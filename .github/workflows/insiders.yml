@@ -13,8 +13,8 @@ env:
   CACHE_PIP_DEPS: cache-pip
   # Key for the cache created at the end of the the 'Cache ./pythonFiles/lib/python' step.
   CACHE_PYTHONFILES: cache-pvsc-pythonFiles
-  ARTIFACT_NAME_VSIX: ms-python-insiders-vsix
-  VSIX_NAME: ms-python-insiders.vsix
+  ARTIFACT_NAME_VSIX: ms-ai-tools-jupyter-insiders-vsix
+  VSIX_NAME: ms-ai-tools-jupyter-insiders.vsix
   COVERAGE_REPORTS: tests-coverage-reports
   TEST_RESULTS_DIRECTORY: .
 
@@ -472,7 +472,7 @@ jobs:
     needs: [tests, smoke-tests, build-vsix]
     env:
       BLOB_CONTAINER_NAME: extension-builds
-      BLOB_NAME: ms-python-gha-insiders.vsix # So named to avoid clobbering Azure Pipelines upload.
+      BLOB_NAME: ms-ai-tools-jupyter-gha-insiders.vsix # So named to avoid clobbering Azure Pipelines upload.
 
     steps:
       - name: Download VSIX

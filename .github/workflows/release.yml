@@ -15,8 +15,8 @@ env:
   CACHE_PIP_DEPS: cache-pip
   # Key for the cache created at the end of the the 'Cache ./pythonFiles/lib/python' step.
   CACHE_PYTHONFILES: cache-pvsc-pythonFiles
-  ARTIFACT_NAME_VSIX: ms-python-release-vsix
-  VSIX_NAME: ms-python-release.vsix
+  ARTIFACT_NAME_VSIX: ms-ai-tools-jupyter-release-vsix
+  VSIX_NAME: ms-ai-tools-jupyter-release.vsix
   COVERAGE_REPORTS: tests-coverage-reports
   TEST_RESULTS_DIRECTORY: .
 

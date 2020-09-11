@@ -6,7 +6,7 @@
 | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
 | [![Build Status](https://dev.azure.com/ms/vscode-python/_apis/build/status/CI?branchName=release)](https://dev.azure.com/ms/vscode-python/_build/latest?definitionId=88&branchName=release) | [![Build Status](https://dev.azure.com/ms/vscode-python/_apis/build/status/CI?branchName=main)](https://dev.azure.com/ms/vscode-python/_build/latest?definitionId=88&branchName=main) | [![Build Status](https://dev.azure.com/ms/vscode-python/_apis/build/status/Nightly%20Build?branchName=main)](https://dev.azure.com/ms/vscode-python/_build/latest?definitionId=85&branchName=main) | [![codecov](https://codecov.io/gh/microsoft/vscode-python/branch/main/graph/badge.svg)](https://codecov.io/gh/microsoft/vscode-python) |
 
-[[Development build](https://pvsc.blob.core.windows.net/extension-builds/ms-python-insiders.vsix)]
+[[Development build](https://pvsc.blob.core.windows.net/extension-builds/ms-ai-tools-jupyter-insiders.vsix)]
 
 ---
 
@@ -341,7 +341,7 @@ Steps to build the extension on your machine once you've cloned the repo:
 > npm run package # This step takes around 10 minutes.
 ```
 
-Resulting in a `ms-python-insiders.vsix` file in your `vscode-python` folder.
+Resulting in a `ms-ai-tools-jupyter-insiders.vsix` file in your `vscode-python` folder.
 
 ⚠️ If you made changes to `package.json`, run `npm install` (instead of `npm ci`) to update `package-lock.json` and install dependencies all at once.
 
@@ -350,9 +350,9 @@ Resulting in a `ms-python-insiders.vsix` file in your `vscode-python` folder.
 If you would like to use the latest version of the extension as committed to `main` that has passed our test suite, then you may set the `"python.insidersChannel"` setting to `"daily"` or `"weekly"` based on how often you would like the extension to check for updates.
 
 You may also download and install the extension manually from the following
-[location](https://pvsc.blob.core.windows.net/extension-builds/ms-python-insiders.vsix).
+[location](https://pvsc.blob.core.windows.net/extension-builds/ms-ai-tools-jupyter-insiders.vsix).
 Once you have downloaded the
-[ms-python-insiders.vsix](https://pvsc.blob.core.windows.net/extension-builds/ms-python-insiders.vsix)
+[ms-ai-tools-jupyter-insiders.vsix](https://pvsc.blob.core.windows.net/extension-builds/ms-ai-tools-jupyter-insiders.vsix)
 file, please follow the instructions on
 [this page](https://code.visualstudio.com/docs/editor/extension-gallery#_install-from-a-vsix)
 to install the extension. Do note that the manual install will not automatically update to newer builds unless you set the `"python.insidersChannel"` setting (it will get replaced with released versions from the Marketplace once they are newer than the version install manually).
