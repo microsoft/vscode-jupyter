@@ -5,8 +5,6 @@ import '../common/extensions';
 import { inject, injectable } from 'inversify';
 import { ConfigurationChangeEvent, Disposable, OutputChannel, Uri } from 'vscode';
 
-import { LSNotSupportedDiagnosticServiceId } from '../application/diagnostics/checks/lsNotSupported';
-import { IDiagnosticsService } from '../application/diagnostics/types';
 import {
     IApplicationEnvironment,
     IApplicationShell,
@@ -216,21 +214,6 @@ export class LanguageServerExtensionActivationService
         key: string
     ): Promise<RefCountedLanguageServer> {
         let serverType = this.getCurrentLanguageServerType();
-        if (serverType === LanguageServerType.Microsoft) {
-            const lsNotSupportedDiagnosticService = this.serviceContainer.get<IDiagnosticsService>(
-                IDiagnosticsService,
-                LSNotSupportedDiagnosticServiceId
-            );
-            const diagnostic = await lsNotSupportedDiagnosticService.diagnose(undefined);
-            lsNotSupportedDiagnosticService.handle(diagnostic).ignoreErrors();
-            if (diagnostic.length) {
-                sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_PLATFORM_SUPPORTED, undefined, {
-                    supported: false
-                });
-                serverType = LanguageServerType.Jedi;
-            }
-        }
-
         this.sendTelemetryForChosenLanguageServer(serverType).ignoreErrors();
 
         await this.logStartup(serverType);

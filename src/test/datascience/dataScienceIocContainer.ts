@@ -53,10 +53,6 @@ import {
     ILanguageServerProxy,
     LanguageServerType
 } from '../../client/activation/types';
-import {
-    LSNotSupportedDiagnosticService,
-    LSNotSupportedDiagnosticServiceId
-} from '../../client/application/diagnostics/checks/lsNotSupported';
 import { DiagnosticFilterService } from '../../client/application/diagnostics/filter';
 import {
     DiagnosticCommandPromptHandlerService,

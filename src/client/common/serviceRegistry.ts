@@ -72,7 +72,6 @@ import { CurrentProcess } from './process/currentProcess';
 import { ProcessLogger } from './process/logger';
 import { IProcessLogger } from './process/types';
 import { TerminalActivator } from './terminal/activator';
-import { PowershellTerminalActivationFailedHandler } from './terminal/activator/powershellFailedHandler';
 import { Bash } from './terminal/environmentActivationProviders/bash';
 import { CommandPromptAndPowerShell } from './terminal/environmentActivationProviders/commandPrompt';
 import { CondaActivationCommandProvider } from './terminal/environmentActivationProviders/condaActivationProvider';
@@ -87,7 +86,6 @@ import { VSCEnvironmentShellDetector } from './terminal/shellDetectors/vscEnviro
 import {
     IShellDetector,
     ITerminalActivationCommandProvider,
-    ITerminalActivationHandler,
     ITerminalActivator,
     ITerminalHelper,
     ITerminalServiceFactory,
@@ -143,10 +141,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IEditorUtils>(IEditorUtils, EditorUtils);
     serviceManager.addSingleton<INugetService>(INugetService, NugetService);
     serviceManager.addSingleton<ITerminalActivator>(ITerminalActivator, TerminalActivator);
-    serviceManager.addSingleton<ITerminalActivationHandler>(
-        ITerminalActivationHandler,
-        PowershellTerminalActivationFailedHandler
-    );
     serviceManager.addSingleton<ILiveShareApi>(ILiveShareApi, LiveShareApi);
     serviceManager.addSingleton<ICryptoUtils>(ICryptoUtils, CryptoUtils);
     serviceManager.addSingleton<IExperimentsManager>(IExperimentsManager, ExperimentsManager);

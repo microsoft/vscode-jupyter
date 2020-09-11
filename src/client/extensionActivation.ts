@@ -139,7 +139,7 @@ async function activateLegacy(
     const languageServerType = configuration.getSettings().languageServer;
 
     // Language feature registrations.
-    appRegisterTypes(serviceManager, languageServerType);
+    appRegisterTypes(serviceManager);
     providersRegisterTypes(serviceManager);
     activationRegisterTypes(serviceManager, languageServerType);
 
