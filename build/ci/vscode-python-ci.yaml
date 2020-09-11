@@ -52,24 +52,13 @@ stages:
               # focused on integration
               TestsToRun: 'testSingleWorkspace'
               NeedsPythonTestReqs: true
-            'Multi Workspace':
-              # no mocks, with vscode
-              # focused on integration
-              TestsToRun: 'testMultiWorkspace'
-              NeedsPythonTestReqs: true
-            'Venv':
-              TestsToRun: 'venvTests'
-              NeedsPythonTestReqs: true
-              NeedsIPythonReqs: true
-              # This is for the venvTests to use, not needed if you don't run venv tests...
-              PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
             'Debugger':
               TestsToRun: 'testDebugger'
               NeedsPythonTestReqs: true
-            'Smoke':
-              TestsToRun: 'testSmoke'
-              NeedsPythonTestReqs: true
-              NeedsIPythonReqs: true
+            # 'Smoke':
+            #   TestsToRun: 'testSmoke'
+            #   NeedsPythonTestReqs: true
+            #   NeedsIPythonReqs: true
           maxParallel: 2
         pool:
           vmImage: 'ubuntu-16.04'
@@ -88,12 +77,6 @@ stages:
               TestsToRun: 'testUnitTests, pythonUnitTests, pythonIPythonTests'
               NeedsPythonTestReqs: true
               NeedsIPythonReqs: true
-            'Venv':
-              PythonVersion: '3.5'
-              TestsToRun: 'venvTests'
-              NeedsPythonTestReqs: true
-              NeedsIPythonReqs: true
-              PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
             'Debugger':
               PythonVersion: '3.5'
               TestsToRun: 'testDebugger'
@@ -123,14 +106,6 @@ stages:
             'Single Workspace':
               TestsToRun: 'testSingleWorkspace'
               NeedsPythonTestReqs: true
-            'Multi Workspace':
-              TestsToRun: 'testMultiWorkspace'
-              NeedsPythonTestReqs: true
-            'Venv':
-              TestsToRun: 'venvTests'
-              NeedsPythonTestReqs: true
-              NeedsIPythonReqs: true
-              PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
             'Debugger':
               TestsToRun: 'testDebugger'
               NeedsPythonTestReqs: true
@@ -163,14 +138,6 @@ stages:
             'Single Workspace':
               TestsToRun: 'testSingleWorkspace'
               NeedsPythonTestReqs: true
-            'Multi Workspace':
-              TestsToRun: 'testMultiWorkspace'
-              NeedsPythonTestReqs: true
-            'Venv':
-              TestsToRun: 'venvTests'
-              NeedsPythonTestReqs: true
-              NeedsIPythonReqs: true
-              PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
             'Debugger':
               TestsToRun: 'testDebugger'
               NeedsPythonTestReqs: true

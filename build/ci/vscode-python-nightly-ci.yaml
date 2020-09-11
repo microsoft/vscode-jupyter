@@ -51,17 +51,9 @@ stages:
             'Single Workspace':
               TestsToRun: 'testSingleWorkspace'
               NeedsPythonTestReqs: true
-            'Multi Workspace':
-              TestsToRun: 'testMultiWorkspace'
-              NeedsPythonTestReqs: true
             'Debugger':
               TestsToRun: 'testDebugger'
               NeedsPythonTestReqs: true
-            'Venv':
-              TestsToRun: 'venvTests'
-              NeedsPythonTestReqs: true
-              # This is for the venvTests to use, not needed if you don't run venv tests...
-              PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
             'Smoke':
               TestsToRun: 'testSmoke'
               NeedsPythonTestReqs: true
@@ -92,19 +84,10 @@ stages:
               PythonVersion: '3.6'
               TestsToRun: 'testSingleWorkspace'
               NeedsPythonTestReqs: true
-            'Multi Workspace':
-              PythonVersion: '3.6'
-              TestsToRun: 'testMultiWorkspace'
-              NeedsPythonTestReqs: true
             'Debugger':
               PythonVersion: '3.6'
               TestsToRun: 'testDebugger'
               NeedsPythonTestReqs: true
-            'Venv':
-              PythonVersion: '3.6'
-              TestsToRun: 'venvTests'
-              NeedsPythonTestReqs: true
-              PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
             # Note: We only run the smoke tests with the latest Python release.
           maxParallel: 1
         pool:
@@ -132,19 +115,10 @@ stages:
               PythonVersion: '3.5'
               TestsToRun: 'testSingleWorkspace'
               NeedsPythonTestReqs: true
-            'Multi Workspace':
-              PythonVersion: '3.5'
-              TestsToRun: 'testMultiWorkspace'
-              NeedsPythonTestReqs: true
             'Debugger':
               PythonVersion: '3.5'
               TestsToRun: 'testDebugger'
               NeedsPythonTestReqs: true
-            'Venv':
-              PythonVersion: '3.5'
-              TestsToRun: 'venvTests'
-              NeedsPythonTestReqs: true
-              PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
             # Note: We only run the smoke tests with the latest Python release.
           maxParallel: 1
         pool:
@@ -171,10 +145,6 @@ stages:
             'Single Workspace':
               PythonVersion: '2.7'
               TestsToRun: 'testSingleWorkspace'
-              NeedsPythonTestReqs: true
-            'Multi Workspace':
-              PythonVersion: '2.7'
-              TestsToRun: 'testMultiWorkspace'
               NeedsPythonTestReqs: true
             'Debugger':
               PythonVersion: '2.7'
@@ -208,16 +178,9 @@ stages:
             'Single Workspace':
               TestsToRun: 'testSingleWorkspace'
               NeedsPythonTestReqs: true
-            'Multi Workspace':
-              TestsToRun: 'testMultiWorkspace'
-              NeedsPythonTestReqs: true
             'Debugger':
               TestsToRun: 'testDebugger'
               NeedsPythonTestReqs: true
-            'Venv':
-              TestsToRun: 'venvTests'
-              NeedsPythonTestReqs: true
-              PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
             'Smoke':
               TestsToRun: 'testSmoke'
               NeedsPythonTestReqs: true
@@ -248,19 +211,10 @@ stages:
               PythonVersion: '3.6'
               TestsToRun: 'testSingleWorkspace'
               NeedsPythonTestReqs: true
-            'Multi Workspace':
-              PythonVersion: '3.6'
-              TestsToRun: 'testMultiWorkspace'
-              NeedsPythonTestReqs: true
             'Debugger':
               PythonVersion: '3.6'
               TestsToRun: 'testDebugger'
               NeedsPythonTestReqs: true
-            'Venv':
-              PythonVersion: '3.6'
-              TestsToRun: 'venvTests'
-              NeedsPythonTestReqs: true
-              PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
             # Note: We only run the smoke tests with the latest Python release.
           maxParallel: 1
         pool:
@@ -288,19 +242,10 @@ stages:
               PythonVersion: '3.5'
               TestsToRun: 'testSingleWorkspace'
               NeedsPythonTestReqs: true
-            'Multi Workspace':
-              PythonVersion: '3.5'
-              TestsToRun: 'testMultiWorkspace'
-              NeedsPythonTestReqs: true
             'Debugger':
               PythonVersion: '3.5'
               TestsToRun: 'testDebugger'
               NeedsPythonTestReqs: true
-            'Venv':
-              PythonVersion: '3.5'
-              TestsToRun: 'venvTests'
-              NeedsPythonTestReqs: true
-              PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
             # Note: We only run the smoke tests with the latest Python release.
           maxParallel: 1
         pool:
@@ -327,10 +272,6 @@ stages:
             'Single Workspace':
               PythonVersion: '2.7'
               TestsToRun: 'testSingleWorkspace'
-              NeedsPythonTestReqs: true
-            'Multi Workspace':
-              PythonVersion: '2.7'
-              TestsToRun: 'testMultiWorkspace'
               NeedsPythonTestReqs: true
             'Debugger':
               PythonVersion: '2.7'
@@ -364,16 +305,9 @@ stages:
             'Single Workspace':
               TestsToRun: 'testSingleWorkspace'
               NeedsPythonTestReqs: true
-            'Multi Workspace':
-              TestsToRun: 'testMultiWorkspace'
-              NeedsPythonTestReqs: true
             'Debugger':
               TestsToRun: 'testDebugger'
               NeedsPythonTestReqs: true
-            'Venv':
-              TestsToRun: 'venvTests'
-              NeedsPythonTestReqs: true
-              PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
             'Smoke':
               TestsToRun: 'testSmoke'
               NeedsPythonTestReqs: true
@@ -404,19 +338,10 @@ stages:
               PythonVersion: '3.6'
               TestsToRun: 'testSingleWorkspace'
               NeedsPythonTestReqs: true
-            'Multi Workspace':
-              PythonVersion: '3.6'
-              TestsToRun: 'testMultiWorkspace'
-              NeedsPythonTestReqs: true
             'Debugger':
               PythonVersion: '3.6'
               TestsToRun: 'testDebugger'
               NeedsPythonTestReqs: true
-            'Venv':
-              PythonVersion: '3.6'
-              TestsToRun: 'venvTests'
-              NeedsPythonTestReqs: true
-              PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
             # Note: We only run the smoke tests with the latest Python release.
           maxParallel: 1
         pool:
@@ -444,19 +369,10 @@ stages:
               PythonVersion: '3.5'
               TestsToRun: 'testSingleWorkspace'
               NeedsPythonTestReqs: true
-            'Multi Workspace':
-              PythonVersion: '3.5'
-              TestsToRun: 'testMultiWorkspace'
-              NeedsPythonTestReqs: true
             'Debugger':
               PythonVersion: '3.5'
               TestsToRun: 'testDebugger'
               NeedsPythonTestReqs: true
-            'Venv':
-              PythonVersion: '3.5'
-              TestsToRun: 'venvTests'
-              NeedsPythonTestReqs: true
-              PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
             # Note: We only run the smoke tests with the latest Python release.
           maxParallel: 1
         pool:
@@ -483,10 +399,6 @@ stages:
             'Single Workspace':
               PythonVersion: '2.7'
               TestsToRun: 'testSingleWorkspace'
-              NeedsPythonTestReqs: true
-            'Multi Workspace':
-              PythonVersion: '2.7'
-              TestsToRun: 'testMultiWorkspace'
               NeedsPythonTestReqs: true
             'Debugger':
               PythonVersion: '2.7'
