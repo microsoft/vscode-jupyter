@@ -8,13 +8,13 @@
 		"vscode": "^1.32.0"
 	},
 	"license": "MIT",
-	"homepage": "https://github.com/Microsoft/vscode-python",
+	"homepage": "https://github.com/Microsoft/vscode-jupyter",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/Microsoft/vscode-python"
+		"url": "https://github.com/Microsoft/vscode-jupyter"
 	},
 	"bugs": {
-		"url": "https://github.com/Microsoft/vscode-python/issues"
+		"url": "https://github.com/Microsoft/vscode-jupyter/issues"
 	},
 	"qna": "https://stackoverflow.com/questions/tagged/visual-studio-code+python",
 	"categories": [
