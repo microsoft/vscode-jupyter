@@ -55,17 +55,14 @@ import {
     IJupyterSubCommandExecutionService,
     INotebookServer
 } from '../../client/datascience/types';
-import { EnvironmentActivationService } from '../../client/interpreter/activation/service';
 import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { InterpreterService } from '../../client/interpreter/interpreterService';
 import { ServiceContainer } from '../../client/ioc/container';
-import { KnownSearchPathsForInterpreters } from '../../client/pythonEnvironments/discovery/locators/services/KnownPathsService';
 import { EnvironmentType, PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { getOSType, OSType } from '../common';
 import { noop } from '../core';
 import { MockOutputChannel } from '../mockClasses';
-import { MockAutoSelectionService } from '../mocks/autoSelector';
 import { MockJupyterServer } from './mockJupyterServer';
 
 // tslint:disable:no-any no-http-string no-multiline-string max-func-body-length
@@ -97,15 +94,14 @@ suite('Jupyter Execution', async () => {
     const configService = mock(ConfigurationService);
     const application = mock(ApplicationShell);
     const processServiceFactory = mock(ProcessServiceFactory);
-    const knownSearchPaths = mock(KnownSearchPathsForInterpreters);
     const fileSystem = mock(DataScienceFileSystem);
-    const activationHelper = mock(EnvironmentActivationService);
+    const activationHelper = mock<IEnvironmentActivationService>();
     const serviceContainer = mock(ServiceContainer);
     const workspaceService = mock(WorkspaceService);
     const disposableRegistry = new DisposableRegistry();
     const dummyEvent = new EventEmitter<void>();
     const configChangeEvent = new EventEmitter<ConfigurationChangeEvent>();
-    const pythonSettings = new PythonSettings(undefined, new MockAutoSelectionService());
+    const pythonSettings = new PythonSettings(undefined);
     const jupyterOnPath = getOSType() === OSType.Windows ? '/foo/bar/jupyter.exe' : '/foo/bar/jupyter';
     let ipykernelInstallCount = 0;
     let kernelSelector: KernelSelector;
@@ -913,8 +909,6 @@ suite('Jupyter Execution', async () => {
         // Service container also needs to generate jupyter servers. However we can't use a mock as that messes up returning
         // this object from a promise
         when(serviceContainer.get<INotebookServer>(INotebookServer)).thenReturn(new MockJupyterServer());
-
-        when(knownSearchPaths.getSearchPaths()).thenReturn(['/foo/bar']);
 
         // We also need a file system
         const tempFile = {

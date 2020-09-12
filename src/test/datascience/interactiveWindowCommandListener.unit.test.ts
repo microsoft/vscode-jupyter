@@ -37,8 +37,6 @@ import {
 } from '../../client/datascience/types';
 import { InterpreterService } from '../../client/interpreter/interpreterService';
 import { ServiceContainer } from '../../client/ioc/container';
-import { KnownSearchPathsForInterpreters } from '../../client/pythonEnvironments/discovery/locators/services/KnownPathsService';
-import { MockAutoSelectionService } from '../mocks/autoSelector';
 import { MockCommandManager } from './mockCommandManager';
 import { MockDocumentManager } from './mockDocumentManager';
 import { MockStatusProvider } from './mockStatusProvider';
@@ -58,11 +56,10 @@ function createTypeMoq<T>(tag: string): TypeMoq.IMock<T> {
 suite('Interactive window command listener', async () => {
     const interpreterService = mock(InterpreterService);
     const configService = mock(ConfigurationService);
-    const knownSearchPaths = mock(KnownSearchPathsForInterpreters);
     const fileSystem = mock(DataScienceFileSystem);
     const serviceContainer = mock(ServiceContainer);
     const dummyEvent = new EventEmitter<void>();
-    const pythonSettings = new PythonSettings(undefined, new MockAutoSelectionService());
+    const pythonSettings = new PythonSettings(undefined);
     const disposableRegistry: IDisposable[] = [];
     const interactiveWindowProvider = mock(InteractiveWindowProvider);
     const dataScienceErrorHandler = mock(DataScienceErrorHandler);
@@ -151,8 +148,6 @@ suite('Interactive window command listener', async () => {
             widgetScriptSources: [],
             interactiveWindowMode: 'single'
         };
-
-        when(knownSearchPaths.getSearchPaths()).thenReturn(['/foo/bar']);
 
         // We also need a file system
         const tempFile = {

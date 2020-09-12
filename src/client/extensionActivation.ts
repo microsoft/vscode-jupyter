@@ -12,10 +12,9 @@ import { IExtensionActivationManager, ILanguageServerExtension } from './activat
 import { registerTypes as appRegisterTypes } from './application/serviceRegistry';
 import { IApplicationDiagnostics } from './application/types';
 import { DebugService } from './common/application/debugService';
-import { IApplicationEnvironment, ICommandManager, IWorkspaceService } from './common/application/types';
+import { IApplicationEnvironment, ICommandManager } from './common/application/types';
 import { Commands, PYTHON, PYTHON_LANGUAGE, STANDARD_OUTPUT_CHANNEL, UseProposedApi } from './common/constants';
 import { registerTypes as installerRegisterTypes } from './common/installer/serviceRegistry';
-import { traceError } from './common/logger';
 import { registerTypes as platformRegisterTypes } from './common/platform/serviceRegistry';
 import { IFileSystem } from './common/platform/types';
 import { registerTypes as processRegisterTypes } from './common/process/serviceRegistry';
@@ -40,11 +39,6 @@ import { IDebugSessionEventHandlers } from './debugger/extension/hooks/types';
 import { registerTypes as debugConfigurationRegisterTypes } from './debugger/extension/serviceRegistry';
 import { IDebugConfigurationService, IDebuggerBanner } from './debugger/extension/types';
 import { registerTypes as formattersRegisterTypes } from './formatters/serviceRegistry';
-import {
-    IInterpreterLocatorProgressHandler,
-    IInterpreterLocatorProgressService,
-    IInterpreterService
-} from './interpreter/contracts';
 import { registerTypes as interpretersRegisterTypes } from './interpreter/serviceRegistry';
 import { IServiceContainer, IServiceManager } from './ioc/types';
 import { getLanguageConfiguration } from './language/languageConfiguration';
@@ -56,7 +50,6 @@ import { PythonFormattingEditProvider } from './providers/formatProvider';
 import { ReplProvider } from './providers/replProvider';
 import { registerTypes as providersRegisterTypes } from './providers/serviceRegistry';
 import { activateSimplePythonRefactorProvider } from './providers/simpleRefactorProvider';
-import { TerminalProvider } from './providers/terminalProvider';
 import { ISortImportsEditingProvider } from './providers/types';
 import { setExtensionInstallTelemetryProperties } from './telemetry/extensionInstallTelemetry';
 import { registerTypes as commonRegisterTerminalTypes } from './terminals/serviceRegistry';
@@ -144,10 +137,6 @@ async function activateLegacy(
     activationRegisterTypes(serviceManager, languageServerType);
 
     // "initialize" "services"
-
-    const interpreterManager = serviceContainer.get<IInterpreterService>(IInterpreterService);
-    interpreterManager.initialize();
-
     const handlers = serviceManager.getAll<IDebugSessionEventHandlers>(IDebugSessionEventHandlers);
     const disposables = serviceManager.get<IDisposableRegistry>(IDisposableRegistry);
     const dispatcher = new DebugSessionEventDispatcher(handlers, DebugService.instance, disposables);
@@ -158,9 +147,6 @@ async function activateLegacy(
     disposables.push(cmdManager.registerCommand(Commands.ViewOutput, () => outputChannel.show()));
     cmdManager.executeCommand('setContext', 'python.vscode.channel', applicationEnv.channel).then(noop, noop);
 
-    // Display progress of interpreter refreshes only after extension has activated.
-    serviceContainer.get<IInterpreterLocatorProgressHandler>(IInterpreterLocatorProgressHandler).register();
-    serviceContainer.get<IInterpreterLocatorProgressService>(IInterpreterLocatorProgressService).register();
     serviceContainer.get<IApplicationDiagnostics>(IApplicationDiagnostics).register();
     serviceContainer.get<ITestCodeNavigatorCommandHandler>(ITestCodeNavigatorCommandHandler).register();
     serviceContainer.get<ITestExplorerCommandHandler>(ITestExplorerCommandHandler).register();
@@ -183,11 +169,6 @@ async function activateLegacy(
 
     serviceManager.get<ICodeExecutionManager>(ICodeExecutionManager).registerCommands();
 
-    const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
-    interpreterManager
-        .refresh(workspaceService.hasWorkspaceFolders ? workspaceService.workspaceFolders![0].uri : undefined)
-        .catch((ex) => traceError('Python Extension: interpreterManager.refresh', ex));
-
     // Activate data science features
     const dataScience = serviceManager.get<IDataScience>(IDataScience);
     dataScience.activate().ignoreErrors();
@@ -207,10 +188,6 @@ async function activateLegacy(
     context.subscriptions.push(deprecationMgr);
 
     context.subscriptions.push(new ReplProvider(serviceContainer));
-
-    const terminalProvider = new TerminalProvider(serviceContainer);
-    terminalProvider.initialize(window.activeTerminal).ignoreErrors();
-    context.subscriptions.push(terminalProvider);
 
     context.subscriptions.push(
         languages.registerCodeActionsProvider(PYTHON, new PythonCodeActionProvider(), {

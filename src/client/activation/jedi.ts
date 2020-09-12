@@ -28,7 +28,6 @@ import {
 import { PYTHON } from '../common/constants';
 import { traceError } from '../common/logger';
 import { IConfigurationService, IDisposable, IExtensionContext, Resource } from '../common/types';
-import { IShebangCodeLensProvider } from '../interpreter/contracts';
 import { IServiceContainer, IServiceManager } from '../ioc/types';
 import { JediFactory } from '../languageServices/jediProxyFactory';
 import { PythonCompletionItemProvider } from '../providers/completionProvider';
@@ -58,7 +57,6 @@ export class JediExtensionActivator implements ILanguageServerActivator {
     private definitionProvider: PythonDefinitionProvider | undefined;
     private referenceProvider: PythonReferenceProvider | undefined;
     private completionProvider: PythonCompletionItemProvider | undefined;
-    private codeLensProvider: IShebangCodeLensProvider | undefined;
     private symbolProvider: JediSymbolProvider | undefined;
     private signatureProvider: PythonSignatureProvider | undefined;
     private registrations: IDisposable[] = [];
@@ -83,7 +81,6 @@ export class JediExtensionActivator implements ILanguageServerActivator {
         this.hoverProvider = new PythonHoverProvider(jediFactory);
         this.referenceProvider = new PythonReferenceProvider(jediFactory);
         this.completionProvider = new PythonCompletionItemProvider(jediFactory, this.serviceManager);
-        this.codeLensProvider = this.serviceManager.get<IShebangCodeLensProvider>(IShebangCodeLensProvider);
         this.objectDefinitionProvider = new PythonObjectDefinitionProvider(jediFactory);
         this.symbolProvider = new JediSymbolProvider(serviceContainer, jediFactory);
         this.signatureProvider = new PythonSignatureProvider(jediFactory);
@@ -113,7 +110,6 @@ export class JediExtensionActivator implements ILanguageServerActivator {
             this.hoverProvider &&
             this.referenceProvider &&
             this.completionProvider &&
-            this.codeLensProvider &&
             this.symbolProvider &&
             this.signatureProvider
         ) {
@@ -133,7 +129,6 @@ export class JediExtensionActivator implements ILanguageServerActivator {
             this.registrations.push(
                 languages.registerCompletionItemProvider(this.documentSelector, this.completionProvider, '.')
             );
-            this.registrations.push(languages.registerCodeLensProvider(this.documentSelector, this.codeLensProvider));
             const onTypeDispatcher = new OnTypeFormattingDispatcher({
                 '\n': new OnEnterFormatter(),
                 ':': new BlockFormatProviders()
@@ -213,12 +208,10 @@ export class JediExtensionActivator implements ILanguageServerActivator {
     }
 
     public get onDidChangeCodeLenses(): Event<void> | undefined {
-        return this.codeLensProvider ? this.codeLensProvider.onDidChangeCodeLenses : undefined;
+        return undefined;
     }
-    public provideCodeLenses(document: TextDocument, token: CancellationToken): ProviderResult<CodeLens[]> {
-        if (this.codeLensProvider) {
-            return this.codeLensProvider.provideCodeLenses(document, token);
-        }
+    public provideCodeLenses(_: TextDocument, __: CancellationToken): ProviderResult<CodeLens[]> {
+        return;
     }
     public provideDocumentSymbols(
         document: TextDocument,

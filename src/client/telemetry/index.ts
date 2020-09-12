@@ -11,7 +11,6 @@ import { DiagnosticCodes } from '../application/diagnostics/constants';
 import { IWorkspaceService } from '../common/application/types';
 import { AppinsightsKey, isTestExecution, isUnitTestExecution, PVSC_EXTENSION_ID } from '../common/constants';
 import { traceError, traceInfo } from '../common/logger';
-import { TerminalShellType } from '../common/terminal/types';
 import { Architecture } from '../common/utils/platform';
 import { StopWatch } from '../common/utils/stopWatch';
 import {
@@ -24,7 +23,6 @@ import {
 import { ExportFormat } from '../datascience/export/types';
 import { DebugConfigurationType } from '../debugger/extension/types';
 import { ConsoleType, TriggerType } from '../debugger/types';
-import { AutoSelectionRule } from '../interpreter/autoSelection/types';
 import { LinterId } from '../linters/types';
 import { EnvironmentType } from '../pythonEnvironments/info';
 import { TestProvider } from '../testing/common/types';
@@ -672,43 +670,9 @@ export interface IEventNamePropertyMapping {
      */
     [EventName.EDITOR_LOAD]: {
         /**
-         * The conda version if selected
-         */
-        condaVersion: string | undefined;
-        /**
-         * The python interpreter version if selected
-         */
-        pythonVersion: string | undefined;
-        /**
-         * The type of interpreter (conda, virtualenv, pipenv etc.)
-         */
-        interpreterType: EnvironmentType | undefined;
-        /**
-         * The type of terminal shell created: powershell, cmd, zsh, bash etc.
-         *
-         * @type {TerminalShellType}
-         */
-        terminal: TerminalShellType;
-        /**
          * Number of workspace folders opened
          */
         workspaceFolderCount: number;
-        /**
-         * If interpreters found for the main workspace contains a python3 interpreter
-         */
-        hasPython3: boolean;
-        /**
-         * If user has defined an interpreter in settings.json
-         */
-        usingUserDefinedInterpreter: boolean;
-        /**
-         * If interpreter is auto selected for the workspace
-         */
-        usingAutoSelectedWorkspaceInterpreter: boolean;
-        /**
-         * If global interpreter is being used
-         */
-        usingGlobalInterpreter: boolean;
     };
     /**
      * Telemetry event sent when substituting Environment variables to calculate value of variables
@@ -1014,12 +978,6 @@ export interface IEventNamePropertyMapping {
          */
         failed?: boolean;
         /**
-         * The type of terminal shell to activate
-         *
-         * @type {TerminalShellType}
-         */
-        terminal: TerminalShellType;
-        /**
          * The Python interpreter version of the active interpreter for the resource
          *
          * @type {string}
@@ -1049,12 +1007,6 @@ export interface IEventNamePropertyMapping {
          */
         failed?: boolean;
         /**
-         * The type of terminal shell to activate
-         *
-         * @type {TerminalShellType}
-         */
-        terminal: TerminalShellType;
-        /**
          * The Python interpreter version of the interpreter for the resource
          *
          * @type {string}
@@ -1068,12 +1020,6 @@ export interface IEventNamePropertyMapping {
         interpreterType: EnvironmentType;
     };
     [EventName.PYTHON_INTERPRETER_AUTO_SELECTION]: {
-        /**
-         * The rule used to auto-select the interpreter
-         *
-         * @type {AutoSelectionRule}
-         */
-        rule?: AutoSelectionRule;
         /**
          * If cached interpreter no longer exists or is invalid
          *
@@ -1522,18 +1468,6 @@ export interface IEventNamePropertyMapping {
      */
     [EventName.TERMINAL_CREATE]: {
         /**
-         * The type of terminal shell created: powershell, cmd, zsh, bash etc.
-         *
-         * @type {TerminalShellType}
-         */
-        terminal?: TerminalShellType;
-        /**
-         * The source which triggered creation of terminal
-         *
-         * @type {'commandpalette'}
-         */
-        triggeredBy?: 'commandpalette';
-        /**
          * The default Python interpreter version to be used in terminal, inferred from resource's 'settings.json'
          *
          * @type {string}
@@ -1934,12 +1868,6 @@ export interface IEventNamePropertyMapping {
          * @type {boolean}
          */
         isPossiblyCondaEnv: boolean;
-        /**
-         * The type of terminal shell created: powershell, cmd, zsh, bash etc.
-         *
-         * @type {TerminalShellType}
-         */
-        terminal: TerminalShellType;
     };
     /**
      * Telemetry event sent once done searching for kernel spec and interpreter for a local connection.

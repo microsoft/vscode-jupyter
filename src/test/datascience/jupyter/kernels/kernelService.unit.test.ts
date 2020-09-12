@@ -27,7 +27,6 @@ import {
     IJupyterSubCommandExecutionService,
     KernelInterpreterDependencyResponse
 } from '../../../../client/datascience/types';
-import { EnvironmentActivationService } from '../../../../client/interpreter/activation/service';
 import { IEnvironmentActivationService } from '../../../../client/interpreter/activation/types';
 import { IInterpreterService } from '../../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../../client/interpreter/interpreterService';
@@ -50,7 +49,7 @@ suite('DataScience - KernelService', () => {
         interperterService = mock(InterpreterService);
         fs = mock(DataScienceFileSystem);
         sessionManager = mock(JupyterSessionManager);
-        activationHelper = mock(EnvironmentActivationService);
+        activationHelper = mock<IEnvironmentActivationService>();
         execFactory = mock(PythonExecutionFactory);
         execService = mock<IPythonExecutionService>();
         dependencyService = mock(KernelDependencyService);
