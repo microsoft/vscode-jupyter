@@ -25,9 +25,8 @@ import { DebugConfigurationType } from '../debugger/extension/types';
 import { ConsoleType, TriggerType } from '../debugger/types';
 import { LinterId } from '../linters/types';
 import { EnvironmentType } from '../pythonEnvironments/info';
-import { TestProvider } from '../testing/common/types';
 import { EventName, PlatformErrors } from './constants';
-import { LinterTrigger, TestTool } from './types';
+import { LinterTrigger } from './types';
 
 // tslint:disable: no-any
 
@@ -1429,31 +1428,6 @@ export interface IEventNamePropertyMapping {
      */
     [EventName.SYMBOL]: never | undefined;
     /**
-     * Telemetry event sent if and when user configure tests command. This command can be trigerred from multiple places in the extension. (Command palette, prompt etc.)
-     */
-    [EventName.UNITTEST_CONFIGURE]: never | undefined;
-    /**
-     * Telemetry event sent when user chooses a test framework in the Quickpick displayed for enabling and configuring test framework
-     */
-    [EventName.UNITTEST_CONFIGURING]: {
-        /**
-         * Name of the test framework to configure
-         */
-        tool?: TestTool;
-        /**
-         * Carries the source which triggered configuration of tests
-         *
-         * @type {('ui' | 'commandpalette')}
-         */
-        trigger: 'ui' | 'commandpalette';
-        /**
-         * Carries `true` if configuring test framework failed, `false` otherwise
-         *
-         * @type {boolean}
-         */
-        failed: boolean;
-    };
-    /**
      * Telemetry event sent when the extension is activated, if an active terminal is present and
      * the `python.terminal.activateEnvInCurrentTerminal` setting is set to `true`.
      */
@@ -1480,114 +1454,6 @@ export interface IEventNamePropertyMapping {
          */
         interpreterType?: EnvironmentType;
     };
-    /**
-     * Telemetry event sent with details about discovering tests
-     */
-    [EventName.UNITTEST_DISCOVER]: {
-        /**
-         * The test framework used to discover tests
-         *
-         * @type {TestTool}
-         */
-        tool: TestTool;
-        /**
-         * Carries the source which triggered discovering of tests
-         *
-         * @type {('ui' | 'commandpalette')}
-         */
-        trigger: 'ui' | 'commandpalette';
-        /**
-         * Carries `true` if discovering tests failed, `false` otherwise
-         *
-         * @type {boolean}
-         */
-        failed: boolean;
-    };
-    /**
-     * Telemetry event is sent if we are doing test discovery using python code
-     */
-    [EventName.UNITTEST_DISCOVER_WITH_PYCODE]: never | undefined;
-    /**
-     * Telemetry event sent when user clicks a file, function, or suite in test explorer.
-     */
-    [EventName.UNITTEST_NAVIGATE]: {
-        /**
-         * Carries `true` if user clicks a file, `false` otherwise
-         *
-         * @type {boolean}
-         */
-        byFile?: boolean;
-        /**
-         * Carries `true` if user clicks a function, `false` otherwise
-         *
-         * @type {boolean}
-         */
-        byFunction?: boolean;
-        /**
-         * Carries `true` if user clicks a suite, `false` otherwise
-         *
-         * @type {boolean}
-         */
-        bySuite?: boolean;
-        /**
-         * Carries `true` if we are changing focus to the suite/file/function, `false` otherwise
-         *
-         * @type {boolean}
-         */
-        focus_code?: boolean;
-    };
-    /**
-     * Tracks number of workspace folders shown in test explorer
-     */
-    [EventName.UNITTEST_EXPLORER_WORK_SPACE_COUNT]: { count: number };
-    /**
-     * Telemetry event sent with details about running the tests, what is being run, what framework is being used etc.
-     */
-    [EventName.UNITTEST_RUN]: {
-        /**
-         * Framework being used to run tests
-         */
-        tool: TestTool;
-        /**
-         * Carries info what is being run
-         */
-        scope: 'currentFile' | 'all' | 'file' | 'class' | 'function' | 'failed';
-        /**
-         * Carries `true` if debugging, `false` otherwise
-         */
-        debugging: boolean;
-        /**
-         * Carries what triggered the execution of the tests
-         */
-        triggerSource: 'ui' | 'codelens' | 'commandpalette' | 'auto' | 'testExplorer';
-        /**
-         * Carries `true` if running tests failed, `false` otherwise
-         */
-        failed: boolean;
-    };
-    /**
-     * Telemetry event sent when cancelling running or discovering tests
-     */
-    [EventName.UNITTEST_STOP]: never | undefined;
-    /**
-     * Telemetry event sent when disabling all test frameworks
-     */
-    [EventName.UNITTEST_DISABLE]: never | undefined;
-    /**
-     * Telemetry event sent when viewing Python test log output
-     */
-    [EventName.UNITTEST_VIEW_OUTPUT]: never | undefined;
-    /**
-     * Tracks which testing framework has been enabled by the user.
-     * Telemetry is sent when settings have been modified by the user.
-     * Values sent include:
-     * unittest -   If this value is `true`, then unittest has been enabled by the user.
-     * pytest   -   If this value is `true`, then pytest has been enabled by the user.
-     * nosetest -   If this value is `true`, then nose has been enabled by the user.
-     * @type {(never | undefined)}
-     * @memberof IEventNamePropertyMapping
-     */
-    [EventName.UNITTEST_ENABLED]: Partial<Record<TestProvider, undefined | boolean>>;
     /**
      * Telemetry sent when building workspace symbols
      */

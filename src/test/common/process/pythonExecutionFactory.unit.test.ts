@@ -29,7 +29,6 @@ import { IConfigurationService, IDisposableRegistry } from '../../../client/comm
 import { Architecture } from '../../../client/common/utils/platform';
 import { IEnvironmentActivationService } from '../../../client/interpreter/activation/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
-import { InterpreterService } from '../../../client/interpreter/interpreterService';
 import { IWindowsStoreInterpreter } from '../../../client/interpreter/locators/types';
 import { ServiceContainer } from '../../../client/ioc/container';
 import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
@@ -103,7 +102,7 @@ suite('Process - PythonExecutionFactory', () => {
                     )
                     .returns(() => processService.object);
                 processService.setup((p: any) => p.then).returns(() => undefined);
-                interpreterService = mock(InterpreterService);
+                interpreterService = mock<IInterpreterService>();
                 when(interpreterService.getInterpreterDetails(anything())).thenResolve({
                     version: { major: 3 }
                 } as any);

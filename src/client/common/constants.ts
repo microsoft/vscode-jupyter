@@ -40,7 +40,6 @@ export namespace Commands {
     export const Tests_Ask_To_Stop_Discovery = 'python.askToStopTestDiscovery';
     export const Tests_Stop = 'python.stopTests';
     export const Test_Reveal_Test_Item = 'python.revealTestItem';
-    export const ViewOutput = 'python.viewOutput';
     export const Tests_ViewOutput = 'python.viewTestOutput';
     export const Tests_Select_And_Run_Method = 'python.selectAndRunTestMethod';
     export const Tests_Select_And_Debug_Method = 'python.selectAndDebugTestMethod';

@@ -306,7 +306,6 @@ import {
 import { ProtocolParser } from '../../client/debugger/extension/helpers/protocolParser';
 import { IProtocolParser } from '../../client/debugger/extension/types';
 import { IInterpreterService } from '../../client/interpreter/contracts';
-import { registerInterpreterTypes } from '../../client/interpreter/serviceRegistry';
 import { EnvironmentType, PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { registerForIOC } from '../../client/pythonEnvironments/legacyIOC';
 import { CodeExecutionHelper } from '../../client/terminals/codeExecution/helper';
@@ -919,7 +918,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             this.serviceManager.addSingleton<IPythonExecutionFactory>(IPythonExecutionFactory, PythonExecutionFactory);
 
             // Make sure full interpreter services are available.
-            registerInterpreterTypes(this.serviceManager);
+            // registerInterpreterTypes(this.serviceManager);
             registerForIOC(this.serviceManager, this.serviceContainer);
 
             this.serviceManager.addSingleton<IJupyterSessionManagerFactory>(

@@ -9,8 +9,6 @@ import { Commands as DSCommands } from '../../datascience/constants';
 import { KernelConnectionMetadata } from '../../datascience/jupyter/kernels/types';
 import { INotebookModel, ISwitchKernelOptions } from '../../datascience/types';
 import { CommandSource } from '../../testing/common/constants';
-import { TestFunction, TestsToRun } from '../../testing/common/types';
-import { TestDataItem, TestWorkspaceFolder } from '../../testing/types';
 import { Commands } from '../constants';
 import { Channel } from './types';
 
@@ -40,7 +38,6 @@ interface ICommandNameWithoutArgumentTypeMapping {
     ['editor.action.formatDocument']: [];
     ['editor.action.rename']: [];
     ['python.datascience.selectJupyterInterpreter']: [];
-    [Commands.ViewOutput]: [];
     [Commands.Set_Linter]: [];
     [Commands.Start_REPL]: [];
     [Commands.Enable_SourceMap_Support]: [];
@@ -117,39 +114,10 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [Commands.Tests_Select_And_Run_File]: [undefined, CommandSource];
     [Commands.Tests_Run_Current_File]: [undefined, CommandSource];
     [Commands.Tests_Stop]: [undefined, Uri];
-    [Commands.Test_Reveal_Test_Item]: [TestDataItem];
-    // When command is invoked from a tree node, first argument is the node data.
-    [Commands.Tests_Run]: [
-        undefined | TestWorkspaceFolder,
-        undefined | CommandSource,
-        undefined | Uri,
-        undefined | TestsToRun
-    ];
-    // When command is invoked from a tree node, first argument is the node data.
-    [Commands.Tests_Debug]: [
-        undefined | TestWorkspaceFolder,
-        undefined | CommandSource,
-        undefined | Uri,
-        undefined | TestsToRun
-    ];
-    [Commands.Tests_Run_Parametrized]: [undefined, undefined | CommandSource, Uri, TestFunction[], boolean];
-    // When command is invoked from a tree node, first argument is the node data.
-    [Commands.Tests_Discover]: [undefined | TestWorkspaceFolder, undefined | CommandSource, undefined | Uri];
     [Commands.Tests_Run_Failed]: [undefined, CommandSource, Uri];
     [Commands.Tests_Select_And_Debug_Method]: [undefined, CommandSource, Uri];
     [Commands.Tests_Select_And_Run_Method]: [undefined, CommandSource, Uri];
     [Commands.Tests_Configure]: [undefined, undefined | CommandSource, undefined | Uri];
-    [Commands.Tests_Picker_UI]: [undefined, undefined | CommandSource, Uri, TestFunction[]];
-    [Commands.Tests_Picker_UI_Debug]: [undefined, undefined | CommandSource, Uri, TestFunction[]];
-    // When command is invoked from a tree node, first argument is the node data.
-    [Commands.runTestNode]: [TestDataItem];
-    // When command is invoked from a tree node, first argument is the node data.
-    [Commands.debugTestNode]: [TestDataItem];
-    // When command is invoked from a tree node, first argument is the node data.
-    [Commands.openTestNodeInEditor]: [TestDataItem];
-    [Commands.navigateToTestFile]: [Uri, TestDataItem, boolean];
-    [Commands.navigateToTestFunction]: [Uri, TestDataItem, boolean];
-    [Commands.navigateToTestSuite]: [Uri, TestDataItem, boolean];
     [DSCommands.ExportFileAndOutputAsNotebook]: [Uri];
     [DSCommands.RunAllCells]: [Uri];
     [DSCommands.RunCell]: [Uri, number, number, number, number];

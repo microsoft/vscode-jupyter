@@ -1,9 +1,9 @@
-import { Disposable, QuickPickItem } from 'vscode';
+import { QuickPickItem } from 'vscode';
 import { Resource } from '../../common/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 
 export const IInterpreterSelector = Symbol('IInterpreterSelector');
-export interface IInterpreterSelector extends Disposable {
+export interface IInterpreterSelector {
     getSuggestions(resource: Resource): Promise<IInterpreterQuickPickItem[]>;
 }
 

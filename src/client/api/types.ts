@@ -7,6 +7,11 @@ import { InstallerResponse, Product, Resource } from '../common/types';
 import { IInterpreterQuickPickItem } from '../interpreter/configuration/types';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 
+export const IPythonApiProvider = Symbol('IPythonApi');
+export interface IPythonApiProvider {
+    getApi(): Promise<PythonApi>;
+    setApi(api: PythonApi): void;
+}
 export type PythonApi = {
     /**
      * IInterpreterService
@@ -43,3 +48,8 @@ export type PythonApi = {
      */
     install(product: Product, resource?: InterpreterUri, cancel?: CancellationToken): Promise<InstallerResponse>;
 };
+
+export const IPythonInstaller = Symbol('IPythonInstaller');
+export interface IPythonInstaller {
+    install(product: Product, resource?: InterpreterUri, cancel?: CancellationToken): Promise<InstallerResponse>;
+}

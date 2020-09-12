@@ -5,12 +5,12 @@
 
 import { Event } from 'vscode';
 import { NotebookCell } from 'vscode-proposed';
+import { PythonApiProvider } from './api/pythonApi';
+import { PythonApi } from './api/types';
 import { isTestExecution } from './common/constants';
 import { traceError } from './common/logger';
-import { IConfigurationService, Resource } from './common/types';
 import { IDataViewerDataProvider, IDataViewerFactory } from './datascience/data-viewing/types';
 import { IJupyterUriProvider, IJupyterUriProviderRegistration, INotebookExtensibility } from './datascience/types';
-import { getDebugpyLauncherArgs, getDebugpyPackagePath } from './debugger/extension/adapter/remoteLaunchers';
 import { IServiceContainer, IServiceManager } from './ioc/types';
 
 /*
@@ -25,68 +25,20 @@ export interface IExtensionApi {
      * @memberof IExtensionApi
      */
     ready: Promise<void>;
-    debug: {
-        /**
-         * Generate an array of strings for commands to pass to the Python executable to launch the debugger for remote debugging.
-         * Users can append another array of strings of what they want to execute along with relevant arguments to Python.
-         * E.g `['/Users/..../pythonVSCode/pythonFiles/lib/python/debugpy', '--listen', 'localhost:57039', '--wait-for-client']`
-         * @param {string} host
-         * @param {number} port
-         * @param {boolean} [waitUntilDebuggerAttaches=true]
-         * @returns {Promise<string[]>}
-         */
-        getRemoteLauncherCommand(host: string, port: number, waitUntilDebuggerAttaches: boolean): Promise<string[]>;
-
-        /**
-         * Gets the path to the debugger package used by the extension.
-         * @returns {Promise<string>}
-         */
-        getDebuggerPackagePath(): Promise<string | undefined>;
-    };
+    readonly onKernelPostExecute: Event<NotebookCell>;
+    readonly onKernelRestart: Event<void>;
     /**
-     * Return internal settings within the extension which are stored in VSCode storage
+     * Launches Data Viewer component.
+     * @param {IDataViewerDataProvider} dataProvider Instance that will be used by the Data Viewer component to fetch data.
+     * @param {string} title Data Viewer title
      */
-    settings: {
-        /**
-         * Returns all the details the consumer needs to execute code within the selected environment,
-         * corresponding to the specified resource taking into account any workspace-specific settings
-         * for the workspace to which this resource belongs.
-         * @param {Resource} [resource] A resource for which the setting is asked for.
-         * * When no resource is provided, the setting scoped to the first workspace folder is returned.
-         * * If no folder is present, it returns the global setting.
-         * @returns {({ execCommand: string[] | undefined })}
-         */
-        getExecutionDetails(
-            resource?: Resource
-        ): {
-            /**
-             * E.g of execution commands returned could be,
-             * * `['<path to the interpreter set in settings>']`
-             * * `['<path to the interpreter selected by the extension when setting is not set>']`
-             * * `['conda', 'run', 'python']` which is used to run from within Conda environments.
-             * or something similar for some other Python environments.
-             *
-             * @type {(string[] | undefined)} When return value is `undefined`, it means no interpreter is set.
-             * Otherwise, join the items returned using space to construct the full execution command.
-             */
-            execCommand: string[] | undefined;
-        };
-    };
-    datascience: {
-        readonly onKernelPostExecute: Event<NotebookCell>;
-        readonly onKernelRestart: Event<void>;
-        /**
-         * Launches Data Viewer component.
-         * @param {IDataViewerDataProvider} dataProvider Instance that will be used by the Data Viewer component to fetch data.
-         * @param {string} title Data Viewer title
-         */
-        showDataViewer(dataProvider: IDataViewerDataProvider, title: string): Promise<void>;
-        /**
-         * Registers a remote server provider component that's used to pick remote jupyter server URIs
-         * @param serverProvider object called back when picking jupyter server URI
-         */
-        registerRemoteServerProvider(serverProvider: IJupyterUriProvider): void;
-    };
+    showDataViewer(dataProvider: IDataViewerDataProvider, title: string): Promise<void>;
+    /**
+     * Registers a remote server provider component that's used to pick remote jupyter server URIs
+     * @param serverProvider object called back when picking jupyter server URI
+     */
+    registerRemoteServerProvider(serverProvider: IJupyterUriProvider): void;
+    registerPythonApi(pythonApi: PythonApi): void;
 }
 
 export function buildApi(
@@ -95,51 +47,32 @@ export function buildApi(
     serviceManager: IServiceManager,
     serviceContainer: IServiceContainer
 ): IExtensionApi {
-    const configurationService = serviceContainer.get<IConfigurationService>(IConfigurationService);
     const notebookExtensibility = serviceContainer.get<INotebookExtensibility>(INotebookExtensibility);
+    let registered = false;
     const api: IExtensionApi = {
         // 'ready' will propagate the exception, but we must log it here first.
         ready: ready.catch((ex) => {
             traceError('Failure during activation.', ex);
             return Promise.reject(ex);
         }),
-        debug: {
-            async getRemoteLauncherCommand(
-                host: string,
-                port: number,
-                waitUntilDebuggerAttaches: boolean = true
-            ): Promise<string[]> {
-                return getDebugpyLauncherArgs({
-                    host,
-                    port,
-                    waitUntilDebuggerAttaches
-                });
-            },
-            async getDebuggerPackagePath(): Promise<string | undefined> {
-                return getDebugpyPackagePath();
+        registerPythonApi: (pythonApi: PythonApi) => {
+            if (registered) {
+                return;
             }
+            registered = true;
+            const apiProvider = serviceContainer.get<PythonApiProvider>(PythonApiProvider);
+            apiProvider.setApi(pythonApi);
         },
-        settings: {
-            getExecutionDetails(resource?: Resource) {
-                const pythonPath = configurationService.getSettings(resource).pythonPath;
-                // If pythonPath equals an empty string, no interpreter is set.
-                return { execCommand: pythonPath === '' ? undefined : [pythonPath] };
-            }
+        async showDataViewer(dataProvider: IDataViewerDataProvider, title: string): Promise<void> {
+            const dataViewerProviderService = serviceContainer.get<IDataViewerFactory>(IDataViewerFactory);
+            await dataViewerProviderService.create(dataProvider, title);
         },
-        datascience: {
-            async showDataViewer(dataProvider: IDataViewerDataProvider, title: string): Promise<void> {
-                const dataViewerProviderService = serviceContainer.get<IDataViewerFactory>(IDataViewerFactory);
-                await dataViewerProviderService.create(dataProvider, title);
-            },
-            registerRemoteServerProvider(picker: IJupyterUriProvider): void {
-                const container = serviceContainer.get<IJupyterUriProviderRegistration>(
-                    IJupyterUriProviderRegistration
-                );
-                container.registerProvider(picker);
-            },
-            onKernelPostExecute: notebookExtensibility.onKernelPostExecute,
-            onKernelRestart: notebookExtensibility.onKernelRestart
-        }
+        registerRemoteServerProvider(picker: IJupyterUriProvider): void {
+            const container = serviceContainer.get<IJupyterUriProviderRegistration>(IJupyterUriProviderRegistration);
+            container.registerProvider(picker);
+        },
+        onKernelPostExecute: notebookExtensibility.onKernelPostExecute,
+        onKernelRestart: notebookExtensibility.onKernelRestart
     };
 
     // In test environment return the DI Container.

@@ -13,7 +13,6 @@ import { convertStat, FileSystem, FileSystemUtils, RawFileSystem } from '../clie
 import { PathUtils } from '../client/common/platform/pathUtils';
 import { PlatformService } from '../client/common/platform/platformService';
 import { RegistryImplementation } from '../client/common/platform/registry';
-import { registerTypes as platformRegisterTypes } from '../client/common/platform/serviceRegistry';
 import { FileStat, FileType, IFileSystem, IPlatformService, IRegistry } from '../client/common/platform/types';
 import { BufferDecoder } from '../client/common/process/decoder';
 import { ProcessService } from '../client/common/process/proc';
@@ -39,18 +38,12 @@ import {
 } from '../client/common/types';
 import { createDeferred } from '../client/common/utils/async';
 import { registerTypes as variableRegisterTypes } from '../client/common/variables/serviceRegistry';
-import { registerTypes as formattersRegisterTypes } from '../client/formatters/serviceRegistry';
 import { IEnvironmentActivationService } from '../client/interpreter/activation/types';
-import { IInterpreterService } from '../client/interpreter/contracts';
-import { InterpreterService } from '../client/interpreter/interpreterService';
-import { registerInterpreterTypes } from '../client/interpreter/serviceRegistry';
 import { ServiceContainer } from '../client/ioc/container';
 import { ServiceManager } from '../client/ioc/serviceManager';
 import { IServiceContainer, IServiceManager } from '../client/ioc/types';
-import { registerTypes as lintersRegisterTypes } from '../client/linters/serviceRegistry';
 import { registerForIOC } from '../client/pythonEnvironments/legacyIOC';
 import { TEST_OUTPUT_CHANNEL } from '../client/testing/common/constants';
-import { registerTypes as unittestsRegisterTypes } from '../client/testing/serviceRegistry';
 import { MockOutputChannel } from './mockClasses';
 import { MockMemento } from './mocks/mementos';
 import { MockProcessService } from './mocks/proc';
@@ -234,21 +227,9 @@ export class IocContainer {
     public registerVariableTypes() {
         variableRegisterTypes(this.serviceManager);
     }
-    public registerUnitTestTypes() {
-        unittestsRegisterTypes(this.serviceManager);
-    }
-    public registerLinterTypes() {
-        lintersRegisterTypes(this.serviceManager);
-    }
-    public registerFormatterTypes() {
-        formattersRegisterTypes(this.serviceManager);
-    }
-    public registerPlatformTypes() {
-        platformRegisterTypes(this.serviceManager);
-    }
     public registerInterpreterTypes() {
         // This method registers all interpreter types except `IInterpreterAutoSeletionProxyService` & `IEnvironmentActivationService`, as it's already registered in the constructor & registerMockProcessTypes() respectively
-        registerInterpreterTypes(this.serviceManager);
+        // registerInterpreterTypes(this.serviceManager);
     }
     public registerMockProcessTypes() {
         this.serviceManager.addSingleton<IBufferDecoder>(IBufferDecoder, BufferDecoder);
@@ -278,7 +259,7 @@ export class IocContainer {
     }
 
     public registerMockInterpreterTypes() {
-        this.serviceManager.addSingleton<IInterpreterService>(IInterpreterService, InterpreterService);
+        // this.serviceManager.addSingleton<IInterpreterService>(IInterpreterService, InterpreterService);
         this.serviceManager.addSingleton<IRegistry>(IRegistry, RegistryImplementation);
         registerForIOC(this.serviceManager, this.serviceContainer);
     }

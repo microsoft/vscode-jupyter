@@ -35,7 +35,7 @@ import {
     INotebookEditorProvider,
     INotebookServer
 } from '../../client/datascience/types';
-import { InterpreterService } from '../../client/interpreter/interpreterService';
+import { IInterpreterService } from '../../client/interpreter/contracts';
 import { ServiceContainer } from '../../client/ioc/container';
 import { MockCommandManager } from './mockCommandManager';
 import { MockDocumentManager } from './mockDocumentManager';
@@ -54,7 +54,7 @@ function createTypeMoq<T>(tag: string): TypeMoq.IMock<T> {
 
 // tslint:disable:no-any no-http-string no-multiline-string max-func-body-length
 suite('Interactive window command listener', async () => {
-    const interpreterService = mock(InterpreterService);
+    const interpreterService = mock<IInterpreterService>();
     const configService = mock(ConfigurationService);
     const fileSystem = mock(DataScienceFileSystem);
     const serviceContainer = mock(ServiceContainer);

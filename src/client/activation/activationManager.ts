@@ -5,7 +5,6 @@
 
 import { inject, injectable, multiInject } from 'inversify';
 import { TextDocument } from 'vscode';
-import { IApplicationDiagnostics } from '../application/types';
 import { IActiveResourceService, IDocumentManager, IWorkspaceService } from '../common/application/types';
 import { PYTHON_LANGUAGE } from '../common/constants';
 import { DeprecatePythonPath } from '../common/experiments/groups';
@@ -29,7 +28,6 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
         private readonly singleActivationServices: IExtensionSingleActivationService[],
         @inject(IDocumentManager) private readonly documentManager: IDocumentManager,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
-        @inject(IApplicationDiagnostics) private readonly appDiagnostics: IApplicationDiagnostics,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IFileSystem) private readonly fileSystem: IFileSystem,
         @inject(IActiveResourceService) private readonly activeResourceService: IActiveResourceService,
@@ -74,7 +72,6 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
         await sendActivationTelemetry(this.fileSystem, this.workspaceService, resource);
 
         await Promise.all(this.activationServices.map((item) => item.activate(resource)));
-        await this.appDiagnostics.performPreStartupHealthCheck(resource);
     }
     public async initialize() {
         this.addHandlers();

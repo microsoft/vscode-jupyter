@@ -9,11 +9,11 @@ import { CodeActionKind, debug, DebugConfigurationProvider, languages, OutputCha
 
 import { registerTypes as activationRegisterTypes } from './activation/serviceRegistry';
 import { IExtensionActivationManager, ILanguageServerExtension } from './activation/types';
+import { registerTypes as registerApiTypes } from './api/serviceRegistry';
 import { registerTypes as appRegisterTypes } from './application/serviceRegistry';
-import { IApplicationDiagnostics } from './application/types';
 import { DebugService } from './common/application/debugService';
 import { IApplicationEnvironment, ICommandManager } from './common/application/types';
-import { Commands, PYTHON, PYTHON_LANGUAGE, STANDARD_OUTPUT_CHANNEL, UseProposedApi } from './common/constants';
+import { PYTHON, PYTHON_LANGUAGE, STANDARD_OUTPUT_CHANNEL, UseProposedApi } from './common/constants';
 import { registerTypes as installerRegisterTypes } from './common/installer/serviceRegistry';
 import { registerTypes as platformRegisterTypes } from './common/platform/serviceRegistry';
 import { IFileSystem } from './common/platform/types';
@@ -39,7 +39,6 @@ import { IDebugSessionEventHandlers } from './debugger/extension/hooks/types';
 import { registerTypes as debugConfigurationRegisterTypes } from './debugger/extension/serviceRegistry';
 import { IDebugConfigurationService, IDebuggerBanner } from './debugger/extension/types';
 import { registerTypes as formattersRegisterTypes } from './formatters/serviceRegistry';
-import { registerTypes as interpretersRegisterTypes } from './interpreter/serviceRegistry';
 import { IServiceContainer, IServiceManager } from './ioc/types';
 import { getLanguageConfiguration } from './language/languageConfiguration';
 import { LinterCommands } from './linters/linterCommands';
@@ -53,11 +52,6 @@ import { activateSimplePythonRefactorProvider } from './providers/simpleRefactor
 import { ISortImportsEditingProvider } from './providers/types';
 import { setExtensionInstallTelemetryProperties } from './telemetry/extensionInstallTelemetry';
 import { registerTypes as commonRegisterTerminalTypes } from './terminals/serviceRegistry';
-import { ICodeExecutionManager, ITerminalAutoActivation } from './terminals/types';
-import { TEST_OUTPUT_CHANNEL } from './testing/common/constants';
-import { ITestContextService } from './testing/common/types';
-import { ITestCodeNavigatorCommandHandler, ITestExplorerCommandHandler } from './testing/navigation/types';
-import { registerTypes as unitTestsRegisterTypes } from './testing/serviceRegistry';
 
 export async function activateComponents(
     context: IExtensionContext,
@@ -88,13 +82,12 @@ async function activateLegacy(
 
     const standardOutputChannel = window.createOutputChannel(OutputChannelNames.python());
     addOutputChannelLogging(standardOutputChannel);
-    const unitTestOutChannel = window.createOutputChannel(OutputChannelNames.pythonTest());
     const jupyterOutputChannel = window.createOutputChannel(OutputChannelNames.jupyter());
     serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, standardOutputChannel, STANDARD_OUTPUT_CHANNEL);
-    serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, unitTestOutChannel, TEST_OUTPUT_CHANNEL);
     serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, jupyterOutputChannel, JUPYTER_OUTPUT_CHANNEL);
 
     // Core registrations (non-feature specific).
+    registerApiTypes(serviceManager);
     commonRegisterTypes(serviceManager);
     platformRegisterTypes(serviceManager);
     processRegisterTypes(serviceManager);
@@ -108,9 +101,7 @@ async function activateLegacy(
     serviceManager.addSingletonInstance<boolean>(UseProposedApi, enableProposedApi);
     // Feature specific registrations.
     variableRegisterTypes(serviceManager);
-    unitTestsRegisterTypes(serviceManager);
     lintersRegisterTypes(serviceManager);
-    interpretersRegisterTypes(serviceManager);
     formattersRegisterTypes(serviceManager);
     installerRegisterTypes(serviceManager);
     commonRegisterTerminalTypes(serviceManager);
@@ -143,15 +134,9 @@ async function activateLegacy(
     dispatcher.registerEventHandlers();
 
     const cmdManager = serviceContainer.get<ICommandManager>(ICommandManager);
-    const outputChannel = serviceManager.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
-    disposables.push(cmdManager.registerCommand(Commands.ViewOutput, () => outputChannel.show()));
     cmdManager.executeCommand('setContext', 'python.vscode.channel', applicationEnv.channel).then(noop, noop);
 
-    serviceContainer.get<IApplicationDiagnostics>(IApplicationDiagnostics).register();
-    serviceContainer.get<ITestCodeNavigatorCommandHandler>(ITestCodeNavigatorCommandHandler).register();
-    serviceContainer.get<ITestExplorerCommandHandler>(ITestExplorerCommandHandler).register();
     serviceContainer.get<ILanguageServerExtension>(ILanguageServerExtension).register();
-    serviceContainer.get<ITestContextService>(ITestContextService).register();
 
     // "activate" everything else
 
@@ -159,15 +144,12 @@ async function activateLegacy(
     context.subscriptions.push(manager);
     const activationPromise = manager.activate();
 
-    serviceManager.get<ITerminalAutoActivation>(ITerminalAutoActivation).register();
     const pythonSettings = configuration.getSettings();
 
     activateSimplePythonRefactorProvider(context, standardOutputChannel, serviceContainer);
 
     const sortImports = serviceContainer.get<ISortImportsEditingProvider>(ISortImportsEditingProvider);
     sortImports.registerCommands();
-
-    serviceManager.get<ICodeExecutionManager>(ICodeExecutionManager).registerCommands();
 
     // Activate data science features
     const dataScience = serviceManager.get<IDataScience>(IDataScience);

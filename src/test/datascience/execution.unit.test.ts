@@ -57,7 +57,6 @@ import {
 } from '../../client/datascience/types';
 import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
 import { IInterpreterService } from '../../client/interpreter/contracts';
-import { InterpreterService } from '../../client/interpreter/interpreterService';
 import { ServiceContainer } from '../../client/ioc/container';
 import { EnvironmentType, PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { getOSType, OSType } from '../common';
@@ -87,7 +86,7 @@ class DisposableRegistry implements IAsyncDisposableRegistry {
 }
 
 suite('Jupyter Execution', async () => {
-    const interpreterService = mock(InterpreterService);
+    const interpreterService = mock<IInterpreterService>();
     const jupyterOutputChannel = new MockOutputChannel('');
     const executionFactory = mock(PythonExecutionFactory);
     const liveShare = mock(LiveShareApi);

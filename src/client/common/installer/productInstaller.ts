@@ -3,6 +3,7 @@
 import { inject, injectable, named } from 'inversify';
 import * as os from 'os';
 import { CancellationToken, OutputChannel, Uri } from 'vscode';
+import { IPythonInstaller } from '../../api/types';
 import '../../common/extensions';
 import * as localize from '../../common/utils/localize';
 import { Telemetry } from '../../datascience/constants';
@@ -128,10 +129,16 @@ export class DataScienceInstaller extends BaseInstaller {
         if (isResource(interpreterUri)) {
             throw new Error('All data science packages require an interpreter be passed in');
         }
+        const installer = this.serviceContainer.get<IPythonInstaller>(IPythonInstaller);
 
         // At this point we know that `interpreterUri` is of type PythonInterpreter
         const interpreter = interpreterUri as PythonEnvironment;
-        // TODO:
+        const result = await installer.install(product, interpreter);
+
+        if (result === InstallerResponse.Disabled || result === InstallerResponse.Ignore) {
+            return result;
+        }
+
         return this.isInstalled(product, interpreter).then((isInstalled) =>
             isInstalled ? InstallerResponse.Installed : InstallerResponse.Ignore
         );
