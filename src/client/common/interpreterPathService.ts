@@ -15,7 +15,6 @@ import {
     IDisposable,
     IDisposableRegistry,
     IInterpreterPathService,
-    IJupyterSettings,
     InspectInterpreterSettingType,
     InterpreterConfigurationScope,
     IPersistentState,

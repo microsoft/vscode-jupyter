@@ -14,7 +14,7 @@ import * as localize from '../../common/utils/localize';
 import { captureTelemetry } from '../../telemetry';
 import { DefaultTheme, GatherExtension, Telemetry } from '../constants';
 import { CssMessages, IGetCssRequest, IGetMonacoThemeRequest, SharedMessages } from '../messages';
-import { ICodeCssGenerator, IDataScienceExtraSettings, IThemeFinder } from '../types';
+import { ICodeCssGenerator, IJupyterExtraSettings, IThemeFinder } from '../types';
 
 @injectable() // For some reason this is necessary to get the class hierarchy to work.
 export abstract class WebviewHost<IMapping> implements IDisposable {
@@ -99,7 +99,7 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
         }
     }
 
-    protected async generateDataScienceExtraSettings(): Promise<IDataScienceExtraSettings> {
+    protected async generateDataScienceExtraSettings(): Promise<IJupyterExtraSettings> {
         const resource = this.owningResource;
         const editor = this.workspaceService.getConfiguration('editor');
         const workbench = this.workspaceService.getConfiguration('workbench');

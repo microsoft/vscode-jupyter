@@ -21,6 +21,7 @@ import {
     ILoggingSettings,
     InteractiveWindowMode,
     IVariableQuery,
+    IWatchableJupyterSettings,
     LoggingLevelSettingType,
     Resource,
     WidgetCDNs
@@ -31,7 +32,7 @@ import { SystemVariables } from './variables/systemVariables';
 // tslint:disable:no-require-imports no-var-requires
 
 // tslint:disable-next-line:completed-docs
-export class JupyterSettings implements IJupyterSettings {
+export class JupyterSettings implements IWatchableJupyterSettings {
     public get onDidChange(): Event<void> {
         return this.changed.event;
     }

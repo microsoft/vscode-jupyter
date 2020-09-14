@@ -7,8 +7,7 @@ import { IServiceContainer } from '../../ioc/types';
 import { IWorkspaceService } from '../application/types';
 import { JupyterSettings } from '../configSettings';
 import { isUnitTestExecution } from '../constants';
-import { DeprecatePythonPath } from '../experiments/groups';
-import { IConfigurationService, IExperimentsManager, IInterpreterPathService, IJupyterSettings } from '../types';
+import { IConfigurationService, IWatchableJupyterSettings } from '../types';
 
 @injectable()
 export class ConfigurationService implements IConfigurationService {
@@ -16,7 +15,7 @@ export class ConfigurationService implements IConfigurationService {
     constructor(@inject(IServiceContainer) private readonly serviceContainer: IServiceContainer) {
         this.workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
     }
-    public getSettings(resource?: Uri): IJupyterSettings {
+    public getSettings(resource?: Uri): IWatchableJupyterSettings {
         return JupyterSettings.getInstance(resource, this.workspaceService);
     }
 

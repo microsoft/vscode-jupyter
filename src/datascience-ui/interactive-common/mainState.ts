@@ -13,7 +13,7 @@ import { IJupyterSettings } from '../../client/common/types';
 import { CellMatcher } from '../../client/datascience/cellMatcher';
 import { Identifiers } from '../../client/datascience/constants';
 import { IEditorPosition } from '../../client/datascience/interactive-common/interactiveWindowTypes';
-import { CellState, ICell, IDataScienceExtraSettings, IMessageCell } from '../../client/datascience/types';
+import { CellState, ICell, IJupyterExtraSettings, IMessageCell } from '../../client/datascience/types';
 import { concatMultilineString, splitMultilineString } from '../common';
 import { createCodeCell } from '../common/cellFactory';
 import { getDefaultSettings } from '../react-common/settingsReactSide';
@@ -84,7 +84,7 @@ export type IMainState = {
     skipDefault?: boolean;
     testMode?: boolean;
     codeTheme: string;
-    settings?: IDataScienceExtraSettings;
+    settings?: IJupyterExtraSettings;
     focusPending: number;
     monacoReady: boolean;
     loaded: boolean;

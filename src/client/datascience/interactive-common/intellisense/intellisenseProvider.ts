@@ -30,7 +30,6 @@ import { Resource } from '../../../common/types';
 import { createDeferred, Deferred, sleep, waitForPromise } from '../../../common/utils/async';
 import { noop } from '../../../common/utils/misc';
 import { HiddenFileFormatString } from '../../../constants';
-import { IInterpreterService } from '../../../interpreter/contracts';
 //import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { sendTelemetryWhenDone } from '../../../telemetry';
 import { Identifiers, Settings, Telemetry } from '../../constants';

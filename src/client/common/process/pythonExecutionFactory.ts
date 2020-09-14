@@ -44,7 +44,6 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(IEnvironmentActivationService) private readonly activationHelper: IEnvironmentActivationService,
         @inject(IProcessServiceFactory) private readonly processServiceFactory: IProcessServiceFactory,
-        @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(IBufferDecoder) private readonly decoder: IBufferDecoder,
         @inject(IWindowsStoreInterpreter) private readonly windowsStoreInterpreter: IWindowsStoreInterpreter,
         @inject(IPlatformService) private readonly platformService: IPlatformService,

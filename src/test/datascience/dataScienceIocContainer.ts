@@ -28,41 +28,8 @@ import * as vsls from 'vsls/vscode';
 import { KernelDaemonPool } from '../../client/datascience/kernel-launcher/kernelDaemonPool';
 
 import { promisify } from 'util';
-import { LanguageServerExtensionActivationService } from '../../client/activation/activationService';
-import { LanguageServerDownloader } from '../../client/activation/common/downloader';
-import { JediExtensionActivator } from '../../client/activation/jedi';
-import { DotNetLanguageServerActivator } from '../../client/activation/languageServer/activator';
-import { LanguageServerCompatibilityService } from '../../client/activation/languageServer/languageServerCompatibilityService';
-import { LanguageServerExtension } from '../../client/activation/languageServer/languageServerExtension';
-import { DotNetLanguageServerFolderService } from '../../client/activation/languageServer/languageServerFolderService';
-import { DotNetLanguageServerPackageService } from '../../client/activation/languageServer/languageServerPackageService';
-import { DotNetLanguageServerManager } from '../../client/activation/languageServer/manager';
-import { NodeLanguageServerActivator } from '../../client/activation/node/activator';
-import { NodeLanguageServerManager } from '../../client/activation/node/manager';
-import {
-    IExtensionSingleActivationService,
-    ILanguageServerActivator,
-    ILanguageServerAnalysisOptions,
-    ILanguageServerCache,
-    ILanguageServerCompatibilityService,
-    ILanguageServerDownloader,
-    ILanguageServerExtension,
-    ILanguageServerFolderService,
-    ILanguageServerManager,
-    ILanguageServerPackageService,
-    ILanguageServerProxy,
-    LanguageServerType
-} from '../../client/activation/types';
-import { DiagnosticFilterService } from '../../client/application/diagnostics/filter';
-import {
-    DiagnosticCommandPromptHandlerService,
-    DiagnosticCommandPromptHandlerServiceId,
-    MessageCommandPrompt
-} from '../../client/application/diagnostics/promptHandler';
-import { IDiagnosticFilterService, IDiagnosticHandlerService } from '../../client/application/diagnostics/types';
 import { ApplicationEnvironment } from '../../client/common/application/applicationEnvironment';
 import { ApplicationShell } from '../../client/common/application/applicationShell';
-import { ClipboardService } from '../../client/common/application/clipboard';
 import { VSCodeNotebook } from '../../client/common/application/notebook';
 import { TerminalManager } from '../../client/common/application/terminalManager';
 import {
@@ -120,8 +87,6 @@ import {
     IProcessServiceFactory,
     IPythonExecutionFactory
 } from '../../client/common/process/types';
-import { StartPage } from '../../client/common/startPage/startPage';
-import { IStartPage } from '../../client/common/startPage/types';
 import {
     GLOBAL_MEMENTO,
     IAsyncDisposableRegistry,
@@ -129,7 +94,6 @@ import {
     IConfigurationService,
     ICryptoUtils,
     ICurrentProcess,
-    IJupyterSettings,
     IDisposable,
     IExperimentService,
     IExperimentsManager,
@@ -138,11 +102,11 @@ import {
     IHttpClient,
     IInstaller,
     IInterpreterPathService,
+    IJupyterSettings,
     IMemento,
     IOutputChannel,
     IPathUtils,
     IPersistentStateFactory,
-    IJupyterSettings,
     IsWindows,
     ProductType,
     Resource,
@@ -319,8 +283,6 @@ import { MockExtensions } from './mockExtensions';
 import { MockFileSystem } from './mockFileSystem';
 import { MockJupyterManager, SupportedCommands } from './mockJupyterManager';
 import { MockJupyterManagerFactory } from './mockJupyterManagerFactory';
-import { MockLanguageServerAnalysisOptions } from './mockLanguageServerAnalysisOptions';
-import { MockLanguageServerProxy } from './mockLanguageServerProxy';
 import { MockLiveShareApi } from './mockLiveShare';
 import { MockPythonSettings } from './mockPythonSettings';
 import { MockWorkspaceConfiguration } from './mockWorkspaceConfig';
@@ -336,6 +298,12 @@ import {
 } from './testNativeEditorProvider';
 import { TestPersistentStateFactory } from './testPersistentStateFactory';
 import { WebBrowserPanelProvider } from './uiTests/webBrowserPanelProvider';
+import { boolean } from 'yargs';
+import { IExtensionSingleActivationService } from '../../client/activation/types';
+import { DiagnosticFilterService } from '../../client/application/diagnostics/filter';
+import { MessageCommandPrompt, DiagnosticCommandPromptHandlerService, DiagnosticCommandPromptHandlerServiceId } from '../../client/application/diagnostics/promptHandler';
+import { IDiagnosticHandlerService, IDiagnosticFilterService } from '../../client/application/diagnostics/types';
+import { ClipboardService } from '../../client/common/application/clipboard';
 
 export class DataScienceIocContainer extends UnitTestIocContainer {
     public get workingInterpreter() {
@@ -403,7 +371,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     private disposed = false;
     private experimentState = new Map<string, boolean>();
     private extensionRootPath: string | undefined;
-    private languageServerType: LanguageServerType = LanguageServerType.Microsoft;
     private pendingWebPanel: IMountedWebView | undefined;
 
     constructor(private readonly uiTest: boolean = false) {
@@ -471,19 +438,12 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.settingsMap.clear();
         this.configMap.clear();
         this.setContexts = {};
-        reset(this.webPanelProvider);
-    }
-
-    //tslint:disable:max-func-body-length
+        reset(this.webPanelPruseCustomEditor: boolean = false-body-length
     public registerDataScienceTypes(
-        useCustomEditor: boolean = false,
-        languageServerType: LanguageServerType = LanguageServerType.Microsoft
+        useCustomEditor: boolean = false
     ) {
         this.serviceManager.addSingletonInstance<number>(DataScienceStartupTime, Date.now());
         this.serviceManager.addSingletonInstance<DataScienceIocContainer>(DataScienceIocContainer, this);
-
-        // Save our language server type
-        this.languageServerType = languageServerType;
 
         // Make sure the default python path is set.
         this.defaultPythonPath = this.findPythonPath();
@@ -539,7 +499,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<IPlotViewerProvider>(IPlotViewerProvider, PlotViewerProvider);
         this.serviceManager.add<IDataViewer>(IDataViewer, DataViewer);
         this.serviceManager.add<IPlotViewer>(IPlotViewer, PlotViewer);
-        this.serviceManager.add<IStartPage>(IStartPage, StartPage);
 
         const experimentService = mock(ExperimentService);
         this.serviceManager.addSingletonInstance<IExperimentService>(IExperimentService, instance(experimentService));

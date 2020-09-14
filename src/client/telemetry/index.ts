@@ -6,7 +6,6 @@ import * as stackTrace from 'stack-trace';
 // tslint:disable-next-line: import-name
 import TelemetryReporter from 'vscode-extension-telemetry/lib/telemetryReporter';
 
-import { LanguageServerType } from '../activation/types';
 import { DiagnosticCodes } from '../application/diagnostics/constants';
 import { IWorkspaceService } from '../common/application/types';
 import { AppinsightsKey, isTestExecution, isUnitTestExecution, PVSC_EXTENSION_ID } from '../common/constants';
@@ -23,7 +22,6 @@ import {
 import { ExportFormat } from '../datascience/export/types';
 import { DebugConfigurationType } from '../debugger/extension/types';
 import { ConsoleType, TriggerType } from '../debugger/types';
-import { LinterId } from '../linters/types';
 import { EnvironmentType } from '../pythonEnvironments/info';
 import { EventName, PlatformErrors } from './constants';
 import { LinterTrigger } from './types';
@@ -795,26 +793,6 @@ export interface IEventNamePropertyMapping {
     };
     [EventName.HASHED_PACKAGE_PERF]: never | undefined;
     /**
-     * Telemetry event sent with details of selection in prompt
-     * `Prompt message` :- 'Linter ${productName} is not installed'
-     */
-    [EventName.LINTER_NOT_INSTALLED_PROMPT]: {
-        /**
-         * Name of the linter
-         *
-         * @type {LinterId}
-         */
-        tool?: LinterId;
-        /**
-         * `select` When 'Select linter' option is selected
-         * `disablePrompt` When 'Do not show again' option is selected
-         * `install` When 'Install' option is selected
-         *
-         * @type {('select' | 'disablePrompt' | 'install')}
-         */
-        action: 'select' | 'disablePrompt' | 'install';
-    };
-    /**
      * Telemetry event sent when installing modules
      */
     [EventName.PYTHON_INSTALL_PACKAGE]: {
@@ -824,35 +802,6 @@ export interface IEventNamePropertyMapping {
          * @type {string}
          */
         installer: string;
-    };
-    /**
-     * Telemetry sent with details immediately after linting a document completes
-     */
-    [EventName.LINTING]: {
-        /**
-         * Name of the linter being used
-         *
-         * @type {LinterId}
-         */
-        tool: LinterId;
-        /**
-         * If custom arguments for linter is provided in settings.json
-         *
-         * @type {boolean}
-         */
-        hasCustomArgs: boolean;
-        /**
-         * Carries the source which triggered configuration of tests
-         *
-         * @type {LinterTrigger}
-         */
-        trigger: LinterTrigger;
-        /**
-         * Carries `true` if linter executable is specified, `false` otherwise
-         *
-         * @type {boolean}
-         */
-        executableSpecified: boolean;
     };
     /**
      * Telemetry event sent after fetching the OS version
@@ -1134,19 +1083,6 @@ export interface IEventNamePropertyMapping {
         selection: 'Reload' | undefined;
     };
     /**
-     * Telemetry sent with details about the current selection of language server
-     */
-    [EventName.PYTHON_LANGUAGE_SERVER_CURRENT_SELECTION]: {
-        /**
-         * The startup value of the language server setting
-         */
-        lsStartup?: LanguageServerType;
-        /**
-         * Used to track switch between language servers. Carries the final state after the switch.
-         */
-        switchTo?: LanguageServerType;
-    };
-    /**
      * Telemetry event sent with details after attempting to download LS
      */
     [EventName.PYTHON_LANGUAGE_SERVER_DOWNLOADED]: {
@@ -1386,39 +1322,6 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when starting REPL
      */
     [EventName.REPL]: never | undefined;
-    /**
-     * Telemetry event sent with details of linter selected in quickpick of linter list.
-     */
-    [EventName.SELECT_LINTER]: {
-        /**
-         * The name of the linter
-         */
-        tool?: LinterId;
-        /**
-         * Carries `true` if linter is enabled, `false` otherwise
-         */
-        enabled: boolean;
-    };
-    /**
-     * Telemetry event sent with details when clicking the prompt with the following message,
-     * `Prompt message` :- 'You have a pylintrc file in your workspace. Do you want to enable pylint?'
-     */
-    [EventName.CONFIGURE_AVAILABLE_LINTER_PROMPT]: {
-        /**
-         * Name of the linter tool
-         *
-         * @type {LinterId}
-         */
-        tool: LinterId;
-        /**
-         * `enable` When 'Enable [linter name]' option is clicked
-         * `ignore` When 'Not now' option is clicked
-         * `disablePrompt` When 'Do not show again` option is clicked
-         *
-         * @type {('enable' | 'ignore' | 'disablePrompt' | undefined)}
-         */
-        action: 'enable' | 'ignore' | 'disablePrompt' | undefined;
-    };
     /**
      * Telemetry event sent when providing help for the signature at the given position and document.
      */

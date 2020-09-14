@@ -12,7 +12,7 @@ import { IDocumentManager, IWorkspaceService } from '../../client/common/applica
 import { WorkspaceService } from '../../client/common/application/workspace';
 import { JupyterSettings } from '../../client/common/configSettings';
 import { ConfigurationService } from '../../client/common/configuration/service';
-import { IConfigurationService, IJupyterSettings } from '../../client/common/types';
+import { IConfigurationService, IJupyterSettings, IWatchableJupyterSettings } from '../../client/common/types';
 import { CommandRegistry } from '../../client/datascience/commands/commandRegistry';
 import { pruneCell } from '../../client/datascience/common';
 import { DataScience } from '../../client/datascience/datascience';
@@ -28,7 +28,7 @@ suite('DataScience Tests', () => {
     let docManager: IDocumentManager;
     let workspaceService: IWorkspaceService;
     let cmdRegistry: CommandRegistry;
-    let settings: IJupyterSettings;
+    let settings: IWatchableJupyterSettings;
     let onDidChangeSettings: sinon.SinonStub;
     let onDidChangeActiveTextEditor: sinon.SinonStub;
     setup(() => {
@@ -58,7 +58,6 @@ suite('DataScience Tests', () => {
         when(configService.getSettings(anything())).thenReturn(instance(settings));
         when(settings.onDidChange).thenReturn(onDidChangeSettings);
         // tslint:disable-next-line: no-any
-        when(settings.datascience).thenReturn({} as any);
         when(docManager.onDidChangeActiveTextEditor).thenReturn(onDidChangeActiveTextEditor);
     });
 

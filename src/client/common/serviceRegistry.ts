@@ -15,7 +15,6 @@ import { CommandManager } from './application/commandManager';
 import { ReloadVSCodeCommandHandler } from './application/commands/reloadCommand';
 import { CustomEditorService } from './application/customEditorService';
 import { DebugService } from './application/debugService';
-import { DebugSessionTelemetry } from './application/debugSessionTelemetry';
 import { DocumentManager } from './application/documentManager';
 import { Extensions } from './application/extensions';
 import { LanguageService } from './application/languageService';
@@ -155,10 +154,6 @@ export function registerTypes(serviceManager: IServiceManager) {
         IExtensionChannelRule,
         ExtensionInsidersWeeklyChannelRule,
         ExtensionChannel.weekly
-    );
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
-        DebugSessionTelemetry
     );
     serviceManager.addSingleton<ICustomEditorService>(ICustomEditorService, CustomEditorService);
 }

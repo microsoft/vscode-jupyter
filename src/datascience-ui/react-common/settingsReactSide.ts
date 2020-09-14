@@ -3,17 +3,21 @@
 'use strict';
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 
-import { IDataScienceExtraSettings } from '../../client/datascience/types';
+import { IJupyterExtraSettings } from '../../client/datascience/types';
 
 export function getDefaultSettings() {
     // Default settings for tests
     // tslint:disable-next-line: no-unnecessary-local-variable
-    const result: IDataScienceExtraSettings = {
+    const result: IJupyterExtraSettings = {
+        insidersChannel: 'off',
+        experiments: { enabled: true, optInto: [], optOutFrom: [] },
+        logging: {
+            level: 'off'
+        },
         allowImportFromNotebook: true,
         alwaysTrustNotebooks: true,
         jupyterLaunchTimeout: 10,
         jupyterLaunchRetries: 3,
-        enabled: true,
         jupyterServerURI: 'local',
         // tslint:disable-next-line: no-invalid-template-strings
         notebookFileRoot: '${fileDirname}',
@@ -85,7 +89,7 @@ export function getDefaultSettings() {
 }
 
 //tslint:disable:no-any
-export function computeEditorOptions(settings: IDataScienceExtraSettings): monacoEditor.editor.IEditorOptions {
+export function computeEditorOptions(settings: IJupyterExtraSettings): monacoEditor.editor.IEditorOptions {
     const intellisenseOptions = settings.intellisenseOptions;
     const extraSettings = settings.extraSettings;
     if (intellisenseOptions && extraSettings) {

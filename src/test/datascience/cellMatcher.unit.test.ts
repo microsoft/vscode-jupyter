@@ -14,7 +14,8 @@ suite('DataScience CellMatcher', () => {
         assert.ok(matcher1.isMarkdown('# %% [markdown]'), 'Base markdown is wrong');
         assert.equal(matcher1.exec('# %% TITLE'), 'TITLE', 'Title not found');
 
-        settings.defaultCellMarker = '# %% CODE HERE';
+        // tslint:disable-next-line: no-any
+        (<any>settings).defaultCellMarker = '# %% CODE HERE';
         const matcher2 = new CellMatcher(settings);
         assert.ok(matcher2.isCode('# %%'), 'Code not found');
         assert.ok(matcher2.isCode('# %% CODE HERE'), 'Code not found');

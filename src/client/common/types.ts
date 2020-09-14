@@ -159,7 +159,6 @@ export interface ICurrentProcess {
 
 export interface IJupyterSettings {
     readonly insidersChannel: ExtensionChannels;
-    readonly onDidChange: Event<void>;
     readonly experiments: IExperiments;
     readonly logging: ILoggingSettings;
     readonly allowUnauthorizedRemoteConnection?: boolean;
@@ -220,115 +219,15 @@ export interface IJupyterSettings {
     readonly showKernelSelectionOnInteractiveWindow?: boolean;
     readonly interactiveWindowMode: InteractiveWindowMode;
 }
-export interface ISortImportSettings {
-    readonly path: string;
-    readonly args: string[];
-}
 
-export interface ITestingSettings {
-    readonly promptToConfigure: boolean;
-    readonly debugPort: number;
-    readonly nosetestsEnabled: boolean;
-    nosetestPath: string;
-    nosetestArgs: string[];
-    readonly pytestEnabled: boolean;
-    pytestPath: string;
-    pytestArgs: string[];
-    readonly unittestEnabled: boolean;
-    unittestArgs: string[];
-    cwd?: string;
-    readonly autoTestDiscoverOnSaveEnabled: boolean;
-}
-export interface IPylintCategorySeverity {
-    readonly convention: DiagnosticSeverity;
-    readonly refactor: DiagnosticSeverity;
-    readonly warning: DiagnosticSeverity;
-    readonly error: DiagnosticSeverity;
-    readonly fatal: DiagnosticSeverity;
-}
-export interface IPycodestyleCategorySeverity {
-    readonly W: DiagnosticSeverity;
-    readonly E: DiagnosticSeverity;
-}
-// tslint:disable-next-line:interface-name
-export interface Flake8CategorySeverity {
-    readonly F: DiagnosticSeverity;
-    readonly E: DiagnosticSeverity;
-    readonly W: DiagnosticSeverity;
-}
-export interface IMypyCategorySeverity {
-    readonly error: DiagnosticSeverity;
-    readonly note: DiagnosticSeverity;
+export interface IWatchableJupyterSettings extends IJupyterSettings {
+    readonly onDidChange: Event<void>;
 }
 
 export type LoggingLevelSettingType = 'off' | 'error' | 'warn' | 'info' | 'debug';
 
 export interface ILoggingSettings {
     readonly level: LogLevel | 'off';
-}
-export interface ILintingSettings {
-    readonly enabled: boolean;
-    readonly ignorePatterns: string[];
-    readonly prospectorEnabled: boolean;
-    readonly prospectorArgs: string[];
-    readonly pylintEnabled: boolean;
-    readonly pylintArgs: string[];
-    readonly pycodestyleEnabled: boolean;
-    readonly pycodestyleArgs: string[];
-    readonly pylamaEnabled: boolean;
-    readonly pylamaArgs: string[];
-    readonly flake8Enabled: boolean;
-    readonly flake8Args: string[];
-    readonly pydocstyleEnabled: boolean;
-    readonly pydocstyleArgs: string[];
-    readonly lintOnSave: boolean;
-    readonly maxNumberOfProblems: number;
-    readonly pylintCategorySeverity: IPylintCategorySeverity;
-    readonly pycodestyleCategorySeverity: IPycodestyleCategorySeverity;
-    readonly flake8CategorySeverity: Flake8CategorySeverity;
-    readonly mypyCategorySeverity: IMypyCategorySeverity;
-    prospectorPath: string;
-    pylintPath: string;
-    pycodestylePath: string;
-    pylamaPath: string;
-    flake8Path: string;
-    pydocstylePath: string;
-    mypyEnabled: boolean;
-    mypyArgs: string[];
-    mypyPath: string;
-    banditEnabled: boolean;
-    banditArgs: string[];
-    banditPath: string;
-    readonly pylintUseMinimalCheckers: boolean;
-}
-export interface IFormattingSettings {
-    readonly provider: string;
-    autopep8Path: string;
-    readonly autopep8Args: string[];
-    blackPath: string;
-    readonly blackArgs: string[];
-    yapfPath: string;
-    readonly yapfArgs: string[];
-}
-export interface IAutoCompleteSettings {
-    readonly addBrackets: boolean;
-    readonly extraPaths: string[];
-    readonly showAdvancedMembers: boolean;
-    readonly typeshedPaths: string[];
-}
-export interface IWorkspaceSymbolSettings {
-    readonly enabled: boolean;
-    tagFilePath: string;
-    readonly rebuildOnStart: boolean;
-    readonly rebuildOnFileSave: boolean;
-    readonly ctagsPath: string;
-    readonly exclusionPatterns: string[];
-}
-export interface ITerminalSettings {
-    readonly executeInFileDir: boolean;
-    readonly launchArgs: string[];
-    readonly activateEnvironment: boolean;
-    readonly activateEnvInCurrentTerminal: boolean;
 }
 
 export interface IExperiments {
@@ -377,7 +276,7 @@ export type WidgetCDNs = 'unpkg.com' | 'jsdelivr.com';
 
 export const IConfigurationService = Symbol('IConfigurationService');
 export interface IConfigurationService {
-    getSettings(resource?: Uri): IJupyterSettings;
+    getSettings(resource?: Uri): IWatchableJupyterSettings;
     isTestExecution(): boolean;
     updateSetting(setting: string, value?: {}, resource?: Uri, configTarget?: ConfigurationTarget): Promise<void>;
     updateSectionSetting(

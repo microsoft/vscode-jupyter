@@ -25,7 +25,6 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
         @inject(IDisposableRegistry) disposableRegistry: Disposable[],
         @inject(IPlatformService) private platformService: IPlatformService,
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
-        @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
         @inject(ICurrentProcess) private process: ICurrentProcess,
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @optional() private cacheDuration: number = CACHE_DURATION

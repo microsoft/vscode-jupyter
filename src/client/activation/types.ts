@@ -3,24 +3,7 @@
 
 'use strict';
 
-import { SemVer } from 'semver';
-import {
-    CodeLensProvider,
-    CompletionItemProvider,
-    DefinitionProvider,
-    DocumentSymbolProvider,
-    Event,
-    HoverProvider,
-    ReferenceProvider,
-    RenameProvider,
-    SignatureHelpProvider,
-    TextDocument,
-    TextDocumentContentChangeEvent
-} from 'vscode';
-import { LanguageClient, LanguageClientOptions } from 'vscode-languageclient/node';
-import { NugetPackage } from '../common/nuget/types';
-import { IDisposable, IOutputChannel, LanguageServerDownloadChannels, Resource } from '../common/types';
-import { PythonEnvironment } from '../pythonEnvironments/info';
+import { IDisposable, Resource } from '../common/types';
 
 export const IExtensionActivationManager = Symbol('IExtensionActivationManager');
 /**
