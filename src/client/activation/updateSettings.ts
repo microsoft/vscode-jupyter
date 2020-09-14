@@ -14,7 +14,7 @@ import { traceDecorators } from '../logging';
 import { IExtensionActivationService } from './types';
 
 @injectable()
-export class UpdateSettingsService implements IExtensionActivationService {
+export class MigrateDataScienceSettingsService implements IExtensionActivationService {
     constructor(
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IApplicationEnvironment) private readonly application: IApplicationEnvironment,
@@ -24,11 +24,11 @@ export class UpdateSettingsService implements IExtensionActivationService {
         this.updateSettings(resource).ignoreErrors();
     }
     @traceDecorators.error('Failed to update test settings')
-    public async updateSettings(resource: Resource): Promise<void> {
+    private async updateSettings(resource: Resource): Promise<void> {
         const filesToBeFixed = await this.getFilesToBeFixed(resource);
         await Promise.all(filesToBeFixed.map((file) => this.fixSettingInFile(file)));
     }
-    public getSettingsFiles(resource: Resource): string[] {
+    private getSettingsFiles(resource: Resource): string[] {
         const settingsFiles: string[] = [];
         if (this.application.userSettingsFile) {
             settingsFiles.push(this.application.userSettingsFile);
@@ -39,7 +39,7 @@ export class UpdateSettingsService implements IExtensionActivationService {
         }
         return settingsFiles;
     }
-    public async getFilesToBeFixed(resource: Resource): Promise<string[]> {
+    private async getFilesToBeFixed(resource: Resource): Promise<string[]> {
         const files = this.getSettingsFiles(resource);
         const result = await Promise.all(
             files.map(async (file) => {
@@ -50,7 +50,7 @@ export class UpdateSettingsService implements IExtensionActivationService {
         return result.filter((item) => item.needsFixing).map((item) => item.file);
     }
     @swallowExceptions('Failed to update settings.json')
-    public async fixSettingInFile(filePath: string): Promise<string> {
+    private async fixSettingInFile(filePath: string): Promise<string> {
         let fileContents = await this.fs.readFile(filePath);
         fileContents = fileContents.replace(
             /"python\.dataScience\.(.*)"?/g,
@@ -60,7 +60,7 @@ export class UpdateSettingsService implements IExtensionActivationService {
         return fileContents;
     }
 
-    public async doesFileNeedToBeFixed(filePath: string): Promise<boolean> {
+    private async doesFileNeedToBeFixed(filePath: string): Promise<boolean> {
         try {
             const contents = await this.fs.readFile(filePath);
             return contents.indexOf('python.dataScience') > 0;
