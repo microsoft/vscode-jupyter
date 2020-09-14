@@ -1,13 +1,12 @@
-import { CancellationToken, Disposable, languages, OutputChannel, TextDocument } from 'vscode';
-import { IApplicationShell, ICommandManager, IDocumentManager, IWorkspaceService } from '../common/application/types';
-import { Commands, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
+import { CancellationToken, Disposable, OutputChannel, TextDocument } from 'vscode';
+import { IApplicationShell, IDocumentManager, IWorkspaceService } from '../common/application/types';
+import { STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { isNotInstalledError } from '../common/helpers';
 import { IFileSystem } from '../common/platform/types';
 import { IProcessServiceFactory } from '../common/process/types';
 import { IConfigurationService, IInstaller, InstallerResponse, IOutputChannel, Product } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { Generator } from './generator';
-import { WorkspaceSymbolProvider } from './provider';
 
 const MAX_NUMBER_OF_ATTEMPTS_TO_INSTALL_AND_BUILD = 2;
 
@@ -15,7 +14,6 @@ export class WorkspaceSymbols implements Disposable {
     private disposables: Disposable[];
     private generators: Generator[] = [];
     private readonly outputChannel: OutputChannel;
-    private commandMgr: ICommandManager;
     private fs: IFileSystem;
     private workspace: IWorkspaceService;
     private processFactory: IProcessServiceFactory;
@@ -25,7 +23,6 @@ export class WorkspaceSymbols implements Disposable {
 
     constructor(private serviceContainer: IServiceContainer) {
         this.outputChannel = this.serviceContainer.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
-        this.commandMgr = this.serviceContainer.get<ICommandManager>(ICommandManager);
         this.fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
         this.workspace = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         this.processFactory = this.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory);
@@ -36,9 +33,6 @@ export class WorkspaceSymbols implements Disposable {
         this.disposables.push(this.outputChannel);
         this.registerCommands();
         this.initializeGenerators();
-        languages.registerWorkspaceSymbolProvider(
-            new WorkspaceSymbolProvider(this.fs, this.commandMgr, this.generators)
-        );
         this.disposables.push(this.workspace.onDidChangeWorkspaceFolders(() => this.initializeGenerators()));
         this.disposables.push(this.documents.onDidSaveTextDocument((e) => this.onDocumentSaved(e)));
         this.buildSymbolsOnStart();
@@ -80,17 +74,7 @@ export class WorkspaceSymbols implements Disposable {
         }
     }
 
-    private registerCommands() {
-        this.disposables.push(
-            this.commandMgr.registerCommand(
-                Commands.Build_Workspace_Symbols,
-                async (rebuild: boolean = true, token?: CancellationToken) => {
-                    const promises = this.buildWorkspaceSymbols(rebuild, token);
-                    return Promise.all(promises);
-                }
-            )
-        );
-    }
+    private registerCommands() {}
 
     private onDocumentSaved(document: TextDocument) {
         const workspaceFolder = this.workspace.getWorkspaceFolder(document.uri);

@@ -4,7 +4,6 @@
 'use strict';
 
 import { CancellationToken, Position, TextDocument, Uri } from 'vscode';
-import { Commands as LSCommands } from '../../activation/commands';
 import { Commands as DSCommands } from '../../datascience/constants';
 import { KernelConnectionMetadata } from '../../datascience/jupyter/kernels/types';
 import { INotebookModel, ISwitchKernelOptions } from '../../datascience/types';
@@ -22,13 +21,7 @@ export type CommandsWithoutArgs = keyof ICommandNameWithoutArgumentTypeMapping;
 interface ICommandNameWithoutArgumentTypeMapping {
     [Commands.SwitchToInsidersDaily]: [];
     [Commands.SwitchToInsidersWeekly]: [];
-    [Commands.ClearWorkspaceInterpreter]: [];
-    [Commands.ResetInterpreterSecurityStorage]: [];
     [Commands.SwitchOffInsidersChannel]: [];
-    [Commands.Set_Interpreter]: [];
-    [Commands.Set_ShebangInterpreter]: [];
-    [Commands.Run_Linter]: [];
-    [Commands.Enable_Linter]: [];
     ['workbench.action.showCommands']: [];
     ['workbench.action.debug.continue']: [];
     ['workbench.action.debug.stepOver']: [];
@@ -38,17 +31,7 @@ interface ICommandNameWithoutArgumentTypeMapping {
     ['editor.action.formatDocument']: [];
     ['editor.action.rename']: [];
     ['python.datascience.selectJupyterInterpreter']: [];
-    [Commands.Set_Linter]: [];
-    [Commands.Start_REPL]: [];
     [Commands.Enable_SourceMap_Support]: [];
-    [Commands.Exec_Selection_In_Terminal]: [];
-    [Commands.Exec_Selection_In_Django_Shell]: [];
-    [Commands.Create_Terminal]: [];
-    [Commands.Tests_View_UI]: [];
-    [Commands.Tests_Ask_To_Stop_Discovery]: [];
-    [Commands.Tests_Ask_To_Stop_Test]: [];
-    [Commands.Tests_Discovering]: [];
-    [Commands.PickLocalProcess]: [];
     [DSCommands.RunCurrentCell]: [];
     [DSCommands.RunCurrentCellAdvance]: [];
     [DSCommands.ExecSelectionInInteractiveWindow]: [];
@@ -72,9 +55,6 @@ interface ICommandNameWithoutArgumentTypeMapping {
     [DSCommands.ExportOutputAsNotebook]: [];
     [DSCommands.AddCellBelow]: [];
     [DSCommands.CreateNewNotebook]: [];
-    [Commands.OpenStartPage]: [];
-    [LSCommands.ClearAnalyisCache]: [];
-    [LSCommands.RestartLS]: [];
 }
 
 /**
@@ -105,19 +85,6 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     ['vscode.open']: [Uri];
     ['workbench.action.files.saveAs']: [Uri];
     ['workbench.action.files.save']: [Uri];
-    [Commands.GetSelectedInterpreterPath]: [{ workspaceFolder: string } | string[]];
-    [Commands.Build_Workspace_Symbols]: [boolean, CancellationToken];
-    [Commands.Sort_Imports]: [undefined, Uri];
-    [Commands.Exec_In_Terminal]: [undefined, Uri];
-    [Commands.Exec_In_Terminal_Icon]: [undefined, Uri];
-    [Commands.Tests_ViewOutput]: [undefined, CommandSource];
-    [Commands.Tests_Select_And_Run_File]: [undefined, CommandSource];
-    [Commands.Tests_Run_Current_File]: [undefined, CommandSource];
-    [Commands.Tests_Stop]: [undefined, Uri];
-    [Commands.Tests_Run_Failed]: [undefined, CommandSource, Uri];
-    [Commands.Tests_Select_And_Debug_Method]: [undefined, CommandSource, Uri];
-    [Commands.Tests_Select_And_Run_Method]: [undefined, CommandSource, Uri];
-    [Commands.Tests_Configure]: [undefined, undefined | CommandSource, undefined | Uri];
     [DSCommands.ExportFileAndOutputAsNotebook]: [Uri];
     [DSCommands.RunAllCells]: [Uri];
     [DSCommands.RunCell]: [Uri, number, number, number, number];

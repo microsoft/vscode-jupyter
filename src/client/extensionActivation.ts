@@ -46,7 +46,6 @@ import { registerTypes as lintersRegisterTypes } from './linters/serviceRegistry
 import { addOutputChannelLogging, setLoggingLevel } from './logging';
 import { PythonCodeActionProvider } from './providers/codeActionProvider/pythonCodeActionProvider';
 import { PythonFormattingEditProvider } from './providers/formatProvider';
-import { ReplProvider } from './providers/replProvider';
 import { registerTypes as providersRegisterTypes } from './providers/serviceRegistry';
 import { activateSimplePythonRefactorProvider } from './providers/simpleRefactorProvider';
 import { ISortImportsEditingProvider } from './providers/types';
@@ -146,7 +145,7 @@ async function activateLegacy(
 
     const pythonSettings = configuration.getSettings();
 
-    activateSimplePythonRefactorProvider(context, standardOutputChannel, serviceContainer);
+    activateSimplePythonRefactorProvider(serviceContainer);
 
     const sortImports = serviceContainer.get<ISortImportsEditingProvider>(ISortImportsEditingProvider);
     sortImports.registerCommands();
@@ -168,8 +167,6 @@ async function activateLegacy(
     const deprecationMgr = serviceContainer.get<IFeatureDeprecationManager>(IFeatureDeprecationManager);
     deprecationMgr.initialize();
     context.subscriptions.push(deprecationMgr);
-
-    context.subscriptions.push(new ReplProvider(serviceContainer));
 
     context.subscriptions.push(
         languages.registerCodeActionsProvider(PYTHON, new PythonCodeActionProvider(), {

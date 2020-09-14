@@ -9,6 +9,7 @@ import { Event, EventEmitter } from 'vscode';
 import { traceError, traceInfo, traceWarning } from '../../common/logger';
 import { IProcessServiceFactory, ObservableExecutionResult } from '../../common/process/types';
 import { Resource } from '../../common/types';
+import { sleep } from '../../common/utils/async';
 import { noop, swallowExceptions } from '../../common/utils/misc';
 import { captureTelemetry } from '../../telemetry';
 import { Telemetry } from '../constants';
@@ -107,9 +108,9 @@ export class KernelProcess implements IKernelProcess {
                 }
             }
         );
-
+        await sleep(10_000);
         // Don't return until our heartbeat channel is open for connections
-        return this.waitForHeartbeat();
+        // return this.waitForHeartbeat();
     }
 
     public async dispose(): Promise<void> {

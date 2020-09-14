@@ -24,13 +24,13 @@ import {
 } from '../common/types';
 import { swallowExceptions } from '../common/utils/decorators';
 import { LanguageService } from '../common/utils/localize';
-import { noop } from '../common/utils/misc';
+// import { noop } from '../common/utils/misc';
 import { IInterpreterService } from '../interpreter/contracts';
 import { IServiceContainer } from '../ioc/types';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
-import { Commands } from './commands';
+// import { Commands } from './commands';
 import { LanguageServerChangeHandler } from './common/languageServerChangeHandler';
 import { RefCountedLanguageServer } from './refCountedLanguageServer';
 import {
@@ -68,15 +68,15 @@ export class LanguageServerExtensionActivationService
         this.interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
         this.output = this.serviceContainer.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
 
-        const commandManager = this.serviceContainer.get<ICommandManager>(ICommandManager);
+        // const commandManager = this.serviceContainer.get<ICommandManager>(ICommandManager);
         const disposables = serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
         disposables.push(this);
         disposables.push(this.workspaceService.onDidChangeConfiguration(this.onDidChangeConfiguration.bind(this)));
         disposables.push(this.workspaceService.onDidChangeWorkspaceFolders(this.onWorkspaceFoldersChanged, this));
         disposables.push(this.interpreterService.onDidChangeInterpreter(this.onDidChangeInterpreter.bind(this)));
-        disposables.push(
-            commandManager.registerCommand(Commands.ClearAnalyisCache, this.onClearAnalysisCaches.bind(this))
-        );
+        // disposables.push(
+        //     commandManager.registerCommand(Commands.ClearAnalyisCache, this.onClearAnalysisCaches.bind(this))
+        // );
 
         this.languageServerChangeHandler = new LanguageServerChangeHandler(
             this.getCurrentLanguageServerType(),
@@ -292,8 +292,8 @@ export class LanguageServerExtensionActivationService
         return `${resourcePortion}-${interperterPortion}`;
     }
 
-    private async onClearAnalysisCaches() {
-        const values = await Promise.all([...this.cache.values()]);
-        values.forEach((v) => (v.clearAnalysisCache ? v.clearAnalysisCache() : noop()));
-    }
+    // private async onClearAnalysisCaches() {
+    //     const values = await Promise.all([...this.cache.values()]);
+    //     values.forEach((v) => (v.clearAnalysisCache ? v.clearAnalysisCache() : noop()));
+    // }
 }
