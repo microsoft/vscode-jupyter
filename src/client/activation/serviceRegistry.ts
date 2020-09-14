@@ -74,6 +74,7 @@ import {
     IPlatformData,
     LanguageServerType
 } from './types';
+import { UpdateSettingsService } from './updateSettings';
 
 // tslint:disable-next-line: max-func-body-length
 export function registerTypes(serviceManager: IServiceManager, languageServerType: LanguageServerType) {
