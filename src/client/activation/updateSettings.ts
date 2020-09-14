@@ -13,7 +13,6 @@ import { swallowExceptions } from '../common/utils/decorators';
 import { traceDecorators } from '../logging';
 import { IExtensionActivationService } from './types';
 
-// tslint:disable-next-line:no-suspicious-comment
 @injectable()
 export class UpdateSettingsService implements IExtensionActivationService {
     constructor(
