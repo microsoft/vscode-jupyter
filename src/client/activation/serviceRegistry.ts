@@ -81,6 +81,7 @@ export function registerTypes(serviceManager: IServiceManager, languageServerTyp
     serviceManager.addBinding(ILanguageServerCache, IExtensionActivationService);
     serviceManager.addSingleton<ILanguageServerExtension>(ILanguageServerExtension, LanguageServerExtension);
     serviceManager.add<IExtensionActivationManager>(IExtensionActivationManager, ExtensionActivationManager);
+    serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, UpdateSettingsService);
 
     serviceManager.addSingleton<IPythonExtensionBanner>(
         IPythonExtensionBanner,
