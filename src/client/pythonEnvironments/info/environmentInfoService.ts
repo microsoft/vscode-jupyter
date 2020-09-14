@@ -41,13 +41,10 @@ async function buildEnvironmentInfo(interpreterPath: string): Promise<PythonEnvi
         sysVersion: interpreterInfo.sysVersion,
         architecture: interpreterInfo.architecture,
         sysPrefix: interpreterInfo.sysPrefix,
-        pipEnvWorkspaceFolder: interpreterInfo.pipEnvWorkspaceFolder,
-        companyDisplayName: '',
         displayName: '',
         envType: EnvironmentType.Unknown, // Code to handle This will be added later.
         envName: '',
-        envPath: '',
-        cachedEntry: false,
+        envPath: ''
     };
 }
 

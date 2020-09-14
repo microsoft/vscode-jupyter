@@ -51,7 +51,6 @@ export type InterpreterInformation = {
     sysVersion?: string;
     architecture: Architecture;
     sysPrefix: string;
-    pipEnvWorkspaceFolder?: string;
 };
 
 /**
@@ -67,12 +66,10 @@ export type InterpreterInformation = {
 // Note that "cachedEntry" is specific to the caching machinery
 // and doesn't really belong here.
 export type PythonEnvironment = InterpreterInformation & {
-    companyDisplayName?: string;
     displayName?: string;
     envType: EnvironmentType;
     envName?: string;
     envPath?: string;
-    cachedEntry?: boolean;
 };
 
 /**
