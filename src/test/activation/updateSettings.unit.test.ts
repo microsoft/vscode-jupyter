@@ -140,7 +140,6 @@ suite('Migrate data science settings', () => {
     }`;
 
     setup(() => {
-        // fs.addFileContents(FILEPATH, JSON.stringify(originalSettings));
         fs.addFileContents(FILEPATH, originalSettings);
         application = mock(ApplicationEnvironment);
         workspace = mock(WorkspaceService);
