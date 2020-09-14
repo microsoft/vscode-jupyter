@@ -307,7 +307,6 @@ import { ProtocolParser } from '../../client/debugger/extension/helpers/protocol
 import { IProtocolParser } from '../../client/debugger/extension/types';
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { EnvironmentType, PythonEnvironment } from '../../client/pythonEnvironments/info';
-import { registerForIOC } from '../../client/pythonEnvironments/legacyIOC';
 import { CodeExecutionHelper } from '../../client/terminals/codeExecution/helper';
 import { ICodeExecutionHelper } from '../../client/terminals/types';
 import { MockOutputChannel } from '../mockClasses';
@@ -909,17 +908,11 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             when(this.kernelServiceMock.searchAndRegisterKernel(anything(), anything())).thenResolve(undefined);
             when(this.kernelServiceMock.getKernelSpecs(anything(), anything())).thenResolve([]);
             this.serviceManager.addSingletonInstance<KernelService>(KernelService, instance(this.kernelServiceMock));
-
-            registerForIOC(this.serviceManager, this.serviceContainer);
         } else {
             this.serviceManager.addSingleton<IInstaller>(IInstaller, ProductInstaller);
             this.serviceManager.addSingleton<KernelService>(KernelService, KernelService);
             this.serviceManager.addSingleton<IProcessServiceFactory>(IProcessServiceFactory, ProcessServiceFactory);
             this.serviceManager.addSingleton<IPythonExecutionFactory>(IPythonExecutionFactory, PythonExecutionFactory);
-
-            // Make sure full interpreter services are available.
-            // registerInterpreterTypes(this.serviceManager);
-            registerForIOC(this.serviceManager, this.serviceContainer);
 
             this.serviceManager.addSingleton<IJupyterSessionManagerFactory>(
                 IJupyterSessionManagerFactory,

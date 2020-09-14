@@ -86,6 +86,7 @@
         "no-console": "off",
         "no-control-regex": "off",
         "function-paren-newline": "off",
+        "consistent-return": "off",
         "no-extend-native": "off",
         "no-multi-str": "off",
         "no-param-reassign": "off",

@@ -42,7 +42,6 @@ import { IEnvironmentActivationService } from '../client/interpreter/activation/
 import { ServiceContainer } from '../client/ioc/container';
 import { ServiceManager } from '../client/ioc/serviceManager';
 import { IServiceContainer, IServiceManager } from '../client/ioc/types';
-import { registerForIOC } from '../client/pythonEnvironments/legacyIOC';
 import { TEST_OUTPUT_CHANNEL } from '../client/testing/common/constants';
 import { MockOutputChannel } from './mockClasses';
 import { MockMemento } from './mocks/mementos';
@@ -261,7 +260,6 @@ export class IocContainer {
     public registerMockInterpreterTypes() {
         // this.serviceManager.addSingleton<IInterpreterService>(IInterpreterService, InterpreterService);
         this.serviceManager.addSingleton<IRegistry>(IRegistry, RegistryImplementation);
-        registerForIOC(this.serviceManager, this.serviceContainer);
     }
 
     public registerMockProcess() {
