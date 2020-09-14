@@ -7,19 +7,19 @@ import * as path from 'path';
 import { inject, injectable } from 'inversify';
 import { IApplicationEnvironment, IWorkspaceService } from '../common/application/types';
 import { traceError } from '../common/logger';
-import { IFileSystem } from '../common/platform/types';
 import { Resource } from '../common/types';
 import { swallowExceptions } from '../common/utils/decorators';
 import { traceDecorators } from '../logging';
 import { IExtensionActivationService } from './types';
+import { IDataScienceFileSystem } from '../datascience/types';
 
 @injectable()
 export class MigrateDataScienceSettingsService implements IExtensionActivationService {
     constructor(
-        @inject(IFileSystem) private readonly fs: IFileSystem,
+        @inject(IDataScienceFileSystem) private readonly fs: IDataScienceFileSystem,
         @inject(IApplicationEnvironment) private readonly application: IApplicationEnvironment,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
-    ) {}
+    ) { }
     public async activate(resource: Resource): Promise<void> {
         this.updateSettings(resource).ignoreErrors();
     }
@@ -50,19 +50,19 @@ export class MigrateDataScienceSettingsService implements IExtensionActivationSe
         return result.filter((item) => item.needsFixing).map((item) => item.file);
     }
     @swallowExceptions('Failed to update settings.json')
-    private async fixSettingInFile(filePath: string): Promise<string> {
-        let fileContents = await this.fs.readFile(filePath);
+    public async fixSettingInFile(filePath: string): Promise<string> {
+        let fileContents = await this.fs.readLocalFile(filePath);
         fileContents = fileContents.replace(
-            /"python\.dataScience\.(.*)"?/g,
-            (_match, capture) => `"jupyter.${capture}"`
+            /"python\.dataScience\.(.*?)":/g,
+            (_match, capture) => `"jupyter.${capture}":`
         );
-        await this.fs.writeFile(filePath, fileContents);
+        await this.fs.writeLocalFile(filePath, fileContents);
         return fileContents;
     }
 
     private async doesFileNeedToBeFixed(filePath: string): Promise<boolean> {
         try {
-            const contents = await this.fs.readFile(filePath);
+            const contents = await this.fs.readLocalFile(filePath);
             return contents.indexOf('python.dataScience') > 0;
         } catch (ex) {
             traceError('Failed to check if settings file needs to be fixed', ex);
