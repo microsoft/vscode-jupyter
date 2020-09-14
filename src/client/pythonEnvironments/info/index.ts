@@ -87,32 +87,6 @@ export function normalizeEnvironment(environment: PartialPythonEnvironment): voi
 }
 
 /**
- * Convert the Python environment type to a user-facing name.
- */
-export function getEnvironmentTypeName(environmentType: EnvironmentType) {
-    switch (environmentType) {
-        case EnvironmentType.Conda: {
-            return 'conda';
-        }
-        case EnvironmentType.Pipenv: {
-            return 'pipenv';
-        }
-        case EnvironmentType.Pyenv: {
-            return 'pyenv';
-        }
-        case EnvironmentType.Venv: {
-            return 'venv';
-        }
-        case EnvironmentType.VirtualEnv: {
-            return 'virtualenv';
-        }
-        default: {
-            return '';
-        }
-    }
-}
-
-/**
  * Determine if the given infos correspond to the same env.
  *
  * @param environment1 - one of the two envs to compare
@@ -159,8 +133,7 @@ export function updateEnvironment(environment: PartialPythonEnvironment, other: 
         'sysPrefix',
         'architecture',
         'sysVersion',
-        'version',
-        'pipEnvWorkspaceFolder',
+        'version'
     ];
     props.forEach((prop) => {
         if (!environment[prop] && other[prop]) {
