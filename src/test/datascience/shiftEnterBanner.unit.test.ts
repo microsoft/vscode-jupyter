@@ -12,7 +12,7 @@ import {
     IDataScienceSettings,
     IPersistentState,
     IPersistentStateFactory,
-    IPythonSettings
+    IJupyterSettings
 } from '../../client/common/types';
 import { Telemetry } from '../../client/datascience/constants';
 import { InteractiveShiftEnterBanner, InteractiveShiftEnterStateKeys } from '../../client/datascience/shiftEnterBanner';
@@ -156,7 +156,7 @@ function loadBanner(
         });
 
     // Config settings
-    const pythonSettings = typemoq.Mock.ofType<IPythonSettings>();
+    const pythonSettings = typemoq.Mock.ofType<IJupyterSettings>();
     const dataScienceSettings = typemoq.Mock.ofType<IDataScienceSettings>();
     dataScienceSettings.setup((d) => d.enabled).returns(() => true);
     dataScienceSettings.setup((d) => d.sendSelectionToInteractiveWindow).returns(() => false);

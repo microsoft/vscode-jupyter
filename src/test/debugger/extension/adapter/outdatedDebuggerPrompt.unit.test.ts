@@ -11,7 +11,7 @@ import { ApplicationShell } from '../../../../client/common/application/applicat
 import { IApplicationShell } from '../../../../client/common/application/types';
 import { ConfigurationService } from '../../../../client/common/configuration/service';
 import { BrowserService } from '../../../../client/common/net/browser';
-import { IBrowserService, IPythonSettings } from '../../../../client/common/types';
+import { IBrowserService, IJupyterSettings } from '../../../../client/common/types';
 import { createDeferred, sleep } from '../../../../client/common/utils/async';
 import { Common } from '../../../../client/common/utils/localize';
 import { OutdatedDebuggerPromptFactory } from '../../../../client/debugger/extension/adapter/outdatedDebuggerPrompt';
@@ -42,7 +42,7 @@ suite('Debugging - Outdated Debugger Prompt tests.', () => {
         when(configurationService.getSettings(undefined)).thenReturn(({
             experiments: { enabled: true }
             // tslint:disable-next-line: no-any
-        } as any) as IPythonSettings);
+        } as any) as IJupyterSettings);
 
         appShell = mock(ApplicationShell);
         browserService = mock(BrowserService);

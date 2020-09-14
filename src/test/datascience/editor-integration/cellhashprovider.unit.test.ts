@@ -6,7 +6,7 @@ import * as TypeMoq from 'typemoq';
 import { Position, Range, Uri } from 'vscode';
 
 import { IDebugService } from '../../../client/common/application/types';
-import { IConfigurationService, IDataScienceSettings, IPythonSettings } from '../../../client/common/types';
+import { IConfigurationService, IDataScienceSettings, IJupyterSettings } from '../../../client/common/types';
 import { CellHashProvider } from '../../../client/datascience/editor-integration/cellhashprovider';
 import {
     CellState,
@@ -31,13 +31,13 @@ suite('CellHashProvider Unit Tests', () => {
     let documentManager: MockDocumentManager;
     let configurationService: TypeMoq.IMock<IConfigurationService>;
     let dataScienceSettings: TypeMoq.IMock<IDataScienceSettings>;
-    let pythonSettings: TypeMoq.IMock<IPythonSettings>;
+    let pythonSettings: TypeMoq.IMock<IJupyterSettings>;
     let debugService: TypeMoq.IMock<IDebugService>;
     let fileSystem: TypeMoq.IMock<IDataScienceFileSystem>;
     const hashListener: HashListener = new HashListener();
     setup(() => {
         configurationService = TypeMoq.Mock.ofType<IConfigurationService>();
-        pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
+        pythonSettings = TypeMoq.Mock.ofType<IJupyterSettings>();
         dataScienceSettings = TypeMoq.Mock.ofType<IDataScienceSettings>();
         debugService = TypeMoq.Mock.ofType<IDebugService>();
         fileSystem = TypeMoq.Mock.ofType<IDataScienceFileSystem>();

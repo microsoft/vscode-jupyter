@@ -9,7 +9,7 @@ import { instance, mock } from 'ts-mockito';
 import { Uri } from 'vscode';
 import { LanguageServerType } from '../../client/activation/types';
 import { IWorkspaceService } from '../../client/common/application/types';
-import { PythonSettings } from '../../client/common/configSettings';
+import { JupyterSettings } from '../../client/common/configSettings';
 import { IConfigurationService } from '../../client/common/types';
 import { Identifiers } from '../../client/datascience/constants';
 import { IntellisenseDocument } from '../../client/datascience/interactive-common/intellisense/intellisenseDocument';
@@ -52,7 +52,7 @@ suite('DataScience Intellisense Unit Tests', () => {
     let fileSystem: TypeMoq.IMock<IDataScienceFileSystem>;
     let notebookProvider: TypeMoq.IMock<INotebookProvider>;
     let cells: ICell[] = [createEmptyCell(Identifiers.EditCellId, null)];
-    const pythonSettings = new (class extends PythonSettings {
+    const pythonSettings = new (class extends JupyterSettings {
         public fireChangeEvent() {
             this.changed.fire();
         }

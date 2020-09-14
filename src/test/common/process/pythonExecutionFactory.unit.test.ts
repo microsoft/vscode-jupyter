@@ -9,7 +9,7 @@ import { anything, instance, mock, reset, verify, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import { Uri } from 'vscode';
 
-import { PythonSettings } from '../../../client/common/configSettings';
+import { JupyterSettings } from '../../../client/common/configSettings';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import { IPlatformService } from '../../../client/common/platform/types';
 import { BufferDecoder } from '../../../client/common/process/decoder';
@@ -127,7 +127,7 @@ suite('Process - PythonExecutionFactory', () => {
             });
             teardown(() => sinon.restore());
             test('Ensure PythonExecutionService is created', async () => {
-                const pythonSettings = mock(PythonSettings);
+                const pythonSettings = mock(JupyterSettings);
                 when(processFactory.create(resource)).thenResolve(processService.object);
                 when(activationHelper.getActivatedEnvironmentVariables(resource)).thenResolve({ x: '1' });
                 when(pythonSettings.pythonPath).thenReturn('HELLO');
@@ -141,7 +141,7 @@ suite('Process - PythonExecutionFactory', () => {
             });
             test('Ensure we use an existing `create` method if there are no environment variables for the activated env', async () => {
                 const pythonPath = 'path/to/python';
-                const pythonSettings = mock(PythonSettings);
+                const pythonSettings = mock(JupyterSettings);
 
                 when(processFactory.create(resource)).thenResolve(processService.object);
                 when(pythonSettings.pythonPath).thenReturn(pythonPath);
@@ -160,7 +160,7 @@ suite('Process - PythonExecutionFactory', () => {
             });
             test('Ensure we use an existing `create` method if there are no environment variables (0 length) for the activated env', async () => {
                 const pythonPath = 'path/to/python';
-                const pythonSettings = mock(PythonSettings);
+                const pythonSettings = mock(JupyterSettings);
 
                 when(processFactory.create(resource)).thenResolve(processService.object);
                 when(pythonSettings.pythonPath).thenReturn(pythonPath);
@@ -185,7 +185,7 @@ suite('Process - PythonExecutionFactory', () => {
                     return Promise.resolve((mockExecService as any) as IPythonExecutionService);
                 };
 
-                const pythonSettings = mock(PythonSettings);
+                const pythonSettings = mock(JupyterSettings);
                 when(activationHelper.getActivatedEnvironmentVariables(resource, anything(), anything())).thenResolve({
                     x: '1'
                 });
@@ -203,7 +203,7 @@ suite('Process - PythonExecutionFactory', () => {
 
             test("Ensure `create` returns a WindowsStorePythonProcess instance if it's a windows store intepreter path", async () => {
                 const pythonPath = 'path/to/python';
-                const pythonSettings = mock(PythonSettings);
+                const pythonSettings = mock(JupyterSettings);
 
                 when(processFactory.create(resource)).thenResolve(processService.object);
                 when(pythonSettings.pythonPath).thenReturn(pythonPath);
@@ -219,7 +219,7 @@ suite('Process - PythonExecutionFactory', () => {
             });
 
             test('Create Daemon Service an invoke initialize', async () => {
-                const pythonSettings = mock(PythonSettings);
+                const pythonSettings = mock(JupyterSettings);
                 when(activationHelper.getActivatedEnvironmentVariables(resource, anything(), anything())).thenResolve({
                     x: '1'
                 });
@@ -236,7 +236,7 @@ suite('Process - PythonExecutionFactory', () => {
                 expect(initialize.callCount).to.equal(1);
             });
             test('Do not create Daemon Service for Python 2.7', async () => {
-                const pythonSettings = mock(PythonSettings);
+                const pythonSettings = mock(JupyterSettings);
                 when(activationHelper.getActivatedEnvironmentVariables(resource, anything(), anything())).thenResolve({
                     x: '1'
                 });
@@ -257,7 +257,7 @@ suite('Process - PythonExecutionFactory', () => {
                 expect(initialize.callCount).to.equal(0);
             });
             test('Create Daemon Service should return the same daemon when created one after another', async () => {
-                const pythonSettings = mock(PythonSettings);
+                const pythonSettings = mock(JupyterSettings);
                 when(activationHelper.getActivatedEnvironmentVariables(resource, anything(), anything())).thenResolve({
                     x: '1'
                 });
@@ -274,7 +274,7 @@ suite('Process - PythonExecutionFactory', () => {
                 expect(daemon1).to.equal(daemon2);
             });
             test('Create Daemon Service should return two different daemons (if python path is different)', async () => {
-                const pythonSettings = mock(PythonSettings);
+                const pythonSettings = mock(JupyterSettings);
                 when(activationHelper.getActivatedEnvironmentVariables(resource, anything(), anything())).thenResolve({
                     x: '1'
                 });
@@ -293,7 +293,7 @@ suite('Process - PythonExecutionFactory', () => {
                 expect(daemon1).to.not.equal(daemon2);
             });
             test('Create Daemon Service should return the same daemon when created in parallel', async () => {
-                const pythonSettings = mock(PythonSettings);
+                const pythonSettings = mock(JupyterSettings);
                 when(activationHelper.getActivatedEnvironmentVariables(resource, anything(), anything())).thenResolve({
                     x: '1'
                 });
@@ -312,7 +312,7 @@ suite('Process - PythonExecutionFactory', () => {
                 expect(daemon1).to.equal(daemon2);
             });
             test('Failure to create Daemon Service should return PythonExecutionService', async () => {
-                const pythonSettings = mock(PythonSettings);
+                const pythonSettings = mock(JupyterSettings);
                 const pythonExecService = ({ dummy: 1 } as any) as IPythonExecutionService;
                 when(activationHelper.getActivatedEnvironmentVariables(resource, anything(), anything())).thenResolve({
                     x: '1'

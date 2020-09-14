@@ -84,7 +84,7 @@ import {
 import { WebviewPanelProvider } from '../../client/common/application/webviewPanels/webviewPanelProvider';
 import { WorkspaceService } from '../../client/common/application/workspace';
 import { AsyncDisposableRegistry } from '../../client/common/asyncDisposableRegistry';
-import { PythonSettings } from '../../client/common/configSettings';
+import { JupyterSettings } from '../../client/common/configSettings';
 import {
     EXTENSION_ROOT_DIR,
     UseCustomEditorApi,
@@ -142,7 +142,7 @@ import {
     IOutputChannel,
     IPathUtils,
     IPersistentStateFactory,
-    IPythonSettings,
+    IJupyterSettings,
     IsWindows,
     ProductType,
     Resource,
@@ -1077,7 +1077,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         return false;
     }
 
-    public getSettings(resource?: Uri): IPythonSettings {
+    public getSettings(resource?: Uri): IJupyterSettings {
         const key = this.getResourceKey(resource);
         let setting = this.settingsMap.get(key);
         if (!setting && !this.disposed) {
@@ -1311,7 +1311,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     private getResourceKey(resource: Resource): string {
         if (!this.disposed) {
             const workspace = this.serviceManager.get<IWorkspaceService>(IWorkspaceService);
-            const workspaceFolderUri = PythonSettings.getSettingsUriAndTarget(resource, workspace).uri;
+            const workspaceFolderUri = JupyterSettings.getSettingsUriAndTarget(resource, workspace).uri;
             return workspaceFolderUri ? workspaceFolderUri.fsPath : '';
         }
         return '';

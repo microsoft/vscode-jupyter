@@ -30,7 +30,7 @@ interface ICommandNameWithoutArgumentTypeMapping {
     ['workbench.action.closeActiveEditor']: [];
     ['editor.action.formatDocument']: [];
     ['editor.action.rename']: [];
-    ['python.datascience.selectJupyterInterpreter']: [];
+    ['jupyter.selectJupyterInterpreter']: [];
     [Commands.Enable_SourceMap_Support]: [];
     [DSCommands.RunCurrentCell]: [];
     [DSCommands.RunCurrentCellAdvance]: [];
@@ -70,7 +70,7 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     ['workbench.extensions.installExtension']: [Uri | 'ms-ai-tools.jupyter'];
     ['workbench.action.files.openFolder']: [];
     ['workbench.action.openWorkspace']: [];
-    ['setContext']: [string, boolean] | ['python.vscode.channel', Channel];
+    ['setContext']: [string, boolean] | ['jupyter.vscode.channel', Channel];
     ['python.reloadVSCode']: [string];
     ['revealLine']: [{ lineNumber: number; at: 'top' | 'center' | 'bottom' }];
     ['python._loadLanguageServerExtension']: {}[];

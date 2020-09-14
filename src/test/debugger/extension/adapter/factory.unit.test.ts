@@ -15,7 +15,7 @@ import { DebugAdapterExecutable, DebugAdapterServer, DebugConfiguration, DebugSe
 import { ApplicationShell } from '../../../../client/common/application/applicationShell';
 import { IApplicationShell } from '../../../../client/common/application/types';
 import { ConfigurationService } from '../../../../client/common/configuration/service';
-import { IPythonSettings } from '../../../../client/common/types';
+import { IJupyterSettings } from '../../../../client/common/types';
 import { Architecture } from '../../../../client/common/utils/platform';
 import { EXTENSION_ROOT_DIR } from '../../../../client/constants';
 import { DebugAdapterDescriptorFactory } from '../../../../client/debugger/extension/adapter/factory';
@@ -68,7 +68,7 @@ suite('Debugging - Adapter Factory', () => {
         when(configurationService.getSettings(undefined)).thenReturn(({
             experiments: { enabled: true }
             // tslint:disable-next-line: no-any
-        } as any) as IPythonSettings);
+        } as any) as IJupyterSettings);
 
         interpreterService = mock<IInterpreterService>();
         appShell = mock(ApplicationShell);

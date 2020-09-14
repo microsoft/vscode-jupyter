@@ -16,7 +16,7 @@ import {
     IExperimentService,
     IMemento,
     IOutputChannel,
-    IPythonSettings
+    IJupyterSettings
 } from '../types';
 import { Experiments } from '../utils/localize';
 import { ExperimentationTelemetry } from './telemetry';
@@ -35,7 +35,7 @@ export class ExperimentService implements IExperimentService {
     public _optOutFrom: string[] = [];
 
     private readonly experimentationService?: IExperimentationService;
-    private readonly settings: IPythonSettings;
+    private readonly settings: IJupyterSettings;
 
     constructor(
         @inject(IConfigurationService) readonly configurationService: IConfigurationService,

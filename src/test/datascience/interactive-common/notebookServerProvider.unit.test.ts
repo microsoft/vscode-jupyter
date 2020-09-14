@@ -5,7 +5,7 @@ import { SemVer } from 'semver';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import { IApplicationShell } from '../../../client/common/application/types';
-import { IConfigurationService, IDataScienceSettings, IPythonSettings } from '../../../client/common/types';
+import { IConfigurationService, IDataScienceSettings, IJupyterSettings } from '../../../client/common/types';
 import { Architecture } from '../../../client/common/utils/platform';
 import { NotebookServerProvider } from '../../../client/datascience/interactive-common/notebookServerProvider';
 import { ProgressReporter } from '../../../client/datascience/progress/progressReporter';
@@ -31,7 +31,7 @@ suite('DataScience - NotebookServerProvider', () => {
     let jupyterExecution: IJupyterExecution;
     let applicationShell: IApplicationShell;
     let interpreterService: IInterpreterService;
-    let pythonSettings: IPythonSettings;
+    let pythonSettings: IJupyterSettings;
     let dataScienceSettings: IDataScienceSettings;
     const workingPython: PythonEnvironment = {
         path: '/foo/bar/python.exe',
@@ -50,7 +50,7 @@ suite('DataScience - NotebookServerProvider', () => {
         interpreterService = mock<IInterpreterService>();
 
         // Set up our settings
-        pythonSettings = mock<IPythonSettings>();
+        pythonSettings = mock<IJupyterSettings>();
         dataScienceSettings = mock<IDataScienceSettings>();
         when(pythonSettings.datascience).thenReturn(instance(dataScienceSettings));
         when(dataScienceSettings.jupyterServerURI).thenReturn('local');

@@ -9,7 +9,7 @@ import { isTestExecution } from '../common/constants';
 import '../common/extensions';
 import { traceError } from '../common/logger';
 import { IPythonToolExecutionService } from '../common/process/types';
-import { ExecutionInfo, IConfigurationService, IPythonSettings, Product } from '../common/types';
+import { ExecutionInfo, IConfigurationService, IJupyterSettings, Product } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { ErrorHandler } from './errorHandlers/errorHandler';
 import { ILinter, ILinterInfo, ILinterManager, ILintMessage, LinterId, LintMessageSeverity } from './types';
@@ -68,11 +68,11 @@ export abstract class BaseLinter implements ILinter {
     protected readonly configService: IConfigurationService;
 
     private errorHandler: ErrorHandler;
-    private _pythonSettings!: IPythonSettings;
+    private _pythonSettings!: IJupyterSettings;
     private _info: ILinterInfo;
     private workspace: IWorkspaceService;
 
-    protected get pythonSettings(): IPythonSettings {
+    protected get pythonSettings(): IJupyterSettings {
         return this._pythonSettings;
     }
 

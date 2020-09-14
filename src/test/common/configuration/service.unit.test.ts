@@ -7,7 +7,7 @@ import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
 import { ConfigurationTarget, Uri, WorkspaceConfiguration } from 'vscode';
 import { IWorkspaceService } from '../../../client/common/application/types';
-import { PythonSettings } from '../../../client/common/configSettings';
+import { JupyterSettings } from '../../../client/common/configSettings';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import { DeprecatePythonPath } from '../../../client/common/experiments/groups';
 import { IExperimentsManager, IInterpreterPathService } from '../../../client/common/types';
@@ -51,7 +51,7 @@ suite('Configuration Service', () => {
 
     test('Fetching settings goes as expected', () => {
         const settings = configService.getSettings();
-        expect(settings).to.be.instanceOf(PythonSettings);
+        expect(settings).to.be.instanceOf(JupyterSettings);
     });
 
     test('Do not update global settings if global value is already equal to the new value', async () => {

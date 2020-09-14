@@ -8,7 +8,7 @@ import { anything, capture, instance, mock, verify, when } from 'ts-mockito';
 import { ApplicationShell } from '../../../../client/common/application/applicationShell';
 import { IApplicationShell, IWorkspaceService } from '../../../../client/common/application/types';
 import { WorkspaceService } from '../../../../client/common/application/workspace';
-import { PythonSettings } from '../../../../client/common/configSettings';
+import { JupyterSettings } from '../../../../client/common/configSettings';
 import { PathUtils } from '../../../../client/common/platform/pathUtils';
 import { IDataScienceSettings, IPathUtils } from '../../../../client/common/types';
 import { JupyterInterpreterSelector } from '../../../../client/datascience/jupyter/interpreter/jupyterInterpreterSelector';
@@ -30,7 +30,7 @@ suite('DataScience - Jupyter Interpreter Picker', () => {
         appShell = mock(ApplicationShell);
         workspace = mock(WorkspaceService);
         pathUtils = mock(PathUtils);
-        const pythonSettings = mock(PythonSettings);
+        const pythonSettings = mock(JupyterSettings);
         // tslint:disable-next-line: no-any
         dsSettings = {} as any;
         when(pythonSettings.datascience).thenReturn(dsSettings);

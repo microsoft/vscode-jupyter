@@ -133,7 +133,7 @@ async function activateLegacy(
     dispatcher.registerEventHandlers();
 
     const cmdManager = serviceContainer.get<ICommandManager>(ICommandManager);
-    cmdManager.executeCommand('setContext', 'python.vscode.channel', applicationEnv.channel).then(noop, noop);
+    cmdManager.executeCommand('setContext', 'jupyter.vscode.channel', applicationEnv.channel).then(noop, noop);
 
     serviceContainer.get<ILanguageServerExtension>(ILanguageServerExtension).register();
 

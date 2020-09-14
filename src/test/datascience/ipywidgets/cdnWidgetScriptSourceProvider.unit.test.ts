@@ -9,7 +9,7 @@ import * as path from 'path';
 import { Readable } from 'stream';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { EventEmitter, Uri } from 'vscode';
-import { PythonSettings } from '../../../client/common/configSettings';
+import { JupyterSettings } from '../../../client/common/configSettings';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import { HttpClient } from '../../../client/common/net/httpClient';
 import { IConfigurationService, IHttpClient, WidgetCDNs } from '../../../client/common/types';
@@ -40,7 +40,7 @@ suite('DataScience - ipywidget - CDN', () => {
     let notebook: INotebook;
     let configService: IConfigurationService;
     let httpClient: IHttpClient;
-    let settings: PythonSettings;
+    let settings: JupyterSettings;
     let fileSystem: IDataScienceFileSystem;
     let webviewUriConverter: ILocalResourceUriConverter;
     let tempFileCount = 0;

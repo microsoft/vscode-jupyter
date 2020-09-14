@@ -19,7 +19,7 @@ import {
     IExtensions,
     IOutputChannel,
     IPersistentStateFactory,
-    IPythonSettings,
+    IJupyterSettings,
     Resource
 } from '../common/types';
 import { swallowExceptions } from '../common/utils/decorators';
@@ -40,7 +40,7 @@ import {
     LanguageServerType
 } from './types';
 
-const languageServerSetting: keyof IPythonSettings = 'languageServer';
+const languageServerSetting: keyof IJupyterSettings = 'languageServer';
 const workspacePathNameForGlobalWorkspaces = '';
 
 interface IActivatedServer {

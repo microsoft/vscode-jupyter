@@ -5,10 +5,10 @@ import { inject, injectable } from 'inversify';
 import { ConfigurationTarget, Uri, WorkspaceConfiguration } from 'vscode';
 import { IServiceContainer } from '../../ioc/types';
 import { IWorkspaceService } from '../application/types';
-import { PythonSettings } from '../configSettings';
+import { JupyterSettings } from '../configSettings';
 import { isUnitTestExecution } from '../constants';
 import { DeprecatePythonPath } from '../experiments/groups';
-import { IConfigurationService, IExperimentsManager, IInterpreterPathService, IPythonSettings } from '../types';
+import { IConfigurationService, IExperimentsManager, IInterpreterPathService, IJupyterSettings } from '../types';
 
 @injectable()
 export class ConfigurationService implements IConfigurationService {
@@ -16,10 +16,10 @@ export class ConfigurationService implements IConfigurationService {
     constructor(@inject(IServiceContainer) private readonly serviceContainer: IServiceContainer) {
         this.workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
     }
-    public getSettings(resource?: Uri): IPythonSettings {
+    public getSettings(resource?: Uri): IJupyterSettings {
         const interpreterPathService = this.serviceContainer.get<IInterpreterPathService>(IInterpreterPathService);
         const experiments = this.serviceContainer.get<IExperimentsManager>(IExperimentsManager);
-        return PythonSettings.getInstance(resource, this.workspaceService, experiments, interpreterPathService);
+        return JupyterSettings.getInstance(resource, this.workspaceService, experiments, interpreterPathService);
     }
 
     public async updateSectionSetting(
@@ -39,7 +39,7 @@ export class ConfigurationService implements IConfigurationService {
         };
         let settingsInfo = defaultSetting;
         if (section === 'python' && configTarget !== ConfigurationTarget.Global) {
-            settingsInfo = PythonSettings.getSettingsUriAndTarget(resource, this.workspaceService);
+            settingsInfo = JupyterSettings.getSettingsUriAndTarget(resource, this.workspaceService);
         }
         configTarget = configTarget ? configTarget : settingsInfo.target;
 

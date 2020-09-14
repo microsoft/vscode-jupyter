@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 import { anything, instance, mock, verify, when } from 'ts-mockito';
-import { PythonSettings } from '../../../client/common/configSettings';
-import { IConfigurationService, IExperimentsManager, IPythonSettings } from '../../../client/common/types';
+import { JupyterSettings } from '../../../client/common/configSettings';
+import { IConfigurationService, IExperimentsManager, IJupyterSettings } from '../../../client/common/types';
 import { KernelDaemonPool } from '../../../client/datascience/kernel-launcher/kernelDaemonPool';
 import { KernelDaemonPreWarmer } from '../../../client/datascience/kernel-launcher/kernelDaemonPreWarmer';
 import {
@@ -22,7 +22,7 @@ suite('DataScience - Kernel Daemon Pool PreWarmer', () => {
     let rawNotebookSupported: IRawNotebookSupportedService;
     let configService: IConfigurationService;
     let daemonPool: KernelDaemonPool;
-    let settings: IPythonSettings;
+    let settings: IJupyterSettings;
     setup(() => {
         notebookEditorProvider = mock<INotebookEditorProvider>();
         interactiveProvider = mock<IInteractiveWindowProvider>();
@@ -34,7 +34,7 @@ suite('DataScience - Kernel Daemon Pool PreWarmer', () => {
         when(experiment.inExperiment(anything())).thenReturn(true);
 
         // Set up our config settings
-        settings = mock(PythonSettings);
+        settings = mock(JupyterSettings);
         when(configService.getSettings()).thenReturn(instance(settings));
         // tslint:disable-next-line: no-any
         when(settings.datascience).thenReturn({} as any);

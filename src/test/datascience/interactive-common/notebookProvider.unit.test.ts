@@ -5,7 +5,7 @@ import { anything, instance, mock, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import * as vscode from 'vscode';
 import { IWorkspaceService } from '../../../client/common/application/types';
-import { IDataScienceSettings, IDisposableRegistry, IPythonSettings } from '../../../client/common/types';
+import { IDataScienceSettings, IDisposableRegistry, IJupyterSettings } from '../../../client/common/types';
 import { NotebookProvider } from '../../../client/datascience/interactive-common/notebookProvider';
 import { IJupyterNotebookProvider, INotebook, IRawNotebookProvider } from '../../../client/datascience/types';
 
@@ -29,7 +29,7 @@ suite('DataScience - NotebookProvider', () => {
     let disposableRegistry: IDisposableRegistry;
     let jupyterNotebookProvider: IJupyterNotebookProvider;
     let rawNotebookProvider: IRawNotebookProvider;
-    let pythonSettings: IPythonSettings;
+    let pythonSettings: IJupyterSettings;
     let dataScienceSettings: IDataScienceSettings;
 
     setup(() => {
@@ -39,7 +39,7 @@ suite('DataScience - NotebookProvider', () => {
         const workspaceService = mock<IWorkspaceService>();
 
         // Set up our settings
-        pythonSettings = mock<IPythonSettings>();
+        pythonSettings = mock<IJupyterSettings>();
         dataScienceSettings = mock<IDataScienceSettings>();
         when(pythonSettings.datascience).thenReturn(instance(dataScienceSettings));
         when(workspaceService.hasWorkspaceFolders).thenReturn(false);

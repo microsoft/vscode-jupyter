@@ -11,12 +11,12 @@ import * as typemoq from 'typemoq';
 import { ConfigurationChangeEvent, FileSystemWatcher, Uri } from 'vscode';
 import { IWorkspaceService } from '../../../client/common/application/types';
 import { WorkspaceService } from '../../../client/common/application/workspace';
-import { PythonSettings } from '../../../client/common/configSettings';
+import { JupyterSettings } from '../../../client/common/configSettings';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import { PlatformService } from '../../../client/common/platform/platformService';
 import { IPlatformService } from '../../../client/common/platform/types';
 import { CurrentProcess } from '../../../client/common/process/currentProcess';
-import { IConfigurationService, ICurrentProcess, IPythonSettings } from '../../../client/common/types';
+import { IConfigurationService, ICurrentProcess, IJupyterSettings } from '../../../client/common/types';
 import { sleep } from '../../../client/common/utils/async';
 import { clearCache } from '../../../client/common/utils/cacheUtils';
 import { EnvironmentVariablesService } from '../../../client/common/variables/environment';
@@ -35,7 +35,7 @@ suite('Multiroot Environment Variables Provider', () => {
     let workspace: IWorkspaceService;
     let configuration: IConfigurationService;
     let currentProcess: ICurrentProcess;
-    let settings: IPythonSettings;
+    let settings: IJupyterSettings;
     let serviceContainer: IServiceContainer;
 
     setup(() => {
@@ -44,7 +44,7 @@ suite('Multiroot Environment Variables Provider', () => {
         workspace = mock(WorkspaceService);
         configuration = mock(ConfigurationService);
         currentProcess = mock(CurrentProcess);
-        settings = mock(PythonSettings);
+        settings = mock(JupyterSettings);
         serviceContainer = mock(ServiceContainer);
 
         when(configuration.getSettings(anything())).thenReturn(instance(settings));

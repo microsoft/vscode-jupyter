@@ -1,8 +1,8 @@
 import { IWorkspaceService } from '../../client/common/application/types';
-import { PythonSettings } from '../../client/common/configSettings';
+import { JupyterSettings } from '../../client/common/configSettings';
 import { IExperimentsManager, IInterpreterPathService, Resource } from '../../client/common/types';
 
-export class MockPythonSettings extends PythonSettings {
+export class MockPythonSettings extends JupyterSettings {
     constructor(
         workspaceFolder: Resource,
         workspace?: IWorkspaceService,

@@ -13,7 +13,7 @@ import { IFileSystem } from '../common/platform/types';
 import * as internalPython from '../common/process/internal/python';
 import * as internalScripts from '../common/process/internal/scripts';
 import { IPythonExecutionFactory } from '../common/process/types';
-import { IConfigurationService, IPythonSettings } from '../common/types';
+import { IConfigurationService, IJupyterSettings } from '../common/types';
 import { createDeferred, Deferred } from '../common/utils/async';
 import { swallowExceptions } from '../common/utils/decorators';
 import { StopWatch } from '../common/utils/stopWatch';
@@ -154,7 +154,7 @@ type JediProxyPayload = {
 
 export class JediProxy implements Disposable {
     private proc?: ChildProcess;
-    private pythonSettings: IPythonSettings;
+    private pythonSettings: IJupyterSettings;
     private cmdId: number = 0;
     private lastKnownPythonInterpreter: string;
     private previousData = '';

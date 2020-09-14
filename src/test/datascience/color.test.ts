@@ -7,7 +7,7 @@ import { WorkspaceConfiguration } from 'vscode';
 
 import { Extensions } from '../../client/common/application/extensions';
 import { IWorkspaceService } from '../../client/common/application/types';
-import { PythonSettings } from '../../client/common/configSettings';
+import { JupyterSettings } from '../../client/common/configSettings';
 import { CurrentProcess } from '../../client/common/process/currentProcess';
 import { IConfigurationService } from '../../client/common/types';
 import { CodeCssGenerator } from '../../client/datascience/codeCssGenerator';
@@ -24,7 +24,7 @@ suite('Theme colors', () => {
     let workspaceConfig: TypeMoq.IMock<WorkspaceConfiguration>;
     let cssGenerator: CodeCssGenerator;
     let configService: TypeMoq.IMock<IConfigurationService>;
-    const settings: PythonSettings = new PythonSettings(undefined);
+    const settings: JupyterSettings = new JupyterSettings(undefined);
 
     setup(() => {
         extensions = new Extensions();

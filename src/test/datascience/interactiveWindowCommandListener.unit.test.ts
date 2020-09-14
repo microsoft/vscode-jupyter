@@ -10,7 +10,7 @@ import * as uuid from 'uuid/v4';
 import { EventEmitter, Uri } from 'vscode';
 import { ApplicationShell } from '../../client/common/application/applicationShell';
 import { IApplicationShell } from '../../client/common/application/types';
-import { PythonSettings } from '../../client/common/configSettings';
+import { JupyterSettings } from '../../client/common/configSettings';
 import { ConfigurationService } from '../../client/common/configuration/service';
 import { IConfigurationService, IDisposable } from '../../client/common/types';
 import * as localize from '../../client/common/utils/localize';
@@ -59,7 +59,7 @@ suite('Interactive window command listener', async () => {
     const fileSystem = mock(DataScienceFileSystem);
     const serviceContainer = mock(ServiceContainer);
     const dummyEvent = new EventEmitter<void>();
-    const pythonSettings = new PythonSettings(undefined);
+    const pythonSettings = new JupyterSettings(undefined);
     const disposableRegistry: IDisposable[] = [];
     const interactiveWindowProvider = mock(InteractiveWindowProvider);
     const dataScienceErrorHandler = mock(DataScienceErrorHandler);

@@ -39,7 +39,7 @@ export async function initialize(): Promise<IExtensionTestApi> {
         // When running smoke tests, we won't have access to these.
         const configSettings = await import('../client/common/configSettings');
         // Dispose any cached python settings (used only in test env).
-        configSettings.PythonSettings.dispose();
+        configSettings.JupyterSettings.dispose();
     }
     // tslint:disable-next-line:no-any
     return (api as any) as IExtensionTestApi;
@@ -59,7 +59,7 @@ export async function initializeTest(): Promise<any> {
         // When running smoke tests, we won't have access to these.
         const configSettings = await import('../client/common/configSettings');
         // Dispose any cached python settings (used only in test env).
-        configSettings.PythonSettings.dispose();
+        configSettings.JupyterSettings.dispose();
     }
 }
 export async function closeActiveWindows(): Promise<void> {

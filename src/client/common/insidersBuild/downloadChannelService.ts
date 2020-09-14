@@ -7,10 +7,10 @@ import { inject, injectable } from 'inversify';
 import { ConfigurationChangeEvent, ConfigurationTarget, Event, EventEmitter } from 'vscode';
 import { IWorkspaceService } from '../application/types';
 import { traceDecorators } from '../logger';
-import { IConfigurationService, IDisposable, IDisposableRegistry, IPythonSettings } from '../types';
+import { IConfigurationService, IDisposable, IDisposableRegistry, IJupyterSettings } from '../types';
 import { ExtensionChannels, IExtensionChannelService } from './types';
 
-export const insidersChannelSetting: keyof IPythonSettings = 'insidersChannel';
+export const insidersChannelSetting: keyof IJupyterSettings = 'insidersChannel';
 
 @injectable()
 export class ExtensionChannelService implements IExtensionChannelService {

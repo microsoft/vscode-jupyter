@@ -6,7 +6,7 @@ import { Subject } from 'rxjs/Subject';
 import * as sinon from 'sinon';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { CancellationToken } from 'vscode';
-import { PythonSettings } from '../../../client/common/configSettings';
+import { JupyterSettings } from '../../../client/common/configSettings';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import { ObservableExecutionResult, Output } from '../../../client/common/process/types';
 import { IConfigurationService, IDataScienceSettings } from '../../../client/common/types';
@@ -80,7 +80,7 @@ suite('DataScience - JupyterConnection', () => {
         serviceContainer = mock(ServiceContainer);
         fs = mock(DataScienceFileSystem);
         configService = mock(ConfigurationService);
-        const settings = mock(PythonSettings);
+        const settings = mock(JupyterSettings);
         getServerInfoStub.resolves(dummyServerInfos);
         when(fs.areLocalPathsSame(anything(), anything())).thenCall((path1, path2) => path1 === path2);
         when(settings.datascience).thenReturn(dsSettings);

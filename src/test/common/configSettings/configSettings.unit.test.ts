@@ -13,7 +13,7 @@ import * as TypeMoq from 'typemoq';
 import untildify = require('untildify');
 import { WorkspaceConfiguration } from 'vscode';
 import { LanguageServerType } from '../../../client/activation/types';
-import { PythonSettings } from '../../../client/common/configSettings';
+import { JupyterSettings } from '../../../client/common/configSettings';
 import {
     IAnalysisSettings,
     IAutoCompleteSettings,
@@ -32,7 +32,7 @@ import * as EnvFileTelemetry from '../../../client/telemetry/envFileTelemetry';
 
 // tslint:disable-next-line:max-func-body-length
 suite('Python Settings', async () => {
-    class CustomPythonSettings extends PythonSettings {
+    class CustomPythonSettings extends JupyterSettings {
         // tslint:disable-next-line:no-unnecessary-override
         public update(pythonSettings: WorkspaceConfiguration) {
             return super.update(pythonSettings);
@@ -56,7 +56,7 @@ suite('Python Settings', async () => {
         sinon.restore();
     });
 
-    function initializeConfig(sourceSettings: PythonSettings) {
+    function initializeConfig(sourceSettings: JupyterSettings) {
         // string settings
         for (const name of [
             'pythonPath',

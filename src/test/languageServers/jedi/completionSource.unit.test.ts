@@ -7,7 +7,7 @@
 
 import * as TypeMoq from 'typemoq';
 import { CancellationTokenSource, CompletionItemKind, Position, SymbolKind, TextDocument, TextLine } from 'vscode';
-import { IAutoCompleteSettings, IConfigurationService, IPythonSettings } from '../../../client/common/types';
+import { IAutoCompleteSettings, IConfigurationService, IJupyterSettings } from '../../../client/common/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { JediFactory } from '../../../client/languageServices/jediProxyFactory';
 import { CompletionSource } from '../../../client/providers/completionSource';
@@ -24,7 +24,7 @@ suite('Completion Provider', () => {
         jediHandler = TypeMoq.Mock.ofType<JediProxyHandler<ICompletionResult>>();
         const serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         const configService = TypeMoq.Mock.ofType<IConfigurationService>();
-        const pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
+        const pythonSettings = TypeMoq.Mock.ofType<IJupyterSettings>();
         autoCompleteSettings = TypeMoq.Mock.ofType<IAutoCompleteSettings>();
         autoCompleteSettings = TypeMoq.Mock.ofType<IAutoCompleteSettings>();
 
