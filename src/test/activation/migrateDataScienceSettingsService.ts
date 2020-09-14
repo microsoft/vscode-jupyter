@@ -1,13 +1,13 @@
 import { expect } from 'chai';
 import { mock } from 'ts-mockito';
-import { MigrateDataScienceSettingsService } from '../../client/activation/updateSettings';
+import { MigrateDataScienceSettingsService } from '../../client/activation/migrateDataScienceSettingsService';
 import { ApplicationEnvironment } from '../../client/common/application/applicationEnvironment';
-import { IWorkspaceService, IApplicationEnvironment } from '../../client/common/application/types';
+import { IApplicationEnvironment, IWorkspaceService } from '../../client/common/application/types';
 import { WorkspaceService } from '../../client/common/application/workspace';
 import { MockFileSystem } from '../datascience/mockFileSystem';
 
 suite('Migrate data science settings', () => {
-    let fs = new MockFileSystem();
+    const fs = new MockFileSystem();
     let workspace: IWorkspaceService;
     let application: IApplicationEnvironment;
     let updateDataScienceSettingsService: MigrateDataScienceSettingsService;
@@ -144,10 +144,10 @@ suite('Migrate data science settings', () => {
         application = mock(ApplicationEnvironment);
         workspace = mock(WorkspaceService);
         updateDataScienceSettingsService = new MigrateDataScienceSettingsService(fs, application, workspace);
-    })
+    });
 
     test('Correctly updates python.dataScience settings', async () => {
         const result = await updateDataScienceSettingsService.fixSettingInFile(FILEPATH);
-        expect(result === migratedSettings, "Failed to migrate python.dataScience settings");
-    })
-})
+        expect(result === migratedSettings, 'Failed to migrate python.dataScience settings');
+    });
+});

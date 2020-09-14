@@ -74,7 +74,7 @@ import {
     IPlatformData,
     LanguageServerType
 } from './types';
-import { MigrateDataScienceSettingsService } from './updateSettings';
+import { MigrateDataScienceSettingsService } from './migrateDataScienceSettingsService';
 
 // tslint:disable-next-line: max-func-body-length
 export function registerTypes(serviceManager: IServiceManager, languageServerType: LanguageServerType) {
