@@ -1,19 +1,18 @@
 import { IWorkspaceService } from '../../client/common/application/types';
 import { JupyterSettings } from '../../client/common/configSettings';
-import { IExperimentsManager, IInterpreterPathService, Resource } from '../../client/common/types';
+import { IJupyterSettings, Resource } from '../../client/common/types';
 
-export class MockPythonSettings extends JupyterSettings {
-    constructor(
-        workspaceFolder: Resource,
-        workspace?: IWorkspaceService,
-        experimentsManager?: IExperimentsManager,
-        interpreterPathService?: IInterpreterPathService
-    ) {
-        super(workspaceFolder, workspace, experimentsManager, interpreterPathService);
+export class MockJupyterSettings extends JupyterSettings {
+    constructor(workspaceFolder: Resource, workspace?: IWorkspaceService) {
+        super(workspaceFolder, workspace);
     }
 
     public fireChangeEvent() {
         this.changed.fire();
+    }
+
+    public assign(partial: Partial<IJupyterSettings>) {
+        Object.assign(this, partial);
     }
 
     protected getPythonExecutable(v: string) {

@@ -98,10 +98,10 @@ suite('DataScience Interactive Window output tests', () => {
         await ioc.dispose();
     });
 
-    async function forceSettingsChange(newSettings: IJupyterSettings) {
+    async function forceSettingsChange(newSettings: Partial<IJupyterSettings>) {
         const { mount } = await getOrCreateInteractiveWindow(ioc);
         const update = mount.waitForMessage(InteractiveWindowMessages.SettingsUpdated);
-        ioc.forceSettingsChanged(undefined, ioc.getSettings().pythonPath, newSettings);
+        ioc.forceDataScienceSettingsChanged(newSettings);
         return update;
     }
 
@@ -1025,7 +1025,7 @@ for i in range(0, 100):
     runTest(
         'Gather code run from text editor',
         async () => {
-            ioc.getSettings().gatherToScript = true;
+            await forceSettingsChange({ gatherToScript: true });
             // Enter some code.
             const code = `${defaultCellMarker}\na=1\na`;
             await addCode(ioc, code);
@@ -1065,7 +1065,7 @@ for i in range(0, 100):
     runTest(
         'Gather code run from input box',
         async () => {
-            ioc.getSettings().gatherToScript = true;
+            await forceSettingsChange({ gatherToScript: true });
             // Create an interactive window so that it listens to the results.
             const { mount } = await getOrCreateInteractiveWindow(ioc);
 
@@ -1136,7 +1136,7 @@ for i in range(0, 100):
     runTest(
         'Limit text output',
         async () => {
-            ioc.getSettings().textOutputLimit = 8;
+            await forceSettingsChange({ textOutputLimit: 8 });
 
             // Output should be trimmed to just two lines of output
             const code = `print("hello\\nworld\\nhow\\nare\\nyou")`;

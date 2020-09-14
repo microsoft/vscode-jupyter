@@ -9,11 +9,19 @@ import { IJupyterSettings } from '../../client/common/types';
 // The default base set of data science settings to use
 export function defaultDataScienceSettings(): IJupyterSettings {
     return {
+        logging: {
+            level: 'off'
+        },
+        insidersChannel: 'off',
+        experiments: {
+            enabled: false,
+            optOutFrom: [],
+            optInto: []
+        },
         allowImportFromNotebook: true,
         alwaysTrustNotebooks: true,
         jupyterLaunchTimeout: 10,
         jupyterLaunchRetries: 3,
-        enabled: true,
         jupyterServerURI: 'local',
         // tslint:disable-next-line: no-invalid-template-strings
         notebookFileRoot: '${fileDirname}',

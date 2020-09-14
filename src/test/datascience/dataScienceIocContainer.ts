@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 //tslint:disable:trailing-comma no-any
-import * as child_process from 'child_process';
 import { ReactWrapper } from 'enzyme';
 import * as fs from 'fs-extra';
 import * as glob from 'glob';
@@ -28,21 +27,19 @@ import * as vsls from 'vsls/vscode';
 import { KernelDaemonPool } from '../../client/datascience/kernel-launcher/kernelDaemonPool';
 
 import { promisify } from 'util';
+import { IExtensionSingleActivationService } from '../../client/activation/types';
 import { ApplicationEnvironment } from '../../client/common/application/applicationEnvironment';
 import { ApplicationShell } from '../../client/common/application/applicationShell';
 import { VSCodeNotebook } from '../../client/common/application/notebook';
-import { TerminalManager } from '../../client/common/application/terminalManager';
 import {
     IApplicationEnvironment,
     IApplicationShell,
-    IClipboard,
     ICommandManager,
     ICustomEditorService,
     IDebugService,
     IDocumentManager,
     ILiveShareApi,
     ILiveShareTestingApi,
-    ITerminalManager,
     IVSCodeNotebook,
     IWebviewPanelOptions,
     IWebviewPanelProvider,
@@ -108,6 +105,7 @@ import {
     IPathUtils,
     IPersistentStateFactory,
     IsWindows,
+    IWatchableJupyterSettings,
     ProductType,
     Resource,
     WORKSPACE_MEMENTO
@@ -284,7 +282,7 @@ import { MockFileSystem } from './mockFileSystem';
 import { MockJupyterManager, SupportedCommands } from './mockJupyterManager';
 import { MockJupyterManagerFactory } from './mockJupyterManagerFactory';
 import { MockLiveShareApi } from './mockLiveShare';
-import { MockPythonSettings } from './mockPythonSettings';
+import { MockJupyterSettings } from './mockPythonSettings';
 import { MockWorkspaceConfiguration } from './mockWorkspaceConfig';
 import { MockWorkspaceFolder } from './mockWorkspaceFolder';
 import { IMountedWebView } from './mountedWebView';
@@ -298,12 +296,6 @@ import {
 } from './testNativeEditorProvider';
 import { TestPersistentStateFactory } from './testPersistentStateFactory';
 import { WebBrowserPanelProvider } from './uiTests/webBrowserPanelProvider';
-import { boolean } from 'yargs';
-import { IExtensionSingleActivationService } from '../../client/activation/types';
-import { DiagnosticFilterService } from '../../client/application/diagnostics/filter';
-import { MessageCommandPrompt, DiagnosticCommandPromptHandlerService, DiagnosticCommandPromptHandlerServiceId } from '../../client/application/diagnostics/promptHandler';
-import { IDiagnosticHandlerService, IDiagnosticFilterService } from '../../client/application/diagnostics/types';
-import { ClipboardService } from '../../client/common/application/clipboard';
 
 export class DataScienceIocContainer extends UnitTestIocContainer {
     public get workingInterpreter() {
@@ -326,7 +318,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         return this.kernelServiceMock;
     }
     private static jupyterInterpreters: PythonEnvironment[] = [];
-    private static foundPythonPath: string | undefined;
     public applicationShell!: ApplicationShell;
     // tslint:disable-next-line:no-any
     public datascience!: TypeMoq.IMock<IDataScience>;
@@ -366,7 +357,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     private configMap = new Map<string, MockWorkspaceConfiguration>();
     private emptyConfig = new MockWorkspaceConfiguration();
     private workspaceFolders: MockWorkspaceFolder[] = [];
-    private defaultPythonPath: string | undefined;
     private kernelServiceMock = mock(KernelService);
     private disposed = false;
     private experimentState = new Map<string, boolean>();
@@ -438,15 +428,13 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.settingsMap.clear();
         this.configMap.clear();
         this.setContexts = {};
-        reset(this.webPanelPruseCustomEditor: boolean = false-body-length
-    public registerDataScienceTypes(
-        useCustomEditor: boolean = false
-    ) {
+        reset(this.webPanelProvider);
+    }
+
+    //tslint:disable:max-func-body-length
+    public registerDataScienceTypes(useCustomEditor: boolean = false) {
         this.serviceManager.addSingletonInstance<number>(DataScienceStartupTime, Date.now());
         this.serviceManager.addSingletonInstance<DataScienceIocContainer>(DataScienceIocContainer, this);
-
-        // Make sure the default python path is set.
-        this.defaultPythonPath = this.findPythonPath();
 
         // Create the workspace service first as it's used to set config values.
         this.createWorkspaceService();
@@ -597,39 +585,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             instance(mockServerSelector)
         );
 
-        this.serviceManager.addSingleton<ITerminalManager>(ITerminalManager, TerminalManager);
-        this.serviceManager.addSingleton<ILanguageServerProxy>(ILanguageServerProxy, MockLanguageServerProxy);
-        this.serviceManager.addSingleton<ILanguageServerCache>(
-            ILanguageServerCache,
-            LanguageServerExtensionActivationService
-        );
-        this.serviceManager.addSingleton<ILanguageServerExtension>(ILanguageServerExtension, LanguageServerExtension);
-
-        this.serviceManager.add<ILanguageServerActivator>(
-            ILanguageServerActivator,
-            JediExtensionActivator,
-            LanguageServerType.Jedi
-        );
-        this.serviceManager.addSingleton<ILanguageServerAnalysisOptions>(
-            ILanguageServerAnalysisOptions,
-            MockLanguageServerAnalysisOptions
-        );
-        if (languageServerType === LanguageServerType.Microsoft) {
-            this.serviceManager.add<ILanguageServerActivator>(
-                ILanguageServerActivator,
-                DotNetLanguageServerActivator,
-                LanguageServerType.Microsoft
-            );
-            this.serviceManager.add<ILanguageServerManager>(ILanguageServerManager, DotNetLanguageServerManager);
-        } else if (languageServerType === LanguageServerType.Node) {
-            this.serviceManager.add<ILanguageServerActivator>(
-                ILanguageServerActivator,
-                NodeLanguageServerActivator,
-                LanguageServerType.Node
-            );
-            this.serviceManager.add<ILanguageServerManager>(ILanguageServerManager, NodeLanguageServerManager);
-        }
-
         this.serviceManager.addSingleton<INotebookProvider>(INotebookProvider, NotebookProvider);
         this.serviceManager.addSingleton<IJupyterNotebookProvider>(IJupyterNotebookProvider, JupyterNotebookProvider);
         this.serviceManager.addSingleton<IJupyterServerProvider>(IJupyterServerProvider, NotebookServerProvider);
@@ -669,16 +624,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<ICodeLensFactory>(ICodeLensFactory, CodeLensFactory, undefined, [
             IInteractiveWindowListener
         ]);
-        this.serviceManager.addSingleton<ILanguageServerCompatibilityService>(
-            ILanguageServerCompatibilityService,
-            LanguageServerCompatibilityService
-        );
-        this.serviceManager.addSingleton<IDiagnosticHandlerService<MessageCommandPrompt>>(
-            IDiagnosticHandlerService,
-            DiagnosticCommandPromptHandlerService,
-            DiagnosticCommandPromptHandlerServiceId
-        );
-        this.serviceManager.addSingleton<IDiagnosticFilterService>(IDiagnosticFilterService, DiagnosticFilterService);
         this.serviceManager.addSingleton<NotebookStarter>(NotebookStarter, NotebookStarter);
         this.serviceManager.addSingleton<KernelSelector>(KernelSelector, KernelSelector);
         this.serviceManager.addSingleton<KernelSelectionProvider>(KernelSelectionProvider, KernelSelectionProvider);
@@ -713,24 +658,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingletonInstance<IDotNetCompatibilityService>(
             IDotNetCompatibilityService,
             instance(dotNetCompability)
-        );
-
-        // Don't allow the download to happen
-        const downloader = mock(LanguageServerDownloader);
-        this.serviceManager.addSingletonInstance<ILanguageServerDownloader>(
-            ILanguageServerDownloader,
-            instance(downloader)
-        );
-
-        const folderService = mock(DotNetLanguageServerFolderService);
-        const packageService = mock(DotNetLanguageServerPackageService);
-        this.serviceManager.addSingletonInstance<ILanguageServerFolderService>(
-            ILanguageServerFolderService,
-            instance(folderService)
-        );
-        this.serviceManager.addSingletonInstance<ILanguageServerPackageService>(
-            ILanguageServerPackageService,
-            instance(packageService)
         );
 
         // Turn off experiments.
@@ -770,7 +697,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         );
 
         this.serviceManager.addSingletonInstance<IApplicationShell>(IApplicationShell, instance(this.applicationShell));
-        this.serviceManager.addSingleton<IClipboard>(IClipboard, ClipboardService);
         this.serviceManager.addSingletonInstance<IDocumentManager>(IDocumentManager, this.documentManager);
         this.serviceManager.addSingletonInstance<IConfigurationService>(
             IConfigurationService,
@@ -1036,28 +962,30 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         return false;
     }
 
-    public getSettings(resource?: Uri): IJupyterSettings {
+    public getSettings(resource?: Uri): IWatchableJupyterSettings {
         const key = this.getResourceKey(resource);
         let setting = this.settingsMap.get(key);
         if (!setting && !this.disposed) {
             // Make sure we have the default config for this resource first.
             this.getWorkspaceConfig('python', resource);
-            setting = new MockPythonSettings(resource, this.serviceManager.get<IWorkspaceService>(IWorkspaceService));
+            setting = new MockJupyterSettings(resource, this.serviceManager.get<IWorkspaceService>(IWorkspaceService));
             this.settingsMap.set(key, setting);
         } else if (this.disposed) {
-            setting = this.generatePythonSettings(this.languageServerType);
+            setting = this.generateJupyterSettings();
         }
         return setting;
     }
 
     public forceDataScienceSettingsChanged(dataScienceSettings: Partial<IJupyterSettings>) {
-        this.forceSettingsChanged(undefined, this.getSettings().pythonPath, {
+        this.forceSettingsChanged(undefined, '', {
             ...this.getSettings(),
             ...dataScienceSettings
         });
     }
 
     public forceSettingsChanged(resource: Resource, newPath: string, datascienceSettings?: IJupyterSettings) {
+        // tslint:disable-next-line: no-suspicious-comment
+        // TODO: Python path will not be updated by this code so tests are unlikely to pass
         const settings = this.getSettings(resource) as any;
         settings.pythonPath = newPath;
         settings.datascience = datascienceSettings ? datascienceSettings : settings.datascience;
@@ -1135,7 +1063,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         const key = this.getResourceKey(resource);
         let result = this.configMap.get(key);
         if (!result) {
-            result = this.generatePythonWorkspaceConfig(this.languageServerType);
+            result = this.generateWorkspaceConfig();
             this.configMap.set(key, result);
         }
         return result;
@@ -1154,66 +1082,16 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         return panel;
     }
 
-    private generatePythonSettings(languageServerType: LanguageServerType) {
+    private generateJupyterSettings() {
         // Create a dummy settings just to setup the workspace config
-        const pythonSettings = new MockPythonSettings(undefined);
-        pythonSettings.pythonPath = this.defaultPythonPath!;
-        pythonSettings.datascience = {
-            allowImportFromNotebook: true,
-            alwaysTrustNotebooks: true,
-            jupyterLaunchTimeout: 120000,
-            jupyterLaunchRetries: 3,
-            enabled: true,
-            jupyterServerURI: 'local',
-            // tslint:disable-next-line: no-invalid-template-strings
-            notebookFileRoot: '${fileDirname}',
-            changeDirOnImportExport: false,
-            useDefaultConfigForJupyter: true,
-            jupyterInterruptTimeout: 10000,
-            searchForJupyter: true,
-            showCellInputCode: true,
-            collapseCellInputCodeByDefault: true,
-            allowInput: true,
-            maxOutputSize: 400,
-            enableScrollingForCellOutputs: true,
-            errorBackgroundColor: '#FFFFFF',
-            sendSelectionToInteractiveWindow: false,
-            codeRegularExpression: '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])',
-            markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)',
-            variableExplorerExclude: 'module;function;builtin_function_or_method',
-            liveShareConnectionTimeout: 100,
-            enablePlotViewer: true,
-            stopOnFirstLineWhileDebugging: true,
-            stopOnError: true,
-            addGotoCodeLenses: true,
-            enableCellCodeLens: true,
-            runStartupCommands: '',
-            debugJustMyCode: true,
-            variableQueries: [],
-            jupyterCommandLineArguments: [],
-            disableJupyterAutoStart: false,
-            widgetScriptSources: ['jsdelivr.com', 'unpkg.com'],
-            interactiveWindowMode: 'single'
-        };
-        pythonSettings.downloadLanguageServer = false;
-        const folders = ['Envs', '.virtualenvs'];
-        pythonSettings.venvFolders = folders;
-        pythonSettings.venvPath = path.join('~', 'foo');
-        pythonSettings.terminal = {
-            executeInFileDir: false,
-            launchArgs: [],
-            activateEnvironment: true,
-            activateEnvInCurrentTerminal: false
-        };
-        pythonSettings.languageServer = languageServerType;
-        return pythonSettings;
+        return new MockJupyterSettings(undefined);
     }
 
-    private generatePythonWorkspaceConfig(languageServerType: LanguageServerType): MockWorkspaceConfiguration {
-        const pythonSettings = this.generatePythonSettings(languageServerType);
+    private generateWorkspaceConfig(): MockWorkspaceConfiguration {
+        const settings = this.generateJupyterSettings();
 
         // Use these settings to default all of the settings in a python configuration
-        return new MockWorkspaceConfiguration(pythonSettings);
+        return new MockWorkspaceConfiguration(settings);
     }
 
     private createWorkspaceService() {
@@ -1300,24 +1178,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         } catch (ex) {
             traceError(`Exception attempting dependency list for ${interpreter.path}: `, ex);
             return false;
-        }
-    }
-
-    private findPythonPath(): string {
-        try {
-            // Use a static variable so we don't have to recompute this on subsequenttests
-            if (!DataScienceIocContainer.foundPythonPath) {
-                // Give preference to the CI test python (could also be set in launch.json for debugging).
-                const output = child_process.execFileSync(
-                    process.env.CI_PYTHON_PATH || 'python',
-                    ['-c', 'import sys;print(sys.executable)'],
-                    { encoding: 'utf8' }
-                );
-                DataScienceIocContainer.foundPythonPath = output.replace(/\r?\n/g, '');
-            }
-            return DataScienceIocContainer.foundPythonPath;
-        } catch (ex) {
-            return 'python';
         }
     }
 }
