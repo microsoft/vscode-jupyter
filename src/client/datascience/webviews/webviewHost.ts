@@ -107,7 +107,7 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
         const ext = extensions.getExtension(GatherExtension);
 
         return {
-            ...this.configService.getSettings(resource).datascience,
+            ...this.configService.getSettings(resource),
             extraSettings: {
                 editor: {
                     cursor: this.getValue(editor, 'cursorStyle', 'line'),

@@ -43,7 +43,7 @@ export class IPyWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
     private configurationPromise?: Deferred<void>;
     private get configuredScriptSources(): readonly WidgetCDNs[] {
         const settings = this.configurationSettings.getSettings(undefined);
-        return settings.datascience.widgetScriptSources;
+        return settings.widgetScriptSources;
     }
     private readonly userConfiguredCDNAtLeastOnce: IPersistentState<boolean>;
     private readonly neverWarnAboutScriptsNotFoundOnCDN: IPersistentState<boolean>;

@@ -4,10 +4,10 @@
 'use strict';
 
 import { noop } from 'lodash';
-import { IDataScienceSettings } from '../../client/common/types';
+import { IJupyterSettings } from '../../client/common/types';
 
 // The default base set of data science settings to use
-export function defaultDataScienceSettings(): IDataScienceSettings {
+export function defaultDataScienceSettings(): IJupyterSettings {
     return {
         allowImportFromNotebook: true,
         alwaysTrustNotebooks: true,

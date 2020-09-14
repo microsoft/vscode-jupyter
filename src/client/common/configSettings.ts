@@ -9,7 +9,6 @@ import {
     Uri,
     WorkspaceConfiguration
 } from 'vscode';
-import { LanguageServerType } from '../activation/types';
 import '../common/extensions';
 import { LogLevel } from '../logging/levels';
 import { IWorkspaceService } from './application/types';
@@ -39,10 +38,10 @@ export class JupyterSettings implements IJupyterSettings {
 
     private static jupyterSettings: Map<string, JupyterSettings> = new Map<string, JupyterSettings>();
     public experiments!: IExperiments;
-    public languageServer: LanguageServerType = LanguageServerType.Microsoft;
     public logging: ILoggingSettings = { level: LogLevel.Error };
     public insidersChannel: ExtensionChannels = 'off';
     public allowImportFromNotebook: boolean = false;
+    public allowUnauthorizedRemoteConnection: boolean = false;
     public alwaysTrustNotebooks: boolean = false;
     public jupyterInterruptTimeout: number = 10_000;
     public jupyterLaunchTimeout: number = 60_000;
@@ -157,13 +156,6 @@ export class JupyterSettings implements IJupyterSettings {
     protected update(jupyterSettings: WorkspaceConfiguration) {
         const workspaceRoot = this.workspaceRoot?.fsPath;
         const systemVariables: SystemVariables = new SystemVariables(undefined, workspaceRoot, this.workspace);
-
-        let ls = jupyterSettings.get<LanguageServerType>('languageServer') ?? LanguageServerType.Jedi;
-        ls = systemVariables.resolveAny(ls);
-        if (!Object.values(LanguageServerType).includes(ls)) {
-            ls = LanguageServerType.Jedi;
-        }
-        this.languageServer = ls;
 
         // tslint:disable-next-line: no-any
         const loggingSettings = systemVariables.resolveAny(jupyterSettings.get<any>('logging'))!;

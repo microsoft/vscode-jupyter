@@ -9,7 +9,7 @@ import * as path from 'path';
 
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { PYTHON_LANGUAGE } from '../../client/common/constants';
-import { IDataScienceSettings } from '../../client/common/types';
+import { IJupyterSettings } from '../../client/common/types';
 import { CellMatcher } from '../../client/datascience/cellMatcher';
 import { Identifiers } from '../../client/datascience/constants';
 import { IEditorPosition } from '../../client/datascience/interactive-common/interactiveWindowTypes';
@@ -231,7 +231,7 @@ export function createEditableCellVM(executionCount: number): ICellViewModel {
     };
 }
 
-export function extractInputText(inputCellVM: ICellViewModel, settings: IDataScienceSettings | undefined): string {
+export function extractInputText(inputCellVM: ICellViewModel, settings: IJupyterSettings | undefined): string {
     const inputCell = inputCellVM.cell;
     let source: string[] = [];
     if (inputCell.data.source) {
@@ -264,7 +264,7 @@ export function extractInputText(inputCellVM: ICellViewModel, settings: IDataSci
 
 export function createCellVM(
     inputCell: ICell,
-    settings: IDataScienceSettings | undefined,
+    settings: IJupyterSettings | undefined,
     editable: boolean,
     runDuringDebug: boolean
 ): ICellViewModel {

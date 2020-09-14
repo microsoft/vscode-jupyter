@@ -9,7 +9,7 @@ import { CancellationToken } from 'vscode';
 import { JupyterSettings } from '../../../client/common/configSettings';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import { ObservableExecutionResult, Output } from '../../../client/common/process/types';
-import { IConfigurationService, IDataScienceSettings } from '../../../client/common/types';
+import { IConfigurationService, IJupyterSettings } from '../../../client/common/types';
 import { DataScience } from '../../../client/common/utils/localize';
 import { noop } from '../../../client/common/utils/misc';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
@@ -28,7 +28,7 @@ suite('DataScience - JupyterConnection', () => {
     let fs: IDataScienceFileSystem;
     let serviceContainer: IServiceContainer;
     // tslint:disable-next-line: no-any
-    const dsSettings: IDataScienceSettings = { jupyterLaunchTimeout: 10_000 } as any;
+    const dsSettings: IJupyterSettings = { jupyterLaunchTimeout: 10_000 } as any;
     const childProc = new events.EventEmitter();
     const notebookDir = 'someDir';
     const dummyServerInfos: JupyterServerInfo[] = [

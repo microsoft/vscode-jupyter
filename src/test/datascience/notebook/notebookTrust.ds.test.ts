@@ -13,7 +13,7 @@ import * as uuid from 'uuid/v4';
 import { Uri } from 'vscode';
 import { NotebookDocument } from '../../../../types/vscode-proposed';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
-import { IConfigurationService, IDataScienceSettings, IDisposable } from '../../../client/common/types';
+import { IConfigurationService, IJupyterSettings, IDisposable } from '../../../client/common/types';
 import { INotebookEditorProvider } from '../../../client/datascience/types';
 import { splitMultilineString } from '../../../datascience-ui/common';
 import { IExtensionTestApi } from '../../common';
@@ -44,10 +44,10 @@ suite('DataScience - VSCode Notebook - (Trust)', function () {
         }
     });
     let oldTrustSetting: boolean;
-    let dsSettings: IDataScienceSettings;
+    let dsSettings: IJupyterSettings;
     suiteSetup(() => {
         const configService = api.serviceContainer.get<IConfigurationService>(IConfigurationService);
-        dsSettings = configService.getSettings(testIPynb).datascience;
+        dsSettings = configService.getSettings(testIPynb);
         oldTrustSetting = dsSettings.alwaysTrustNotebooks;
         dsSettings.alwaysTrustNotebooks = false;
     });

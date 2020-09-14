@@ -422,7 +422,7 @@ suite('DataScience Native Editor', () => {
                 runMountedTest('Invalid kernel can be switched', async (context) => {
                     if (ioc.mockJupyter) {
                         ioc.forceSettingsChanged(undefined, ioc.getSettings().pythonPath, {
-                            ...ioc.getSettings().datascience,
+                            ...ioc.getSettings(),
                             jupyterLaunchRetries: 1,
                             disableJupyterAutoStart: true
                         });
@@ -720,7 +720,7 @@ df.head()`;
 
                 runMountedTest('Server load skipped', async (context) => {
                     if (ioc.mockJupyter) {
-                        ioc.getSettings().datascience.disableJupyterAutoStart = true;
+                        ioc.getSettings().disableJupyterAutoStart = true;
                         await ioc.activate();
 
                         // Create an editor so something is listening to messages
@@ -2627,7 +2627,7 @@ df.head()`;
 
                         // Force our settings to not stop on error
                         ioc.forceSettingsChanged(undefined, ioc.getSettings().pythonPath, {
-                            ...ioc.getSettings().datascience,
+                            ...ioc.getSettings(),
                             stopOnError: false
                         });
 

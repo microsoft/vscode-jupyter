@@ -34,7 +34,7 @@ export class KernelDaemonPreWarmer implements IExtensionActivationService {
         // Also respect the disable autostart setting to not do any prewarming for the user
         if (
             !(await this.rawNotebookSupported.supported()) ||
-            this.configService.getSettings().datascience.disableJupyterAutoStart
+            this.configService.getSettings().disableJupyterAutoStart
         ) {
             return;
         }

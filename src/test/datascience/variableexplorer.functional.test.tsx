@@ -140,8 +140,8 @@ value = 'hello world'`;
                 verifyVariables(wrapper, targetVariables);
 
                 // Update our exclude list to exclude strings
-                ioc.getSettings().datascience.variableExplorerExclude = `${
-                    ioc.getSettings().datascience.variableExplorerExclude
+                ioc.getSettings().variableExplorerExclude = `${
+                    ioc.getSettings().variableExplorerExclude
                 };str`;
 
                 // Add another string and check our vars, strings should be hidden

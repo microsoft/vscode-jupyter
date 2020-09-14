@@ -255,7 +255,7 @@ suite('DataScience notebook tests', () => {
                     if (server) {
                         for (let i = 0; i < types.length; i += 1) {
                             const markdownRegex = types[i].markdownRegEx ? types[i].markdownRegEx : '';
-                            ioc.getSettings().datascience.markdownRegularExpression = markdownRegex!;
+                            ioc.getSettings().markdownRegularExpression = markdownRegex!;
                             await verifyCell(
                                 server,
                                 i,
@@ -282,7 +282,7 @@ suite('DataScience notebook tests', () => {
             }
 
             async function createNotebookWithNonDefaultConfig(): Promise<INotebook | undefined> {
-                const newSettings = { ...ioc.getSettings().datascience, useDefaultConfig: false };
+                const newSettings = { ...ioc.getSettings(), useDefaultConfig: false };
                 ioc.forceSettingsChanged(undefined, ioc.getSettings().pythonPath, newSettings);
                 return createNotebook();
             }
@@ -295,7 +295,7 @@ suite('DataScience notebook tests', () => {
                 // Catch exceptions. Throw a specific assertion if the promise fails
                 try {
                     if (uri) {
-                        const newSettings = { ...ioc.getSettings().datascience, jupyterServerURI: uri };
+                        const newSettings = { ...ioc.getSettings(), jupyterServerURI: uri };
                         ioc.forceSettingsChanged(undefined, ioc.getSettings().pythonPath, newSettings);
                     }
                     launchingFile = launchingFile || path.join(srcDirectory(), 'foo.py');
@@ -619,7 +619,7 @@ suite('DataScience notebook tests', () => {
                 // Translate this into a notebook
 
                 // Make sure we have a change dir happening
-                const settings = { ...ioc.getSettings().datascience };
+                const settings = { ...ioc.getSettings() };
                 settings.changeDirOnImportExport = true;
                 ioc.forceSettingsChanged(undefined, ioc.getSettings().pythonPath, settings);
 
@@ -1419,9 +1419,9 @@ plt.show()`,
             runTest('Notebook launch retry', async function (_this: Mocha.Context) {
                 // Skipping for now. Re-enable to test idle timeouts
                 _this.skip();
-                // ioc.getSettings().datascience.jupyterLaunchRetries = 1;
-                // ioc.getSettings().datascience.jupyterLaunchTimeout = 10000;
-                //         ioc.getSettings().datascience.runStartupCommands = '%config Application.log_level="DEBUG"';
+                // ioc.getSettings().jupyterLaunchRetries = 1;
+                // ioc.getSettings().jupyterLaunchTimeout = 10000;
+                //         ioc.getSettings().runStartupCommands = '%config Application.log_level="DEBUG"';
                 //         const log = `import logging
                 // logger = logging.getLogger()
                 // fhandler = logging.FileHandler(filename='D:\\Training\\mylog.log', mode='a')
@@ -1439,7 +1439,7 @@ plt.show()`,
             });
 
             runTest('Startup commands', async () => {
-                ioc.getSettings().datascience.runStartupCommands = ['a=1', 'b=2'];
+                ioc.getSettings().runStartupCommands = ['a=1', 'b=2'];
                 addMockData(`a=1\\nb=2`, undefined);
                 addMockData(`a`, 1);
                 addMockData(`b`, 2);

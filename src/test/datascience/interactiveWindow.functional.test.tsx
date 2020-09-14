@@ -12,7 +12,7 @@ import { Disposable, Memento, Selection, TextDocument, TextEditor, Uri } from 'v
 import { ReactWrapper } from 'enzyme';
 import { anything, when } from 'ts-mockito';
 import { IApplicationShell, IDocumentManager } from '../../client/common/application/types';
-import { GLOBAL_MEMENTO, IDataScienceSettings, IMemento } from '../../client/common/types';
+import { GLOBAL_MEMENTO, IJupyterSettings, IMemento } from '../../client/common/types';
 import { createDeferred, sleep, waitForPromise } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { EXTENSION_ROOT_DIR } from '../../client/constants';
@@ -98,7 +98,7 @@ suite('DataScience Interactive Window output tests', () => {
         await ioc.dispose();
     });
 
-    async function forceSettingsChange(newSettings: IDataScienceSettings) {
+    async function forceSettingsChange(newSettings: IJupyterSettings) {
         const { mount } = await getOrCreateInteractiveWindow(ioc);
         const update = mount.waitForMessage(InteractiveWindowMessages.SettingsUpdated);
         ioc.forceSettingsChanged(undefined, ioc.getSettings().pythonPath, newSettings);
@@ -1025,7 +1025,7 @@ for i in range(0, 100):
     runTest(
         'Gather code run from text editor',
         async () => {
-            ioc.getSettings().datascience.gatherToScript = true;
+            ioc.getSettings().gatherToScript = true;
             // Enter some code.
             const code = `${defaultCellMarker}\na=1\na`;
             await addCode(ioc, code);
@@ -1065,7 +1065,7 @@ for i in range(0, 100):
     runTest(
         'Gather code run from input box',
         async () => {
-            ioc.getSettings().datascience.gatherToScript = true;
+            ioc.getSettings().gatherToScript = true;
             // Create an interactive window so that it listens to the results.
             const { mount } = await getOrCreateInteractiveWindow(ioc);
 
@@ -1136,7 +1136,7 @@ for i in range(0, 100):
     runTest(
         'Limit text output',
         async () => {
-            ioc.getSettings().datascience.textOutputLimit = 8;
+            ioc.getSettings().textOutputLimit = 8;
 
             // Output should be trimmed to just two lines of output
             const code = `print("hello\\nworld\\nhow\\nare\\nyou")`;

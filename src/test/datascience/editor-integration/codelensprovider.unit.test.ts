@@ -10,7 +10,7 @@ import {
     IDocumentManager,
     IVSCodeNotebook
 } from '../../../client/common/application/types';
-import { IConfigurationService, IDataScienceSettings, IJupyterSettings } from '../../../client/common/types';
+import { IConfigurationService, IJupyterSettings, IJupyterSettings } from '../../../client/common/types';
 import { DataScienceCodeLensProvider } from '../../../client/datascience/editor-integration/codelensprovider';
 import {
     ICodeWatcher,
@@ -25,7 +25,7 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     let configurationService: TypeMoq.IMock<IConfigurationService>;
     let codeLensProvider: IDataScienceCodeLensProvider;
-    let dataScienceSettings: TypeMoq.IMock<IDataScienceSettings>;
+    let dataScienceSettings: TypeMoq.IMock<IJupyterSettings>;
     let pythonSettings: TypeMoq.IMock<IJupyterSettings>;
     let documentManager: TypeMoq.IMock<IDocumentManager>;
     let commandManager: TypeMoq.IMock<ICommandManager>;
@@ -45,7 +45,7 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
         debugService = TypeMoq.Mock.ofType<IDebugService>();
         debugLocationTracker = TypeMoq.Mock.ofType<IDebugLocationTracker>();
         pythonSettings = TypeMoq.Mock.ofType<IJupyterSettings>();
-        dataScienceSettings = TypeMoq.Mock.ofType<IDataScienceSettings>();
+        dataScienceSettings = TypeMoq.Mock.ofType<IJupyterSettings>();
         fileSystem = TypeMoq.Mock.ofType<IDataScienceFileSystem>();
         vscodeNotebook = TypeMoq.Mock.ofType<IVSCodeNotebook>();
         dataScienceSettings.setup((d) => d.enabled).returns(() => true);

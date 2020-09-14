@@ -2,13 +2,13 @@
 // Licensed under the MIT License.
 'use strict';
 import { assert } from 'chai';
-import { IDataScienceSettings } from '../../client/common/types';
+import { IJupyterSettings } from '../../client/common/types';
 import { CellMatcher } from '../../client/datascience/cellMatcher';
 import { defaultDataScienceSettings } from './helpers';
 
 suite('DataScience CellMatcher', () => {
     test('CellMatcher', () => {
-        const settings: IDataScienceSettings = defaultDataScienceSettings();
+        const settings: IJupyterSettings = defaultDataScienceSettings();
         const matcher1 = new CellMatcher(settings);
         assert.ok(matcher1.isCode('# %%'), 'Base code is wrong');
         assert.ok(matcher1.isMarkdown('# %% [markdown]'), 'Base markdown is wrong');

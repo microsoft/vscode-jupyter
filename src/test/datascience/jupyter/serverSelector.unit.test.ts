@@ -10,7 +10,7 @@ import { ClipboardService } from '../../../client/common/application/clipboard';
 import { CommandManager } from '../../../client/common/application/commandManager';
 import { IClipboard, ICommandManager } from '../../../client/common/application/types';
 import { ConfigurationService } from '../../../client/common/configuration/service';
-import { IDataScienceSettings } from '../../../client/common/types';
+import { IJupyterSettings } from '../../../client/common/types';
 import { DataScience } from '../../../client/common/utils/localize';
 import { noop } from '../../../client/common/utils/misc';
 import { MultiStepInput, MultiStepInputFactory } from '../../../client/common/utils/multiStepInput';
@@ -26,7 +26,7 @@ import { MockQuickPick } from '../mockQuickPick';
 suite('DataScience - Jupyter Server URI Selector', () => {
     let quickPick: MockQuickPick | undefined;
     let cmdManager: ICommandManager;
-    let dsSettings: IDataScienceSettings;
+    let dsSettings: IJupyterSettings;
     let clipboard: IClipboard;
 
     function createDataScienceObject(

@@ -10,7 +10,7 @@ import { IApplicationShell, IWorkspaceService } from '../../../../client/common/
 import { WorkspaceService } from '../../../../client/common/application/workspace';
 import { JupyterSettings } from '../../../../client/common/configSettings';
 import { PathUtils } from '../../../../client/common/platform/pathUtils';
-import { IDataScienceSettings, IPathUtils } from '../../../../client/common/types';
+import { IJupyterSettings, IPathUtils } from '../../../../client/common/types';
 import { JupyterInterpreterSelector } from '../../../../client/datascience/jupyter/interpreter/jupyterInterpreterSelector';
 import { JupyterInterpreterStateStore } from '../../../../client/datascience/jupyter/interpreter/jupyterInterpreterStateStore';
 import { IInterpreterSelector } from '../../../../client/interpreter/configuration/types';
@@ -22,7 +22,7 @@ suite('DataScience - Jupyter Interpreter Picker', () => {
     let interpreterSelectionState: JupyterInterpreterStateStore;
     let workspace: IWorkspaceService;
     let pathUtils: IPathUtils;
-    let dsSettings: IDataScienceSettings;
+    let dsSettings: IJupyterSettings;
 
     setup(() => {
         interpreterSelector = mock<IInterpreterSelector>();

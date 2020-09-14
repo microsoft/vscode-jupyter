@@ -9,7 +9,7 @@ import * as typemoq from 'typemoq';
 import { IApplicationShell } from '../../client/common/application/types';
 import {
     IConfigurationService,
-    IDataScienceSettings,
+    IJupyterSettings,
     IPersistentState,
     IPersistentStateFactory,
     IJupyterSettings
@@ -157,7 +157,7 @@ function loadBanner(
 
     // Config settings
     const pythonSettings = typemoq.Mock.ofType<IJupyterSettings>();
-    const dataScienceSettings = typemoq.Mock.ofType<IDataScienceSettings>();
+    const dataScienceSettings = typemoq.Mock.ofType<IJupyterSettings>();
     dataScienceSettings.setup((d) => d.enabled).returns(() => true);
     dataScienceSettings.setup((d) => d.sendSelectionToInteractiveWindow).returns(() => false);
     pythonSettings.setup((p) => p.datascience).returns(() => dataScienceSettings.object);

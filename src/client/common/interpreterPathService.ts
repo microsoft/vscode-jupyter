@@ -15,18 +15,17 @@ import {
     IDisposable,
     IDisposableRegistry,
     IInterpreterPathService,
+    IJupyterSettings,
     InspectInterpreterSettingType,
     InterpreterConfigurationScope,
     IPersistentState,
     IPersistentStateFactory,
-    IJupyterSettings,
     Resource
 } from './types';
 
 export const workspaceKeysForWhichTheCopyIsDone_Key = 'workspaceKeysForWhichTheCopyIsDone_Key';
 export const workspaceFolderKeysForWhichTheCopyIsDone_Key = 'workspaceFolderKeysForWhichTheCopyIsDone_Key';
 export const isGlobalSettingCopiedKey = 'isGlobalSettingCopiedKey';
-export const defaultInterpreterPathSetting: keyof IJupyterSettings = 'defaultInterpreterPath';
 const CI_PYTHON_PATH = getCIPythonPath();
 
 export function getCIPythonPath(): string {
@@ -52,7 +51,9 @@ export class InterpreterPathService implements IInterpreterPathService {
     }
 
     public async onDidChangeConfiguration(event: ConfigurationChangeEvent) {
-        if (event.affectsConfiguration(`python.${defaultInterpreterPathSetting}`)) {
+        // tslint:disable-next-line: no-suspicious-comment
+        // TODO: Double check this. Should go away when we use the Python API though
+        if (event.affectsConfiguration(`python.defaultInterpreterPath`)) {
             this._didChangeInterpreterEmitter.fire({ uri: undefined, configTarget: ConfigurationTarget.Global });
         }
     }

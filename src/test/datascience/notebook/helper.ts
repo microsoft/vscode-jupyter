@@ -184,7 +184,7 @@ export async function closeNotebooks(disposables: IDisposable[] = []) {
 
 export async function trustAllNotebooks() {
     const api = await initialize();
-    const dsSettings = api.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings().datascience;
+    const dsSettings = api.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings();
     if (oldValueFor_alwaysTrustNotebooks !== undefined) {
         oldValueFor_alwaysTrustNotebooks = dsSettings.alwaysTrustNotebooks;
     }

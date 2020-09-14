@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { assert } from 'chai';
-import { IDataScienceSettings } from '../../client/common/types';
+import { IJupyterSettings } from '../../client/common/types';
 import {
     createEmptyCell,
     CursorPos,
@@ -34,7 +34,7 @@ suite('DataScience MainState', () => {
     }
 
     test('ExtractInputText', () => {
-        const settings: IDataScienceSettings = defaultDataScienceSettings();
+        const settings: IJupyterSettings = defaultDataScienceSettings();
         settings.stopOnFirstLineWhileDebugging = true;
         const cvm: ICellViewModel = {
             cell: createEmptyCell('1', null),

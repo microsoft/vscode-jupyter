@@ -17,7 +17,6 @@ import {
     Uri,
     WorkspaceEdit
 } from 'vscode';
-import { LanguageServerType } from '../activation/types';
 import { LogLevel } from '../logging/levels';
 import { CommandsWithoutArgs } from './application/commands';
 import { ExtensionChannels } from './insidersBuild/types';
@@ -159,11 +158,11 @@ export interface ICurrentProcess {
 }
 
 export interface IJupyterSettings {
-    readonly languageServer: LanguageServerType;
     readonly insidersChannel: ExtensionChannels;
     readonly onDidChange: Event<void>;
     readonly experiments: IExperiments;
     readonly logging: ILoggingSettings;
+    readonly allowUnauthorizedRemoteConnection?: boolean;
     readonly allowImportFromNotebook: boolean;
     readonly alwaysTrustNotebooks: boolean;
     readonly jupyterInterruptTimeout: number;

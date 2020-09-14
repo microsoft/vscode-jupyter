@@ -17,7 +17,7 @@ import { JupyterSettings } from '../../../client/common/configSettings';
 import {
     IAnalysisSettings,
     IAutoCompleteSettings,
-    IDataScienceSettings,
+    IJupyterSettings,
     IExperiments,
     IFormattingSettings,
     ILintingSettings,
@@ -116,7 +116,7 @@ suite('Python Settings', async () => {
             .returns(() => sourceSettings.workspaceSymbols);
         config.setup((c) => c.get<ITestingSettings>('testing')).returns(() => sourceSettings.testing);
         config.setup((c) => c.get<ITerminalSettings>('terminal')).returns(() => sourceSettings.terminal);
-        config.setup((c) => c.get<IDataScienceSettings>('dataScience')).returns(() => sourceSettings.datascience);
+        config.setup((c) => c.get<IJupyterSettings>('dataScience')).returns(() => sourceSettings.datascience);
         config.setup((c) => c.get<IExperiments>('experiments')).returns(() => sourceSettings.experiments);
     }
 

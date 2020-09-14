@@ -129,7 +129,7 @@ import {
     IConfigurationService,
     ICryptoUtils,
     ICurrentProcess,
-    IDataScienceSettings,
+    IJupyterSettings,
     IDisposable,
     IExperimentService,
     IExperimentsManager,
@@ -1091,14 +1091,14 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         return setting;
     }
 
-    public forceDataScienceSettingsChanged(dataScienceSettings: Partial<IDataScienceSettings>) {
+    public forceDataScienceSettingsChanged(dataScienceSettings: Partial<IJupyterSettings>) {
         this.forceSettingsChanged(undefined, this.getSettings().pythonPath, {
-            ...this.getSettings().datascience,
+            ...this.getSettings(),
             ...dataScienceSettings
         });
     }
 
-    public forceSettingsChanged(resource: Resource, newPath: string, datascienceSettings?: IDataScienceSettings) {
+    public forceSettingsChanged(resource: Resource, newPath: string, datascienceSettings?: IJupyterSettings) {
         const settings = this.getSettings(resource) as any;
         settings.pythonPath = newPath;
         settings.datascience = datascienceSettings ? datascienceSettings : settings.datascience;

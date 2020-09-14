@@ -33,9 +33,9 @@ function getCacheKey(
     vscode: VSCodeType = require('vscode'),
     serviceContainer: IServiceContainer | undefined
 ) {
-    const section = vscode.workspace.getConfiguration('python', vscode.Uri.file(__filename));
+    const section = vscode.workspace.getConfiguration('jupyter', vscode.Uri.file(__filename));
     if (!section) {
-        return 'python';
+        return 'jupyter';
     }
     let interpreterPathService: IInterpreterPathService | undefined;
     let inExperiment: boolean | undefined;
@@ -61,6 +61,9 @@ function getCacheKey(
     if (!folder) {
         return globalPythonPath;
     }
+
+    // tslint:disable-next-line: no-suspicious-comment
+    // TODO: We should get this out of the python API
     const workspacePythonPath =
         inExperiment && interpreterPathService
             ? interpreterPathService.get(resource)

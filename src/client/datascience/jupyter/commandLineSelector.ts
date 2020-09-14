@@ -78,7 +78,7 @@ export class JupyterCommandLineSelector {
         // Ask the user to enter a command line
         const result = await input.showInputBox({
             title: DataScience.jupyterCommandLinePrompt(),
-            value: this.configuration.getSettings(file).datascience.jupyterCommandLineArguments.join(' '),
+            value: this.configuration.getSettings(file).jupyterCommandLineArguments.join(' '),
             validate: this.validate,
             prompt: ''
         });

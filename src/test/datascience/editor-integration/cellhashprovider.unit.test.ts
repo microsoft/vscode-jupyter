@@ -6,7 +6,7 @@ import * as TypeMoq from 'typemoq';
 import { Position, Range, Uri } from 'vscode';
 
 import { IDebugService } from '../../../client/common/application/types';
-import { IConfigurationService, IDataScienceSettings, IJupyterSettings } from '../../../client/common/types';
+import { IConfigurationService, IJupyterSettings, IJupyterSettings } from '../../../client/common/types';
 import { CellHashProvider } from '../../../client/datascience/editor-integration/cellhashprovider';
 import {
     CellState,
@@ -30,7 +30,7 @@ suite('CellHashProvider Unit Tests', () => {
     let hashProvider: CellHashProvider;
     let documentManager: MockDocumentManager;
     let configurationService: TypeMoq.IMock<IConfigurationService>;
-    let dataScienceSettings: TypeMoq.IMock<IDataScienceSettings>;
+    let dataScienceSettings: TypeMoq.IMock<IJupyterSettings>;
     let pythonSettings: TypeMoq.IMock<IJupyterSettings>;
     let debugService: TypeMoq.IMock<IDebugService>;
     let fileSystem: TypeMoq.IMock<IDataScienceFileSystem>;
@@ -38,7 +38,7 @@ suite('CellHashProvider Unit Tests', () => {
     setup(() => {
         configurationService = TypeMoq.Mock.ofType<IConfigurationService>();
         pythonSettings = TypeMoq.Mock.ofType<IJupyterSettings>();
-        dataScienceSettings = TypeMoq.Mock.ofType<IDataScienceSettings>();
+        dataScienceSettings = TypeMoq.Mock.ofType<IJupyterSettings>();
         debugService = TypeMoq.Mock.ofType<IDebugService>();
         fileSystem = TypeMoq.Mock.ofType<IDataScienceFileSystem>();
         dataScienceSettings.setup((d) => d.enabled).returns(() => true);

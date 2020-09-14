@@ -45,10 +45,10 @@ export class LiveShareApi implements ILiveShareApi {
     }
 
     private onSettingsChanged() {
-        const supported = this.configService.getSettings().datascience.allowLiveShare;
+        const supported = this.configService.getSettings().allowLiveShare;
         if (supported !== this.supported) {
             this.supported = supported ? true : false;
-            const liveShareTimeout = this.configService.getSettings().datascience.liveShareConnectionTimeout;
+            const liveShareTimeout = this.configService.getSettings().liveShareConnectionTimeout;
             this.apiPromise = supported
                 ? vsls
                       .getApi()

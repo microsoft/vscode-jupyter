@@ -29,7 +29,7 @@ export class ExtensionChannelService implements IExtensionChannelService {
 
     public get isChannelUsingDefaultConfiguration(): boolean {
         const settings = this.workspaceService
-            .getConfiguration('python')
+            .getConfiguration('jupyter')
             .inspect<ExtensionChannels>(insidersChannelSetting);
         if (!settings) {
             throw new Error(
