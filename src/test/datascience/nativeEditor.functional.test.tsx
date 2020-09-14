@@ -421,8 +421,7 @@ suite('DataScience Native Editor', () => {
 
                 runMountedTest('Invalid kernel can be switched', async (context) => {
                     if (ioc.mockJupyter) {
-                        ioc.forceSettingsChanged(undefined, ioc.getSettings().pythonPath, {
-                            ...ioc.getSettings(),
+                        ioc.forceDataScienceSettingsChanged({
                             jupyterLaunchRetries: 1,
                             disableJupyterAutoStart: true
                         });
@@ -720,7 +719,9 @@ df.head()`;
 
                 runMountedTest('Server load skipped', async (context) => {
                     if (ioc.mockJupyter) {
-                        ioc.getSettings().disableJupyterAutoStart = true;
+                        ioc.forceDataScienceSettingsChanged({
+                            disableJupyterAutoStart: true
+                        });
                         await ioc.activate();
 
                         // Create an editor so something is listening to messages
@@ -2312,7 +2313,7 @@ df.head()`;
                         // Configure notebook to save automatically ever 1s.
                         await updateFileConfig(ioc, 'autoSave', 'afterDelay');
                         await updateFileConfig(ioc, 'autoSaveDelay', 1_000);
-                        ioc.forceSettingsChanged(undefined, ioc.getSettings().pythonPath);
+                        ioc.forceDataScienceSettingsChanged({});
 
                         /**
                          * Make some changes to a cell of a notebook, then verify the notebook is auto saved.
@@ -2347,7 +2348,7 @@ df.head()`;
                         await updateFileConfig(ioc, 'autoSave', 'afterDelay');
                         await updateFileConfig(ioc, 'autoSaveDelay', 2_000);
 
-                        ioc.forceSettingsChanged(undefined, ioc.getSettings().pythonPath);
+                        ioc.forceDataScienceSettingsChanged({});
                         const notebookFileContents = await fs.readFile(notebookFile.filePath, 'utf8');
                         const dirtyPromise = waitForMessage(ioc, InteractiveWindowMessages.NotebookDirty);
                         const cleanPromise = waitForMessage(ioc, InteractiveWindowMessages.NotebookClean);
@@ -2410,7 +2411,7 @@ df.head()`;
 
                         // Configure notebook to save when active editor changes.
                         await updateFileConfig(ioc, 'autoSave', 'onFocusChange');
-                        ioc.forceSettingsChanged(undefined, ioc.getSettings().pythonPath);
+                        ioc.forceDataScienceSettingsChanged({});
 
                         // Now that the notebook is dirty, change the active editor.
                         const docManager = ioc.get<IDocumentManager>(IDocumentManager) as MockDocumentManager;
@@ -2442,7 +2443,7 @@ df.head()`;
 
                         // Configure notebook to save when window state changes.
                         await updateFileConfig(ioc, 'autoSave', 'onWindowChange');
-                        ioc.forceSettingsChanged(undefined, ioc.getSettings().pythonPath);
+                        ioc.forceDataScienceSettingsChanged({});
 
                         // Now that the notebook is dirty, change the active editor.
                         // This should not trigger a save of notebook (as its configured to save only when window state changes).
@@ -2468,7 +2469,7 @@ df.head()`;
 
                         // Configure notebook to save when active editor changes.
                         await updateFileConfig(ioc, 'autoSave', configSetting);
-                        ioc.forceSettingsChanged(undefined, ioc.getSettings().pythonPath);
+                        ioc.forceDataScienceSettingsChanged({});
 
                         // Now that the notebook is dirty, send notification about changes to window state.
                         windowStateChangeHandlers.forEach((item) => item({ focused }));
@@ -2500,7 +2501,7 @@ df.head()`;
 
                         // Configure notebook to save when active editor changes.
                         await updateFileConfig(ioc, 'autoSave', 'onFocusChange');
-                        ioc.forceSettingsChanged(undefined, ioc.getSettings().pythonPath);
+                        ioc.forceDataScienceSettingsChanged({});
 
                         // Force a view state change
                         mount.changeViewState(true, false);
@@ -2626,10 +2627,7 @@ df.head()`;
                         const ne = notebookEditor;
 
                         // Force our settings to not stop on error
-                        ioc.forceSettingsChanged(undefined, ioc.getSettings().pythonPath, {
-                            ...ioc.getSettings(),
-                            stopOnError: false
-                        });
+                        ioc.forceDataScienceSettingsChanged({ stopOnError: false });
 
                         const runAllButton = findButton(ne.mount.wrapper, NativeEditor, 0);
                         // The render method needs to be executed 3 times for three cells.

@@ -19,7 +19,7 @@ import { IDataScienceFileSystem } from '../../../client/datascience/types';
 import { ServiceContainer } from '../../../client/ioc/container';
 import { IServiceContainer } from '../../../client/ioc/types';
 
-// tslint:disable: max-func-body-length
+// tslint:disable: max-func-body-length no-any
 suite('DataScience - JupyterConnection', () => {
     let observableOutput: Subject<Output<string>>;
     let launchResult: ObservableExecutionResult<string>;
@@ -83,7 +83,6 @@ suite('DataScience - JupyterConnection', () => {
         const settings = mock(JupyterSettings);
         getServerInfoStub.resolves(dummyServerInfos);
         when(fs.areLocalPathsSame(anything(), anything())).thenCall((path1, path2) => path1 === path2);
-        when(settings.datascience).thenReturn(dsSettings);
         when(configService.getSettings(anything())).thenReturn(instance(settings));
         when(serviceContainer.get<IDataScienceFileSystem>(IDataScienceFileSystem)).thenReturn(instance(fs));
         when(serviceContainer.get<IConfigurationService>(IConfigurationService)).thenReturn(instance(configService));
@@ -101,7 +100,7 @@ suite('DataScience - JupyterConnection', () => {
         );
     }
     test('Successfully gets connection info', async () => {
-        dsSettings.jupyterLaunchTimeout = 10_000;
+        (<any>dsSettings).jupyterLaunchTimeout = 10_000;
         const waiter = createConnectionWaiter();
         observableOutput.next({ source: 'stderr', out: 'Jupyter listening on http://123.123.123:8888' });
 
@@ -114,7 +113,7 @@ suite('DataScience - JupyterConnection', () => {
         assert.equal(connection.token, expectedServerInfo.token);
     });
     test('Disconnect event is fired in connection', async () => {
-        dsSettings.jupyterLaunchTimeout = 10_000;
+        (<any>dsSettings).jupyterLaunchTimeout = 10_000;
         const waiter = createConnectionWaiter();
         observableOutput.next({ source: 'stderr', out: 'Jupyter listening on http://123.123.123:8888' });
         let disconnected = false;
@@ -128,7 +127,7 @@ suite('DataScience - JupyterConnection', () => {
         assert.equal(connection.localProcExitCode, 999);
     });
     test('Throw timeout error', async () => {
-        dsSettings.jupyterLaunchTimeout = 10;
+        (<any>dsSettings).jupyterLaunchTimeout = 10;
         const waiter = createConnectionWaiter();
 
         const promise = waiter.waitForConnection();

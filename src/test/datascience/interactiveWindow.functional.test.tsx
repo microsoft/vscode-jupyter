@@ -709,10 +709,13 @@ for i in range(0, 100):
                 // Add another python path
                 const secondUri = Uri.file('bar.py');
                 ioc.addResourceToFolder(secondUri, path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience2'));
-                ioc.forceSettingsChanged(
-                    secondUri,
-                    interpreters.filter((i) => i.path !== activeInterpreter?.path)[0].path
-                );
+
+                // tslint:disable-next-line: no-suspicious-comment
+                // TODO: Need to be able to change the current interpreter using the python API
+                // ioc.forceSettingsChanged(
+                //     secondUri,
+                //     interpreters.filter((i) => i.path !== activeInterpreter?.path)[0].path
+                // );
 
                 // Then open a second time and make sure it uses this new path
                 const secondPath = await interpreterService.getActiveInterpreter(secondUri);

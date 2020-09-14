@@ -15,7 +15,6 @@ import { CancellationTokenSource, ConfigurationChangeEvent, Disposable, EventEmi
 import { ApplicationShell } from '../../client/common/application/applicationShell';
 import { IApplicationShell, IWorkspaceService } from '../../client/common/application/types';
 import { WorkspaceService } from '../../client/common/application/workspace';
-import { JupyterSettings } from '../../client/common/configSettings';
 import { ConfigurationService } from '../../client/common/configuration/service';
 import { PYTHON_LANGUAGE } from '../../client/common/constants';
 import { PersistentState, PersistentStateFactory } from '../../client/common/persistentState';

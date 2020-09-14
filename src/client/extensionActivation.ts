@@ -5,15 +5,14 @@
 
 // tslint:disable:max-func-body-length
 
-import { CodeActionKind, debug, DebugConfigurationProvider, languages, OutputChannel, window } from 'vscode';
+import { debug, DebugConfigurationProvider, OutputChannel, window } from 'vscode';
 
 import { registerTypes as activationRegisterTypes } from './activation/serviceRegistry';
 import { IExtensionActivationManager } from './activation/types';
 import { registerTypes as registerApiTypes } from './api/serviceRegistry';
 import { registerTypes as appRegisterTypes } from './application/serviceRegistry';
-import { DebugService } from './common/application/debugService';
 import { IApplicationEnvironment, ICommandManager } from './common/application/types';
-import { PYTHON, PYTHON_LANGUAGE, STANDARD_OUTPUT_CHANNEL, UseProposedApi } from './common/constants';
+import { STANDARD_OUTPUT_CHANNEL, UseProposedApi } from './common/constants';
 import { registerTypes as installerRegisterTypes } from './common/installer/serviceRegistry';
 import { registerTypes as platformRegisterTypes } from './common/platform/serviceRegistry';
 import { IFileSystem } from './common/platform/types';
@@ -21,7 +20,6 @@ import { registerTypes as processRegisterTypes } from './common/process/serviceR
 import { registerTypes as commonRegisterTypes } from './common/serviceRegistry';
 import {
     IConfigurationService,
-    IDisposableRegistry,
     IExperimentsManager,
     IExtensionContext,
     IFeatureDeprecationManager,
@@ -37,7 +35,6 @@ import { DebuggerTypeName } from './debugger/constants';
 import { registerTypes as debugConfigurationRegisterTypes } from './debugger/extension/serviceRegistry';
 import { IDebugConfigurationService, IDebuggerBanner } from './debugger/extension/types';
 import { IServiceContainer, IServiceManager } from './ioc/types';
-import { getLanguageConfiguration } from './language/languageConfiguration';
 import { addOutputChannelLogging, setLoggingLevel } from './logging';
 import { setExtensionInstallTelemetryProperties } from './telemetry/extensionInstallTelemetry';
 import { registerTypes as commonRegisterTerminalTypes } from './terminals/serviceRegistry';

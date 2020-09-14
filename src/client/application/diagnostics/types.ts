@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { DiagnosticSeverity, Uri } from 'vscode';
+import { DiagnosticSeverity } from 'vscode';
 import { Resource } from '../../common/types';
 import { DiagnosticCodes } from './constants';
 

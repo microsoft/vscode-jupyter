@@ -9,10 +9,9 @@ import * as typemoq from 'typemoq';
 import { IApplicationShell } from '../../client/common/application/types';
 import {
     IConfigurationService,
-    IJupyterSettings,
     IPersistentState,
     IPersistentStateFactory,
-    IJupyterSettings
+    IWatchableJupyterSettings
 } from '../../client/common/types';
 import { Telemetry } from '../../client/datascience/constants';
 import { InteractiveShiftEnterBanner, InteractiveShiftEnterStateKeys } from '../../client/datascience/shiftEnterBanner';
@@ -156,12 +155,9 @@ function loadBanner(
         });
 
     // Config settings
-    const pythonSettings = typemoq.Mock.ofType<IJupyterSettings>();
-    const dataScienceSettings = typemoq.Mock.ofType<IJupyterSettings>();
-    dataScienceSettings.setup((d) => d.enabled).returns(() => true);
+    const dataScienceSettings = typemoq.Mock.ofType<IWatchableJupyterSettings>();
     dataScienceSettings.setup((d) => d.sendSelectionToInteractiveWindow).returns(() => false);
-    pythonSettings.setup((p) => p.datascience).returns(() => dataScienceSettings.object);
-    config.setup((c) => c.getSettings(typemoq.It.isAny())).returns(() => pythonSettings.object);
+    config.setup((c) => c.getSettings(typemoq.It.isAny())).returns(() => dataScienceSettings.object);
 
     // Config Jupyter
     jupyterExecution

@@ -6,7 +6,7 @@ import * as TypeMoq from 'typemoq';
 import { Position, Range, Uri } from 'vscode';
 
 import { IDebugService } from '../../../client/common/application/types';
-import { IConfigurationService, IJupyterSettings, IWatchableJupyterSettings } from '../../../client/common/types';
+import { IConfigurationService, IWatchableJupyterSettings } from '../../../client/common/types';
 import { CellHashProvider } from '../../../client/datascience/editor-integration/cellhashprovider';
 import {
     CellState,

@@ -147,7 +147,7 @@ suite('DataScience - ipywidget - CDN', () => {
                 verify(httpClient.exists(anything())).never();
             });
             function updateCDNSettings(...values: WidgetCDNs[]) {
-                settings.datascience.widgetScriptSources = values;
+                settings.widgetScriptSources = values;
             }
             (['unpkg.com', 'jsdelivr.com'] as WidgetCDNs[]).forEach((cdn) => {
                 suite(cdn, () => {

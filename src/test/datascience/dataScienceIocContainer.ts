@@ -983,26 +983,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         });
     }
 
-    public forceSettingsChanged(resource: Resource, newPath: string, datascienceSettings?: IJupyterSettings) {
-        // tslint:disable-next-line: no-suspicious-comment
-        // TODO: Python path will not be updated by this code so tests are unlikely to pass
-        const settings = this.getSettings(resource) as any;
-        settings.pythonPath = newPath;
-        settings.datascience = datascienceSettings ? datascienceSettings : settings.datascience;
-
-        // The workspace config must be updated too as a config change event will cause the data to be reread from
-        // the config.
-        const config = this.getWorkspaceConfig('python', resource);
-        config.update('pythonPath', newPath).ignoreErrors();
-        config.update('dataScience', settings.datascience).ignoreErrors();
-        settings.fireChangeEvent();
-        this.configChangeEvent.fire({
-            affectsConfiguration(_s: string, _r?: Uri): boolean {
-                return true;
-            }
-        });
-    }
-
     public setExtensionRootPath(newRoot: string) {
         this.extensionRootPath = newRoot;
     }
@@ -1080,6 +1060,25 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         const panel = this.pendingWebPanel;
         panel.attach(options);
         return panel;
+    }
+    private forceSettingsChanged(resource: Resource, newPath: string, datascienceSettings?: IJupyterSettings) {
+        // tslint:disable-next-line: no-suspicious-comment
+        // TODO: Python path will not be updated by this code so tests are unlikely to pass
+        const settings = this.getSettings(resource) as any;
+        settings.pythonPath = newPath;
+        settings.datascience = datascienceSettings ? datascienceSettings : settings.datascience;
+
+        // The workspace config must be updated too as a config change event will cause the data to be reread from
+        // the config.
+        const config = this.getWorkspaceConfig('python', resource);
+        config.update('pythonPath', newPath).ignoreErrors();
+        config.update('dataScience', settings.datascience).ignoreErrors();
+        settings.fireChangeEvent();
+        this.configChangeEvent.fire({
+            affectsConfiguration(_s: string, _r?: Uri): boolean {
+                return true;
+            }
+        });
     }
 
     private generateJupyterSettings() {

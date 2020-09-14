@@ -3,7 +3,7 @@
 
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { JupyterSettings } from '../../../client/common/configSettings';
-import { IConfigurationService, IExperimentsManager, IJupyterSettings } from '../../../client/common/types';
+import { IConfigurationService, IExperimentsManager, IWatchableJupyterSettings } from '../../../client/common/types';
 import { KernelDaemonPool } from '../../../client/datascience/kernel-launcher/kernelDaemonPool';
 import { KernelDaemonPreWarmer } from '../../../client/datascience/kernel-launcher/kernelDaemonPreWarmer';
 import {
@@ -22,7 +22,7 @@ suite('DataScience - Kernel Daemon Pool PreWarmer', () => {
     let rawNotebookSupported: IRawNotebookSupportedService;
     let configService: IConfigurationService;
     let daemonPool: KernelDaemonPool;
-    let settings: IJupyterSettings;
+    let settings: IWatchableJupyterSettings;
     setup(() => {
         notebookEditorProvider = mock<INotebookEditorProvider>();
         interactiveProvider = mock<IInteractiveWindowProvider>();
@@ -37,7 +37,6 @@ suite('DataScience - Kernel Daemon Pool PreWarmer', () => {
         settings = mock(JupyterSettings);
         when(configService.getSettings()).thenReturn(instance(settings));
         // tslint:disable-next-line: no-any
-        when(settings.datascience).thenReturn({} as any);
 
         prewarmer = new KernelDaemonPreWarmer(
             instance(notebookEditorProvider),

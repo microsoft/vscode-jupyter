@@ -8,7 +8,7 @@ import { sendFileCreationTelemetry } from '../../telemetry/envFileTelemetry';
 import { IWorkspaceService } from '../application/types';
 import { traceVerbose } from '../logger';
 import { IPlatformService } from '../platform/types';
-import { IConfigurationService, ICurrentProcess, IDisposableRegistry } from '../types';
+import { ICurrentProcess, IDisposableRegistry } from '../types';
 import { InMemoryInterpreterSpecificCache } from '../utils/cacheUtils';
 import { clearCachedResourceSpecificIngterpreterData } from '../utils/decorators';
 import { EnvironmentVariables, IEnvironmentVariablesProvider, IEnvironmentVariablesService } from './types';

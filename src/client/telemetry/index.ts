@@ -24,7 +24,6 @@ import { DebugConfigurationType } from '../debugger/extension/types';
 import { ConsoleType, TriggerType } from '../debugger/types';
 import { EnvironmentType } from '../pythonEnvironments/info';
 import { EventName, PlatformErrors } from './constants';
-import { LinterTrigger } from './types';
 
 // tslint:disable: no-any
 

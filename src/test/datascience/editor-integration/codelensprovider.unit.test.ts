@@ -10,7 +10,7 @@ import {
     IDocumentManager,
     IVSCodeNotebook
 } from '../../../client/common/application/types';
-import { IConfigurationService, IJupyterSettings, IWatchableJupyterSettings } from '../../../client/common/types';
+import { IConfigurationService, IWatchableJupyterSettings } from '../../../client/common/types';
 import { DataScienceCodeLensProvider } from '../../../client/datascience/editor-integration/codelensprovider';
 import {
     ICodeWatcher,

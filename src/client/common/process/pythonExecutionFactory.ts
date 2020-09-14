@@ -11,7 +11,7 @@ import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { traceError } from '../logger';
 import { IFileSystem } from '../platform/types';
-import { IConfigurationService, IDisposable, IDisposableRegistry, Resource } from '../types';
+import { IDisposable, IDisposableRegistry, Resource } from '../types';
 import { ProcessService } from './proc';
 import { PythonDaemonFactory } from './pythonDaemonFactory';
 import { PythonDaemonExecutionServicePool } from './pythonDaemonPool';

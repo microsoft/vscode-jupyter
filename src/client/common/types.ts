@@ -7,7 +7,6 @@ import { Request as RequestResult } from 'request';
 import {
     CancellationToken,
     ConfigurationTarget,
-    DiagnosticSeverity,
     Disposable,
     DocumentSymbolProvider,
     Event,

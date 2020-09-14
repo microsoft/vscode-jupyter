@@ -17,7 +17,6 @@ import { isTestExecution } from './constants';
 import { ExtensionChannels } from './insidersBuild/types';
 import {
     IExperiments,
-    IJupyterSettings,
     ILoggingSettings,
     InteractiveWindowMode,
     IVariableQuery,

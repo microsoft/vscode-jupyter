@@ -193,7 +193,7 @@ suite('DataScience - ipywidget - Widget Script Source Provider', () => {
                 ).once();
             });
             test('Attempt to get widget source from all providers', async () => {
-                settings.datascience.widgetScriptSources = ['jsdelivr.com', 'unpkg.com'];
+                (<any>settings).widgetScriptSources = ['jsdelivr.com', 'unpkg.com'];
                 const localOrRemoteSource = localLaunch
                     ? sinon.stub(LocalWidgetScriptSourceProvider.prototype, 'getWidgetScriptSource')
                     : sinon.stub(RemoteWidgetScriptSourceProvider.prototype, 'getWidgetScriptSource');
@@ -211,7 +211,7 @@ suite('DataScience - ipywidget - Widget Script Source Provider', () => {
             });
             test('Widget sources should respect changes to configuration settings', async () => {
                 // 1. Search CDN then local/remote juptyer.
-                settings.datascience.widgetScriptSources = ['jsdelivr.com', 'unpkg.com'];
+                (<any>settings).widgetScriptSources = ['jsdelivr.com', 'unpkg.com'];
                 const localOrRemoteSource = localLaunch
                     ? sinon.stub(LocalWidgetScriptSourceProvider.prototype, 'getWidgetScriptSource')
                     : sinon.stub(RemoteWidgetScriptSourceProvider.prototype, 'getWidgetScriptSource');
@@ -229,7 +229,7 @@ suite('DataScience - ipywidget - Widget Script Source Provider', () => {
                 localOrRemoteSource.reset();
                 cdnSource.reset();
                 localOrRemoteSource.resolves({ moduleName: 'moduleLocal', scriptUri: '1', source: 'local' });
-                settings.datascience.widgetScriptSources = [];
+                (<any>settings).widgetScriptSources = [];
                 onDidChangeWorkspaceSettings.fire({ affectsConfiguration: () => true });
 
                 values = await scriptSourceProvider.getWidgetScriptSource('ModuleName', '`');
@@ -239,7 +239,7 @@ suite('DataScience - ipywidget - Widget Script Source Provider', () => {
             });
             test('Widget source should support fall back search', async () => {
                 // 1. Search CDN and if that fails then get from local/remote.
-                settings.datascience.widgetScriptSources = ['jsdelivr.com', 'unpkg.com'];
+                (<any>settings).widgetScriptSources = ['jsdelivr.com', 'unpkg.com'];
                 const localOrRemoteSource = localLaunch
                     ? sinon.stub(LocalWidgetScriptSourceProvider.prototype, 'getWidgetScriptSource')
                     : sinon.stub(RemoteWidgetScriptSourceProvider.prototype, 'getWidgetScriptSource');
@@ -258,7 +258,7 @@ suite('DataScience - ipywidget - Widget Script Source Provider', () => {
                 cdnSource.calledBefore(localOrRemoteSource);
             });
             test('Widget sources from CDN should be given prefernce', async () => {
-                settings.datascience.widgetScriptSources = ['jsdelivr.com', 'unpkg.com'];
+                (<any>settings).widgetScriptSources = ['jsdelivr.com', 'unpkg.com'];
                 const localOrRemoteSource = localLaunch
                     ? sinon.stub(LocalWidgetScriptSourceProvider.prototype, 'getWidgetScriptSource')
                     : sinon.stub(RemoteWidgetScriptSourceProvider.prototype, 'getWidgetScriptSource');
@@ -276,7 +276,7 @@ suite('DataScience - ipywidget - Widget Script Source Provider', () => {
                 verify(appShell.showWarningMessage(anything(), anything(), anything(), anything())).never();
             });
             test('When CDN is turned on and widget script is not found, then display a warning about script not found on CDN', async () => {
-                settings.datascience.widgetScriptSources = ['jsdelivr.com', 'unpkg.com'];
+                (<any>settings).widgetScriptSources = ['jsdelivr.com', 'unpkg.com'];
                 const localOrRemoteSource = localLaunch
                     ? sinon.stub(LocalWidgetScriptSourceProvider.prototype, 'getWidgetScriptSource')
                     : sinon.stub(RemoteWidgetScriptSourceProvider.prototype, 'getWidgetScriptSource');

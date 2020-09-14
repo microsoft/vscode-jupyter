@@ -10,7 +10,7 @@ import { ApplicationShell } from '../../../../client/common/application/applicat
 import { IApplicationShell } from '../../../../client/common/application/types';
 import { JupyterSettings } from '../../../../client/common/configSettings';
 import { ConfigurationService } from '../../../../client/common/configuration/service';
-import { IConfigurationService, IJupyterSettings } from '../../../../client/common/types';
+import { IConfigurationService, IWatchableJupyterSettings } from '../../../../client/common/types';
 import { Common } from '../../../../client/common/utils/localize';
 import { Architecture } from '../../../../client/common/utils/platform';
 import { EXTENSION_ROOT_DIR } from '../../../../client/constants';
@@ -35,7 +35,7 @@ suite('DataScience - Kernel Switcher', () => {
     let connection: IJupyterConnection;
     let currentKernel: IJupyterKernelSpec | LiveKernelModel;
     let selectedInterpreter: PythonEnvironment;
-    let settings: IJupyterSettings;
+    let settings: IWatchableJupyterSettings;
     let newKernelConnection: KernelConnectionMetadata;
     setup(() => {
         connection = mock<IJupyterConnection>();
@@ -67,7 +67,6 @@ suite('DataScience - Kernel Switcher', () => {
         when(notebookProvider.type).thenReturn('jupyter');
 
         // tslint:disable-next-line: no-any
-        when(settings.datascience).thenReturn({} as any);
         when(notebook.connection).thenReturn(instance(connection));
         when(configService.getSettings(anything())).thenReturn(instance(settings));
         kernelSwitcher = new KernelSwitcher(
