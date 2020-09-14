@@ -21,7 +21,7 @@
     "bugs": {
         "url": "https://github.com/Microsoft/vscode-jupyter/issues"
     },
-    "qna": "https://stackoverflow.com/questions/tagged/visual-studio-code+python",
+    "qna": "https://stackoverflow.com/questions/tagged/visual-studio-code+jupyter",
     "icon": "icon.png",
     "galleryBanner": {
         "color": "#1e415e",
@@ -654,52 +654,52 @@
                 {
                     "when": "editorFocus && editorLangId == python && jupyter.hascodecells && jupyter.featureenabled && !notebookEditorFocused",
                     "command": "jupyter.runallcells",
-                    "group": "Python2"
+                    "group": "Jupyter2"
                 },
                 {
                     "when": "editorFocus && editorLangId == python && jupyter.hascodecells && jupyter.featureenabled && !notebookEditorFocused",
                     "command": "jupyter.runcurrentcell",
-                    "group": "Python2"
+                    "group": "Jupyter2"
                 },
                 {
                     "when": "editorFocus && editorLangId == python && jupyter.hascodecells && jupyter.featureenabled && !notebookEditorFocused",
                     "command": "jupyter.runcurrentcelladvance",
-                    "group": "Python2"
+                    "group": "Jupyter2"
                 },
                 {
                     "command": "jupyter.runFileInteractive",
-                    "group": "Python2",
+                    "group": "Jupyter2",
                     "when": "editorFocus && editorLangId == python && jupyter.featureenabled && !notebookEditorFocused"
                 },
                 {
                     "command": "jupyter.runfromline",
-                    "group": "Python2",
+                    "group": "Jupyter2",
                     "when": "editorFocus && editorLangId == python && jupyter.ownsSelection && jupyter.featureenabled && !notebookEditorFocused"
                 },
                 {
                     "command": "jupyter.runtoline",
-                    "group": "Python2",
+                    "group": "Jupyter2",
                     "when": "editorFocus && editorLangId == python && jupyter.ownsSelection && jupyter.featureenabled && !notebookEditorFocused"
                 },
                 {
                     "command": "jupyter.execSelectionInteractive",
-                    "group": "Python2",
+                    "group": "Jupyter2",
                     "when": "editorFocus && editorLangId == python && jupyter.featureenabled && jupyter.ownsSelection && !notebookEditorFocused"
                 },
                 {
                     "when": "editorFocus && editorLangId == python && resourceLangId == jupyter && jupyter.featureenabled && !notebookEditorFocused",
                     "command": "jupyter.importnotebook",
-                    "group": "Python3@1"
+                    "group": "Jupyter3@1"
                 },
                 {
                     "when": "editorFocus && editorLangId == python && jupyter.hascodecells && jupyter.featureenabled && !notebookEditorFocused",
                     "command": "jupyter.exportfileasnotebook",
-                    "group": "Python3@2"
+                    "group": "Jupyter3@2"
                 },
                 {
                     "when": "editorFocus && editorLangId == python && jupyter.hascodecells && jupyter.featureenabled && !notebookEditorFocused",
                     "command": "jupyter.exportfileandoutputasnotebook",
-                    "group": "Python3@3"
+                    "group": "Jupyter3@3"
                 }
             ],
             "editor/title": [
@@ -726,22 +726,22 @@
                 {
                     "when": "resourceLangId == python && jupyter.featureenabled && !notebookEditorFocused",
                     "command": "jupyter.runFileInteractive",
-                    "group": "Python2"
+                    "group": "Jupyter2"
                 },
                 {
                     "when": "resourceLangId == jupyter",
                     "command": "jupyter.opennotebook",
-                    "group": "Python"
+                    "group": "Jupyter"
                 },
                 {
                     "when": "resourceLangId == jupyter && jupyter.vscode.channel == 'insiders'",
                     "command": "jupyter.opennotebookInPreviewEditor",
-                    "group": "Python"
+                    "group": "Jupyter"
                 },
                 {
                     "when": "resourceLangId == jupyter",
                     "command": "jupyter.importnotebookfile",
-                    "group": "Python"
+                    "group": "Jupyter"
                 }
             ],
             "commandPalette": [
@@ -1167,17 +1167,6 @@
                 }
             ]
         },
-        "breakpoints": [
-            {
-                "language": "python"
-            },
-            {
-                "language": "html"
-            },
-            {
-                "language": "jinja"
-            }
-        ],
         "configuration": {
             "type": "object",
             "title": "Jupyter",
@@ -1268,12 +1257,6 @@
                     "default": true,
                     "description": "Warn the user before restarting a kernel.",
                     "scope": "application"
-                },
-                "jupyter.enabled": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Enable the experimental data science features in the python extension.",
-                    "scope": "resource"
                 },
                 "jupyter.exportWithOutputEnabled": {
                     "type": "boolean",
@@ -1802,9 +1785,9 @@
         "testDebugger": "node ./out/test/testBootstrap.js ./out/test/debuggerTest.js",
         "testSingleWorkspace": "node ./out/test/testBootstrap.js ./out/test/standardTest.js",
         "preTestJediLSP": "node ./out/test/languageServers/jedi/lspSetup.js",
-        "testJediLSP": "node ./out/test/languageServers/jedi/lspSetup.js && cross-env CODE_TESTS_WORKSPACE=src/test VSC_PYTHON_CI_TEST_GREP='Language Server:' node ./out/test/testBootstrap.js ./out/test/standardTest.js && node ./out/test/languageServers/jedi/lspTeardown.js",
+        "testJediLSP": "node ./out/test/languageServers/jedi/lspSetup.js && cross-env CODE_TESTS_WORKSPACE=src/test VSC_JUPYTER_CI_TEST_GREP='Language Server:' node ./out/test/testBootstrap.js ./out/test/standardTest.js && node ./out/test/languageServers/jedi/lspTeardown.js",
         "pretestDataScience": "node ./out/test/datascience/dsTestSetup.js",
-        "testDataScience": "cross-env CODE_TESTS_WORKSPACE=src/test/datascience VSC_PYTHON_CI_TEST_VSC_CHANNEL=insiders TEST_FILES_SUFFIX=ds.test VSC_PYTHON_FORCE_LOGGING=1 VSC_PYTHON_LOAD_EXPERIMENTS_FROM_FILE=true node ./out/test/testBootstrap.js ./out/test/standardTest.js",
+        "testDataScience": "cross-env CODE_TESTS_WORKSPACE=src/test/datascience VSC_JUPYTER_CI_TEST_VSC_CHANNEL=insiders TEST_FILES_SUFFIX=ds.test VSC_PYTHON_FORCE_LOGGING=1 VSC_PYTHON_LOAD_EXPERIMENTS_FROM_FILE=true node ./out/test/testBootstrap.js ./out/test/standardTest.js",
         "testPerformance": "node ./out/test/testBootstrap.js ./out/test/performanceTest.js",
         "testSmoke": "node ./out/test/smokeTest.js",
         "lint-staged": "node gulpfile.js",

@@ -118,19 +118,6 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
                     })
                 );
             }
-
-            const settings = this.configurationService.getSettings(resource);
-            if (settings.downloadLanguageServer) {
-                this.languageClient.onTelemetry((telemetryEvent) => {
-                    const eventName = telemetryEvent.EventName || EventName.LANGUAGE_SERVER_TELEMETRY;
-                    const formattedProperties = {
-                        ...telemetryEvent.Properties,
-                        // Replace all slashes in the method name so it doesn't get scrubbed by vscode-extension-telemetry.
-                        method: telemetryEvent.Properties.method?.replace(/\//g, '.')
-                    };
-                    sendTelemetryEvent(eventName, telemetryEvent.Measurements, formattedProperties);
-                });
-            }
         } else {
             await this.startupCompleted.promise;
         }

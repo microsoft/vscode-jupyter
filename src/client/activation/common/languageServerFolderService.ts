@@ -63,28 +63,11 @@ export abstract class LanguageServerFolderService implements ILanguageServerFold
     }
 
     public async shouldLookForNewLanguageServer(currentFolder?: FolderVersionPair): Promise<boolean> {
-        const configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
-        const autoUpdateLanguageServer = configService.getSettings().autoUpdateLanguageServer;
-        const downloadLanguageServer = configService.getSettings().downloadLanguageServer;
-        if (currentFolder && (!autoUpdateLanguageServer || !downloadLanguageServer)) {
-            return false;
-        }
-        const downloadChannel = this.getDownloadChannel();
-        const rule = this.serviceContainer.get<IDownloadChannelRule>(IDownloadChannelRule, downloadChannel);
-        return rule.shouldLookForNewLanguageServer(currentFolder);
+        return false;
     }
 
     public async getCurrentLanguageServerDirectory(): Promise<FolderVersionPair | undefined> {
-        const configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
-        if (!configService.getSettings().downloadLanguageServer) {
-            return { path: this.languageServerFolder, version: new semver.SemVer('0.0.0') };
-        }
-        const dirs = await this.getExistingLanguageServerDirectories();
-        if (dirs.length === 0) {
-            return;
-        }
-        dirs.sort((a, b) => a.version.compare(b.version));
-        return dirs[dirs.length - 1];
+        return { path: this.languageServerFolder, version: new semver.SemVer('0.0.0') };
     }
 
     public async getExistingLanguageServerDirectories(): Promise<FolderVersionPair[]> {

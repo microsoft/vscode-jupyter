@@ -79,22 +79,10 @@ export class DotNetLanguageServerActivator extends LanguageServerActivatorBase {
     }
 
     private async ensureLanguageServerFileIsAvailable(
-        resource: Resource,
-        fileName: string
+        _resource: Resource,
+        _fileName: string
     ): Promise<string | undefined> {
-        const settings = this.configurationService.getSettings(resource);
-        if (settings.downloadLanguageServer === false) {
-            // Development mode
-            return;
-        }
-        const languageServerFolder = await this.languageServerFolderService.getLanguageServerFolderName(resource);
-        if (languageServerFolder) {
-            const languageServerFolderPath = path.join(EXTENSION_ROOT_DIR, languageServerFolder);
-            const mscorlib = path.join(languageServerFolderPath, fileName);
-            if (!(await this.fs.fileExists(mscorlib))) {
-                await this.lsDownloader.downloadLanguageServer(languageServerFolderPath, resource);
-            }
-            return languageServerFolderPath;
-        }
+        // This should be handled by the python extension
+        return undefined;
     }
 }

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
 import { inject, injectable, optional } from 'inversify';
+import * as path from 'path';
 import { ConfigurationChangeEvent, Disposable, Event, EventEmitter, FileSystemWatcher, Uri } from 'vscode';
 import { IServiceContainer } from '../../ioc/types';
 import { sendFileCreationTelemetry } from '../../telemetry/envFileTelemetry';
@@ -82,11 +82,14 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
         return mergedVars;
     }
     public async getCustomEnvironmentVariables(resource?: Uri): Promise<EnvironmentVariables | undefined> {
-        const settings = this.configurationService.getSettings(resource);
         const workspaceFolderUri = this.getWorkspaceFolderUri(resource);
         this.trackedWorkspaceFolders.add(workspaceFolderUri ? workspaceFolderUri.fsPath : '');
-        this.createFileWatcher(settings.envFile, workspaceFolderUri);
-        return this.envVarsService.parseFile(settings.envFile, this.process.env);
+
+        // tslint:disable-next-line: no-suspicious-comment
+        // TODO: This should be added to the python API (or this entire service should move there)
+        const envFile = workspaceFolderUri?.fsPath ? path.join(workspaceFolderUri.fsPath, '.env') : '.env';
+        this.createFileWatcher(envFile, workspaceFolderUri);
+        return this.envVarsService.parseFile(envFile, this.process.env);
     }
     public configurationChanged(e: ConfigurationChangeEvent) {
         this.trackedWorkspaceFolders.forEach((item) => {

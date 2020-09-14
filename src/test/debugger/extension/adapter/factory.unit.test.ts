@@ -45,7 +45,7 @@ suite('Debugging - Adapter Factory', () => {
         version: new SemVer('3.7.4-test')
     };
     const oldValueOfVSC_PYTHON_UNIT_TEST = process.env.VSC_PYTHON_UNIT_TEST;
-    const oldValueOfVSC_PYTHON_CI_TEST = process.env.VSC_PYTHON_CI_TEST;
+    const oldValueOfVSC_JUPYTER_CI_TEST = process.env.VSC_JUPYTER_CI_TEST;
 
     class Reporter {
         public static eventNames: string[] = [];
@@ -60,7 +60,7 @@ suite('Debugging - Adapter Factory', () => {
 
     setup(() => {
         process.env.VSC_PYTHON_UNIT_TEST = undefined;
-        process.env.VSC_PYTHON_CI_TEST = undefined;
+        process.env.VSC_JUPYTER_CI_TEST = undefined;
         rewiremock.enable();
         rewiremock('vscode-extension-telemetry').with({ default: Reporter });
 
@@ -81,7 +81,7 @@ suite('Debugging - Adapter Factory', () => {
 
     teardown(() => {
         process.env.VSC_PYTHON_UNIT_TEST = oldValueOfVSC_PYTHON_UNIT_TEST;
-        process.env.VSC_PYTHON_CI_TEST = oldValueOfVSC_PYTHON_CI_TEST;
+        process.env.VSC_JUPYTER_CI_TEST = oldValueOfVSC_JUPYTER_CI_TEST;
         Reporter.properties = [];
         Reporter.eventNames = [];
         Reporter.measures = [];

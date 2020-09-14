@@ -82,15 +82,6 @@ export class DotNetLanguageServerAnalysisOptions extends LanguageServerAnalysisO
         }
 
         let searchPaths = [];
-
-        const settings = this.configuration.getSettings(this.resource);
-        if (settings.autoComplete) {
-            const extraPaths = settings.autoComplete.extraPaths;
-            if (extraPaths && extraPaths.length > 0) {
-                searchPaths.push(...extraPaths);
-            }
-        }
-
         const envPythonPath = await this.getEnvPythonPath();
         if (envPythonPath !== '') {
             const paths = envPythonPath.split(this.pathUtils.delimiter).filter((item) => item.trim().length > 0);
@@ -131,26 +122,16 @@ export class DotNetLanguageServerAnalysisOptions extends LanguageServerAnalysisO
         }
     }
 
-    protected getPythonExcludeSection(list: string[]): void {
-        const pythonSettings = this.configuration.getSettings(this.resource);
-        const paths = pythonSettings && pythonSettings.linting ? pythonSettings.linting.ignorePatterns : undefined;
-        if (paths && Array.isArray(paths)) {
-            paths.filter((p) => p && p.length > 0).forEach((p) => list.push(p));
-        }
+    protected getPythonExcludeSection(_list: string[]): void {
+        // Do nothing
     }
 
     protected getTypeshedPaths(): string[] {
-        const settings = this.configuration.getSettings(this.resource);
-        return settings.analysis.typeshedPaths && settings.analysis.typeshedPaths.length > 0
-            ? settings.analysis.typeshedPaths
-            : [path.join(this.context.extensionPath, this.languageServerFolder, 'Typeshed')];
+        return [path.join(this.context.extensionPath, this.languageServerFolder, 'Typeshed')];
     }
 
     protected getCacheFolderPath(): string | null {
-        const settings = this.configuration.getSettings(this.resource);
-        return settings.analysis.cacheFolderPath && settings.analysis.cacheFolderPath.length > 0
-            ? settings.analysis.cacheFolderPath
-            : null;
+        return null;
     }
 
     protected async onSettingsChangedHandler(e?: ConfigurationChangeEvent): Promise<void> {

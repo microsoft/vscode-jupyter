@@ -42,9 +42,6 @@ export abstract class LanguageServerPackageService implements ILanguageServerPac
     public getLanguageServerDownloadChannel(): LanguageServerDownloadChannels {
         const configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
         const settings = configService.getSettings();
-        if (settings.analysis.downloadChannel) {
-            return settings.analysis.downloadChannel;
-        }
 
         if (settings.insidersChannel === 'daily' || settings.insidersChannel === 'weekly') {
             return 'beta';

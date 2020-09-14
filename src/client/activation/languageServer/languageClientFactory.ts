@@ -101,9 +101,7 @@ export class DotNetLanguageClientFactory implements ILanguageClientFactory {
         const settings = this.configurationService.getSettings(resource);
         let factory: ILanguageClientFactory;
         if (this.platformData && this.languageServerFolderService) {
-            factory = settings.downloadLanguageServer
-                ? new DotNetDownloadedLanguageClientFactory(this.platformData, this.languageServerFolderService)
-                : new DotNetSimpleLanguageClientFactory(this.platformData, this.languageServerFolderService);
+            factory = new DotNetSimpleLanguageClientFactory(this.platformData, this.languageServerFolderService);
         } else {
             factory = settings.downloadLanguageServer ? this.downloadedFactory : this.simpleFactory;
         }

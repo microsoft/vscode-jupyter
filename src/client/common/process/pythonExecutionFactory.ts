@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { inject, injectable } from 'inversify';
+import { PythonApiProvider } from '../../api/pythonApi';
 import { IPlatformService } from '../../common/platform/types';
 import { IEnvironmentActivationService } from '../../interpreter/activation/types';
 import { IInterpreterService } from '../../interpreter/contracts';
@@ -10,7 +11,7 @@ import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { traceError } from '../logger';
 import { IFileSystem } from '../platform/types';
-import { IConfigurationService, IDisposable, IDisposableRegistry } from '../types';
+import { IConfigurationService, IDisposable, IDisposableRegistry, Resource } from '../types';
 import { ProcessService } from './proc';
 import { PythonDaemonFactory } from './pythonDaemonFactory';
 import { PythonDaemonExecutionServicePool } from './pythonDaemonPool';
@@ -46,7 +47,8 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(IBufferDecoder) private readonly decoder: IBufferDecoder,
         @inject(IWindowsStoreInterpreter) private readonly windowsStoreInterpreter: IWindowsStoreInterpreter,
-        @inject(IPlatformService) private readonly platformService: IPlatformService
+        @inject(IPlatformService) private readonly platformService: IPlatformService,
+        @inject(PythonApiProvider) private readonly api: PythonApiProvider
     ) {
         // Acquire other objects here so that if we are called during dispose they are available.
         this.disposables = this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
@@ -54,9 +56,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         this.fileSystem = this.serviceContainer.get<IFileSystem>(IFileSystem);
     }
     public async create(options: ExecutionFactoryCreationOptions): Promise<IPythonExecutionService> {
-        const pythonPath = options.pythonPath
-            ? options.pythonPath
-            : this.configService.getSettings(options.resource).pythonPath;
+        const pythonPath = options.pythonPath ? options.pythonPath : await this.getPythonPath(options.resource);
         const processService: IProcessService = await this.processServiceFactory.create(options.resource);
         processService.on('exec', this.logger.logProcess.bind(this.logger));
 
@@ -72,9 +72,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
     public async createDaemon<T extends IPythonDaemonExecutionService | IDisposable>(
         options: DaemonExecutionFactoryCreationOptions
     ): Promise<T | IPythonExecutionService> {
-        const pythonPath = options.pythonPath
-            ? options.pythonPath
-            : this.configService.getSettings(options.resource).pythonPath;
+        const pythonPath = options.pythonPath ? options.pythonPath : await this.getPythonPath(options.resource);
         const daemonPoolKey = `${pythonPath}#${options.daemonClass || ''}#${options.daemonModule || ''}`;
         const interpreterService = this.serviceContainer.tryGet<IInterpreterService>(IInterpreterService);
         const interpreter = interpreterService
@@ -159,14 +157,18 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
                 pythonPath: options.interpreter ? options.interpreter.path : undefined
             });
         }
-        const pythonPath = options.interpreter
-            ? options.interpreter.path
-            : this.configService.getSettings(options.resource).pythonPath;
+        const pythonPath = options.interpreter ? options.interpreter.path : await this.getPythonPath(options.resource);
         const processService: IProcessService = new ProcessService(this.decoder, { ...envVars });
         processService.on('exec', this.logger.logProcess.bind(this.logger));
         this.disposables.push(processService);
 
         return createPythonService(pythonPath, processService, this.fileSystem);
+    }
+
+    private async getPythonPath(resource: Resource): Promise<string> {
+        const api = await this.api.getApi();
+        const interpreter = await api.getActiveInterpreter(resource);
+        return interpreter?.path ?? 'python';
     }
 }
 

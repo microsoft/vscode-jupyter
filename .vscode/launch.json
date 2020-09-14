@@ -130,7 +130,7 @@
                 "--extensionTestsPath=${workspaceFolder}/out/test"
             ],
             "env": {
-                "VSC_PYTHON_CI_TEST_GREP": "Smoke Test"
+                "VSC_JUPYTER_CI_TEST_GREP": "Smoke Test"
             },
             "stopOnEntry": false,
             "sourceMaps": true,
@@ -155,7 +155,7 @@
                 "--extensionTestsPath=${workspaceFolder}/out/test"
             ],
             "env": {
-                "VSC_PYTHON_CI_TEST_GREP": "" // Modify this to run a subset of the single workspace tests
+                "VSC_JUPYTER_CI_TEST_GREP": "" // Modify this to run a subset of the single workspace tests
             },
             "stopOnEntry": false,
             "sourceMaps": true,
@@ -180,7 +180,7 @@
                 "--extensionTestsPath=${workspaceFolder}/out/test"
             ],
             "env": {
-                "VSC_PYTHON_CI_TEST_GREP": "Language Server:"
+                "VSC_JUPYTER_CI_TEST_GREP": "Language Server:"
             },
             "stopOnEntry": false,
             "sourceMaps": true,
@@ -206,8 +206,8 @@
                 "--extensionTestsPath=${workspaceFolder}/out/test"
             ],
             "env": {
-                "VSC_PYTHON_CI_TEST_GREP": "", // Modify this to run a subset of the single workspace tests
-                "VSC_PYTHON_CI_TEST_INVERT_GREP": "", // Initialize this to invert the grep (exclude tests with value defined in grep).
+                "VSC_JUPYTER_CI_TEST_GREP": "", // Modify this to run a subset of the single workspace tests
+                "VSC_JUPYTER_CI_TEST_INVERT_GREP": "", // Initialize this to invert the grep (exclude tests with value defined in grep).
                 "VSC_PYTHON_LOAD_EXPERIMENTS_FROM_FILE": "true",
                 "TEST_FILES_SUFFIX": "ds.test"
             },

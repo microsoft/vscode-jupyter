@@ -1,11 +1,8 @@
 'use strict';
 
-import * as child_process from 'child_process';
-import * as path from 'path';
 import {
     ConfigurationChangeEvent,
     ConfigurationTarget,
-    DiagnosticSeverity,
     Disposable,
     Event,
     EventEmitter,
@@ -15,39 +12,24 @@ import {
 import { LanguageServerType } from '../activation/types';
 import '../common/extensions';
 import { LogLevel } from '../logging/levels';
-import { sendTelemetryEvent } from '../telemetry';
-import { EventName } from '../telemetry/constants';
-import { sendSettingTelemetry } from '../telemetry/envFileTelemetry';
 import { IWorkspaceService } from './application/types';
 import { WorkspaceService } from './application/workspace';
-import { DEFAULT_INTERPRETER_SETTING, isTestExecution } from './constants';
-import { DeprecatePythonPath } from './experiments/groups';
+import { isTestExecution } from './constants';
 import { ExtensionChannels } from './insidersBuild/types';
-import { IS_WINDOWS } from './platform/constants';
-import * as internalPython from './process/internal/python';
 import {
-    IAnalysisSettings,
-    IAutoCompleteSettings,
-    IDataScienceSettings,
     IExperiments,
-    IExperimentsManager,
-    IFormattingSettings,
-    IInterpreterPathService,
-    ILintingSettings,
-    ILoggingSettings,
     IJupyterSettings,
-    ISortImportSettings,
-    ITerminalSettings,
-    ITestingSettings,
-    IWorkspaceSymbolSettings,
+    ILoggingSettings,
+    InteractiveWindowMode,
+    IVariableQuery,
     LoggingLevelSettingType,
-    Resource, InteractiveWindowMode, IVariableQuery, WidgetCDNs
+    Resource,
+    WidgetCDNs
 } from './types';
 import { debounceSync } from './utils/decorators';
 import { SystemVariables } from './variables/systemVariables';
 
 // tslint:disable:no-require-imports no-var-requires
-const untildify = require('untildify');
 
 // tslint:disable-next-line:completed-docs
 export class JupyterSettings implements IJupyterSettings {
@@ -59,30 +41,14 @@ export class JupyterSettings implements IJupyterSettings {
     public experiments!: IExperiments;
     public languageServer: LanguageServerType = LanguageServerType.Microsoft;
     public logging: ILoggingSettings = { level: LogLevel.Error };
-    protected readonly changed = new EventEmitter<void>();
-    private workspaceRoot: Resource;
-    private disposables: Disposable[] = [];
-    private readonly workspace: IWorkspaceService;
-
-    constructor(
-        workspaceFolder: Resource,
-        workspace?: IWorkspaceService,
-        private readonly experimentsManager?: IExperimentsManager,
-        private readonly interpreterPathService?: IInterpreterPathService
-    ) {
-        this.workspace = workspace || new WorkspaceService();
-        this.workspaceRoot = workspaceFolder;
-        this.initialize();
-    }
-    public insidersChannel: ExtensionChannels = "off";
+    public insidersChannel: ExtensionChannels = 'off';
     public allowImportFromNotebook: boolean = false;
     public alwaysTrustNotebooks: boolean = false;
-    public enabled: boolean = false;
     public jupyterInterruptTimeout: number = 10_000;
     public jupyterLaunchTimeout: number = 60_000;
     public jupyterLaunchRetries: number = 3;
-    public jupyterServerURI: string = 'local'
-    public notebookFileRoot: string = '${workspaceRoot}'
+    public jupyterServerURI: string = 'local';
+    public notebookFileRoot: string = '';
     public changeDirOnImportExport: boolean = false;
     public useDefaultConfigForJupyter: boolean = false;
     public searchForJupyter: boolean = false;
@@ -131,25 +97,25 @@ export class JupyterSettings implements IJupyterSettings {
     public widgetScriptSources: WidgetCDNs[] = [];
     public alwaysScrollOnNewCell?: boolean | undefined;
     public showKernelSelectionOnInteractiveWindow?: boolean | undefined;
-    public interactiveWindowMode: InteractiveWindowMode = "multiple";
+    public interactiveWindowMode: InteractiveWindowMode = 'multiple';
+    protected readonly changed = new EventEmitter<void>();
+    private workspaceRoot: Resource;
+    private disposables: Disposable[] = [];
+    private readonly workspace: IWorkspaceService;
+
+    constructor(workspaceFolder: Resource, workspace?: IWorkspaceService) {
+        this.workspace = workspace || new WorkspaceService();
+        this.workspaceRoot = workspaceFolder;
+        this.initialize();
+    }
     // tslint:disable-next-line:function-name
-    public static getInstance(
-        resource: Uri | undefined,
-        workspace?: IWorkspaceService,
-        experimentsManager?: IExperimentsManager,
-        interpreterPathService?: IInterpreterPathService
-    ): JupyterSettings {
+    public static getInstance(resource: Uri | undefined, workspace?: IWorkspaceService): JupyterSettings {
         workspace = workspace || new WorkspaceService();
         const workspaceFolderUri = JupyterSettings.getSettingsUriAndTarget(resource, workspace).uri;
         const workspaceFolderKey = workspaceFolderUri ? workspaceFolderUri.fsPath : '';
 
         if (!JupyterSettings.jupyterSettings.has(workspaceFolderKey)) {
-            const settings = new JupyterSettings(
-                workspaceFolderUri,
-                workspace,
-                experimentsManager,
-                interpreterPathService
-            );
+            const settings = new JupyterSettings(workspaceFolderUri, workspace);
             JupyterSettings.jupyterSettings.set(workspaceFolderKey, settings);
         }
         // tslint:disable-next-line:no-non-null-assertion
@@ -222,12 +188,14 @@ export class JupyterSettings implements IJupyterSettings {
                   optOutFrom: []
               };
 
-
         // The rest are all the same.
-        const keys = Object.getOwnPropertyNames(this).filter(f => f !== 'experiments' && f !== 'logging' && f !== 'languageServer')
-        keys.forEach(k => {
+        const keys = Object.getOwnPropertyNames(this).filter(
+            (f) => f !== 'experiments' && f !== 'logging' && f !== 'languageServer'
+        );
+        keys.forEach((k) => {
             // Replace variables with their actual value.
             const val = systemVariables.resolveAny(jupyterSettings.get(k));
+            // tslint:disable-next-line: no-any
             (<any>this)[k] = val;
         });
     }
@@ -260,9 +228,6 @@ export class JupyterSettings implements IJupyterSettings {
                 }
             })
         );
-        if (this.interpreterPathService) {
-            this.disposables.push(this.interpreterPathService.onDidChange(onDidChange.bind(this)));
-        }
 
         const initialConfig = this.workspace.getConfiguration('jupyter', this.workspaceRoot);
         if (initialConfig) {
@@ -274,7 +239,6 @@ export class JupyterSettings implements IJupyterSettings {
         this.changed.fire();
     }
 }
-
 
 function convertSettingTypeToLogLevel(setting: LoggingLevelSettingType | undefined): LogLevel | 'off' {
     switch (setting) {

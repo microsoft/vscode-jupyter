@@ -103,8 +103,10 @@ export class LanguageClientMiddleware implements Middleware {
 
                 params.items.forEach((item, i) => {
                     if (item.section === 'python') {
-                        const uri = item.scopeUri ? Uri.parse(item.scopeUri) : undefined;
-                        settings[i].pythonPath = this.configService.getSettings(uri).pythonPath;
+                        // tslint:disable-next-line: no-suspicious-comment
+                        // TODO: Do we need to do this in the jupyter extension?
+                        //const uri = item.scopeUri ? Uri.parse(item.scopeUri) : undefined;
+                        //settings[i].pythonPath = this.configService.getSettings(uri).pythonPath;
                     }
                 });
 
@@ -124,7 +126,7 @@ export class LanguageClientMiddleware implements Middleware {
 
     public constructor(
         experimentsManager: IExperimentsManager,
-        private readonly configService: IConfigurationService,
+        readonly _configService: IConfigurationService,
         serverType: LanguageServerType,
         public readonly serverVersion?: string
     ) {

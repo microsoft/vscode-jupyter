@@ -80,7 +80,6 @@ export class JediExtensionActivator implements ILanguageServerActivator {
         this.objectDefinitionProvider = new PythonObjectDefinitionProvider(jediFactory);
         this.symbolProvider = new JediSymbolProvider(serviceContainer, jediFactory);
         this.signatureProvider = new PythonSignatureProvider(jediFactory);
-
     }
 
     public deactivate() {
@@ -133,12 +132,6 @@ export class JediExtensionActivator implements ILanguageServerActivator {
             this.registrations.push(
                 languages.registerDocumentSymbolProvider(this.documentSelector, this.symbolProvider)
             );
-            const pythonSettings = this.serviceManager.get<IConfigurationService>(IConfigurationService).getSettings();
-            if (pythonSettings.devOptions.indexOf('DISABLE_SIGNATURE') === -1) {
-                this.registrations.push(
-                    languages.registerSignatureHelpProvider(this.documentSelector, this.signatureProvider, '(', ',')
-                );
-            }
         }
     }
 

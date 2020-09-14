@@ -17,7 +17,7 @@ import { DebugSessionLoggingFactory } from '../../../../client/debugger/extensio
 // tslint:disable-next-line: max-func-body-length
 suite('Debugging - Session Logging', () => {
     const oldValueOfVSC_PYTHON_UNIT_TEST = process.env.VSC_PYTHON_UNIT_TEST;
-    const oldValueOfVSC_PYTHON_CI_TEST = process.env.VSC_PYTHON_CI_TEST;
+    const oldValueOfVSC_JUPYTER_CI_TEST = process.env.VSC_JUPYTER_CI_TEST;
     let loggerFactory: DebugSessionLoggingFactory;
     let fsService: FileSystem;
     let writeStream: fs.WriteStream;
@@ -27,14 +27,14 @@ suite('Debugging - Session Logging', () => {
         writeStream = mock(fs.WriteStream);
 
         process.env.VSC_PYTHON_UNIT_TEST = undefined;
-        process.env.VSC_PYTHON_CI_TEST = undefined;
+        process.env.VSC_JUPYTER_CI_TEST = undefined;
 
         loggerFactory = new DebugSessionLoggingFactory(instance(fsService));
     });
 
     teardown(() => {
         process.env.VSC_PYTHON_UNIT_TEST = oldValueOfVSC_PYTHON_UNIT_TEST;
-        process.env.VSC_PYTHON_CI_TEST = oldValueOfVSC_PYTHON_CI_TEST;
+        process.env.VSC_JUPYTER_CI_TEST = oldValueOfVSC_JUPYTER_CI_TEST;
     });
 
     function createSession(id: string, workspaceFolder?: WorkspaceFolder): DebugSession {

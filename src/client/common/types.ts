@@ -159,13 +159,13 @@ export interface ICurrentProcess {
 }
 
 export interface IJupyterSettings {
+    readonly languageServer: LanguageServerType;
     readonly insidersChannel: ExtensionChannels;
     readonly onDidChange: Event<void>;
     readonly experiments: IExperiments;
     readonly logging: ILoggingSettings;
     readonly allowImportFromNotebook: boolean;
     readonly alwaysTrustNotebooks: boolean;
-    readonly enabled: boolean;
     readonly jupyterInterruptTimeout: number;
     readonly jupyterLaunchTimeout: number;
     readonly jupyterLaunchRetries: number;
@@ -370,10 +370,6 @@ export interface IVariableQuery {
     language: string;
     query: string;
     parseExpr: string;
-}
-
-export interface IDataScienceSettings {
-
 }
 
 export type InteractiveWindowMode = 'perFile' | 'single' | 'multiple';
