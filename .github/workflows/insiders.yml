@@ -7,7 +7,7 @@ on:
       - tweekGHA
   pull_request:
     branches:
-     - main
+      - main
   check_run:
     types: [rerequested, requested_action]
 
