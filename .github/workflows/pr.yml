@@ -245,6 +245,7 @@ jobs:
         run: |
           echo "::set-env name=CI_PYTHON_PATH::python"
           echo "::set-env name=CI_DISABLE_AUTO_SELECTION::1"
+          echo "::set-env name=VSCODE_PYTHON_ROLLING::1"
         shell: bash
         if: matrix.test-suite != 'ts-unit'
 
