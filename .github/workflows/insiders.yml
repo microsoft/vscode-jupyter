@@ -1,10 +1,15 @@
 name: Insiders Build
 
-on: pull_request
-# on:
-#   push:
-#     branches:
-#       - main
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+     - main
+  check_run:
+    types: [rerequested, requested_action]
+
 
 env:
   PYTHON_VERSION: 3.8
