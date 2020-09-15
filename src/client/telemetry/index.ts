@@ -1932,26 +1932,6 @@ export interface IEventNamePropertyMapping {
     [Telemetry.RawKernelSessionStartTimeout]: never | undefined;
     [Telemetry.RawKernelSessionStartUserCancel]: never | undefined;
 
-    // Start Page Events
-    [Telemetry.StartPageViewed]: never | undefined;
-    [Telemetry.StartPageOpenedFromCommandPalette]: never | undefined;
-    [Telemetry.StartPageOpenedFromNewInstall]: never | undefined;
-    [Telemetry.StartPageOpenedFromNewUpdate]: never | undefined;
-    [Telemetry.StartPageWebViewError]: never | undefined;
-    [Telemetry.StartPageTime]: never | undefined;
-    [Telemetry.StartPageClickedDontShowAgain]: never | undefined;
-    [Telemetry.StartPageClosedWithoutAction]: never | undefined;
-    [Telemetry.StartPageUsedAnActionOnFirstTime]: never | undefined;
-    [Telemetry.StartPageOpenBlankNotebook]: never | undefined;
-    [Telemetry.StartPageOpenBlankPythonFile]: never | undefined;
-    [Telemetry.StartPageOpenInteractiveWindow]: never | undefined;
-    [Telemetry.StartPageOpenCommandPalette]: never | undefined;
-    [Telemetry.StartPageOpenCommandPaletteWithOpenNBSelected]: never | undefined;
-    [Telemetry.StartPageOpenSampleNotebook]: never | undefined;
-    [Telemetry.StartPageOpenFileBrowser]: never | undefined;
-    [Telemetry.StartPageOpenFolder]: never | undefined;
-    [Telemetry.StartPageOpenWorkspace]: never | undefined;
-
     // Run by line events
     [Telemetry.RunByLineStart]: never | undefined;
     [Telemetry.RunByLineStep]: never | undefined;
