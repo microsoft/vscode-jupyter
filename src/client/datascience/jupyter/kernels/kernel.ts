@@ -24,7 +24,6 @@ import { createDeferred, Deferred } from '../../../common/utils/async';
 import { noop } from '../../../common/utils/misc';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { CodeSnippets } from '../../constants';
-import { InteractiveWindowMessages } from '../../interactive-common/interactiveWindowTypes';
 import { INotebookContentProvider } from '../../notebook/types';
 import { getDefaultNotebookContent, updateNotebookMetadata } from '../../notebookStorage/baseModel';
 import {
@@ -138,10 +137,7 @@ export class Kernel implements IKernel {
             });
 
             this._notebookPromise
-                //.then((nb) => (this.kernelExecution.notebook = this.notebook = nb))
-                .then((nb) => {
-                    this.kernelExecution.notebook = this.notebook = nb;
-                })
+                .then((nb) => (this.kernelExecution.notebook = this.notebook = nb))
                 .catch((ex) => {
                     traceError('failed to create INotebook in kernel', ex);
                     this._notebookPromise = undefined;
