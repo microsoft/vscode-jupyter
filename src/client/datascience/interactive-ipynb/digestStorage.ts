@@ -6,6 +6,7 @@ import { Uri } from 'vscode';
 import { traceError, traceInfo } from '../../common/logger';
 import { isFileNotFoundError } from '../../common/platform/errors';
 import { IExtensionContext } from '../../common/types';
+import { MigrateDigestStorage } from '../../migration/migrateDigestStorage';
 import { IDataScienceFileSystem, IDigestStorage } from '../types';
 
 @injectable()
@@ -13,6 +14,7 @@ export class DigestStorage implements IDigestStorage {
     public readonly key: Promise<string>;
     private digestDir: Promise<string>;
     private loggedFileLocations = new Set();
+    private migrator: MigrateDigestStorage;
 
     constructor(
         @inject(IDataScienceFileSystem) private fs: IDataScienceFileSystem,
@@ -20,6 +22,7 @@ export class DigestStorage implements IDigestStorage {
     ) {
         this.key = this.initKey();
         this.digestDir = this.initDir();
+        this.migrator = new MigrateDigestStorage(extensionContext, fs);
     }
 
     public async saveDigest(uri: Uri, signature: string) {
@@ -70,6 +73,7 @@ export class DigestStorage implements IDigestStorage {
     }
 
     private async initDir(): Promise<string> {
+        await this.migrator.migrateDir();
         const defaultDigestDirLocation = this.getDefaultLocation('nbsignatures');
         if (!(await this.fs.localDirectoryExists(defaultDigestDirLocation))) {
             await this.fs.createLocalDirectory(defaultDigestDirLocation);
@@ -82,6 +86,7 @@ export class DigestStorage implements IDigestStorage {
      * checkpoints in the notebook's execution history
      */
     private async initKey(): Promise<string> {
+        await this.migrator.migrateKey();
         const defaultKeyFileLocation = this.getDefaultLocation('nbsecret');
 
         if (await this.fs.localFileExists(defaultKeyFileLocation)) {
