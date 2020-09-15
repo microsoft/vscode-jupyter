@@ -1297,8 +1297,8 @@ export interface IKernelDependencyService {
     areDependenciesInstalled(interpreter: PythonEnvironment, _token?: CancellationToken): Promise<boolean>;
 }
 
-export const INotebookAndInteractiveWindowUsageTracker = Symbol('INotebookAndInteractiveWindowUsageTracker');
-export interface INotebookAndInteractiveWindowUsageTracker {
+export const INotebookCreationTracker = Symbol('INotebookCreationTracker');
+export interface INotebookCreationTracker {
     readonly lastPythonNotebookCreated?: Date;
     readonly lastNotebookCreated?: Date;
     startTracking(): void;

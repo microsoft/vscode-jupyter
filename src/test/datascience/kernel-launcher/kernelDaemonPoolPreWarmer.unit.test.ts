@@ -8,7 +8,7 @@ import { KernelDaemonPool } from '../../../client/datascience/kernel-launcher/ke
 import { KernelDaemonPreWarmer } from '../../../client/datascience/kernel-launcher/kernelDaemonPreWarmer';
 import {
     IInteractiveWindowProvider,
-    INotebookAndInteractiveWindowUsageTracker,
+    INotebookCreationTracker,
     INotebookEditorProvider,
     IRawNotebookSupportedService
 } from '../../../client/datascience/types';
@@ -18,7 +18,7 @@ suite('DataScience - Kernel Daemon Pool PreWarmer', () => {
     let prewarmer: KernelDaemonPreWarmer;
     let notebookEditorProvider: INotebookEditorProvider;
     let interactiveProvider: IInteractiveWindowProvider;
-    let usageTracker: INotebookAndInteractiveWindowUsageTracker;
+    let usageTracker: INotebookCreationTracker;
     let rawNotebookSupported: IRawNotebookSupportedService;
     let configService: IConfigurationService;
     let daemonPool: KernelDaemonPool;
@@ -26,7 +26,7 @@ suite('DataScience - Kernel Daemon Pool PreWarmer', () => {
     setup(() => {
         notebookEditorProvider = mock<INotebookEditorProvider>();
         interactiveProvider = mock<IInteractiveWindowProvider>();
-        usageTracker = mock<INotebookAndInteractiveWindowUsageTracker>();
+        usageTracker = mock<INotebookCreationTracker>();
         daemonPool = mock<KernelDaemonPool>();
         rawNotebookSupported = mock<IRawNotebookSupportedService>();
         configService = mock<IConfigurationService>();

@@ -13,7 +13,7 @@ import { IConfigurationService, IDisposableRegistry, Resource } from '../../comm
 import { swallowExceptions } from '../../common/utils/decorators';
 import {
     IInteractiveWindowProvider,
-    INotebookAndInteractiveWindowUsageTracker,
+    INotebookCreationTracker,
     INotebookEditor,
     INotebookEditorProvider,
     IRawNotebookSupportedService
@@ -26,8 +26,8 @@ export class KernelDaemonPreWarmer implements IExtensionActivationService {
         @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider,
         @inject(IInteractiveWindowProvider) private interactiveProvider: IInteractiveWindowProvider,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(INotebookAndInteractiveWindowUsageTracker)
-        private readonly usageTracker: INotebookAndInteractiveWindowUsageTracker,
+        @inject(INotebookCreationTracker)
+        private readonly usageTracker: INotebookCreationTracker,
         @inject(KernelDaemonPool) private readonly kernelDaemonPool: KernelDaemonPool,
         @inject(IRawNotebookSupportedService) private readonly rawNotebookSupported: IRawNotebookSupportedService,
         @inject(IConfigurationService) private readonly configService: IConfigurationService,

@@ -8,8 +8,7 @@ import { IConfigurationService } from '../../common/types';
 import {
     IInteractiveWindow,
     IInteractiveWindowProvider,
-    INotebookAndInteractiveWindowUsageTracker,
-    INotebookEditor,
+    INotebookCreationTracker,
     INotebookEditorProvider,
     INotebookProvider
 } from '../types';
@@ -17,8 +16,8 @@ import {
 @injectable()
 export class ServerPreload implements IExtensionSingleActivationService {
     constructor(
-        @inject(INotebookAndInteractiveWindowUsageTracker)
-        private readonly tracker: INotebookAndInteractiveWindowUsageTracker,
+        @inject(INotebookCreationTracker)
+        private readonly tracker: INotebookCreationTracker,
         @inject(INotebookEditorProvider) private notebookEditorProvider: INotebookEditorProvider,
         @inject(IInteractiveWindowProvider) private interactiveProvider: IInteractiveWindowProvider,
         @inject(IConfigurationService) private configService: IConfigurationService,

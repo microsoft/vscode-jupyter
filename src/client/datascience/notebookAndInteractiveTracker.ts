@@ -8,13 +8,13 @@ import { Memento, Uri } from 'vscode';
 import { PYTHON_LANGUAGE } from '../common/constants';
 import { IDisposableRegistry, IMemento, WORKSPACE_MEMENTO } from '../common/types';
 import { getKernelConnectionLanguage } from './jupyter/kernels/helpers';
-import { INotebook, INotebookAndInteractiveWindowUsageTracker, INotebookProvider } from './types';
+import { INotebook, INotebookCreationTracker, INotebookProvider } from './types';
 
 const LastPythonNotebookCreatedKey = 'last-python-notebook-created';
 const LastNotebookCreatedKey = 'last-notebook-created';
 
 @injectable()
-export class NotebookAndInteractiveWindowUsageTracker implements INotebookAndInteractiveWindowUsageTracker {
+export class NotebookCreationTracker implements INotebookCreationTracker {
     public get lastPythonNotebookCreated() {
         const time = this.mementoStorage.get<number | undefined>(LastPythonNotebookCreatedKey);
         return time ? new Date(time) : undefined;
