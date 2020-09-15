@@ -340,6 +340,7 @@ import {
 } from './testNativeEditorProvider';
 import { TestPersistentStateFactory } from './testPersistentStateFactory';
 import { WebBrowserPanelProvider } from './uiTests/webBrowserPanelProvider';
+import { MockMemento } from '../mocks/mementos';
 
 export class DataScienceIocContainer extends UnitTestIocContainer {
     public get workingInterpreter() {
@@ -629,6 +630,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         );
         const mockExtensionContext = TypeMoq.Mock.ofType<IExtensionContext>();
         mockExtensionContext.setup((m) => m.globalStoragePath).returns(() => os.tmpdir());
+        mockExtensionContext.setup((m) => m.globalState).returns(() => new MockMemento());
         mockExtensionContext.setup((m) => m.extensionPath).returns(() => this.extensionRootPath || os.tmpdir());
         this.serviceManager.addSingletonInstance<IExtensionContext>(IExtensionContext, mockExtensionContext.object);
 
