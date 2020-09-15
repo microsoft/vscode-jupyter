@@ -64,6 +64,7 @@ function getCacheKey(
 
     // tslint:disable-next-line: no-suspicious-comment
     // TODO: We should get this out of the python API
+    // https://github.com/microsoft/vscode-jupyter/issues/50
     const workspacePythonPath =
         inExperiment && interpreterPathService
             ? interpreterPathService.get(resource)

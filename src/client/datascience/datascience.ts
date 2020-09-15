@@ -72,6 +72,7 @@ export class DataScience implements IDataScience {
         let editorContext = new ContextKey(EditorContexts.DataScienceEnabled, this.commandManager);
         // tslint:disable-next-line: no-suspicious-comment
         // TODO: Remove the DataScienceEnabled context. Not necessary
+        // https://github.com/microsoft/vscode-jupyter/issues/52
         editorContext.set(true).catch();
         const ownsSelection = settings.sendSelectionToInteractiveWindow;
         editorContext = new ContextKey(EditorContexts.OwnsSelection, this.commandManager);

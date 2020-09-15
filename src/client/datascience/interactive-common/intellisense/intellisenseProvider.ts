@@ -195,6 +195,7 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
 
         // tslint:disable-next-line: no-suspicious-comment
         // TODO: We need an API to get this from the python extension (or some other way to compute intellisense from within old school notebooks)
+        // https://github.com/microsoft/vscode-jupyter/issues/53
         // Resource should be our potential resource if its set. Otherwise workspace root
         // const resource =
         //     this.potentialResource ||

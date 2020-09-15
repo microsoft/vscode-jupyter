@@ -477,6 +477,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
     private onConfigChanged(_configService: IConfigurationService) {
         // tslint:disable-next-line: no-suspicious-comment
         // TODO: We can't watch this from our own settings. Need to have an event on the python API
+        // https://github.com/microsoft/vscode-jupyter/issues/54
         // const pythonPath = configService.getSettings().pythonPath;
         // if (this.activeInterpreter === undefined || pythonPath !== this.activeInterpreter.path) {
         //     this.activeInterpreter = this.installedInterpreters.filter((f) => f.path === pythonPath)[0];
