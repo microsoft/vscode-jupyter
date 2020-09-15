@@ -27,7 +27,9 @@ import { ITestNativeEditorProvider } from './testNativeEditorProvider';
         let ioc: DataScienceIocContainer;
         let snapshot: any;
 
-        suiteSetup(() => {
+        suiteSetup(function () {
+            // tslint:disable-next-line: no-invalid-this
+            this.skip();
             snapshot = takeSnapshot();
         });
 
