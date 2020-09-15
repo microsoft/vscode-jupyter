@@ -314,6 +314,7 @@ import { InterpreterService } from '../interpreters/interpreterService';
 import { InterpreterSelector } from '../interpreters/selector';
 import { WindowsStoreInterpreter } from '../interpreters/winStoreInterpreter';
 import { MockOutputChannel } from '../mockClasses';
+import { MockMemento } from '../mocks/mementos';
 import { UnitTestIocContainer } from '../testing/serviceRegistry';
 import { MockCommandManager } from './mockCommandManager';
 import { MockCustomEditorService } from './mockCustomEditorService';
@@ -340,7 +341,6 @@ import {
 } from './testNativeEditorProvider';
 import { TestPersistentStateFactory } from './testPersistentStateFactory';
 import { WebBrowserPanelProvider } from './uiTests/webBrowserPanelProvider';
-import { MockMemento } from '../mocks/mementos';
 
 export class DataScienceIocContainer extends UnitTestIocContainer {
     public get workingInterpreter() {
@@ -630,7 +630,8 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         );
         const mockExtensionContext = TypeMoq.Mock.ofType<IExtensionContext>();
         mockExtensionContext.setup((m) => m.globalStoragePath).returns(() => os.tmpdir());
-        mockExtensionContext.setup((m) => m.globalState).returns(() => new MockMemento());
+        const globalState = new MockMemento();
+        mockExtensionContext.setup((m) => m.globalState).returns(() => globalState);
         mockExtensionContext.setup((m) => m.extensionPath).returns(() => this.extensionRootPath || os.tmpdir());
         this.serviceManager.addSingletonInstance<IExtensionContext>(IExtensionContext, mockExtensionContext.object);
 

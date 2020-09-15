@@ -24,7 +24,8 @@ suite('DataScience - TrustService', () => {
         const fileSystem = mock(DataScienceFileSystem);
         const context = typemoq.Mock.ofType<IExtensionContext>();
         context.setup((c) => c.globalStoragePath).returns(() => os.tmpdir());
-        context.setup((c) => c.globalState).returns(() => new MockMemento());
+        const globalState = new MockMemento();
+        context.setup((c) => c.globalState).returns(() => globalState);
         when(configService.getSettings()).thenCall(() => {
             // tslint:disable-next-line: no-any
             return { datascience: { alwaysTrustNotebooks } } as any;
