@@ -153,6 +153,17 @@ export class JupyterSettings implements IWatchableJupyterSettings {
         this._disposables.forEach((disposable) => disposable && disposable.dispose());
         this._disposables = [];
     }
+
+    public toJSON() {
+        // Override this so settings can be turned into JSON without a circular problem
+
+        // tslint:disable-next-line: no-any
+        const result: any = {};
+        const allowedKeys = this.getSerializableKeys();
+        // tslint:disable-next-line: no-any
+        allowedKeys.forEach((k) => (result[k] = (<any>this)[k]));
+        return result;
+    }
     // tslint:disable-next-line:cyclomatic-complexity max-func-body-length
     protected update(jupyterConfig: WorkspaceConfiguration) {
         const workspaceRoot = this._workspaceRoot?.fsPath;
@@ -182,9 +193,7 @@ export class JupyterSettings implements IWatchableJupyterSettings {
               };
 
         // The rest are all the same.
-        const keys = Object.getOwnPropertyNames(this).filter(
-            (f) => f !== 'experiments' && f !== 'logging' && f !== 'languageServer' && !f.startsWith('_')
-        );
+        const keys = this.getSerializableKeys().filter((f) => f !== 'experiments' && f !== 'logging');
         keys.forEach((k) => {
             // Replace variables with their actual value.
             const val = systemVariables.resolveAny(jupyterConfig.get(k));
@@ -234,6 +243,11 @@ export class JupyterSettings implements IWatchableJupyterSettings {
 
     protected fireChangeNotification() {
         this._changeEmitter.fire();
+    }
+
+    private getSerializableKeys() {
+        // Get the keys that are allowed.
+        return Object.getOwnPropertyNames(this).filter((f) => !f.startsWith('_'));
     }
 }
 
