@@ -8,29 +8,13 @@ import { Memento, Uri } from 'vscode';
 import { PYTHON_LANGUAGE } from '../common/constants';
 import { IDisposableRegistry, IMemento, WORKSPACE_MEMENTO } from '../common/types';
 import { getKernelConnectionLanguage } from './jupyter/kernels/helpers';
-import {
-    IInteractiveWindowProvider,
-    INotebook,
-    INotebookAndInteractiveWindowUsageTracker,
-    INotebookEditorProvider,
-    INotebookProvider
-} from './types';
+import { INotebook, INotebookAndInteractiveWindowUsageTracker, INotebookProvider } from './types';
 
-const LastNotebookOpenedTimeKey = 'last-notebook-start-time';
-const LastInteractiveWindowStartTimeKey = 'last-interactive-window-start-time';
 const LastPythonNotebookCreatedKey = 'last-python-notebook-created';
 const LastNotebookCreatedKey = 'last-notebook-created';
 
 @injectable()
 export class NotebookAndInteractiveWindowUsageTracker implements INotebookAndInteractiveWindowUsageTracker {
-    public get lastNotebookOpened() {
-        const time = this.mementoStorage.get<number | undefined>(LastNotebookOpenedTimeKey);
-        return time ? new Date(time) : undefined;
-    }
-    public get lastInteractiveWindowOpened() {
-        const time = this.mementoStorage.get<number | undefined>(LastInteractiveWindowStartTimeKey);
-        return time ? new Date(time) : undefined;
-    }
     public get lastPythonNotebookCreated() {
         const time = this.mementoStorage.get<number | undefined>(LastPythonNotebookCreatedKey);
         return time ? new Date(time) : undefined;
@@ -41,23 +25,10 @@ export class NotebookAndInteractiveWindowUsageTracker implements INotebookAndInt
     }
     constructor(
         @inject(IMemento) @named(WORKSPACE_MEMENTO) private mementoStorage: Memento,
-        @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider,
-        @inject(IInteractiveWindowProvider) private readonly interactiveWindowProvider: IInteractiveWindowProvider,
         @inject(INotebookProvider) private readonly notebookProvider: INotebookProvider,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
     ) {}
     public async startTracking(): Promise<void> {
-        this.disposables.push(
-            this.notebookEditorProvider.onDidOpenNotebookEditor(() =>
-                this.mementoStorage.update(LastNotebookOpenedTimeKey, Date.now())
-            )
-        );
-        this.disposables.push(
-            this.interactiveWindowProvider.onDidChangeActiveInteractiveWindow(() =>
-                this.mementoStorage.update(LastInteractiveWindowStartTimeKey, Date.now())
-            )
-        );
-
         this.disposables.push(this.notebookProvider.onNotebookCreated(this.notebookCreated));
     }
 

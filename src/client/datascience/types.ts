@@ -1299,8 +1299,6 @@ export interface IKernelDependencyService {
 
 export const INotebookAndInteractiveWindowUsageTracker = Symbol('INotebookAndInteractiveWindowUsageTracker');
 export interface INotebookAndInteractiveWindowUsageTracker {
-    readonly lastNotebookOpened?: Date;
-    readonly lastInteractiveWindowOpened?: Date;
     readonly lastPythonNotebookCreated?: Date;
     readonly lastNotebookCreated?: Date;
     startTracking(): void;
