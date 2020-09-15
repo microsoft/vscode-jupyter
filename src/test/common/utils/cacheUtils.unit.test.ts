@@ -29,7 +29,7 @@ const scenariosToTest: CacheUtilsTestScenario[] = [
 ];
 
 // tslint:disable:no-any max-func-body-length
-suite('Common Utils - CacheUtilsxxx', () => {
+suite('Common Utils - CacheUtils', () => {
     suite('InMemory Cache', () => {
         let clock: sinon.SinonFakeTimers;
         setup(() => {
