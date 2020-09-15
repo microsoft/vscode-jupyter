@@ -9,6 +9,7 @@ import {
     IInteractiveWindow,
     IInteractiveWindowProvider,
     INotebookAndInteractiveWindowUsageTracker,
+    INotebookEditor,
     INotebookEditorProvider,
     INotebookProvider
 } from '../types';
