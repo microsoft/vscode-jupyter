@@ -14,15 +14,12 @@ export const PYTHON = [
 export const PYTHON_ALLFILES = [{ language: PYTHON_LANGUAGE }];
 
 export const PVSC_EXTENSION_ID = 'ms-ai-tools.jupyter';
-export const CODE_RUNNER_EXTENSION_ID = 'formulahendry.code-runner';
-export const PYLANCE_EXTENSION_ID = 'ms-jupyter.vscode-pylance';
 export const AppinsightsKey = 'AIF-d9b70cd4-b9f9-4d70-929b-a071c400b217';
 
 export namespace Commands {
-    export const Enable_SourceMap_Support = 'python.enableSourceMapSupport';
-    export const SwitchOffInsidersChannel = 'python.switchOffInsidersChannel';
-    export const SwitchToInsidersDaily = 'python.switchToDailyChannel';
-    export const SwitchToInsidersWeekly = 'python.switchToWeeklyChannel';
+    export const SwitchOffInsidersChannel = 'jupyter.switchOffInsidersChannel';
+    export const SwitchToInsidersDaily = 'jupyter.switchToDailyChannel';
+    export const SwitchToInsidersWeekly = 'jupyter.switchToWeeklyChannel';
 }
 export namespace Octicons {
     export const Test_Pass = '$(check)';
