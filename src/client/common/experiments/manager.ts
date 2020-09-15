@@ -20,10 +20,10 @@ import {
     ICryptoUtils,
     IExperimentsManager,
     IHttpClient,
+    IJupyterSettings,
     IOutputChannel,
     IPersistentState,
-    IPersistentStateFactory,
-    IJupyterSettings
+    IPersistentStateFactory
 } from '../types';
 import { sleep } from '../utils/async';
 import { swallowExceptions } from '../utils/decorators';
