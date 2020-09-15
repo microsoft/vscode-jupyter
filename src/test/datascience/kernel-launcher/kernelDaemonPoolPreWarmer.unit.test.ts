@@ -2,13 +2,14 @@
 // Licensed under the MIT License.
 
 import { anything, instance, mock, verify, when } from 'ts-mockito';
+import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { JupyterSettings } from '../../../client/common/configSettings';
 import { IConfigurationService, IExperimentsManager, IWatchableJupyterSettings } from '../../../client/common/types';
 import { KernelDaemonPool } from '../../../client/datascience/kernel-launcher/kernelDaemonPool';
 import { KernelDaemonPreWarmer } from '../../../client/datascience/kernel-launcher/kernelDaemonPreWarmer';
 import {
     IInteractiveWindowProvider,
-    INotebookAndInteractiveWindowUsageTracker,
+    INotebookCreationTracker,
     INotebookEditorProvider,
     IRawNotebookSupportedService
 } from '../../../client/datascience/types';
@@ -18,18 +19,20 @@ suite('DataScience - Kernel Daemon Pool PreWarmer', () => {
     let prewarmer: KernelDaemonPreWarmer;
     let notebookEditorProvider: INotebookEditorProvider;
     let interactiveProvider: IInteractiveWindowProvider;
-    let usageTracker: INotebookAndInteractiveWindowUsageTracker;
+    let usageTracker: INotebookCreationTracker;
     let rawNotebookSupported: IRawNotebookSupportedService;
     let configService: IConfigurationService;
     let daemonPool: KernelDaemonPool;
     let settings: IWatchableJupyterSettings;
+    let vscodeNotebook: IVSCodeNotebook;
     setup(() => {
         notebookEditorProvider = mock<INotebookEditorProvider>();
         interactiveProvider = mock<IInteractiveWindowProvider>();
-        usageTracker = mock<INotebookAndInteractiveWindowUsageTracker>();
+        usageTracker = mock<INotebookCreationTracker>();
         daemonPool = mock<KernelDaemonPool>();
         rawNotebookSupported = mock<IRawNotebookSupportedService>();
         configService = mock<IConfigurationService>();
+        vscodeNotebook = mock<IVSCodeNotebook>();
         const experiment = mock<IExperimentsManager>();
         when(experiment.inExperiment(anything())).thenReturn(true);
 
@@ -45,13 +48,13 @@ suite('DataScience - Kernel Daemon Pool PreWarmer', () => {
             instance(usageTracker),
             instance(daemonPool),
             instance(rawNotebookSupported),
-            instance(configService)
+            instance(configService),
+            instance(vscodeNotebook)
         );
     });
     test('Should not pre-warm daemon pool if ds was never used', async () => {
         when(rawNotebookSupported.supported()).thenResolve(true);
-        when(usageTracker.lastInteractiveWindowOpened).thenReturn(undefined);
-        when(usageTracker.lastNotebookOpened).thenReturn(undefined);
+        when(usageTracker.lastPythonNotebookCreated).thenReturn(undefined);
 
         await prewarmer.activate(undefined);
 
@@ -68,8 +71,7 @@ suite('DataScience - Kernel Daemon Pool PreWarmer', () => {
 
     test('Prewarm if supported and the date works', async () => {
         when(rawNotebookSupported.supported()).thenResolve(true);
-        when(usageTracker.lastInteractiveWindowOpened).thenReturn(new Date());
-        when(usageTracker.lastNotebookOpened).thenReturn(new Date());
+        when(usageTracker.lastPythonNotebookCreated).thenReturn(new Date());
 
         await prewarmer.activate(undefined);
 

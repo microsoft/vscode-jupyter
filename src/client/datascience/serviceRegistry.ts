@@ -115,7 +115,7 @@ import { NotebookEditorCompatibilitySupport } from './notebook/notebookEditorCom
 import { NotebookEditorProvider } from './notebook/notebookEditorProvider';
 import { NotebookEditorProviderWrapper } from './notebook/notebookEditorProviderWrapper';
 import { registerTypes as registerNotebookTypes } from './notebook/serviceRegistry';
-import { NotebookAndInteractiveWindowUsageTracker } from './notebookAndInteractiveTracker';
+import { NotebookCreationTracker } from './notebookAndInteractiveTracker';
 import { NotebookExtensibility } from './notebookExtensibility';
 import { NotebookModelFactory } from './notebookStorage/factory';
 import { NativeEditorProvider } from './notebookStorage/nativeEditorProvider';
@@ -162,7 +162,7 @@ import {
     IJupyterVariableDataProviderFactory,
     IJupyterVariables,
     IKernelDependencyService,
-    INotebookAndInteractiveWindowUsageTracker,
+    INotebookCreationTracker,
     INotebookEditor,
     INotebookEditorProvider,
     INotebookExecutionLogger,
@@ -292,7 +292,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IJupyterSubCommandExecutionService>(IJupyterSubCommandExecutionService, JupyterInterpreterSubCommandExecutionService);
     serviceManager.addSingleton<KernelDaemonPool>(KernelDaemonPool, KernelDaemonPool);
     serviceManager.addSingleton<IKernelDependencyService>(IKernelDependencyService, KernelDependencyService);
-    serviceManager.addSingleton<INotebookAndInteractiveWindowUsageTracker>(INotebookAndInteractiveWindowUsageTracker, NotebookAndInteractiveWindowUsageTracker);
+    serviceManager.addSingleton<INotebookCreationTracker>(INotebookCreationTracker, NotebookCreationTracker);
     serviceManager.addSingleton<KernelDaemonPreWarmer>(KernelDaemonPreWarmer, KernelDaemonPreWarmer);
     serviceManager.add<IProtocolParser>(IProtocolParser, ProtocolParser);
     serviceManager.addSingleton<IJupyterDebugService>(IJupyterDebugService, MultiplexingDebugService, Identifiers.MULTIPLEXING_DEBUGSERVICE);
