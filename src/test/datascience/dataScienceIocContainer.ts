@@ -28,7 +28,6 @@ import { KernelDaemonPool } from '../../client/datascience/kernel-launcher/kerne
 
 import { promisify } from 'util';
 import { IExtensionSingleActivationService } from '../../client/activation/types';
-import { IPythonApiProvider } from '../../client/api/types';
 import { ApplicationEnvironment } from '../../client/common/application/applicationEnvironment';
 import { ApplicationShell } from '../../client/common/application/applicationShell';
 import { VSCodeNotebook } from '../../client/common/application/notebook';
@@ -277,8 +276,6 @@ import { InterpreterService } from '../interpreters/interpreterService';
 import { InterpreterSelector } from '../interpreters/selector';
 import { WindowsStoreInterpreter } from '../interpreters/winStoreInterpreter';
 import { MockOutputChannel } from '../mockClasses';
-import { MockPythonApi } from '../mockPythonApi';
-import { MockPythonApiProvider } from '../mockPythonApiProvider';
 import { UnitTestIocContainer } from '../testing/serviceRegistry';
 import { MockCommandManager } from './mockCommandManager';
 import { MockCustomEditorService } from './mockCustomEditorService';
@@ -898,8 +895,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             IJupyterUriProviderRegistration,
             JupyterUriProviderRegistration
         );
-        this.serviceManager.addSingleton<MockPythonApi>(MockPythonApi, MockPythonApi);
-        this.serviceManager.addSingleton<IPythonApiProvider>(IPythonApiProvider, MockPythonApiProvider);
     }
     public setFileContents(uri: Uri, contents: string) {
         const fileSystem = this.serviceManager.get<IDataScienceFileSystem>(IDataScienceFileSystem) as MockFileSystem;
