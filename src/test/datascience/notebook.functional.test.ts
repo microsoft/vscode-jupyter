@@ -24,7 +24,6 @@ import { IPythonExecutionFactory } from '../../client/common/process/types';
 import { Product } from '../../client/common/types';
 import { createDeferred, waitForPromise } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
-import { Architecture } from '../../client/common/utils/platform';
 import { getDefaultInteractiveIdentity } from '../../client/datascience/interactive-window/identity';
 import { getMessageForLibrariesNotInstalled } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService';
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
@@ -45,7 +44,7 @@ import {
     InterruptResult
 } from '../../client/datascience/types';
 import { IInterpreterService } from '../../client/interpreter/contracts';
-import { EnvironmentType, PythonEnvironment } from '../../client/pythonEnvironments/info';
+import { PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { concatMultilineString } from '../../datascience-ui/common';
 import { generateTestState, ICellViewModel } from '../../datascience-ui/interactive-common/mainState';
 import { sleep } from '../core';
@@ -561,12 +560,6 @@ suite('DataScience notebook tests', () => {
                     // Rewire our data we use to search for processes
                     @injectable()
                     class EmptyInterpreterService implements IInterpreterService {
-                        public get hasInterpreters(): Promise<boolean> {
-                            return Promise.resolve(true);
-                        }
-                        public onDidChangeInterpreterConfiguration(): Disposable {
-                            return { dispose: noop };
-                        }
                         public onDidChangeInterpreter(
                             _listener: (e: void) => any,
                             _thisArgs?: any,
@@ -578,25 +571,10 @@ suite('DataScience notebook tests', () => {
                         public getInterpreters(_resource?: Uri): Promise<PythonEnvironment[]> {
                             return Promise.resolve([]);
                         }
-                        public autoSetInterpreter(): Promise<void> {
-                            throw new Error('Method not implemented');
-                        }
                         public getActiveInterpreter(_resource?: Uri): Promise<PythonEnvironment | undefined> {
                             return Promise.resolve(undefined);
                         }
                         public getInterpreterDetails(_pythonPath: string, _resoure?: Uri): Promise<PythonEnvironment> {
-                            throw new Error('Method not implemented');
-                        }
-                        public refresh(_resource: Uri): Promise<void> {
-                            throw new Error('Method not implemented');
-                        }
-                        public initialize(): void {
-                            throw new Error('Method not implemented');
-                        }
-                        public getDisplayName(_interpreter: Partial<PythonEnvironment>): Promise<string> {
-                            throw new Error('Method not implemented');
-                        }
-                        public shouldAutoSetInterpreter(): Promise<boolean> {
                             throw new Error('Method not implemented');
                         }
                     }
@@ -695,9 +673,7 @@ suite('DataScience notebook tests', () => {
                         path: '/foo/bar/baz/python.exe',
                         version: new SemVer('3.6.6-final'),
                         sysVersion: '1.0.0.0',
-                        sysPrefix: 'Python',
-                        envType: EnvironmentType.Unknown,
-                        architecture: Architecture.x64
+                        sysPrefix: 'Python'
                     };
 
                     // Add interpreter into mock jupyter service and set it as active

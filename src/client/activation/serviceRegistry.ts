@@ -6,12 +6,17 @@ import { DataScienceSurveyBanner } from '../datascience/dataScienceSurveyBanner'
 import { InteractiveShiftEnterBanner } from '../datascience/shiftEnterBanner';
 import { IServiceManager } from '../ioc/types';
 import { ExtensionActivationManager } from './activationManager';
+import { MigrateDataScienceSettingsService } from './migrateDataScienceSettingsService';
 
-import { IExtensionActivationManager } from './types';
+import { IExtensionActivationManager, IExtensionActivationService } from './types';
 
 // tslint:disable-next-line: max-func-body-length
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.add<IExtensionActivationManager>(IExtensionActivationManager, ExtensionActivationManager);
+    serviceManager.addSingleton<IExtensionActivationService>(
+        IExtensionActivationService,
+        MigrateDataScienceSettingsService
+    );
 
     serviceManager.addSingleton<IPythonExtensionBanner>(
         IPythonExtensionBanner,
