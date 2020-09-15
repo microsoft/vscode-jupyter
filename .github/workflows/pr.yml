@@ -1,7 +1,7 @@
 name: Insiders Build
 
 on:
-  push:
+  pull_request:
     branches:
       - main
   check_run:
@@ -130,7 +130,7 @@ jobs:
       matrix:
         # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
         # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest]
         test-suite: [ts-unit]
     env:
       NODE_VERSION: 12.15.0
@@ -179,9 +179,9 @@ jobs:
       matrix:
         # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
         # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest]
         # Run the tests on the oldest and most recent versions of Python.
-        python: [2.7, 3.8]
+        python: [3.8]
         # test-suite: [python-unit, single-workspace, functional]
         test-suite: [functional]
     env:
