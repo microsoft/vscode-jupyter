@@ -1107,7 +1107,46 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
     private generateJupyterSettings() {
         // Create a dummy settings just to setup the workspace config
-        return new MockJupyterSettings(undefined);
+        const settings = new MockJupyterSettings(undefined);
+
+        // Then setup the default values.
+        settings.assign({
+            allowImportFromNotebook: true,
+            alwaysTrustNotebooks: true,
+            jupyterLaunchTimeout: 120000,
+            jupyterLaunchRetries: 3,
+            jupyterServerURI: 'local',
+            // tslint:disable-next-line: no-invalid-template-strings
+            notebookFileRoot: '${fileDirname}',
+            changeDirOnImportExport: false,
+            useDefaultConfigForJupyter: true,
+            jupyterInterruptTimeout: 10000,
+            searchForJupyter: true,
+            showCellInputCode: true,
+            collapseCellInputCodeByDefault: true,
+            allowInput: true,
+            maxOutputSize: 400,
+            enableScrollingForCellOutputs: true,
+            errorBackgroundColor: '#FFFFFF',
+            sendSelectionToInteractiveWindow: false,
+            codeRegularExpression: '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])',
+            markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)',
+            variableExplorerExclude: 'module;function;builtin_function_or_method',
+            liveShareConnectionTimeout: 100,
+            enablePlotViewer: true,
+            stopOnFirstLineWhileDebugging: true,
+            stopOnError: true,
+            addGotoCodeLenses: true,
+            enableCellCodeLens: true,
+            runStartupCommands: '',
+            debugJustMyCode: true,
+            variableQueries: [],
+            jupyterCommandLineArguments: [],
+            disableJupyterAutoStart: false,
+            widgetScriptSources: ['jsdelivr.com', 'unpkg.com'],
+            interactiveWindowMode: 'single'
+        });
+        return settings;
     }
 
     private generateWorkspaceConfig(): MockWorkspaceConfiguration {
