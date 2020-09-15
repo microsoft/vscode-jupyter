@@ -33,7 +33,7 @@
             }
         },
         {
-            "name": "Extension (DS UI in Browser)",
+            "name": "Extension (UI in Browser)",
             "type": "extensionHost",
             "request": "launch",
             "runtimeExecutable": "${execPath}",
@@ -107,7 +107,7 @@
             "request": "launch",
             "runtimeExecutable": "${execPath}",
             "args": [
-                "${workspaceFolder:vscode-jupyter}/src/test/datascience",
+                "${workspaceFolder:vscode-jupyter}/src/testMultiRootWkspc/smokeTests",
                 "--disable-extensions",
                 "--enable-proposed-api",
                 "--extensionDevelopmentPath=${workspaceFolder:vscode-python}",
