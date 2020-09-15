@@ -49,6 +49,7 @@ export class KernelDaemonPreWarmer implements IExtensionActivationService {
         await this.preWarmDaemonPoolIfNecesary();
     }
     private async preWarmDaemonPoolIfNecesary() {
+        // This is only for python, so prewarm just if we've seen python recently in this workspace
         if (this.shouldPreWarmDaemonPool(this.usageTracker.lastPythonNotebookCreated)) {
             await this.preWarmKernelDaemonPool();
         }

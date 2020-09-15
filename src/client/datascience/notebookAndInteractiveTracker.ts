@@ -19,6 +19,7 @@ import {
 const LastNotebookOpenedTimeKey = 'last-notebook-start-time';
 const LastInteractiveWindowStartTimeKey = 'last-interactive-window-start-time';
 const LastPythonNotebookCreatedKey = 'last-python-notebook-created';
+const LastNotebookCreatedKey = 'last-notebook-created';
 
 @injectable()
 export class NotebookAndInteractiveWindowUsageTracker implements INotebookAndInteractiveWindowUsageTracker {
@@ -32,6 +33,10 @@ export class NotebookAndInteractiveWindowUsageTracker implements INotebookAndInt
     }
     public get lastPythonNotebookCreated() {
         const time = this.mementoStorage.get<number | undefined>(LastPythonNotebookCreatedKey);
+        return time ? new Date(time) : undefined;
+    }
+    public get lastNotebookCreated() {
+        const time = this.mementoStorage.get<number | undefined>(LastNotebookCreatedKey);
         return time ? new Date(time) : undefined;
     }
     constructor(
@@ -57,9 +62,11 @@ export class NotebookAndInteractiveWindowUsageTracker implements INotebookAndInt
     }
 
     // Callback for when a notebook is created by the notebook provider
-    // If it's a python notebook, then note the time for it
+    // Note the time as well as an extra time for python specific notebooks
     private notebookCreated(evt: { identity: Uri; notebook: INotebook }) {
         const language = getKernelConnectionLanguage(evt.notebook.getKernelConnection());
+
+        this.mementoStorage.update(LastNotebookCreatedKey, Date.now());
 
         if (language === PYTHON_LANGUAGE) {
             this.mementoStorage.update(LastPythonNotebookCreatedKey, Date.now());
