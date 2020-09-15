@@ -56,7 +56,7 @@ suite('DataScience - ipywidget - CDN', () => {
         httpClient = mock(HttpClient);
         fileSystem = mock(DataScienceFileSystem);
         webviewUriConverter = mock(IPyWidgetScriptSource);
-        settings = { datascience: { widgetScriptSources: [] } } as any;
+        settings = { widgetScriptSources: [] } as any;
         when(configService.getSettings(anything())).thenReturn(settings as any);
         when(httpClient.downloadFile(anything())).thenCall(request);
         when(fileSystem.localFileExists(anything())).thenCall((f) => fs.pathExists(f));

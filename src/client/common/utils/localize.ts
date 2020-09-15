@@ -426,7 +426,7 @@ export namespace DataScience {
     export const exportDialogFailed = localize('DataScience.exportDialogFailed', 'Failed to export notebook. {0}');
     export const exportOpenQuestion = localize('DataScience.exportOpenQuestion', 'Open in browser');
     export const exportOpenQuestion1 = localize('DataScience.exportOpenQuestion1', 'Open in editor');
-    export const runCellLensCommandTitle = localize('python.command.jupyter.runcell.title', 'Run cell');
+    export const runCellLensCommandTitle = localize('jupyter.command.jupyter.runcell.title', 'Run cell');
     export const importDialogTitle = localize('DataScience.importDialogTitle', 'Import Jupyter Notebook');
     export const importDialogFilter = localize('DataScience.importDialogFilter', 'Jupyter Notebooks');
     export const notebookCheckForImportTitle = localize(
@@ -516,13 +516,13 @@ export namespace DataScience {
     export const connectedToIPyKernel = localize('DataScience.connectedToIPyKernel', 'Connected.');
     export const connectingToJupyter = localize('DataScience.connectingToJupyter', 'Connecting to Jupyter server');
     export const exportingFormat = localize('DataScience.exportingFormat', 'Exporting {0}');
-    export const runAllCellsLensCommandTitle = localize('python.command.jupyter.runallcells.title', 'Run all cells');
+    export const runAllCellsLensCommandTitle = localize('jupyter.command.jupyter.runallcells.title', 'Run all cells');
     export const runAllCellsAboveLensCommandTitle = localize(
-        'python.command.jupyter.runallcellsabove.title',
+        'jupyter.command.jupyter.runallcellsabove.title',
         'Run above'
     );
     export const runCellAndAllBelowLensCommandTitle = localize(
-        'python.command.jupyter.runcellandallbelow.title',
+        'jupyter.command.jupyter.runcellandallbelow.title',
         'Run Below'
     );
     export const importChangeDirectoryComment = localize(

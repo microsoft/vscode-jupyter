@@ -34,7 +34,8 @@
         "jupyter",
         "notebook",
         "ipynb",
-        "multi-root ready"
+        "multi-root ready",
+        "python"
     ],
     "categories": [
         "Programming Languages",
