@@ -49,10 +49,7 @@ export class KernelDaemonPreWarmer implements IExtensionActivationService {
         await this.preWarmDaemonPoolIfNecesary();
     }
     private async preWarmDaemonPoolIfNecesary() {
-        if (
-            this.shouldPreWarmDaemonPool(this.usageTracker.lastInteractiveWindowOpened) ||
-            this.shouldPreWarmDaemonPool(this.usageTracker.lastNotebookOpened)
-        ) {
+        if (this.shouldPreWarmDaemonPool(this.usageTracker.lastPythonNotebookCreated)) {
             await this.preWarmKernelDaemonPool();
         }
     }

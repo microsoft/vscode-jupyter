@@ -1301,6 +1301,7 @@ export const INotebookAndInteractiveWindowUsageTracker = Symbol('INotebookAndInt
 export interface INotebookAndInteractiveWindowUsageTracker {
     readonly lastNotebookOpened?: Date;
     readonly lastInteractiveWindowOpened?: Date;
+    readonly lastPythonNotebookCreated?: Date;
     startTracking(): void;
 }
 

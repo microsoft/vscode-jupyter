@@ -40,10 +40,7 @@ export class ServerPreload implements IExtensionSingleActivationService {
     }
 
     private checkDateForServerStart() {
-        if (
-            this.shouldAutoStartStartServer(this.tracker.lastInteractiveWindowOpened) ||
-            this.shouldAutoStartStartServer(this.tracker.lastNotebookOpened)
-        ) {
+        if (this.shouldAutoStartStartServer(this.tracker.lastPythonNotebookCreated)) {
             this.createServerIfNecessary().ignoreErrors();
         }
     }
