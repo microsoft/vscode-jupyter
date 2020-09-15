@@ -28,6 +28,7 @@ import { KernelDaemonPool } from '../../client/datascience/kernel-launcher/kerne
 
 import { promisify } from 'util';
 import { IExtensionSingleActivationService } from '../../client/activation/types';
+import { IPythonApiProvider } from '../../client/api/types';
 import { ApplicationEnvironment } from '../../client/common/application/applicationEnvironment';
 import { ApplicationShell } from '../../client/common/application/applicationShell';
 import { VSCodeNotebook } from '../../client/common/application/notebook';
@@ -276,6 +277,8 @@ import { InterpreterService } from '../interpreters/interpreterService';
 import { InterpreterSelector } from '../interpreters/selector';
 import { WindowsStoreInterpreter } from '../interpreters/winStoreInterpreter';
 import { MockOutputChannel } from '../mockClasses';
+import { MockPythonApi } from '../mockPythonApi';
+import { MockPythonApiProvider } from '../mockPythonApiProvider';
 import { UnitTestIocContainer } from '../testing/serviceRegistry';
 import { MockCommandManager } from './mockCommandManager';
 import { MockCustomEditorService } from './mockCustomEditorService';
@@ -895,6 +898,8 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             IJupyterUriProviderRegistration,
             JupyterUriProviderRegistration
         );
+        this.serviceManager.addSingleton<MockPythonApi>(MockPythonApi, MockPythonApi);
+        this.serviceManager.addSingleton<IPythonApiProvider>(IPythonApiProvider, MockPythonApiProvider);
     }
     public setFileContents(uri: Uri, contents: string) {
         const fileSystem = this.serviceManager.get<IDataScienceFileSystem>(IDataScienceFileSystem) as MockFileSystem;
@@ -986,7 +991,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         let setting = this.settingsMap.get(key);
         if (!setting && !this.disposed) {
             // Make sure we have the default config for this resource first.
-            this.getWorkspaceConfig('python', resource);
+            this.getWorkspaceConfig('jupyter', resource);
             setting = new MockJupyterSettings(resource, this.serviceManager.get<IWorkspaceService>(IWorkspaceService));
             this.settingsMap.set(key, setting);
         } else if (this.disposed) {
@@ -1056,7 +1061,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     }
 
     public getWorkspaceConfig(section: string | undefined, resource?: Resource): MockWorkspaceConfiguration {
-        if (!section || section !== 'python') {
+        if (!section || section !== 'jupyter') {
             return this.emptyConfig;
         }
         const key = this.getResourceKey(resource);
@@ -1080,18 +1085,18 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         panel.attach(options);
         return panel;
     }
-    private forceSettingsChanged(resource: Resource, newPath: string, datascienceSettings?: IJupyterSettings) {
+    private forceSettingsChanged(resource: Resource, _newPath: string, datascienceSettings?: IJupyterSettings) {
         // tslint:disable-next-line: no-suspicious-comment
         // TODO: Python path will not be updated by this code so tests are unlikely to pass
-        const settings = this.getSettings(resource) as any;
-        settings.pythonPath = newPath;
-        settings.datascience = datascienceSettings ? datascienceSettings : settings.datascience;
+        const settings = this.getSettings(resource) as MockJupyterSettings;
+        if (datascienceSettings) {
+            settings.assign(datascienceSettings);
+        }
 
         // The workspace config must be updated too as a config change event will cause the data to be reread from
         // the config.
-        const config = this.getWorkspaceConfig('python', resource);
-        config.update('pythonPath', newPath).ignoreErrors();
-        config.update('dataScience', settings.datascience).ignoreErrors();
+        const config = this.getWorkspaceConfig('jupyter', resource);
+        config.update('', settings).ignoreErrors();
         settings.fireChangeEvent();
         this.configChangeEvent.fire({
             affectsConfiguration(_s: string, _r?: Uri): boolean {

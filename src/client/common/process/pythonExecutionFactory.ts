@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { inject, injectable } from 'inversify';
-import { PythonApiProvider } from '../../api/pythonApi';
+import { IPythonApiProvider } from '../../api/types';
 import { IPlatformService } from '../../common/platform/types';
 import { IEnvironmentActivationService } from '../../interpreter/activation/types';
 import { IInterpreterService } from '../../interpreter/contracts';
@@ -47,7 +47,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         @inject(IBufferDecoder) private readonly decoder: IBufferDecoder,
         @inject(IWindowsStoreInterpreter) private readonly windowsStoreInterpreter: IWindowsStoreInterpreter,
         @inject(IPlatformService) private readonly platformService: IPlatformService,
-        @inject(PythonApiProvider) private readonly api: PythonApiProvider
+        @inject(IPythonApiProvider) private readonly api: IPythonApiProvider
     ) {
         // Acquire other objects here so that if we are called during dispose they are available.
         this.disposables = this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);

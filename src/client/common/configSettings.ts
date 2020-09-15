@@ -171,11 +171,13 @@ export class JupyterSettings implements IWatchableJupyterSettings {
 
         // tslint:disable-next-line: no-any
         const loggingSettings = systemVariables.resolveAny(jupyterConfig.get<any>('logging'))!;
-        loggingSettings.level = convertSettingTypeToLogLevel(loggingSettings.level);
-        if (this.logging) {
-            Object.assign<ILoggingSettings, ILoggingSettings>(this.logging, loggingSettings);
-        } else {
-            this.logging = loggingSettings;
+        if (loggingSettings) {
+            loggingSettings.level = convertSettingTypeToLogLevel(loggingSettings.level);
+            if (this.logging) {
+                Object.assign<ILoggingSettings, ILoggingSettings>(this.logging, loggingSettings);
+            } else {
+                this.logging = loggingSettings;
+            }
         }
 
         const experiments = systemVariables.resolveAny(jupyterConfig.get<IExperiments>('experiments'))!;

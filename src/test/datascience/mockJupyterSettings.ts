@@ -12,7 +12,7 @@ export class MockJupyterSettings extends JupyterSettings {
     }
 
     public assign(partial: Partial<IJupyterSettings>) {
-        Object.assign(this, partial);
+        Object.assign(this, { ...this, ...partial });
     }
 
     protected getPythonExecutable(v: string) {
