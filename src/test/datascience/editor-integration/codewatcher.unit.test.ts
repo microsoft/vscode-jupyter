@@ -32,7 +32,7 @@ import {
 import { IServiceContainer } from '../../../client/ioc/types';
 import { ICodeExecutionHelper } from '../../../client/terminals/types';
 import { MockDocumentManager } from '../mockDocumentManager';
-import { MockJupyterSettings } from '../mockPythonSettings';
+import { MockJupyterSettings } from '../mockJupyterSettings';
 import { MockEditor } from '../mockTextEditor';
 import { createDocument } from './helpers';
 

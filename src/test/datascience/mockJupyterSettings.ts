@@ -8,7 +8,7 @@ export class MockJupyterSettings extends JupyterSettings {
     }
 
     public fireChangeEvent() {
-        this.changed.fire();
+        this.fireChangeNotification();
     }
 
     public assign(partial: Partial<IJupyterSettings>) {

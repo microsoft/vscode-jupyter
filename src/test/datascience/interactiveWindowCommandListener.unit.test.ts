@@ -38,7 +38,7 @@ import { IInterpreterService } from '../../client/interpreter/contracts';
 import { ServiceContainer } from '../../client/ioc/container';
 import { MockCommandManager } from './mockCommandManager';
 import { MockDocumentManager } from './mockDocumentManager';
-import { MockJupyterSettings } from './mockPythonSettings';
+import { MockJupyterSettings } from './mockJupyterSettings';
 import { MockStatusProvider } from './mockStatusProvider';
 
 // tslint:disable:no-any no-http-string no-multiline-string max-func-body-length

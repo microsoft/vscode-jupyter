@@ -20,7 +20,6 @@ import {
     VSCodeNativeTelemetry
 } from '../datascience/constants';
 import { ExportFormat } from '../datascience/export/types';
-import { DebugConfigurationType } from '../debugger/extension/types';
 import { ConsoleType, TriggerType } from '../debugger/types';
 import { EventName, PlatformErrors } from './constants';
 
@@ -580,42 +579,6 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when attaching to a local process.
      */
     [EventName.DEBUGGER_ATTACH_TO_LOCAL_PROCESS]: never | undefined;
-    /**
-     * Telemetry sent after building configuration for debugger
-     */
-    [EventName.DEBUGGER_CONFIGURATION_PROMPTS]: {
-        /**
-         * The type of debug configuration to build configuration for
-         *
-         * @type {DebugConfigurationType}
-         */
-        configurationType: DebugConfigurationType;
-        /**
-         * Carries `true` if we are able to auto-detect manage.py path for Django, `false` otherwise
-         *
-         * @type {boolean}
-         */
-        autoDetectedDjangoManagePyPath?: boolean;
-        /**
-         * Carries `true` if we are able to auto-detect .ini file path for Pyramid, `false` otherwise
-         *
-         * @type {boolean}
-         */
-        autoDetectedPyramidIniPath?: boolean;
-        /**
-         * Carries `true` if we are able to auto-detect app.py path for Flask, `false` otherwise
-         *
-         * @type {boolean}
-         */
-        autoDetectedFlaskAppPyPath?: boolean;
-        /**
-         * Carries `true` if user manually entered the required path for the app
-         * (path to `manage.py` for Django, path to `.ini` for Pyramid, path to `app.py` for Flask), `false` otherwise
-         *
-         * @type {boolean}
-         */
-        manuallyEnteredAValue?: boolean;
-    };
     /**
      * Telemetry event sent when providing completion provider in launch.json. It is sent just *after* inserting the completion.
      */

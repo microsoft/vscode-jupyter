@@ -61,7 +61,7 @@ import { getOSType, OSType } from '../common';
 import { noop } from '../core';
 import { MockOutputChannel } from '../mockClasses';
 import { MockJupyterServer } from './mockJupyterServer';
-import { MockJupyterSettings } from './mockPythonSettings';
+import { MockJupyterSettings } from './mockJupyterSettings';
 
 // tslint:disable:no-any no-http-string no-multiline-string max-func-body-length
 class DisposableRegistry implements IAsyncDisposableRegistry {

@@ -5,7 +5,7 @@
 
 // tslint:disable:max-func-body-length
 
-import { debug, DebugConfigurationProvider, OutputChannel, window } from 'vscode';
+import { OutputChannel, window } from 'vscode';
 
 import { registerTypes as activationRegisterTypes } from './activation/serviceRegistry';
 import { IExtensionActivationManager } from './activation/types';
@@ -31,9 +31,7 @@ import { registerTypes as variableRegisterTypes } from './common/variables/servi
 import { JUPYTER_OUTPUT_CHANNEL } from './datascience/constants';
 import { registerTypes as dataScienceRegisterTypes } from './datascience/serviceRegistry';
 import { IDataScience } from './datascience/types';
-import { DebuggerTypeName } from './debugger/constants';
 import { registerTypes as debugConfigurationRegisterTypes } from './debugger/extension/serviceRegistry';
-import { IDebugConfigurationService, IDebuggerBanner } from './debugger/extension/types';
 import { IServiceContainer, IServiceManager } from './ioc/types';
 import { addOutputChannelLogging, setLoggingLevel } from './logging';
 import { setExtensionInstallTelemetryProperties } from './telemetry/extensionInstallTelemetry';
@@ -124,12 +122,6 @@ async function activateLegacy(
     const deprecationMgr = serviceContainer.get<IFeatureDeprecationManager>(IFeatureDeprecationManager);
     deprecationMgr.initialize();
     context.subscriptions.push(deprecationMgr);
-
-    serviceContainer.getAll<DebugConfigurationProvider>(IDebugConfigurationService).forEach((debugConfigProvider) => {
-        context.subscriptions.push(debug.registerDebugConfigurationProvider(DebuggerTypeName, debugConfigProvider));
-    });
-
-    serviceContainer.get<IDebuggerBanner>(IDebuggerBanner).initialize();
 
     return { activationPromise };
 }

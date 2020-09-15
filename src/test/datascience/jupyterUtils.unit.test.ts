@@ -15,7 +15,7 @@ import { expandWorkingDir } from '../../client/datascience/jupyter/jupyterUtils'
 import { createEmptyCell } from '../../datascience-ui/interactive-common/mainState';
 import { MockDocument } from './mockDocument';
 import { MockDocumentManager } from './mockDocumentManager';
-import { MockJupyterSettings } from './mockPythonSettings';
+import { MockJupyterSettings } from './mockJupyterSettings';
 
 suite('DataScience JupyterUtils', () => {
     const workspaceService = mock(WorkspaceService);

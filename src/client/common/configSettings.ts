@@ -33,7 +33,7 @@ import { SystemVariables } from './variables/systemVariables';
 // tslint:disable-next-line:completed-docs
 export class JupyterSettings implements IWatchableJupyterSettings {
     public get onDidChange(): Event<void> {
-        return this.changed.event;
+        return this._changeEmitter.event;
     }
 
     private static jupyterSettings: Map<string, JupyterSettings> = new Map<string, JupyterSettings>();
@@ -97,14 +97,15 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     public alwaysScrollOnNewCell?: boolean | undefined;
     public showKernelSelectionOnInteractiveWindow?: boolean | undefined;
     public interactiveWindowMode: InteractiveWindowMode = 'multiple';
-    protected readonly changed = new EventEmitter<void>();
-    private workspaceRoot: Resource;
-    private disposables: Disposable[] = [];
-    private readonly workspace: IWorkspaceService;
+    // Privates should start with _ so that they are not read from the settings.json
+    private _changeEmitter = new EventEmitter<void>();
+    private _workspaceRoot: Resource;
+    private _disposables: Disposable[] = [];
+    private readonly _workspace: IWorkspaceService;
 
     constructor(workspaceFolder: Resource, workspace?: IWorkspaceService) {
-        this.workspace = workspace || new WorkspaceService();
-        this.workspaceRoot = workspaceFolder;
+        this._workspace = workspace || new WorkspaceService();
+        this._workspaceRoot = workspaceFolder;
         this.initialize();
     }
     // tslint:disable-next-line:function-name
@@ -149,13 +150,13 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     }
     public dispose() {
         // tslint:disable-next-line:no-unsafe-any
-        this.disposables.forEach((disposable) => disposable && disposable.dispose());
-        this.disposables = [];
+        this._disposables.forEach((disposable) => disposable && disposable.dispose());
+        this._disposables = [];
     }
     // tslint:disable-next-line:cyclomatic-complexity max-func-body-length
     protected update(jupyterSettings: WorkspaceConfiguration) {
-        const workspaceRoot = this.workspaceRoot?.fsPath;
-        const systemVariables: SystemVariables = new SystemVariables(undefined, workspaceRoot, this.workspace);
+        const workspaceRoot = this._workspaceRoot?.fsPath;
+        const systemVariables: SystemVariables = new SystemVariables(undefined, workspaceRoot, this._workspace);
 
         // tslint:disable-next-line: no-any
         const loggingSettings = systemVariables.resolveAny(jupyterSettings.get<any>('logging'))!;
@@ -182,7 +183,7 @@ export class JupyterSettings implements IWatchableJupyterSettings {
 
         // The rest are all the same.
         const keys = Object.getOwnPropertyNames(this).filter(
-            (f) => f !== 'experiments' && f !== 'logging' && f !== 'languageServer'
+            (f) => f !== 'experiments' && f !== 'logging' && f !== 'languageServer' && !f.startsWith('_')
         );
         keys.forEach((k) => {
             // Replace variables with their actual value.
@@ -194,7 +195,7 @@ export class JupyterSettings implements IWatchableJupyterSettings {
 
     protected onWorkspaceFoldersChanged() {
         //If an activated workspace folder was removed, delete its key
-        const workspaceKeys = this.workspace.workspaceFolders!.map((workspaceFolder) => workspaceFolder.uri.fsPath);
+        const workspaceKeys = this._workspace.workspaceFolders!.map((workspaceFolder) => workspaceFolder.uri.fsPath);
         const activatedWkspcKeys = Array.from(JupyterSettings.jupyterSettings.keys());
         const activatedWkspcFoldersRemoved = activatedWkspcKeys.filter((item) => workspaceKeys.indexOf(item) < 0);
         if (activatedWkspcFoldersRemoved.length > 0) {
@@ -205,30 +206,34 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     }
     protected initialize(): void {
         const onDidChange = () => {
-            const currentConfig = this.workspace.getConfiguration('jupyter', this.workspaceRoot);
+            const currentConfig = this._workspace.getConfiguration('jupyter', this._workspaceRoot);
             this.update(currentConfig);
 
             // If workspace config changes, then we could have a cascading effect of on change events.
             // Let's defer the change notification.
             this.debounceChangeNotification();
         };
-        this.disposables.push(this.workspace.onDidChangeWorkspaceFolders(this.onWorkspaceFoldersChanged, this));
-        this.disposables.push(
-            this.workspace.onDidChangeConfiguration((event: ConfigurationChangeEvent) => {
+        this._disposables.push(this._workspace.onDidChangeWorkspaceFolders(this.onWorkspaceFoldersChanged, this));
+        this._disposables.push(
+            this._workspace.onDidChangeConfiguration((event: ConfigurationChangeEvent) => {
                 if (event.affectsConfiguration('jupyter')) {
                     onDidChange();
                 }
             })
         );
 
-        const initialConfig = this.workspace.getConfiguration('jupyter', this.workspaceRoot);
+        const initialConfig = this._workspace.getConfiguration('jupyter', this._workspaceRoot);
         if (initialConfig) {
             this.update(initialConfig);
         }
     }
     @debounceSync(1)
     protected debounceChangeNotification() {
-        this.changed.fire();
+        this._changeEmitter.fire();
+    }
+
+    protected fireChangeNotification() {
+        this._changeEmitter.fire();
     }
 }
 

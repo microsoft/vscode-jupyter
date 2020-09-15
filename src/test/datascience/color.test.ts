@@ -13,7 +13,7 @@ import { CodeCssGenerator } from '../../client/datascience/codeCssGenerator';
 import { DataScienceFileSystem } from '../../client/datascience/dataScienceFileSystem';
 import { ThemeFinder } from '../../client/datascience/themeFinder';
 import { IThemeFinder } from '../../client/datascience/types';
-import { MockJupyterSettings } from './mockPythonSettings';
+import { MockJupyterSettings } from './mockJupyterSettings';
 
 // tslint:disable:max-func-body-length
 suite('Theme colors', () => {
