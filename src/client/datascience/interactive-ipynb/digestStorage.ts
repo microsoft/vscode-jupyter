@@ -20,9 +20,9 @@ export class DigestStorage implements IDigestStorage {
         @inject(IDataScienceFileSystem) private fs: IDataScienceFileSystem,
         @inject(IExtensionContext) private extensionContext: IExtensionContext
     ) {
+        this.migrator = new MigrateDigestStorage(extensionContext, fs);
         this.key = this.initKey();
         this.digestDir = this.initDir();
-        this.migrator = new MigrateDigestStorage(extensionContext, fs);
     }
 
     public async saveDigest(uri: Uri, signature: string) {
