@@ -14,9 +14,9 @@ import {
     GLOBAL_MEMENTO,
     IConfigurationService,
     IExperimentService,
+    IJupyterSettings,
     IMemento,
-    IOutputChannel,
-    IJupyterSettings
+    IOutputChannel
 } from '../types';
 import { Experiments } from '../utils/localize';
 import { ExperimentationTelemetry } from './telemetry';
