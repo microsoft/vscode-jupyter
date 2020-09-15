@@ -65,10 +65,9 @@ async function activateLegacy(
     serviceContainer: IServiceContainer
 ) {
     // register "services"
-
-    const standardOutputChannel = window.createOutputChannel(OutputChannelNames.python());
-    addOutputChannelLogging(standardOutputChannel);
     const jupyterOutputChannel = window.createOutputChannel(OutputChannelNames.jupyter());
+    const standardOutputChannel = jupyterOutputChannel;
+    addOutputChannelLogging(standardOutputChannel);
     serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, standardOutputChannel, STANDARD_OUTPUT_CHANNEL);
     serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, jupyterOutputChannel, JUPYTER_OUTPUT_CHANNEL);
 

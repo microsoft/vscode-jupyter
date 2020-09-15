@@ -4,7 +4,6 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { IExtensionActivationService } from '../../activation/types';
 import '../../common/extensions';
 import { IConfigurationService, IDisposableRegistry, Resource } from '../../common/types';
 import { swallowExceptions } from '../../common/utils/decorators';
@@ -17,7 +16,7 @@ import {
 import { KernelDaemonPool } from './kernelDaemonPool';
 
 @injectable()
-export class KernelDaemonPreWarmer implements IExtensionActivationService {
+export class KernelDaemonPreWarmer {
     constructor(
         @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider,
         @inject(IInteractiveWindowProvider) private interactiveProvider: IInteractiveWindowProvider,
