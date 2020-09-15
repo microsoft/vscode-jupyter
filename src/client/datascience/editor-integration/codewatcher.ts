@@ -83,7 +83,7 @@ export class CodeWatcher implements ICodeWatcher {
         this.version = document.version;
 
         // Get document cells here. Make a copy of our settings.
-        this.cachedSettings = JSON.parse(JSON.stringify(this.configService.getSettings(document.uri)));
+        this.cachedSettings = { ...this.configService.getSettings(document.uri) };
 
         // Use the factory to generate our new code lenses.
         this.codeLenses = this.codeLensFactory.createCodeLenses(document);

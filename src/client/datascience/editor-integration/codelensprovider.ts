@@ -54,8 +54,12 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
     // CodeLensProvider interface
     // Some implementation based on DonJayamanne's jupyter extension work
     public provideCodeLenses(document: vscode.TextDocument, _token: vscode.CancellationToken): vscode.CodeLens[] {
-        if (this.vsCodeNotebook.activeNotebookEditor) {
-            return [];
+        try {
+            if (this.vsCodeNotebook.activeNotebookEditor) {
+                return [];
+            }
+        } catch {
+            // If vscodenote book fails, just ignore
         }
         // Get the list of code lens for this document.
         return this.getCodeLensTimed(document);
