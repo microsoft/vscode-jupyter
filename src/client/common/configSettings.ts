@@ -56,46 +56,46 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     public collapseCellInputCodeByDefault: boolean = false;
     public maxOutputSize: number = -1;
     public enableScrollingForCellOutputs: boolean = false;
-    public gatherToScript?: boolean | undefined;
-    public gatherSpecPath?: string | undefined;
+    public gatherToScript: boolean = false;
+    public gatherSpecPath: string = '';
     public sendSelectionToInteractiveWindow: boolean = false;
     public markdownRegularExpression: string = '';
     public codeRegularExpression: string = '';
-    public allowLiveShare?: boolean | undefined;
+    public allowLiveShare: boolean = false;
     public errorBackgroundColor: string = '';
-    public ignoreVscodeTheme?: boolean | undefined;
-    public variableExplorerExclude?: string | undefined;
-    public liveShareConnectionTimeout?: number | undefined;
-    public decorateCells?: boolean | undefined;
-    public enableCellCodeLens?: boolean | undefined;
-    public askForLargeDataFrames?: boolean | undefined;
-    public enableAutoMoveToNextCell?: boolean | undefined;
-    public askForKernelRestart?: boolean | undefined;
-    public enablePlotViewer?: boolean | undefined;
-    public codeLenses?: string | undefined;
-    public debugCodeLenses?: string | undefined;
-    public debugpyDistPath?: string | undefined;
-    public stopOnFirstLineWhileDebugging?: boolean | undefined;
-    public textOutputLimit?: number | undefined;
-    public magicCommandsAsComments?: boolean | undefined;
-    public stopOnError?: boolean | undefined;
-    public remoteDebuggerPort?: number | undefined;
-    public colorizeInputBox?: boolean | undefined;
-    public addGotoCodeLenses?: boolean | undefined;
-    public useNotebookEditor?: boolean | undefined;
-    public runMagicCommands?: string | undefined;
+    public ignoreVscodeTheme: boolean = false;
+    public variableExplorerExclude: string = '';
+    public liveShareConnectionTimeout: number = 0;
+    public decorateCells: boolean = false;
+    public enableCellCodeLens: boolean = false;
+    public askForLargeDataFrames: boolean = false;
+    public enableAutoMoveToNextCell: boolean = false;
+    public askForKernelRestart: boolean = false;
+    public enablePlotViewer: boolean = false;
+    public codeLenses: string = '';
+    public debugCodeLenses: string = '';
+    public debugpyDistPath: string = '';
+    public stopOnFirstLineWhileDebugging: boolean = false;
+    public textOutputLimit: number = 0;
+    public magicCommandsAsComments: boolean = false;
+    public stopOnError: boolean = false;
+    public remoteDebuggerPort: number = 0;
+    public colorizeInputBox: boolean = false;
+    public addGotoCodeLenses: boolean = false;
+    public useNotebookEditor: boolean = false;
+    public runMagicCommands: string = '';
     public runStartupCommands: string | string[] = [];
     public debugJustMyCode: boolean = false;
-    public defaultCellMarker?: string | undefined;
-    public verboseLogging?: boolean | undefined;
-    public themeMatplotlibPlots?: boolean | undefined;
-    public useWebViewServer?: boolean | undefined;
+    public defaultCellMarker: string = '';
+    public verboseLogging: boolean = false;
+    public themeMatplotlibPlots: boolean = false;
+    public useWebViewServer: boolean = false;
     public variableQueries: IVariableQuery[] = [];
-    public disableJupyterAutoStart?: boolean | undefined;
+    public disableJupyterAutoStart: boolean = false;
     public jupyterCommandLineArguments: string[] = [];
     public widgetScriptSources: WidgetCDNs[] = [];
-    public alwaysScrollOnNewCell?: boolean | undefined;
-    public showKernelSelectionOnInteractiveWindow?: boolean | undefined;
+    public alwaysScrollOnNewCell: boolean = false;
+    public showKernelSelectionOnInteractiveWindow: boolean = false;
     public interactiveWindowMode: InteractiveWindowMode = 'multiple';
     // Privates should start with _ so that they are not read from the settings.json
     private _changeEmitter = new EventEmitter<void>();
@@ -154,12 +154,12 @@ export class JupyterSettings implements IWatchableJupyterSettings {
         this._disposables = [];
     }
     // tslint:disable-next-line:cyclomatic-complexity max-func-body-length
-    protected update(jupyterSettings: WorkspaceConfiguration) {
+    protected update(jupyterConfig: WorkspaceConfiguration) {
         const workspaceRoot = this._workspaceRoot?.fsPath;
         const systemVariables: SystemVariables = new SystemVariables(undefined, workspaceRoot, this._workspace);
 
         // tslint:disable-next-line: no-any
-        const loggingSettings = systemVariables.resolveAny(jupyterSettings.get<any>('logging'))!;
+        const loggingSettings = systemVariables.resolveAny(jupyterConfig.get<any>('logging'))!;
         loggingSettings.level = convertSettingTypeToLogLevel(loggingSettings.level);
         if (this.logging) {
             Object.assign<ILoggingSettings, ILoggingSettings>(this.logging, loggingSettings);
@@ -167,7 +167,7 @@ export class JupyterSettings implements IWatchableJupyterSettings {
             this.logging = loggingSettings;
         }
 
-        const experiments = systemVariables.resolveAny(jupyterSettings.get<IExperiments>('experiments'))!;
+        const experiments = systemVariables.resolveAny(jupyterConfig.get<IExperiments>('experiments'))!;
         if (this.experiments) {
             Object.assign<IExperiments, IExperiments>(this.experiments, experiments);
         } else {
@@ -187,7 +187,7 @@ export class JupyterSettings implements IWatchableJupyterSettings {
         );
         keys.forEach((k) => {
             // Replace variables with their actual value.
-            const val = systemVariables.resolveAny(jupyterSettings.get(k));
+            const val = systemVariables.resolveAny(jupyterConfig.get(k));
             // tslint:disable-next-line: no-any
             (<any>this)[k] = val;
         });

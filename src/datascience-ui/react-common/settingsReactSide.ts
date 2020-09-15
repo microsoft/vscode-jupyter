@@ -2,13 +2,12 @@
 // Licensed under the MIT License.
 'use strict';
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
-
 import { IJupyterExtraSettings } from '../../client/datascience/types';
 
-export function getDefaultSettings() {
+export function getDefaultSettings(): IJupyterExtraSettings {
     // Default settings for tests
     // tslint:disable-next-line: no-unnecessary-local-variable
-    const result: IJupyterExtraSettings = {
+    const result: Partial<IJupyterExtraSettings> = {
         insidersChannel: 'off',
         experiments: { enabled: true, optInto: [], optOutFrom: [] },
         logging: {
@@ -85,7 +84,8 @@ export function getDefaultSettings() {
         widgetScriptSources: []
     };
 
-    return result;
+    // tslint:disable-next-line: no-any
+    return result as any;
 }
 
 //tslint:disable:no-any

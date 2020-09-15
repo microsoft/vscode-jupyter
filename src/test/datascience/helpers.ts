@@ -46,7 +46,8 @@ export function defaultDataScienceSettings(): IJupyterSettings {
         jupyterCommandLineArguments: [],
         widgetScriptSources: [],
         interactiveWindowMode: 'single'
-    };
+        // tslint:disable-next-line: no-any
+    } as any;
 }
 
 export function takeSnapshot() {
