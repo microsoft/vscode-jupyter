@@ -70,7 +70,7 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     ['workbench.action.files.openFolder']: [];
     ['workbench.action.openWorkspace']: [];
     ['setContext']: [string, boolean] | ['jupyter.vscode.channel', Channel];
-    ['python.reloadVSCode']: [string];
+    ['jupyter.reloadVSCode']: [string];
     ['revealLine']: [{ lineNumber: number; at: 'top' | 'center' | 'bottom' }];
     ['python._loadLanguageServerExtension']: {}[];
     ['python.SelectAndInsertDebugConfiguration']: [TextDocument, Position, CancellationToken];
@@ -80,7 +80,6 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     ['notebook.cell.insertCodeCellBelow']: [];
     ['notebook.undo']: [];
     ['notebook.redo']: [];
-    ['python.viewLanguageServerOutput']: [];
     ['vscode.open']: [Uri];
     ['workbench.action.files.saveAs']: [Uri];
     ['workbench.action.files.save']: [Uri];
