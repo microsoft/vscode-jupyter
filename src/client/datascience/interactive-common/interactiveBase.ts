@@ -1130,6 +1130,8 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
                     metadata: this.notebookMetadata
                 });
                 if (notebook) {
+                    //const kernelConnect = notebook.getKernelConnection();
+                    //const language = getKernelConnectionLanguage(kernelConnect);
                     const executionActivation = { ...this.notebookIdentity, owningResource: this.owningResource };
                     this.postMessageToListeners(
                         InteractiveWindowMessages.NotebookExecutionActivated,
