@@ -23,7 +23,7 @@ export class LiveShareApi implements ILiveShareApi {
         @inject(IApplicationShell) private appShell: IApplicationShell
     ) {
         const disposable = workspace.onDidChangeConfiguration((e) => {
-            if (e.affectsConfiguration('python.dataScience', undefined)) {
+            if (e.affectsConfiguration('jupyter', undefined)) {
                 // When config changes happen, recreate our commands.
                 this.onSettingsChanged();
             }

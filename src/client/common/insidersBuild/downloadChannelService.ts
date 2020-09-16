@@ -49,7 +49,7 @@ export class ExtensionChannelService implements IExtensionChannelService {
     }
 
     public async onDidChangeConfiguration(event: ConfigurationChangeEvent) {
-        if (event.affectsConfiguration(`python.${insidersChannelSetting}`)) {
+        if (event.affectsConfiguration(`jupyter.${insidersChannelSetting}`)) {
             const settings = this.configService.getSettings();
             this._onDidChannelChange.fire(settings.insidersChannel);
         }

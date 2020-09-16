@@ -51,7 +51,7 @@ suite('DataScience - ipywidget - Widget Script Source Provider', () => {
         when(stateFactory.createGlobalPersistentState(anything(), anything())).thenReturn(
             instance(userSelectedOkOrDoNotShowAgainInPrompt)
         );
-        settings = { datascience: { widgetScriptSources: [] } } as any;
+        settings = { widgetScriptSources: [] } as any;
         when(configService.getSettings(anything())).thenReturn(settings as any);
         when(userSelectedOkOrDoNotShowAgainInPrompt.value).thenReturn(false);
         when(userSelectedOkOrDoNotShowAgainInPrompt.updateValue(anything())).thenResolve();
@@ -130,7 +130,7 @@ suite('DataScience - ipywidget - Widget Script Source Provider', () => {
                 // Confirm settings were updated.
                 verify(
                     configService.updateSetting(
-                        'dataScience.widgetScriptSources',
+                        'widgetScriptSources',
                         deepEqual([]),
                         undefined,
                         ConfigurationTarget.Global
@@ -185,7 +185,7 @@ suite('DataScience - ipywidget - Widget Script Source Provider', () => {
                 verify(userSelectedOkOrDoNotShowAgainInPrompt.updateValue(true)).once();
                 verify(
                     configService.updateSetting(
-                        'dataScience.widgetScriptSources',
+                        'widgetScriptSources',
                         deepEqual(['jsdelivr.com', 'unpkg.com']),
                         undefined,
                         ConfigurationTarget.Global

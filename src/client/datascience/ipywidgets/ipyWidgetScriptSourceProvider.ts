@@ -235,7 +235,7 @@ export class IPyWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         this.configurationPromise.resolve();
     }
     private async updateScriptSources(scriptSources: WidgetCDNs[]) {
-        const targetSetting = 'dataScience.widgetScriptSources';
+        const targetSetting = 'widgetScriptSources';
         await this.configurationSettings.updateSetting(
             targetSetting,
             scriptSources,

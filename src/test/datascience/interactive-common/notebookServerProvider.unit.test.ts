@@ -47,6 +47,7 @@ suite('DataScience - NotebookServerProvider', () => {
 
         // Set up our settings
         pythonSettings = mock<IWatchableJupyterSettings>();
+        when(pythonSettings.jupyterServerURI).thenReturn('local');
         when(configurationService.getSettings(anything())).thenReturn(instance(pythonSettings));
 
         // Create the server provider
