@@ -247,6 +247,11 @@ jobs:
           echo "::set-env name=VSCODE_PYTHON_ROLLING::1"
         shell: bash
 
+      - name: Dump
+        run: |
+          env
+        shell: bash
+
       #   # Upload unit test coverage reports for later use in the "reports" job.
       #   - name: Upload unit test coverage reports
       #     uses: actions/upload-artifact@v1
