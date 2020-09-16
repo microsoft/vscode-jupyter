@@ -1172,6 +1172,12 @@
             "type": "object",
             "title": "Jupyter",
             "properties": {
+                "jupyter.diagnostics.sourceMapsEnabled": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enable source map support for meaningful stack traces in error logs.",
+                    "scope": "application"
+                },
                 "jupyter.experiments.enabled": {
                     "type": "boolean",
                     "default": true,

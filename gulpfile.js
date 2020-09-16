@@ -297,7 +297,7 @@ function getAllowedWarningsForWebPack(buildConfig) {
 }
 gulp.task('renameSourceMaps', async () => {
     // By default source maps will be disabled in the extension.
-    // Users will need to use the command `python.enableSourceMapSupport` to enable source maps.
+    // Users will need to use the command `jupyter.diagnostics.sourceMapEnabled` to enable source maps.
     const extensionSourceMap = path.join(__dirname, 'out', 'client', 'extension.js.map');
     await fs.rename(extensionSourceMap, `${extensionSourceMap}.disabled`);
 });

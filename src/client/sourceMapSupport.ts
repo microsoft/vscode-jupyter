@@ -18,7 +18,7 @@ const setting = 'sourceMapsEnabled';
 export class SourceMapSupport {
     private readonly config: WorkspaceConfiguration;
     constructor(private readonly vscode: VSCode) {
-        this.config = this.vscode.workspace.getConfiguration('python.diagnostics', null);
+        this.config = this.vscode.workspace.getConfiguration('jupyter.diagnostics', null);
     }
     public async initialize(): Promise<void> {
         if (!this.enabled) {
@@ -45,18 +45,7 @@ export class SourceMapSupport {
     }
     protected async enableSourceMaps(enable: boolean) {
         const extensionSourceFile = path.join(EXTENSION_ROOT_DIR, 'out', 'client', 'extension.js');
-        const debuggerSourceFile = path.join(
-            EXTENSION_ROOT_DIR,
-            'out',
-            'client',
-            'debugger',
-            'debugAdapter',
-            'main.js'
-        );
-        await Promise.all([
-            this.enableSourceMap(enable, extensionSourceFile),
-            this.enableSourceMap(enable, debuggerSourceFile)
-        ]);
+        await this.enableSourceMap(enable, extensionSourceFile);
     }
     protected async enableSourceMap(enable: boolean, sourceFile: string) {
         const sourceMapFile = `${sourceFile}.map`;
@@ -76,7 +65,7 @@ export class SourceMapSupport {
     }
 }
 export function initialize(vscode: VSCode = require('vscode')) {
-    if (!vscode.workspace.getConfiguration('python.diagnostics', null).get('sourceMapsEnabled', false)) {
+    if (!vscode.workspace.getConfiguration('jupyter.diagnostics', null).get('sourceMapsEnabled', false)) {
         new SourceMapSupport(vscode).disable().ignoreErrors();
         return;
     }
