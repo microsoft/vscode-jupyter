@@ -8,13 +8,6 @@ import { EXTENSION_ROOT_DIR } from '../../constants';
 import { FileSystem } from '../platform/fileSystem';
 
 // External callers of localize use these tables to retrieve localized values.
-export namespace Diagnostics {
-    export const warnSourceMaps = localize(
-        'diagnostics.warnSourceMaps',
-        'Source map support is enabled in the Jupyter Extension, this will adversely impact performance of the extension.'
-    );
-    export const disableSourceMaps = localize('diagnostics.disableSourceMaps', 'Disable Source Map Support');
-}
 
 export namespace Common {
     export const bannerLabelYes = localize('Common.bannerLabelYes', 'Yes');
