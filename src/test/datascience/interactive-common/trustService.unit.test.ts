@@ -28,7 +28,7 @@ suite('DataScience - TrustService', () => {
         context.setup((c) => c.globalState).returns(() => globalState);
         when(configService.getSettings()).thenCall(() => {
             // tslint:disable-next-line: no-any
-            return { datascience: { alwaysTrustNotebooks } } as any;
+            return { alwaysTrustNotebooks } as any;
         });
         when(fileSystem.appendLocalFile(anything(), anything())).thenCall((f, c) => fs.appendFile(f, c));
         when(fileSystem.readLocalFile(anything())).thenCall((f) => fs.readFile(f));
