@@ -1,7 +1,9 @@
 import * as path from 'path';
-import { traceError } from '../common/logger';
+import { traceInfo } from '../common/logger';
 import { IExtensionContext } from '../common/types';
 import { IDataScienceFileSystem } from '../datascience/types';
+
+export const trustDirectoryMigrated = 'trustDirectoryMigrated';
 
 export class MigrateDigestStorage {
     private currentExtensionStorageDir: string;
@@ -29,7 +31,7 @@ export class MigrateDigestStorage {
                 await this.fs.copyLocal(nbsecret, path.join(this.currentExtensionStorageDir, 'nbsecret'));
                 this.fs.deleteLocalFile(nbsecret).ignoreErrors();
             } catch (e) {
-                traceError('Encountered error while migrating trusted notebooks nbsecret keyfile', e);
+                traceInfo('Encountered error while migrating trusted notebooks nbsecret keyfile', e);
             } finally {
                 await this.extensionContext.globalState.update(trustKeyMigrated, true);
             }
@@ -40,7 +42,6 @@ export class MigrateDigestStorage {
      * Copy, then delete, pythonExtensionStorage/nbsignatures if it exists
      */
     public async migrateDir() {
-        const trustDirectoryMigrated = 'trustDirectoryMigrated';
         if (!this.extensionContext.globalState.get(trustDirectoryMigrated)) {
             try {
                 await this.ensuredDir;
@@ -48,7 +49,7 @@ export class MigrateDigestStorage {
                 await this.fs.copyLocal(nbsignatures, path.join(this.currentExtensionStorageDir, 'nbsignatures'));
                 this.fs.deleteLocalDirectory(nbsignatures).ignoreErrors();
             } catch (e) {
-                traceError('Encountered error while migrating trusted notebooks nbsignatures directory', e);
+                traceInfo('Encountered error while migrating trusted notebooks nbsignatures directory', e);
             } finally {
                 await this.extensionContext.globalState.update(trustDirectoryMigrated, true);
             }
