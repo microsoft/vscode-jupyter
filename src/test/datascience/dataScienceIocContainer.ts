@@ -919,7 +919,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             if (!activeInterpreter || !(await this.hasFunctionalDependencies(activeInterpreter))) {
                 const list = await this.getFunctionalTestInterpreters();
                 if (list.length) {
-                    this.forceSettingsChanged(undefined, list[0].path);
+                    this.forceSettingsChanged(undefined, list[0].path, {});
 
                     // Log this all the time. Useful in determining why a test may not pass.
                     const message = `Setting interpreter to ${list[0].displayName || list[0].path} -> ${list[0].path}`;
@@ -996,10 +996,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     }
 
     public forceDataScienceSettingsChanged(dataScienceSettings: Partial<IJupyterSettings>) {
-        this.forceSettingsChanged(undefined, '', {
-            ...this.getSettings(),
-            ...dataScienceSettings
-        });
+        this.forceSettingsChanged(undefined, '', dataScienceSettings);
     }
 
     public setExtensionRootPath(newRoot: string) {
@@ -1080,18 +1077,22 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         panel.attach(options);
         return panel;
     }
-    private forceSettingsChanged(resource: Resource, _newPath: string, datascienceSettings?: IJupyterSettings) {
+    private forceSettingsChanged(resource: Resource, _newPath: string, partial: Partial<IJupyterSettings>) {
         // tslint:disable-next-line: no-suspicious-comment
         // TODO: Python path will not be updated by this code so tests are unlikely to pass
         const settings = this.getSettings(resource) as MockJupyterSettings;
-        if (datascienceSettings) {
-            settings.assign(datascienceSettings);
+        if (partial) {
+            settings.assign(partial);
         }
 
         // The workspace config must be updated too as a config change event will cause the data to be reread from
         // the config.
         const config = this.getWorkspaceConfig('jupyter', resource);
-        config.update('', settings).ignoreErrors();
+        // Turn into the JSON only version
+        const jsonVersion = JSON.parse(JSON.stringify(settings));
+        // Update each key
+        const keys = Object.keys(jsonVersion);
+        keys.forEach((k) => config.update(k, jsonVersion[k]).ignoreErrors());
         settings.fireChangeEvent();
         this.configChangeEvent.fire({
             affectsConfiguration(_s: string, _r?: Uri): boolean {

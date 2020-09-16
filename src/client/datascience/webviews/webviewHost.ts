@@ -105,9 +105,10 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
         const workbench = this.workspaceService.getConfiguration('workbench');
         const theme = !workbench ? DefaultTheme : workbench.get<string>('colorTheme', DefaultTheme);
         const ext = extensions.getExtension(GatherExtension);
+        const sendableSettings = JSON.parse(JSON.stringify(this.configService.getSettings(resource)));
 
         return {
-            ...JSON.parse(JSON.stringify(this.configService.getSettings(resource))),
+            ...sendableSettings,
             extraSettings: {
                 editor: {
                     cursor: this.getValue(editor, 'cursorStyle', 'line'),
