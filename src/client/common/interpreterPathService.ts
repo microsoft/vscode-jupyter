@@ -28,10 +28,7 @@ export const isGlobalSettingCopiedKey = 'isGlobalSettingCopiedKey';
 const CI_PYTHON_PATH = getCIPythonPath();
 
 export function getCIPythonPath(): string {
-    if (process.env.CI_PYTHON_PATH && fs.existsSync(process.env.CI_PYTHON_PATH)) {
-        return process.env.CI_PYTHON_PATH;
-    }
-    return 'python';
+    return process.env.CI_PYTHON_PATH || 'python';
 }
 @injectable()
 export class InterpreterPathService implements IInterpreterPathService {

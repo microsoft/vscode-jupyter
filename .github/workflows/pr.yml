@@ -20,6 +20,8 @@ env:
   COVERAGE_REPORTS: tests-coverage-reports
   VSC_PYTHON_FORCE_LOGGING: true # Enable this to turn on console output for the logger
   TEST_RESULTS_DIRECTORY: .
+  CI_PYTHON_PATH: python
+  VSCODE_PYTHON_ROLLING: 1
 
 jobs:
   build-vsix:
@@ -237,11 +239,11 @@ jobs:
           python -m pip install --upgrade -r ./build/functional-test-requirements.txt
         if: matrix.test-suite == 'functional'
 
-      - name: Set CI_PYTHON_PATH
-        run: |
-          echo "::set-env name=CI_PYTHON_PATH::python"
-          echo "::set-env name=VSCODE_PYTHON_ROLLING::1"
-        shell: bash
+    #   - name: Set CI_PYTHON_PATH
+    #     run: |
+    #       echo "::set-env name=CI_PYTHON_PATH::python"
+    #       echo "::set-env name=VSCODE_PYTHON_ROLLING::1"
+    #     shell: bash
 
       - name: Dump
         run: |
