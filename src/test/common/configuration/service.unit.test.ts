@@ -44,7 +44,7 @@ suite('Configuration Service', () => {
     function setupConfigProvider(): TypeMoq.IMock<WorkspaceConfiguration> {
         const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
         workspaceService
-            .setup((w) => w.getConfiguration(TypeMoq.It.isValue('python'), TypeMoq.It.isValue(resource)))
+            .setup((w) => w.getConfiguration(TypeMoq.It.isValue('jupyter'), TypeMoq.It.isValue(resource)))
             .returns(() => workspaceConfig.object);
         return workspaceConfig;
     }
