@@ -3,7 +3,6 @@
 
 'use strict';
 
-import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import { ConfigurationChangeEvent, ConfigurationTarget, Event, EventEmitter, Uri } from 'vscode';
 import { IWorkspaceService } from './application/types';
