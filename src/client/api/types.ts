@@ -50,7 +50,7 @@ export type PythonApi = {
     /**
      * Retrieve interpreter path selected for Jupyter server from Python memento storage
      */
-    getInterpreterPathSelectedForJupyterServer(): Promise<string>;
+    getInterpreterPathSelectedForJupyterServer(): Promise<string | undefined>;
 };
 
 export const IPythonInstaller = Symbol('IPythonInstaller');
