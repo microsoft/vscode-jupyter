@@ -26,7 +26,7 @@ suite('Source Map Support', () => {
             workspace: {
                 // tslint:disable-next-line: no-any
                 getConfiguration: (setting: string, _defaultValue: any) => {
-                    if (setting !== 'python.diagnostics') {
+                    if (setting !== 'jupyter.diagnostics') {
                         return;
                     }
                     return {
@@ -125,8 +125,7 @@ suite('Source Map Support', () => {
 
         await instance.enableSourceMaps(enableSourceMaps);
         const extensionSourceMap = path.join(EXTENSION_ROOT_DIR, 'out', 'client', 'extension.js');
-        const debuggerSourceMap = path.join(EXTENSION_ROOT_DIR, 'out', 'client', 'debugger', 'debugAdapter', 'main.js');
-        expect(sourceFilesPassed).to.deep.equal([extensionSourceMap, debuggerSourceMap]);
+        expect(sourceFilesPassed).to.deep.equal([extensionSourceMap]);
     }
     test('Rename extension and debugger source maps when enabling source maps', () =>
         testRenamingFilesWhenEnablingDisablingSourceMaps(true));
