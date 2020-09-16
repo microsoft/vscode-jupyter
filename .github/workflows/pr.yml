@@ -216,10 +216,6 @@ jobs:
       - name: Install dependencies (npm ci)
         run: npm ci
 
-      - name: Compile if not cached
-        run: npx gulp prePublishNonBundle
-        if: steps.out-cache.outputs.cache-hit == false
-
       - name: Use Python ${{matrix.python}}
         uses: actions/setup-python@v2
         with:
@@ -251,6 +247,10 @@ jobs:
         run: |
           env
         shell: bash
+
+      - name: Compile if not cached
+        run: npx gulp prePublishNonBundle
+        if: steps.out-cache.outputs.cache-hit == false
 
       #   # Upload unit test coverage reports for later use in the "reports" job.
       #   - name: Upload unit test coverage reports
