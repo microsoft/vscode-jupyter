@@ -237,6 +237,7 @@ jobs:
         run: |
           python -m pip install numpy
           python -m pip install --upgrade -r ./build/functional-test-requirements.txt
+          python -m pip install --upgrade -r ./build/conda-functional-requirements.txt
         if: matrix.test-suite == 'functional'
 
       - name: Set CI_PYTHON_PATH
