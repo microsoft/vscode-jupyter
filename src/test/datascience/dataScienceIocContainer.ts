@@ -269,6 +269,7 @@ import { trustDirectoryMigrated } from '../../client/migration/migrateDigestStor
 import { PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { CodeExecutionHelper } from '../../client/terminals/codeExecution/helper';
 import { ICodeExecutionHelper } from '../../client/terminals/types';
+import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants';
 import { EnvironmentActivationService } from '../interpreters/envActivation';
 import { InterpreterService } from '../interpreters/interpreterService';
 import { InterpreterSelector } from '../interpreters/selector';
@@ -299,7 +300,6 @@ import {
 } from './testNativeEditorProvider';
 import { TestPersistentStateFactory } from './testPersistentStateFactory';
 import { WebBrowserPanelProvider } from './uiTests/webBrowserPanelProvider';
-import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants';
 
 export class DataScienceIocContainer extends UnitTestIocContainer {
     public get workingInterpreter() {
