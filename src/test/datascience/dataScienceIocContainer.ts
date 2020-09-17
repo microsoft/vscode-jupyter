@@ -28,6 +28,7 @@ import { KernelDaemonPool } from '../../client/datascience/kernel-launcher/kerne
 
 import { promisify } from 'util';
 import { IExtensionSingleActivationService } from '../../client/activation/types';
+import { IPythonDebuggerPathProvider } from '../../client/api/types';
 import { ApplicationEnvironment } from '../../client/common/application/applicationEnvironment';
 import { ApplicationShell } from '../../client/common/application/applicationShell';
 import { VSCodeNotebook } from '../../client/common/application/notebook';
@@ -298,6 +299,7 @@ import {
 } from './testNativeEditorProvider';
 import { TestPersistentStateFactory } from './testPersistentStateFactory';
 import { WebBrowserPanelProvider } from './uiTests/webBrowserPanelProvider';
+import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants';
 
 export class DataScienceIocContainer extends UnitTestIocContainer {
     public get workingInterpreter() {
@@ -773,6 +775,9 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.add<INotebookStorage>(INotebookStorage, NativeEditorStorage);
         this.serviceManager.addSingleton<INotebookStorageProvider>(INotebookStorageProvider, NotebookStorageProvider);
         this.serviceManager.addSingleton<ICustomEditorService>(ICustomEditorService, MockCustomEditorService);
+        this.serviceManager.addSingletonInstance<IPythonDebuggerPathProvider>(IPythonDebuggerPathProvider, {
+            getDebuggerPath: async () => path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'pythonFiles', 'lib', 'python')
+        });
 
         // Create our jupyter mock if necessary
         if (this.shouldMockJupyter) {
