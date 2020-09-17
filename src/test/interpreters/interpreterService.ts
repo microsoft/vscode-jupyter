@@ -63,4 +63,3 @@ async function getAllInterpreters(): Promise<PythonEnvironment[]> {
     });
     return interpreters;
 }
-
