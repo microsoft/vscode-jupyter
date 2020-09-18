@@ -30,6 +30,7 @@ class MockSocket {
     }
     // tslint:disable-next-line:no-any
     public write(data: any) {
+        // eslint-disable-next-line no-useless-concat
         this._data = `${data}` + '';
         this._rawDataWritten = data;
     }
