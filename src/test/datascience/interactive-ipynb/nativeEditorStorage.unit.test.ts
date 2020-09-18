@@ -282,9 +282,7 @@ suite('DataScience - Native Editor Storage', () => {
         when(executionProvider.serverStarted).thenReturn(serverStartedEvent.event);
 
         when(trustService.isNotebookTrusted(anything(), anything())).thenReturn(Promise.resolve(true));
-        when(trustService.trustNotebook(anything(), anything())).thenCall(() => {
-            return Promise.resolve();
-        });
+        when(trustService.trustNotebook(anything(), anything())).thenCall(() => Promise.resolve());
 
         testIndex += 1;
         when(crypto.createHash(anything(), 'string')).thenReturn(`${testIndex}`);
@@ -303,9 +301,7 @@ suite('DataScience - Native Editor Storage', () => {
                 return '';
             }
         }
-        const matcher = (): any => {
-            return new WebPanelCreateMatcher();
-        };
+        const matcher = (): any => new WebPanelCreateMatcher();
         when(webPanelProvider.create(matcher())).thenResolve(instance(webPanel));
         lastWriteFileValue = baseFile;
         wroteToFileEvent = new EventEmitter<string>();
@@ -327,21 +323,13 @@ suite('DataScience - Native Editor Storage', () => {
                 }
                 return Promise.resolve();
             });
-        fileSystem
-            .setup((f) => f.readFile(typemoq.It.isAny()))
-            .returns((_a1) => {
-                return Promise.resolve(lastWriteFileValue);
-            });
+        fileSystem.setup((f) => f.readFile(typemoq.It.isAny())).returns((_a1) => Promise.resolve(lastWriteFileValue));
         fileSystem
             .setup((f) => f.readLocalFile(typemoq.It.isAny()))
-            .returns((_a1) => {
-                return Promise.resolve(lastWriteFileValue);
-            });
+            .returns((_a1) => Promise.resolve(lastWriteFileValue));
         fileSystem
             .setup((f) => f.stat(typemoq.It.isAny()))
-            .returns((_a1) => {
-                return Promise.resolve({ mtime: startTime, type: FileType.File, ctime: startTime, size: 100 });
-            });
+            .returns((_a1) => Promise.resolve({ mtime: startTime, type: FileType.File, ctime: startTime, size: 100 }));
         storage = createStorage();
     });
 

@@ -233,9 +233,7 @@ suite('DataScience - JupyterSession', () => {
                 remoteSessionInstance.isRemoteSession = false;
                 when(remoteSession.kernel).thenReturn(instance(remoteKernel));
                 when(remoteKernel.registerCommTarget(anything(), anything())).thenReturn();
-                when(sessionManager.startNew(anything())).thenCall(() => {
-                    return Promise.resolve(instance(remoteSession));
-                });
+                when(sessionManager.startNew(anything())).thenCall(() => Promise.resolve(instance(remoteSession)));
             });
             suite('Switching kernels', () => {
                 setup(async () => {

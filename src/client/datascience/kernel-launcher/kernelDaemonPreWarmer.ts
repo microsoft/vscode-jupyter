@@ -80,9 +80,7 @@ export class KernelDaemonPreWarmer {
     private async onDidOpenNotebookDocument(doc: NotebookDocument): Promise<void> {
         if (
             doc.languages.includes(PYTHON_LANGUAGE) ||
-            doc.cells.some((cell: NotebookCell) => {
-                return cell.language === PYTHON_LANGUAGE;
-            })
+            doc.cells.some((cell: NotebookCell) => cell.language === PYTHON_LANGUAGE)
         ) {
             await this.preWarmKernelDaemonPool();
         }

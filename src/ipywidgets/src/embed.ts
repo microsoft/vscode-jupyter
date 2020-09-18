@@ -98,14 +98,13 @@ export function requireLoader(moduleName: string, moduleVersion: string): Promis
  * the widgets' models and views classes. (The default loader looks them up on unpkg.com)
  */
 export function renderWidgets(element = document.documentElement): void {
-    const managerFactory = (): any => {
-        return new wm.WidgetManager(undefined, element, {
+    const managerFactory = (): any =>
+        new wm.WidgetManager(undefined, element, {
             widgetsRegisteredInRequireJs: new Set<string>(),
             errorHandler: () => 'Error loading widget.',
             loadWidgetScript: (_moduleName: string, _moduleVersion: string) => Promise.resolve(),
             successHandler: () => 'Success'
         });
-    };
     libembed.renderWidgets(managerFactory, element).catch((x) => {
         window.console.error(x);
     });

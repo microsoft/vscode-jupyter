@@ -532,9 +532,7 @@ suite('Jupyter Execution', async () => {
     function setupMissingNotebookPythonService(service: TypeMoq.IMock<IPythonExecutionService>) {
         service
             .setup((x) => x.execModule(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-            .returns((_v) => {
-                return Promise.reject('cant exec');
-            });
+            .returns((_v) => Promise.reject('cant exec'));
         service
             .setup((x) => x.execModuleObservable(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => {
@@ -857,11 +855,10 @@ suite('Jupyter Execution', async () => {
         when(configService.getSettings(anything())).thenReturn(pythonSettings);
         when(workspaceService.onDidChangeConfiguration).thenReturn(configChangeEvent.event);
         when(application.withProgress(anything(), anything())).thenCall(
-            (_, cb: (_: any, token: any) => Promise<any>) => {
-                return new Promise((resolve, reject) => {
+            (_, cb: (_: any, token: any) => Promise<any>) =>
+                new Promise((resolve, reject) => {
                     cb({ report: noop }, new CancellationTokenSource().token).then(resolve).catch(reject);
-                });
-            }
+                })
         );
 
         // Setup default settings
@@ -903,9 +900,7 @@ suite('Jupyter Execution', async () => {
 
         // We also need a file system
         const tempFile = {
-            dispose: () => {
-                return undefined;
-            },
+            dispose: () => undefined,
             filePath: '/foo/bar/baz.py'
         };
         when(fileSystem.createTemporaryLocalFile(anything())).thenResolve(tempFile);

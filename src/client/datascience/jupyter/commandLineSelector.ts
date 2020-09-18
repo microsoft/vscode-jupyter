@@ -102,9 +102,7 @@ export class JupyterCommandLineSelector {
         );
     }
 
-    private validate = async (_inputText: string): Promise<string | undefined> => {
-        return undefined;
-    };
+    private validate = async (_inputText: string): Promise<string | undefined> => undefined;
 
     private getPickList(): QuickPickItem[] {
         // Always have 'local' and 'custom'

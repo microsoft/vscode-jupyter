@@ -46,11 +46,9 @@ suite('JupyterPasswordConnect', () => {
             // tslint:disable-next-line: no-any
         } as any;
         when(configService.getSettings(anything())).thenReturn(dsSettings as any);
-        when(configService.updateSetting('dataScience.jupyterServerURI', anything(), anything(), anything())).thenCall(
-            (_a1, _a2, _a3, _a4) => {
-                return Promise.resolve();
-            }
-        );
+        when(
+            configService.updateSetting('dataScience.jupyterServerURI', anything(), anything(), anything())
+        ).thenCall((_a1, _a2, _a3, _a4) => Promise.resolve());
 
         // Set up our fake node fetch
         const fetchMock: typemoq.IMock<typeof nodeFetch.default> = typemoq.Mock.ofInstance(nodeFetch.default);
@@ -59,11 +57,7 @@ suite('JupyterPasswordConnect', () => {
         // Mock our first call to get xsrf cookie
         const mockXsrfResponse = typemoq.Mock.ofType(nodeFetch.Response);
         const mockXsrfHeaders = typemoq.Mock.ofType(nodeFetch.Headers);
-        mockXsrfHeaders
-            .setup((mh) => mh.raw())
-            .returns(() => {
-                return { 'set-cookie': [`_xsrf=${xsrfValue}`] };
-            });
+        mockXsrfHeaders.setup((mh) => mh.raw()).returns(() => ({ 'set-cookie': [`_xsrf=${xsrfValue}`] }));
         mockXsrfResponse.setup((mr) => mr.ok).returns(() => ok);
         mockXsrfResponse.setup((mr) => mr.status).returns(() => 302);
         mockXsrfResponse.setup((mr) => mr.headers).returns(() => mockXsrfHeaders.object);
@@ -117,11 +111,9 @@ suite('JupyterPasswordConnect', () => {
         const mockSessionHeaders = typemoq.Mock.ofType(nodeFetch.Headers);
         mockSessionHeaders
             .setup((mh) => mh.raw())
-            .returns(() => {
-                return {
-                    'set-cookie': [`${sessionName}=${sessionValue}`]
-                };
-            });
+            .returns(() => ({
+                'set-cookie': [`${sessionName}=${sessionValue}`]
+            }));
         mockSessionResponse.setup((mr) => mr.status).returns(() => 302);
         mockSessionResponse.setup((mr) => mr.headers).returns(() => mockSessionHeaders.object);
 
@@ -168,11 +160,9 @@ suite('JupyterPasswordConnect', () => {
         const mockSessionHeaders = typemoq.Mock.ofType(nodeFetch.Headers);
         mockSessionHeaders
             .setup((mh) => mh.raw())
-            .returns(() => {
-                return {
-                    'set-cookie': [`${sessionName}=${sessionValue}`]
-                };
-            });
+            .returns(() => ({
+                'set-cookie': [`${sessionName}=${sessionValue}`]
+            }));
         mockSessionResponse.setup((mr) => mr.status).returns(() => 302);
         mockSessionResponse.setup((mr) => mr.headers).returns(() => mockSessionHeaders.object);
 
@@ -232,11 +222,9 @@ suite('JupyterPasswordConnect', () => {
             // tslint:disable-next-line: no-any
         } as any;
         when(configService.getSettings(anything())).thenReturn(dsSettings as any);
-        when(configService.updateSetting('jupyterServerURI', anything(), anything(), anything())).thenCall(
-            (_a1, _a2, _a3, _a4) => {
-                return Promise.resolve();
-            }
-        );
+        when(
+            configService.updateSetting('jupyterServerURI', anything(), anything(), anything())
+        ).thenCall((_a1, _a2, _a3, _a4) => Promise.resolve());
 
         const quickPick = new MockQuickPick('');
         const input = new MockInputBox('test');

@@ -251,28 +251,18 @@ export class MockJupyterManager implements IJupyterSessionManager {
         this.pythonServices.push(pythonService);
         this.pythonExecutionFactory
             .setup((f) =>
-                f.create(
-                    TypeMoq.It.is((o) => {
-                        return o && o.pythonPath ? o.pythonPath === interpreter.path : false;
-                    })
-                )
+                f.create(TypeMoq.It.is((o) => (o && o.pythonPath ? o.pythonPath === interpreter.path : false)))
             )
             .returns(() => Promise.resolve(pythonService));
         this.pythonExecutionFactory
             .setup((f) =>
-                f.createDaemon(
-                    TypeMoq.It.is((o) => {
-                        return o && o.pythonPath ? o.pythonPath === interpreter.path : false;
-                    })
-                )
+                f.createDaemon(TypeMoq.It.is((o) => (o && o.pythonPath ? o.pythonPath === interpreter.path : false)))
             )
             .returns(() => Promise.resolve((pythonService as unknown) as IPythonDaemonExecutionService));
         this.pythonExecutionFactory
             .setup((f) =>
                 f.createActivatedEnvironment(
-                    TypeMoq.It.is((o) => {
-                        return !o || JSON.stringify(o.interpreter) === JSON.stringify(interpreter);
-                    })
+                    TypeMoq.It.is((o) => !o || JSON.stringify(o.interpreter) === JSON.stringify(interpreter))
                 )
             )
             .returns(() => Promise.resolve(pythonService));
@@ -620,18 +610,16 @@ export class MockJupyterManager implements IJupyterSessionManager {
         stderr: string[],
         stdout: string[]
     ) {
-        service.addExecObservableResult(file, args, () => {
-            return {
-                proc: undefined,
-                out: new Observable<Output<string>>((subscriber) => {
-                    stderr.forEach((s) => subscriber.next({ source: 'stderr', out: s }));
-                    stdout.forEach((s) => subscriber.next({ source: 'stderr', out: s }));
-                }),
-                dispose: () => {
-                    noop();
-                }
-            };
-        });
+        service.addExecObservableResult(file, args, () => ({
+            proc: undefined,
+            out: new Observable<Output<string>>((subscriber) => {
+                stderr.forEach((s) => subscriber.next({ source: 'stderr', out: s }));
+                stdout.forEach((s) => subscriber.next({ source: 'stderr', out: s }));
+            }),
+            dispose: () => {
+                noop();
+            }
+        }));
     }
 
     private setupSupportedPythonService(
@@ -668,11 +656,10 @@ export class MockJupyterManager implements IJupyterSessionManager {
                 service,
                 'jupyter',
                 ['nbconvert', /.*/, '--to', 'python', '--stdout', '--template', /.*/],
-                () => {
-                    return Promise.resolve({
+                () =>
+                    Promise.resolve({
                         stdout: '#%%\r\nimport os\r\nos.chdir()\r\n#%%\r\na=1'
-                    });
-                }
+                    })
             );
         } else {
             when(this.productInstaller.isInstalled(Product.nbconvert)).thenResolve(false);
@@ -872,11 +859,10 @@ export class MockJupyterManager implements IJupyterSessionManager {
                 this.processService,
                 workingPython.path,
                 ['-m', 'jupyter', 'nbconvert', /.*/, '--to', 'python', '--stdout', '--template', /.*/],
-                () => {
-                    return Promise.resolve({
+                () =>
+                    Promise.resolve({
                         stdout: '#%%\r\nimport os\r\nos.chdir()'
-                    });
-                }
+                    })
             );
         }
     }

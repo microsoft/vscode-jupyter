@@ -152,9 +152,7 @@ suite('Interactive window command listener', async () => {
 
         // We also need a file system
         const tempFile = {
-            dispose: () => {
-                return undefined;
-            },
+            dispose: () => undefined,
             filePath: '/foo/bar/baz.py'
         };
         when(fileSystem.createTemporaryLocalFile(anything())).thenResolve(tempFile);
@@ -281,9 +279,7 @@ suite('Interactive window command listener', async () => {
                     TypeMoq.It.isAny()
                 )
             )
-            .returns(() => {
-                return Promise.resolve(generateCells(undefined, 'a=1', 'bar.py', 0, false, uuid()));
-            });
+            .returns(() => Promise.resolve(generateCells(undefined, 'a=1', 'bar.py', 0, false, uuid())));
 
         when(applicationShell.showSaveDialog(argThat((o) => o.saveLabel && o.saveLabel.includes('Export')))).thenReturn(
             Promise.resolve(Uri.file('foo'))

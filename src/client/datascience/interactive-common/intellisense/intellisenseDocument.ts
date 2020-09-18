@@ -242,22 +242,14 @@ export class IntellisenseDocument implements TextDocument {
 
         // Normalize all of the cells, removing \r and separating each
         // with a newline
-        const normalized = cells.map((c) => {
-            return {
-                id: c.id,
-                code: `${c.code.replace(/\r/g, '')}\n`
-            };
-        });
+        const normalized = cells.map((c) => ({
+            id: c.id,
+            code: `${c.code.replace(/\r/g, '')}\n`
+        }));
 
         // Contents are easy, just load all of the code in a row
         this._contents =
-            normalized && normalized.length
-                ? normalized
-                      .map((c) => c.code)
-                      .reduce((p, c) => {
-                          return `${p}${c}`;
-                      })
-                : '';
+            normalized && normalized.length ? normalized.map((c) => c.code).reduce((p, c) => `${p}${c}`) : '';
 
         // Cell ranges are slightly more complicated
         let prev: number = 0;

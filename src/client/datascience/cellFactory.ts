@@ -144,9 +144,7 @@ export function generateCellsFromString(source: string, settings?: IJupyterSetti
 
     // For each one, get its text and turn it into a cell
     return Array.prototype.concat(
-        ...starts.map((s) => {
-            return generateCells(settings, s.code, '', s.startLine, false, uuid());
-        })
+        ...starts.map((s) => generateCells(settings, s.code, '', s.startLine, false, uuid()))
     );
 }
 

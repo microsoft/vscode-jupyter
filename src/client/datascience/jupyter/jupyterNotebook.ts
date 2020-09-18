@@ -875,8 +875,8 @@ export class JupyterNotebookBase implements INotebook {
         return undefined;
     };
 
-    private combineObservables = (...args: Observable<ICell>[]): Observable<ICell[]> => {
-        return new Observable<ICell[]>((subscriber) => {
+    private combineObservables = (...args: Observable<ICell>[]): Observable<ICell[]> =>
+        new Observable<ICell[]>((subscriber) => {
             // When all complete, we have our results
             const results: Record<string, ICell> = {};
 
@@ -886,9 +886,7 @@ export class JupyterNotebookBase implements INotebook {
                         results[c.id] = c;
 
                         // Convert to an array
-                        const array = Object.keys(results).map((k: string) => {
-                            return results[k];
-                        });
+                        const array = Object.keys(results).map((k: string) => results[k]);
 
                         // Update our subscriber of our total results if we have that many
                         if (array.length === args.length) {
@@ -906,15 +904,13 @@ export class JupyterNotebookBase implements INotebook {
                 );
             });
         });
-    };
 
-    private executeMarkdownObservable = (cell: ICell): Observable<ICell> => {
+    private executeMarkdownObservable = (cell: ICell): Observable<ICell> =>
         // Markdown doesn't need any execution
-        return new Observable<ICell>((subscriber) => {
+        new Observable<ICell>((subscriber) => {
             subscriber.next(cell);
             subscriber.complete();
         });
-    };
 
     private async updateWorkingDirectoryAndPath(launchingFile?: string): Promise<void> {
         if (this._executionInfo && this._executionInfo.connectionInfo.localLaunch && !this._workingDirectory) {

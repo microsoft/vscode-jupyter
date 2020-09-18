@@ -162,8 +162,8 @@ export function getExtensionSettings(resource: Uri | undefined): IJupyterSetting
     return pythonSettings.JupyterSettings.getInstance(resource);
 }
 export function retryAsync(this: any, wrapped: Function, retryCount: number = 2) {
-    return async (...args: any[]) => {
-        return new Promise((resolve, reject) => {
+    return async (...args: any[]) =>
+        new Promise((resolve, reject) => {
             const reasons: any[] = [];
 
             const makeCall = () => {
@@ -180,7 +180,6 @@ export function retryAsync(this: any, wrapped: Function, retryCount: number = 2)
 
             makeCall();
         });
-    };
 }
 
 async function setAutoSaveDelay(resource: string | Uri | undefined, config: ConfigurationTarget, delayinMS: number) {

@@ -85,9 +85,9 @@ export class KernelFinder implements IKernelFinder {
                 }
 
                 const diskSearch = this.findDiskPath(kernelName);
-                const interpreterSearch = this.getInterpreterPaths(resource).then((interpreterPaths) => {
-                    return this.findInterpreterPath(interpreterPaths, kernelName);
-                });
+                const interpreterSearch = this.getInterpreterPaths(resource).then((interpreterPaths) =>
+                    this.findInterpreterPath(interpreterPaths, kernelName)
+                );
 
                 let result = await Promise.race([diskSearch, interpreterSearch]);
                 if (!result) {
@@ -223,9 +223,7 @@ export class KernelFinder implements IKernelFinder {
         const paths: string[] = [];
         const vars = await this.envVarsProvider.getEnvironmentVariables();
         const jupyterPathVars = vars.JUPYTER_PATH
-            ? vars.JUPYTER_PATH.split(path.delimiter).map((jupyterPath) => {
-                  return path.join(jupyterPath, 'kernels');
-              })
+            ? vars.JUPYTER_PATH.split(path.delimiter).map((jupyterPath) => path.join(jupyterPath, 'kernels'))
             : [];
 
         if (jupyterPathVars.length > 0) {
@@ -301,11 +299,7 @@ export class KernelFinder implements IKernelFinder {
         // Append back on the start of each path so we have the full path in the results
         const fullPathResults = searchResults
             .filter((f) => f)
-            .map((result, index) => {
-                return result.map((partialSpecPath) => {
-                    return path.join(paths[index], partialSpecPath);
-                });
-            });
+            .map((result, index) => result.map((partialSpecPath) => path.join(paths[index], partialSpecPath)));
 
         return flatten(fullPathResults);
     }

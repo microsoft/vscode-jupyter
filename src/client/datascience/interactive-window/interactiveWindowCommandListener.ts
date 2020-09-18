@@ -61,34 +61,32 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
         this.disposableRegistry.push(disposable);
         disposable = commandManager.registerCommand(
             Commands.ImportNotebook,
-            (file?: Uri, _cmdSource: CommandSource = CommandSource.commandPalette) => {
-                return this.listenForErrors(() => {
+            (file?: Uri, _cmdSource: CommandSource = CommandSource.commandPalette) =>
+                this.listenForErrors(() => {
                     if (file) {
                         return this.importNotebookOnFile(file);
                     } else {
                         return this.importNotebook();
                     }
-                });
-            }
+                })
         );
         this.disposableRegistry.push(disposable);
         disposable = commandManager.registerCommand(
             Commands.ImportNotebookFile,
-            (file?: Uri, _cmdSource: CommandSource = CommandSource.commandPalette) => {
-                return this.listenForErrors(() => {
+            (file?: Uri, _cmdSource: CommandSource = CommandSource.commandPalette) =>
+                this.listenForErrors(() => {
                     if (file) {
                         return this.importNotebookOnFile(file);
                     } else {
                         return this.importNotebook();
                     }
-                });
-            }
+                })
         );
         this.disposableRegistry.push(disposable);
         disposable = commandManager.registerCommand(
             Commands.ExportFileAsNotebook,
-            (file?: Uri, _cmdSource: CommandSource = CommandSource.commandPalette) => {
-                return this.listenForErrors(() => {
+            (file?: Uri, _cmdSource: CommandSource = CommandSource.commandPalette) =>
+                this.listenForErrors(() => {
                     if (file) {
                         return this.exportFile(file);
                     } else {
@@ -99,14 +97,13 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
                     }
 
                     return Promise.resolve();
-                });
-            }
+                })
         );
         this.disposableRegistry.push(disposable);
         disposable = commandManager.registerCommand(
             Commands.ExportFileAndOutputAsNotebook,
-            (file: Uri, _cmdSource: CommandSource = CommandSource.commandPalette) => {
-                return this.listenForErrors(() => {
+            (file: Uri, _cmdSource: CommandSource = CommandSource.commandPalette) =>
+                this.listenForErrors(() => {
                     if (file) {
                         return this.exportFileAndOutput(file);
                     } else {
@@ -116,8 +113,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
                         }
                     }
                     return Promise.resolve();
-                });
-            }
+                })
         );
         this.disposableRegistry.push(disposable);
         this.disposableRegistry.push(commandManager.registerCommand(Commands.UndoCells, () => this.undoCells()));

@@ -71,9 +71,7 @@ export function createRemoteConnectionInfo(
             serverUri && serverUri.displayName
                 ? serverUri.displayName
                 : getJupyterConnectionDisplayName(token, baseUrl),
-        disconnected: (_l) => {
-            return { dispose: noop };
-        },
+        disconnected: (_l) => ({ dispose: noop }),
         dispose: noop,
         rootDirectory: '',
         getAuthHeader: serverUri ? () => getJupyterServerUri(uri)?.authorizationHeader : undefined,

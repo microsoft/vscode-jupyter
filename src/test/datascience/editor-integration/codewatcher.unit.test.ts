@@ -438,9 +438,7 @@ fourth line
                     TypeMoq.It.isValue(testString),
                     TypeMoq.It.isValue(fileName),
                     TypeMoq.It.isValue(0),
-                    TypeMoq.It.is((ed: TextEditor) => {
-                        return textEditor.object === ed;
-                    }),
+                    TypeMoq.It.is((ed: TextEditor) => textEditor.object === ed),
                     TypeMoq.It.isAny()
                 )
             )
@@ -557,9 +555,7 @@ testing2`;
                     TypeMoq.It.isValue('#%%\ntesting2'),
                     TypeMoq.It.isValue(fileName),
                     TypeMoq.It.isValue(2),
-                    TypeMoq.It.is((ed: TextEditor) => {
-                        return textEditor.object === ed;
-                    }),
+                    TypeMoq.It.is((ed: TextEditor) => textEditor.object === ed),
                     TypeMoq.It.isAny()
                 )
             )
@@ -809,13 +805,7 @@ testing2`;
 
         codeWatcher.setDocument(document.object);
         helper
-            .setup((h) =>
-                h.getSelectedTextToExecute(
-                    TypeMoq.It.is((ed: TextEditor) => {
-                        return textEditor.object === ed;
-                    })
-                )
-            )
+            .setup((h) => h.getSelectedTextToExecute(TypeMoq.It.is((ed: TextEditor) => textEditor.object === ed)))
             .returns(() => Promise.resolve('testing2'));
         helper.setup((h) => h.normalizeLines(TypeMoq.It.isAny())).returns(() => Promise.resolve('testing2'));
 
@@ -826,9 +816,7 @@ testing2`;
                     TypeMoq.It.isValue('testing2'),
                     TypeMoq.It.isValue(fileName),
                     TypeMoq.It.isValue(3),
-                    TypeMoq.It.is((ed: TextEditor) => {
-                        return textEditor.object === ed;
-                    }),
+                    TypeMoq.It.is((ed: TextEditor) => textEditor.object === ed),
                     TypeMoq.It.isAny()
                 )
             )
@@ -865,9 +853,7 @@ testing2`;
                     TypeMoq.It.isValue('#%%\ntesting1'),
                     TypeMoq.It.isValue(fileName),
                     TypeMoq.It.isValue(0),
-                    TypeMoq.It.is((ed: TextEditor) => {
-                        return textEditor.object === ed;
-                    }),
+                    TypeMoq.It.is((ed: TextEditor) => textEditor.object === ed),
                     TypeMoq.It.isAny()
                 )
             )

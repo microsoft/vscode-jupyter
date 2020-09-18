@@ -39,9 +39,7 @@ class StatusItem implements Disposable {
         }
     };
 
-    public promise = (): Promise<void> => {
-        return this.deferred.promise;
-    };
+    public promise = (): Promise<void> => this.deferred.promise;
 
     public reject = () => {
         this.deferred.reject();

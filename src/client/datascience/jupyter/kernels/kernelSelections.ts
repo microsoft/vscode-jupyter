@@ -179,19 +179,17 @@ export class InterpreterKernelSelectionListProvider
     ): Promise<IKernelSpecQuickPickItem<PythonKernelConnectionMetadata>[]> {
         const items = await this.interpreterSelector.getSuggestions(resource);
         return items
-            ? items.map((item) => {
-                  return {
-                      ...item,
-                      // We don't want descriptions.
-                      description: '',
-                      selection: {
-                          kernelModel: undefined,
-                          interpreter: item.interpreter,
-                          kernelSpec: undefined,
-                          kind: 'startUsingPythonInterpreter'
-                      }
-                  };
-              })
+            ? items.map((item) => ({
+                  ...item,
+                  // We don't want descriptions.
+                  description: '',
+                  selection: {
+                      kernelModel: undefined,
+                      interpreter: item.interpreter,
+                      kernelSpec: undefined,
+                      kind: 'startUsingPythonInterpreter'
+                  }
+              }))
             : [];
     }
 }
@@ -333,10 +331,10 @@ export class KernelSelectionProvider {
                     }
                     return true;
                 })
-                .map((item) => {
+                .map((item) =>
                     // We don't want descriptions.
-                    return { ...item, description: '' };
-                });
+                    ({ ...item, description: '' })
+                );
 
             const unifiedList = [...installedKernels!, ...interpreters];
             // Sort by name.

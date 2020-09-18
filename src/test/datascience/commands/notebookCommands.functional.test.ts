@@ -120,12 +120,10 @@ suite('DataScience - Notebook Commands', () => {
                 const dummySessionEvent = new EventEmitter<Kernel.IKernelConnection>();
                 when(jupyterSessionManagerFactory.onRestartSessionCreated).thenReturn(dummySessionEvent.event);
                 when(jupyterSessionManagerFactory.onRestartSessionUsed).thenReturn(dummySessionEvent.event);
-                when(appShell.showQuickPick(anything(), anything(), anything())).thenCall(() => {
-                    return isLocalConnection ? localSelections[0] : remoteSelections[0];
-                });
-                when(appShell.withProgress(anything(), anything())).thenCall((_o, t) => {
-                    return t();
-                });
+                when(appShell.showQuickPick(anything(), anything(), anything())).thenCall(() =>
+                    isLocalConnection ? localSelections[0] : remoteSelections[0]
+                );
+                when(appShell.withProgress(anything(), anything())).thenCall((_o, t) => t());
                 when(notebookProvider.connect(anything())).thenResolve(
                     isLocalConnection ? ({ type: 'raw' } as any) : ({ type: 'jupyter' } as any)
                 );
@@ -217,9 +215,7 @@ suite('DataScience - Notebook Commands', () => {
                     const notebook = createNotebookMock();
                     when((notebook as any).then).thenReturn(undefined);
                     const uri = Uri.file('test.ipynb');
-                    when(notebookProvider.getOrCreateNotebook(anything())).thenCall(async () => {
-                        return instance(notebook);
-                    });
+                    when(notebookProvider.getOrCreateNotebook(anything())).thenCall(async () => instance(notebook));
 
                     await commandHandler.bind(notebookCommands)({ identity: uri });
 

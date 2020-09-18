@@ -85,12 +85,10 @@ export class CellHashProvider implements ICellHashProvider, INotebookExecutionLo
 
     public getHashes(): IFileHashes[] {
         return [...this.hashes.entries()]
-            .map((e) => {
-                return {
-                    file: e[0],
-                    hashes: e[1].filter((h) => !h.deleted)
-                };
-            })
+            .map((e) => ({
+                file: e[0],
+                hashes: e[1].filter((h) => !h.deleted)
+            }))
             .filter((e) => e.hashes.length > 0);
     }
 

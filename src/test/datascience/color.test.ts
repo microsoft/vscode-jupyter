@@ -33,21 +33,9 @@ suite('Theme colors', () => {
         themeFinder = new ThemeFinder(extensions, currentProcess, fs);
 
         workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
-        workspaceConfig
-            .setup((ws) => ws.has(TypeMoq.It.isAnyString()))
-            .returns(() => {
-                return false;
-            });
-        workspaceConfig
-            .setup((ws) => ws.get(TypeMoq.It.isAnyString()))
-            .returns(() => {
-                return undefined;
-            });
-        workspaceConfig
-            .setup((ws) => ws.get(TypeMoq.It.isAnyString(), TypeMoq.It.isAny()))
-            .returns((_s, d) => {
-                return d;
-            });
+        workspaceConfig.setup((ws) => ws.has(TypeMoq.It.isAnyString())).returns(() => false);
+        workspaceConfig.setup((ws) => ws.get(TypeMoq.It.isAnyString())).returns(() => undefined);
+        workspaceConfig.setup((ws) => ws.get(TypeMoq.It.isAnyString(), TypeMoq.It.isAny())).returns((_s, d) => d);
 
         settings.assign({
             allowImportFromNotebook: true,
@@ -100,24 +88,12 @@ suite('Theme colors', () => {
                 workspaceConfig.reset();
                 workspaceConfig
                     .setup((ws) => ws.get<string>(TypeMoq.It.isValue('colorTheme')))
-                    .returns(() => {
-                        return themeName;
-                    });
-                workspaceConfig
-                    .setup((ws) => ws.get<string>(TypeMoq.It.isValue('fontFamily')))
-                    .returns(() => {
-                        return 'Arial';
-                    });
-                workspaceConfig
-                    .setup((ws) => ws.get<number>(TypeMoq.It.isValue('fontSize')))
-                    .returns(() => {
-                        return 16;
-                    });
+                    .returns(() => themeName);
+                workspaceConfig.setup((ws) => ws.get<string>(TypeMoq.It.isValue('fontFamily'))).returns(() => 'Arial');
+                workspaceConfig.setup((ws) => ws.get<number>(TypeMoq.It.isValue('fontSize'))).returns(() => 16);
                 workspaceConfig
                     .setup((ws) => ws.get(TypeMoq.It.isAnyString(), TypeMoq.It.isAny()))
-                    .returns((_s, d) => {
-                        return d;
-                    });
+                    .returns((_s, d) => d);
                 const theme = await cssGenerator.generateMonacoTheme(undefined, isDark, themeName);
                 assert.ok(theme, `Cannot find monaco theme for ${themeName}`);
                 const colors = await cssGenerator.generateThemeCss(undefined, isDark, themeName);

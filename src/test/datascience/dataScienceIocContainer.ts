@@ -869,11 +869,9 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             _listener: (e: WindowState) => any,
             _thisArgs?: any,
             _disposables?: IDisposable[] | Disposable
-        ) => {
-            return {
-                dispose: noop
-            };
-        };
+        ) => ({
+            dispose: noop
+        });
         when(this.applicationShell.onDidChangeWindowState).thenReturn(eventCallback);
         when(this.applicationShell.withProgress(anything(), anything())).thenCall((_o, c) => c());
 

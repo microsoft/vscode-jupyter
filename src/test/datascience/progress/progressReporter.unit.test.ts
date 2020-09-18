@@ -36,9 +36,9 @@ suite('DataScience - Progress Reporter', () => {
     test('Progress message should not get cancelled', async () => {
         let callbackPromise: Promise<{}> | undefined;
         const cancel = new CancellationTokenSource();
-        when(appShell.withProgress(anything(), anything())).thenCall((_, cb: Task<{}>) => {
-            return (callbackPromise = cb(instance(vscodeProgressReporter), cancel.token));
-        });
+        when(appShell.withProgress(anything(), anything())).thenCall(
+            (_, cb: Task<{}>) => (callbackPromise = cb(instance(vscodeProgressReporter), cancel.token))
+        );
 
         reporter.createProgressIndicator('Hello World');
 
@@ -51,9 +51,9 @@ suite('DataScience - Progress Reporter', () => {
     test('Cancel progress message when cancellation is cancelled', async () => {
         let callbackPromise: Promise<{}> | undefined;
         const cancel = new CancellationTokenSource();
-        when(appShell.withProgress(anything(), anything())).thenCall((_, cb: Task<{}>) => {
-            return (callbackPromise = cb(instance(vscodeProgressReporter), cancel.token));
-        });
+        when(appShell.withProgress(anything(), anything())).thenCall(
+            (_, cb: Task<{}>) => (callbackPromise = cb(instance(vscodeProgressReporter), cancel.token))
+        );
 
         reporter.createProgressIndicator('Hello World');
 
@@ -67,9 +67,9 @@ suite('DataScience - Progress Reporter', () => {
     test('Cancel progress message when disposed', async () => {
         let callbackPromise: Promise<{}> | undefined;
         const cancel = new CancellationTokenSource();
-        when(appShell.withProgress(anything(), anything())).thenCall((_, cb: Task<{}>) => {
-            return (callbackPromise = cb(instance(vscodeProgressReporter), cancel.token));
-        });
+        when(appShell.withProgress(anything(), anything())).thenCall(
+            (_, cb: Task<{}>) => (callbackPromise = cb(instance(vscodeProgressReporter), cancel.token))
+        );
 
         const disposable = reporter.createProgressIndicator('Hello World');
 
@@ -82,9 +82,9 @@ suite('DataScience - Progress Reporter', () => {
     test('Report progress until disposed', async () => {
         let callbackPromise: Promise<{}> | undefined;
         const cancel = new CancellationTokenSource();
-        when(appShell.withProgress(anything(), anything())).thenCall((_, cb: Task<{}>) => {
-            return (callbackPromise = cb(instance(vscodeProgressReporter), cancel.token));
-        });
+        when(appShell.withProgress(anything(), anything())).thenCall(
+            (_, cb: Task<{}>) => (callbackPromise = cb(instance(vscodeProgressReporter), cancel.token))
+        );
 
         const disposable = reporter.createProgressIndicator('Hello World');
         const progressMessages: string[] = [];

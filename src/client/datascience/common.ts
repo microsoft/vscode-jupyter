@@ -48,18 +48,12 @@ export function getSavedUriList(globalState: Memento): { uri: string; time: numb
     const uriList = globalState.get<{ uri: string; time: number; displayName?: string }[]>(
         Settings.JupyterServerUriList
     );
-    return uriList
-        ? uriList.sort((a, b) => {
-              return b.time - a.time;
-          })
-        : [];
+    return uriList ? uriList.sort((a, b) => b.time - a.time) : [];
 }
 export function addToUriList(globalState: Memento, uri: string, time: number, displayName: string) {
     const uriList = getSavedUriList(globalState);
 
-    const editList = uriList.filter((f, i) => {
-        return f.uri !== uri && i < Settings.JupyterServerUriListMax - 1;
-    });
+    const editList = uriList.filter((f, i) => f.uri !== uri && i < Settings.JupyterServerUriListMax - 1);
     editList.splice(0, 0, { uri, time, displayName });
 
     globalState.update(Settings.JupyterServerUriList, editList).then(noop, noop);

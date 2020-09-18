@@ -354,15 +354,13 @@ export class NativeEditorStorage implements INotebookStorage {
         const cells = json ? (json.cells as (nbformat.ICodeCell | nbformat.IRawCell | nbformat.IMarkdownCell)[]) : [];
 
         // Remap the ids
-        const remapped = cells.map((c, index) => {
-            return {
-                id: `NotebookImport#${index}`,
-                file: Identifiers.EmptyFileName,
-                line: 0,
-                state: CellState.finished,
-                data: c
-            };
-        });
+        const remapped = cells.map((c, index) => ({
+            id: `NotebookImport#${index}`,
+            file: Identifiers.EmptyFileName,
+            line: 0,
+            state: CellState.finished,
+            data: c
+        }));
 
         if (!forVSCodeNotebook) {
             // Make sure at least one

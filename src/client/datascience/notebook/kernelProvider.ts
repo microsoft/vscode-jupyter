@@ -114,15 +114,16 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
         });
 
         // Turn this into our preferred list.
-        const mapped = withInterpreter.map((kernel) => {
-            return new VSCodeNotebookKernelMetadata(
-                kernel.label,
-                kernel.description || kernel.detail || '',
-                kernel.selection,
-                areKernelConnectionsEqual(kernel.selection, preferredKernel),
-                this.kernelProvider
-            );
-        });
+        const mapped = withInterpreter.map(
+            (kernel) =>
+                new VSCodeNotebookKernelMetadata(
+                    kernel.label,
+                    kernel.description || kernel.detail || '',
+                    kernel.selection,
+                    areKernelConnectionsEqual(kernel.selection, preferredKernel),
+                    this.kernelProvider
+                )
+        );
 
         // If no preferred kernel set but we have a language, use that to set preferred instead.
         if (!mapped.find((v) => v.isPreferred) && document.cells.length) {

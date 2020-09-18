@@ -59,10 +59,10 @@ export class DataScienceSurveyBannerLogger implements IInteractiveWindowListener
                 );
                 state
                     .updateValue(state.value + args.cellIds.length)
-                    .then(() => {
+                    .then(() =>
                         // On every update try to show the banner.
-                        return this.dataScienceSurveyBanner.showBanner();
-                    })
+                        this.dataScienceSurveyBanner.showBanner()
+                    )
                     .ignoreErrors();
             }
         }

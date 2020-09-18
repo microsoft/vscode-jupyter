@@ -149,14 +149,12 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         // Remove duplicates.
         const dup = new Set<string>();
         return models
-            .map((m) => {
-                return {
-                    id: m.id,
-                    name: m.name,
-                    lastActivityTime: m.last_activity ? new Date(Date.parse(m.last_activity.toString())) : new Date(),
-                    numberOfConnections: m.connections ? parseInt(m.connections.toString(), 10) : 0
-                };
-            })
+            .map((m) => ({
+                id: m.id,
+                name: m.name,
+                lastActivityTime: m.last_activity ? new Date(Date.parse(m.last_activity.toString())) : new Date(),
+                numberOfConnections: m.connections ? parseInt(m.connections.toString(), 10) : 0
+            }))
             .filter((item) => {
                 if (dup.has(item.id)) {
                     return false;

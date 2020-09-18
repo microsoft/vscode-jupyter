@@ -47,9 +47,7 @@ export async function requestExecute(
     future.onIOPub = ioPubHandler;
     future.onReply = shellHandler;
     rawKernel.requestExecute(requestContent, true);
-    return waiter.promise.then((m) => {
-        return m;
-    });
+    return waiter.promise.then((m) => m);
 }
 
 export async function requestInspect(rawKernel: RawKernel, code: string): Promise<JSONObject> {

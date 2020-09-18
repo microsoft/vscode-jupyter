@@ -15,17 +15,15 @@ export class JupyterUriProviderWrapper implements IJupyterUriProvider {
     }
 
     public getQuickPickEntryItems(): vscode.QuickPickItem[] {
-        return this.provider.getQuickPickEntryItems().map((q) => {
-            return {
-                ...q,
-                // Add the package name onto the description
-                description: localize.DataScience.uriProviderDescriptionFormat().format(
-                    q.description || '',
-                    this.packageName
-                ),
-                original: q
-            };
-        });
+        return this.provider.getQuickPickEntryItems().map((q) => ({
+            ...q,
+            // Add the package name onto the description
+            description: localize.DataScience.uriProviderDescriptionFormat().format(
+                q.description || '',
+                this.packageName
+            ),
+            original: q
+        }));
     }
 
     public handleQuickPick(

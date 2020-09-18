@@ -176,12 +176,12 @@ export namespace Execution {
     }
 
     export function clearAllOutputs(arg: NativeEditorReducerArg): IMainState {
-        const newList = arg.prevState.cellVMs.map((cellVM) => {
-            return Helpers.asCellViewModel({
+        const newList = arg.prevState.cellVMs.map((cellVM) =>
+            Helpers.asCellViewModel({
                 ...cellVM,
                 cell: { ...cellVM.cell, data: { ...cellVM.cell.data, outputs: [], execution_count: null } }
-            });
-        });
+            })
+        );
 
         Transfer.postModelClearOutputs(arg);
 

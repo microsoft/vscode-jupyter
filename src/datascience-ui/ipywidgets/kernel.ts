@@ -437,9 +437,7 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
                 const result = hook(msg);
                 this.hookResults.set(msg.header.msg_id, result);
                 if ((result as any).then) {
-                    return (result as any).then((r: boolean) => {
-                        return r;
-                    });
+                    return (result as any).then((r: boolean) => r);
                 }
 
                 // When not a promise reset right after
@@ -513,9 +511,7 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
             // we send the message that we are done handling this message
             // Since the Extension is blocking waiting for this message to be handled we know all extension message are
             // related to this message or before and should be resolved before we move on
-            const extensionPromises = Array.from(this.awaitingExtensionMessage.values()).map((value) => {
-                return value.promise;
-            });
+            const extensionPromises = Array.from(this.awaitingExtensionMessage.values()).map((value) => value.promise);
             Promise.all(extensionPromises)
                 .then(() => {
                     // Fine to wait and send this in the catch as the Extension is blocking new messages for this and the UI kernel

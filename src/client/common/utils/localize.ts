@@ -956,9 +956,7 @@ export function getCollectionJSON(): string {
 // tslint:disable-next-line:no-suspicious-comment
 export function localize(key: string, defValue?: string) {
     // Return a pointer to function so that we refetch it on each call.
-    return () => {
-        return getString(key, defValue);
-    };
+    return () => getString(key, defValue);
 }
 
 function parseLocale(): string {

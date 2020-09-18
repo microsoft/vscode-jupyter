@@ -140,9 +140,7 @@ function loadBanner(
                 typemoq.It.isValue(true)
             )
         )
-        .returns(() => {
-            return enabledState.object;
-        });
+        .returns(() => enabledState.object);
     persistService
         .setup((a) =>
             a.createGlobalPersistentState(
@@ -150,9 +148,7 @@ function loadBanner(
                 typemoq.It.isValue(false)
             )
         )
-        .returns(() => {
-            return enabledState.object;
-        });
+        .returns(() => enabledState.object);
 
     // Config settings
     const dataScienceSettings = typemoq.Mock.ofType<IWatchableJupyterSettings>();
@@ -162,9 +158,7 @@ function loadBanner(
     // Config Jupyter
     jupyterExecution
         .setup((j) => j.isNotebookSupported())
-        .returns(() => {
-            return Promise.resolve(jupyterFound);
-        })
+        .returns(() => Promise.resolve(jupyterFound))
         .verifiable(executionCalled ? typemoq.Times.once() : typemoq.Times.never());
 
     const yes = 'Yes';

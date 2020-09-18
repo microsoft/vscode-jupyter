@@ -97,9 +97,8 @@ export class JupyterImporter implements INotebookImporter {
         return this.configuration.getSettings().defaultCellMarker || Identifiers.DefaultCodeCellMarker;
     }
 
-    private addIPythonImport = (pythonOutput: string): string => {
-        return CodeSnippets.ImportIPython.format(this.defaultCellMarker, pythonOutput);
-    };
+    private addIPythonImport = (pythonOutput: string): string =>
+        CodeSnippets.ImportIPython.format(this.defaultCellMarker, pythonOutput);
 
     private addDirectoryChange = (pythonOutput: string, directoryChange: string): string => {
         const newCode = CodeSnippets.ChangeDirectory.join(os.EOL).format(

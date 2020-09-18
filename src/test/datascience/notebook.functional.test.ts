@@ -437,9 +437,7 @@ suite('DataScience notebook tests', () => {
                 async () => {
                     when(
                         ioc.applicationShell.showWarningMessage(anything(), anything(), anything(), anything())
-                    ).thenCall((_a1, _a2, a3, _a4) => {
-                        return Promise.resolve(a3);
-                    });
+                    ).thenCall((_a1, _a2, a3, _a4) => Promise.resolve(a3));
 
                     const pythonService = await createPythonService(ioc);
 
@@ -544,9 +542,7 @@ suite('DataScience notebook tests', () => {
                 if (!useRawKernel) {
                     // Make a dummy class that will fail during launch
                     class FailedProcess extends JupyterExecutionFactory {
-                        public isNotebookSupported = (): Promise<boolean> => {
-                            return Promise.resolve(false);
-                        };
+                        public isNotebookSupported = (): Promise<boolean> => Promise.resolve(false);
                     }
                     ioc.serviceManager.rebind<IJupyterExecution>(IJupyterExecution, FailedProcess);
                     await createNotebook(undefined, undefined, true);
@@ -593,9 +589,7 @@ suite('DataScience notebook tests', () => {
                 // Get a bunch of test cells (use our test cells from the react controls)
                 const testFolderPath = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience');
                 const testState = generateTestState(testFolderPath);
-                const cells = testState.cellVMs.map((cellVM: ICellViewModel, _index: number) => {
-                    return cellVM.cell;
-                });
+                const cells = testState.cellVMs.map((cellVM: ICellViewModel, _index: number) => cellVM.cell);
 
                 // Translate this into a notebook
 
@@ -1333,20 +1327,20 @@ plt.show()`,
                 const service = await factory.create({ pythonPath });
                 const mockService = service as MockPythonService;
                 // Used by commands (can be removed when `src/client/datascience/jupyter/interpreter/jupyterCommand.ts` is deleted).
-                mockService.addExecResult(['-m', 'jupyter', 'notebook', '--version'], () => {
-                    return Promise.resolve({
+                mockService.addExecResult(['-m', 'jupyter', 'notebook', '--version'], () =>
+                    Promise.resolve({
                         stdout: '9.9.9.9',
                         stderr: 'Not supported'
-                    });
-                });
+                    })
+                );
 
                 // Used by commands (can be removed when `src/client/datascience/jupyter/interpreter/jupyterCommand.ts` is deleted).
-                mockService.addExecResult(['-m', 'notebook', '--version'], () => {
-                    return Promise.resolve({
+                mockService.addExecResult(['-m', 'notebook', '--version'], () =>
+                    Promise.resolve({
                         stdout: '',
                         stderr: 'Not supported'
-                    });
-                });
+                    })
+                );
                 // For new approach.
                 when(ioc.mockJupyter?.productInstaller.isInstalled(Product.jupyter)).thenResolve(false as any);
                 when(ioc.mockJupyter?.productInstaller.isInstalled(Product.notebook)).thenResolve(false as any);

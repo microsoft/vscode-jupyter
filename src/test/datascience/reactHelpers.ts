@@ -11,9 +11,7 @@ const Module = require('module');
 
 (function () {
     const origRequire = Module.prototype.require;
-    const _require = (context: any, filepath: any) => {
-        return origRequire.call(context, filepath);
-    };
+    const _require = (context: any, filepath: any) => origRequire.call(context, filepath);
     Module.prototype.require = function (filepath: string) {
         if (filepath === 'canvas') {
             try {

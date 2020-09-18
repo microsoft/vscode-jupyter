@@ -377,15 +377,13 @@ export function createNotebookModel(
         ...(nb || {})
     };
 
-    const cells = nbJson.cells.map((c, index) => {
-        return {
-            id: `NotebookImport#${index}`,
-            file: Identifiers.EmptyFileName,
-            line: 0,
-            state: CellState.finished,
-            data: c
-        };
-    });
+    const cells = nbJson.cells.map((c, index) => ({
+        id: `NotebookImport#${index}`,
+        file: Identifiers.EmptyFileName,
+        line: 0,
+        state: CellState.finished,
+        data: c
+    }));
     return new VSCodeNotebookModel(trusted, uri, JSON.parse(JSON.stringify(cells)), globalMemento, crypto, nbJson);
 }
 export async function executeCell(cell: NotebookCell) {

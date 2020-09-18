@@ -270,9 +270,7 @@ export namespace vscMockArrays {
      */
     export function distinct<T>(array: T[], keyFn?: (t: T) => string): T[] {
         if (!keyFn) {
-            return array.filter((element, position) => {
-                return array.indexOf(element) === position;
-            });
+            return array.filter((element, position) => array.indexOf(element) === position);
         }
 
         const seen: Record<string, boolean> = Object.create(null);

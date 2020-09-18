@@ -220,9 +220,7 @@ suite('DataScience - ipywidget - CDN', () => {
                         });
                         nock(baseUrl)
                             .get(/.*/)
-                            .reply(200, () => {
-                                return createStreamFromString('foo');
-                            });
+                            .reply(200, () => createStreamFromString('foo'));
                         const value = await scriptSourceProvider.getWidgetScriptSource(moduleName, moduleVersion);
 
                         assert.deepEqual(value, {

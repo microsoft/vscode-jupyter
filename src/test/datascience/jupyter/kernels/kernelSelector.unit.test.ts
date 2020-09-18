@@ -217,17 +217,15 @@ suite('DataScience - KernelSelector', () => {
             ];
             const quickPickItems: IKernelSpecQuickPickItem<
                 LiveKernelConnectionMetadata | KernelSpecConnectionMetadata
-            >[] = kernelModels.map((kernelModel) => {
-                return {
-                    label: '',
-                    selection: {
-                        kernelModel,
-                        kernelSpec: undefined,
-                        interpreter: undefined,
-                        kind: 'connectToLiveKernel'
-                    }
-                };
-            });
+            >[] = kernelModels.map((kernelModel) => ({
+                label: '',
+                selection: {
+                    kernelModel,
+                    kernelSpec: undefined,
+                    interpreter: undefined,
+                    kind: 'connectToLiveKernel'
+                }
+            }));
 
             when(
                 kernelSelectionProvider.getKernelSelectionsForRemoteSession(

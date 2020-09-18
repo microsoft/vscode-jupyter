@@ -62,13 +62,12 @@ export namespace Helpers {
               )
             : arg.prevState.currentExecutionCount;
 
-        const index = arg.prevState.cellVMs.findIndex((c: ICellViewModel) => {
-            return (
+        const index = arg.prevState.cellVMs.findIndex(
+            (c: ICellViewModel) =>
                 c.cell.id === arg.payload.data.id &&
                 c.cell.line === arg.payload.data.line &&
                 arePathsSame(c.cell.file, arg.payload.data.file)
-            );
-        });
+        );
         if (index >= 0) {
             // This means the cell existed already so it was actual executed code.
             // Use its execution count to update our execution count.

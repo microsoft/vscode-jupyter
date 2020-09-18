@@ -791,9 +791,7 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
     private convertToDocCells(cells: ICell[]): { code: string; id: string }[] {
         return cells
             .filter((c) => c.data.cell_type === 'code')
-            .map((c) => {
-                return { code: concatMultilineString(c.data.source), id: c.id };
-            });
+            .map((c) => ({ code: concatMultilineString(c.data.source), id: c.id }));
     }
 
     private async handleUndo(request: NotebookModelChange): Promise<void> {
@@ -884,12 +882,10 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
             const changes = document.loadAllCells(
                 payload.cells
                     .filter((c) => c.data.cell_type === 'code')
-                    .map((cell) => {
-                        return {
-                            code: concatMultilineString(cell.data.source),
-                            id: cell.id
-                        };
-                    }),
+                    .map((cell) => ({
+                        code: concatMultilineString(cell.data.source),
+                        id: cell.id
+                    })),
                 this.notebookType
             );
 

@@ -36,9 +36,7 @@ export class InsidersExtensionService implements IExtensionSingleActivationServi
 
     public registerCommandsAndHandlers(): void {
         this.disposables.push(
-            this.extensionChannelService.onDidChannelChange((channel) => {
-                return this.handleChannel(channel, true);
-            })
+            this.extensionChannelService.onDidChannelChange((channel) => this.handleChannel(channel, true))
         );
         this.disposables.push(
             this.cmdManager.registerCommand(Commands.SwitchOffInsidersChannel, () =>

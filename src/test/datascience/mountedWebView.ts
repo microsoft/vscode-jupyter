@@ -62,20 +62,16 @@ export class MountedWebView implements IMountedWebView, IDisposable {
 
     constructor(mount: () => ReactWrapper<any, Readonly<{}>, React.Component>, public readonly id: string) {
         // Setup the acquireVsCodeApi. The react control will cache this value when it's mounted.
-        const globalAcquireVsCodeApi = (): IVsCodeApi => {
-            return {
-                // tslint:disable-next-line:no-any
-                postMessage: (msg: any) => {
-                    this.postMessageToWebPanel(msg);
-                },
-                // tslint:disable-next-line:no-any no-empty
-                setState: (_msg: any) => {},
-                // tslint:disable-next-line:no-any no-empty
-                getState: () => {
-                    return {};
-                }
-            };
-        };
+        const globalAcquireVsCodeApi = (): IVsCodeApi => ({
+            // tslint:disable-next-line:no-any
+            postMessage: (msg: any) => {
+                this.postMessageToWebPanel(msg);
+            },
+            // tslint:disable-next-line:no-any no-empty
+            setState: (_msg: any) => {},
+            // tslint:disable-next-line:no-any no-empty
+            getState: () => ({})
+        });
         // tslint:disable-next-line:no-string-literal
         (global as any)['acquireVsCodeApi'] = globalAcquireVsCodeApi;
 

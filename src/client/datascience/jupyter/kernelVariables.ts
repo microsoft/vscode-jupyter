@@ -304,18 +304,16 @@ export class KernelVariables implements IJupyterVariables {
             // Refetch the list of names from the notebook. They might have changed.
             list = {
                 currentExecutionCount: request.executionCount,
-                variables: (await this.getVariableNamesFromKernel(notebook)).map((n) => {
-                    return {
-                        name: n,
-                        value: undefined,
-                        supportsDataExplorer: false,
-                        type: '',
-                        size: 0,
-                        shape: '',
-                        count: 0,
-                        truncated: true
-                    };
-                })
+                variables: (await this.getVariableNamesFromKernel(notebook)).map((n) => ({
+                    name: n,
+                    value: undefined,
+                    supportsDataExplorer: false,
+                    type: '',
+                    size: 0,
+                    shape: '',
+                    count: 0,
+                    truncated: true
+                }))
             };
         }
 

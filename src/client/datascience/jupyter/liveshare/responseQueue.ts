@@ -43,9 +43,9 @@ export class ResponseQueue {
         let cells: ICell[] | undefined = [];
         while (cells !== undefined) {
             // Find all matches in order
-            const response = await this.waitForSpecificResponse<IExecuteObservableResponse>((r) => {
-                return r.pos === pos && id === r.id && code === r.code;
-            });
+            const response = await this.waitForSpecificResponse<IExecuteObservableResponse>(
+                (r) => r.pos === pos && id === r.id && code === r.code
+            );
             if (response.cells) {
                 subscriber.next(response.cells);
                 pos += 1;

@@ -54,9 +54,7 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
         debugService.setup((d) => d.activeDebugSession).returns(() => undefined);
         fileSystem
             .setup((f) => f.areLocalPathsSame(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-            .returns((a, b) => {
-                return a.toLowerCase() === b.toLowerCase();
-            });
+            .returns((a, b) => a.toLowerCase() === b.toLowerCase());
 
         codeLensProvider = new DataScienceCodeLensProvider(
             serviceContainer.object,
@@ -110,9 +108,7 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
         targetCodeWatcher.setup((tc) => tc.getVersion()).returns(() => 1);
         serviceContainer
             .setup((c) => c.get(TypeMoq.It.isValue(ICodeWatcher)))
-            .returns(() => {
-                return targetCodeWatcher.object;
-            })
+            .returns(() => targetCodeWatcher.object)
             .verifiable(TypeMoq.Times.once());
         documentManager.setup((d) => d.textDocuments).returns(() => [document.object]);
 

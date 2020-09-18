@@ -35,9 +35,7 @@ const Module = require('module');
 // tslint:disable-next-line:no-function-expression
 (function () {
     const origRequire = Module.prototype.require;
-    const _require = (context: any, filepath: any) => {
-        return origRequire.call(context, filepath);
-    };
+    const _require = (context: any, filepath: any) => origRequire.call(context, filepath);
     Module.prototype.require = function (filepath: string) {
         if (filepath.endsWith('.css') || filepath.endsWith('.svg')) {
             return '';

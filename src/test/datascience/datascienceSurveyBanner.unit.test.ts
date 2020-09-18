@@ -185,16 +185,12 @@ function preparePopup(
         .setup((a) =>
             a.createGlobalPersistentState(typemoq.It.isValue(DSSurveyStateKeys.ShowBanner), typemoq.It.isValue(true))
         )
-        .returns(() => {
-            return enabledValState.object;
-        });
+        .returns(() => enabledValState.object);
     myfactory
         .setup((a) =>
             a.createGlobalPersistentState(typemoq.It.isValue(DSSurveyStateKeys.ShowBanner), typemoq.It.isValue(false))
         )
-        .returns(() => {
-            return enabledValState.object;
-        });
+        .returns(() => enabledValState.object);
     myfactory
         .setup((a) =>
             a.createGlobalPersistentState(
@@ -202,9 +198,7 @@ function preparePopup(
                 typemoq.It.isAnyNumber()
             )
         )
-        .returns(() => {
-            return executionCountState.object;
-        });
+        .returns(() => executionCountState.object);
     myfactory
         .setup((a) =>
             a.createGlobalPersistentState(
@@ -212,9 +206,7 @@ function preparePopup(
                 typemoq.It.isAnyNumber()
             )
         )
-        .returns(() => {
-            return openCountState.object;
-        });
+        .returns(() => openCountState.object);
     const result = new DataScienceSurveyBanner(appShell, myfactory.object, browser, instance(provider), targetUri);
 
     // Fire the number of opens specifed so that it behaves like the real editor

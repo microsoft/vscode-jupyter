@@ -317,9 +317,8 @@ ${args.defaultStyle ? DefaultCssVars[args.defaultStyle] : ''}
             });
 
             result.rules = result.rules.sort(
-                (a: monacoEditor.editor.ITokenThemeRule, b: monacoEditor.editor.ITokenThemeRule) => {
-                    return a.token.localeCompare(b.token);
-                }
+                (a: monacoEditor.editor.ITokenThemeRule, b: monacoEditor.editor.ITokenThemeRule) =>
+                    a.token.localeCompare(b.token)
             );
         } else {
             // Otherwise use our default values.
@@ -349,13 +348,9 @@ ${args.defaultStyle ? DefaultCssVars[args.defaultStyle] : ''}
         return result;
     }
 
-    private mergeColors = (colors1: JSONArray, colors2: JSONArray): JSONArray => {
-        return [...colors1, ...colors2];
-    };
+    private mergeColors = (colors1: JSONArray, colors2: JSONArray): JSONArray => [...colors1, ...colors2];
 
-    private mergeBaseColors = (colors1: JSONObject, colors2: JSONObject): JSONObject => {
-        return { ...colors1, ...colors2 };
-    };
+    private mergeBaseColors = (colors1: JSONObject, colors2: JSONObject): JSONObject => ({ ...colors1, ...colors2 });
 
     private readTokenColors = async (themeFile: string): Promise<JSONArray> => {
         try {
@@ -442,9 +437,7 @@ ${args.defaultStyle ? DefaultCssVars[args.defaultStyle] : ''}
                 const themes = contributes.themes as JSONArray;
 
                 // One of these (it's an array), should have our matching theme entry
-                const index = themes.findIndex((e: any) => {
-                    return e !== null && (e.id === theme || e.name === theme);
-                });
+                const index = themes.findIndex((e: any) => e !== null && (e.id === theme || e.name === theme));
 
                 const found = index >= 0 ? (themes[index] as any) : null;
                 if (found !== null) {
@@ -492,9 +485,7 @@ ${args.defaultStyle ? DefaultCssVars[args.defaultStyle] : ''}
                 const themes = contributes.themes as JSONArray;
 
                 // One of these (it's an array), should have our matching theme entry
-                const index = themes.findIndex((e: any) => {
-                    return e !== null && (e.id === theme || e.name === theme);
-                });
+                const index = themes.findIndex((e: any) => e !== null && (e.id === theme || e.name === theme));
 
                 const found = index >= 0 ? (themes[index] as any) : null;
                 if (found !== null) {

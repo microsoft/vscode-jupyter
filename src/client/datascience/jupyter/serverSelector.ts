@@ -184,9 +184,9 @@ export class JupyterServerSelector {
         const providers = await this.extraUriProviders.getProviders();
         if (providers) {
             providers.forEach((p) => {
-                const newproviderItems = p.getQuickPickEntryItems().map((i) => {
-                    return { ...i, newChoice: false, provider: p };
-                });
+                const newproviderItems = p
+                    .getQuickPickEntryItems()
+                    .map((i) => ({ ...i, newChoice: false, provider: p }));
                 providerItems = providerItems.concat(newproviderItems);
             });
         }

@@ -651,16 +651,12 @@ export class CodeWatcher implements ICodeWatcher {
 
     @captureTelemetry(Telemetry.ChangeCellToMarkdown)
     public changeCellToMarkdown() {
-        this.applyToCells((editor, cell, _) => {
-            return this.changeCellTo(editor, cell, 'markdown');
-        });
+        this.applyToCells((editor, cell, _) => this.changeCellTo(editor, cell, 'markdown'));
     }
 
     @captureTelemetry(Telemetry.ChangeCellToCode)
     public changeCellToCode() {
-        this.applyToCells((editor, cell, _) => {
-            return this.changeCellTo(editor, cell, 'code');
-        });
+        this.applyToCells((editor, cell, _) => this.changeCellTo(editor, cell, 'code'));
     }
 
     @captureTelemetry(Telemetry.GotoNextCellInFile)

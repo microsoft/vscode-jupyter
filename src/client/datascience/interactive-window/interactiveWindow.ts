@@ -321,9 +321,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     @captureTelemetry(Telemetry.ScrolledToCell)
     public scrollToCell(id: string): void {
         this.show(false)
-            .then(() => {
-                return this.postMessage(InteractiveWindowMessages.ScrollToCell, { id });
-            })
+            .then(() => this.postMessage(InteractiveWindowMessages.ScrollToCell, { id }))
             .ignoreErrors();
     }
 

@@ -322,16 +322,14 @@ export function generateTestCells(filePath: string, repetitions: number): ICell[
         cellData = [...cellData, ...generateCellData()];
     }
     return cellData.map(
-        (data: nbformat.ICodeCell | nbformat.IMarkdownCell | nbformat.IRawCell | IMessageCell, key: number) => {
-            return {
-                id: key.toString(),
-                file: path.join(filePath, 'foo.py').toLowerCase(),
-                line: 1,
-                state: key === cellData.length - 1 ? CellState.executing : CellState.finished,
-                type: key === 3 ? 'preview' : 'execute',
-                data: data
-            };
-        }
+        (data: nbformat.ICodeCell | nbformat.IMarkdownCell | nbformat.IRawCell | IMessageCell, key: number) => ({
+            id: key.toString(),
+            file: path.join(filePath, 'foo.py').toLowerCase(),
+            line: 1,
+            state: key === cellData.length - 1 ? CellState.executing : CellState.finished,
+            type: key === 3 ? 'preview' : 'execute',
+            data: data
+        })
     );
 }
 

@@ -300,9 +300,7 @@ export class JupyterDebugService implements IJupyterDebugService, IDisposable {
                 path: file
             },
             lines: sbs.map((sb) => sb.location.range.start.line),
-            breakpoints: sbs.map((sb) => {
-                return { line: sb.location.range.start.line };
-            }),
+            breakpoints: sbs.map((sb) => ({ line: sb.location.range.start.line })),
             sourceModified: true
         });
     }

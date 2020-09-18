@@ -148,15 +148,13 @@ export class HostJupyterExecution
         }
     }
 
-    private onRemoteIsNotebookSupported = (_args: any[], cancellation: CancellationToken): Promise<any> => {
+    private onRemoteIsNotebookSupported = (_args: any[], cancellation: CancellationToken): Promise<any> =>
         // Just call local
-        return this.isNotebookSupported(cancellation);
-    };
+        this.isNotebookSupported(cancellation);
 
-    private onRemoteIsImportSupported = (_args: any[], cancellation: CancellationToken): Promise<any> => {
+    private onRemoteIsImportSupported = (_args: any[], cancellation: CancellationToken): Promise<any> =>
         // Just call local
-        return this.isImportSupported(cancellation);
-    };
+        this.isImportSupported(cancellation);
 
     private onRemoteConnectToNotebookServer = async (
         args: any[],
@@ -183,9 +181,7 @@ export class HostJupyterExecution
                     localProcExitCode: undefined,
                     valid: true,
                     displayName: getJupyterConnectionDisplayName(connectionInfo.token, connectionInfo.baseUrl),
-                    disconnected: (_l) => {
-                        return { dispose: noop };
-                    },
+                    disconnected: (_l) => ({ dispose: noop }),
                     dispose: noop,
                     rootDirectory: connectionInfo.rootDirectory
                 };
@@ -193,8 +189,7 @@ export class HostJupyterExecution
         }
     };
 
-    private onRemoteGetUsableJupyterPython = (_args: any[], cancellation: CancellationToken): Promise<any> => {
+    private onRemoteGetUsableJupyterPython = (_args: any[], cancellation: CancellationToken): Promise<any> =>
         // Just call local
-        return this.getUsableJupyterPython(cancellation);
-    };
+        this.getUsableJupyterPython(cancellation);
 }
