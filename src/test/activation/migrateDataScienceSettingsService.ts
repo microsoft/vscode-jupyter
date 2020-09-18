@@ -78,7 +78,6 @@ suite('Migrate data science settings', () => {
     const migratedSettings = `{
         "jupyter.allowImportFromNotebook": true,
         "jupyter.alwaysTrustNotebooks": true,
-        "jupyter.enabled": true,
         "jupyter.jupyterInterruptTimeout": 0,
         "jupyter.jupyterLaunchTimeout": 0,
         "jupyter.jupyterLaunchRetries": 0,
