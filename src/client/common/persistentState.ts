@@ -43,6 +43,7 @@ export class PersistentStateFactory implements IPersistentStateFactory {
         @inject(IMemento) @named(GLOBAL_MEMENTO) private globalState: Memento,
         @inject(IMemento) @named(WORKSPACE_MEMENTO) private workspaceState: Memento
     ) {}
+
     public createGlobalPersistentState<T>(
         key: string,
         defaultValue?: T,
@@ -50,6 +51,7 @@ export class PersistentStateFactory implements IPersistentStateFactory {
     ): IPersistentState<T> {
         return new PersistentState<T>(this.globalState, key, defaultValue, expiryDurationMs);
     }
+
     public createWorkspacePersistentState<T>(
         key: string,
         defaultValue?: T,

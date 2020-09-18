@@ -28,6 +28,7 @@ class MockClipboard {
     public readText(): Promise<string> {
         return Promise.resolve(this.text);
     }
+
     public async writeText(value: string): Promise<void> {
         this.text = value;
     }

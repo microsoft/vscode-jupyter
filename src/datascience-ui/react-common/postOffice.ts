@@ -38,9 +38,11 @@ export class PostOffice implements IDisposable {
     constructor() {
         this.observable = this.subject.asObservable();
     }
+
     public asObservable(): Observable<PostOfficeMessage> {
         return this.observable;
     }
+
     public dispose() {
         if (this.registered) {
             this.registered = false;

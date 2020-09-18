@@ -28,14 +28,17 @@ export class CellOutputMimeTypeTracker implements IExtensionSingleActivationServ
     public onKernelRestarted() {
         // Do nothing on restarted
     }
+
     public async preExecute(_cell: ICell, _silent: boolean): Promise<void> {
         // Do nothing on pre execute
     }
+
     public async postExecute(cell: ICell, silent: boolean): Promise<void> {
         if (!silent && cell.data.cell_type === 'code') {
             this.scheduleCheck(this.createCellKey(cell), this.checkCell.bind(this, cell));
         }
     }
+
     public async activate(): Promise<void> {
         // Act like all of our open documents just opened; our timeout will make sure this is delayed.
         this.notebookEditorProvider.editors.forEach((e) => this.onOpenedOrClosedNotebook(e));
@@ -46,6 +49,7 @@ export class CellOutputMimeTypeTracker implements IExtensionSingleActivationServ
             this.scheduleCheck(e.file.fsPath, this.checkNotebook.bind(this, e));
         }
     }
+
     private getCellOutputMimeTypes(cell: ICell): string[] {
         if (cell.data.cell_type === 'markdown') {
             return ['markdown'];
@@ -66,6 +70,7 @@ export class CellOutputMimeTypeTracker implements IExtensionSingleActivationServ
             }
         }
     }
+
     private getOutputMimeTypes(output: nbformat.IOutput): string[] {
         // tslint:disable-next-line: no-any
         const outputType: nbformat.OutputType = output.output_type as any;

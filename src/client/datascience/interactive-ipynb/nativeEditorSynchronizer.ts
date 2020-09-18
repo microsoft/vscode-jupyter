@@ -31,9 +31,11 @@ export class NativeEditorSynchronizer {
             }
         });
     }
+
     public subscribeToUserActions(editor: INotebookEditor, cb: UserActionNotificationCallback) {
         this.registeredNotebooks.set(editor, cb);
     }
+
     public disable() {
         this.enabled = false;
         this.registeredNotebooks.clear();

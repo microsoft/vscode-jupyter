@@ -11,18 +11,23 @@ export class ProcOutput {
     public get stdout(): string {
         return this.dump('stdout');
     }
+
     public get stderr(): string {
         return this.dump('stderr');
     }
+
     public get combined(): string {
         return this.dump();
     }
+
     public addStdout(data: Buffer) {
         this.output.push(['stdout', data]);
     }
+
     public addStderr(data: Buffer) {
         this.output.push(['stdout', data]);
     }
+
     private dump(which?: OutStream) {
         let out = '';
         for (const [stream, data] of this.output) {
@@ -54,12 +59,15 @@ export class Proc {
         this.raw = (raw as unknown) as IRawProc;
         this.output = output;
     }
+
     public get pid(): number {
         return this.raw.pid;
     }
+
     public get exited(): boolean {
         return this.raw.exitCode !== null;
     }
+
     public async waitUntilDone(): Promise<ProcResult> {
         if (this.result) {
             return this.result;

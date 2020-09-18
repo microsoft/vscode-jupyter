@@ -405,6 +405,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
     ): Promise<IJupyterConnection> {
         return this.notebookStarter.start(useDefaultConfig, customCommandLine, workingDirectory, cancelToken);
     }
+
     private onSettingsChanged() {
         // Clear our usableJupyterInterpreter so that we recompute our values
         this.usablePythonInterpreter = undefined;

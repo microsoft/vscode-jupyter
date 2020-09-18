@@ -25,27 +25,35 @@ export class LiveShareProxy implements vsls.LiveShare {
         this.realApi.onDidChangeSession(this.onSessionChanged, this);
         this.onSessionChanged({ session: this.realApi.session }).ignoreErrors();
     }
+
     public get session(): vsls.Session {
         return this.realApi.session;
     }
+
     public get onDidChangeSession(): Event<vsls.SessionChangeEvent> {
         return this.realApi.onDidChangeSession;
     }
+
     public get peers(): vsls.Peer[] {
         return this.realApi.peers;
     }
+
     public get onDidChangePeers(): Event<vsls.PeersChangeEvent> {
         return this.realApi.onDidChangePeers;
     }
+
     public share(options?: vsls.ShareOptions | undefined): Promise<Uri | null> {
         return this.realApi.share(options);
     }
+
     public join(link: Uri, options?: vsls.JoinOptions | undefined): Promise<void> {
         return this.realApi.join(link, options);
     }
+
     public end(): Promise<void> {
         return this.realApi.end();
     }
+
     public async shareService(name: string): Promise<vsls.SharedService | null> {
         // Create the real shared service.
         const realService = await this.realApi.shareService(name);
@@ -62,33 +70,42 @@ export class LiveShareProxy implements vsls.LiveShare {
 
         return realService;
     }
+
     public unshareService(name: string): Promise<void> {
         return this.realApi.unshareService(name);
     }
+
     public getSharedService(name: string): Promise<vsls.SharedServiceProxy | null> {
         return this.realApi.getSharedService(name);
     }
+
     public convertLocalUriToShared(localUri: Uri): Uri {
         return this.realApi.convertLocalUriToShared(localUri);
     }
+
     public convertSharedUriToLocal(sharedUri: Uri): Uri {
         return this.realApi.convertSharedUriToLocal(sharedUri);
     }
+
     public registerCommand(command: string, isEnabled?: (() => boolean) | undefined, thisArg?: any): Disposable | null {
         return this.realApi.registerCommand(command, isEnabled, thisArg);
     }
+
     public registerTreeDataProvider<T>(viewId: vsls.View, treeDataProvider: TreeDataProvider<T>): Disposable | null {
         return this.realApi.registerTreeDataProvider(viewId, treeDataProvider);
     }
+
     public registerContactServiceProvider(
         name: string,
         contactServiceProvider: vsls.ContactServiceProvider
     ): Disposable | null {
         return this.realApi.registerContactServiceProvider(name, contactServiceProvider);
     }
+
     public shareServer(server: vsls.Server): Promise<Disposable> {
         return this.realApi.shareServer(server);
     }
+
     public getContacts(emails: string[]): Promise<vsls.ContactsCollection> {
         return this.realApi.getContacts(emails);
     }

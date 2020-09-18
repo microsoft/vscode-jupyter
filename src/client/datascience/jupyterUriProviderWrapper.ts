@@ -13,6 +13,7 @@ export class JupyterUriProviderWrapper implements IJupyterUriProvider {
     public get id() {
         return this.provider.id;
     }
+
     public getQuickPickEntryItems(): vscode.QuickPickItem[] {
         return this.provider.getQuickPickEntryItems().map((q) => {
             return {
@@ -26,6 +27,7 @@ export class JupyterUriProviderWrapper implements IJupyterUriProvider {
             };
         });
     }
+
     public handleQuickPick(
         item: vscode.QuickPickItem,
         back: boolean

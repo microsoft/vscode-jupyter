@@ -67,9 +67,11 @@ export class ImportTracker implements IExtensionSingleActivationService, INotebo
     public onKernelRestarted() {
         // Do nothing on restarted
     }
+
     public async preExecute(_cell: ICell, _silent: boolean): Promise<void> {
         // Do nothing on pre execute
     }
+
     public async postExecute(cell: ICell, silent: boolean): Promise<void> {
         // Check for imports in the cell itself.
         if (!silent && cell.data.cell_type === 'code') {

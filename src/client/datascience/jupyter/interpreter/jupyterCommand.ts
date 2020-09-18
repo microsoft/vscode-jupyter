@@ -126,6 +126,7 @@ class InterpreterJupyterCommand implements IJupyterCommand {
             });
         });
     }
+
     public interpreter(): Promise<PythonEnvironment | undefined> {
         return this.interpreterPromise;
     }
@@ -270,6 +271,7 @@ export class InterpreterJupyterKernelSpecCommand extends InterpreterJupyterComma
             { ...options, throwOnStdErr: true }
         );
     }
+
     private async getKernelSpecVersion(interpreter: PythonEnvironment, options: SpawnOptions) {
         // Try getting kernels using python script, if that fails (even if there's output in stderr) rethrow original exception.
         const activatedEnv = await this.pythonExecutionFactory.createActivatedEnvironment({

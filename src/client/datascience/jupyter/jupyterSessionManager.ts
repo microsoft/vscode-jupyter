@@ -50,6 +50,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         }
         return this._jupyterlab!;
     }
+
     constructor(
         private jupyterPasswordConnect: IJupyterPasswordConnect,
         _config: IConfigurationService,
@@ -72,6 +73,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
     public get onRestartSessionUsed() {
         return this.restartSessionUsedEvent.event;
     }
+
     public async dispose() {
         traceInfo(`Disposing session manager`);
         try {

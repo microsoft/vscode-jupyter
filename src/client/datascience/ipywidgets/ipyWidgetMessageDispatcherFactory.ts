@@ -19,6 +19,7 @@ class IPyWidgetMessageDispatcherWithOldMessages implements IIPyWidgetMessageDisp
     public get postMessage(): Event<IPyWidgetMessage> {
         return this._postMessageEmitter.event;
     }
+
     private _postMessageEmitter = new EventEmitter<IPyWidgetMessage>();
     private readonly disposables: IDisposable[] = [];
     constructor(
@@ -34,6 +35,7 @@ class IPyWidgetMessageDispatcherWithOldMessages implements IIPyWidgetMessageDisp
             disposable?.dispose(); // NOSONAR
         }
     }
+
     public async initialize() {
         return this.baseMulticaster.initialize();
     }
@@ -41,6 +43,7 @@ class IPyWidgetMessageDispatcherWithOldMessages implements IIPyWidgetMessageDisp
     public receiveMessage(message: IPyWidgetMessage) {
         this.baseMulticaster.receiveMessage(message);
     }
+
     private raisePostMessage(message: IPyWidgetMessage) {
         // Send all of the old messages the notebook may not have received.
         // Also send them in the same order.
@@ -97,6 +100,7 @@ export class IPyWidgetMessageDispatcherFactory implements IDisposable {
             this.disposables.shift()?.dispose(); // NOSONAR
         }
     }
+
     public create(identity: Uri): IIPyWidgetMessageDispatcher {
         let baseDispatcher = this.messageDispatchers.get(identity.fsPath);
         if (!baseDispatcher) {
@@ -118,6 +122,7 @@ export class IPyWidgetMessageDispatcherFactory implements IDisposable {
         this.disposables.push(dispatcher);
         return dispatcher;
     }
+
     private trackDisposingOfNotebook(notebook: INotebook) {
         if (this.disposed) {
             return;

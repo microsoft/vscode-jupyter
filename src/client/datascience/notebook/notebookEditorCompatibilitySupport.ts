@@ -27,9 +27,11 @@ export class NotebookEditorCompatibilitySupport implements IExtensionSingleActiv
         @inject(IDataScienceFileSystem) private readonly fs: IDataScienceFileSystem,
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer
     ) {}
+
     public async activate(): Promise<void> {
         this.initialize();
     }
+
     public canOpenWithVSCodeNotebookEditor(uri: Uri) {
         this.initialize();
         if (!this.ourCustomNotebookEditorProvider) {
@@ -46,6 +48,7 @@ export class NotebookEditorCompatibilitySupport implements IExtensionSingleActiv
         }
         return true;
     }
+
     public canOpenWithOurNotebookEditor(uri: Uri, throwException = false) {
         this.initialize();
         // If user has a VS Code notebook opened for the same document, let them know things can go wonky.
@@ -59,6 +62,7 @@ export class NotebookEditorCompatibilitySupport implements IExtensionSingleActiv
         }
         return true;
     }
+
     private initialize() {
         if (this.initialized) {
             return;
@@ -78,6 +82,7 @@ export class NotebookEditorCompatibilitySupport implements IExtensionSingleActiv
         }
         this.vscodeNotebookEditorProvider.onDidOpenNotebookEditor((e) => this.canOpenWithVSCodeNotebookEditor(e.file));
     }
+
     private showWarning(throwException: boolean) {
         if (throwException) {
             throw new Error(DataScience.usingPreviewNotebookWithOtherNotebookWarning());

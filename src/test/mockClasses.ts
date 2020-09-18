@@ -8,13 +8,16 @@ export class MockOutputChannel implements vscode.OutputChannel {
         this.name = name;
         this.output = '';
     }
+
     public append(value: string) {
         this.output += value;
     }
+
     public appendLine(value: string) {
         this.append(value);
         this.append('\n');
     }
+
     // tslint:disable-next-line:no-empty
     public clear() {}
     public show(preservceFocus?: boolean): void;
@@ -23,9 +26,11 @@ export class MockOutputChannel implements vscode.OutputChannel {
     public show(_x?: any, _y?: any): void {
         this.isShown = true;
     }
+
     public hide() {
         this.isShown = false;
     }
+
     // tslint:disable-next-line:no-empty
     public dispose() {}
 }

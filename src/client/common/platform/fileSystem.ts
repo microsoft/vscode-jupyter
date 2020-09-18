@@ -332,6 +332,7 @@ export class FileSystemUtils implements IFileSystemUtils {
         private readonly getHash: (data: string) => string,
         private readonly globFiles: (pat: string, options?: { cwd: string; dot?: boolean }) => Promise<string[]>
     ) {}
+
     // Create a new object using common-case default values.
     public static withDefaults(
         raw?: IRawFileSystem,
@@ -398,9 +399,11 @@ export class FileSystemUtils implements IFileSystemUtils {
         }
         return (stat.type & fileType) === fileType;
     }
+
     public async fileExists(filename: string): Promise<boolean> {
         return this.pathExists(filename, FileType.File);
     }
+
     public async directoryExists(dirname: string): Promise<boolean> {
         return this.pathExists(dirname, FileType.Directory);
     }
@@ -416,11 +419,13 @@ export class FileSystemUtils implements IFileSystemUtils {
             throw err; // re-throw
         }
     }
+
     public async getSubDirectories(dirname: string): Promise<string[]> {
         const files = await this.listdir(dirname);
         const filtered = filterByFileType(files, FileType.Directory);
         return filtered.map(([filename, _fileType]) => filename);
     }
+
     public async getFiles(dirname: string): Promise<string[]> {
         // Note that only "regular" files are returned.
         const files = await this.listdir(dirname);
@@ -507,81 +512,107 @@ export class FileSystem implements IFileSystem {
     public get directorySeparatorChar(): string {
         return this.utils.paths.sep;
     }
+
     public arePathsSame(path1: string, path2: string): boolean {
         return this.utils.pathUtils.arePathsSame(path1, path2);
     }
+
     public getDisplayName(path: string): string {
         return this.utils.pathUtils.getDisplayName(path);
     }
+
     public async stat(filename: string): Promise<FileStat> {
         return this.utils.raw.stat(filename);
     }
+
     public async createDirectory(dirname: string): Promise<void> {
         return this.utils.createDirectory(dirname);
     }
+
     public async deleteDirectory(dirname: string): Promise<void> {
         return this.utils.deleteDirectory(dirname);
     }
+
     public async listdir(dirname: string): Promise<[string, FileType][]> {
         return this.utils.listdir(dirname);
     }
+
     public async readFile(filePath: string): Promise<string> {
         return this.utils.raw.readText(filePath);
     }
+
     public async readData(filePath: string): Promise<Buffer> {
         return this.utils.raw.readData(filePath);
     }
+
     public async writeFile(filename: string, data: {}): Promise<void> {
         return this.utils.raw.writeText(filename, data);
     }
+
     public async appendFile(filename: string, text: string): Promise<void> {
         return this.utils.raw.appendText(filename, text);
     }
+
     public async copyFile(src: string, dest: string): Promise<void> {
         return this.utils.raw.copyFile(src, dest);
     }
+
     public async deleteFile(filename: string): Promise<void> {
         return this.utils.deleteFile(filename);
     }
+
     public async chmod(filename: string, mode: string): Promise<void> {
         return this.utils.raw.chmod(filename, mode);
     }
+
     public async move(src: string, tgt: string) {
         await this.utils.raw.move(src, tgt);
     }
+
     public readFileSync(filePath: string): string {
         return this.utils.raw.readTextSync(filePath);
     }
+
     public createReadStream(filePath: string): ReadStream {
         return this.utils.raw.createReadStream(filePath);
     }
+
     public createWriteStream(filePath: string): WriteStream {
         return this.utils.raw.createWriteStream(filePath);
     }
+
     public async fileExists(filename: string): Promise<boolean> {
         return this.utils.fileExists(filename);
     }
+
     public fileExistsSync(filename: string): boolean {
         return this.utils.fileExistsSync(filename);
     }
+
     public async directoryExists(dirname: string): Promise<boolean> {
         return this.utils.directoryExists(dirname);
     }
+
     public async getSubDirectories(dirname: string): Promise<string[]> {
         return this.utils.getSubDirectories(dirname);
     }
+
     public async getFiles(dirname: string): Promise<string[]> {
         return this.utils.getFiles(dirname);
     }
+
     public async getFileHash(filename: string): Promise<string> {
         return this.utils.getFileHash(filename);
     }
+
     public async search(globPattern: string, cwd?: string, dot?: boolean): Promise<string[]> {
         return this.utils.search(globPattern, cwd, dot);
     }
+
     public async createTemporaryFile(suffix: string, mode?: number): Promise<TemporaryFile> {
         return this.utils.tmp.createFile(suffix, mode);
     }
+
     public async isDirReadonly(dirname: string): Promise<boolean> {
         return this.utils.isDirReadonly(dirname);
     }

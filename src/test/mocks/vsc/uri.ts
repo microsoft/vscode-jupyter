@@ -476,6 +476,7 @@ export namespace vscUri {
             super(schemeOrData as any, authority, path, query, fragment, _strict);
             this._fsPath = this.fsPath;
         }
+
         get fsPath(): string {
             if (!this._fsPath) {
                 this._fsPath = _makeFsPath(this);

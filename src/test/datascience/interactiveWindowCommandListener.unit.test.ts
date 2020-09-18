@@ -88,9 +88,11 @@ suite('Interactive window command listener', async () => {
             super();
             this.func = func;
         }
+
         public match(value: Object): boolean {
             return this.func(value);
         }
+
         public toString(): string {
             return 'FunctionMatcher';
         }

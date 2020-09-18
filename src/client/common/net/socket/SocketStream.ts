@@ -25,6 +25,7 @@ export class SocketStream {
         const buffer = uint64be.encode(num);
         this.socket.write(buffer);
     }
+
     public WriteString(value: string) {
         const stringBuffer = new Buffer(value, 'utf-8');
         this.WriteInt32(stringBuffer.length);
@@ -32,6 +33,7 @@ export class SocketStream {
             this.socket.write(stringBuffer);
         }
     }
+
     public Write(buffer: Buffer) {
         this.socket.write(buffer);
     }
@@ -42,17 +44,20 @@ export class SocketStream {
     public get Buffer(): Buffer {
         return this.buffer;
     }
+
     public BeginTransaction() {
         this.isInTransaction = true;
         this.bytesRead = 0;
         this.ClearErrors();
     }
+
     public EndTransaction() {
         this.isInTransaction = false;
         this.buffer = this.buffer.slice(this.bytesRead);
         this.bytesRead = 0;
         this.ClearErrors();
     }
+
     public RollBackTransaction() {
         this.isInTransaction = false;
         this.bytesRead = 0;
@@ -224,6 +229,7 @@ export class SocketStream {
         }
         return data;
     }
+
     public readStringInTransaction(): string {
         return this.readValueInTransaction<string>(DataType.string);
     }

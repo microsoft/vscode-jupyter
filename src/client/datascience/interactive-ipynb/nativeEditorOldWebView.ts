@@ -63,6 +63,7 @@ export class NativeEditorOldWebView extends NativeEditor {
     public get visible(): boolean {
         return this.viewState.visible;
     }
+
     public get active(): boolean {
         return this.viewState.active;
     }
@@ -243,6 +244,7 @@ export class NativeEditorOldWebView extends NativeEditor {
                 return AskForSaveResult.Cancel;
         }
     }
+
     private async setDirty(): Promise<void> {
         // Then update dirty flag.
         if (this.isDirty) {

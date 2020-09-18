@@ -9,9 +9,11 @@ export class TrustService implements ITrustService {
     public get onDidSetNotebookTrust() {
         return this._onDidSetNotebookTrust.event;
     }
+
     private get alwaysTrustNotebooks() {
         return this.configService.getSettings().alwaysTrustNotebooks;
     }
+
     protected readonly _onDidSetNotebookTrust = new EventEmitter<void>();
     constructor(
         @inject(IDigestStorage) private readonly digestStorage: IDigestStorage,

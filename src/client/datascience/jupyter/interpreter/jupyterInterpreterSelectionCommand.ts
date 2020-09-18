@@ -18,6 +18,7 @@ export class JupyterInterpreterSelectionCommand implements IExtensionSingleActiv
         @inject(ICommandManager) private readonly cmdManager: ICommandManager,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
     ) {}
+
     public async activate(): Promise<void> {
         this.disposables.push(
             this.cmdManager.registerCommand('jupyter.selectJupyterInterpreter', () => {

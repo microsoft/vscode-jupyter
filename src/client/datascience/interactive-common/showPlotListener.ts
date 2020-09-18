@@ -17,6 +17,7 @@ export class ShowPlotListener implements IInteractiveWindowListener {
         message: string;
         payload: any;
     }>();
+
     constructor(@inject(IPlotViewerProvider) private provider: IPlotViewerProvider) {
         noop();
     }
@@ -37,6 +38,7 @@ export class ShowPlotListener implements IInteractiveWindowListener {
                 break;
         }
     }
+
     public dispose(): void | undefined {
         noop();
     }

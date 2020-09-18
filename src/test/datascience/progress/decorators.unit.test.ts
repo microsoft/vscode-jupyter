@@ -24,6 +24,7 @@ suite('DataScience - Progress Reporter Decorator', () => {
         public async doSomething() {
             return this.something.promise;
         }
+
         @reportAction(ReportableAction.NotebookConnect)
         public async doSomethingElse() {
             return this.somethingElse.promise;
@@ -36,6 +37,7 @@ suite('DataScience - Progress Reporter Decorator', () => {
         public async doSomething() {
             return this.something.promise;
         }
+
         @reportAction(ReportableAction.KernelsGetKernelForRemoteConnection)
         public async doSomethingElse() {
             return this.somethingElse.promise;

@@ -127,15 +127,19 @@ export abstract class BaseNotebookModel implements INotebookModel {
     public get onDidDispose() {
         return this._disposed.event;
     }
+
     public get isDisposed() {
         return this._isDisposed === true;
     }
+
     public get isDirty(): boolean {
         return false;
     }
+
     public get changed(): Event<NotebookModelChange> {
         return this._changedEmitter.event;
     }
+
     public get file(): Uri {
         return this._file;
     }
@@ -143,12 +147,15 @@ export abstract class BaseNotebookModel implements INotebookModel {
     public get isUntitled(): boolean {
         return isUntitledFile(this.file);
     }
+
     public get cells(): ICell[] {
         return this._cells;
     }
+
     public get onDidEdit(): Event<NotebookModelChange> {
         return this._editEventEmitter.event;
     }
+
     public get metadata(): INotebookMetadataLive | undefined {
         return this.kernelId && this.notebookJson.metadata
             ? {
@@ -159,6 +166,7 @@ export abstract class BaseNotebookModel implements INotebookModel {
               // tslint:disable-next-line: no-any
               (this.notebookJson.metadata as any);
     }
+
     public get isTrusted() {
         return this._isTrusted;
     }
@@ -181,10 +189,12 @@ export abstract class BaseNotebookModel implements INotebookModel {
         this.ensureNotebookJson();
         this.kernelId = this.getStoredKernelId();
     }
+
     public dispose() {
         this._isDisposed = true;
         this._disposed.fire();
     }
+
     public update(change: NotebookModelChange): void {
         this.handleModelChange(change);
     }
@@ -192,12 +202,15 @@ export abstract class BaseNotebookModel implements INotebookModel {
     public getContent(): string {
         return this.generateNotebookContent();
     }
+
     public trust() {
         this._isTrusted = true;
     }
+
     protected handleUndo(_change: NotebookModelChange): boolean {
         return false;
     }
+
     protected handleRedo(change: NotebookModelChange): boolean {
         let changed = false;
         switch (change.kind) {
@@ -210,6 +223,7 @@ export abstract class BaseNotebookModel implements INotebookModel {
 
         return changed;
     }
+
     protected generateNotebookJson() {
         // Make sure we have some
         this.ensureNotebookJson();
@@ -245,6 +259,7 @@ export abstract class BaseNotebookModel implements INotebookModel {
             this._editEventEmitter.fire(change);
         }
     }
+
     // tslint:disable-next-line: cyclomatic-complexity
     private updateVersionInfo(kernelConnection: KernelConnectionMetadata | undefined): boolean {
         const { changed, kernelId } = updateNotebookMetadata(this.notebookJson.metadata, kernelConnection);
@@ -267,6 +282,7 @@ export abstract class BaseNotebookModel implements INotebookModel {
         const json = this.generateNotebookJson();
         return JSON.stringify(json, null, this.indentAmount);
     }
+
     private getStoredKernelId(): string | undefined {
         // Stored as a list so we don't take up too much space
         const list: KernelIdListEntry[] = this.globalMemento.get<KernelIdListEntry[]>(ActiveKernelIdList, []);
@@ -277,6 +293,7 @@ export abstract class BaseNotebookModel implements INotebookModel {
             return entry?.kernelId;
         }
     }
+
     private setStoredKernelId(id: string | undefined) {
         const list: KernelIdListEntry[] = this.globalMemento.get<KernelIdListEntry[]>(ActiveKernelIdList, []);
         const fileHash = this.crypto.createHash(this._file.toString(), 'string');

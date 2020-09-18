@@ -66,26 +66,32 @@ class DeferredImpl<T> implements Deferred<T> {
             this._reject = rej;
         });
     }
+
     public resolve(_value?: T | PromiseLike<T>) {
         // tslint:disable-next-line:no-any
         this._resolve.apply(this.scope ? this.scope : this, arguments as any);
         this._resolved = true;
     }
+
     // tslint:disable-next-line:no-any
     public reject(_reason?: any) {
         // tslint:disable-next-line:no-any
         this._reject.apply(this.scope ? this.scope : this, arguments as any);
         this._rejected = true;
     }
+
     get promise(): Promise<T> {
         return this._promise;
     }
+
     get resolved(): boolean {
         return this._resolved;
     }
+
     get rejected(): boolean {
         return this._rejected;
     }
+
     get completed(): boolean {
         return this._rejected || this._resolved;
     }

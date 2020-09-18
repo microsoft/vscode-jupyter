@@ -27,9 +27,11 @@ export class MockJupyterNotebook implements INotebook {
     public get connection(): INotebookProviderConnection | undefined {
         return this.providerConnection;
     }
+
     public get identity(): Uri {
         return getDefaultInteractiveIdentity();
     }
+
     public get onSessionStatusChanged(): Event<ServerStatus> {
         if (!this.onStatusChangedEvent) {
             this.onStatusChangedEvent = new EventEmitter<ServerStatus>();
@@ -40,6 +42,7 @@ export class MockJupyterNotebook implements INotebook {
     public get status(): ServerStatus {
         return ServerStatus.Idle;
     }
+
     public get session(): IJupyterSession {
         throw new Error('Method not implemented');
     }
@@ -47,9 +50,11 @@ export class MockJupyterNotebook implements INotebook {
     public get resource(): Resource {
         return Uri.file('foo.py');
     }
+
     public get onKernelInterrupted(): Event<void> {
         return this.kernelInterrupted.event;
     }
+
     public kernelSocket = new Observable<KernelSocketInformation | undefined>();
     public onKernelChanged = new EventEmitter<KernelConnectionMetadata>().event;
     public onDisposed = new EventEmitter<void>().event;
@@ -61,9 +66,11 @@ export class MockJupyterNotebook implements INotebook {
     constructor(private providerConnection: INotebookProviderConnection | undefined) {
         noop();
     }
+
     public registerIOPubListener(_listener: (msg: KernelMessage.IIOPubMessage, requestId: string) => void): void {
         noop();
     }
+
     public getCellHashProvider(): ICellHashProvider | undefined {
         throw new Error('Method not implemented.');
     }
@@ -71,6 +78,7 @@ export class MockJupyterNotebook implements INotebook {
     public clear(_id: string): void {
         noop();
     }
+
     public executeObservable(_code: string, _f: string, _line: number): Observable<ICell[]> {
         throw new Error('Method not implemented');
     }
@@ -86,18 +94,23 @@ export class MockJupyterNotebook implements INotebook {
     ): Promise<INotebookCompletion> {
         throw new Error('Method not implemented');
     }
+
     public execute(_code: string, _f: string, _line: number): Promise<ICell[]> {
         throw new Error('Method not implemented');
     }
+
     public restartKernel(): Promise<void> {
         throw new Error('Method not implemented');
     }
+
     public translateToNotebook(_cells: ICell[]): Promise<JSONObject> {
         throw new Error('Method not implemented');
     }
+
     public waitForIdle(): Promise<void> {
         throw new Error('Method not implemented');
     }
+
     public setLaunchingFile(_file: string): Promise<void> {
         throw new Error('Method not implemented');
     }
@@ -206,12 +219,14 @@ export class MockJupyterNotebook implements INotebook {
 
         return Promise.resolve(shellMessage);
     }
+
     public registerMessageHook(
         _msgId: string,
         _hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>
     ): void {
         noop();
     }
+
     public removeMessageHook(
         _msgId: string,
         _hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>

@@ -204,6 +204,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
     public get onRestartSessionUsed() {
         return this.restartSessionUsedEvent.event;
     }
+
     public getConnInfo(): IJupyterConnection {
         return this.connInfo!;
     }

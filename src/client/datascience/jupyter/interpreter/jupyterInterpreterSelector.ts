@@ -29,6 +29,7 @@ export class JupyterInterpreterSelector {
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(IPathUtils) private readonly pathUtils: IPathUtils
     ) {}
+
     /**
      * Displays interpreter selector and returns the selection.
      *

@@ -53,9 +53,11 @@ export class FakeVSCodeFileSystemAPI {
     public async readFile(uri: Uri): Promise<Uint8Array> {
         return fsextra.readFile(uri.fsPath);
     }
+
     public async writeFile(uri: Uri, content: Uint8Array): Promise<void> {
         return fsextra.writeFile(uri.fsPath, Buffer.from(content));
     }
+
     public async delete(uri: Uri, _options?: { recursive: boolean; useTrash: boolean }): Promise<void> {
         return (
             fsextra
@@ -64,6 +66,7 @@ export class FakeVSCodeFileSystemAPI {
                 .then(() => fsextra.remove(uri.fsPath))
         );
     }
+
     public async stat(uri: Uri): Promise<FileStat> {
         const filename = uri.fsPath;
 
@@ -80,6 +83,7 @@ export class FakeVSCodeFileSystemAPI {
         }
         return convertStat(stat, filetype);
     }
+
     public async readDirectory(uri: Uri): Promise<[string, FileType][]> {
         const names: string[] = await fsextra.readdir(uri.fsPath);
         const promises = names.map((name) => {
@@ -110,9 +114,11 @@ export class FakeVSCodeFileSystemAPI {
         });
         return Promise.all(promises);
     }
+
     public async createDirectory(uri: Uri): Promise<void> {
         return fsextra.mkdirp(uri.fsPath);
     }
+
     public async copy(src: Uri, dest: Uri): Promise<void> {
         const deferred = createDeferred<void>();
         const rs = fsextra
@@ -133,6 +139,7 @@ export class FakeVSCodeFileSystemAPI {
         rs.pipe(ws);
         return deferred.promise;
     }
+
     public async rename(src: Uri, dest: Uri): Promise<void> {
         return fsextra.rename(src.fsPath, dest.fsPath);
     }
@@ -176,6 +183,7 @@ export class IocContainer {
             STANDARD_OUTPUT_CHANNEL
         );
     }
+
     public async dispose(): Promise<void> {
         for (const disposable of this.disposables) {
             if (!disposable) {
@@ -197,6 +205,7 @@ export class IocContainer {
             this.registerFileSystemTypes();
         }
     }
+
     public registerFileSystemTypes() {
         this.serviceManager.addSingleton<IPlatformService>(IPlatformService, PlatformService);
         this.serviceManager.addSingleton<IFileSystem>(
@@ -205,6 +214,7 @@ export class IocContainer {
             this.useVSCodeAPI ? FileSystem : LegacyFileSystem
         );
     }
+
     public registerProcessTypes() {
         processRegisterTypes(this.serviceManager);
         const mockEnvironmentActivationService = mock<IEnvironmentActivationService>();
@@ -218,13 +228,16 @@ export class IocContainer {
             instance(mockEnvironmentActivationService)
         );
     }
+
     public registerVariableTypes() {
         variableRegisterTypes(this.serviceManager);
     }
+
     public registerInterpreterTypes() {
         // This method registers all interpreter types except `IInterpreterAutoSeletionProxyService` & `IEnvironmentActivationService`, as it's already registered in the constructor & registerMockProcessTypes() respectively
         // registerInterpreterTypes(this.serviceManager);
     }
+
     public registerMockProcessTypes() {
         this.serviceManager.addSingleton<IBufferDecoder>(IBufferDecoder, BufferDecoder);
         const processServiceFactory = TypeMoq.Mock.ofType<IProcessServiceFactory>();

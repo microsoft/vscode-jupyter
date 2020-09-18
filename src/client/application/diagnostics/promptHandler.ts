@@ -26,6 +26,7 @@ export class DiagnosticCommandPromptHandlerService implements IDiagnosticHandler
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         this.appShell = serviceContainer.get<IApplicationShell>(IApplicationShell);
     }
+
     public async handle(
         diagnostic: IDiagnostic,
         options: MessageCommandPrompt = { commandPrompts: [] }
@@ -47,6 +48,7 @@ export class DiagnosticCommandPromptHandlerService implements IDiagnosticHandler
             await selectedOption.command.invoke();
         }
     }
+
     private async displayMessage(
         message: string,
         severity: DiagnosticSeverity,

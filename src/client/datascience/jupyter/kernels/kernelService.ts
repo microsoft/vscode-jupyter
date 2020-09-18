@@ -71,6 +71,7 @@ export class KernelService {
         @inject(IDataScienceFileSystem) private readonly fs: IDataScienceFileSystem,
         @inject(IEnvironmentActivationService) private readonly activationHelper: IEnvironmentActivationService
     ) {}
+
     /**
      * Finds a kernel spec from a given session or jupyter process that matches a given spec.
      *
@@ -85,6 +86,7 @@ export class KernelService {
         sessionManager?: IJupyterSessionManager,
         cancelToken?: CancellationToken
     ): Promise<IJupyterKernelSpec | undefined>;
+
     /**
      * Finds a kernel spec from a given session or jupyter process that matches a given interpreter.
      *
@@ -99,6 +101,7 @@ export class KernelService {
         sessionManager?: IJupyterSessionManager | undefined,
         cancelToken?: CancellationToken
     ): Promise<IJupyterKernelSpec | undefined>;
+
     public async findMatchingKernelSpec(
         option: nbformat.IKernelspecMetadata | PythonEnvironment,
         sessionManager: IJupyterSessionManager | undefined,
@@ -246,6 +249,7 @@ export class KernelService {
             }
         }
     }
+
     public async searchAndRegisterKernel(
         interpreter: PythonEnvironment,
         disableUI?: boolean,
@@ -389,6 +393,7 @@ export class KernelService {
         );
         return kernel;
     }
+
     public async updateKernelEnvironment(
         interpreter: PythonEnvironment | undefined,
         kernel: IJupyterKernelSpec,
@@ -460,6 +465,7 @@ export class KernelService {
             specedKernel.metadata = specModel.metadata;
         }
     }
+
     /**
      * Gets a list of all kernel specs.
      *
@@ -494,6 +500,7 @@ export class KernelService {
 
         return result;
     }
+
     /**
      * Not all characters are allowed in a kernel name.
      * This method will generate a name for a kernel based on display name and path.

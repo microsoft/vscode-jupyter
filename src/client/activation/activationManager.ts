@@ -44,6 +44,7 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
             this.docOpenedHandler = undefined;
         }
     }
+
     public async activate(): Promise<void> {
         await this.initialize();
         // Activate all activation services together.
@@ -52,6 +53,7 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
             this.activateWorkspace(this.activeResourceService.getActiveResource())
         ]);
     }
+
     @traceDecorators.error('Failed to activate a workspace')
     public async activateWorkspace(resource: Resource) {
         const key = this.getWorkspaceKey(resource);
@@ -69,10 +71,12 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
             await Promise.all(this.activationServices.map((item) => item.activate(resource)));
         }
     }
+
     public async initialize() {
         this.addHandlers();
         this.addRemoveDocOpenedHandlers();
     }
+
     public onDocOpened(doc: TextDocument) {
         if (doc.languageId !== PYTHON_LANGUAGE) {
             return;
@@ -92,6 +96,7 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
     protected addHandlers() {
         this.disposables.push(this.workspaceService.onDidChangeWorkspaceFolders(this.onWorkspaceFoldersChanged, this));
     }
+
     protected addRemoveDocOpenedHandlers() {
         if (this.hasMultipleWorkspaces()) {
             if (!this.docOpenedHandler) {
@@ -104,6 +109,7 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
             this.docOpenedHandler = undefined;
         }
     }
+
     protected onWorkspaceFoldersChanged() {
         //If an activated workspace folder was removed, delete its key
         const workspaceKeys = this.workspaceService.workspaceFolders!.map((workspaceFolder) =>
@@ -118,9 +124,11 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
         }
         this.addRemoveDocOpenedHandlers();
     }
+
     protected hasMultipleWorkspaces() {
         return this.workspaceService.hasWorkspaceFolders && this.workspaceService.workspaceFolders!.length > 1;
     }
+
     protected getWorkspaceKey(resource: Resource) {
         return this.workspaceService.getWorkspaceFolderIdentifier(resource, '');
     }

@@ -43,9 +43,11 @@ export namespace vscMock {
             this.event = this.add.bind(this);
             this.emitter = new NodeEventEmitter();
         }
+
         public fire(data?: T): void {
             this.emitter.emit('evt', data);
         }
+
         public dispose(): void {
             this.emitter.removeAllListeners();
         }
@@ -69,6 +71,7 @@ export namespace vscMock {
             // @ts-ignore
             this.onCancellationRequested = this.add.bind(this);
         }
+
         public cancel() {
             this.isCancellationRequested = true;
             this.fire();
@@ -80,9 +83,11 @@ export namespace vscMock {
         constructor() {
             this.token = new CancellationToken();
         }
+
         public cancel(): void {
             this.token.cancel();
         }
+
         public dispose(): void {
             this.token.dispose();
         }
@@ -185,6 +190,7 @@ export namespace vscMock {
         public append(parts: string): CodeActionKind {
             return new CodeActionKind(`${this._value}.${parts}`);
         }
+
         public intersects(other: CodeActionKind): boolean {
             return this._value.includes(other._value) || other._value.includes(this._value);
         }

@@ -219,6 +219,7 @@ class IMonacoActionMapping {
     public [InteractiveWindowMessages.ProvideCompletionItemsResponse]: MonacoReducerFunc<
         IProvideCompletionItemsResponse
     >;
+
     public [InteractiveWindowMessages.ProvideSignatureHelpResponse]: MonacoReducerFunc<IProvideSignatureHelpResponse>;
     public [InteractiveWindowMessages.ProvideHoverResponse]: MonacoReducerFunc<IProvideHoverResponse>;
     public [InteractiveWindowMessages.ResolveCompletionItemResponse]: MonacoReducerFunc<IResolveCompletionItemResponse>;

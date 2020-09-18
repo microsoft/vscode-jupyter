@@ -78,6 +78,7 @@ class TestRunner {
 
         await this.launchTest(env);
     }
+
     private async runPerfTest(devLogFiles: string[], releaseLogFiles: string[], languageServerLogFiles: string[]) {
         const env: Record<string, {}> = {
             ACTIVATION_TIMES_DEV_LOG_FILE_PATHS: JSON.stringify(devLogFiles),

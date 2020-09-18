@@ -557,12 +557,14 @@ export class IInteractiveWindowMapping {
         parentId: string;
         msg: KernelMessage.IIOPubMessage;
     };
+
     public [IPyWidgetMessages.IPyWidgets_MessageHookResult]: {
         requestId: string;
         parentId: string;
         msgType: string;
         result: boolean;
     };
+
     public [IPyWidgetMessages.IPyWidgets_mirror_execute]: { id: string; msg: KernelMessage.IExecuteRequestMsg };
     public [InteractiveWindowMessages.StartCell]: ICell;
     public [InteractiveWindowMessages.ForceVariableRefresh]: never | undefined;
@@ -645,6 +647,7 @@ export class IInteractiveWindowMapping {
         // tslint:disable-next-line: no-any
         payload: BaseReduxActionPayload<any>;
     };
+
     public [InteractiveWindowMessages.NativeCommand]: INativeCommand;
     public [InteractiveWindowMessages.VariablesComplete]: never | undefined;
     public [InteractiveWindowMessages.NotebookRunAllCells]: never | undefined;

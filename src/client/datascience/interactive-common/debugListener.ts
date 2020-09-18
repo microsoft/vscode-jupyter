@@ -18,6 +18,7 @@ export class DebugListener implements IInteractiveWindowListener {
         message: string;
         payload: any;
     }>();
+
     constructor(
         @inject(IJupyterDebugService)
         @named(Identifiers.MULTIPLEXING_DEBUGSERVICE)
@@ -36,6 +37,7 @@ export class DebugListener implements IInteractiveWindowListener {
                 break;
         }
     }
+
     public dispose(): void | undefined {
         noop();
     }

@@ -44,6 +44,7 @@ export class TestRecorder {
         }
         this.initialize();
     }
+
     public async end() {
         if (this.mode !== 'record') {
             return;
@@ -53,6 +54,7 @@ export class TestRecorder {
             encoding: 'utf8'
         });
     }
+
     private initialize() {
         const disposable = this.webServer.onDidReceiveMessage(this.onDidReceiveMessage, this);
         const oldDispose = this.webServer.dispose.bind(this.webServer);
@@ -86,6 +88,7 @@ export class TestRecorder {
             this.sendMessageToUIUntilNextUIRequest();
         }
     }
+
     private sendMessageToUIUntilNextUIRequest() {
         // Now send all messages till the next request.
         const nextRequestIndex = this.messages.findIndex((item) => item.type === 'fromUI');
@@ -103,6 +106,7 @@ export class TestRecorder {
         this.originalPostMessage(messagesToSend.payload);
         setTimeout(this.sendMessageToUIUntilNextUIRequest.bind(this), 1);
     }
+
     private postMessage(message: any): void {
         const messageToLog = { ...message };
         if (messageToLog.type === InteractiveWindowMessages.LoadOnigasmAssemblyResponse) {

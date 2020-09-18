@@ -14,15 +14,19 @@ export class CurrentProcess implements ICurrentProcess {
         process.on(event as any, listener as any);
         return process as any;
     };
+
     public get env(): EnvironmentVariables {
         return (process.env as any) as EnvironmentVariables;
     }
+
     public get argv(): string[] {
         return process.argv;
     }
+
     public get stdout(): NodeJS.WriteStream {
         return process.stdout;
     }
+
     public get stdin(): NodeJS.ReadStream {
         return process.stdin;
     }

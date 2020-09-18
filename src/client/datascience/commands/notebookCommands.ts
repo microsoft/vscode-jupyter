@@ -28,6 +28,7 @@ export class NotebookCommands implements IDisposable {
         @inject(KernelSelector) private readonly kernelSelector: KernelSelector,
         @inject(KernelSwitcher) private readonly kernelSwitcher: KernelSwitcher
     ) {}
+
     public register() {
         this.disposables.push(
             this.commandManager.registerCommand(Commands.SwitchJupyterKernel, this.switchKernel, this),
@@ -36,6 +37,7 @@ export class NotebookCommands implements IDisposable {
             this.commandManager.registerCommand(Commands.NotebookEditorExpandAllCells, this.expandAll, this)
         );
     }
+
     public dispose() {
         this.disposables.forEach((d) => d.dispose());
     }

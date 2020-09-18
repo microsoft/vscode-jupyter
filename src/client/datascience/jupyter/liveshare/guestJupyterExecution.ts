@@ -74,9 +74,11 @@ export class GuestJupyterExecution extends LiveShareParticipantGuest(
     public async isNotebookSupported(cancelToken?: CancellationToken): Promise<boolean> {
         return this.checkSupported(LiveShareCommands.isNotebookSupported, cancelToken);
     }
+
     public isImportSupported(cancelToken?: CancellationToken): Promise<boolean> {
         return this.checkSupported(LiveShareCommands.isImportSupported, cancelToken);
     }
+
     public isSpawnSupported(_cancelToken?: CancellationToken): Promise<boolean> {
         return Promise.resolve(false);
     }

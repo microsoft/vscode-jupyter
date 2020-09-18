@@ -18,6 +18,7 @@ export class PreWarmActivatedJupyterEnvironmentVariables implements IExtensionSi
         @inject(JupyterInterpreterService) private readonly jupyterInterpreterService: JupyterInterpreterService,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
     ) {}
+
     public async activate(): Promise<void> {
         this.disposables.push(
             this.jupyterInterpreterService.onDidChangeInterpreter(() => this.preWarmInterpreterVariables().catch(noop))

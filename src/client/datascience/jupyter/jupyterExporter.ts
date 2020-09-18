@@ -89,6 +89,7 @@ export class JupyterExporter implements INotebookExporter {
             this.applicationShell.showInformationMessage(localize.DataScience.exportDialogFailed().format(exc));
         }
     }
+
     public async translateToNotebook(
         cells: ICell[],
         changeDirectory?: string,

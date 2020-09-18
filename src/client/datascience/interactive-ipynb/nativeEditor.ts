@@ -94,6 +94,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     public get onDidChangeViewState(): Event<void> {
         return this._onDidChangeViewState.event;
     }
+
     public get notebookExtensibility(): INotebookExtensibility {
         return this.nbExtensibility;
     }
@@ -128,6 +129,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     public get modified(): Event<INotebookEditor> {
         return this.modifiedEvent.event;
     }
+
     public get saved(): Event<INotebookEditor> {
         return this.savedEvent.event;
     }
@@ -135,9 +137,11 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     public get isDirty(): boolean {
         return this.model ? this.model.isDirty : false;
     }
+
     public get model(): Readonly<INotebookModel> {
         return this._model;
     }
+
     public readonly type: 'old' | 'custom' = 'custom';
     protected savedEvent: EventEmitter<INotebookEditor> = new EventEmitter<INotebookEditor>();
     protected closedEvent: EventEmitter<INotebookEditor> = new EventEmitter<INotebookEditor>();
@@ -247,6 +251,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         await this.loadPromise;
         return super.show(preserveFocus);
     }
+
     public dispose(): Promise<void> {
         super.dispose();
         this.model?.dispose(); // NOSONAR
@@ -364,6 +369,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     public expandAllCells(): void {
         throw Error('Not implemented Exception');
     }
+
     public collapseAllCells(): void {
         throw Error('Not implemented Exception');
     }
@@ -618,6 +624,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             }
         }
     }
+
     private async monitorChangesToTrust() {
         if (this.previouslyNotTrusted && this.model?.isTrusted) {
             this.previouslyNotTrusted = false;
@@ -625,6 +632,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             this.postMessage(InteractiveWindowMessages.TrustNotebookComplete).ignoreErrors();
         }
     }
+
     private renameVariableExplorerHeights(name: string, updatedName: string) {
         // Updates the workspace storage to reflect the updated name of the notebook
         // should be called if the name of the notebook changes

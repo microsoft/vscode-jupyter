@@ -52,6 +52,7 @@ function TestNativeEditorProviderMixin<T extends ClassType<NativeEditorProvider>
         constructor(...rest: any[]) {
             super(...rest);
         }
+
         public getMountedWebView(window: INotebookEditor | undefined): IMountedWebView {
             const key = window ? window.file.toString() : this.editors[0].file.toString();
             if (!this.windowToMountMap.has(key)) {
@@ -59,6 +60,7 @@ function TestNativeEditorProviderMixin<T extends ClassType<NativeEditorProvider>
             }
             return this.windowToMountMap.get(key)!;
         }
+
         public waitForMessage(file: Uri | undefined, message: string, options?: WaitForMessageOptions): Promise<void> {
             // We may already have this editor. Check
             const key = file ? file.toString() : undefined;
@@ -114,6 +116,7 @@ function TestNativeEditorProviderMixin<T extends ClassType<NativeEditorProvider>
 
             return result;
         }
+
         private get ioc(): DataScienceIocContainer | undefined {
             return this.serviceContainer.get<DataScienceIocContainer>(DataScienceIocContainer);
         }

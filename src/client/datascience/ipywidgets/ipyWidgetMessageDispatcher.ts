@@ -33,6 +33,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
     public get postMessage(): Event<IPyWidgetMessage> {
         return this._postMessageEmitter.event;
     }
+
     private readonly commTargetsRegistered = new Set<string>();
     private jupyterLab?: typeof import('@jupyterlab/services');
     private pendingTargetNames = new Set<string>();
@@ -83,6 +84,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         const jupyterLabSerialize = require('@jupyterlab/services/lib/kernel/serialize') as typeof import('@jupyterlab/services/lib/kernel/serialize'); // NOSONAR
         this.deserialize = jupyterLabSerialize.deserialize;
     }
+
     public dispose() {
         // Send overhead telemetry for our message hooking
         this.sendOverheadTelemetry();
@@ -137,10 +139,12 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
                 break;
         }
     }
+
     public sendRawPayloadToKernelSocket(payload?: any) {
         this.pendingMessages.push(payload);
         this.sendPendingMessages();
     }
+
     public async registerCommTarget(targetName: string) {
         this.pendingTargetNames.add(targetName);
         await this.initialize();
@@ -160,12 +164,14 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
             this.registerCommTargets(notebook);
         }
     }
+
     protected raisePostMessage<M extends IInteractiveWindowMapping, T extends keyof IInteractiveWindowMapping>(
         message: IPyWidgetMessages,
         payload: M[T]
     ) {
         this._postMessageEmitter.fire({ message, payload });
     }
+
     private subscribeToKernelSocket(notebook: INotebook) {
         if (this.subscribedToKernelSocket) {
             return;
@@ -207,6 +213,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
             this.sendPendingMessages();
         });
     }
+
     /**
      * Pass this information to UI layer so it can create a dummy kernel with same information.
      * Information includes kernel connection info (client id, user name, model, etc).
@@ -220,6 +227,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
             this.raisePostMessage(IPyWidgetMessages.IPyWidgets_kernelOptions, this.kernelSocketInfo.options);
         }
     }
+
     private async mirrorSend(data: any, _cb?: (err?: Error) => void): Promise<void> {
         // If this is shell control message, mirror to the other side. This is how
         // we get the kernel in the UI to have the same set of futures we have on this side
@@ -336,6 +344,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
             }
         }
     }
+
     private onKernelSocketResponse(payload: { id: string }) {
         const pending = this.waitingMessageIds.get(payload.id);
         if (pending) {
@@ -345,6 +354,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
             pending.resultPromise.resolve();
         }
     }
+
     private sendPendingMessages() {
         if (!this.notebook || !this.kernelSocketInfo) {
             return;
@@ -398,6 +408,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         }
         return this.notebook;
     }
+
     /**
      * When a kernel restarts, we need to ensure the comm targets are re-registered.
      * This must happen before anything else is processed.

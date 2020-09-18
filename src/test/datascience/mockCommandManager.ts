@@ -14,6 +14,7 @@ export class MockCommandManager implements ICommandManager {
     public dispose() {
         this.commands.clear();
     }
+
     public registerCommand<
         E extends keyof ICommandNameArgumentTypeMapping,
         U extends ICommandNameArgumentTypeMapping[E]
@@ -33,6 +34,7 @@ export class MockCommandManager implements ICommandManager {
     ): Disposable {
         throw new Error('Method not implemented.');
     }
+
     public executeCommand<
         T,
         E extends keyof ICommandNameArgumentTypeMapping,

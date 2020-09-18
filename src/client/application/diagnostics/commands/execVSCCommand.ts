@@ -19,6 +19,7 @@ export class ExecuteVSCCommand extends BaseDiagnosticCommand {
     ) {
         super(diagnostic);
     }
+
     public async invoke(): Promise<void> {
         sendTelemetryEvent(EventName.DIAGNOSTICS_ACTION, undefined, { commandName: this.commandName });
         const cmdManager = this.serviceContainer.get<ICommandManager>(ICommandManager);

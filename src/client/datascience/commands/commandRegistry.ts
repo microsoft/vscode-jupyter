@@ -50,6 +50,7 @@ export class CommandRegistry implements IDisposable {
         this.disposables.push(this.serverSelectedCommand);
         this.disposables.push(this.notebookCommands);
     }
+
     public register() {
         this.commandLineCommand.register();
         this.serverSelectedCommand.register();
@@ -103,9 +104,11 @@ export class CommandRegistry implements IDisposable {
             });
         }
     }
+
     public dispose() {
         this.disposables.forEach((d) => d.dispose());
     }
+
     private registerCommand<
         E extends keyof ICommandNameArgumentTypeMapping,
         U extends ICommandNameArgumentTypeMapping[E]
@@ -438,6 +441,7 @@ export class CommandRegistry implements IDisposable {
             });
         }
     }
+
     // Get our matching code watcher for the active document
     private getCurrentCodeWatcher(): ICodeWatcher | undefined {
         const activeEditor = this.documentManager.activeTextEditor;

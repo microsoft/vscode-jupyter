@@ -33,12 +33,15 @@ export class NotebookProvider implements INotebookProvider {
     public get activeNotebooks() {
         return [...this.notebooks.values()];
     }
+
     public get onSessionStatusChanged() {
         return this._onSessionStatusChanged.event;
     }
+
     public get onPotentialKernelChanged() {
         return this._potentialKernelChanged.event;
     }
+
     constructor(
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IRawNotebookProvider) private readonly rawNotebookProvider: IRawNotebookProvider,
@@ -50,6 +53,7 @@ export class NotebookProvider implements INotebookProvider {
             .then((b) => (this._type = b ? 'raw' : 'jupyter'))
             .ignoreErrors();
     }
+
     public get onNotebookCreated() {
         return this._notebookCreated.event;
     }
@@ -85,6 +89,7 @@ export class NotebookProvider implements INotebookProvider {
             });
         }
     }
+
     public disposeAssociatedNotebook(options: { identity: Uri }) {
         const nbPromise = this.notebooks.get(options.identity.toString());
         if (!nbPromise) {
@@ -95,6 +100,7 @@ export class NotebookProvider implements INotebookProvider {
             .then((nb) => nb.dispose())
             .catch((ex) => traceWarning('Failed to dispose notebook in disposeAssociatedNotebook', ex));
     }
+
     public async getOrCreateNotebook(options: GetNotebookOptions): Promise<INotebook | undefined> {
         const rawKernel = await this.rawNotebookProvider.supported();
 

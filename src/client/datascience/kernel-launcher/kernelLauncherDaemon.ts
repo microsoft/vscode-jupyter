@@ -68,6 +68,7 @@ export class PythonKernelLauncherDaemon implements IDisposable {
             return { observableOutput, daemon };
         }
     }
+
     public dispose() {
         while (this.processesToDispose.length) {
             try {

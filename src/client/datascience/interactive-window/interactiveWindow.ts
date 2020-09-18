@@ -69,9 +69,11 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     public get onDidChangeViewState(): Event<void> {
         return this._onDidChangeViewState.event;
     }
+
     public get visible(): boolean {
         return this.viewState.visible;
     }
+
     public get active(): boolean {
         return this.viewState.active;
     }
@@ -79,15 +81,19 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     public get closed(): Event<IInteractiveWindow> {
         return this.closedEvent.event;
     }
+
     public get owner(): Resource {
         return this._owner;
     }
+
     public get submitters(): Uri[] {
         return this._submitters;
     }
+
     public get identity(): Uri {
         return this._identity;
     }
+
     private _onDidChangeViewState = new EventEmitter<void>();
     private closedEvent: EventEmitter<IInteractiveWindow> = new EventEmitter<IInteractiveWindow>();
     private waitingForExportCells: boolean = false;
@@ -341,6 +347,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         }
         return undefined;
     }
+
     protected async addSysInfo(reason: SysInfoReason): Promise<void> {
         await super.addSysInfo(reason);
 
@@ -352,6 +359,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             this.postMessage(InteractiveWindowMessages.LoadAllCells, { cells: [] }).ignoreErrors();
         }
     }
+
     protected async onViewStateChanged(args: WebViewViewChangeEventArgs) {
         super.onViewStateChanged(args);
         this._onDidChangeViewState.fire();
@@ -423,6 +431,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     protected async closeBecauseOfFailure(_exc: Error): Promise<void> {
         this.dispose();
     }
+
     protected ensureConnectionAndNotebook(): Promise<void> {
         // Keep track of users who have used interactive window in a worksapce folder.
         // To be used if/when changing workflows related to startup of jupyter.

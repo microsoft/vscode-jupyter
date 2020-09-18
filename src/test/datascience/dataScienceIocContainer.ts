@@ -319,6 +319,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     public get kernelService() {
         return this.kernelServiceMock;
     }
+
     private static jupyterInterpreters: PythonEnvironment[] = [];
     public applicationShell!: ApplicationShell;
     // tslint:disable-next-line:no-any
@@ -330,6 +331,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         name: string;
         value: boolean;
     }>();
+
     private jupyterMock: MockJupyterManagerFactory | undefined;
     private asyncRegistry: AsyncDisposableRegistry;
     private configChangeEvent = new EventEmitter<ConfigurationChangeEvent>();
@@ -342,6 +344,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         sysPrefix: 'Python',
         displayName: 'Python'
     };
+
     private workingPython2: PythonEnvironment = {
         path: '/foo/baz/python.exe',
         version: new SemVer('3.6.7-final'),
@@ -883,6 +886,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             JupyterUriProviderRegistration
         );
     }
+
     public setFileContents(uri: Uri, contents: string) {
         const fileSystem = this.serviceManager.get<IDataScienceFileSystem>(IDataScienceFileSystem) as MockFileSystem;
         fileSystem.addFileContents(uri.fsPath, contents);
@@ -1064,6 +1068,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         panel.attach(options);
         return panel;
     }
+
     private forceSettingsChanged(resource: Resource, newPath: string, partial: Partial<IJupyterSettings>) {
         // tslint:disable-next-line: no-suspicious-comment
         // TODO: Python path will not be updated by this code so tests are unlikely to pass
@@ -1149,14 +1154,17 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             public onDidChange(_listener: (e: Uri) => any, _thisArgs?: any, _disposables?: Disposable[]): Disposable {
                 return { dispose: noop };
             }
+
             //tslint:disable-next-line:no-any
             public onDidDelete(_listener: (e: Uri) => any, _thisArgs?: any, _disposables?: Disposable[]): Disposable {
                 return { dispose: noop };
             }
+
             //tslint:disable-next-line:no-any
             public onDidCreate(_listener: (e: Uri) => any, _thisArgs?: any, _disposables?: Disposable[]): Disposable {
                 return { dispose: noop };
             }
+
             public dispose() {
                 noop();
             }

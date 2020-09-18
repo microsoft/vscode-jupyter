@@ -21,6 +21,7 @@ export class GatherLogger implements IGatherLogger {
     public dispose() {
         noop();
     }
+
     public onKernelRestarted() {
         noop();
     }

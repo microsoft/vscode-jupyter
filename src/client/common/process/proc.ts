@@ -25,6 +25,7 @@ export class ProcessService extends EventEmitter implements IProcessService {
     constructor(private readonly decoder: IBufferDecoder, private readonly env?: EnvironmentVariables) {
         super();
     }
+
     public static isAlive(pid: number): boolean {
         try {
             process.kill(pid, 0);
@@ -33,6 +34,7 @@ export class ProcessService extends EventEmitter implements IProcessService {
             return false;
         }
     }
+
     public static kill(pid: number): void {
         try {
             if (process.platform === 'win32') {
@@ -45,6 +47,7 @@ export class ProcessService extends EventEmitter implements IProcessService {
             // Ignore.
         }
     }
+
     public dispose() {
         this.removeAllListeners();
         this.processesToKill.forEach((p) => {
@@ -130,6 +133,7 @@ export class ProcessService extends EventEmitter implements IProcessService {
             dispose: disposable.dispose
         };
     }
+
     public exec(file: string, args: string[], options: SpawnOptions = {}): Promise<ExecutionResult<string>> {
         const spawnOptions = this.getDefaultOptions(options);
         const encoding = spawnOptions.encoding ? spawnOptions.encoding : 'utf8';

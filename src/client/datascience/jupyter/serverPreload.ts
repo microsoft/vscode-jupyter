@@ -26,6 +26,7 @@ export class ServerPreload implements IExtensionSingleActivationService {
         this.notebookEditorProvider.onDidOpenNotebookEditor(this.onDidOpenNotebook.bind(this));
         this.interactiveProvider.onDidChangeActiveInteractiveWindow(this.onDidOpenOrCloseInteractive.bind(this));
     }
+
     public activate(): Promise<void> {
         // This is the list of things that should cause us to start a local server
         // 1) Notebook is opened
@@ -44,6 +45,7 @@ export class ServerPreload implements IExtensionSingleActivationService {
             this.createServerIfNecessary().ignoreErrors();
         }
     }
+
     private shouldAutoStartStartServer(lastTime?: Date) {
         if (!lastTime) {
             return false;

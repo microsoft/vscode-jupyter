@@ -33,6 +33,7 @@ export class NativeEditorRunByLineListener
         message: string;
         payload: any;
     }>();
+
     private currentCellBeingRun: ICell | undefined;
 
     constructor(
@@ -88,6 +89,7 @@ export class NativeEditorRunByLineListener
                 break;
         }
     }
+
     public dispose(): void | undefined {
         noop();
     }

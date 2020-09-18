@@ -27,14 +27,17 @@ export class TrustCommandHandler implements IExtensionSingleActivationService {
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
     ) {}
+
     public async activate(): Promise<void> {
         this.activateInBackground().ignoreErrors();
     }
+
     public async activateInBackground(): Promise<void> {
         const context = new ContextKey('jupyter.trustfeatureenabled', this.commandManager);
         context.set(true).ignoreErrors();
         this.disposables.push(this.commandManager.registerCommand(Commands.TrustNotebook, this.onTrustNotebook, this));
     }
+
     @swallowExceptions('Trusting notebook')
     private async onTrustNotebook(uri?: Uri) {
         uri = uri ?? this.editorProvider.activeEditor?.file;

@@ -298,6 +298,7 @@ suite('DataScience - Native Editor Storage', () => {
                 listener.onMessage(InteractiveWindowMessages.Started, undefined);
                 return true;
             }
+
             public toString() {
                 return '';
             }

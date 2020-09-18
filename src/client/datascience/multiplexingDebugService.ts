@@ -52,6 +52,7 @@ export class MultiplexingDebugService implements IJupyterDebugService {
             jupyterDebugService.onDidReceiveDebugSessionCustomEvent(this.gotCustomEvent.bind(this))
         );
     }
+
     public get activeDebugSession(): DebugSession | undefined {
         return this.activeService.activeDebugSession;
     }
@@ -59,41 +60,52 @@ export class MultiplexingDebugService implements IJupyterDebugService {
     public get activeDebugConsole(): DebugConsole {
         return this.activeService.activeDebugConsole;
     }
+
     public get breakpoints(): Breakpoint[] {
         return this.activeService.breakpoints;
     }
+
     public get onDidChangeActiveDebugSession(): Event<DebugSession | undefined> {
         return this.sessionChangedEvent.event;
     }
+
     public get onDidStartDebugSession(): Event<DebugSession> {
         return this.sessionStartedEvent.event;
     }
+
     public get onDidReceiveDebugSessionCustomEvent(): Event<DebugSessionCustomEvent> {
         return this.sessionCustomEvent.event;
     }
+
     public get onDidTerminateDebugSession(): Event<DebugSession> {
         return this.sessionTerminatedEvent.event;
     }
+
     public get onDidChangeBreakpoints(): Event<BreakpointsChangeEvent> {
         return this.activeService.onDidChangeBreakpoints;
     }
+
     public get onBreakpointHit(): Event<void> {
         return this.jupyterDebugService.onBreakpointHit;
     }
+
     public startRunByLine(config: DebugConfiguration): Thenable<boolean> {
         this.lastStartedService = this.jupyterDebugService;
         return this.jupyterDebugService.startRunByLine(config);
     }
+
     public registerDebugConfigurationProvider(debugType: string, provider: DebugConfigurationProvider): Disposable {
         const d1 = this.vscodeDebugService.registerDebugConfigurationProvider(debugType, provider);
         const d2 = this.jupyterDebugService.registerDebugConfigurationProvider(debugType, provider);
         return this.combineDisposables(d1, d2);
     }
+
     public registerDebugAdapterTrackerFactory(debugType: string, factory: DebugAdapterTrackerFactory): Disposable {
         const d1 = this.vscodeDebugService.registerDebugAdapterTrackerFactory(debugType, factory);
         const d2 = this.jupyterDebugService.registerDebugAdapterTrackerFactory(debugType, factory);
         return this.combineDisposables(d1, d2);
     }
+
     public startDebugging(
         folder: WorkspaceFolder | undefined,
         nameOrConfiguration: string | DebugConfiguration,
@@ -102,9 +114,11 @@ export class MultiplexingDebugService implements IJupyterDebugService {
         this.lastStartedService = this.vscodeDebugService;
         return this.vscodeDebugService.startDebugging(folder, nameOrConfiguration, parentSession);
     }
+
     public addBreakpoints(breakpoints: Breakpoint[]): void {
         return this.activeService.addBreakpoints(breakpoints);
     }
+
     public removeBreakpoints(breakpoints: Breakpoint[]): void {
         return this.activeService.removeBreakpoints(breakpoints);
     }
@@ -115,18 +129,21 @@ export class MultiplexingDebugService implements IJupyterDebugService {
         }
         throw new Error('Requesting jupyter specific stack when not debugging.');
     }
+
     public step(): Promise<void> {
         if (this.lastStartedService === this.jupyterDebugService) {
             return this.jupyterDebugService.step();
         }
         throw new Error('Requesting jupyter specific step when not debugging.');
     }
+
     public continue(): Promise<void> {
         if (this.lastStartedService === this.jupyterDebugService) {
             return this.jupyterDebugService.continue();
         }
         throw new Error('Requesting jupyter specific step when not debugging.');
     }
+
     public requestVariables(): Promise<void> {
         if (this.lastStartedService === this.jupyterDebugService) {
             return this.jupyterDebugService.requestVariables();

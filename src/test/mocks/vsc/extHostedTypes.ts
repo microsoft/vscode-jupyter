@@ -492,6 +492,7 @@ export namespace vscMockExtHostedTypes {
             ret.newEol = eol;
             return ret;
         }
+
         // @ts-ignore
         protected _range: Range;
         // @ts-ignore
@@ -599,9 +600,11 @@ export namespace vscMockExtHostedTypes {
         createFile(_uri: vscode.Uri, _options?: { overwrite?: boolean; ignoreIfExists?: boolean }): void {
             throw new Error('Method not implemented.');
         }
+
         deleteFile(_uri: vscode.Uri, _options?: { recursive?: boolean; ignoreIfNotExists?: boolean }): void {
             throw new Error('Method not implemented.');
         }
+
         renameFile(
             _oldUri: vscode.Uri,
             _newUri: vscode.Uri,
@@ -1544,6 +1547,7 @@ export namespace vscMockExtHostedTypes {
             args: (string | vscode.ShellQuotedString)[],
             options?: vscode.ShellExecutionOptions
         );
+
         constructor(
             arg0: string | vscode.ShellQuotedString,
             arg1?: vscode.ShellExecutionOptions | (string | vscode.ShellQuotedString)[],
@@ -1664,6 +1668,7 @@ export namespace vscMockExtHostedTypes {
             execution?: ProcessExecution | ShellExecution,
             problemMatchers?: string | string[]
         );
+
         constructor(
             definition: vscode.TaskDefinition,
             scope: vscode.TaskScope.Global | vscode.TaskScope.Workspace | vscode.WorkspaceFolder,
@@ -1672,6 +1677,7 @@ export namespace vscMockExtHostedTypes {
             execution?: ProcessExecution | ShellExecution,
             problemMatchers?: string | string[]
         );
+
         constructor(
             definition: vscode.TaskDefinition,
             arg2: string | (vscode.TaskScope.Global | vscode.TaskScope.Workspace) | vscode.WorkspaceFolder,
@@ -2066,18 +2072,23 @@ export namespace vscMockExtHostedTypes {
         static FileExists(messageOrUri?: string | vscUri.URI): FileSystemError {
             return new FileSystemError(messageOrUri, 'EntryExists', FileSystemError.FileExists);
         }
+
         static FileNotFound(messageOrUri?: string | vscUri.URI): FileSystemError {
             return new FileSystemError(messageOrUri, 'EntryNotFound', FileSystemError.FileNotFound);
         }
+
         static FileNotADirectory(messageOrUri?: string | vscUri.URI): FileSystemError {
             return new FileSystemError(messageOrUri, 'EntryNotADirectory', FileSystemError.FileNotADirectory);
         }
+
         static FileIsADirectory(messageOrUri?: string | vscUri.URI): FileSystemError {
             return new FileSystemError(messageOrUri, 'EntryIsADirectory', FileSystemError.FileIsADirectory);
         }
+
         static NoPermissions(messageOrUri?: string | vscUri.URI): FileSystemError {
             return new FileSystemError(messageOrUri, 'NoPermissions', FileSystemError.NoPermissions);
         }
+
         static Unavailable(messageOrUri?: string | vscUri.URI): FileSystemError {
             return new FileSystemError(messageOrUri, 'Unavailable', FileSystemError.Unavailable);
         }
@@ -2097,6 +2108,7 @@ export namespace vscMockExtHostedTypes {
                 Error.captureStackTrace(this, terminator);
             }
         }
+
         public get code(): string {
             return '';
         }

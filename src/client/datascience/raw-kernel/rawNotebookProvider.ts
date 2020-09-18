@@ -31,6 +31,7 @@ export class RawConnection implements IRawConnection {
     public dispose() {
         noop();
     }
+
     public get disconnected(): Event<number> {
         return this.eventEmitter.event;
     }
@@ -40,6 +41,7 @@ export class RawNotebookProviderBase implements IRawNotebookProvider {
     public get id(): string {
         return this._id;
     }
+
     // Keep track of the notebooks that we have provided
     private notebooks = new Map<string, Promise<INotebook>>();
     private rawConnection: IRawConnection | undefined;

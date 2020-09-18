@@ -45,54 +45,71 @@ export class RawKernel implements Kernel.IKernel {
     public get terminated() {
         return this.realKernel.terminated as any; // NOSONAR
     }
+
     public get statusChanged() {
         return this.realKernel.statusChanged as any; // NOSONAR
     }
+
     public get iopubMessage() {
         return this.realKernel.iopubMessage as any; // NOSONAR
     }
+
     public get unhandledMessage() {
         return this.realKernel.unhandledMessage as any; // NOSONAR
     }
+
     public get anyMessage() {
         return this.realKernel.anyMessage as any; // NOSONAR
     }
+
     public get serverSettings(): ServerConnection.ISettings {
         return this.realKernel.serverSettings;
     }
+
     public get id(): string {
         return this.realKernel.id;
     }
+
     public get name(): string {
         return this.realKernel.name;
     }
+
     public get model(): Kernel.IModel {
         return this.realKernel.model;
     }
+
     public get username(): string {
         return this.realKernel.username;
     }
+
     public get clientId(): string {
         return this.realKernel.clientId;
     }
+
     public get status(): Kernel.Status {
         return this.realKernel.status;
     }
+
     public get info(): KernelMessage.IInfoReply | null {
         return this.realKernel.info;
     }
+
     public get isReady(): boolean {
         return this.realKernel.isReady;
     }
+
     public get ready(): Promise<void> {
         return this.realKernel.ready;
     }
+
     public get handleComms(): boolean {
         return this.realKernel.handleComms;
     }
+
     public get isDisposed(): boolean {
         return this.realKernel.isDisposed;
     }
+
     constructor(
         private realKernel: Kernel.IKernel,
         socket: IKernelSocket & IWebSocketLike & IDisposable,
@@ -111,9 +128,11 @@ export class RawKernel implements Kernel.IKernel {
         await this.kernelProcess.dispose();
         this.socket.dispose();
     }
+
     public getSpec(): Promise<Kernel.ISpecModel> {
         return this.realKernel.getSpec();
     }
+
     public sendShellMessage<T extends KernelMessage.ShellMessageType>(
         msg: KernelMessage.IShellMessage<T>,
         expectReply?: boolean,
@@ -124,6 +143,7 @@ export class RawKernel implements Kernel.IKernel {
     > {
         return this.realKernel.sendShellMessage(msg, expectReply, disposeOnDone);
     }
+
     public sendControlMessage<T extends KernelMessage.ControlMessageType>(
         msg: KernelMessage.IControlMessage<T>,
         expectReply?: boolean,
@@ -134,23 +154,29 @@ export class RawKernel implements Kernel.IKernel {
     > {
         return this.realKernel.sendControlMessage(msg, expectReply, disposeOnDone);
     }
+
     public reconnect(): Promise<void> {
         throw new Error('Reconnect is not supported.');
     }
+
     public interrupt(): Promise<void> {
         // Send this directly to our kernel process. Don't send it through the real kernel. The
         // real kernel will send a goofy API request to the websocket.
         return this.kernelProcess.interrupt();
     }
+
     public restart(): Promise<void> {
         throw new Error('This method should not be called. Restart is implemented at a higher level');
     }
+
     public requestKernelInfo(): Promise<KernelMessage.IInfoReplyMsg> {
         return this.realKernel.requestKernelInfo();
     }
+
     public requestComplete(content: { code: string; cursor_pos: number }): Promise<KernelMessage.ICompleteReplyMsg> {
         return this.realKernel.requestComplete(content);
     }
+
     public requestInspect(content: {
         code: string;
         cursor_pos: number;
@@ -158,6 +184,7 @@ export class RawKernel implements Kernel.IKernel {
     }): Promise<KernelMessage.IInspectReplyMsg> {
         return this.realKernel.requestInspect(content);
     }
+
     public requestHistory(
         content:
             | KernelMessage.IHistoryRequestRange
@@ -166,6 +193,7 @@ export class RawKernel implements Kernel.IKernel {
     ): Promise<KernelMessage.IHistoryReplyMsg> {
         return this.realKernel.requestHistory(content);
     }
+
     public requestExecute(
         content: {
             code: string;
@@ -180,6 +208,7 @@ export class RawKernel implements Kernel.IKernel {
     ): Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> {
         return this.realKernel.requestExecute(content, disposeOnDone, metadata);
     }
+
     public requestDebug(
         // tslint:disable-next-line: no-banned-terms
         content: { seq: number; type: 'request'; command: string; arguments?: any },
@@ -187,43 +216,52 @@ export class RawKernel implements Kernel.IKernel {
     ): Kernel.IControlFuture<KernelMessage.IDebugRequestMsg, KernelMessage.IDebugReplyMsg> {
         return this.realKernel.requestDebug(content, disposeOnDone);
     }
+
     public requestIsComplete(content: { code: string }): Promise<KernelMessage.IIsCompleteReplyMsg> {
         return this.realKernel.requestIsComplete(content);
     }
+
     public requestCommInfo(content: {
         target_name?: string;
         target?: string;
     }): Promise<KernelMessage.ICommInfoReplyMsg> {
         return this.realKernel.requestCommInfo(content);
     }
+
     public sendInputReply(content: KernelMessage.ReplyContent<KernelMessage.IInputReply>): void {
         return this.realKernel.sendInputReply(content);
     }
+
     public connectToComm(targetName: string, commId?: string): Kernel.IComm {
         return this.realKernel.connectToComm(targetName, commId);
     }
+
     public registerCommTarget(
         targetName: string,
         callback: (comm: Kernel.IComm, msg: KernelMessage.ICommOpenMsg) => void | PromiseLike<void>
     ): void {
         return this.realKernel.registerCommTarget(targetName, callback);
     }
+
     public removeCommTarget(
         targetName: string,
         callback: (comm: Kernel.IComm, msg: KernelMessage.ICommOpenMsg) => void | PromiseLike<void>
     ): void {
         return this.realKernel.removeCommTarget(targetName, callback);
     }
+
     public dispose(): void {
         swallowExceptions(() => this.realKernel.dispose());
         swallowExceptions(() => this.socket.dispose());
     }
+
     public registerMessageHook(
         msgId: string,
         hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>
     ): void {
         this.realKernel.registerMessageHook(msgId, hook);
     }
+
     public removeMessageHook(
         msgId: string,
         hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>

@@ -41,6 +41,7 @@ export class GatherListener implements IInteractiveWindowListener {
         // tslint:disable-next-line: no-any
         payload: any;
     }>();
+
     private notebookUri: Uri | undefined;
     private gatherProvider: IGatherProvider | undefined;
     private gatherTimer: StopWatch | undefined;

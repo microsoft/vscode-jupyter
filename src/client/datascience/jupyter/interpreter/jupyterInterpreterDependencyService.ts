@@ -119,6 +119,7 @@ export class JupyterInterpreterDependencyService {
         @inject(IInstaller) private readonly installer: IInstaller,
         @inject(IJupyterCommandFactory) private readonly commandFactory: IJupyterCommandFactory
     ) {}
+
     /**
      * Configures the python interpreter to ensure it can run Jupyter server by installing any missing dependencies.
      * If user opts not to install they can opt to select another interpreter.
@@ -209,6 +210,7 @@ export class JupyterInterpreterDependencyService {
                 return JupyterInterpreterDependencyResponse.cancel;
         }
     }
+
     /**
      * Whether all dependencies required to start & use a jupyter server are available in the provided interpreter.
      *

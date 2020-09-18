@@ -41,6 +41,7 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
     public get isDirty(): boolean {
         return this.document?.isDirty === true;
     }
+
     public get cells(): ICell[] {
         // Possible the document has been closed/disposed
         if (this.isDisposed) {
@@ -53,6 +54,7 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
             ? this.document.cells.map((cell) => createCellFromVSCNotebookCell(cell, this))
             : this._cells;
     }
+
     public get isDisposed() {
         // Possible the document has been closed/disposed
         if (
@@ -72,6 +74,7 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
             cells: []
         };
     }
+
     public get isUntitled(): boolean {
         return this.document ? this.document.isUntitled : super.isUntitled;
     }
@@ -89,6 +92,7 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
     ) {
         super(isTrusted, file, cells, globalMemento, crypto, json, indentAmount, pythonNumber);
     }
+
     /**
      * Unfortunately Notebook models are created early, well before a VSC Notebook Document is created.
      * We can associate an INotebookModel with a VSC Notebook, only after the Notebook has been opened.
@@ -96,6 +100,7 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
     public associateNotebookDocument(document: NotebookDocument) {
         this.document = document;
     }
+
     public trust() {
         super.trust();
         if (this.document) {
@@ -104,6 +109,7 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
             this._cells = [];
         }
     }
+
     protected generateNotebookJson() {
         const json = super.generateNotebookJson();
         if (this.document && this.isTrusted) {

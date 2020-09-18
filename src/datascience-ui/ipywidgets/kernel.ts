@@ -26,54 +26,71 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
     public get iopubMessage(): ISignal<this, KernelMessage.IIOPubMessage> {
         return this._ioPubMessageSignal;
     }
+
     public get terminated() {
         return this.realKernel.terminated as any;
     }
+
     public get statusChanged() {
         return this.realKernel.statusChanged as any;
     }
+
     public get unhandledMessage() {
         return this.realKernel.unhandledMessage as any;
     }
+
     public get anyMessage() {
         return this.realKernel.anyMessage as any;
     }
+
     public get serverSettings(): ServerConnection.ISettings {
         return this.realKernel.serverSettings;
     }
+
     public get id(): string {
         return this.realKernel.id;
     }
+
     public get name(): string {
         return this.realKernel.name;
     }
+
     public get model(): Kernel.IModel {
         return this.realKernel.model;
     }
+
     public get username(): string {
         return this.realKernel.username;
     }
+
     public get clientId(): string {
         return this.realKernel.clientId;
     }
+
     public get status(): Kernel.Status {
         return this.realKernel.status;
     }
+
     public get info(): KernelMessage.IInfoReply | null {
         return this.realKernel.info;
     }
+
     public get isReady(): boolean {
         return this.realKernel.isReady;
     }
+
     public get ready(): Promise<void> {
         return this.realKernel.ready;
     }
+
     public get handleComms(): boolean {
         return this.realKernel.handleComms;
     }
+
     public get isDisposed(): boolean {
         return this.realKernel.isDisposed;
     }
+
     private realKernel: Kernel.IKernel;
     private hookResults = new Map<string, boolean | PromiseLike<boolean>>();
     private websocket: WebSocketWS & { sendEnabled: boolean };
@@ -92,9 +109,11 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
             constructor() {
                 proxySocketInstance = this;
             }
+
             public close(_code?: number | undefined, _reason?: string | undefined): void {
                 // Nothing.
             }
+
             public send(data: string | ArrayBuffer | SharedArrayBuffer | Blob | ArrayBufferView): void {
                 // This is a command being sent from the UI kernel to the websocket. We mirror that to
                 // the extension side.
@@ -145,9 +164,11 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
     public shutdown(): Promise<void> {
         return this.realKernel.shutdown();
     }
+
     public getSpec(): Promise<Kernel.ISpecModel> {
         return this.realKernel.getSpec();
     }
+
     public sendShellMessage<T extends KernelMessage.ShellMessageType>(
         msg: KernelMessage.IShellMessage<T>,
         expectReply?: boolean,
@@ -158,6 +179,7 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
     > {
         return this.realKernel.sendShellMessage(msg, expectReply, disposeOnDone);
     }
+
     public sendControlMessage<T extends KernelMessage.ControlMessageType>(
         msg: KernelMessage.IControlMessage<T>,
         expectReply?: boolean,
@@ -168,21 +190,27 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
     > {
         return this.realKernel.sendControlMessage(msg, expectReply, disposeOnDone);
     }
+
     public reconnect(): Promise<void> {
         return this.realKernel.reconnect();
     }
+
     public interrupt(): Promise<void> {
         return this.realKernel.interrupt();
     }
+
     public restart(): Promise<void> {
         return this.realKernel.restart();
     }
+
     public requestKernelInfo(): Promise<KernelMessage.IInfoReplyMsg> {
         return this.realKernel.requestKernelInfo();
     }
+
     public requestComplete(content: { code: string; cursor_pos: number }): Promise<KernelMessage.ICompleteReplyMsg> {
         return this.realKernel.requestComplete(content);
     }
+
     public requestInspect(content: {
         code: string;
         cursor_pos: number;
@@ -190,6 +218,7 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
     }): Promise<KernelMessage.IInspectReplyMsg> {
         return this.realKernel.requestInspect(content);
     }
+
     public requestHistory(
         content:
             | KernelMessage.IHistoryRequestRange
@@ -198,6 +227,7 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
     ): Promise<KernelMessage.IHistoryReplyMsg> {
         return this.realKernel.requestHistory(content);
     }
+
     public requestExecute(
         content: {
             code: string;
@@ -212,6 +242,7 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
     ): Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> {
         return this.realKernel.requestExecute(content, disposeOnDone, metadata);
     }
+
     public requestDebug(
         // tslint:disable-next-line: no-banned-terms
         content: { seq: number; type: 'request'; command: string; arguments?: any },
@@ -219,21 +250,26 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
     ): Kernel.IControlFuture<KernelMessage.IDebugRequestMsg, KernelMessage.IDebugReplyMsg> {
         return this.realKernel.requestDebug(content, disposeOnDone);
     }
+
     public requestIsComplete(content: { code: string }): Promise<KernelMessage.IIsCompleteReplyMsg> {
         return this.realKernel.requestIsComplete(content);
     }
+
     public requestCommInfo(content: {
         target_name?: string;
         target?: string;
     }): Promise<KernelMessage.ICommInfoReplyMsg> {
         return this.realKernel.requestCommInfo(content);
     }
+
     public sendInputReply(content: KernelMessage.ReplyContent<KernelMessage.IInputReply>): void {
         return this.realKernel.sendInputReply(content);
     }
+
     public connectToComm(targetName: string, commId?: string): Kernel.IComm {
         return this.realKernel.connectToComm(targetName, commId);
     }
+
     public registerCommTarget(
         targetName: string,
         callback: (comm: Kernel.IComm, msg: KernelMessage.ICommOpenMsg) => void | PromiseLike<void>
@@ -246,16 +282,19 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
         );
         return this.realKernel.registerCommTarget(targetName, callback);
     }
+
     public removeCommTarget(
         targetName: string,
         callback: (comm: Kernel.IComm, msg: KernelMessage.ICommOpenMsg) => void | PromiseLike<void>
     ): void {
         return this.realKernel.removeCommTarget(targetName, callback);
     }
+
     public dispose(): void {
         this.postOffice.removeHandler(this);
         return this.realKernel.dispose();
     }
+
     public handleMessage(type: string, payload?: any): boolean {
         // Handle messages as they come in. Note: Do not await anything here. THey have to be inorder.
         // If not, we could switch to message chaining or an observable instead.
@@ -292,6 +331,7 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
         }
         return true;
     }
+
     public registerMessageHook(
         msgId: string,
         hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>
@@ -381,6 +421,7 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
         }
         this.realKernel.requestKernelInfo = originalRequestKernelInfo;
     }
+
     private messageHookInterceptor(msg: KernelMessage.IIOPubMessage): boolean | PromiseLike<boolean> {
         try {
             window.console.log(

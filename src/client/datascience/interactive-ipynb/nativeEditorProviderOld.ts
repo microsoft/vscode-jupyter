@@ -75,6 +75,7 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
     public get editors(): INotebookEditor[] {
         return [...this.activeEditors.values()];
     }
+
     private activeEditors: Map<string, INotebookEditor> = new Map<string, INotebookEditor>();
     private readonly _autoSaveNotebookInHotExitFile = new WeakMap<INotebookModel, Function>();
     constructor(
@@ -293,6 +294,7 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
         this.activeEditors.delete(e.file.fsPath);
         this._onDidChangeActiveNotebookEditor.fire(this.activeEditor);
     }
+
     private onSavedEditor(oldPath: string, e: INotebookEditor) {
         // Switch our key for this editor
         if (this.activeEditors.has(oldPath)) {
@@ -344,6 +346,7 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
             }
         }
     };
+
     /**
      * If the INotebookModel associated with a Notebook is of type VSCodeNotebookModel, then its used with a VSC Notebook.
      * I.e. document is already opened in a VSC Notebook.
@@ -353,6 +356,7 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
         // This is temporary code.
         return model instanceof VSCodeNotebookModel;
     }
+
     /**
      * Check if user is attempting to compare two ipynb files.
      * If yes, then return `true`, else `false`.
@@ -402,6 +406,7 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
         // If its not, then its another document (that is not in the diff view).
         return gitSchemeEditor === editor || fileSchemeEditor === editor;
     }
+
     private isNotebook(document: TextDocument) {
         // Skip opening anything from git as we should use the git viewer.
         const validUriScheme = document.uri.scheme !== 'git';

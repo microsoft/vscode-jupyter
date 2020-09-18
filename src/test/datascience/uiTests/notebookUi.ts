@@ -23,6 +23,7 @@ export class NotebookEditorUI extends BaseWebUI {
     public _setEditor(editor: INotebookEditor) {
         this._editor = editor;
     }
+
     public async getCellCount(): Promise<number> {
         const items = await this.page!.$$('.cell-wrapper');
         return items.length;
@@ -93,10 +94,12 @@ export class NotebookEditorUI extends BaseWebUI {
         }
         return buttons[button];
     }
+
     private async getCellToolbar(cellIndex: number): Promise<ElementHandle<Element>> {
         const cell = await this.getCell(cellIndex);
         return cell.$$('.native-editor-celltoolbar-middle').then((items) => items[0]);
     }
+
     private async getToolbarButton(cellIndex: number, button: CellToolbarButton): Promise<ElementHandle<Element>> {
         const toolbar = await this.getCellToolbar(cellIndex);
         return toolbar.$$('button[role=button]').then((items) => items[button]);

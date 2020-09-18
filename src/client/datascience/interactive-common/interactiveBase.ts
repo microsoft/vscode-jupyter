@@ -121,6 +121,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
     public get onExecutedCode(): Event<string> {
         return this.executeEvent.event;
     }
+
     public get ready(): Event<void> {
         return this.readyEvent.event;
     }
@@ -1521,6 +1522,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
     private async selectServer() {
         await this.commandManager.executeCommand(Commands.SelectJupyterURI);
     }
+
     private async kernelChangeHandler(kernelConnection: KernelConnectionMetadata) {
         // Check if we are changing to LiveKernelModel
         if (kernelConnection.kind === 'connectToLiveKernel') {

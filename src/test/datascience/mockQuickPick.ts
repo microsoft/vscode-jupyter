@@ -32,31 +32,40 @@ export class MockQuickPick implements QuickPick<QuickPickItem> {
     public get onDidChangeValue(): Event<string> {
         return this.didChangeValueEmitter.event;
     }
+
     public get onDidAccept(): Event<void> {
         return this.didAcceptEmitter.event;
     }
+
     public get onDidTriggerButton(): Event<QuickInputButton> {
         return this.didTriggerButtonEmitter.event;
     }
+
     public get activeItems(): QuickPickItem[] {
         return this._activeItems;
     }
+
     public set activeItems(items: QuickPickItem[]) {
         this._activeItems = items;
         this.didChangeActiveEmitter.fire(items);
     }
+
     public get onDidChangeActive(): Event<QuickPickItem[]> {
         return this.didChangeActiveEmitter.event;
     }
+
     public get selectedItems(): readonly QuickPickItem[] {
         return [];
     }
+
     public get onDidChangeSelection(): Event<QuickPickItem[]> {
         return this.didChangeSelectedEmitter.event;
     }
+
     public get onDidHide(): Event<void> {
         return this.didHideEmitter.event;
     }
+
     public show(): void {
         // After a timeout select the item
         setTimeout(() => {
@@ -68,9 +77,11 @@ export class MockQuickPick implements QuickPick<QuickPickItem> {
             }
         }, 1);
     }
+
     public hide(): void {
         // Do nothing.
     }
+
     public dispose(): void {
         // Do nothing.
     }

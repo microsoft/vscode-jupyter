@@ -45,6 +45,7 @@ export class JupyterNotebookProvider implements IJupyterNotebookProvider {
         // here throw our generic server disposed message that we use in server creatio n
         throw new Error(localize.DataScience.sessionDisposed());
     }
+
     public async getNotebook(options: GetNotebookOptions): Promise<INotebook | undefined> {
         const server = await this.serverProvider.getOrCreateServer({
             getOnly: options.getOnly,

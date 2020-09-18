@@ -61,6 +61,7 @@ class CellSubscriber {
     public get cell(): ICell {
         return this.cellRef;
     }
+
     public executionState?: Kernel.Status;
     private deferred: Deferred<CellState> = createDeferred<CellState>();
     private cellRef: ICell;
@@ -156,19 +157,24 @@ export class JupyterNotebookBase implements INotebook {
     public get onDisposed(): Event<void> {
         return this.disposedEvent.event;
     }
+
     public get onKernelChanged(): Event<KernelConnectionMetadata> {
         return this.kernelChanged.event;
     }
+
     public get disposed() {
         return this._disposed;
     }
+
     private kernelChanged = new EventEmitter<KernelConnectionMetadata>();
     public get onKernelRestarted(): Event<void> {
         return this.kernelRestarted.event;
     }
+
     public get onKernelInterrupted(): Event<void> {
         return this.kernelInterrupted.event;
     }
+
     private readonly kernelRestarted = new EventEmitter<void>();
     private readonly kernelInterrupted = new EventEmitter<void>();
     private disposedEvent = new EventEmitter<void>();
@@ -178,6 +184,7 @@ export class JupyterNotebookBase implements INotebook {
     public get kernelSocket(): Observable<KernelSocketInformation | undefined> {
         return this.session.kernelSocket;
     }
+
     public get session(): IJupyterSession {
         return this._session;
     }
@@ -259,6 +266,7 @@ export class JupyterNotebookBase implements INotebook {
     public get resource(): Resource {
         return this._resource;
     }
+
     public get identity(): Uri {
         return this._identity;
     }
@@ -699,6 +707,7 @@ export class JupyterNotebookBase implements INotebook {
             throw new Error(localize.DataScience.sessionDisposed());
         }
     }
+
     public registerMessageHook(
         msgId: string,
         hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>
@@ -709,6 +718,7 @@ export class JupyterNotebookBase implements INotebook {
             throw new Error(localize.DataScience.sessionDisposed());
         }
     }
+
     public removeMessageHook(
         msgId: string,
         hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>

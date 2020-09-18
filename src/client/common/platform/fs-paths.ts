@@ -23,6 +23,7 @@ export class FileSystemPaths implements IFileSystemPaths {
         // (effectively) the node "path" module to use
         private readonly raw: INodePath
     ) {}
+
     // Create a new object using common-case default values.
     // We do not use an alternate constructor because defaults in the
     // constructor runs counter to our typical approach.
@@ -73,6 +74,7 @@ export class Executables {
         // the OS type to target
         private readonly osType: OSType
     ) {}
+
     // Create a new object using common-case default values.
     // We do not use an alternate constructor because defaults in the
     // constructor runs counter to our typical approach.
@@ -106,6 +108,7 @@ export class FileSystemPathUtils implements IFileSystemPathUtils {
         // other low-level FS path operations to use
         private readonly raw: IRawPaths
     ) {}
+
     // Create a new object using common-case default values.
     // We do not use an alternate constructor because defaults in the
     // constructor runs counter to our typical approach.

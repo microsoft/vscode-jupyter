@@ -33,6 +33,7 @@ class MockSocketCallbackHandler extends SocketCallbackHandler {
         this.registerCommandHandler(ResponseCommands.Pong, this.onPong.bind(this));
         this.registerCommandHandler(ResponseCommands.Error, this.onError.bind(this));
     }
+
     public ping(message: string) {
         this.SendRawCommand(Commands.PingBytes);
 
@@ -43,6 +44,7 @@ class MockSocketCallbackHandler extends SocketCallbackHandler {
         ]);
         this.stream.Write(buffer);
     }
+
     protected handleHandshake(): boolean {
         if (!this.guid) {
             this.guid = this.stream.readStringInTransaction();
@@ -70,6 +72,7 @@ class MockSocketCallbackHandler extends SocketCallbackHandler {
         this.emit('handshake');
         return true;
     }
+
     private onError() {
         const message = this.stream.readStringInTransaction();
         if (typeof message !== 'string') {
@@ -77,6 +80,7 @@ class MockSocketCallbackHandler extends SocketCallbackHandler {
         }
         this.emit('error', '', '', message);
     }
+
     private onPong() {
         const message = this.stream.readStringInTransaction();
         if (typeof message !== 'string') {
@@ -96,11 +100,13 @@ class MockSocketClient {
         }
         return this.socketStream;
     }
+
     public start(): Promise<any> {
         this.def = createDeferred<any>();
         this.socket = net.connect(this.port as any, this.connectionListener.bind(this));
         return this.def.promise;
     }
+
     private connectionListener() {
         if (this.socket === undefined || this.def === undefined) {
             throw Error('not started');

@@ -20,6 +20,7 @@ export class RendererExtension implements IExtensionSingleActivationService {
         @inject(IApplicationEnvironment) private readonly env: IApplicationEnvironment,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
     ) {}
+
     public async activate() {
         if (this.env.channel === 'stable') {
             return;

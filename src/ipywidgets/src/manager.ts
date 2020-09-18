@@ -81,6 +81,7 @@ export class WidgetManager extends jupyterlab.WidgetManager {
             .requestCommInfo({ target: this.comm_target_name })
             .then((reply) => (reply.content as any).comms);
     }
+
     public async display_view(msg: any, view: Backbone.View<Backbone.Model>, options: any): Promise<Widget> {
         const widget = await super.display_view(msg, view, options);
         const element = options.node ? (options.node as HTMLElement) : this.el;
@@ -90,6 +91,7 @@ export class WidgetManager extends jupyterlab.WidgetManager {
         }
         return widget;
     }
+
     public async restoreWidgets(): Promise<void> {
         // Disabled for now.
         // This throws errors if enabled, can be added later.
@@ -136,6 +138,7 @@ export class WidgetManager extends jupyterlab.WidgetManager {
 
         return result;
     }
+
     private sendSuccess(className: string, moduleName: string, moduleVersion: string) {
         try {
             this.scriptLoader.successHandler(className, moduleName, moduleVersion);

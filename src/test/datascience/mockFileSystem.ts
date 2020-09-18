@@ -13,6 +13,7 @@ export class MockFileSystem extends DataScienceFileSystem {
         super();
         this.vscfs = new FakeVSCodeFileSystemAPI();
     }
+
     public async readLocalFile(filePath: string): Promise<string> {
         const contents = this.contentOverloads.get(filePath);
         if (contents) {
@@ -20,9 +21,11 @@ export class MockFileSystem extends DataScienceFileSystem {
         }
         return super.readLocalFile(filePath);
     }
+
     public async writeLocalFile(filePath: string, contents: string): Promise<void> {
         this.contentOverloads.set(filePath, contents);
     }
+
     public async readFile(filePath: Uri): Promise<string> {
         const contents = this.contentOverloads.get(filePath.fsPath);
         if (contents) {
@@ -30,6 +33,7 @@ export class MockFileSystem extends DataScienceFileSystem {
         }
         return super.readFile(filePath);
     }
+
     public addFileContents(filePath: string, contents: string): void {
         this.contentOverloads.set(filePath, contents);
     }

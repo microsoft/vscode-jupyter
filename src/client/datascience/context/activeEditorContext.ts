@@ -71,9 +71,11 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         this.hasNativeNotebookCells = new ContextKey(EditorContexts.HaveNativeCells, this.commandManager);
         this.isNotebookTrusted = new ContextKey(EditorContexts.IsNotebookTrusted, this.commandManager);
     }
+
     public dispose() {
         this.disposables.forEach((item) => item.dispose());
     }
+
     public async activate(): Promise<void> {
         this.docManager.onDidChangeActiveTextEditor(this.onDidChangeActiveTextEditor, this, this.disposables);
         this.notebookProvider.onSessionStatusChanged(this.onDidKernelStatusChange, this, this.disposables);
@@ -103,10 +105,12 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
             .set((this.notebookEditorProvider.activeEditor?.model?.cells?.length || 0) > 0)
             .ignoreErrors();
     }
+
     private onDidChangeActiveInteractiveWindow(e?: IInteractiveWindow) {
         this.interactiveContext.set(!!e).ignoreErrors();
         this.updateMergedContexts();
     }
+
     private onDidChangeActiveNotebookEditor(e?: INotebookEditor) {
         // This will ensure all subsequent telemetry will get the context of whether it is a custom/native/old notebook editor.
         // This is temporary, and once we ship native editor this needs to be removed.
@@ -116,6 +120,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         this.updateMergedContexts();
         this.updateContextOfActiveNotebookKernel(e);
     }
+
     private updateContextOfActiveNotebookKernel(activeEditor?: INotebookEditor) {
         if (activeEditor) {
             this.notebookProvider
@@ -133,6 +138,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
             this.canRestartNotebookKernelContext.set(false).ignoreErrors();
         }
     }
+
     private onDidKernelStatusChange({ notebook }: { status: ServerStatus; notebook: INotebook }) {
         // Ok, kernel status has changed.
         const activeEditor = this.notebookEditorProvider.activeEditor;
@@ -146,18 +152,21 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         }
         this.updateContextOfActiveNotebookKernel(activeEditor);
     }
+
     private onDidChangeActiveTextEditor(e?: TextEditor) {
         this.isPythonFileActive =
             e?.document.languageId === PYTHON_LANGUAGE && !this.notebookEditorProvider.activeEditor;
         this.updateNativeNotebookCellContext();
         this.updateMergedContexts();
     }
+
     // When trust service says trust has changed, update context with whether the currently active notebook is trusted
     private onDidSetNotebookTrust() {
         if (this.notebookEditorProvider.activeEditor?.model !== undefined) {
             this.isNotebookTrusted.set(this.notebookEditorProvider.activeEditor?.model?.isTrusted).ignoreErrors();
         }
     }
+
     private updateMergedContexts() {
         this.interactiveOrNativeContext
             .set(this.nativeContext.value === true && this.interactiveContext.value === true)

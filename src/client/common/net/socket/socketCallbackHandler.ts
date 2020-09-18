@@ -17,11 +17,13 @@ export abstract class SocketCallbackHandler extends EventEmitter {
         this.commandHandlers = new Map<string, Function>();
         socketServer.on('data', this.onData.bind(this));
     }
+
     private disposed!: boolean;
     public dispose() {
         this.disposed = true;
         this.commandHandlers.clear();
     }
+
     private onData(socketClient: net.Socket, data: Buffer) {
         if (this.disposed) {
             return;

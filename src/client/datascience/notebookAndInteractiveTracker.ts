@@ -19,15 +19,18 @@ export class NotebookCreationTracker implements INotebookCreationTracker {
         const time = this.mementoStorage.get<number | undefined>(LastPythonNotebookCreatedKey);
         return time ? new Date(time) : undefined;
     }
+
     public get lastNotebookCreated() {
         const time = this.mementoStorage.get<number | undefined>(LastNotebookCreatedKey);
         return time ? new Date(time) : undefined;
     }
+
     constructor(
         @inject(IMemento) @named(WORKSPACE_MEMENTO) private mementoStorage: Memento,
         @inject(INotebookProvider) private readonly notebookProvider: INotebookProvider,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
     ) {}
+
     public async startTracking(): Promise<void> {
         this.disposables.push(this.notebookProvider.onNotebookCreated(this.notebookCreated));
     }

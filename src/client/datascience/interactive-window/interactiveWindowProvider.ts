@@ -69,12 +69,15 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
     public get onDidChangeActiveInteractiveWindow(): Event<IInteractiveWindow | undefined> {
         return this._onDidChangeActiveInteractiveWindow.event;
     }
+
     public get activeWindow(): IInteractiveWindow | undefined {
         return this._windows.find((w) => w.active && w.visible);
     }
+
     public get windows(): ReadonlyArray<IInteractiveWindow> {
         return this._windows;
     }
+
     private readonly _onDidChangeActiveInteractiveWindow = new EventEmitter<IInteractiveWindow | undefined>();
     private lastActiveInteractiveWindow: IInteractiveWindow | undefined;
     private postOffice: PostOffice;
@@ -285,6 +288,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
         this.lastActiveInteractiveWindow = this.activeWindow ? this.activeWindow : this.lastActiveInteractiveWindow;
         this._onDidChangeActiveInteractiveWindow.fire(this.activeWindow);
     }
+
     private onPeerCountChanged(newCount: number) {
         // If we're losing peers, resolve all syncs
         if (newCount < this.postOffice.peerCount) {

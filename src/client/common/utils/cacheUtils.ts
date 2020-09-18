@@ -17,6 +17,7 @@ export class DataWithExpiry {
     constructor(expiryDuration: number, private _data: any) {
         this.expiryTime = expiryDuration + Date.now();
     }
+
     public get expired() {
         const hasExpired = this.expiryTime <= Date.now();
         if (hasExpired) {
@@ -24,6 +25,7 @@ export class DataWithExpiry {
         }
         return hasExpired;
     }
+
     public get data(): any {
         if (this.expired) {
             this._data = undefined;
@@ -58,6 +60,7 @@ export class InMemoryCache<T> {
         const store = globalCacheStore.get(this.cacheKey);
         return store && !store.expired ? true : false;
     }
+
     /**
      * Returns undefined if there is no data.
      * Uses `hasData` to determine whether any cached data exists.
@@ -73,10 +76,12 @@ export class InMemoryCache<T> {
         const store = globalCacheStore.get(this.cacheKey);
         return store?.data;
     }
+
     public set data(value: T | undefined) {
         const store = new DataWithExpiry(this.expiryDurationMs, value);
         globalCacheStore.set(this.cacheKey, store);
     }
+
     public clear() {
         globalCacheStore.delete(this.cacheKey);
     }

@@ -32,6 +32,7 @@ export class KernelDaemonPreWarmer {
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(IVSCodeNotebook) private readonly vscodeNotebook: IVSCodeNotebook
     ) {}
+
     public async activate(_resource: Resource): Promise<void> {
         // Check to see if raw notebooks are supported
         // If not, don't bother with prewarming
@@ -55,12 +56,14 @@ export class KernelDaemonPreWarmer {
         }
         await this.preWarmDaemonPoolIfNecesary();
     }
+
     private async preWarmDaemonPoolIfNecesary() {
         // This is only for python, so prewarm just if we've seen python recently in this workspace
         if (this.shouldPreWarmDaemonPool(this.usageTracker.lastPythonNotebookCreated)) {
             await this.preWarmKernelDaemonPool();
         }
     }
+
     @swallowExceptions('PreWarmKernelDaemon')
     private async preWarmKernelDaemonPool() {
         await this.kernelDaemonPool.preWarmKernelDaemons();

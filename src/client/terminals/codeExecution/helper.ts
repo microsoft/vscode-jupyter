@@ -26,6 +26,7 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
         this.processServiceFactory = serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory);
         this.interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
     }
+
     public async normalizeLines(code: string, resource?: Uri): Promise<string> {
         try {
             if (code.trim().length === 0) {
@@ -81,6 +82,7 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
         }
         return code;
     }
+
     public async saveFileIfDirty(file: Uri): Promise<void> {
         const docs = this.documentManager.textDocuments.filter((d) => d.uri.path === file.path);
         if (docs.length === 1 && docs[0].isDirty) {

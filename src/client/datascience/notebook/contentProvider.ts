@@ -40,17 +40,21 @@ export class NotebookContentProvider implements INotebookContentProvider {
     public get onDidChangeNotebook() {
         return this.notebookChanged.event;
     }
+
     constructor(
         @inject(INotebookStorageProvider) private readonly notebookStorage: INotebookStorageProvider,
         @inject(NotebookEditorCompatibilitySupport)
         private readonly compatibilitySupport: NotebookEditorCompatibilitySupport
     ) {}
+
     public notifyChangesToDocument(document: NotebookDocument) {
         this.notebookChanged.fire({ document });
     }
+
     public async resolveNotebook(_document: NotebookDocument, _webview: NotebookCommunication): Promise<void> {
         // Later
     }
+
     public async openNotebook(uri: Uri, openContext: NotebookDocumentOpenContext): Promise<NotebookData> {
         if (!this.compatibilitySupport.canOpenWithVSCodeNotebookEditor(uri)) {
             // If not supported, return a notebook with error displayed.
@@ -80,6 +84,7 @@ export class NotebookContentProvider implements INotebookContentProvider {
         sendTelemetryEvent(Telemetry.CellCount, undefined, { count: model.cells.length });
         return notebookModelToVSCNotebookData(model);
     }
+
     @captureTelemetry(Telemetry.Save, undefined, true)
     public async saveNotebook(document: NotebookDocument, cancellation: CancellationToken) {
         const model = await this.notebookStorage.getOrCreateModel(document.uri, undefined, undefined, true);
@@ -99,6 +104,7 @@ export class NotebookContentProvider implements INotebookContentProvider {
             await this.notebookStorage.saveAs(model, targetResource);
         }
     }
+
     public async backupNotebook(
         document: NotebookDocument,
         _context: NotebookDocumentBackupContext,

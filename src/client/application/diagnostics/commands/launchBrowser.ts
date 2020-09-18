@@ -14,6 +14,7 @@ export class LaunchBrowserCommand extends BaseDiagnosticCommand {
     constructor(diagnostic: IDiagnostic, private serviceContainer: IServiceContainer, private url: string) {
         super(diagnostic);
     }
+
     public async invoke(): Promise<void> {
         sendTelemetryEvent(EventName.DIAGNOSTICS_ACTION, undefined, { url: this.url });
         const browser = this.serviceContainer.get<IBrowserService>(IBrowserService);

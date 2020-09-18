@@ -13,6 +13,7 @@ export class Signal<T, S> implements ISignal<T, S> {
         this.slots.add(bound);
         return true;
     }
+
     // tslint:disable-next-line: no-any
     public disconnect(slot: Slot<T, S>, thisArg?: any): boolean {
         const bound = thisArg ? slot.bind(thisArg) : slot;

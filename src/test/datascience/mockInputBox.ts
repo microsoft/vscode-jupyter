@@ -24,18 +24,23 @@ export class MockInputBox implements InputBox {
     constructor(value: string) {
         this._value = value;
     }
+
     public get onDidChangeValue(): Event<string> {
         return this.didChangeValueEmitter.event;
     }
+
     public get onDidAccept(): Event<void> {
         return this.didAcceptEmitter.event;
     }
+
     public get onDidTriggerButton(): Event<QuickInputButton> {
         return this.didTriggerButtonEmitter.event;
     }
+
     public get onDidHide(): Event<void> {
         return this.didHideEmitter.event;
     }
+
     public show(): void {
         // After 10 ms set the value, then accept it
         setTimeout(() => {
@@ -51,9 +56,11 @@ export class MockInputBox implements InputBox {
             }, 10);
         }, 10);
     }
+
     public hide(): void {
         // Do nothing
     }
+
     public dispose(): void {
         // Do nothing
     }

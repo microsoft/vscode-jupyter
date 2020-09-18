@@ -42,28 +42,36 @@ export class ApplicationEnvironment implements IApplicationEnvironment {
                 return;
         }
     }
+
     public get appName(): string {
         return vscode.env.appName;
     }
+
     public get vscodeVersion(): string {
         return vscode.version;
     }
+
     public get appRoot(): string {
         return vscode.env.appRoot;
     }
+
     public get language(): string {
         return vscode.env.language;
     }
+
     public get sessionId(): string {
         return vscode.env.sessionId;
     }
+
     public get machineId(): string {
         return vscode.env.machineId;
     }
+
     public get extensionName(): string {
         // tslint:disable-next-line:non-literal-require
         return this.packageJson.displayName;
     }
+
     /**
      * At the time of writing this API, the vscode.env.shell isn't officially released in stable version of VS Code.
      * Using this in stable version seems to throw errors in VSC with messages being displayed to the user about use of
@@ -76,18 +84,22 @@ export class ApplicationEnvironment implements IApplicationEnvironment {
     public get shell(): string {
         return vscode.env.shell;
     }
+
     // tslint:disable-next-line:no-any
     public get packageJson(): any {
         // tslint:disable-next-line:non-literal-require no-require-imports
         return require('../../../../package.json');
     }
+
     public get channel(): Channel {
         return this.appName.indexOf('Insider') > 0 ? 'insiders' : 'stable';
     }
+
     public get extensionChannel(): Channel {
         const version = parse(this.packageJson.version);
         return !version || version.prerelease.length > 0 ? 'insiders' : 'stable';
     }
+
     public get uriScheme(): string {
         return vscode.env.uriScheme;
     }

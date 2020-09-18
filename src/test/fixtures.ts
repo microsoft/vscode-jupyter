@@ -17,6 +17,7 @@ export class CleanupFixture {
     public addCleanup(cleanup: CleanupFunc) {
         this.cleanups.push(cleanup);
     }
+
     public addFSCleanup(filename: string) {
         this.addCleanup(async () => {
             try {

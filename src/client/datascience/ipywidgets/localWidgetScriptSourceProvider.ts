@@ -33,20 +33,24 @@ export class LocalWidgetScriptSourceProvider implements IWidgetScriptSourceProvi
         private readonly fs: IDataScienceFileSystem,
         private readonly interpreterService: IInterpreterService
     ) {}
+
     public async getWidgetScriptSource(moduleName: string): Promise<Readonly<WidgetScriptSource>> {
         const sources = await this.getWidgetScriptSources();
         const found = sources.find((item) => item.moduleName.toLowerCase() === moduleName.toLowerCase());
         return found || { moduleName };
     }
+
     public dispose() {
         // Noop.
     }
+
     public async getWidgetScriptSources(ignoreCache?: boolean): Promise<Readonly<WidgetScriptSource[]>> {
         if (!ignoreCache && this.cachedWidgetScripts) {
             return this.cachedWidgetScripts;
         }
         return (this.cachedWidgetScripts = this.getWidgetScriptSourcesWithoutCache());
     }
+
     @captureTelemetry(Telemetry.DiscoverIPyWidgetNamesLocalPerf)
     private async getWidgetScriptSourcesWithoutCache(): Promise<WidgetScriptSource[]> {
         const sysPrefix = await this.getSysPrefixOfKernel();
@@ -82,6 +86,7 @@ export class LocalWidgetScriptSourceProvider implements IWidgetScriptSourceProvi
         // tslint:disable-next-line: no-any
         return Promise.all(mappedFiles as any);
     }
+
     private async getSysPrefixOfKernel() {
         const kernelConnectionMetadata = this.notebook.getKernelConnection();
         if (!kernelConnectionMetadata) {

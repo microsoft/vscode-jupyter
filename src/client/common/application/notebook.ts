@@ -37,27 +37,33 @@ export class VSCodeNotebook implements IVSCodeNotebook {
                   kernel: NotebookKernel | undefined;
               }>().event;
     }
+
     public get onDidChangeActiveNotebookEditor(): Event<NotebookEditor | undefined> {
         return this.canUseNotebookApi
             ? this.notebook.onDidChangeActiveNotebookEditor
             : new EventEmitter<NotebookEditor | undefined>().event;
     }
+
     public get onDidOpenNotebookDocument(): Event<NotebookDocument> {
         return this.canUseNotebookApi
             ? this.notebook.onDidOpenNotebookDocument
             : new EventEmitter<NotebookDocument>().event;
     }
+
     public get onDidCloseNotebookDocument(): Event<NotebookDocument> {
         return this.canUseNotebookApi
             ? this.notebook.onDidCloseNotebookDocument
             : new EventEmitter<NotebookDocument>().event;
     }
+
     public get notebookDocuments(): ReadonlyArray<NotebookDocument> {
         return this.canUseNotebookApi ? this.notebook.notebookDocuments : [];
     }
+
     public get notebookEditors() {
         return this.canUseNotebookApi ? this.notebook.visibleNotebookEditors : [];
     }
+
     public get onDidChangeNotebookDocument(): Event<
         NotebookCellsChangeEvent | NotebookCellOutputsChangeEvent | NotebookCellLanguageChangeEvent
     > {
@@ -67,6 +73,7 @@ export class VSCodeNotebook implements IVSCodeNotebook {
                   NotebookCellsChangeEvent | NotebookCellOutputsChangeEvent | NotebookCellLanguageChangeEvent
               >().event;
     }
+
     public get activeNotebookEditor(): NotebookEditor | undefined {
         if (!this.useProposedApi) {
             return;
@@ -77,6 +84,7 @@ export class VSCodeNotebook implements IVSCodeNotebook {
             return undefined;
         }
     }
+
     private get notebook() {
         if (!this._notebook) {
             // tslint:disable-next-line: no-require-imports
@@ -84,9 +92,11 @@ export class VSCodeNotebook implements IVSCodeNotebook {
         }
         return this._notebook!;
     }
+
     private readonly _onDidChangeNotebookDocument = new EventEmitter<
         NotebookCellsChangeEvent | NotebookCellOutputsChangeEvent | NotebookCellLanguageChangeEvent
     >();
+
     private addedEventHandlers?: boolean;
     private _notebook?: typeof notebook;
     private readonly canUseNotebookApi?: boolean;
@@ -101,6 +111,7 @@ export class VSCodeNotebook implements IVSCodeNotebook {
             this.canUseNotebookApi = true;
         }
     }
+
     public registerNotebookContentProvider(
         notebookType: string,
         provider: NotebookContentProvider,
@@ -111,12 +122,14 @@ export class VSCodeNotebook implements IVSCodeNotebook {
     ): Disposable {
         return this.notebook.registerNotebookContentProvider(notebookType, provider, options);
     }
+
     public registerNotebookKernelProvider(
         selector: NotebookDocumentFilter,
         provider: NotebookKernelProvider
     ): Disposable {
         return this.notebook.registerNotebookKernelProvider(selector, provider);
     }
+
     private addEventHandlers() {
         if (this.addedEventHandlers) {
             return;

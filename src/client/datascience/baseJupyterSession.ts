@@ -42,10 +42,12 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     protected get session(): ISessionWithSocket | undefined {
         return this._session;
     }
+
     protected kernelConnectionMetadata?: KernelConnectionMetadata;
     public get kernelSocket(): Observable<KernelSocketInformation | undefined> {
         return this._kernelSocket;
     }
+
     private get jupyterLab(): undefined | typeof import('@jupyterlab/services') {
         if (!this._jupyterLab) {
             // tslint:disable-next-line:no-require-imports
@@ -68,9 +70,11 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     public get isConnected(): boolean {
         return this.connected;
     }
+
     public get onIoPubMessage() {
         return this.ioPubEventEmitter.event;
     }
+
     protected onStatusChangedEvent: EventEmitter<ServerStatus> = new EventEmitter<ServerStatus>();
     protected statusHandler: Slot<ISessionWithSocket, Kernel.Status>;
     protected connected: boolean = false;
@@ -85,9 +89,11 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         this.statusHandler = this.onStatusChanged.bind(this);
         this.ioPubHandler = (_s, m) => this.ioPubEventEmitter.fire(m);
     }
+
     public dispose(): Promise<void> {
         return this.shutdown();
     }
+
     // Abstracts for each Session type to implement
     public abstract async waitForIdle(timeout: number): Promise<void>;
 
@@ -113,6 +119,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         }
         traceInfo('Shutdown session -- complete');
     }
+
     public async interrupt(timeout: number): Promise<void> {
         if (this.session && this.session.kernel) {
             // Listen for session status changes
@@ -298,6 +305,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
             throw new Error(localize.DataScience.sessionDisposed());
         }
     }
+
     public registerMessageHook(
         msgId: string,
         hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>
@@ -308,6 +316,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
             throw new Error(localize.DataScience.sessionDisposed());
         }
     }
+
     public removeMessageHook(
         msgId: string,
         hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>
@@ -439,6 +448,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
             }
         }
     }
+
     protected async shutdownSession(
         session: ISessionWithSocket | undefined,
         statusHandler: Slot<ISessionWithSocket, Kernel.Status> | undefined
@@ -474,6 +484,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
             traceInfo(`shutdownSession ${kernelId} - shutdown complete`);
         }
     }
+
     private getServerStatus(): ServerStatus {
         if (this.session) {
             switch (this.session.kernel.status) {

@@ -43,6 +43,7 @@ export class NotebookStarter implements Disposable {
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) private readonly jupyterOutputChannel: IOutputChannel
     ) {}
+
     public dispose() {
         while (this.disposables.length > 0) {
             const disposable = this.disposables.shift();
@@ -55,6 +56,7 @@ export class NotebookStarter implements Disposable {
             }
         }
     }
+
     // tslint:disable-next-line: max-func-body-length
     @reportAction(ReportableAction.NotebookStart)
     public async start(
@@ -275,6 +277,7 @@ export class NotebookStarter implements Disposable {
             return args;
         }
     }
+
     private async generateTempDir(): Promise<TemporaryDirectory> {
         const resultDir = path.join(os.tmpdir(), uuid());
         await this.fs.createLocalDirectory(resultDir);

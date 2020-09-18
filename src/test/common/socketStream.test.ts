@@ -21,13 +21,16 @@ class MockSocket {
     constructor() {
         this._data = '';
     }
+
     public get dataWritten(): string {
         return this._data;
     }
+
     // tslint:disable-next-line:no-any
     public get rawDataWritten(): any {
         return this._rawDataWritten;
     }
+
     // tslint:disable-next-line:no-any
     public write(data: any) {
         // eslint-disable-next-line no-useless-concat

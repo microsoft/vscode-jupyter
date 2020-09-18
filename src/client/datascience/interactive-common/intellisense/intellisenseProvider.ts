@@ -88,12 +88,14 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
     public get postMessage(): Event<{ message: string; payload: any }> {
         return this.postEmitter.event;
     }
+
     private documentPromise: Deferred<IntellisenseDocument> | undefined;
     private temporaryFile: TemporaryFile | undefined;
     private postEmitter: EventEmitter<{ message: string; payload: any }> = new EventEmitter<{
         message: string;
         payload: any;
     }>();
+
     private cancellationSources: Map<string, CancellationTokenSource> = new Map<string, CancellationTokenSource>();
     private notebookIdentity: Uri | undefined;
     private notebookType: 'interactive' | 'native' = 'interactive';

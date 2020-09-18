@@ -37,6 +37,7 @@ export class PythonToolExecutionService implements IPythonToolExecutionService {
             return processService.execObservable(executionInfo.execPath!, executionInfo.args, { ...options });
         }
     }
+
     public async exec(
         executionInfo: ExecutionInfo,
         options: SpawnOptions,

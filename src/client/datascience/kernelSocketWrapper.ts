@@ -100,6 +100,7 @@ export function KernelSocketWrapper<T extends ClassType<IWebSocketLike>>(SuperCl
         public addReceiveHook(hook: (data: WebSocketWS.Data) => Promise<void>) {
             this.receiveHooks.push(hook);
         }
+
         public removeReceiveHook(hook: (data: WebSocketWS.Data) => Promise<void>) {
             this.receiveHooks = this.receiveHooks.filter((l) => l !== hook);
         }

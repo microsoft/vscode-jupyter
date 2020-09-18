@@ -41,9 +41,11 @@ class MockEditorEdit implements TextEditorEdit {
             }
         ]);
     }
+
     public delete(_location: Selection | Range): void {
         throw new Error('Method not implemented.');
     }
+
     public setEndOfLine(_endOfLine: EndOfLine): void {
         throw new Error('Method not implemented.');
     }
@@ -62,15 +64,19 @@ export class MockEditor implements TextEditor {
     public get document(): TextDocument {
         return this._document;
     }
+
     public get visibleRanges(): Range[] {
         return [];
     }
+
     public get options(): TextEditorOptions {
         return {};
     }
+
     public get viewColumn(): ViewColumn | undefined {
         return undefined;
     }
+
     public edit(
         callback: (editBuilder: TextEditorEdit) => void,
         _options?: { undoStopBefore: boolean; undoStopAfter: boolean } | undefined
@@ -81,6 +87,7 @@ export class MockEditor implements TextEditor {
             r(true);
         });
     }
+
     public insertSnippet(
         _snippet: SnippetString,
         _location?: Range | Position | Range[] | Position[] | undefined,
@@ -88,18 +95,22 @@ export class MockEditor implements TextEditor {
     ): Thenable<boolean> {
         throw new Error('Method not implemented.');
     }
+
     public setDecorations(
         _decorationType: TextEditorDecorationType,
         _rangesOrOptions: Range[] | DecorationOptions[]
     ): void {
         throw new Error('Method not implemented.');
     }
+
     public revealRange(_range: Range, _revealType?: TextEditorRevealType | undefined): void {
         this._revealCallback();
     }
+
     public show(_column?: ViewColumn | undefined): void {
         throw new Error('Method not implemented.');
     }
+
     public hide(): void {
         throw new Error('Method not implemented.');
     }

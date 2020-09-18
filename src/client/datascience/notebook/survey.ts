@@ -30,6 +30,7 @@ export class NotebookSurveyBanner {
         return !this.persistentState.createGlobalPersistentState<NotebookSurveyUsageData>(storageKey, {}).value
             .surveyDisabled;
     }
+
     private disabledInCurrentSession: boolean = false;
     constructor(
         @inject(IApplicationShell) private appShell: IApplicationShell,
@@ -133,6 +134,7 @@ export class NotebookSurveyDataLogger implements IExtensionSingleActivationServi
         // tslint:disable-next-line: no-use-before-declare
         @inject(NotebookSurveyBanner) private readonly survey: NotebookSurveyBanner
     ) {}
+
     public async activate() {
         if (!this.survey.enabled) {
             return;
@@ -160,6 +162,7 @@ export class NotebookSurveyDataLogger implements IExtensionSingleActivationServi
 
         this.migrateDataAndDisplayBanner().catch(traceError.bind(undefined, 'Failed to migrate survey data'));
     }
+
     private async migrateDataAndDisplayBanner() {
         const data = this.persistentState.createGlobalPersistentState<NotebookSurveyUsageData>(storageKey, {});
         // The user has loaded a new instance of VSC, and we need to move numbers from previous session into the respective storage props.
@@ -178,6 +181,7 @@ export class NotebookSurveyDataLogger implements IExtensionSingleActivationServi
 
         await this.survey.showBanner();
     }
+
     private async incrementCellAction() {
         const data = this.persistentState.createGlobalPersistentState<NotebookSurveyUsageData>(storageKey, {});
 
@@ -186,6 +190,7 @@ export class NotebookSurveyDataLogger implements IExtensionSingleActivationServi
         await data.updateValue(data.value);
         await this.survey.showBanner();
     }
+
     private async incrementCellExecution() {
         const data = this.persistentState.createGlobalPersistentState<NotebookSurveyUsageData>(storageKey, {});
         data.value.numberOfExecutionsInCurrentSession = (data.value.numberOfExecutionsInCurrentSession || 0) + 1;

@@ -22,6 +22,7 @@ class TestRunner {
         await this.extractLatestExtension(SMOKE_TEST_EXTENSIONS_DIR);
         await this.launchSmokeTests();
     }
+
     private async launchSmokeTests() {
         const env: Record<string, {}> = {
             VSC_PYTHON_SMOKE_TEST: '1',
@@ -30,6 +31,7 @@ class TestRunner {
 
         await this.launchTest(env);
     }
+
     private async enableLanguageServer(enable: boolean) {
         // When running smoke tests, we won't have access to unbundled files.
         const settings = `{ "python.languageServer": ${enable ? '"Microsoft"' : '"Jedi"'} }`;
@@ -48,6 +50,7 @@ class TestRunner {
             settings
         );
     }
+
     private async launchTest(customEnvVars: Record<string, {}>) {
         console.log('Launch tests in test runner');
         await new Promise((resolve, reject) => {

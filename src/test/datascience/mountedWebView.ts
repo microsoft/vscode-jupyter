@@ -98,9 +98,11 @@ export class MountedWebView implements IMountedWebView, IDisposable {
     public get onDisposed() {
         return this.disposedEvent.event;
     }
+
     public get loadFailed(): Event<void> {
         return this.loadFailedEmitter.event;
     }
+
     public attach(options: IWebviewPanelOptions) {
         this.webPanelListener = options.listener;
 
@@ -178,15 +180,19 @@ export class MountedWebView implements IMountedWebView, IDisposable {
     public asWebviewUri(localResource: Uri): Uri {
         return localResource;
     }
+
     public setTitle(_val: string): void {
         noop();
     }
+
     public async show(_preserveFocus: boolean): Promise<void> {
         noop();
     }
+
     public isVisible(): boolean {
         return this.visible;
     }
+
     public postMessage(m: WebviewMessage): void {
         // Actually send to the UI
         if (this.reactMessageCallback) {
@@ -199,15 +205,19 @@ export class MountedWebView implements IMountedWebView, IDisposable {
             }
         }
     }
+
     public close(): void {
         noop();
     }
+
     public isActive(): boolean {
         return this.active;
     }
+
     public updateCwd(_cwd: string): void {
         noop();
     }
+
     public dispose() {
         if (!this.disposed) {
             this.disposed = true;
@@ -225,6 +235,7 @@ export class MountedWebView implements IMountedWebView, IDisposable {
             this.webPanelListener.onChangeViewState(this);
         }
     }
+
     public addMessageListener(callback: (m: string, p: any) => void) {
         this.extraListeners.push(callback);
     }
@@ -235,6 +246,7 @@ export class MountedWebView implements IMountedWebView, IDisposable {
             this.extraListeners.splice(index, 1);
         }
     }
+
     private postMessageToWebPanel(msg: any) {
         if (this.disposed && !msg.type.startsWith(`DISPATCHED`)) {
             traceError(`Posting to disposed mount.`);

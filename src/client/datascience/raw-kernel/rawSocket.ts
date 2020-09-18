@@ -95,6 +95,7 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
         }
         return true;
     }
+
     public sendToRealKernel(data: any, _callback: any): void {
         // If from ipywidgets, this will be serialized already, so turn it back into a message so
         // we can add the special hash to it.
@@ -112,17 +113,21 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
     public addReceiveHook(hook: (data: WebSocketWS.Data) => Promise<void>): void {
         this.receiveHooks.push(hook);
     }
+
     public removeReceiveHook(hook: (data: WebSocketWS.Data) => Promise<void>): void {
         this.receiveHooks = this.receiveHooks.filter((l) => l !== hook);
     }
+
     public addSendHook(hook: (data: any, cb?: ((err?: Error | undefined) => void) | undefined) => Promise<void>): void {
         this.sendHooks.push(hook);
     }
+
     public removeSendHook(
         hook: (data: any, cb?: ((err?: Error | undefined) => void) | undefined) => Promise<void>
     ): void {
         this.sendHooks = this.sendHooks.filter((p) => p !== hook);
     }
+
     private generateChannel<T extends Subscriber | Dealer>(
         connection: IKernelConnection,
         channel: 'iopub' | 'shell' | 'control' | 'stdin',
@@ -135,6 +140,7 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
         );
         return result;
     }
+
     private async processSocketMessages(
         channel: 'iopub' | 'shell' | 'control' | 'stdin',
         readable: Subscriber | Dealer

@@ -262,6 +262,7 @@ export class HostJupyterNotebook
         // Just call the base
         return super.restartKernel(timeout);
     }
+
     private onInterruptRequest(timeout: number, _cancellation: CancellationToken): Promise<any> {
         // Just call the base
         return super.interruptKernel(timeout);

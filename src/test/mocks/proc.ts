@@ -22,11 +22,13 @@ export class MockProcessService extends EventEmitter implements IProcessService 
     constructor(private procService: IProcessService) {
         super();
     }
+
     public onExecObservable(
         handler: (file: string, args: string[], options: SpawnOptions, callback: ExecObservableCallback) => void
     ) {
         this.on('execObservable', handler);
     }
+
     public execObservable(file: string, args: string[], options: SpawnOptions = {}): ObservableExecutionResult<string> {
         let value: Observable<Output<string>> | Output<string> | undefined;
         let valueReturned = false;
@@ -60,9 +62,11 @@ export class MockProcessService extends EventEmitter implements IProcessService 
             return this.procService.execObservable(file, args, options);
         }
     }
+
     public onExec(handler: (file: string, args: string[], options: SpawnOptions, callback: ExecCallback) => void) {
         this.on('exec', handler);
     }
+
     public async exec(file: string, args: string[], options: SpawnOptions = {}): Promise<ExecutionResult<string>> {
         let value: ExecutionResult<string> | undefined;
         let valueReturned = false;

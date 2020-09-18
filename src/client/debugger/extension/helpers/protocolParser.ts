@@ -36,27 +36,33 @@ export class ProtocolParser implements IProtocolParser {
     constructor() {
         this.events = new EventEmitter();
     }
+
     public dispose() {
         if (this.stream) {
             this.stream.removeListener('data', this.dataCallbackHandler);
             this.stream = undefined;
         }
     }
+
     public connect(stream: Readable) {
         this.stream = stream;
         stream.addListener('data', this.dataCallbackHandler);
     }
+
     public on(event: string | symbol, listener: Listener): this {
         this.events.on(event, listener);
         return this;
     }
+
     public once(event: string | symbol, listener: Listener): this {
         this.events.once(event, listener);
         return this;
     }
+
     private dataCallbackHandler = (data: string | Buffer) => {
         this.handleData(data as Buffer);
     };
+
     private dispatch(body: string): void {
         const message = JSON.parse(body) as DebugProtocol.ProtocolMessage;
 
@@ -89,6 +95,7 @@ export class ProtocolParser implements IProtocolParser {
 
         this.events.emit('data', message);
     }
+
     private handleData(data: Buffer): void {
         if (this.disposed) {
             return;

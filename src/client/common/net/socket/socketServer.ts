@@ -12,13 +12,16 @@ export class SocketServer extends EventEmitter implements ISocketServer {
     public get client(): Promise<net.Socket> {
         return this.clientSocket.promise;
     }
+
     constructor() {
         super();
         this.clientSocket = createDeferred<net.Socket>();
     }
+
     public dispose() {
         this.Stop();
     }
+
     public Stop() {
         if (!this.socketServer) {
             return;

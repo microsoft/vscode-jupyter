@@ -30,6 +30,7 @@ class PythonEnvironment {
         const python = this.deps.getPythonArgv(this.pythonPath);
         return buildPythonExecInfo(python, pythonArgs);
     }
+
     public getExecutionObservableInfo(pythonArgs: string[] = []): PythonExecInfo {
         const python = this.deps.getObservablePythonArgv(this.pythonPath);
         return buildPythonExecInfo(python, pythonArgs);

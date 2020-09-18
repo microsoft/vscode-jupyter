@@ -45,6 +45,7 @@ export class IPyWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         const settings = this.configurationSettings.getSettings(undefined);
         return settings.widgetScriptSources;
     }
+
     private readonly userConfiguredCDNAtLeastOnce: IPersistentState<boolean>;
     private readonly neverWarnAboutScriptsNotFoundOnCDN: IPersistentState<boolean>;
     constructor(
@@ -67,12 +68,15 @@ export class IPyWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
             false
         );
     }
+
     public initialize() {
         this.workspaceService.onDidChangeConfiguration(this.onSettingsChagned.bind(this));
     }
+
     public dispose() {
         this.disposeScriptProviders();
     }
+
     /**
      * We know widgets are being used, at this point prompt user if required.
      */
@@ -113,6 +117,7 @@ export class IPyWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         this.handleWidgetSourceNotFoundOnCDN(found).ignoreErrors();
         return found;
     }
+
     private async handleWidgetSourceNotFoundOnCDN(widgetSource: WidgetScriptSource) {
         // if widget exists nothing to do.
         if (widgetSource.source === 'cdn' || this.neverWarnAboutScriptsNotFoundOnCDN.value === true) {
@@ -146,6 +151,7 @@ export class IPyWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
             this.rebuildProviders();
         }
     }
+
     private disposeScriptProviders() {
         while (this.scriptProviders && this.scriptProviders.length) {
             const item = this.scriptProviders.shift();
@@ -154,6 +160,7 @@ export class IPyWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
             }
         }
     }
+
     private rebuildProviders() {
         this.disposeScriptProviders();
 
@@ -234,6 +241,7 @@ export class IPyWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         sendTelemetryEvent(Telemetry.IPyWidgetPromptToUseCDNSelection, undefined, { selection: selectionForTelemetry });
         this.configurationPromise.resolve();
     }
+
     private async updateScriptSources(scriptSources: WidgetCDNs[]) {
         const targetSetting = 'widgetScriptSources';
         await this.configurationSettings.updateSetting(

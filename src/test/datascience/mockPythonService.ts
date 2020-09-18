@@ -34,6 +34,7 @@ export class MockPythonService implements IPythonExecutionService {
     public execObservable(args: string[], options: SpawnOptions): ObservableExecutionResult<string> {
         return this.procService.execObservable(this.interpreter.path, args, options);
     }
+
     public execModuleObservable(
         moduleName: string,
         args: string[],
@@ -41,6 +42,7 @@ export class MockPythonService implements IPythonExecutionService {
     ): ObservableExecutionResult<string> {
         return this.procService.execObservable(this.interpreter.path, ['-m', moduleName, ...args], options);
     }
+
     public exec(args: string[], options: SpawnOptions): Promise<ExecutionResult<string>> {
         return this.procService.exec(this.interpreter.path, args, options);
     }

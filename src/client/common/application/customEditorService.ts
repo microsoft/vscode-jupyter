@@ -72,6 +72,7 @@ export class CustomEditorService implements ICustomEditorService {
         );
         this.commandManager.executeCommand('jupyter.reloadVSCode', DataScience.reloadCustomEditor());
     }
+
     private async removeCustomEditors() {
         // Note, to put it back, use the shipped version. This packageJson is required into the product
         // so it's packed by webpack into the source.

@@ -55,6 +55,7 @@ export class GuestJupyterNotebook
     public get connection(): INotebookProviderConnection | undefined {
         return this._executionInfo?.connectionInfo;
     }
+
     public kernelSocket = new Observable<KernelSocketInformation | undefined>();
 
     public get onSessionStatusChanged(): Event<ServerStatus> {
@@ -71,6 +72,7 @@ export class GuestJupyterNotebook
     public get session(): IJupyterSession {
         throw new Error('Method not implemented');
     }
+
     public onKernelChanged = new EventEmitter<KernelConnectionMetadata>().event;
     public onKernelRestarted = new EventEmitter<void>().event;
     public onKernelInterrupted = new EventEmitter<void>().event;
@@ -78,6 +80,7 @@ export class GuestJupyterNotebook
     public get disposed() {
         return false;
     }
+
     private _jupyterLab?: typeof import('@jupyterlab/services');
     private responseQueue: ResponseQueue = new ResponseQueue();
     private onStatusChangedEvent: EventEmitter<ServerStatus> | undefined;
@@ -253,6 +256,7 @@ export class GuestJupyterNotebook
     public setKernelConnection(_spec: KernelConnectionMetadata, _timeout: number): Promise<void> {
         return Promise.resolve();
     }
+
     public getLoggers(): INotebookExecutionLogger[] {
         return [];
     }
@@ -318,12 +322,14 @@ export class GuestJupyterNotebook
 
         return Promise.resolve(shellMessage);
     }
+
     public registerMessageHook(
         _msgId: string,
         _hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>
     ): void {
         noop();
     }
+
     public removeMessageHook(
         _msgId: string,
         _hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>

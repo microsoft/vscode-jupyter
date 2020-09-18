@@ -21,6 +21,7 @@ export class MockProcessService implements IProcessService {
         args: (string | RegExp)[];
         result(): ObservableExecutionResult<string>;
     }[] = [];
+
     private timeDelay: number | undefined;
 
     public execObservable(file: string, args: string[], _options: SpawnOptions): ObservableExecutionResult<string> {

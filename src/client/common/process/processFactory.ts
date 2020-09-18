@@ -18,6 +18,7 @@ export class ProcessServiceFactory implements IProcessServiceFactory {
         @inject(IBufferDecoder) private readonly decoder: IBufferDecoder,
         @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry
     ) {}
+
     public async create(resource?: Uri): Promise<IProcessService> {
         const customEnvVars = await this.envVarsService.getEnvironmentVariables(resource);
         const proc: IProcessService = new ProcessService(this.decoder, customEnvVars);

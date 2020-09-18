@@ -28,6 +28,7 @@ export class WebServer implements IWebServer {
     public get onDidReceiveMessage() {
         return this._onDidReceiveMessage.event;
     }
+
     private app?: express.Express;
     private io?: socketIO.Server;
     private server?: http.Server;
@@ -38,12 +39,14 @@ export class WebServer implements IWebServer {
     public static create() {
         return new WebServer();
     }
+
     public dispose() {
         this.server?.close();
         this.io?.close();
         this.disposed = true;
         this.socketPromise.promise.then((s) => s.disconnect()).catch(noop);
     }
+
     public postMessage(message: {}) {
         if (this.disposed) {
             return;
@@ -193,26 +196,33 @@ export class WebBrowserPanel implements IWebviewPanel, IDisposable {
         }
         return localResource;
     }
+
     public setTitle(newTitle: string): void {
         if (this.panel) {
             this.panel.title = newTitle;
         }
     }
+
     public async show(preserveFocus: boolean): Promise<void> {
         this.panel?.reveal(this.panel?.viewColumn, preserveFocus);
     }
+
     public isVisible(): boolean {
         return this.panel?.visible === true;
     }
+
     public close(): void {
         this.dispose();
     }
+
     public isActive(): boolean {
         return this.panel?.active === true;
     }
+
     public updateCwd(_cwd: string): void {
         // Noop
     }
+
     public dispose() {
         this.server?.dispose();
         this.panel?.dispose();

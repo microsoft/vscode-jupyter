@@ -44,21 +44,27 @@ class JupyterDebugSession implements DebugSession {
     ) {
         noop();
     }
+
     public get id(): string {
         return this._id;
     }
+
     public get type(): string {
         return 'python';
     }
+
     public get name(): string {
         return this._name;
     }
+
     public get workspaceFolder(): WorkspaceFolder | undefined {
         return undefined;
     }
+
     public get configuration(): DebugConfiguration {
         return this._configuration;
     }
+
     public customRequest(command: string, args?: any): Thenable<any> {
         return this.customRequestHandler(command, args);
     }
@@ -102,6 +108,7 @@ export class JupyterDebugService implements IJupyterDebugService, IDisposable {
     public get activeDebugSession(): DebugSession | undefined {
         return this.session;
     }
+
     public get activeDebugConsole(): DebugConsole {
         return {
             append(_value: string): void {
@@ -112,24 +119,31 @@ export class JupyterDebugService implements IJupyterDebugService, IDisposable {
             }
         };
     }
+
     public get breakpoints(): Breakpoint[] {
         return this._breakpoints;
     }
+
     public get onDidChangeActiveDebugSession(): Event<DebugSession | undefined> {
         return this.sessionChangedEvent.event;
     }
+
     public get onDidStartDebugSession(): Event<DebugSession> {
         return this.sessionStartedEvent.event;
     }
+
     public get onDidReceiveDebugSessionCustomEvent(): Event<DebugSessionCustomEvent> {
         return this.sessionCustomEvent.event;
     }
+
     public get onDidTerminateDebugSession(): Event<DebugSession> {
         return this.sessionTerminatedEvent.event;
     }
+
     public get onDidChangeBreakpoints(): Event<BreakpointsChangeEvent> {
         return this.breakpointsChangedEvent.event;
     }
+
     public registerDebugConfigurationProvider(_debugType: string, _provider: DebugConfigurationProvider): Disposable {
         return {
             dispose: () => {
@@ -180,12 +194,15 @@ export class JupyterDebugService implements IJupyterDebugService, IDisposable {
         }
         return Promise.resolve(true);
     }
+
     public addBreakpoints(breakpoints: Breakpoint[]): void {
         this._breakpoints = this._breakpoints.concat(breakpoints);
     }
+
     public removeBreakpoints(_breakpoints: Breakpoint[]): void {
         noop();
     }
+
     public get onBreakpointHit(): Event<void> {
         return this.breakpointEmitter.event;
     }

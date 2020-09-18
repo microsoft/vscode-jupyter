@@ -58,6 +58,7 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
         promise.then((result) => (cacheStoreIndexedByWorkspaceFolder.data = result)).ignoreErrors();
         return promise;
     }
+
     public async _getEnvironmentVariables(resource?: Uri): Promise<EnvironmentVariables> {
         let mergedVars = await this.getCustomEnvironmentVariables(resource);
         if (!mergedVars) {
@@ -74,6 +75,7 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
         }
         return mergedVars;
     }
+
     public async getCustomEnvironmentVariables(resource?: Uri): Promise<EnvironmentVariables | undefined> {
         const workspaceFolderUri = this.getWorkspaceFolderUri(resource);
         this.trackedWorkspaceFolders.add(workspaceFolderUri ? workspaceFolderUri.fsPath : '');
@@ -85,6 +87,7 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
         this.createFileWatcher(envFile, workspaceFolderUri);
         return this.envVarsService.parseFile(envFile, this.process.env);
     }
+
     public configurationChanged(e: ConfigurationChangeEvent) {
         this.trackedWorkspaceFolders.forEach((item) => {
             const uri = item && item.length > 0 ? Uri.file(item) : undefined;
@@ -93,6 +96,7 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
             }
         });
     }
+
     public createFileWatcher(envFile: string, workspaceFolderUri?: Uri) {
         if (this.fileWatchers.has(envFile)) {
             return;
@@ -105,6 +109,7 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
             this.disposables.push(envFileWatcher.onDidDelete(() => this.onEnvironmentFileChanged(workspaceFolderUri)));
         }
     }
+
     private getWorkspaceFolderUri(resource?: Uri): Uri | undefined {
         if (!resource) {
             return;

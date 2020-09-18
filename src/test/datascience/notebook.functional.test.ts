@@ -572,9 +572,11 @@ suite('DataScience notebook tests', () => {
                         public getInterpreters(_resource?: Uri): Promise<PythonEnvironment[]> {
                             return Promise.resolve([]);
                         }
+
                         public getActiveInterpreter(_resource?: Uri): Promise<PythonEnvironment | undefined> {
                             return Promise.resolve(undefined);
                         }
+
                         public getInterpreterDetails(_pythonPath: string, _resoure?: Uri): Promise<PythonEnvironment> {
                             throw new Error('Method not implemented');
                         }
@@ -1182,66 +1184,86 @@ plt.show()`,
                     this.stdin = new Writable();
                     this.stdio = [this.stdin, this.stdout, this.stderr];
                 }
+
                 public kill(_signal?: string): void {
                     throw new Error('Method not implemented.');
                 }
+
                 public send(_message: any, _sendHandle?: any, _options?: any, _callback?: any): any {
                     throw new Error('Method not implemented.');
                 }
+
                 public disconnect(): void {
                     throw new Error('Method not implemented.');
                 }
+
                 public unref(): void {
                     throw new Error('Method not implemented.');
                 }
+
                 public ref(): void {
                     throw new Error('Method not implemented.');
                 }
+
                 public addListener(_event: any, _listener: any): this {
                     throw new Error('Method not implemented.');
                 }
+
                 public emit(_event: any, _message?: any, _sendHandle?: any, ..._rest: any[]): any {
                     throw new Error('Method not implemented.');
                 }
+
                 public on(event: any, listener: any): this {
                     if (event === 'exit') {
                         setTimeout(() => listener(2), this.timeout);
                     }
                     return this;
                 }
+
                 public off(_event: string | symbol, _listener: (...args: any[]) => void): this {
                     throw new Error('Method not implemented.');
                 }
+
                 public once(_event: any, _listener: any): this {
                     throw new Error('Method not implemented.');
                 }
+
                 public prependListener(_event: any, _listener: any): this {
                     throw new Error('Method not implemented.');
                 }
+
                 public prependOnceListener(_event: any, _listener: any): this {
                     throw new Error('Method not implemented.');
                 }
+
                 public removeListener(_event: string | symbol, _listener: (...args: any[]) => void): this {
                     return this;
                 }
+
                 public removeAllListeners(_event?: string | symbol): this {
                     throw new Error('Method not implemented.');
                 }
+
                 public setMaxListeners(_n: number): this {
                     throw new Error('Method not implemented.');
                 }
+
                 public getMaxListeners(): number {
                     throw new Error('Method not implemented.');
                 }
+
                 public listeners(_event: string | symbol): Function[] {
                     throw new Error('Method not implemented.');
                 }
+
                 public rawListeners(_event: string | symbol): Function[] {
                     throw new Error('Method not implemented.');
                 }
+
                 public eventNames(): (string | symbol)[] {
                     throw new Error('Method not implemented.');
                 }
+
                 public listenerCount(_type: string | symbol): number {
                     throw new Error('Method not implemented.');
                 }
@@ -1278,14 +1300,17 @@ plt.show()`,
                     public onKernelRestarted() {
                         // Do nothing on restarted
                     }
+
                     public dispose() {
                         noop();
                     }
+
                     public async preExecute(cell: ICell, silent: boolean): Promise<void> {
                         if (!silent) {
                             cellInputs.push(concatMultilineString(cell.data.source));
                         }
                     }
+
                     public async postExecute(cell: ICell, silent: boolean): Promise<void> {
                         if (!silent) {
                             outputs.push(extractDataOutput(cell));

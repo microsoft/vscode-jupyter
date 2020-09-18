@@ -17,6 +17,7 @@ export class DebuggerVariableRegistration implements IExtensionSingleActivationS
         @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
         @inject(IJupyterVariables) @named(Identifiers.DEBUGGER_VARIABLES) private debugVariables: DebugAdapterTracker
     ) {}
+
     public activate(): Promise<void> {
         this.disposables.push(this.debugService.registerDebugAdapterTrackerFactory(PYTHON_LANGUAGE, this));
         return Promise.resolve();

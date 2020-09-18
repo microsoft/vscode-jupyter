@@ -47,10 +47,12 @@ export class IPyWidgetScriptSource implements IInteractiveWindowListener, ILocal
     public get postMessage(): Event<{ message: string; payload: any }> {
         return this.postEmitter.event;
     }
+
     // tslint:disable-next-line: no-any
     public get postInternalMessage(): Event<{ message: string; payload: any }> {
         return this.postInternalMessageEmitter.event;
     }
+
     private readonly resourcesMappedToExtensionFolder = new Map<string, Promise<Uri>>();
     private notebookIdentity?: Uri;
     private postEmitter = new EventEmitter<{
@@ -58,11 +60,13 @@ export class IPyWidgetScriptSource implements IInteractiveWindowListener, ILocal
         // tslint:disable-next-line: no-any
         payload: any;
     }>();
+
     private postInternalMessageEmitter = new EventEmitter<{
         message: string;
         // tslint:disable-next-line: no-any
         payload: any;
     }>();
+
     private notebook?: INotebook;
     private jupyterLab?: typeof jupyterlabService;
     private scriptProvider?: IPyWidgetScriptSourceProvider;
@@ -109,6 +113,7 @@ export class IPyWidgetScriptSource implements IInteractiveWindowListener, ILocal
             this.disposables
         );
     }
+
     /**
      * This method is called to convert a Uri to a format such that it can be used in a webview.
      * WebViews only allow files that are part of extension and the same directory where notebook lives.
@@ -219,6 +224,7 @@ export class IPyWidgetScriptSource implements IInteractiveWindowListener, ILocal
             });
         }
     }
+
     private async saveIdentity(args: INotebookIdentity) {
         this.notebookIdentity = args.resource;
         await this.initialize();
@@ -260,6 +266,7 @@ export class IPyWidgetScriptSource implements IInteractiveWindowListener, ILocal
         );
         await this.initializeNotebook();
     }
+
     private async initializeNotebook() {
         if (!this.notebook) {
             return;
@@ -284,6 +291,7 @@ export class IPyWidgetScriptSource implements IInteractiveWindowListener, ILocal
         );
         this.handlePendingRequests();
     }
+
     private handlePendingRequests() {
         const pendingModuleNames = Array.from(this.pendingModuleRequests.keys());
         while (pendingModuleNames.length) {

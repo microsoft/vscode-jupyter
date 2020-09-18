@@ -94,6 +94,7 @@ export class JupyterConnectionWaiter implements IDisposable {
             )
         );
     }
+
     public dispose() {
         // tslint:disable-next-line: no-any
         clearTimeout(this.launchTimeout as any);

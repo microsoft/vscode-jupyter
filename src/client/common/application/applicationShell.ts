@@ -40,6 +40,7 @@ export class ApplicationShell implements IApplicationShell {
     public get onDidChangeWindowState(): Event<WindowState> {
         return window.onDidChangeWindowState;
     }
+
     public showInformationMessage(message: string, ...items: string[]): Thenable<string>;
     public showInformationMessage(message: string, options: MessageOptions, ...items: string[]): Thenable<string>;
     public showInformationMessage<T extends MessageItem>(message: string, ...items: T[]): Thenable<T>;
@@ -48,6 +49,7 @@ export class ApplicationShell implements IApplicationShell {
         options: MessageOptions,
         ...items: T[]
     ): Thenable<T>;
+
     public showInformationMessage(message: string, options?: any, ...items: any[]): Thenable<any> {
         return window.showInformationMessage(message, options, ...items);
     }
@@ -60,6 +62,7 @@ export class ApplicationShell implements IApplicationShell {
         options: MessageOptions,
         ...items: T[]
     ): Thenable<T>;
+
     public showWarningMessage(message: any, options?: any, ...items: any[]) {
         return window.showWarningMessage(message, options, ...items);
     }
@@ -72,6 +75,7 @@ export class ApplicationShell implements IApplicationShell {
         options: MessageOptions,
         ...items: T[]
     ): Thenable<T>;
+
     public showErrorMessage(message: any, options?: any, ...items: any[]) {
         return window.showErrorMessage(message, options, ...items);
     }
@@ -81,11 +85,13 @@ export class ApplicationShell implements IApplicationShell {
         options?: QuickPickOptions,
         token?: CancellationToken
     ): Thenable<string>;
+
     public showQuickPick<T extends QuickPickItem>(
         items: T[] | Thenable<T[]>,
         options?: QuickPickOptions,
         token?: CancellationToken
     ): Thenable<T>;
+
     public showQuickPick(items: any, options?: any, token?: any): Thenable<any> {
         return window.showQuickPick(items, options, token);
     }
@@ -93,12 +99,15 @@ export class ApplicationShell implements IApplicationShell {
     public showOpenDialog(options: OpenDialogOptions): Thenable<Uri[] | undefined> {
         return window.showOpenDialog(options);
     }
+
     public showSaveDialog(options: SaveDialogOptions): Thenable<Uri | undefined> {
         return window.showSaveDialog(options);
     }
+
     public showInputBox(options?: InputBoxOptions, token?: CancellationToken): Thenable<string | undefined> {
         return window.showInputBox(options, token);
     }
+
     public openUrl(url: string): void {
         env.openExternal(Uri.parse(url));
     }
@@ -113,15 +122,18 @@ export class ApplicationShell implements IApplicationShell {
     public createStatusBarItem(alignment?: StatusBarAlignment, priority?: number): StatusBarItem {
         return window.createStatusBarItem(alignment, priority);
     }
+
     public showWorkspaceFolderPick(options?: WorkspaceFolderPickOptions): Thenable<WorkspaceFolder | undefined> {
         return window.showWorkspaceFolderPick(options);
     }
+
     public withProgress<R>(
         options: ProgressOptions,
         task: (progress: Progress<{ message?: string; increment?: number }>, token: CancellationToken) => Thenable<R>
     ): Thenable<R> {
         return window.withProgress<R>(options, task);
     }
+
     public withProgressCustomIcon<R>(
         icon: string,
         task: (progress: Progress<{ message?: string; increment?: number }>, token: CancellationToken) => Thenable<R>
@@ -139,15 +151,19 @@ export class ApplicationShell implements IApplicationShell {
             return result;
         });
     }
+
     public createQuickPick<T extends QuickPickItem>(): QuickPick<T> {
         return window.createQuickPick<T>();
     }
+
     public createInputBox(): InputBox {
         return window.createInputBox();
     }
+
     public createTreeView<T>(viewId: string, options: TreeViewOptions<T>): TreeView<T> {
         return window.createTreeView<T>(viewId, options);
     }
+
     public createOutputChannel(name: string): OutputChannel {
         return window.createOutputChannel(name);
     }

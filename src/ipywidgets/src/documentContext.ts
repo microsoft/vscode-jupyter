@@ -46,21 +46,27 @@ export class DocumentContext implements DocumentRegistry.IContext<INotebookModel
     public changeKernel(_options: Partial<Kernel.IModel>): Promise<Kernel.IKernelConnection> {
         throw new Error('Method not implemented.');
     }
+
     public shutdown(): Promise<void> {
         throw new Error('Method not implemented.');
     }
+
     public selectKernel(): Promise<void> {
         throw new Error('Method not implemented.');
     }
+
     public restart(): Promise<boolean> {
         throw new Error('Method not implemented.');
     }
+
     public setPath(_path: string): Promise<void> {
         throw new Error('Method not implemented.');
     }
+
     public setName(_name: string): Promise<void> {
         throw new Error('Method not implemented.');
     }
+
     public setType(_type: string): Promise<void> {
         throw new Error('Method not implemented.');
     }
@@ -68,27 +74,35 @@ export class DocumentContext implements DocumentRegistry.IContext<INotebookModel
     public addSibling(_widget: Widget, _options?: any): any {
         throw new Error('Method not implemented.');
     }
+
     public save(): Promise<void> {
         throw new Error('Method not implemented.');
     }
+
     public saveAs(): Promise<void> {
         throw new Error('Method not implemented.');
     }
+
     public revert(): Promise<void> {
         throw new Error('Method not implemented.');
     }
+
     public createCheckpoint(): Promise<import('@jupyterlab/services').Contents.ICheckpointModel> {
         throw new Error('Method not implemented.');
     }
+
     public deleteCheckpoint(_checkpointID: string): Promise<void> {
         throw new Error('Method not implemented.');
     }
+
     public restoreCheckpoint(_checkpointID?: string): Promise<void> {
         throw new Error('Method not implemented.');
     }
+
     public listCheckpoints(): Promise<import('@jupyterlab/services').Contents.ICheckpointModel[]> {
         throw new Error('Method not implemented.');
     }
+
     public dispose(): void {
         throw new Error('Method not implemented.');
     }

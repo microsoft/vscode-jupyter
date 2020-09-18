@@ -32,12 +32,15 @@ export class JupyterInterpreterOldCacheStateStore {
         this.workspaceJupyterInterpreter = { state: workspaceState };
         this.globalJupyterInterpreter = { state: globalState };
     }
+
     private get cacheStore(): CacheInfo {
         return this.workspace.hasWorkspaceFolders ? this.workspaceJupyterInterpreter : this.globalJupyterInterpreter;
     }
+
     public getCachedInterpreterPath(): string | undefined {
         return this.cacheStore.state.value;
     }
+
     public async clearCache(): Promise<void> {
         await this.cacheStore.state.updateValue(undefined);
     }

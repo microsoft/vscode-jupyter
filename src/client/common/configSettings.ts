@@ -108,6 +108,7 @@ export class JupyterSettings implements IWatchableJupyterSettings {
         this._workspaceRoot = workspaceFolder;
         this.initialize();
     }
+
     // tslint:disable-next-line:function-name
     public static getInstance(resource: Uri | undefined, workspace?: IWorkspaceService): JupyterSettings {
         workspace = workspace || new WorkspaceService();
@@ -148,6 +149,7 @@ export class JupyterSettings implements IWatchableJupyterSettings {
         JupyterSettings.jupyterSettings.forEach((item) => item && item.dispose());
         JupyterSettings.jupyterSettings.clear();
     }
+
     public dispose() {
         // tslint:disable-next-line:no-unsafe-any
         this._disposables.forEach((disposable) => disposable && disposable.dispose());
@@ -164,6 +166,7 @@ export class JupyterSettings implements IWatchableJupyterSettings {
         allowedKeys.forEach((k) => (result[k] = (<any>this)[k]));
         return result;
     }
+
     // tslint:disable-next-line:cyclomatic-complexity max-func-body-length
     protected update(jupyterConfig: WorkspaceConfiguration) {
         const workspaceRoot = this._workspaceRoot?.fsPath;
@@ -215,6 +218,7 @@ export class JupyterSettings implements IWatchableJupyterSettings {
             }
         }
     }
+
     protected initialize(): void {
         const onDidChange = () => {
             const currentConfig = this._workspace.getConfiguration('jupyter', this._workspaceRoot);
@@ -238,6 +242,7 @@ export class JupyterSettings implements IWatchableJupyterSettings {
             this.update(initialConfig);
         }
     }
+
     @debounceSync(1)
     protected debounceChangeNotification() {
         this._changeEmitter.fire();

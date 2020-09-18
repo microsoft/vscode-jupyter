@@ -24,6 +24,7 @@ export class NotebookStorageProvider implements INotebookStorageProvider {
     public get onSavedAs() {
         return this._savedAs.event;
     }
+
     private static untitledCounter = 1;
     private readonly _savedAs = new EventEmitter<{ new: Uri; old: Uri }>();
     private readonly storageAndModels = new Map<string, Promise<INotebookModel>>();
@@ -37,9 +38,11 @@ export class NotebookStorageProvider implements INotebookStorageProvider {
     ) {
         disposables.push(this);
     }
+
     public async save(model: INotebookModel, cancellation: CancellationToken) {
         await this.storage.save(model, cancellation);
     }
+
     public async saveAs(model: INotebookModel, targetResource: Uri) {
         const oldUri = model.file;
         await this.storage.saveAs(model, targetResource);
@@ -50,18 +53,23 @@ export class NotebookStorageProvider implements INotebookStorageProvider {
         this.storageAndModels.delete(oldUri.toString());
         this.storageAndModels.set(targetResource.toString(), Promise.resolve(model));
     }
+
     public generateBackupId(model: INotebookModel): string {
         return this.storage.generateBackupId(model);
     }
+
     public backup(model: INotebookModel, cancellation: CancellationToken, backupId?: string) {
         return this.storage.backup(model, cancellation, backupId);
     }
+
     public revert(model: INotebookModel, cancellation: CancellationToken) {
         return this.storage.revert(model, cancellation);
     }
+
     public deleteBackup(model: INotebookModel, backupId?: string) {
         return this.storage.deleteBackup(model, backupId);
     }
+
     public get(file: Uri): INotebookModel | undefined {
         return this.resolvedStorageAndModels.get(file.toString());
     }
@@ -72,6 +80,7 @@ export class NotebookStorageProvider implements INotebookStorageProvider {
         backupId?: string,
         forVSCodeNotebook?: boolean
     ): Promise<INotebookModel>;
+
     public getOrCreateModel(
         file: Uri,
         contents?: string,
@@ -99,6 +108,7 @@ export class NotebookStorageProvider implements INotebookStorageProvider {
         }
         return this.storageAndModels.get(key)!;
     }
+
     public dispose() {
         while (this.disposables.length) {
             this.disposables.shift()?.dispose(); // NOSONAR

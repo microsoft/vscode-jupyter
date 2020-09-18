@@ -23,12 +23,15 @@ export class PlatformService implements IPlatformService {
             });
         }
     }
+
     public get pathVariableName() {
         return this.isWindows ? WINDOWS_PATH_VARIABLE_NAME : NON_WINDOWS_PATH_VARIABLE_NAME;
     }
+
     public get virtualEnvBinName() {
         return this.isWindows ? 'Scripts' : 'bin';
     }
+
     public async getVersion(): Promise<SemVer> {
         if (this.version) {
             return this.version;
@@ -62,15 +65,19 @@ export class PlatformService implements IPlatformService {
     public get isWindows(): boolean {
         return this.osType === OSType.Windows;
     }
+
     public get isMac(): boolean {
         return this.osType === OSType.OSX;
     }
+
     public get isLinux(): boolean {
         return this.osType === OSType.Linux;
     }
+
     public get osRelease(): string {
         return os.release();
     }
+
     public get is64bit(): boolean {
         // tslint:disable-next-line:no-require-imports
         const arch = require('arch');

@@ -39,6 +39,7 @@ class MockLiveService implements vsls.SharedService, vsls.SharedServiceProxy {
     public get onDidChangeIsServiceAvailable(): Event<boolean> {
         return this.changeIsServiceAvailableEmitter.event;
     }
+
     public request(name: string, args: any[], cancellation?: CancellationToken): Promise<any> {
         // See if any handlers.
         const handler = this.sibling ? this.sibling.requestHandlers.get(name) : undefined;
@@ -47,12 +48,15 @@ class MockLiveService implements vsls.SharedService, vsls.SharedServiceProxy {
         }
         return Promise.resolve();
     }
+
     public onRequest(name: string, handler: vsls.RequestHandler): void {
         this.requestHandlers.set(name, handler);
     }
+
     public onNotify(name: string, handler: vsls.NotifyHandler): void {
         this.notifyHandlers.set(name, handler);
     }
+
     public notify(name: string, args: object): void {
         // See if any handlers.
         const handler = this.sibling ? this.sibling.notifyHandlers.get(name) : undefined;
@@ -246,12 +250,15 @@ class MockLiveShare implements vsls.LiveShare, vsls.Session, vsls.Peer, IDisposa
     public get role(): vsls.Role {
         return this._visibleRole;
     }
+
     public get id(): string {
         return this._id;
     }
+
     public get peerNumber(): number {
         return this._peerNumber;
     }
+
     public get user(): vsls.UserInfo {
         return {
             displayName: 'Test',
@@ -260,6 +267,7 @@ class MockLiveShare implements vsls.LiveShare, vsls.Session, vsls.Peer, IDisposa
             id: '0'
         };
     }
+
     public get access(): vsls.Access {
         return vsls.Access.None;
     }
@@ -267,18 +275,23 @@ class MockLiveShare implements vsls.LiveShare, vsls.Session, vsls.Peer, IDisposa
     public get onDidChangeSession(): Event<vsls.SessionChangeEvent> {
         return this.changeSessionEmitter.event;
     }
+
     public get peers(): vsls.Peer[] {
         return this.currentPeers;
     }
+
     public get onDidChangePeers(): Event<vsls.PeersChangeEvent> {
         return this.changePeersEmitter.event;
     }
+
     public share(_options?: vsls.ShareOptions): Promise<Uri> {
         throw new Error('Method not implemented.');
     }
+
     public join(_link: Uri, _options?: vsls.JoinOptions): Promise<void> {
         throw new Error('Method not implemented.');
     }
+
     public async end(): Promise<void> {
         // If we're the guest, just stop ourselves. If we're the host, stop everybody
         if (this._role === vsls.Role.Guest) {
@@ -287,6 +300,7 @@ class MockLiveShare implements vsls.LiveShare, vsls.Session, vsls.Peer, IDisposa
             await Promise.all(MockLiveShare.others.map((p) => p.stop()));
         }
     }
+
     public shareService(name: string): Promise<vsls.SharedService> {
         if (!MockLiveShare.services.has(name)) {
             MockLiveShare.services.set(name, this.generateServicePair());
@@ -299,10 +313,12 @@ class MockLiveShare implements vsls.LiveShare, vsls.Session, vsls.Peer, IDisposa
         // Host is always the first
         return Promise.resolve(services[0]);
     }
+
     public unshareService(name: string): Promise<void> {
         MockLiveShare.services.delete(name);
         return Promise.resolve();
     }
+
     public getSharedService(name: string): Promise<vsls.SharedServiceProxy> {
         if (!MockLiveShare.services.has(name)) {
             // Don't wait for the host to start. It shouldn't be necessary anyway.
@@ -316,6 +332,7 @@ class MockLiveShare implements vsls.LiveShare, vsls.Session, vsls.Peer, IDisposa
         // Guest is always the second one
         return Promise.resolve(services[1]);
     }
+
     public convertLocalUriToShared(localUri: Uri): Uri {
         // Do the same checking that liveshare does
         checkArg(localUri, 'localUri', 'uri');
@@ -335,6 +352,7 @@ class MockLiveShare implements vsls.LiveShare, vsls.Session, vsls.Peer, IDisposa
 
         return Uri.parse(`vsls:${localUri.fsPath}`);
     }
+
     public convertSharedUriToLocal(sharedUri: Uri): Uri {
         checkArg(sharedUri, 'sharedUri', 'uri');
 
@@ -349,18 +367,22 @@ class MockLiveShare implements vsls.LiveShare, vsls.Session, vsls.Peer, IDisposa
 
         return Uri.file(sharedUri.fsPath);
     }
+
     public registerCommand(_command: string, _isEnabled?: () => boolean, _thisArg?: any): Disposable {
         throw new Error('Method not implemented.');
     }
+
     public registerTreeDataProvider<T>(_viewId: vsls.View, _treeDataProvider: TreeDataProvider<T>): Disposable {
         throw new Error('Method not implemented.');
     }
+
     public registerContactServiceProvider(
         _name: string,
         _contactServiceProvider: vsls.ContactServiceProvider
     ): Disposable {
         throw new Error('Method not implemented.');
     }
+
     public shareServer(_server: vsls.Server): Promise<Disposable> {
         // Ignore for now. We don't need to port forward during a test
         return Promise.resolve({ dispose: noop });

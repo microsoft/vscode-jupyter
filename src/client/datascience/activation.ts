@@ -29,6 +29,7 @@ export class Activation implements IExtensionSingleActivationService {
         @inject(INotebookCreationTracker)
         private readonly tracker: INotebookCreationTracker
     ) {}
+
     public async activate(): Promise<void> {
         this.disposables.push(this.notebookEditorProvider.onDidOpenNotebookEditor(this.onDidOpenNotebookEditor, this));
         this.disposables.push(this.jupyterInterpreterService.onDidChangeInterpreter(this.onDidChangeInterpreter, this));

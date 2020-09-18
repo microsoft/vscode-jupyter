@@ -23,6 +23,7 @@ export class MountedWebViewFactory implements IMountedWebViewFactory, IDisposabl
         this.map.forEach((v) => v.dispose());
         this.map.clear();
     }
+
     public get(id: string): IMountedWebView {
         const obj = this.map.get(id);
         if (!obj) {

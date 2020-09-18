@@ -37,6 +37,7 @@ export class AutoSaveService implements IInteractiveWindowListener {
         message: string;
         payload: any;
     }>();
+
     private disposables: IDisposable[] = [];
     private notebookUri?: Uri;
     private timeout?: ReturnType<typeof setTimeout>;
@@ -72,6 +73,7 @@ export class AutoSaveService implements IInteractiveWindowListener {
             this.disposables.push(notebook.saved(this.onNotebookSaved, this, this.disposables));
         }
     }
+
     public onViewStateChanged(args: WebViewViewChangeEventArgs) {
         let changed = false;
         if (this.visible !== args.current.visible) {
@@ -89,22 +91,26 @@ export class AutoSaveService implements IInteractiveWindowListener {
             }
         }
     }
+
     public dispose(): void | undefined {
         this.disposables.filter((item) => !!item).forEach((item) => item.dispose());
         this.clearTimeout();
     }
+
     private onNotebookModified(_: INotebookEditor) {
         // If we haven't started a timer, then start if necessary.
         if (!this.timeout) {
             this.setTimer();
         }
     }
+
     private onNotebookSaved(_: INotebookEditor) {
         // If we haven't started a timer, then start if necessary.
         if (!this.timeout) {
             this.setTimer();
         }
     }
+
     private getNotebook(): INotebookEditor | undefined {
         const uri = this.notebookUri;
         if (!uri) {
@@ -114,6 +120,7 @@ export class AutoSaveService implements IInteractiveWindowListener {
             this.fs.areLocalPathsSame(item.file.fsPath, uri.fsPath)
         );
     }
+
     private getAutoSaveSettings(): FileSettings {
         const filesConfig = this.workspace.getConfiguration('files', this.notebookUri);
         return {
@@ -121,6 +128,7 @@ export class AutoSaveService implements IInteractiveWindowListener {
             autoSaveDelay: filesConfig.get('autoSaveDelay', 1000)
         };
     }
+
     private onSettingsChanded(e: ConfigurationChangeEvent) {
         if (
             e.affectsConfiguration('files.autoSave', this.notebookUri) ||
@@ -131,6 +139,7 @@ export class AutoSaveService implements IInteractiveWindowListener {
             this.setTimer();
         }
     }
+
     private setTimer() {
         const settings = this.getAutoSaveSettings();
         if (!settings || settings.autoSave === 'off') {
@@ -144,12 +153,14 @@ export class AutoSaveService implements IInteractiveWindowListener {
             }, settings.autoSaveDelay);
         }
     }
+
     private clearTimeout() {
         if (this.timeout) {
             clearTimeout(this.timeout);
             this.timeout = undefined;
         }
     }
+
     private save() {
         this.clearTimeout();
         const notebook = this.getNotebook();
@@ -160,12 +171,14 @@ export class AutoSaveService implements IInteractiveWindowListener {
             this.setTimer();
         }
     }
+
     private onDidChangeWindowState(_state: WindowState) {
         const settings = this.getAutoSaveSettings();
         if (settings && (settings.autoSave === 'onWindowChange' || settings.autoSave === 'onFocusChange')) {
             this.save();
         }
     }
+
     private onDidChangeActiveTextEditor(_e?: TextEditor) {
         const settings = this.getAutoSaveSettings();
         if (settings && settings.autoSave === 'onFocusChange') {

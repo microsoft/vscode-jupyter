@@ -44,6 +44,7 @@ export class KernelDaemonPool implements IDisposable {
         @inject(IPythonExecutionFactory) private readonly pythonExecutionFactory: IPythonExecutionFactory,
         @inject(IKernelDependencyService) private readonly kernelDependencyService: IKernelDependencyService
     ) {}
+
     public async preWarmKernelDaemons() {
         if (this.initialized) {
             return;
@@ -61,9 +62,11 @@ export class KernelDaemonPool implements IDisposable {
         }
         await Promise.all(promises);
     }
+
     public dispose() {
         this.disposables.forEach((item) => item.dispose());
     }
+
     public async get(
         resource: Resource,
         kernelSpec: IJupyterKernelSpec,
@@ -96,6 +99,7 @@ export class KernelDaemonPool implements IDisposable {
     private getDaemonKey(resource: Resource, pythonPath: string): string {
         return `${this.workspaceService.getWorkspaceFolderIdentifier(resource)}#${pythonPath}`;
     }
+
     private createDaemon(resource: Resource, pythonPath: string) {
         const daemon = this.pythonExecutionFactory.createDaemon<IPythonKernelDaemon>({
             daemonModule: KernelLauncherDaemonModule,
@@ -113,6 +117,7 @@ export class KernelDaemonPool implements IDisposable {
             .catch(noop);
         return daemon;
     }
+
     private async onDidEnvironmentVariablesChange(affectedResoruce: Resource) {
         const workspaceFolderIdentifier = this.workspaceService.getWorkspaceFolderIdentifier(affectedResoruce);
         this.daemonPool = this.daemonPool.filter((item) => {
@@ -129,6 +134,7 @@ export class KernelDaemonPool implements IDisposable {
             return true;
         });
     }
+
     private async preWarmKernelDaemon(resource: Resource) {
         const interpreter = await this.interrpeterService.getActiveInterpreter(resource);
         if (!interpreter || !(await this.kernelDependencyService.areDependenciesInstalled(interpreter))) {
@@ -162,6 +168,7 @@ export class KernelDaemonPool implements IDisposable {
             workspaceResource: resource
         });
     }
+
     private async onDidChangeInterpreter() {
         // Get a list of all unique workspaces
         const uniqueResourcesWithKernels = new Map<string, IKernelDaemonInfo>();

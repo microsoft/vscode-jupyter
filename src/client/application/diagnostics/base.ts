@@ -39,10 +39,12 @@ export abstract class BaseDiagnosticsService implements IDiagnosticsService, IDi
         this.filterService = serviceContainer.get<IDiagnosticFilterService>(IDiagnosticFilterService);
         disposableRegistry.push(this);
     }
+
     public abstract diagnose(resource: Resource): Promise<IDiagnostic[]>;
     public dispose() {
         // Nothing to do, but can be overidden
     }
+
     public async handle(diagnostics: IDiagnostic[]): Promise<void> {
         if (diagnostics.length === 0) {
             return;
@@ -60,10 +62,12 @@ export abstract class BaseDiagnosticsService implements IDiagnosticsService, IDi
         });
         await this.onHandle(diagnosticsToHandle);
     }
+
     public async canHandle(diagnostic: IDiagnostic): Promise<boolean> {
         sendTelemetryEvent(EventName.DIAGNOSTICS_MESSAGE, undefined, { code: diagnostic.code });
         return this.supportedDiagnosticCodes.filter((item) => item === diagnostic.code).length > 0;
     }
+
     protected abstract onHandle(diagnostics: IDiagnostic[]): Promise<void>;
     /**
      * Returns a key used to keep track of whether a diagnostic was handled or not.

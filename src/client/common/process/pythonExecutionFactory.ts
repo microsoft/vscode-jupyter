@@ -53,6 +53,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         this.logger = this.serviceContainer.get<IProcessLogger>(IProcessLogger);
         this.fileSystem = this.serviceContainer.get<IFileSystem>(IFileSystem);
     }
+
     public async create(options: ExecutionFactoryCreationOptions): Promise<IPythonExecutionService> {
         const pythonPath = options.pythonPath ? options.pythonPath : await this.getPythonPath(options.resource);
         const processService: IProcessService = await this.processServiceFactory.create(options.resource);
@@ -139,6 +140,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
             return (activatedProcPromise as unknown) as T;
         });
     }
+
     public async createActivatedEnvironment(
         options: ExecutionFactoryCreateWithEnvironmentOptions
     ): Promise<IPythonExecutionService> {

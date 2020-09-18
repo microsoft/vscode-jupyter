@@ -13,12 +13,15 @@ export class MockProcess implements ICurrentProcess {
     public on(_event: string | symbol, _listener: Function): this {
         return this;
     }
+
     public get argv(): string[] {
         return [];
     }
+
     public get stdout(): NodeJS.WriteStream {
         return TypeMoq.Mock.ofType<NodeJS.WriteStream>().object;
     }
+
     public get stdin(): NodeJS.ReadStream {
         return TypeMoq.Mock.ofType<NodeJS.ReadStream>().object;
     }

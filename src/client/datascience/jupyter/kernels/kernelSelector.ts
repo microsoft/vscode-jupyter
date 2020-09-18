@@ -88,6 +88,7 @@ export class KernelSelector implements IKernelSelectionUsage {
         this.kernelIdsToHide.add(kernel.id);
         this.kernelIdsToHide.add(kernel.clientId);
     }
+
     /**
      * Opposite of the add counterpart.
      *
@@ -127,6 +128,7 @@ export class KernelSelector implements IKernelSelectionUsage {
         );
         return cloneDeep(selection);
     }
+
     /**
      * Select a kernel from a local session.
      */
@@ -156,6 +158,7 @@ export class KernelSelector implements IKernelSelectionUsage {
         );
         return cloneDeep(selection);
     }
+
     /**
      * Gets a kernel that needs to be used with a local session.
      * (will attempt to find the best matching kernel, or prompt user to use current interpreter or select one).
@@ -317,6 +320,7 @@ export class KernelSelector implements IKernelSelectionUsage {
             });
         }
     }
+
     public async useSelectedKernel(
         selection: KernelConnectionMetadata,
         resource: Resource,
@@ -366,6 +370,7 @@ export class KernelSelector implements IKernelSelectionUsage {
             return;
         }
     }
+
     public async askForLocalKernel(
         resource: Resource,
         type: 'raw' | 'jupyter' | 'noConnection',
@@ -384,6 +389,7 @@ export class KernelSelector implements IKernelSelectionUsage {
             return cloneDeep(item);
         }
     }
+
     public async selectJupyterKernel(
         resource: Resource,
         connection: INotebookProviderConnection | undefined,

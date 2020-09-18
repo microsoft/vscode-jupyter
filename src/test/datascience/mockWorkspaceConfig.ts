@@ -29,9 +29,11 @@ export class MockWorkspaceConfiguration implements WorkspaceConfiguration {
 
         return arguments.length > 1 ? defaultValue : (undefined as any);
     }
+
     public has(section: string): boolean {
         return this.values.has(section);
     }
+
     public inspect<T>(
         _section: string
     ):
@@ -45,6 +47,7 @@ export class MockWorkspaceConfiguration implements WorkspaceConfiguration {
         | undefined {
         return;
     }
+
     public update(
         section: string,
         value: any,

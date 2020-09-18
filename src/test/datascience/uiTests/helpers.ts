@@ -50,13 +50,16 @@ export class BaseWebUI implements IAsyncDisposable {
         await this.browser?.close();
         await this.page?.close();
     }
+
     public async type(text: string): Promise<void> {
         await this.page?.keyboard.type(text);
     }
+
     public _setWebServer(webServer: IWebServer) {
         this.webServer = webServer;
         this.webServerPromise.resolve(webServer);
     }
+
     public async waitUntilLoaded(): Promise<void> {
         await this.webServerPromise.promise.then(() =>
             // The UI is deemed loaded when we have seen all of the following messages.
@@ -78,6 +81,7 @@ export class BaseWebUI implements IAsyncDisposable {
     public waitForMessageAfterServer(message: string, options?: WaitForMessageOptions): Promise<void> {
         return this.webServerPromise.promise.then(() => this.waitForMessage(message, options));
     }
+
     public async waitForMessage(message: string, options?: WaitForMessageOptions): Promise<void> {
         if (!this.webServer) {
             throw new Error('WebServer not yet started');
@@ -124,6 +128,7 @@ export class BaseWebUI implements IAsyncDisposable {
 
         return promise.promise;
     }
+
     /**
      * Opens a browser an loads the webpage, effectively loading the UI.
      */

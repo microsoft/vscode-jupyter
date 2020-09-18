@@ -30,6 +30,7 @@ export class LinkProvider implements IInteractiveWindowListener {
         message: string;
         payload: any;
     }>();
+
     constructor(
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
         @inject(IDataScienceFileSystem) private fs: IDataScienceFileSystem,
@@ -90,6 +91,7 @@ export class LinkProvider implements IInteractiveWindowListener {
                 break;
         }
     }
+
     public dispose(): void | undefined {
         noop();
     }

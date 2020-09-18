@@ -22,6 +22,7 @@ export class ServiceContainer implements IServiceContainer {
     public get<T>(serviceIdentifier: interfaces.ServiceIdentifier<T>, name?: string | number | symbol): T {
         return name ? this.container.getNamed<T>(serviceIdentifier, name) : this.container.get<T>(serviceIdentifier);
     }
+
     public getAll<T>(
         serviceIdentifier: string | symbol | Newable<T> | Abstract<T>,
         name?: string | number | symbol | undefined
@@ -30,6 +31,7 @@ export class ServiceContainer implements IServiceContainer {
             ? this.container.getAllNamed<T>(serviceIdentifier, name)
             : this.container.getAll<T>(serviceIdentifier);
     }
+
     public tryGet<T>(
         serviceIdentifier: interfaces.ServiceIdentifier<T>,
         name?: string | number | symbol | undefined

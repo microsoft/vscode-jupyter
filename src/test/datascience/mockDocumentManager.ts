@@ -43,35 +43,45 @@ export class MockDocumentManager implements IDocumentManager {
     public get onDidChangeActiveTextEditor(): Event<TextEditor | undefined> {
         return this.didChangeActiveTextEditorEmitter.event;
     }
+
     public get onDidChangeTextDocument(): Event<TextDocumentChangeEvent> {
         return this.didChangeTextDocumentEmitter.event;
     }
+
     public get onDidOpenTextDocument(): Event<TextDocument> {
         return this.didOpenEmitter.event;
     }
+
     public get onDidChangeVisibleTextEditors(): Event<TextEditor[]> {
         return this.didChangeVisibleEmitter.event;
     }
+
     public get onDidChangeTextEditorSelection(): Event<TextEditorSelectionChangeEvent> {
         return this.didChangeTextEditorSelectionEmitter.event;
     }
+
     public get onDidChangeTextEditorOptions(): Event<TextEditorOptionsChangeEvent> {
         return this.didChangeTextEditorOptionsEmitter.event;
     }
+
     public get onDidChangeTextEditorViewColumn(): Event<TextEditorViewColumnChangeEvent> {
         return this.didChangeTextEditorViewColumnEmitter.event;
     }
+
     public get onDidCloseTextDocument(): Event<TextDocument> {
         return this.didCloseEmitter.event;
     }
+
     public get onDidSaveTextDocument(): Event<TextDocument> {
         return this.didSaveEmitter.event;
     }
+
     public showTextDocument(
         _document: TextDocument,
         _column?: ViewColumn,
         _preserveFocus?: boolean
     ): Thenable<TextEditor>;
+
     public showTextDocument(_document: TextDocument | Uri, _options?: TextDocumentShowOptions): Thenable<TextEditor>;
     public showTextDocument(document: any, _column?: any, _preserveFocus?: any): Thenable<TextEditor> {
         this.visibleTextEditors.push(document);
@@ -80,6 +90,7 @@ export class MockDocumentManager implements IDocumentManager {
         this.didChangeActiveTextEditorEmitter.fire(this.activeTextEditor);
         return Promise.resolve(mockEditor);
     }
+
     public openTextDocument(_fileName: string | Uri): Thenable<TextDocument>;
     public openTextDocument(_options?: { language?: string; content?: string }): Thenable<TextDocument>;
     public openTextDocument(_options?: any): Thenable<TextDocument> {
@@ -89,6 +100,7 @@ export class MockDocumentManager implements IDocumentManager {
         }
         return Promise.resolve(this.lastDocument);
     }
+
     public applyEdit(_edit: WorkspaceEdit): Thenable<boolean> {
         throw new Error('Method not implemented.');
     }

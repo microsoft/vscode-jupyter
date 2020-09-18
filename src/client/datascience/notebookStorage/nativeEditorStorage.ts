@@ -65,6 +65,7 @@ export class NativeEditorStorage implements INotebookStorage {
         @inject(ITrustService) private trustService: ITrustService,
         @inject(INotebookModelFactory) private readonly factory: INotebookModelFactory
     ) {}
+
     private static isUntitledFile(file: Uri) {
         return isUntitledFile(file);
     }
@@ -72,15 +73,18 @@ export class NativeEditorStorage implements INotebookStorage {
     public generateBackupId(model: INotebookModel): string {
         return `${path.basename(model.file.fsPath)}-${uuid()}`;
     }
+
     public get(_file: Uri): INotebookModel | undefined {
         return undefined;
     }
+
     public getOrCreateModel(
         file: Uri,
         possibleContents?: string,
         backupId?: string,
         forVSCodeNotebook?: boolean
     ): Promise<INotebookModel>;
+
     public getOrCreateModel(
         file: Uri,
         possibleContents?: string,
@@ -88,6 +92,7 @@ export class NativeEditorStorage implements INotebookStorage {
         skipDirtyContents?: boolean,
         forVSCodeNotebook?: boolean
     ): Promise<INotebookModel>;
+
     public getOrCreateModel(
         file: Uri,
         possibleContents?: string,
@@ -97,6 +102,7 @@ export class NativeEditorStorage implements INotebookStorage {
     ): Promise<INotebookModel> {
         return this.loadFromFile(file, possibleContents, options, forVSCodeNotebook);
     }
+
     public async save(model: INotebookModel, _cancellation: CancellationToken): Promise<void> {
         const contents = model.getContent();
         const parallelize = [this.fs.writeFile(model.file, contents)];
@@ -131,6 +137,7 @@ export class NativeEditorStorage implements INotebookStorage {
             sourceUri: model.file
         });
     }
+
     public async backup(model: INotebookModel, cancellation: CancellationToken, backupId?: string): Promise<void> {
         // If we are already backing up, save this request replacing any other previous requests
         if (this.backingUp) {
@@ -161,6 +168,7 @@ export class NativeEditorStorage implements INotebookStorage {
     public async deleteBackup(model: INotebookModel, backupId: string): Promise<void> {
         return this.clearHotExit(model.file, backupId);
     }
+
     /**
      * Stores the uncommitted notebook changes into a temporary location.
      * Also keep track of the current time. This way we can check whether changes were
@@ -216,6 +224,7 @@ export class NativeEditorStorage implements INotebookStorage {
             traceError(`Error writing storage for ${filePath}: `, exc);
         }
     }
+
     private async extractPythonMainVersion(notebookData: Partial<nbformat.INotebookContent>): Promise<number> {
         if (
             notebookData &&
@@ -253,12 +262,14 @@ export class NativeEditorStorage implements INotebookStorage {
             noop();
         }
     }
+
     private loadFromFile(
         file: Uri,
         possibleContents?: string,
         backupId?: string,
         forVSCodeNotebook?: boolean
     ): Promise<INotebookModel>;
+
     private loadFromFile(
         file: Uri,
         possibleContents?: string,
@@ -266,6 +277,7 @@ export class NativeEditorStorage implements INotebookStorage {
         skipDirtyContents?: boolean,
         forVSCodeNotebook?: boolean
     ): Promise<INotebookModel>;
+
     private async loadFromFile(
         file: Uri,
         possibleContents?: string,

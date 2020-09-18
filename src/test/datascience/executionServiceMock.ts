@@ -36,16 +36,19 @@ export class MockPythonExecutionService implements IPythonExecutionService {
     public getExecutablePath(): Promise<string> {
         return Promise.resolve(this.pythonPath);
     }
+
     public isModuleInstalled(moduleName: string): Promise<boolean> {
         return this.procService
             .exec(this.pythonPath, ['-c', `import ${moduleName}`], { throwOnStdErr: true })
             .then(() => true)
             .catch(() => false);
     }
+
     public execObservable(args: string[], options: SpawnOptions): ObservableExecutionResult<string> {
         const opts: SpawnOptions = { ...options };
         return this.procService.execObservable(this.pythonPath, args, opts);
     }
+
     public execModuleObservable(
         moduleName: string,
         args: string[],
@@ -54,10 +57,12 @@ export class MockPythonExecutionService implements IPythonExecutionService {
         const opts: SpawnOptions = { ...options };
         return this.procService.execObservable(this.pythonPath, ['-m', moduleName, ...args], opts);
     }
+
     public exec(args: string[], options: SpawnOptions): Promise<ExecutionResult<string>> {
         const opts: SpawnOptions = { ...options };
         return this.procService.exec(this.pythonPath, args, opts);
     }
+
     public async execModule(
         moduleName: string,
         args: string[],
@@ -76,6 +81,7 @@ export class MockPythonExecutionService implements IPythonExecutionService {
 
         return result;
     }
+
     public getExecutionInfo(args: string[]) {
         return buildPythonExecInfo(this.pythonPath, args);
     }

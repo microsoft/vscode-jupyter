@@ -40,6 +40,7 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(IExtensionContext) private readonly extensionContext: IExtensionContext
     ) {}
+
     public async activate(): Promise<void> {
         // This condition is temporary.
         // If user belongs to the experiment, then make the necessary changes to package.json.
@@ -88,6 +89,7 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
             }
         }
     }
+
     private async enableNotebooks() {
         if (this.env.channel === 'stable') {
             this.shell.showErrorMessage(DataScience.previewNotebookOnlySupportedInVSCInsiders()).then(noop, noop);
@@ -96,6 +98,7 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
 
         await this.enableDisableEditorAssociation(true);
     }
+
     private async enableDisableEditorAssociation(enable: boolean) {
         // This code is temporary.
         const settings = this.workspace.getConfiguration('workbench', undefined);
@@ -135,6 +138,7 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
             ]);
         }
     }
+
     private async disableNotebooks() {
         if (this.env.channel === 'stable') {
             return;

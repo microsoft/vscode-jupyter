@@ -15,20 +15,24 @@ class MockProvider implements IJupyterUriProvider {
     public get id() {
         return this._id;
     }
+
     private currentBearer = 1;
     private result: string = '1';
     constructor(private readonly _id: string) {
         // Id should be readonly
     }
+
     public getQuickPickEntryItems(): vscode.QuickPickItem[] {
         return [{ label: 'Foo' }];
     }
+
     public async handleQuickPick(
         _item: vscode.QuickPickItem,
         back: boolean
     ): Promise<JupyterServerUriHandle | 'back' | undefined> {
         return back ? 'back' : this.result;
     }
+
     public async getServerUri(handle: string): Promise<IJupyterServerUri> {
         if (handle === '1') {
             const currentDate = new Date();

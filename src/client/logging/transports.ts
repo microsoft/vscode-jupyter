@@ -36,6 +36,7 @@ class ConsoleTransport extends Transport {
         [LogLevel.Debug]: console.debug,
         [LogLevel.Trace]: console.trace
     };
+
     private static defaultFunc = console.log;
     // tslint:enable:no-console
 
@@ -83,6 +84,7 @@ class JupyterOutputChannelTransport extends Transport {
     constructor(private readonly channel: OutputChannel, options?: any) {
         super(options);
     }
+
     // tslint:disable-next-line: no-any
     public log?(info: { message: string; [formattedMessage]: string }, next: () => void): any {
         setImmediate(() => this.emit('logged', info));

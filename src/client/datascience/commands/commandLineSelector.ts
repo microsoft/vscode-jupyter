@@ -16,6 +16,7 @@ export class JupyterCommandLineSelectorCommand implements IDisposable {
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(JupyterCommandLineSelector) private readonly commandSelector: JupyterCommandLineSelector
     ) {}
+
     public register() {
         this.disposables.push(
             this.commandManager.registerCommand(
@@ -25,6 +26,7 @@ export class JupyterCommandLineSelectorCommand implements IDisposable {
             )
         );
     }
+
     public dispose() {
         this.disposables.forEach((d) => d.dispose());
     }

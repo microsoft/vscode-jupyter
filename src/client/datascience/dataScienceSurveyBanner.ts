@@ -42,10 +42,12 @@ export class DataScienceSurveyBannerLogger implements IInteractiveWindowListener
         @named(BANNER_NAME_DS_SURVEY)
         private readonly dataScienceSurveyBanner: IPythonExtensionBanner
     ) {}
+
     // tslint:disable-next-line: no-any
     public get postMessage(): Event<{ message: string; payload: any }> {
         return this.postEmitter.event;
     }
+
     // tslint:disable-next-line: no-any
     public onMessage(message: string, payload?: any): void {
         if (message === InteractiveWindowMessages.ReExecuteCells) {
@@ -65,6 +67,7 @@ export class DataScienceSurveyBannerLogger implements IInteractiveWindowListener
             }
         }
     }
+
     public dispose(): void | undefined {
         noop();
     }
@@ -79,6 +82,7 @@ export class DataScienceSurveyBanner implements IPythonExtensionBanner {
         localize.DataScienceSurveyBanner.bannerLabelYes(),
         localize.DataScienceSurveyBanner.bannerLabelNo()
     ];
+
     private readonly surveyLink: string;
 
     constructor(
@@ -99,6 +103,7 @@ export class DataScienceSurveyBanner implements IPythonExtensionBanner {
         }
         this.isInitialized = true;
     }
+
     public get enabled(): boolean {
         return this.persistentState.createGlobalPersistentState<boolean>(DSSurveyStateKeys.ShowBanner, true).value;
     }

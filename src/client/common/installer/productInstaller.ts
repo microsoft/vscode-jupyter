@@ -100,10 +100,12 @@ export abstract class BaseInstaller {
         resource?: InterpreterUri,
         cancel?: CancellationToken
     ): Promise<InstallerResponse>;
+
     protected getExecutableNameFromSettings(product: Product, resource?: Uri): string {
         const productPathService = this.serviceContainer.get<IProductPathService>(IProductPathService);
         return productPathService.getExecutableNameFromSettings(product, resource);
     }
+
     protected isExecutableAModule(product: Product, resource?: Uri): Boolean {
         const productPathService = this.serviceContainer.get<IProductPathService>(IProductPathService);
         return productPathService.isExecutableAModule(product, resource);
@@ -135,6 +137,7 @@ export class DataScienceInstaller extends BaseInstaller {
             isInstalled ? InstallerResponse.Installed : InstallerResponse.Ignore
         );
     }
+
     protected async promptToInstallImplementation(
         product: Product,
         resource?: InterpreterUri,
@@ -191,6 +194,7 @@ export class ProductInstaller implements IInstaller {
         }
         return this.createInstaller().promptToInstall(product, resource, cancel);
     }
+
     public async install(
         product: Product,
         resource?: InterpreterUri,
@@ -198,12 +202,15 @@ export class ProductInstaller implements IInstaller {
     ): Promise<InstallerResponse> {
         return this.createInstaller().install(product, resource, cancel);
     }
+
     public async isInstalled(product: Product, resource?: InterpreterUri): Promise<boolean | undefined> {
         return this.createInstaller().isInstalled(product, resource);
     }
+
     public translateProductToModuleName(product: Product, _purpose: ModuleNamePurpose): string {
         return translateProductToModule(product);
     }
+
     private createInstaller(): BaseInstaller {
         return new DataScienceInstaller(this.serviceContainer, this.outputChannel);
     }

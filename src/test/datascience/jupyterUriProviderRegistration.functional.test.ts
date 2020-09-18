@@ -24,9 +24,11 @@ class TestUriProvider implements IJupyterUriProvider {
     public getQuickPickEntryItems(): QuickPickItem[] {
         throw new Error('Method not implemented.');
     }
+
     public handleQuickPick(_item: QuickPickItem, _backEnabled: boolean): Promise<string | undefined> {
         throw new Error('Method not implemented.');
     }
+
     public async getServerUri(handle: string): Promise<IJupyterServerUri> {
         if (handle === TestUriHandle) {
             this.currentBearer += 1;
@@ -55,6 +57,7 @@ class TestUriProviderExtension implements Extension<any> {
             pythonRemoteServerProvider: []
         }
     };
+
     public extensionKind: ExtensionKind = ExtensionKind.Workspace;
     public exports: any = {};
     constructor(private ioc: DataScienceIocContainer) {}
@@ -73,6 +76,7 @@ class UriMockExtensions implements IExtensions {
     constructor(ioc: DataScienceIocContainer) {
         this.all.push(new TestUriProviderExtension(ioc));
     }
+
     public getExtension<T>(_extensionId: string): Extension<T> | undefined {
         return undefined;
     }

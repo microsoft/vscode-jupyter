@@ -90,6 +90,7 @@ export class JupyterServerSelector {
             await this.handleProviderQuickPick(provider.id, result);
         }
     }
+
     private async handleProviderQuickPick(id: string, result: JupyterServerUriHandle | undefined) {
         if (result) {
             const uri = this.generateUriFromRemoteProvider(id, result);
@@ -162,6 +163,7 @@ export class JupyterServerSelector {
                 .then(noop, noop);
         }
     }
+
     private validateSelectJupyterURI = async (inputText: string): Promise<string | undefined> => {
         try {
             // tslint:disable-next-line:no-unused-expression

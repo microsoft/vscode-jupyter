@@ -70,6 +70,7 @@ export class JupyterCommandLineSelector {
             return this.selectCustomCommandLine.bind(this, file);
         }
     }
+
     private async selectCustomCommandLine(
         file: Uri,
         input: IMultiStepInput<{}>,

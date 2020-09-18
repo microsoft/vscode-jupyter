@@ -32,6 +32,7 @@ export class GuestJupyterSessionManager implements IJupyterSessionManager {
     public get onRestartSessionUsed() {
         return this.restartSessionUsedEvent.event;
     }
+
     public startNew(
         kernelConnection: KernelConnectionMetadata | undefined,
         workingDirectory: string,

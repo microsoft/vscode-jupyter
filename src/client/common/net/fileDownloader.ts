@@ -20,6 +20,7 @@ export class FileDownloader implements IFileDownloader {
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell
     ) {}
+
     public async downloadFile(uri: string, options: DownloadOptions): Promise<string> {
         if (options.outputChannel) {
             options.outputChannel.appendLine(Http.downloadingFile().format(uri));
@@ -36,6 +37,7 @@ export class FileDownloader implements IFileDownloader {
 
         return tempFile.filePath;
     }
+
     public async downloadFileWithStatusBarProgress(
         uri: string,
         progressMessage: string,

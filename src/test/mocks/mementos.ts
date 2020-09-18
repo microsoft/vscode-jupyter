@@ -15,11 +15,13 @@ export class MockMemento implements Memento {
         // tslint:disable-next-line:no-any
         return exists ? this._value[key] : (defaultValue! as any);
     }
+
     // tslint:disable-next-line:no-any
     public update(key: string, value: any): Thenable<void> {
         this._value[key] = value;
         return Promise.resolve();
     }
+
     public clear() {
         this._value = {};
     }

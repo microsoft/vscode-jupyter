@@ -22,6 +22,7 @@ export class TemporaryFileSystem implements ITempFileSystem {
         // (effectively) the third-party "tmp" module to use
         private readonly raw: IRawTempFS
     ) {}
+
     public static withDefaults(): TemporaryFileSystem {
         return new TemporaryFileSystem(
             // Use the actual "tmp" module.

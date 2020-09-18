@@ -13,9 +13,11 @@ class TestPersistentState<T> implements IPersistentState<T> {
             persistedState.set(key, defaultValue);
         }
     }
+
     public get value(): T {
         return persistedState.get(this.key);
     }
+
     public async updateValue(value: T): Promise<void> {
         persistedState.set(this.key, value);
     }
@@ -39,6 +41,7 @@ export class TestPersistentStateFactory implements IPersistentStateFactory {
 
         return this.realStateFactory.createGlobalPersistentState(key, defaultValue, expiryDurationMs);
     }
+
     public createWorkspacePersistentState<T>(
         key: string,
         defaultValue?: T | undefined,

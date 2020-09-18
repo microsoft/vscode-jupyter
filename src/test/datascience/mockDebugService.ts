@@ -25,6 +25,7 @@ export class MockDebuggerService implements IJupyterDebugService {
         @named(Identifiers.RUN_BY_LINE_DEBUGSERVICE)
         private jupyterDebugService: IJupyterDebugService
     ) {}
+
     public get activeDebugSession(): DebugSession | undefined {
         return this.activeService.activeDebugSession;
     }
@@ -32,36 +33,47 @@ export class MockDebuggerService implements IJupyterDebugService {
     public get activeDebugConsole(): DebugConsole {
         return this.activeService.activeDebugConsole;
     }
+
     public get breakpoints(): Breakpoint[] {
         return this.activeService.breakpoints;
     }
+
     public get onDidChangeActiveDebugSession(): Event<DebugSession | undefined> {
         return this.activeService.onDidChangeActiveDebugSession;
     }
+
     public get onDidStartDebugSession(): Event<DebugSession> {
         return this.activeService.onDidStartDebugSession;
     }
+
     public get onDidReceiveDebugSessionCustomEvent(): Event<DebugSessionCustomEvent> {
         return this.activeService.onDidReceiveDebugSessionCustomEvent;
     }
+
     public get onDidTerminateDebugSession(): Event<DebugSession> {
         return this.activeService.onDidTerminateDebugSession;
     }
+
     public get onDidChangeBreakpoints(): Event<BreakpointsChangeEvent> {
         return this.onDidChangeBreakpoints;
     }
+
     public get onBreakpointHit(): Event<void> {
         return this.activeService.onBreakpointHit;
     }
+
     public startRunByLine(config: DebugConfiguration): Thenable<boolean> {
         return this.jupyterDebugService.startRunByLine(config);
     }
+
     public registerDebugConfigurationProvider(debugType: string, provider: DebugConfigurationProvider): Disposable {
         return this.jupyterDebugService.registerDebugConfigurationProvider(debugType, provider);
     }
+
     public registerDebugAdapterTrackerFactory(debugType: string, factory: DebugAdapterTrackerFactory): Disposable {
         return this.jupyterDebugService.registerDebugAdapterTrackerFactory(debugType, factory);
     }
+
     public startDebugging(
         folder: WorkspaceFolder | undefined,
         nameOrConfiguration: string | DebugConfiguration,
@@ -69,27 +81,35 @@ export class MockDebuggerService implements IJupyterDebugService {
     ): Thenable<boolean> {
         return this.activeService.startDebugging(folder, nameOrConfiguration, parentSession);
     }
+
     public addBreakpoints(breakpoints: Breakpoint[]): void {
         return this.activeService.addBreakpoints(breakpoints);
     }
+
     public removeBreakpoints(breakpoints: Breakpoint[]): void {
         return this.activeService.removeBreakpoints(breakpoints);
     }
+
     public getStack(): Promise<DebugProtocol.StackFrame[]> {
         return this.activeService.getStack();
     }
+
     public step(): Promise<void> {
         return this.activeService.step();
     }
+
     public continue(): Promise<void> {
         return this.activeService.continue();
     }
+
     public requestVariables(): Promise<void> {
         return this.activeService.requestVariables();
     }
+
     public stop(): void {
         return this.activeService.stop();
     }
+
     private get activeService(): IJupyterDebugService {
         return this.jupyterDebugService;
     }

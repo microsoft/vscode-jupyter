@@ -58,6 +58,7 @@ export class HttpClient implements IHttpClient {
             }
         });
     }
+
     private async getContents(uri: string): Promise<string> {
         // tslint:disable-next-line:no-require-imports
         const request = require('request') as typeof requestTypes;

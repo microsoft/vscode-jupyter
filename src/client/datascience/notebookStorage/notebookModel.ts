@@ -17,12 +17,14 @@ export class NativeEditorNotebookModel extends BaseNotebookModel {
     public get id() {
         return this._id;
     }
+
     private _id = uuid();
     private saveChangeCount: number = 0;
     private changeCount: number = 0;
     public get isDirty(): boolean {
         return this.changeCount !== this.saveChangeCount;
     }
+
     constructor(
         isTrusted: boolean,
         file: Uri,
@@ -44,6 +46,7 @@ export class NativeEditorNotebookModel extends BaseNotebookModel {
     public async applyEdits(edits: readonly NotebookModelChange[]): Promise<void> {
         edits.forEach((e) => this.update({ ...e, source: 'redo' }));
     }
+
     public async undoEdits(edits: readonly NotebookModelChange[]): Promise<void> {
         edits.forEach((e) => this.update({ ...e, source: 'undo' }));
     }

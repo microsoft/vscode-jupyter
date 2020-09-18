@@ -40,6 +40,7 @@ export class JupyterInterpreterService {
         private readonly interpreterConfiguration: JupyterInterpreterDependencyService,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService
     ) {}
+
     /**
      * Gets the selected interpreter configured to run Jupyter.
      *

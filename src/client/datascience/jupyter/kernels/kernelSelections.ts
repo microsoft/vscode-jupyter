@@ -128,6 +128,7 @@ export class InstalledJupyterKernelSelectionListProvider
         private readonly pathUtils: IPathUtils,
         private readonly sessionManager?: IJupyterSessionManager
     ) {}
+
     public async getKernelSelections(
         _resource: Resource,
         cancelToken?: CancellationToken | undefined
@@ -206,13 +207,16 @@ export class KernelSelectionProvider {
     private localSuggestionsCache: IKernelSpecQuickPickItem<
         KernelSpecConnectionMetadata | PythonKernelConnectionMetadata
     >[] = [];
+
     private remoteSuggestionsCache: IKernelSpecQuickPickItem<
         LiveKernelConnectionMetadata | KernelSpecConnectionMetadata
     >[] = [];
+
     private _listChanged = new EventEmitter<Resource>();
     public get onDidChangeSelections() {
         return this._listChanged.event;
     }
+
     constructor(
         @inject(KernelService) private readonly kernelService: KernelService,
         @inject(IInterpreterSelector) private readonly interpreterSelector: IInterpreterSelector,
@@ -220,6 +224,7 @@ export class KernelSelectionProvider {
         @inject(IPathUtils) private readonly pathUtils: IPathUtils,
         @inject(IKernelFinder) private readonly kernelFinder: IKernelFinder
     ) {}
+
     /**
      * Gets a selection of kernel specs from a remote session.
      *
@@ -258,6 +263,7 @@ export class KernelSelectionProvider {
             this.remoteSuggestionsCache.length > 0 ? Promise.resolve(this.remoteSuggestionsCache) : liveItems;
         return Promise.race([cachedItems, liveItems]);
     }
+
     /**
      * Gets a selection of kernel specs for a local session.
      *

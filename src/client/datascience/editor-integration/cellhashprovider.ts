@@ -51,6 +51,7 @@ export class CellHashProvider implements ICellHashProvider, INotebookExecutionLo
         // tslint:disable-next-line: no-any
         payload: any;
     }>();
+
     // Map of file to Map of start line to actual hash
     private executionCount: number = 0;
     private hashes: Map<string, IRangedCellHash[]> = new Map<string, IRangedCellHash[]>();

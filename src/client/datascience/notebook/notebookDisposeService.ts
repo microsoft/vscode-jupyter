@@ -21,6 +21,7 @@ export class NotebookDisposeService implements IExtensionSingleActivationService
         @inject(INotebookProvider) private readonly notebookProvider: INotebookProvider,
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider
     ) {}
+
     public async activate(): Promise<void> {
         if (this.env.channel !== 'insiders') {
             return;
@@ -28,6 +29,7 @@ export class NotebookDisposeService implements IExtensionSingleActivationService
 
         this.vscNotebook.onDidCloseNotebookDocument(this.onDidCloseNotebookDocument, this, this.disposables);
     }
+
     private onDidCloseNotebookDocument(document: NotebookDocument) {
         const kernel = this.kernelProvider.get(document.uri);
         if (kernel) {

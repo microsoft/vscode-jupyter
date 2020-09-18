@@ -32,9 +32,11 @@ export class KernelProvider implements IKernelProvider {
         @inject(KernelSelector) private readonly kernelSelectionUsage: IKernelSelectionUsage,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell
     ) {}
+
     public get(uri: Uri): IKernel | undefined {
         return this.kernelsByUri.get(uri.toString())?.kernel;
     }
+
     public getOrCreate(uri: Uri, options: KernelOptions): IKernel | undefined {
         const existingKernelInfo = this.kernelsByUri.get(uri.toString());
         if (existingKernelInfo && fastDeepEqual(existingKernelInfo.options.metadata, options.metadata)) {
@@ -64,6 +66,7 @@ export class KernelProvider implements IKernelProvider {
         this.deleteMappingIfKernelIsDisposed(uri, kernel);
         return kernel;
     }
+
     /**
      * If a kernel has been disposed, then remove the mapping of Uri + Kernel.
      */
@@ -83,6 +86,7 @@ export class KernelProvider implements IKernelProvider {
             this.disposables
         );
     }
+
     private disposeOldKernel(uri: Uri) {
         this.kernelsByUri
             .get(uri.toString())

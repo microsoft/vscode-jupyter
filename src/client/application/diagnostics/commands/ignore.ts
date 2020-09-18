@@ -17,6 +17,7 @@ export class IgnoreDiagnosticCommand extends BaseDiagnosticCommand {
     ) {
         super(diagnostic);
     }
+
     public invoke(): Promise<void> {
         sendTelemetryEvent(EventName.DIAGNOSTICS_ACTION, undefined, { ignoreCode: this.diagnostic.code });
         const filter = this.serviceContainer.get<IDiagnosticFilterService>(IDiagnosticFilterService);

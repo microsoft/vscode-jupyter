@@ -25,6 +25,7 @@ export class UnitTestIocContainer extends IocContainer {
     constructor() {
         super();
     }
+
     public async getPythonMajorVersion(resource: Uri): Promise<number> {
         const procServiceFactory = this.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory);
         const procService = await procServiceFactory.create(resource);

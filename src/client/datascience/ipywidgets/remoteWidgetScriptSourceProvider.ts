@@ -18,6 +18,7 @@ export class RemoteWidgetScriptSourceProvider implements IWidgetScriptSourceProv
     public dispose() {
         // Noop.
     }
+
     public async getWidgetScriptSource(moduleName: string, moduleVersion: string): Promise<WidgetScriptSource> {
         const scriptUri = `${this.connection.baseUrl}nbextensions/${moduleName}/index.js`;
         const exists = await this.getUrlForWidget(scriptUri);
@@ -27,6 +28,7 @@ export class RemoteWidgetScriptSourceProvider implements IWidgetScriptSourceProv
         traceWarning(`Widget Script not found for ${moduleName}@${moduleVersion}`);
         return { moduleName };
     }
+
     private async getUrlForWidget(url: string): Promise<boolean> {
         if (RemoteWidgetScriptSourceProvider.validUrls.has(url)) {
             return RemoteWidgetScriptSourceProvider.validUrls.get(url)!;

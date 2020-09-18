@@ -52,6 +52,7 @@ export class PythonDaemonFactory {
         // Always ignore warnings as the user should never see the output of the daemon running
         this.envVariables[PYTHON_WARNINGS] = 'ignore';
     }
+
     @traceDecorators.error('Failed to create daemon')
     public async createDaemonService<T extends IPythonDaemonExecutionService | IDisposable>(): Promise<T> {
         // Add '--log-file=/Users/donjayamanne/Desktop/Development/vsc/pythonVSCode/daaemon.log' to log to a file.
@@ -103,12 +104,14 @@ export class PythonDaemonFactory {
             throw ex;
         }
     }
+
     /**
      * Protected so we can override for testing purposes.
      */
     protected createConnection(proc: ChildProcess) {
         return createMessageConnection(new StreamMessageReader(proc.stdout), new StreamMessageWriter(proc.stdin));
     }
+
     /**
      * Tests whether a daemon is usable or not by checking whether it responds to a simple ping.
      * If a daemon doesn't reply to a ping in 5s, then its deemed to be dead/not usable.

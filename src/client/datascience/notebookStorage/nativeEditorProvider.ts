@@ -74,15 +74,19 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
     public get onDidChangeActiveNotebookEditor(): Event<INotebookEditor | undefined> {
         return this._onDidChangeActiveNotebookEditor.event;
     }
+
     public get onDidCloseNotebookEditor(): Event<INotebookEditor> {
         return this._onDidCloseNotebookEditor.event;
     }
+
     public get onDidOpenNotebookEditor(): Event<INotebookEditor> {
         return this._onDidOpenNotebookEditor.event;
     }
+
     public get activeEditor(): INotebookEditor | undefined {
         return this.editors.find((e) => e.visible && e.active);
     }
+
     public get onDidChangeCustomDocument(): Event<CustomDocumentEditEvent> {
         return this._onDidEdit.event;
     }
@@ -90,6 +94,7 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
     public get editors(): INotebookEditor[] {
         return [...this.openedEditors];
     }
+
     // Note, this constant has to match the value used in the package.json to register the webview custom editor.
     public static readonly customEditorViewType = 'ms-ai-tools.jupyter.notebook.ipynb';
     protected readonly _onDidChangeActiveNotebookEditor = new EventEmitter<INotebookEditor | undefined>();
@@ -135,18 +140,22 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
             dispose: () => model.dispose()
         };
     }
+
     public async saveCustomDocument(document: CustomDocument, cancellation: CancellationToken): Promise<void> {
         const model = await this.loadModel(document.uri);
         return this.storage.save(model, cancellation);
     }
+
     public async saveCustomDocumentAs(document: CustomDocument, targetResource: Uri): Promise<void> {
         const model = await this.loadModel(document.uri);
         return this.storage.saveAs(model, targetResource);
     }
+
     public async revertCustomDocument(document: CustomDocument, cancellation: CancellationToken): Promise<void> {
         const model = await this.loadModel(document.uri);
         return this.storage.revert(model, cancellation);
     }
+
     public async backupCustomDocument(
         document: CustomDocument,
         _context: CustomDocumentBackupContext,
@@ -307,6 +316,7 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
         this.openedEditors.delete(editor);
         this._onDidCloseNotebookEditor.fire(editor);
     }
+
     private trackModel(model: INotebookModel) {
         if (!this.models.has(model)) {
             this.models.add(model);

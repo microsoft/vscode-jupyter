@@ -18,9 +18,11 @@ export class ReloadVSCodeCommandHandler implements IExtensionSingleActivationSer
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell
     ) {}
+
     public async activate(): Promise<void> {
         this.commandManager.registerCommand('jupyter.reloadVSCode', this.onReloadVSCode, this);
     }
+
     private async onReloadVSCode(message: string) {
         const item = await this.appShell.showInformationMessage(message, Common.reload());
         if (item === Common.reload()) {

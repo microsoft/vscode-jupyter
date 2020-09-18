@@ -23,6 +23,7 @@ export class RendererExtensionDownloader {
         @inject(IFileDownloader) private readonly fileDownloader: IFileDownloader,
         @inject(IDataScienceFileSystem) private readonly fs: IDataScienceFileSystem
     ) {}
+
     @traceDecorators.error('Installing Notebook Renderer extension failed')
     public async downloadAndInstall(): Promise<void> {
         if (this.installed) {

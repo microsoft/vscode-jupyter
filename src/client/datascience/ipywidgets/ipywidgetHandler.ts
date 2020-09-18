@@ -33,6 +33,7 @@ export class IPyWidgetHandler implements IInteractiveWindowListener {
     public get postMessage(): Event<{ message: string; payload: any }> {
         return this.postEmitter.event;
     }
+
     private ipyWidgetMessageDispatcher?: IIPyWidgetMessageDispatcher;
     private notebookIdentity: Uri | undefined;
     // tslint:disable-next-line: no-any
@@ -41,6 +42,7 @@ export class IPyWidgetHandler implements IInteractiveWindowListener {
         // tslint:disable-next-line: no-any
         payload: any;
     }>();
+
     // tslint:disable-next-line: no-require-imports
     private hashFn = require('hash.js').sha256;
     private enabled = false;
@@ -114,6 +116,7 @@ export class IPyWidgetHandler implements IInteractiveWindowListener {
             // do nothing on failure
         }
     }
+
     private sendUnsupportedWidgetVersionFailureTelemetry(payload: NotifyIPyWidgeWidgetVersionNotSupportedAction) {
         try {
             sendTelemetryEvent(Telemetry.IPyWidgetWidgetVersionNotSupportedLoadFailure, 0, {
@@ -124,6 +127,7 @@ export class IPyWidgetHandler implements IInteractiveWindowListener {
             // do nothing on failure
         }
     }
+
     private sendRenderFailureTelemetry(payload: Error) {
         try {
             traceError('Error rendering a widget: ', payload);
@@ -152,6 +156,7 @@ export class IPyWidgetHandler implements IInteractiveWindowListener {
             }
         }
     }
+
     private getIPyWidgetMessageDispatcher() {
         if (!this.notebookIdentity || !this.enabled) {
             return;

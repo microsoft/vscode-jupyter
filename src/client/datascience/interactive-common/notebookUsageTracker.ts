@@ -35,6 +35,7 @@ export class NotebookUsageTracker implements IExtensionSingleActivationService {
         }
         this.editorProvider.onDidOpenNotebookEditor(this.onEditorOpened, this, this.disposables);
     }
+
     public dispose() {
         // Send a bunch of telemetry
         if (this.openedNotebookCount) {
@@ -47,6 +48,7 @@ export class NotebookUsageTracker implements IExtensionSingleActivationService {
             sendTelemetryEvent(Telemetry.NotebookWorkspaceCount, undefined, { count: this.notebookCount });
         }
     }
+
     private onEditorOpened(editor: INotebookEditor): void {
         this.openedNotebookCount += 1;
         if (editor.model?.isUntitled) {

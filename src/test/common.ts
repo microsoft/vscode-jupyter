@@ -560,9 +560,11 @@ export class FakeClock {
         const lolex = require('lolex');
         this.clock = lolex.install();
     }
+
     public uninstall() {
         this.clock?.uninstall();
     }
+
     /**
      * Wait for timers to kick in, and then wait for all of them to complete.
      *
@@ -590,6 +592,7 @@ export class FakeClock {
             await new Promise((resolve) => process.nextTick(resolve));
         }
     }
+
     /**
      * Wait for timers to finish.
      *
@@ -626,21 +629,27 @@ export class TestEventHandler<T extends void | any = any> implements IDisposable
     public get fired() {
         return this.handledEvents.length > 0;
     }
+
     public get first(): T {
         return this.handledEvents[0];
     }
+
     public get second(): T {
         return this.handledEvents[1];
     }
+
     public get last(): T {
         return this.handledEvents[this.handledEvents.length - 1];
     }
+
     public get count(): number {
         return this.handledEvents.length;
     }
+
     public get all(): T[] {
         return this.handledEvents;
     }
+
     private readonly handler: IDisposable;
     // tslint:disable-next-line: no-any
     private readonly handledEvents: any[] = [];
@@ -648,14 +657,17 @@ export class TestEventHandler<T extends void | any = any> implements IDisposable
         disposables.push(this);
         this.handler = event(this.listener, this);
     }
+
     public reset() {
         while (this.handledEvents.length) {
             this.handledEvents.pop();
         }
     }
+
     public async assertFired(waitPeriod: number = 100): Promise<void> {
         await waitForCondition(async () => this.fired, waitPeriod, `${this.eventNameForErrorMessages} event not fired`);
     }
+
     public async assertFiredExactly(numberOfTimesFired: number, waitPeriod: number = 2_000): Promise<void> {
         await waitForCondition(
             async () => this.count === numberOfTimesFired,
@@ -663,6 +675,7 @@ export class TestEventHandler<T extends void | any = any> implements IDisposable
             `${this.eventNameForErrorMessages} event fired ${this.count}, expected ${numberOfTimesFired}`
         );
     }
+
     public async assertFiredAtLeast(numberOfTimesFired: number, waitPeriod: number = 2_000): Promise<void> {
         await waitForCondition(
             async () => this.count >= numberOfTimesFired,
@@ -670,6 +683,7 @@ export class TestEventHandler<T extends void | any = any> implements IDisposable
             `${this.eventNameForErrorMessages} event fired ${this.count}, expected at least ${numberOfTimesFired}.`
         );
     }
+
     public atIndex(index: number): T {
         return this.handledEvents[index];
     }

@@ -43,24 +43,31 @@ export class Kernel implements IKernel {
     get connection(): INotebookProviderConnection | undefined {
         return this.notebook?.connection;
     }
+
     get onStatusChanged(): Event<ServerStatus> {
         return this._onStatusChanged.event;
     }
+
     get onRestarted(): Event<void> {
         return this._onRestarted.event;
     }
+
     get onDisposed(): Event<void> {
         return this._onDisposed.event;
     }
+
     get status(): ServerStatus {
         return this.notebook?.status ?? ServerStatus.NotStarted;
     }
+
     get disposed(): boolean {
         return this._disposed === true || this.notebook?.disposed === true;
     }
+
     get kernelSocket(): Observable<KernelSocketInformation | undefined> {
         return this._kernelSocket.asObservable();
     }
+
     private notebook?: INotebook;
     private _disposed?: boolean;
     private readonly _kernelSocket = new Subject<KernelSocketInformation | undefined>();
@@ -99,22 +106,27 @@ export class Kernel implements IKernel {
             appShell
         );
     }
+
     public async executeCell(cell: NotebookCell): Promise<void> {
         await this.start({ disableUI: false, token: this.startCancellation.token });
         await this.kernelExecution.executeCell(cell);
     }
+
     public async executeAllCells(document: NotebookDocument): Promise<void> {
         await this.start({ disableUI: false, token: this.startCancellation.token });
         await this.kernelExecution.executeAllCells(document);
     }
+
     public cancelCell(cell: NotebookCell) {
         this.startCancellation.cancel();
         this.kernelExecution.cancelCell(cell);
     }
+
     public cancelAllCells(document: NotebookDocument) {
         this.startCancellation.cancel();
         this.kernelExecution.cancelAllCells(document);
     }
+
     public async start(options?: { disableUI?: boolean; token?: CancellationToken }): Promise<void> {
         if (this.restarting) {
             await this.restarting.promise;
@@ -148,6 +160,7 @@ export class Kernel implements IKernel {
             await this.initializeAfterStart();
         }
     }
+
     public async interrupt(): Promise<InterruptResult> {
         if (this.restarting) {
             await this.restarting.promise;
@@ -157,6 +170,7 @@ export class Kernel implements IKernel {
         }
         return this.notebook.interruptKernel(this.launchTimeout);
     }
+
     public async dispose(): Promise<void> {
         this.restarting = undefined;
         this._notebookPromise = undefined;
@@ -170,6 +184,7 @@ export class Kernel implements IKernel {
         }
         this.kernelExecution.dispose();
     }
+
     public async restart(): Promise<void> {
         if (this.restarting) {
             return this.restarting.promise;
@@ -187,6 +202,7 @@ export class Kernel implements IKernel {
             }
         }
     }
+
     private async validate(uri: Uri): Promise<void> {
         const kernel = this.kernelProvider.get(uri);
         if (!kernel) {
@@ -213,6 +229,7 @@ export class Kernel implements IKernel {
         }
         await this.kernelValidated.get(key)!.promise;
     }
+
     private async initializeAfterStart() {
         if (!this.notebook) {
             return;

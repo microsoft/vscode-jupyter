@@ -69,6 +69,7 @@ export class JupyterInterpreterSubCommandExecutionService
     public async refreshCommands(): Promise<void> {
         noop();
     }
+
     public async isNotebookSupported(token?: CancellationToken): Promise<boolean> {
         const interpreter = await this.jupyterInterpreter.getSelectedInterpreter(token);
         if (!interpreter) {
@@ -76,6 +77,7 @@ export class JupyterInterpreterSubCommandExecutionService
         }
         return this.jupyterDependencyService.areDependenciesInstalled(interpreter, token);
     }
+
     public async isExportSupported(token?: CancellationToken): Promise<boolean> {
         const interpreter = await this.jupyterInterpreter.getSelectedInterpreter(token);
         if (!interpreter) {
@@ -83,6 +85,7 @@ export class JupyterInterpreterSubCommandExecutionService
         }
         return this.jupyterDependencyService.isExportSupported(interpreter, token);
     }
+
     public async getReasonForJupyterNotebookNotBeingSupported(token?: CancellationToken): Promise<string> {
         let interpreter = await this.jupyterInterpreter.getSelectedInterpreter(token);
         if (!interpreter) {
@@ -108,9 +111,11 @@ export class JupyterInterpreterSubCommandExecutionService
 
         return getMessageForLibrariesNotInstalled(productsNotInstalled, interpreter.displayName);
     }
+
     public async getSelectedInterpreter(token?: CancellationToken): Promise<PythonEnvironment | undefined> {
         return this.jupyterInterpreter.getSelectedInterpreter(token);
     }
+
     public async startNotebook(
         notebookArgs: string[],
         options: SpawnOptions
@@ -182,6 +187,7 @@ export class JupyterInterpreterSubCommandExecutionService
             .execModule('jupyter', ['nbconvert'].concat(args), { throwOnStdErr: false, encoding: 'utf8', token })
             .then((output) => output.stdout);
     }
+
     public async openNotebook(notebookFile: string): Promise<void> {
         const interpreter = await this.getSelectedInterpreterAndThrowIfNotAvailable();
         // Do  not use the daemon for this, its a waste resources. The user will manage the lifecycle of this process.

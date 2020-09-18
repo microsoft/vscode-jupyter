@@ -38,6 +38,7 @@ export class NotebookServerProvider implements IJupyterServerProvider {
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService
     ) {}
+
     public get onNotebookCreated() {
         return this._notebookCreated.event;
     }

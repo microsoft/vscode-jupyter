@@ -28,18 +28,21 @@ export class NotebookEditorProviderWrapper implements INotebookEditorProvider {
         }
         return this._onDidChangeActiveNotebookEditor.event;
     }
+
     public get onDidCloseNotebookEditor(): Event<INotebookEditor> {
         if (this.useVSCodeNotebookEditorApi) {
             return this.vscodeNotebookEditorProvider.onDidCloseNotebookEditor;
         }
         return this._onDidCloseNotebookEditor.event;
     }
+
     public get onDidOpenNotebookEditor(): Event<INotebookEditor> {
         if (this.useVSCodeNotebookEditorApi) {
             return this.vscodeNotebookEditorProvider.onDidOpenNotebookEditor;
         }
         return this._onDidOpenNotebookEditor.event;
     }
+
     public get activeEditor(): INotebookEditor | undefined {
         if (this.useVSCodeNotebookEditorApi) {
             return this.vscodeNotebookEditorProvider.activeEditor;
@@ -48,6 +51,7 @@ export class NotebookEditorProviderWrapper implements INotebookEditorProvider {
             this.vscodeNotebookEditorProvider.activeEditor || this.ourCustomOrOldNotebookEditorProvider?.activeEditor
         );
     }
+
     public get editors(): INotebookEditor[] {
         if (this.useVSCodeNotebookEditorApi) {
             return this.vscodeNotebookEditorProvider.editors;
@@ -59,6 +63,7 @@ export class NotebookEditorProviderWrapper implements INotebookEditorProvider {
         const provider = this.ourCustomOrOldNotebookEditorProvider || this.vscodeNotebookEditorProvider;
         return provider.editors;
     }
+
     protected readonly _onDidChangeActiveNotebookEditor = new EventEmitter<INotebookEditor | undefined>();
     protected readonly _onDidOpenNotebookEditor = new EventEmitter<INotebookEditor>();
     private readonly _onDidCloseNotebookEditor = new EventEmitter<INotebookEditor>();
@@ -135,9 +140,11 @@ export class NotebookEditorProviderWrapper implements INotebookEditorProvider {
 
         return (this.ourCustomOrOldNotebookEditorProvider || this.vscodeNotebookEditorProvider).open(file);
     }
+
     public async show(file: Uri): Promise<INotebookEditor | undefined> {
         return (this.ourCustomOrOldNotebookEditorProvider || this.vscodeNotebookEditorProvider).show(file);
     }
+
     public async createNew(contents?: string): Promise<INotebookEditor> {
         return (this.ourCustomOrOldNotebookEditorProvider || this.vscodeNotebookEditorProvider).createNew(contents);
     }

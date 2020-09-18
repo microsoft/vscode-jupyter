@@ -53,6 +53,7 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
         // tslint:disable-next-line: no-any
         payload: any;
     }>();
+
     private notebookData = new Map<string, PerNotebookData>();
     private codeLensCache = new Map<string, CodeLensCacheData>();
     constructor(

@@ -41,18 +41,23 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
     public get onDidChangeActiveNotebookEditor(): Event<INotebookEditor | undefined> {
         return this._onDidChangeActiveNotebookEditor.event;
     }
+
     public get onDidCloseNotebookEditor(): Event<INotebookEditor> {
         return this._onDidCloseNotebookEditor.event;
     }
+
     public get onDidOpenNotebookEditor(): Event<INotebookEditor> {
         return this._onDidOpenNotebookEditor.event;
     }
+
     public get activeEditor(): INotebookEditor | undefined {
         return this.editors.find((e) => e.visible && e.active);
     }
+
     public get editors(): INotebookEditor[] {
         return [...this.openedEditors];
     }
+
     protected readonly _onDidChangeActiveNotebookEditor = new EventEmitter<INotebookEditor | undefined>();
     protected readonly _onDidOpenNotebookEditor = new EventEmitter<INotebookEditor>();
     private readonly _onDidCloseNotebookEditor = new EventEmitter<INotebookEditor>();
@@ -106,16 +111,19 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         // This gets resolved when we have handled the opening of the notebook.
         return deferred.promise;
     }
+
     public async show(_file: Uri): Promise<INotebookEditor | undefined> {
         // We do not need this.
         return;
     }
+
     @captureTelemetry(Telemetry.CreateNewNotebook, undefined, false)
     public async createNew(contents?: string): Promise<INotebookEditor> {
         setSharedProperty('ds_notebookeditor', 'native');
         const model = await this.storage.createNew(contents, true);
         return this.open(model.file);
     }
+
     private onEditorOpened(editor: INotebookEditor): void {
         this.openedEditors.add(editor);
         editor.closed(this.closedEditor, this, this.disposables);
@@ -179,6 +187,7 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
             await this.commandManager.executeCommand(Commands.TrustNotebook, model.file);
         }
     }
+
     private onDidChangeActiveVsCodeNotebookEditor(editor: VSCodeNotebookEditor | undefined) {
         if (!editor) {
             this._onDidChangeActiveNotebookEditor.fire(undefined);
@@ -192,9 +201,11 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         this.trackedVSCodeNotebookEditors.add(editor);
         this.disposables.push(editor.onDidDispose(() => this.onDidDisposeVSCodeNotebookEditor(editor)));
     }
+
     private async onDidCloseNotebookDocument(document: NotebookDocument) {
         this.disposeResourceRelatedToNotebookEditor(document.uri);
     }
+
     private disposeResourceRelatedToNotebookEditor(uri: Uri) {
         // Ok, dispose all of the resources associated with this document.
         // In our case, we only have one editor.
@@ -209,6 +220,7 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         this.notebookEditorsByUri.delete(uri.toString());
         this.notebooksWaitingToBeOpenedByUri.delete(uri.toString());
     }
+
     /**
      * We know a notebook editor has been closed.
      * We need to close/dispose all of our resources related to this notebook document.

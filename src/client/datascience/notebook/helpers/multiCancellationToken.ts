@@ -20,6 +20,7 @@ export class MultiCancellationTokenSource {
             onCancellationRequested: this.eventEmitter.event.bind(this.eventEmitter)
         };
     }
+
     public cancel(): void {
         this.token.isCancellationRequested = true;
         this.eventEmitter.fire();

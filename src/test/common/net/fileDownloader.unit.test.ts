@@ -42,6 +42,7 @@ class ErroringMemoryStream extends Writable {
     constructor(private readonly errorMessage: string) {
         super();
     }
+
     public _write(_chunk: any, _encoding: any, callback: any) {
         super.emit('error', new Error(this.errorMessage));
         return callback();
@@ -63,14 +64,17 @@ class DelayedReadMemoryStream extends Readable {
     ) {
         super();
     }
+
     // @ts-ignore https://devblogs.microsoft.com/typescript/announcing-typescript-4-0-rc/#properties-overridding-accessors-and-vice-versa-is-an-error
     public get readableLength() {
         return 1024 * 10;
     }
+
     public _read() {
         // Delay reading data, mimicking slow file downloads.
         setTimeout(() => this.sendMesage(), this.delayMs);
     }
+
     public sendMesage() {
         const i = (this.readCounter += 1);
         if (i > this.totalKb / this.kbPerIteration) {

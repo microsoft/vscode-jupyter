@@ -61,6 +61,7 @@ export class RawJupyterSession extends BaseJupyterSession {
         }
         return Promise.resolve();
     }
+
     public async dispose(): Promise<void> {
         this._disposables.forEach((d) => d.dispose());
         await super.dispose();
@@ -196,6 +197,7 @@ export class RawJupyterSession extends BaseJupyterSession {
             this.restartSessionPromise = this.createRestartSession(this.kernelConnectionMetadata, this.session);
         }
     }
+
     protected async createRestartSession(
         kernelConnection: KernelConnectionMetadata | undefined,
         _session: ISessionWithSocket,

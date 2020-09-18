@@ -97,48 +97,63 @@ export class RawSession implements ISessionWithSocket {
     get terminated(): ISignal<this, void> {
         throw new Error('Not yet implemented');
     }
+
     get kernelChanged(): ISignal<this, Session.IKernelChangedArgs> {
         return this._kernelChanged;
     }
+
     get propertyChanged(): ISignal<this, 'path' | 'name' | 'type'> {
         throw new Error('Not yet implemented');
     }
+
     get iopubMessage(): ISignal<this, KernelMessage.IIOPubMessage> {
         return this._ioPubMessage;
     }
+
     get unhandledMessage(): ISignal<this, KernelMessage.IMessage> {
         throw new Error('Not yet implemented');
     }
+
     get anyMessage(): ISignal<this, Kernel.IAnyMessageArgs> {
         throw new Error('Not yet implemented');
     }
+
     get path(): string {
         throw new Error('Not yet implemented');
     }
+
     get name(): string {
         throw new Error('Not yet implemented');
     }
+
     get type(): string {
         throw new Error('Not yet implemented');
     }
+
     get serverSettings(): ServerConnection.ISettings {
         throw new Error('Not yet implemented');
     }
+
     get model(): Session.IModel {
         throw new Error('Not yet implemented');
     }
+
     get status(): Kernel.Status {
         throw new Error('Not yet implemented');
     }
+
     public setPath(_path: string): Promise<void> {
         throw new Error('Not yet implemented');
     }
+
     public setName(_name: string): Promise<void> {
         throw new Error('Not yet implemented');
     }
+
     public setType(_type: string): Promise<void> {
         throw new Error('Not yet implemented');
     }
+
     public changeKernel(_options: Partial<Kernel.IModel>): Promise<Kernel.IKernelConnection> {
         throw new Error('Not yet implemented');
     }
@@ -148,9 +163,11 @@ export class RawSession implements ISessionWithSocket {
     private onKernelStatus(_sender: Kernel.IKernelConnection, state: Kernel.Status) {
         this._statusChanged.emit(state);
     }
+
     private onIOPubMessage(_sender: Kernel.IKernelConnection, msg: KernelMessage.IIOPubMessage) {
         this._ioPubMessage.emit(msg);
     }
+
     private handleUnhandledExitingOfKernelProcess(e: { exitCode?: number | undefined; reason?: string | undefined }) {
         if (this.isDisposing) {
             return;

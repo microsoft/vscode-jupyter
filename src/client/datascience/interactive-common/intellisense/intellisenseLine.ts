@@ -19,24 +19,30 @@ export class IntellisenseLine implements TextLine {
     public get offset(): number {
         return this._offset;
     }
+
     public get lineNumber(): number {
         return this._line;
     }
+
     public get text(): string {
         return this._contents;
     }
+
     public get range(): Range {
         return this._range;
     }
+
     public get rangeIncludingLineBreak(): Range {
         return this._rangeWithLineBreak;
     }
+
     public get firstNonWhitespaceCharacterIndex(): number {
         if (this._firstNonWhitespaceIndex === undefined) {
             this._firstNonWhitespaceIndex = this._contents.trimLeft().length - this._contents.length;
         }
         return this._firstNonWhitespaceIndex;
     }
+
     public get isEmptyOrWhitespace(): boolean {
         if (this._isEmpty === undefined) {
             this._isEmpty = this._contents.length === 0 || this._contents.trim().length === 0;

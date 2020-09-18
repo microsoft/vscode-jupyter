@@ -28,6 +28,7 @@ export abstract class WebviewPanelHost<IMapping> extends WebviewHost<IMapping> i
     protected get isDisposed(): boolean {
         return this.disposed;
     }
+
     protected viewState: { visible: boolean; active: boolean } = { visible: false, active: false };
     private webPanel: IWebviewPanel | undefined;
     private messageListener: IWebviewPanelMessageListener;
@@ -97,6 +98,7 @@ export abstract class WebviewPanelHost<IMapping> extends WebviewHost<IMapping> i
 
         super.dispose();
     }
+
     public get title() {
         return this._title;
     }

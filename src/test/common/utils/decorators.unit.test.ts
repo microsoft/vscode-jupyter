@@ -116,6 +116,7 @@ suite('Common Utils - Decorators', function () {
                 this.calls = [];
                 this.timestamps = [];
             }
+
             protected _addCall(funcname: string, timestamp?: number): void {
                 if (!timestamp) {
                     timestamp = getHighPrecisionTime();

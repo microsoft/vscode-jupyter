@@ -28,6 +28,7 @@ export class MockJupyterSession implements IJupyterSession {
     private onIoPubMessageEvent: EventEmitter<KernelMessage.IIOPubMessage> = new EventEmitter<
         KernelMessage.IIOPubMessage
     >();
+
     private timedelay: number;
     private executionCount: number = 0;
     private outstandingRequestTokenSources: CancellationTokenSource[] = [];
@@ -58,6 +59,7 @@ export class MockJupyterSession implements IJupyterSession {
         }
         return this.onStatusChangedEvent.event;
     }
+
     public get onIoPubMessage(): Event<KernelMessage.IIOPubMessage> {
         return this.onIoPubMessageEvent.event;
     }
@@ -77,11 +79,13 @@ export class MockJupyterSession implements IJupyterSession {
 
         return sleep(this.timedelay);
     }
+
     public interrupt(_timeout: number): Promise<void> {
         const requests = [...this.outstandingRequestTokenSources];
         requests.forEach((r) => r.cancel());
         return sleep(this.timedelay);
     }
+
     public waitForIdle(_timeout: number): Promise<void> {
         if (this.pendingIdleFailure) {
             this.pendingIdleFailure = false;
@@ -93,6 +97,7 @@ export class MockJupyterSession implements IJupyterSession {
     public prolongRestarts() {
         this.forceRestartTimeout = true;
     }
+
     public requestExecute(
         content: KernelMessage.IExecuteRequestMsg['content'],
         _disposeOnDone?: boolean,
@@ -267,12 +272,14 @@ export class MockJupyterSession implements IJupyterSession {
 
         return Promise.resolve(shellMessage);
     }
+
     public registerMessageHook(
         _msgId: string,
         _hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>
     ): void {
         noop();
     }
+
     public removeMessageHook(
         _msgId: string,
         _hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>

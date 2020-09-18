@@ -32,10 +32,12 @@ export class PythonKernelDaemon extends BasePythonDaemon implements IPythonKerne
     ) {
         super(pythonExecutionService, platformService, pythonPath, proc, connection);
     }
+
     public async interrupt() {
         const request = new RequestType0<void, void, void>('interrupt_kernel');
         await this.sendRequestWithoutArgs(request);
     }
+
     public async kill() {
         if (this.killed) {
             return;
@@ -44,6 +46,7 @@ export class PythonKernelDaemon extends BasePythonDaemon implements IPythonKerne
         const request = new RequestType0<void, void, void>('kill_kernel');
         await this.sendRequestWithoutArgs(request);
     }
+
     public async preWarm() {
         if (this.started) {
             return;
@@ -99,6 +102,7 @@ export class PythonKernelDaemon extends BasePythonDaemon implements IPythonKerne
             out: this.subject
         };
     }
+
     private monitorOutput() {
         if (this.outputHooked) {
             return;

@@ -42,6 +42,7 @@ export class PythonDaemonExecutionService extends BasePythonDaemon implements IP
     ) {
         super(pythonExecutionService, platformService, pythonPath, proc, connection);
     }
+
     public async getInterpreterInformation(): Promise<InterpreterInformation | undefined> {
         try {
             this.throwIfRPCConnectionIsDead();
@@ -56,6 +57,7 @@ export class PythonDaemonExecutionService extends BasePythonDaemon implements IP
             return this.pythonExecutionService.getInterpreterInformation();
         }
     }
+
     public async getExecutablePath(): Promise<string> {
         try {
             this.throwIfRPCConnectionIsDead();
@@ -71,9 +73,11 @@ export class PythonDaemonExecutionService extends BasePythonDaemon implements IP
             return this.pythonExecutionService.getExecutablePath();
         }
     }
+
     public getExecutionInfo(pythonArgs?: string[]): PythonExecInfo {
         return this.pythonExecutionService.getExecutionInfo(pythonArgs);
     }
+
     public async isModuleInstalled(moduleName: string): Promise<boolean> {
         try {
             this.throwIfRPCConnectionIsDead();
@@ -91,6 +95,7 @@ export class PythonDaemonExecutionService extends BasePythonDaemon implements IP
             return this.pythonExecutionService.isModuleInstalled(moduleName);
         }
     }
+
     public execObservable(args: string[], options: SpawnOptions): ObservableExecutionResult<string> {
         if (this.isAlive && this.canExecFileUsingDaemon(args, options)) {
             try {
@@ -107,6 +112,7 @@ export class PythonDaemonExecutionService extends BasePythonDaemon implements IP
             return this.pythonExecutionService.execObservable(args, options);
         }
     }
+
     public execModuleObservable(
         moduleName: string,
         args: string[],

@@ -40,6 +40,7 @@ export class PythonDaemonExecutionServicePool extends PythonDaemonFactory implem
         super(disposables, options, pythonExecutionService, platformService, activatedEnvVariables);
         this.disposables.push(this);
     }
+
     public async initialize() {
         if (!isDaemonPoolCreationOption(this.options)) {
             return;
@@ -59,28 +60,35 @@ export class PythonDaemonExecutionServicePool extends PythonDaemonFactory implem
 
         await Promise.all([promises, promises2]);
     }
+
     public dispose() {
         this._disposed = true;
     }
+
     public async getInterpreterInformation(): Promise<InterpreterInformation | undefined> {
         const msg = { args: ['GetPythonVersion'] };
         return this.wrapCall((daemon) => daemon.getInterpreterInformation(), msg);
     }
+
     public async getExecutablePath(): Promise<string> {
         const msg = { args: ['getExecutablePath'] };
         return this.wrapCall((daemon) => daemon.getExecutablePath(), msg);
     }
+
     public getExecutionInfo(pythonArgs?: string[]): PythonExecInfo {
         return this.pythonExecutionService.getExecutionInfo(pythonArgs);
     }
+
     public async isModuleInstalled(moduleName: string): Promise<boolean> {
         const msg = { args: ['-m', moduleName] };
         return this.wrapCall((daemon) => daemon.isModuleInstalled(moduleName), msg);
     }
+
     public async exec(args: string[], options: SpawnOptions): Promise<ExecutionResult<string>> {
         const msg = { args, options };
         return this.wrapCall((daemon) => daemon.exec(args, options), msg);
     }
+
     public async execModule(
         moduleName: string,
         args: string[],
@@ -89,10 +97,12 @@ export class PythonDaemonExecutionServicePool extends PythonDaemonFactory implem
         const msg = { args: ['-m', moduleName].concat(args), options };
         return this.wrapCall((daemon) => daemon.execModule(moduleName, args, options), msg);
     }
+
     public execObservable(args: string[], options: SpawnOptions): ObservableExecutionResult<string> {
         const msg = { args, options };
         return this.wrapObservableCall((daemon) => daemon.execObservable(args, options), msg);
     }
+
     public execModuleObservable(
         moduleName: string,
         args: string[],
@@ -101,6 +111,7 @@ export class PythonDaemonExecutionServicePool extends PythonDaemonFactory implem
         const msg = { args: ['-m', moduleName].concat(args), options };
         return this.wrapObservableCall((daemon) => daemon.execModuleObservable(moduleName, args, options), msg);
     }
+
     /**
      * Wrapper for all promise operations to be performed on a daemon.
      * Gets a daemon from the pool, executes the required code, then returns the daemon back into the pool.
@@ -127,6 +138,7 @@ export class PythonDaemonExecutionServicePool extends PythonDaemonFactory implem
             this.pushDaemonIntoPool('StandardDaemon', daemon);
         }
     }
+
     /**
      * Wrapper for all observable operations to be performed on a daemon.
      * Gets a daemon from the pool, executes the required code, then returns the daemon back into the pool.
@@ -172,6 +184,7 @@ export class PythonDaemonExecutionServicePool extends PythonDaemonFactory implem
 
         return result;
     }
+
     /**
      * Adds a daemon into a pool.
      *
@@ -184,6 +197,7 @@ export class PythonDaemonExecutionServicePool extends PythonDaemonFactory implem
         const pool = type === 'StandardDaemon' ? this.daemons : this.observableDaemons;
         pool.push(daemon);
     }
+
     /**
      * Gets a daemon from a pool.
      * If we're unable to get a daemon from a pool within 1s, then return the standard `PythonExecutionService`.
@@ -200,6 +214,7 @@ export class PythonDaemonExecutionServicePool extends PythonDaemonFactory implem
         }
         return this.daemons.shift() ?? this.pythonExecutionService;
     }
+
     /**
      * Gets a daemon from a pool for observable operations.
      * If we're unable to get a daemon from a pool, then return the standard `PythonExecutionService`.
@@ -215,6 +230,7 @@ export class PythonDaemonExecutionServicePool extends PythonDaemonFactory implem
         }
         return this.pythonExecutionService;
     }
+
     /**
      * Pushes a daemon back into the pool.
      * Before doing this, check whether the daemon is usable or not.

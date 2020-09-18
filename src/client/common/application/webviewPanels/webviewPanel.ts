@@ -57,6 +57,7 @@ export class WebviewPanel extends Webview implements IWebviewPanel {
     public get loadFailed(): Event<void> {
         return this.loadFailedEmitter.event;
     }
+
     public async show(preserveFocus: boolean) {
         await this.loadPromise;
         if (this.panel) {

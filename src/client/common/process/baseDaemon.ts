@@ -39,11 +39,13 @@ export abstract class BasePythonDaemon {
     public get isAlive(): boolean {
         return this.connectionClosedMessage === '';
     }
+
     protected outputObservale = new Subject<Output<string>>();
     private connectionClosedMessage: string = '';
     protected get closed() {
         return this.connectionClosedDeferred.promise;
     }
+
     // tslint:disable-next-line: no-any
     private readonly connectionClosedDeferred: Deferred<any>;
     private disposables: IDisposable[] = [];
@@ -62,6 +64,7 @@ export abstract class BasePythonDaemon {
         this.connectionClosedDeferred.promise.catch(noop);
         this.monitorConnection();
     }
+
     public dispose() {
         // Make sure that we only dispose once so we are not sending multiple kill signals or notifications
         // This daemon can be held by multiple disposes such as a jupyter server daemon process which can
@@ -85,6 +88,7 @@ export abstract class BasePythonDaemon {
             this.disposables.forEach((item) => item.dispose());
         }
     }
+
     public execObservable(args: string[], options: SpawnOptions): ObservableExecutionResult<string> {
         if (this.isAlive && this.canExecFileUsingDaemon(args, options)) {
             try {
@@ -101,6 +105,7 @@ export abstract class BasePythonDaemon {
             return this.pythonExecutionService.execObservable(args, options);
         }
     }
+
     public execModuleObservable(
         moduleName: string,
         args: string[],
@@ -121,6 +126,7 @@ export abstract class BasePythonDaemon {
             return this.pythonExecutionService.execModuleObservable(moduleName, args, options);
         }
     }
+
     public async exec(args: string[], options: SpawnOptions): Promise<ExecutionResult<string>> {
         if (this.isAlive && this.canExecFileUsingDaemon(args, options)) {
             try {
@@ -137,6 +143,7 @@ export abstract class BasePythonDaemon {
             return this.pythonExecutionService.exec(args, options);
         }
     }
+
     public async execModule(
         moduleName: string,
         args: string[],
@@ -157,12 +164,15 @@ export abstract class BasePythonDaemon {
             return this.pythonExecutionService.execModule(moduleName, args, options);
         }
     }
+
     protected canExecFileUsingDaemon(args: string[], options: SpawnOptions): boolean {
         return args[0].toLowerCase().endsWith('.py') && this.areOptionsSupported(options);
     }
+
     protected canExecModuleUsingDaemon(_moduleName: string, _args: string[], options: SpawnOptions): boolean {
         return this.areOptionsSupported(options);
     }
+
     protected areOptionsSupported(options: SpawnOptions): boolean {
         const daemonSupportedSpawnOptions: (keyof SpawnOptions)[] = [
             'cwd',
@@ -176,9 +186,11 @@ export abstract class BasePythonDaemon {
         // tslint:disable-next-line: no-any
         return Object.keys(options).every((item) => daemonSupportedSpawnOptions.indexOf(item as any) >= 0);
     }
+
     protected sendRequestWithoutArgs<R, E, RO>(type: RequestType0<R, E, RO>): Thenable<R> {
         return Promise.race([this.connection.sendRequest(type), this.connectionClosedDeferred.promise]);
     }
+
     protected sendRequest<P, R, E, RO>(type: RequestType<P, R, E, RO>, params?: P): Thenable<R> {
         if (!this.isAlive) {
             traceError('Daemon is handling a request after death.');
@@ -186,11 +198,13 @@ export abstract class BasePythonDaemon {
         // Throw an error if the connection has been closed.
         return Promise.race([this.connection.sendRequest(type, params), this.connectionClosedDeferred.promise]);
     }
+
     protected throwIfRPCConnectionIsDead() {
         if (!this.isAlive) {
             throw new ConnectionClosedError(this.connectionClosedMessage);
         }
     }
+
     protected execAsObservable(
         moduleOrFile: { moduleName: string } | { fileName: string },
         args: string[],
@@ -269,6 +283,7 @@ export abstract class BasePythonDaemon {
             out: subject
         };
     }
+
     /**
      * Process the response.
      *
@@ -293,6 +308,7 @@ export abstract class BasePythonDaemon {
             response.stdout = `${response.stdout || ''}${os.EOL}${response.stderr}`;
         }
     }
+
     private async execFileWithDaemon(
         fileName: string,
         args: string[],
@@ -314,6 +330,7 @@ export abstract class BasePythonDaemon {
         this.processResponse(response, options);
         return response;
     }
+
     private async execModuleWithDaemon(
         moduleName: string,
         args: string[],
@@ -335,6 +352,7 @@ export abstract class BasePythonDaemon {
         this.processResponse(response, options);
         return response;
     }
+
     private monitorConnection() {
         // tslint:disable-next-line: no-any
         const logConnectionStatus = (msg: string, ex?: any) => {

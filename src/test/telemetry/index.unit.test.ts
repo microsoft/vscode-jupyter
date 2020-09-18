@@ -36,11 +36,13 @@ suite('Telemetry', () => {
             Reporter.measures = [];
             Reporter.errorProps = undefined;
         }
+
         public sendTelemetryEvent(eventName: string, properties?: {}, measures?: {}) {
             Reporter.eventName.push(eventName);
             Reporter.properties.push(properties!);
             Reporter.measures.push(measures!);
         }
+
         public sendTelemetryErrorEvent(eventName: string, properties?: {}, measures?: {}, errorProps?: string[]) {
             this.sendTelemetryEvent(eventName, properties, measures);
             Reporter.errorProps = errorProps;

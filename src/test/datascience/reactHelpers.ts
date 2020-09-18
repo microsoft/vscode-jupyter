@@ -63,32 +63,41 @@ class MockCanvas implements CanvasRenderingContext2D {
     public restore(): void {
         throw new Error('Method not implemented.');
     }
+
     public save(): void {
         throw new Error('Method not implemented.');
     }
+
     public getTransform(): DOMMatrix {
         throw new Error('Method not implemented.');
     }
+
     public resetTransform(): void {
         throw new Error('Method not implemented.');
     }
+
     public rotate(_angle: number): void {
         throw new Error('Method not implemented.');
     }
+
     public scale(_x: number, _y: number): void {
         throw new Error('Method not implemented.');
     }
+
     public setTransform(a: number, b: number, c: number, d: number, e: number, f: number): void;
     public setTransform(transform?: DOMMatrix2DInit | undefined): void;
     public setTransform(_a?: any, _b?: any, _c?: any, _d?: any, _e?: any, _f?: any) {
         throw new Error('Method not implemented.');
     }
+
     public transform(_a: number, _b: number, _c: number, _d: number, _e: number, _f: number): void {
         throw new Error('Method not implemented.');
     }
+
     public translate(_x: number, _y: number): void {
         throw new Error('Method not implemented.');
     }
+
     public globalAlpha!: number;
     public globalCompositeOperation!: string;
     public imageSmoothingEnabled!: boolean;
@@ -98,9 +107,11 @@ class MockCanvas implements CanvasRenderingContext2D {
     public createLinearGradient(_x0: number, _y0: number, _x1: number, _y1: number): CanvasGradient {
         throw new Error('Method not implemented.');
     }
+
     public createPattern(_image: CanvasImageSource, _repetition: string): CanvasPattern | null {
         throw new Error('Method not implemented.');
     }
+
     public createRadialGradient(
         _x0: number,
         _y0: number,
@@ -111,6 +122,7 @@ class MockCanvas implements CanvasRenderingContext2D {
     ): CanvasGradient {
         throw new Error('Method not implemented.');
     }
+
     public shadowBlur!: number;
     public shadowColor!: string;
     public shadowOffsetX!: number;
@@ -119,61 +131,75 @@ class MockCanvas implements CanvasRenderingContext2D {
     public clearRect(_x: number, _y: number, _w: number, _h: number): void {
         throw new Error('Method not implemented.');
     }
+
     public fillRect(_x: number, _y: number, _w: number, _h: number): void {
         throw new Error('Method not implemented.');
     }
+
     public strokeRect(_x: number, _y: number, _w: number, _h: number): void {
         throw new Error('Method not implemented.');
     }
+
     public beginPath(): void {
         throw new Error('Method not implemented.');
     }
+
     public clip(fillRule?: 'nonzero' | 'evenodd' | undefined): void;
     public clip(path: Path2D, fillRule?: 'nonzero' | 'evenodd' | undefined): void;
     public clip(_path?: any, _fillRule?: any) {
         throw new Error('Method not implemented.');
     }
+
     public fill(fillRule?: 'nonzero' | 'evenodd' | undefined): void;
     public fill(path: Path2D, fillRule?: 'nonzero' | 'evenodd' | undefined): void;
     public fill(_path?: any, _fillRule?: any) {
         throw new Error('Method not implemented.');
     }
+
     public isPointInPath(x: number, y: number, fillRule?: 'nonzero' | 'evenodd' | undefined): boolean;
     public isPointInPath(path: Path2D, x: number, y: number, fillRule?: 'nonzero' | 'evenodd' | undefined): boolean;
     public isPointInPath(_path: any, _x: any, _y?: any, _fillRule?: any): boolean {
         throw new Error('Method not implemented.');
     }
+
     public isPointInStroke(x: number, y: number): boolean;
     public isPointInStroke(path: Path2D, x: number, y: number): boolean;
     public isPointInStroke(_path: any, _x: any, _y?: any): boolean {
         throw new Error('Method not implemented.');
     }
+
     public stroke(): void;
     // tslint:disable-next-line: unified-signatures
     public stroke(path: Path2D): void;
     public stroke(_path?: any) {
         throw new Error('Method not implemented.');
     }
+
     public drawFocusIfNeeded(element: Element): void;
     public drawFocusIfNeeded(path: Path2D, element: Element): void;
     public drawFocusIfNeeded(_path: any, _element?: any) {
         throw new Error('Method not implemented.');
     }
+
     public scrollPathIntoView(): void;
     // tslint:disable-next-line: unified-signatures
     public scrollPathIntoView(path: Path2D): void;
     public scrollPathIntoView(_path?: any) {
         throw new Error('Method not implemented.');
     }
+
     public fillText(_text: string, _x: number, _y: number, _maxWidth?: number | undefined): void {
         throw new Error('Method not implemented.');
     }
+
     public measureText(_text: string): TextMetrics {
         throw new Error('Method not implemented.');
     }
+
     public strokeText(_text: string, _x: number, _y: number, _maxWidth?: number | undefined): void {
         throw new Error('Method not implemented.');
     }
+
     public drawImage(image: CanvasImageSource, dx: number, dy: number): void;
     public drawImage(image: CanvasImageSource, dx: number, dy: number, dw: number, dh: number): void;
     public drawImage(
@@ -187,6 +213,7 @@ class MockCanvas implements CanvasRenderingContext2D {
         dw: number,
         dh: number
     ): void;
+
     public drawImage(
         _image: any,
         _sx: any,
@@ -200,14 +227,17 @@ class MockCanvas implements CanvasRenderingContext2D {
     ) {
         throw new Error('Method not implemented.');
     }
+
     public createImageData(sw: number, sh: number): ImageData;
     public createImageData(imagedata: ImageData): ImageData;
     public createImageData(_sw: any, _sh?: any): ImageData {
         throw new Error('Method not implemented.');
     }
+
     public getImageData(_sx: number, _sy: number, _sw: number, _sh: number): ImageData {
         throw new Error('Method not implemented.');
     }
+
     public putImageData(imagedata: ImageData, dx: number, dy: number): void;
     public putImageData(
         imagedata: ImageData,
@@ -218,6 +248,7 @@ class MockCanvas implements CanvasRenderingContext2D {
         dirtyWidth: number,
         dirtyHeight: number
     ): void;
+
     public putImageData(
         _imagedata: any,
         _dx: any,
@@ -229,6 +260,7 @@ class MockCanvas implements CanvasRenderingContext2D {
     ) {
         throw new Error('Method not implemented.');
     }
+
     public lineCap!: CanvasLineCap;
     public lineDashOffset!: number;
     public lineJoin!: CanvasLineJoin;
@@ -237,9 +269,11 @@ class MockCanvas implements CanvasRenderingContext2D {
     public getLineDash(): number[] {
         throw new Error('Method not implemented.');
     }
+
     public setLineDash(_segments: number[]): void {
         throw new Error('Method not implemented.');
     }
+
     public direction!: CanvasDirection;
     public font!: string;
     public textAlign!: CanvasTextAlign;
@@ -254,15 +288,19 @@ class MockCanvas implements CanvasRenderingContext2D {
     ): void {
         throw new Error('Method not implemented.');
     }
+
     public arcTo(_x1: number, _y1: number, _x2: number, _y2: number, _radius: number): void {
         throw new Error('Method not implemented.');
     }
+
     public bezierCurveTo(_cp1x: number, _cp1y: number, _cp2x: number, _cp2y: number, _x: number, _y: number): void {
         throw new Error('Method not implemented.');
     }
+
     public closePath(): void {
         throw new Error('Method not implemented.');
     }
+
     public ellipse(
         _x: number,
         _y: number,
@@ -275,15 +313,19 @@ class MockCanvas implements CanvasRenderingContext2D {
     ): void {
         throw new Error('Method not implemented.');
     }
+
     public lineTo(_x: number, _y: number): void {
         throw new Error('Method not implemented.');
     }
+
     public moveTo(_x: number, _y: number): void {
         throw new Error('Method not implemented.');
     }
+
     public quadraticCurveTo(_cpx: number, _cpy: number, _x: number, _y: number): void {
         throw new Error('Method not implemented.');
     }
+
     public rect(_x: number, _y: number, _w: number, _h: number): void {
         throw new Error('Method not implemented.');
     }

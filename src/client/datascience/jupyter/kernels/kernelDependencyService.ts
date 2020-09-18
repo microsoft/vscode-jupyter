@@ -23,6 +23,7 @@ export class KernelDependencyService implements IKernelDependencyService {
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IInstaller) private readonly installer: IInstaller
     ) {}
+
     /**
      * Configures the python interpreter to ensure it can run a Jupyter Kernel by installing any missing dependencies.
      * If user opts not to install they can opt to select another interpreter.
@@ -71,6 +72,7 @@ export class KernelDependencyService implements IKernelDependencyService {
         }
         return KernelInterpreterDependencyResponse.cancel;
     }
+
     public areDependenciesInstalled(interpreter: PythonEnvironment, _token?: CancellationToken): Promise<boolean> {
         return this.installer.isInstalled(Product.ipykernel, interpreter).then((installed) => installed === true);
     }

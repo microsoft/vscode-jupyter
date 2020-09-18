@@ -32,6 +32,7 @@ export class ExportCommands implements IDisposable {
         @inject(INotebookEditorProvider) private readonly notebookProvider: INotebookEditorProvider,
         @inject(IDataScienceFileSystem) private readonly fs: IDataScienceFileSystem
     ) {}
+
     public register() {
         this.registerCommand(Commands.ExportAsPythonScript, (model) => this.export(model, ExportFormat.python));
         this.registerCommand(Commands.ExportToHTML, (model, defaultFileName?) =>

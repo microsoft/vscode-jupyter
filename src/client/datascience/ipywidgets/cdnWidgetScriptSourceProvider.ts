@@ -70,6 +70,7 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         const settings = this.configurationSettings.getSettings(undefined);
         return settings.widgetScriptSources;
     }
+
     private cache = new Map<string, WidgetScriptSource>();
     constructor(
         private readonly configurationSettings: IConfigurationService,
@@ -77,9 +78,11 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         private readonly localResourceUriConverter: ILocalResourceUriConverter,
         private readonly fs: IDataScienceFileSystem
     ) {}
+
     public dispose() {
         this.cache.clear();
     }
+
     public async getWidgetScriptSource(moduleName: string, moduleVersion: string): Promise<WidgetScriptSource> {
         // First see if we already have it downloaded.
         const key = this.getModuleKey(moduleName, moduleVersion);

@@ -25,24 +25,30 @@ class IntellisenseLine implements TextLine {
     public get offset(): number {
         return this._offset;
     }
+
     public get lineNumber(): number {
         return this._line;
     }
+
     public get text(): string {
         return this._contents;
     }
+
     public get range(): Range {
         return this._range;
     }
+
     public get rangeIncludingLineBreak(): Range {
         return this._rangeWithLineBreak;
     }
+
     public get firstNonWhitespaceCharacterIndex(): number {
         if (this._firstNonWhitespaceIndex === undefined) {
             this._firstNonWhitespaceIndex = this._contents.trimLeft().length - this._contents.length;
         }
         return this._firstNonWhitespaceIndex;
     }
+
     public get isEmptyOrWhitespace(): boolean {
         if (this._isEmpty === undefined) {
             this._isEmpty = this._contents.length === 0 || this._contents.trim().length === 0;
@@ -85,6 +91,7 @@ export class IntellisenseDocument implements TextDocument {
     public get uri(): Uri {
         return this._uri;
     }
+
     public get fileName(): string {
         return this._uri.fsPath;
     }
@@ -96,24 +103,31 @@ export class IntellisenseDocument implements TextDocument {
     public get isReadOnly(): boolean {
         return !this.inEditMode;
     }
+
     public get languageId(): string {
         return PYTHON_LANGUAGE;
     }
+
     public get version(): number {
         return this._version;
     }
+
     public get isDirty(): boolean {
         return true;
     }
+
     public get isClosed(): boolean {
         return false;
     }
+
     public save(): Thenable<boolean> {
         return Promise.resolve(true);
     }
+
     public get eol(): EndOfLine {
         return EndOfLine.LF;
     }
+
     public get lineCount(): number {
         return this._lines.length;
     }
@@ -125,9 +139,11 @@ export class IntellisenseDocument implements TextDocument {
             return this._lines[position.line];
         }
     }
+
     public offsetAt(position: Position): number {
         return this.convertToOffset(position);
     }
+
     public positionAt(offset: number): Position {
         let line = 0;
         let ch = 0;
@@ -139,6 +155,7 @@ export class IntellisenseDocument implements TextDocument {
         }
         return new Position(line, ch);
     }
+
     public getText(range?: Range | undefined): string {
         if (!range) {
             return this._contents;
@@ -184,9 +201,11 @@ export class IntellisenseDocument implements TextDocument {
         }
         return undefined;
     }
+
     public validateRange(range: Range): Range {
         return range;
     }
+
     public validatePosition(position: Position): Position {
         return position;
     }

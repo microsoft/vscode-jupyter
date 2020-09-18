@@ -249,17 +249,21 @@ export class MockJupyterRequest implements Kernel.IFuture<any, any> {
     public get done(): Promise<KernelMessage.IShellMessage> {
         return this.deferred.promise;
     }
+
     public registerMessageHook(_hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>): void {
         noop();
     }
+
     public removeMessageHook(_hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>): void {
         noop();
     }
+
     public sendInputReply(content: KernelMessage.IInputReply): void {
         if (this.currentProducer) {
             this.currentProducer.receiveInput(content.value);
         }
     }
+
     public dispose(): void {
         if (!this.isDisposed) {
             this.isDisposed = true;

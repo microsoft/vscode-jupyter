@@ -29,15 +29,19 @@ export class KernelProcess implements IKernelProcess {
     public get exited(): Event<{ exitCode?: number; reason?: string }> {
         return this.exitEvent.event;
     }
+
     public get kernelConnectionMetadata(): Readonly<KernelSpecConnectionMetadata | PythonKernelConnectionMetadata> {
         return this._kernelConnectionMetadata;
     }
+
     public get connection(): Readonly<IKernelConnection> {
         return this._connection;
     }
+
     private get isPythonKernel(): boolean {
         return isPythonKernelConnection(this.kernelConnectionMetadata);
     }
+
     private _process?: ChildProcess;
     private exitEvent = new EventEmitter<{ exitCode?: number; reason?: string }>();
     private pythonKernelLauncher?: PythonKernelLauncherDaemon;
@@ -57,6 +61,7 @@ export class KernelProcess implements IKernelProcess {
     ) {
         this._kernelConnectionMetadata = kernelConnectionMetadata;
     }
+
     public async interrupt(): Promise<void> {
         if (this.kernelDaemon) {
             await this.kernelDaemon?.interrupt();

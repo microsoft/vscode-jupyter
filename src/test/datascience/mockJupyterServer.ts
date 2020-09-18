@@ -21,6 +21,7 @@ export class MockJupyterServer implements INotebookServer {
     public get id(): string {
         return this._id;
     }
+
     public connect(launchInfo: INotebookServerLaunchInfo): Promise<void> {
         if (launchInfo && launchInfo.connectionInfo && launchInfo.kernelConnectionMetadata) {
             this.launchInfo = launchInfo;
@@ -45,12 +46,15 @@ export class MockJupyterServer implements INotebookServer {
     public async setMatplotLibStyle(_useDark: boolean): Promise<void> {
         noop();
     }
+
     public getConnectionInfo(): IJupyterConnection | undefined {
         return this.launchInfo ? this.launchInfo.connectionInfo : undefined;
     }
+
     public waitForConnect(): Promise<INotebookServerLaunchInfo | undefined> {
         throw new Error('Method not implemented');
     }
+
     public async shutdown() {
         return Promise.resolve();
     }

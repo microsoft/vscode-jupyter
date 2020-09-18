@@ -11,9 +11,11 @@ export class ServiceProxy implements vsls.SharedService {
         private guestsResponding: () => Promise<boolean>,
         private forceShutdown: () => void
     ) {}
+
     public get isServiceAvailable(): boolean {
         return this.realService.isServiceAvailable;
     }
+
     public get onDidChangeIsServiceAvailable(): Event<boolean> {
         return this.realService.onDidChangeIsServiceAvailable;
     }
@@ -21,9 +23,11 @@ export class ServiceProxy implements vsls.SharedService {
     public onRequest(name: string, handler: vsls.RequestHandler): void {
         return this.realService.onRequest(name, handler);
     }
+
     public onNotify(name: string, handler: vsls.NotifyHandler): void {
         return this.realService.onNotify(name, handler);
     }
+
     public async notify(name: string, args: object): Promise<void> {
         if (await this.guestsResponding()) {
             return this.realService.notify(name, args);

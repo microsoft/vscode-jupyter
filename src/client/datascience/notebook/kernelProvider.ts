@@ -28,9 +28,11 @@ class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
     get preloads(): Uri[] {
         return [];
     }
+
     get id() {
         return getKernelConnectionId(this.selection);
     }
+
     constructor(
         public readonly label: string,
         public readonly description: string,
@@ -38,15 +40,19 @@ class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
         public readonly isPreferred: boolean,
         private readonly kernelProvider: IKernelProvider
     ) {}
+
     public executeCell(_: NotebookDocument, cell: NotebookCell) {
         this.kernelProvider.getOrCreate(cell.notebook.uri, { metadata: this.selection })?.executeCell(cell); // NOSONAR
     }
+
     public executeAllCells(document: NotebookDocument) {
         this.kernelProvider.getOrCreate(document.uri, { metadata: this.selection })?.executeAllCells(document); // NOSONAR
     }
+
     public cancelCellExecution(_: NotebookDocument, cell: NotebookCell) {
         this.kernelProvider.get(cell.notebook.uri)?.interrupt(); // NOSONAR
     }
+
     public cancelAllCellsExecution(document: NotebookDocument) {
         this.kernelProvider.get(document.uri)?.interrupt(); // NOSONAR
     }
@@ -57,6 +63,7 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
     public get onDidChangeKernels(): Event<NotebookDocument | undefined> {
         return this._onDidChangeKernels.event;
     }
+
     private readonly _onDidChangeKernels = new EventEmitter<NotebookDocument | undefined>();
     private notebookKernelChangeHandled = new WeakSet<INotebook>();
     constructor(
@@ -85,6 +92,7 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
         );
         this.notebook.onDidChangeActiveNotebookKernel(this.onDidChangeActiveNotebookKernel, this, disposables);
     }
+
     public async provideKernels(
         document: NotebookDocument,
         token: CancellationToken
@@ -154,6 +162,7 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
         });
         return mapped;
     }
+
     private createNotebookKernelMetadataFromPreferredKernel(
         preferredKernel?: KernelConnectionMetadata
     ): VSCodeNotebookKernelMetadata | undefined {
@@ -187,6 +196,7 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
             );
         }
     }
+
     private async getPreferredKernel(document: NotebookDocument, token: CancellationToken) {
         // If we already have a kernel selected, then return that.
         const editor =
@@ -207,6 +217,7 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
             true
         );
     }
+
     private async onDidChangeActiveNotebookKernel({
         document,
         kernel

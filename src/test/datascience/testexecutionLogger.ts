@@ -12,14 +12,17 @@ export class TestExecutionLogger implements INotebookExecutionLogger {
     public dispose() {
         noop();
     }
+
     public preExecute(cell: ICell, _silent: boolean): Promise<void> {
         traceInfo(`Cell Execution for ${cell.id} : \n${concatMultilineString(cell.data.source)}\n`);
         return Promise.resolve();
     }
+
     public postExecute(cell: ICell, _silent: boolean): Promise<void> {
         traceCellResults(`Cell Execution complete for ${cell.id}\n`, [cell]);
         return Promise.resolve();
     }
+
     public onKernelRestarted(): void {
         // Can ignore this.
     }

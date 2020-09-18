@@ -136,9 +136,11 @@ export class KernelExecution implements IDisposable {
         }
         document.cells.forEach((cell) => this.cancelCell(cell));
     }
+
     public dispose() {
         this.disposables.forEach((d) => d.dispose());
     }
+
     private async getKernel(document: NotebookDocument): Promise<IKernel> {
         await this.validateKernel(document);
         let kernel = this.kernelProvider.get(document.uri);

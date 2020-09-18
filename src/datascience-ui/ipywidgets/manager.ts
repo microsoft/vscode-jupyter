@@ -30,6 +30,7 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
     public static get instance(): Observable<WidgetManager | undefined> {
         return WidgetManager._instance;
     }
+
     private static _instance = new ReplaySubject<WidgetManager | undefined>();
     private manager?: IJupyterLabWidgetManager;
     private proxyKernel?: Kernel.IKernel;
@@ -62,14 +63,17 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
         // Handshake.
         this.postOffice.sendMessage<IInteractiveWindowMapping>(IPyWidgetMessages.IPyWidgets_Ready);
     }
+
     public dispose(): void {
         this.proxyKernel?.dispose(); // NOSONAR
         this.postOffice.removeHandler(this);
         this.clear().ignoreErrors();
     }
+
     public async clear(): Promise<void> {
         await this.manager?.clear_state();
     }
+
     public handleMessage(message: string, payload?: any) {
         if (message === IPyWidgetMessages.IPyWidgets_kernelOptions) {
             this.initializeKernelAndWidgetManager(payload);
@@ -140,6 +144,7 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
         // tslint:disable-next-line: no-any
         return this.manager.display_view(data, view, { node: ele });
     }
+
     private initializeKernelAndWidgetManager(options: KernelSocketOptions) {
         if (this.proxyKernel && fastDeepEqual(options, this.options)) {
             return;
@@ -173,6 +178,7 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
             console.error('Failed to initialize WidgetManager', ex);
         }
     }
+
     /**
      * Ensure we create the model for the display data.
      */

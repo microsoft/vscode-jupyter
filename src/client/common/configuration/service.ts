@@ -15,6 +15,7 @@ export class ConfigurationService implements IConfigurationService {
     constructor(@inject(IServiceContainer) private readonly serviceContainer: IServiceContainer) {
         this.workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
     }
+
     public getSettings(resource?: Uri): IWatchableJupyterSettings {
         return JupyterSettings.getInstance(resource, this.workspaceService);
     }

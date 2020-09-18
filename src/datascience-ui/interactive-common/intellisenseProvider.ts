@@ -35,18 +35,22 @@ export class IntellisenseProvider
         string,
         IRequestData<monacoEditor.languages.CompletionList>
     >();
+
     private resolveCompletionRequests: Map<string, IRequestData<monacoEditor.languages.CompletionItem>> = new Map<
         string,
         IRequestData<monacoEditor.languages.CompletionItem>
     >();
+
     private hoverRequests: Map<string, IRequestData<monacoEditor.languages.Hover>> = new Map<
         string,
         IRequestData<monacoEditor.languages.Hover>
     >();
+
     private signatureHelpRequests: Map<string, IRequestData<monacoEditor.languages.SignatureHelpResult>> = new Map<
         string,
         IRequestData<monacoEditor.languages.SignatureHelpResult>
     >();
+
     private registerDisposables: monacoEditor.IDisposable[] = [];
     private monacoIdToCellId: Map<string, string> = new Map<string, string>();
     private cellIdToMonacoId: Map<string, string> = new Map<string, string>();

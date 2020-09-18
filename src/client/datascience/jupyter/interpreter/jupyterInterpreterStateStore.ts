@@ -33,9 +33,11 @@ export class JupyterInterpreterStateStore {
     public get interpreterSetAtleastOnce(): boolean {
         return !!this.selectedPythonPath || this.memento.get<boolean>(keySelected, false);
     }
+
     public get selectedPythonPath(): string | undefined {
         return this._interpreterPath || this.memento.get<string | undefined>(key, undefined);
     }
+
     public updateSelectedPythonPath(value: string | undefined) {
         this._interpreterPath = value;
         this.memento.update(key, value).then(noop, noop);

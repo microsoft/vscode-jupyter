@@ -16,6 +16,7 @@ export class JupyterServerSelectorCommand implements IDisposable {
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(JupyterServerSelector) private readonly serverSelector: JupyterServerSelector
     ) {}
+
     public register() {
         this.disposables.push(
             this.commandManager.registerCommand(
@@ -25,6 +26,7 @@ export class JupyterServerSelectorCommand implements IDisposable {
             )
         );
     }
+
     public dispose() {
         this.disposables.forEach((d) => d.dispose());
     }

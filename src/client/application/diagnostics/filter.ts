@@ -25,6 +25,7 @@ export class DiagnosticFilterService implements IDiagnosticFilterService {
         );
         return globalState.value.indexOf(code) >= 0 || workspaceState.value.indexOf(code) >= 0;
     }
+
     public async ignoreDiagnostic(code: string, scope: DiagnosticScope): Promise<void> {
         const factory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
         const state =
