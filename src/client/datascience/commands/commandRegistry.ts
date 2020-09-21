@@ -109,7 +109,7 @@ export class CommandRegistry implements IDisposable {
     private registerCommand<
         E extends keyof ICommandNameArgumentTypeMapping,
         U extends ICommandNameArgumentTypeMapping[E]
-    // tslint:disable-next-line: no-any
+        // tslint:disable-next-line: no-any
     >(command: E, callback: (...args: U) => any) {
         const disposable = this.commandManager.registerCommand(command, callback, this);
         this.disposables.push(disposable);
@@ -136,12 +136,7 @@ export class CommandRegistry implements IDisposable {
         }
         // Update the setting and once updated, notify user to restart kernel.
         this.configService
-            .updateSetting(
-                'widgetScriptSources',
-                ['jsdelivr.com', 'unpkg.com'],
-                undefined,
-                ConfigurationTarget.Global
-            )
+            .updateSetting('widgetScriptSources', ['jsdelivr.com', 'unpkg.com'], undefined, ConfigurationTarget.Global)
             .then(() => {
                 // Let user know they'll need to restart the kernel.
                 this.appShell
