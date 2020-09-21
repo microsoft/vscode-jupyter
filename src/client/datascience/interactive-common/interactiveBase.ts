@@ -933,7 +933,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         const settings = this.configuration.getSettings(this.owningResource);
         if (settings) {
             this.configuration
-                .updateSetting('dataScience.askForKernelRestart', false, undefined, ConfigurationTarget.Global)
+                .updateSetting('askForKernelRestart', false, undefined, ConfigurationTarget.Global)
                 .ignoreErrors();
         }
     }
@@ -947,7 +947,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         const settings = this.configuration.getSettings(this.owningResource);
         if (settings) {
             this.configuration
-                .updateSetting('dataScience.askForLargeDataFrames', false, undefined, ConfigurationTarget.Global)
+                .updateSetting('askForLargeDataFrames', false, undefined, ConfigurationTarget.Global)
                 .ignoreErrors();
         }
     }
@@ -1410,12 +1410,12 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         const response: IJupyterVariablesResponse = this._notebook
             ? await this.jupyterVariables.getVariables(this._notebook, args)
             : {
-                  totalCount: 0,
-                  pageResponse: [],
-                  pageStartIndex: args?.startIndex,
-                  executionCount: args?.executionCount,
-                  refreshCount: args?.refreshCount || 0
-              };
+                totalCount: 0,
+                pageResponse: [],
+                pageStartIndex: args?.startIndex,
+                executionCount: args?.executionCount,
+                refreshCount: args?.refreshCount || 0
+            };
 
         this.postMessage(InteractiveWindowMessages.GetVariablesResponse, response).ignoreErrors();
         sendTelemetryEvent(Telemetry.VariableExplorerVariableCount, undefined, { variableCount: response.totalCount });
