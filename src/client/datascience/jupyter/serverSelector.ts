@@ -43,7 +43,7 @@ export class JupyterServerSelector {
         @inject(ICommandManager) private cmdManager: ICommandManager,
         @inject(IJupyterUriProviderRegistration)
         private extraUriProviders: IJupyterUriProviderRegistration
-    ) {}
+    ) { }
 
     @captureTelemetry(Telemetry.SelectJupyterURI)
     public selectJupyterURI(allowLocal: boolean): Promise<void> {
@@ -99,9 +99,8 @@ export class JupyterServerSelector {
 
     private generateUriFromRemoteProvider(id: string, result: JupyterServerUriHandle) {
         // tslint:disable-next-line: no-http-string
-        return `${Identifiers.REMOTE_URI}?${Identifiers.REMOTE_URI_ID_PARAM}=${id}&${
-            Identifiers.REMOTE_URI_HANDLE_PARAM
-        }=${encodeURI(result)}`;
+        return `${Identifiers.REMOTE_URI}?${Identifiers.REMOTE_URI_ID_PARAM}=${id}&${Identifiers.REMOTE_URI_HANDLE_PARAM
+            }=${encodeURI(result)}`;
     }
 
     private async selectRemoteURI(input: IMultiStepInput<{}>, _state: {}): Promise<InputStep<{}> | void> {
@@ -131,7 +130,7 @@ export class JupyterServerSelector {
     private async setJupyterURIToLocal(): Promise<void> {
         const previousValue = this.configuration.getSettings(undefined).jupyterServerURI;
         await this.configuration.updateSetting(
-            'dataScience.jupyterServerURI',
+            'jupyterServerURI',
             Settings.JupyterServerLocalLaunch,
             undefined,
             ConfigurationTarget.Workspace
@@ -149,7 +148,7 @@ export class JupyterServerSelector {
     private async setJupyterURIToRemote(userURI: string): Promise<void> {
         const previousValue = this.configuration.getSettings(undefined).jupyterServerURI;
         await this.configuration.updateSetting(
-            'dataScience.jupyterServerURI',
+            'jupyterServerURI',
             userURI,
             undefined,
             ConfigurationTarget.Workspace
