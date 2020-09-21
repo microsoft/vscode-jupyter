@@ -55,8 +55,8 @@ export class MigrateJupyterInterpreterStateService implements IExtensionActivati
         if (!this.memento.get(key)) {
             this.api
                 .getApi()
-                .then(async (api) => {
-                    const data = await api.getInterpreterPathSelectedForJupyterServer();
+                .then((api) => {
+                    const data = api.getInterpreterPathSelectedForJupyterServer();
                     this.memento.update(key, data).then(noop, noop);
                     this.memento.update(keySelected, true).then(noop, noop);
                 })
