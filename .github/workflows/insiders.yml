@@ -4,10 +4,6 @@ on:
   push:
     branches:
       - main
-      - ci
-  schedule:
-    # Every day 1am.
-    - cron:  '0 1 * * *'
   check_run:
     types: [rerequested, requested_action]
 
