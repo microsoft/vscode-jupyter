@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - ci
   check_run:
     types: [rerequested, requested_action]
 
