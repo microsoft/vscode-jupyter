@@ -61,17 +61,27 @@ export class JupyterImporter implements INotebookImporter {
         const settings = this.configuration.getSettings();
         let directoryChange: string | undefined;
         if (settings.changeDirOnImportExport) {
+            console.log('Calculating directory change');
             directoryChange = await this.calculateDirectoryChange(sourceFile);
+            console.log('Calculated directory change');
+        } else {
+            console.log('Skipping change dir on import export');
         }
 
         // Before we try the import, see if we don't support it, if we don't give a chance to install dependencies
         if (!(await this.jupyterExecution.isImportSupported())) {
+            console.log('Installing missing dependencies');
             await this.dependencyManager.installMissingDependencies();
+            console.log('Installed missing dependencies');
+        } else {
+            console.log('Import is supported');
         }
 
         // Use the jupyter nbconvert functionality to turn the notebook into a python file
         if (await this.jupyterExecution.isImportSupported()) {
+            console.log('Importing notebook');
             let fileOutput: string = await this.jupyterExecution.importNotebook(sourceFile, template);
+            console.log('File output is ', fileOutput);
             if (fileOutput.includes('get_ipython()')) {
                 fileOutput = this.addIPythonImport(fileOutput);
             }
