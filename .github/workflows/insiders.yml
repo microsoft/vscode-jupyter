@@ -5,6 +5,9 @@ on:
     branches:
       - main
       - ci
+  schedule:
+    # Every day 1am.
+    - cron:  '0 1 * * *'
   check_run:
     types: [rerequested, requested_action]
 
@@ -297,7 +300,7 @@ jobs:
           python -m pip install --upgrade -r ./build/ipython-test-requirements.txt
           python -m pip install --upgrade -r ./build/functional-test-requirements.txt
           python -m pip install --upgrade -r ./build/conda-functional-requirements.txt
-          
+
       - name: Install dependencies (npm ci)
         run: npm ci --prefer-offline
 
