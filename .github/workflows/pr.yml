@@ -203,7 +203,7 @@ jobs:
         os: [ubuntu-latest]
         # python: [3.6, 3.7, 3.8]
         python: [3.8]
-        test-suite: [python-unit, functional]
+        test-suite: [python-unit, functional, functional-with-jupyter]
     steps:
       - name: Checkout
         uses: actions/checkout@v2

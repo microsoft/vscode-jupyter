@@ -18,7 +18,7 @@
                 "${workspaceFolder}/out/**/*",
                 "!${workspaceFolder}/**/node_modules**/*"
             ],
-            "preLaunchTask": "Compile",
+            // "preLaunchTask": "Compile",
             "skipFiles": [
                 "<node_internals>/**"
             ],
@@ -115,7 +115,7 @@
                 "--extensionTestsPath=${workspaceFolder:vscode-jupyter}/out/test"
             ],
             "env": {
-                "CI_PYTHON_PATH": "<Python Path>",
+                "CI_PYTHON_PATH": "/Users/donjayamanne/Desktop/Development/crap/docBug/venvDS/bin/python",
                 "VSC_PYTHON_SMOKE_TEST": "1",
                 "VSC_JUPYTER_CI_TEST_GREP": "Smoke Test"
             },
@@ -127,7 +127,7 @@
                 "${workspaceFolder:vscode-jupyter}/out/**/*.js",
                 "!${workspaceFolder:vscode-jupyter}/**/node_modules**/*"
             ],
-            "preLaunchTask": "Compile",
+            // "preLaunchTask": "Compile",
             "skipFiles": [
                 "<node_internals>/**"
             ]
