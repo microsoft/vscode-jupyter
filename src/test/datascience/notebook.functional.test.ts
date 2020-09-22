@@ -588,63 +588,77 @@ suite('DataScience notebook tests', () => {
             });
 
             runTest('Export/Import', async () => {
-                // Get a bunch of test cells (use our test cells from the react controls)
-                const testFolderPath = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience');
-                const testState = generateTestState(testFolderPath);
-                const cells = testState.cellVMs.map((cellVM: ICellViewModel, _index: number) => {
-                    return cellVM.cell;
-                });
-
-                // Translate this into a notebook
-
-                // Make sure we have a change dir happening
-                const settings = { ...ioc.getSettings() };
-                settings.changeDirOnImportExport = true;
-                ioc.forceDataScienceSettingsChanged(settings);
-
-                const exporter = ioc.serviceManager.get<INotebookExporter>(INotebookExporter);
-                const newFolderPath = path.join(
-                    EXTENSION_ROOT_DIR,
-                    'src',
-                    'test',
-                    'datascience',
-                    'WorkspaceDir',
-                    'WorkspaceSubDir',
-                    'foo.ipynb'
-                );
-                const notebook = await exporter.translateToNotebook(cells, newFolderPath);
-                assert.ok(notebook, 'Translate to notebook is failing');
-
-                // Make sure we added in our chdir
-                if (notebook) {
-                    const nbcells = notebook.cells;
-                    if (nbcells) {
-                        const firstCellText: string = nbcells[0].source as string;
-                        assert.ok(firstCellText.includes('os.chdir'), `${firstCellText} does not include 'os.chdir`);
-                    }
-                }
-
-                // Save to a temp file
-                const fileSystem = ioc.serviceManager.get<IDataScienceFileSystem>(IDataScienceFileSystem);
-                const importer = ioc.serviceManager.get<INotebookImporter>(INotebookImporter);
-                const temp = await fileSystem.createTemporaryLocalFile('.ipynb');
-
                 try {
-                    await fs.writeFile(temp.filePath, JSON.stringify(notebook), 'utf8');
-                    // Try importing this. This should verify export works and that importing is possible
-                    const results = await importer.importFromFile(Uri.file(temp.filePath));
+                    // Get a bunch of test cells (use our test cells from the react controls)
+                    const testFolderPath = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience');
+                    const testState = generateTestState(testFolderPath);
+                    const cells = testState.cellVMs.map((cellVM: ICellViewModel, _index: number) => {
+                        return cellVM.cell;
+                    });
 
-                    // Make sure we have a single chdir in our results
-                    const first = results.indexOf('os.chdir');
-                    assert.ok(first >= 0, 'No os.chdir in import');
-                    const second = results.indexOf('os.chdir', first + 1);
-                    assert.equal(second, -1, 'More than one chdir in the import. It should be skipped');
+                    // Translate this into a notebook
 
-                    // Make sure we have a cell in our results
-                    assert.ok(/#\s*%%/.test(results), 'No cells in returned import');
-                } finally {
-                    importer.dispose();
-                    temp.dispose();
+                    // Make sure we have a change dir happening
+                    const settings = { ...ioc.getSettings() };
+                    settings.changeDirOnImportExport = true;
+                    ioc.forceDataScienceSettingsChanged(settings);
+
+                    const exporter = ioc.serviceManager.get<INotebookExporter>(INotebookExporter);
+                    const newFolderPath = path.join(
+                        EXTENSION_ROOT_DIR,
+                        'src',
+                        'test',
+                        'datascience',
+                        'WorkspaceDir',
+                        'WorkspaceSubDir',
+                        'foo.ipynb'
+                    );
+                    const notebook = await exporter.translateToNotebook(cells, newFolderPath);
+                    assert.ok(notebook, 'Translate to notebook is failing');
+                    console.log('Translated notebook is');
+                    console.log(JSON.stringify(notebook));
+
+                    // Make sure we added in our chdir
+                    if (notebook) {
+                        const nbcells = notebook.cells;
+                        console.log('notebook cells');
+                        console.log(JSON.stringify(nbcells));
+                        if (nbcells) {
+                            const firstCellText: string = nbcells[0].source as string;
+                            assert.ok(
+                                firstCellText.includes('os.chdir'),
+                                `${firstCellText} does not include 'os.chdir`
+                            );
+                        }
+                    }
+
+                    // Save to a temp file
+                    const fileSystem = ioc.serviceManager.get<IDataScienceFileSystem>(IDataScienceFileSystem);
+                    const importer = ioc.serviceManager.get<INotebookImporter>(INotebookImporter);
+                    const temp = await fileSystem.createTemporaryLocalFile('.ipynb');
+
+                    try {
+                        await fs.writeFile(temp.filePath, JSON.stringify(notebook), 'utf8');
+                        // Try importing this. This should verify export works and that importing is possible
+                        const results = await importer.importFromFile(Uri.file(temp.filePath));
+                        console.log('Imported results from file');
+                        console.log(JSON.stringify(results));
+
+                        // Make sure we have a single chdir in our results
+                        const first = results.indexOf('os.chdir');
+                        assert.ok(first >= 0, 'No os.chdir in import');
+                        const second = results.indexOf('os.chdir', first + 1);
+                        assert.equal(second, -1, 'More than one chdir in the import. It should be skipped');
+
+                        // Make sure we have a cell in our results
+                        assert.ok(/#\s*%%/.test(results), 'No cells in returned import');
+                    } finally {
+                        importer.dispose();
+                        temp.dispose();
+                    }
+                } catch (e) {
+                    console.log(JSON.stringify(e));
+                    throw e;
                 }
             });
 
@@ -880,8 +894,8 @@ suite('DataScience notebook tests', () => {
                 assert.equal(error, undefined, 'Error thrown during interrupt');
                 assert.ok(
                     finishedPromise.completed ||
-                        result === InterruptResult.TimedOut ||
-                        result === InterruptResult.Success,
+                    result === InterruptResult.TimedOut ||
+                    result === InterruptResult.Success,
                     `Interrupt restarted ${result} for: ${code}`
                 );
 
