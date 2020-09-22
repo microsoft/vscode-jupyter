@@ -250,13 +250,7 @@ export async function deleteFiles(globPattern: string) {
     return Promise.all(items.map((item) => fs.remove(item).catch(noop)));
 }
 function getPythonPath(): string {
-    if (process.env.CI_PYTHON_PATH && fs.existsSync(process.env.CI_PYTHON_PATH)) {
-        return process.env.CI_PYTHON_PATH;
-    }
-    // tslint:disable-next-line:no-suspicious-comment
-    // TODO: Change this to python3.
-    // See https://github.com/microsoft/vscode-python/issues/10910.
-    return 'python';
+    return process.env.CI_PYTHON_PATH || 'python';
 }
 
 /**
