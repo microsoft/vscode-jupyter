@@ -64,78 +64,9 @@ export type PythonSettingKeys =
     | 'linting.ignorePatterns'
     | 'terminal.activateEnvironment';
 
-async function disposePythonSettings() {
-    if (!IS_SMOKE_TEST) {
-        const configSettings = await import('../client/common/configSettings');
-        configSettings.JupyterSettings.dispose();
-    }
-}
-
-export async function updateSetting(
-    setting: PythonSettingKeys,
-    value: {} | undefined,
-    resource: Uri | undefined,
-    configTarget: ConfigurationTarget
-) {
-    const vscode = require('vscode') as typeof import('vscode');
-    const settings = vscode.workspace.getConfiguration('python', resource || null);
-    const currentValue = settings.inspect(setting);
-    if (
-        currentValue !== undefined &&
-        ((configTarget === vscode.ConfigurationTarget.Global && currentValue.globalValue === value) ||
-            (configTarget === vscode.ConfigurationTarget.Workspace && currentValue.workspaceValue === value) ||
-            (configTarget === vscode.ConfigurationTarget.WorkspaceFolder &&
-                currentValue.workspaceFolderValue === value))
-    ) {
-        await disposePythonSettings();
-        return;
-    }
-    await settings.update(setting, value, configTarget);
-
-    // We've experienced trouble with .update in the past, where VSC returns stale data even
-    // after invoking the update method. This issue has regressed a few times as well. This
-    // delay is merely a backup to ensure it extension doesn't break the tests due to similar
-    // regressions in VSC:
-    // await sleep(2000);
-    // ... please see issue #2356 and PR #2332 for a discussion on the matter
-
-    await disposePythonSettings();
-}
-
-export async function clearPythonPathInWorkspaceFolder(resource: string | Uri) {
-    const vscode = require('vscode') as typeof import('vscode');
-    return retryAsync(setPythonPathInWorkspace)(resource, vscode.ConfigurationTarget.WorkspaceFolder);
-}
-
 export async function setPythonPathInWorkspaceRoot(pythonPath: string) {
-    const vscode = require('vscode') as typeof import('vscode');
-    return retryAsync(setPythonPathInWorkspace)(undefined, vscode.ConfigurationTarget.Workspace, pythonPath);
+    return retryAsync(setPythonPathInWorkspace)(pythonPath);
 }
-
-export async function restorePythonPathInWorkspaceRoot() {
-    const vscode = require('vscode') as typeof import('vscode');
-    return retryAsync(setPythonPathInWorkspace)(undefined, vscode.ConfigurationTarget.Workspace, PYTHON_PATH);
-}
-
-export async function setGlobalInterpreterPath(pythonPath: string) {
-    return retryAsync(setGlobalPathToInterpreter)(pythonPath);
-}
-
-export const resetGlobalInterpreterPathSetting = async () => retryAsync(restoreGlobalInterpreterPathSetting)();
-
-async function restoreGlobalInterpreterPathSetting(): Promise<void> {
-    const vscode = require('vscode') as typeof import('vscode');
-    const pythonConfig = vscode.workspace.getConfiguration('python', (null as any) as Uri);
-    await pythonConfig.update('defaultInterpreterPath', undefined, true);
-    await disposePythonSettings();
-}
-async function setGlobalPathToInterpreter(pythonPath?: string): Promise<void> {
-    const vscode = require('vscode') as typeof import('vscode');
-    const pythonConfig = vscode.workspace.getConfiguration('python', (null as any) as Uri);
-    await pythonConfig.update('defaultInterpreterPath', pythonPath, true);
-    await disposePythonSettings();
-}
-export const resetGlobalPythonPathSetting = async () => retryAsync(restoreGlobalPythonPathSetting)();
 
 export async function setAutoSaveDelayInWorkspaceRoot(delayinMS: number) {
     const vscode = require('vscode') as typeof import('vscode');
@@ -199,33 +130,13 @@ async function setAutoSaveDelay(resource: string | Uri | undefined, config: Conf
     }
 }
 
-async function setPythonPathInWorkspace(
-    resource: string | Uri | undefined,
-    config: ConfigurationTarget,
-    pythonPath?: string
-) {
+async function setPythonPathInWorkspace(pythonPath?: string) {
     const vscode = require('vscode') as typeof import('vscode');
-    if (config === vscode.ConfigurationTarget.WorkspaceFolder && !IS_MULTI_ROOT_TEST) {
-        return;
+    const settings = vscode.workspace.getConfiguration('python', undefined);
+    const value = settings.inspect<string>('defaultInterpreterPath');
+    if (value && value.globalValue !== pythonPath) {
+        await settings.update('defaultInterpreterPath', pythonPath, ConfigurationTarget.Global);
     }
-    const resourceUri = typeof resource === 'string' ? vscode.Uri.file(resource) : resource;
-    const settings = vscode.workspace.getConfiguration('python', resourceUri || null);
-    const value = settings.inspect<string>('pythonPath');
-    const prop: 'workspaceFolderValue' | 'workspaceValue' =
-        config === vscode.ConfigurationTarget.Workspace ? 'workspaceValue' : 'workspaceFolderValue';
-    if (value && value[prop] !== pythonPath) {
-        await settings.update('pythonPath', pythonPath, config);
-        await disposePythonSettings();
-    }
-}
-async function restoreGlobalPythonPathSetting(): Promise<void> {
-    const vscode = require('vscode') as typeof import('vscode');
-    const pythonConfig = vscode.workspace.getConfiguration('python', (null as any) as Uri);
-    await Promise.all([
-        pythonConfig.update('pythonPath', undefined, true),
-        pythonConfig.update('defaultInterpreterPath', undefined, true)
-    ]);
-    await disposePythonSettings();
 }
 
 export async function deleteDirectory(dir: string) {

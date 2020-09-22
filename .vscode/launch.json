@@ -113,7 +113,7 @@
                 "--enable-proposed-api",
                 "--extensionDevelopmentPath=${workspaceFolder:vscode-python}",
                 "--extensionDevelopmentPath=${workspaceFolder:vscode-jupyter}",
-                "--extensionTestsPath=${workspaceFolder}/out/test"
+                "--extensionTestsPath=${workspaceFolder:vscode-jupyter}/out/test"
             ],
             "env": {
                 "VSC_JUPYTER_CI_TEST_GREP": "Smoke Test"
