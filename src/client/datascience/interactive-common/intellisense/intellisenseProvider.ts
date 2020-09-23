@@ -22,7 +22,7 @@ import {
 import { CancellationToken } from 'vscode-jsonrpc';
 import * as vscodeLanguageClient from 'vscode-languageclient/node';
 import { concatMultilineString } from '../../../../datascience-ui/common';
-import { IPythonApiProvider } from '../../../api/types';
+import { ILanguageServerProvider } from '../../../api/types';
 import { IWorkspaceService } from '../../../common/application/types';
 import { CancellationError } from '../../../common/cancellation';
 import { traceError, traceWarning } from '../../../common/logger';
@@ -111,7 +111,7 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
         @inject(IDataScienceFileSystem) private fs: IDataScienceFileSystem,
         @inject(INotebookProvider) private notebookProvider: INotebookProvider,
         @inject(IInterpreterService) private interpreterService: IInterpreterService,
-        @inject(IPythonApiProvider) private apiProvider: IPythonApiProvider,
+        @inject(ILanguageServerProvider) private languageServerProvider: ILanguageServerProvider,
         @inject(IJupyterVariables) @named(Identifiers.ALL_VARIABLES) private variableProvider: IJupyterVariables
     ) {}
 
@@ -226,8 +226,11 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
 
             // Get an instance of the language server (so we ref count it )
             try {
-                const api = await this.apiProvider.getApi();
-                const languageServer = await LanguageServerWrapper.create(api, resource, interpreter);
+                const languageServer = await LanguageServerWrapper.create(
+                    this.languageServerProvider,
+                    resource,
+                    interpreter
+                );
 
                 // Dispose of our old language service
                 this.languageServer?.dispose();

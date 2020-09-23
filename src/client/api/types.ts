@@ -81,3 +81,8 @@ export const IPythonDebuggerPathProvider = Symbol('IPythonDebuggerPathProvider')
 export interface IPythonDebuggerPathProvider {
     getDebuggerPath(): Promise<string>;
 }
+
+export const ILanguageServerProvider = Symbol('ILanguageServerProvider');
+export interface ILanguageServerProvider {
+    getLanguageServer(resource?: InterpreterUri): Promise<ILanguageServer | undefined>;
+}

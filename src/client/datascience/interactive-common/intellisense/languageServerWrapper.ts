@@ -12,7 +12,7 @@ import * as c2p from 'vscode-languageclient/lib/common/codeConverter';
 import * as p2c from 'vscode-languageclient/lib/common/protocolConverter';
 import * as vscodeLanguageClient from 'vscode-languageclient/node';
 import * as lsp from 'vscode-languageserver-protocol';
-import { ILanguageServer, ILanguageServerConnection, PythonApi } from '../../../api/types';
+import { ILanguageServer, ILanguageServerConnection, ILanguageServerProvider } from '../../../api/types';
 import { Resource } from '../../../common/types';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
 
@@ -32,12 +32,12 @@ export class LanguageServerWrapper implements Disposable {
     }
 
     public static async create(
-        pythonApi: PythonApi,
+        provider: ILanguageServerProvider,
         resource: Resource,
         interpreter: PythonEnvironment | undefined
     ): Promise<LanguageServerWrapper | undefined> {
         // Create a server wrapper if we can get a connection to a language server
-        const languageServer = await pythonApi.getLanguageServer(interpreter ? interpreter : resource);
+        const languageServer = await provider.getLanguageServer(interpreter ? interpreter : resource);
         if (languageServer) {
             return new LanguageServerWrapper(languageServer);
         }
