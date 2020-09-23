@@ -3,7 +3,6 @@ name: Publish Extension
 on:
   push:
     branches:
-      - moreCICHanges
       - 'release'
       - 'release/*'
       - 'release-*'

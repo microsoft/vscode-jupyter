@@ -3,7 +3,6 @@ name: Release VSIX
 on:
   push:
     branches:
-      - moreCICHanges
       - 'release'
       - 'release/*'
       - 'release-*'
