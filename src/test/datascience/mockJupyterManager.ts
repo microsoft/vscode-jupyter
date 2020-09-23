@@ -649,7 +649,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
             this.setupPythonServiceExec(
                 service,
                 'ipykernel',
-                ['install', '--user', '--name', /\w+-\w+-\w+-\w+-\w+/, '--display-name', `'Python Interactive'`],
+                ['install', '--user', '--name', /\w+-\w+-\w+-\w+-\w+/, '--display-name', `'Interactive'`],
                 () => {
                     const spec = this.addKernelSpec(workingPython.path);
                     return Promise.resolve({ stdout: `somename ${path.dirname(spec)}` });
@@ -754,7 +754,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
                     '--name',
                     /\w+-\w+-\w+-\w+-\w+/,
                     '--display-name',
-                    `'Python Interactive'`
+                    `'Interactive'`
                 ],
                 () => {
                     const spec = this.addKernelSpec(workingPython.path);
