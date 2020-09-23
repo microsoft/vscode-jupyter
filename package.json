@@ -1176,12 +1176,14 @@
                 {
                     "command": "jupyter.disableDebugLogging",
                     "title": "%jupyter.command.jupyter.disableDebugLogging.title%",
-                    "category": "Jupyter"
+                    "category": "Jupyter",
+                    "when": "config.jupyter.logging.level == debug"
                 },
                 {
                     "command": "jupyter.enableDebugLogging",
                     "title": "%jupyter.command.jupyter.enableDebugLogging.title%",
-                    "category": "Jupyter"
+                    "category": "Jupyter",
+                    "when": "config.jupyter.logging.level != debug"
                 }
             ]
         },
