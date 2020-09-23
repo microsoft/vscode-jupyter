@@ -83,7 +83,8 @@ import {
     typeCode,
     verifyCellIndex,
     verifyCellSource,
-    verifyHtmlOnCell
+    verifyHtmlOnCell,
+    verifyServerStatus
 } from './testHelpers';
 import { ITestNativeEditorProvider } from './testNativeEditorProvider';
 
@@ -222,7 +223,7 @@ suite('DataScience Native Editor', () => {
                     // Add a cell into the UI and wait for it to render
                     await addCell(mount, 'a=1\na');
 
-                    verifyHtmlOnCell(mount.wrapper, 'NativeCell', '<span>1</span>', 1);
+                    verifyHtmlOnCell(mount.wrapper, 'NativeCell', '1', 1);
                 });
 
                 runMountedTest('Invalid session still runs', async (context) => {
@@ -237,7 +238,7 @@ suite('DataScience Native Editor', () => {
                         // Run the first cell. Should fail but then ask for another
                         await addCell(mount, 'a=1\na');
 
-                        verifyHtmlOnCell(mount.wrapper, 'NativeCell', '<span>1</span>', 1);
+                        verifyHtmlOnCell(mount.wrapper, 'NativeCell', '1', 1);
                     } else {
                         context.skip();
                     }
@@ -415,7 +416,7 @@ suite('DataScience Native Editor', () => {
                         // Run the first cell. Should fail but then ask for another
                         await addCell(ne.mount, 'a=1\na');
 
-                        verifyHtmlOnCell(ne.mount.wrapper, 'NativeCell', '<span>1</span>', 1);
+                        verifyHtmlOnCell(ne.mount.wrapper, 'NativeCell', '1', 1);
                     } else {
                         context.skip();
                     }
@@ -448,7 +449,7 @@ suite('DataScience Native Editor', () => {
                         // Verify we picked the valid kernel.
                         await addCell(ne.mount, 'a=1\na');
 
-                        verifyHtmlOnCell(ne.mount.wrapper, 'NativeCell', '<span>1</span>', 2);
+                        verifyHtmlOnCell(ne.mount.wrapper, 'NativeCell', '1', 2);
                     } else {
                         context.skip();
                     }
@@ -714,6 +715,8 @@ df.head()`;
 
                         // Make sure it has a server
                         assert.ok(editor.editor.notebook, 'Notebook did not start with a server');
+                        // Make sure it does have a name though
+                        verifyServerStatus(editor.mount.wrapper, 'local');
                     } else {
                         context.skip();
                     }
@@ -734,6 +737,9 @@ df.head()`;
 
                         // Make sure it does not have a server
                         assert.notOk(editor.editor.notebook, 'Notebook should not start with a server');
+
+                        // Make sure it does have a name though
+                        verifyServerStatus(editor.mount.wrapper, 'local');
                     } else {
                         context.skip();
                     }
@@ -1690,7 +1696,7 @@ df.head()`;
                         wrapper.update();
 
                         // Ensure cell was executed.
-                        verifyHtmlOnCell(wrapper, 'NativeCell', '<span>2</span>', 1);
+                        verifyHtmlOnCell(wrapper, 'NativeCell', '2', 1);
 
                         // The third cell should be selected.
                         assert.ok(isCellSelected(wrapper, 'NativeCell', 2));
@@ -1728,7 +1734,7 @@ df.head()`;
                         await update;
 
                         // Ensure cell was executed.
-                        verifyHtmlOnCell(wrapper, 'NativeCell', '<span>2</span>', 1);
+                        verifyHtmlOnCell(wrapper, 'NativeCell', '2', 1);
 
                         // The first cell should be selected.
                         assert.ok(isCellSelected(wrapper, 'NativeCell', 1));
@@ -1958,7 +1964,7 @@ df.head()`;
                         await update;
 
                         // Ensure cell was executed.
-                        verifyHtmlOnCell(wrapper, 'NativeCell', '<span>3</span>', 2);
+                        verifyHtmlOnCell(wrapper, 'NativeCell', '3', 2);
 
                         // Hide the output
                         update = waitForMessage(ioc, InteractiveWindowMessages.OutputToggled);
@@ -1966,7 +1972,7 @@ df.head()`;
                         await update;
 
                         // Ensure cell output is hidden (looking for cell results will throw an exception).
-                        assert.throws(() => verifyHtmlOnCell(wrapper, 'NativeCell', '<span>3</span>', 2));
+                        assert.throws(() => verifyHtmlOnCell(wrapper, 'NativeCell', '3', 2));
 
                         // Display the output
                         update = waitForMessage(ioc, InteractiveWindowMessages.OutputToggled);
@@ -1974,7 +1980,7 @@ df.head()`;
                         await update;
 
                         // Ensure cell output is visible again.
-                        verifyHtmlOnCell(wrapper, 'NativeCell', '<span>3</span>', 2);
+                        verifyHtmlOnCell(wrapper, 'NativeCell', '3', 2);
                     });
 
                     test("Toggle line numbers using the 'l' key", async () => {
