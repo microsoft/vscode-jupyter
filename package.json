@@ -469,14 +469,12 @@
             {
                 "command": "jupyter.selectjupyteruri",
                 "title": "%jupyter.command.jupyter.selectjupyteruri.title%",
-                "category": "Jupyter",
-                "when": "jupyter.featureenabled"
+                "category": "Jupyter"
             },
             {
                 "command": "jupyter.selectjupytercommandline",
                 "title": "%jupyter.command.jupyter.selectjupytercommandline.title%",
-                "category": "Jupyter",
-                "when": "jupyter.featureenabled"
+                "category": "Jupyter"
             },
             {
                 "command": "jupyter.importnotebook",
@@ -899,8 +897,7 @@
                 {
                     "command": "jupyter.createnewinteractive",
                     "title": "%jupyter.command.jupyter.createnewinteractive.title%",
-                    "category": "Jupyter",
-                    "when": "jupyter.featureenabled"
+                    "category": "Jupyter"
                 },
                 {
                     "command": "jupyter.runallcells",
@@ -1024,7 +1021,7 @@
                     "command": "jupyter.notebookeditor.trust",
                     "title": "%DataScience.trustNotebookCommandTitle%",
                     "category": "Jupyter",
-                    "when": "jupyter.featureenabled && notebookEditorFocused && !jupyter.isnotebooktrusted && jupyter.trustfeatureenabled"
+                    "when": "notebookEditorFocused && !jupyter.isnotebooktrusted && jupyter.trustfeatureenabled"
                 },
                 {
                     "command": "jupyter.notebookeditor.runallcells",
@@ -1054,19 +1051,19 @@
                     "command": "jupyter.notebookeditor.removeallcells",
                     "title": "%jupyter.command.jupyter.removeallcells.title%",
                     "category": "Jupyter",
-                    "when": "jupyter.featureenabled && notebookEditorFocused"
+                    "when": "notebookEditorFocused"
                 },
                 {
                     "command": "jupyter.notebookeditor.expandallcells",
                     "title": "%jupyter.command.jupyter.expandallcells.title%",
                     "category": "Jupyter",
-                    "when": "jupyter.featureenabled && notebookEditorFocused"
+                    "when": "notebookEditorFocused"
                 },
                 {
                     "command": "jupyter.notebookeditor.collapseallcells",
                     "title": "%jupyter.command.jupyter.collapseallcells.title%",
                     "category": "Jupyter",
-                    "when": "jupyter.featureenabled && notebookEditorFocused"
+                    "when": "notebookEditorFocused"
                 },
                 {
                     "command": "jupyter.expandallcells",
@@ -1965,10 +1962,5 @@
         "webpack-fix-default-import-plugin": "^1.0.3",
         "why-is-node-running": "^2.0.3",
         "yargs": "^15.3.1"
-    },
-    "__metadata": {
-        "id": "f1f59ae4-9318-4f3c-a9b5-81b2eaa5f8a5",
-        "publisherDisplayName": "Microsoft",
-        "publisherId": "998b010b-e2af-44a5-a6cd-0b5fd3b9b6f8"
     }
 }
