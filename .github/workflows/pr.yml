@@ -16,8 +16,7 @@ env:
   CACHE_PIP_DEPS: cache-pip
   # Key for the cache created at the end of the the 'Cache ./pythonFiles/lib/python' step.
   CACHE_PYTHONFILES: cache-pvsc-pythonFiles
-  ARTIFACT_NAME_VSIX: ms-ai-tools-jupyter-insiders-vsix
-  VSIX_NAME: ms-ai-tools-jupyter-insiders.vsix
+  VSIX_NAME: ms-ai-tools-jupyter-insiders-vsix
   VSIX_NAME_PYTHON: ms-python-insiders-nods.vsix
   COVERAGE_REPORTS: tests-coverage-reports
   CI_PYTHON_PATH: python
@@ -71,7 +70,7 @@ jobs:
 
       - uses: actions/upload-artifact@v2
         with:
-          name: ${{env.ARTIFACT_NAME_VSIX}}
+          name: ${{env.VSIX_NAME}}
           path: ${{env.VSIX_NAME}}
 
   lint:
@@ -186,8 +185,8 @@ jobs:
 
       - name: Compile if not cached
         run: npx gulp prePublishNonBundle
-        # if: steps.out-cache.outputs.cache-hit == false
 
+        # if: steps.out-cache.outputs.cache-hit == false
       - name: Run TypeScript unit tests
         run: npm run test:unittests:cover
 
@@ -389,7 +388,6 @@ jobs:
         with:
           node-version: ${{env.NODE_VERSION}}
 
-
       - name: Azure Login
         uses: azure/login@v1.1
         with:
@@ -398,14 +396,10 @@ jobs:
       - name: Download Python VSIX
         run: az storage blob download --file ${{env.VSIX_NAME_PYTHON}} --account-name pvsc --container-name extension-builds --name ${{ env.VSIX_NAME_PYTHON }}
 
-    #   - name: Download Jupyter VSIX
-    #     run: az storage blob download --file ms-ai-tools-jupyter-insiders.vsix --account-name pvsc --container-name extension-builds-jupyter --name ms-ai-tools-jupyter-insiders.vsix
-
       - name: Download VSIX
         uses: actions/download-artifact@v2
         with:
-          name: ${{env.ARTIFACT_NAME_VSIX}}
-
+          name: ${{env.VSIX_NAME}}
 
       - name: Install dependencies (npm ci)
         run: npm ci --prefer-offline
