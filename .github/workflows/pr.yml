@@ -345,11 +345,11 @@ jobs:
       - name: Run DataScience tests with VSCode & Jupyter
         uses: GabrielBB/xvfb-action@v1.4
         with:
-          run: npm run test:testDataScience
+          run: npm run test:testVSCode
         env:
           VSCODE_PYTHON_ROLLING: 1
           VSC_PYTHON_FORCE_LOGGING: 1
-        if: matrix.test-suite == 'integration' || (matrix.test-suite == 'test-based-on-pr-body' && github.event_name == 'pull_request' && contains(github.event.pull_request.body, '[x] Run integration test'))
+        if: matrix.test-suite == 'integration' || (matrix.test-suite == 'test-based-on-pr-body' && github.event_name == 'pull_request' && contains(github.event.pull_request.body, '[x] Run vscode test'))
 
 #   smoke-tests:
 #     name: Smoke tests
