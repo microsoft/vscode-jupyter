@@ -651,6 +651,11 @@
                 "command": "jupyter.enableDebugLogging",
                 "title": "%jupyter.command.jupyter.enableDebugLogging.title%",
                 "category": "Jupyter"
+            },
+            {
+                "command": "jupyter.disableDebugLogging",
+                "title": "%jupyter.command.jupyter.disableDebugLogging.title%",
+                "category": "Jupyter"
             }
         ],
         "menus": {
@@ -1167,6 +1172,11 @@
                     "title": "%DataScience.notebookExportAs%",
                     "category": "Jupyter",
                     "when": "false"
+                },
+                {
+                    "command": "jupyter.disableDebugLogging",
+                    "title": "%jupyter.command.jupyter.disableDebugLogging.title%",
+                    "category": "Jupyter"
                 },
                 {
                     "command": "jupyter.enableDebugLogging",
