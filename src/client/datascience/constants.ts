@@ -111,7 +111,7 @@ export namespace Commands {
     export const NotebookEditorExpandAllCells = 'jupyter.notebookeditor.expandallcells';
     export const NotebookEditorCollapseAllCells = 'jupyter.notebookeditor.collapseallcells';
     export const EnableDebugLogging = 'jupyter.enableDebugLogging';
-    export const DisableDebugLogging = 'jupyter.disableDebugLogging';
+    export const ResetLoggingLevel = 'jupyter.resetLoggingLevel';
 }
 
 export namespace CodeLensCommands {

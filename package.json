@@ -653,8 +653,8 @@
                 "category": "Jupyter"
             },
             {
-                "command": "jupyter.disableDebugLogging",
-                "title": "%jupyter.command.jupyter.disableDebugLogging.title%",
+                "command": "jupyter.resetLoggingLevel",
+                "title": "%jupyter.command.jupyter.resetLoggingLevel.title%",
                 "category": "Jupyter"
             }
         ],
@@ -1174,10 +1174,10 @@
                     "when": "false"
                 },
                 {
-                    "command": "jupyter.disableDebugLogging",
-                    "title": "%jupyter.command.jupyter.disableDebugLogging.title%",
+                    "command": "jupyter.resetLoggingLevel",
+                    "title": "%jupyter.command.jupyter.resetLoggingLevel.title%",
                     "category": "Jupyter",
-                    "when": "config.jupyter.logging.level == debug"
+                    "when": "config.jupyter.logging.level != error"
                 },
                 {
                     "command": "jupyter.enableDebugLogging",

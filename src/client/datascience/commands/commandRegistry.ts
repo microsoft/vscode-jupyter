@@ -95,7 +95,7 @@ export class CommandRegistry implements IDisposable {
         this.registerCommand(Commands.GatherQuality, this.reportGatherQuality);
         this.registerCommand(Commands.LatestExtension, this.openPythonExtensionPage);
         this.registerCommand(Commands.EnableDebugLogging, this.enableDebugLogging);
-        this.registerCommand(Commands.DisableDebugLogging, this.disableDebugLogging);
+        this.registerCommand(Commands.ResetLoggingLevel, this.resetLoggingLevel);
         this.registerCommand(
             Commands.EnableLoadingWidgetsFrom3rdPartySource,
             this.enableLoadingWidgetScriptsFromThirdParty
@@ -141,9 +141,9 @@ export class CommandRegistry implements IDisposable {
         }
     }
 
-    private async disableDebugLogging() {
+    private async resetLoggingLevel() {
         const previousValue = this.configService.getSettings().logging.level;
-        if (previousValue === LogLevel.Debug) {
+        if (previousValue !== LogLevel.Error) {
             await this.configService.updateSetting('logging.level', 'error', undefined, ConfigurationTarget.Global);
             this.commandManager.executeCommand('jupyter.reloadVSCode', DataScience.reloadRequired()).then(noop, noop);
         }
