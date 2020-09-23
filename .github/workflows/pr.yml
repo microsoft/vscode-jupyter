@@ -399,8 +399,7 @@ jobs:
         run: az storage blob download --file ${{env.VSIX_NAME_PYTHON}} --account-name pvsc --container-name extension-builds --name ${{ env.VSIX_NAME_PYTHON }}
 
       - name: Download Jupyter VSIX
-        run: az storage blob download --file ms-ai-tools-jupyter-insiders.vsix --account-name pvsc --container-name extension-builds-jupyter
-        --name ms-ai-tools-jupyter-insiders.vsix
+        run: az storage blob download --file ms-ai-tools-jupyter-insiders.vsix --account-name pvsc --container-name extension-builds-jupyter --name ms-ai-tools-jupyter-insiders.vsix
 
 
       - name: Install dependencies (npm ci)
