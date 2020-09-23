@@ -739,7 +739,7 @@ df.head()`;
                         assert.notOk(editor.editor.notebook, 'Notebook should not start with a server');
 
                         // Make sure it does have a name though
-                        verifyServerStatus(editor.mount.wrapper, 'Not Started');
+                        verifyServerStatus(editor.mount.wrapper, 'local');
                     } else {
                         context.skip();
                     }
