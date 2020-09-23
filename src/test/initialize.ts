@@ -3,34 +3,25 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 import type { IExtensionApi } from '../client/api';
-import {
-    clearPythonPathInWorkspaceFolder,
-    IExtensionTestApi,
-    PYTHON_PATH,
-    resetGlobalPythonPathSetting,
-    setPythonPathInWorkspaceRoot
-} from './common';
+import { IExtensionTestApi, PYTHON_PATH, setPythonPathInWorkspaceRoot } from './common';
 import { IS_SMOKE_TEST, PVSC_EXTENSION_ID_FOR_TESTS } from './constants';
 import { sleep } from './core';
 
 export * from './constants';
 export * from './ciConstants';
-
-const dummyPythonFile = path.join(__dirname, '..', '..', 'src', 'test', 'pythonFiles', 'dummy.py');
 export const multirootPath = path.join(__dirname, '..', '..', 'src', 'testMultiRootWkspc');
-const workspace3Uri = vscode.Uri.file(path.join(multirootPath, 'workspace3'));
 
 //First thing to be executed.
 process.env.VSC_JUPYTER_CI_TEST = '1';
 
 // Ability to use custom python environments for testing
 export async function initializePython() {
-    await resetGlobalPythonPathSetting();
-    await clearPythonPathInWorkspaceFolder(dummyPythonFile);
-    await clearPythonPathInWorkspaceFolder(workspace3Uri);
     await setPythonPathInWorkspaceRoot(PYTHON_PATH);
 }
 
+export function isInsiders() {
+    return vscode.env.appName.indexOf('Insider') > 0;
+}
 // tslint:disable-next-line:no-any
 export async function initialize(): Promise<IExtensionTestApi> {
     await initializePython();
@@ -44,6 +35,7 @@ export async function initialize(): Promise<IExtensionTestApi> {
     // tslint:disable-next-line:no-any
     return (api as any) as IExtensionTestApi;
 }
+
 export async function activateExtension() {
     const extension = vscode.extensions.getExtension<IExtensionApi>(PVSC_EXTENSION_ID_FOR_TESTS)!;
     const api = await extension.activate();

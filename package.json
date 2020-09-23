@@ -469,14 +469,12 @@
             {
                 "command": "jupyter.selectjupyteruri",
                 "title": "%jupyter.command.jupyter.selectjupyteruri.title%",
-                "category": "Jupyter",
-                "when": "jupyter.featureenabled"
+                "category": "Jupyter"
             },
             {
                 "command": "jupyter.selectjupytercommandline",
                 "title": "%jupyter.command.jupyter.selectjupytercommandline.title%",
-                "category": "Jupyter",
-                "when": "jupyter.featureenabled"
+                "category": "Jupyter"
             },
             {
                 "command": "jupyter.importnotebook",
@@ -899,8 +897,7 @@
                 {
                     "command": "jupyter.createnewinteractive",
                     "title": "%jupyter.command.jupyter.createnewinteractive.title%",
-                    "category": "Jupyter",
-                    "when": "jupyter.featureenabled"
+                    "category": "Jupyter"
                 },
                 {
                     "command": "jupyter.runallcells",
@@ -1024,7 +1021,7 @@
                     "command": "jupyter.notebookeditor.trust",
                     "title": "%DataScience.trustNotebookCommandTitle%",
                     "category": "Jupyter",
-                    "when": "jupyter.featureenabled && notebookEditorFocused && !jupyter.isnotebooktrusted && jupyter.trustfeatureenabled"
+                    "when": "notebookEditorFocused && !jupyter.isnotebooktrusted && jupyter.trustfeatureenabled"
                 },
                 {
                     "command": "jupyter.notebookeditor.runallcells",
@@ -1054,19 +1051,19 @@
                     "command": "jupyter.notebookeditor.removeallcells",
                     "title": "%jupyter.command.jupyter.removeallcells.title%",
                     "category": "Jupyter",
-                    "when": "jupyter.featureenabled && notebookEditorFocused"
+                    "when": "notebookEditorFocused"
                 },
                 {
                     "command": "jupyter.notebookeditor.expandallcells",
                     "title": "%jupyter.command.jupyter.expandallcells.title%",
                     "category": "Jupyter",
-                    "when": "jupyter.featureenabled && notebookEditorFocused"
+                    "when": "notebookEditorFocused"
                 },
                 {
                     "command": "jupyter.notebookeditor.collapseallcells",
                     "title": "%jupyter.command.jupyter.collapseallcells.title%",
                     "category": "Jupyter",
-                    "when": "jupyter.featureenabled && notebookEditorFocused"
+                    "when": "notebookEditorFocused"
                 },
                 {
                     "command": "jupyter.expandallcells",
@@ -1695,10 +1692,10 @@
         "testSingleWorkspace": "node ./out/test/testBootstrap.js ./out/test/standardTest.js",
         "preTestJediLSP": "node ./out/test/languageServers/jedi/lspSetup.js",
         "testJediLSP": "node ./out/test/languageServers/jedi/lspSetup.js && cross-env CODE_TESTS_WORKSPACE=src/test VSC_JUPYTER_CI_TEST_GREP='Language Server:' node ./out/test/testBootstrap.js ./out/test/standardTest.js && node ./out/test/languageServers/jedi/lspTeardown.js",
-        "pretestDataScience": "node ./out/test/datascience/dsTestSetup.js",
-        "testDataScience": "cross-env CODE_TESTS_WORKSPACE=src/test/datascience VSC_JUPYTER_CI_TEST_VSC_CHANNEL=insiders TEST_FILES_SUFFIX=ds.test VSC_PYTHON_FORCE_LOGGING=1 VSC_PYTHON_LOAD_EXPERIMENTS_FROM_FILE=true node ./out/test/testBootstrap.js ./out/test/standardTest.js",
+        "pretestVSCodeX": "node ./out/test/datascience/dsTestSetup.js",
+        "testVSCode": "cross-env CODE_TESTS_WORKSPACE=src/test/datascience VSC_JUPYTER_CI_TEST_VSC_CHANNEL=stable TEST_FILES_SUFFIX=vscode.test VSC_PYTHON_FORCE_LOGGING=1 VSC_PYTHON_LOAD_EXPERIMENTS_FROM_FILE=true node ./out/test/testBootstrap.js ./out/test/standardTest.js",
         "testPerformance": "node ./out/test/testBootstrap.js ./out/test/performanceTest.js",
-        "testSmoke": "node ./out/test/smokeTest.js",
+        "testSmoke": "node ./out/test/testBootstrap.js ./out/test/smokeTest.js",
         "lint-staged": "node gulpfile.js",
         "lint": "tslint src/**/*.ts -t verbose",
         "prettier-fix": "prettier 'src/**/*.ts*' --write && prettier 'build/**/*.js' --write",
@@ -1965,10 +1962,5 @@
         "webpack-fix-default-import-plugin": "^1.0.3",
         "why-is-node-running": "^2.0.3",
         "yargs": "^15.3.1"
-    },
-    "__metadata": {
-        "id": "f1f59ae4-9318-4f3c-a9b5-81b2eaa5f8a5",
-        "publisherDisplayName": "Microsoft",
-        "publisherId": "998b010b-e2af-44a5-a6cd-0b5fd3b9b6f8"
     }
 }
