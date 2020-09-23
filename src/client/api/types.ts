@@ -22,6 +22,11 @@ export interface IPythonApiProvider {
     getApi(): Promise<PythonApi>;
     setApi(api: PythonApi): void;
 }
+export const IPythonExtensionChecker = Symbol('IPythonExtensionChecker');
+export interface IPythonExtensionChecker {
+    readonly isPythonExtensionInstalled: boolean;
+}
+
 export type PythonApi = {
     /**
      * IInterpreterService

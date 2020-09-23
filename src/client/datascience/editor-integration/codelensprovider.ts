@@ -3,6 +3,7 @@
 'use strict';
 import { inject, injectable } from 'inversify';
 import * as vscode from 'vscode';
+import { IPythonApiProvider } from '../../api/types';
 
 import { ICommandManager, IDebugService, IDocumentManager, IVSCodeNotebook } from '../../common/application/types';
 import { ContextKey } from '../../common/contextKey';
@@ -29,7 +30,8 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
         @inject(IDebugService) private debugService: IDebugService,
         @inject(IDataScienceFileSystem) private fs: IDataScienceFileSystem,
-        @inject(IVSCodeNotebook) private readonly vsCodeNotebook: IVSCodeNotebook
+        @inject(IVSCodeNotebook) private readonly vsCodeNotebook: IVSCodeNotebook,
+        @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider
     ) {
         disposableRegistry.push(this);
         disposableRegistry.push(this.debugService.onDidChangeActiveDebugSession(this.onChangeDebugSession.bind(this)));
@@ -61,6 +63,12 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
         } catch {
             // If vscodenote book fails, just ignore
         }
+
+        // Skip if no python extension. We can't run a python kernel anyway
+        if (!this.apiProvider.isPythonExtensionInstalled) {
+            return [];
+        }
+
         // Get the list of code lens for this document.
         return this.getCodeLensTimed(document);
     }

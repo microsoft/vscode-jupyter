@@ -28,13 +28,14 @@ import {
     ILanguageServerProvider,
     IPythonApiProvider,
     IPythonDebuggerPathProvider,
+    IPythonExtensionChecker,
     IPythonInstaller,
     PythonApi
 } from './types';
 
 // tslint:disable: max-classes-per-file
 @injectable()
-export class PythonApiProvider {
+export class PythonApiProvider implements IPythonApiProvider {
     private readonly api = createDeferred<PythonApi>();
 
     private initialized?: boolean;
@@ -73,6 +74,15 @@ export class PythonApiProvider {
             await pythonExtension.activate();
         }
         pythonExtension.exports.jupyter.registerHooks();
+    }
+}
+
+@injectable()
+export class PythonExtensionChecker implements IPythonExtensionChecker {
+    constructor(@inject(IExtensions) private readonly extensions: IExtensions) {}
+
+    public get isPythonExtensionInstalled() {
+        return this.extensions.getExtension('ms-python.python') !== undefined;
     }
 }
 

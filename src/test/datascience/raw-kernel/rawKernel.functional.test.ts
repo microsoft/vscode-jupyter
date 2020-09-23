@@ -4,7 +4,9 @@
 import { assert } from 'chai';
 import { noop } from 'jquery';
 import * as portfinder from 'portfinder';
+import { instance, mock, when } from 'ts-mockito';
 import * as uuid from 'uuid/v4';
+import { PythonApiProvider } from '../../../client/api/pythonApi';
 import { IProcessServiceFactory } from '../../../client/common/process/types';
 import { createDeferred, sleep } from '../../../client/common/utils/async';
 import { KernelDaemonPool } from '../../../client/datascience/kernel-launcher/kernelDaemonPool';
@@ -74,13 +76,16 @@ suite('DataScience raw kernel tests', () => {
             path: interpreter!.path,
             id: uuid()
         };
+        const apiProvider = mock(PythonApiProvider);
+        when(apiProvider.isPythonExtensionInstalled).thenReturn(true);
         kernelProcess = new KernelProcess(
             ioc.get<IProcessServiceFactory>(IProcessServiceFactory),
             ioc.get<KernelDaemonPool>(KernelDaemonPool),
             connectionInfo as any,
             { kernelSpec, interpreter, kind: 'startUsingKernelSpec' },
             ioc.get<IDataScienceFileSystem>(IDataScienceFileSystem),
-            undefined
+            undefined,
+            instance(apiProvider)
         );
         await kernelProcess.launch(process.cwd());
         return createRawKernel(kernelProcess, uuid());

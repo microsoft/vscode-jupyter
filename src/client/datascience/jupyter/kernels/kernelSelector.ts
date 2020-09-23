@@ -7,6 +7,7 @@ import { inject, injectable } from 'inversify';
 // tslint:disable-next-line: no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
 import { CancellationToken } from 'vscode-jsonrpc';
+import { IPythonApiProvider } from '../../../api/types';
 import { IApplicationShell } from '../../../common/application/types';
 import '../../../common/extensions';
 import { traceError, traceInfo, traceVerbose } from '../../../common/logger';
@@ -70,7 +71,8 @@ export class KernelSelector implements IKernelSelectionUsage {
         @inject(IKernelFinder) private readonly kernelFinder: IKernelFinder,
         @inject(IJupyterSessionManagerFactory) private jupyterSessionManagerFactory: IJupyterSessionManagerFactory,
         @inject(IConfigurationService) private configService: IConfigurationService,
-        @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry
+        @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
+        @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider
     ) {
         disposableRegistry.push(
             this.jupyterSessionManagerFactory.onRestartSessionCreated(this.addKernelToIgnoreList.bind(this))
@@ -182,9 +184,11 @@ export class KernelSelector implements IKernelSelectionUsage {
         };
         // When this method is called, we know we've started a local jupyter server or are connecting raw
         // Lets pre-warm the list of local kernels.
-        this.selectionProvider
-            .getKernelSelectionsForLocalSession(resource, type, sessionManager, cancelToken)
-            .ignoreErrors();
+        if (this.apiProvider.isPythonExtensionInstalled) {
+            this.selectionProvider
+                .getKernelSelectionsForLocalSession(resource, type, sessionManager, cancelToken)
+                .ignoreErrors();
+        }
 
         let selection:
             | KernelSpecConnectionMetadata
@@ -222,7 +226,10 @@ export class KernelSelector implements IKernelSelectionUsage {
         const itemToReturn = cloneDeep(selection);
         if (itemToReturn) {
             itemToReturn.interpreter =
-                itemToReturn.interpreter || (await this.interpreterService.getActiveInterpreter(resource));
+                itemToReturn.interpreter ||
+                (this.apiProvider.isPythonExtensionInstalled
+                    ? await this.interpreterService.getActiveInterpreter(resource)
+                    : undefined);
         }
         return itemToReturn;
     }
@@ -525,10 +532,10 @@ export class KernelSelector implements IKernelSelectionUsage {
             cancelToken,
             ignoreDependencyCheck
         );
-        const activeInterpreter = await this.interpreterService.getActiveInterpreter(resource);
-        if (!kernelSpec && !activeInterpreter) {
-            return;
-        } else if (!kernelSpec && activeInterpreter) {
+        const activeInterpreter = this.apiProvider.isPythonExtensionInstalled
+            ? await this.interpreterService.getActiveInterpreter(resource)
+            : undefined;
+        if (!kernelSpec && activeInterpreter) {
             await this.installDependenciesIntoInterpreter(activeInterpreter, ignoreDependencyCheck, cancelToken);
 
             // Return current interpreter.
@@ -536,15 +543,33 @@ export class KernelSelector implements IKernelSelectionUsage {
                 kind: 'startUsingPythonInterpreter',
                 interpreter: activeInterpreter
             };
-        } else if (kernelSpec) {
+        } else if (kernelSpec && !activeInterpreter) {
             // Locate the interpreter that matches our kernelspec
-            const interpreter = await this.kernelService.findMatchingInterpreter(kernelSpec, cancelToken);
+            const interpreter = this.apiProvider.isPythonExtensionInstalled
+                ? await this.kernelService.findMatchingInterpreter(kernelSpec, cancelToken)
+                : undefined;
 
             if (interpreter) {
                 await this.installDependenciesIntoInterpreter(interpreter, ignoreDependencyCheck, cancelToken);
             }
 
             return { kind: 'startUsingKernelSpec', kernelSpec, interpreter };
+        } else {
+            // No kernel specs, list them all and pick the first one
+            const kernelSpecs = await this.kernelFinder.listKernelSpecs(resource);
+
+            // Do a bit of hack and pick a python one first if the resource is a python file
+            if (resource?.fsPath && resource.fsPath.endsWith('.py')) {
+                const firstPython = kernelSpecs.find((k) => k.language === 'python');
+                if (firstPython) {
+                    return { kind: 'startUsingKernelSpec', kernelSpec: firstPython, interpreter: undefined };
+                }
+            }
+
+            // If that didn't work, just pick the first one
+            if (kernelSpecs.length > 0) {
+                return { kind: 'startUsingKernelSpec', kernelSpec: kernelSpecs[0], interpreter: undefined };
+            }
         }
     }
 

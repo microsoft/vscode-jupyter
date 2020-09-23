@@ -5,6 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import { IExtensionSingleActivationService } from '../activation/types';
+import { IPythonApiProvider } from '../api/types';
 import '../common/extensions';
 import { IPythonDaemonExecutionService, IPythonExecutionFactory } from '../common/process/types';
 import { IDisposableRegistry } from '../common/types';
@@ -27,7 +28,8 @@ export class Activation implements IExtensionSingleActivationService {
         @inject(ActiveEditorContextService) private readonly contextService: ActiveEditorContextService,
         @inject(KernelDaemonPreWarmer) private readonly daemonPoolPrewarmer: KernelDaemonPreWarmer,
         @inject(INotebookCreationTracker)
-        private readonly tracker: INotebookCreationTracker
+        private readonly tracker: INotebookCreationTracker,
+        @inject(IPythonApiProvider) private readonly pythonApiProvider: IPythonApiProvider
     ) {}
     public async activate(): Promise<void> {
         this.disposables.push(this.notebookEditorProvider.onDidOpenNotebookEditor(this.onDidOpenNotebookEditor, this));
@@ -57,6 +59,10 @@ export class Activation implements IExtensionSingleActivationService {
     @debounceAsync(500)
     @swallowExceptions('Failed to pre-warm daemon pool')
     private async PreWarmDaemonPool() {
+        if (!this.pythonApiProvider.isPythonExtensionInstalled) {
+            // Skip prewarm if no python extension
+            return;
+        }
         const interpreter = await this.jupyterInterpreterService.getSelectedInterpreter();
         if (!interpreter) {
             return;
