@@ -321,7 +321,8 @@ jobs:
       - name: Compile if not cached
         run: npx gulp prePublishNonBundle
         # If running the placeholder suite & not required to run any tests, then don't compile.
-        if: steps.out-cache.outputs.cache-hit == false && (matrix.test-suite != 'test-based-on-pr-body' || contains(github.event.pull_request.body, '[x] Run '))
+        # if: steps.out-cache.outputs.cache-hit == false && (matrix.test-suite != 'test-based-on-pr-body' || contains(github.event.pull_request.body, '[x] Run '))
+        if: matrix.test-suite != 'test-based-on-pr-body' || contains(github.event.pull_request.body, '[x] Run ')
 
       - name: Run functional tests
         run: npm run test:functional
