@@ -138,7 +138,7 @@ export function disposeAllDisposables(disposables: IDisposable[]) {
 }
 
 export async function canRunTests() {
-    if (!isInsiders()){
+    if (!isInsiders()) {
         return false;
     }
     const api = await initialize();
@@ -167,7 +167,7 @@ export async function shutdownAllNotebooks() {
 
 let oldValueFor_alwaysTrustNotebooks: undefined | boolean;
 export async function closeNotebooksAndCleanUpAfterTests(disposables: IDisposable[] = []) {
-    if (!isInsiders()){
+    if (!isInsiders()) {
         return false;
     }
     await closeActiveWindows();
@@ -183,7 +183,7 @@ export async function closeNotebooksAndCleanUpAfterTests(disposables: IDisposabl
     sinon.restore();
 }
 export async function closeNotebooks(disposables: IDisposable[] = []) {
-    if (!isInsiders()){
+    if (!isInsiders()) {
         return false;
     }
     await closeActiveWindows();
