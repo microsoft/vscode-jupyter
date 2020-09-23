@@ -219,9 +219,9 @@ jobs:
       - name: Upgrade pip
         run: python -m pip install -U pip
 
-      - name: Body
-        run: echo "${{github.event.pull_request.body}}""
-        shell: bash
+    #   - name: Body
+    #     run: echo "${{github.event.pull_request.body}}""
+    #     shell: bash
 
       - name: Use Node ${{env.NODE_VERSION}}
         uses: actions/setup-node@v2.1.1
