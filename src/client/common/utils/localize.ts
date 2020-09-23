@@ -18,7 +18,7 @@ export namespace Common {
     export const ok = localize('Common.ok', 'Ok');
     export const gotIt = localize('Common.gotIt', 'Got it!');
     export const install = localize('Common.install', 'Install');
-    export const loadingExtension = localize('Common.loadingPythonExtension', 'Python extension loading...');
+    export const loadingExtension = localize('Common.loadingExtension', 'Jupyter extension loading...');
     export const openOutputPanel = localize('Common.openOutputPanel', 'Show output');
     export const noIWillDoItLater = localize('Common.noIWillDoItLater', 'No, I will do it later');
     export const notNow = localize('Common.notNow', 'Not now');

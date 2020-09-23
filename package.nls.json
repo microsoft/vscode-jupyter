@@ -325,7 +325,7 @@
     "DataScience.jupyterCommandLineQuickPickPlaceholder": "Choose an option",
     "DataScience.jupyterCommandLineQuickPickTitle": "Pick command line for Jupyter",
     "DataScience.jupyterCommandLinePrompt": "Enter your custom command line for Jupyter",
-    "Common.loadingPythonExtension": "Python extension loading...",
+    "Common.loadingExtension": "Jupyter extension loading...",
     "debug.selectConfigurationTitle": "Select a debug configuration",
     "debug.selectConfigurationPlaceholder": "Debug Configuration",
     "debug.launchJsonConfigurationsCompletionLabel": "Python",

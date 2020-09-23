@@ -89,7 +89,6 @@
     "diagnostics.invalidTestSettings": "Your settings needs to be updated to change the setting \"jupyter.unitTest.\" to \"jupyter.testing.\", otherwise testing Python code using the extension may not work. Would you like to automatically update your settings now?",
     "Common.canceled": "已取消",
     "Common.cancel": "取消",
-    "Common.loadingPythonExtension": "正在載入 Python 延伸模組...",
     "debug.selectConfigurationTitle": "選擇偵錯設定檔",
     "debug.selectConfigurationPlaceholder": "偵錯設定檔",
     "debug.launchJsonConfigurationsCompletionLabel": "Python",
