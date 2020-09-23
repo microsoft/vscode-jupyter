@@ -16,12 +16,6 @@ export enum WebAppReload {
     experiment = 'Reload - experiment'
 }
 
-// Experiment to use a local ZMQ kernel connection as opposed to starting a Jupyter server locally
-export enum LocalZMQKernel {
-    control = 'LocalZMQKernel - control',
-    experiment = 'LocalZMQKernel - experiment'
-}
-
 // Experiment for supporting run by line in data science notebooks
 export enum RunByLine {
     control = 'RunByLine - control',

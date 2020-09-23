@@ -1196,7 +1196,6 @@
                     "default": [],
                     "items": {
                         "enum": [
-                            "LocalZMQKernel - experiment",
                             "NativeNotebook - experiment",
                             "CustomEditorSupport - experiment",
                             "RunByLine - experiment",
@@ -1212,7 +1211,6 @@
                     "default": [],
                     "items": {
                         "enum": [
-                            "LocalZMQKernel - experiment",
                             "NativeNotebook - experiment",
                             "CustomEditorSupport - experiment",
                             "RunByLine - experiment",

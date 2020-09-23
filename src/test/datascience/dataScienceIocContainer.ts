@@ -57,7 +57,6 @@ import {
     UseVSCodeNotebookEditorApi
 } from '../../client/common/constants';
 import { CryptoUtils } from '../../client/common/crypto';
-import { LocalZMQKernel } from '../../client/common/experiments/groups';
 import { ExperimentsManager } from '../../client/common/experiments/manager';
 import { ExperimentService } from '../../client/common/experiments/service';
 import { ProductInstaller } from '../../client/common/installer/productInstaller';
