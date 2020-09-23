@@ -4,7 +4,6 @@ on:
   pull_request:
     branches:
       - main
-      - moreCICHanges
   check_run:
     types: [rerequested, requested_action]
 
