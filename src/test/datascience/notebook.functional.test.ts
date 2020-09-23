@@ -73,10 +73,9 @@ suite('DataScience notebook tests', () => {
                     // tslint:disable-next-line: no-invalid-this
                     this.skip();
                     return;
-                } else {
-                    ioc.forceDataScienceSettingsChanged({ disableZMQSupport: true });
                 }
                 ioc.registerDataScienceTypes();
+                ioc.forceDataScienceSettingsChanged({ disableZMQSupport: !useRawKernel });
                 await ioc.activate();
                 notebookProvider = ioc.get<INotebookProvider>(INotebookProvider);
             });
