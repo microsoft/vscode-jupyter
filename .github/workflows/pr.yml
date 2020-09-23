@@ -286,6 +286,8 @@ jobs:
         with:
           path: ./out
           key: ${{runner.os}}-${{env.CACHE_OUT_DIRECTORY}}-${{hashFiles('src/**')}}
+        # If running the placeholder suite & not required to run any tests, then don't compile.
+        if: matrix.test-suite != 'test-based-on-pr-body' || contains(github.event.pull_request.body, '[x] Run ')
 
       # For faster/better builds of sdists.
       - run: python -m pip install wheel
