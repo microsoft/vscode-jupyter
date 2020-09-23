@@ -29,7 +29,6 @@ export class MigrateDigestStorage {
                 await this.ensuredDir;
                 const nbsecret = path.join(this.pythonExtensionStorageDir, 'nbsecret');
                 await this.fs.copyLocal(nbsecret, path.join(this.currentExtensionStorageDir, 'nbsecret'));
-                this.fs.deleteLocalFile(nbsecret).ignoreErrors();
             } catch (e) {
                 traceInfo('Encountered error while migrating trusted notebooks nbsecret keyfile', e);
             } finally {
