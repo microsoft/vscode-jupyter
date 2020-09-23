@@ -646,6 +646,11 @@
                 "command": "jupyter.latestExtension",
                 "title": "DataScience.latestExtension",
                 "category": "Jupyter"
+            },
+            {
+                "command": "jupyter.enableDebugLogging",
+                "title": "%jupyter.command.jupyter.enableDebugLogging.title%",
+                "category": "Jupyter"
             }
         ],
         "menus": {
@@ -1162,6 +1167,11 @@
                     "title": "%DataScience.notebookExportAs%",
                     "category": "Jupyter",
                     "when": "false"
+                },
+                {
+                    "command": "jupyter.enableDebugLogging",
+                    "title": "%jupyter.command.jupyter.enableDebugLogging.title%",
+                    "category": "Jupyter"
                 }
             ]
         },

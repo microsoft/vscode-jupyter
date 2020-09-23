@@ -110,6 +110,7 @@ export namespace Commands {
     export const EnableLoadingWidgetsFrom3rdPartySource = 'jupyter.enableLoadingWidgetScriptsFromThirdPartySource';
     export const NotebookEditorExpandAllCells = 'jupyter.notebookeditor.expandallcells';
     export const NotebookEditorCollapseAllCells = 'jupyter.notebookeditor.collapseallcells';
+    export const EnableDebugLogging = 'jupyter.enableDebugLogging';
 }
 
 export namespace CodeLensCommands {
