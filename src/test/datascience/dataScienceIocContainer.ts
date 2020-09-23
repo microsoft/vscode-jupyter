@@ -788,7 +788,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             );
 
             // Raw Kernel doesn't have a mock layer, so disable ZMQ for mocked jupyter tests
-            this.forceDataScienceSettingsChanged({ disableZMQSupport: true });
+            this.forceDataScienceSettingsChanged({ disableZMQSupport: true }, false);
         } else {
             this.serviceManager.addSingleton<IInstaller>(IInstaller, ProductInstaller);
             this.serviceManager.addSingleton<IInterpreterService>(IInterpreterService, InterpreterService);
@@ -979,8 +979,11 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         return setting;
     }
 
-    public forceDataScienceSettingsChanged(dataScienceSettings: Partial<IJupyterSettings>) {
-        this.forceSettingsChanged(undefined, '', dataScienceSettings);
+    public forceDataScienceSettingsChanged(
+        dataScienceSettings: Partial<IJupyterSettings>,
+        notifyEvent: boolean = true
+    ) {
+        this.forceSettingsChanged(undefined, '', dataScienceSettings, notifyEvent);
     }
 
     public setExtensionRootPath(newRoot: string) {
@@ -1061,7 +1064,12 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         panel.attach(options);
         return panel;
     }
-    private forceSettingsChanged(resource: Resource, newPath: string, partial: Partial<IJupyterSettings>) {
+    private forceSettingsChanged(
+        resource: Resource,
+        newPath: string,
+        partial: Partial<IJupyterSettings>,
+        notifyEvent: boolean = true
+    ) {
         // tslint:disable-next-line: no-suspicious-comment
         // TODO: Python path will not be updated by this code so tests are unlikely to pass
         const settings = this.getSettings(resource) as MockJupyterSettings;
@@ -1069,21 +1077,23 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             settings.assign(partial);
         }
 
-        // The workspace config must be updated too as a config change event will cause the data to be reread from
-        // the config.
-        const config = this.getWorkspaceConfig('jupyter', resource);
-        // Turn into the JSON only version
-        const jsonVersion = JSON.parse(JSON.stringify(settings));
-        // Update each key
-        const keys = Object.keys(jsonVersion);
-        keys.forEach((k) => config.update(k, jsonVersion[k]).ignoreErrors());
-        settings.fireChangeEvent();
-        this.configChangeEvent.fire({
-            affectsConfiguration(_s: string, _r?: Uri): boolean {
-                return true;
-            }
-        });
-        this.get<InterpreterService>(IInterpreterService).updateInterpreter(resource, newPath);
+        if (notifyEvent) {
+            // The workspace config must be updated too as a config change event will cause the data to be reread from
+            // the config.
+            const config = this.getWorkspaceConfig('jupyter', resource);
+            // Turn into the JSON only version
+            const jsonVersion = JSON.parse(JSON.stringify(settings));
+            // Update each key
+            const keys = Object.keys(jsonVersion);
+            keys.forEach((k) => config.update(k, jsonVersion[k]).ignoreErrors());
+            settings.fireChangeEvent();
+            this.configChangeEvent.fire({
+                affectsConfiguration(_s: string, _r?: Uri): boolean {
+                    return true;
+                }
+            });
+            this.get<InterpreterService>(IInterpreterService).updateInterpreter(resource, newPath);
+        }
     }
 
     private generateJupyterSettings() {
