@@ -22,9 +22,10 @@ import {
     WorkspaceEdit
 } from 'vscode';
 import * as vscodeLanguageClient from 'vscode-languageclient/node';
+import * as lsp from 'vscode-languageserver-protocol';
 import { ILanguageServer } from '../../client/api/types';
 
-import { createDeferred, Deferred } from '../../client/common/utils/async';
+import { createDeferred, Deferred, sleep } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 
 // tslint:disable:no-any unified-signatures
@@ -32,6 +33,16 @@ export class MockLanguageServer implements ILanguageServer {
     private notificationPromise: Deferred<void> | undefined;
     private contents = '';
     private versionId: number = 0;
+    private nextCompletionItem: lsp.CompletionItem | undefined;
+    private nextHoverItem: lsp.Hover | undefined;
+
+    public setNextCompletionItem(item: lsp.CompletionItem) {
+        this.nextCompletionItem = item;
+    }
+
+    public setNextHover(item: lsp.Hover) {
+        this.nextHoverItem = item;
+    }
 
     public waitForNotification(): Promise<void> {
         this.notificationPromise = createDeferred();
@@ -50,7 +61,7 @@ export class MockLanguageServer implements ILanguageServer {
         // Return an object that looks like a connection
         return {
             sendNotification: this.sendNotification.bind(this) as any,
-            sendRequest: noop as any,
+            sendRequest: this.sendRequest.bind(this) as any,
             sendProgress: noop as any,
             onRequest: noop as any,
             onNotification: noop as any,
@@ -146,6 +157,24 @@ export class MockLanguageServer implements ILanguageServer {
             const changes = params.contentChanges;
             this.applyChanges(changes);
             this.resolveNotificationPromise();
+        }
+    }
+
+    private async sendRequest(method: any, _params: any) {
+        if (method === vscodeLanguageClient.CompletionRequest.type) {
+            await sleep(10);
+            if (this.nextCompletionItem) {
+                const result = [this.nextCompletionItem];
+                this.nextCompletionItem = undefined;
+                return result;
+            }
+        } else if (method === vscodeLanguageClient.HoverRequest.type) {
+            await sleep(10);
+            if (this.nextHoverItem) {
+                const result = this.nextHoverItem;
+                this.nextHoverItem = undefined;
+                return result;
+            }
         }
     }
 
