@@ -27,7 +27,7 @@ jobs:
   build-vsix:
     name: Build VSIX
     runs-on: ubuntu-latest
-    if: github.repository == 'microsoft/vscode-jupyterx'
+    if: github.repository == 'microsoft/vscode-jupyter'
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -77,7 +77,7 @@ jobs:
   lint:
     name: Lint
     runs-on: ubuntu-latest
-    if: github.repository == 'microsoft/vscode-jupyterx'
+    if: github.repository == 'microsoft/vscode-jupyter'
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -132,7 +132,7 @@ jobs:
   ts_tests:
     name: Type Script Tests
     runs-on: ${{ matrix.os }}
-    if: github.repository == 'microsoft/vscode-jupyterx'
+    if: github.repository == 'microsoft/vscode-jupyter'
     strategy:
       fail-fast: false
       matrix:
@@ -194,7 +194,7 @@ jobs:
   tests:
     name: Tests (with Python)
     runs-on: ${{ matrix.os }}
-    if: github.repository == 'microsoft/vscode-jupyterx'
+    if: github.repository == 'microsoft/vscode-jupyter'
     strategy:
       fail-fast: false
       matrix:
@@ -359,7 +359,7 @@ jobs:
     # The value of runs-on is the OS of the current job (specified in the strategy matrix below) instead of being hardcoded.
     runs-on: ${{ matrix.os }}
     if: github.repository == 'microsoft/vscode-jupyter'
-    # needs: [build-vsix]
+    needs: [build-vsix]
     strategy:
       fail-fast: false
       matrix:
@@ -398,8 +398,13 @@ jobs:
       - name: Download Python VSIX
         run: az storage blob download --file ${{env.VSIX_NAME_PYTHON}} --account-name pvsc --container-name extension-builds --name ${{ env.VSIX_NAME_PYTHON }}
 
-      - name: Download Jupyter VSIX
-        run: az storage blob download --file ms-ai-tools-jupyter-insiders.vsix --account-name pvsc --container-name extension-builds-jupyter --name ms-ai-tools-jupyter-insiders.vsix
+    #   - name: Download Jupyter VSIX
+    #     run: az storage blob download --file ms-ai-tools-jupyter-insiders.vsix --account-name pvsc --container-name extension-builds-jupyter --name ms-ai-tools-jupyter-insiders.vsix
+
+      - name: Download VSIX
+        uses: actions/download-artifact@v2
+        with:
+          name: ${{env.ARTIFACT_NAME_VSIX}}
 
 
       - name: Install dependencies (npm ci)
@@ -409,12 +414,6 @@ jobs:
         run: |
           python -m pip install numpy
           python -m pip install --upgrade jupyter
-
-    #   # Save time by reusing bits from the VSIX.
-    #   - name: Download VSIX
-    #     uses: actions/download-artifact@v2
-    #     with:
-    #       name: ${{env.ARTIFACT_NAME_VSIX}}
 
       # Compile the test files.
       - name: Prepare for smoke tests
