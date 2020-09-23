@@ -18,7 +18,6 @@ import { ApplicationShell } from '../../client/common/application/applicationShe
 import { IApplicationShell, IWorkspaceService } from '../../client/common/application/types';
 import { Cancellation, CancellationError } from '../../client/common/cancellation';
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
-import { LocalZMQKernel } from '../../client/common/experiments/groups';
 import { traceError, traceInfo } from '../../client/common/logger';
 import { IPythonExecutionFactory } from '../../client/common/process/types';
 import { Product } from '../../client/common/types';
@@ -75,7 +74,7 @@ suite('DataScience notebook tests', () => {
                     this.skip();
                     return;
                 } else {
-                    ioc.setExperimentState(LocalZMQKernel.experiment, useRawKernel);
+                    ioc.forceDataScienceSettingsChanged({ disableZMQSupport: true });
                 }
                 ioc.registerDataScienceTypes();
                 await ioc.activate();

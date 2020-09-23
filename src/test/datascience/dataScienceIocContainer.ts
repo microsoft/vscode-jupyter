@@ -648,13 +648,8 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         when(experimentManager.inExperiment(anything())).thenCall((exp) => {
             const setState = this.experimentState.get(exp);
             if (setState === undefined) {
-                if (this.shouldMockJupyter) {
-                    // RawKernel doesn't currently have a mock layer
-                    return exp !== LocalZMQKernel.experiment;
-                } else {
-                    // All experiments to true by default if not mocking jupyter
-                    return true;
-                }
+                // All experiments on by default
+                return true;
             }
             return setState;
         });
@@ -791,6 +786,9 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
                 IEnvironmentActivationService,
                 instance(mock(EnvironmentActivationService))
             );
+
+            // Raw Kernel doesn't have a mock layer, so disable ZMQ for mocked jupyter tests
+            this.forceDataScienceSettingsChanged({ disableZMQSupport: true });
         } else {
             this.serviceManager.addSingleton<IInstaller>(IInstaller, ProductInstaller);
             this.serviceManager.addSingleton<IInterpreterService>(IInterpreterService, InterpreterService);
