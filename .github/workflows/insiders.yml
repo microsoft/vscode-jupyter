@@ -180,7 +180,7 @@ jobs:
 
       - name: Compile if not cached
         run: npx gulp prePublishNonBundle
-        if: steps.out-cache.outputs.cache-hit == false
+        # if: steps.out-cache.outputs.cache-hit == false
 
       - name: Run TypeScript unit tests
         run: npm run test:unittests:cover
@@ -299,7 +299,7 @@ jobs:
 
       - name: Compile if not cached
         run: npx gulp prePublishNonBundle
-        if: steps.out-cache.outputs.cache-hit == false
+        # if: steps.out-cache.outputs.cache-hit == false
 
       - name: Run Python and IPython unit tests
         run: |
