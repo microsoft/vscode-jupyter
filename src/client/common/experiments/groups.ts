@@ -51,12 +51,6 @@ export enum CollectNodeLSRequestTiming {
     experiment = 'CollectNodeLSRequestTiming - experiment'
 }
 
-// Determine if ipywidgets is enabled or not
-export enum EnableIPyWidgets {
-    control = 'EnableIPyWidgets - control',
-    experiment = 'EnableIPyWidgets - experiment'
-}
-
 /*
  * Experiment to turn on custom editor or VS Code Native Notebook API support.
  */
