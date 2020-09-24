@@ -22,7 +22,6 @@ import {
     IDocumentManager,
     IWorkspaceService
 } from '../../client/common/application/types';
-import { LocalZMQKernel } from '../../client/common/experiments/groups';
 import { ICryptoUtils, IExtensionContext } from '../../client/common/types';
 import { createDeferred, sleep, waitForPromise } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
@@ -83,7 +82,8 @@ import {
     typeCode,
     verifyCellIndex,
     verifyCellSource,
-    verifyHtmlOnCell
+    verifyHtmlOnCell,
+    verifyServerStatus
 } from './testHelpers';
 import { ITestNativeEditorProvider } from './testNativeEditorProvider';
 
@@ -456,7 +456,7 @@ suite('DataScience Native Editor', () => {
 
                 runMountedTest('Remote kernel can be switched and remembered', async () => {
                     // Turn off raw kernel for this test as it's testing remote
-                    ioc.setExperimentState(LocalZMQKernel.experiment, false);
+                    ioc.forceDataScienceSettingsChanged({ disableZMQSupport: true });
 
                     const pythonService = await createPythonService(ioc, 2);
 
@@ -714,6 +714,8 @@ df.head()`;
 
                         // Make sure it has a server
                         assert.ok(editor.editor.notebook, 'Notebook did not start with a server');
+                        // Make sure it does have a name though
+                        verifyServerStatus(editor.mount.wrapper, 'local');
                     } else {
                         context.skip();
                     }
@@ -734,6 +736,9 @@ df.head()`;
 
                         // Make sure it does not have a server
                         assert.notOk(editor.editor.notebook, 'Notebook should not start with a server');
+
+                        // Make sure it does have a name though
+                        verifyServerStatus(editor.mount.wrapper, 'local');
                     } else {
                         context.skip();
                     }
@@ -878,7 +883,7 @@ df.head()`;
 
                 runMountedTest('Startup and shutdown', async () => {
                     // Turn off raw kernel for this test as it's testing jupyterserver start / shutdown
-                    ioc.setExperimentState(LocalZMQKernel.experiment, false);
+                    ioc.forceDataScienceSettingsChanged({ disableZMQSupport: true });
                     addMockData(ioc, 'b=2\nb', 2);
                     addMockData(ioc, 'c=3\nc', 3);
 
@@ -929,7 +934,7 @@ df.head()`;
                     const errorThrownDeferred = createDeferred<Error>();
 
                     // Turn off raw kernel for this test as it's testing jupyter usable error
-                    ioc.setExperimentState(LocalZMQKernel.experiment, false);
+                    ioc.forceDataScienceSettingsChanged({ disableZMQSupport: true });
 
                     // REmap the functions in the execution and error handler. Note, we can't rebind them as
                     // they've already been injected into the INotebookProvider
