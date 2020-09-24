@@ -317,6 +317,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         return this.jupyterMock ? this.jupyterMock.getManager() : undefined;
     }
 
+    public get isRawKernel(): boolean {
+        return !this.mockJupyter && !this.getSettings().disableZMQSupport;
+    }
+
     public get kernelService() {
         return this.kernelServiceMock;
     }
@@ -325,6 +329,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     // tslint:disable-next-line:no-any
     public datascience!: TypeMoq.IMock<IDataScience>;
     public shouldMockJupyter: boolean;
+    public attemptedPythonExtension: boolean = false;
     private commandManager: MockCommandManager = new MockCommandManager();
     private setContexts: Record<string, boolean> = {};
     private contextSetEvent: EventEmitter<{ name: string; value: boolean }> = new EventEmitter<{
@@ -492,6 +497,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingletonInstance<IExperimentService>(IExperimentService, instance(experimentService));
         const extensionChecker = mock(PythonExtensionChecker);
         when(extensionChecker.isPythonExtensionInstalled).thenCall(this.isPythonExtensionInstalled.bind(this));
+        when(extensionChecker.installPythonExtension()).thenCall(this.installPythonExtension.bind(this));
         this.serviceManager.addSingletonInstance<IPythonExtensionChecker>(
             IPythonExtensionChecker,
             instance(extensionChecker)
@@ -1081,6 +1087,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
     private isPythonExtensionInstalled() {
         return this.pythonExtensionState;
+    }
+
+    private installPythonExtension() {
+        this.attemptedPythonExtension = true;
     }
 
     private forceSettingsChanged(

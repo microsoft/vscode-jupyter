@@ -85,7 +85,7 @@ export class NotebookProvider implements INotebookProvider {
                 ...options,
                 onConnectionMade: this.fireConnectionMade.bind(this)
             });
-        } else {
+        } else if (!options.getOnly) {
             await this.extensionChecker.installPythonExtension();
         }
     }
