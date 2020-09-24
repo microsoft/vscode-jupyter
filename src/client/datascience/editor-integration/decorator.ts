@@ -5,7 +5,7 @@ import { inject, injectable } from 'inversify';
 import * as vscode from 'vscode';
 
 import { IExtensionSingleActivationService } from '../../activation/types';
-import { IPythonApiProvider } from '../../api/types';
+import { IPythonExtensionChecker } from '../../api/types';
 import { IDocumentManager, IVSCodeNotebook } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../common/types';
@@ -23,7 +23,7 @@ export class Decorator implements IExtensionSingleActivationService, IDisposable
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IConfigurationService) private configuration: IConfigurationService,
         @inject(IVSCodeNotebook) private vsCodeNotebook: IVSCodeNotebook,
-        @inject(IPythonApiProvider) private apiProvider: IPythonApiProvider
+        @inject(IPythonExtensionChecker) private extensionChecker: IPythonExtensionChecker
     ) {
         this.computeDecorations();
         disposables.push(this);
@@ -107,7 +107,7 @@ export class Decorator implements IExtensionSingleActivationService, IDisposable
             this.activeCellTop &&
             this.cellSeparatorType &&
             this.activeCellBottom &&
-            this.apiProvider.isPythonExtensionInstalled
+            this.extensionChecker.isPythonExtensionInstalled
         ) {
             const settings = this.configuration.getSettings(editor.document.uri);
             if (settings.decorateCells) {

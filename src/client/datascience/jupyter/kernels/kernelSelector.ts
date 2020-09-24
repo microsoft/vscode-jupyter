@@ -7,7 +7,7 @@ import { inject, injectable } from 'inversify';
 // tslint:disable-next-line: no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
 import { CancellationToken } from 'vscode-jsonrpc';
-import { IPythonApiProvider } from '../../../api/types';
+import { IPythonExtensionChecker } from '../../../api/types';
 import { IApplicationShell } from '../../../common/application/types';
 import '../../../common/extensions';
 import { traceError, traceInfo, traceVerbose } from '../../../common/logger';
@@ -72,7 +72,7 @@ export class KernelSelector implements IKernelSelectionUsage {
         @inject(IJupyterSessionManagerFactory) private jupyterSessionManagerFactory: IJupyterSessionManagerFactory,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
-        @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider
+        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker
     ) {
         disposableRegistry.push(
             this.jupyterSessionManagerFactory.onRestartSessionCreated(this.addKernelToIgnoreList.bind(this))
@@ -184,7 +184,7 @@ export class KernelSelector implements IKernelSelectionUsage {
         };
         // When this method is called, we know we've started a local jupyter server or are connecting raw
         // Lets pre-warm the list of local kernels.
-        if (this.apiProvider.isPythonExtensionInstalled) {
+        if (this.extensionChecker.isPythonExtensionInstalled) {
             this.selectionProvider
                 .getKernelSelectionsForLocalSession(resource, type, sessionManager, cancelToken)
                 .ignoreErrors();
@@ -227,7 +227,7 @@ export class KernelSelector implements IKernelSelectionUsage {
         if (itemToReturn) {
             itemToReturn.interpreter =
                 itemToReturn.interpreter ||
-                (this.apiProvider.isPythonExtensionInstalled
+                (this.extensionChecker.isPythonExtensionInstalled
                     ? await this.interpreterService.getActiveInterpreter(resource)
                     : undefined);
         }
@@ -532,7 +532,7 @@ export class KernelSelector implements IKernelSelectionUsage {
             cancelToken,
             ignoreDependencyCheck
         );
-        const activeInterpreter = this.apiProvider.isPythonExtensionInstalled
+        const activeInterpreter = this.extensionChecker.isPythonExtensionInstalled
             ? await this.interpreterService.getActiveInterpreter(resource)
             : undefined;
         if (!kernelSpec && activeInterpreter) {
@@ -545,7 +545,7 @@ export class KernelSelector implements IKernelSelectionUsage {
             };
         } else if (kernelSpec && !activeInterpreter) {
             // Locate the interpreter that matches our kernelspec
-            const interpreter = this.apiProvider.isPythonExtensionInstalled
+            const interpreter = this.extensionChecker.isPythonExtensionInstalled
                 ? await this.kernelService.findMatchingInterpreter(kernelSpec, cancelToken)
                 : undefined;
 

@@ -6,7 +6,7 @@
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { EventEmitter } from 'vscode';
 import { IExtensionSingleActivationService } from '../../client/activation/types';
-import { PythonApiProvider } from '../../client/api/pythonApi';
+import { PythonExtensionChecker } from '../../client/api/pythonApi';
 import { createDeferred } from '../../client/common/utils/async';
 import { JupyterInterpreterService } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterService';
 import { PreWarmActivatedJupyterEnvironmentVariables } from '../../client/datascience/preWarmVariables';
@@ -20,7 +20,7 @@ suite('DataScience - PreWarm Env Vars', () => {
     let jupyterInterpreter: JupyterInterpreterService;
     let onDidChangeInterpreter: EventEmitter<PythonEnvironment>;
     let interpreter: PythonEnvironment;
-    let apiProvider: PythonApiProvider;
+    let extensionChecker: PythonExtensionChecker;
     setup(() => {
         interpreter = {
             path: '',
@@ -31,13 +31,13 @@ suite('DataScience - PreWarm Env Vars', () => {
         envActivationService = mock<IEnvironmentActivationService>();
         jupyterInterpreter = mock(JupyterInterpreterService);
         when(jupyterInterpreter.onDidChangeInterpreter).thenReturn(onDidChangeInterpreter.event);
-        apiProvider = mock(PythonApiProvider);
-        when(apiProvider.isPythonExtensionInstalled).thenReturn(true);
+        extensionChecker = mock(PythonExtensionChecker);
+        when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
         activationService = new PreWarmActivatedJupyterEnvironmentVariables(
             instance(envActivationService),
             instance(jupyterInterpreter),
             [],
-            instance(apiProvider)
+            instance(extensionChecker)
         );
     });
     test('Should not pre-warm env variables if there is no jupyter interpreter', async () => {
@@ -54,7 +54,7 @@ suite('DataScience - PreWarm Env Vars', () => {
     });
     test('Should not pre-warm env variables if there is no python extension', async () => {
         const envActivated = createDeferred<string>();
-        when(apiProvider.isPythonExtensionInstalled).thenReturn(false);
+        when(extensionChecker.isPythonExtensionInstalled).thenReturn(false);
         when(envActivationService.getActivatedEnvironmentVariables(anything(), anything())).thenCall(() => {
             envActivated.reject(new Error('Environment Activated when it should not have been!'));
             return Promise.resolve();

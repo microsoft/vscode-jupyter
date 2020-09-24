@@ -8,7 +8,7 @@ import { anything, instance, mock, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 
 import { Uri } from 'vscode';
-import { PythonApiProvider } from '../../client/api/pythonApi';
+import { PythonExtensionChecker } from '../../client/api/pythonApi';
 import { IWorkspaceService } from '../../client/common/application/types';
 import { IPlatformService } from '../../client/common/platform/types';
 import { PythonExecutionFactory } from '../../client/common/process/pythonExecutionFactory';
@@ -306,8 +306,8 @@ suite('Kernel Finder', () => {
                 });
 
             const executionFactory = mock(PythonExecutionFactory);
-            const apiProvider = mock(PythonApiProvider);
-            when(apiProvider.isPythonExtensionInstalled).thenReturn(true);
+            const extensionChecker = mock(PythonExtensionChecker);
+            when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
 
             kernelFinder = new KernelFinder(
                 interpreterService.object,
@@ -318,7 +318,7 @@ suite('Kernel Finder', () => {
                 instance(workspaceService),
                 instance(executionFactory),
                 envVarsProvider.object,
-                instance(apiProvider)
+                instance(extensionChecker)
             );
         });
 
@@ -382,8 +382,8 @@ suite('Kernel Finder', () => {
 
             workspaceService = mock<IWorkspaceService>();
             const executionFactory = mock(PythonExecutionFactory);
-            const apiProvider = mock(PythonApiProvider);
-            when(apiProvider.isPythonExtensionInstalled).thenReturn(true);
+            const extensionChecker = mock(PythonExtensionChecker);
+            when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
 
             kernelFinder = new KernelFinder(
                 interpreterService.object,
@@ -394,7 +394,7 @@ suite('Kernel Finder', () => {
                 instance(workspaceService),
                 instance(executionFactory),
                 envVarsProvider.object,
-                instance(apiProvider)
+                instance(extensionChecker)
             );
         });
 

@@ -6,7 +6,7 @@ import type { nbformat } from '@jupyterlab/coreutils';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { CancellationToken } from 'vscode';
-import { IPythonApiProvider } from '../../api/types';
+import { IPythonExtensionChecker } from '../../api/types';
 import { IWorkspaceService } from '../../common/application/types';
 import { traceError, traceInfo } from '../../common/logger';
 import { IPlatformService } from '../../common/platform/types';
@@ -57,7 +57,7 @@ export class KernelFinder implements IKernelFinder {
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IPythonExecutionFactory) private readonly exeFactory: IPythonExecutionFactory,
         @inject(IEnvironmentVariablesProvider) private readonly envVarsProvider: IEnvironmentVariablesProvider,
-        @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider
+        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker
     ) {}
     @captureTelemetry(Telemetry.KernelFinderPerf)
     public async findKernelSpec(
@@ -210,7 +210,7 @@ export class KernelFinder implements IKernelFinder {
     }
 
     private async getInterpreterPaths(resource: Resource): Promise<string[]> {
-        if (this.apiProvider.isPythonExtensionInstalled) {
+        if (this.extensionChecker.isPythonExtensionInstalled) {
             const interpreters = await this.interpreterService.getInterpreters(resource);
             const interpreterPrefixPaths = interpreters.map((interpreter) => interpreter.sysPrefix);
             // We can get many duplicates here, so de-dupe the list
@@ -261,7 +261,7 @@ export class KernelFinder implements IKernelFinder {
     }
 
     private async getActiveInterpreter(resource?: Resource): Promise<PythonEnvironment | undefined> {
-        if (this.apiProvider.isPythonExtensionInstalled) {
+        if (this.extensionChecker.isPythonExtensionInstalled) {
             return this.interpreterService.getActiveInterpreter(resource);
         }
         return undefined;

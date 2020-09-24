@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { anything, instance, mock, verify, when } from 'ts-mockito';
-import { PythonApiProvider } from '../../../client/api/pythonApi';
+import { PythonExtensionChecker } from '../../../client/api/pythonApi';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { JupyterSettings } from '../../../client/common/configSettings';
 import { IConfigurationService, IExperimentsManager, IWatchableJupyterSettings } from '../../../client/common/types';
@@ -26,7 +26,7 @@ suite('DataScience - Kernel Daemon Pool PreWarmer', () => {
     let daemonPool: KernelDaemonPool;
     let settings: IWatchableJupyterSettings;
     let vscodeNotebook: IVSCodeNotebook;
-    let apiProvider: PythonApiProvider;
+    let extensionChecker: PythonExtensionChecker;
     setup(() => {
         notebookEditorProvider = mock<INotebookEditorProvider>();
         interactiveProvider = mock<IInteractiveWindowProvider>();
@@ -37,8 +37,8 @@ suite('DataScience - Kernel Daemon Pool PreWarmer', () => {
         vscodeNotebook = mock<IVSCodeNotebook>();
         const experiment = mock<IExperimentsManager>();
         when(experiment.inExperiment(anything())).thenReturn(true);
-        apiProvider = mock(PythonApiProvider);
-        when(apiProvider.isPythonExtensionInstalled).thenReturn(true);
+        extensionChecker = mock(PythonExtensionChecker);
+        when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
 
         // Set up our config settings
         settings = mock(JupyterSettings);
@@ -54,7 +54,7 @@ suite('DataScience - Kernel Daemon Pool PreWarmer', () => {
             instance(rawNotebookSupported),
             instance(configService),
             instance(vscodeNotebook),
-            instance(apiProvider)
+            instance(extensionChecker)
         );
     });
     test('Should not pre-warm daemon pool if ds was never used', async () => {
@@ -66,7 +66,7 @@ suite('DataScience - Kernel Daemon Pool PreWarmer', () => {
         verify(daemonPool.preWarmKernelDaemons()).never();
     });
     test('Should not pre-warm daemon pool if python is not installed', async () => {
-        when(apiProvider.isPythonExtensionInstalled).thenReturn(false);
+        when(extensionChecker.isPythonExtensionInstalled).thenReturn(false);
 
         await prewarmer.activate(undefined);
 

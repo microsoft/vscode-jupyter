@@ -8,7 +8,7 @@ import { CancellationToken } from 'vscode-jsonrpc';
 
 import type { Kernel } from '@jupyterlab/services';
 import { EventEmitter } from 'vscode';
-import { PythonApiProvider } from '../../../../client/api/pythonApi';
+import { PythonExtensionChecker } from '../../../../client/api/pythonApi';
 import { ApplicationShell } from '../../../../client/common/application/applicationShell';
 import { IApplicationShell } from '../../../../client/common/application/types';
 import { ConfigurationService } from '../../../../client/common/configuration/service';
@@ -79,8 +79,8 @@ suite('DataScience - KernelSelector', () => {
         when(jupyterSessionManagerFactory.onRestartSessionCreated).thenReturn(dummySessionEvent.event);
         when(jupyterSessionManagerFactory.onRestartSessionUsed).thenReturn(dummySessionEvent.event);
         const configService = mock(ConfigurationService);
-        const apiProvider = mock(PythonApiProvider);
-        when(apiProvider.isPythonExtensionInstalled).thenReturn(true);
+        const extensionChecker = mock(PythonExtensionChecker);
+        when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
         kernelSelector = new KernelSelector(
             instance(kernelSelectionProvider),
             instance(appShell),
@@ -91,7 +91,7 @@ suite('DataScience - KernelSelector', () => {
             instance(jupyterSessionManagerFactory),
             instance(configService),
             [],
-            apiProvider
+            instance(extensionChecker)
         );
     });
     teardown(() => sinon.restore());

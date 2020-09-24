@@ -3,7 +3,7 @@
 'use strict';
 import { inject, injectable } from 'inversify';
 import * as vscode from 'vscode';
-import { IPythonApiProvider } from '../../api/types';
+import { IPythonExtensionChecker } from '../../api/types';
 
 import { ICommandManager, IDebugService, IDocumentManager, IVSCodeNotebook } from '../../common/application/types';
 import { ContextKey } from '../../common/contextKey';
@@ -31,7 +31,7 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
         @inject(IDebugService) private debugService: IDebugService,
         @inject(IDataScienceFileSystem) private fs: IDataScienceFileSystem,
         @inject(IVSCodeNotebook) private readonly vsCodeNotebook: IVSCodeNotebook,
-        @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider
+        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker
     ) {
         disposableRegistry.push(this);
         disposableRegistry.push(this.debugService.onDidChangeActiveDebugSession(this.onChangeDebugSession.bind(this)));
@@ -65,7 +65,7 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
         }
 
         // Skip if no python extension. We can't run a python kernel anyway
-        if (!this.apiProvider.isPythonExtensionInstalled) {
+        if (!this.extensionChecker.isPythonExtensionInstalled) {
             return [];
         }
 

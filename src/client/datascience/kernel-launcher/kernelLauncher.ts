@@ -6,7 +6,7 @@ import { inject, injectable } from 'inversify';
 import * as portfinder from 'portfinder';
 import { promisify } from 'util';
 import * as uuid from 'uuid/v4';
-import { IPythonApiProvider } from '../../api/types';
+import { IPythonExtensionChecker } from '../../api/types';
 import { IProcessServiceFactory } from '../../common/process/types';
 import { Resource } from '../../common/types';
 import { captureTelemetry } from '../../telemetry';
@@ -29,7 +29,7 @@ export class KernelLauncher implements IKernelLauncher {
         @inject(IProcessServiceFactory) private processExecutionFactory: IProcessServiceFactory,
         @inject(IDataScienceFileSystem) private readonly fs: IDataScienceFileSystem,
         @inject(KernelDaemonPool) private readonly daemonPool: KernelDaemonPool,
-        @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider
+        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker
     ) {}
 
     @captureTelemetry(Telemetry.KernelLauncherPerf)
@@ -46,7 +46,7 @@ export class KernelLauncher implements IKernelLauncher {
             kernelConnectionMetadata,
             this.fs,
             resource,
-            this.apiProvider
+            this.extensionChecker
         );
         await kernelProcess.launch(workingDirectory);
         return kernelProcess;

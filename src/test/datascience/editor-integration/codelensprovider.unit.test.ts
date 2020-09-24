@@ -4,7 +4,7 @@
 import { instance, mock, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import { CancellationTokenSource, Disposable, TextDocument, Uri } from 'vscode';
-import { PythonApiProvider } from '../../../client/api/pythonApi';
+import { PythonExtensionChecker } from '../../../client/api/pythonApi';
 
 import {
     ICommandManager,
@@ -59,8 +59,8 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
             .returns((a, b) => {
                 return a.toLowerCase() === b.toLowerCase();
             });
-        const apiProvider = mock(PythonApiProvider);
-        when(apiProvider.isPythonExtensionInstalled).thenReturn(true);
+        const extensionChecker = mock(PythonExtensionChecker);
+        when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
 
         codeLensProvider = new DataScienceCodeLensProvider(
             serviceContainer.object,
@@ -72,7 +72,7 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
             debugService.object,
             fileSystem.object,
             vscodeNotebook.object,
-            instance(apiProvider)
+            instance(extensionChecker)
         );
     });
 

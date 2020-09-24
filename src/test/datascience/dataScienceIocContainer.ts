@@ -28,7 +28,8 @@ import { KernelDaemonPool } from '../../client/datascience/kernel-launcher/kerne
 
 import { promisify } from 'util';
 import { IExtensionSingleActivationService } from '../../client/activation/types';
-import { ILanguageServerProvider, IPythonDebuggerPathProvider } from '../../client/api/types';
+import { PythonExtensionChecker } from '../../client/api/pythonApi';
+import { ILanguageServerProvider, IPythonDebuggerPathProvider, IPythonExtensionChecker } from '../../client/api/types';
 import { ApplicationEnvironment } from '../../client/common/application/applicationEnvironment';
 import { ApplicationShell } from '../../client/common/application/applicationShell';
 import { VSCodeNotebook } from '../../client/common/application/notebook';
@@ -360,6 +361,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     private experimentState = new Map<string, boolean>();
     private extensionRootPath: string | undefined;
     private pendingWebPanel: IMountedWebView | undefined;
+    private pythonExtensionState: boolean = true;
 
     constructor(private readonly uiTest: boolean = false) {
         super();
@@ -488,6 +490,12 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
         const experimentService = mock(ExperimentService);
         this.serviceManager.addSingletonInstance<IExperimentService>(IExperimentService, instance(experimentService));
+        const extensionChecker = mock(PythonExtensionChecker);
+        when(extensionChecker.isPythonExtensionInstalled).thenCall(this.isPythonExtensionInstalled.bind(this));
+        this.serviceManager.addSingletonInstance<IPythonExtensionChecker>(
+            IPythonExtensionChecker,
+            instance(extensionChecker)
+        );
 
         this.serviceManager.addSingleton<IApplicationEnvironment>(IApplicationEnvironment, ApplicationEnvironment);
         this.serviceManager.add<INotebookImporter>(INotebookImporter, JupyterImporter);
@@ -1058,6 +1066,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.experimentState.set(experimentName, enabled);
     }
 
+    public setPythonExtensionState(installed: boolean) {
+        this.pythonExtensionState = installed;
+    }
+
     private async onCreateWebPanel(options: IWebviewPanelOptions) {
         if (!this.pendingWebPanel) {
             throw new Error('Creating web panel without a mount');
@@ -1066,6 +1078,11 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         panel.attach(options);
         return panel;
     }
+
+    private isPythonExtensionInstalled() {
+        return this.pythonExtensionState;
+    }
+
     private forceSettingsChanged(
         resource: Resource,
         newPath: string,

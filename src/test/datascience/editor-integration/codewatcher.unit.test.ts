@@ -8,7 +8,7 @@ import * as TypeMoq from 'typemoq';
 import { CancellationTokenSource, CodeLens, Disposable, EventEmitter, Range, Selection, TextEditor, Uri } from 'vscode';
 
 import { instance, mock, when } from 'ts-mockito';
-import { PythonApiProvider } from '../../../client/api/pythonApi';
+import { PythonExtensionChecker } from '../../../client/api/pythonApi';
 import {
     ICommandManager,
     IDebugService,
@@ -913,8 +913,8 @@ testing2`;
         document.setup((doc) => doc.getText()).returns(() => inputText);
         documentManager.setup((d) => d.textDocuments).returns(() => [document.object]);
 
-        const apiProvider = mock(PythonApiProvider);
-        when(apiProvider.isPythonExtensionInstalled).thenReturn(true);
+        const extensionChecker = mock(PythonExtensionChecker);
+        when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
 
         const codeLensProvider = new DataScienceCodeLensProvider(
             serviceContainer.object,
@@ -926,7 +926,7 @@ testing2`;
             debugService.object,
             fileSystem.object,
             vscodeNotebook.object,
-            instance(apiProvider)
+            instance(extensionChecker)
         );
 
         let result = codeLensProvider.provideCodeLenses(document.object, tokenSource.token);

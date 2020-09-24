@@ -5,7 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import { NotebookCell, NotebookDocument } from '../../../../types/vscode-proposed';
-import { IPythonApiProvider } from '../../api/types';
+import { IPythonExtensionChecker } from '../../api/types';
 import { IVSCodeNotebook } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import '../../common/extensions';
@@ -32,7 +32,7 @@ export class KernelDaemonPreWarmer {
         @inject(IRawNotebookSupportedService) private readonly rawNotebookSupported: IRawNotebookSupportedService,
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(IVSCodeNotebook) private readonly vscodeNotebook: IVSCodeNotebook,
-        @inject(IPythonApiProvider) private readonly pythonApiProvider: IPythonApiProvider
+        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker
     ) {}
     public async activate(_resource: Resource): Promise<void> {
         // Check to see if raw notebooks are supported
@@ -41,7 +41,7 @@ export class KernelDaemonPreWarmer {
         if (
             !(await this.rawNotebookSupported.supported()) ||
             this.configService.getSettings().disableJupyterAutoStart ||
-            !this.pythonApiProvider.isPythonExtensionInstalled
+            !this.extensionChecker.isPythonExtensionInstalled
         ) {
             return;
         }

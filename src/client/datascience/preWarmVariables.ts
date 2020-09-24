@@ -5,7 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import { IExtensionSingleActivationService } from '../activation/types';
-import { IPythonApiProvider } from '../api/types';
+import { IPythonExtensionChecker } from '../api/types';
 import '../common/extensions';
 import { IDisposableRegistry } from '../common/types';
 import { noop } from '../common/utils/misc';
@@ -18,7 +18,7 @@ export class PreWarmActivatedJupyterEnvironmentVariables implements IExtensionSi
         @inject(IEnvironmentActivationService) private readonly activationService: IEnvironmentActivationService,
         @inject(JupyterInterpreterService) private readonly jupyterInterpreterService: JupyterInterpreterService,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider
+        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker
     ) {}
     public async activate(): Promise<void> {
         this.disposables.push(
@@ -28,7 +28,7 @@ export class PreWarmActivatedJupyterEnvironmentVariables implements IExtensionSi
     }
 
     private async preWarmInterpreterVariables() {
-        if (!this.apiProvider.isPythonExtensionInstalled) {
+        if (!this.extensionChecker.isPythonExtensionInstalled) {
             return;
         }
         const interpreter = await this.jupyterInterpreterService.getSelectedInterpreter();
