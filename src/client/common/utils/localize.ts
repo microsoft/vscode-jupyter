@@ -84,7 +84,7 @@ export namespace Logging {
     export const currentWorkingDirectory = localize('Logging.CurrentWorkingDirectory', 'cwd:');
     export const warnUserAboutDebugLoggingSetting = localize(
         'Logging.WarnUserAboutDebugLoggingSetting',
-        'You have enabled debug logging, which will continue to write logs to disk. Would you like to turn debug logging off?'
+        'You have enabled debug logging for the Jupyter extension, which will continue to write logs to disk. Would you like to turn debug logging off?'
     );
     export const bannerYesTurnOffDebugLogging = localize(
         'Logging.YesTurnOffDebugLogging',
