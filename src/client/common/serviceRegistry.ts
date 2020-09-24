@@ -5,6 +5,7 @@ import { IExperimentService, IFileDownloader, IHttpClient } from '../common/type
 import { LiveShareApi } from '../datascience/liveshare/liveshare';
 import { INotebookExecutionLogger } from '../datascience/types';
 import { IServiceManager } from '../ioc/types';
+import { DebugLoggingManager } from '../logging/debugLoggingManager';
 import { ImportTracker } from '../telemetry/importTracker';
 import { IImportTracker } from '../telemetry/types';
 import { ActiveResourceService } from './application/activeResource';
@@ -130,6 +131,10 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         ReloadVSCodeCommandHandler
+    );
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        DebugLoggingManager
     );
     serviceManager.addSingleton<IExtensionChannelService>(IExtensionChannelService, ExtensionChannelService);
     serviceManager.addSingleton<IExtensionChannelRule>(

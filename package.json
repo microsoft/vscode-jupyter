@@ -648,6 +648,11 @@
                 "category": "Jupyter"
             },
             {
+                "command": "jupyter.openLogFile",
+                "title": "%jupyter.command.jupyter.openLogFile.title%",
+                "category": "Jupyter"
+            },
+            {
                 "command": "jupyter.enableDebugLogging",
                 "title": "%jupyter.command.jupyter.enableDebugLogging.title%",
                 "category": "Jupyter"
@@ -1184,6 +1189,12 @@
                     "title": "%jupyter.command.jupyter.enableDebugLogging.title%",
                     "category": "Jupyter",
                     "when": "config.jupyter.logging.level != debug"
+                },
+                {
+                    "command": "jupyter.openLogFile",
+                    "title": "%jupyter.command.jupyter.openLogFile.title%",
+                    "category": "Jupyter",
+                    "when": "config.jupyter.logging.level == debug"
                 }
             ]
         },
