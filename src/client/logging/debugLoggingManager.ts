@@ -62,13 +62,14 @@ export class DebugLoggingManager implements IExtensionSingleActivationService {
             case Logging.bannerYesTurnOffDebugLogging():
                 this.globalState.update(SEEN_DEBUG_LOG_LEVEL_ON_ACTIVATION_AT_LEAST_ONCE, false);
                 this.commandManager.executeCommand(Commands.ResetLoggingLevel);
-                break;
+                return;
             case Common.doNotShowAgain():
                 this.globalState.update(SHOULD_WARN_ABOUT_LOGGING, false);
                 break;
             default:
                 break;
         }
+        await this.configureLoggingToFile();
     }
 
     private async onOpenDebugLogFile() {
