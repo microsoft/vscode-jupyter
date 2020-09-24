@@ -44,8 +44,11 @@ export class Activation implements IExtensionSingleActivationService {
         this.PreWarmDaemonPool().ignoreErrors();
         setSharedProperty('ds_notebookeditor', e.type);
         sendTelemetryEvent(Telemetry.OpenNotebookAll);
-        // Warm up our selected interpreter for the extension
-        this.jupyterInterpreterService.setInitialInterpreter().ignoreErrors();
+
+        if (this.extensionChecker.isPythonExtensionInstalled) {
+            // Warm up our selected interpreter for the extension
+            this.jupyterInterpreterService.setInitialInterpreter().ignoreErrors();
+        }
     }
 
     private onDidChangeInterpreter() {

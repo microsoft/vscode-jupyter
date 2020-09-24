@@ -12,11 +12,12 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { CancellationToken, Event, EventEmitter, Uri } from 'vscode';
-import { IApplicationShell } from '../common/application/types';
+import { CancellationToken, Disposable, Event, EventEmitter, Uri } from 'vscode';
+import { IApplicationEnvironment, IApplicationShell, ICommandManager } from '../common/application/types';
 import { InterpreterUri } from '../common/installer/types';
 import { IExtensions, InstallerResponse, Product, Resource } from '../common/types';
 import { createDeferred } from '../common/utils/async';
+import * as localize from '../common/utils/localize';
 import { noop } from '../common/utils/misc';
 import { IEnvironmentActivationService } from '../interpreter/activation/types';
 import { IInterpreterQuickPickItem, IInterpreterSelector } from '../interpreter/configuration/types';
@@ -42,7 +43,7 @@ export class PythonApiProvider implements IPythonApiProvider {
 
     constructor(
         @inject(IExtensions) private readonly extensions: IExtensions,
-        @inject(IApplicationShell) private readonly appShell: IApplicationShell
+        @inject(IPythonExtensionChecker) private extensionChecker: IPythonExtensionChecker
     ) {}
 
     public getApi(): Promise<PythonApi> {
@@ -66,23 +67,61 @@ export class PythonApiProvider implements IPythonApiProvider {
             'ms-python.python'
         );
         if (!pythonExtension) {
-            // tslint:disable-next-line: messages-must-be-localized
-            this.appShell.showErrorMessage('Install Python Extension').then(noop, noop);
-            return;
+            await this.extensionChecker.installPythonExtension();
+        } else {
+            if (!pythonExtension.isActive) {
+                await pythonExtension.activate();
+            }
+            pythonExtension.exports.jupyter.registerHooks();
         }
-        if (!pythonExtension.isActive) {
-            await pythonExtension.activate();
-        }
-        pythonExtension.exports.jupyter.registerHooks();
     }
 }
 
 @injectable()
 export class PythonExtensionChecker implements IPythonExtensionChecker {
-    constructor(@inject(IExtensions) private readonly extensions: IExtensions) {}
+    private extensionChangeHandler: Disposable | undefined;
+    private pythonExtensionId = 'ms-python.python';
+
+    constructor(
+        @inject(IExtensions) private readonly extensions: IExtensions,
+        @inject(IApplicationShell) private readonly appShell: IApplicationShell,
+        @inject(IApplicationEnvironment) private readonly appEnv: IApplicationEnvironment,
+        @inject(ICommandManager) private readonly commands: ICommandManager
+    ) {}
 
     public get isPythonExtensionInstalled() {
-        return this.extensions.getExtension('ms-python.python') !== undefined;
+        return this.extensions.getExtension(this.pythonExtensionId) !== undefined;
+    }
+
+    public async installPythonExtension(): Promise<void> {
+        // Ask user if they want to install and then wait for them to actually install it.
+        const yes = localize.Common.bannerLabelYes();
+        const no = localize.Common.bannerLabelNo();
+        const answer = await this.appShell.showErrorMessage(localize.DataScience.pythonExtensionRequired(), yes, no);
+        if (answer === yes) {
+            // Start listening for extension changes
+            this.extensionChangeHandler = this.extensions.onDidChange(this.extensionsChangeHandler.bind(this));
+
+            // Have the user install python
+            this.appShell.openUrl(`${this.appEnv.uriScheme}:extension/${this.pythonExtensionId}`);
+        }
+    }
+
+    private async extensionsChangeHandler(): Promise<void> {
+        // Track extension installation state and prompt to reload when it becomes available.
+        if (this.isPythonExtensionInstalled && this.extensionChangeHandler) {
+            this.extensionChangeHandler.dispose();
+            this.extensionChangeHandler = undefined;
+
+            const response = await this.appShell.showWarningMessage(
+                localize.DataScience.pythonInstalledReloadPromptMessage(),
+                localize.Common.bannerLabelYes(),
+                localize.Common.bannerLabelNo()
+            );
+            if (response === localize.Common.bannerLabelYes()) {
+                this.commands.executeCommand('workbench.action.reloadWindow');
+            }
+        }
     }
 }
 

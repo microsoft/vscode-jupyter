@@ -1266,6 +1266,7 @@ export class JupyterNotebookBase implements INotebook {
                             // Mark as stream output so the text is formatted because it likely has ansi codes in it.
                             output_type: 'stream',
                             text: data,
+                            name: 'stdout',
                             metadata: {},
                             execution_count: reply.execution_count
                         },
