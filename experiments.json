@@ -124,35 +124,5 @@
         "salt": "DeprecatePythonPath",
         "min": 80,
         "max": 100
-    },
-    {
-        "name": "RunByLine - experiment",
-        "salt": "RunByLine",
-        "min": 0,
-        "max": 40
-    },
-    {
-        "name": "RunByLine - control",
-        "salt": "RunByLine",
-        "min": 40,
-        "max": 100
-    },
-    {
-        "name": "CustomEditorSupport - control",
-        "salt": "CustomEditorSupport",
-        "min": 0,
-        "max": 100
-    },
-    {
-        "name": "CustomEditorSupport - experiment",
-        "salt": "CustomEditorSupport",
-        "max": 0,
-        "min": 0
-    },
-    {
-        "name": "NativeNotebook - experiment",
-        "salt": "CustomEditorSupport",
-        "max": 0,
-        "min": 0
     }
 ]

@@ -13,6 +13,7 @@ import { registerTypes as registerApiTypes } from './api/serviceRegistry';
 import { registerTypes as appRegisterTypes } from './application/serviceRegistry';
 import { IApplicationEnvironment, ICommandManager } from './common/application/types';
 import { STANDARD_OUTPUT_CHANNEL, UseProposedApi } from './common/constants';
+import { NotebookEditorSupport } from './common/experiments/groups';
 import { registerTypes as installerRegisterTypes } from './common/installer/serviceRegistry';
 import { registerTypes as platformRegisterTypes } from './common/platform/serviceRegistry';
 import { IFileSystem } from './common/platform/types';
@@ -20,6 +21,7 @@ import { registerTypes as processRegisterTypes } from './common/process/serviceR
 import { registerTypes as commonRegisterTypes } from './common/serviceRegistry';
 import {
     IConfigurationService,
+    IExperimentService,
     IExperimentsManager,
     IExtensionContext,
     IFeatureDeprecationManager,
@@ -95,9 +97,17 @@ async function activateLegacy(
     const abExperiments = serviceContainer.get<IExperimentsManager>(IExperimentsManager);
     await abExperiments.activate();
 
+    // Load the two data science experiments that we need to register types
+    // Await here to keep the register method sync
+    const experimentService = serviceContainer.get<IExperimentService>(IExperimentService);
+    const useVSCodeNotebookAPI = await experimentService.inExperiment(NotebookEditorSupport.nativeNotebookExperiment);
+    const inCustomEditorApiExperiment = await experimentService.inExperiment(
+        NotebookEditorSupport.customEditorExperiment
+    );
+
     // Register datascience types after experiments have loaded.
     // To ensure we can register types based on experiments.
-    dataScienceRegisterTypes(serviceManager);
+    dataScienceRegisterTypes(serviceManager, useVSCodeNotebookAPI, inCustomEditorApiExperiment);
 
     // Language feature registrations.
     appRegisterTypes(serviceManager);

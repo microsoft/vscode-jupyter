@@ -55,9 +55,8 @@ export enum CollectNodeLSRequestTiming {
  * Experiment to turn on custom editor or VS Code Native Notebook API support.
  */
 export enum NotebookEditorSupport {
-    control = 'CustomEditorSupport - control',
-    customEditorExperiment = 'CustomEditorSupport - experiment',
-    nativeNotebookExperiment = 'NativeNotebook - experiment'
+    customEditorExperiment = 'CustomEditor',
+    nativeNotebookExperiment = 'NativeNotebookEditor'
 }
 
 // Experiment to remove the Kernel/Server Tooblar in the Interactive Window when running a local Jupyter Server.
