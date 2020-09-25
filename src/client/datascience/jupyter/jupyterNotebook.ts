@@ -1199,12 +1199,7 @@ export class JupyterNotebookBase implements INotebook {
 
     private addToCellData = (
         cell: ICell,
-        output:
-            | nbformat.IUnrecognizedOutput
-            | nbformat.IExecuteResult
-            | nbformat.IDisplayData
-            | nbformat.IStream
-            | nbformat.IError,
+        output: nbformat.IExecuteResult | nbformat.IDisplayData | nbformat.IStream | nbformat.IError,
         clearState: RefBool
     ) => {
         const data: nbformat.ICodeCell = cell.data as nbformat.ICodeCell;
