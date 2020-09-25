@@ -366,9 +366,10 @@ export class KernelSelector implements IKernelSelectionUsage {
             sendTelemetryEvent(Telemetry.SwitchToExistingKernel, undefined, {
                 language: this.computeLanguage(selection.kernelSpec.language)
             });
-            const interpreter = selection.kernelSpec
-                ? await this.kernelService.findMatchingInterpreter(selection.kernelSpec, cancelToken)
-                : undefined;
+            const interpreter =
+                selection.kernelSpec && this.extensionChecker.isPythonExtensionInstalled
+                    ? await this.kernelService.findMatchingInterpreter(selection.kernelSpec, cancelToken)
+                    : undefined;
             await this.kernelService.updateKernelEnvironment(interpreter, selection.kernelSpec, cancelToken);
             return cloneDeep({ kernelSpec: selection.kernelSpec, interpreter, kind: 'startUsingKernelSpec' });
         } else {
