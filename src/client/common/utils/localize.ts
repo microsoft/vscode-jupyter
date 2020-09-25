@@ -80,6 +80,17 @@ export namespace OutputChannelNames {
     export const jupyter = localize('OutputChannelNames.jupyter', 'Jupyter');
 }
 
+export namespace GitHubIssue {
+    export const success = localize(
+        'GitHubIssue.Success',
+        'Your GitHub issue was successfully created! View it [here]({0}).'
+    );
+    export const failure = localize(
+        'GitHubIssue.Failure',
+        'We encountered an error while submitting your GitHub issue. Please click [here](https://github.com/microsoft/vscode-jupyter/issues/new)_to open an issue.'
+    );
+}
+
 export namespace Logging {
     export const currentWorkingDirectory = localize('Logging.CurrentWorkingDirectory', 'cwd:');
     export const warnUserAboutDebugLoggingSetting = localize(
@@ -642,6 +653,7 @@ export namespace DataScience {
         'DataScience.cellStopOnErrorFormatMessage',
         '{0} cells were canceled due to an error in the previous cell.'
     );
+    export const submitGitHubIssue = localize('DataScience.submitGitHubIssue', '✅ Submit GitHub Issue');
     export const scrollToCellTitleFormatMessage = localize('DataScience.scrollToCellTitleFormatMessage', 'Go to [{0}]');
     export const instructionComments = localize(
         'DataScience.instructionComments',

@@ -1,10 +1,11 @@
 import { Octokit } from '@octokit/rest';
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
-import { authentication, Memento } from 'vscode';
+import { authentication, Memento, Uri } from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
-import { IApplicationShell, ICommandManager } from '../common/application/types';
+import { IApplicationEnvironment, IApplicationShell, ICommandManager } from '../common/application/types';
 import { traceError } from '../common/logger';
+import { IPlatformService } from '../common/platform/types';
 import {
     GLOBAL_MEMENTO,
     IConfigurationService,
@@ -12,9 +13,10 @@ import {
     IExtensionContext,
     IMemento
 } from '../common/types';
-import { Common, Logging } from '../common/utils/localize';
+import { Common, GitHubIssue, Logging } from '../common/utils/localize';
 import { Commands } from '../datascience/constants';
-import { IDataScienceFileSystem } from '../datascience/types';
+import { IDataScienceFileSystem, IInteractiveWindowProvider, INotebookProvider } from '../datascience/types';
+import { IInterpreterService } from '../interpreter/contracts';
 import { addLogfile } from './_global';
 import { LogLevel } from './levels';
 
@@ -24,6 +26,7 @@ const SHOULD_WARN_ABOUT_LOGGING = 'ShouldWarnAboutLogging';
 @injectable()
 export class DebugLoggingManager implements IExtensionSingleActivationService {
     private logfilePath: string;
+    private issueFilePath: string;
     constructor(
         @inject(IDataScienceFileSystem) private filesystem: IDataScienceFileSystem,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private globalState: Memento,
@@ -31,10 +34,21 @@ export class DebugLoggingManager implements IExtensionSingleActivationService {
         @inject(ICommandManager) private commandManager: ICommandManager,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IExtensionContext) private extensionContext: IExtensionContext,
-        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
+        @inject(IApplicationEnvironment) private applicationEnvironment: IApplicationEnvironment,
+        @inject(IPlatformService) private platformService: IPlatformService,
+        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
+        @inject(INotebookProvider) private notebookProvider: INotebookProvider,
+        @inject(IInterpreterService) private interpreterService: IInterpreterService,
+        @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider
     ) {
         this.logfilePath = path.join(this.extensionContext.globalStoragePath, 'log.txt');
-        this.disposables.push(this.commandManager.registerCommand(Commands.OpenLogFile, this.createGitHubIssue, this));
+        this.issueFilePath = path.join(this.extensionContext.globalStoragePath, 'issue.md');
+        this.disposables.push(
+            ...[
+                this.commandManager.registerCommand(Commands.CreateGitHubIssue, this.createGitHubIssue, this),
+                this.commandManager.registerCommand(Commands.SubmitGitHubIssue, this.submitGitHubIssue, this)
+            ]
+        );
     }
 
     public async activate() {
@@ -83,19 +97,52 @@ export class DebugLoggingManager implements IExtensionSingleActivationService {
     private async createGitHubIssue() {
         try {
             const body = await this.filesystem.readLocalFile(this.logfilePath);
-            const formatted = `<details>${body}</details>`;
+            const formatted = `# Steps to cause the bug to occur
+1.
+# Actual behavior
+XXX
+# Expected behavior
+XXX
+# Your Jupyter environment
+Active Python interpreter: ${(await this.interpreterService.getActiveInterpreter(undefined))?.displayName}
+Number of interactive windows: ${this.interactiveWindowProvider?.windows?.length}
+Number of Jupyter notebooks: ${this.notebookProvider?.activeNotebooks?.length}
+Jupyter notebook type: ${this.notebookProvider?.type}
+Extension version: ${this.applicationEnvironment?.packageJson?.version}
+VS Code version: ${this.applicationEnvironment?.vscodeVersion}
+OS: ${this.platformService.osType} ${(await this.platformService?.getVersion())?.version}
+
+<details>
+${body}
+</details>`;
+
+            // Open a markdown file for the user to review and remove PII
+            await this.filesystem.writeLocalFile(this.issueFilePath, formatted);
+            this.commandManager.executeCommand('vscode.open', Uri.file(this.issueFilePath));
+        } catch (err) {
+            traceError(err);
+        }
+    }
+
+    // After the user has reviewed the contents, submit the issue on their behalf
+    private async submitGitHubIssue() {
+        try {
+            const body = await this.filesystem.readLocalFile(this.issueFilePath);
             const authSession = await authentication.getSession('github', ['repo'], { createIfNone: true });
             if (authSession) {
                 const octokit = new Octokit({ auth: authSession.accessToken });
-                await octokit.issues.create({
+                const response = await octokit.issues.create({
                     owner: 'microsoft',
                     repo: 'vscode-jupyter',
                     title: 'Bug report',
-                    body: formatted
+                    body
                 });
+                if (response?.data?.html_url) {
+                    await this.appShell.showInformationMessage(GitHubIssue.success().format(response.data.html_url));
+                }
             }
         } catch (err) {
-            traceError(err);
+            await this.appShell.showErrorMessage(GitHubIssue.failure());
         }
     }
 }

@@ -5,7 +5,7 @@ import type { JSONObject } from '@phosphor/coreutils';
 import { inject, injectable } from 'inversify';
 import * as vscode from 'vscode';
 import { ICommandManager, IDocumentManager, IWorkspaceService } from '../common/application/types';
-import { PYTHON_ALLFILES, PYTHON_LANGUAGE } from '../common/constants';
+import { GITHUB_ISSUE_MARKDOWN_FILE, PYTHON_ALLFILES, PYTHON_LANGUAGE } from '../common/constants';
 import { ContextKey } from '../common/contextKey';
 import '../common/extensions';
 import { IConfigurationService, IDisposable, IDisposableRegistry, IExtensionContext } from '../common/types';
@@ -14,7 +14,7 @@ import { sendTelemetryEvent } from '../telemetry';
 import { hasCells } from './cellFactory';
 import { CommandRegistry } from './commands/commandRegistry';
 import { EditorContexts, Telemetry } from './constants';
-import { IDataScience, IDataScienceCodeLensProvider } from './types';
+import { IDataScience, IDataScienceCodeLensProvider, IGitHubIssueCodeLensProvider } from './types';
 
 @injectable()
 export class DataScience implements IDataScience {
@@ -26,6 +26,7 @@ export class DataScience implements IDataScience {
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
         @inject(IExtensionContext) private extensionContext: IExtensionContext,
         @inject(IDataScienceCodeLensProvider) private dataScienceCodeLensProvider: IDataScienceCodeLensProvider,
+        @inject(IGitHubIssueCodeLensProvider) private gitHubIssueCodeLensProvider: IGitHubIssueCodeLensProvider,
         @inject(IConfigurationService) private configuration: IConfigurationService,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(IWorkspaceService) private workspace: IWorkspaceService,
@@ -42,7 +43,8 @@ export class DataScience implements IDataScience {
         this.commandRegistry.register();
 
         this.extensionContext.subscriptions.push(
-            vscode.languages.registerCodeLensProvider(PYTHON_ALLFILES, this.dataScienceCodeLensProvider)
+            vscode.languages.registerCodeLensProvider(PYTHON_ALLFILES, this.dataScienceCodeLensProvider),
+            vscode.languages.registerCodeLensProvider(GITHUB_ISSUE_MARKDOWN_FILE, this.gitHubIssueCodeLensProvider)
         );
 
         // Set our initial settings and sign up for changes

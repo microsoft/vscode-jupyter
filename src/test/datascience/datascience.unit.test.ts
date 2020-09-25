@@ -12,18 +12,20 @@ import { IDocumentManager, IWorkspaceService } from '../../client/common/applica
 import { WorkspaceService } from '../../client/common/application/workspace';
 import { JupyterSettings } from '../../client/common/configSettings';
 import { ConfigurationService } from '../../client/common/configuration/service';
+import { GitHubIssueCodeLensProvider } from '../../client/common/gitHubIssueCodeLensProvider';
 import { IConfigurationService, IWatchableJupyterSettings } from '../../client/common/types';
 import { CommandRegistry } from '../../client/datascience/commands/commandRegistry';
 import { pruneCell } from '../../client/datascience/common';
 import { DataScience } from '../../client/datascience/datascience';
 import { DataScienceCodeLensProvider } from '../../client/datascience/editor-integration/codelensprovider';
-import { IDataScienceCodeLensProvider } from '../../client/datascience/types';
+import { IDataScienceCodeLensProvider, IGitHubIssueCodeLensProvider } from '../../client/datascience/types';
 
 // tslint:disable: max-func-body-length
 suite('DataScience Tests', () => {
     let dataScience: DataScience;
     let cmdManager: CommandManager;
-    let codeLensProvider: IDataScienceCodeLensProvider;
+    let dataScienceCodeLensProvider: IDataScienceCodeLensProvider;
+    let gitHubIssueCodeLensProvider: IGitHubIssueCodeLensProvider;
     let configService: IConfigurationService;
     let docManager: IDocumentManager;
     let workspaceService: IWorkspaceService;
@@ -33,7 +35,8 @@ suite('DataScience Tests', () => {
     let onDidChangeActiveTextEditor: sinon.SinonStub;
     setup(() => {
         cmdManager = mock(CommandManager);
-        codeLensProvider = mock(DataScienceCodeLensProvider);
+        dataScienceCodeLensProvider = mock(DataScienceCodeLensProvider);
+        gitHubIssueCodeLensProvider = mock(GitHubIssueCodeLensProvider);
         configService = mock(ConfigurationService);
         workspaceService = mock(WorkspaceService);
         cmdRegistry = mock(CommandRegistry);
@@ -46,7 +49,8 @@ suite('DataScience Tests', () => {
             [] as any,
             // tslint:disable-next-line: no-any
             { subscriptions: [] } as any,
-            instance(codeLensProvider),
+            instance(dataScienceCodeLensProvider),
+            instance(gitHubIssueCodeLensProvider),
             instance(configService),
             instance(docManager),
             instance(workspaceService),

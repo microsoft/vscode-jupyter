@@ -648,8 +648,13 @@
                 "category": "Jupyter"
             },
             {
-                "command": "jupyter.openLogFile",
-                "title": "%jupyter.command.jupyter.openLogFile.title%",
+                "command": "jupyter.createGitHubIssue",
+                "title": "%jupyter.command.jupyter.createGitHubIssue.title%",
+                "category": "Jupyter"
+            },
+            {
+                "command": "jupyter.submitGitHubIssue",
+                "title": "%jupyter.command.jupyter.submitGitHubIssue.title%",
                 "category": "Jupyter"
             },
             {
@@ -1191,8 +1196,8 @@
                     "when": "config.jupyter.logging.level != debug"
                 },
                 {
-                    "command": "jupyter.openLogFile",
-                    "title": "%jupyter.command.jupyter.openLogFile.title%",
+                    "command": "jupyter.createGitHubIssue",
+                    "title": "%jupyter.command.jupyter.createGitHubIssue.title%",
                     "category": "Jupyter",
                     "when": "config.jupyter.logging.level == debug"
                 }
