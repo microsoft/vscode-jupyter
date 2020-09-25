@@ -18,8 +18,7 @@ export enum WebAppReload {
 
 // Experiment for supporting run by line in data science notebooks
 export enum RunByLine {
-    control = 'RunByLine - control',
-    experiment = 'RunByLine - experiment'
+    experiment = 'RunByLine'
 }
 
 /**
