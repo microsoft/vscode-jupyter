@@ -544,7 +544,7 @@ export class KernelSelector implements IKernelSelectionUsage {
                 kind: 'startUsingPythonInterpreter',
                 interpreter: activeInterpreter
             };
-        } else if (kernelSpec && !activeInterpreter) {
+        } else if (kernelSpec) {
             // Locate the interpreter that matches our kernelspec
             const interpreter = this.extensionChecker.isPythonExtensionInstalled
                 ? await this.kernelService.findMatchingInterpreter(kernelSpec, cancelToken)
