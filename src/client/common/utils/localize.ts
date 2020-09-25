@@ -87,7 +87,7 @@ export namespace GitHubIssue {
     );
     export const failure = localize(
         'GitHubIssue.Failure',
-        'We encountered an error while submitting your GitHub issue. Please click [here](https://github.com/microsoft/vscode-jupyter/issues/new)_to open an issue.'
+        'We encountered an error while submitting your GitHub issue. Please click [here](https://github.com/microsoft/vscode-jupyter/issues/new) to open an issue.'
     );
 }
 
