@@ -1714,6 +1714,7 @@
         "@jupyterlab/services": "^4.2.0",
         "@loadable/component": "^5.12.0",
         "@nteract/messaging": "^7.0.0",
+        "@octokit/rest": "^18.0.6",
         "@types/tcp-port-used": "^1.0.0",
         "ansi-regex": "^4.1.0",
         "arch": "^2.1.0",

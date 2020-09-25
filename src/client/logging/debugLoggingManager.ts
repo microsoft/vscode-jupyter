@@ -1,9 +1,17 @@
+import { Octokit } from '@octokit/rest';
 import { inject, injectable, named } from 'inversify';
-import { Memento, Uri } from 'vscode';
+import * as path from 'path';
+import { authentication, Memento } from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IApplicationShell, ICommandManager } from '../common/application/types';
-import { TemporaryFile } from '../common/platform/types';
-import { GLOBAL_MEMENTO, IConfigurationService, IDisposableRegistry, IMemento } from '../common/types';
+import { traceError } from '../common/logger';
+import {
+    GLOBAL_MEMENTO,
+    IConfigurationService,
+    IDisposableRegistry,
+    IExtensionContext,
+    IMemento
+} from '../common/types';
 import { Common, Logging } from '../common/utils/localize';
 import { Commands } from '../datascience/constants';
 import { IDataScienceFileSystem } from '../datascience/types';
@@ -15,17 +23,18 @@ const SHOULD_WARN_ABOUT_LOGGING = 'ShouldWarnAboutLogging';
 
 @injectable()
 export class DebugLoggingManager implements IExtensionSingleActivationService {
-    private temporaryLogFile: TemporaryFile | undefined;
-
+    private logfilePath: string;
     constructor(
         @inject(IDataScienceFileSystem) private filesystem: IDataScienceFileSystem,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private globalState: Memento,
         @inject(IApplicationShell) private appShell: IApplicationShell,
         @inject(ICommandManager) private commandManager: ICommandManager,
         @inject(IConfigurationService) private configService: IConfigurationService,
+        @inject(IExtensionContext) private extensionContext: IExtensionContext,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
     ) {
-        this.disposables.push(this.commandManager.registerCommand(Commands.OpenLogFile, this.onOpenDebugLogFile, this));
+        this.logfilePath = path.join(this.extensionContext.globalStoragePath, 'log.txt');
+        this.disposables.push(this.commandManager.registerCommand(Commands.OpenLogFile, this.createGitHubIssue, this));
     }
 
     public async activate() {
@@ -46,9 +55,8 @@ export class DebugLoggingManager implements IExtensionSingleActivationService {
     }
 
     private async configureLoggingToFile() {
-        const logfile = await this.filesystem.createTemporaryLocalFile('.txt');
-        addLogfile(logfile.filePath);
-        this.temporaryLogFile = logfile;
+        await this.filesystem.writeLocalFile(this.logfilePath, ''); // Overwrite existing logfile if any
+        addLogfile(this.logfilePath);
         this.globalState.update(SEEN_DEBUG_LOG_LEVEL_ON_ACTIVATION_AT_LEAST_ONCE, true);
     }
 
@@ -72,9 +80,22 @@ export class DebugLoggingManager implements IExtensionSingleActivationService {
         await this.configureLoggingToFile();
     }
 
-    private async onOpenDebugLogFile() {
-        if (this.temporaryLogFile) {
-            this.commandManager.executeCommand('vscode.open', Uri.file(this.temporaryLogFile.filePath));
+    private async createGitHubIssue() {
+        try {
+            const body = await this.filesystem.readLocalFile(this.logfilePath);
+            const formatted = `<details>${body}</details>`;
+            const authSession = await authentication.getSession('github', ['repo'], { createIfNone: true });
+            if (authSession) {
+                const octokit = new Octokit({ auth: authSession.accessToken });
+                await octokit.issues.create({
+                    owner: 'microsoft',
+                    repo: 'vscode-jupyter',
+                    title: 'Bug report',
+                    body: formatted
+                });
+            }
+        } catch (err) {
+            traceError(err);
         }
     }
 }
