@@ -163,18 +163,22 @@ suite('DataScience Interactive Window output tests', () => {
 
     runTest(
         'Saving without python extension',
-        async () => {
-            ioc.setPythonExtensionState(false);
+        async (c) => {
+            if (ioc.isRawKernel) {
+                ioc.setPythonExtensionState(false);
 
-            await addCode(ioc, 'a=1\na');
+                await addCode(ioc, 'a=1\na');
 
-            const { window, mount } = await getOrCreateInteractiveWindow(ioc);
+                const { window, mount } = await getOrCreateInteractiveWindow(ioc);
 
-            const exportPromise = mount.waitForMessage(InteractiveWindowMessages.ReturnAllCells);
-            window.exportCells();
-            await exportPromise;
+                const exportPromise = mount.waitForMessage(InteractiveWindowMessages.ReturnAllCells);
+                window.exportCells();
+                await exportPromise;
 
-            assert.ok(ioc.attemptedPythonExtension, 'Export should warn user about installing');
+                assert.ok(ioc.attemptedPythonExtension, 'Export should warn user about installing');
+            } else {
+                c.skip();
+            }
         },
         () => {
             return ioc;
