@@ -113,7 +113,10 @@ VS Code version: ${this.applicationEnvironment?.vscodeVersion}
 OS: ${this.platformService.osType} ${(await this.platformService?.getVersion())?.version}
 
 <details>
+
+${'```'}
 ${body}
+${'```'}
 </details>`;
 
             // Open a markdown file for the user to review and remove PII
