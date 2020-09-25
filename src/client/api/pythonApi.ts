@@ -19,6 +19,7 @@ import { IExtensions, InstallerResponse, Product, Resource } from '../common/typ
 import { createDeferred } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
 import { noop } from '../common/utils/misc';
+import { PythonExtension } from '../datascience/constants';
 import { IEnvironmentActivationService } from '../interpreter/activation/types';
 import { IInterpreterQuickPickItem, IInterpreterSelector } from '../interpreter/configuration/types';
 import { IInterpreterService } from '../interpreter/contracts';
@@ -63,9 +64,7 @@ export class PythonApiProvider implements IPythonApiProvider {
             return;
         }
         this.initialized = true;
-        const pythonExtension = this.extensions.getExtension<{ jupyter: { registerHooks(): void } }>(
-            'ms-python.python'
-        );
+        const pythonExtension = this.extensions.getExtension<{ jupyter: { registerHooks(): void } }>(PythonExtension);
         if (!pythonExtension) {
             await this.extensionChecker.installPythonExtension();
         } else {
@@ -80,7 +79,7 @@ export class PythonApiProvider implements IPythonApiProvider {
 @injectable()
 export class PythonExtensionChecker implements IPythonExtensionChecker {
     private extensionChangeHandler: Disposable | undefined;
-    private pythonExtensionId = 'ms-python.python';
+    private pythonExtensionId = PythonExtension;
 
     constructor(
         @inject(IExtensions) private readonly extensions: IExtensions,
