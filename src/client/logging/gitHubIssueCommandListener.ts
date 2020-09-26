@@ -5,7 +5,7 @@ import { authentication, Position, Uri, window, workspace, WorkspaceEdit } from 
 import { IApplicationEnvironment, IApplicationShell, ICommandManager } from '../common/application/types';
 import { traceError } from '../common/logger';
 import { IPlatformService } from '../common/platform/types';
-import { IDisposableRegistry, IExtensionContext } from '../common/types';
+import { IDisposableRegistry, IExtensionContext, IPathUtils } from '../common/types';
 import { GitHubIssue } from '../common/utils/localize';
 import { Commands } from '../datascience/constants';
 import {
@@ -22,6 +22,7 @@ export class GitHubIssueCommandListener implements IDataScienceCommandListener {
     private issueFilePath: Uri | undefined;
     constructor(
         @inject(IDataScienceFileSystem) private filesystem: IDataScienceFileSystem,
+        @inject(IPathUtils) private pathUtils: IPathUtils,
         @inject(IApplicationShell) private appShell: IApplicationShell,
         @inject(ICommandManager) private commandManager: ICommandManager,
         @inject(IApplicationEnvironment) private applicationEnvironment: IApplicationEnvironment,
@@ -44,7 +45,6 @@ export class GitHubIssueCommandListener implements IDataScienceCommandListener {
     }
     private async createGitHubIssue() {
         try {
-            const body = await this.filesystem.readLocalFile(this.logfilePath);
             const formatted = `# Steps to cause the bug to occur
 1. <!-- ${GitHubIssue.pleaseFillThisOut()} -->
 # Actual behavior
@@ -63,7 +63,7 @@ OS: ${this.platformService.osType} ${(await this.platformService?.getVersion())?
 <details>
 
 ${'```'}
-${body}
+${await this.getRedactedLogs()}
 ${'```'}
 </details>`;
 
@@ -108,6 +108,14 @@ ${'```'}
             }
         } catch (err) {
             await this.appShell.showErrorMessage(GitHubIssue.failure());
+            traceError(err);
         }
+    }
+
+    private async getRedactedLogs() {
+        const pathComponents = this.pathUtils.home.split(this.pathUtils.separator);
+        const username = pathComponents[pathComponents.length - 1];
+        const re = RegExp(username, 'gi');
+        return (await this.filesystem.readLocalFile(this.logfilePath)).replace(re, '[redacted]');
     }
 }
