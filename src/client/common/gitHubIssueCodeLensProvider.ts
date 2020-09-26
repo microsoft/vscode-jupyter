@@ -7,8 +7,16 @@ import { GitHubIssue } from './utils/localize';
 
 @injectable()
 export class GitHubIssueCodeLensProvider implements IGitHubIssueCodeLensProvider {
-    public provideCodeLenses(_document: TextDocument, _token: CancellationToken): CodeLens[] {
-        const range = new Range(new Position(0, 0), new Position(0, 1));
-        return [new CodeLens(range, generateCommand(Commands.SubmitGitHubIssue, GitHubIssue.submitGitHubIssue()))];
+    public provideCodeLenses(document: TextDocument, _token: CancellationToken): CodeLens[] {
+        const command = generateCommand(Commands.SubmitGitHubIssue, GitHubIssue.submitGitHubIssue());
+        const codelenses: CodeLens[] = [];
+        for (let index = 0; index < document.lineCount; index += 1) {
+            const line = document.lineAt(index);
+            if (line.text.startsWith('# ')) {
+                const range = new Range(new Position(line.lineNumber, 0), new Position(line.lineNumber, 1));
+                codelenses.push(new CodeLens(range, command));
+            }
+        }
+        return codelenses;
     }
 }
