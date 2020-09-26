@@ -31,7 +31,6 @@ import {
     ICryptoUtils,
     IExperiments,
     IHttpClient,
-    IOutputChannel,
     IPersistentState,
     IPersistentStateFactory
 } from '../../../client/common/types';
@@ -49,7 +48,6 @@ suite('A/B experiments', () => {
     let isDownloadedStorageValid: TypeMoq.IMock<IPersistentState<boolean>>;
     let experimentStorage: TypeMoq.IMock<IPersistentState<any>>;
     let downloadedExperimentsStorage: TypeMoq.IMock<IPersistentState<any>>;
-    let output: TypeMoq.IMock<IOutputChannel>;
     let fs: IFileSystem;
     let expManager: ExperimentsManager;
     let configurationService: ConfigurationService;
@@ -62,7 +60,6 @@ suite('A/B experiments', () => {
         isDownloadedStorageValid = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
         experimentStorage = TypeMoq.Mock.ofType<IPersistentState<any>>();
         downloadedExperimentsStorage = TypeMoq.Mock.ofType<IPersistentState<any>>();
-        output = TypeMoq.Mock.ofType<IOutputChannel>();
         configurationService = mock(ConfigurationService);
         experiments = TypeMoq.Mock.ofType<IExperiments>();
         const settings = mock(JupyterSettings);
@@ -85,7 +82,6 @@ suite('A/B experiments', () => {
             instance(httpClient),
             instance(crypto),
             instance(appEnvironment),
-            output.object,
             instance(fs),
             instance(configurationService)
         );
@@ -201,7 +197,6 @@ suite('A/B experiments', () => {
             instance(httpClient),
             instance(crypto),
             instance(appEnvironment),
-            output.object,
             instance(fs),
             instance(configurationService)
         );
@@ -227,7 +222,6 @@ suite('A/B experiments', () => {
             instance(httpClient),
             instance(crypto),
             instance(appEnvironment),
-            output.object,
             instance(fs),
             instance(configurationService)
         );
@@ -260,7 +254,6 @@ suite('A/B experiments', () => {
             instance(httpClient),
             instance(crypto),
             instance(appEnvironment),
-            output.object,
             instance(fs),
             instance(configurationService)
         );
@@ -285,7 +278,6 @@ suite('A/B experiments', () => {
             instance(httpClient),
             instance(crypto),
             instance(appEnvironment),
-            output.object,
             instance(fs),
             instance(configurationService)
         );
@@ -334,7 +326,6 @@ suite('A/B experiments', () => {
             instance(httpClient),
             instance(crypto),
             instance(appEnvironment),
-            output.object,
             instance(fs),
             instance(configurationService)
         );
@@ -375,7 +366,6 @@ suite('A/B experiments', () => {
             instance(httpClient),
             instance(crypto),
             instance(appEnvironment),
-            output.object,
             instance(fs),
             instance(configurationService)
         );
@@ -412,7 +402,6 @@ suite('A/B experiments', () => {
             instance(httpClient),
             instance(crypto),
             instance(appEnvironment),
-            output.object,
             instance(fs),
             instance(configurationService)
         );
@@ -463,7 +452,6 @@ suite('A/B experiments', () => {
             instance(httpClient),
             instance(crypto),
             instance(appEnvironment),
-            output.object,
             instance(fs),
             instance(configurationService)
         );
@@ -517,7 +505,6 @@ suite('A/B experiments', () => {
                     instance(httpClient),
                     instance(crypto),
                     instance(appEnvironment),
-                    output.object,
                     instance(fs),
                     instance(configurationService)
                 );
@@ -999,7 +986,6 @@ suite('A/B experiments', () => {
                 instance(httpClient),
                 instance(crypto),
                 instance(appEnvironment),
-                output.object,
                 instance(fs),
                 instance(configurationService),
                 timeout
@@ -1023,7 +1009,6 @@ suite('A/B experiments', () => {
                 instance(httpClient),
                 instance(crypto),
                 instance(appEnvironment),
-                output.object,
                 instance(fs),
                 instance(configurationService),
                 timeout
@@ -1045,7 +1030,6 @@ suite('A/B experiments', () => {
                 instance(httpClient),
                 instance(crypto),
                 instance(appEnvironment),
-                output.object,
                 instance(fs),
                 instance(configurationService)
             );

@@ -11,6 +11,7 @@ import { IExperimentsManager } from '../common/types';
 import { ProtocolParser } from '../debugger/extension/helpers/protocolParser';
 import { IProtocolParser } from '../debugger/extension/types';
 import { IServiceManager } from '../ioc/types';
+import { GitHubIssueCommandListener } from '../logging/gitHubIssueCommandListener';
 import { Activation } from './activation';
 import { CodeCssGenerator } from './codeCssGenerator';
 import { JupyterCommandLineSelectorCommand } from './commands/commandLineSelector';
@@ -27,7 +28,6 @@ import { JupyterVariableDataProvider } from './data-viewing/jupyterVariableDataP
 import { JupyterVariableDataProviderFactory } from './data-viewing/jupyterVariableDataProviderFactory';
 import { IDataViewer, IDataViewerFactory } from './data-viewing/types';
 import { DataScience } from './datascience';
-import { DataScienceFileSystem } from './dataScienceFileSystem';
 import { DataScienceSurveyBannerLogger } from './dataScienceSurveyBanner';
 import { DebugLocationTrackerFactory } from './debugLocationTrackerFactory';
 import { CellHashProvider } from './editor-integration/cellhashprovider';
@@ -141,7 +141,6 @@ import {
     IDataScienceCodeLensProvider,
     IDataScienceCommandListener,
     IDataScienceErrorHandler,
-    IDataScienceFileSystem,
     IDebugLocationTracker,
     IDigestStorage,
     IGatherLogger,
@@ -248,6 +247,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IGitHubIssueCodeLensProvider>(IGitHubIssueCodeLensProvider, GitHubIssueCodeLensProvider);
     serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, InteractiveWindowCommandListener);
     serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, NativeEditorCommandListener);
+    serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, GitHubIssueCommandListener);
     serviceManager.addSingleton<IDataViewerFactory>(IDataViewerFactory, DataViewerFactory);
     serviceManager.addSingleton<IDebugLocationTracker>(IDebugLocationTracker, DebugLocationTrackerFactory);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, Activation);
@@ -316,7 +316,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IJupyterUriProviderRegistration>(IJupyterUriProviderRegistration, JupyterUriProviderRegistration);
     serviceManager.addSingleton<IDigestStorage>(IDigestStorage, DigestStorage);
     serviceManager.addSingleton<ITrustService>(ITrustService, TrustService);
-    serviceManager.addSingleton<IDataScienceFileSystem>(IDataScienceFileSystem, DataScienceFileSystem);
     serviceManager.addSingleton<IFileSystemPathUtils>(IFileSystemPathUtils, FileSystemPathUtils);
     serviceManager.addSingleton<INotebookExtensibility>(INotebookExtensibility, NotebookExtensibility);
 

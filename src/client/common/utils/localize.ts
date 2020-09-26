@@ -89,13 +89,18 @@ export namespace GitHubIssue {
         'GitHubIssue.Failure',
         'We encountered an error while submitting your GitHub issue. Please click [here](https://github.com/microsoft/vscode-jupyter/issues/new) to open an issue.'
     );
+    export const pleaseFillThisOut = localize(
+        'GitHubIssue.pleaseFillThisOut',
+        'Please fill this section out before submitting an issue!'
+    );
+    export const submitGitHubIssue = localize('GitHubIssue.submitGitHubIssue', '✅ Submit GitHub Issue');
 }
 
 export namespace Logging {
     export const currentWorkingDirectory = localize('Logging.CurrentWorkingDirectory', 'cwd:');
     export const warnUserAboutDebugLoggingSetting = localize(
         'Logging.WarnUserAboutDebugLoggingSetting',
-        'You have enabled debug logging for the Jupyter extension, which will continue to write logs to disk. Would you like to turn debug logging off?'
+        'You have enabled debug logging for the Jupyter extension, which will continue to write logs to disk. To turn off debug logging, click [here](command:jupyter.resetLoggingLevel).'
     );
     export const bannerYesTurnOffDebugLogging = localize(
         'Logging.YesTurnOffDebugLogging',
@@ -653,7 +658,6 @@ export namespace DataScience {
         'DataScience.cellStopOnErrorFormatMessage',
         '{0} cells were canceled due to an error in the previous cell.'
     );
-    export const submitGitHubIssue = localize('DataScience.submitGitHubIssue', '✅ Submit GitHub Issue');
     export const scrollToCellTitleFormatMessage = localize('DataScience.scrollToCellTitleFormatMessage', 'Go to [{0}]');
     export const instructionComments = localize(
         'DataScience.instructionComments',

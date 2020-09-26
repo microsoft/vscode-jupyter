@@ -85,6 +85,7 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     ['vscode.open']: [Uri];
     ['workbench.action.files.saveAs']: [Uri];
     ['workbench.action.files.save']: [Uri];
+    ['workbench.action.files.newUntitledFile']: [];
     [DSCommands.ExportFileAndOutputAsNotebook]: [Uri];
     [DSCommands.RunAllCells]: [Uri];
     [DSCommands.RunCell]: [Uri, number, number, number, number];

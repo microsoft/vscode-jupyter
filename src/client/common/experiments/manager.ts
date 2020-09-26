@@ -5,14 +5,14 @@
 
 'use strict';
 
-import { inject, injectable, named, optional } from 'inversify';
+import { inject, injectable, optional } from 'inversify';
 import { parse } from 'jsonc-parser';
 import * as path from 'path';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { IApplicationEnvironment } from '../application/types';
-import { EXTENSION_ROOT_DIR, STANDARD_OUTPUT_CHANNEL } from '../constants';
-import { traceDecorators, traceError } from '../logger';
+import { EXTENSION_ROOT_DIR } from '../constants';
+import { traceDecorators, traceError, traceInfo } from '../logger';
 import { IFileSystem } from '../platform/types';
 import {
     ABExperiments,
@@ -21,7 +21,6 @@ import {
     IExperimentsManager,
     IHttpClient,
     IJupyterSettings,
-    IOutputChannel,
     IPersistentState,
     IPersistentStateFactory
 } from '../types';
@@ -94,7 +93,6 @@ export class ExperimentsManager implements IExperimentsManager {
         @inject(IHttpClient) private readonly httpClient: IHttpClient,
         @inject(ICryptoUtils) private readonly crypto: ICryptoUtils,
         @inject(IApplicationEnvironment) private readonly appEnvironment: IApplicationEnvironment,
-        @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly output: IOutputChannel,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
         @optional() private experimentEffortTimeout: number = EXPERIMENTS_EFFORT_TIMEOUT_MS
@@ -132,7 +130,7 @@ export class ExperimentsManager implements IExperimentsManager {
         for (const exp of this.userExperiments || []) {
             // We need to know whether an experiment influences the logs we observe in github issues, so log the experiment group
             // tslint:disable-next-line: no-console
-            this.output.appendLine(Experiments.inGroup().format(exp.name));
+            traceInfo(Experiments.inGroup().format(exp.name));
         }
         this.initializeInBackground().ignoreErrors();
     }
