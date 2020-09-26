@@ -649,7 +649,7 @@ export interface IDataScienceCodeLensProvider extends CodeLensProvider {
     getCodeWatcher(document: TextDocument): ICodeWatcher | undefined;
 }
 export const IGitHubIssueCodeLensProvider = Symbol('IGitHubIssueCodeLensProvider');
-export interface IGitHubIssueCodeLensProvider extends CodeLensProvider { }
+export interface IGitHubIssueCodeLensProvider extends CodeLensProvider {}
 
 // Wraps the Code Watcher API
 export const ICodeWatcher = Symbol('ICodeWatcher');
