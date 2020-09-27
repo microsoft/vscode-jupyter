@@ -22,7 +22,6 @@ import { registerTypes as commonRegisterTypes } from './common/serviceRegistry';
 import {
     IConfigurationService,
     IExperimentService,
-    IExperimentsManager,
     IExtensionContext,
     IFeatureDeprecationManager,
     IOutputChannel
@@ -93,9 +92,6 @@ async function activateLegacy(
     // `IConfigurationService` may depend any of the registered types, so doing it after all registrations are finished.
     // XXX Move this *after* abExperiments is activated?
     setLoggingLevel(configuration.getSettings().logging.level);
-
-    const abExperiments = serviceContainer.get<IExperimentsManager>(IExperimentsManager);
-    await abExperiments.activate();
 
     // Load the two data science experiments that we need to register types
     // Await here to keep the register method sync
