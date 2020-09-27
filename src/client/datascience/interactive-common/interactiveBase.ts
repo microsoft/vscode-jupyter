@@ -180,7 +180,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
             title,
             viewColumn,
             useCustomEditorApi,
-            expService.inExperiment(RunByLine.EXP),
+            expService.inExperiment(RunByLine.experiment),
             expService.inExperiment(RemoveKernelToolbarInInteractiveWindow.experiment)
         );
 

@@ -36,8 +36,7 @@ export class HoverProvider implements INotebookExecutionLogger, vscode.HoverProv
         @inject(IInteractiveWindowProvider) private interactiveProvider: IInteractiveWindowProvider,
         @inject(IDataScienceFileSystem) private readonly fs: IDataScienceFileSystem
     ) {
-        //this.enabled = experimentService.inExperiment(RunByLine.EXP);
-        this.enabledPromise = experimentService.inExperiment(RunByLine.EXP).catch((reason) => {
+        this.enabledPromise = experimentService.inExperiment(RunByLine.experiment).catch((reason) => {
             traceError(`Failed to load run by line experiment ${reason}`);
             return false;
         });

@@ -72,7 +72,7 @@ export class JupyterVariables implements IJupyterVariables {
     }
 
     private async getVariableHandler(notebook: INotebook): Promise<IJupyterVariables> {
-        const inRunByLineExperiment = await this.experimentsService.inExperiment(RunByLine.EXP);
+        const inRunByLineExperiment = await this.experimentsService.inExperiment(RunByLine.experiment);
         if (!inRunByLineExperiment) {
             return this.oldVariables;
         }

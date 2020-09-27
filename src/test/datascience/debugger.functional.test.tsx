@@ -296,7 +296,7 @@ suite('DataScience Debugger tests', () => {
     runInteractiveTest(
         'Check variables',
         async () => {
-            ioc.setExperimentState(RunByLine.EXP, true);
+            ioc.setExperimentState(RunByLine.experiment, true);
             await debugCell('interactive', '#%%\nx = [4, 6]\nx = 5', undefined, undefined, false, () => {
                 const targetResult = {
                     name: 'x',
@@ -389,7 +389,7 @@ suite('DataScience Debugger tests', () => {
             assert.equal(ImageButtons.length, 5, 'Cell buttons wrong number');
         },
         () => {
-            ioc.setExperimentState(RunByLine.EXP, true);
+            ioc.setExperimentState(RunByLine.experiment, true);
             return createIOC();
         }
     );
@@ -441,7 +441,7 @@ suite('DataScience Debugger tests', () => {
             expect(runByLineButtonProps.disabled).to.equal(false, 'Run by line button not active in break mode');
         },
         () => {
-            ioc.setExperimentState(RunByLine.EXP, true);
+            ioc.setExperimentState(RunByLine.experiment, true);
             return createIOC();
         }
     );
