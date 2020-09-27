@@ -41,7 +41,7 @@ const rangeInclusive = require('range-inclusive');
 
         setup(async () => {
             ioc = new DataScienceIocContainer();
-            ioc.setExperimentState(RunByLine.experiment, runByLine);
+            ioc.setExperimentState(RunByLine.EXP, runByLine);
             ioc.registerDataScienceTypes();
             createdNotebook = false;
             await ioc.activate();
