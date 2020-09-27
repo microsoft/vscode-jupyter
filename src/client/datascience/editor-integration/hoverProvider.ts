@@ -9,7 +9,7 @@ import { PYTHON } from '../../common/constants';
 import { RunByLine } from '../../common/experiments/groups';
 import { traceError } from '../../common/logger';
 
-import { IExperimentService, IExperimentsManager } from '../../common/types';
+import { IExperimentService } from '../../common/types';
 import { sleep } from '../../common/utils/async';
 import { noop } from '../../common/utils/misc';
 import { Identifiers } from '../constants';
@@ -60,7 +60,7 @@ export class HoverProvider implements INotebookExecutionLogger, vscode.HoverProv
                 const size = this.runFiles.size;
                 this.runFiles.add(cell.file.toLocaleLowerCase());
                 if (size !== this.runFiles.size) {
-                    this.initializeHoverProvider();
+                    await this.initializeHoverProvider();
                 }
             }
         } catch (exc) {

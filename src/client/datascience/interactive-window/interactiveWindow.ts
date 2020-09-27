@@ -19,7 +19,6 @@ import {
     IConfigurationService,
     IDisposableRegistry,
     IExperimentService,
-    IExperimentsManager,
     InteractiveWindowMode,
     IPersistentStateFactory,
     Resource
@@ -122,7 +121,6 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         private readonly stateFactory: IPersistentStateFactory,
         globalStorage: Memento,
         workspaceStorage: Memento,
-        experimentsManager: IExperimentsManager,
         notebookProvider: INotebookProvider,
         useCustomEditorApi: boolean,
         expService: IExperimentService,
@@ -164,7 +162,6 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             ],
             localize.DataScience.interactiveWindowTitle(),
             ViewColumn.Two,
-            experimentsManager,
             notebookProvider,
             useCustomEditorApi,
             expService,

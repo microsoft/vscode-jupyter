@@ -20,8 +20,7 @@ import {
     IAsyncDisposableRegistry,
     IConfigurationService,
     IDisposableRegistry,
-    IExperimentService,
-    IExperimentsManager
+    IExperimentService
 } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
@@ -95,7 +94,6 @@ export class NativeEditorOldWebView extends NativeEditor {
         errorHandler: IDataScienceErrorHandler,
         globalStorage: Memento,
         workspaceStorage: Memento,
-        experimentsManager: IExperimentsManager,
         asyncRegistry: IAsyncDisposableRegistry,
         notebookProvider: INotebookProvider,
         useCustomEditorApi: boolean,
@@ -132,7 +130,6 @@ export class NativeEditorOldWebView extends NativeEditor {
             errorHandler,
             globalStorage,
             workspaceStorage,
-            experimentsManager,
             asyncRegistry,
             notebookProvider,
             useCustomEditorApi,

@@ -32,7 +32,6 @@ import {
     IConfigurationService,
     IDisposableRegistry,
     IExperimentService,
-    IExperimentsManager,
     Resource
 } from '../../common/types';
 import { StopWatch } from '../../common/utils/stopWatch';
@@ -177,7 +176,6 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         errorHandler: IDataScienceErrorHandler,
         globalStorage: Memento,
         workspaceStorage: Memento,
-        experimentsManager: IExperimentsManager,
         asyncRegistry: IAsyncDisposableRegistry,
         notebookProvider: INotebookProvider,
         useCustomEditorApi: boolean,
@@ -220,7 +218,6 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             ],
             path.basename(_model.file.fsPath),
             ViewColumn.Active,
-            experimentsManager,
             notebookProvider,
             useCustomEditorApi,
             expService,

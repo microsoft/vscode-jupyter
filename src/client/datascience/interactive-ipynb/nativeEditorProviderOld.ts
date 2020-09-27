@@ -23,7 +23,6 @@ import {
     IConfigurationService,
     IDisposableRegistry,
     IExperimentService,
-    IExperimentsManager,
     IMemento,
     WORKSPACE_MEMENTO
 } from '../../common/types';
@@ -220,7 +219,6 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
             this.serviceContainer.get<IDataScienceErrorHandler>(IDataScienceErrorHandler),
             this.serviceContainer.get<Memento>(IMemento, GLOBAL_MEMENTO),
             this.serviceContainer.get<Memento>(IMemento, WORKSPACE_MEMENTO),
-            this.serviceContainer.get<IExperimentsManager>(IExperimentsManager),
             this.serviceContainer.get<IAsyncDisposableRegistry>(IAsyncDisposableRegistry),
             this.serviceContainer.get<INotebookProvider>(INotebookProvider),
             this.serviceContainer.get<boolean>(UseCustomEditorApi),
