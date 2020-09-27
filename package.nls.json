@@ -577,5 +577,6 @@
     "DataScience.interactiveWindowModeBannerSwitchYes": "Yes",
     "DataScience.interactiveWindowModeBannerSwitchAlways": "Always",
     "DataScience.interactiveWindowModeBannerSwitchNo": "No",
-    "DataScience.ipykernelNotInstalled": "IPyKernel not installed into interpreter {0}"
+    "DataScience.ipykernelNotInstalled": "IPyKernel not installed into interpreter {0}",
+    "DataScience.illegalEditorConfig": "CustomEditor and NativeNotebook experiments cannot be turned on together"
 }

@@ -4,6 +4,7 @@
 'use strict';
 
 // tslint:disable:max-func-body-length
+import './extensions';
 
 import { OutputChannel, window } from 'vscode';
 
@@ -11,7 +12,7 @@ import { registerTypes as activationRegisterTypes } from './activation/serviceRe
 import { IExtensionActivationManager } from './activation/types';
 import { registerTypes as registerApiTypes } from './api/serviceRegistry';
 import { registerTypes as appRegisterTypes } from './application/serviceRegistry';
-import { IApplicationEnvironment, ICommandManager } from './common/application/types';
+import { IApplicationEnvironment, IApplicationShell, ICommandManager } from './common/application/types';
 import { STANDARD_OUTPUT_CHANNEL, UseProposedApi } from './common/constants';
 import { NotebookEditorSupport } from './common/experiments/groups';
 import { registerTypes as installerRegisterTypes } from './common/installer/serviceRegistry';
@@ -26,7 +27,7 @@ import {
     IFeatureDeprecationManager,
     IOutputChannel
 } from './common/types';
-import { OutputChannelNames } from './common/utils/localize';
+import * as localize from './common/utils/localize';
 import { noop } from './common/utils/misc';
 import { registerTypes as variableRegisterTypes } from './common/variables/serviceRegistry';
 import { JUPYTER_OUTPUT_CHANNEL } from './datascience/constants';
@@ -63,7 +64,7 @@ async function activateLegacy(
     serviceContainer: IServiceContainer
 ) {
     // register "services"
-    const jupyterOutputChannel = window.createOutputChannel(OutputChannelNames.jupyter());
+    const jupyterOutputChannel = window.createOutputChannel(localize.OutputChannelNames.jupyter());
     const standardOutputChannel = jupyterOutputChannel;
     addOutputChannelLogging(standardOutputChannel);
     serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, standardOutputChannel, STANDARD_OUTPUT_CHANNEL);
@@ -96,10 +97,18 @@ async function activateLegacy(
     // Load the two data science experiments that we need to register types
     // Await here to keep the register method sync
     const experimentService = serviceContainer.get<IExperimentService>(IExperimentService);
-    const useVSCodeNotebookAPI = await experimentService.inExperiment(NotebookEditorSupport.nativeNotebookExperiment);
-    const inCustomEditorApiExperiment = await experimentService.inExperiment(
+    let useVSCodeNotebookAPI = await experimentService.inExperiment(NotebookEditorSupport.nativeNotebookExperiment);
+    let inCustomEditorApiExperiment = await experimentService.inExperiment(
         NotebookEditorSupport.customEditorExperiment
     );
+
+    // These should be mutually exclusive, but if someone opts into both, notify them and disable both
+    if (useVSCodeNotebookAPI && inCustomEditorApiExperiment) {
+        const appShell = serviceContainer.get<IApplicationShell>(IApplicationShell);
+        appShell.showErrorMessage(localize.DataScience.illegalEditorConfig()).then(noop, noop);
+        useVSCodeNotebookAPI = false;
+        inCustomEditorApiExperiment = false;
+    }
 
     // Register datascience types after experiments have loaded.
     // To ensure we can register types based on experiments.
