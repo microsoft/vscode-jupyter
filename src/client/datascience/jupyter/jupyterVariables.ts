@@ -71,7 +71,7 @@ export class JupyterVariables implements IJupyterVariables {
         return this.getVariableHandler(notebook).getDataFrameRows(targetVariable, notebook, start, end);
     }
 
-    private getVariableHandler(notebook: INotebook): IJupyterVariables {
+    private async getVariableHandler(notebook: INotebook): Promise<IJupyterVariables> {
         if (!this.experimentsManager.inExperiment(RunByLine.experiment)) {
             return this.oldVariables;
         }

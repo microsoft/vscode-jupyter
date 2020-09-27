@@ -9,7 +9,7 @@ import { PYTHON } from '../../common/constants';
 import { RunByLine } from '../../common/experiments/groups';
 import { traceError } from '../../common/logger';
 
-import { IExperimentsManager } from '../../common/types';
+import { IExperimentService, IExperimentsManager } from '../../common/types';
 import { sleep } from '../../common/utils/async';
 import { noop } from '../../common/utils/misc';
 import { Identifiers } from '../constants';
@@ -27,16 +27,20 @@ import {
 @injectable()
 export class HoverProvider implements INotebookExecutionLogger, vscode.HoverProvider {
     private runFiles = new Set<string>();
-    private enabled = false;
+    private enabledPromise: Promise<boolean>;
     private hoverProviderRegistration: vscode.Disposable | undefined;
 
     constructor(
-        @inject(IExperimentsManager) experimentsManager: IExperimentsManager,
+        @inject(IExperimentService) experimentService: IExperimentService,
         @inject(IJupyterVariables) @named(Identifiers.KERNEL_VARIABLES) private variableProvider: IJupyterVariables,
         @inject(IInteractiveWindowProvider) private interactiveProvider: IInteractiveWindowProvider,
         @inject(IDataScienceFileSystem) private readonly fs: IDataScienceFileSystem
     ) {
-        this.enabled = experimentsManager.inExperiment(RunByLine.experiment);
+        //this.enabled = experimentService.inExperiment(RunByLine.EXP);
+        this.enabledPromise = experimentService.inExperiment(RunByLine.EXP).catch((reason) => {
+            traceError(`Failed to load run by line experiment ${reason}`);
+            return false;
+        });
     }
 
     public dispose() {
@@ -81,9 +85,12 @@ export class HoverProvider implements INotebookExecutionLogger, vscode.HoverProv
         return Promise.race([timeoutHandler(), this.getVariableHover(document, position, token)]);
     }
 
-    private initializeHoverProvider() {
+    private async initializeHoverProvider() {
+        // Wait for our check of the experiment before enabling
+        const enabled = await this.enabledPromise;
+
         if (!this.hoverProviderRegistration) {
-            if (this.enabled) {
+            if (enabled) {
                 this.hoverProviderRegistration = vscode.languages.registerHoverProvider(PYTHON, this);
             } else {
                 this.hoverProviderRegistration = {
