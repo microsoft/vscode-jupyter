@@ -4,8 +4,6 @@
 'use strict';
 
 // tslint:disable:max-func-body-length
-import './extensions';
-
 import { OutputChannel, window } from 'vscode';
 
 import { registerTypes as activationRegisterTypes } from './activation/serviceRegistry';

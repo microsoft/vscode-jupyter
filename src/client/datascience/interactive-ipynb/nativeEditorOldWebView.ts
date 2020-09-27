@@ -16,6 +16,7 @@ import {
 } from '../../common/application/types';
 import { traceError } from '../../common/logger';
 
+import { IPythonExtensionChecker } from '../../api/types';
 import {
     IAsyncDisposableRegistry,
     IConfigurationService,
@@ -103,7 +104,8 @@ export class NativeEditorOldWebView extends NativeEditor {
         model: INotebookModel,
         webviewPanel: WebviewPanel | undefined,
         selector: KernelSelector,
-        notebookExtensibility: INotebookExtensibility
+        notebookExtensibility: INotebookExtensibility,
+        extensionChecker: IPythonExtensionChecker
     ) {
         super(
             listeners,
@@ -138,7 +140,8 @@ export class NativeEditorOldWebView extends NativeEditor {
             model,
             webviewPanel,
             selector,
-            notebookExtensibility
+            notebookExtensibility,
+            extensionChecker
         );
         asyncRegistry.push(this);
         // No ui syncing in old notebooks.

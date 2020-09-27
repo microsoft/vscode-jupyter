@@ -6,6 +6,7 @@ import * as path from 'path';
 import { CancellationTokenSource, Memento, TextDocument, TextEditor, Uri, WebviewPanel } from 'vscode';
 
 import { CancellationToken } from 'vscode-jsonrpc';
+import { IPythonExtensionChecker } from '../../api/types';
 import {
     IApplicationShell,
     ICommandManager,
@@ -228,7 +229,8 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
             model,
             panel,
             this.serviceContainer.get<KernelSelector>(KernelSelector),
-            this.serviceContainer.get<INotebookExtensibility>(INotebookExtensibility)
+            this.serviceContainer.get<INotebookExtensibility>(INotebookExtensibility),
+            this.serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker)
         );
         this.activeEditors.set(model.file.fsPath, editor);
         this.disposables.push(editor.closed(this.onClosedEditor.bind(this)));
