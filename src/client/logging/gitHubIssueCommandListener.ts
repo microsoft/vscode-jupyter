@@ -1,7 +1,7 @@
 import { Octokit } from '@octokit/rest';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { authentication, env, Position, Uri, window, workspace, WorkspaceEdit } from 'vscode';
+import { authentication, env, Position, TextDocument, Uri, window, workspace, WorkspaceEdit } from 'vscode';
 import { IApplicationEnvironment, IApplicationShell, ICommandManager } from '../common/application/types';
 import { traceError } from '../common/logger';
 import { IPlatformService } from '../common/platform/types';
@@ -20,6 +20,7 @@ import { IInterpreterService } from '../interpreter/contracts';
 export class GitHubIssueCommandListener implements IDataScienceCommandListener {
     private logfilePath: string;
     private issueFilePath: Uri | undefined;
+    private issueTextDocument: TextDocument | undefined;
     constructor(
         @inject(IDataScienceFileSystem) private filesystem: IDataScienceFileSystem,
         @inject(IPathUtils) private pathUtils: IPathUtils,
@@ -72,7 +73,7 @@ ${'```'}
             this.issueFilePath = Uri.file('issue.md').with({
                 scheme: 'untitled'
             });
-            await workspace.openTextDocument(this.issueFilePath);
+            this.issueTextDocument = await workspace.openTextDocument(this.issueFilePath);
             const edit = new WorkspaceEdit();
             edit.insert(this.issueFilePath, new Position(0, 0), formatted);
             await workspace.applyEdit(edit);
@@ -121,6 +122,9 @@ ${'```'}
             });
             if (response?.data?.html_url) {
                 await this.appShell.showInformationMessage(GitHubIssue.success().format(response.data.html_url));
+                if (window.activeTextEditor?.document === this.issueTextDocument) {
+                    this.commandManager.executeCommand('workbench.action.closeActiveEditor');
+                }
             }
         }
     }
