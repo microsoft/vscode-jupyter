@@ -1218,7 +1218,6 @@
                             "NativeNotebook",
                             "CustomEditor",
                             "RunByLine",
-                            "RemoveKernelToolbarInInteractiveWindow",
                             "All"
                         ]
                     },
@@ -1233,7 +1232,6 @@
                             "NativeNotebook",
                             "CustomEditor",
                             "RunByLine",
-                            "RemoveKernelToolbarInInteractiveWindow",
                             "All"
                         ]
                     },

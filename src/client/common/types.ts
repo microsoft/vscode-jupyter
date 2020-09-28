@@ -17,12 +17,7 @@ import {
 } from 'vscode';
 import { LogLevel } from '../logging/levels';
 import { CommandsWithoutArgs } from './application/commands';
-import {
-    JoinMailingListPromptVariants,
-    NotebookEditorSupport,
-    RemoveKernelToolbarInInteractiveWindow,
-    RunByLine
-} from './experiments/groups';
+import { JoinMailingListPromptVariants, NotebookEditorSupport, RunByLine } from './experiments/groups';
 import { ExtensionChannels } from './insidersBuild/types';
 import { InterpreterUri } from './installer/types';
 import { EnvironmentVariables } from './variables/types';
@@ -416,12 +411,6 @@ export interface IAsyncDisposableRegistry extends IAsyncDisposable {
  */
 export const IExperimentService = Symbol('IExperimentService');
 export interface IExperimentService {
-    inExperiment(
-        experimentName:
-            | RunByLine
-            | NotebookEditorSupport
-            | RemoveKernelToolbarInInteractiveWindow
-            | JoinMailingListPromptVariants
-    ): Promise<boolean>;
+    inExperiment(experimentName: RunByLine | NotebookEditorSupport | JoinMailingListPromptVariants): Promise<boolean>;
     getExperimentValue<T extends boolean | number | string>(experimentName: string): Promise<T | undefined>;
 }
