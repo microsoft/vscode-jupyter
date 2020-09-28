@@ -97,11 +97,9 @@ export class CellExecution {
 
     private _completed?: boolean;
     private readonly initPromise: Promise<void>;
-    /**
-     * This is used to chain the updates to the cells.
-     */
-    private previousUpdatedToCellHasCompleted = Promise.resolve();
     private disposables: IDisposable[] = [];
+
+    private ioPubChain = Promise.resolve();
 
     private constructor(
         public readonly editor: VSCNotebookEditor,
@@ -354,19 +352,15 @@ export class CellExecution {
             this.completedSuccessfully().then(noop, noop);
         }
     }
-
+    private handleIOPub(clearState: RefBool, loggers: INotebookExecutionLogger[], msg: KernelMessage.IIOPubMessage) {
+        this.ioPubChain = this.ioPubChain.then(() => this.handleIOPubInternal(clearState, loggers, msg).catch(noop));
+    }
     @swallowExceptions()
-    private async handleIOPub(
+    private async handleIOPubInternal(
         clearState: RefBool,
         loggers: INotebookExecutionLogger[],
         msg: KernelMessage.IIOPubMessage
-        // tslint:disable-next-line: no-any
     ) {
-        // Wait for previous cell update to complete.
-        await this.previousUpdatedToCellHasCompleted.then(noop, noop);
-        const deferred = createDeferred<void>();
-        this.previousUpdatedToCellHasCompleted = this.previousUpdatedToCellHasCompleted.then(() => deferred.promise);
-
         // Let our loggers get a first crack at the message. They may change it
         loggers.forEach((f) => (msg = f.preHandleIOPub ? f.preHandleIOPub(msg) : msg));
 
@@ -412,7 +406,7 @@ export class CellExecution {
 
             // Set execution count, all messages should have it
             if ('execution_count' in msg.content && typeof msg.content.execution_count === 'number') {
-                updateCellExecutionCount(this.editor, this.cell, msg.content.execution_count).then(noop, noop);
+                await updateCellExecutionCount(this.editor, this.cell, msg.content.execution_count);
             }
 
             // Show our update if any new output.
@@ -421,9 +415,7 @@ export class CellExecution {
             }
         } catch (err) {
             // If not a restart error, then tell the subscriber
-            this.completedWithErrors(err).then(noop, noop);
-        } finally {
-            deferred.resolve();
+            await this.completedWithErrors(err).then(noop, noop);
         }
     }
 
