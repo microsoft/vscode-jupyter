@@ -1,7 +1,7 @@
 import { Octokit } from '@octokit/rest';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { authentication, Position, Uri, window, workspace, WorkspaceEdit } from 'vscode';
+import { authentication, env, Position, Uri, window, workspace, WorkspaceEdit } from 'vscode';
 import { IApplicationEnvironment, IApplicationShell, ICommandManager } from '../common/application/types';
 import { traceError } from '../common/logger';
 import { IPlatformService } from '../common/platform/types';
@@ -45,12 +45,13 @@ export class GitHubIssueCommandListener implements IDataScienceCommandListener {
     }
     private async createGitHubIssue() {
         try {
+            const pleaseFillThisOut = GitHubIssue.pleaseFillThisOut();
             const formatted = `# Steps to cause the bug to occur
-1. <!-- ${GitHubIssue.pleaseFillThisOut()} -->
+1. <!-- ${pleaseFillThisOut} -->
 # Actual behavior
-<!-- ${GitHubIssue.pleaseFillThisOut()} -->
+<!-- ${pleaseFillThisOut} -->
 # Expected behavior
-<!-- ${GitHubIssue.pleaseFillThisOut()} -->
+<!-- ${pleaseFillThisOut} -->
 # Your Jupyter environment
 Active Python interpreter: ${(await this.interpreterService.getActiveInterpreter(undefined))?.displayName}
 Number of interactive windows: ${this.interactiveWindowProvider?.windows?.length}
@@ -83,32 +84,53 @@ ${'```'}
 
     // After the user has reviewed the contents, submit the issue on their behalf
     private async submitGitHubIssue() {
-        try {
-            const editors = window.visibleTextEditors.filter(
-                (e) => e.document.uri.toString() === this.issueFilePath?.toString()
-            );
-            if (editors.length === 1) {
-                const editor = editors[0];
-                const body = editor.document.getText();
-                const authSession = await authentication.getSession('github', ['repo'], { createIfNone: true });
-                if (authSession) {
-                    const octokit = new Octokit({ auth: authSession.accessToken });
-                    const response = await octokit.issues.create({
-                        owner: 'microsoft',
-                        repo: 'vscode-jupyter',
-                        title: 'Bug report',
-                        body
-                    });
-                    if (response?.data?.html_url) {
-                        await this.appShell.showInformationMessage(
-                            GitHubIssue.success().format(response.data.html_url)
-                        );
-                    }
-                }
+        const editors = window.visibleTextEditors.filter(
+            (e) => e.document.uri.toString() === this.issueFilePath?.toString()
+        );
+        if (editors.length === 1) {
+            const editor = editors[0];
+            const content = editor.document.getText();
+            try {
+                this.validateBody(content);
+                await this.submitForUser(content);
+            } catch (err) {
+                traceError(err);
+                await this.copyIssueContentsAndOpenGitHub(content);
             }
-        } catch (err) {
-            await this.appShell.showErrorMessage(GitHubIssue.failure());
-            traceError(err);
+        }
+    }
+
+    private validateBody(content: string) {
+        return content.includes(GitHubIssue.pleaseFillThisOut());
+    }
+
+    private async submitForUser(body: string) {
+        const title = await window.showInputBox({
+            ignoreFocusOut: true,
+            prompt: GitHubIssue.askForIssueTitle(),
+            placeHolder: GitHubIssue.titlePlaceholder()
+        });
+        const authSession = await authentication.getSession('github', ['repo'], { createIfNone: true });
+        if (authSession) {
+            const octokit = new Octokit({ auth: authSession.accessToken });
+            const response = await octokit.issues.create({
+                owner: 'microsoft',
+                repo: 'vscode-jupyter',
+                title: title ? title : 'Bug report',
+                body
+            });
+            if (response?.data?.html_url) {
+                await this.appShell.showInformationMessage(GitHubIssue.success().format(response.data.html_url));
+            }
+        }
+    }
+
+    private async copyIssueContentsAndOpenGitHub(issueBody: string) {
+        const prompt = GitHubIssue.copyContentToClipboardAndOpenIssue();
+        const selection = await this.appShell.showErrorMessage(GitHubIssue.failure(), ...[prompt]);
+        if (selection === prompt) {
+            await env.clipboard.writeText(issueBody);
+            await env.openExternal(Uri.parse('https://github.com/microsoft/vscode-jupyter/issues/new'));
         }
     }
 

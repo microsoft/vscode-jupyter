@@ -87,11 +87,23 @@ export namespace GitHubIssue {
     );
     export const failure = localize(
         'GitHubIssue.Failure',
-        'We encountered an error while submitting your GitHub issue. Please click [here](https://github.com/microsoft/vscode-jupyter/issues/new) to open an issue.'
+        'We encountered an error while submitting your GitHub issue. Would you still like to report an issue?'
+    );
+    export const copyContentToClipboardAndOpenIssue = localize(
+        'GitHubIssue.copyToClipboardAndOpenIssue',
+        'Yes, copy content to clipboard and open issue'
+    );
+    export const askForIssueTitle = localize(
+        'GitHubIssue.askForIssueTitle',
+        'Please provide a descriptive title summarizing your issue.'
+    );
+    export const titlePlaceholder = localize(
+        'GitHubIssue.titlePlaceholder',
+        'E.g.: Unable to start a local kernel session'
     );
     export const pleaseFillThisOut = localize(
         'GitHubIssue.pleaseFillThisOut',
-        'Please fill this section out before submitting an issue!'
+        'Please fill this section out and delete this comment before submitting an issue!'
     );
     export const submitGitHubIssue = localize('GitHubIssue.submitGitHubIssue', '✅ Submit GitHub Issue');
 }
