@@ -26,6 +26,7 @@ import {
 @injectable()
 export class JupyterVariables implements IJupyterVariables {
     private refreshEventEmitter = new EventEmitter<void>();
+    private runByLineEnabled: boolean | undefined;
 
     constructor(
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
@@ -72,8 +73,10 @@ export class JupyterVariables implements IJupyterVariables {
     }
 
     private async getVariableHandler(notebook: INotebook): Promise<IJupyterVariables> {
-        const inRunByLineExperiment = await this.experimentsService.inExperiment(RunByLine.experiment);
-        if (!inRunByLineExperiment) {
+        if (this.runByLineEnabled === undefined) {
+            this.runByLineEnabled = await this.experimentsService.inExperiment(RunByLine.experiment);
+        }
+        if (!this.runByLineEnabled) {
             return this.oldVariables;
         }
         if (this.debuggerVariables.active && notebook.status === ServerStatus.Busy) {
