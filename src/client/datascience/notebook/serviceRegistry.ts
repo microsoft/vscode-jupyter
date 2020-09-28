@@ -4,8 +4,8 @@
 'use strict';
 
 import { IExtensionSingleActivationService } from '../../activation/types';
-import { GitHubIssueCodeLensProvider } from '../../common/gitHubIssueCodeLensProvider';
 import { IServiceManager } from '../../ioc/types';
+import { GitHubIssueCodeLensProvider } from '../../logging/gitHubIssueCodeLensProvider';
 import { KernelProvider } from '../jupyter/kernels/kernelProvider';
 import { IKernelProvider } from '../jupyter/kernels/types';
 import { NotebookContentProvider } from './contentProvider';

@@ -105,6 +105,9 @@ export namespace GitHubIssue {
         'GitHubIssue.pleaseFillThisOut',
         'Please fill this section out and delete this comment before submitting an issue!'
     );
+    export const missingFields = localize(
+        'GitHubIssue.missingFields',
+        'Please provide details of the issue you encountered before clicking Submit GitHub Issue.');
     export const submitGitHubIssue = localize('GitHubIssue.submitGitHubIssue', '✅ Submit GitHub Issue');
 }
 

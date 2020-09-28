@@ -1,8 +1,22 @@
 import { Octokit } from '@octokit/rest';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { authentication, env, Position, TextDocument, Uri, window, workspace, WorkspaceEdit } from 'vscode';
+import {
+    authentication,
+    Diagnostic,
+    DiagnosticCollection,
+    env,
+    languages,
+    Position,
+    Range,
+    TextDocument,
+    Uri,
+    window,
+    workspace,
+    WorkspaceEdit
+} from 'vscode';
 import { IApplicationEnvironment, IApplicationShell, ICommandManager } from '../common/application/types';
+import { MARKDOWN_LANGUAGE } from '../common/constants';
 import { traceError } from '../common/logger';
 import { IPlatformService } from '../common/platform/types';
 import { IDisposableRegistry, IExtensionContext, IPathUtils } from '../common/types';
@@ -21,6 +35,7 @@ export class GitHubIssueCommandListener implements IDataScienceCommandListener {
     private logfilePath: string;
     private issueFilePath: Uri | undefined;
     private issueTextDocument: TextDocument | undefined;
+    private diagnosticCollection: DiagnosticCollection;
     constructor(
         @inject(IDataScienceFileSystem) private filesystem: IDataScienceFileSystem,
         @inject(IPathUtils) private pathUtils: IPathUtils,
@@ -35,6 +50,7 @@ export class GitHubIssueCommandListener implements IDataScienceCommandListener {
         @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider
     ) {
         this.logfilePath = path.join(this.extensionContext.globalStoragePath, 'log.txt');
+        this.diagnosticCollection = languages.createDiagnosticCollection(MARKDOWN_LANGUAGE);
     }
     public register(commandManager: ICommandManager): void {
         this.disposableRegistry.push(
@@ -92,8 +108,7 @@ ${'```'}
             const editor = editors[0];
             const content = editor.document.getText();
             try {
-                this.validateBody(content);
-                await this.submitForUser(content);
+                await this.validateBodyAndSubmit(content, editor.document);
             } catch (err) {
                 traceError(err);
                 await this.copyIssueContentsAndOpenGitHub(content);
@@ -101,8 +116,33 @@ ${'```'}
         }
     }
 
-    private validateBody(content: string) {
-        return content.includes(GitHubIssue.pleaseFillThisOut());
+    private async validateBodyAndSubmit(content: string, document: TextDocument) {
+        const problems = this.displayErrors(document);
+        if (problems.length > 0) {
+            await this.appShell.showErrorMessage(GitHubIssue.missingFields());
+        } else {
+            await this.submitForUser(content);
+        }
+    }
+
+    private displayErrors(document: TextDocument) {
+        this.diagnosticCollection.clear();
+        const pleaseFillThisOut = GitHubIssue.pleaseFillThisOut();
+        const diagnostics = [];
+
+        for (let index = 0; index < document.lineCount; index += 1) {
+            const line = document.lineAt(index);
+            const matchIndex = line.text.search(pleaseFillThisOut);
+            if (matchIndex !== -1) {
+                const start = new Position(line.lineNumber, matchIndex);
+                const end = new Position(line.lineNumber, matchIndex + pleaseFillThisOut.length);
+                const range = new Range(start, end);
+                diagnostics.push(new Diagnostic(range, pleaseFillThisOut));
+            }
+        }
+
+        this.diagnosticCollection.set(document.uri, diagnostics);
+        return diagnostics;
     }
 
     private async submitForUser(body: string) {

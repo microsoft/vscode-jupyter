@@ -199,6 +199,7 @@
     "GitHubIssue.copyToClipboardAndOpenIssue": "Yes, copy content to clipboard and open issue",
     "GitHubIssue.submitGitHubIssue": "✅ Submit GitHub Issue",
     "GitHubIssue.pleaseFillThisOut": "Please fill this section out and delete this comment before submitting an issue!",
+    "GitHubIssue.missingFields": "Please provide details of the issue you encountered before clicking Submit GitHub Issue.",
     "GitHubIssue.askForIssueTitle": "Please provide a descriptive title summarizing your issue.",
     "GitHubIssue.titlePlaceholder": "E.g.: Unable to start a local kernel session",
     "InterpreterQuickPickList.quickPickListPlaceholder": "Current: {0}",
