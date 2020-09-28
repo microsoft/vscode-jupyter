@@ -34,7 +34,7 @@ export class JoinMailingListPrompt implements IExtensionSingleActivationService 
         }
 
         let promptContent: string | undefined;
-        if (await this.experiments.inExperiment( Experiments.MailingListVariant1)) {
+        if (await this.experiments.inExperiment(Experiments.MailingListVariant1)) {
             promptContent = await this.experiments.getExperimentValue<string>(Experiments.MailingListVariant1);
         } else if (await this.experiments.inExperiment(Experiments.MailingListVariant2)) {
             promptContent = await this.experiments.getExperimentValue<string>(Experiments.MailingListVariant2);
