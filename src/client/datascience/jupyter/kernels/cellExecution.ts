@@ -427,7 +427,7 @@ export class CellExecution {
         }
     }
 
-    private addToCellData(
+    private async addToCellData(
         output: nbformat.IExecuteResult | nbformat.IDisplayData | nbformat.IStream | nbformat.IError,
         clearState: RefBool
     ) {
