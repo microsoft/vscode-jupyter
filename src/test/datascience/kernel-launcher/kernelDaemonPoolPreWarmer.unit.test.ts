@@ -2,9 +2,10 @@
 // Licensed under the MIT License.
 
 import { anything, instance, mock, verify, when } from 'ts-mockito';
+import { PythonExtensionChecker } from '../../../client/api/pythonApi';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { JupyterSettings } from '../../../client/common/configSettings';
-import { IConfigurationService, IExperimentsManager, IWatchableJupyterSettings } from '../../../client/common/types';
+import { IConfigurationService, IExperimentService, IWatchableJupyterSettings } from '../../../client/common/types';
 import { KernelDaemonPool } from '../../../client/datascience/kernel-launcher/kernelDaemonPool';
 import { KernelDaemonPreWarmer } from '../../../client/datascience/kernel-launcher/kernelDaemonPreWarmer';
 import {
@@ -25,6 +26,7 @@ suite('DataScience - Kernel Daemon Pool PreWarmer', () => {
     let daemonPool: KernelDaemonPool;
     let settings: IWatchableJupyterSettings;
     let vscodeNotebook: IVSCodeNotebook;
+    let extensionChecker: PythonExtensionChecker;
     setup(() => {
         notebookEditorProvider = mock<INotebookEditorProvider>();
         interactiveProvider = mock<IInteractiveWindowProvider>();
@@ -33,8 +35,10 @@ suite('DataScience - Kernel Daemon Pool PreWarmer', () => {
         rawNotebookSupported = mock<IRawNotebookSupportedService>();
         configService = mock<IConfigurationService>();
         vscodeNotebook = mock<IVSCodeNotebook>();
-        const experiment = mock<IExperimentsManager>();
-        when(experiment.inExperiment(anything())).thenReturn(true);
+        const experimentService = mock<IExperimentService>();
+        when(experimentService.inExperiment(anything())).thenResolve(true);
+        extensionChecker = mock(PythonExtensionChecker);
+        when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
 
         // Set up our config settings
         settings = mock(JupyterSettings);
@@ -49,12 +53,20 @@ suite('DataScience - Kernel Daemon Pool PreWarmer', () => {
             instance(daemonPool),
             instance(rawNotebookSupported),
             instance(configService),
-            instance(vscodeNotebook)
+            instance(vscodeNotebook),
+            instance(extensionChecker)
         );
     });
     test('Should not pre-warm daemon pool if ds was never used', async () => {
         when(rawNotebookSupported.supported()).thenResolve(true);
         when(usageTracker.lastPythonNotebookCreated).thenReturn(undefined);
+
+        await prewarmer.activate(undefined);
+
+        verify(daemonPool.preWarmKernelDaemons()).never();
+    });
+    test('Should not pre-warm daemon pool if python is not installed', async () => {
+        when(extensionChecker.isPythonExtensionInstalled).thenReturn(false);
 
         await prewarmer.activate(undefined);
 

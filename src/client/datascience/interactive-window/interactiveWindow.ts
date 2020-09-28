@@ -3,6 +3,7 @@
 import type { nbformat } from '@jupyterlab/coreutils';
 import * as path from 'path';
 import { Event, EventEmitter, Memento, Uri, ViewColumn } from 'vscode';
+import { IPythonExtensionChecker } from '../../api/types';
 import {
     IApplicationShell,
     ICommandManager,
@@ -19,7 +20,6 @@ import {
     IConfigurationService,
     IDisposableRegistry,
     IExperimentService,
-    IExperimentsManager,
     InteractiveWindowMode,
     IPersistentStateFactory,
     Resource
@@ -122,7 +122,6 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         private readonly stateFactory: IPersistentStateFactory,
         globalStorage: Memento,
         workspaceStorage: Memento,
-        experimentsManager: IExperimentsManager,
         notebookProvider: INotebookProvider,
         useCustomEditorApi: boolean,
         expService: IExperimentService,
@@ -130,7 +129,8 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         owner: Resource,
         mode: InteractiveWindowMode,
         title: string | undefined,
-        selector: KernelSelector
+        selector: KernelSelector,
+        private readonly extensionChecker: IPythonExtensionChecker
     ) {
         super(
             listeners,
@@ -164,7 +164,6 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             ],
             localize.DataScience.interactiveWindowTitle(),
             ViewColumn.Two,
-            experimentsManager,
             notebookProvider,
             useCustomEditorApi,
             expService,
@@ -466,6 +465,11 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     @captureTelemetry(Telemetry.ExportNotebookInteractive, undefined, false)
     // tslint:disable-next-line: no-any no-empty
     private async export(cells: ICell[]) {
+        // Export requires the python extension
+        if (!this.extensionChecker.isPythonExtensionInstalled) {
+            return this.extensionChecker.installPythonExtension();
+        }
+
         // Should be an array of cells
         if (cells && this.applicationShell) {
             // Indicate busy
@@ -490,8 +494,12 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     }
 
     private async exportAs(cells: ICell[]) {
-        let model: INotebookModel;
+        // Export requires the python extension
+        if (!this.extensionChecker.isPythonExtensionInstalled) {
+            return this.extensionChecker.installPythonExtension();
+        }
 
+        let model: INotebookModel;
         this.startProgress();
         try {
             model = await this.exportUtil.getModelFromCells(cells);

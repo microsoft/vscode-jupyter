@@ -6,6 +6,7 @@ import * as path from 'path';
 import { CancellationTokenSource, Memento, TextDocument, TextEditor, Uri, WebviewPanel } from 'vscode';
 
 import { CancellationToken } from 'vscode-jsonrpc';
+import { IPythonExtensionChecker } from '../../api/types';
 import {
     IApplicationShell,
     ICommandManager,
@@ -23,7 +24,6 @@ import {
     IConfigurationService,
     IDisposableRegistry,
     IExperimentService,
-    IExperimentsManager,
     IMemento,
     WORKSPACE_MEMENTO
 } from '../../common/types';
@@ -220,7 +220,6 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
             this.serviceContainer.get<IDataScienceErrorHandler>(IDataScienceErrorHandler),
             this.serviceContainer.get<Memento>(IMemento, GLOBAL_MEMENTO),
             this.serviceContainer.get<Memento>(IMemento, WORKSPACE_MEMENTO),
-            this.serviceContainer.get<IExperimentsManager>(IExperimentsManager),
             this.serviceContainer.get<IAsyncDisposableRegistry>(IAsyncDisposableRegistry),
             this.serviceContainer.get<INotebookProvider>(INotebookProvider),
             this.serviceContainer.get<boolean>(UseCustomEditorApi),
@@ -230,7 +229,8 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
             model,
             panel,
             this.serviceContainer.get<KernelSelector>(KernelSelector),
-            this.serviceContainer.get<INotebookExtensibility>(INotebookExtensibility)
+            this.serviceContainer.get<INotebookExtensibility>(INotebookExtensibility),
+            this.serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker)
         );
         this.activeEditors.set(model.file.fsPath, editor);
         this.disposables.push(editor.closed(this.onClosedEditor.bind(this)));

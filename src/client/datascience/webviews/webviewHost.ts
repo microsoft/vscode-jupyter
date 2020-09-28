@@ -12,7 +12,7 @@ import { IConfigurationService, IDisposable, Resource } from '../../common/types
 import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { captureTelemetry } from '../../telemetry';
-import { DefaultTheme, GatherExtension, Telemetry } from '../constants';
+import { DefaultTheme, GatherExtension, PythonExtension, Telemetry } from '../constants';
 import { CssMessages, IGetCssRequest, IGetMonacoThemeRequest, SharedMessages } from '../messages';
 import { ICodeCssGenerator, IJupyterExtraSettings, IThemeFinder } from '../types';
 
@@ -31,7 +31,7 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
         @unmanaged() protected themeFinder: IThemeFinder,
         @unmanaged() protected workspaceService: IWorkspaceService,
         @unmanaged() protected readonly useCustomEditorApi: boolean,
-        @unmanaged() private readonly enableVariablesDuringDebugging: boolean,
+        @unmanaged() private readonly enableVariablesDuringDebugging: Promise<boolean>,
         @unmanaged() private readonly hideKernelToolbarInInteractiveWindow: Promise<boolean>
     ) {
         // Listen for settings changes from vscode.
@@ -105,6 +105,7 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
         const workbench = this.workspaceService.getConfiguration('workbench');
         const theme = !workbench ? DefaultTheme : workbench.get<string>('colorTheme', DefaultTheme);
         const ext = extensions.getExtension(GatherExtension);
+        const pythonExt = extensions.getExtension(PythonExtension);
         const sendableSettings = JSON.parse(JSON.stringify(this.configService.getSettings(resource)));
 
         return {
@@ -126,7 +127,8 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
                     fontFamily: this.getValue(editor, 'fontFamily', "Consolas, 'Courier New', monospace")
                 },
                 theme: theme,
-                useCustomEditorApi: this.useCustomEditorApi
+                useCustomEditorApi: this.useCustomEditorApi,
+                hasPythonExtension: pythonExt !== undefined
             },
             intellisenseOptions: {
                 quickSuggestions: {
@@ -144,7 +146,7 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
                 parameterHintsEnabled: this.getValue(editor, 'parameterHints.enabled', true)
             },
             variableOptions: {
-                enableDuringDebugger: this.enableVariablesDuringDebugging
+                enableDuringDebugger: await this.enableVariablesDuringDebugging
             },
             webviewExperiments: {
                 removeKernelToolbarInInteractiveWindow: await this.hideKernelToolbarInInteractiveWindow

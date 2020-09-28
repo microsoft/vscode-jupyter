@@ -32,7 +32,6 @@ import {
     IConfigurationService,
     IDisposableRegistry,
     IExperimentService,
-    IExperimentsManager,
     Resource
 } from '../../common/types';
 import { StopWatch } from '../../common/utils/stopWatch';
@@ -82,6 +81,7 @@ import type { nbformat } from '@jupyterlab/coreutils';
 import cloneDeep = require('lodash/cloneDeep');
 import { concatMultilineString, splitMultilineString } from '../../../datascience-ui/common';
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
+import { IPythonExtensionChecker } from '../../api/types';
 import { isTestExecution, PYTHON_LANGUAGE } from '../../common/constants';
 import { translateKernelLanguageToMonaco } from '../common';
 import { IDataViewerFactory } from '../data-viewing/types';
@@ -177,7 +177,6 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         errorHandler: IDataScienceErrorHandler,
         globalStorage: Memento,
         workspaceStorage: Memento,
-        experimentsManager: IExperimentsManager,
         asyncRegistry: IAsyncDisposableRegistry,
         notebookProvider: INotebookProvider,
         useCustomEditorApi: boolean,
@@ -186,7 +185,8 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         private _model: INotebookModel,
         webviewPanel: WebviewPanel | undefined,
         selector: KernelSelector,
-        private nbExtensibility: INotebookExtensibility
+        private nbExtensibility: INotebookExtensibility,
+        private extensionChecker: IPythonExtensionChecker
     ) {
         super(
             listeners,
@@ -220,7 +220,6 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             ],
             path.basename(_model.file.fsPath),
             ViewColumn.Active,
-            experimentsManager,
             notebookProvider,
             useCustomEditorApi,
             expService,
@@ -730,6 +729,11 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     }
 
     private async exportAs(): Promise<void> {
+        // Export requires the python extension
+        if (!this.extensionChecker.isPythonExtensionInstalled) {
+            return this.extensionChecker.installPythonExtension();
+        }
+
         const activeEditor = this.editorProvider.activeEditor;
         if (!activeEditor || !activeEditor.model) {
             return;
@@ -766,6 +770,9 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
     @captureTelemetry(Telemetry.RunByLineStart)
     private async handleRunByLine(runByLine: IRunByLine) {
+        if (!this.extensionChecker.isPythonExtensionInstalled) {
+            return this.extensionChecker.installPythonExtension();
+        }
         try {
             // If there's any payload, it has the code and the id
             if (runByLine.cell.id && runByLine.cell.data.cell_type === 'code') {

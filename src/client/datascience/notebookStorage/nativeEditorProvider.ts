@@ -6,6 +6,7 @@ import * as uuid from 'uuid/v4';
 import { Disposable, Event, EventEmitter, Memento, Uri, WebviewPanel } from 'vscode';
 import { CancellationToken } from 'vscode-languageclient/node';
 import { arePathsSame } from '../../../datascience-ui/react-common/arePathsSame';
+import { IPythonExtensionChecker } from '../../api/types';
 import {
     CustomDocument,
     CustomDocumentBackup,
@@ -30,7 +31,6 @@ import {
     IConfigurationService,
     IDisposableRegistry,
     IExperimentService,
-    IExperimentsManager,
     IMemento,
     WORKSPACE_MEMENTO
 } from '../../common/types';
@@ -258,7 +258,6 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
             this.serviceContainer.get<IDataScienceErrorHandler>(IDataScienceErrorHandler),
             this.serviceContainer.get<Memento>(IMemento, GLOBAL_MEMENTO),
             this.serviceContainer.get<Memento>(IMemento, WORKSPACE_MEMENTO),
-            this.serviceContainer.get<IExperimentsManager>(IExperimentsManager),
             this.serviceContainer.get<IAsyncDisposableRegistry>(IAsyncDisposableRegistry),
             this.serviceContainer.get<INotebookProvider>(INotebookProvider),
             this.serviceContainer.get<boolean>(UseCustomEditorApi),
@@ -267,7 +266,8 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
             model,
             panel,
             this.serviceContainer.get<KernelSelector>(KernelSelector),
-            this.serviceContainer.get<INotebookExtensibility>(INotebookExtensibility)
+            this.serviceContainer.get<INotebookExtensibility>(INotebookExtensibility),
+            this.serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker)
         );
         this.openedEditor(editor);
         return editor;
