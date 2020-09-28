@@ -65,10 +65,13 @@ export class GitHubIssueCommandListener implements IDataScienceCommandListener {
             const pleaseFillThisOut = GitHubIssue.pleaseFillThisOut();
             const formatted = `# Steps to cause the bug to occur
 1. <!-- ${pleaseFillThisOut} -->
+
 # Actual behavior
 <!-- ${pleaseFillThisOut} -->
+
 # Expected behavior
 <!-- ${pleaseFillThisOut} -->
+
 # Your Jupyter environment
 Active Python interpreter: ${(await this.interpreterService.getActiveInterpreter(undefined))?.displayName}
 Number of interactive windows: ${this.interactiveWindowProvider?.windows?.length}
@@ -161,7 +164,7 @@ ${'```'}
                 body
             });
             if (response?.data?.html_url) {
-                await this.appShell.showInformationMessage(GitHubIssue.success().format(response.data.html_url));
+                await env.openExternal(Uri.parse(response.data.html_url));
                 this.closeIssueEditorOnSuccess();
             }
         }
