@@ -7,7 +7,7 @@ import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { commands, NotebookEditor as VSCNotebookEditor } from 'vscode';
 import { IApplicationShell, IVSCodeNotebook } from '../../../client/common/application/types';
-import { IConfigurationService, IDataScienceSettings, IDisposable } from '../../../client/common/types';
+import { IConfigurationService, IWatchableJupyterSettings, IDisposable, ReadWrite } from '../../../client/common/types';
 import { createDeferredFromPromise } from '../../../client/common/utils/async';
 import { noop } from '../../../client/common/utils/misc';
 import { IKernelProvider } from '../../../client/datascience/jupyter/kernels/types';
@@ -46,7 +46,7 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
     let vscodeNotebook: IVSCodeNotebook;
     const suiteDisposables: IDisposable[] = [];
     let oldAskForRestart: boolean | undefined;
-    let dsSettings: IDataScienceSettings;
+    let dsSettings: ReadWrite<IWatchableJupyterSettings>;
     suiteSetup(async function () {
         this.timeout(60_000);
         api = await initialize();
@@ -59,8 +59,7 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
         editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
         kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
-        dsSettings = api.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(undefined)
-            .datascience;
+        dsSettings = api.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(undefined);
         oldAskForRestart = dsSettings.askForKernelRestart;
         // Disable the prompt (when attempting to restart kernel).
         dsSettings.askForKernelRestart = false;
@@ -81,7 +80,7 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         await closeNotebooksAndCleanUpAfterTests(disposables.concat(suiteDisposables));
     });
 
-    test('Cancelling token will cancel cell executionxxx', async () => {
+    test('Cancelling token will cancel cell execution', async () => {
         await insertPythonCellAndWait('import time\nfor i in range(10000):\n  print(i)\n  time.sleep(0.1)', 0);
         const cell = vscEditor.document.cells[0];
         const appShell = api.serviceContainer.get<IApplicationShell>(IApplicationShell);
@@ -115,7 +114,7 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
             assertVSCCellHasErrors(cell);
         }
     });
-    test('Restarting kernel will cancel cell execution & we can re-run a cellxxx', async () => {
+    test('Restarting kernel will cancel cell execution & we can re-run a cell', async () => {
         await insertPythonCellAndWait('import time\nfor i in range(10000):\n  print(i)\n  time.sleep(0.1)', 0);
         const cell = vscEditor.document.cells[0];
 
