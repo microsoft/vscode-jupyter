@@ -7,7 +7,7 @@ import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { commands, NotebookEditor as VSCNotebookEditor } from 'vscode';
 import { IApplicationShell, IVSCodeNotebook } from '../../../client/common/application/types';
-import { IConfigurationService, IWatchableJupyterSettings, IDisposable, ReadWrite } from '../../../client/common/types';
+import { IConfigurationService, IDisposable, IWatchableJupyterSettings, ReadWrite } from '../../../client/common/types';
 import { createDeferredFromPromise } from '../../../client/common/utils/async';
 import { noop } from '../../../client/common/utils/misc';
 import { IKernelProvider } from '../../../client/datascience/jupyter/kernels/types';
