@@ -122,10 +122,14 @@ ${'```'}
             });
             if (response?.data?.html_url) {
                 await this.appShell.showInformationMessage(GitHubIssue.success().format(response.data.html_url));
-                if (window.activeTextEditor?.document === this.issueTextDocument) {
-                    this.commandManager.executeCommand('workbench.action.closeActiveEditor');
-                }
+                this.closeIssueEditorOnSuccess();
             }
+        }
+    }
+
+    private closeIssueEditorOnSuccess() {
+        if (window.activeTextEditor?.document === this.issueTextDocument) {
+            this.commandManager.executeCommand('workbench.action.closeActiveEditor');
         }
     }
 
@@ -135,6 +139,7 @@ ${'```'}
         if (selection === prompt) {
             await env.clipboard.writeText(issueBody);
             await env.openExternal(Uri.parse('https://github.com/microsoft/vscode-jupyter/issues/new'));
+            this.closeIssueEditorOnSuccess();
         }
     }
 
