@@ -81,10 +81,6 @@ export namespace OutputChannelNames {
 }
 
 export namespace GitHubIssue {
-    export const success = localize(
-        'GitHubIssue.Success',
-        'Your GitHub issue was successfully created! View it [here]({0}).'
-    );
     export const failure = localize(
         'GitHubIssue.Failure',
         'We encountered an error while submitting your GitHub issue. Would you still like to report an issue?'
@@ -107,7 +103,8 @@ export namespace GitHubIssue {
     );
     export const missingFields = localize(
         'GitHubIssue.missingFields',
-        'Please provide details of the issue you encountered before clicking Submit GitHub Issue.');
+        'Please provide details of the issue you encountered before clicking Submit GitHub Issue.'
+    );
     export const submitGitHubIssue = localize('GitHubIssue.submitGitHubIssue', '✅ Submit GitHub Issue');
 }
 
