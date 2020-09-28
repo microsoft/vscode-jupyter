@@ -10,7 +10,6 @@ import { IImportTracker } from '../telemetry/types';
 import { ActiveResourceService } from './application/activeResource';
 import { ApplicationEnvironment } from './application/applicationEnvironment';
 import { ClipboardService } from './application/clipboard';
-import { CommandManager } from './application/commandManager';
 import { ReloadVSCodeCommandHandler } from './application/commands/reloadCommand';
 import { CustomEditorService } from './application/customEditorService';
 import { DebugService } from './application/debugService';
@@ -22,7 +21,6 @@ import {
     IActiveResourceService,
     IApplicationEnvironment,
     IClipboard,
-    ICommandManager,
     ICustomEditorService,
     IDebugService,
     IDocumentManager,
@@ -91,7 +89,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IClipboard>(IClipboard, ClipboardService);
     serviceManager.addSingleton<ICurrentProcess>(ICurrentProcess, CurrentProcess);
     serviceManager.addSingleton<IInstaller>(IInstaller, ProductInstaller);
-    serviceManager.addSingleton<ICommandManager>(ICommandManager, CommandManager);
     serviceManager.addSingleton<IProcessLogger>(IProcessLogger, ProcessLogger);
     serviceManager.addSingleton<IDocumentManager>(IDocumentManager, DocumentManager);
     serviceManager.addSingleton<IDebugService>(IDebugService, DebugService);

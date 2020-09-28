@@ -1,9 +1,10 @@
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
 import { Memento } from 'vscode';
-import { IApplicationShell } from '../common/application/types';
+import { IApplicationShell, ICommandManager } from '../common/application/types';
 import { GLOBAL_MEMENTO, IConfigurationService, IExtensionContext, IMemento } from '../common/types';
 import { Logging } from '../common/utils/localize';
+import { Commands } from '../datascience/constants';
 import { IDataScienceFileSystem, IDebugLoggingManager } from '../datascience/types';
 import { addLogfile } from './_global';
 import { LogLevel } from './levels';
@@ -18,6 +19,7 @@ export class DebugLoggingManager implements IDebugLoggingManager {
         @inject(IMemento) @named(GLOBAL_MEMENTO) private globalState: Memento,
         @inject(IApplicationShell) private appShell: IApplicationShell,
         @inject(IConfigurationService) private configService: IConfigurationService,
+        @inject(ICommandManager) private commandManager: ICommandManager,
         @inject(IExtensionContext) private extensionContext: IExtensionContext
     ) {
         this.logfilePath = path.join(this.extensionContext.globalStoragePath, 'log.txt');
@@ -43,7 +45,12 @@ export class DebugLoggingManager implements IDebugLoggingManager {
     }
 
     private async warnUserAboutLoggingToFile() {
-        this.appShell.showWarningMessage(Logging.warnUserAboutDebugLoggingSetting());
+        const prompt = Logging.bannerYesTurnOffDebugLogging();
+        this.appShell.showWarningMessage(Logging.warnUserAboutDebugLoggingSetting(), ...[prompt]).then((selection) => {
+            if (selection === prompt) {
+                this.commandManager.executeCommand(Commands.ResetLoggingLevel);
+            }
+        });
         await this.configureLoggingToFile();
     }
 }

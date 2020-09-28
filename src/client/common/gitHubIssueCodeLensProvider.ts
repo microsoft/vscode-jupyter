@@ -1,12 +1,20 @@
-import { injectable } from 'inversify';
-import { CancellationToken, CodeLens, Position, Range, TextDocument } from 'vscode';
+import { inject, injectable } from 'inversify';
+import { CancellationToken, CodeLens, languages, Position, Range, TextDocument } from 'vscode';
+import { IExtensionSingleActivationService } from '../activation/types';
 import { Commands } from '../datascience/constants';
 import { generateCommand } from '../datascience/editor-integration/codeLensFactory';
-import { IGitHubIssueCodeLensProvider } from '../datascience/types';
+import { GITHUB_ISSUE_MARKDOWN_FILE } from './constants';
+import { IExtensionContext } from './types';
 import { GitHubIssue } from './utils/localize';
 
 @injectable()
-export class GitHubIssueCodeLensProvider implements IGitHubIssueCodeLensProvider {
+export class GitHubIssueCodeLensProvider implements IExtensionSingleActivationService {
+    constructor(@inject(IExtensionContext) private extensionContext: IExtensionContext) {}
+
+    public async activate() {
+        this.extensionContext.subscriptions.push(languages.registerCodeLensProvider(GITHUB_ISSUE_MARKDOWN_FILE, this));
+    }
+
     public provideCodeLenses(document: TextDocument, _token: CancellationToken): CodeLens[] {
         const command = generateCommand(Commands.SubmitGitHubIssue, GitHubIssue.submitGitHubIssue());
         const codelenses: CodeLens[] = [];

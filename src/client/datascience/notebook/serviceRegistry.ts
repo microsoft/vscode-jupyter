@@ -4,6 +4,7 @@
 'use strict';
 
 import { IExtensionSingleActivationService } from '../../activation/types';
+import { GitHubIssueCodeLensProvider } from '../../common/gitHubIssueCodeLensProvider';
 import { IServiceManager } from '../../ioc/types';
 import { KernelProvider } from '../jupyter/kernels/kernelProvider';
 import { IKernelProvider } from '../jupyter/kernels/types';
@@ -31,5 +32,9 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         NotebookSurveyDataLogger
+    );
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        GitHubIssueCodeLensProvider
     );
 }

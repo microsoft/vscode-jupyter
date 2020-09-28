@@ -4,7 +4,6 @@
 import { IExtensionSingleActivationService } from '../activation/types';
 import { UseCustomEditorApi, UseVSCodeNotebookEditorApi } from '../common/constants';
 import { NotebookEditorSupport } from '../common/experiments/groups';
-import { GitHubIssueCodeLensProvider } from '../common/gitHubIssueCodeLensProvider';
 import { FileSystemPathUtils } from '../common/platform/fs-paths';
 import { IFileSystemPathUtils } from '../common/platform/types';
 import { IExperimentsManager } from '../common/types';
@@ -144,7 +143,6 @@ import {
     IDebugLocationTracker,
     IDigestStorage,
     IGatherLogger,
-    IGitHubIssueCodeLensProvider,
     IInteractiveWindow,
     IInteractiveWindowListener,
     IInteractiveWindowProvider,
@@ -244,7 +242,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<ICodeLensFactory>(ICodeLensFactory, CodeLensFactory, undefined, [IInteractiveWindowListener]);
     serviceManager.addSingleton<IDataScience>(IDataScience, DataScience);
     serviceManager.addSingleton<IDataScienceCodeLensProvider>(IDataScienceCodeLensProvider, DataScienceCodeLensProvider);
-    serviceManager.addSingleton<IGitHubIssueCodeLensProvider>(IGitHubIssueCodeLensProvider, GitHubIssueCodeLensProvider);
     serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, InteractiveWindowCommandListener);
     serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, NativeEditorCommandListener);
     serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, GitHubIssueCommandListener);
