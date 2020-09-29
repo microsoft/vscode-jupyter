@@ -21,7 +21,7 @@ env:
   COVERAGE_REPORTS: tests-coverage-reports
   CI_PYTHON_PATH: python
   TEST_RESULTS_DIRECTORY: .
-  TEST_RESULTS_GLOB: '**/test*.xml'
+  TEST_RESULTS_GLOB: '**/test-results.xml'
   # Set this to true to produce more output from actions
   ACTIONS_RUNNER_DEBUG: true
 
