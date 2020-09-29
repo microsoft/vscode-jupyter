@@ -351,6 +351,12 @@ jobs:
           VSC_PYTHON_FORCE_LOGGING: 1
         if: matrix.test-suite == 'functional-with-jupyter' || (matrix.test-suite == 'test-based-on-pr-body' && contains(github.event.pull_request.body, '[x] Run functional-with-jupyter test'))
 
+      - name: Upload test results
+        uses: actions/upload-artifact@v2
+        with: 
+          name: test-results.xml
+          path: ${{ env.TEST_RESULTS_GLOB }} 
+        
       - name: Publish Test Report
         uses: scacap/action-surefire-report@v1
         with:
