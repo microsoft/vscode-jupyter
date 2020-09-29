@@ -21,6 +21,7 @@ env:
   COVERAGE_REPORTS: tests-coverage-reports
   CI_PYTHON_PATH: python
   TEST_RESULTS_DIRECTORY: .
+  TEST_RESULTS_GLOB: '**/test*.xml'
 
 jobs:
   build-vsix:
@@ -194,7 +195,7 @@ jobs:
         uses: scacap/action-surefire-report@v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}       
-          report_paths: ${{ env.TEST_RESULTS_DIRECTORY }} 
+          report_paths: ${{ env.TEST_RESULTS_GLOB }} 
 
   tests:
     name: Tests (with Python)
