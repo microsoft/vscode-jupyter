@@ -11,13 +11,13 @@ jobs:
       - name: Created internally
         id: internal
         env:
-            ISSUE_OWNER: ${{github.event.issue.owner.login}}
+            ISSUE_OWNER: ${{github.event.issue.user.login}}
         run: |
           echo ::set-output name=result::$(node -p -e "['rchiodo', 'greazer', 'joyceerhl', 'DavidKutu', 'claudiaregio', 'IanMatthewHuff', 'DonJayamanne'].filter(item => process.env.ISSUE_OWNER.toLowerCase() === item.toLowerCase()).length > 0 ? 1 : 0")
         shell: bash
       - name: Debug
         run: |
-          echo ${{github.event.issue.owner.login}}
+          echo ${{github.event.issue.user.login}}
           echo ${{steps.internal.outputs.result}}
         shell: bash
       - name: Should we proceed
