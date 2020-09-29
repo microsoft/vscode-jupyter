@@ -11,10 +11,9 @@ jobs:
       - name: Should we proceed
         id: proceed
         env:
-            ISSUE_LABELS: ${{toJson(github.event.issue.labels)}}
             ISSUE_ASSIGNEES: ${{toJson(github.event.issue.assignees)}}
         run: |
-          echo ::set-output name=result::$(node -p -e "JSON.parse(process.env.ISSUE_ASSIGNEES).length === 0 && JSON.parse(process.env.ISSUE_LABELS).filter(item => item.name.indexOf('data science') >= 0).length === 1 ? 1 : 0")
+          echo ::set-output name=result::$(node -p -e "JSON.parse(process.env.ISSUE_ASSIGNEES).length === 0 ? 1 : 0")
         shell: bash
       - uses: actions/checkout@v2
         if: steps.proceed.outputs.result == 1
