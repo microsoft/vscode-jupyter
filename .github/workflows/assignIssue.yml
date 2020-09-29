@@ -99,7 +99,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          args: assign DonJayamanne
+          args: assign IanMatthewHuff
       - name: Wednesday (Rich)
         if: steps.proceed.outputs.result == 1 && (steps.day.outputs.number == 2 && steps.hour.outputs.hour >= 16) || (steps.day.outputs.number == 3 && steps.hour.outputs.hour < 16)
         uses: actions/github@v1.0.0
