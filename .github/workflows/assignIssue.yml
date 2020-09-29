@@ -6,7 +6,7 @@ jobs:
   assignIssue:
     name: Assign Issue to Someone
     runs-on: ubuntu-latest
-    if: github.repository == 'microsoft/vscode-jupyter'
+    # if: github.repository == 'microsoft/vscode-jupyter'
     steps:
       - name: Created internally
         id: internal
@@ -105,7 +105,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          args: assign IanMatthewHuff
+          args: assign DonJayamanne
       - name: Wednesday (Rich)
         if: steps.proceed.outputs.result == 1 && (steps.day.outputs.number == 2 && steps.hour.outputs.hour >= 16) || (steps.day.outputs.number == 3 && steps.hour.outputs.hour < 16)
         uses: actions/github@v1.0.0
