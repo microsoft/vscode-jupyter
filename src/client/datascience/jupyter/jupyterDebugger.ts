@@ -5,7 +5,6 @@ import type { nbformat } from '@jupyterlab/coreutils';
 import { inject, injectable, named } from 'inversify';
 // tslint:disable-next-line: no-require-imports
 import unescape = require('lodash/unescape');
-import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import { DebugConfiguration, Disposable } from 'vscode';
 import * as vsls from 'vsls/vscode';
