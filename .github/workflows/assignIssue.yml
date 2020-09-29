@@ -1,7 +1,7 @@
 name: Assign to someone
 on:
   issues:
-    types: [opened, labeled]
+    types: [opened]
 jobs:
   assignIssue:
     name: Assign Issue to Someone
