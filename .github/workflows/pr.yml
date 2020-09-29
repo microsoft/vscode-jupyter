@@ -190,6 +190,12 @@ jobs:
       - name: Run TypeScript unit tests
         run: npm run test:unittests:cover
 
+      - name: Publish Test Report
+        uses: scacap/action-surefire-report@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}       
+          report_paths: ${{ env.TEST_RESULTS_DIRECTORY }} 
+
   tests:
     name: Tests (with Python)
     runs-on: ${{ matrix.os }}
@@ -343,6 +349,12 @@ jobs:
           VSCODE_PYTHON_ROLLING: 1
           VSC_PYTHON_FORCE_LOGGING: 1
         if: matrix.test-suite == 'functional-with-jupyter' || (matrix.test-suite == 'test-based-on-pr-body' && contains(github.event.pull_request.body, '[x] Run functional-with-jupyter test'))
+
+      - name: Publish Test Report
+        uses: scacap/action-surefire-report@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}       
+          report_paths: ${{ env.TEST_RESULTS_DIRECTORY }} 
 
       - name: Run DataScience tests with VSCode & Jupyter
         uses: GabrielBB/xvfb-action@v1.4
