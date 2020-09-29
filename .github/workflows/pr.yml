@@ -195,6 +195,7 @@ jobs:
 
       - name: Publish Test Report
         uses: scacap/action-surefire-report@v1
+        if: ${{ always() }}
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}       
           report_paths: ${{ env.TEST_RESULTS_GLOB }} 
@@ -360,7 +361,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}       
           report_paths: ${{ env.TEST_RESULTS_GLOB }} 
           check_name: Functional Test Report
-        if: matrix.test-suite == 'functional' || matrix.test-suite == 'functional-with-jupyter'
+        if: (matrix.test-suite == 'functional' || matrix.test-suite == 'functional-with-jupyter') && ${{ always() }}
 
       - name: Run DataScience tests with VSCode & Jupyter
         uses: GabrielBB/xvfb-action@v1.4
