@@ -355,7 +355,7 @@ jobs:
         uses: scacap/action-surefire-report@v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}       
-          report_paths: ${{ env.TEST_RESULTS_DIRECTORY }} 
+          report_paths: ${{ env.TEST_RESULTS_GLOB }} 
 
       - name: Run DataScience tests with VSCode & Jupyter
         uses: GabrielBB/xvfb-action@v1.4
