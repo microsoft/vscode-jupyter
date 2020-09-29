@@ -168,4 +168,4 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}       
           report_paths: ${{ env.TEST_RESULTS_GLOB }} 
           check_name: Functional Test Report
-        if: (matrix.test-suite == 'functional' || matrix.test-suite == 'functional-with-jupyter') && ${{ always() }}
+        if: (matrix.test-suite == 'functional' || matrix.test-suite == 'functional-with-jupyter') && ${{ failure() }}
