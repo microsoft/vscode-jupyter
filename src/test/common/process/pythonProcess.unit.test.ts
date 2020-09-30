@@ -5,10 +5,10 @@ import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
-import { IFileSystem } from '../../../client/common/platform/types';
 import { createPythonEnv } from '../../../client/common/process/pythonEnvironment';
 import { createPythonProcessService } from '../../../client/common/process/pythonProcess';
 import { IProcessService, StdErrError } from '../../../client/common/process/types';
+import { IDataScienceFileSystem } from '../../../client/datascience/types';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
 import { noop } from '../../core';
 
@@ -19,12 +19,12 @@ use(chaiAsPromised);
 // tslint:disable-next-line: max-func-body-length
 suite('PythonProcessService', () => {
     let processService: TypeMoq.IMock<IProcessService>;
-    let fileSystem: TypeMoq.IMock<IFileSystem>;
+    let fileSystem: TypeMoq.IMock<IDataScienceFileSystem>;
     const pythonPath = 'path/to/python';
 
     setup(() => {
         processService = TypeMoq.Mock.ofType<IProcessService>(undefined, TypeMoq.MockBehavior.Strict);
-        fileSystem = TypeMoq.Mock.ofType<IFileSystem>(undefined, TypeMoq.MockBehavior.Strict);
+        fileSystem = TypeMoq.Mock.ofType<IDataScienceFileSystem>(undefined, TypeMoq.MockBehavior.Strict);
     });
 
     test('execObservable should call processService.execObservable', () => {

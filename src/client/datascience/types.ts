@@ -1399,6 +1399,7 @@ export interface IDataScienceFileSystem {
     readFile(uri: Uri): Promise<string>;
     stat(uri: Uri): Promise<FileStat>;
     writeFile(uri: Uri, text: string | Buffer): Promise<void>;
+    getFiles(dir: Uri): Promise<Uri[]>;
 }
 export interface ISwitchKernelOptions {
     identity: Resource;

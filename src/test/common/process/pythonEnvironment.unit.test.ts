@@ -8,13 +8,13 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as path from 'path';
 import { SemVer } from 'semver';
 import * as TypeMoq from 'typemoq';
-import { IFileSystem } from '../../../client/common/platform/types';
 import {
     createCondaEnv,
     createPythonEnv,
     createWindowsStoreEnv
 } from '../../../client/common/process/pythonEnvironment';
 import { IProcessService, StdErrError } from '../../../client/common/process/types';
+import { IDataScienceFileSystem } from '../../../client/datascience/types';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
 
 const isolated = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'pythonFiles', 'pyvsc-run-isolated.py');
@@ -23,12 +23,12 @@ use(chaiAsPromised);
 
 suite('PythonEnvironment', () => {
     let processService: TypeMoq.IMock<IProcessService>;
-    let fileSystem: TypeMoq.IMock<IFileSystem>;
+    let fileSystem: TypeMoq.IMock<IDataScienceFileSystem>;
     const pythonPath = 'path/to/python';
 
     setup(() => {
         processService = TypeMoq.Mock.ofType<IProcessService>(undefined, TypeMoq.MockBehavior.Strict);
-        fileSystem = TypeMoq.Mock.ofType<IFileSystem>(undefined, TypeMoq.MockBehavior.Strict);
+        fileSystem = TypeMoq.Mock.ofType<IDataScienceFileSystem>(undefined, TypeMoq.MockBehavior.Strict);
     });
 
     test('getInterpreterInformation should return an object if the python path is valid', async () => {
@@ -133,7 +133,7 @@ suite('PythonEnvironment', () => {
     });
 
     test('getExecutablePath should return pythonPath if pythonPath is a file', async () => {
-        fileSystem.setup((f) => f.fileExists(pythonPath)).returns(() => Promise.resolve(true));
+        fileSystem.setup((f) => f.localFileExists(pythonPath)).returns(() => Promise.resolve(true));
         const env = createPythonEnv(pythonPath, processService.object, fileSystem.object);
 
         const result = await env.getExecutablePath();
@@ -143,7 +143,7 @@ suite('PythonEnvironment', () => {
 
     test('getExecutablePath should not return pythonPath if pythonPath is not a file', async () => {
         const executablePath = 'path/to/dummy/executable';
-        fileSystem.setup((f) => f.fileExists(pythonPath)).returns(() => Promise.resolve(false));
+        fileSystem.setup((f) => f.localFileExists(pythonPath)).returns(() => Promise.resolve(false));
         const argv = [isolated, '-c', 'import sys;print(sys.executable)'];
         processService
             .setup((p) => p.exec(pythonPath, argv, { throwOnStdErr: true }))
@@ -157,7 +157,7 @@ suite('PythonEnvironment', () => {
 
     test('getExecutablePath should throw if the result of exec() writes to stderr', async () => {
         const stderr = 'bar';
-        fileSystem.setup((f) => f.fileExists(pythonPath)).returns(() => Promise.resolve(false));
+        fileSystem.setup((f) => f.localFileExists(pythonPath)).returns(() => Promise.resolve(false));
         const argv = [isolated, '-c', 'import sys;print(sys.executable)'];
         processService
             .setup((p) => p.exec(pythonPath, argv, { throwOnStdErr: true }))
@@ -224,14 +224,14 @@ suite('PythonEnvironment', () => {
 
 suite('CondaEnvironment', () => {
     let processService: TypeMoq.IMock<IProcessService>;
-    let fileSystem: TypeMoq.IMock<IFileSystem>;
+    let fileSystem: TypeMoq.IMock<IDataScienceFileSystem>;
     const args = ['-a', 'b', '-c'];
     const pythonPath = 'path/to/python';
     const condaFile = 'path/to/conda';
 
     setup(() => {
         processService = TypeMoq.Mock.ofType<IProcessService>(undefined, TypeMoq.MockBehavior.Strict);
-        fileSystem = TypeMoq.Mock.ofType<IFileSystem>(undefined, TypeMoq.MockBehavior.Strict);
+        fileSystem = TypeMoq.Mock.ofType<IDataScienceFileSystem>(undefined, TypeMoq.MockBehavior.Strict);
     });
 
     test('getExecutionInfo with a named environment should return execution info using the environment name', () => {

@@ -8,7 +8,7 @@ import { LanguageConfiguration } from 'vscode';
 import { EXTENSION_ROOT_DIR, PYTHON_LANGUAGE } from '../common/constants';
 import { traceError } from '../common/logger';
 
-import { ICurrentProcess, IExtensions } from '../common/types';
+import { IExtensions } from '../common/types';
 import { getLanguageConfiguration } from '../language/languageConfiguration';
 import { IDataScienceFileSystem, IThemeFinder } from './types';
 
@@ -26,7 +26,6 @@ export class ThemeFinder implements IThemeFinder {
 
     constructor(
         @inject(IExtensions) private extensions: IExtensions,
-        @inject(ICurrentProcess) private currentProcess: ICurrentProcess,
         @inject(IDataScienceFileSystem) private fs: IDataScienceFileSystem
     ) {}
 
@@ -115,7 +114,7 @@ export class ThemeFinder implements IThemeFinder {
     }
 
     private async findMatchingLanguage(language: string): Promise<string | undefined> {
-        const currentExe = this.currentProcess.execPath;
+        const currentExe = process.execPath;
         let currentPath = path.dirname(currentExe);
 
         // Should be somewhere under currentPath/resources/app/extensions inside of a json file
@@ -141,7 +140,7 @@ export class ThemeFinder implements IThemeFinder {
 
     private async findMatchingLanguageConfiguration(language: string): Promise<LanguageConfiguration> {
         try {
-            const currentExe = this.currentProcess.execPath;
+            const currentExe = process.execPath;
             let currentPath = path.dirname(currentExe);
 
             // Should be somewhere under currentPath/resources/app/extensions inside of a json file
@@ -204,7 +203,7 @@ export class ThemeFinder implements IThemeFinder {
 
         // If didn't find in the extensions folder, then try searching manually. This shouldn't happen, but
         // this is our backup plan in case vscode changes stuff.
-        const currentExe = this.currentProcess.execPath;
+        const currentExe = process.execPath;
         let currentPath = path.dirname(currentExe);
 
         // Should be somewhere under currentPath/resources/app/extensions inside of a json file

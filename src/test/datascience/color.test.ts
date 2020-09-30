@@ -7,7 +7,6 @@ import { WorkspaceConfiguration } from 'vscode';
 
 import { Extensions } from '../../client/common/application/extensions';
 import { IWorkspaceService } from '../../client/common/application/types';
-import { CurrentProcess } from '../../client/common/process/currentProcess';
 import { IConfigurationService } from '../../client/common/types';
 import { CodeCssGenerator } from '../../client/datascience/codeCssGenerator';
 import { DataScienceFileSystem } from '../../client/datascience/dataScienceFileSystem';
@@ -19,7 +18,6 @@ import { MockJupyterSettings } from './mockJupyterSettings';
 suite('Theme colors', () => {
     let themeFinder: ThemeFinder;
     let extensions: Extensions;
-    let currentProcess: CurrentProcess;
     let workspaceService: TypeMoq.IMock<IWorkspaceService>;
     let workspaceConfig: TypeMoq.IMock<WorkspaceConfiguration>;
     let cssGenerator: CodeCssGenerator;
@@ -28,9 +26,8 @@ suite('Theme colors', () => {
 
     setup(() => {
         extensions = new Extensions();
-        currentProcess = new CurrentProcess();
         const fs = new DataScienceFileSystem();
-        themeFinder = new ThemeFinder(extensions, currentProcess, fs);
+        themeFinder = new ThemeFinder(extensions, fs);
 
         workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
         workspaceConfig

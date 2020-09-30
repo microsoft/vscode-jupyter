@@ -137,6 +137,11 @@ export class DataScienceFileSystem implements IDataScienceFileSystem {
         return Array.isArray(found) ? found : [];
     }
 
+    public async getFiles(dir: Uri): Promise<Uri[]> {
+        const files = await this.vscfs.readDirectory(dir);
+        return files.filter((f) => f[1] === FileType.File).map((f) => Uri.file(f[0]));
+    }
+
     public async writeLocalFile(filename: string, text: string | Buffer): Promise<void> {
         const uri = Uri.file(filename);
         return this.writeFile(uri, text);

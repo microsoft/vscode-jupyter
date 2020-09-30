@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 import { inject, injectable } from 'inversify';
 import { IPlatformService } from '../../common/platform/types';
+import { IDataScienceFileSystem } from '../../datascience/types';
 import { IEnvironmentActivationService } from '../../interpreter/activation/types';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IWindowsStoreInterpreter } from '../../interpreter/locators/types';
@@ -9,7 +10,6 @@ import { IServiceContainer } from '../../ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { traceError } from '../logger';
-import { IFileSystem } from '../platform/types';
 import { IDisposable, IDisposableRegistry, Resource } from '../types';
 import { ProcessService } from './proc';
 import { PythonDaemonFactory } from './pythonDaemonFactory';
@@ -38,7 +38,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
     private readonly daemonsPerPythonService = new Map<string, Promise<IPythonDaemonExecutionService>>();
     private readonly disposables: IDisposableRegistry;
     private readonly logger: IProcessLogger;
-    private readonly fileSystem: IFileSystem;
+    private readonly fileSystem: IDataScienceFileSystem;
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(IEnvironmentActivationService) private readonly activationHelper: IEnvironmentActivationService,
@@ -51,7 +51,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         // Acquire other objects here so that if we are called during dispose they are available.
         this.disposables = this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
         this.logger = this.serviceContainer.get<IProcessLogger>(IProcessLogger);
-        this.fileSystem = this.serviceContainer.get<IFileSystem>(IFileSystem);
+        this.fileSystem = this.serviceContainer.get<IDataScienceFileSystem>(IDataScienceFileSystem);
     }
     public async create(options: ExecutionFactoryCreationOptions): Promise<IPythonExecutionService> {
         const pythonPath = options.pythonPath ? options.pythonPath : await this.getPythonPath(options.resource);
@@ -172,7 +172,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
 function createPythonService(
     pythonPath: string,
     procService: IProcessService,
-    fs: IFileSystem,
+    fs: IDataScienceFileSystem,
     conda?: [
         string,
         {
