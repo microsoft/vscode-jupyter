@@ -5,7 +5,7 @@ import { IApplicationShell, ICommandManager } from '../common/application/types'
 import { GLOBAL_MEMENTO, IConfigurationService, IExtensionContext, IMemento } from '../common/types';
 import { Logging } from '../common/utils/localize';
 import { Commands } from '../datascience/constants';
-import { IFileSystem, IDebugLoggingManager } from '../datascience/types';
+import { IDebugLoggingManager, IFileSystem } from '../datascience/types';
 import { addLogfile } from './_global';
 import { LogLevel } from './levels';
 

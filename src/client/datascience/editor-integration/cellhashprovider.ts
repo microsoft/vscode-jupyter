@@ -21,8 +21,8 @@ import {
     ICellHash,
     ICellHashListener,
     ICellHashProvider,
-    IFileSystem,
     IFileHashes,
+    IFileSystem,
     INotebook,
     INotebookExecutionLogger
 } from '../types';

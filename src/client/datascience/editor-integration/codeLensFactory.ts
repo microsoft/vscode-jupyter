@@ -18,8 +18,8 @@ import {
     ICellHashProvider,
     ICellRange,
     ICodeLensFactory,
-    IFileSystem,
     IFileHashes,
+    IFileSystem,
     IInteractiveWindowListener,
     INotebook,
     INotebookProvider

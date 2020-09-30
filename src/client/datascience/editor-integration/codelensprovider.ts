@@ -12,7 +12,7 @@ import { StopWatch } from '../../common/utils/stopWatch';
 import { IServiceContainer } from '../../ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { CodeLensCommands, EditorContexts, Telemetry } from '../constants';
-import { ICodeWatcher, IDataScienceCodeLensProvider, IFileSystem, IDebugLocationTracker } from '../types';
+import { ICodeWatcher, IDataScienceCodeLensProvider, IDebugLocationTracker, IFileSystem } from '../types';
 
 @injectable()
 export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider, IDisposable {

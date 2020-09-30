@@ -23,8 +23,8 @@ import { NotebookProvider } from '../../../client/datascience/interactive-common
 import {
     ICodeWatcher,
     IDataScienceErrorHandler,
-    IFileSystem,
     IDebugLocationTracker,
+    IFileSystem,
     IInteractiveWindow,
     IInteractiveWindowProvider,
     INotebook

@@ -7,7 +7,7 @@ import { traceError, traceInfo } from '../../common/logger';
 import { isFileNotFoundError } from '../../common/platform/errors';
 import { IExtensionContext } from '../../common/types';
 import { MigrateDigestStorage } from '../../migration/migrateDigestStorage';
-import { IFileSystem, IDigestStorage } from '../types';
+import { IDigestStorage, IFileSystem } from '../types';
 
 @injectable()
 export class DigestStorage implements IDigestStorage {
