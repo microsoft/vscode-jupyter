@@ -170,5 +170,5 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}       
           report_paths: ${{ env.TEST_RESULTS_GLOB }} 
           check_name: Functional Test Report
-        if: steps.test_functional.outcome == 'failure' || steps.test_functional_jupyter.outcome == 'failure'
+        if: (steps.test_functional.outcome == 'failure' || steps.test_functional_jupyter.outcome == 'failure') && failure()
 
