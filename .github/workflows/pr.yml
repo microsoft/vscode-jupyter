@@ -23,7 +23,7 @@ env:
   TEST_RESULTS_DIRECTORY: .
   TEST_RESULTS_GLOB: '**/test-results.xml'
   # Set this to true to produce more output from actions
-  ACTIONS_RUNNER_DEBUG: false
+  ACTIONS_RUNNER_DEBUG: true
 
 jobs:
   build-vsix:
@@ -351,7 +351,7 @@ jobs:
         if: matrix.test-suite == 'single-workspace' || (matrix.test-suite == 'test-based-on-pr-body' && contains(github.event.pull_request.body, '[x] Run single-workspace test'))
 
       - name: Run functional tests with Jupyter
-        run: npm run test:functional
+        run: npm run test:functional -- --grep="MimeTypes"
         id: test_functional_jupyter
         env:
           VSCODE_PYTHON_ROLLING: 1
