@@ -18,14 +18,14 @@ import { noop } from '../utils/misc';
 export class FileDownloader implements IFileDownloader {
     constructor(
         @inject(IHttpClient) private readonly httpClient: IHttpClient,
-        @inject(IDataScienceFileSystem) private readonly fs: IDataScienceFileSystem,
+        @inject(IDataScienceFileSystem) private readonly dsfs: IDataScienceFileSystem,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell
     ) {}
     public async downloadFile(uri: string, options: DownloadOptions): Promise<string> {
         if (options.outputChannel) {
             options.outputChannel.appendLine(Http.downloadingFile().format(uri));
         }
-        const tempFile = await this.fs.createTemporaryLocalFile(options.extension);
+        const tempFile = await this.dsfs.createTemporaryLocalFile(options.extension);
 
         await this.downloadFileWithStatusBarProgress(uri, options.progressMessagePrefix, tempFile.filePath).then(
             noop,

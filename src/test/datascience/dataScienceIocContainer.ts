@@ -67,6 +67,7 @@ import { BrowserService } from '../../client/common/net/browser';
 import { HttpClient } from '../../client/common/net/httpClient';
 import { IS_WINDOWS } from '../../client/common/platform/constants';
 import { PathUtils } from '../../client/common/platform/pathUtils';
+import { PlatformService } from '../../client/common/platform/platformService';
 import { IPlatformService } from '../../client/common/platform/types';
 import { BufferDecoder } from '../../client/common/process/decoder';
 import { ProcessLogger } from '../../client/common/process/logger';
@@ -296,7 +297,6 @@ import {
 } from './testNativeEditorProvider';
 import { TestPersistentStateFactory } from './testPersistentStateFactory';
 import { WebBrowserPanelProvider } from './uiTests/webBrowserPanelProvider';
-import { PlatformService } from '../../client/common/platform/platformService';
 
 export class DataScienceIocContainer extends UnitTestIocContainer {
     public get workingInterpreter() {
