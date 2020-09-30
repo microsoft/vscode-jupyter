@@ -4,7 +4,7 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Uri } from 'vscode';
-import { IDataScienceFileSystem } from '../../../datascience/types';
+import { IFileSystem } from '../../../datascience/types';
 import { IDisposableRegistry, IExtensionContext } from '../../types';
 import { IWebviewPanel, IWebviewPanelOptions, IWebviewPanelProvider } from '../types';
 import { WebviewPanel } from './webviewPanel';
@@ -13,7 +13,7 @@ import { WebviewPanel } from './webviewPanel';
 export class WebviewPanelProvider implements IWebviewPanelProvider {
     constructor(
         @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry,
-        @inject(IDataScienceFileSystem) private readonly fs: IDataScienceFileSystem,
+        @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IExtensionContext) private readonly context: IExtensionContext
     ) {}
 

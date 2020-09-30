@@ -5,7 +5,7 @@
 
 import { inject, injectable, named } from 'inversify';
 import { Uri } from 'vscode';
-import { IDataScienceFileSystem } from '../../datascience/types';
+import { IFileSystem } from '../../datascience/types';
 import { IApplicationShell, ICommandManager } from '../application/types';
 import { Octicons, PVSC_EXTENSION_ID, STANDARD_OUTPUT_CHANNEL } from '../constants';
 import { traceDecorators } from '../logger';
@@ -41,7 +41,7 @@ export class InsidersBuildInstaller implements IExtensionBuildInstaller {
     constructor(
         @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly output: IOutputChannel,
         @inject(IFileDownloader) private readonly fileDownloader: IFileDownloader,
-        @inject(IDataScienceFileSystem) private readonly fs: IDataScienceFileSystem,
+        @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(ICommandManager) private readonly cmdManager: ICommandManager,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell
     ) {}

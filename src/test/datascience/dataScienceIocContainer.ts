@@ -215,9 +215,9 @@ import {
     IDataScienceCodeLensProvider,
     IDataScienceCommandListener,
     IDataScienceErrorHandler,
-    IDataScienceFileSystem,
     IDebugLocationTracker,
     IDigestStorage,
+    IFileSystem,
     IGatherLogger,
     IInteractiveWindow,
     IInteractiveWindowListener,
@@ -470,7 +470,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
         this.serviceManager.addSingleton<INotebookModelFactory>(INotebookModelFactory, NotebookModelFactory);
         this.serviceManager.addSingleton<IMountedWebViewFactory>(IMountedWebViewFactory, MountedWebViewFactory);
-        this.serviceManager.addSingletonInstance<IDataScienceFileSystem>(IDataScienceFileSystem, new MockFileSystem());
+        this.serviceManager.addSingletonInstance<IFileSystem>(IFileSystem, new MockFileSystem());
         this.serviceManager.addSingleton<IJupyterExecution>(IJupyterExecution, JupyterExecutionFactory);
         this.serviceManager.addSingleton<IInteractiveWindowProvider>(
             IInteractiveWindowProvider,
@@ -890,7 +890,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         );
     }
     public setFileContents(uri: Uri, contents: string) {
-        const fileSystem = this.serviceManager.get<IDataScienceFileSystem>(IDataScienceFileSystem) as MockFileSystem;
+        const fileSystem = this.serviceManager.get<IFileSystem>(IFileSystem) as MockFileSystem;
         fileSystem.addFileContents(uri.fsPath, contents);
     }
 

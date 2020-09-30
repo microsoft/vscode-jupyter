@@ -9,7 +9,7 @@ import { Extensions } from '../../client/common/application/extensions';
 import { IWorkspaceService } from '../../client/common/application/types';
 import { IConfigurationService } from '../../client/common/types';
 import { CodeCssGenerator } from '../../client/datascience/codeCssGenerator';
-import { DataScienceFileSystem } from '../../client/datascience/dataScienceFileSystem';
+import { FileSystem } from '../../client/datascience/fileSystem';
 import { ThemeFinder } from '../../client/datascience/themeFinder';
 import { IThemeFinder } from '../../client/datascience/types';
 import { MockJupyterSettings } from './mockJupyterSettings';
@@ -26,7 +26,7 @@ suite('Theme colors', () => {
 
     setup(() => {
         extensions = new Extensions();
-        const fs = new DataScienceFileSystem();
+        const fs = new FileSystem();
         themeFinder = new ThemeFinder(extensions, fs);
 
         workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
@@ -160,7 +160,7 @@ suite('Theme colors', () => {
             .setup((m) => m.findThemeRootJson(TypeMoq.It.isAnyString()))
             .returns(() => Promise.resolve(undefined));
 
-        const fs = new DataScienceFileSystem();
+        const fs = new FileSystem();
         cssGenerator = new CodeCssGenerator(workspaceService.object, mockThemeFinder.object, configService.object, fs);
 
         const colors = await cssGenerator.generateThemeCss(undefined, false, 'Kimbie Dark');

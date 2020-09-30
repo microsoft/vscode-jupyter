@@ -10,7 +10,7 @@ import { traceError } from '../common/logger';
 
 import { IExtensions } from '../common/types';
 import { getLanguageConfiguration } from '../language/languageConfiguration';
-import { IDataScienceFileSystem, IThemeFinder } from './types';
+import { IFileSystem, IThemeFinder } from './types';
 
 // tslint:disable:no-any
 
@@ -24,10 +24,7 @@ export class ThemeFinder implements IThemeFinder {
     private themeCache: { [key: string]: IThemeData | undefined } = {};
     private languageCache: { [key: string]: string | undefined } = {};
 
-    constructor(
-        @inject(IExtensions) private extensions: IExtensions,
-        @inject(IDataScienceFileSystem) private fs: IDataScienceFileSystem
-    ) {}
+    constructor(@inject(IExtensions) private extensions: IExtensions, @inject(IFileSystem) private fs: IFileSystem) {}
 
     public async findThemeRootJson(themeName: string): Promise<string | undefined> {
         // find our data

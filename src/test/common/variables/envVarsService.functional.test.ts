@@ -12,7 +12,7 @@ import { IPathUtils } from '../../../client/common/types';
 import { OSType } from '../../../client/common/utils/platform';
 import { EnvironmentVariablesService } from '../../../client/common/variables/environment';
 import { IEnvironmentVariablesService } from '../../../client/common/variables/types';
-import { DataScienceFileSystem } from '../../../client/datascience/dataScienceFileSystem';
+import { FileSystem } from '../../../client/datascience/fileSystem';
 import { getOSType } from '../../common';
 
 use(chaiAsPromised);
@@ -25,7 +25,7 @@ suite('Environment Variables Service', () => {
     let variablesService: IEnvironmentVariablesService;
     setup(() => {
         pathUtils = new PathUtils(getOSType() === OSType.Windows);
-        const fs = new DataScienceFileSystem();
+        const fs = new FileSystem();
         variablesService = new EnvironmentVariablesService(pathUtils, fs);
     });
 

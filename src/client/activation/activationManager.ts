@@ -11,7 +11,7 @@ import { PYTHON_LANGUAGE } from '../common/constants';
 import { traceDecorators } from '../common/logger';
 import { IDisposable, Resource } from '../common/types';
 import { Deferred } from '../common/utils/async';
-import { IDataScienceFileSystem } from '../datascience/types';
+import { IFileSystem } from '../datascience/types';
 import { IInterpreterService } from '../interpreter/contracts';
 import { sendActivationTelemetry } from '../telemetry/envFileTelemetry';
 import { IExtensionActivationManager, IExtensionActivationService, IExtensionSingleActivationService } from './types';
@@ -31,7 +31,7 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
         @inject(IDocumentManager) private readonly documentManager: IDocumentManager,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
-        @inject(IDataScienceFileSystem) private readonly fileSystem: IDataScienceFileSystem,
+        @inject(IFileSystem) private readonly fileSystem: IFileSystem,
         @inject(IActiveResourceService) private readonly activeResourceService: IActiveResourceService,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker
     ) {}

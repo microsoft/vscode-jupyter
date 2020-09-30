@@ -5,7 +5,7 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { DataScience } from '../../common/utils/localize';
-import { IDataScienceFileSystem } from '../../datascience/types';
+import { IFileSystem } from '../../datascience/types';
 
 import { EXTENSION_ROOT_DIR, UseCustomEditorApi } from '../constants';
 import { traceError } from '../logger';
@@ -18,7 +18,7 @@ export class CustomEditorService implements ICustomEditorService {
         @inject(ICommandManager) private commandManager: ICommandManager,
         @inject(UseCustomEditorApi) private readonly useCustomEditorApi: boolean,
         @inject(IApplicationEnvironment) private readonly appEnvironment: IApplicationEnvironment,
-        @inject(IDataScienceFileSystem) private readonly fileSystem: IDataScienceFileSystem
+        @inject(IFileSystem) private readonly fileSystem: IFileSystem
     ) {
         this.verifyPackageJson().catch((e) => traceError(`Error rewriting package json: `, e));
     }

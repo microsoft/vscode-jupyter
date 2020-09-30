@@ -22,8 +22,8 @@ import { PlatformService } from '../../../client/common/platform/platformService
 import { IHttpClient } from '../../../client/common/types';
 import { Http } from '../../../client/common/utils/localize';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
-import { DataScienceFileSystem } from '../../../client/datascience/dataScienceFileSystem';
-import { IDataScienceFileSystem } from '../../../client/datascience/types';
+import { FileSystem } from '../../../client/datascience/fileSystem';
+import { IFileSystem } from '../../../client/datascience/types';
 import { noop } from '../../core';
 import { MockOutputChannel } from '../../mockClasses';
 const requestProgress = require('request-progress');
@@ -68,7 +68,7 @@ class DelayedReadMemoryStream extends Readable {
 suite('File Downloader', () => {
     let fileDownloader: FileDownloader;
     let httpClient: IHttpClient;
-    let fs: IDataScienceFileSystem;
+    let fs: IFileSystem;
     let appShell: IApplicationShell;
     suiteTeardown(() => {
         rewiremock.disable();
@@ -82,7 +82,7 @@ suite('File Downloader', () => {
             httpClient = mock(HttpClient);
             appShell = mock(ApplicationShell);
             when(httpClient.downloadFile(anything())).thenCall(request);
-            fs = new DataScienceFileSystem();
+            fs = new FileSystem();
         });
         teardown(() => {
             rewiremock.disable();
@@ -189,7 +189,7 @@ suite('File Downloader', () => {
         let downloadWithProgressStub: sinon.SinonStub<any>;
         setup(() => {
             httpClient = mock(HttpClient);
-            fs = mock(DataScienceFileSystem);
+            fs = mock(FileSystem);
             appShell = mock(ApplicationShell);
             downloadWithProgressStub = sinon.stub(FileDownloader.prototype, 'displayDownloadProgress');
             downloadWithProgressStub.callsFake(() => Promise.resolve());

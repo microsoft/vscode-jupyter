@@ -11,7 +11,7 @@ import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import { IPathUtils } from '../../../client/common/types';
 import { EnvironmentVariablesService, parseEnvFile } from '../../../client/common/variables/environment';
-import { IDataScienceFileSystem } from '../../../client/datascience/types';
+import { IFileSystem } from '../../../client/datascience/types';
 
 use(chaiAsPromised);
 
@@ -24,11 +24,11 @@ const PATHS = [
 suite('Environment Variables Service', () => {
     const filename = 'x/y/z/.env';
     let pathUtils: TypeMoq.IMock<IPathUtils>;
-    let fs: TypeMoq.IMock<IDataScienceFileSystem>;
+    let fs: TypeMoq.IMock<IFileSystem>;
     let variablesService: EnvironmentVariablesService;
     setup(() => {
         pathUtils = TypeMoq.Mock.ofType<IPathUtils>(undefined, TypeMoq.MockBehavior.Strict);
-        fs = TypeMoq.Mock.ofType<IDataScienceFileSystem>(undefined, TypeMoq.MockBehavior.Strict);
+        fs = TypeMoq.Mock.ofType<IFileSystem>(undefined, TypeMoq.MockBehavior.Strict);
         variablesService = new EnvironmentVariablesService(
             // This is the only place that the mocks are used.
             pathUtils.object,

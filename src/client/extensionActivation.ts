@@ -29,7 +29,7 @@ import { noop } from './common/utils/misc';
 import { registerTypes as variableRegisterTypes } from './common/variables/serviceRegistry';
 import { JUPYTER_OUTPUT_CHANNEL } from './datascience/constants';
 import { registerTypes as dataScienceRegisterTypes } from './datascience/serviceRegistry';
-import { IDataScience, IDataScienceFileSystem, IDebugLoggingManager } from './datascience/types';
+import { IDataScience, IDebugLoggingManager, IFileSystem } from './datascience/types';
 import { IServiceContainer, IServiceManager } from './ioc/types';
 import { addOutputChannelLogging, setLoggingLevel } from './logging';
 import { registerLoggerTypes } from './logging/serviceRegistry';
@@ -80,7 +80,7 @@ async function activateLegacy(
     processRegisterTypes(serviceManager);
 
     // We need to setup this property before any telemetry is sent
-    const fs = serviceManager.get<IDataScienceFileSystem>(IDataScienceFileSystem);
+    const fs = serviceManager.get<IFileSystem>(IFileSystem);
     await setExtensionInstallTelemetryProperties(fs);
 
     const applicationEnv = serviceManager.get<IApplicationEnvironment>(IApplicationEnvironment);

@@ -4,7 +4,7 @@
 import '../../extensions';
 
 import { Event, EventEmitter, Uri, WebviewOptions, WebviewPanel as vscodeWebviewPanel, window } from 'vscode';
-import { IDataScienceFileSystem } from '../../../datascience/types';
+import { IFileSystem } from '../../../datascience/types';
 import { traceError } from '../../logger';
 import { IDisposableRegistry } from '../../types';
 import * as localize from '../../utils/localize';
@@ -17,7 +17,7 @@ export class WebviewPanel extends Webview implements IWebviewPanel {
     private loadFailedEmitter = new EventEmitter<void>();
 
     constructor(
-        fs: IDataScienceFileSystem,
+        fs: IFileSystem,
         private disposableRegistry: IDisposableRegistry,
         private panelOptions: IWebviewPanelOptions,
         additionalRootPaths: Uri[] = []

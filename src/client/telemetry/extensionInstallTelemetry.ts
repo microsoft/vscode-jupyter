@@ -4,7 +4,7 @@
 import * as path from 'path';
 import { setSharedProperty } from '.';
 import { EXTENSION_ROOT_DIR } from '../constants';
-import { IDataScienceFileSystem } from '../datascience/types';
+import { IFileSystem } from '../datascience/types';
 
 /**
  * Sets shared telemetry property about where the extension was installed from
@@ -13,7 +13,7 @@ import { IDataScienceFileSystem } from '../datascience/types';
  * case as 'MarketPlace'.
  *
  */
-export async function setExtensionInstallTelemetryProperties(fs: IDataScienceFileSystem) {
+export async function setExtensionInstallTelemetryProperties(fs: IFileSystem) {
     // Look for PythonCodingPack file under `%USERPROFILE%/.vscode/extensions`
     // folder. If that file exists treat this extension as installed from coding
     // pack.

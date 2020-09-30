@@ -3,7 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { IDataScienceFileSystem } from '../../datascience/types';
+import { IFileSystem } from '../../datascience/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { IPathUtils } from '../types';
@@ -15,7 +15,7 @@ export class EnvironmentVariablesService implements IEnvironmentVariablesService
     constructor(
         // We only use a small portion of either of these interfaces.
         @inject(IPathUtils) private readonly pathUtils: IPathUtils,
-        @inject(IDataScienceFileSystem) private readonly fs: IDataScienceFileSystem
+        @inject(IFileSystem) private readonly fs: IFileSystem
     ) {}
 
     public async parseFile(

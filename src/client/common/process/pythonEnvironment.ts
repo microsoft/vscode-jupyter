@@ -1,4 +1,4 @@
-import { IDataScienceFileSystem } from '../../datascience/types';
+import { IFileSystem } from '../../datascience/types';
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
@@ -95,7 +95,7 @@ export function createPythonEnv(
     pythonPath: string,
     // These are used to generate the deps.
     procs: IProcessService,
-    fs: IDataScienceFileSystem
+    fs: IFileSystem
 ): PythonEnvironment {
     const deps = createDeps(
         async (filename) => fs.localFileExists(filename),
@@ -117,7 +117,7 @@ export function createCondaEnv(
     pythonPath: string,
     // These are used to generate the deps.
     procs: IProcessService,
-    fs: IDataScienceFileSystem
+    fs: IFileSystem
 ): PythonEnvironment {
     const runArgs = ['run'];
     if (condaInfo.name === '') {

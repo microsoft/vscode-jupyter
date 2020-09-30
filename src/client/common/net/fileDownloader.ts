@@ -7,7 +7,7 @@ import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import * as requestTypes from 'request';
 import { Progress } from 'vscode';
-import { IDataScienceFileSystem } from '../../datascience/types';
+import { IFileSystem } from '../../datascience/types';
 import { IApplicationShell } from '../application/types';
 import { Octicons } from '../constants';
 import { DownloadOptions, IFileDownloader, IHttpClient } from '../types';
@@ -18,7 +18,7 @@ import { noop } from '../utils/misc';
 export class FileDownloader implements IFileDownloader {
     constructor(
         @inject(IHttpClient) private readonly httpClient: IHttpClient,
-        @inject(IDataScienceFileSystem) private readonly dsfs: IDataScienceFileSystem,
+        @inject(IFileSystem) private readonly dsfs: IFileSystem,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell
     ) {}
     public async downloadFile(uri: string, options: DownloadOptions): Promise<string> {
