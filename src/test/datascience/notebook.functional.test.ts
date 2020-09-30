@@ -981,7 +981,7 @@ a`,
                     mimeType: 'text/plain',
                     cellType: 'code',
                     result: 1,
-                    verifyValue: (d) => assert.equal(d, 100, 'Plain text invalid')
+                    verifyValue: (d) => assert.equal(d, 1, 'Plain text invalid')
                 },
                 {
                     markdownRegEx: undefined,
