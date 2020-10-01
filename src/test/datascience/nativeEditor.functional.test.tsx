@@ -64,6 +64,7 @@ import {
     openEditor,
     runMountedTest
 } from './nativeEditorTestHelpers';
+import { assertHasTextOutputInICell } from './notebook/helper';
 import { createPythonService, startRemoteServer } from './remoteTestHelpers';
 import {
     addContinuousMockData,
@@ -1035,6 +1036,7 @@ df.head()`;
 
                         // File should exist. Open and run all cells
                         const n = await openEditor(ioc, '', tf.filePath);
+                        assert.equal(n.editor.model.cells.length, 3, 'Cells not loaded');
                         const threeCellsUpdated = n.mount.waitForMessage(InteractiveWindowMessages.ExecutionRendered, {
                             numberOfTimes: 3
                         });
