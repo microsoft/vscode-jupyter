@@ -141,7 +141,7 @@ class TestRunner {
 
     private async downloadExtension(): Promise<string> {
         const version = await this.getReleaseVersion();
-        const url = `https://marketplace.visualstudio.com/_apis/public/gallery/publishers/ms-ai-tools/vsextensions/jupyter/${version}/vspackage`;
+        const url = `https://marketplace.visualstudio.com/_apis/public/gallery/publishers/ms-toolsai/vsextensions/jupyter/${version}/vspackage`;
         const destination = path.join(__dirname, `extension${version}.zip`);
         if (await fs.pathExists(destination)) {
             return destination;

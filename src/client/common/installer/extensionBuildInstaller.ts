@@ -14,7 +14,7 @@ import { ExtensionChannels } from '../utils/localize';
 import { IExtensionBuildInstaller } from './types';
 
 export const developmentBuildUri =
-    'https://pvsc.blob.core.windows.net/extension-builds/ms-ai-tools-jupyter-insiders.vsix';
+    'https://pvsc.blob.core.windows.net/extension-builds/ms-toolsai-jupyter-insiders.vsix';
 export const vsixFileExtension = '.vsix';
 
 @injectable()
@@ -23,7 +23,7 @@ export class StableBuildInstaller implements IExtensionBuildInstaller {
         @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly output: IOutputChannel,
         @inject(ICommandManager) private readonly cmdManager: ICommandManager,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell
-    ) {}
+    ) { }
 
     @traceDecorators.error('Installing stable build of extension failed')
     public async install(): Promise<void> {
@@ -44,7 +44,7 @@ export class InsidersBuildInstaller implements IExtensionBuildInstaller {
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(ICommandManager) private readonly cmdManager: ICommandManager,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell
-    ) {}
+    ) { }
 
     @traceDecorators.error('Installing insiders build of extension failed')
     public async install(): Promise<void> {
