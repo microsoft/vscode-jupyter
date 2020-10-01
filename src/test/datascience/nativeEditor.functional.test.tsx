@@ -33,7 +33,7 @@ import { KeyPrefix } from '../../client/datascience/notebookStorage/nativeEditor
 import {
     ICell,
     IDataScienceErrorHandler,
-    IDataScienceFileSystem,
+    IFileSystem,
     IJupyterExecution,
     INotebookEditor,
     INotebookEditorProvider,
@@ -1028,7 +1028,7 @@ df.head()`;
                         }
                     );
                     addMockData(ioc, 'c=3\nc', 3);
-                    const dsfs = ioc.get<IDataScienceFileSystem>(IDataScienceFileSystem);
+                    const dsfs = ioc.get<IFileSystem>(IFileSystem);
                     const tf = await dsfs.createTemporaryLocalFile('.ipynb');
                     try {
                         await dsfs.writeLocalFile(tf.filePath, baseFile);
