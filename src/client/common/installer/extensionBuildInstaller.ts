@@ -7,7 +7,7 @@ import { inject, injectable, named } from 'inversify';
 import { Uri } from 'vscode';
 import { IFileSystem } from '../../datascience/types';
 import { IApplicationShell, ICommandManager } from '../application/types';
-import { Octicons, PVSC_EXTENSION_ID, STANDARD_OUTPUT_CHANNEL } from '../constants';
+import { JVSC_EXTENSION_ID, Octicons, STANDARD_OUTPUT_CHANNEL } from '../constants';
 import { traceDecorators } from '../logger';
 import { IFileDownloader, IOutputChannel } from '../types';
 import { ExtensionChannels } from '../utils/localize';
@@ -30,7 +30,7 @@ export class StableBuildInstaller implements IExtensionBuildInstaller {
         this.output.append(ExtensionChannels.installingStableMessage());
         await this.appShell.withProgressCustomIcon(Octicons.Installing, async (progress) => {
             progress.report({ message: ExtensionChannels.installingStableMessage() });
-            return this.cmdManager.executeCommand('workbench.extensions.installExtension', PVSC_EXTENSION_ID);
+            return this.cmdManager.executeCommand('workbench.extensions.installExtension', JVSC_EXTENSION_ID);
         });
         this.output.appendLine(ExtensionChannels.installationCompleteMessage());
     }

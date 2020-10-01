@@ -22,7 +22,7 @@ import * as download from 'download';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as request from 'request';
-import { EXTENSION_ROOT_DIR, PVSC_EXTENSION_ID } from '../client/common/constants';
+import { EXTENSION_ROOT_DIR, JVSC_EXTENSION_ID } from '../client/common/constants';
 import { unzip } from './common';
 import { initializeLogger } from './testLogger';
 
@@ -117,7 +117,7 @@ class TestRunner {
     }
 
     private async getReleaseVersion(): Promise<string> {
-        const url = `https://marketplace.visualstudio.com/items?itemName=${PVSC_EXTENSION_ID}`;
+        const url = `https://marketplace.visualstudio.com/items?itemName=${JVSC_EXTENSION_ID}`;
         const content = await new Promise<string>((resolve, reject) => {
             request(url, (error, response, body) => {
                 if (error) {
