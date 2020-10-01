@@ -64,7 +64,6 @@ import {
     openEditor,
     runMountedTest
 } from './nativeEditorTestHelpers';
-import { assertHasTextOutputInICell } from './notebook/helper';
 import { createPythonService, startRemoteServer } from './remoteTestHelpers';
 import {
     addContinuousMockData,
