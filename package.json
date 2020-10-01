@@ -7,7 +7,7 @@
         "usingNewInterpreterStorage": true
     },
     "languageServerVersion": "0.5.30",
-    "publisher": "ms-ai-tools",
+    "publisher": "ms-toolsai",
     "enableProposedApi": true,
     "author": {
         "name": "Microsoft Corporation"
