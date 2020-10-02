@@ -18,7 +18,6 @@ import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry } from '../../telemetry';
 import { getRealPath } from '../common';
 import { Telemetry } from '../constants';
-import { defaultKernelSpecName } from '../jupyter/kernels/helpers';
 import { JupyterKernelSpec } from '../jupyter/kernels/jupyterKernelSpec';
 import { IFileSystem, IJupyterKernelSpec } from '../types';
 import { IKernelFinder } from './types';
@@ -70,35 +69,32 @@ export class KernelFinder implements IKernelFinder {
         const kernelName = kernelSpecMetadata?.name;
 
         if (kernelSpecMetadata && kernelName) {
-            // For a non default kernelspec search for it
-            if (!kernelName.includes(defaultKernelSpecName)) {
-                let kernelSpec = await this.searchCache(kernelName);
+            let kernelSpec = await this.searchCache(kernelName);
 
-                if (kernelSpec) {
-                    return kernelSpec;
-                }
-
-                // Check in active interpreter first
-                kernelSpec = await this.getKernelSpecFromActiveInterpreter(kernelName, resource);
-
-                if (kernelSpec) {
-                    this.writeCache().ignoreErrors();
-                    return kernelSpec;
-                }
-
-                const diskSearch = this.findDiskPath(kernelName);
-                const interpreterSearch = this.getInterpreterPaths(resource).then((interpreterPaths) => {
-                    return this.findInterpreterPath(interpreterPaths, kernelName);
-                });
-
-                let result = await Promise.race([diskSearch, interpreterSearch]);
-                if (!result) {
-                    const both = await Promise.all([diskSearch, interpreterSearch]);
-                    result = both[0] ? both[0] : both[1];
-                }
-
-                foundKernel = result;
+            if (kernelSpec) {
+                return kernelSpec;
             }
+
+            // Check in active interpreter first
+            kernelSpec = await this.getKernelSpecFromActiveInterpreter(kernelName, resource);
+
+            if (kernelSpec) {
+                this.writeCache().ignoreErrors();
+                return kernelSpec;
+            }
+
+            const diskSearch = this.findDiskPath(kernelName);
+            const interpreterSearch = this.getInterpreterPaths(resource).then((interpreterPaths) => {
+                return this.findInterpreterPath(interpreterPaths, kernelName);
+            });
+
+            let result = await Promise.race([diskSearch, interpreterSearch]);
+            if (!result) {
+                const both = await Promise.all([diskSearch, interpreterSearch]);
+                result = both[0] ? both[0] : both[1];
+            }
+
+            foundKernel = result;
         }
 
         this.writeCache().ignoreErrors();
