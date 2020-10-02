@@ -27,7 +27,6 @@ import {
 } from '../../notebook/helpers/helpers';
 import { MultiCancellationTokenSource } from '../../notebook/helpers/multiCancellationToken';
 import { NotebookEditor } from '../../notebook/notebookEditor';
-import { INotebookContentProvider } from '../../notebook/types';
 import {
     IDataScienceErrorHandler,
     IJupyterSession,
@@ -41,7 +40,6 @@ const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed'
 
 export class CellExecutionFactory {
     constructor(
-        private readonly contentProvider: INotebookContentProvider,
         private readonly errorHandler: IDataScienceErrorHandler,
         private readonly editorProvider: INotebookEditorProvider,
         private readonly appShell: IApplicationShell,
@@ -53,7 +51,6 @@ export class CellExecutionFactory {
         return CellExecution.fromCell(
             this.vscNotebook.notebookEditors.find((e) => e.document === cell.notebook)!,
             cell,
-            this.contentProvider,
             this.errorHandler,
             this.editorProvider,
             this.appShell
@@ -102,7 +99,6 @@ export class CellExecution {
     private constructor(
         public readonly editor: VSCNotebookEditor,
         public readonly cell: NotebookCell,
-        private readonly contentProvider: INotebookContentProvider,
         private readonly errorHandler: IDataScienceErrorHandler,
         private readonly editorProvider: INotebookEditorProvider,
         private readonly applicationService: IApplicationShell
@@ -114,12 +110,11 @@ export class CellExecution {
     public static fromCell(
         editor: VSCNotebookEditor,
         cell: NotebookCell,
-        contentProvider: INotebookContentProvider,
         errorHandler: IDataScienceErrorHandler,
         editorProvider: INotebookEditorProvider,
         appService: IApplicationShell
     ) {
-        return new CellExecution(editor, cell, contentProvider, errorHandler, editorProvider, appService);
+        return new CellExecution(editor, cell, errorHandler, editorProvider, appService);
     }
 
     public async start(kernelPromise: Promise<IKernel>, notebook: INotebook) {
@@ -134,8 +129,6 @@ export class CellExecution {
             });
         });
         this.stopWatch.reset();
-        // Changes to metadata must be saved in ipynb, hence mark doc has dirty.
-        this.contentProvider.notifyChangesToDocument(this.cell.notebook);
         this.notifyCellExecution();
 
         // Begin the request that will modify our cell.
@@ -180,13 +173,10 @@ export class CellExecution {
             })
         );
         await updateCellWithErrorStatus(this.editor, this.cell, error);
-        this.contentProvider.notifyChangesToDocument(this.cell.notebook);
         this.errorHandler.handleError((error as unknown) as Error).ignoreErrors();
 
         this._completed = true;
         this._result.resolve(this.cell.metadata.runState);
-        // Changes to metadata must be saved in ipynb, hence mark doc has dirty.
-        this.contentProvider.notifyChangesToDocument(this.cell.notebook);
     }
 
     private async completedSuccessfully() {
@@ -220,8 +210,6 @@ export class CellExecution {
 
         this._completed = true;
         this._result.resolve(this.cell.metadata.runState);
-        // Changes to metadata must be saved in ipynb, hence mark doc has dirty.
-        this.contentProvider.notifyChangesToDocument(this.cell.notebook);
     }
 
     /**
@@ -256,8 +244,6 @@ export class CellExecution {
         );
         this._completed = true;
         this._result.resolve(this.cell.metadata.runState);
-        // Changes to metadata must be saved in ipynb, hence mark doc has dirty.
-        this.contentProvider.notifyChangesToDocument(this.cell.notebook);
     }
 
     /**
@@ -271,7 +257,6 @@ export class CellExecution {
                 runState: vscodeNotebookEnums.NotebookCellRunState.Running
             })
         );
-        this.contentProvider.notifyChangesToDocument(this.cell.notebook);
     }
 
     private sendPerceivedCellExecute() {
@@ -365,8 +350,6 @@ export class CellExecution {
         // tslint:disable-next-line:no-require-imports
         const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
 
-        // Keep track of we need to send an update to VS code or not.
-        let shouldUpdate = true;
         try {
             if (jupyterLab.KernelMessage.isExecuteResultMsg(msg)) {
                 await this.handleExecuteResult(msg as KernelMessage.IExecuteResultMsg, clearState);
@@ -376,28 +359,23 @@ export class CellExecution {
                 // Status is handled by the result promise. While it is running we are active. Otherwise we're stopped.
                 // So ignore status messages.
                 const statusMsg = msg as KernelMessage.IStatusMsg;
-                shouldUpdate = false;
                 this.handleStatusMessage(statusMsg, clearState);
             } else if (jupyterLab.KernelMessage.isStreamMsg(msg)) {
                 await this.handleStreamMessage(msg as KernelMessage.IStreamMsg, clearState);
             } else if (jupyterLab.KernelMessage.isDisplayDataMsg(msg)) {
                 await this.handleDisplayData(msg as KernelMessage.IDisplayDataMsg, clearState);
-            } else if (jupyterLab.KernelMessage.isUpdateDisplayDataMsg(msg)) {
-                // No new data to update UI, hence do not send updates.
-                shouldUpdate = false;
             } else if (jupyterLab.KernelMessage.isClearOutputMsg(msg)) {
                 await this.handleClearOutput(msg as KernelMessage.IClearOutputMsg, clearState);
             } else if (jupyterLab.KernelMessage.isErrorMsg(msg)) {
                 await this.handleError(msg as KernelMessage.IErrorMsg, clearState);
+            } else if (jupyterLab.KernelMessage.isUpdateDisplayDataMsg(msg)) {
+                // Noop.
             } else if (jupyterLab.KernelMessage.isCommOpenMsg(msg)) {
-                // No new data to update UI, hence do not send updates.
-                shouldUpdate = false;
+                // Noop.
             } else if (jupyterLab.KernelMessage.isCommMsgMsg(msg)) {
-                // No new data to update UI, hence do not send updates.
-                shouldUpdate = false;
+                // Noop.
             } else if (jupyterLab.KernelMessage.isCommCloseMsg(msg)) {
-                // No new data to update UI, hence do not send updates.
-                shouldUpdate = false;
+                // Noop.
             } else {
                 traceWarning(`Unknown message ${msg.header.msg_type} : hasData=${'data' in msg.content}`);
             }
@@ -405,11 +383,6 @@ export class CellExecution {
             // Set execution count, all messages should have it
             if ('execution_count' in msg.content && typeof msg.content.execution_count === 'number') {
                 await updateCellExecutionCount(this.editor, this.cell, msg.content.execution_count);
-            }
-
-            // Show our update if any new output.
-            if (shouldUpdate) {
-                this.contentProvider.notifyChangesToDocument(this.cell.notebook);
             }
         } catch (err) {
             // If not a restart error, then tell the subscriber
@@ -580,9 +553,6 @@ export class CellExecution {
             if ('execution_count' in msg.content && typeof msg.content.execution_count === 'number') {
                 await updateCellExecutionCount(this.editor, this.cell, msg.content.execution_count);
             }
-
-            // Send this event.
-            this.contentProvider.notifyChangesToDocument(this.cell.notebook);
         }
     }
 }
