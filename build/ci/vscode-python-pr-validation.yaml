@@ -51,14 +51,21 @@ stages:
               NeedsPythonTestReqs: true
               NeedsPythonFunctionalReqs: true
               SplitFunctionalTests: false
-            # 'DataScience':
-            #   TestsToRun: 'testVSCode'
-            #   NeedsPythonTestReqs: true
-            #   NeedsPythonFunctionalReqs: true
-            # 'Smoke':
-            #   TestsToRun: 'testSmoke'
-            #   NeedsPythonTestReqs: true
-            #   NeedsIPythonReqs: true
+            'Single Workspace':
+              TestsToRun: 'testSingleWorkspace'
+              NeedsPythonTestReqs: true
+            'DataScience':
+              TestsToRun: 'testDataScience'
+              NeedsPythonTestReqs: true
+              NeedsPythonFunctionalReqs: true
+            'DataScience in VSCode':
+              TestsToRun: 'testDataScienceInVSCode'
+              NeedsPythonTestReqs: true
+              NeedsPythonFunctionalReqs: true
+            'Smoke':
+              TestsToRun: 'testSmoke'
+              NeedsPythonTestReqs: true
+              NeedsIPythonReqs: true
         pool:
           vmImage: 'ubuntu-16.04'
         steps:

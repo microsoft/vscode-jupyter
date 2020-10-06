@@ -52,7 +52,7 @@ import {
 import { NativeEditor } from './nativeEditor';
 import { NativeEditorSynchronizer } from './nativeEditorSynchronizer';
 
-enum AskForSaveResult {
+export enum AskForSaveResult {
     Yes,
     No,
     Cancel

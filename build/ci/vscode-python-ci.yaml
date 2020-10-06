@@ -52,10 +52,28 @@ stages:
               # focused on integration
               TestsToRun: 'testSingleWorkspace'
               NeedsPythonTestReqs: true
-            # 'Smoke':
-            #   TestsToRun: 'testSmoke'
-            #   NeedsPythonTestReqs: true
-            #   NeedsIPythonReqs: true
+            'Multi Workspace':
+              # no mocks, with vscode
+              # focused on integration
+              TestsToRun: 'testMultiWorkspace'
+              NeedsPythonTestReqs: true
+            'Venv':
+              TestsToRun: 'venvTests'
+              NeedsPythonTestReqs: true
+              NeedsIPythonReqs: true
+              # This is for the venvTests to use, not needed if you don't run venv tests...
+              PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
+            'Debugger':
+              TestsToRun: 'testDebugger'
+              NeedsPythonTestReqs: true
+            'DataScience in VSCode':
+              TestsToRun: 'testDataScienceInVSCode'
+              NeedsPythonTestReqs: true
+              NeedsPythonFunctionalReqs: true
+            'Smoke':
+              TestsToRun: 'testSmoke'
+              NeedsPythonTestReqs: true
+              NeedsIPythonReqs: true
           maxParallel: 2
         pool:
           vmImage: 'ubuntu-16.04'
