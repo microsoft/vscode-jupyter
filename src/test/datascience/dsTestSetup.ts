@@ -4,6 +4,7 @@
 import * as fs from 'fs-extra';
 import { applyEdits, ModificationOptions, modify } from 'jsonc-parser';
 import * as path from 'path';
+import { IS_CI_SERVER } from '../ciConstants';
 // import { IS_CI_SERVER } from '../ciConstants';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants';
 
@@ -54,12 +55,12 @@ function updateTestsForOldNotebooks() {
     updateSettings(false);
 }
 
-if (
+if (!IS_CI_SERVER) {
+    // Noop.
+} else if (
     process.env.VSC_PYTHON_CI_TEST_VSC_CHANNEL === 'insiders' &&
     process.env.TEST_FILES_SUFFIX === 'native.vscode.test'
 ) {
-    // tslint:disable-next-line: no-console
-    console.error('Insider Tests');
     updateTestsForNativeNotebooks();
 } else {
     // tslint:disable-next-line: no-console
