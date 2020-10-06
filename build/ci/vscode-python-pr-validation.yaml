@@ -46,11 +46,6 @@ stages:
               TestsToRun: 'pythonIPythonTests'
               NeedsPythonTestReqs: true
               NeedsIPythonReqs: true
-            'Functional':
-              TestsToRun: 'testfunctional'
-              NeedsPythonTestReqs: true
-              NeedsPythonFunctionalReqs: true
-              SplitFunctionalTests: false
             # 'DataScience':
             #   TestsToRun: 'testVSCode'
             #   NeedsPythonTestReqs: true
