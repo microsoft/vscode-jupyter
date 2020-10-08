@@ -10,6 +10,7 @@ import { GitHubIssueCodeLensProvider } from '../../logging/gitHubIssueCodeLensPr
 import { KernelProvider } from '../jupyter/kernels/kernelProvider';
 import { IKernelProvider } from '../jupyter/kernels/types';
 import { NotebookContentProvider } from './contentProvider';
+import { NotebookCellLanguageService } from './defaultCellLanguageService';
 import { NotebookIntegration } from './integration';
 import { VSCodeKernelPickerProvider } from './kernelProvider';
 import { NotebookDisposeService } from './notebookDisposeService';
@@ -38,4 +39,9 @@ export function registerTypes(serviceManager: IServiceManager) {
         IExtensionSingleActivationService,
         GitHubIssueCodeLensProvider
     );
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        NotebookCellLanguageService
+    );
+    serviceManager.addSingleton<NotebookCellLanguageService>(NotebookCellLanguageService, NotebookCellLanguageService);
 }

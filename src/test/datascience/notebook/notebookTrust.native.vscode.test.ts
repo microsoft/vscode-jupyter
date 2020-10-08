@@ -13,7 +13,7 @@ import * as uuid from 'uuid/v4';
 import { Uri } from 'vscode';
 import { NotebookDocument } from '../../../../types/vscode-proposed';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
-import { IConfigurationService, IDisposable, IJupyterSettings } from '../../../client/common/types';
+import { IConfigurationService, IDisposable, IJupyterSettings, ReadWrite } from '../../../client/common/types';
 import { INotebookEditorProvider } from '../../../client/datascience/types';
 import { splitMultilineString } from '../../../datascience-ui/common';
 import { IExtensionTestApi } from '../../common';
@@ -37,7 +37,7 @@ suite('DataScience - VSCode Notebook - (Trust)', function () {
     let testIPynb: Uri;
     const disposables: IDisposable[] = [];
     let oldTrustSetting: boolean;
-    let dsSettings: IJupyterSettings;
+    let dsSettings: ReadWrite<IJupyterSettings> | undefined;
     suiteSetup(async function () {
         return this.skip();
         this.timeout(15_000);
@@ -45,6 +45,8 @@ suite('DataScience - VSCode Notebook - (Trust)', function () {
         if (!(await canRunTests())) {
             return this.skip();
         }
+    });
+    suiteSetup(() => {
         const configService = api.serviceContainer.get<IConfigurationService>(IConfigurationService);
         dsSettings = configService.getSettings(testIPynb);
         oldTrustSetting = dsSettings.alwaysTrustNotebooks;
@@ -52,7 +54,7 @@ suite('DataScience - VSCode Notebook - (Trust)', function () {
     });
     setup(async () => {
         sinon.restore();
-        (dsSettings as any).alwaysTrustNotebooks = false;
+        dsSettings!.alwaysTrustNotebooks = false;
         // Don't use same file (due to dirty handling, we might save in dirty.)
         // Cuz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
         testIPynb = Uri.file(await createTemporaryNotebook(templateIPynb, disposables));
@@ -63,8 +65,8 @@ suite('DataScience - VSCode Notebook - (Trust)', function () {
     });
     teardown(async () => closeNotebooksAndCleanUpAfterTests(disposables));
     suiteTeardown(() => {
-        if (typeof oldTrustSetting === 'boolean') {
-            (dsSettings as any).alwaysTrustNotebooks = oldTrustSetting === true;
+        if (typeof oldTrustSetting === 'boolean' && dsSettings) {
+            dsSettings.alwaysTrustNotebooks = oldTrustSetting === true;
         }
     });
 

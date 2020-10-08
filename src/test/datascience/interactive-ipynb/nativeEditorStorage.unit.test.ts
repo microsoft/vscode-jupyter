@@ -14,6 +14,7 @@ import { PythonExtensionChecker } from '../../../client/api/pythonApi';
 import { DocumentManager } from '../../../client/common/application/documentManager';
 import {
     IDocumentManager,
+    IVSCodeNotebook,
     IWebviewPanelMessageListener,
     IWebviewPanelProvider,
     IWorkspaceService
@@ -23,6 +24,7 @@ import { WebviewPanelProvider } from '../../../client/common/application/webview
 import { WorkspaceService } from '../../../client/common/application/workspace';
 import { JupyterSettings } from '../../../client/common/configSettings';
 import { ConfigurationService } from '../../../client/common/configuration/service';
+import { PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { CryptoUtils } from '../../../client/common/crypto';
 import { IConfigurationService, ICryptoUtils, IDisposable, IExtensionContext } from '../../../client/common/types';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
@@ -32,6 +34,7 @@ import {
 } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { TrustService } from '../../../client/datascience/interactive-ipynb/trustService';
 import { JupyterExecutionFactory } from '../../../client/datascience/jupyter/jupyterExecutionFactory';
+import { NotebookCellLanguageService } from '../../../client/datascience/notebook/defaultCellLanguageService';
 import { NotebookModelFactory } from '../../../client/datascience/notebookStorage/factory';
 import { NativeEditorStorage } from '../../../client/datascience/notebookStorage/nativeEditorStorage';
 import { NotebookStorageProvider } from '../../../client/datascience/notebookStorage/notebookStorageProvider';
@@ -348,6 +351,10 @@ suite('DataScience - Native Editor Storage', () => {
     function createStorage() {
         const extensionChecker = mock(PythonExtensionChecker);
         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
+        const mockVSC = mock<IVSCodeNotebook>();
+        when(mockVSC.notebookEditors).thenReturn([]);
+        const cellLanguageService = mock<NotebookCellLanguageService>();
+        when(cellLanguageService.getPreferredLanguage()).thenReturn(PYTHON_LANGUAGE);
         const notebookStorage = new NativeEditorStorage(
             instance(executionProvider),
             fileSystem.object, // Use typemoq so can save values in returns
@@ -356,7 +363,7 @@ suite('DataScience - Native Editor Storage', () => {
             globalMemento,
             localMemento,
             instance(trustService),
-            new NotebookModelFactory(false),
+            new NotebookModelFactory(false, instance(mockVSC), instance(cellLanguageService)),
             instance(extensionChecker)
         );
 
