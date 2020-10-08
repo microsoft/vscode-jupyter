@@ -15,7 +15,6 @@ import * as sinon from 'sinon';
 import { Disposable } from 'vscode';
 import { sleep } from '../../../client/common/utils/async';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
-import { IS_CI_SERVER } from '../../ciConstants';
 import { retryIfFail as retryIfFailOriginal } from '../../common';
 import { mockedVSCodeNamespaces } from '../../vscode-mock';
 import { DataScienceIocContainer } from '../dataScienceIocContainer';
@@ -38,12 +37,6 @@ use(chaiAsPromised);
         let ioc: DataScienceIocContainer;
 
         suiteSetup(function () {
-            // Skip all tests until flakiness can be resolved.
-            // See issue: https://github.com/microsoft/vscode-python/issues/13936
-            if (IS_CI_SERVER) {
-                this.skip();
-            }
-
             // These are UI tests, hence nothing to do with platforms.
             this.timeout(30_000); // UI Tests, need time to start jupyter.
             this.retries(3); // UI tests can be flaky.
