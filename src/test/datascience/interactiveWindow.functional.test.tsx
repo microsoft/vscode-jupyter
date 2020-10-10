@@ -23,7 +23,7 @@ import { EditorContexts } from '../../client/datascience/constants';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { InteractiveWindow } from '../../client/datascience/interactive-window/interactiveWindow';
 import { AskedForPerFileSettingKey } from '../../client/datascience/interactive-window/interactiveWindowProvider';
-import { IDataScienceFileSystem, IInteractiveWindowProvider } from '../../client/datascience/types';
+import { IFileSystem, IInteractiveWindowProvider } from '../../client/datascience/types';
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { concatMultilineString } from '../../datascience-ui/common';
 import { InteractivePanel } from '../../datascience-ui/history-react/interactivePanel';
@@ -682,7 +682,7 @@ for i in range(0, 100):
                     return;
                 }
             };
-            const dsfs = ioc.get<IDataScienceFileSystem>(IDataScienceFileSystem);
+            const dsfs = ioc.get<IFileSystem>(IFileSystem);
             const tf = await dsfs.createTemporaryLocalFile('.ipynb');
             try {
                 let exportCalled = false;
