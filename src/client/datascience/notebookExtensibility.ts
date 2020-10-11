@@ -9,6 +9,8 @@ export class NotebookExtensibility implements INotebookExtensibility {
 
     private kernelRestart = new EventEmitter<void>();
 
+    private openWebview = new EventEmitter<string[]>();
+
     public get onKernelPostExecute(): Event<NotebookCell> {
         return this.kernelExecute.event;
     }
@@ -17,11 +19,22 @@ export class NotebookExtensibility implements INotebookExtensibility {
         return this.kernelRestart.event;
     }
 
+    public get onOpenWebview(): Event<string[]> {
+        return this.openWebview.event;
+    }
+
     public fireKernelRestart(): void {
         this.kernelRestart.fire();
     }
 
     public fireKernelPostExecute(cell: NotebookCell): void {
-        this.kernelExecute.fire(cell);
+        const text = cell.document.getText();
+        if (text.length > 0) {
+            this.kernelExecute.fire(cell);
+        }
+    }
+
+    public fireOpenWebview(languages: string[]): void {
+        this.openWebview.fire(languages);
     }
 }

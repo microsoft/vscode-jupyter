@@ -500,6 +500,7 @@ export interface ILocalResourceUriConverter {
 }
 
 export interface IInteractiveBase extends Disposable {
+    readonly notebookExtensibility: INotebookExtensibility;
     onExecutedCode: Event<string>;
     notebook?: INotebook;
     startProgress(): void;
@@ -567,7 +568,6 @@ export interface INotebookEditor extends Disposable {
     readonly executed: Event<INotebookEditor>;
     readonly modified: Event<INotebookEditor>;
     readonly saved: Event<INotebookEditor>;
-    readonly notebookExtensibility: INotebookExtensibility;
     /**
      * Is this notebook representing an untitled file which has never been saved yet.
      */
@@ -600,8 +600,10 @@ export const INotebookExtensibility = Symbol('INotebookExtensibility');
 export interface INotebookExtensibility {
     readonly onKernelPostExecute: Event<NotebookCell>;
     readonly onKernelRestart: Event<void>;
+    readonly onOpenWebview: Event<string[]>;
     fireKernelRestart(): void;
     fireKernelPostExecute(cell: NotebookCell): void;
+    fireOpenWebview(languages: string[]): void;
 }
 
 export const IInteractiveWindowListener = Symbol('IInteractiveWindowListener');

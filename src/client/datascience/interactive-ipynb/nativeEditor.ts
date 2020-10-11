@@ -94,9 +94,6 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     public get onDidChangeViewState(): Event<void> {
         return this._onDidChangeViewState.event;
     }
-    public get notebookExtensibility(): INotebookExtensibility {
-        return this.nbExtensibility;
-    }
 
     public get visible(): boolean {
         return this.viewState.visible;
@@ -185,7 +182,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         private _model: INotebookModel,
         webviewPanel: WebviewPanel | undefined,
         selector: KernelSelector,
-        private nbExtensibility: INotebookExtensibility,
+        nbExtensibility: INotebookExtensibility,
         private extensionChecker: IPythonExtensionChecker
     ) {
         super(
@@ -223,7 +220,8 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             notebookProvider,
             useCustomEditorApi,
             expService,
-            selector
+            selector,
+            nbExtensibility
         );
         asyncRegistry.push(this);
         asyncRegistry.push(this.trustService.onDidSetNotebookTrust(this.monitorChangesToTrust, this));
