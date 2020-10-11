@@ -13,7 +13,12 @@ import { IDisposableRegistry } from '../../common/types';
 import { captureTelemetry } from '../../telemetry';
 import { CommandSource } from '../../testing/common/constants';
 import { Commands, Telemetry } from '../constants';
-import { IDataScienceCommandListener, IDataScienceErrorHandler, INotebookEditorProvider } from '../types';
+import {
+    IDataScienceCommandListener,
+    IDataScienceErrorHandler,
+    INotebookEditor,
+    INotebookEditorProvider
+} from '../types';
 
 @injectable()
 export class NativeEditorCommandListener implements IDataScienceCommandListener {
@@ -113,13 +118,13 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
     }
 
     @captureTelemetry(Telemetry.OpenNotebook, { scope: 'command' }, false)
-    private async openNotebook(file?: Uri): Promise<void> {
+    private async openNotebook(file?: Uri): Promise<INotebookEditor | undefined> {
         if (file && path.extname(file.fsPath).toLocaleLowerCase() === '.ipynb') {
             try {
                 // Then take the contents and load it.
-                await this.provider.open(file);
+                return this.provider.open(file);
             } catch (e) {
-                return this.dataScienceErrorHandler.handleError(e);
+                await this.dataScienceErrorHandler.handleError(e);
             }
         }
     }

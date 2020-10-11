@@ -82,7 +82,7 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
                 if (uri) {
                     setSharedProperty('ds_notebookeditor', 'native');
                     captureTelemetry(Telemetry.OpenNotebook, { scope: 'command' }, false);
-                    this.open(uri).ignoreErrors();
+                    return this.open(uri).ignoreErrors();
                 }
             })
         );
