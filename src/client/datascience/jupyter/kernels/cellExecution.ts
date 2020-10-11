@@ -136,7 +136,6 @@ export class CellExecution {
         this.stopWatch.reset();
         // Changes to metadata must be saved in ipynb, hence mark doc has dirty.
         this.contentProvider.notifyChangesToDocument(this.cell.notebook);
-        this.notifyCellExecution();
 
         // Begin the request that will modify our cell.
         kernelPromise
@@ -496,6 +495,7 @@ export class CellExecution {
     private async handleExecuteInput(msg: KernelMessage.IExecuteInputMsg, _clearState: RefBool) {
         if (msg.content.execution_count) {
             await updateCellExecutionCount(this.editor, this.cell, msg.content.execution_count);
+            this.notifyCellExecution();
         }
     }
 

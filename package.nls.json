@@ -59,6 +59,8 @@
     "jupyter.command.jupyter.debugFileInteractive.title": "Debug Current File in Interactive Window",
     "jupyter.command.jupyter.runallcells.title": "Run All Cells",
     "jupyter.command.jupyter.notebookeditor.runallcells.title": "Run All Notebook Cells",
+    "jupyter.command.jupyter.notebookeditor.expandallcells.title": "Expand All Notebook Cells",
+    "jupyter.command.jupyter.notebookeditor.collapseallcells.title": "Collapse All Notebook Cells",
     "jupyter.command.jupyter.runallcellsabove.title": "Run Above",
     "jupyter.command.jupyter.runcellandallbelow.title": "Run Below",
     "jupyter.command.jupyter.runallcellsabove.palette.title": "Run Cells Above Current Cell",
@@ -590,6 +592,6 @@
     "DataScience.interactiveWindowModeBannerSwitchNo": "No",
     "DataScience.ipykernelNotInstalled": "IPyKernel not installed into interpreter {0}",
     "DataScience.illegalEditorConfig": "CustomEditor and NativeNotebook experiments cannot be turned on together",
-    "DataScience.pythonExtensionRequired" : "The Python extension is required to perform that task. Click Yes to open Python extension installation page.",
-    "DataScience.pythonInstalledReloadPromptMessage" : "Python extension is now installed. Reload window to activate?"
+    "DataScience.pythonExtensionRequired": "The Python extension is required to perform that task. Click Yes to open Python extension installation page.",
+    "DataScience.pythonInstalledReloadPromptMessage": "Python extension is now installed. Reload window to activate?"
 }
