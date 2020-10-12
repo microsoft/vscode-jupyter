@@ -267,17 +267,6 @@ export interface INotebookExecutionLogger extends IDisposable {
     preHandleIOPub?(msg: KernelMessage.IIOPubMessage): KernelMessage.IIOPubMessage;
 }
 
-export interface IGatherProvider {
-    logExecution(vscCell: ICell): void;
-    gatherCode(vscCell: ICell): string;
-    resetLog(): void;
-}
-
-export const IGatherLogger = Symbol('IGatherLogger');
-export interface IGatherLogger extends INotebookExecutionLogger {
-    getGatherProvider(): IGatherProvider | undefined;
-}
-
 export const IJupyterExecution = Symbol('IJupyterExecution');
 export interface IJupyterExecution extends IAsyncDisposable {
     serverStarted: Event<INotebookServerOptions | undefined>;
@@ -839,8 +828,6 @@ export interface IJupyterExtraSettings extends IJupyterSettings {
     variableOptions: {
         enableDuringDebugger: boolean;
     };
-
-    gatherIsInstalled: boolean;
 }
 
 // Get variables from the currently running active Jupyter server

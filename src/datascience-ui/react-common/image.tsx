@@ -28,7 +28,6 @@ export enum ImageName {
     Next,
     Prev,
     Copy,
-    GatherCode,
     Up,
     Down,
     Run,
@@ -69,10 +68,6 @@ const images: { [key: string]: { light: string; dark: string } } = {
     ExpandAll: {
         light: require('./images/ExpandAll/ExpandAll_16x_vscode.svg'),
         dark: require('./images/ExpandAll/ExpandAll_16x_vscode_dark.svg')
-    },
-    GatherCode: {
-        light: require('./images/GatherCode/gather_light.svg'),
-        dark: require('./images/GatherCode/gather_dark.svg')
     },
     GoToSourceCode: {
         light: require('./images/GoToSourceCode/GoToSourceCode_16x_vscode.svg'),

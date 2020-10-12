@@ -9,14 +9,13 @@ import {
 } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { CssMessages } from '../../../../client/datascience/messages';
 import { ICell } from '../../../../client/datascience/types';
-import { extractInputText, getSelectedAndFocusedInfo, ICellViewModel, IMainState } from '../../mainState';
+import { extractInputText, getSelectedAndFocusedInfo, IMainState } from '../../mainState';
 import { isSyncingMessage, postActionToExtension } from '../helpers';
 import { Helpers } from './helpers';
 import {
     CommonActionType,
     CommonReducerArg,
     ICellAction,
-    IChangeGatherStatus,
     IEditCellAction,
     ILinkClickAction,
     ISendCommandAction,
@@ -132,22 +131,6 @@ export namespace Transfer {
             });
         }
 
-        return arg.prevState;
-    }
-
-    export function gather(arg: CommonReducerArg<CommonActionType, ICellAction>): IMainState {
-        const cellVM = arg.prevState.cellVMs.find((c) => c.cell.id === arg.payload.data.cellId);
-        if (cellVM) {
-            postActionToExtension(arg, InteractiveWindowMessages.GatherCode, cellVM.cell);
-        }
-        return arg.prevState;
-    }
-
-    export function gatherToScript(arg: CommonReducerArg<CommonActionType, ICellAction>): IMainState {
-        const cellVM = arg.prevState.cellVMs.find((c) => c.cell.id === arg.payload.data.cellId);
-        if (cellVM) {
-            postActionToExtension(arg, InteractiveWindowMessages.GatherCodeToScript, cellVM.cell);
-        }
         return arg.prevState;
     }
 
@@ -326,26 +309,6 @@ export namespace Transfer {
             // As soon as an untrusted notebook is loaded, prompt the user to trust it
             postActionToExtension(arg, InteractiveWindowMessages.LaunchNotebookTrustPrompt);
         }
-        return arg.prevState;
-    }
-
-    export function gathering(arg: CommonReducerArg<CommonActionType, IChangeGatherStatus>): IMainState {
-        const index = arg.prevState.cellVMs.findIndex((c) => c.cell.id === arg.payload.data.cellId);
-        if (index >= 0) {
-            const cellVMs = [...arg.prevState.cellVMs];
-            const current = arg.prevState.cellVMs[index];
-            const newCell: ICellViewModel = {
-                ...current,
-                gathering: arg.payload.data.gathering
-            };
-            cellVMs[index] = newCell;
-
-            return {
-                ...arg.prevState,
-                cellVMs
-            };
-        }
-
         return arg.prevState;
     }
 }

@@ -52,7 +52,6 @@ interface INativeCellBaseProps {
     firstCell: boolean;
     font: IFont;
     allowUndo: boolean;
-    gatherIsInstalled: boolean;
     editorOptions: monacoEditor.editor.IEditorOptions;
     themeMatplotlibPlots: boolean | undefined;
     focusPending: number;
@@ -139,10 +138,6 @@ export class NativeCell extends React.Component<INativeCellProps> {
 
     private isFocused = () => {
         return this.props.cellVM.focused;
-    };
-
-    private isError = () => {
-        return this.props.cellVM.cell.state === CellState.error;
     };
 
     private renderNormalCell() {
@@ -576,9 +571,6 @@ export class NativeCell extends React.Component<INativeCellProps> {
             this.runAndMove();
             this.props.sendCommand(NativeMouseCommandTelemetry.Run);
         };
-        const gatherCell = () => {
-            this.props.gatherCell(cellId);
-        };
         const deleteCell = () => {
             this.props.deleteCell(cellId);
             this.props.sendCommand(NativeMouseCommandTelemetry.DeleteCell);
@@ -594,14 +586,6 @@ export class NativeCell extends React.Component<INativeCellProps> {
             this.props.focusCell(cellId);
             this.props.step(cellId);
         };
-        const gatherDisabled =
-            this.props.cellVM.cell.data.execution_count === null ||
-            this.props.cellVM.hasBeenRun === null ||
-            this.props.cellVM.hasBeenRun === false ||
-            this.props.cellVM.cell.state === CellState.executing ||
-            this.isError() ||
-            this.isMarkdownCell() ||
-            !this.props.gatherIsInstalled;
         const switchTooltip =
             this.props.cellVM.cell.data.cell_type === 'code'
                 ? getLocString('DataScience.switchToMarkdown', 'Change to markdown')
@@ -699,22 +683,6 @@ export class NativeCell extends React.Component<INativeCellProps> {
                         disabled={!this.props.isNotebookTrusted}
                     >
                         <Image baseTheme={this.props.baseTheme} class="image-button-image" image={otherCellImage} />
-                    </ImageButton>
-                    <ImageButton
-                        baseTheme={this.props.baseTheme}
-                        onClick={gatherCell}
-                        tooltip={getLocString(
-                            'DataScience.gatherCell',
-                            'Gather the code required to generate this cell into a new notebook'
-                        )}
-                        hidden={gatherDisabled}
-                        disabled={!this.props.isNotebookTrusted || this.props.cellVM.gathering}
-                    >
-                        <Image
-                            baseTheme={this.props.baseTheme}
-                            class="image-button-image"
-                            image={this.props.cellVM.gathering ? ImageName.Sync : ImageName.GatherCode}
-                        />
                     </ImageButton>
                     <ImageButton
                         baseTheme={this.props.baseTheme}

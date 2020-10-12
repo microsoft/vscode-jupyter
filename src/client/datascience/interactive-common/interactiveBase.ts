@@ -263,7 +263,9 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
                     )
                     .catch(); // do nothing
 
-                this.nbExtensibility.fireOpenWebview([]);
+                const editor = this.documentManager.activeTextEditor;
+                const language = editor ? editor.document.languageId : PYTHON_LANGUAGE;
+                this.nbExtensibility.fireOpenWebview([language]);
                 break;
 
             case InteractiveWindowMessages.GotoCodeCell:

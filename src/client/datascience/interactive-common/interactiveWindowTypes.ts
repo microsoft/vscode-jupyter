@@ -10,7 +10,6 @@ import { DebugProtocol } from 'vscode-debugprotocol';
 import {
     CommonActionType,
     IAddCellAction,
-    IChangeGatherStatus,
     ILoadIPyWidgetClassFailureAction,
     IVariableExplorerHeight,
     LoadIPyWidgetClassLoadAction,
@@ -95,9 +94,6 @@ export enum InteractiveWindowMessages {
     SavePng = 'save_png',
     StartDebugging = 'start_debugging',
     StopDebugging = 'stop_debugging',
-    GatherCode = 'gather_code',
-    GatherCodeToScript = 'gather_code_to_script',
-    Gathering = 'gathering',
     LaunchNotebookTrustPrompt = 'launch_notebook_trust_prompt',
     TrustNotebookComplete = 'trust_notebook_complete',
     LoadAllCells = 'load_all_cells',
@@ -626,9 +622,6 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.SavePng]: string | undefined;
     public [InteractiveWindowMessages.StartDebugging]: never | undefined;
     public [InteractiveWindowMessages.StopDebugging]: never | undefined;
-    public [InteractiveWindowMessages.GatherCode]: ICell;
-    public [InteractiveWindowMessages.GatherCodeToScript]: ICell;
-    public [InteractiveWindowMessages.Gathering]: IChangeGatherStatus;
     public [InteractiveWindowMessages.LaunchNotebookTrustPrompt]: never | undefined;
     public [InteractiveWindowMessages.TrustNotebookComplete]: never | undefined;
     public [InteractiveWindowMessages.LoadAllCells]: ILoadAllCells;
