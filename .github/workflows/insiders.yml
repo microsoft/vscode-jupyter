@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - rchiodo/add_windows_mac # Temp while testing
   workflow_dispatch:
 
 env:
