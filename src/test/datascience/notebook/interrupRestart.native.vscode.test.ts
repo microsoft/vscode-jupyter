@@ -30,6 +30,7 @@ import {
     insertCodeCell,
     startJupyter,
     trustAllNotebooks,
+    waitForKernelToGetAutoSelected,
     waitForTextOutputInVSCode
 } from './helper';
 
@@ -78,6 +79,7 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         await trustAllNotebooks();
         // Open a notebook and use this for all tests in this test suite.
         await editorProvider.createNew();
+        await waitForKernelToGetAutoSelected();
         assert.isOk(vscodeNotebook.activeNotebookEditor, 'No active notebook');
         vscEditor = vscodeNotebook.activeNotebookEditor!;
     });
