@@ -18,7 +18,7 @@ import {
     ICodeWatcher,
     IDataScienceCodeLensProvider,
     IDataScienceCommandListener,
-    IDataScienceFileSystem,
+    IFileSystem,
     INotebookEditorProvider
 } from '../types';
 import { JupyterCommandLineSelectorCommand } from './commandLineSelector';
@@ -46,7 +46,7 @@ export class CommandRegistry implements IDisposable {
         @inject(IApplicationShell) private appShell: IApplicationShell,
         @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) private jupyterOutput: IOutputChannel,
         @inject(ExportCommands) private readonly exportCommand: ExportCommands,
-        @inject(IDataScienceFileSystem) private readonly fs: IDataScienceFileSystem
+        @inject(IFileSystem) private readonly fs: IFileSystem
     ) {
         this.disposables.push(this.serverSelectedCommand);
         this.disposables.push(this.notebookCommands);
@@ -463,6 +463,6 @@ export class CommandRegistry implements IDisposable {
     }
 
     private openPythonExtensionPage() {
-        env.openExternal(Uri.parse(`https://marketplace.visualstudio.com/items?itemName=ms-ai-tools.jupyter`));
+        env.openExternal(Uri.parse(`https://marketplace.visualstudio.com/items?itemName=ms-toolsai.jupyter`));
     }
 }

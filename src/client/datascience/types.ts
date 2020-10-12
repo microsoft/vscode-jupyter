@@ -7,6 +7,7 @@ import type { Kernel, KernelMessage } from '@jupyterlab/services/lib/kernel';
 import type { JSONObject } from '@phosphor/coreutils';
 import { WriteStream } from 'fs-extra';
 import { Observable } from 'rxjs/Observable';
+import { SemVer } from 'semver';
 import {
     CancellationToken,
     CodeLens,
@@ -271,14 +272,12 @@ export const IJupyterExecution = Symbol('IJupyterExecution');
 export interface IJupyterExecution extends IAsyncDisposable {
     serverStarted: Event<INotebookServerOptions | undefined>;
     isNotebookSupported(cancelToken?: CancellationToken): Promise<boolean>;
-    isImportSupported(cancelToken?: CancellationToken): Promise<boolean>;
     isSpawnSupported(cancelToken?: CancellationToken): Promise<boolean>;
     connectToNotebookServer(
         options?: INotebookServerOptions,
         cancelToken?: CancellationToken
     ): Promise<INotebookServer | undefined>;
     spawnNotebook(file: string): Promise<void>;
-    importNotebook(file: Uri, template: string | undefined): Promise<string>;
     getUsableJupyterPython(cancelToken?: CancellationToken): Promise<PythonEnvironment | undefined>;
     getServer(options?: INotebookServerOptions): Promise<INotebookServer | undefined>;
     getNotebookError(): Promise<string>;
@@ -422,7 +421,7 @@ export interface IJupyterKernelSpec {
 
 export const INotebookImporter = Symbol('INotebookImporter');
 export interface INotebookImporter extends Disposable {
-    importFromFile(contentsFile: Uri): Promise<string>;
+    importFromFile(contentsFile: Uri, interpreter: PythonEnvironment): Promise<string>;
 }
 
 export const INotebookExporter = Symbol('INotebookExporter');
@@ -983,14 +982,6 @@ export interface IJupyterSubCommandExecutionService {
      */
     isNotebookSupported(cancelToken?: CancellationToken): Promise<boolean>;
     /**
-     * Checks whether exporting of ipynb is supported.
-     *
-     * @param {CancellationToken} [cancelToken]
-     * @returns {Promise<boolean>}
-     * @memberof IJupyterSubCommandExecutionService
-     */
-    isExportSupported(cancelToken?: CancellationToken): Promise<boolean>;
-    /**
      * Error message indicating why jupyter notebook isn't supported.
      *
      * @returns {Promise<string>}
@@ -1030,16 +1021,6 @@ export interface IJupyterSubCommandExecutionService {
      */
     getRunningJupyterServers(token?: CancellationToken): Promise<JupyterServerInfo[] | undefined>;
     /**
-     * Exports a given notebook into a python file.
-     *
-     * @param {string} file
-     * @param {string} [template]
-     * @param {CancellationToken} [token]
-     * @returns {Promise<string>}
-     * @memberof IJupyterSubCommandExecutionService
-     */
-    exportNotebookToPython(file: Uri, template?: string, token?: CancellationToken): Promise<string>;
-    /**
      * Opens an ipynb file in a new instance of a jupyter notebook server.
      *
      * @param {string} notebookFile
@@ -1067,6 +1048,22 @@ export interface IJupyterInterpreterDependencyManager {
      * @memberof IJupyterInterpreterDependencyManager
      */
     installMissingDependencies(err?: JupyterInstallError): Promise<void>;
+}
+
+export const INbConvertInterpreterDependencyChecker = Symbol('INbConvertInterpreterDependencyChecker');
+export interface INbConvertInterpreterDependencyChecker {
+    isNbConvertInstalled(interpreter: PythonEnvironment, _token?: CancellationToken): Promise<boolean>;
+    getNbConvertVersion(interpreter: PythonEnvironment, _token?: CancellationToken): Promise<SemVer | undefined>;
+}
+
+export const INbConvertExportToPythonService = Symbol('INbConvertExportToPythonService');
+export interface INbConvertExportToPythonService {
+    exportNotebookToPython(
+        file: Uri,
+        interpreter: PythonEnvironment,
+        template?: string,
+        token?: CancellationToken
+    ): Promise<string>;
 }
 
 export interface INotebookModel {
@@ -1359,8 +1356,8 @@ export interface ITrustService {
     trustNotebook(uri: Uri, notebookContents: string): Promise<void>;
 }
 
-export const IDataScienceFileSystem = Symbol('IDataScienceFileSystem');
-export interface IDataScienceFileSystem {
+export const IFileSystem = Symbol('IFileSystem');
+export interface IFileSystem {
     // Local-only filesystem utilities
     appendLocalFile(path: string, text: string): Promise<void>;
     areLocalPathsSame(path1: string, path2: string): boolean;
@@ -1388,6 +1385,7 @@ export interface IDataScienceFileSystem {
     readFile(uri: Uri): Promise<string>;
     stat(uri: Uri): Promise<FileStat>;
     writeFile(uri: Uri, text: string | Buffer): Promise<void>;
+    getFiles(dir: Uri): Promise<Uri[]>;
 }
 export interface ISwitchKernelOptions {
     identity: Resource;

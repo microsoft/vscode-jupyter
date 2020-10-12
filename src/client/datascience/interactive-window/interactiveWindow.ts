@@ -45,7 +45,7 @@ import {
     ICell,
     ICodeCssGenerator,
     IDataScienceErrorHandler,
-    IDataScienceFileSystem,
+    IFileSystem,
     IInteractiveWindow,
     IInteractiveWindowInfo,
     IInteractiveWindowListener,
@@ -109,7 +109,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         disposables: IDisposableRegistry,
         cssGenerator: ICodeCssGenerator,
         themeFinder: IThemeFinder,
-        fs: IDataScienceFileSystem,
+        fs: IFileSystem,
         configuration: IConfigurationService,
         commandManager: ICommandManager,
         jupyterExporter: INotebookExporter,
@@ -515,7 +515,13 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
                 const lastSubmitter = this.submitters[this.submitters.length - 1];
                 defaultFileName = path.basename(lastSubmitter.fsPath, path.extname(lastSubmitter.fsPath));
             }
-            this.commandManager.executeCommand(Commands.Export, model, defaultFileName);
+
+            this.commandManager.executeCommand(
+                Commands.Export,
+                model,
+                defaultFileName,
+                this.notebook?.getMatchingInterpreter()
+            );
         }
     }
 

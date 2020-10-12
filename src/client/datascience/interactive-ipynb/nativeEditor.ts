@@ -55,7 +55,7 @@ import {
     ICell,
     ICodeCssGenerator,
     IDataScienceErrorHandler,
-    IDataScienceFileSystem,
+    IFileSystem,
     IInteractiveWindowInfo,
     IInteractiveWindowListener,
     IJupyterDebugger,
@@ -159,7 +159,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         cssGenerator: ICodeCssGenerator,
         themeFinder: IThemeFinder,
         statusProvider: IStatusProvider,
-        fs: IDataScienceFileSystem,
+        fs: IFileSystem,
         configuration: IConfigurationService,
         commandManager: ICommandManager,
         jupyterExporter: INotebookExporter,
@@ -736,7 +736,12 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         if (!activeEditor || !activeEditor.model) {
             return;
         }
-        this.commandManager.executeCommand(Commands.Export, activeEditor.model, undefined);
+        this.commandManager.executeCommand(
+            Commands.Export,
+            activeEditor.model,
+            undefined,
+            activeEditor.notebook?.getMatchingInterpreter()
+        );
     }
 
     private logNativeCommand(args: INativeCommand) {

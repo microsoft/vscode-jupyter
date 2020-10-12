@@ -5,16 +5,16 @@
 
 import { inject, injectable, named } from 'inversify';
 import { Uri } from 'vscode';
+import { IFileSystem } from '../../datascience/types';
 import { IApplicationShell, ICommandManager } from '../application/types';
-import { Octicons, PVSC_EXTENSION_ID, STANDARD_OUTPUT_CHANNEL } from '../constants';
+import { JVSC_EXTENSION_ID, Octicons, STANDARD_OUTPUT_CHANNEL } from '../constants';
 import { traceDecorators } from '../logger';
-import { IFileSystem } from '../platform/types';
 import { IFileDownloader, IOutputChannel } from '../types';
 import { ExtensionChannels } from '../utils/localize';
 import { IExtensionBuildInstaller } from './types';
 
 export const developmentBuildUri =
-    'https://pvsc.blob.core.windows.net/extension-builds/ms-ai-tools-jupyter-insiders.vsix';
+    'https://pvsc.blob.core.windows.net/extension-builds/ms-toolsai-jupyter-insiders.vsix';
 export const vsixFileExtension = '.vsix';
 
 @injectable()
@@ -30,7 +30,7 @@ export class StableBuildInstaller implements IExtensionBuildInstaller {
         this.output.append(ExtensionChannels.installingStableMessage());
         await this.appShell.withProgressCustomIcon(Octicons.Installing, async (progress) => {
             progress.report({ message: ExtensionChannels.installingStableMessage() });
-            return this.cmdManager.executeCommand('workbench.extensions.installExtension', PVSC_EXTENSION_ID);
+            return this.cmdManager.executeCommand('workbench.extensions.installExtension', JVSC_EXTENSION_ID);
         });
         this.output.appendLine(ExtensionChannels.installationCompleteMessage());
     }
@@ -55,7 +55,7 @@ export class InsidersBuildInstaller implements IExtensionBuildInstaller {
             return this.cmdManager.executeCommand('workbench.extensions.installExtension', Uri.file(vsixFilePath));
         });
         this.output.appendLine(ExtensionChannels.installationCompleteMessage());
-        await this.fs.deleteFile(vsixFilePath);
+        await this.fs.deleteLocalFile(vsixFilePath);
     }
 
     @traceDecorators.error('Downloading insiders build of extension failed')

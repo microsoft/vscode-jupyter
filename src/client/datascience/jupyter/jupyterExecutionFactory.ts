@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable, named } from 'inversify';
-import { CancellationToken, Event, EventEmitter, Uri } from 'vscode';
+import { CancellationToken, Event, EventEmitter } from 'vscode';
 
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../common/application/types';
 
@@ -17,7 +17,7 @@ import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { JUPYTER_OUTPUT_CHANNEL } from '../constants';
-import { IDataScienceFileSystem, IJupyterExecution, INotebookServer, INotebookServerOptions } from '../types';
+import { IFileSystem, IJupyterExecution, INotebookServer, INotebookServerOptions } from '../types';
 import { KernelSelector } from './kernels/kernelSelector';
 import { GuestJupyterExecution } from './liveshare/guestJupyterExecution';
 import { HostJupyterExecution } from './liveshare/hostJupyterExecution';
@@ -33,7 +33,7 @@ type JupyterExecutionClassType = {
         interpreterService: IInterpreterService,
         disposableRegistry: IDisposableRegistry,
         asyncRegistry: IAsyncDisposableRegistry,
-        fileSystem: IDataScienceFileSystem,
+        fileSystem: IFileSystem,
         workspace: IWorkspaceService,
         configuration: IConfigurationService,
         kernelSelector: KernelSelector,
@@ -58,7 +58,7 @@ export class JupyterExecutionFactory implements IJupyterExecution, IAsyncDisposa
         @inject(IInterpreterService) interpreterService: IInterpreterService,
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
         @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
-        @inject(IDataScienceFileSystem) fs: IDataScienceFileSystem,
+        @inject(IFileSystem) fs: IFileSystem,
         @inject(IWorkspaceService) workspace: IWorkspaceService,
         @inject(IConfigurationService) configuration: IConfigurationService,
         @inject(KernelSelector) kernelSelector: KernelSelector,
@@ -117,10 +117,6 @@ export class JupyterExecutionFactory implements IJupyterExecution, IAsyncDisposa
         return execution.getNotebookError();
     }
 
-    public async isImportSupported(cancelToken?: CancellationToken): Promise<boolean> {
-        const execution = await this.executionFactory.get();
-        return execution.isImportSupported(cancelToken);
-    }
     public async isSpawnSupported(cancelToken?: CancellationToken): Promise<boolean> {
         const execution = await this.executionFactory.get();
         return execution.isSpawnSupported(cancelToken);
@@ -139,10 +135,6 @@ export class JupyterExecutionFactory implements IJupyterExecution, IAsyncDisposa
     public async spawnNotebook(file: string): Promise<void> {
         const execution = await this.executionFactory.get();
         return execution.spawnNotebook(file);
-    }
-    public async importNotebook(file: Uri, template: string | undefined): Promise<string> {
-        const execution = await this.executionFactory.get();
-        return execution.importNotebook(file, template);
     }
     public async getUsableJupyterPython(cancelToken?: CancellationToken): Promise<PythonEnvironment | undefined> {
         const execution = await this.executionFactory.get();

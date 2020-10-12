@@ -7,7 +7,7 @@
         "usingNewInterpreterStorage": true
     },
     "languageServerVersion": "0.5.30",
-    "publisher": "ms-ai-tools",
+    "publisher": "ms-toolsai",
     "enableProposedApi": true,
     "author": {
         "name": "Microsoft Corporation"
@@ -1652,7 +1652,7 @@
         ]
     },
     "scripts": {
-        "package": "gulp clean && gulp prePublishBundle && vsce package -o ms-ai-tools-jupyter-insiders.vsix",
+        "package": "gulp clean && gulp prePublishBundle && vsce package -o ms-toolsai-jupyter-insiders.vsix",
         "compile": "tsc -watch -p ./",
         "compiled": "deemon npm run compile",
         "kill-compiled": "deemon --kill npm run compile",
@@ -1892,7 +1892,7 @@
         "node-has-native-dependencies": "^1.0.2",
         "node-html-parser": "^1.1.13",
         "nyc": "^15.0.0",
-        "playwright-chromium": "^0.13.0",
+        "playwright-chromium": "^1.4.2",
         "postcss": "^7.0.27",
         "postcss-cssnext": "^3.1.0",
         "postcss-import": "^12.0.1",
@@ -1946,6 +1946,7 @@
         "webpack-cli": "^3.1.2",
         "webpack-fix-default-import-plugin": "^1.0.3",
         "why-is-node-running": "^2.0.3",
-        "yargs": "^15.3.1"
+        "yargs": "^15.4.1",
+        "yargs-parser": ">=13.1.2"
     }
 }

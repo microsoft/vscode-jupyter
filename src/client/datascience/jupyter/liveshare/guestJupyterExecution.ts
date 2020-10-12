@@ -18,7 +18,7 @@ import { IInterpreterService } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { LiveShare, LiveShareCommands } from '../../constants';
-import { IDataScienceFileSystem, IJupyterConnection, INotebookServer, INotebookServerOptions } from '../../types';
+import { IFileSystem, IJupyterConnection, INotebookServer, INotebookServerOptions } from '../../types';
 import { JupyterConnectError } from '../jupyterConnectError';
 import { JupyterExecutionBase } from '../jupyterExecution';
 import { KernelSelector } from '../kernels/kernelSelector';
@@ -39,7 +39,7 @@ export class GuestJupyterExecution extends LiveShareParticipantGuest(
         interpreterService: IInterpreterService,
         disposableRegistry: IDisposableRegistry,
         asyncRegistry: IAsyncDisposableRegistry,
-        fs: IDataScienceFileSystem,
+        fs: IFileSystem,
         workspace: IWorkspaceService,
         configuration: IConfigurationService,
         kernelSelector: KernelSelector,
@@ -72,10 +72,15 @@ export class GuestJupyterExecution extends LiveShareParticipantGuest(
     }
 
     public async isNotebookSupported(cancelToken?: CancellationToken): Promise<boolean> {
-        return this.checkSupported(LiveShareCommands.isNotebookSupported, cancelToken);
-    }
-    public isImportSupported(cancelToken?: CancellationToken): Promise<boolean> {
-        return this.checkSupported(LiveShareCommands.isImportSupported, cancelToken);
+        const service = await this.waitForService();
+
+        // Make a remote call on the proxy
+        if (service) {
+            const result = await service.request(LiveShareCommands.isNotebookSupported, [], cancelToken);
+            return result as boolean;
+        }
+
+        return false;
     }
     public isSpawnSupported(_cancelToken?: CancellationToken): Promise<boolean> {
         return Promise.resolve(false);
@@ -143,17 +148,5 @@ export class GuestJupyterExecution extends LiveShareParticipantGuest(
 
     public async getServer(options?: INotebookServerOptions): Promise<INotebookServer | undefined> {
         return this.serverCache.get(options);
-    }
-
-    private async checkSupported(command: string, cancelToken?: CancellationToken): Promise<boolean> {
-        const service = await this.waitForService();
-
-        // Make a remote call on the proxy
-        if (service) {
-            const result = await service.request(command, [], cancelToken);
-            return result as boolean;
-        }
-
-        return false;
     }
 }

@@ -7,6 +7,7 @@ import { CancellationToken, Position, TextDocument, Uri } from 'vscode';
 import { Commands as DSCommands } from '../../datascience/constants';
 import { KernelConnectionMetadata } from '../../datascience/jupyter/kernels/types';
 import { INotebookModel, ISwitchKernelOptions } from '../../datascience/types';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { CommandSource } from '../../testing/common/constants';
 import { Commands } from '../constants';
 import { Channel } from './types';
@@ -68,7 +69,7 @@ interface ICommandNameWithoutArgumentTypeMapping {
 export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgumentTypeMapping {
     ['vscode.openWith']: [Uri, string];
     ['workbench.action.quickOpen']: [string];
-    ['workbench.extensions.installExtension']: [Uri | 'ms-ai-tools.jupyter'];
+    ['workbench.extensions.installExtension']: [Uri | 'ms-toolsai.jupyter'];
     ['workbench.action.files.openFolder']: [];
     ['workbench.action.openWorkspace']: [];
     ['setContext']: [string, boolean] | ['jupyter.vscode.channel', Channel];
@@ -123,10 +124,10 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.GotoPrevCellInFile]: [];
     [DSCommands.ScrollToCell]: [Uri, string];
     [DSCommands.ViewJupyterOutput]: [];
-    [DSCommands.ExportAsPythonScript]: [INotebookModel];
-    [DSCommands.ExportToHTML]: [INotebookModel, string | undefined];
-    [DSCommands.ExportToPDF]: [INotebookModel, string | undefined];
-    [DSCommands.Export]: [Uri | INotebookModel, string | undefined];
+    [DSCommands.ExportAsPythonScript]: [INotebookModel, PythonEnvironment | undefined];
+    [DSCommands.ExportToHTML]: [INotebookModel, string | undefined, PythonEnvironment | undefined];
+    [DSCommands.ExportToPDF]: [INotebookModel, string | undefined, PythonEnvironment | undefined];
+    [DSCommands.Export]: [Uri | INotebookModel, string | undefined, PythonEnvironment | undefined];
     [DSCommands.SetJupyterKernel]: [KernelConnectionMetadata, Uri, undefined | Uri];
     [DSCommands.SwitchJupyterKernel]: [ISwitchKernelOptions | undefined];
     [DSCommands.SelectJupyterCommandLine]: [undefined | Uri];

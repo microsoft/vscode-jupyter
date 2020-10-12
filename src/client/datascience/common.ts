@@ -3,6 +3,7 @@
 'use strict';
 import type { nbformat } from '@jupyterlab/coreutils';
 import * as os from 'os';
+import { parse, SemVer } from 'semver';
 import { Memento, Uri } from 'vscode';
 import { splitMultilineString } from '../../datascience-ui/common';
 import { traceError, traceInfo } from '../common/logger';
@@ -10,7 +11,7 @@ import { IPythonExecutionFactory } from '../common/process/types';
 import { DataScience } from '../common/utils/localize';
 import { noop } from '../common/utils/misc';
 import { Settings } from './constants';
-import { ICell, IDataScienceFileSystem } from './types';
+import { ICell, IFileSystem } from './types';
 
 // Can't figure out a better way to do this. Enumerate
 // the allowed keys of different output formats.
@@ -157,7 +158,7 @@ export function generateNewNotebookUri(
 }
 
 export async function getRealPath(
-    fs: IDataScienceFileSystem,
+    fs: IFileSystem,
     execFactory: IPythonExecutionFactory,
     pythonPath: string,
     expectedPath: string
@@ -186,5 +187,16 @@ export async function getRealPath(
         if (await fs.localFileExists(trimmed)) {
             return trimmed;
         }
+    }
+}
+
+// For the given string parse it out to a SemVer or return undefined
+export function parseSemVer(versionString: string): SemVer | undefined {
+    const versionMatch = /^\s*(\d+)\.(\d+)\.(.+)\s*$/.exec(versionString);
+    if (versionMatch && versionMatch.length > 2) {
+        const major = parseInt(versionMatch[1], 10);
+        const minor = parseInt(versionMatch[2], 10);
+        const build = parseInt(versionMatch[3], 10);
+        return parse(`${major}.${minor}.${build}`, true) ?? undefined;
     }
 }

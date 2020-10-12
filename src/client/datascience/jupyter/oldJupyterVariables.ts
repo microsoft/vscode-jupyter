@@ -11,15 +11,13 @@ import { Event, EventEmitter, Uri } from 'vscode';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { traceError } from '../../common/logger';
 
-// tslint:disable-next-line: no-require-imports
-import unescape = require('lodash/unescape');
 import { IConfigurationService } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { EXTENSION_ROOT_DIR } from '../../constants';
 import { Identifiers, Settings } from '../constants';
 import {
     ICell,
-    IDataScienceFileSystem,
+    IFileSystem,
     IJupyterVariable,
     IJupyterVariables,
     IJupyterVariablesRequest,
@@ -58,7 +56,7 @@ export class OldJupyterVariables implements IJupyterVariables {
     private refreshEventEmitter = new EventEmitter<void>();
 
     constructor(
-        @inject(IDataScienceFileSystem) private fs: IDataScienceFileSystem,
+        @inject(IFileSystem) private fs: IFileSystem,
         @inject(IConfigurationService) private configService: IConfigurationService
     ) {}
 
@@ -234,7 +232,7 @@ export class OldJupyterVariables implements IJupyterVariables {
 
     // Pull our text result out of the Jupyter cell
     private deserializeJupyterResult<T>(cells: ICell[]): T {
-        const text = unescape(this.extractJupyterResultText(cells));
+        const text = this.extractJupyterResultText(cells);
         return JSON.parse(text) as T;
     }
 
@@ -359,7 +357,7 @@ export class OldJupyterVariables implements IJupyterVariables {
         // Now execute the query
         if (notebook && query) {
             const cells = await notebook.execute(query.query, Identifiers.EmptyFileName, 0, uuid(), undefined, true);
-            const text = unescape(this.extractJupyterResultText(cells));
+            const text = this.extractJupyterResultText(cells);
 
             // Apply the expression to it
             const matches = this.getAllMatches(query.parser, text);

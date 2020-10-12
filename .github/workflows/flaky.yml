@@ -118,6 +118,7 @@ jobs:
       # In production, we get debugpy from python extension.
       - name: Install functional test requirements
         run: |
+          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
           python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
           python ./pythonFiles/install_debugpy.py
           python -m pip install numpy
@@ -125,6 +126,7 @@ jobs:
           python -m pip install --upgrade -r build/test-requirements.txt
           python -m pip install --upgrade -r ./build/ipython-test-requirements.txt
           python -m pip install --upgrade -r ./build/conda-functional-requirements.txt
+          python -m ipykernel install --user
 
       - name: Install dependencies (npm ci)
         run: npm ci --prefer-offline
@@ -149,10 +151,12 @@ jobs:
 
       - name: Run functional tests
         run: npm run test:functional
+        id: test_functional
         if: matrix.test-suite == 'functional'
 
       - name: Run functional tests with Jupyter
         run: npm run test:functional
+        id: test_functional_jupyter
         env:
           VSCODE_PYTHON_ROLLING: 1
           VSC_PYTHON_FORCE_LOGGING: 1
@@ -164,4 +168,11 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}       
           report_paths: ${{ env.TEST_RESULTS_GLOB }} 
           check_name: Functional Test Report
-        if: matrix.test-suite == 'functional' || matrix.test-suite == 'functional-with-jupyter'
+        if: (steps.test_functional.outcome == 'failure' || steps.test_functional_jupyter.outcome == 'failure') && failure()
+
+      - name: Upload Functional Test Report
+        uses: actions/upload-artifact@v2
+        with:
+          name: functional-jupyter-test-result-${{ matrix.os }}-${{ matrix.python }}
+          path: ${{ env.TEST_RESULTS_GLOB }}
+        if: steps.test_functional_jupyter.outcome == 'failure' && failure()

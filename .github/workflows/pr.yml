@@ -16,14 +16,12 @@ env:
   CACHE_PIP_DEPS: cache-pip
   # Key for the cache created at the end of the the 'Cache ./pythonFiles/lib/python' step.
   CACHE_PYTHONFILES: cache-pvsc-pythonFiles
-  VSIX_NAME: ms-ai-tools-jupyter-insiders-vsix
+  VSIX_NAME: ms-toolsai-jupyter-insiders.vsix
   VSIX_NAME_PYTHON: ms-python-insiders-nods.vsix
   COVERAGE_REPORTS: tests-coverage-reports
   CI_PYTHON_PATH: python
   TEST_RESULTS_DIRECTORY: .
   TEST_RESULTS_GLOB: '**/test-results.xml'
-  # Set this to true to produce more output from actions
-  ACTIONS_RUNNER_DEBUG: false
 
 jobs:
   build-vsix:
@@ -191,13 +189,15 @@ jobs:
 
         # if: steps.out-cache.outputs.cache-hit == false
       - name: Run TypeScript unit tests
+        id: test_unittests
         run: npm run test:unittests:cover
 
       - name: Publish Test Report
         uses: scacap/action-surefire-report@v1
+        if: steps.test_unittests.outcome == 'failure' && failure()
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}       
-          report_paths: ${{ env.TEST_RESULTS_GLOB }} 
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          report_paths: ${{ env.TEST_RESULTS_GLOB }}
           check_name: Ts-Unit Test Report
 
   tests:
@@ -312,6 +312,7 @@ jobs:
           python -m pip install --upgrade -r build/test-requirements.txt
           python -m pip install --upgrade -r ./build/ipython-test-requirements.txt
           python -m pip install --upgrade -r ./build/conda-functional-requirements.txt
+          python -m ipykernel install --user
         # This step is slow.
         # If running the placeholder suite & not required to run any tests, then don't install python dependencies.
         if: matrix.test-suite != 'test-based-on-pr-body' || contains(github.event.pull_request.body, '[x] Run ')
@@ -337,6 +338,7 @@ jobs:
 
       - name: Run functional tests
         run: npm run test:functional
+        id: test_functional
         if: matrix.test-suite == 'functional'
 
       - name: Run single-workspace tests
@@ -348,7 +350,8 @@ jobs:
         if: matrix.test-suite == 'single-workspace' || (matrix.test-suite == 'test-based-on-pr-body' && contains(github.event.pull_request.body, '[x] Run single-workspace test'))
 
       - name: Run functional tests with Jupyter
-        run: npm run test:functional
+        run: npm run test:functional -- --grep="MimeTypes"
+        id: test_functional_jupyter
         env:
           VSCODE_PYTHON_ROLLING: 1
           VSC_PYTHON_FORCE_LOGGING: 1
@@ -357,10 +360,10 @@ jobs:
       - name: Publish Test Report
         uses: scacap/action-surefire-report@v1
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}       
-          report_paths: ${{ env.TEST_RESULTS_GLOB }} 
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          report_paths: ${{ env.TEST_RESULTS_GLOB }}
           check_name: Functional Test Report
-        if: matrix.test-suite == 'functional' || matrix.test-suite == 'functional-with-jupyter'
+        if: (steps.test_functional.outcome == 'failure' || steps.test_functional_jupyter.outcome == 'failure') && failure()
 
       - name: Run DataScience tests with VSCode & Jupyter
         uses: GabrielBB/xvfb-action@v1.4

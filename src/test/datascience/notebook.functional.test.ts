@@ -6,8 +6,6 @@ import { assert } from 'chai';
 import { ChildProcess } from 'child_process';
 import * as fs from 'fs-extra';
 import { injectable } from 'inversify';
-// tslint:disable-next-line: no-require-imports
-import escape = require('lodash/escape');
 import * as os from 'os';
 import * as path from 'path';
 import { SemVer } from 'semver';
@@ -25,6 +23,8 @@ import { IPythonExecutionFactory } from '../../client/common/process/types';
 import { Product } from '../../client/common/types';
 import { createDeferred, waitForPromise } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
+import { ExportInterpreterFinder } from '../../client/datascience/export/exportInterpreterFinder';
+import { ExportFormat } from '../../client/datascience/export/types';
 import { getDefaultInteractiveIdentity } from '../../client/datascience/interactive-window/identity';
 import { getMessageForLibrariesNotInstalled } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService';
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
@@ -33,7 +33,7 @@ import { HostJupyterNotebook } from '../../client/datascience/jupyter/liveshare/
 import {
     CellState,
     ICell,
-    IDataScienceFileSystem,
+    IFileSystem,
     IJupyterConnection,
     IJupyterExecution,
     IJupyterKernelSpec,
@@ -128,7 +128,7 @@ suite('DataScience notebook tests', () => {
                 return path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience');
             }
 
-            function extractDataOutput(cell: ICell): any {
+            function extractDataOutput(cell: ICell): string | undefined {
                 assert.equal(cell.data.cell_type, 'code', `Wrong type of cell returned`);
                 const codeCell = cell.data as nbformat.ICodeCell;
                 if (codeCell.outputs.length > 0) {
@@ -143,7 +143,7 @@ suite('DataScience notebook tests', () => {
                         // For linter
                         assert.ok(data.hasOwnProperty('text/plain'), `Cell mime type not correct`);
                         assert.ok((data as any)['text/plain'], `Cell mime type not correct`);
-                        return (data as any)['text/plain'];
+                        return concatMultilineString((data as any)['text/plain']);
                     }
                 }
             }
@@ -157,9 +157,9 @@ suite('DataScience notebook tests', () => {
                 const cells = await notebook!.execute(code, path.join(srcDirectory(), 'foo.py'), 2, uuid());
                 assert.equal(cells.length, 1, `Wrong number of cells returned`);
                 const data = extractDataOutput(cells[0]);
-                if (pathVerify) {
+                if (pathVerify && data) {
                     // For a path comparison normalize output
-                    const normalizedOutput = path.normalize(data).toUpperCase().replace(/&#39;/g, '');
+                    const normalizedOutput = path.normalize(data).toUpperCase().replace(/'/g, '');
                     const normalizedTarget = path.normalize(expectedValue).toUpperCase().replace(/'/g, '');
                     assert.equal(normalizedOutput, normalizedTarget, 'Cell path values does not match');
                 } else {
@@ -625,14 +625,19 @@ suite('DataScience notebook tests', () => {
                 }
 
                 // Save to a temp file
-                const fileSystem = ioc.serviceManager.get<IDataScienceFileSystem>(IDataScienceFileSystem);
+                const fileSystem = ioc.serviceManager.get<IFileSystem>(IFileSystem);
                 const importer = ioc.serviceManager.get<INotebookImporter>(INotebookImporter);
                 const temp = await fileSystem.createTemporaryLocalFile('.ipynb');
 
                 try {
                     await fs.writeFile(temp.filePath, JSON.stringify(notebook), 'utf8');
                     // Try importing this. This should verify export works and that importing is possible
-                    const results = await importer.importFromFile(Uri.file(temp.filePath));
+                    const exportInterpreterFinder = ioc.serviceManager.get<ExportInterpreterFinder>(
+                        ExportInterpreterFinder
+                    );
+                    const usable = await exportInterpreterFinder.getExportInterpreter(ExportFormat.python, undefined);
+                    assert.isDefined(usable);
+                    const results = await importer.importFromFile(Uri.file(temp.filePath), usable!);
 
                     // Make sure we have a single chdir in our results
                     const first = results.indexOf('os.chdir');
@@ -642,6 +647,7 @@ suite('DataScience notebook tests', () => {
 
                     // Make sure we have a cell in our results
                     assert.ok(/#\s*%%/.test(results), 'No cells in returned import');
+                    assert.ok(!results.includes('tpl'), 'Formatted template with wrong arguments');
                 } finally {
                     importer.dispose();
                     temp.dispose();
@@ -832,13 +838,6 @@ suite('DataScience notebook tests', () => {
                         true
                     )
                 );
-                assert.ok(
-                    await testCancelableMethod(
-                        (t: CancellationToken) => jupyterExecution.isImportSupported(t),
-                        'Cancel did not cancel isImport after {0}ms',
-                        true
-                    )
-                );
             });
 
             async function interruptExecute(
@@ -990,7 +989,7 @@ a`,
                     mimeType: 'text/plain',
                     cellType: 'code',
                     result: `<a href=f>`,
-                    verifyValue: (d) => assert.ok(d.includes(escape(`<a href=f>`)), 'XML not escaped')
+                    verifyValue: (d) => assert.ok(d.includes(`<a href=f>`), 'Should not escape at the notebook level')
                 },
                 {
                     markdownRegEx: undefined,
@@ -1002,7 +1001,7 @@ df.head()`,
                     cellType: 'error',
                     // tslint:disable-next-line:quotemark
                     verifyValue: (d) =>
-                        assert.ok((d as string).includes(escape("has no attribute 'read'")), 'Unexpected error result')
+                        assert.ok((d as string).includes("has no attribute 'read'"), 'Unexpected error result')
                 },
                 {
                     markdownRegEx: undefined,
@@ -1098,7 +1097,7 @@ plt.show()`,
                     'Jupyter is not outputting the path to the config'
                 );
                 const configPath = match !== null ? match[1] : '';
-                const filesystem = ioc.serviceContainer.get<IDataScienceFileSystem>(IDataScienceFileSystem);
+                const filesystem = ioc.serviceContainer.get<IFileSystem>(IFileSystem);
                 await filesystem.writeLocalFile(configPath, 'c.NotebookApp.password_required = True'); // This should make jupyter fail
                 modifiedConfig = true;
             }
@@ -1297,7 +1296,10 @@ plt.show()`,
                     }
                     public async postExecute(cell: ICell, silent: boolean): Promise<void> {
                         if (!silent) {
-                            outputs.push(extractDataOutput(cell));
+                            const data = extractDataOutput(cell);
+                            if (data) {
+                                outputs.push(data);
+                            }
                         }
                     }
                 }
