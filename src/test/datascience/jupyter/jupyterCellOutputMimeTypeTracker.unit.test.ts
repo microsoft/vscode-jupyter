@@ -17,7 +17,7 @@ import { NativeEditorProvider } from '../../../client/datascience/notebookStorag
 import { NativeEditorNotebookModel } from '../../../client/datascience/notebookStorage/notebookModel';
 import { CellState, ICell, INotebookEditor } from '../../../client/datascience/types';
 
-suite('DataScience - Cell Output Mimetype Trackerxxx', () => {
+suite('DataScience - Cell Output Mimetype Tracker', () => {
     const oldValueOfVSC_PYTHON_UNIT_TEST = process.env.VSC_PYTHON_UNIT_TEST;
     const oldValueOfVSC_JUPYTER_CI_TEST = process.env.VSC_JUPYTER_CI_TEST;
     let outputMimeTypeTracker: CellOutputMimeTypeTracker;

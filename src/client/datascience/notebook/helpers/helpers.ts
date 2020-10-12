@@ -11,11 +11,11 @@ import type {
     NotebookCell,
     NotebookCellData,
     NotebookCellMetadata,
+    NotebookCellRunState,
     NotebookData,
     NotebookDocument,
     NotebookEditor
-} from 'vscode-proposed';
-import { NotebookCellRunState } from '../../../../../typings/vscode-proposed';
+} from '../../../../../typings/vscode-proposed';
 import { concatMultilineString, splitMultilineString } from '../../../../datascience-ui/common';
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../common/constants';
 import '../../../common/extensions';

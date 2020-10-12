@@ -57,6 +57,7 @@ import {
     WorkspaceFolderPickOptions,
     WorkspaceFoldersChangeEvent
 } from 'vscode';
+import * as vsls from 'vsls/vscode';
 import type {
     NotebookCellLanguageChangeEvent as VSCNotebookCellLanguageChangeEvent,
     NotebookCellMetadata,
@@ -70,8 +71,7 @@ import type {
     NotebookEditor,
     NotebookKernel,
     NotebookKernelProvider
-} from 'vscode-proposed';
-import * as vsls from 'vsls/vscode';
+} from '../../../../types/vscode-proposed';
 
 import { IAsyncDisposable, Resource } from '../types';
 import { ICommandNameArgumentTypeMapping } from './commands';

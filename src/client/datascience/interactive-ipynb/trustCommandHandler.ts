@@ -9,7 +9,6 @@ import { IExtensionSingleActivationService } from '../../activation/types';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import { ContextKey } from '../../common/contextKey';
 import '../../common/extensions';
-import { IFileSystem } from '../../common/platform/types';
 import { IDisposableRegistry } from '../../common/types';
 import { createDeferred } from '../../common/utils/async';
 import { swallowExceptions } from '../../common/utils/decorators';
@@ -19,7 +18,7 @@ import { sendTelemetryEvent } from '../../telemetry';
 import { Commands, Telemetry } from '../constants';
 import { INotebookStorageProvider } from '../notebookStorage/notebookStorageProvider';
 import { VSCodeNotebookModel } from '../notebookStorage/vscNotebookModel';
-import { INotebookEditorProvider, INotebookModel, ITrustService } from '../types';
+import { IFileSystem, INotebookEditorProvider, INotebookModel, ITrustService } from '../types';
 
 @injectable()
 export class TrustCommandHandler implements IExtensionSingleActivationService {
@@ -89,9 +88,7 @@ export class TrustCommandHandler implements IExtensionSingleActivationService {
     }
     private async trustNativeNotebook(model: VSCodeNotebookModel) {
         const trustedNotebookInTrustService = createDeferred<void>();
-        const doc = this.vscNotebook.notebookDocuments.find((item) =>
-            this.fs.arePathsSame(item.uri.fsPath, model.file.fsPath)
-        );
+        const doc = this.vscNotebook.notebookDocuments.find((item) => this.fs.arePathsSame(item.uri, model.file));
         let fileReverted = false;
         const disposable = this.vscNotebook.onDidChangeNotebookDocument((e) => {
             if (e.document !== doc) {

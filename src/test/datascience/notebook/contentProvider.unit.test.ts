@@ -10,7 +10,10 @@ import { anything, instance, mock, when } from 'ts-mockito';
 import { EventEmitter, Memento, Uri } from 'vscode';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
-import type { NotebookContentProvider as VSCodeNotebookContentProvider, NotebookDocument } from 'vscode-proposed';
+import type {
+    NotebookContentProvider as VSCodeNotebookContentProvider,
+    NotebookDocument
+} from '../../../../types/vscode-proposed';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { ICryptoUtils } from '../../../client/common/types';

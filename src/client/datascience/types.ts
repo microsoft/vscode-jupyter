@@ -24,8 +24,8 @@ import {
     Uri
 } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import type { NotebookCell } from 'vscode-proposed';
 import type { Data as WebSocketData } from 'ws';
+import type { NotebookCell } from '../../../types/vscode-proposed';
 import { ServerStatus } from '../../datascience-ui/interactive-common/mainState';
 import { ICommandManager, IDebugService } from '../common/application/types';
 import { FileStat, TemporaryFile } from '../common/platform/types';

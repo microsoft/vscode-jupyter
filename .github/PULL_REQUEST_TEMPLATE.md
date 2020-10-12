@@ -21,3 +21,4 @@ Select one or more of the following tests to run as part of the CI for the curre
 * [ ] Run single-workspace tests (with VS Code, without Python extension & without Jupyter)
 * [ ] Run functional-with-jupyter tests (mocked VS Code, without Python extension & with Jupyter)
 * [ ] Run vscode tests (with VS Code, with Python extension & with Jupyter)
+* [ ] Run Notebook tests (with VS Code, with Python extension & with Jupyter)

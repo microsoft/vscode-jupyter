@@ -5,7 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import { Event, EventEmitter, Uri } from 'vscode';
-import type { NotebookDocument, NotebookEditor as VSCodeNotebookEditor } from 'vscode-proposed';
+import type { NotebookDocument, NotebookEditor as VSCodeNotebookEditor } from '../../../../types/vscode-proposed';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import '../../common/extensions';
 

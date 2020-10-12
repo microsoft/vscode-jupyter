@@ -8,7 +8,7 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import { Uri } from 'vscode';
-import { IConfigurationService, IDataScienceSettings, IDisposable } from '../../../client/common/types';
+import { IConfigurationService, IDisposable, IJupyterSettings, ReadWrite } from '../../../client/common/types';
 import { ITrustService } from '../../../client/datascience/types';
 import { IExtensionTestApi } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
@@ -20,7 +20,7 @@ suite('DataScience - TrustService', () => {
     let trustService: ITrustService;
     let ipynbFile: string;
     let oldTrustSetting: boolean;
-    let dsSettings: IDataScienceSettings | undefined;
+    let dsSettings: ReadWrite<IJupyterSettings> | undefined;
     const templateIpynb = path.join(
         EXTENSION_ROOT_DIR_FOR_TESTS,
         'src/test/datascience/interactive-common/nbToTrust.ipynb'
@@ -30,7 +30,7 @@ suite('DataScience - TrustService', () => {
         api = await initialize();
         trustService = api.serviceContainer.get<ITrustService>(ITrustService);
         const configService = api.serviceContainer.get<IConfigurationService>(IConfigurationService);
-        dsSettings = configService.getSettings().datascience;
+        dsSettings = configService.getSettings();
         oldTrustSetting = dsSettings.alwaysTrustNotebooks;
         dsSettings.alwaysTrustNotebooks = false;
     });

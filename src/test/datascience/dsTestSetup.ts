@@ -4,7 +4,6 @@
 import * as fs from 'fs-extra';
 import { applyEdits, ModificationOptions, modify } from 'jsonc-parser';
 import * as path from 'path';
-// import { IS_CI_SERVER } from '../ciConstants';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants';
 
 const settingsFile = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src/test/datascience/.vscode/settings.json');
@@ -26,8 +25,6 @@ function updateTestsForNativeNotebooks() {
     content.contributes.configuration.properties['python.logging.level'].scope = 'resource';
 
     fs.writeFileSync(packageJsonFile, JSON.stringify(content, undefined, 4));
-    // tslint:disable-next-line: no-console
-    console.error('Updated');
     updateSettings(true);
 }
 
@@ -39,7 +36,7 @@ function updateSettings(useNativeNotebooks: boolean) {
         }
     };
     let settingsJson = fs.readFileSync(settingsFile).toString();
-    const experiments = useNativeNotebooks ? ['NativeNotebook - experiment'] : [];
+    const experiments = useNativeNotebooks ? ['NativeNotebookEditor'] : [];
     const autoSave = useNativeNotebooks ? 'off' : 'afterDelay';
 
     settingsJson = applyEdits(
@@ -54,15 +51,8 @@ function updateTestsForOldNotebooks() {
     updateSettings(false);
 }
 
-if (
-    process.env.VSC_PYTHON_CI_TEST_VSC_CHANNEL === 'insiders' &&
-    process.env.TEST_FILES_SUFFIX === 'native.vscode.test'
-) {
-    // tslint:disable-next-line: no-console
-    console.error('Insider Tests');
+if (process.env.VSC_PYTHON_CI_TEST_VSC_CHANNEL === 'insiders') {
     updateTestsForNativeNotebooks();
 } else {
-    // tslint:disable-next-line: no-console
-    console.error('Stable Tests');
     updateTestsForOldNotebooks();
 }

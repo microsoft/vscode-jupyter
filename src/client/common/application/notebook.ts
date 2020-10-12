@@ -13,7 +13,7 @@ import type {
     NotebookEditor,
     NotebookKernel,
     NotebookKernelProvider
-} from 'vscode-proposed';
+} from '../../../../types/vscode-proposed';
 import { UseProposedApi } from '../constants';
 import { IDisposableRegistry } from '../types';
 import { IApplicationEnvironment, IVSCodeNotebook, NotebookCellChangedEvent } from './types';

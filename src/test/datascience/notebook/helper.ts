@@ -39,7 +39,7 @@ import { INotebookContentProvider } from '../../../client/datascience/notebook/t
 import { VSCodeNotebookModel } from '../../../client/datascience/notebookStorage/vscNotebookModel';
 import { INotebookEditorProvider, INotebookProvider, ITrustService } from '../../../client/datascience/types';
 import { createEventHandler, waitForCondition } from '../../common';
-import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
+import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_SMOKE_TEST } from '../../constants';
 import { closeActiveWindows, initialize, isInsiders } from '../../initialize';
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
@@ -159,6 +159,12 @@ export async function shutdownAllNotebooks() {
 
 let oldValueFor_alwaysTrustNotebooks: undefined | boolean;
 export async function closeNotebooksAndCleanUpAfterTests(disposables: IDisposable[] = []) {
+    if (!IS_SMOKE_TEST) {
+        // When running smoke tests, we won't have access to these.
+        const configSettings = await import('../../../client/common/configSettings');
+        // Dispose any cached python settings (used only in test env).
+        configSettings.JupyterSettings.dispose();
+    }
     if (!isInsiders()) {
         return false;
     }

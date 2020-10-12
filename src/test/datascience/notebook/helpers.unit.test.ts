@@ -7,10 +7,11 @@ import { nbformat } from '@jupyterlab/coreutils';
 import { assert } from 'chai';
 import { cloneDeep } from 'lodash';
 import { Uri } from 'vscode';
-import type { CellOutput } from 'vscode-proposed';
+import { CellOutput, NotebookCellData } from '../../../../types/vscode-proposed';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
+import { ReadWrite } from '../../../client/common/types';
 import { notebookModelToVSCNotebookData } from '../../../client/datascience/notebook/helpers/helpers';
 
 suite('DataScience - NativeNotebook helpers', () => {
@@ -31,13 +32,13 @@ suite('DataScience - NativeNotebook helpers', () => {
         ];
 
         // tslint:disable-next-line: no-any
-        const notebook = notebookModelToVSCNotebookData(true, {}, Uri.file(''), cells, PYTHON_LANGUAGE);
+        const notebook = notebookModelToVSCNotebookData(true, {}, Uri.file(''), cells as any, PYTHON_LANGUAGE);
 
         assert.isOk(notebook);
         assert.deepEqual(notebook.languages, ['*']);
         // ignore metadata we add.
         const cellsWithoutCustomMetadata = notebook.cells.map((cell) => {
-            const cellToCompareWith = cloneDeep(cell);
+            const cellToCompareWith: ReadWrite<NotebookCellData> = cloneDeep(cell);
             delete cellToCompareWith.metadata?.custom;
             return cellToCompareWith;
         });

@@ -14,7 +14,7 @@ import type {
     NotebookDocumentBackupContext,
     NotebookDocumentContentChangeEvent,
     NotebookDocumentOpenContext
-} from 'vscode-proposed';
+} from '../../../../types/vscode-proposed';
 import { MARKDOWN_LANGUAGE } from '../../common/constants';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { DataScience } from '../../common/utils/localize';
