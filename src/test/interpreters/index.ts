@@ -55,7 +55,7 @@ export async function getInterpreterInfo(pythonPath: string): Promise<PythonEnvi
                 sysPrefix: json.sysPrefix
             };
         } catch (ex) {
-            traceError('Failed to get Activated env Variables');
+            traceError('Failed to get Activated env Variables: ', ex);
             return undefined;
         }
     })();
