@@ -201,7 +201,6 @@ jobs:
         # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
         os: [ubuntu-latest, windows-latest]
         python: [3.8]
-        # test-suite: [python-unit, functional]
         test-suite: [python-unit, functional]
     steps:
       - name: Checkout
