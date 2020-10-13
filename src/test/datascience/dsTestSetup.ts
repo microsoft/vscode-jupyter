@@ -63,7 +63,11 @@ function updateTestsForOldNotebooks() {
 updatePackageJsonForTests();
 
 if (process.env.VSC_JUPYTER_CI_TEST_VSC_CHANNEL === 'insiders' && process.env.VSC_JUPYTER_RUN_NB_TEST) {
+    // tslint:disable-next-line: no-console
+    console.info('Updated settings for Native Notebook tests');
     updateTestsForNativeNotebooks();
 } else {
+    // tslint:disable-next-line: no-console
+    console.info('Updated settings for Standard Notebook tests');
     updateTestsForOldNotebooks();
 }
