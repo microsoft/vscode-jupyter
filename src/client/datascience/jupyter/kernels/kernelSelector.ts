@@ -500,7 +500,7 @@ export class KernelSelector implements IKernelSelectionUsage {
         notebookMetadata?: nbformat.INotebookMetadata
     ): Promise<PythonEnvironment | undefined> {
         const info = getInterpreterInfoStoredInMetadata(notebookMetadata);
-        if (!info) {
+        if (!info || !this.extensionChecker.isPythonExtensionInstalled) {
             return;
         }
         const interpreters = await this.interpreterService.getInterpreters(resource);
@@ -528,7 +528,9 @@ export class KernelSelector implements IKernelSelectionUsage {
 
         // First use our kernel finder to locate a kernelspec on disk
         const kernelSpec = await this.kernelFinder.findKernelSpec(resource, notebookMetadata, cancelToken);
-        const activeInterpreter = await this.interpreterService.getActiveInterpreter(resource);
+        const activeInterpreter = this.extensionChecker.isPythonExtensionInstalled
+            ? await this.interpreterService.getActiveInterpreter(resource)
+            : undefined;
         if (!kernelSpec && !activeInterpreter) {
             return;
         } else if (!kernelSpec && activeInterpreter) {
@@ -550,7 +552,7 @@ export class KernelSelector implements IKernelSelectionUsage {
                 kernelSpec,
                 interpreter
             };
-            // Install missing depednencies only if we're dealing with a Python kernel.
+            // Install missing dependencies only if we're dealing with a Python kernel.
             if (interpreter && isPythonKernelConnection(connectionInfo)) {
                 await this.installDependenciesIntoInterpreter(interpreter, ignoreDependencyCheck, cancelToken);
             }
