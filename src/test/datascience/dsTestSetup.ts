@@ -21,8 +21,8 @@ function updateTestsForNativeNotebooks() {
     delete content.contributes.notebookProvider[0].priority;
 
     // Update package.json to pick experiments from our custom settings.json file.
-    content.contributes.configuration.properties['python.experiments.optInto'].scope = 'resource';
-    content.contributes.configuration.properties['python.logging.level'].scope = 'resource';
+    content.contributes.configuration.properties['jupyter.experiments.optInto'].scope = 'resource';
+    content.contributes.configuration.properties['jupyter.logging.level'].scope = 'resource';
 
     fs.writeFileSync(packageJsonFile, JSON.stringify(content, undefined, 4));
     updateSettings(true);
