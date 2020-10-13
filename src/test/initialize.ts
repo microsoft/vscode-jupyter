@@ -1,9 +1,11 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 import type { IExtensionApi } from '../client/api';
+import type { IDisposable } from '../client/common/types';
 import { IExtensionTestApi, PYTHON_PATH, setPythonPathInWorkspaceRoot } from './common';
 import { IS_SMOKE_TEST, JVSC_EXTENSION_ID_FOR_TESTS } from './constants';
 import { sleep } from './core';
+import { disposeAllDisposables } from './datascience/notebook/helper';
 
 export * from './constants';
 export * from './ciConstants';
@@ -24,12 +26,6 @@ export function isInsiders() {
 export async function initialize(): Promise<IExtensionTestApi> {
     await initializePython();
     const api = await activateExtension();
-    if (!IS_SMOKE_TEST) {
-        // When running smoke tests, we won't have access to these.
-        const configSettings = await import('../client/common/configSettings');
-        // Dispose any cached python settings (used only in test env).
-        configSettings.JupyterSettings.dispose();
-    }
     // tslint:disable-next-line:no-any
     return (api as any) as IExtensionTestApi;
 }
@@ -52,9 +48,10 @@ export async function initializeTest(): Promise<any> {
         configSettings.JupyterSettings.dispose();
     }
 }
-export async function closeActiveWindows(): Promise<void> {
+export async function closeActiveWindows(disposables: IDisposable[] = []): Promise<void> {
+    disposeAllDisposables(disposables);
     await closeActiveNotebooks();
-    await closeWindowsInteral();
+    await closeWindowsInternal();
 }
 export async function closeActiveNotebooks(): Promise<void> {
     if (!vscode.env.appName.toLowerCase().includes('insiders') || !isANotebookOpen()) {
@@ -69,11 +66,11 @@ export async function closeActiveNotebooks(): Promise<void> {
     // Hence keep trying.
     for (let counter = 0; counter <= 5 && isANotebookOpen(); counter += 1) {
         await sleep(counter * 100);
-        await closeWindowsInteral();
+        await closeWindowsInternal();
     }
 }
 
-async function closeWindowsInteral() {
+async function closeWindowsInternal() {
     return new Promise<void>((resolve, reject) => {
         // Attempt to fix #1301.
         // Lets not waste too much time.
