@@ -14,6 +14,7 @@ import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants';
 import { isCondaEnvironment } from './condaLocator';
 import { getCondaEnvironment, getCondaFile, isCondaAvailable } from './condaService';
 
+const executionTimeout = 7_500;
 const SCRIPTS_DIR = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'pythonFiles');
 const defaultShells = {
     [OSType.Windows]: 'cmd',
@@ -40,7 +41,7 @@ export async function getInterpreterInfo(pythonPath: string | undefined): Promis
             const argv = [...cli, path.join(SCRIPTS_DIR, 'interpreterInfo.py').fileToCommandArgument()];
             const cmd = argv.reduce((p, c) => (p ? `${p} "${c}"` : `"${c.replace('\\', '/')}"`), '');
             const result = await processService.shellExec(cmd, {
-                timeout: 7_500,
+                timeout: executionTimeout,
                 env: process.env,
                 shell: defaultShell
             });
@@ -77,7 +78,7 @@ export async function getActivatedEnvVariables(pythonPath: string): Promise<Node
         const argv = [...cli, path.join(SCRIPTS_DIR, 'printEnvVariables.py')];
         const cmd = argv.reduce((p, c) => (p ? `${p} "${c}"` : `"${c.replace('\\', '/')}"`), '');
         const result = await processService.shellExec(cmd, {
-            timeout: 1_500,
+            timeout: executionTimeout,
             maxBuffer: 1000 * 1000,
             throwOnStdErr: false,
             env: process.env,
