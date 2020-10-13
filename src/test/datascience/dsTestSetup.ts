@@ -51,7 +51,7 @@ function updateTestsForOldNotebooks() {
     updateSettings(false);
 }
 
-if (process.env.VSC_PYTHON_CI_TEST_VSC_CHANNEL === 'insiders') {
+if (process.env.VSC_JUPYTER_CI_TEST_VSC_CHANNEL === 'insiders') {
     updateTestsForNativeNotebooks();
 } else {
     updateTestsForOldNotebooks();
