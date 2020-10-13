@@ -21,8 +21,6 @@ function requiresPythonExtensionToBeInstalled() {
     return process.env.TEST_FILES_SUFFIX === 'vscode.test' || process.env.TEST_FILES_SUFFIX === 'smoke.test';
 }
 
-console.error(`Inside StadnardTest.ts = ${process.env.VSC_JUPYTER_CI_TEST_VSC_CHANNEL}`);
-console.error(`VSC_JUPYTER_CI_TEST_VSC_CHANNEL = ${process.env.VSC_JUPYTER_CI_TEST_VSC_CHANNEL}`);
 const channel = (process.env.VSC_JUPYTER_CI_TEST_VSC_CHANNEL || '').toLowerCase().includes('insiders')
     ? 'insiders'
     : 'stable';

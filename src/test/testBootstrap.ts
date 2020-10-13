@@ -14,11 +14,6 @@ import { initializeLogger } from './testLogger';
 initializeLogger();
 
 // tslint:disable: no-console
-console.error(`Insider TestBootstrap = ${process.env.VSC_JUPYTER_CI_TEST_VSC_CHANNEL}`);
-console.error(`VSC_JUPYTER_CI_TEST_VSC_CHANNEL = ${process.env.VSC_JUPYTER_CI_TEST_VSC_CHANNEL}`);
-console.error(`VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST = ${process.env.VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST}`);
-console.error(`VSC_JUPYTER_CI_TEST_VSC_CHANNEL = ${process.env.VSC_JUPYTER_CI_TEST_VSC_CHANNEL}`);
-console.error(`VSC_JUPYTER_RUN_NB_TEST = ${process.env.VSC_JUPYTER_RUN_NB_TEST}`);
 
 /*
 This is a simple work around for tests tasks not completing on CI.
@@ -115,8 +110,6 @@ async function startSocketServer() {
 
 async function start() {
     await startSocketServer();
-    console.error(`process.env inside TEstBootstarap.ts`);
-    console.error(process.env);
     const options: SpawnOptions = { cwd: process.cwd(), env: process.env, detached: true, stdio: 'inherit' };
     proc = spawn(process.execPath, [testFile], options);
     proc.once('close', end);

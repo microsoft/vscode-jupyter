@@ -8,6 +8,20 @@ import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants';
 
 const settingsFile = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src/test/datascience/.vscode/settings.json');
 
+function updatePackageJsonForTests() {
+    /**
+     * Modify package.json to ensure we can change logging & opt out of experiments if required, etc.
+     */
+    const packageJsonFile = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'package.json');
+    const content = JSON.parse(fs.readFileSync(packageJsonFile).toString());
+
+    // Update package.json to pick experiments from our custom settings.json file.
+    content.contributes.configuration.properties['jupyter.experiments.optInto'].scope = 'resource';
+    content.contributes.configuration.properties['jupyter.logging.level'].scope = 'resource';
+
+    fs.writeFileSync(packageJsonFile, JSON.stringify(content, undefined, 4));
+}
+
 function updateTestsForNativeNotebooks() {
     /**
      * Modify package.json to ensure VSC Notebooks have been setup so tests can run.
@@ -17,12 +31,7 @@ function updateTestsForNativeNotebooks() {
     const content = JSON.parse(fs.readFileSync(packageJsonFile).toString());
 
     // This code is temporary.
-    content.enableProposedApi = true;
     delete content.contributes.notebookProvider[0].priority;
-
-    // Update package.json to pick experiments from our custom settings.json file.
-    content.contributes.configuration.properties['jupyter.experiments.optInto'].scope = 'resource';
-    content.contributes.configuration.properties['jupyter.logging.level'].scope = 'resource';
 
     fs.writeFileSync(packageJsonFile, JSON.stringify(content, undefined, 4));
     updateSettings(true);
@@ -50,12 +59,9 @@ function updateSettings(useNativeNotebooks: boolean) {
 function updateTestsForOldNotebooks() {
     updateSettings(false);
 }
-// tslint:disable: no-console
-console.error(`VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST = ${process.env.VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST}`);
-console.error(`VSC_JUPYTER_CI_TEST_VSC_CHANNEL = ${process.env.VSC_JUPYTER_CI_TEST_VSC_CHANNEL}`);
-console.error(`VSC_JUPYTER_RUN_NB_TEST = ${process.env.VSC_JUPYTER_RUN_NB_TEST}`);
 
-// When in insiders, always run the Notebook tests.
+updatePackageJsonForTests();
+
 if (process.env.VSC_JUPYTER_CI_TEST_VSC_CHANNEL === 'insiders' && process.env.VSC_JUPYTER_RUN_NB_TEST) {
     updateTestsForNativeNotebooks();
 } else {
