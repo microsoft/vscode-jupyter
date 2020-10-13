@@ -3,9 +3,9 @@
 'use strict';
 
 import { ChildProcess } from 'child_process';
+import * as fs from 'fs-extra';
 import * as tcpPortUsed from 'tcp-port-used';
 import * as tmp from 'tmp';
-import * as fs from 'fs-extra';
 import { Event, EventEmitter } from 'vscode';
 import { IPythonExtensionChecker } from '../../api/types';
 import { traceError, traceInfo, traceWarning } from '../../common/logger';
