@@ -110,7 +110,6 @@ suite('DataScience Install IPyKernel (slow) (install)xxx', () => {
         // The prompt should be displayed & ipykernel should get installed.
         await waitForCondition(
             async () => {
-                editorProvider.activeEditor!.runAllCells(); // Keep trying, possible notebook hasn't opened (old nb can be slow to open).
                 await Promise.all([await prompt.displayed, installed.promise]);
                 return true;
             },
