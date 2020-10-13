@@ -141,14 +141,6 @@ jobs:
           python -m IPython pythonFiles/tests/run_all.py
         if: matrix.test-suite == 'python-unit'
 
-      - name: Run single-workspace tests
-        env:
-          CI_PYTHON_VERSION: ${{matrix.python}}
-        uses: GabrielBB/xvfb-action@v1.4
-        with:
-          run: npm run testSingleWorkspace
-        if: matrix.test-suite == 'single-workspace'
-
       - name: Run functional tests
         run: npm run test:functional
         id: test_functional
@@ -301,7 +293,7 @@ jobs:
       - name: Run VSCode tests
         uses: GabrielBB/xvfb-action@v1.4
         with:
-          run: npm run testDataScienceInVSCode
+          run: npm run testVSCode
         env:
           DISPLAY: 10
           VSCODE_PYTHON_ROLLING: 1
