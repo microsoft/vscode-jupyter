@@ -30,7 +30,7 @@ const { argv } = require('yargs');
 const os = require('os');
 const rmrf = require('rimraf');
 
-const isCI = process.env.TRAVIS === 'true' || process.env.TF_BUILD !== undefined;
+const isCI = process.env.GITHUB_ACTIONS === 'true';
 
 const noop = function () { };
 /**
@@ -132,7 +132,14 @@ gulp.task('compile-viewers', async () => {
     await buildWebPackForDevOrProduction('./build/webpack/webpack.datascience-ui-viewers.config.js');
 });
 
-gulp.task('compile-webviews', gulp.series('compile-ipywidgets', 'compile-notebooks', 'compile-viewers'));
+// On CI, when running Notebook tests, we don't need old webviews.
+// Simple & temporary optimization for the Notebook Test Job.
+if (isCI && process.env.VSC_CI_MATRIX_TEST_SUITE === 'notebook'){
+    gulp.task('compile-webviews', noop);
+} else {
+    gulp.task('compile-webviews', gulp.series('compile-ipywidgets', 'compile-notebooks', 'compile-viewers'));
+
+}
 
 gulp.task(
     'check-datascience-dependencies',

@@ -327,23 +327,6 @@ jobs:
           VSC_PYTHON_FORCE_LOGGING: 1
         id: test_functional_group
 
-      - name: Publish Test Report
-        uses: scacap/action-surefire-report@v1
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          report_paths: ${{ env.TEST_RESULTS_GLOB }}
-          check_name: Functional Test Report ${{matrix.test-suite}}
-        if: steps.test_functional_group.outcome == 'failure' && failure()
-
-      - name: Run DataScience tests with VSCode & Jupyter
-        uses: GabrielBB/xvfb-action@v1.4
-        with:
-          run: npm run test:testVSCode
-        env:
-          VSCODE_PYTHON_ROLLING: 1
-          VSC_PYTHON_FORCE_LOGGING: 1
-        if: matrix.test-suite == 'integration'
-
 
   vscodeTests:
     name: VS Code Tests # These tests run with Python extension & real Jupyter
@@ -466,7 +449,8 @@ jobs:
 
       - name: Compile if not cached
         run: npx gulp prePublishNonBundle
-
+        env:
+            VSC_CI_MATRIX_TEST_SUITE: ${{matrix.test-suite}}
 
       # Used by tests for non-python kernels.
       # Test are enabled via env variable `VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST`
@@ -519,25 +503,25 @@ jobs:
           check_name: VSCode Test Report
         if: (steps.test_vscode.outcome == 'failure' || steps.test_vscode.outcome == 'failure') && failure()
 
-    #   - name: Run Native Notebook with VSCode & Jupyter
-    #     uses: GabrielBB/xvfb-action@v1.4
-    #     with:
-    #       run: npm run testNativeNotebooksInVSCode
-    #     env:
-    #       VSCODE_PYTHON_ROLLING: 1
-    #       VSC_PYTHON_FORCE_LOGGING: 1
-    #       VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
-    #       VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
-    #     id: test_notebook_vscode
-    #     if: matrix.test-suite == 'notebook'
+      - name: Run Native Notebook with VSCode & Jupyter
+        uses: GabrielBB/xvfb-action@v1.4
+        with:
+          run: npm run testNativeNotebooksInVSCode
+        env:
+          VSCODE_PYTHON_ROLLING: 1
+          VSC_PYTHON_FORCE_LOGGING: 1
+          VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
+          VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
+        id: test_notebook_vscode
+        if: matrix.test-suite == 'notebook'
 
-    #   - name: Publish Notebook Test Report
-    #     uses: scacap/action-surefire-report@v1
-    #     with:
-    #       github_token: ${{ secrets.GITHUB_TOKEN }}
-    #       report_paths: ${{ env.TEST_RESULTS_GLOB }}
-    #       check_name: Notebook Test Report
-    #     if: (steps.test_notebook_vscode.outcome == 'failure' || steps.test_notebook_vscode.outcome == 'failure') && failure()
+      - name: Publish Notebook Test Report
+        uses: scacap/action-surefire-report@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          report_paths: ${{ env.TEST_RESULTS_GLOB }}
+          check_name: Notebook Test Report
+        if: (steps.test_notebook_vscode.outcome == 'failure' || steps.test_notebook_vscode.outcome == 'failure') && failure()
 
 
 
