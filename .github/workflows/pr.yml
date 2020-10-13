@@ -343,7 +343,7 @@ jobs:
 
 
   vscodeTests:
-    name: VS Code Tests (with Python Ext & Jupyter)
+    name: VS Code Tests # These tests run with Python extension & real Jupyter
     runs-on: ${{ matrix.os }}
     if: github.repository == 'microsoft/vscode-jupyter'
     strategy:
