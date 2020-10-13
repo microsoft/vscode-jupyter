@@ -19,7 +19,7 @@ env:
   VSIX_NAME_UPLOADED_TO_BLOB: ms-toolsai-jupyter-insiders.vsix
   CI_PYTHON_PATH: python
   TEST_RESULTS_DIRECTORY: .
-  TEST_RESULTS_GLOB: '**/test-results.xml'
+  TEST_RESULTS_GLOB: '**/test-results*.xml'
 
 jobs:
   build-vsix:
