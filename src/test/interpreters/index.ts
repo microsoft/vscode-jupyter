@@ -25,7 +25,10 @@ const defaultShells = {
 const defaultShell = defaultShells[getOSType()];
 
 const interpreterInfoCache = new Map<string, Promise<PythonEnvironment | undefined>>();
-export async function getInterpreterInfo(pythonPath: string): Promise<PythonEnvironment | undefined> {
+export async function getInterpreterInfo(pythonPath: string | undefined): Promise<PythonEnvironment | undefined> {
+    if (!pythonPath) {
+        return undefined;
+    }
     if (interpreterInfoCache.has(pythonPath)) {
         return interpreterInfoCache.get(pythonPath);
     }
@@ -94,7 +97,7 @@ export async function getActivatedEnvVariables(pythonPath: string): Promise<Node
     return promise;
 }
 
-async function getPythonCli(pythonPath: string) {
+async function getPythonCli(pythonPath: string | undefined) {
     const isConda = await isCondaEnvironment(pythonPath);
     if (isConda) {
         try {
@@ -119,5 +122,5 @@ async function getPythonCli(pythonPath: string) {
         }
         traceError('Using Conda Interpreter, but no conda');
     }
-    return [pythonPath.fileToCommandArgument()];
+    return pythonPath ? [pythonPath.fileToCommandArgument()] : [];
 }
