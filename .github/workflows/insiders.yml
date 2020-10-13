@@ -312,6 +312,12 @@ jobs:
         run: npm ci --prefer-offline
         # This step is slow.
 
+      - name: Install Julia on linux
+        if: matrix.os == 'ubuntu-latest'
+        uses: julia-actions/setup-julia@v1
+        with:
+          version: 1.5.1
+
       - name: Compile if not cached
         run: npx gulp prePublishNonBundle
 
