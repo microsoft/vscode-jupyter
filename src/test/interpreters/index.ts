@@ -40,7 +40,7 @@ export async function getInterpreterInfo(pythonPath: string | undefined): Promis
             const argv = [...cli, path.join(SCRIPTS_DIR, 'interpreterInfo.py').fileToCommandArgument()];
             const cmd = argv.reduce((p, c) => (p ? `${p} "${c}"` : `"${c.replace('\\', '/')}"`), '');
             const result = await processService.shellExec(cmd, {
-                timeout: 1_500,
+                timeout: 7_500,
                 env: process.env,
                 shell: defaultShell
             });
