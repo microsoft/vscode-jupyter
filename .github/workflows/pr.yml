@@ -541,7 +541,6 @@ jobs:
       # Caching (https://github.com/actions/cache/blob/main/examples.md#python---pip
       - name: Cache pip on linux
         uses: actions/cache@v2
-        if: startsWith(matrix.test-suite, 'functional') && matrix.os == 'ubuntu-latest'
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-${{ hashFiles('requirements.txt') }}-${{hashFiles('build/debugger-install-requirements.txt')}}-${{hashFiles('test-requirements.txt')}}-${{hashFiles('ipython-test-requirements.txt')}}-${{hashFiles('functional-test-requirements.txt')}}-${{hashFiles('conda-functional-requirements.txt')}}
@@ -550,7 +549,6 @@ jobs:
 
       - name: Cache pip on mac
         uses: actions/cache@v2
-        if: startsWith(matrix.test-suite, 'functional')  && matrix.os == 'macos-latest'
         with:
           path: ~/Library/Caches/pip
           key: ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-${{ hashFiles('requirements.txt') }}-${{hashFiles('build/debugger-install-requirements.txt')}}-${{hashFiles('test-requirements.txt')}}-${{hashFiles('ipython-test-requirements.txt')}}-${{hashFiles('functional-test-requirements.txt')}}-${{hashFiles('conda-functional-requirements.txt')}}
@@ -559,7 +557,6 @@ jobs:
 
       - name: Cache pip on windows
         uses: actions/cache@v2
-        if: startsWith(matrix.test-suite, 'functional')  && matrix.os == 'windows-latest'
         with:
           path: ~\AppData\Local\pip\Cache
           key: ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-${{ hashFiles('requirements.txt') }}-${{hashFiles('build/debugger-install-requirements.txt')}}-${{hashFiles('test-requirements.txt')}}-${{hashFiles('ipython-test-requirements.txt')}}-${{hashFiles('functional-test-requirements.txt')}}-${{hashFiles('conda-functional-requirements.txt')}}
@@ -568,7 +565,6 @@ jobs:
 
       # For faster/better builds of sdists.
       - run: python -m pip install wheel
-        if: startsWith(matrix.test-suite, 'functional')
         shell: bash
 
       # debugpy  & Jedi LS is not shipped, only installed for local tests.
