@@ -53,6 +53,10 @@ function updateSettings(useNativeNotebooks: boolean) {
         modify(settingsJson, ['jupyter.experiments.optInto'], experiments, modificationOptions)
     );
     settingsJson = applyEdits(settingsJson, modify(settingsJson, ['files.autoSave'], autoSave, modificationOptions));
+    settingsJson = applyEdits(
+        settingsJson,
+        modify(settingsJson, ['jupyter.useNotebookEditor'], useNativeNotebooks === false, modificationOptions)
+    );
 
     fs.writeFileSync(settingsFile, settingsJson);
 }
