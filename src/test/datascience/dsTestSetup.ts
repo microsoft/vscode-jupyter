@@ -50,6 +50,8 @@ function updateSettings(useNativeNotebooks: boolean) {
 function updateTestsForOldNotebooks() {
     updateSettings(false);
 }
+// tslint:disable-next-line: no-console
+console.error(`VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST = ${process.env.VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST}`);
 
 if (process.env.VSC_JUPYTER_CI_TEST_VSC_CHANNEL === 'insiders') {
     updateTestsForNativeNotebooks();
