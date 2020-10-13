@@ -298,7 +298,7 @@ jobs:
           DISPLAY: 10
           VSCODE_PYTHON_ROLLING: 1
           VSC_PYTHON_FORCE_LOGGING: 1
-          VSC_PYTHON_CI_NON_PYTHON_NB_TEST: 1
+          VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
           VSC_PYTHON_LOAD_EXPERIMENTS_FROM_FILE: 'true'
         id: test_functional
 
@@ -446,7 +446,7 @@ jobs:
 #           DISPLAY: 10
 #           VSCODE_PYTHON_ROLLING: 1
 #           VSC_PYTHON_FORCE_LOGGING: 1
-#           VSC_PYTHON_CI_NON_PYTHON_NB_TEST: 1
+#           VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
 #           VSC_PYTHON_CI_TEST_VSC_CHANNEL: 'insiders'
 #           VSC_PYTHON_LOAD_EXPERIMENTS_FROM_FILE: 'true'
 #         id: test_functional
