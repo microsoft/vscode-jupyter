@@ -21,7 +21,7 @@ env:
   COVERAGE_REPORTS: tests-coverage-reports
   CI_PYTHON_PATH: python
   TEST_RESULTS_DIRECTORY: .
-  TEST_RESULTS_GLOB: '**/test-results.xml'
+  TEST_RESULTS_GLOB: '**/test-results*.xml'
 
 jobs:
   build-vsix:
@@ -201,7 +201,149 @@ jobs:
           check_name: Ts-Unit Test Report
 
   tests:
-    name: Tests (with Python)
+    name: Functional Jupyter Tests
+    runs-on: ${{ matrix.os }}
+    if: github.repository == 'microsoft/vscode-jupyter'
+    strategy:
+      fail-fast: false
+      matrix:
+        # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
+        # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
+        os: [ubuntu-latest]
+        python: [3.8]
+        test-suite: [group1, group2, group3, group4]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Use Python ${{matrix.python}}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{matrix.python}}
+
+      - name: Upgrade pip
+        run: python -m pip install -U pip
+
+      - name: Use Node ${{env.NODE_VERSION}}
+        uses: actions/setup-node@v2.1.1
+        with:
+          node-version: ${{env.NODE_VERSION}}
+
+      # Start caching
+
+      # Cache Python Dependencies.
+      # Caching (https://github.com/actions/cache/blob/main/examples.md#python---pip
+      - name: Cache pip on linux
+        uses: actions/cache@v2
+        if: matrix.os == 'ubuntu-latest'
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-${{ hashFiles('requirements.txt') }}-${{hashFiles('build/debugger-install-requirements.txt')}}-${{hashFiles('test-requirements.txt')}}-${{hashFiles('ipython-test-requirements.txt')}}-${{hashFiles('functional-test-requirements.txt')}}-${{hashFiles('conda-functional-requirements.txt')}}
+          restore-keys: |
+            ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-
+
+      - name: Cache pip on mac
+        uses: actions/cache@v2
+        if: matrix.os == 'macos-latest'
+        with:
+          path: ~/Library/Caches/pip
+          key: ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-${{ hashFiles('requirements.txt') }}-${{hashFiles('build/debugger-install-requirements.txt')}}-${{hashFiles('test-requirements.txt')}}-${{hashFiles('ipython-test-requirements.txt')}}-${{hashFiles('functional-test-requirements.txt')}}-${{hashFiles('conda-functional-requirements.txt')}}
+          restore-keys: |
+            ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-
+
+      - name: Cache pip on windows
+        uses: actions/cache@v2
+        if: matrix.os == 'windows-latest'
+        with:
+          path: ~\AppData\Local\pip\Cache
+          key: ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-${{ hashFiles('requirements.txt') }}-${{hashFiles('build/debugger-install-requirements.txt')}}-${{hashFiles('test-requirements.txt')}}-${{hashFiles('ipython-test-requirements.txt')}}-${{hashFiles('functional-test-requirements.txt')}}-${{hashFiles('conda-functional-requirements.txt')}}
+          restore-keys: |
+            ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-
+
+      # Caching of npm packages (https://github.com/actions/cache/blob/main/examples.md#node---npm)
+      - name: Cache npm on linux/mac
+        uses: actions/cache@v2
+        if: matrix.os != 'windows-latest'
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Get npm cache directory
+        if: matrix.os == 'windows-latest'
+        id: npm-cache
+        run: |
+          echo "::set-output name=dir::$(npm config get cache)"
+      - name: Cache npm on windows
+        uses: actions/cache@v2
+        if: matrix.os == 'windows-latest'
+        with:
+          path: ${{ steps.npm-cache.outputs.dir }}
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Cache compiled TS files
+        id: out-cache
+        uses: actions/cache@v2
+        with:
+          path: ./out
+          key: ${{runner.os}}-${{env.CACHE_OUT_DIRECTORY}}-${{hashFiles('src/**')}}
+
+      # For faster/better builds of sdists.
+      - run: python -m pip install wheel
+        shell: bash
+
+      # debugpy is not shipped, only installed for local tests.
+      # In production, we get debugpy from python extension.
+      - name: Install functional test requirements
+        run: |
+          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
+          python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
+          python ./pythonFiles/install_debugpy.py
+          python -m pip install numpy
+          python -m pip install --upgrade jupyter
+          python -m pip install --upgrade -r build/test-requirements.txt
+          python -m pip install --upgrade -r ./build/ipython-test-requirements.txt
+          python -m pip install --upgrade -r ./build/conda-functional-requirements.txt
+          python -m ipykernel install --user
+        # This step is slow.
+
+      - name: Install dependencies (npm ci)
+        run: npm ci --prefer-offline
+        # This step is slow.
+
+      - name: Compile if not cached
+        run: npx gulp prePublishNonBundle
+
+      - name: Run functional tests
+        run: npm run test:functional:parallel -- --${{matrix.test-suite}}
+        env:
+          VSCODE_PYTHON_ROLLING: 1
+          VSC_PYTHON_FORCE_LOGGING: 1
+        id: test_functional_group
+
+      - name: Publish Test Report
+        uses: scacap/action-surefire-report@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          report_paths: ${{ env.TEST_RESULTS_GLOB }}
+          check_name: Functional Test Report ${{matrix.test-suite}}
+        if: steps.test_functional_group.outcome == 'failure' && failure()
+
+      - name: Run DataScience tests with VSCode & Jupyter
+        uses: GabrielBB/xvfb-action@v1.4
+        with:
+          run: npm run test:testVSCode
+        env:
+          VSCODE_PYTHON_ROLLING: 1
+          VSC_PYTHON_FORCE_LOGGING: 1
+        if: matrix.test-suite == 'integration' || (matrix.test-suite == 'test-based-on-pr-body' && contains(github.event.pull_request.body, '[x] Run vscode test'))
+
+
+  vscodeTests:
+    name: VS Code Tests (with Python Ext & Jupyter)
     runs-on: ${{ matrix.os }}
     if: github.repository == 'microsoft/vscode-jupyter'
     strategy:
@@ -212,12 +354,10 @@ jobs:
         os: [ubuntu-latest]
         python: [3.8] # Use flaky tests to run against more versions of Python.
         # python-unit: Python tests
-        # functional: Tests with mocked VS Code, & mocked Python)
-        # functional-with-jupyter: Tests with mocked VS Code & real jupyter
         # single-workspace: Tests with VS Code
         # integration: Tests with VS Code, Python extension & real Jupyter
         # notebook: Notebook Tests with VS Code, Python extension & real Jupyter
-        test-suite: [python-unit, functional, integration, notebook, single-workspace, test-based-on-pr-body]
+        test-suite: [python-unit, integration, notebook, single-workspace, test-based-on-pr-body]
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -337,11 +477,6 @@ jobs:
         # if: steps.out-cache.outputs.cache-hit == false && (matrix.test-suite != 'test-based-on-pr-body' || contains(github.event.pull_request.body, '[x] Run '))
         if: matrix.test-suite != 'test-based-on-pr-body' || contains(github.event.pull_request.body, '[x] Run ')
 
-      - name: Run functional tests
-        run: npm run test:functional
-        id: test_functional
-        if: matrix.test-suite == 'functional'
-
       - name: Run single-workspace tests
         env:
           CI_PYTHON_VERSION: ${{matrix.python}}
@@ -349,23 +484,6 @@ jobs:
         with:
           run: npm run testSingleWorkspace
         if: matrix.test-suite == 'single-workspace' || (matrix.test-suite == 'test-based-on-pr-body' && contains(github.event.pull_request.body, '[x] Run single-workspace test'))
-
-      - name: Run functional tests with Jupyter
-        run: npm run test:functional -- --grep="MimeTypes"
-        id: test_functional_jupyter
-        env:
-          VSCODE_PYTHON_ROLLING: 1
-          VSC_PYTHON_FORCE_LOGGING: 1
-        if: matrix.test-suite == 'functional-with-jupyter' || (matrix.test-suite == 'test-based-on-pr-body' && contains(github.event.pull_request.body, '[x] Run functional-with-jupyter test'))
-
-      - name: Publish Test Report
-        uses: scacap/action-surefire-report@v1
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          report_paths: ${{ env.TEST_RESULTS_GLOB }}
-          check_name: Functional Test Report
-        if: (steps.test_functional.outcome == 'failure' || steps.test_functional_jupyter.outcome == 'failure') && failure()
-
 
       - name: Azure Login
         uses: azure/login@v1.1
@@ -384,7 +502,16 @@ jobs:
         env:
           VSCODE_PYTHON_ROLLING: 1
           VSC_PYTHON_FORCE_LOGGING: 1
+        id: test_vscode
         if: matrix.test-suite == 'integration' || (matrix.test-suite == 'test-based-on-pr-body' && contains(github.event.pull_request.body, '[x] Run vscode test'))
+
+      - name: Publish VSCode Test Report
+        uses: scacap/action-surefire-report@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          report_paths: ${{ env.TEST_RESULTS_GLOB }}
+          check_name: VSCode Test Report
+        if: (steps.test_vscode.outcome == 'failure' || steps.test_vscode.outcome == 'failure') && failure()
 
       - name: Run Native Notebook with VSCode & Jupyter
         uses: GabrielBB/xvfb-action@v1.4
@@ -393,7 +520,19 @@ jobs:
         env:
           VSCODE_PYTHON_ROLLING: 1
           VSC_PYTHON_FORCE_LOGGING: 1
+        id: test_notebook_vscode
         if: matrix.test-suite == 'notebook' || (matrix.test-suite == 'test-based-on-pr-body' && contains(github.event.pull_request.body, '[x] Run Notebook test'))
+
+      - name: Publish Notebook Test Report
+        uses: scacap/action-surefire-report@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          report_paths: ${{ env.TEST_RESULTS_GLOB }}
+          check_name: Notebook Test Report
+        if: (steps.test_notebook_vscode.outcome == 'failure' || steps.test_notebook_vscode.outcome == 'failure') && failure()
+
+
+
 
   smoke-tests:
     name: Smoke tests
