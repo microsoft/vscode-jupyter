@@ -13,6 +13,11 @@ import { initializeLogger } from './testLogger';
 
 initializeLogger();
 
+// tslint:disable: no-console
+console.error(`VSC_JUPYTER_CI_TEST_VSC_CHANNEL = ${process.env.VSC_JUPYTER_CI_TEST_VSC_CHANNEL}`);
+console.error(`VSC_JUPYTER_CI_TEST_VSC_CHANNEL = ${process.env.VSC_JUPYTER_CI_TEST_VSC_CHANNEL}`);
+console.error(`VSC_JUPYTER_CI_TEST_VSC_CHANNEL = ${process.env.VSC_JUPYTER_CI_TEST_VSC_CHANNEL}`);
+console.error(`VSC_JUPYTER_CI_TEST_VSC_CHANNEL = ${process.env.VSC_JUPYTER_CI_TEST_VSC_CHANNEL}`);
 // tslint:disable:no-console
 
 /*
