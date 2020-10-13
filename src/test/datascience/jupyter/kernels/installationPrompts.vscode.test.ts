@@ -17,7 +17,12 @@ import { getOSType, IExtensionTestApi, OSType, waitForCondition } from '../../..
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../../constants';
 import { closeActiveWindows, initialize } from '../../../initialize';
 import { openNotebook } from '../../helpers';
-import { closeNotebooksAndCleanUpAfterTests, hijackPrompt, trustAllNotebooks } from '../../notebook/helper';
+import {
+    closeNotebooksAndCleanUpAfterTests,
+    hijackPrompt,
+    trustAllNotebooks,
+    waitForKernelToGetAutoSelected
+} from '../../notebook/helper';
 
 // tslint:disable: no-invalid-this max-func-body-length no-function-expression no-any
 suite('DataScience Install IPyKernel (slow) (install)xxx', () => {
@@ -43,17 +48,19 @@ suite('DataScience Install IPyKernel (slow) (install)xxx', () => {
             // Virtual env does not exist.
             return this.skip();
         }
+        return this.skip();
         await trustAllNotebooks();
         api = await initialize();
         installer = api.serviceContainer.get<IInstaller>(IInstaller);
         editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
+    });
 
+    setup(async () => {
         // Uninstall ipykernel from the virtual env.
         const proc = new ProcessService(new BufferDecoder());
         await proc.exec(venvPythonPath, ['-m', 'pip', 'uninstall', 'ipykernel', '--yes']);
+        return closeActiveWindows();
     });
-
-    setup(closeActiveWindows);
     teardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
 
     test('Test Install IPyKernel prompt message', async () => {
@@ -67,10 +74,7 @@ suite('DataScience Install IPyKernel (slow) (install)xxx', () => {
     });
 
     test('Ensure prompt is displayed when ipykernel module is not found and it gets installed', async () => {
-        // tslint:disable: no-console
-        console.error('Log1');
         const installed = createDeferred();
-        console.error('Log2');
 
         // Confirm it is installed.
         const showInformationMessage = sinon.stub(installer, 'install').callsFake(async function (product: Product) {
@@ -80,15 +84,11 @@ suite('DataScience Install IPyKernel (slow) (install)xxx', () => {
                 arguments
             ) as Promise<InstallerResponse>);
             if (product === Product.ipykernel && result === InstallerResponse.Installed) {
-                console.error('Log4');
                 installed.resolve();
             }
-            console.error('Log5');
             return result;
         });
-        console.error('Log3');
         disposables.push({ dispose: () => showInformationMessage.restore() });
-        console.error('Log6');
 
         // Confirm message is displayed & we click 'Install` button.
         const prompt = await hijackPrompt(
@@ -97,24 +97,25 @@ suite('DataScience Install IPyKernel (slow) (install)xxx', () => {
             { text: Common.install(), clickImmediately: true },
             disposables
         );
-        console.error('Log7');
 
         await openNotebook(api.serviceContainer, nbFile);
-        console.error('Log8');
+        // If this is a native notebook, then wait for kernel to get selected.
+        if (editorProvider.activeEditor?.type === 'native') {
+            await waitForKernelToGetAutoSelected();
+        }
 
         // Run all cells
         editorProvider.activeEditor!.runAllCells();
-        console.error('Log9');
 
         // The prompt should be displayed & ipykernel should get installed.
         await waitForCondition(
             async () => {
+                editorProvider.activeEditor!.runAllCells(); // Keep trying, possible notebook hasn't opened (old nb can be slow to open).
                 await Promise.all([await prompt.displayed, installed.promise]);
                 return true;
             },
             delayForUITest,
             'Prompt not displayed or not installed successfully'
         );
-        console.error('Log10');
     });
 });
