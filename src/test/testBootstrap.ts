@@ -15,10 +15,9 @@ initializeLogger();
 
 // tslint:disable: no-console
 console.error(`VSC_JUPYTER_CI_TEST_VSC_CHANNEL = ${process.env.VSC_JUPYTER_CI_TEST_VSC_CHANNEL}`);
+console.error(`VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST = ${process.env.VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST}`);
 console.error(`VSC_JUPYTER_CI_TEST_VSC_CHANNEL = ${process.env.VSC_JUPYTER_CI_TEST_VSC_CHANNEL}`);
-console.error(`VSC_JUPYTER_CI_TEST_VSC_CHANNEL = ${process.env.VSC_JUPYTER_CI_TEST_VSC_CHANNEL}`);
-console.error(`VSC_JUPYTER_CI_TEST_VSC_CHANNEL = ${process.env.VSC_JUPYTER_CI_TEST_VSC_CHANNEL}`);
-// tslint:disable:no-console
+console.error(`VSC_JUPYTER_RUN_NB_TEST = ${process.env.VSC_JUPYTER_RUN_NB_TEST}`);
 
 /*
 This is a simple work around for tests tasks not completing on CI.

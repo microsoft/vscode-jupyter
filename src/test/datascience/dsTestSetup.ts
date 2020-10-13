@@ -50,10 +50,13 @@ function updateSettings(useNativeNotebooks: boolean) {
 function updateTestsForOldNotebooks() {
     updateSettings(false);
 }
-// tslint:disable-next-line: no-console
+// tslint:disable: no-console
 console.error(`VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST = ${process.env.VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST}`);
+console.error(`VSC_JUPYTER_CI_TEST_VSC_CHANNEL = ${process.env.VSC_JUPYTER_CI_TEST_VSC_CHANNEL}`);
+console.error(`VSC_JUPYTER_RUN_NB_TEST = ${process.env.VSC_JUPYTER_RUN_NB_TEST}`);
 
-if (process.env.VSC_JUPYTER_CI_TEST_VSC_CHANNEL === 'insiders') {
+// When in insiders, always run the Notebook tests.
+if (process.env.VSC_JUPYTER_CI_TEST_VSC_CHANNEL === 'insiders' && process.env.VSC_JUPYTER_RUN_NB_TEST) {
     updateTestsForNativeNotebooks();
 } else {
     updateTestsForOldNotebooks();
