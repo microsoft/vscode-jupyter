@@ -381,7 +381,7 @@ jobs:
       # Caching (https://github.com/actions/cache/blob/main/examples.md#python---pip
       - name: Cache pip on linux
         uses: actions/cache@v2
-        if: startsWith(matrix.test-suite, 'functional') && matrix.os == 'ubuntu-latest'
+        if: matrix.os == 'ubuntu-latest'
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-${{ hashFiles('requirements.txt') }}-${{hashFiles('build/debugger-install-requirements.txt')}}-${{hashFiles('test-requirements.txt')}}-${{hashFiles('ipython-test-requirements.txt')}}-${{hashFiles('functional-test-requirements.txt')}}-${{hashFiles('conda-functional-requirements.txt')}}
@@ -390,7 +390,7 @@ jobs:
 
       - name: Cache pip on mac
         uses: actions/cache@v2
-        if: startsWith(matrix.test-suite, 'functional')  && matrix.os == 'macos-latest'
+        if: matrix.os == 'macos-latest'
         with:
           path: ~/Library/Caches/pip
           key: ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-${{ hashFiles('requirements.txt') }}-${{hashFiles('build/debugger-install-requirements.txt')}}-${{hashFiles('test-requirements.txt')}}-${{hashFiles('ipython-test-requirements.txt')}}-${{hashFiles('functional-test-requirements.txt')}}-${{hashFiles('conda-functional-requirements.txt')}}
@@ -399,7 +399,7 @@ jobs:
 
       - name: Cache pip on windows
         uses: actions/cache@v2
-        if: startsWith(matrix.test-suite, 'functional')  && matrix.os == 'windows-latest'
+        if: matrix.os == 'windows-latest'
         with:
           path: ~\AppData\Local\pip\Cache
           key: ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-${{ hashFiles('requirements.txt') }}-${{hashFiles('build/debugger-install-requirements.txt')}}-${{hashFiles('test-requirements.txt')}}-${{hashFiles('ipython-test-requirements.txt')}}-${{hashFiles('functional-test-requirements.txt')}}-${{hashFiles('conda-functional-requirements.txt')}}
@@ -440,12 +440,12 @@ jobs:
       # For faster/better builds of sdists.
       - run: python -m pip install wheel
         shell: bash
-        if: matrix.test-suite != 'test-based-on-pr-body' || contains(github.event.pull_request.body, '[x] Run ')
 
       # debugpy is not shipped, only installed for local tests.
       # In production, we get debugpy from python extension.
       - name: Install functional test requirements
         run: |
+          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
           python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
           python ./pythonFiles/install_debugpy.py
           python -m pip install numpy
@@ -455,27 +455,13 @@ jobs:
           python -m pip install --upgrade -r ./build/conda-functional-requirements.txt
           python -m ipykernel install --user
         # This step is slow.
-        # If running the placeholder suite & not required to run any tests, then don't install python dependencies.
-        if: matrix.test-suite != 'test-based-on-pr-body' || contains(github.event.pull_request.body, '[x] Run ')
 
       - name: Install dependencies (npm ci)
         run: npm ci --prefer-offline
         # This step is slow.
-        # If running the placeholder suite & not required to run any tests, then don't install python dependencies.
-        if: matrix.test-suite != 'test-based-on-pr-body' || contains(github.event.pull_request.body, '[x] Run ')
-
-      # Run the Python and IPython tests in our codebase.
-      - name: Run Python and IPython unit tests
-        run: |
-          python pythonFiles/tests/run_all.py
-          python -m IPython pythonFiles/tests/run_all.py
-        if: matrix.test-suite == 'python-unit'
 
       - name: Compile if not cached
         run: npx gulp prePublishNonBundle
-        # If running the placeholder suite & not required to run any tests, then don't compile.
-        # if: steps.out-cache.outputs.cache-hit == false && (matrix.test-suite != 'test-based-on-pr-body' || contains(github.event.pull_request.body, '[x] Run '))
-        if: matrix.test-suite != 'test-based-on-pr-body' || contains(github.event.pull_request.body, '[x] Run ')
 
       - name: Run single-workspace tests
         env:
