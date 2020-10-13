@@ -330,16 +330,6 @@ jobs:
           check_name: Functional Test Report ${{matrix.test-suite}} ${{matrix.os}}
         if: steps.test_functional_group.outcome == 'failure' && failure()
 
-      - name: Run DataScience tests with VSCode & Jupyter
-        uses: GabrielBB/xvfb-action@v1.4
-        with:
-          run: npm run test:testVSCode
-        env:
-          VSCODE_PYTHON_ROLLING: 1
-          VSC_PYTHON_FORCE_LOGGING: 1
-        if: matrix.test-suite == 'integration' || (matrix.test-suite == 'test-based-on-pr-body' && contains(github.event.pull_request.body, '[x] Run vscode test'))
-
-
   vscodeTests:
     name: VS Code Tests # These tests run with Python extension & real Jupyter
     runs-on: ${{ matrix.os }}
