@@ -357,7 +357,7 @@ jobs:
         # single-workspace: Tests with VS Code
         # integration: Tests with VS Code, Python extension & real Jupyter
         # notebook: Notebook Tests with VS Code, Python extension & real Jupyter
-        test-suite: [python-unit, integration, notebook, single-workspace, test-based-on-pr-body]
+        test-suite: [python-unit, integration, single-workspace, test-based-on-pr-body]
     steps:
       - name: Checkout
         uses: actions/checkout@v2
