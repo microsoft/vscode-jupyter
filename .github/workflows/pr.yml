@@ -375,17 +375,6 @@ jobs:
         with:
           node-version: ${{env.NODE_VERSION}}
 
-      - name: Install Julia
-        uses: julia-actions/setup-julia@v1
-        with:
-          version: ${{env.JULIA_VERSION}}
-
-      - name: Install Julia Kernel
-        run: |
-          julia -e '
-            using Pkg
-            Pkg.add("IJulia")'
-
       # Start caching
 
       # Cache Python Dependencies.
@@ -473,6 +462,29 @@ jobs:
 
       - name: Compile if not cached
         run: npx gulp prePublishNonBundle
+
+
+      # Used by tests for non-python kernels.
+      # Test are enabled via env variable `VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST`
+      - name: Install Julia
+        uses: julia-actions/setup-julia@v1
+        with:
+          version: ${{env.JULIA_VERSION}}
+
+      - name: Install Julia Kernel
+        run: |
+          julia -e '
+            using Pkg
+            Pkg.add("IJulia")'
+
+      # Used by tests for installation of ipykernel.
+      # Test are enabled dyanamically when
+      # 1. `CI_PYTHON_PATH2` points to the new virtual env.
+      # 2. Virtual env is located under `src/test/datascience/` and named `.venvnokernel`.
+      - name: Create virtual environment for Tests
+        run: |
+          python -m venv .venvnokernel
+        working-directory: src/test/datascience
 
       - name: Azure Login
         uses: azure/login@v1.1
