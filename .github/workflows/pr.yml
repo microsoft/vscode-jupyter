@@ -353,11 +353,10 @@ jobs:
         # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
         os: [ubuntu-latest]
         python: [3.8] # Use flaky tests to run against more versions of Python.
-        # python-unit: Python tests
         # single-workspace: Tests with VS Code
         # integration: Tests with VS Code, Python extension & real Jupyter
         # notebook: Notebook Tests with VS Code, Python extension & real Jupyter
-        test-suite: [python-unit, integration, single-workspace, test-based-on-pr-body]
+        test-suite: [integration, single-workspace, test-based-on-pr-body]
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -469,17 +468,17 @@ jobs:
         uses: GabrielBB/xvfb-action@v1.4
         with:
           run: npm run testSingleWorkspace
-        if: matrix.test-suite == 'single-workspace' || (matrix.test-suite == 'test-based-on-pr-body' && contains(github.event.pull_request.body, '[x] Run single-workspace test'))
+        if: matrix.test-suite == 'single-workspace'
 
       - name: Azure Login
         uses: azure/login@v1.1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
-        if: matrix.test-suite == 'notebook' || matrix.test-suite == 'integration' || (matrix.test-suite == 'test-based-on-pr-body' && contains(github.event.pull_request.body, '[x] Run vscode test')) || (matrix.test-suite == 'test-based-on-pr-body' && contains(github.event.pull_request.body, '[x] Run Notebook test'))
+        if: matrix.test-suite == 'notebook' || (matrix.test-suite == 'test-based-on-pr-body' && contains(github.event.pull_request.body, '[x] Run Notebook test'))
 
       - name: Download Python VSIX
         run: az storage blob download --file ${{env.VSIX_NAME_PYTHON}} --account-name pvsc --container-name extension-builds --name ${{ env.VSIX_NAME_PYTHON }}
-        if: matrix.test-suite == 'notebook' || matrix.test-suite == 'integration' || (matrix.test-suite == 'test-based-on-pr-body' && contains(github.event.pull_request.body, '[x] Run vscode test')) || (matrix.test-suite == 'test-based-on-pr-body' && contains(github.event.pull_request.body, '[x] Run Notebook test'))
+        if: matrix.test-suite == 'notebook' || (matrix.test-suite == 'test-based-on-pr-body' && contains(github.event.pull_request.body, '[x] Run Notebook test'))
 
       - name: Run tests with VSCode & Jupyter
         uses: GabrielBB/xvfb-action@v1.4
@@ -489,7 +488,7 @@ jobs:
           VSCODE_PYTHON_ROLLING: 1
           VSC_PYTHON_FORCE_LOGGING: 1
         id: test_vscode
-        if: matrix.test-suite == 'integration' || (matrix.test-suite == 'test-based-on-pr-body' && contains(github.event.pull_request.body, '[x] Run vscode test'))
+        if: matrix.test-suite == 'integration'
 
       - name: Publish VSCode Test Report
         uses: scacap/action-surefire-report@v1
@@ -516,8 +515,6 @@ jobs:
           report_paths: ${{ env.TEST_RESULTS_GLOB }}
           check_name: Notebook Test Report
         if: (steps.test_notebook_vscode.outcome == 'failure' || steps.test_notebook_vscode.outcome == 'failure') && failure()
-
-
 
 
   smoke-tests:
