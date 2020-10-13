@@ -3,13 +3,19 @@
 
 'use strict';
 
-import { Event } from 'vscode';
+import { Event, NotebookCellRunState } from 'vscode';
 import { NotebookCell } from 'vscode-proposed';
 import { IPythonApiProvider, PythonApi } from './api/types';
 import { isTestExecution } from './common/constants';
 import { traceError } from './common/logger';
 import { IDataViewerDataProvider, IDataViewerFactory } from './datascience/data-viewing/types';
-import { IJupyterUriProvider, IJupyterUriProviderRegistration, INotebookExtensibility } from './datascience/types';
+import {
+    IJupyterUriProvider,
+    IJupyterUriProviderRegistration,
+    INotebookExtensibility,
+    IWebviewExtensibility,
+    IWebviewOpenedMessage
+} from './datascience/types';
 import { IServiceContainer, IServiceManager } from './ioc/types';
 
 /*
@@ -26,6 +32,14 @@ export interface IExtensionApi {
     ready: Promise<void>;
     readonly onKernelPostExecute: Event<NotebookCell>;
     readonly onKernelRestart: Event<void>;
+    readonly onOpenWebview: Event<IWebviewOpenedMessage>;
+    registerCellCommand(
+        command: string,
+        buttonHtml: string,
+        statusToEnable: NotebookCellRunState[],
+        interactive: boolean
+    ): void;
+    removeCellCommand(command: string, interactive: boolean): void;
     /**
      * Launches Data Viewer component.
      * @param {IDataViewerDataProvider} dataProvider Instance that will be used by the Data Viewer component to fetch data.
@@ -47,6 +61,7 @@ export function buildApi(
     serviceContainer: IServiceContainer
 ): IExtensionApi {
     const notebookExtensibility = serviceContainer.get<INotebookExtensibility>(INotebookExtensibility);
+    const webviewExtensibility = serviceContainer.get<IWebviewExtensibility>(IWebviewExtensibility);
     let registered = false;
     const api: IExtensionApi = {
         // 'ready' will propagate the exception, but we must log it here first.
@@ -71,7 +86,10 @@ export function buildApi(
             container.registerProvider(picker);
         },
         onKernelPostExecute: notebookExtensibility.onKernelPostExecute,
-        onKernelRestart: notebookExtensibility.onKernelRestart
+        onKernelRestart: notebookExtensibility.onKernelRestart,
+        onOpenWebview: notebookExtensibility.onOpenWebview,
+        registerCellCommand: webviewExtensibility.registerCellCommand,
+        removeCellCommand: webviewExtensibility.removeCellCommand
     };
 
     // In test environment return the DI Container.

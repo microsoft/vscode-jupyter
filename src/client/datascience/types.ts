@@ -17,6 +17,7 @@ import {
     Disposable,
     Event,
     LanguageConfiguration,
+    NotebookCellRunState,
     QuickPickItem,
     Range,
     TextDocument,
@@ -499,6 +500,8 @@ export interface IInteractiveBase extends Disposable {
     interruptKernel(): Promise<void>;
     restartKernel(): Promise<void>;
     hasCell(id: string): Promise<boolean>;
+    createWebviewCellButton(command: string, buttonHtml: string, statusToEnable: CellState[]): void;
+    removeWebviewCellButton(command: string): void;
 }
 
 export const IInteractiveWindow = Symbol('IInteractiveWindow');
@@ -581,6 +584,8 @@ export interface INotebookEditor extends Disposable {
     collapseAllCells(): void;
     interruptKernel(): Promise<void>;
     restartKernel(): Promise<void>;
+    createWebviewCellButton(command: string, buttonHtml: string, statusToEnable: CellState[]): void;
+    removeWebviewCellButton(command: string): void;
 }
 
 export const INotebookExtensibility = Symbol('INotebookExtensibility');
@@ -588,10 +593,22 @@ export const INotebookExtensibility = Symbol('INotebookExtensibility');
 export interface INotebookExtensibility {
     readonly onKernelPostExecute: Event<NotebookCell>;
     readonly onKernelRestart: Event<void>;
-    readonly onOpenWebview: Event<string[]>;
+    readonly onOpenWebview: Event<IWebviewOpenedMessage>;
     fireKernelRestart(): void;
     fireKernelPostExecute(cell: NotebookCell): void;
-    fireOpenWebview(languages: string[]): void;
+    fireOpenWebview(msg: IWebviewOpenedMessage): void;
+}
+
+export const IWebviewExtensibility = Symbol('IWebviewExtensibility');
+
+export interface IWebviewExtensibility {
+    registerCellCommand(
+        command: string,
+        buttonHtml: string,
+        statusToEnable: NotebookCellRunState[],
+        interactive: boolean
+    ): void;
+    removeCellCommand(command: string, interactive: boolean): void;
 }
 
 export const IInteractiveWindowListener = Symbol('IInteractiveWindowListener');
@@ -1396,4 +1413,15 @@ export interface ISwitchKernelOptions {
 export const IDebugLoggingManager = Symbol('IDebugLoggingManager');
 export interface IDebugLoggingManager {
     initialize(): Promise<void>;
+}
+
+export interface IExternalWebviewCellButton {
+    command: string;
+    buttonHtml: string;
+    statusToEnable: CellState[];
+}
+
+export interface IWebviewOpenedMessage {
+    languages: string[];
+    isInteractive: boolean;
 }

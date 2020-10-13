@@ -23,6 +23,7 @@ import { CssMessages, IGetCssRequest, IGetCssResponse, IGetMonacoThemeRequest, S
 import { IGetMonacoThemeResponse } from '../monacoMessages';
 import {
     ICell,
+    IExternalWebviewCellButton,
     IInteractiveWindowInfo,
     IJupyterVariable,
     IJupyterVariablesRequest,
@@ -138,7 +139,8 @@ export enum InteractiveWindowMessages {
     DebugStateChange = 'debug_state_change',
     KernelIdle = 'kernel_idle',
     HasCell = 'has_cell',
-    HasCellResponse = 'has_cell_response'
+    HasCellResponse = 'has_cell_response',
+    UpdateExternalCellButtons = 'update_external_cell_buttons'
 }
 
 export enum IPyWidgetMessages {
@@ -674,4 +676,5 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.DebugStateChange]: IDebugStateChange;
     public [InteractiveWindowMessages.HasCell]: string;
     public [InteractiveWindowMessages.HasCellResponse]: { id: string; result: boolean };
+    public [InteractiveWindowMessages.UpdateExternalCellButtons]: IExternalWebviewCellButton[];
 }

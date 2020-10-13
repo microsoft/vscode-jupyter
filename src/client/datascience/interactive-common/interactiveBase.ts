@@ -262,10 +262,6 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
                         ).ignoreErrors()
                     )
                     .catch(); // do nothing
-
-                const editor = this.documentManager.activeTextEditor;
-                const language = editor ? editor.document.languageId : PYTHON_LANGUAGE;
-                this.nbExtensibility.fireOpenWebview([language]);
                 break;
 
             case InteractiveWindowMessages.GotoCodeCell:
@@ -506,6 +502,10 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
             this.applicationShell.showErrorMessage(err);
         });
     }
+
+    public abstract createWebviewCellButton(command: string, buttonHtml: string, statusToEnable: CellState[]): void;
+
+    public abstract removeWebviewCellButton(command: string): void;
 
     public abstract hasCell(id: string): Promise<boolean>;
 
@@ -1591,7 +1591,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
     private async firePostExecute(cell: ICell) {
         if (cell && cell.data && cell.data.source) {
             const dummyUri = 'https://www.msft.com/some/path?query#';
-            // find a way to not open a doc
+            // TO DO: find a way to not open a doc
             const dummyDoc = await workspace.openTextDocument({
                 language: '',
                 content: concatMultilineString(cell.data.source)

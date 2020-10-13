@@ -55,6 +55,7 @@ import {
     ICell,
     ICodeCssGenerator,
     IDataScienceErrorHandler,
+    IExternalWebviewCellButton,
     IFileSystem,
     IInteractiveWindowInfo,
     IInteractiveWindowListener,
@@ -148,6 +149,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     private executeCancelTokens = new Set<CancellationTokenSource>();
     private loadPromise: Promise<void>;
     private previouslyNotTrusted: boolean = false;
+    private externalButtons: IExternalWebviewCellButton[] = [];
 
     constructor(
         listeners: IInteractiveWindowListener[],
@@ -265,6 +267,10 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                             }
                         })
                         .catch((exc) => traceError('Error loading cells: ', exc));
+
+                    const editor = this.documentManager.activeTextEditor;
+                    const language = editor ? editor.document.languageId : PYTHON_LANGUAGE;
+                    this.notebookExtensibility.fireOpenWebview({ languages: [language], isInteractive: false });
                 }
                 break;
             case InteractiveWindowMessages.Sync:
@@ -363,6 +369,17 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     }
     public collapseAllCells(): void {
         throw Error('Not implemented Exception');
+    }
+
+    public createWebviewCellButton(command: string, buttonHtml: string, statusToEnable: CellState[]): void {
+        this.externalButtons.push({ command, buttonHtml, statusToEnable });
+        this.postMessage(InteractiveWindowMessages.UpdateExternalCellButtons, this.externalButtons).ignoreErrors();
+    }
+
+    public removeWebviewCellButton(command: string): void {
+        const index = this.externalButtons.findIndex((button) => button.command === command);
+        this.externalButtons.splice(index, 1);
+        this.postMessage(InteractiveWindowMessages.UpdateExternalCellButtons, this.externalButtons).ignoreErrors();
     }
 
     protected addSysInfo(reason: SysInfoReason): Promise<void> {

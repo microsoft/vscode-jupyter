@@ -1,7 +1,7 @@
 import { injectable } from 'inversify';
 import { Event, EventEmitter } from 'vscode';
 import type { NotebookCell } from 'vscode-proposed';
-import { INotebookExtensibility } from './types';
+import { INotebookExtensibility, IWebviewOpenedMessage } from './types';
 
 @injectable()
 export class NotebookExtensibility implements INotebookExtensibility {
@@ -9,7 +9,7 @@ export class NotebookExtensibility implements INotebookExtensibility {
 
     private kernelRestart = new EventEmitter<void>();
 
-    private openWebview = new EventEmitter<string[]>();
+    private openWebview = new EventEmitter<IWebviewOpenedMessage>();
 
     public get onKernelPostExecute(): Event<NotebookCell> {
         return this.kernelExecute.event;
@@ -19,7 +19,7 @@ export class NotebookExtensibility implements INotebookExtensibility {
         return this.kernelRestart.event;
     }
 
-    public get onOpenWebview(): Event<string[]> {
+    public get onOpenWebview(): Event<IWebviewOpenedMessage> {
         return this.openWebview.event;
     }
 
@@ -34,7 +34,7 @@ export class NotebookExtensibility implements INotebookExtensibility {
         }
     }
 
-    public fireOpenWebview(languages: string[]): void {
-        this.openWebview.fire(languages);
+    public fireOpenWebview(msg: IWebviewOpenedMessage): void {
+        this.openWebview.fire(msg);
     }
 }

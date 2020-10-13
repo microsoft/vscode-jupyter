@@ -176,8 +176,10 @@ import {
     IRawNotebookSupportedService,
     IStatusProvider,
     IThemeFinder,
-    ITrustService
+    ITrustService,
+    IWebviewExtensibility
 } from './types';
+import { WebviewExtensibility } from './webviewExtensibility';
 
 // README: Did you make sure "dataScienceIocContainer.ts" has also been updated appropriately?
 
@@ -312,6 +314,7 @@ export function registerTypes(serviceManager: IServiceManager, useVSCodeNotebook
     serviceManager.addSingleton<ITrustService>(ITrustService, TrustService);
     serviceManager.addSingleton<IFileSystemPathUtils>(IFileSystemPathUtils, FileSystemPathUtils);
     serviceManager.addSingleton<INotebookExtensibility>(INotebookExtensibility, NotebookExtensibility);
+    serviceManager.addSingleton<IWebviewExtensibility>(IWebviewExtensibility, WebviewExtensibility);
 
     registerNotebookTypes(serviceManager);
 }

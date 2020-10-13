@@ -12,6 +12,7 @@ import {
     IWebviewPanelProvider,
     IWorkspaceService
 } from '../../common/application/types';
+import { PYTHON_LANGUAGE } from '../../common/constants';
 import { ContextKey } from '../../common/contextKey';
 import '../../common/extensions';
 import { traceError } from '../../common/logger';
@@ -42,9 +43,11 @@ import {
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
 import { KernelConnectionMetadata } from '../jupyter/kernels/types';
 import {
+    CellState,
     ICell,
     ICodeCssGenerator,
     IDataScienceErrorHandler,
+    IExternalWebviewCellButton,
     IFileSystem,
     IInteractiveWindow,
     IInteractiveWindowInfo,
@@ -99,6 +102,8 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     private pendingHasCell = new Map<string, Deferred<boolean>>();
     private mode: InteractiveWindowMode = 'multiple';
     private loadPromise: Promise<void>;
+    private externalButtons: IExternalWebviewCellButton[] = [];
+
     constructor(
         listeners: IInteractiveWindowListener[],
         liveShare: ILiveShareApi,
@@ -248,6 +253,11 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         super.onMessage(message, payload);
 
         switch (message) {
+            case InteractiveWindowMessages.Started:
+                const editor = this.documentManager.activeTextEditor;
+                const language = editor ? editor.document.languageId : PYTHON_LANGUAGE;
+                this.notebookExtensibility.fireOpenWebview({ languages: [language], isInteractive: true });
+                break;
             case InteractiveWindowMessages.Export:
                 this.handleMessage(message, payload, this.export);
                 break;
@@ -343,6 +353,18 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         }
         return undefined;
     }
+
+    public createWebviewCellButton(command: string, buttonHtml: string, statusToEnable: CellState[]): void {
+        this.externalButtons.push({ command, buttonHtml, statusToEnable });
+        this.postMessage(InteractiveWindowMessages.UpdateExternalCellButtons, this.externalButtons).ignoreErrors();
+    }
+
+    public removeWebviewCellButton(command: string): void {
+        const index = this.externalButtons.findIndex((button) => button.command === command);
+        this.externalButtons.splice(index, 1);
+        this.postMessage(InteractiveWindowMessages.UpdateExternalCellButtons, this.externalButtons).ignoreErrors();
+    }
+
     protected async addSysInfo(reason: SysInfoReason): Promise<void> {
         await super.addSysInfo(reason);
 

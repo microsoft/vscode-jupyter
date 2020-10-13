@@ -257,6 +257,14 @@ export class NotebookEditor implements INotebookEditor {
     public dispose() {
         this._closed.fire(this);
     }
+
+    public createWebviewCellButton(): void {
+        throw new Error('Method not implemented.');
+    }
+
+    public removeWebviewCellButton(): void {
+        throw new Error('Method not implemented.');
+    }
     private async restartKernelInternal(kernel: IKernel): Promise<void> {
         this.restartingKernel = true;
 

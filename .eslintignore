@@ -1260,6 +1260,8 @@ src/client/datascience/progress/messages.ts
 src/client/datascience/progress/types.ts
 src/client/datascience/progress/decorator.ts
 src/client/datascience/codeCssGenerator.ts
+src/client/datascience/notebookExtensibility.ts
+src/client/datascience/webviewExtensibility.ts
 src/client/datascience/kernel-launcher/helpers.ts
 src/client/datascience/kernel-launcher/kernelFinder.ts
 src/client/datascience/kernel-launcher/kernelProcess.ts
