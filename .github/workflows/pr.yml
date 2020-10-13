@@ -6,6 +6,7 @@ on:
       - main
   check_run:
     types: [rerequested, requested_action]
+  workflow_dispatch:
 
 env:
   NODE_VERSION: 12.15.0
