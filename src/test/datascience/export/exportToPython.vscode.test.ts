@@ -27,6 +27,8 @@ suite('DataScience - Export Python', () => {
             // tslint:disable-next-line:no-invalid-this
             this.skip();
         }
+        // tslint:disable-next-line:no-invalid-this
+        this.skip();
     });
     teardown(closeActiveWindows);
     suiteTeardown(closeActiveWindows);
