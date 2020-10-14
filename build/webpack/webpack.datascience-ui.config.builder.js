@@ -111,8 +111,7 @@ function getPlugins(bundle) {
     return plugins;
 }
 
-function buildConfiguration(options) {
-    const bundle = options.bundle;
+function buildConfiguration(bundle) {
     // console.error(`Bundle = ${bundle}`);
     // Folder inside `datascience-ui` that will be created and where the files will be dumped.
     const bundleFolder = bundle;
