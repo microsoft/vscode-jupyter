@@ -371,7 +371,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     constructor(private readonly uiTest: boolean = false) {
         super();
         this.useVSCodeAPI = false;
-        const isRollingBuild = process.env ? process.env.VSCODE_PYTHON_ROLLING !== undefined : false;
+        const isRollingBuild = process.env ? process.env.VSC_FORCE_REAL_JUPYTER !== undefined : false;
         this.shouldMockJupyter = !isRollingBuild;
         this.asyncRegistry = new AsyncDisposableRegistry();
     }
@@ -494,7 +494,9 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingletonInstance<IExperimentService>(IExperimentService, instance(experimentService));
         const extensionChecker = mock(PythonExtensionChecker);
         when(extensionChecker.isPythonExtensionInstalled).thenCall(this.isPythonExtensionInstalled.bind(this));
-        when(extensionChecker.installPythonExtension()).thenCall(this.installPythonExtension.bind(this));
+        when(extensionChecker.showPythonExtensionInstallRequiredPrompt()).thenCall(
+            this.installPythonExtension.bind(this)
+        );
         this.serviceManager.addSingletonInstance<IPythonExtensionChecker>(
             IPythonExtensionChecker,
             instance(extensionChecker)

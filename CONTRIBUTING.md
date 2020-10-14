@@ -37,10 +37,6 @@ python3 -m venv .venv
 source .venv/bin/activate
 # The Python code in the extension is formatted using Black.
 python3 -m pip install black
-# Install Python dependencies using `python3`.
-# If you want to use a different interpreter then specify it in the
-# CI_PYTHON_PATH environment variable.
-npx gulp installPythonLibs
 ```
 
 If you see warnings that `The engine "vscode" appears to be invalid.`, you can ignore these.
@@ -349,9 +345,9 @@ Resulting in a `ms-toolsai-jupyter-insiders.vsix` file in your `vscode-jupyter` 
 If you would like to use the latest version of the extension as committed to `main` that has passed our test suite, then you may set the `"jupyter.insidersChannel"` setting to `"daily"` or `"weekly"` based on how often you would like the extension to check for updates.
 
 You may also download and install the extension manually from the following
-[location](https://pvsc.blob.core.windows.net/extension-builds/ms-toolsai-jupyter-insiders.vsix).
+[location](https://pvsc.blob.core.windows.net/extension-builds-jupyter/ms-toolsai-jupyter-insiders.vsix).
 Once you have downloaded the
-[ms-toolsai-jupyter-insiders.vsix](https://pvsc.blob.core.windows.net/extension-builds/ms-toolsai-jupyter-insiders.vsix)
+[ms-toolsai-jupyter-insiders.vsix](https://pvsc.blob.core.windows.net/extension-builds-jupyter/ms-toolsai-jupyter-insiders.vsix)
 file, please follow the instructions on
 [this page](https://code.visualstudio.com/docs/editor/extension-gallery#_install-from-a-vsix)
 to install the extension. Do note that the manual install will not automatically update to newer builds unless you set the `"jupyter.insidersChannel"` setting (it will get replaced with released versions from the Marketplace once they are newer than the version install manually).

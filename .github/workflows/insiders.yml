@@ -221,6 +221,9 @@ jobs:
       - name: Upgrade pip
         run: python -m pip install -U pip
 
+      - name: Show python version
+        run: python --version
+
       - name: Use Node ${{env.NODE_VERSION}}
         uses: actions/setup-node@v2.1.2
         with:
@@ -317,8 +320,8 @@ jobs:
       - name: Run functional tests
         run: npm run test:functional:parallel -- --${{matrix.test-suite}}
         env:
-          VSCODE_PYTHON_ROLLING: 1
-          VSC_PYTHON_FORCE_LOGGING: 1
+          VSC_FORCE_REAL_JUPYTER: 1
+          VSC_JUPYTER_FORCE_LOGGING: 1
         id: test_functional_group
 
       - name: Publish Test Report
@@ -463,8 +466,8 @@ jobs:
         with:
           run: npm run testVSCode
         env:
-          VSCODE_PYTHON_ROLLING: 1
-          VSC_PYTHON_FORCE_LOGGING: 1
+          VSC_FORCE_REAL_JUPYTER: 1
+          VSC_JUPYTER_FORCE_LOGGING: 1
         id: test_vscode
         if: matrix.test-suite == 'integration'
 
@@ -481,8 +484,8 @@ jobs:
         with:
           run: npm run testNativeNotebooksInVSCode
         env:
-          VSCODE_PYTHON_ROLLING: 1
-          VSC_PYTHON_FORCE_LOGGING: 1
+          VSC_FORCE_REAL_JUPYTER: 1
+          VSC_JUPYTER_FORCE_LOGGING: 1
         id: test_notebook_vscode
         if: matrix.test-suite == 'notebook'
 
