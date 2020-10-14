@@ -19,6 +19,7 @@ const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 
 // Any build on the CI is considered production mode.
 const isProdBuild = constants.isCI || process.argv.includes('--mode');
+const fasterCompiler = !!process.env.CI_JUPYTER_FAST_COMPILATION;
 
 function getEntry(bundle) {
     switch (bundle) {
@@ -38,14 +39,19 @@ function getEntry(bundle) {
 }
 
 function getPlugins(bundle) {
-    const plugins = [
+    const plugins = [ ];
+    // Add the Fork TS type checker only if we need a fast compilation.
+    // When running tests, we'll ignore type checking (faster).
+    // Other CI jobs can look for ts issues.
+    if (!fasterCompiler){
         new ForkTsCheckerWebpackPlugin({
-            checkSyntacticErrors: true,
-            tsconfig: configFileName,
-            reportFiles: ['src/datascience-ui/**/*.{ts,tsx}'],
-            memoryLimit: 9096
+            typescript: {
+                configFile: configFileName,
+                reportFiles: ['src/datascience-ui/**/*.{ts,tsx}'],
+                memoryLimit: 9096
+            }
         })
-    ];
+    }
     if (isProdBuild) {
         plugins.push(...common.getDefaultPlugins(bundle));
     }
@@ -105,7 +111,9 @@ function getPlugins(bundle) {
     return plugins;
 }
 
-function buildConfiguration(bundle) {
+function buildConfiguration(options) {
+    const bundle = options.bundle;
+    // console.error(`Bundle = ${bundle}`);
     // Folder inside `datascience-ui` that will be created and where the files will be dumped.
     const bundleFolder = bundle;
     const filesToCopy = [];
@@ -130,10 +138,11 @@ function buildConfiguration(bundle) {
         output: {
             path: path.join(constants.ExtensionRootDir, 'out', 'datascience-ui', bundleFolder),
             filename: '[name].js',
-            chunkFilename: `[name].bundle.js`
+            chunkFilename: `[name].bundle.js`,
+            pathinfo: false
         },
-        mode: 'development', // Leave as is, we'll need to see stack traces when there are errors.
-        devtool: isProdBuild ? 'source-map' : 'inline-source-map',
+        mode: isProdBuild ? 'production' : 'development', // Leave as is, we'll need to see stack traces when there are errors.
+        devtool: isProdBuild ? undefined : 'inline-source-map',
         optimization: {
             minimize: isProdBuild,
             minimizer: isProdBuild ? [new TerserPlugin({ sourceMap: true })] : [],
@@ -256,6 +265,12 @@ function buildConfiguration(bundle) {
                                 configFile: configFileName,
                                 // Faster (turn on only on CI, for dev we don't need this).
                                 transpileOnly: true,
+                                silent: true,
+                                compilerOptions: {
+                                    skipLibCheck: true
+                                },
+                                // skipLibCheck: true,
+                                // suppressOutputPathCheck: true,
                                 reportFiles: ['src/datascience-ui/**/*.{ts,tsx}']
                             }
                         }
@@ -263,16 +278,26 @@ function buildConfiguration(bundle) {
                 },
                 {
                     test: /\.svg$/,
-                    use: ['svg-inline-loader']
+                    use: ['cache-loader', 'thread-loader', 'svg-inline-loader']
                 },
                 {
                     test: /\.css$/,
-                    use: ['style-loader', 'css-loader']
+                    use: ['cache-loader', 'thread-loader', 'style-loader', 'css-loader']
                 },
                 {
                     test: /\.js$/,
                     include: /node_modules.*remark.*default.*js/,
                     use: [
+                        { loader: 'cache-loader' },
+                        {
+                            loader: 'thread-loader',
+                            options: {
+                                // there should be 1 cpu for the fork-ts-checker-webpack-plugin
+                                workers: require('os').cpus().length - 1,
+                                workerNodeArgs: ['--max-old-space-size=9096'],
+                                poolTimeout: isProdBuild ? 1000 : Infinity // set this to Infinity in watch mode - see https://github.com/webpack-contrib/thread-loader
+                            }
+                        },
                         {
                             loader: path.resolve('./build/webpack/loaders/remarkLoader.js'),
                             options: {}
@@ -284,6 +309,16 @@ function buildConfiguration(bundle) {
                     type: 'javascript/auto',
                     include: /node_modules.*remark.*/,
                     use: [
+                        { loader: 'cache-loader' },
+                        {
+                            loader: 'thread-loader',
+                            options: {
+                                // there should be 1 cpu for the fork-ts-checker-webpack-plugin
+                                workers: require('os').cpus().length - 1,
+                                workerNodeArgs: ['--max-old-space-size=9096'],
+                                poolTimeout: isProdBuild ? 1000 : Infinity // set this to Infinity in watch mode - see https://github.com/webpack-contrib/thread-loader
+                            }
+                        },
                         {
                             loader: path.resolve('./build/webpack/loaders/jsonloader.js'),
                             options: {}
@@ -293,6 +328,16 @@ function buildConfiguration(bundle) {
                 {
                     test: /\.(png|woff|woff2|eot|gif|ttf)$/,
                     use: [
+                        { loader: 'cache-loader' },
+                        {
+                            loader: 'thread-loader',
+                            options: {
+                                // there should be 1 cpu for the fork-ts-checker-webpack-plugin
+                                workers: require('os').cpus().length - 1,
+                                workerNodeArgs: ['--max-old-space-size=9096'],
+                                poolTimeout: isProdBuild ? 1000 : Infinity // set this to Infinity in watch mode - see https://github.com/webpack-contrib/thread-loader
+                            }
+                        },
                         {
                             loader: 'url-loader?limit=100000',
                             options: { esModule: false }
@@ -301,7 +346,7 @@ function buildConfiguration(bundle) {
                 },
                 {
                     test: /\.less$/,
-                    use: ['style-loader', 'css-loader', 'less-loader']
+                    use: ['cache-loader', 'thread-loader', 'style-loader', 'css-loader', 'less-loader']
                 }
             ]
         }
@@ -310,5 +355,11 @@ function buildConfiguration(bundle) {
     return config;
 }
 
-exports.notebooks = buildConfiguration('notebook');
-exports.viewers = buildConfiguration('viewers');
+var createVariants = require('parallel-webpack').createVariants;
+var variants = {
+    bundle: ['notebook', 'viewers']
+};
+
+module.exports = createVariants({}, variants, buildConfiguration);
+// exports.notebooks = buildConfiguration('notebook');
+// exports.viewers = buildConfiguration('viewers');
