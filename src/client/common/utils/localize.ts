@@ -164,13 +164,6 @@ export namespace DataScienceNotebookSurveyBanner {
     );
 }
 
-export namespace PythonAndPylanceExtensionBanner {
-    export const message = localize(
-        'PythonAndPylanceBanner.message',
-        'You have opened a Python notebook. Would you like to try out the Python and Pylance extensions?'
-    );
-}
-
 export namespace ExtensionSurveyBanner {
     export const bannerMessage = localize(
         'ExtensionSurveyBanner.bannerMessage',
@@ -185,6 +178,11 @@ export namespace DataScience {
     export const pythonExtensionRequired = localize(
         'DataScience.pythonExtensionRequired',
         'The Python extension is required to perform that task. Click Yes to open Python extension installation page.'
+    );
+
+    export const pythonExtensionRecommended = localize(
+        'DataScience.pythonExtensionRecommended',
+        'You have opened a Python notebook. Would you like to install the Python extension?'
     );
 
     export const pythonInstalledReloadPromptMessage = localize(
