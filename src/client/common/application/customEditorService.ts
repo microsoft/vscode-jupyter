@@ -3,13 +3,11 @@
 'use strict';
 import { inject, injectable } from 'inversify';
 import * as vscode from 'vscode';
-import { DataScience } from '../../common/utils/localize';
-import { IFileSystem } from '../../datascience/types';
 
 import { UseCustomEditorApi } from '../constants';
 import { traceError } from '../logger';
 import { IExtensionContext } from '../types';
-import { noop } from '../utils/misc';
+import { InvalidCustomEditor } from './invalidCustomEditor';
 import { CustomEditorProvider, ICommandManager, ICustomEditorService, IWorkspaceService } from './types';
 
 const EditorAssociationUpdatedKey = 'EditorAssociationUpdatedToUseCustomEditor';
@@ -38,7 +36,8 @@ export class CustomEditorService implements ICustomEditorService {
             // tslint:disable-next-line: no-any
             return (vscode.window as any).registerCustomEditorProvider(viewType, provider, options);
         } else {
-            return { dispose: noop };
+            // tslint:disable-next-line: no-any
+            return (vscode.window as any).registerCustomEditorProvider(viewType, new InvalidCustomEditor(), options);
         }
     }
 
