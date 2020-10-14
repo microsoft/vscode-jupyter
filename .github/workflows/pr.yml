@@ -16,7 +16,7 @@ env:
   CACHE_NPM_DEPS: cache-npm
   CACHE_OUT_DIRECTORY: cache-out-directory
   CACHE_PIP_DEPS: cache-pip
-  VSC_PYTHON_FORCE_LOGGING: 'true'
+  VSC_JUPYTER_FORCE_LOGGING: 'true'
   VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 'true'
   # Key for the cache created at the end of the the 'Cache ./pythonFiles/lib/python' step.
   CACHE_PYTHONFILES: cache-pvsc-pythonFiles
@@ -339,7 +339,7 @@ jobs:
         run: npm run test:functional:parallel -- --${{matrix.test-suite}}
         env:
           VSCODE_PYTHON_ROLLING: 1
-          VSC_PYTHON_FORCE_LOGGING: 1
+          VSC_JUPYTER_FORCE_LOGGING: 1
         id: test_functional_group
 
       - name: Publish Test Report
@@ -514,7 +514,7 @@ jobs:
           run: npm run testVSCode
         env:
           VSCODE_PYTHON_ROLLING: 1
-          VSC_PYTHON_FORCE_LOGGING: 1
+          VSC_JUPYTER_FORCE_LOGGING: 1
           VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
         id: test_vscode
         if: matrix.test-suite == 'integration'
@@ -533,7 +533,7 @@ jobs:
           run: npm run testNativeNotebooksInVSCode
         env:
           VSCODE_PYTHON_ROLLING: 1
-          VSC_PYTHON_FORCE_LOGGING: 1
+          VSC_JUPYTER_FORCE_LOGGING: 1
           VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
           VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
         id: test_notebook_vscode

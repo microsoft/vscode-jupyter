@@ -318,7 +318,7 @@ jobs:
         run: npm run test:functional:parallel -- --${{matrix.test-suite}}
         env:
           VSCODE_PYTHON_ROLLING: 1
-          VSC_PYTHON_FORCE_LOGGING: 1
+          VSC_JUPYTER_FORCE_LOGGING: 1
         id: test_functional_group
 
       - name: Publish Test Report
@@ -464,7 +464,7 @@ jobs:
           run: npm run testVSCode
         env:
           VSCODE_PYTHON_ROLLING: 1
-          VSC_PYTHON_FORCE_LOGGING: 1
+          VSC_JUPYTER_FORCE_LOGGING: 1
         id: test_vscode
         if: matrix.test-suite == 'integration'
 
@@ -482,7 +482,7 @@ jobs:
           run: npm run testNativeNotebooksInVSCode
         env:
           VSCODE_PYTHON_ROLLING: 1
-          VSC_PYTHON_FORCE_LOGGING: 1
+          VSC_JUPYTER_FORCE_LOGGING: 1
         id: test_notebook_vscode
         if: matrix.test-suite == 'notebook'
 
