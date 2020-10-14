@@ -164,6 +164,13 @@ export namespace DataScienceNotebookSurveyBanner {
     );
 }
 
+export namespace PythonAndPylanceExtensionBanner {
+    export const message = localize(
+        'PythonAndPylanceBanner.message',
+        'You have opened a Python notebook. Would you like to try out the Python and Pylance extensions?'
+    );
+}
+
 export namespace ExtensionSurveyBanner {
     export const bannerMessage = localize(
         'ExtensionSurveyBanner.bannerMessage',
