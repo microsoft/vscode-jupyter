@@ -101,25 +101,25 @@ jobs:
       - name: Install dependencies (npm ci)
         run: npm ci --prefer-offline
 
-    #   - name: Run linting on TypeScript code
-    #     run: npx tslint --project tsconfig.json
+      - name: Run linting on TypeScript code
+        run: npx tslint --project tsconfig.json
 
-    #   - name: Run prettier on TypeScript code
-    #     run: npx prettier 'src/**/*.ts*' --check
+      - name: Run prettier on TypeScript code
+        run: npx prettier 'src/**/*.ts*' --check
 
-    #   - name: Run prettier on JavaScript code
-    #     run: npx prettier 'build/**/*.js' --check
+      - name: Run prettier on JavaScript code
+        run: npx prettier 'build/**/*.js' --check
 
-    #   - name: Use Python ${{env.PYTHON_VERSION}}
-    #     uses: actions/setup-python@v2
-    #     with:
-    #       python-version: ${{env.PYTHON_VERSION}}
+      - name: Use Python ${{env.PYTHON_VERSION}}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{env.PYTHON_VERSION}}
 
-    #   - name: Run Black on Python code
-    #     run: |
-    #       python -m pip install -U black
-    #       python -m black . --check
-    #     working-directory: pythonFiles
+      - name: Run Black on Python code
+        run: |
+          python -m pip install -U black
+          python -m black . --check
+        working-directory: pythonFiles
 
       - name: Run gulp prePublishNonBundle
         run: npx gulp prePublishNonBundle
