@@ -26,7 +26,7 @@ const rangeInclusive = require('range-inclusive');
 
         suiteSetup(function () {
             // These test require python, so only run with a non-mocked jupyter
-            const isRollingBuild = process.env ? process.env.VSCODE_PYTHON_ROLLING !== undefined : false;
+            const isRollingBuild = process.env ? process.env.VSCODE_JUPYTER_ROLLING !== undefined : false;
             if (!isRollingBuild) {
                 // tslint:disable-next-line:no-console
                 console.log('Skipping Variable Explorer tests. Requires python environment');
