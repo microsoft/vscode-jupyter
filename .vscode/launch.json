@@ -87,39 +87,9 @@
 			}
         },
         {
-            "name": "Tests (Debugger, VS Code, *.test.ts)",
-            "type": "extensionHost",
-            "request": "launch",
-            "runtimeExecutable": "${execPath}",
-            "args": [
-                "${workspaceFolder}/src/testMultiRootWkspc/multi.code-workspace",
-                "--disable-extensions",
-                "--extensionDevelopmentPath=${workspaceFolder}",
-                "--extensionTestsPath=${workspaceFolder}/out/test"
-            ],
-            "stopOnEntry": false,
-            "sourceMaps": true,
-            "smartStep": true,
-            "outFiles": [
-                "${workspaceFolder}/out/**/*",
-                "!${workspaceFolder}/**/node_modules**/*"
-            ],
-            "preLaunchTask": "Compile",
-            "env": {
-                "IS_CI_SERVER_TEST_DEBUGGER": "1"
-            },
-            "skipFiles": [
-                "<node_internals>/**"
-            ],
-			"presentation": {
-				"group": "2_tests",
-				"order": 1
-			}
-        },
-        {
             // Note, for the smoke test you want to debug, you may need to copy the file,
             // rename it and remove a check for only smoke tests.
-            "name": "Tests (Smoke, VS Code, *.test.ts)",
+            "name": "Smoke Tests (*.smoke.test.ts)",
             "type": "extensionHost",
             "request": "launch",
             "runtimeExecutable": "${execPath}",
@@ -149,7 +119,7 @@
             ],
 			"presentation": {
 				"group": "2_tests",
-				"order": 2
+				"order": 10
 			}
         },
         {
