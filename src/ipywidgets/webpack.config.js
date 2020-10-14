@@ -31,8 +31,8 @@ const rules = [
     {
         test: /\.woff2(\?v=\d+\.\d+\.\d+)?$/,
         use: [
-            { loader: 'cache-loader' },
-            { loader: 'thread-loader' },
+            'cache-loader',
+            'thread-loader',
             {
                 loader: 'url-loader',
                 options: {
@@ -45,8 +45,8 @@ const rules = [
     {
         test: /\.woff(\?v=\d+\.\d+\.\d+)?$/,
         use: [
-            { loader: 'cache-loader' },
-            { loader: 'thread-loader' },
+            'cache-loader',
+            'thread-loader',
             {
                 loader: 'url-loader',
                 options: {
@@ -59,8 +59,8 @@ const rules = [
     {
         test: /\.ttf(\?v=\d+\.\d+\.\d+)?$/,
         use: [
-            { loader: 'cache-loader' },
-            { loader: 'thread-loader' },
+            'cache-loader',
+            'thread-loader',
             {
                 loader: 'url-loader',
                 options: {
@@ -74,8 +74,8 @@ const rules = [
     {
         test: /\.svg(\?v=\d+\.\d+\.\d+)?$/,
         use: [
-            { loader: 'cache-loader' },
-            { loader: 'thread-loader' },
+            'cache-loader',
+            'thread-loader',
             {
                 loader: 'url-loader',
                 options: {

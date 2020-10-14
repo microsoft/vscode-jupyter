@@ -39,18 +39,18 @@ function getEntry(bundle) {
 }
 
 function getPlugins(bundle) {
-    const plugins = [ ];
+    const plugins = [];
     // Add the Fork TS type checker only if we need a fast compilation.
     // When running tests, we'll ignore type checking (faster).
     // Other CI jobs can look for ts issues.
-    if (!fasterCompiler){
+    if (!fasterCompiler) {
         new ForkTsCheckerWebpackPlugin({
             typescript: {
                 configFile: configFileName,
                 reportFiles: ['src/datascience-ui/**/*.{ts,tsx}'],
                 memoryLimit: 9096
             }
-        })
+        });
     }
     if (isProdBuild) {
         plugins.push(...common.getDefaultPlugins(bundle));
@@ -288,16 +288,8 @@ function buildConfiguration(options) {
                     test: /\.js$/,
                     include: /node_modules.*remark.*default.*js/,
                     use: [
-                        { loader: 'cache-loader' },
-                        {
-                            loader: 'thread-loader',
-                            options: {
-                                // there should be 1 cpu for the fork-ts-checker-webpack-plugin
-                                workers: require('os').cpus().length - 1,
-                                workerNodeArgs: ['--max-old-space-size=9096'],
-                                poolTimeout: isProdBuild ? 1000 : Infinity // set this to Infinity in watch mode - see https://github.com/webpack-contrib/thread-loader
-                            }
-                        },
+                        'cache-loader',
+                        'thread-loader',
                         {
                             loader: path.resolve('./build/webpack/loaders/remarkLoader.js'),
                             options: {}
@@ -309,16 +301,8 @@ function buildConfiguration(options) {
                     type: 'javascript/auto',
                     include: /node_modules.*remark.*/,
                     use: [
-                        { loader: 'cache-loader' },
-                        {
-                            loader: 'thread-loader',
-                            options: {
-                                // there should be 1 cpu for the fork-ts-checker-webpack-plugin
-                                workers: require('os').cpus().length - 1,
-                                workerNodeArgs: ['--max-old-space-size=9096'],
-                                poolTimeout: isProdBuild ? 1000 : Infinity // set this to Infinity in watch mode - see https://github.com/webpack-contrib/thread-loader
-                            }
-                        },
+                        'cache-loader',
+                        'thread-loader',
                         {
                             loader: path.resolve('./build/webpack/loaders/jsonloader.js'),
                             options: {}
@@ -328,16 +312,8 @@ function buildConfiguration(options) {
                 {
                     test: /\.(png|woff|woff2|eot|gif|ttf)$/,
                     use: [
-                        { loader: 'cache-loader' },
-                        {
-                            loader: 'thread-loader',
-                            options: {
-                                // there should be 1 cpu for the fork-ts-checker-webpack-plugin
-                                workers: require('os').cpus().length - 1,
-                                workerNodeArgs: ['--max-old-space-size=9096'],
-                                poolTimeout: isProdBuild ? 1000 : Infinity // set this to Infinity in watch mode - see https://github.com/webpack-contrib/thread-loader
-                            }
-                        },
+                        'cache-loader',
+                        'thread-loader',
                         {
                             loader: 'url-loader?limit=100000',
                             options: { esModule: false }
@@ -355,11 +331,5 @@ function buildConfiguration(options) {
     return config;
 }
 
-var createVariants = require('parallel-webpack').createVariants;
-var variants = {
-    bundle: ['notebook', 'viewers']
-};
-
-module.exports = createVariants({}, variants, buildConfiguration);
-// exports.notebooks = buildConfiguration('notebook');
-// exports.viewers = buildConfiguration('viewers');
+exports.notebooks = buildConfiguration('notebook');
+exports.viewers = buildConfiguration('viewers');
