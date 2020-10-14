@@ -25,8 +25,8 @@ import {
     Uri
 } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import type { NotebookCell } from 'vscode-proposed';
 import type { Data as WebSocketData } from 'ws';
+import type { NotebookCell } from '../../../types/vscode-proposed';
 import { ServerStatus } from '../../datascience-ui/interactive-common/mainState';
 import { ICommandManager, IDebugService } from '../common/application/types';
 import { FileStat, TemporaryFile } from '../common/platform/types';
@@ -204,6 +204,7 @@ export interface INotebook extends IAsyncDisposable {
     interruptKernel(timeoutInMs: number): Promise<InterruptResult>;
     setLaunchingFile(file: string): Promise<void>;
     getSysInfo(): Promise<ICell | undefined>;
+    requestKernelInfo(): Promise<KernelMessage.IInfoReplyMsg>;
     setMatplotLibStyle(useDark: boolean): Promise<void>;
     getMatchingInterpreter(): PythonEnvironment | undefined;
     /**
@@ -308,7 +309,6 @@ export interface IJupyterPasswordConnect {
 export const IJupyterSession = Symbol('IJupyterSession');
 export interface IJupyterSession extends IAsyncDisposable {
     onSessionStatusChanged: Event<ServerStatus>;
-    onIoPubMessage: Event<KernelMessage.IIOPubMessage>;
     readonly status: ServerStatus;
     readonly workingDirectory: string;
     readonly kernelSocket: Observable<KernelSocketInformation | undefined>;
@@ -349,6 +349,7 @@ export interface IJupyterSession extends IAsyncDisposable {
         hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>
     ): void;
     removeMessageHook(msgId: string, hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>): void;
+    requestKernelInfo(): Promise<KernelMessage.IInfoReplyMsg>;
 }
 
 export type ISessionWithSocket = Session.ISession & {
@@ -401,9 +402,9 @@ export interface IJupyterKernelSpec {
      */
     id?: string;
     name: string;
-    language: string;
+    language?: string;
     path: string;
-    env: NodeJS.ProcessEnv | undefined;
+    env?: NodeJS.ProcessEnv | undefined;
     /**
      * Kernel display name.
      *
@@ -1090,13 +1091,17 @@ export interface INotebookModel {
     readonly isDirty: boolean;
     readonly isUntitled: boolean;
     readonly changed: Event<NotebookModelChange>;
-    readonly cells: readonly Readonly<ICell>[];
     readonly onDidEdit: Event<NotebookModelChange>;
     readonly isDisposed: boolean;
     readonly metadata: INotebookMetadataLive | undefined;
     readonly isTrusted: boolean;
+    readonly cellCount: number;
+    /**
+     * @deprecated
+     * Use only with old notebooks, when using with new Notebooks, use VSC API instead.
+     */
+    getCellsWithId(): { data: nbformat.IBaseCell; id: string; state: CellState }[];
     getContent(): string;
-    update(change: NotebookModelChange): void;
     /**
      * Dispose of the Notebook model.
      *

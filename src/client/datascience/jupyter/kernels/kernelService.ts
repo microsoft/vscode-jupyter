@@ -107,7 +107,7 @@ export class KernelService {
         const specs = await this.getKernelSpecs(sessionManager, cancelToken);
         if (isInterpreter(option)) {
             return specs.find((item) => {
-                if (item.language.toLowerCase() !== PYTHON_LANGUAGE.toLowerCase()) {
+                if (item.language?.toLowerCase() !== PYTHON_LANGUAGE.toLowerCase()) {
                     return false;
                 }
                 return (
@@ -327,7 +327,7 @@ export class KernelService {
             'ipykernel',
             ['install', '--user', '--name', name, '--display-name', interpreter.displayName],
             {
-                throwOnStdErr: true,
+                throwOnStdErr: false,
                 encoding: 'utf8',
                 token: cancelToken
             }

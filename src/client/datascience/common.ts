@@ -38,7 +38,7 @@ const dummyExecuteResultObj: nbformat.IExecuteResult = {
     data: {},
     metadata: {}
 };
-const AllowedKeys = {
+export const AllowedCellOutputKeys = {
     ['stream']: new Set(Object.keys(dummyStreamObj)),
     ['error']: new Set(Object.keys(dummyErrorObj)),
     ['display_data']: new Set(Object.keys(dummyDisplayObj)),
@@ -73,7 +73,7 @@ function fixupOutput(output: nbformat.IOutput): nbformat.IOutput {
         case 'error':
         case 'execute_result':
         case 'display_data':
-            allowedKeys = AllowedKeys[output.output_type];
+            allowedKeys = AllowedCellOutputKeys[output.output_type];
             break;
         default:
             return output;
@@ -131,11 +131,16 @@ export function traceCellResults(prefix: string, results: ICell[]) {
 }
 
 export function translateKernelLanguageToMonaco(kernelLanguage: string): string {
-    // The only known translation is C# to csharp at the moment
-    if (kernelLanguage === 'C#' || kernelLanguage === 'c#') {
-        return 'csharp';
+    // At the moment these are the only translations.
+    // python, julia, r, javascript, powershell, etc can be left as is.
+    switch (kernelLanguage.toLowerCase()) {
+        case 'c#':
+            return 'csharp';
+        case 'f#':
+            return 'fsharp';
+        default:
+            return kernelLanguage.toLowerCase();
     }
-    return kernelLanguage.toLowerCase();
 }
 
 export function generateNewNotebookUri(

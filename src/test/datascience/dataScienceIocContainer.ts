@@ -2,8 +2,6 @@
 // Licensed under the MIT License.
 //tslint:disable:trailing-comma no-any
 import { ReactWrapper } from 'enzyme';
-import * as fs from 'fs-extra';
-import * as glob from 'glob';
 import { interfaces } from 'inversify';
 import * as os from 'os';
 import * as path from 'path';
@@ -26,7 +24,6 @@ import {
 import * as vsls from 'vsls/vscode';
 import { KernelDaemonPool } from '../../client/datascience/kernel-launcher/kernelDaemonPool';
 
-import { promisify } from 'util';
 import { IExtensionSingleActivationService } from '../../client/activation/types';
 import { PythonExtensionChecker } from '../../client/api/pythonApi';
 import { ILanguageServerProvider, IPythonDebuggerPathProvider, IPythonExtensionChecker } from '../../client/api/types';
@@ -189,6 +186,7 @@ import { KernelDaemonPreWarmer } from '../../client/datascience/kernel-launcher/
 import { KernelFinder } from '../../client/datascience/kernel-launcher/kernelFinder';
 import { KernelLauncher } from '../../client/datascience/kernel-launcher/kernelLauncher';
 import { IKernelFinder, IKernelLauncher } from '../../client/datascience/kernel-launcher/types';
+import { NotebookCellLanguageService } from '../../client/datascience/notebook/defaultCellLanguageService';
 import { NotebookCreationTracker } from '../../client/datascience/notebookAndInteractiveTracker';
 import { NotebookExtensibility } from '../../client/datascience/notebookExtensibility';
 import { NotebookModelFactory } from '../../client/datascience/notebookStorage/factory';
@@ -379,18 +377,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         // Make sure to disable all command handling during dispose. Don't want
         // anything to startup again.
         this.commandManager.dispose();
-        try {
-            // Make sure to delete any temp files written by native editor storage
-            const globPr = promisify(glob);
-            const tempLocation = os.tmpdir;
-            const tempFiles = await globPr(`${tempLocation}/*.ipynb`);
-            if (tempFiles && tempFiles.length) {
-                await Promise.all(tempFiles.map((t) => fs.remove(t)));
-            }
-        } catch (exc) {
-            // tslint:disable-next-line: no-console
-            console.log(`Exception on cleanup: ${exc}`);
-        }
         await this.asyncRegistry.dispose();
         await super.dispose();
         this.disposed = true;
@@ -537,6 +523,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<ICodeCssGenerator>(ICodeCssGenerator, CodeCssGenerator);
         this.serviceManager.addSingleton<IStatusProvider>(IStatusProvider, StatusProvider);
         this.serviceManager.addSingleton<IBrowserService>(IBrowserService, BrowserService);
+        this.serviceManager.addSingleton<NotebookCellLanguageService>(
+            NotebookCellLanguageService,
+            NotebookCellLanguageService
+        );
         this.serviceManager.addSingletonInstance<IAsyncDisposableRegistry>(
             IAsyncDisposableRegistry,
             this.asyncRegistry

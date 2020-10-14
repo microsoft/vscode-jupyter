@@ -3,8 +3,8 @@
 
 'use strict';
 
-import { Event, NotebookCellRunState } from 'vscode';
-import { NotebookCell } from 'vscode-proposed';
+import { Event } from 'vscode';
+import { NotebookCell, NotebookCellRunState } from '../../types/vscode-proposed';
 import { IPythonApiProvider, PythonApi } from './api/types';
 import { isTestExecution } from './common/constants';
 import { traceError } from './common/logger';

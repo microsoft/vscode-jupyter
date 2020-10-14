@@ -30,6 +30,7 @@ import { InteractiveWindowMessages } from '../../client/datascience/interactive-
 import { NativeEditor as NativeEditorWebView } from '../../client/datascience/interactive-ipynb/nativeEditor';
 import { IKernelSpecQuickPickItem } from '../../client/datascience/jupyter/kernels/types';
 import { KeyPrefix } from '../../client/datascience/notebookStorage/nativeEditorStorage';
+import { NativeEditorNotebookModel } from '../../client/datascience/notebookStorage/notebookModel';
 import {
     ICell,
     IDataScienceErrorHandler,
@@ -52,7 +53,6 @@ import { IMonacoEditorState, MonacoEditor } from '../../datascience-ui/react-com
 import { waitForCondition } from '../common';
 import { createTemporaryFile } from '../utils/fs';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
-import { takeSnapshot, writeDiffSnapshot } from './helpers';
 import { MockCustomEditorService } from './mockCustomEditorService';
 import { MockDocumentManager } from './mockDocumentManager';
 import { IMountedWebView, WaitForMessageOptions } from './mountedWebView';
@@ -112,7 +112,6 @@ suite('DataScience Native Editor', () => {
 
     [false, true].forEach((useCustomEditorApi) => {
         //import { asyncDump } from '../common/asyncDump';
-        let snapshot: any;
         suite(`${useCustomEditorApi ? 'With' : 'Without'} Custom Editor API`, () => {
             function createFileCell(cell: any, data: any): ICell {
                 const newCell = {
@@ -134,12 +133,6 @@ suite('DataScience Native Editor', () => {
 
                 return newCell;
             }
-            suiteSetup(() => {
-                snapshot = takeSnapshot();
-            });
-            suiteTeardown(() => {
-                writeDiffSnapshot(snapshot, `Native ${useCustomEditorApi}`);
-            });
             suite('Editor tests', () => {
                 const disposables: Disposable[] = [];
                 let ioc: DataScienceIocContainer;
@@ -210,11 +203,6 @@ suite('DataScience Native Editor', () => {
                         noop();
                     }
                 });
-
-                // Uncomment this to debug hangs on exit
-                // suiteTeardown(() => {
-                //      asyncDump();
-                // });
 
                 runMountedTest('Simple text', async () => {
                     // Create an editor so something is listening to messages
@@ -1042,7 +1030,7 @@ df.head()`;
 
                         // File should exist. Open and run all cells
                         const n = await openEditor(ioc, '', tf.filePath);
-                        assert.equal(n.editor.model.cells.length, 3, 'Cells not loaded');
+                        assert.equal((n.editor.model as NativeEditorNotebookModel).cells.length, 3, 'Cells not loaded');
                         const threeCellsUpdated = n.mount.waitForMessage(InteractiveWindowMessages.ExecutionRendered, {
                             numberOfTimes: 3
                         });
