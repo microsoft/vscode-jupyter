@@ -328,6 +328,13 @@ jobs:
           VSC_PYTHON_FORCE_LOGGING: 1
         id: test_functional_group
 
+      - name: Publish Test Report
+        uses: scacap/action-surefire-report@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          report_paths: ${{ env.TEST_RESULTS_GLOB }}
+          check_name: Functional Test Report ${{matrix.test-suite}}
+        if: steps.test_functional_group.outcome == 'failure' && failure()
 
   vscodeTests:
     name: VS Code Tests # These tests run with Python extension & real Jupyter
