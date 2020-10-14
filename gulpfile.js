@@ -307,7 +307,13 @@ gulp.task('verifyBundle', async () => {
 
 gulp.task('prePublishBundle', gulp.series('webpack'));
 gulp.task('checkDependencies', gulp.series('checkNativeDependencies', 'check-datascience-dependencies'));
-gulp.task('prePublishNonBundle', gulp.parallel('compile', 'compile-ipywidgets', 'compile-ipywidgets', 'compile-notebooks', 'compile-viewers'));
+// On CI, when running Notebook tests, we don't need old webviews.
+// Simple & temporary optimization for the Notebook Test Job.
+if (isCI && process.env.VSC_CI_MATRIX_TEST_SUITE === 'notebook') {
+    gulp.task('prePublishNonBundle', gulp.parallel('compile'));
+} else {
+    gulp.task('prePublishNonBundle', gulp.parallel('compile', 'compile-ipywidgets', 'compile-ipywidgets', 'compile-notebooks', 'compile-viewers'));
+}
 
 gulp.task('installPythonRequirements', async () => {
     const args = [
