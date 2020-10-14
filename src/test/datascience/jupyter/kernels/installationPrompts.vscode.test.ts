@@ -48,7 +48,6 @@ suite('DataScience Install IPyKernel (slow) (install)', () => {
             // Virtual env does not exist.
             return this.skip();
         }
-        return this.skip();
         await trustAllNotebooks();
         api = await initialize();
         installer = api.serviceContainer.get<IInstaller>(IInstaller);
