@@ -269,8 +269,6 @@ function buildConfiguration(options) {
                                 compilerOptions: {
                                     skipLibCheck: true
                                 },
-                                // skipLibCheck: true,
-                                // suppressOutputPathCheck: true,
                                 reportFiles: ['src/datascience-ui/**/*.{ts,tsx}']
                             }
                         }
