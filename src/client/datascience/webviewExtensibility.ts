@@ -1,12 +1,12 @@
 import { inject, injectable } from 'inversify';
 import { NotebookCellRunState } from 'vscode';
-import { CellState, IInteractiveWindow, INotebookEditor, IWebviewExtensibility } from './types';
+import { CellState, IInteractiveWindowProvider, INotebookEditorProvider, IWebviewExtensibility } from './types';
 
 @injectable()
 export class WebviewExtensibility implements IWebviewExtensibility {
     constructor(
-        @inject(INotebookEditor) private readonly webviewNotebook: INotebookEditor,
-        @inject(IInteractiveWindow) private readonly interactiveWindow: IInteractiveWindow
+        @inject(INotebookEditorProvider) private readonly webviewNotebookProvider: INotebookEditorProvider,
+        @inject(IInteractiveWindowProvider) private readonly interactiveWindowProvider: IInteractiveWindowProvider
     ) {}
 
     public registerCellCommand(
@@ -16,25 +16,33 @@ export class WebviewExtensibility implements IWebviewExtensibility {
         interactive: boolean
     ): void {
         if (interactive) {
-            this.interactiveWindow.createWebviewCellButton(
-                command,
-                buttonHtml,
-                statusToEnable.map((s) => this.translateCellState(s))
-            );
+            this.interactiveWindowProvider.windows.forEach((window) => {
+                window.createWebviewCellButton(
+                    command,
+                    buttonHtml,
+                    statusToEnable.map((s) => this.translateCellState(s))
+                );
+            });
         } else {
-            this.webviewNotebook.createWebviewCellButton(
-                command,
-                buttonHtml,
-                statusToEnable.map((s) => this.translateCellState(s))
-            );
+            this.webviewNotebookProvider.editors.forEach((editor) => {
+                editor.createWebviewCellButton(
+                    command,
+                    buttonHtml,
+                    statusToEnable.map((s) => this.translateCellState(s))
+                );
+            });
         }
     }
 
     public removeCellCommand(command: string, interactive: boolean): void {
         if (interactive) {
-            this.interactiveWindow.removeWebviewCellButton(command);
+            this.interactiveWindowProvider.windows.forEach((window) => {
+                window.removeWebviewCellButton(command);
+            });
         } else {
-            this.webviewNotebook.removeWebviewCellButton(command);
+            this.webviewNotebookProvider.editors.forEach((editor) => {
+                editor.removeWebviewCellButton(command);
+            });
         }
     }
 
