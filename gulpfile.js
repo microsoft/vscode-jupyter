@@ -307,7 +307,7 @@ gulp.task('verifyBundle', async () => {
 
 gulp.task('prePublishBundle', gulp.series('webpack'));
 gulp.task('checkDependencies', gulp.series('checkNativeDependencies', 'check-datascience-dependencies'));
-gulp.task('prePublishNonBundle', gulp.parallel('compile', 'compile-ipywidgets', 'compile-notebooks-and-viewers'));
+gulp.task('prePublishNonBundle', gulp.parallel('compile', 'compile-ipywidgets', 'compile-webviews'));
 
 gulp.task('installPythonRequirements', async () => {
     const args = [
