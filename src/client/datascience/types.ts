@@ -17,7 +17,6 @@ import {
     Disposable,
     Event,
     LanguageConfiguration,
-    NotebookCellRunState,
     QuickPickItem,
     Range,
     TextDocument,
@@ -26,7 +25,7 @@ import {
 } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import type { Data as WebSocketData } from 'ws';
-import type { NotebookCell } from '../../../types/vscode-proposed';
+import type { NotebookCell, NotebookCellRunState } from '../../../types/vscode-proposed';
 import { ServerStatus } from '../../datascience-ui/interactive-common/mainState';
 import { ICommandManager, IDebugService } from '../common/application/types';
 import { FileStat, TemporaryFile } from '../common/platform/types';
