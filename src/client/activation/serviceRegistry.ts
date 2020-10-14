@@ -3,7 +3,7 @@
 
 import { BANNER_NAME_DS_SURVEY, BANNER_NAME_INTERACTIVE_SHIFTENTER, IJupyterExtensionBanner } from '../common/types';
 import { DataScienceSurveyBanner } from '../datascience/dataScienceSurveyBanner';
-import { RecommendPythonExtensionBanner } from '../datascience/installPythonExtensionBanner';
+import { RecommendPythonExtensionBanner } from '../datascience/recommendPythonExtensionBanner';
 import { InteractiveShiftEnterBanner } from '../datascience/shiftEnterBanner';
 import { IServiceManager } from '../ioc/types';
 import { ExtensionActivationManager } from './activationManager';
