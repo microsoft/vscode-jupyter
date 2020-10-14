@@ -338,7 +338,7 @@ jobs:
       - name: Run functional tests
         run: npm run test:functional:parallel -- --${{matrix.test-suite}}
         env:
-          VSCODE_JUPYTER_ROLLING: 1
+          VSC_FORCE_REAL_JUPYTER: 1
           VSC_JUPYTER_FORCE_LOGGING: 1
         id: test_functional_group
 
@@ -355,7 +355,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     if: github.repository == 'microsoft/vscode-jupyter'
     env:
-        VSCODE_JUPYTER_ROLLING: 1
+        VSC_FORCE_REAL_JUPYTER: 1
         VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
     strategy:
       fail-fast: false
@@ -513,7 +513,7 @@ jobs:
         with:
           run: npm run testVSCode
         env:
-          VSCODE_JUPYTER_ROLLING: 1
+          VSC_FORCE_REAL_JUPYTER: 1
           VSC_JUPYTER_FORCE_LOGGING: 1
           VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
         id: test_vscode
@@ -532,7 +532,7 @@ jobs:
         with:
           run: npm run testNativeNotebooksInVSCode
         env:
-          VSCODE_JUPYTER_ROLLING: 1
+          VSC_FORCE_REAL_JUPYTER: 1
           VSC_JUPYTER_FORCE_LOGGING: 1
           VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
           VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'

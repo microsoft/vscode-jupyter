@@ -166,7 +166,7 @@
                 "VSC_JUPYTER_CI_TEST_GREP": "", // Modify this to run a subset of the tests
                 "VSC_JUPYTER_CI_TEST_INVERT_GREP": "", // Initialize this to invert the grep (exclude tests with value defined in grep).
                 "CI_PYTHON_PATH": "<PythonPath>", // Update with path to real python interpereter used for testing.
-                "VSCODE_JUPYTER_ROLLING": "true", // Enalbe tests that require Jupyter.
+                "VSC_FORCE_REAL_JUPYTER": "true", // Enalbe tests that require Jupyter.
                 "VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST": "", // Initialize this to run tests again Julia & other kernels.
                 "VSC_JUPYTER_RUN_NB_TEST": "", // Initialize this to run notebook tests (must be using VSC Insiders).
                 "VSC_JUPYTER_LOAD_EXPERIMENTS_FROM_FILE": "true",
@@ -202,7 +202,7 @@
                 "VSC_JUPYTER_CI_TEST_GREP": "VSCode Notebook", // Leave as `VSCode Notebook` to run only Notebook tests.
                 "VSC_JUPYTER_CI_TEST_INVERT_GREP": "", // Initialize this to invert the grep (exclude tests with value defined in grep).
                 "CI_PYTHON_PATH": "<PythonPath>", // Update with path to real python interpereter used for testing.
-                "VSCODE_JUPYTER_ROLLING": "true", // Enalbe tests that require Jupyter.
+                "VSC_FORCE_REAL_JUPYTER": "true", // Enalbe tests that require Jupyter.
                 "VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST": "", // Initialize this to run tests again Julia & other kernels.
                 "VSC_JUPYTER_RUN_NB_TEST": "true", // Initialize this to run notebook tests (must be using VSC Insiders).
                 "VSC_JUPYTER_LOAD_EXPERIMENTS_FROM_FILE": "true",
@@ -268,7 +268,7 @@
                 // Remove `X` prefix to test with real browser to host DS ui (for DS functional tests).
                 "XVSC_JUPYTER_DS_UI_BROWSER": "1",
                 // Remove `X` prefix to test with real python (for DS functional tests).
-                "XVSCODE_JUPYTER_ROLLING": "1",
+                "XVSC_FORCE_REAL_JUPYTER": "1",
                 // Remove 'X' to turn on all logging in the debug output
                 "XVSC_JUPYTER_FORCE_LOGGING": "1",
                 // Remove `X` prefix and update path to test with real python interpreter (for DS functional tests).
@@ -315,7 +315,7 @@
                 // Remove `X` prefix to test with real browser to host DS ui (for DS functional tests).
                 "XVSC_JUPYTER_DS_UI_BROWSER": "1",
                 // Remove `X` prefix to test with real python (for DS functional tests).
-                "XVSCODE_JUPYTER_ROLLING": "1",
+                "XVSC_FORCE_REAL_JUPYTER": "1",
                 // Remove 'X' to turn on all logging in the debug output
                 "XVSC_JUPYTER_FORCE_LOGGING": "1",
                 // Remove `X` prefix and update path to test with real python interpreter (for DS functional tests).
