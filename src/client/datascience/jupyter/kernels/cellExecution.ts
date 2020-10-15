@@ -97,8 +97,6 @@ export class CellExecution {
     private cancelHandled = false;
 
     private requestHandlerChain = Promise.resolve();
-    // tslint:disable-next-line: no-any
-    private messagesRemainingToBeProcessed: Promise<any>[] = [];
 
     private constructor(
         public readonly editor: VSCNotebookEditor,
@@ -358,28 +356,21 @@ export class CellExecution {
         });
 
         // Listen to messages & chain each (to process them in the order we get them).
-        request.onIOPub = (msg) => {
-            const promise = (this.requestHandlerChain = this.requestHandlerChain.then(() =>
+        request.onIOPub = (msg) =>
+            (this.requestHandlerChain = this.requestHandlerChain.then(() =>
                 this.handleIOPub(clearState, loggers, msg).catch(noop)
             ));
-            this.messagesRemainingToBeProcessed.push(promise);
-            return promise;
-        };
-        request.onReply = (msg) => {
-            const promise = (this.requestHandlerChain = this.requestHandlerChain.then(() =>
+        request.onReply = (msg) =>
+            (this.requestHandlerChain = this.requestHandlerChain.then(() =>
                 this.handleReply(clearState, msg).catch(noop)
             ));
-            this.messagesRemainingToBeProcessed.push(promise);
-            return promise;
-        };
         request.onStdin = this.handleInputRequest.bind(this, session);
 
         // When the request finishes we are done
         try {
             // request.done resolves even before all iopub messages have been sent through.
-            // Solution is to wait for all messages to get processed messagesRemainingToBeProcessed.
-            // & as a double measure wait for the chained promise to complete as well.
-            await Promise.all([request.done, this.requestHandlerChain, ...this.messagesRemainingToBeProcessed]);
+            // Solution is to wait for all messages to get processed.
+            await Promise.all([request.done, this.requestHandlerChain]);
             await this.completedSuccessfully();
         } catch (ex) {
             // @jupyterlab/services throws a `Canceled` error when the kernel is interrupted.
@@ -390,7 +381,6 @@ export class CellExecution {
                 await this.completedWithErrors(ex);
             }
         } finally {
-            this.messagesRemainingToBeProcessed = [];
             cancelDisposable.dispose();
         }
     }
