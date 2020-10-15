@@ -11,36 +11,12 @@ import { noop } from '../../../common/utils/misc';
  * At this point, VSC is still updating the execution order & we then update the output.
  * Depending on the sequence its possible for some of the updates to get lost.
  *
- * Easy way to see what could happen is to run python code that runs in a thread as follows:
- * With the below cell code, jupyter will send the the following messages:
- * 1. status message
- * 2. iopub messages (with output)
- * 3. Execute reply (done)
- * 4. But background thread still sends messages
- * This means, we cannot rely on execute_reply to mark the end of execution.
- * More details here https://github.com/jupyter/jupyter_client/issues/297
- *
- * ```python
- * import time
- * import threading
- * from IPython.display import display
- *
- * sleep_time = 4.
- *
- * def work():
- *     for i in range(10):
- *         print('iteration %d'%i)
- *         time.sleep(1)
- *
- * def spawn():
- *     thread = threading.Thread(target=work)
- *     thread.start()
- *     time.sleep(sleep_time)
- *
- * spawn()
- * print('main thread done\n')
- * ```
- *
+ * Excellent example:
+ * Assume we perform the following updates without awaiting on the promise.
+ * Without awaiting, its very easy to replicate issues where the output is never displayed.
+ * - We update execution count
+ * - We update output
+ * - We update status after completion
  */
 const pendingCellUpdates = new WeakMap<NotebookDocument, Promise<unknown>>();
 export async function chainWithPendingUpdates(

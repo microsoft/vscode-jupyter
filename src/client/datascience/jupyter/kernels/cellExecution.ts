@@ -63,9 +63,15 @@ export class CellExecutionFactory {
         );
     }
 }
+
 /**
  * Responsible for execution of an individual cell and manages the state of the cell as it progresses through the execution phases.
  * Execution phases include - enqueue for execution (done in ctor), start execution, completed execution with/without errors, cancel execution or dequeue.
+ *
+ * WARNING: Do not dispose `request: Kernel.IShellFuture` object.
+ * Even after request.done & execute_reply is sent we could have more messages coming from iopub.
+ * Further details here https://github.com/microsoft/vscode-jupyter/issues/232 & https://github.com/jupyter/jupyter_client/issues/297
+ *
  */
 export class CellExecution {
     public get result(): Promise<NotebookCellRunState | undefined> {
@@ -386,7 +392,7 @@ export class CellExecution {
 
         // WARNING: Do not dispose `request`.
         // Even after request.done & execute_reply is sent we could have more messages coming from iopub.
-        // We have tests for this & check notebookUpdater.ts & https://github.com/jupyter/jupyter_client/issues/297
+        // We have tests for this & check https://github.com/microsoft/vscode-jupyter/issues/232 & https://github.com/jupyter/jupyter_client/issues/297
 
         try {
             // When the request finishes we are done
