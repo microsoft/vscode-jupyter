@@ -429,4 +429,118 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', () => {
         assert.equal((cells[1].outputs[0] as CellDisplayOutput).data['text/markdown'], 'bar', 'Incorrect output value');
         assertHasTextOutputInVSCode(cells[2], 'hello', 0, false);
     });
+    test('More messages from background threads', async () => {
+        // Details can be found in notebookUpdater.ts & https://github.com/jupyter/jupyter_client/issues/297
+        await insertCodeCell(
+            dedent`
+        import time
+        import threading
+        from IPython.display import display
+
+        def work():
+            for i in range(10):
+                print('iteration %d'%i)
+                time.sleep(0.1)
+
+        def spawn():
+            thread = threading.Thread(target=work)
+            thread.start()
+            time.sleep(0.3)
+
+        spawn()
+        print('main thread done')
+        `,
+            { index: 0 }
+        );
+        const cells = vscodeNotebook.activeNotebookEditor?.document.cells!;
+
+        await executeActiveDocument();
+        await waitForCondition(
+            async () => assertHasExecutionCompletedSuccessfully(cells[0]),
+            15_000,
+            'Cell did not get executed'
+        );
+
+        // Wait for last line to be `iteration 9`
+        assert.equal(cells[0].outputs.length, 1, 'Incorrect number of output');
+        assert.equal(cells[0].outputs[0].outputKind, vscodeNotebookEnums.CellOutputKind.Rich, 'Incorrect output type');
+        await waitForCondition(
+            async () => {
+                const output = cells[0].outputs[0] as CellDisplayOutput;
+                const text = output.data['text/plain'] as string;
+                return text.trim().endsWith('iteration 9');
+            },
+            10_000,
+            'Incorrect output, expected all iterations'
+        );
+        const textOutput = (cells[0].outputs[0] as CellDisplayOutput).data['text/plain'] as string;
+        expect(textOutput.indexOf('main thread done')).lessThan(
+            textOutput.indexOf('iteration 9'),
+            'Main thread should have completed before background thread'
+        );
+        expect(textOutput.indexOf('main thread done')).greaterThan(
+            textOutput.indexOf('iteration 0'),
+            'Main thread should have completed after background starts'
+        );
+    });
+    test('Messages from background threads can come in other cell output', async () => {
+        // Details can be found in notebookUpdater.ts & https://github.com/jupyter/jupyter_client/issues/297
+        // If you have a background thread in cell 1 & then immediately after that you have a cell 2.
+        // The background messages (output) from cell one will end up in cell 2.
+        await insertCodeCell(
+            dedent`
+        import time
+        import threading
+        from IPython.display import display
+
+        def work():
+            for i in range(10):
+                print('iteration %d'%i)
+                time.sleep(0.1)
+
+        def spawn():
+            thread = threading.Thread(target=work)
+            thread.start()
+            time.sleep(0.3)
+
+        spawn()
+        print('main thread done')
+        `,
+            { index: 0 }
+        );
+        await insertCodeCell('print("HELLO")', { index: 1 });
+        const cells = vscodeNotebook.activeNotebookEditor?.document.cells!;
+
+        await executeActiveDocument();
+        await waitForCondition(
+            async () => assertHasExecutionCompletedSuccessfully(cells[1]),
+            15_000,
+            'Cells did not get executed'
+        );
+
+        // Wait for last line to be `iteration 9`
+        assert.equal(cells[0].outputs.length, 1, 'Incorrect number of output');
+        assert.equal(cells[1].outputs.length, 1, 'Incorrect number of output');
+        assert.equal(cells[0].outputs[0].outputKind, vscodeNotebookEnums.CellOutputKind.Rich, 'Incorrect output type');
+
+        // The background messages from cell 1 will end up in cell 2.
+        await waitForCondition(
+            async () => {
+                const output = cells[1].outputs[0] as CellDisplayOutput;
+                const text = output.data['text/plain'] as string;
+                return text.trim().endsWith('iteration 9');
+            },
+            10_000,
+            'Expected background messages to end up in cell 2'
+        );
+        const cell1Output = (cells[0].outputs[0] as CellDisplayOutput).data['text/plain'] as string;
+        const cell2Output = (cells[1].outputs[0] as CellDisplayOutput).data['text/plain'] as string;
+        expect(cell1Output).includes('main thread done', 'Main thread did not complete in cell 1');
+        expect(cell2Output).includes('HELLO', 'Print output from cell 2 not in output of cell 2');
+        expect(cell2Output).includes('iteration 9', 'Background output from cell 1 not in output of cell 2');
+        expect(cell2Output.indexOf('iteration 9')).greaterThan(
+            cell2Output.indexOf('HELLO'),
+            'output from cell 2 should be printed before last background output from cell 1'
+        );
+    });
 });

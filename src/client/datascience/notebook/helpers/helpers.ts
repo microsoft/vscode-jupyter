@@ -34,6 +34,7 @@ import { KernelMessage } from '@jupyterlab/services';
 // tslint:disable-next-line: no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
 import { Uri } from 'vscode';
+import { chainWithPendingUpdates } from './notebookUpdater';
 
 // This is the custom type we are adding into nbformat.IBaseCellMetadata
 export interface IBaseCellVSCodeMetadata {
@@ -381,16 +382,19 @@ export function createIOutputFromCellOutputs(cellOutputs: CellOutput[]): nbforma
 }
 
 export async function clearCellForExecution(editor: NotebookEditor, cell: NotebookCell) {
-    await editor.edit((edit) => {
-        edit.replaceCellMetadata(cell.index, {
-            ...cell.metadata,
-            statusMessage: undefined,
-            executionOrder: undefined,
-            lastRunDuration: undefined,
-            runStartTime: undefined
-        });
-        edit.replaceCellOutput(cell.index, []);
-    });
+    await chainWithPendingUpdates(
+        editor.document,
+        editor.edit((edit) => {
+            edit.replaceCellMetadata(cell.index, {
+                ...cell.metadata,
+                statusMessage: undefined,
+                executionOrder: undefined,
+                lastRunDuration: undefined,
+                runStartTime: undefined
+            });
+            edit.replaceCellOutput(cell.index, []);
+        })
+    );
     await updateCellExecutionTimes(editor, cell);
 }
 
@@ -437,12 +441,15 @@ export async function updateCellExecutionTimes(
     // customMetadata.metadata.vscode.end_execution_time = endTimeISO;
     // customMetadata.metadata.vscode.start_execution_time = startTimeISO;
     const lastRunDuration = times.lastRunDuration ?? cell.metadata.lastRunDuration;
-    await editor.edit((edit) =>
-        edit.replaceCellMetadata(cell.index, {
-            ...cell.metadata,
-            // custom: customMetadata,
-            lastRunDuration
-        })
+    await chainWithPendingUpdates(
+        editor.document,
+        editor.edit((edit) =>
+            edit.replaceCellMetadata(cell.index, {
+                ...cell.metadata,
+                // custom: customMetadata,
+                lastRunDuration
+            })
+        )
     );
 }
 
@@ -742,30 +749,33 @@ export async function updateVSCNotebookAfterTrustingNotebook(
         return;
     }
 
-    await editor.edit((edit) => {
-        edit.replaceMetadata({
-            ...document.metadata,
-            cellEditable: true,
-            cellRunnable: true,
-            editable: true,
-            runnable: true
-        });
-        document.cells.forEach((cell, index) => {
-            if (cell.cellKind === vscodeNotebookEnums.CellKind.Markdown) {
-                edit.replaceCellMetadata(index, { ...cell.metadata, editable: true });
-            } else {
-                edit.replaceCellMetadata(index, {
-                    ...cell.metadata,
-                    editable: true,
-                    runnable: true
-                });
-                // Restore the output once we trust the notebook.
-                edit.replaceCellOutput(
-                    index,
-                    // tslint:disable-next-line: no-any
-                    createVSCCellOutputsFromOutputs(originalCells[index].outputs as any)
-                );
-            }
-        });
-    });
+    await chainWithPendingUpdates(
+        editor.document,
+        editor.edit((edit) => {
+            edit.replaceMetadata({
+                ...document.metadata,
+                cellEditable: true,
+                cellRunnable: true,
+                editable: true,
+                runnable: true
+            });
+            document.cells.forEach((cell, index) => {
+                if (cell.cellKind === vscodeNotebookEnums.CellKind.Markdown) {
+                    edit.replaceCellMetadata(index, { ...cell.metadata, editable: true });
+                } else {
+                    edit.replaceCellMetadata(index, {
+                        ...cell.metadata,
+                        editable: true,
+                        runnable: true
+                    });
+                    // Restore the output once we trust the notebook.
+                    edit.replaceCellOutput(
+                        index,
+                        // tslint:disable-next-line: no-any
+                        createVSCCellOutputsFromOutputs(originalCells[index].outputs as any)
+                    );
+                }
+            });
+        })
+    );
 }

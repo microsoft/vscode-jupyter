@@ -30,6 +30,7 @@ import {
     updateCellExecutionTimes
 } from '../../notebook/helpers/helpers';
 import { MultiCancellationTokenSource } from '../../notebook/helpers/multiCancellationToken';
+import { chainWithPendingUpdates } from '../../notebook/helpers/notebookUpdater';
 import { NotebookEditor } from '../../notebook/notebookEditor';
 import {
     IDataScienceErrorHandler,
@@ -97,7 +98,6 @@ export class CellExecution {
     private cancelHandled = false;
 
     private requestHandlerChain = Promise.resolve();
-
     private constructor(
         public readonly editor: VSCNotebookEditor,
         public readonly cell: NotebookCell,
@@ -129,12 +129,15 @@ export class CellExecution {
         this.started = true;
         // Ensure we clear the cell state and trigger a change.
         await clearCellForExecution(this.editor, this.cell);
-        await this.editor.edit((edit) => {
-            edit.replaceCellMetadata(this.cell.index, {
-                ...this.cell.metadata,
-                runStartTime: new Date().getTime()
-            });
-        });
+        await chainWithPendingUpdates(
+            this.cell,
+            this.editor.edit((edit) => {
+                edit.replaceCellMetadata(this.cell.index, {
+                    ...this.cell.metadata,
+                    runStartTime: new Date().getTime()
+                });
+            })
+        );
         this.stopWatch.reset();
         this.notifyCellExecution();
 
@@ -177,11 +180,14 @@ export class CellExecution {
 
     private async completedWithErrors(error: Partial<Error>) {
         this.sendPerceivedCellExecute();
-        await this.editor.edit((edit) =>
-            edit.replaceCellMetadata(this.cell.index, {
-                ...this.cell.metadata,
-                lastRunDuration: this.stopWatch.elapsedTime
-            })
+        await chainWithPendingUpdates(
+            this.cell,
+            this.editor.edit((edit) =>
+                edit.replaceCellMetadata(this.cell.index, {
+                    ...this.cell.metadata,
+                    lastRunDuration: this.stopWatch.elapsedTime
+                })
+            )
         );
         await updateCellWithErrorStatus(this.editor, this.cell, error);
         this.errorHandler.handleError((error as unknown) as Error).ignoreErrors();
@@ -210,12 +216,15 @@ export class CellExecution {
             statusMessage = getCellStatusMessageBasedOnFirstCellErrorOutput(this.cell.outputs);
         }
 
-        await this.editor.edit((edit) =>
-            edit.replaceCellMetadata(this.cell.index, {
-                ...this.cell.metadata,
-                runState,
-                statusMessage
-            })
+        await chainWithPendingUpdates(
+            this.cell,
+            this.editor.edit((edit) =>
+                edit.replaceCellMetadata(this.cell.index, {
+                    ...this.cell.metadata,
+                    runState,
+                    statusMessage
+                })
+            )
         );
 
         this._completed = true;
@@ -228,12 +237,15 @@ export class CellExecution {
             lastRunDuration: this.stopWatch.elapsedTime
         });
 
-        await this.editor.edit((edit) =>
-            edit.replaceCellMetadata(this.cell.index, {
-                ...this.cell.metadata,
-                runState: vscodeNotebookEnums.NotebookCellRunState.Idle,
-                statusMessage: ''
-            })
+        await chainWithPendingUpdates(
+            this.cell,
+            this.editor.edit((edit) =>
+                edit.replaceCellMetadata(this.cell.index, {
+                    ...this.cell.metadata,
+                    runState: vscodeNotebookEnums.NotebookCellRunState.Idle,
+                    statusMessage: ''
+                })
+            )
         );
 
         this._completed = true;
@@ -263,12 +275,15 @@ export class CellExecution {
             this.oldCellRunState === vscodeNotebookEnums.NotebookCellRunState.Running
                 ? vscodeNotebookEnums.NotebookCellRunState.Idle
                 : this.oldCellRunState;
-        await this.editor.edit((edit) =>
-            edit.replaceCellMetadata(this.cell.index, {
-                ...this.cell.metadata,
-                runStartTime: undefined,
-                runState
-            })
+        await chainWithPendingUpdates(
+            this.cell,
+            this.editor.edit((edit) =>
+                edit.replaceCellMetadata(this.cell.index, {
+                    ...this.cell.metadata,
+                    runStartTime: undefined,
+                    runState
+                })
+            )
         );
         this._completed = true;
         this._result.resolve(this.cell.metadata.runState);
@@ -282,11 +297,14 @@ export class CellExecution {
         if (!this.canExecuteCell()) {
             return;
         }
-        await this.editor.edit((edit) =>
-            edit.replaceCellMetadata(this.cell.index, {
-                ...this.cell.metadata,
-                runState: vscodeNotebookEnums.NotebookCellRunState.Running
-            })
+        await chainWithPendingUpdates(
+            this.cell,
+            this.editor.edit((edit) =>
+                edit.replaceCellMetadata(this.cell.index, {
+                    ...this.cell.metadata,
+                    runState: vscodeNotebookEnums.NotebookCellRunState.Running
+                })
+            )
         );
     }
 
@@ -366,8 +384,12 @@ export class CellExecution {
             ));
         request.onStdin = this.handleInputRequest.bind(this, session);
 
-        // When the request finishes we are done
+        // WARNING: Do not dispose `request`.
+        // Even after request.done & execute_reply is sent we could have more messages coming from iopub.
+        // We have tests for this & check notebookUpdater.ts & https://github.com/jupyter/jupyter_client/issues/297
+
         try {
+            // When the request finishes we are done
             // request.done resolves even before all iopub messages have been sent through.
             // Solution is to wait for all messages to get processed.
             await Promise.all([request.done, this.requestHandlerChain]);
@@ -442,18 +464,21 @@ export class CellExecution {
     ) {
         const converted = cellOutputToVSCCellOutput(output);
 
-        await this.editor.edit((edit) => {
-            let existingOutput = [...this.cell.outputs];
+        await chainWithPendingUpdates(
+            this.cell,
+            this.editor.edit((edit) => {
+                let existingOutput = [...this.cell.outputs];
 
-            // Clear if necessary
-            if (clearState.value) {
-                existingOutput = [];
-                clearState.update(false);
-            }
+                // Clear if necessary
+                if (clearState.value) {
+                    existingOutput = [];
+                    clearState.update(false);
+                }
 
-            // Append to the data (we would push here but VS code requires a recreation of the array)
-            edit.replaceCellOutput(this.cell.index, existingOutput.concat(converted));
-        });
+                // Append to the data (we would push here but VS code requires a recreation of the array)
+                edit.replaceCellOutput(this.cell.index, existingOutput.concat(converted));
+            })
+        );
     }
 
     private handleInputRequest(session: IJupyterSession, msg: KernelMessage.IStdinMessage) {
@@ -522,38 +547,41 @@ export class CellExecution {
         traceInfo(`Kernel switching to ${msg.content.execution_state}`);
     }
     private async handleStreamMessage(msg: KernelMessage.IStreamMsg, clearState: RefBool) {
-        await this.editor.edit((edit) => {
-            let exitingCellOutput = this.cell.outputs;
-            // Clear output if waiting for a clear
-            if (clearState.value) {
-                exitingCellOutput = [];
-                clearState.update(false);
-            }
+        await chainWithPendingUpdates(
+            this.cell,
+            this.editor.edit((edit) => {
+                let exitingCellOutput = this.cell.outputs;
+                // Clear output if waiting for a clear
+                if (clearState.value) {
+                    exitingCellOutput = [];
+                    clearState.update(false);
+                }
 
-            // Might already have a stream message. If so, just add on to it.
-            // We use Rich output for text streams (not CellStreamOutput, known VSC Issues).
-            // https://github.com/microsoft/vscode-python/issues/14156
-            const lastOutput =
-                exitingCellOutput.length > 0 ? exitingCellOutput[exitingCellOutput.length - 1] : undefined;
-            const existing: CellDisplayOutput | undefined =
-                lastOutput && lastOutput.outputKind === CellOutputKind.Rich ? lastOutput : undefined;
-            if (existing && 'text/plain' in existing.data) {
-                // tslint:disable-next-line:restrict-plus-operands
-                existing.data['text/plain'] = formatStreamText(
-                    concatMultilineString(`${existing.data['text/plain']}${msg.content.text}`)
-                );
-                edit.replaceCellOutput(this.cell.index, [...exitingCellOutput]); // This is necessary to get VS code to update (for now)
-            } else {
-                const originalText = formatStreamText(concatMultilineString(msg.content.text));
-                // Create a new stream entry
-                const output: nbformat.IStream = {
-                    output_type: 'stream',
-                    name: msg.content.name,
-                    text: originalText
-                };
-                edit.replaceCellOutput(this.cell.index, [...exitingCellOutput, cellOutputToVSCCellOutput(output)]);
-            }
-        });
+                // Might already have a stream message. If so, just add on to it.
+                // We use Rich output for text streams (not CellStreamOutput, known VSC Issues).
+                // https://github.com/microsoft/vscode-python/issues/14156
+                const lastOutput =
+                    exitingCellOutput.length > 0 ? exitingCellOutput[exitingCellOutput.length - 1] : undefined;
+                const existing: CellDisplayOutput | undefined =
+                    lastOutput && lastOutput.outputKind === CellOutputKind.Rich ? lastOutput : undefined;
+                if (existing && 'text/plain' in existing.data) {
+                    // tslint:disable-next-line:restrict-plus-operands
+                    existing.data['text/plain'] = formatStreamText(
+                        concatMultilineString(`${existing.data['text/plain']}${msg.content.text}`)
+                    );
+                    edit.replaceCellOutput(this.cell.index, [...exitingCellOutput]); // This is necessary to get VS code to update (for now)
+                } else {
+                    const originalText = formatStreamText(concatMultilineString(msg.content.text));
+                    // Create a new stream entry
+                    const output: nbformat.IStream = {
+                        output_type: 'stream',
+                        name: msg.content.name,
+                        text: originalText
+                    };
+                    edit.replaceCellOutput(this.cell.index, [...exitingCellOutput, cellOutputToVSCCellOutput(output)]);
+                }
+            })
+        );
     }
 
     private async handleDisplayData(msg: KernelMessage.IDisplayDataMsg, clearState: RefBool) {
@@ -574,7 +602,10 @@ export class CellExecution {
             clearState.update(true);
         } else {
             // Clear all outputs and start over again.
-            await this.editor.edit((edit) => edit.replaceCellOutput(this.cell.index, []));
+            await chainWithPendingUpdates(
+                this.cell,
+                this.editor.edit((edit) => edit.replaceCellOutput(this.cell.index, []))
+            );
         }
     }
 

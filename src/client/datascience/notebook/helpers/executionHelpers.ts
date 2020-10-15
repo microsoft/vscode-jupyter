@@ -9,6 +9,7 @@ import * as fastDeepEqual from 'fast-deep-equal';
 import type { NotebookCell, NotebookEditor } from '../../../../../types/vscode-proposed';
 import { createErrorOutput } from '../../../../datascience-ui/common/cellFactory';
 import { createIOutputFromCellOutputs, createVSCCellOutputsFromOutputs, translateErrorOutput } from './helpers';
+import { chainWithPendingUpdates } from './notebookUpdater';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
@@ -65,13 +66,16 @@ export async function updateCellWithErrorStatus(
     cell: NotebookCell,
     ex: Partial<Error>
 ) {
-    await notebookEditor.edit((edit) => {
-        edit.replaceCellMetadata(cell.index, {
-            ...cell.metadata,
-            runState: vscodeNotebookEnums.NotebookCellRunState.Error
-        });
-        edit.replaceCellOutput(cell.index, [translateErrorOutput(createErrorOutput(ex))]);
-    });
+    await chainWithPendingUpdates(
+        notebookEditor.document,
+        notebookEditor.edit((edit) => {
+            edit.replaceCellMetadata(cell.index, {
+                ...cell.metadata,
+                runState: vscodeNotebookEnums.NotebookCellRunState.Error
+            });
+            edit.replaceCellOutput(cell.index, [translateErrorOutput(createErrorOutput(ex))]);
+        })
+    );
 }
 
 /**
@@ -83,11 +87,14 @@ export async function updateCellExecutionCount(
     executionCount: number
 ): Promise<void> {
     if (cell.metadata.executionOrder !== executionCount && executionCount) {
-        await editor.edit((edit) =>
-            edit.replaceCellMetadata(cell.index, {
-                ...cell.metadata,
-                executionOrder: executionCount
-            })
+        await chainWithPendingUpdates(
+            editor.document,
+            editor.edit((edit) =>
+                edit.replaceCellMetadata(cell.index, {
+                    ...cell.metadata,
+                    executionOrder: executionCount
+                })
+            )
         );
     }
 }
@@ -107,5 +114,8 @@ export async function updateCellOutput(editor: NotebookEditor, cell: NotebookCel
     if (cell.outputs.length === newOutput.length && fastDeepEqual(cell.outputs, newOutput)) {
         return;
     }
-    await editor.edit((edit) => edit.replaceCellOutput(cell.index, newOutput));
+    await chainWithPendingUpdates(
+        editor.document,
+        editor.edit((edit) => edit.replaceCellOutput(cell.index, newOutput))
+    );
 }
