@@ -18,7 +18,6 @@ import { DataScience } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { JupyterNotebookView } from './constants';
 import { isJupyterNotebook } from './helpers/helpers';
-import { InvalidNotebookContentProvider } from './invalidNotebookContentProvider';
 import { VSCodeKernelPickerProvider } from './kernelProvider';
 import { INotebookContentProvider } from './types';
 
