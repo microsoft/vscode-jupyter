@@ -38,7 +38,7 @@ const cacheFile = 'kernelSpecPathCache.json';
 // Before returning the IJupyterKernelSpec it makes sure that ipykernel is installed into the kernel spec interpreter
 @injectable()
 export class KernelFinder implements IKernelFinder {
-    private cache?: { path: string; spec: IJupyterKernelSpec }[];
+    private cache = new Map<string, IJupyterKernelSpec>();
     private cacheDirty = false;
 
     // Store our results when listing all possible kernelspecs for a resource
@@ -185,7 +185,7 @@ export class KernelFinder implements IKernelFinder {
 
             // If we failed to get a kernelspec pull path from our cache and loaded list
             this.pathToKernelSpec.delete(specPath);
-            this.cache = this.cache?.filter((item) => item.path !== specPath);
+            this.cache.delete(specPath);
             return undefined;
         });
     }
@@ -390,11 +390,10 @@ export class KernelFinder implements IKernelFinder {
     }
 
     private async updateCache(newPath: string) {
-        this.cache = Array.isArray(this.cache) ? this.cache : [];
-        if (!this.cache.find((i) => i.path === newPath)) {
+        if (!this.cache.has(newPath)) {
             const spec = await this.loadKernelSpec(newPath);
             if (spec) {
-                this.cache.push({ path: newPath, spec });
+                this.cache.set(newPath, spec);
                 this.cacheDirty = true;
             }
         }
@@ -411,9 +410,9 @@ export class KernelFinder implements IKernelFinder {
     }
 
     private async searchCache(kernelName: string): Promise<IJupyterKernelSpec | undefined> {
-        const cachedItem = this.cache?.find((item) => {
+        const cachedItem = [...this.cache.entries()].find((item) => {
             try {
-                return item.spec.display_name === kernelName || path.basename(path.dirname(item.path)) === kernelName;
+                return item[1].display_name === kernelName || path.basename(path.dirname(item[0])) === kernelName;
             } catch (e) {
                 traceInfo('KernelSpec path in cache is not a string.', e);
                 return false;
@@ -421,7 +420,7 @@ export class KernelFinder implements IKernelFinder {
         });
 
         if (cachedItem) {
-            return this.getKernelSpec(cachedItem.path);
+            return this.getKernelSpec(cachedItem[0]);
         }
 
         return undefined;
