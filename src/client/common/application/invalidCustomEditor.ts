@@ -1,4 +1,7 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
 import { CancellationToken, Event, EventEmitter, Uri, WebviewPanel } from 'vscode';
+import * as localize from '../../common/utils/localize';
 import { INotebookEditor } from '../../datascience/types';
 import {
     CustomDocument,
@@ -41,9 +44,7 @@ export class InvalidCustomEditor implements CustomEditorProvider {
         _cancellation: CancellationToken
     ): Promise<CustomDocument> {
         // Show an error to the user. Custom Editor is not supported.
-        throw new Error(
-            'Using the Jupyter notebook editor requires the stable version of VS code and the CustomEditor experiment to be enabled.'
-        );
+        throw new Error(localize.DataScience.invalidCustomEditor());
     }
     public async saveCustomDocument(_document: CustomDocument, _cancellation: CancellationToken): Promise<void> {
         throw new Error('Not Implemented');
