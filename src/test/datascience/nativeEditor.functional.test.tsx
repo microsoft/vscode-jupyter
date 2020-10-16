@@ -2873,6 +2873,11 @@ df.head()`;
                         if (isRollingBuild && fileObject.metadata.kernelspec) {
                             assert.notEqual(fileObject.metadata.kernelspec.display_name, 'JUNK');
                             assert.notEqual(fileObject.metadata.kernelspec.name, 'JUNK');
+                            assert.notEqual(
+                                fileObject.metadata.kernelspec.name,
+                                fileObject.metadata.kernelspec.display_name,
+                                'Kernel display name should be different than the name'
+                            );
                         }
                     });
                 });

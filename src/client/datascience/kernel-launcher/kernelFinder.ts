@@ -38,7 +38,7 @@ const cacheFile = 'kernelSpecPathCache.json';
 // Before returning the IJupyterKernelSpec it makes sure that ipykernel is installed into the kernel spec interpreter
 @injectable()
 export class KernelFinder implements IKernelFinder {
-    private cache = new Map<string, IJupyterKernelSpec>();
+    private cache?: string[];
     private cacheDirty = false;
 
     // Store our results when listing all possible kernelspecs for a resource
@@ -158,7 +158,7 @@ export class KernelFinder implements IKernelFinder {
         await Promise.all(
             searchResults.map(async (resultPath) => {
                 // Add these into our path cache to speed up later finds
-                this.updateCache(resultPath).ignoreErrors();
+                this.updateCache(resultPath);
                 const kernelspec = await this.getKernelSpec(resultPath);
 
                 if (kernelspec) {
@@ -185,7 +185,7 @@ export class KernelFinder implements IKernelFinder {
 
             // If we failed to get a kernelspec pull path from our cache and loaded list
             this.pathToKernelSpec.delete(specPath);
-            this.cache.delete(specPath);
+            this.cache = this.cache?.filter((itempath) => itempath !== specPath);
             return undefined;
         });
     }
@@ -369,11 +369,9 @@ export class KernelFinder implements IKernelFinder {
 
     private async getKernelSpecFromDisk(paths: string[], kernelName: string): Promise<IJupyterKernelSpec | undefined> {
         const searchResults = await this.kernelGlobSearch(paths);
-        await Promise.all(
-            searchResults.map((specPath) => {
-                return this.updateCache(specPath);
-            })
-        );
+        searchResults.forEach((specPath) => {
+            this.updateCache(specPath);
+        });
 
         return this.searchCache(kernelName);
     }
@@ -383,19 +381,19 @@ export class KernelFinder implements IKernelFinder {
             if (Array.isArray(this.cache) && this.cache.length > 0) {
                 return;
             }
-            this.cache = JSON.parse(await this.fs.readLocalFile(path.join(this.context.globalStoragePath, cacheFile)));
+            this.cache = JSON.parse(
+                await this.fs.readLocalFile(path.join(this.context.globalStoragePath, cacheFile))
+            ) as string[];
         } catch {
             traceInfo('No kernelSpec cache found.');
         }
     }
 
-    private async updateCache(newPath: string) {
-        if (!this.cache.has(newPath)) {
-            const spec = await this.loadKernelSpec(newPath);
-            if (spec) {
-                this.cache.set(newPath, spec);
-                this.cacheDirty = true;
-            }
+    private updateCache(newPath: string) {
+        this.cache = Array.isArray(this.cache) ? this.cache : [];
+        if (!this.cache.includes(newPath)) {
+            this.cache.push(newPath);
+            this.cacheDirty = true;
         }
     }
 
@@ -410,17 +408,17 @@ export class KernelFinder implements IKernelFinder {
     }
 
     private async searchCache(kernelName: string): Promise<IJupyterKernelSpec | undefined> {
-        const cachedItem = [...this.cache.entries()].find((item) => {
+        const kernelJsonFile = this.cache?.find((kernelPath) => {
             try {
-                return item[1].display_name === kernelName || path.basename(path.dirname(item[0])) === kernelName;
+                return path.basename(path.dirname(kernelPath)) === kernelName;
             } catch (e) {
                 traceInfo('KernelSpec path in cache is not a string.', e);
                 return false;
             }
         });
 
-        if (cachedItem) {
-            return this.getKernelSpec(cachedItem[0]);
+        if (kernelJsonFile) {
+            return this.getKernelSpec(kernelJsonFile);
         }
 
         return undefined;
