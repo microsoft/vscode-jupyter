@@ -158,7 +158,7 @@ export class KernelFinder implements IKernelFinder {
         await Promise.all(
             searchResults.map(async (resultPath) => {
                 // Add these into our path cache to speed up later finds
-                await this.updateCache(resultPath);
+                this.updateCache(resultPath).ignoreErrors();
                 const kernelspec = await this.getKernelSpec(resultPath);
 
                 if (kernelspec) {
