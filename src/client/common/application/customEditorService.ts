@@ -59,9 +59,7 @@ export class CustomEditorService implements ICustomEditorService {
         // Update the settings.
         if (
             this.useCustomEditorApi &&
-            (!Array.isArray(editorAssociations) ||
-                editorAssociations.length === 0 ||
-                !editorAssociations.find((item) => item.viewType === ViewType))
+            (editorAssociations.length === 0 || !editorAssociations.find((item) => item.viewType === ViewType))
         ) {
             editorAssociations.push({
                 viewType: ViewType,
