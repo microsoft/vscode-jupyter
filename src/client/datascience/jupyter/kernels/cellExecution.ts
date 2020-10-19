@@ -347,8 +347,9 @@ export class CellExecution {
 
     private async executeCodeCell(code: string, session: IJupyterSession, loggers: INotebookExecutionLogger[]) {
         // Generate metadata from our cell (some kernels expect this.)
-        const metadata = {
-            ...this.cell.metadata,
+        // tslint:disable-next-line: no-any
+        const metadata: any = {
+            ...(this.cell.metadata?.custom?.metadata || {}), // Send the Cell Metadata
             ...{ cellId: this.cell.uri.toString() }
         };
 
