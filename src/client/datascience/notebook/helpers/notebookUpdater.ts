@@ -29,7 +29,7 @@ export async function chainWithPendingUpdates(
     const pendingUpdates = pendingCellUpdates.has(notebook) ? pendingCellUpdates.get(notebook)! : Promise.resolve();
     const deferred = createDeferred<boolean>();
     const aggregatedPromise = pendingUpdates
-        .finally(async () => editor.edit(update).then(deferred.resolve, deferred.reject))
+        .then(async () => editor.edit(update).then(deferred.resolve, deferred.reject))
         .catch(noop);
     pendingCellUpdates.set(notebook, aggregatedPromise);
     return deferred.promise;
