@@ -8,7 +8,7 @@ import * as sinon from 'sinon';
 import { commands, NotebookEditor as VSCNotebookEditor } from 'vscode';
 import { IApplicationShell, IVSCodeNotebook } from '../../../client/common/application/types';
 import { IConfigurationService, IDisposable, IJupyterSettings, ReadWrite } from '../../../client/common/types';
-import { createDeferredFromPromise } from '../../../client/common/utils/async';
+import { createDeferredFromPromise, sleep } from '../../../client/common/utils/async';
 import { DataScience } from '../../../client/common/utils/localize';
 import { noop } from '../../../client/common/utils/misc';
 import { IKernelProvider } from '../../../client/datascience/jupyter/kernels/types';
@@ -81,7 +81,7 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         await closeNotebooksAndCleanUpAfterTests(disposables.concat(suiteDisposables));
     });
 
-    test('Cancelling token will cancel cell execution', async () => {
+    test('Interrupting kernel (Cancelling token) will cancel cell execution', async () => {
         await insertCodeCell('import time\nfor i in range(10000):\n  print(i)\n  time.sleep(0.1)', { index: 0 });
         const cell = vscEditor.document.cells[0];
         const appShell = api.serviceContainer.get<IApplicationShell>(IApplicationShell);
@@ -143,7 +143,7 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         await waitForTextOutputInVSCode(cell, '1', 0, false, 15_000); // Wait for 15 seconds for it to start (possibly kernel is still starting).
 
         // Restart the kernel.
-        const restartPromise = commands.executeCommand('jupyter.notebookeditor.restartkernel');
+        let restartPromise = commands.executeCommand('jupyter.notebookeditor.restartkernel');
 
         await waitForCondition(async () => assertVSCCellIsNotRunning(cell), 15_000, 'Execution not cancelled');
 
@@ -157,9 +157,8 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         await waitForCondition(async () => assertVSCCellIsRunning(cell), 15_000, 'Cell not being executed');
 
         // Stop the cell (cleaner way to tear down this test, else VS Code can hang due to the fact that we delete/close notebooks & rest of the code is trying to access it).
-
-        // Interrupt the kernel.
-        kernelProvider.get(cell.notebook.uri)!.interrupt().catch(noop);
-        await waitForExecutionCompletedWithErrors(cell);
+        restartPromise = commands.executeCommand('jupyter.notebookeditor.restartkernel');
+        await waitForCondition(async () => assertVSCCellIsNotRunning(cell), 15_000, 'Execution not cancelled');
+        await restartPromise;
     });
 });
