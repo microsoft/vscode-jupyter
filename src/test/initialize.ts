@@ -50,7 +50,9 @@ export async function initializeTest(): Promise<any> {
     }
 }
 export async function closeActiveWindows(disposables: IDisposable[] = []): Promise<void> {
-    clearPendingChainedUpdatesForTests();
+    if (isInsiders()) {
+        clearPendingChainedUpdatesForTests();
+    }
     disposeAllDisposables(disposables);
     await closeActiveNotebooks();
     await closeWindowsInternal();
