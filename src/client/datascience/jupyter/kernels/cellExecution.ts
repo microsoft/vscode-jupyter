@@ -5,8 +5,13 @@
 
 import { nbformat } from '@jupyterlab/coreutils';
 import type { KernelMessage } from '@jupyterlab/services/lib/kernel/messages';
-import { CancellationToken, CellOutputKind, NotebookCell, NotebookCellRunState } from 'vscode';
-import type { CellDisplayOutput, NotebookEditor as VSCNotebookEditor } from '../../../../../types/vscode-proposed';
+import { CancellationToken } from 'vscode';
+import type {
+    CellDisplayOutput,
+    NotebookCell,
+    NotebookCellRunState,
+    NotebookEditor as VSCNotebookEditor
+} from '../../../../../types/vscode-proposed';
 import { concatMultilineString, formatStreamText } from '../../../../datascience-ui/common';
 import { IApplicationShell, IVSCodeNotebook } from '../../../common/application/types';
 import { traceInfo, traceWarning } from '../../../common/logger';
@@ -567,7 +572,9 @@ export class CellExecution {
             const lastOutput =
                 exitingCellOutput.length > 0 ? exitingCellOutput[exitingCellOutput.length - 1] : undefined;
             const existing: CellDisplayOutput | undefined =
-                lastOutput && lastOutput.outputKind === CellOutputKind.Rich ? lastOutput : undefined;
+                lastOutput && lastOutput.outputKind === vscodeNotebookEnums.CellOutputKind.Rich
+                    ? lastOutput
+                    : undefined;
             if (existing && 'text/plain' in existing.data) {
                 // tslint:disable-next-line:restrict-plus-operands
                 existing.data['text/plain'] = formatStreamText(
