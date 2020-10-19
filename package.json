@@ -68,7 +68,7 @@
         "onCommand:jupyter.selectJupyterInterpreter",
         "onCommand:jupyter.selectjupytercommandline",
         "onNotebook:jupyter-notebook",
-        "onCustomEditor:ms-toolsai.jupyter.notebook.ipynb"
+        "onCustomEditor:jupyter.notebook.ipynb"
     ],
     "main": "./out/client/extension",
     "contributes": {
@@ -1686,7 +1686,7 @@
         ],
         "customEditors": [
             {
-                "viewType": "ms-toolsai.jupyter.notebook.ipynb",
+                "viewType": "jupyter.notebook.ipynb",
                 "displayName": "Jupyter Notebook",
                 "selector": [
                     {

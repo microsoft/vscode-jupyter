@@ -11,7 +11,7 @@ import { InvalidCustomEditor } from './invalidCustomEditor';
 import { CustomEditorProvider, ICommandManager, ICustomEditorService, IWorkspaceService } from './types';
 
 const EditorAssociationUpdatedKey = 'EditorAssociationUpdatedToUseCustomEditor';
-const ViewType = 'ms-toolsai.jupyter.notebook.ipynb';
+export const ViewType = 'jupyter.notebook.ipynb';
 
 @injectable()
 export class CustomEditorService implements ICustomEditorService {
