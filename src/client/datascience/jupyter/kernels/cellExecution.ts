@@ -12,7 +12,7 @@ import { IApplicationShell, IVSCodeNotebook } from '../../../common/application/
 import { traceInfo, traceWarning } from '../../../common/logger';
 import { RefBool } from '../../../common/refBool';
 import { IDisposable } from '../../../common/types';
-import { createDeferred } from '../../../common/utils/async';
+import { createDeferred, Deferred } from '../../../common/utils/async';
 import { swallowExceptions } from '../../../common/utils/decorators';
 import { noop } from '../../../common/utils/misc';
 import { StopWatch } from '../../../common/utils/stopWatch';
@@ -85,6 +85,10 @@ export class CellExecution {
     public get completed() {
         return this._completed;
     }
+    /**
+     * To be used only in tests.
+     */
+    public static cellsCompletedForTesting = new WeakMap<NotebookCell, Deferred<void>>();
 
     private static sentExecuteCellTelemetry?: boolean;
 
@@ -102,7 +106,6 @@ export class CellExecution {
     private readonly initPromise: Promise<void>;
     private disposables: IDisposable[] = [];
     private cancelHandled = false;
-
     private requestHandlerChain = Promise.resolve();
     private constructor(
         public readonly editor: VSCNotebookEditor,
@@ -112,6 +115,24 @@ export class CellExecution {
         private readonly applicationService: IApplicationShell,
         private readonly isPythonKernelConnection: boolean
     ) {
+        // These are only used in the tests (hence the use of we).
+        // See where this is used to understand its purpose.
+        let deferred = createDeferred<void>();
+        if (
+            !CellExecution.cellsCompletedForTesting.has(cell) ||
+            CellExecution.cellsCompletedForTesting.get(cell)!.completed
+        ) {
+            CellExecution.cellsCompletedForTesting.delete(cell);
+            CellExecution.cellsCompletedForTesting.set(cell, deferred);
+        }
+        if (
+            CellExecution.cellsCompletedForTesting.has(cell) &&
+            !CellExecution.cellsCompletedForTesting.get(cell)!.completed
+        ) {
+            deferred = CellExecution.cellsCompletedForTesting.get(cell)!;
+        }
+        this.result.then(() => deferred.resolve()).catch(() => deferred.resolve());
+
         this.oldCellRunState = cell.metadata.runState;
         this.initPromise = this.enqueue();
     }

@@ -11,15 +11,13 @@ import { CellDisplayOutput, commands } from 'vscode';
 import { CellErrorOutput } from '../../../../typings/vscode-proposed';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { IDisposable } from '../../../client/common/types';
+import { clearPendingChainedUpdatesForTests } from '../../../client/datascience/notebook/helpers/notebookUpdater';
 import { INotebookEditorProvider } from '../../../client/datascience/types';
 import { createEventHandler, IExtensionTestApi, sleep, waitForCondition } from '../../common';
 import { initialize } from '../../initialize';
 import {
-    assertHasExecutionCompletedSuccessfully,
-    assertHasExecutionCompletedWithErrors,
     assertHasTextOutputInVSCode,
     assertNotHasTextOutputInVSCode,
-    assertVSCCellHasErrors,
     canRunNotebookTests,
     closeNotebooksAndCleanUpAfterTests,
     deleteAllCellsAndWait,
@@ -27,7 +25,9 @@ import {
     executeCell,
     insertCodeCell,
     startJupyter,
-    trustAllNotebooks
+    trustAllNotebooks,
+    waitForExecutionCompletedSuccessfully,
+    waitForExecutionCompletedWithErrors
 } from './helper';
 
 // tslint:disable-next-line: no-var-requires no-require-imports
@@ -52,20 +52,19 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', () => {
         editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
     });
     // Use same notebook without starting kernel in every single test (use one for whole suite).
-    setup(deleteAllCellsAndWait);
+    setup(async () => {
+        clearPendingChainedUpdatesForTests();
+        await deleteAllCellsAndWait();
+    });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
     test('Execute cell using VSCode Kernel', async () => {
-        await insertCodeCell('print("Hello World")');
+        await insertCodeCell('print("123412341234")', { index: 0 });
         const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
 
         await executeCell(cell);
 
         // Wait till execution count changes and status is success.
-        await waitForCondition(
-            async () => assertHasExecutionCompletedSuccessfully(cell),
-            15_000,
-            'Cell did not get executed'
-        );
+        await waitForExecutionCompletedSuccessfully(cell);
     });
     test('Executed events are triggered', async () => {
         await insertCodeCell('print("Hello World")');
@@ -76,11 +75,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', () => {
         await executeCell(cell);
 
         // Wait till execution count changes and status is success.
-        await waitForCondition(
-            async () => assertHasExecutionCompletedSuccessfully(cell),
-            15_000,
-            'Cell did not get executed'
-        );
+        await waitForExecutionCompletedSuccessfully(cell);
 
         await executed.assertFired(1_000);
         await codeExecuted.assertFired(1_000);
@@ -102,11 +97,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', () => {
         await executeActiveDocument();
 
         // Wait till execution count changes and status is success.
-        await waitForCondition(
-            async () => assertHasExecutionCompletedSuccessfully(cells[1]),
-            15_000,
-            'Cell did not get executed'
-        );
+        await waitForExecutionCompletedSuccessfully(cells[1]);
         assert.isUndefined(cells[0].metadata.runState);
     });
     test('Verify Cell output, execution count and status', async () => {
@@ -115,11 +106,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', () => {
 
         const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
         // Wait till execution count changes and status is success.
-        await waitForCondition(
-            async () => assertHasExecutionCompletedSuccessfully(cell),
-            15_000,
-            'Cell did not get executed'
-        );
+        await waitForExecutionCompletedSuccessfully(cell);
         // Verify output.
         assertHasTextOutputInVSCode(cell, 'Hello World', 0);
 
@@ -134,12 +121,8 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', () => {
         await executeActiveDocument();
 
         // Wait till execution count changes and status is success.
-        await waitForCondition(
-            async () =>
-                assertHasExecutionCompletedSuccessfully(cells[0]) && assertHasExecutionCompletedSuccessfully(cells[1]),
-            15_000,
-            'Cells did not get executed'
-        );
+        await waitForExecutionCompletedSuccessfully(cells[0]);
+        await waitForExecutionCompletedSuccessfully(cells[1]);
 
         // Verify output.
         assertHasTextOutputInVSCode(cells[0], 'Foo Bar');
@@ -156,11 +139,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', () => {
         await executeActiveDocument();
 
         // Wait till execution count changes and status is success.
-        await waitForCondition(
-            async () => assertHasExecutionCompletedSuccessfully(cell),
-            15_000,
-            'Cell did not get executed'
-        );
+        await waitForExecutionCompletedSuccessfully(cell);
 
         expect(cell.metadata.executionOrder).to.be.greaterThan(0, 'Execution count should be > 0');
         expect(cell.metadata.runStartTime).to.be.greaterThan(0, 'Start time should be > 0');
@@ -175,11 +154,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', () => {
         await executeActiveDocument();
 
         // Wait till execution count changes and status is error.
-        await waitForCondition(
-            async () => assertHasExecutionCompletedWithErrors(cell),
-            15_000,
-            'Cell did not get executed'
-        );
+        await waitForExecutionCompletedWithErrors(cell);
 
         assert.lengthOf(cell.outputs, 1, 'Incorrect output');
         const errorOutput = cell.outputs[0] as CellErrorOutput;
@@ -206,11 +181,8 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', () => {
         await executeActiveDocument();
 
         // Wait till execution count changes and status is success.
-        await waitForCondition(
-            async () => assertHasExecutionCompletedSuccessfully(updateCell),
-            15_000,
-            'Cell did not get executed'
-        );
+        await waitForExecutionCompletedSuccessfully(updateCell);
+
         assert.lengthOf(displayCell.outputs, 1, 'Incorrect output');
         const markdownOutput = displayCell.outputs[0] as CellDisplayOutput;
         assert.equal(markdownOutput.outputKind, vscodeNotebookEnums.CellOutputKind.Rich, 'Incorrect output');
@@ -266,7 +238,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', () => {
 
         // Interrupt the kernel).
         await commands.executeCommand('notebook.cancelExecution');
-        await waitForCondition(async () => assertVSCCellHasErrors(cell), 1_000, 'Execution not cancelled');
+        await waitForExecutionCompletedWithErrors(cell);
 
         // Verify that it hasn't got added (even after interrupting).
         assertNotHasTextOutputInVSCode(cell, 'Start', 0, false);
@@ -308,6 +280,8 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', () => {
             15_000,
             'Incorrect output'
         );
+
+        await waitForExecutionCompletedSuccessfully(cell);
     });
     test('Testing streamed output', async () => {
         // Assume you are executing a cell that prints numbers 1-100.
@@ -340,6 +314,8 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', () => {
             15_000,
             'Incorrect output'
         );
+
+        await waitForExecutionCompletedSuccessfully(cell);
     });
     test('Verify escaping of output', async () => {
         await insertCodeCell('1');
@@ -355,11 +331,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', () => {
         await executeActiveDocument();
 
         // Wait till execution count changes and status is error.
-        await waitForCondition(
-            async () => assertHasExecutionCompletedWithErrors(cells[3]),
-            15_000,
-            'Cell did not get executed'
-        );
+        await waitForExecutionCompletedWithErrors(cells[3]);
 
         for (const cell of cells) {
             assert.lengthOf(cell.outputs, 1, 'Incorrect output');
@@ -395,11 +367,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', () => {
         let cells = vscodeNotebook.activeNotebookEditor?.document.cells!;
 
         await executeActiveDocument();
-        await waitForCondition(
-            async () => assertHasExecutionCompletedSuccessfully(cells[1]),
-            15_000,
-            'Cell did not get executed'
-        );
+        await waitForExecutionCompletedSuccessfully(cells[1]);
 
         assert.equal(cells[0].outputs.length, 0, 'Incorrect number of output');
         assert.equal(cells[1].outputs.length, 1, 'Incorrect number of output');
@@ -416,11 +384,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', () => {
         );
         await executeActiveDocument();
         cells = vscodeNotebook.activeNotebookEditor?.document.cells!;
-        await waitForCondition(
-            async () => assertHasExecutionCompletedSuccessfully(cells[2]),
-            15_000,
-            'Cell did not get executed'
-        );
+        await waitForExecutionCompletedSuccessfully(cells[2]);
 
         assert.equal(cells[0].outputs.length, 0, 'Incorrect number of output');
         assert.equal(cells[1].outputs.length, 1, 'Incorrect number of output');
@@ -455,11 +419,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', () => {
         const cells = vscodeNotebook.activeNotebookEditor?.document.cells!;
 
         await executeActiveDocument();
-        await waitForCondition(
-            async () => assertHasExecutionCompletedSuccessfully(cells[0]),
-            15_000,
-            'Cell did not get executed'
-        );
+        await waitForExecutionCompletedSuccessfully(cells[0]);
 
         // Wait for last line to be `iteration 9`
         assert.equal(cells[0].outputs.length, 1, 'Incorrect number of output');
@@ -512,11 +472,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', () => {
         const cells = vscodeNotebook.activeNotebookEditor?.document.cells!;
 
         await executeActiveDocument();
-        await waitForCondition(
-            async () => assertHasExecutionCompletedSuccessfully(cells[1]),
-            15_000,
-            'Cells did not get executed'
-        );
+        await waitForExecutionCompletedSuccessfully(cells[1]);
 
         // Wait for last line to be `iteration 9`
         assert.equal(cells[0].outputs.length, 1, 'Incorrect number of output');

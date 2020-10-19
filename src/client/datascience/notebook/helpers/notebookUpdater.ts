@@ -29,8 +29,24 @@ export async function chainWithPendingUpdates(
     const pendingUpdates = pendingCellUpdates.has(notebook) ? pendingCellUpdates.get(notebook)! : Promise.resolve();
     const deferred = createDeferred<boolean>();
     const aggregatedPromise = pendingUpdates
-        .then(async () => editor.edit(update).then(deferred.resolve, deferred.reject))
+        // We need to ensure the update operation gets invoked after previous updates have been completed.
+        // This way, the callback making references to cell metadata will have the latest information.
+        .then(async () =>
+            editor.edit(update).then(
+                (result) => deferred.resolve(result),
+                (ex) => deferred.reject(ex)
+            )
+        )
         .catch(noop);
     pendingCellUpdates.set(notebook, aggregatedPromise);
     return deferred.promise;
+}
+
+export function clearPendingChainedUpdatesForTests() {
+    // tslint:disable-next-line: no-any no-require-imports
+    const vsc = require('vscode') as any;
+    const editor: NotebookEditor | undefined = vsc.notebook.activeNotebookEditor;
+    if (editor) {
+        pendingCellUpdates.delete(editor.document);
+    }
 }

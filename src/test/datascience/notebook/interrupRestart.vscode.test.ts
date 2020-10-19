@@ -16,7 +16,6 @@ import { INotebookEditorProvider } from '../../../client/datascience/types';
 import { IExtensionTestApi, waitForCondition } from '../../common';
 import { initialize } from '../../initialize';
 import {
-    assertVSCCellHasErrors,
     assertVSCCellIsNotRunning,
     assertVSCCellIsRunning,
     canRunNotebookTests,
@@ -26,6 +25,7 @@ import {
     insertCodeCell,
     startJupyter,
     trustAllNotebooks,
+    waitForExecutionCompletedWithErrors,
     waitForKernelToGetAutoSelected,
     waitForTextOutputInVSCode
 } from './helper';
@@ -112,7 +112,7 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
             'Execution not cancelled'
         );
         if (deferred.completed) {
-            assertVSCCellHasErrors(cell);
+            await waitForExecutionCompletedWithErrors(cell);
         }
     });
     test('Restarting kernel will cancel cell execution & we can re-run a cell', async () => {
@@ -155,5 +155,11 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
 
         // Wait for cell to get busy.
         await waitForCondition(async () => assertVSCCellIsRunning(cell), 15_000, 'Cell not being executed');
+
+        // Stop the cell (cleaner way to tear down this test, else VS Code can hang due to the fact that we delete/close notebooks & rest of the code is trying to access it).
+
+        // Interrupt the kernel.
+        kernelProvider.get(cell.notebook.uri)!.interrupt().catch(noop);
+        await waitForExecutionCompletedWithErrors(cell);
     });
 });
