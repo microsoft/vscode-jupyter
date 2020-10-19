@@ -1,7 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { NotebookCell, NotebookDocument } from '../../../../../types/vscode-proposed';
+import { NotebookDocument, NotebookEditor, NotebookEditorEdit } from '../../../../../types/vscode-proposed';
+import { createDeferred } from '../../../common/utils/async';
 import { noop } from '../../../common/utils/misc';
 
 /**
@@ -19,16 +20,17 @@ import { noop } from '../../../common/utils/misc';
  * - We update status after completion
  */
 const pendingCellUpdates = new WeakMap<NotebookDocument, Promise<unknown>>();
+
 export async function chainWithPendingUpdates(
-    item: NotebookCell | NotebookDocument,
-    // tslint:disable-next-line: no-any
-    promise: Promise<any> | Thenable<any>
-): Promise<void> {
-    // const updater = new NotebookUpdater('notebook' in item ? item.notebook : item);
-    const notebook = 'notebook' in item ? item.notebook : item;
+    editor: NotebookEditor,
+    update: (edit: NotebookEditorEdit) => void
+): Promise<boolean> {
+    const notebook = editor.document;
     const pendingUpdates = pendingCellUpdates.has(notebook) ? pendingCellUpdates.get(notebook)! : Promise.resolve();
-    const newPromise = 'catch' in promise ? promise : new Promise<void>((resolve) => promise.then(resolve, resolve));
-    const aggregatedPromise = pendingUpdates.finally(() => newPromise).catch(noop);
+    const deferred = createDeferred<boolean>();
+    const aggregatedPromise = pendingUpdates
+        .finally(async () => editor.edit(update).then(deferred.resolve, deferred.reject))
+        .catch(noop);
     pendingCellUpdates.set(notebook, aggregatedPromise);
-    await aggregatedPromise;
+    return deferred.promise;
 }

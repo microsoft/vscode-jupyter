@@ -66,16 +66,13 @@ export async function updateCellWithErrorStatus(
     cell: NotebookCell,
     ex: Partial<Error>
 ) {
-    await chainWithPendingUpdates(
-        notebookEditor.document,
-        notebookEditor.edit((edit) => {
-            edit.replaceCellMetadata(cell.index, {
-                ...cell.metadata,
-                runState: vscodeNotebookEnums.NotebookCellRunState.Error
-            });
-            edit.replaceCellOutput(cell.index, [translateErrorOutput(createErrorOutput(ex))]);
-        })
-    );
+    await chainWithPendingUpdates(notebookEditor, (edit) => {
+        edit.replaceCellMetadata(cell.index, {
+            ...cell.metadata,
+            runState: vscodeNotebookEnums.NotebookCellRunState.Error
+        });
+        edit.replaceCellOutput(cell.index, [translateErrorOutput(createErrorOutput(ex))]);
+    });
 }
 
 /**
@@ -87,14 +84,11 @@ export async function updateCellExecutionCount(
     executionCount: number
 ): Promise<void> {
     if (cell.metadata.executionOrder !== executionCount && executionCount) {
-        await chainWithPendingUpdates(
-            editor.document,
-            editor.edit((edit) =>
-                edit.replaceCellMetadata(cell.index, {
-                    ...cell.metadata,
-                    executionOrder: executionCount
-                })
-            )
+        await chainWithPendingUpdates(editor, (edit) =>
+            edit.replaceCellMetadata(cell.index, {
+                ...cell.metadata,
+                executionOrder: executionCount
+            })
         );
     }
 }
@@ -114,8 +108,5 @@ export async function updateCellOutput(editor: NotebookEditor, cell: NotebookCel
     if (cell.outputs.length === newOutput.length && fastDeepEqual(cell.outputs, newOutput)) {
         return;
     }
-    await chainWithPendingUpdates(
-        editor.document,
-        editor.edit((edit) => edit.replaceCellOutput(cell.index, newOutput))
-    );
+    await chainWithPendingUpdates(editor, (edit) => edit.replaceCellOutput(cell.index, newOutput));
 }
