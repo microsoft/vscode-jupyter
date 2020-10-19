@@ -13,8 +13,7 @@ import {
     IJupyterUriProvider,
     IJupyterUriProviderRegistration,
     INotebookExtensibility,
-    IWebviewExtensibility,
-    IWebviewOpenedMessage
+    IWebviewExtensibility
 } from './datascience/types';
 import { IServiceContainer, IServiceManager } from './ioc/types';
 
@@ -32,14 +31,14 @@ export interface IExtensionApi {
     ready: Promise<void>;
     readonly onKernelPostExecute: Event<NotebookCell>;
     readonly onKernelRestart: Event<void>;
-    readonly onOpenWebview: Event<IWebviewOpenedMessage>;
+    readonly onKernelStart: Event<string[]>;
     registerCellCommand(
         command: string,
         buttonHtml: string,
         statusToEnable: NotebookCellRunState[],
-        interactive: boolean
+        tooltip: string
     ): void;
-    removeCellCommand(command: string, interactive: boolean): void;
+    removeCellCommand(command: string): void;
     /**
      * Launches Data Viewer component.
      * @param {IDataViewerDataProvider} dataProvider Instance that will be used by the Data Viewer component to fetch data.
@@ -87,7 +86,7 @@ export function buildApi(
         },
         onKernelPostExecute: notebookExtensibility.onKernelPostExecute,
         onKernelRestart: notebookExtensibility.onKernelRestart,
-        onOpenWebview: notebookExtensibility.onOpenWebview,
+        onKernelStart: notebookExtensibility.onKernelStart,
         registerCellCommand: webviewExtensibility.registerCellCommand,
         removeCellCommand: webviewExtensibility.removeCellCommand
     };

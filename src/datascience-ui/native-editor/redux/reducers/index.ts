@@ -97,5 +97,6 @@ export const reducerMap: Partial<INativeEditorActionMapping> = {
     [InteractiveWindowMessages.ShowBreak]: Execution.handleBreakState,
     [InteractiveWindowMessages.ShowContinue]: Execution.handleContinue,
     [InteractiveWindowMessages.StartDebugging]: Execution.startDebugging,
-    [InteractiveWindowMessages.StopDebugging]: Execution.stopDebugging
+    [InteractiveWindowMessages.StopDebugging]: Execution.stopDebugging,
+    [InteractiveWindowMessages.UpdateExternalCellButtons]: CommonEffects.handleWebviewButtons
 };

@@ -6,7 +6,12 @@ import {
     IInteractiveWindowMapping,
     InteractiveWindowMessages
 } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
-import { IJupyterVariable, IJupyterVariablesRequest } from '../../../client/datascience/types';
+import {
+    ICell,
+    IExternalCommandFromWebview,
+    IJupyterVariable,
+    IJupyterVariablesRequest
+} from '../../../client/datascience/types';
 import {
     CommonAction,
     CommonActionType,
@@ -105,5 +110,7 @@ export const actionCreators = {
             refreshCount
         }),
     widgetFailed: (ex: Error): CommonAction<Error> =>
-        createIncomingActionWithPayload(CommonActionType.IPYWIDGET_RENDER_FAILURE, ex)
+        createIncomingActionWithPayload(CommonActionType.IPYWIDGET_RENDER_FAILURE, ex),
+    runExternalCommand: (command: string, cell: ICell): CommonAction<IExternalCommandFromWebview> =>
+        createIncomingActionWithPayload(InteractiveWindowMessages.ExecuteExternalCommand, { command, cell })
 };

@@ -41,9 +41,14 @@ import { KernelConnectionMetadata } from './kernels/types';
 // tslint:disable-next-line: no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
 import { concatMultilineString, formatStreamText, splitMultilineString } from '../../../datascience-ui/common';
+import { PYTHON_LANGUAGE } from '../../common/constants';
 import { RefBool } from '../../common/refBool';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
-import { getInterpreterFromKernelConnectionMetadata, isPythonKernelConnection } from './kernels/helpers';
+import {
+    getInterpreterFromKernelConnectionMetadata,
+    getKernelConnectionLanguage,
+    isPythonKernelConnection
+} from './kernels/helpers';
 
 class CellSubscriber {
     public get startTime(): number {
@@ -209,6 +214,10 @@ export class JupyterNotebookBase implements INotebook {
 
         // Make a copy of the launch info so we can update it in this class
         this._executionInfo = cloneDeep(executionInfo);
+
+        // fire kernel start
+        const language = getKernelConnectionLanguage(this.getKernelConnection()) || PYTHON_LANGUAGE;
+        this.loggers.forEach((l) => l.onKernelStarted([language]));
     }
 
     public get connection() {
@@ -1194,7 +1203,8 @@ export class JupyterNotebookBase implements INotebook {
     }
 
     private async logPostCode(cell: ICell, silent: boolean): Promise<void> {
-        await Promise.all(this.loggers.map((l) => l.postExecute(cloneDeep(cell), silent)));
+        const language = getKernelConnectionLanguage(this.getKernelConnection()) || PYTHON_LANGUAGE;
+        await Promise.all(this.loggers.map((l) => l.postExecute(cloneDeep(cell), silent, language)));
     }
 
     private addToCellData = (

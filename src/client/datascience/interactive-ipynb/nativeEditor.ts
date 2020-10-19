@@ -55,7 +55,6 @@ import {
     ICell,
     ICodeCssGenerator,
     IDataScienceErrorHandler,
-    IExternalWebviewCellButton,
     IFileSystem,
     IInteractiveWindowInfo,
     IInteractiveWindowListener,
@@ -65,7 +64,6 @@ import {
     INotebookEditor,
     INotebookEditorProvider,
     INotebookExporter,
-    INotebookExtensibility,
     INotebookImporter,
     INotebookMetadataLive,
     INotebookProvider,
@@ -137,6 +135,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         return this._model;
     }
     public readonly type: 'old' | 'custom' = 'custom';
+    public isInteractive = false;
     protected savedEvent: EventEmitter<INotebookEditor> = new EventEmitter<INotebookEditor>();
     protected closedEvent: EventEmitter<INotebookEditor> = new EventEmitter<INotebookEditor>();
     protected modifiedEvent: EventEmitter<INotebookEditor> = new EventEmitter<INotebookEditor>();
@@ -149,7 +148,6 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     private executeCancelTokens = new Set<CancellationTokenSource>();
     private loadPromise: Promise<void>;
     private previouslyNotTrusted: boolean = false;
-    private externalButtons: IExternalWebviewCellButton[] = [];
 
     constructor(
         listeners: IInteractiveWindowListener[],
@@ -184,7 +182,6 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         private _model: NativeEditorNotebookModel,
         webviewPanel: WebviewPanel | undefined,
         selector: KernelSelector,
-        nbExtensibility: INotebookExtensibility,
         private extensionChecker: IPythonExtensionChecker
     ) {
         super(
@@ -222,8 +219,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             notebookProvider,
             useCustomEditorApi,
             expService,
-            selector,
-            nbExtensibility
+            selector
         );
         asyncRegistry.push(this);
         asyncRegistry.push(this.trustService.onDidSetNotebookTrust(this.monitorChangesToTrust, this));
@@ -267,10 +263,6 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                             }
                         })
                         .catch((exc) => traceError('Error loading cells: ', exc));
-
-                    const editor = this.documentManager.activeTextEditor;
-                    const language = editor ? editor.document.languageId : PYTHON_LANGUAGE;
-                    this.notebookExtensibility.fireOpenWebview({ languages: [language], isInteractive: false });
                 }
                 break;
             case InteractiveWindowMessages.Sync:
@@ -369,17 +361,6 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     }
     public collapseAllCells(): void {
         throw Error('Not implemented Exception');
-    }
-
-    public createWebviewCellButton(command: string, buttonHtml: string, statusToEnable: CellState[]): void {
-        this.externalButtons.push({ command, buttonHtml, statusToEnable });
-        this.postMessage(InteractiveWindowMessages.UpdateExternalCellButtons, this.externalButtons).ignoreErrors();
-    }
-
-    public removeWebviewCellButton(command: string): void {
-        const index = this.externalButtons.findIndex((button) => button.command === command);
-        this.externalButtons.splice(index, 1);
-        this.postMessage(InteractiveWindowMessages.UpdateExternalCellButtons, this.externalButtons).ignoreErrors();
     }
 
     protected addSysInfo(reason: SysInfoReason): Promise<void> {

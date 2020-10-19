@@ -13,7 +13,6 @@ import {
     IWebviewPanelProvider,
     IWorkspaceService
 } from '../../common/application/types';
-import { PYTHON_LANGUAGE } from '../../common/constants';
 import { ContextKey } from '../../common/contextKey';
 import '../../common/extensions';
 import { traceError } from '../../common/logger';
@@ -44,11 +43,9 @@ import {
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
 import { KernelConnectionMetadata } from '../jupyter/kernels/types';
 import {
-    CellState,
     ICell,
     ICodeCssGenerator,
     IDataScienceErrorHandler,
-    IExternalWebviewCellButton,
     IFileSystem,
     IInteractiveWindow,
     IInteractiveWindowInfo,
@@ -59,7 +56,6 @@ import {
     IJupyterVariableDataProviderFactory,
     IJupyterVariables,
     INotebookExporter,
-    INotebookExtensibility,
     INotebookModel,
     INotebookProvider,
     IStatusProvider,
@@ -93,6 +89,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     public get identity(): Uri {
         return this._identity;
     }
+    public isInteractive = true;
     private _onDidChangeViewState = new EventEmitter<void>();
     private closedEvent: EventEmitter<IInteractiveWindow> = new EventEmitter<IInteractiveWindow>();
     private waitingForExportCells: boolean = false;
@@ -103,7 +100,6 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     private pendingHasCell = new Map<string, Deferred<boolean>>();
     private mode: InteractiveWindowMode = 'multiple';
     private loadPromise: Promise<void>;
-    private externalButtons: IExternalWebviewCellButton[] = [];
 
     constructor(
         listeners: IInteractiveWindowListener[],
@@ -137,8 +133,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         mode: InteractiveWindowMode,
         title: string | undefined,
         selector: KernelSelector,
-        private readonly extensionChecker: IPythonExtensionChecker,
-        nbExtensibility: INotebookExtensibility
+        private readonly extensionChecker: IPythonExtensionChecker
     ) {
         super(
             listeners,
@@ -175,8 +170,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             notebookProvider,
             useCustomEditorApi,
             expService,
-            selector,
-            nbExtensibility
+            selector
         );
 
         // Send a telemetry event to indicate window is opening
@@ -254,11 +248,6 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         super.onMessage(message, payload);
 
         switch (message) {
-            case InteractiveWindowMessages.Started:
-                const editor = this.documentManager.activeTextEditor;
-                const language = editor ? editor.document.languageId : PYTHON_LANGUAGE;
-                this.notebookExtensibility.fireOpenWebview({ languages: [language], isInteractive: true });
-                break;
             case InteractiveWindowMessages.Export:
                 this.handleMessage(message, payload, this.export);
                 break;
@@ -353,17 +342,6 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             return Uri.file(root);
         }
         return undefined;
-    }
-
-    public createWebviewCellButton(command: string, buttonHtml: string, statusToEnable: CellState[]): void {
-        this.externalButtons.push({ command, buttonHtml, statusToEnable });
-        this.postMessage(InteractiveWindowMessages.UpdateExternalCellButtons, this.externalButtons).ignoreErrors();
-    }
-
-    public removeWebviewCellButton(command: string): void {
-        const index = this.externalButtons.findIndex((button) => button.command === command);
-        this.externalButtons.splice(index, 1);
-        this.postMessage(InteractiveWindowMessages.UpdateExternalCellButtons, this.externalButtons).ignoreErrors();
     }
 
     protected async addSysInfo(reason: SysInfoReason): Promise<void> {

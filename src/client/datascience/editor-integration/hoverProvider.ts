@@ -48,6 +48,10 @@ export class HoverProvider implements INotebookExecutionLogger, vscode.HoverProv
         }
     }
 
+    public onKernelStarted() {
+        noop();
+    }
+
     // tslint:disable-next-line: no-any
     public onKernelRestarted() {
         this.runFiles.clear();

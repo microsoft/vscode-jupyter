@@ -17,7 +17,6 @@ import { IKernel, IKernelProvider } from '../jupyter/kernels/types';
 import {
     INotebook,
     INotebookEditor,
-    INotebookExtensibility,
     INotebookModel,
     INotebookProvider,
     InterruptResult,
@@ -63,9 +62,6 @@ export class NotebookEditor implements INotebookEditor {
     public get onExecutedCode(): Event<string> {
         return this.executedCode.event;
     }
-    public get notebookExtensibility(): INotebookExtensibility {
-        return this.nbExtensibility;
-    }
     public notebook?: INotebook | undefined;
 
     private changedViewState = new EventEmitter<void>();
@@ -86,7 +82,6 @@ export class NotebookEditor implements INotebookEditor {
         private readonly applicationShell: IApplicationShell,
         private readonly configurationService: IConfigurationService,
         disposables: IDisposableRegistry,
-        private readonly nbExtensibility: INotebookExtensibility,
         private readonly cellLanguageService: NotebookCellLanguageService
     ) {
         disposables.push(model.onDidEdit(() => this._modified.fire(this)));
@@ -119,6 +114,15 @@ export class NotebookEditor implements INotebookEditor {
     }
     public stopProgress(): void {
         throw new Error('Method not implemented.');
+    }
+    public createWebviewCellButton(): void {
+        throw new Error('Method not implemented.');
+    }
+    public removeWebviewCellButton(): void {
+        throw new Error('Method not implemented.');
+    }
+    public hasCell(): Promise<boolean> {
+        return Promise.resolve(this.document.cells.length > 0);
     }
     public undoCells(): void {
         this.commandManager.executeCommand('notebook.undo').then(noop, noop);
@@ -191,7 +195,6 @@ export class NotebookEditor implements INotebookEditor {
     public notifyExecution(cell: NotebookCell) {
         this._executed.fire(this);
         this.executedCode.fire(cell.document.getText());
-        this.nbExtensibility.fireKernelPostExecute(cell);
     }
     public async interruptKernel(): Promise<void> {
         if (this.restartingKernel) {
@@ -256,13 +259,6 @@ export class NotebookEditor implements INotebookEditor {
         this._closed.fire(this);
     }
 
-    public createWebviewCellButton(): void {
-        throw new Error('Method not implemented.');
-    }
-
-    public removeWebviewCellButton(): void {
-        throw new Error('Method not implemented.');
-    }
     private async restartKernelInternal(kernel: IKernel): Promise<void> {
         this.restartingKernel = true;
 
@@ -271,7 +267,6 @@ export class NotebookEditor implements INotebookEditor {
 
         try {
             await kernel.restart();
-            this.nbExtensibility.fireKernelRestart();
         } catch (exc) {
             // If we get a kernel promise failure, then restarting timed out. Just shutdown and restart the entire server.
             // Note, this code might not be necessary, as such an error is thrown only when interrupting a kernel times out.

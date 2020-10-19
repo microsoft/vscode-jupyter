@@ -375,6 +375,7 @@ ${buildSettingsCss(this.props.settings)}`}</style>
                         }
                         language={this.props.kernel.language}
                         isNotebookTrusted={this.props.isNotebookTrusted}
+                        externalButtons={this.props.externalButtons}
                     />
                 </ErrorBoundary>
                 {lastLine}

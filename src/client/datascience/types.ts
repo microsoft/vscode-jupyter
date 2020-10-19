@@ -264,7 +264,8 @@ export interface INotebookServerOptions {
 export const INotebookExecutionLogger = Symbol('INotebookExecutionLogger');
 export interface INotebookExecutionLogger extends IDisposable {
     preExecute(cell: ICell, silent: boolean): Promise<void>;
-    postExecute(cell: ICell, silent: boolean): Promise<void>;
+    postExecute(cell: ICell, silent: boolean, language: string): Promise<void>;
+    onKernelStarted(languages: string[]): void;
     onKernelRestarted(): void;
     preHandleIOPub?(msg: KernelMessage.IIOPubMessage): KernelMessage.IIOPubMessage;
 }
@@ -489,7 +490,6 @@ export interface ILocalResourceUriConverter {
 }
 
 export interface IInteractiveBase extends Disposable {
-    readonly notebookExtensibility: INotebookExtensibility;
     onExecutedCode: Event<string>;
     notebook?: INotebook;
     startProgress(): void;
@@ -500,7 +500,7 @@ export interface IInteractiveBase extends Disposable {
     interruptKernel(): Promise<void>;
     restartKernel(): Promise<void>;
     hasCell(id: string): Promise<boolean>;
-    createWebviewCellButton(command: string, buttonHtml: string, statusToEnable: CellState[]): void;
+    createWebviewCellButton(command: string, buttonHtml: string, statusToEnable: CellState[], tooltip: string): void;
     removeWebviewCellButton(command: string): void;
 }
 
@@ -548,7 +548,7 @@ export interface INotebookEditorProvider {
 
 // For native editing, the INotebookEditor acts like a TextEditor and a TextDocument together
 export const INotebookEditor = Symbol('INotebookEditor');
-export interface INotebookEditor extends Disposable {
+export interface INotebookEditor extends Disposable, IInteractiveBase {
     /**
      * Type of editor, whether it is the old, custom or native notebook editor.
      * Once VSC Notebook is stable, this property can be removed.
@@ -584,8 +584,6 @@ export interface INotebookEditor extends Disposable {
     collapseAllCells(): void;
     interruptKernel(): Promise<void>;
     restartKernel(): Promise<void>;
-    createWebviewCellButton(command: string, buttonHtml: string, statusToEnable: CellState[]): void;
-    removeWebviewCellButton(command: string): void;
 }
 
 export const INotebookExtensibility = Symbol('INotebookExtensibility');
@@ -593,10 +591,10 @@ export const INotebookExtensibility = Symbol('INotebookExtensibility');
 export interface INotebookExtensibility {
     readonly onKernelPostExecute: Event<NotebookCell>;
     readonly onKernelRestart: Event<void>;
-    readonly onOpenWebview: Event<IWebviewOpenedMessage>;
-    fireKernelRestart(): void;
-    fireKernelPostExecute(cell: NotebookCell): void;
-    fireOpenWebview(msg: IWebviewOpenedMessage): void;
+    readonly onKernelStart: Event<string[]>;
+    // fireKernelRestart(): void;
+    // fireKernelPostExecute(cell: NotebookCell): void;
+    // fireOpenWebview(msg: IWebviewOpenedMessage): void;
 }
 
 export const IWebviewExtensibility = Symbol('IWebviewExtensibility');
@@ -606,9 +604,9 @@ export interface IWebviewExtensibility {
         command: string,
         buttonHtml: string,
         statusToEnable: NotebookCellRunState[],
-        interactive: boolean
+        tooltip: string
     ): void;
-    removeCellCommand(command: string, interactive: boolean): void;
+    removeCellCommand(command: string): void;
 }
 
 export const IInteractiveWindowListener = Symbol('IInteractiveWindowListener');
@@ -1423,9 +1421,11 @@ export interface IExternalWebviewCellButton {
     command: string;
     buttonHtml: string;
     statusToEnable: CellState[];
+    tooltip: string;
+    running: boolean;
 }
 
-export interface IWebviewOpenedMessage {
-    languages: string[];
-    isInteractive: boolean;
+export interface IExternalCommandFromWebview {
+    command: string;
+    cell: ICell;
 }

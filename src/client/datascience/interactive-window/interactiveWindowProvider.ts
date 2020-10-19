@@ -51,7 +51,6 @@ import {
     IJupyterVariableDataProviderFactory,
     IJupyterVariables,
     INotebookExporter,
-    INotebookExtensibility,
     INotebookProvider,
     IStatusProvider,
     IThemeFinder
@@ -199,8 +198,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
             mode,
             title,
             this.serviceContainer.get<KernelSelector>(KernelSelector),
-            this.serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker),
-            this.serviceContainer.get<INotebookExtensibility>(INotebookExtensibility)
+            this.serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker)
         );
         this._windows.push(result);
 

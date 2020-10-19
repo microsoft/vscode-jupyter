@@ -10,21 +10,17 @@ import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import {
     CancellationToken,
-    CellKind,
     commands,
     ConfigurationTarget,
     Event,
     EventEmitter,
     Memento,
-    NotebookCell,
-    NotebookCellRunState,
     Position,
     Range,
     Selection,
     TextEditor,
     Uri,
-    ViewColumn,
-    workspace
+    ViewColumn
 } from 'vscode';
 import { Disposable } from 'vscode-jsonrpc';
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
@@ -42,11 +38,6 @@ import { Experiments } from '../../common/experiments/groups';
 import { traceError, traceInfo, traceWarning } from '../../common/logger';
 
 import { isNil } from 'lodash';
-import { instance, mock } from 'ts-mockito';
-import { concatMultilineString } from '../../../datascience-ui/common';
-import { createNotebookDocument, createNotebookModel } from '../../../test/datascience/notebook/helper';
-import { MockMemento } from '../../../test/mocks/mementos';
-import { CryptoUtils } from '../../common/crypto';
 import { IConfigurationService, IDisposableRegistry, IExperimentService } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
@@ -89,6 +80,8 @@ import {
     ICell,
     ICodeCssGenerator,
     IDataScienceErrorHandler,
+    IExternalCommandFromWebview,
+    IExternalWebviewCellButton,
     IFileSystem,
     IInteractiveBase,
     IInteractiveWindowInfo,
@@ -101,7 +94,6 @@ import {
     IMessageCell,
     INotebook,
     INotebookExporter,
-    INotebookExtensibility,
     INotebookMetadataLive,
     INotebookProvider,
     INotebookProviderConnection,
@@ -110,6 +102,7 @@ import {
     IThemeFinder,
     WebViewViewChangeEventArgs
 } from '../types';
+import { cellTranslate } from '../utils';
 import { WebviewPanelHost } from '../webviews/webviewPanelHost';
 import { InteractiveWindowMessageListener } from './interactiveWindowMessageListener';
 import { serializeLanguageConfiguration } from './serialization';
@@ -123,10 +116,6 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         return this._id;
     }
 
-    public get notebookExtensibility(): INotebookExtensibility {
-        return this.nbExtensibility;
-    }
-
     public get onExecutedCode(): Event<string> {
         return this.executeEvent.event;
     }
@@ -134,10 +123,12 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         return this.readyEvent.event;
     }
 
+    public abstract isInteractive: boolean;
     protected abstract get notebookMetadata(): INotebookMetadataLive | undefined;
 
     protected abstract get notebookIdentity(): INotebookIdentity;
     protected fileInKernel: string | undefined;
+    protected externalButtons: IExternalWebviewCellButton[] = [];
     private unfinishedCells: ICell[] = [];
     private restartingKernel: boolean = false;
     private perceivedJupyterStartupTelemetryCaptured: boolean = false;
@@ -180,8 +171,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         private readonly notebookProvider: INotebookProvider,
         useCustomEditorApi: boolean,
         expService: IExperimentService,
-        private selector: KernelSelector,
-        private nbExtensibility: INotebookExtensibility
+        private selector: KernelSelector
     ) {
         super(
             configuration,
@@ -274,7 +264,6 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
 
             case InteractiveWindowMessages.RestartKernel:
                 this.restartKernel().ignoreErrors();
-                this.nbExtensibility.fireKernelRestart();
                 break;
 
             case InteractiveWindowMessages.Interrupt:
@@ -359,6 +348,10 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
 
             case InteractiveWindowMessages.MonacoReady:
                 this.readyEvent.fire();
+                break;
+
+            case InteractiveWindowMessages.ExecuteExternalCommand:
+                this.handleMessage(message, payload, this.hanldeExecuteExternalCommand);
                 break;
 
             default:
@@ -503,9 +496,26 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         });
     }
 
-    public abstract createWebviewCellButton(command: string, buttonHtml: string, statusToEnable: CellState[]): void;
+    public createWebviewCellButton(
+        command: string,
+        buttonHtml: string,
+        statusToEnable: CellState[],
+        tooltip: string
+    ): void {
+        const index = this.externalButtons.findIndex((button) => button.command === command);
+        if (index === -1) {
+            this.externalButtons.push({ command, buttonHtml, statusToEnable, tooltip, running: false });
+            this.postMessage(InteractiveWindowMessages.UpdateExternalCellButtons, this.externalButtons).ignoreErrors();
+        }
+    }
 
-    public abstract removeWebviewCellButton(command: string): void;
+    public removeWebviewCellButton(command: string): void {
+        const index = this.externalButtons.findIndex((button) => button.command === command);
+        if (index !== -1) {
+            this.externalButtons.splice(index, 1);
+            this.postMessage(InteractiveWindowMessages.UpdateExternalCellButtons, this.externalButtons).ignoreErrors();
+        }
+    }
 
     public abstract hasCell(id: string): Promise<boolean>;
 
@@ -758,7 +768,6 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
                         cell,
                         notebookIdentity: this.notebookIdentity.resource
                     }).ignoreErrors();
-                    this.firePostExecute(cell).ignoreErrors();
 
                     // Remove from the list of unfinished cells
                     this.unfinishedCells = this.unfinishedCells.filter((c) => c.id !== cell.id);
@@ -1584,51 +1593,13 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         this.postMessage(InteractiveWindowMessages.UpdateDisplayData, msg).ignoreErrors();
     }
 
-    private async firePostExecute(cell: ICell) {
-        if (cell && cell.data && cell.data.source) {
-            const dummyUri = 'https://www.msft.com/some/path?query#';
-            // TO DO: find a way to not open a doc
-            const dummyDoc = await workspace.openTextDocument({
-                language: '',
-                content: concatMultilineString(cell.data.source)
-            });
-            const crypto = mock(CryptoUtils);
-            const model = createNotebookModel(true, Uri.file('a'), new MockMemento(), instance(crypto));
-            const editor = this.documentManager.activeTextEditor;
-
-            const newCell: NotebookCell = {
-                language: editor ? editor.document.languageId : PYTHON_LANGUAGE,
-                document: dummyDoc,
-                metadata: {
-                    executionOrder: cell.data.execution_count as number,
-                    hasExecutionOrder: true,
-                    runState: this.translateCellState(cell.state)
-                },
-                uri: Uri.parse(dummyUri + cell.id),
-                index: 0,
-                outputs: [],
-                cellKind: CellKind.Code,
-                notebook: createNotebookDocument(model)
-            };
-
-            this.nbExtensibility.fireKernelPostExecute(newCell);
+    private async hanldeExecuteExternalCommand(payload: IExternalCommandFromWebview) {
+        let language = PYTHON_LANGUAGE;
+        if (this.notebook) {
+            language = getKernelConnectionLanguage(this.notebook.getKernelConnection()) || PYTHON_LANGUAGE;
         }
-    }
-
-    private translateCellState(state: CellState): NotebookCellRunState {
-        switch (state) {
-            case CellState.editing:
-                return NotebookCellRunState.Idle;
-            case CellState.error:
-                return NotebookCellRunState.Error;
-            case CellState.executing:
-                return NotebookCellRunState.Running;
-            case CellState.finished:
-                return NotebookCellRunState.Success;
-            case CellState.init:
-                return NotebookCellRunState.Idle;
-            default:
-                return NotebookCellRunState.Idle;
-        }
+        await commands.executeCommand(payload.command, cellTranslate(payload.cell, language), this.isInteractive);
+        // Post message again to let the react side know the command is done executing
+        this.postMessage(InteractiveWindowMessages.UpdateExternalCellButtons, this.externalButtons).ignoreErrors();
     }
 }

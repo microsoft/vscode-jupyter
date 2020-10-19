@@ -214,6 +214,7 @@ interface IImageProps {
     image: ImageName;
     class: string;
     title?: string;
+    html?: string;
 }
 
 export class Image extends React.Component<IImageProps> {
@@ -222,6 +223,10 @@ export class Image extends React.Component<IImageProps> {
     }
 
     public render() {
+        if (this.props.html) {
+            return <InlineSVG className={this.props.class} src={this.props.html} title={this.props.title} />;
+        }
+
         const key = ImageName[this.props.image].toString();
         const image = images.hasOwnProperty(key) ? images[key] : images.Cancel; // Default is cancel.
         const source = this.props.baseTheme.includes('dark') ? image.dark : image.light;

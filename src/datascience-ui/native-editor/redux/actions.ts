@@ -7,7 +7,12 @@ import {
     IInteractiveWindowMapping,
     InteractiveWindowMessages
 } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
-import { IJupyterVariable, IJupyterVariablesRequest } from '../../../client/datascience/types';
+import {
+    ICell,
+    IExternalCommandFromWebview,
+    IJupyterVariable,
+    IJupyterVariablesRequest
+} from '../../../client/datascience/types';
 import { CursorPos } from '../../interactive-common/mainState';
 import {
     CommonAction,
@@ -142,5 +147,7 @@ export const actionCreators = {
     continue: (cellId: string): CommonAction<ICellAction> =>
         createIncomingActionWithPayload(CommonActionType.CONTINUE, { cellId }),
     step: (cellId: string): CommonAction<ICellAction> =>
-        createIncomingActionWithPayload(CommonActionType.STEP, { cellId })
+        createIncomingActionWithPayload(CommonActionType.STEP, { cellId }),
+    runExternalCommand: (command: string, cell: ICell): CommonAction<IExternalCommandFromWebview> =>
+        createIncomingActionWithPayload(InteractiveWindowMessages.ExecuteExternalCommand, { command, cell })
 };

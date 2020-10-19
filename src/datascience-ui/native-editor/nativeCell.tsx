@@ -15,7 +15,7 @@ import {
     NativeKeyboardCommandTelemetry,
     NativeMouseCommandTelemetry
 } from '../../client/datascience/constants';
-import { CellState } from '../../client/datascience/types';
+import { CellState, IExternalWebviewCellButton } from '../../client/datascience/types';
 import { concatMultilineString } from '../common';
 import { CellInput } from '../interactive-common/cellInput';
 import { CellOutput } from '../interactive-common/cellOutput';
@@ -60,6 +60,7 @@ interface INativeCellBaseProps {
     runningByLine: DebugState;
     supportsRunByLine: boolean;
     isNotebookTrusted: boolean;
+    externalButtons: IExternalWebviewCellButton[];
 }
 
 type INativeCellProps = INativeCellBaseProps & typeof actionCreators;
@@ -693,11 +694,39 @@ export class NativeCell extends React.Component<INativeCellProps> {
                     >
                         <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.Delete} />
                     </ImageButton>
+                    {this.renderExternalButtons()}
                 </div>
                 <div className="native-editor-celltoolbar-divider" />
             </div>
         );
     };
+
+    private renderExternalButtons() {
+        const buttons: JSX.Element[] = [];
+
+        this.props.externalButtons.forEach((button) => {
+            buttons.push(
+                <ImageButton
+                    baseTheme={this.props.baseTheme}
+                    onClick={() => {
+                        button.running = true;
+                        this.props.runExternalCommand(button.command, this.props.cellVM.cell);
+                    }}
+                    disabled={!button.statusToEnable.includes(this.props.cellVM.cell.state)}
+                    tooltip={button.tooltip}
+                >
+                    <Image
+                        baseTheme={this.props.baseTheme}
+                        class="image-button-image"
+                        html={button.running ? undefined : button.buttonHtml}
+                        image={button.running ? ImageName.Sync : ImageName.Cancel}
+                    />
+                </ImageButton>
+            );
+        });
+
+        return buttons;
+    }
 
     private renderControls = () => {
         const busy =

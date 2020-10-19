@@ -13,7 +13,13 @@ import { IJupyterSettings } from '../../client/common/types';
 import { CellMatcher } from '../../client/datascience/cellMatcher';
 import { Identifiers } from '../../client/datascience/constants';
 import { IEditorPosition } from '../../client/datascience/interactive-common/interactiveWindowTypes';
-import { CellState, ICell, IJupyterExtraSettings, IMessageCell } from '../../client/datascience/types';
+import {
+    CellState,
+    ICell,
+    IExternalWebviewCellButton,
+    IJupyterExtraSettings,
+    IMessageCell
+} from '../../client/datascience/types';
 import { concatMultilineString, splitMultilineString } from '../common';
 import { createCodeCell } from '../common/cellFactory';
 import { getDefaultSettings } from '../react-common/settingsReactSide';
@@ -89,6 +95,7 @@ export type IMainState = {
     loaded: boolean;
     kernel: IServerState;
     isNotebookTrusted: boolean;
+    externalButtons: IExternalWebviewCellButton[];
 };
 
 export type SelectionAndFocusedInfo = {
@@ -196,7 +203,8 @@ export function generateTestState(filePath: string = '', editable: boolean = fal
             jupyterServerStatus: ServerStatus.NotStarted,
             language: PYTHON_LANGUAGE
         },
-        isNotebookTrusted: true
+        isNotebookTrusted: true,
+        externalButtons: []
     };
 }
 
