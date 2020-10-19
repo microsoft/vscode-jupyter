@@ -83,9 +83,7 @@ export async function insertCodeCell(source: string, options?: { language?: stri
         assert.fail('No active editor');
         return;
     }
-    let startNumber = options?.index ?? activeEditor.document.cells.length;
-    // await chainWithPendingUpdates(activeEditor, (edit) => {
-    startNumber = options?.index ?? activeEditor.document.cells.length;
+    const startNumber = options?.index ?? activeEditor.document.cells.length;
     await activeEditor.edit((edit) => {
         edit.replaceCells(startNumber, 0, [
             {

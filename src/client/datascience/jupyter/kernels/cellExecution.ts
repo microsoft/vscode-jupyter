@@ -120,14 +120,13 @@ export class CellExecution {
         private readonly applicationService: IApplicationShell,
         private readonly isPythonKernelConnection: boolean
     ) {
-        // These are only used in the tests (hence the use of we).
+        // These are only used in the tests.
         // See where this is used to understand its purpose.
         let deferred = createDeferred<void>();
         if (
             !CellExecution.cellsCompletedForTesting.has(cell) ||
             CellExecution.cellsCompletedForTesting.get(cell)!.completed
         ) {
-            CellExecution.cellsCompletedForTesting.delete(cell);
             CellExecution.cellsCompletedForTesting.set(cell, deferred);
         }
         if (
