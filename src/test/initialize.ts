@@ -50,7 +50,7 @@ export async function initializeTest(): Promise<any> {
     }
 }
 export async function closeActiveWindows(disposables: IDisposable[] = []): Promise<void> {
-    if (isInsiders()) {
+    if (isInsiders() && process.env.VSC_JUPYTER_RUN_NB_TEST) {
         clearPendingChainedUpdatesForTests();
     }
     disposeAllDisposables(disposables);
