@@ -62,7 +62,8 @@ suite('DataScience Install IPyKernel (slow) (install)', () => {
         // Uninstall ipykernel from the virtual env.
         const proc = new ProcessService(new BufferDecoder());
         await proc.exec(venvPythonPath, ['-m', 'pip', 'uninstall', 'ipykernel', '--yes']);
-        return closeActiveWindows();
+        await closeActiveWindows();
+        sinon.restore();
     });
     teardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
 
