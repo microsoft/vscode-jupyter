@@ -540,11 +540,13 @@ export async function hijackPrompt(
     }
     let displayCount = 0;
     // tslint:disable-next-line: no-function-expression
-    const showErrorMessage = sinon.stub(appShell, promptType).callsFake(function (msg: string) {
+    const stub = sinon.stub(appShell, promptType).callsFake(function (msg: string) {
+        console.info(`Message displayed ${msg}`);
         if (
             ('exactMatch' in message && msg === message.exactMatch) ||
             ('endsWith' in message && msg.endsWith(message.endsWith))
         ) {
+            console.debug(`Exact Message found ${msg} with condition ${JSON.stringify(message)}`);
             displayCount += 1;
             displayed.resolve(true);
             if (buttonToClick) {
@@ -554,12 +556,12 @@ export async function hijackPrompt(
         // tslint:disable-next-line: no-any
         return (appShell[promptType] as any).wrappedMethod.apply(appShell, arguments);
     });
-    const disposable = { dispose: () => showErrorMessage.restore() };
+    const disposable = { dispose: () => stub.restore() };
     if (disposables) {
         disposables.push(disposable);
     }
     return {
-        dispose: () => showErrorMessage.restore(),
+        dispose: () => stub.restore(),
         getDisplayCount: () => displayCount,
         displayed: displayed.promise,
         clickButton: (text?: string) => clickButton.resolve(text || buttonToClick?.text)

@@ -83,6 +83,7 @@ export function writeDiffSnapshot(_snapshot: any, _prefix: string) {
 }
 
 export async function openNotebook(serviceContainer: IServiceContainer, ipynbFile: string, ignoreSaving = true) {
+    console.info(`Opening notebook ${ipynbFile}`);
     const cmd = serviceContainer.get<ICommandManager>(ICommandManager);
     await cmd.executeCommand(Commands.OpenNotebook, Uri.file(ipynbFile), CommandSource.commandPalette);
     const editorProvider = serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
@@ -100,4 +101,5 @@ export async function openNotebook(serviceContainer: IServiceContainer, ipynbFil
         // tslint:disable-next-line: no-any
         (editorProvider.activeEditor as any).askForSave = () => Promise.resolve(AskForSaveResult.No);
     }
+    console.info(`Opened notebook ${ipynbFile}`);
 }

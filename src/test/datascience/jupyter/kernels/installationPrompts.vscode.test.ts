@@ -111,10 +111,24 @@ suite('DataScience Install IPyKernel (slow) (install)', () => {
         // Run all cells
         editorProvider.activeEditor!.runAllCells();
 
-        // The prompt should be displayed & ipykernel should get installed.
+        // The prompt should be displayed.
         await waitForCondition(
             async () => {
-                await Promise.all([await prompt.displayed, installed.promise]);
+                console.info('Waiting for prompt to be displayed');
+                await prompt.displayed;
+                console.log('Prompt displayed');
+                return true;
+            },
+            delayForUITest,
+            'Prompt not displayed'
+        );
+
+        // ipykernel should get installed.
+        await waitForCondition(
+            async () => {
+                console.info('Waiting for ipykernel to get installed');
+                await installed.promise;
+                console.log('ipykernel installed');
                 return true;
             },
             delayForUITest,
