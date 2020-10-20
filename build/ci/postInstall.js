@@ -59,7 +59,9 @@ function createJupyterKernelWithoutSerialization() {
     var relativePath = path.join('node_modules', '@jupyterlab', 'services', 'lib', 'kernel', 'default.js');
     var filePath = path.join(constants_1.ExtensionRootDir, relativePath);
     if (!fs.existsSync(filePath)) {
-        throw new Error("Jupyter lab default kernel not found '" + filePath + "' (Jupyter Extension post install script)");
+        throw new Error(
+            "Jupyter lab default kernel not found '" + filePath + "' (Jupyter Extension post install script)"
+        );
     }
     var fileContents = fs.readFileSync(filePath, { encoding: 'utf8' });
     var replacedContents = fileContents.replace(
