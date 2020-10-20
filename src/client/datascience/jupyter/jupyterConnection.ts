@@ -9,6 +9,7 @@ import { CancellationToken, Disposable, Event, EventEmitter } from 'vscode';
 import { Cancellation, CancellationError } from '../../common/cancellation';
 import { traceInfo, traceWarning } from '../../common/logger';
 
+import { IFileSystem } from '../../common/platform/types';
 import { ObservableExecutionResult, Output } from '../../common/process/types';
 import { IConfigurationService, IDisposable } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
@@ -17,7 +18,6 @@ import { IServiceContainer } from '../../ioc/types';
 import { RegExpValues } from '../constants';
 import { IJupyterConnection } from '../types';
 import { JupyterConnectError } from './jupyterConnectError';
-import { IFileSystem } from '../../common/platform/types';
 
 // tslint:disable-next-line:no-require-imports no-var-requires no-any
 const namedRegexp = require('named-js-regexp');

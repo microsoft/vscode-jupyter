@@ -2,13 +2,13 @@ import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
 import { Memento } from 'vscode';
 import { IApplicationShell, ICommandManager } from '../common/application/types';
+import { IFileSystem } from '../common/platform/types';
 import { GLOBAL_MEMENTO, IConfigurationService, IExtensionContext, IMemento } from '../common/types';
 import { Logging } from '../common/utils/localize';
 import { Commands } from '../datascience/constants';
 import { IDebugLoggingManager } from '../datascience/types';
 import { addLogfile } from './_global';
 import { LogLevel } from './levels';
-import { IFileSystem } from '../common/platform/types';
 
 const SEEN_DEBUG_LOG_LEVEL_ON_ACTIVATION_AT_LEAST_ONCE = 'SeenDebugLogLevelAtLeastOnce';
 

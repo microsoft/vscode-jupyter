@@ -17,6 +17,7 @@ import {
 import { traceError } from '../../common/logger';
 
 import { IPythonExtensionChecker } from '../../api/types';
+import { IFileSystem } from '../../common/platform/types';
 import {
     IAsyncDisposableRegistry,
     IConfigurationService,
@@ -50,7 +51,6 @@ import {
 } from '../types';
 import { NativeEditor } from './nativeEditor';
 import { NativeEditorSynchronizer } from './nativeEditorSynchronizer';
-import { IFileSystem } from '../../common/platform/types';
 
 export enum AskForSaveResult {
     Yes,

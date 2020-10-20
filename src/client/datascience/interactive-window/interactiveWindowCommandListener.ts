@@ -11,6 +11,7 @@ import { IApplicationShell, ICommandManager, IDocumentManager } from '../../comm
 import { CancellationError } from '../../common/cancellation';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { traceError, traceInfo } from '../../common/logger';
+import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { captureTelemetry } from '../../telemetry';
@@ -33,7 +34,6 @@ import {
     IStatusProvider
 } from '../types';
 import { createExportInteractiveIdentity } from './identity';
-import { IFileSystem } from '../../common/platform/types';
 
 @injectable()
 export class InteractiveWindowCommandListener implements IDataScienceCommandListener {

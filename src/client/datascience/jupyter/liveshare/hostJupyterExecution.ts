@@ -10,6 +10,7 @@ import * as vsls from 'vsls/vscode';
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../../common/application/types';
 import { traceInfo } from '../../../common/logger';
 
+import { IFileSystem } from '../../../common/platform/types';
 import {
     IAsyncDisposableRegistry,
     IConfigurationService,
@@ -28,7 +29,6 @@ import { NotebookStarter } from '../notebookStarter';
 import { LiveShareParticipantHost } from './liveShareParticipantMixin';
 import { IRoleBasedObject } from './roleBasedFactory';
 import { ServerCache } from './serverCache';
-import { IFileSystem } from '../../../common/platform/types';
 
 // tslint:disable:no-any
 

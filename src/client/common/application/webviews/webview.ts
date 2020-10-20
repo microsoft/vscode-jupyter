@@ -6,8 +6,8 @@ import '../../extensions';
 import * as path from 'path';
 import { Uri, Webview as vscodeWebview } from 'vscode';
 import { Identifiers } from '../../../datascience/constants';
-import { IWebview, IWebviewOptions, WebviewMessage } from '../types';
 import { IFileSystem } from '../../platform/types';
+import { IWebview, IWebviewOptions, WebviewMessage } from '../types';
 
 // Wrapper over a vscode webview. To be used with either WebviewPanel or WebviewView
 export class Webview implements IWebview {
