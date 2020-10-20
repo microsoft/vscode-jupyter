@@ -31,7 +31,11 @@ export class KernelDependencyService implements IKernelDependencyService {
         interpreter: PythonEnvironment,
         token?: CancellationToken
     ): Promise<KernelInterpreterDependencyResponse> {
+        // tslint:disable-next-line: no-console
+        console.log('Checking for dependencies');
         if (await this.areDependenciesInstalled(interpreter, token)) {
+            // tslint:disable-next-line: no-console
+            console.log('Checking for dependencies & found');
             return KernelInterpreterDependencyResponse.ok;
         }
 
@@ -45,14 +49,21 @@ export class KernelDependencyService implements IKernelDependencyService {
             ProductNames.get(Product.ipykernel)!
         );
         const installerToken = wrapCancellationTokens(token);
+        // tslint:disable-next-line: no-console
+        console.log('Checking for dependencies & prompt displayed');
 
         const selection = await Promise.race([
             this.appShell.showErrorMessage(message, Common.install()),
             promptCancellationPromise
         ]);
         if (installerToken.isCancellationRequested) {
+            // tslint:disable-next-line: no-console
+            console.log('Checking for dependencies & prompt displayed & cancellation cancelled');
             return KernelInterpreterDependencyResponse.cancel;
         }
+
+        // tslint:disable-next-line: no-console
+        console.log(`Checking for dependencies & prompt displayed & response = ${selection}`);
 
         if (selection === Common.install()) {
             const cancellatonPromise = createPromiseFromCancellation({
