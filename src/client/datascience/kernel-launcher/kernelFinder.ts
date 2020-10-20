@@ -238,6 +238,8 @@ export class KernelFinder implements IKernelFinder {
     private async getInterpreterPaths(resource: Resource): Promise<string[]> {
         if (this.extensionChecker.isPythonExtensionInstalled) {
             const interpreters = await this.interpreterService.getInterpreters(resource);
+            // tslint:disable-next-line: no-console
+            console.debug(`Search all interpreters ${interpreters.map((item) => item.path).join(', ')}`);
             const interpreterPrefixPaths = interpreters.map((interpreter) => interpreter.sysPrefix);
             // We can get many duplicates here, so de-dupe the list
             const uniqueInterpreterPrefixPaths = [...new Set(interpreterPrefixPaths)];
