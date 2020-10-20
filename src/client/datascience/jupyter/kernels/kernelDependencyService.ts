@@ -32,10 +32,10 @@ export class KernelDependencyService implements IKernelDependencyService {
         token?: CancellationToken
     ): Promise<KernelInterpreterDependencyResponse> {
         // tslint:disable-next-line: no-console
-        console.log('Checking for dependencies');
+        console.log(`Checking for dependencies ${interpreter.path}`);
         if (await this.areDependenciesInstalled(interpreter, token)) {
             // tslint:disable-next-line: no-console
-            console.log('Checking for dependencies & found');
+            console.log(`Checking for dependencies & found ${interpreter.path}`);
             return KernelInterpreterDependencyResponse.ok;
         }
 
