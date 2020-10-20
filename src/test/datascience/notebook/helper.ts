@@ -284,7 +284,7 @@ function assertHasExecutionCompletedSuccessfully(cell: NotebookCell) {
  *  Wait for VSC to perform some last minute clean up of cells.
  * In tests we can end up deleting cells. However if extension is still dealing with the cells, we need to give it some time to finish.
  */
-export async function waitForCellExecutionToComplete(cell: NotebookCell) {
+async function waitForCellExecutionToComplete(cell: NotebookCell) {
     if (!CellExecution.cellsCompletedForTesting.has(cell)) {
         CellExecution.cellsCompletedForTesting.set(cell, createDeferred<void>());
     }

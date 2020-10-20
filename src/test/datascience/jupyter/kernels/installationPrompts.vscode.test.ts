@@ -5,6 +5,7 @@ import { assert } from 'chai';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as sinon from 'sinon';
+import { IVSCodeNotebook } from '../../../../client/common/application/types';
 import { ProductNames } from '../../../../client/common/installer/productNames';
 import { BufferDecoder } from '../../../../client/common/process/decoder';
 import { ProcessService } from '../../../../client/common/process/proc';
@@ -21,6 +22,7 @@ import {
     closeNotebooksAndCleanUpAfterTests,
     hijackPrompt,
     trustAllNotebooks,
+    waitForExecutionCompletedSuccessfully,
     waitForKernelToGetAutoSelected
 } from '../../notebook/helper';
 
@@ -35,6 +37,7 @@ suite('DataScience Install IPyKernel (slow) (install)', () => {
     let api: IExtensionTestApi;
     let editorProvider: INotebookEditorProvider;
     let installer: IInstaller;
+    let vscodeNotebook: IVSCodeNotebook;
     const delayForUITest = 30_000;
     /*
     This test requires a virtual environment to be created & registered as a kernel.
@@ -48,11 +51,11 @@ suite('DataScience Install IPyKernel (slow) (install)', () => {
             // Virtual env does not exist.
             return this.skip();
         }
-        return this.skip();
         await trustAllNotebooks();
         api = await initialize();
         installer = api.serviceContainer.get<IInstaller>(IInstaller);
         editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
+        vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
     });
 
     setup(async () => {
@@ -116,5 +119,8 @@ suite('DataScience Install IPyKernel (slow) (install)', () => {
             delayForUITest,
             'Prompt not displayed or not installed successfully'
         );
+
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
+        await waitForExecutionCompletedSuccessfully(cell);
     });
 });
