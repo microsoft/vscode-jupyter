@@ -53,6 +53,7 @@ import { NotebookUsageTracker } from './interactive-common/notebookUsageTracker'
 import { ShowPlotListener } from './interactive-common/showPlotListener';
 import { AutoSaveService } from './interactive-ipynb/autoSaveService';
 import { DigestStorage } from './interactive-ipynb/digestStorage';
+import { GatherActivator } from './interactive-ipynb/gatherActivator';
 import { NativeEditor } from './interactive-ipynb/nativeEditor';
 import { NativeEditorCommandListener } from './interactive-ipynb/nativeEditorCommandListener';
 import { NativeEditorOldWebView } from './interactive-ipynb/nativeEditorOldWebView';
@@ -195,6 +196,7 @@ export function registerTypes(serviceManager: IServiceManager, useVSCodeNotebook
     serviceManager.addSingleton<INotebookEditorProvider>(OurNotebookProvider, usingCustomEditor ? NativeEditorProvider : NativeEditorProviderOld);
     serviceManager.addSingleton<INotebookEditorProvider>(INotebookEditorProvider, NotebookEditorProviderWrapper);
     serviceManager.add<IExtensionSingleActivationService>(IExtensionSingleActivationService, NotebookEditorCompatibilitySupport);
+    serviceManager.add<IExtensionSingleActivationService>(IExtensionSingleActivationService, GatherActivator);
     serviceManager.add<NotebookEditorCompatibilitySupport>(NotebookEditorCompatibilitySupport, NotebookEditorCompatibilitySupport);
     if (!useVSCodeNotebookAPI) {
         serviceManager.add<INotebookEditor>(INotebookEditor, usingCustomEditor ? NativeEditor : NativeEditorOldWebView);
