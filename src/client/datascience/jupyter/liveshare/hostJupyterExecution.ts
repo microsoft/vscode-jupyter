@@ -20,13 +20,7 @@ import { noop } from '../../../common/utils/misc';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
 import { LiveShare, LiveShareCommands } from '../../constants';
-import {
-    IFileSystem,
-    IJupyterConnection,
-    IJupyterExecution,
-    INotebookServer,
-    INotebookServerOptions
-} from '../../types';
+import { IJupyterConnection, IJupyterExecution, INotebookServer, INotebookServerOptions } from '../../types';
 import { getJupyterConnectionDisplayName } from '../jupyterConnection';
 import { JupyterExecutionBase } from '../jupyterExecution';
 import { KernelSelector } from '../kernels/kernelSelector';
@@ -34,6 +28,7 @@ import { NotebookStarter } from '../notebookStarter';
 import { LiveShareParticipantHost } from './liveShareParticipantMixin';
 import { IRoleBasedObject } from './roleBasedFactory';
 import { ServerCache } from './serverCache';
+import { IFileSystem } from '../../../common/platform/types';
 
 // tslint:disable:no-any
 

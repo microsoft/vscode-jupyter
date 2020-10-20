@@ -15,8 +15,9 @@ import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { IServiceContainer } from '../../ioc/types';
 import { RegExpValues } from '../constants';
-import { IFileSystem, IJupyterConnection } from '../types';
+import { IJupyterConnection } from '../types';
 import { JupyterConnectError } from './jupyterConnectError';
+import { IFileSystem } from '../../common/platform/types';
 
 // tslint:disable-next-line:no-require-imports no-var-requires no-any
 const namedRegexp = require('named-js-regexp');

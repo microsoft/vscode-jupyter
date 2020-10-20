@@ -55,7 +55,6 @@ import {
     ICell,
     ICodeCssGenerator,
     IDataScienceErrorHandler,
-    IFileSystem,
     IInteractiveWindowInfo,
     IInteractiveWindowListener,
     IJupyterDebugger,
@@ -88,6 +87,7 @@ import { getCellHashProvider } from '../editor-integration/cellhashprovider';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
 import { KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { NativeEditorNotebookModel } from '../notebookStorage/notebookModel';
+import { IFileSystem } from '../../common/platform/types';
 
 const nativeEditorDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'notebook');
 export class NativeEditor extends InteractiveBase implements INotebookEditor {

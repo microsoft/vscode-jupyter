@@ -23,7 +23,6 @@ import { INotebookStorageProvider } from '../notebookStorage/notebookStorageProv
 import {
     IDataScienceCommandListener,
     IDataScienceErrorHandler,
-    IFileSystem,
     IInteractiveBase,
     IInteractiveWindowProvider,
     IJupyterExecution,
@@ -34,6 +33,7 @@ import {
     IStatusProvider
 } from '../types';
 import { createExportInteractiveIdentity } from './identity';
+import { IFileSystem } from '../../common/platform/types';
 
 @injectable()
 export class InteractiveWindowCommandListener implements IDataScienceCommandListener {

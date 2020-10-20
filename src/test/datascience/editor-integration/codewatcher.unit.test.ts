@@ -24,7 +24,6 @@ import {
     ICodeWatcher,
     IDataScienceErrorHandler,
     IDebugLocationTracker,
-    IFileSystem,
     IInteractiveWindow,
     IInteractiveWindowProvider,
     INotebook
@@ -35,6 +34,7 @@ import { MockDocumentManager } from '../mockDocumentManager';
 import { MockJupyterSettings } from '../mockJupyterSettings';
 import { MockEditor } from '../mockTextEditor';
 import { createDocument } from './helpers';
+import { IFileSystem } from '../../../client/common/platform/types';
 
 //tslint:disable:no-any
 

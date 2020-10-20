@@ -14,7 +14,7 @@ import { IConfigurationService, IJupyterSettings } from '../../../client/common/
 import { Common, DataScience } from '../../../client/common/utils/localize';
 import { noop } from '../../../client/common/utils/misc';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
-import { FileSystem } from '../../../client/datascience/fileSystem';
+import { FileSystem } from '../../../client/common/platform/fileSystem';
 import { CDNWidgetScriptSourceProvider } from '../../../client/datascience/ipywidgets/cdnWidgetScriptSourceProvider';
 import { IPyWidgetScriptSourceProvider } from '../../../client/datascience/ipywidgets/ipyWidgetScriptSourceProvider';
 import { LocalWidgetScriptSourceProvider } from '../../../client/datascience/ipywidgets/localWidgetScriptSourceProvider';

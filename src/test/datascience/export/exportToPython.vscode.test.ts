@@ -8,7 +8,7 @@ import { CancellationTokenSource, Uri } from 'vscode';
 import { IDocumentManager } from '../../../client/common/application/types';
 import { ExportInterpreterFinder } from '../../../client/datascience/export/exportInterpreterFinder';
 import { ExportFormat, IExport } from '../../../client/datascience/export/types';
-import { IFileSystem } from '../../../client/datascience/types';
+import { IFileSystem } from '../../../client/common/platform/types';
 import { IExtensionTestApi } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
 import { closeActiveWindows, initialize } from '../../initialize';

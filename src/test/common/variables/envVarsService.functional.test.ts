@@ -12,7 +12,7 @@ import { IPathUtils } from '../../../client/common/types';
 import { OSType } from '../../../client/common/utils/platform';
 import { EnvironmentVariablesService } from '../../../client/common/variables/environment';
 import { IEnvironmentVariablesService } from '../../../client/common/variables/types';
-import { FileSystem } from '../../../client/datascience/fileSystem';
+import { FileSystem } from '../../../client/common/platform/fileSystem';
 import { getOSType } from '../../common';
 
 use(chaiAsPromised);

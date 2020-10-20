@@ -80,7 +80,6 @@ import {
     ICell,
     ICodeCssGenerator,
     IDataScienceErrorHandler,
-    IFileSystem,
     IInteractiveBase,
     IInteractiveWindowInfo,
     IInteractiveWindowListener,
@@ -103,6 +102,7 @@ import {
 import { WebviewPanelHost } from '../webviews/webviewPanelHost';
 import { InteractiveWindowMessageListener } from './interactiveWindowMessageListener';
 import { serializeLanguageConfiguration } from './serialization';
+import { IFileSystem } from '../../common/platform/types';
 
 export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindowMapping> implements IInteractiveBase {
     public get notebook(): INotebook | undefined {

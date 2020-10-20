@@ -14,7 +14,7 @@ import {
     createWindowsStoreEnv
 } from '../../../client/common/process/pythonEnvironment';
 import { IProcessService, StdErrError } from '../../../client/common/process/types';
-import { IFileSystem } from '../../../client/datascience/types';
+import { IFileSystem } from '../../../client/common/platform/types';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
 
 const isolated = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'pythonFiles', 'pyvsc-run-isolated.py');

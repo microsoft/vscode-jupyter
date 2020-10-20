@@ -26,7 +26,6 @@ import { CodeSnippets, Identifiers, Telemetry } from '../constants';
 import {
     CellState,
     ICell,
-    IFileSystem,
     IJupyterSession,
     INotebook,
     INotebookCompletion,
@@ -44,6 +43,7 @@ import { concatMultilineString, formatStreamText, splitMultilineString } from '.
 import { RefBool } from '../../common/refBool';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { getInterpreterFromKernelConnectionMetadata, isPythonKernelConnection } from './kernels/helpers';
+import { IFileSystem } from '../../common/platform/types';
 
 class CellSubscriber {
     public get startTime(): number {

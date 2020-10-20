@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 import { inject, injectable } from 'inversify';
 import { IPlatformService } from '../../common/platform/types';
-import { IFileSystem } from '../../datascience/types';
+import { IFileSystem } from '../platform/types';
 import { IEnvironmentActivationService } from '../../interpreter/activation/types';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IWindowsStoreInterpreter } from '../../interpreter/locators/types';

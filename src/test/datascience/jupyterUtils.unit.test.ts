@@ -10,7 +10,7 @@ import { WorkspaceService } from '../../client/common/application/workspace';
 import { ConfigurationService } from '../../client/common/configuration/service';
 import { IS_WINDOWS } from '../../client/common/platform/constants';
 import { CellHashProvider } from '../../client/datascience/editor-integration/cellhashprovider';
-import { FileSystem } from '../../client/datascience/fileSystem';
+import { FileSystem } from '../../client/common/platform/fileSystem';
 import { expandWorkingDir } from '../../client/datascience/jupyter/jupyterUtils';
 import { createEmptyCell } from '../../datascience-ui/interactive-common/mainState';
 import { MockDocument } from './mockDocument';

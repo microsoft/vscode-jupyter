@@ -7,7 +7,7 @@ import { IBrowserService } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
-import { IFileSystem } from '../types';
+import { IFileSystem } from '../../common/platform/types';
 import { ExportFormat } from './types';
 
 @injectable()

@@ -15,10 +15,11 @@ import { traceError } from '../../common/logger';
 
 import { IConfigurationService, IDisposable } from '../../common/types';
 import * as localize from '../../common/utils/localize';
-import { ICodeCssGenerator, IFileSystem, IPlotViewer, IThemeFinder } from '../types';
+import { ICodeCssGenerator, IPlotViewer, IThemeFinder } from '../types';
 import { WebviewPanelHost } from '../webviews/webviewPanelHost';
 import { PlotViewerMessageListener } from './plotViewerMessageListener';
 import { IExportPlotRequest, IPlotViewerMapping, PlotViewerMessages } from './types';
+import { IFileSystem } from '../../common/platform/types';
 
 const plotDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'viewers');
 @injectable()

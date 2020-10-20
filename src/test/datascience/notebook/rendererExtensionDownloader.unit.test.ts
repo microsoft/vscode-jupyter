@@ -8,7 +8,7 @@ import { IApplicationShell, ICommandManager } from '../../../client/common/appli
 import { IFileDownloader, IOutputChannel } from '../../../client/common/types';
 import { RendererExtensionDownloadUri } from '../../../client/datascience/notebook/constants';
 import { RendererExtensionDownloader } from '../../../client/datascience/notebook/rendererExtensionDownloader';
-import { IFileSystem } from '../../../client/datascience/types';
+import { IFileSystem } from '../../../client/common/platform/types';
 import { noop } from '../../core';
 
 // tslint:disable: no-any

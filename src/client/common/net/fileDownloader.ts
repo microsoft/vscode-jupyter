@@ -7,7 +7,7 @@ import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import * as requestTypes from 'request';
 import { Progress } from 'vscode';
-import { IFileSystem } from '../../datascience/types';
+import { IFileSystem } from '../platform/types';
 import { IApplicationShell } from '../application/types';
 import { Octicons } from '../constants';
 import { DownloadOptions, IFileDownloader, IHttpClient } from '../types';

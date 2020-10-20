@@ -14,7 +14,7 @@ import { NotebookCommands } from '../../../client/datascience/commands/notebookC
 import { JupyterServerSelectorCommand } from '../../../client/datascience/commands/serverSelector';
 import { Commands } from '../../../client/datascience/constants';
 import { DataScienceCodeLensProvider } from '../../../client/datascience/editor-integration/codelensprovider';
-import { FileSystem } from '../../../client/datascience/fileSystem';
+import { FileSystem } from '../../../client/common/platform/fileSystem';
 import { NativeEditorProvider } from '../../../client/datascience/notebookStorage/nativeEditorProvider';
 import { MockOutputChannel } from '../../mockClasses';
 

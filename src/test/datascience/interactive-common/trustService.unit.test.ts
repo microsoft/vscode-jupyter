@@ -10,7 +10,7 @@ import * as typemoq from 'typemoq';
 import { Uri } from 'vscode';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import { IExtensionContext } from '../../../client/common/types';
-import { FileSystem } from '../../../client/datascience/fileSystem';
+import { FileSystem } from '../../../client/common/platform/fileSystem';
 import { DigestStorage } from '../../../client/datascience/interactive-ipynb/digestStorage';
 import { TrustService } from '../../../client/datascience/interactive-ipynb/trustService';
 import { MockMemento } from '../../mocks/mementos';

@@ -35,7 +35,6 @@ import { INotebookStorageProvider } from '../notebookStorage/notebookStorageProv
 import {
     ICodeCssGenerator,
     IDataScienceErrorHandler,
-    IFileSystem,
     IInteractiveWindowListener,
     IJupyterDebugger,
     IJupyterVariableDataProviderFactory,
@@ -51,6 +50,7 @@ import {
 } from '../types';
 import { NativeEditor } from './nativeEditor';
 import { NativeEditorSynchronizer } from './nativeEditorSynchronizer';
+import { IFileSystem } from '../../common/platform/types';
 
 export enum AskForSaveResult {
     Yes,

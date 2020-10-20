@@ -10,7 +10,7 @@ import { vsixFileExtension } from '../../common/installer/extensionBuildInstalle
 import { IFileDownloader, IOutputChannel } from '../../common/types';
 import { DataScienceRendererExtension } from '../../common/utils/localize';
 import { traceDecorators } from '../../logging';
-import { IFileSystem } from '../types';
+import { IFileSystem } from '../../common/platform/types';
 import { RendererExtensionDownloadUri } from './constants';
 
 @injectable()
