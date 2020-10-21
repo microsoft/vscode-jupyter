@@ -58,9 +58,6 @@ export class KernelDependencyService implements IKernelDependencyService {
             return KernelInterpreterDependencyResponse.cancel;
         }
 
-        // tslint:disable-next-line: no-console
-        console.log(`Checking for dependencies & prompt displayed & response = ${selection}`);
-
         if (selection === Common.install()) {
             const cancellationPromise = createPromiseFromCancellation({
                 cancelAction: 'resolve',
