@@ -153,6 +153,7 @@ export class CellExecution {
     }
 
     public async start(kernelPromise: Promise<IKernel>, notebook: INotebook) {
+        traceInfo(`Start executing cell ${this.cell.index}`);
         if (!this.canExecuteCell()) {
             return;
         }
