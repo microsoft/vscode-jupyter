@@ -1,6 +1,9 @@
 name: Insiders VSIX
 
 on:
+  pull_request:
+    branches:
+      - main
   push:
     branches:
       - main
@@ -482,20 +485,8 @@ jobs:
             using Pkg
             Pkg.add("IJulia")'
 
-      # Used by tests for installation of ipykernel.
-      # Create a venv & register it as a kernel.
-      # These tests are slow hence will only run on linux.
-      # This env will be used to install ipykernel & test for prompts if ipykernel is missing & similar tests.
-      # Ensure this is registered as a kernel.
-      - name: Create virtual environment for Tests
-        run: |
-          python -m venv .venvnokernel
-          source .venvnokernel/bin/activate
-
-          python -m pip install ipykernel
-          python -m ipykernel install --user --name .venvnokernel --display-name .venvnokernel
-          python -m pip uninstall ipykernel --yes
-        working-directory: src/test/datascience
+      - name: Create Virtual Env for Tests
+        uses: ./.github/actions/create-vent-for-tests
 
       - name: Azure Login
         uses: azure/login@v1.1.1
