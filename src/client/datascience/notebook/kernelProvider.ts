@@ -12,6 +12,7 @@ import {
     NotebookKernelProvider
 } from '../../../../types/vscode-proposed';
 import { IVSCodeNotebook } from '../../common/application/types';
+import { traceInfo } from '../../common/logger';
 import { IDisposableRegistry } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { IInterpreterService } from '../../interpreter/contracts';
@@ -48,6 +49,7 @@ export class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
         private readonly notebook: IVSCodeNotebook
     ) {}
     public executeCell(doc: NotebookDocument, cell: NotebookCell) {
+        traceInfo('Execute Cell in KernelProvider.ts');
         const kernel = this.kernelProvider.getOrCreate(cell.notebook.uri, { metadata: this.selection });
         if (kernel) {
             this.updateKernelInfoInNotebookWhenAvailable(kernel, doc);
@@ -55,6 +57,7 @@ export class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
         }
     }
     public executeAllCells(document: NotebookDocument) {
+        traceInfo('Execute All Cells in KernelProvider.ts');
         const kernel = this.kernelProvider.getOrCreate(document.uri, { metadata: this.selection });
         if (kernel) {
             this.updateKernelInfoInNotebookWhenAvailable(kernel, document);

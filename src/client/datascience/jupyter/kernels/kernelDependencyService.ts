@@ -8,6 +8,7 @@ import { CancellationToken } from 'vscode';
 import { IApplicationShell } from '../../../common/application/types';
 import { createPromiseFromCancellation, wrapCancellationTokens } from '../../../common/cancellation';
 import { ProductNames } from '../../../common/installer/productNames';
+import { traceInfo } from '../../../common/logger';
 import { IInstaller, InstallerResponse, Product } from '../../../common/types';
 import { Common, DataScience } from '../../../common/utils/localize';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
@@ -31,8 +32,7 @@ export class KernelDependencyService implements IKernelDependencyService {
         interpreter: PythonEnvironment,
         token?: CancellationToken
     ): Promise<KernelInterpreterDependencyResponse> {
-        // tslint:disable-next-line: no-console
-        console.log(`Checking for dependencies ${interpreter.path}`);
+        traceInfo(`installMissingDependencies ${interpreter.path}`);
         if (await this.areDependenciesInstalled(interpreter, token)) {
             // tslint:disable-next-line: no-console
             console.log(`Checking for dependencies & found ${interpreter.path}`);
@@ -66,7 +66,7 @@ export class KernelDependencyService implements IKernelDependencyService {
         console.log(`Checking for dependencies & prompt displayed & response = ${selection}`);
 
         if (selection === Common.install()) {
-            const cancellatonPromise = createPromiseFromCancellation({
+            const cancellationPromise = createPromiseFromCancellation({
                 cancelAction: 'resolve',
                 defaultValue: InstallerResponse.Ignore,
                 token
@@ -74,7 +74,7 @@ export class KernelDependencyService implements IKernelDependencyService {
             // Always pass a cancellation token to `install`, to ensure it waits until the module is installed.
             const response = await Promise.race([
                 this.installer.install(Product.ipykernel, interpreter, installerToken),
-                cancellatonPromise
+                cancellationPromise
             ]);
             if (response === InstallerResponse.Installed) {
                 return KernelInterpreterDependencyResponse.ok;
