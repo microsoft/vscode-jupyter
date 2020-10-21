@@ -1071,6 +1071,20 @@ export interface IWebview {
     asWebviewUri(localResource: Uri): Uri;
 }
 
+// Wraps the VS Code webview view
+export const IWebviewView = Symbol('IWebviewView');
+export interface IWebviewView extends IWebview {}
+
+export interface IWebviewOptions {
+    rootPath: string;
+    cwd: string;
+    scripts: string[];
+}
+
+export interface IWebviewViewOptions extends IWebviewOptions {
+    title: string;
+}
+
 // Wraps the VS Code webview panel
 export const IWebviewPanel = Symbol('IWebviewPanel');
 export interface IWebviewPanel extends IWebview {
@@ -1103,12 +1117,6 @@ export interface IWebviewPanel extends IWebview {
      * @param cwd
      */
     updateCwd(cwd: string): void;
-}
-
-export interface IWebviewOptions {
-    rootPath: string;
-    cwd: string;
-    scripts: string[];
 }
 
 export interface IWebviewPanelOptions extends IWebviewOptions {
