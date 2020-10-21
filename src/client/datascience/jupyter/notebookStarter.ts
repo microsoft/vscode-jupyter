@@ -12,7 +12,7 @@ import { CancellationToken, Disposable } from 'vscode';
 import { CancellationError, createPromiseFromCancellation } from '../../common/cancellation';
 import { WrappedError } from '../../common/errors/errorUtils';
 import { traceInfo } from '../../common/logger';
-import { TemporaryDirectory } from '../../common/platform/types';
+import { IFileSystem, TemporaryDirectory } from '../../common/platform/types';
 import { IDisposable, IOutputChannel } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { StopWatch } from '../../common/utils/stopWatch';
@@ -21,7 +21,7 @@ import { sendTelemetryEvent } from '../../telemetry';
 import { JUPYTER_OUTPUT_CHANNEL, Telemetry } from '../constants';
 import { reportAction } from '../progress/decorator';
 import { ReportableAction } from '../progress/types';
-import { IFileSystem, IJupyterConnection, IJupyterSubCommandExecutionService } from '../types';
+import { IJupyterConnection, IJupyterSubCommandExecutionService } from '../types';
 import { JupyterConnectionWaiter } from './jupyterConnection';
 import { JupyterInstallError } from './jupyterInstallError';
 
@@ -184,7 +184,7 @@ export class NotebookStarter implements Disposable {
         // Check for the debug environment variable being set. Setting this
         // causes Jupyter to output a lot more information about what it's doing
         // under the covers and can be used to investigate problems with Jupyter.
-        const debugArgs = process.env && process.env.VSCODE_PYTHON_DEBUG_JUPYTER ? ['--debug'] : [];
+        const debugArgs = process.env && process.env.VSCODE_JUPYTER_DEBUG_JUPYTER ? ['--debug'] : [];
 
         // Use this temp file and config file to generate a list of args for our command
         return [...args, ...dockerArgs, ...debugArgs];

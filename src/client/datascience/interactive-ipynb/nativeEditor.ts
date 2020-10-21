@@ -55,7 +55,6 @@ import {
     ICell,
     ICodeCssGenerator,
     IDataScienceErrorHandler,
-    IFileSystem,
     IInteractiveWindowInfo,
     IInteractiveWindowListener,
     IJupyterDebugger,
@@ -81,6 +80,7 @@ import { concatMultilineString, splitMultilineString } from '../../../datascienc
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
 import { IPythonExtensionChecker } from '../../api/types';
 import { isTestExecution, PYTHON_LANGUAGE } from '../../common/constants';
+import { IFileSystem } from '../../common/platform/types';
 import { translateKernelLanguageToMonaco } from '../common';
 import { IDataViewerFactory } from '../data-viewing/types';
 import { getCellHashProvider } from '../editor-integration/cellhashprovider';
@@ -731,7 +731,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     private async exportAs(): Promise<void> {
         // Export requires the python extension
         if (!this.extensionChecker.isPythonExtensionInstalled) {
-            return this.extensionChecker.installPythonExtension();
+            return this.extensionChecker.showPythonExtensionInstallRequiredPrompt();
         }
 
         const activeEditor = this.editorProvider.activeEditor;
@@ -776,7 +776,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     @captureTelemetry(Telemetry.RunByLineStart)
     private async handleRunByLine(runByLine: IRunByLine) {
         if (!this.extensionChecker.isPythonExtensionInstalled) {
-            return this.extensionChecker.installPythonExtension();
+            return this.extensionChecker.showPythonExtensionInstallRequiredPrompt();
         }
         try {
             // If there's any payload, it has the code and the id

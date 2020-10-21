@@ -13,7 +13,7 @@ import { KernelDaemonPool } from '../../client/datascience/kernel-launcher/kerne
 import { KernelLauncher } from '../../client/datascience/kernel-launcher/kernelLauncher';
 import { IKernelConnection, IKernelFinder } from '../../client/datascience/kernel-launcher/types';
 import { createRawKernel } from '../../client/datascience/raw-kernel/rawKernel';
-import { IFileSystem, IJupyterKernelSpec } from '../../client/datascience/types';
+import { IJupyterKernelSpec } from '../../client/datascience/types';
 import { PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { sleep, waitForCondition } from '../common';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
@@ -24,6 +24,7 @@ import { requestExecute } from './raw-kernel/rawKernelTestHelpers';
 // Chai as promised is not part of this file
 import * as chaiAsPromised from 'chai-as-promised';
 import { IPythonExtensionChecker } from '../../client/api/types';
+import { IFileSystem } from '../../client/common/platform/types';
 use(chaiAsPromised);
 
 suite('DataScience - Kernel Launcher', () => {
@@ -67,7 +68,7 @@ suite('DataScience - Kernel Launcher', () => {
     });
 
     test('Launch from kernelspec', async function () {
-        if (!process.env.VSCODE_PYTHON_ROLLING) {
+        if (!process.env.VSC_FORCE_REAL_JUPYTER) {
             // tslint:disable-next-line: no-invalid-this
             this.skip();
         } else {
@@ -103,7 +104,7 @@ suite('DataScience - Kernel Launcher', () => {
     }).timeout(10_000);
 
     test('Launch with environment', async function () {
-        if (!process.env.VSCODE_PYTHON_ROLLING || !pythonInterpreter) {
+        if (!process.env.VSC_FORCE_REAL_JUPYTER || !pythonInterpreter) {
             // tslint:disable-next-line: no-invalid-this
             this.skip();
         } else {
@@ -149,7 +150,7 @@ suite('DataScience - Kernel Launcher', () => {
     }).timeout(10_000);
 
     test('Bind with ZMQ', async function () {
-        if (!process.env.VSCODE_PYTHON_ROLLING) {
+        if (!process.env.VSC_FORCE_REAL_JUPYTER) {
             // tslint:disable-next-line: no-invalid-this
             this.skip();
         } else {

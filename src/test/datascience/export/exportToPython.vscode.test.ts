@@ -6,9 +6,9 @@ import { assert } from 'chai';
 import * as path from 'path';
 import { CancellationTokenSource, Uri } from 'vscode';
 import { IDocumentManager } from '../../../client/common/application/types';
+import { IFileSystem } from '../../../client/common/platform/types';
 import { ExportInterpreterFinder } from '../../../client/datascience/export/exportInterpreterFinder';
 import { ExportFormat, IExport } from '../../../client/datascience/export/types';
-import { IFileSystem } from '../../../client/datascience/types';
 import { IExtensionTestApi } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
 import { closeActiveWindows, initialize } from '../../initialize';
@@ -20,7 +20,7 @@ suite('DataScience - Export Python', () => {
         api = await initialize();
         // Export to Python tests require jupyter to run. Othewrise can't
         // run any of our variable execution code
-        const isRollingBuild = process.env ? process.env.VSCODE_PYTHON_ROLLING !== undefined : false;
+        const isRollingBuild = process.env ? process.env.VSC_FORCE_REAL_JUPYTER !== undefined : false;
         if (!isRollingBuild) {
             // tslint:disable-next-line:no-console
             console.log('Skipping Export to Python tests. Requires python environment');

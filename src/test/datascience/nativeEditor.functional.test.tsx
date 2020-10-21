@@ -22,6 +22,7 @@ import {
     IDocumentManager,
     IWorkspaceService
 } from '../../client/common/application/types';
+import { IFileSystem } from '../../client/common/platform/types';
 import { ICryptoUtils, IExtensionContext } from '../../client/common/types';
 import { createDeferred, sleep, waitForPromise } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
@@ -34,7 +35,6 @@ import { NativeEditorNotebookModel } from '../../client/datascience/notebookStor
 import {
     ICell,
     IDataScienceErrorHandler,
-    IFileSystem,
     IJupyterExecution,
     INotebookEditor,
     INotebookEditorProvider,
@@ -2864,15 +2864,19 @@ df.head()`;
                         // First cell should still have the 'collapsed' metadata
                         assert.ok(fileObject.cells[0].metadata.collapsed, 'Metadata erased during execution');
 
-                        // Old language info should be changed by the new execution
-                        assert.notEqual(fileObject.metadata.language_info.version, '1.2.3');
-
                         // Some tests don't have a kernelspec, in which case we should remove it
                         // If there is a spec, we should update the name and display name
-                        const isRollingBuild = process.env ? process.env.VSCODE_PYTHON_ROLLING !== undefined : false;
+                        const isRollingBuild = process.env ? process.env.VSC_FORCE_REAL_JUPYTER !== undefined : false;
                         if (isRollingBuild && fileObject.metadata.kernelspec) {
+                            // Old language info should be changed by the new execution
+                            assert.notEqual(fileObject.metadata.language_info.version, '1.2.3');
                             assert.notEqual(fileObject.metadata.kernelspec.display_name, 'JUNK');
                             assert.notEqual(fileObject.metadata.kernelspec.name, 'JUNK');
+                            assert.notEqual(
+                                fileObject.metadata.kernelspec.name,
+                                fileObject.metadata.kernelspec.display_name,
+                                'Kernel display name should be different than the name'
+                            );
                         }
                     });
                 });

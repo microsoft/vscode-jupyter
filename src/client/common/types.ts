@@ -321,8 +321,8 @@ export interface IBrowserService {
     launch(url: string): void;
 }
 
-export const IPythonExtensionBanner = Symbol('IPythonExtensionBanner');
-export interface IPythonExtensionBanner {
+export const IJupyterExtensionBanner = Symbol('IJupyterExtensionBanner');
+export interface IJupyterExtensionBanner {
     readonly enabled: boolean;
     showBanner(): Promise<void>;
 }

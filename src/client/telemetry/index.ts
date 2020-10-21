@@ -157,7 +157,7 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
         reporter.sendTelemetryEvent(eventNameSent, customProperties, measures);
     }
 
-    if (process.env && process.env.VSC_PYTHON_LOG_TELEMETRY) {
+    if (process.env && process.env.VSC_JUPYTER_LOG_TELEMETRY) {
         traceInfo(
             `Telemetry Event : ${eventNameSent} Measures: ${JSON.stringify(measures)} Props: ${JSON.stringify(
                 customProperties
@@ -459,7 +459,7 @@ export interface IEventNamePropertyMapping {
     };
     /**
      * Telemetry event sent with details when user clicks a button in the following prompt
-     * `Prompt message` :- 'We noticed you are using Visual Studio Code Insiders. Would you like to use the Insiders build of the Python extension?'
+     * `Prompt message` :- 'We noticed you are using Visual Studio Code Insiders. Would you like to use the Insiders build of the Jupyter extension?'
      */
     [EventName.INSIDERS_PROMPT]: {
         /**

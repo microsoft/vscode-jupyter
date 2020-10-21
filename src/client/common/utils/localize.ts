@@ -48,11 +48,11 @@ export namespace ExtensionChannels {
     export const yesDaily = localize('ExtensionChannels.yesDaily', 'Yes, daily');
     export const promptMessage = localize(
         'ExtensionChannels.promptMessage',
-        'We noticed you are using Visual Studio Code Insiders. Would you like to use the Insiders build of the Python extension?'
+        'We noticed you are using Visual Studio Code Insiders. Would you like to use the Insiders build of the Jupyter extension?'
     );
     export const reloadToUseInsidersMessage = localize(
         'ExtensionChannels.reloadToUseInsidersMessage',
-        'Please reload Visual Studio Code to use the insiders build of the Python extension.'
+        'Please reload Visual Studio Code to use the insiders build of the Jupyter extension.'
     );
     export const downloadCompletedOutputMessage = localize(
         'ExtensionChannels.downloadCompletedOutputMessage',
@@ -178,6 +178,11 @@ export namespace DataScience {
     export const pythonExtensionRequired = localize(
         'DataScience.pythonExtensionRequired',
         'The Python extension is required to perform that task. Click Yes to open Python extension installation page.'
+    );
+
+    export const pythonExtensionRecommended = localize(
+        'DataScience.pythonExtensionRecommended',
+        'You have opened a Python notebook. Would you like to install the Python extension?'
     );
 
     export const pythonInstalledReloadPromptMessage = localize(
@@ -945,19 +950,9 @@ export namespace DataScience {
         'DataScience.illegalEditorConfig',
         'CustomEditor and NativeNotebook experiments cannot be turned on together'
     );
-}
-
-export namespace DebugConfigStrings {
-    export const selectConfiguration = {
-        title: localize('debug.selectConfigurationTitle'),
-        placeholder: localize('debug.selectConfigurationPlaceholder')
-    };
-}
-
-export namespace OutdatedDebugger {
-    export const outdatedDebuggerMessage = localize(
-        'OutdatedDebugger.updateDebuggerMessage',
-        'We noticed you are attaching to ptvsd (Python debugger), which was deprecated on May 1st, 2020. Please switch to [debugpy](https://aka.ms/migrateToDebugpy).'
+    export const invalidCustomEditor = localize(
+        'DataScience.invalidCustomEditor',
+        'Using the Jupyter notebook editor requires the stable version of VS code and the CustomEditor experiment to be enabled.'
     );
 }
 

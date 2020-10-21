@@ -5,16 +5,16 @@
 
 import { inject, injectable, named } from 'inversify';
 import { Uri } from 'vscode';
-import { IFileSystem } from '../../datascience/types';
 import { IApplicationShell, ICommandManager } from '../application/types';
 import { JVSC_EXTENSION_ID, Octicons, STANDARD_OUTPUT_CHANNEL } from '../constants';
 import { traceDecorators } from '../logger';
+import { IFileSystem } from '../platform/types';
 import { IFileDownloader, IOutputChannel } from '../types';
 import { ExtensionChannels } from '../utils/localize';
 import { IExtensionBuildInstaller } from './types';
 
 export const developmentBuildUri =
-    'https://pvsc.blob.core.windows.net/extension-builds/ms-toolsai-jupyter-insiders.vsix';
+    'https://pvsc.blob.core.windows.net/extension-builds-jupyter/ms-toolsai-jupyter-insiders.vsix';
 export const vsixFileExtension = '.vsix';
 
 @injectable()

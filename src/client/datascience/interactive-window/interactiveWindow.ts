@@ -16,6 +16,7 @@ import {
 import { ContextKey } from '../../common/contextKey';
 import '../../common/extensions';
 import { traceError } from '../../common/logger';
+import { IFileSystem } from '../../common/platform/types';
 
 import {
     IConfigurationService,
@@ -46,7 +47,6 @@ import {
     ICell,
     ICodeCssGenerator,
     IDataScienceErrorHandler,
-    IFileSystem,
     IInteractiveWindow,
     IInteractiveWindowInfo,
     IInteractiveWindowListener,
@@ -503,7 +503,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     private async export(cells: ICell[]) {
         // Export requires the python extension
         if (!this.extensionChecker.isPythonExtensionInstalled) {
-            return this.extensionChecker.installPythonExtension();
+            return this.extensionChecker.showPythonExtensionInstallRequiredPrompt();
         }
 
         // Should be an array of cells
@@ -532,7 +532,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     private async exportAs(cells: ICell[]) {
         // Export requires the python extension
         if (!this.extensionChecker.isPythonExtensionInstalled) {
-            return this.extensionChecker.installPythonExtension();
+            return this.extensionChecker.showPythonExtensionInstallRequiredPrompt();
         }
 
         let model: INotebookModel;

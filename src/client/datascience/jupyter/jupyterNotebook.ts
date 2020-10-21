@@ -26,7 +26,6 @@ import { CodeSnippets, Identifiers, Telemetry } from '../constants';
 import {
     CellState,
     ICell,
-    IFileSystem,
     IJupyterSession,
     INotebook,
     INotebookCompletion,
@@ -42,6 +41,7 @@ import { KernelConnectionMetadata } from './kernels/types';
 import cloneDeep = require('lodash/cloneDeep');
 import { concatMultilineString, formatStreamText, splitMultilineString } from '../../../datascience-ui/common';
 import { PYTHON_LANGUAGE } from '../../common/constants';
+import { IFileSystem } from '../../common/platform/types';
 import { RefBool } from '../../common/refBool';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import {

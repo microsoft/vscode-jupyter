@@ -19,6 +19,7 @@ import { IApplicationShell, IWorkspaceService } from '../../client/common/applic
 import { Cancellation, CancellationError } from '../../client/common/cancellation';
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import { traceError, traceInfo } from '../../client/common/logger';
+import { IFileSystem } from '../../client/common/platform/types';
 import { IPythonExecutionFactory } from '../../client/common/process/types';
 import { Product } from '../../client/common/types';
 import { createDeferred, waitForPromise } from '../../client/common/utils/async';
@@ -33,7 +34,6 @@ import { HostJupyterNotebook } from '../../client/datascience/jupyter/liveshare/
 import {
     CellState,
     ICell,
-    IFileSystem,
     IJupyterConnection,
     IJupyterExecution,
     IJupyterKernelSpec,
@@ -658,7 +658,7 @@ suite('DataScience notebook tests', () => {
             });
 
             runTest('Change Interpreter', async () => {
-                const isRollingBuild = process.env ? process.env.VSCODE_PYTHON_ROLLING !== undefined : false;
+                const isRollingBuild = process.env ? process.env.VSC_FORCE_REAL_JUPYTER !== undefined : false;
 
                 // Real Jupyter doesn't help this test at all and is tricky to set up for it, so just skip it
                 if (!isRollingBuild) {
