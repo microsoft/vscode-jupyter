@@ -1,4 +1,4 @@
-import { inject } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IExtensions } from '../../common/types';
 import { noop } from '../../common/utils/misc';
@@ -8,6 +8,7 @@ import { noop } from '../../common/utils/misc';
 // so we need to forcefully activate it in the notebook editor use case.
 // Every other case (native notebook, custom editor, IW) has a related event
 // where the gather extension is activated.
+@injectable()
 export class GatherActivator implements IExtensionSingleActivationService {
     constructor(@inject(IExtensions) private extensions: IExtensions) {}
     public async activate() {

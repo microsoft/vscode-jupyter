@@ -119,13 +119,15 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
 
     @captureTelemetry(Telemetry.OpenNotebook, { scope: 'command' }, false)
     private async openNotebook(file?: Uri): Promise<INotebookEditor | undefined> {
+        let notebook: INotebookEditor | undefined;
         if (file && path.extname(file.fsPath).toLocaleLowerCase() === '.ipynb') {
             try {
                 // Then take the contents and load it.
-                return this.provider.open(file);
+                notebook = await this.provider.open(file);
             } catch (e) {
                 await this.dataScienceErrorHandler.handleError(e);
             }
+            return notebook;
         }
     }
 }

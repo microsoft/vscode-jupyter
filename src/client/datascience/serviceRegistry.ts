@@ -315,8 +315,7 @@ export function registerTypes(serviceManager: IServiceManager, useVSCodeNotebook
     serviceManager.addSingleton<IDigestStorage>(IDigestStorage, DigestStorage);
     serviceManager.addSingleton<ITrustService>(ITrustService, TrustService);
     serviceManager.addSingleton<IFileSystemPathUtils>(IFileSystemPathUtils, FileSystemPathUtils);
-    serviceManager.addSingleton<INotebookExecutionLogger>(INotebookExecutionLogger, NotebookExtensibility);
-    serviceManager.addSingleton<INotebookExtensibility>(INotebookExtensibility, NotebookExtensibility);
+    serviceManager.addSingleton<NotebookExtensibility>(NotebookExtensibility, NotebookExtensibility, undefined, [INotebookExtensibility, INotebookExecutionLogger]);
     serviceManager.addSingleton<IWebviewExtensibility>(IWebviewExtensibility, WebviewExtensibility);
 
     registerNotebookTypes(serviceManager);

@@ -56,8 +56,6 @@ export async function calculateWorkingDirectory(
 
 export function cellTranslate(cell: ICell, language: string): (Partial<NotebookCell> & { code: string }) | undefined {
     if (cell && cell.data && cell.data.source) {
-        const dummyUri = 'https://www.msft.com/some/path?query#';
-
         return {
             index: 0,
             language: language,
@@ -66,7 +64,7 @@ export function cellTranslate(cell: ICell, language: string): (Partial<NotebookC
                 hasExecutionOrder: true,
                 runState: translateCellStateToNative(cell.state)
             },
-            uri: Uri.parse(dummyUri + cell.id),
+            uri: Uri.parse(cell.file + cell.id),
             outputs: [],
             cellKind: vscodeNotebookEnums.CellKind.Code,
             code: concatMultilineString(cell.data.source)

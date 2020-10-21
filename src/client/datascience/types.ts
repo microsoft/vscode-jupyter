@@ -592,9 +592,6 @@ export interface INotebookExtensibility {
     readonly onKernelPostExecute: Event<NotebookCell>;
     readonly onKernelRestart: Event<void>;
     readonly onKernelStart: Event<string[]>;
-    // fireKernelRestart(): void;
-    // fireKernelPostExecute(cell: NotebookCell): void;
-    // fireOpenWebview(msg: IWebviewOpenedMessage): void;
 }
 
 export const IWebviewExtensibility = Symbol('IWebviewExtensibility');
