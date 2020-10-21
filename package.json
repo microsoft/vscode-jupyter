@@ -1695,7 +1695,24 @@
                 ],
                 "priority": "option"
             }
-        ]
+        ],
+        "viewsContainers": {
+            "activitybar": [
+                {
+                    "id": "jupyterViewContainer",
+                    "title": "Jupyter",
+                    "icon": "JUNK.svg"
+                }
+            ]
+        },
+        "views": {
+            "jupyterViewContainer": [
+                {
+                    "id": "jupyterViewVariables",
+                    "name": "Variables"
+                }
+            ]
+        }
     },
     "scripts": {
         "package": "gulp clean && gulp prePublishBundle && vsce package -o ms-toolsai-jupyter-insiders.vsix",
