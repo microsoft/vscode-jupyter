@@ -1,9 +1,6 @@
 name: Insiders VSIX
 
 on:
-  pull_request:
-    branches:
-      - main
   push:
     branches:
       - main
