@@ -20,6 +20,7 @@ import { closeActiveWindows, initialize } from '../../../initialize';
 import { openNotebook } from '../../helpers';
 import {
     closeNotebooksAndCleanUpAfterTests,
+    createTemporaryNotebook,
     hijackPrompt,
     trustAllNotebooks,
     waitForExecutionCompletedSuccessfully,
@@ -29,7 +30,8 @@ import {
 // tslint:disable: no-invalid-this max-func-body-length no-function-expression no-any
 suite('DataScience Install IPyKernel (slow) (install)', () => {
     const disposables: IDisposable[] = [];
-    const nbFile = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src/test/datascience/jupyter/kernels/nbWithKernel.ipynb');
+    let nbFile: string;
+    const templateIPynbFile = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src/test/datascience/jupyter/kernels/nbWithKernel.ipynb');
     const executable = getOSType() === OSType.Windows ? 'Scripts/python.exe' : 'bin/python'; // If running locally on Windows box.
     const venvPythonPath = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src/test/datascience/.venvnokernel', executable);
     const expectedPromptMessageSuffix = `requires ${ProductNames.get(Product.ipykernel)!} to be installed.`;
@@ -59,6 +61,9 @@ suite('DataScience Install IPyKernel (slow) (install)', () => {
     });
 
     setup(async () => {
+        // Don't use same file (due to dirty handling, we might save in dirty.)
+        // Cuz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
+        nbFile = await createTemporaryNotebook(templateIPynbFile, disposables);
         // Uninstall ipykernel from the virtual env.
         const proc = new ProcessService(new BufferDecoder());
         await proc.exec(venvPythonPath, ['-m', 'pip', 'uninstall', 'ipykernel', '--yes']);

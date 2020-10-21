@@ -500,12 +500,18 @@ jobs:
             Pkg.add("IJulia")'
 
       # Used by tests for installation of ipykernel.
-      # Test are enabled dyanamically when
-      # 1. `CI_PYTHON_PATH2` points to the new virtual env.
-      # 2. Virtual env is located under `src/test/datascience/` and named `.venvnokernel`.
+      # Create a venv & register it as a kernel.
+      # These tests are slow hence will only run on linux.
+      # This env will be used to install ipykernel & test for prompts if ipykernel is missing & similar tests.
+      # Ensure this is registered as a kernel.
       - name: Create virtual environment for Tests
         run: |
           python -m venv .venvnokernel
+          source .venvnokernel/bin/activate
+
+          python -m pip install ipykernel
+          python -m ipykernel install --user --name .venvnokernel --display-name .venvnokernel
+          python -m pip uninstall ipykernel --yes
         working-directory: src/test/datascience
 
       - name: Azure Login
