@@ -5,7 +5,6 @@
 
 import { NotebookCell, NotebookCellRunState, NotebookDocument } from 'vscode';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../../common/application/types';
-import { traceInfo } from '../../../common/logger';
 import { IDisposable } from '../../../common/types';
 import { noop } from '../../../common/utils/misc';
 import { captureTelemetry } from '../../../telemetry';
@@ -70,7 +69,6 @@ export class KernelExecution implements IDisposable {
     @captureTelemetry(Telemetry.ExecuteNativeCell, undefined, true)
     @captureTelemetry(VSCodeNativeTelemetry.RunAllCells, undefined, true)
     public async executeAllCells(document: NotebookDocument): Promise<void> {
-        traceInfo('Execute all Cell');
         if (!this.notebook) {
             throw new Error('executeObservable cannot be called if kernel has not been started!');
         }

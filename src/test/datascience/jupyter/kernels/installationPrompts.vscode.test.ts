@@ -32,7 +32,10 @@ import {
 suite('DataScience Install IPyKernel (slow) (install)', () => {
     const disposables: IDisposable[] = [];
     let nbFile: string;
-    const templateIPynbFile = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src/test/datascience/jupyter/kernels/nbWithKernel.ipynb');
+    const templateIPynbFile = path.join(
+        EXTENSION_ROOT_DIR_FOR_TESTS,
+        'src/test/datascience/jupyter/kernels/nbWithKernel.ipynb'
+    );
     const executable = getOSType() === OSType.Windows ? 'Scripts/python.exe' : 'bin/python'; // If running locally on Windows box.
     const venvPythonPath = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src/test/datascience/.venvnokernel', executable);
     const expectedPromptMessageSuffix = `requires ${ProductNames.get(Product.ipykernel)!} to be installed.`;
@@ -119,25 +122,11 @@ suite('DataScience Install IPyKernel (slow) (install)', () => {
         editorProvider.activeEditor!.runAllCells();
 
         // The prompt should be displayed.
-        await waitForCondition(
-            async () => {
-                console.info('Waiting for prompt to be displayed');
-                await prompt.displayed;
-                console.log('Prompt displayed');
-                return true;
-            },
-            delayForUITest,
-            'Prompt not displayed'
-        );
+        await waitForCondition(async () => prompt.displayed.then(() => true), delayForUITest, 'Prompt not displayed');
 
         // ipykernel should get installed.
         await waitForCondition(
-            async () => {
-                console.info('Waiting for ipykernel to get installed');
-                await installed.promise;
-                console.log('ipykernel installed');
-                return true;
-            },
+            async () => installed.promise.then(() => true),
             delayForUITest,
             'Prompt not displayed or not installed successfully'
         );

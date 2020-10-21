@@ -6,7 +6,7 @@
 import { ConfigurationTarget, Event, EventEmitter, Uri, WebviewPanel } from 'vscode';
 import type { NotebookCell, NotebookDocument } from '../../../../types/vscode-proposed';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../common/application/types';
-import { traceError, traceInfo } from '../../common/logger';
+import { traceError } from '../../common/logger';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
 import { DataScience } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
@@ -104,7 +104,6 @@ export class NotebookEditor implements INotebookEditor {
         // Not used.
     }
     public runAllCells(): void {
-        traceInfo('Execute All cells in editor');
         this.commandManager.executeCommand('notebook.execute').then(noop, noop);
     }
     public runSelectedCell(): void {

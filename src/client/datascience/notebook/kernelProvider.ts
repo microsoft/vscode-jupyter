@@ -57,7 +57,6 @@ export class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
         }
     }
     public executeAllCells(document: NotebookDocument) {
-        traceInfo('Execute All Cells in KernelProvider.ts');
         const kernel = this.kernelProvider.getOrCreate(document.uri, { metadata: this.selection });
         if (kernel) {
             this.updateKernelInfoInNotebookWhenAvailable(kernel, document);

@@ -8,9 +8,10 @@ import { CancellationToken } from 'vscode';
 import { IApplicationShell } from '../../../common/application/types';
 import { createPromiseFromCancellation, wrapCancellationTokens } from '../../../common/cancellation';
 import { ProductNames } from '../../../common/installer/productNames';
-import { traceInfo } from '../../../common/logger';
+import { traceDecorators, traceInfo } from '../../../common/logger';
 import { IInstaller, InstallerResponse, Product } from '../../../common/types';
 import { Common, DataScience } from '../../../common/utils/localize';
+import { TraceOptions } from '../../../logging/trace';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { IKernelDependencyService, KernelInterpreterDependencyResponse } from '../../types';
 
@@ -28,14 +29,13 @@ export class KernelDependencyService implements IKernelDependencyService {
      * Configures the python interpreter to ensure it can run a Jupyter Kernel by installing any missing dependencies.
      * If user opts not to install they can opt to select another interpreter.
      */
+    @traceDecorators.verbose('Install Missing Dependencies', TraceOptions.ReturnValue)
     public async installMissingDependencies(
         interpreter: PythonEnvironment,
         token?: CancellationToken
     ): Promise<KernelInterpreterDependencyResponse> {
         traceInfo(`installMissingDependencies ${interpreter.path}`);
         if (await this.areDependenciesInstalled(interpreter, token)) {
-            // tslint:disable-next-line: no-console
-            console.log(`Checking for dependencies & found ${interpreter.path}`);
             return KernelInterpreterDependencyResponse.ok;
         }
 
@@ -49,16 +49,12 @@ export class KernelDependencyService implements IKernelDependencyService {
             ProductNames.get(Product.ipykernel)!
         );
         const installerToken = wrapCancellationTokens(token);
-        // tslint:disable-next-line: no-console
-        console.log('Checking for dependencies & prompt displayed');
 
         const selection = await Promise.race([
             this.appShell.showErrorMessage(message, Common.install()),
             promptCancellationPromise
         ]);
         if (installerToken.isCancellationRequested) {
-            // tslint:disable-next-line: no-console
-            console.log('Checking for dependencies & prompt displayed & cancellation cancelled');
             return KernelInterpreterDependencyResponse.cancel;
         }
 

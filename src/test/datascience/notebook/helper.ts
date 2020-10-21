@@ -545,7 +545,7 @@ export async function hijackPrompt(
     let displayCount = 0;
     // tslint:disable-next-line: no-function-expression
     const stub = sinon.stub(appShell, promptType).callsFake(function (msg: string) {
-        console.info(`Message displayed ${msg}`);
+        console.info(`Message displayed to user ${msg}.`);
         if (
             ('exactMatch' in message && msg === message.exactMatch) ||
             ('endsWith' in message && msg.endsWith(message.endsWith))
