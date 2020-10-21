@@ -233,7 +233,7 @@ export async function waitForKernelToGetAutoSelected(expectedLanguage?: string) 
     // Wait for the active kernel to be a julia kernel.
     const errorMessage = expectedLanguage ? `${expectedLanguage} kernel not auto selected` : 'Kernel not auto selected';
     await waitForCondition(async () => isRightKernel(), 15_000, errorMessage);
-    console.info(`Preferred kernel auto selected for Native Notebook`);
+    console.info(`Preferred kernel auto selected for Native Notebook for ${kernelInfo}.`);
 }
 export async function trustNotebook(ipynbFile: string | Uri) {
     const api = await initialize();
