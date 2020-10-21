@@ -236,6 +236,7 @@ export async function waitForKernelToGetAutoSelected(expectedLanguage?: string) 
     console.info(`Preferred kernel auto selected for Native Notebook for ${kernelInfo}.`);
 }
 export async function trustNotebook(ipynbFile: string | Uri) {
+    console.info(`Trusting Notebook ${ipynbFile}`);
     const api = await initialize();
     const uri = typeof ipynbFile === 'string' ? Uri.file(ipynbFile) : ipynbFile;
     const content = await fs.readFile(uri.fsPath, { encoding: 'utf8' });

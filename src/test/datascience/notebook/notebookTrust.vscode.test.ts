@@ -116,7 +116,7 @@ suite('DataScience - VSCode Notebook - (Trust)', function () {
             });
             teardown(async () => closeNotebooks(disposables));
             test('Opening an untrusted notebook', async () => {
-                await openNotebook(api.serviceContainer, ipynbFile.fsPath, false);
+                await openNotebook(api.serviceContainer, ipynbFile.fsPath, { isNotTrusted: true });
                 const model = storageProvider.get(ipynbFile)!;
                 assert.isFalse(model.isTrusted);
                 assertDocumentTrust(false, withOutput);
@@ -133,7 +133,7 @@ suite('DataScience - VSCode Notebook - (Trust)', function () {
                 await trustService.trustNotebook(ipynbFile, fs.readFileSync(ipynbFile.fsPath).toString());
 
                 // Open notebook & Confirm prompt was not displayed & it is trusted.
-                await openNotebook(api.serviceContainer, ipynbFile.fsPath, false);
+                await openNotebook(api.serviceContainer, ipynbFile.fsPath, { isNotTrusted: true });
 
                 // Confirm the notebook is trusted.
                 assert.equal(prompt.getDisplayCount(), 0, 'Prompt should have been once before');
@@ -154,7 +154,7 @@ suite('DataScience - VSCode Notebook - (Trust)', function () {
                 await trustService.trustNotebook(ipynbFile, contentsOnDisc);
 
                 // Open notebook & Confirm prompt was not displayed & it is trusted.
-                await openNotebook(api.serviceContainer, ipynbFile.fsPath, false);
+                await openNotebook(api.serviceContainer, ipynbFile.fsPath, { isNotTrusted: true });
                 await waitForKernelToGetAutoSelected();
 
                 // When ipynb content is generated, we don't want the kernel information to be stored in ipynb (only for testing).
@@ -184,7 +184,7 @@ suite('DataScience - VSCode Notebook - (Trust)', function () {
                 await trustService.trustNotebook(ipynbFile, contentsOnDisc);
 
                 // Open notebook & Confirm prompt was not displayed & it is trusted.
-                await openNotebook(api.serviceContainer, ipynbFile.fsPath, false);
+                await openNotebook(api.serviceContainer, ipynbFile.fsPath, { isNotTrusted: true });
 
                 await waitForKernelToGetAutoSelected();
 
@@ -242,7 +242,7 @@ suite('DataScience - VSCode Notebook - (Trust)', function () {
                 const trustSetEvent = createEventHandler(trustService, 'onDidSetNotebookTrust', disposables);
 
                 // Open notebook & Confirm prompt was displayed.
-                await openNotebook(api.serviceContainer, ipynbFile.fsPath, false);
+                await openNotebook(api.serviceContainer, ipynbFile.fsPath, { isNotTrusted: true });
                 await waitForCondition(() => prompt.displayed, 10_000, 'Prompt to trust not displayed');
                 prompt.clickButton();
 
@@ -257,7 +257,7 @@ suite('DataScience - VSCode Notebook - (Trust)', function () {
                 // Reopening it & we should not get prompted.
                 assert.equal(prompt.getDisplayCount(), 1, 'Prompt should have been once before');
                 await closeNotebooks();
-                await openNotebook(api.serviceContainer, ipynbFile.fsPath, false);
+                await openNotebook(api.serviceContainer, ipynbFile.fsPath, { isNotTrusted: true });
                 assert.equal(prompt.getDisplayCount(), 1, 'Prompt should not have been displayed again');
             });
             test('Prompted to trust an untrusted notebook and not trusted', async () => {
@@ -270,7 +270,7 @@ suite('DataScience - VSCode Notebook - (Trust)', function () {
                 );
 
                 // Open notebook & Confirm prompt was displayed.
-                await openNotebook(api.serviceContainer, ipynbFile.fsPath, false);
+                await openNotebook(api.serviceContainer, ipynbFile.fsPath, { isNotTrusted: true });
                 await waitForCondition(() => prompt.displayed, 10_000, 'Prompt to trust not displayed');
                 prompt.clickButton();
 
@@ -293,7 +293,7 @@ suite('DataScience - VSCode Notebook - (Trust)', function () {
                 );
 
                 // Open notebook & Confirm prompt was displayed.
-                await openNotebook(api.serviceContainer, ipynbFile.fsPath, false);
+                await openNotebook(api.serviceContainer, ipynbFile.fsPath, { isNotTrusted: true });
                 await waitForCondition(() => doNotTrustPrompt.displayed, 10_000, 'Prompt to trust not displayed');
                 doNotTrustPrompt.clickButton();
 

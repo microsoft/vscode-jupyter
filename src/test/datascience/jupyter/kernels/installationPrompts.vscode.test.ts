@@ -22,8 +22,6 @@ import {
     closeNotebooksAndCleanUpAfterTests,
     createTemporaryNotebook,
     hijackPrompt,
-    trustAllNotebooks,
-    trustNotebook,
     waitForExecutionCompletedSuccessfully,
     waitForKernelToGetAutoSelected
 } from '../../notebook/helper';
@@ -57,7 +55,6 @@ suite('DataScience Install IPyKernel (slow) (install)', () => {
             // Virtual env does not exist.
             return this.skip();
         }
-        await trustAllNotebooks();
         api = await initialize();
         installer = api.serviceContainer.get<IInstaller>(IInstaller);
         editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
@@ -68,7 +65,6 @@ suite('DataScience Install IPyKernel (slow) (install)', () => {
         // Don't use same file (due to dirty handling, we might save in dirty.)
         // Cuz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
         nbFile = await createTemporaryNotebook(templateIPynbFile, disposables);
-        await trustNotebook(nbFile);
         // Uninstall ipykernel from the virtual env.
         const proc = new ProcessService(new BufferDecoder());
         await proc.exec(venvPythonPath, ['-m', 'pip', 'uninstall', 'ipykernel', '--yes']);
@@ -87,7 +83,7 @@ suite('DataScience Install IPyKernel (slow) (install)', () => {
         );
     });
 
-    test('Ensure prompt is displayed when ipykernel module is not found and it gets installedxxx', async () => {
+    test('Ensure prompt is displayed when ipykernel module is not found and it gets installed', async () => {
         const installed = createDeferred();
 
         // Confirm it is installed.
