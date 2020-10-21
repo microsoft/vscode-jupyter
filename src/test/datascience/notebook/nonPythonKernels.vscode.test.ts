@@ -73,7 +73,7 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         sinon.restore();
         await closeNotebooks();
         // Don't use same file (due to dirty handling, we might save in dirty.)
-        // Cuz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
+        // Coz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
         testJuliaNb = Uri.file(await createTemporaryNotebook(juliaNb, disposables));
         testEmptyPythonNb = Uri.file(await createTemporaryNotebook(emptyPythonNb, disposables));
     });
