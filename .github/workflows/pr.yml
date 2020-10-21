@@ -500,7 +500,7 @@ jobs:
             Pkg.add("IJulia")'
 
       - name: Create Virtual Env for Tests
-        uses: ./.github/actions/create-vent-for-tests
+        uses: ./.github/actions/create-venv-for-tests
 
       - name: Azure Login
         uses: azure/login@v1.1.1
