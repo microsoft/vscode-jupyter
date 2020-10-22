@@ -67,6 +67,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-
 
+      - name: Install Python libs
+        run: |
+          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
+
       - name: Build VSIX
         uses: ./.github/actions/build-vsix
         id: build-vsix
@@ -305,7 +309,7 @@ jobs:
 
       # debugpy is not shipped, only installed for local tests.
       # In production, we get debugpy from python extension.
-      - name: Install functional test requirements
+      - name: Install Python Libs
         run: |
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
           python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
@@ -462,7 +466,7 @@ jobs:
 
       # debugpy is not shipped, only installed for local tests.
       # In production, we get debugpy from python extension.
-      - name: Install functional test requirements
+      - name: Install Python Libs
         run: |
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
           python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
