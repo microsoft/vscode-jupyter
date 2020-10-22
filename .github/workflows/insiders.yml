@@ -520,10 +520,10 @@ jobs:
         with:
           run: npm run testNativeNotebooksInVSCode
         env:
-            VSC_FORCE_REAL_JUPYTER: 1
-            VSC_JUPYTER_FORCE_LOGGING: 1
-            VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
-            VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
+          VSC_FORCE_REAL_JUPYTER: 1
+          VSC_JUPYTER_FORCE_LOGGING: 1
+          VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
+          VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
         if: matrix.test-suite == 'notebook'
 
       - name: Publish Notebook Test Report
