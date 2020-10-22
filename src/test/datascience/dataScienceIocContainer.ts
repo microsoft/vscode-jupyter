@@ -256,6 +256,8 @@ import {
     IThemeFinder,
     ITrustService
 } from '../../client/datascience/types';
+import { IVariableViewProvider } from '../../client/datascience/variablesView/types';
+import { VariableViewProvider } from '../../client/datascience/variablesView/variableViewProvider';
 import { ProtocolParser } from '../../client/debugger/extension/helpers/protocolParser';
 import { IProtocolParser } from '../../client/debugger/extension/types';
 import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
@@ -540,6 +542,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             IDataScienceCodeLensProvider,
             DataScienceCodeLensProvider
         );
+        this.serviceManager.add<IVariableViewProvider>(IVariableViewProvider, VariableViewProvider);
         this.serviceManager.add<ICodeExecutionHelper>(ICodeExecutionHelper, CodeExecutionHelper);
         this.serviceManager.add<IDataScienceCommandListener>(
             IDataScienceCommandListener,

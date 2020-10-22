@@ -20,7 +20,8 @@ import {
     Range,
     TextDocument,
     TextEditor,
-    Uri
+    Uri,
+    WebviewViewProvider
 } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import type { Data as WebSocketData } from 'ws';
@@ -1379,4 +1380,8 @@ export interface ISwitchKernelOptions {
 export const IDebugLoggingManager = Symbol('IDebugLoggingManager');
 export interface IDebugLoggingManager {
     initialize(): Promise<void>;
+}
+
+export interface IWebviewViewProvider extends WebviewViewProvider {
+    readonly viewType: string;
 }

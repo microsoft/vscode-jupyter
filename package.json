@@ -1708,6 +1708,7 @@
         "views": {
             "jupyterViewContainer": [
                 {
+                    "type": "webview",
                     "id": "jupyterViewVariables",
                     "name": "Variables"
                 }
