@@ -1,15 +1,3 @@
-# Dummy pipeline for Component Gov.
-
-pr:
-    autoCancel: true
-    branches:
-      include:
-        - 'main'
-        - 'release*'
-
-# Not the CI build for merges to main and release.
-trigger: none
-
 pool:
     vmImage: 'ubuntu-latest'
 
