@@ -503,7 +503,7 @@ jobs:
         uses: ./.github/actions/create-venv-for-tests
 
       - name: Azure Login
-        uses: azure/login@v1.1.1
+        uses: azure/login@v1.1.2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
         if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook'
@@ -587,7 +587,7 @@ jobs:
           node-version: ${{env.NODE_VERSION}}
 
       - name: Azure Login
-        uses: azure/login@v1.1.1
+        uses: azure/login@v1.1.2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 

@@ -366,7 +366,7 @@ jobs:
           node-version: ${{env.NODE_VERSION}}
 
       - name: Azure Login
-        uses: azure/login@v1.1.1
+        uses: azure/login@v1.1.2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
@@ -413,7 +413,7 @@ jobs:
           name: ${{ env.VSIX_NAME }}
 
       - name: Azure Login
-        uses: azure/login@v1.1.1
+        uses: azure/login@v1.1.2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
