@@ -1,4 +1,5 @@
 import { inject, injectable } from 'inversify';
+import { IDisposable } from 'monaco-editor';
 import { NotebookCellRunState } from 'vscode';
 import { IInteractiveWindowProvider, INotebookEditorProvider, IWebviewExtensibility } from './types';
 import { translateCellStateFromNative } from './utils';
@@ -6,16 +7,16 @@ import { translateCellStateFromNative } from './utils';
 @injectable()
 export class WebviewExtensibility implements IWebviewExtensibility {
     constructor(
-        @inject(INotebookEditorProvider) private readonly webviewNotebookProvider: INotebookEditorProvider,
-        @inject(IInteractiveWindowProvider) private readonly interactiveWindowProvider: IInteractiveWindowProvider
+        @inject(INotebookEditorProvider) private webviewNotebookProvider: INotebookEditorProvider,
+        @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider
     ) {}
 
-    public registerCellCommand(
+    public registerCellToolbarButton(
         command: string,
         buttonHtml: string,
         statusToEnable: NotebookCellRunState[],
         tooltip: string
-    ): void {
+    ): IDisposable {
         this.interactiveWindowProvider.windows.forEach((window) => {
             window.createWebviewCellButton(
                 command,
@@ -32,14 +33,16 @@ export class WebviewExtensibility implements IWebviewExtensibility {
                 tooltip
             );
         });
-    }
 
-    public removeCellCommand(command: string): void {
-        this.interactiveWindowProvider.windows.forEach((window) => {
-            window.removeWebviewCellButton(command);
-        });
-        this.webviewNotebookProvider.editors.forEach((editor) => {
-            editor.removeWebviewCellButton(command);
-        });
+        return {
+            dispose: () => {
+                this.interactiveWindowProvider.windows.forEach((window) => {
+                    window.removeWebviewCellButton(command);
+                });
+                this.webviewNotebookProvider.editors.forEach((editor) => {
+                    editor.removeWebviewCellButton(command);
+                });
+            }
+        };
     }
 }

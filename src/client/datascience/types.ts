@@ -24,7 +24,7 @@ import {
 } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import type { Data as WebSocketData } from 'ws';
-import type { NotebookCell, NotebookCellRunState } from '../../../types/vscode-proposed';
+import type { NotebookCellRunState } from '../../../types/vscode-proposed';
 import { ServerStatus } from '../../datascience-ui/interactive-common/mainState';
 import { ICommandManager, IDebugService } from '../common/application/types';
 import { ExecutionResult, ObservableExecutionResult, SpawnOptions } from '../common/process/types';
@@ -38,6 +38,7 @@ import { JupyterServerInfo } from './jupyter/jupyterConnection';
 import { JupyterInstallError } from './jupyter/jupyterInstallError';
 import { JupyterKernelSpec } from './jupyter/kernels/jupyterKernelSpec';
 import { KernelConnectionMetadata } from './jupyter/kernels/types';
+import { NotebookEvent } from './notebookExtensibility';
 
 // tslint:disable-next-line:no-any
 export type PromiseFunction = (...any: any[]) => Promise<any>;
@@ -587,21 +588,18 @@ export interface INotebookEditor extends Disposable, IInteractiveBase {
 export const INotebookExtensibility = Symbol('INotebookExtensibility');
 
 export interface INotebookExtensibility {
-    readonly onKernelPostExecute: Event<NotebookCell>;
-    readonly onKernelRestart: Event<void>;
-    readonly onKernelStart: Event<string[]>;
+    readonly onKernelStateChange: Event<NotebookEvent>;
 }
 
 export const IWebviewExtensibility = Symbol('IWebviewExtensibility');
 
 export interface IWebviewExtensibility {
-    registerCellCommand(
+    registerCellToolbarButton(
         command: string,
         buttonHtml: string,
         statusToEnable: NotebookCellRunState[],
         tooltip: string
-    ): void;
-    removeCellCommand(command: string): void;
+    ): IDisposable;
 }
 
 export const IInteractiveWindowListener = Symbol('IInteractiveWindowListener');

@@ -70,5 +70,6 @@ export const reducerMap: Partial<IInteractiveActionMapping> = {
     [SharedMessages.LocInit]: CommonEffects.handleLocInit,
     [InteractiveWindowMessages.UpdateDisplayData]: CommonEffects.handleUpdateDisplayData,
     [InteractiveWindowMessages.HasCell]: Transfer.hasCell,
-    [InteractiveWindowMessages.UpdateExternalCellButtons]: CommonEffects.handleWebviewButtons
+    [InteractiveWindowMessages.UpdateExternalCellButtons]: CommonEffects.handleWebviewButtons,
+    [InteractiveWindowMessages.ExecuteExternalCommand]: Transfer.executeExternalCommand
 };

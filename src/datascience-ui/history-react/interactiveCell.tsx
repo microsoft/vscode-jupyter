@@ -220,7 +220,7 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
     private renderExternalButtons() {
         const buttons: JSX.Element[] = [];
 
-        this.props.externalButtons.forEach((button) => {
+        this.props.externalButtons.forEach((button, index) => {
             buttons.push(
                 <ImageButton
                     baseTheme={this.props.baseTheme}
@@ -230,6 +230,7 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
                     }}
                     disabled={!button.statusToEnable.includes(this.props.cellVM.cell.state)}
                     tooltip={button.tooltip}
+                    key={index}
                 >
                     <Image
                         baseTheme={this.props.baseTheme}

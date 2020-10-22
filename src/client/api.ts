@@ -4,11 +4,13 @@
 'use strict';
 
 import { Event } from 'vscode';
-import { NotebookCell, NotebookCellRunState } from '../../types/vscode-proposed';
+import { NotebookCellRunState } from '../../types/vscode-proposed';
 import { IPythonApiProvider, PythonApi } from './api/types';
 import { isTestExecution } from './common/constants';
 import { traceError } from './common/logger';
+import { IDisposable } from './common/types';
 import { IDataViewerDataProvider, IDataViewerFactory } from './datascience/data-viewing/types';
+import { NotebookEvent } from './datascience/notebookExtensibility';
 import {
     IJupyterUriProvider,
     IJupyterUriProviderRegistration,
@@ -29,16 +31,13 @@ export interface IExtensionApi {
      * @memberof IExtensionApi
      */
     ready: Promise<void>;
-    readonly onKernelPostExecute: Event<NotebookCell>;
-    readonly onKernelRestart: Event<void>;
-    readonly onKernelStart: Event<string[]>;
-    registerCellCommand(
+    readonly onKernelStateChange: Event<NotebookEvent>;
+    registerCellToolbarButton(
         command: string,
         buttonHtml: string,
         statusToEnable: NotebookCellRunState[],
         tooltip: string
-    ): void;
-    removeCellCommand(command: string): void;
+    ): IDisposable;
     /**
      * Launches Data Viewer component.
      * @param {IDataViewerDataProvider} dataProvider Instance that will be used by the Data Viewer component to fetch data.
@@ -84,11 +83,8 @@ export function buildApi(
             const container = serviceContainer.get<IJupyterUriProviderRegistration>(IJupyterUriProviderRegistration);
             container.registerProvider(picker);
         },
-        onKernelPostExecute: notebookExtensibility.onKernelPostExecute,
-        onKernelRestart: notebookExtensibility.onKernelRestart,
-        onKernelStart: notebookExtensibility.onKernelStart,
-        registerCellCommand: webviewExtensibility.registerCellCommand,
-        removeCellCommand: webviewExtensibility.removeCellCommand
+        onKernelStateChange: notebookExtensibility.onKernelStateChange.bind(notebookExtensibility),
+        registerCellToolbarButton: webviewExtensibility.registerCellToolbarButton.bind(webviewExtensibility)
     };
 
     // In test environment return the DI Container.

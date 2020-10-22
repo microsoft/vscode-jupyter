@@ -51,6 +51,11 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
             )
         );
         this.disposableRegistry.push(
+            commandManager.registerCommand(Commands.OpenNewNotebookWithContent, (content: string) =>
+                this.openNewNotebookWithContent(content)
+            )
+        );
+        this.disposableRegistry.push(
             commandManager.registerCommand(Commands.NotebookEditorRunAllCells, () => this.runAllCells())
         );
         this.disposableRegistry.push(
@@ -129,5 +134,15 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
             }
             return notebook;
         }
+    }
+
+    private async openNewNotebookWithContent(content: string): Promise<INotebookEditor | undefined> {
+        let notebook: INotebookEditor | undefined;
+        try {
+            notebook = await this.provider.createNew(content);
+        } catch (e) {
+            await this.dataScienceErrorHandler.handleError(e);
+        }
+        return notebook;
     }
 }

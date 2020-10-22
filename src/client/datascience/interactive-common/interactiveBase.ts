@@ -102,7 +102,7 @@ import {
     IThemeFinder,
     WebViewViewChangeEventArgs
 } from '../types';
-import { cellTranslate } from '../utils';
+import { translateCellToNative } from '../utils';
 import { WebviewPanelHost } from '../webviews/webviewPanelHost';
 import { InteractiveWindowMessageListener } from './interactiveWindowMessageListener';
 import { serializeLanguageConfiguration } from './serialization';
@@ -1598,7 +1598,11 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         if (this.notebook) {
             language = getKernelConnectionLanguage(this.notebook.getKernelConnection()) || PYTHON_LANGUAGE;
         }
-        await commands.executeCommand(payload.command, cellTranslate(payload.cell, language), this.isInteractive);
+        await commands.executeCommand(
+            payload.command,
+            translateCellToNative(payload.cell, language),
+            this.isInteractive
+        );
         // Post message again to let the react side know the command is done executing
         this.postMessage(InteractiveWindowMessages.UpdateExternalCellButtons, this.externalButtons).ignoreErrors();
     }

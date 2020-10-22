@@ -8,7 +8,7 @@ import {
     NotebookModelChange
 } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { CssMessages } from '../../../../client/datascience/messages';
-import { ICell } from '../../../../client/datascience/types';
+import { ICell, IExternalCommandFromWebview } from '../../../../client/datascience/types';
 import { extractInputText, getSelectedAndFocusedInfo, IMainState } from '../../mainState';
 import { isSyncingMessage, postActionToExtension } from '../helpers';
 import { Helpers } from './helpers';
@@ -310,5 +310,15 @@ export namespace Transfer {
             postActionToExtension(arg, InteractiveWindowMessages.LaunchNotebookTrustPrompt);
         }
         return arg.prevState;
+    }
+
+    export function executeExternalCommand(
+        arg: CommonReducerArg<CommonActionType, IExternalCommandFromWebview>
+    ): IMainState {
+        postActionToExtension(arg, InteractiveWindowMessages.ExecuteExternalCommand, arg.payload.data);
+
+        return {
+            ...arg.prevState
+        };
     }
 }

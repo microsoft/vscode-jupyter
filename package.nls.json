@@ -5,6 +5,7 @@
     "jupyter.command.jupyter.exportAsPythonScript.title": "Export as Python Script",
     "jupyter.command.jupyter.exportToHTML.title": "Export to HTML",
     "jupyter.command.jupyter.exportToPDF.title": "Export to PDF",
+    "jupyter.command.jupyter.viewOutput.title": "Display output",
     "DataScience.checkingIfImportIsSupported": "Checking if import is supported",
     "DataScience.installingMissingDependencies": "Installing missing dependencies",
     "DataScience.exportNotebookToPython": "Exporting Notebook to Python",

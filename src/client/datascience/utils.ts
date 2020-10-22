@@ -8,6 +8,7 @@ import { Uri } from 'vscode';
 import { IWorkspaceService } from '../common/application/types';
 import { IFileSystem } from '../common/platform/types';
 
+import { nbformat } from '@jupyterlab/coreutils/lib/nbformat';
 import type { NotebookCell, NotebookCellRunState } from '../../../types/vscode-proposed';
 import { concatMultilineString } from '../../datascience-ui/common';
 import { IConfigurationService } from '../common/types';
@@ -55,8 +56,12 @@ export async function calculateWorkingDirectory(
     return workingDir;
 }
 
-export function cellTranslate(cell: ICell, language: string): (Partial<NotebookCell> & { code: string }) | undefined {
+export function translateCellToNative(
+    cell: ICell,
+    language: string
+): (Partial<NotebookCell> & { code: string }) | undefined {
     if (cell && cell.data && cell.data.source) {
+        const query = '?query#';
         return {
             index: 0,
             language: language,
@@ -65,12 +70,31 @@ export function cellTranslate(cell: ICell, language: string): (Partial<NotebookC
                 hasExecutionOrder: true,
                 runState: translateCellStateToNative(cell.state)
             },
-            uri: Uri.parse(cell.file + cell.id),
+            uri: Uri.parse(cell.file + query + cell.id),
             outputs: [],
             cellKind: vscodeNotebookEnums.CellKind.Code,
             code: concatMultilineString(cell.data.source)
         };
     }
+}
+
+export function traslateCellFromNative(cell: NotebookCell): ICell {
+    const data: nbformat.ICodeCell = {
+        cell_type: 'code',
+        metadata: {},
+        outputs: [],
+        execution_count: cell.metadata.executionOrder ? cell.metadata.executionOrder : 0,
+        source: cell.document.getText().splitLines()
+    };
+    return {
+        id: cell.uri.fragment,
+        file: cell.uri.fsPath,
+        line: 0,
+        state: translateCellStateFromNative(
+            cell.metadata.runState ? cell.metadata.runState : vscodeNotebookEnums.NotebookCellRunState.Idle
+        ),
+        data: data
+    };
 }
 
 export function translateCellStateToNative(state: CellState): NotebookCellRunState {

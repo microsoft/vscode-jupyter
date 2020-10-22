@@ -22,6 +22,7 @@ import {
     InterruptResult,
     IStatusProvider
 } from '../types';
+import { traslateCellFromNative } from '../utils';
 import { NotebookCellLanguageService } from './defaultCellLanguageService';
 import { chainWithPendingUpdates } from './helpers/notebookUpdater';
 // tslint:disable-next-line: no-var-requires no-require-imports
@@ -187,9 +188,19 @@ export class NotebookEditor implements INotebookEditor {
             }).then(noop, noop);
         }
     }
-    public notifyExecution(cell: NotebookCell) {
+    public async notifyExecution(cell: NotebookCell) {
         this._executed.fire(this);
         this.executedCode.fire(cell.document.getText());
+
+        const notebook = await this.notebookProvider.getOrCreateNotebook({
+            resource: this.file,
+            identity: this.file,
+            getOnly: true
+        });
+        if (notebook) {
+            const loggers = notebook.getLoggers();
+            loggers.forEach((l) => l.postExecute(traslateCellFromNative(cell), true, cell.language));
+        }
     }
     public async interruptKernel(): Promise<void> {
         if (this.restartingKernel) {

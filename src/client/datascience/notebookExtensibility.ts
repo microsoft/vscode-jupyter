@@ -3,15 +3,23 @@ import { Event, EventEmitter } from 'vscode';
 import type { NotebookCell } from '../../../types/vscode-proposed';
 import { noop } from '../common/utils/misc';
 import { ICell, INotebookExecutionLogger, INotebookExtensibility } from './types';
-import { cellTranslate } from './utils';
+import { translateCellToNative } from './utils';
+
+export type NotebookEvent = {
+    event: KernelState;
+    languages?: string[];
+    cell?: NotebookCell;
+};
+
+enum KernelState {
+    started,
+    executed,
+    restarted
+}
 
 @injectable()
 export class NotebookExtensibility implements INotebookExecutionLogger, INotebookExtensibility {
-    private kernelExecute = new EventEmitter<NotebookCell>();
-
-    private kernelRestart = new EventEmitter<void>();
-
-    private kernelStart = new EventEmitter<string[]>();
+    private kernelStateChange = new EventEmitter<NotebookEvent>();
 
     public dispose() {
         noop();
@@ -21,27 +29,27 @@ export class NotebookExtensibility implements INotebookExecutionLogger, INoteboo
         noop();
     }
     public async postExecute(cell: ICell, _silent: boolean, language: string): Promise<void> {
-        const nbCell = cellTranslate(cell, language);
+        const nbCell = translateCellToNative(cell, language);
         if (nbCell && nbCell.code.length > 0) {
-            this.kernelExecute.fire(nbCell as NotebookCell);
+            this.kernelStateChange.fire({
+                event: KernelState.executed,
+                cell: nbCell as NotebookCell
+            });
         }
     }
     public onKernelStarted(languages: string[]): void {
-        this.kernelStart.fire(languages);
+        this.kernelStateChange.fire({
+            event: KernelState.started,
+            languages
+        });
     }
     public onKernelRestarted(): void {
-        this.kernelRestart.fire();
+        this.kernelStateChange.fire({
+            event: KernelState.restarted
+        });
     }
 
-    public get onKernelPostExecute(): Event<NotebookCell> {
-        return this.kernelExecute.event;
-    }
-
-    public get onKernelRestart(): Event<void> {
-        return this.kernelRestart.event;
-    }
-
-    public get onKernelStart(): Event<string[]> {
-        return this.kernelStart.event;
+    public get onKernelStateChange(): Event<NotebookEvent> {
+        return this.kernelStateChange.event;
     }
 }
