@@ -1734,6 +1734,9 @@
         "updateBuildNumber": "gulp updateBuildNumber",
         "webpack": "webpack"
     },
+    "resolutions": {
+        "monaco-editor" : "0.18.1"
+    },
     "dependencies": {
         "@enonic/fnv-plus": "^1.3.0",
         "@jupyter-widgets/base": "^2.0.1",
