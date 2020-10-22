@@ -1753,7 +1753,6 @@
         "@nteract/transforms": "^4.4.7",
         "@octokit/rest": "^18.0.6",
         "@phosphor/widgets": "^1.9.3",
-        "@types/tcp-port-used": "^1.0.0",
         "ansi-regex": "^4.1.0",
         "ansi-to-html": "^0.6.7",
         "arch": "^2.1.0",
@@ -1832,7 +1831,6 @@
         "@babel/preset-env": "^7.1.0",
         "@babel/preset-react": "^7.0.0",
         "@babel/register": "^7.9.0",
-        "@blueprintjs/select": "^3.11.2",
         "@istanbuljs/nyc-config-typescript": "^0.1.3",
         "@sinonjs/fake-timers": "^6.0.1",
         "@testing-library/react": "^9.4.0",
@@ -1880,6 +1878,7 @@
         "@types/sinonjs__fake-timers": "^6.0.1",
         "@types/socket.io": "^2.1.4",
         "@types/stack-trace": "0.0.29",
+        "@types/tcp-port-used": "^1.0.0",
         "@types/temp": "^0.8.32",
         "@types/tmp": "0.0.33",
         "@types/untildify": "^3.0.0",
@@ -1990,7 +1989,6 @@
         "webpack-cli": "^3.1.2",
         "webpack-fix-default-import-plugin": "^1.0.3",
         "why-is-node-running": "^2.0.3",
-        "xml2js": "^0.4.23",
         "yargs": "^15.4.1",
         "yargs-parser": ">=13.1.2"
     }
