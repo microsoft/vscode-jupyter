@@ -11,10 +11,6 @@ our features:
 
 -   [Python Extension](https://marketplace.visualstudio.com/items?itemName=ms-python.python)
 -   [debugpy](https://pypi.org/project/debugpy/)
--   [jedi](https://pypi.org/project/jedi/)
-    and [parso](https://pypi.org/project/parso/)
--   [Microsoft Python Language Server](https://github.com/microsoft/python-language-server)
--   [Pylance](https://github.com/microsoft/pylance-release)
 
 Also thanks to the various projects we provide integrations with which help
 make this extension useful:
