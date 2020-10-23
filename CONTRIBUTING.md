@@ -104,7 +104,7 @@ Alter the `launch.json` file in the `"Debug Unit Tests"` section by setting the 
 ### Running Functional Tests
 
 Functional tests are those in files with extension `.functional.test.ts`.
-These tests are similar to system tests in scope, but are run like unit tests.
+These tests are similar to integration tests in scope, but are run like unit tests.
 
 You can run functional tests in a similar way to that for unit tests:
 
@@ -113,7 +113,7 @@ You can run functional tests in a similar way to that for unit tests:
 
 ### Running Integration Tests (with VS Code)
 
-Note: System tests are those in files with extension `*.vscode.test.ts`.
+Note: Integration tests are those in files with extension `*.vscode.test.ts`.
 
 1. Make sure you have compiled all code (done automatically when using incremental building)
 1. Ensure you have disabled breaking into 'Uncaught Exceptions' when running the Unit Tests
