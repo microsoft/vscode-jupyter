@@ -655,7 +655,7 @@ df.head()`;
                     let cell = getLastOutputCell(wrapper, 'NativeCell');
                     let ImageButtons = cell.find(ImageButton);
                     assert.equal(ImageButtons.length, 6, 'Cell buttons not found'); // Note, run by line is there as a button, it's just disabled.
-                    let deleteButton = ImageButtons.at(6);
+                    let deleteButton = ImageButtons.at(5);
 
                     // Make sure delete works
                     let afterDelete = await getNativeCellResults(ne.mount, async () => {
@@ -669,7 +669,7 @@ df.head()`;
                     cell = getLastOutputCell(wrapper, 'NativeCell');
                     ImageButtons = cell.find(ImageButton);
                     assert.equal(ImageButtons.length, 6, 'Cell buttons not found');
-                    deleteButton = ImageButtons.at(6);
+                    deleteButton = ImageButtons.at(5);
 
                     afterDelete = await getNativeCellResults(
                         ne.mount,
@@ -1589,7 +1589,7 @@ df.head()`;
                         let cell = getLastOutputCell(wrapper, 'NativeCell');
                         let imageButtons = cell.find(ImageButton);
                         assert.equal(imageButtons.length, 6, 'Cell buttons not found');
-                        const deleteButton = imageButtons.at(6);
+                        const deleteButton = imageButtons.at(5);
                         const afterDelete = await getNativeCellResults(mount, async () => {
                             deleteButton.simulate('click');
                             return Promise.resolve();

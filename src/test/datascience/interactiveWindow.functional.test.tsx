@@ -603,8 +603,8 @@ Type:      builtin_function_or_method`,
             const ImageButtons = afterUndo.at(afterUndo.length - 2).find(ImageButton);
             assert.equal(ImageButtons.length, 3, 'Cell buttons not found');
 
-            const goto = ImageButtons.at(1);
-            const deleteButton = ImageButtons.at(3);
+            const goto = ImageButtons.at(0);
+            const deleteButton = ImageButtons.at(2);
 
             // Make sure goto works
             goto.simulate('click');
@@ -977,7 +977,7 @@ for i in range(100):
             verifyHtmlOnInteractiveCell('1', CellPosition.Last);
             const ImageButtons = getLastOutputCell(mount.wrapper, 'InteractiveCell').find(ImageButton);
             assert.equal(ImageButtons.length, 3, 'Cell buttons not found');
-            const copyToSource = ImageButtons.at(2);
+            const copyToSource = ImageButtons.at(1);
 
             // Then click the copy to source button
             copyToSource.simulate('click');
@@ -1003,7 +1003,7 @@ for i in range(100):
             const lastCell = getLastOutputCell(mount.wrapper, 'InteractiveCell');
             const ImageButtons = lastCell.find(ImageButton);
             assert.equal(ImageButtons.length, 3, 'Cell buttons not found');
-            const deleteButton = ImageButtons.at(3);
+            const deleteButton = ImageButtons.at(2);
 
             // Make sure delete works
             const afterDelete = await getInteractiveCellResults(ioc, async () => {
