@@ -84,7 +84,7 @@ export function writeDiffSnapshot(_snapshot: any, _prefix: string) {
 
 export async function openNotebook(serviceContainer: IServiceContainer, ipynbFile: string, ignoreSaving = true) {
     const cmd = serviceContainer.get<ICommandManager>(ICommandManager);
-    await cmd.executeCommand(Commands.OpenNotebook, Uri.file(ipynbFile), CommandSource.commandPalette);
+    await cmd.executeCommand(Commands.OpenNotebook, Uri.file(ipynbFile), undefined, CommandSource.commandPalette);
     const editorProvider = serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
     await waitForCondition(
         async () =>

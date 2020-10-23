@@ -42,6 +42,9 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     protected get session(): ISessionWithSocket | undefined {
         return this._session;
     }
+    public get sessionId(): string | undefined {
+        return this._session?.id;
+    }
     protected kernelConnectionMetadata?: KernelConnectionMetadata;
     public get kernelSocket(): Observable<KernelSocketInformation | undefined> {
         return this._kernelSocket;

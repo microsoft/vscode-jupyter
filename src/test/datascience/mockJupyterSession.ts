@@ -21,6 +21,7 @@ const LineFeedRegEx = /(\r\n|\n)/g;
 // tslint:disable:no-any no-http-string no-multiline-string max-func-body-length
 export class MockJupyterSession implements IJupyterSession {
     public readonly workingDirectory = '';
+    public readonly sessionId = '';
     public readonly kernelSocket = new Observable<KernelSocketInformation | undefined>();
     private dict: Record<string, ICell>;
     private restartedEvent: EventEmitter<void> = new EventEmitter<void>();

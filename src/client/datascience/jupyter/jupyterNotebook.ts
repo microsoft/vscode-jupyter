@@ -164,6 +164,9 @@ export class JupyterNotebookBase implements INotebook {
     public get onKernelChanged(): Event<KernelConnectionMetadata> {
         return this.kernelChanged.event;
     }
+    public get kernelId(): string | undefined {
+        return this.session.sessionId;
+    }
     public get disposed() {
         return this._disposed;
     }
@@ -215,9 +218,7 @@ export class JupyterNotebookBase implements INotebook {
         // Make a copy of the launch info so we can update it in this class
         this._executionInfo = cloneDeep(executionInfo);
 
-        // fire kernel start
-        const language = getKernelConnectionLanguage(this.getKernelConnection()) || PYTHON_LANGUAGE;
-        this.loggers.forEach((l) => l.onKernelStarted([language]));
+        this.logKernelStarted().ignoreErrors();
     }
 
     public get connection() {
@@ -482,7 +483,8 @@ export class JupyterNotebookBase implements INotebook {
             traceInfo('restartKernel - initialSetup completed');
 
             // Tell our loggers
-            this.loggers.forEach((l) => l.onKernelRestarted());
+            const id = this.session.sessionId || '';
+            this.loggers.forEach((l) => l.onKernelRestarted(id));
 
             this.kernelRestarted.fire();
             return;
@@ -731,6 +733,13 @@ export class JupyterNotebookBase implements INotebook {
         } else {
             throw new Error(localize.DataScience.sessionDisposed());
         }
+    }
+
+    private async logKernelStarted() {
+        const info = await this.session.requestKernelInfo();
+        const notebookMetadata = info.content as KernelMessage.IInfoReply;
+        const id = this.session.sessionId || '';
+        this.loggers.forEach((l) => l.onKernelStarted(notebookMetadata, id));
     }
 
     private async initializeMatplotlib(cancelToken?: CancellationToken): Promise<void> {
@@ -1204,7 +1213,8 @@ export class JupyterNotebookBase implements INotebook {
 
     private async logPostCode(cell: ICell, silent: boolean): Promise<void> {
         const language = getKernelConnectionLanguage(this.getKernelConnection()) || PYTHON_LANGUAGE;
-        await Promise.all(this.loggers.map((l) => l.postExecute(cloneDeep(cell), silent, language)));
+        const id = this.session.sessionId || '';
+        await Promise.all(this.loggers.map((l) => l.postExecute(cloneDeep(cell), silent, language, id)));
     }
 
     private addToCellData = (

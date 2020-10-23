@@ -48,6 +48,10 @@ export class GuestJupyterNotebook
         return this._identity;
     }
 
+    public get kernelId(): string {
+        return '';
+    }
+
     public get resource(): Resource {
         return this._resource;
     }

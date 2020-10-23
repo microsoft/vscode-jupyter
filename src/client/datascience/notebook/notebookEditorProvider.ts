@@ -81,11 +81,6 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
                 }
             })
         );
-        this.disposables.push(
-            this.commandManager.registerCommand(Commands.OpenNewNotebookWithContentInPreviewEditor, (content: string) =>
-                this.createNew(content)
-            )
-        );
     }
 
     public async open(file: Uri): Promise<INotebookEditor> {

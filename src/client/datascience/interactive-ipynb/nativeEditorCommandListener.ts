@@ -13,12 +13,7 @@ import { IDisposableRegistry } from '../../common/types';
 import { captureTelemetry } from '../../telemetry';
 import { CommandSource } from '../../testing/common/constants';
 import { Commands, Telemetry } from '../constants';
-import {
-    IDataScienceCommandListener,
-    IDataScienceErrorHandler,
-    INotebookEditor,
-    INotebookEditorProvider
-} from '../types';
+import { IDataScienceCommandListener, IDataScienceErrorHandler, INotebookEditorProvider } from '../types';
 
 @injectable()
 export class NativeEditorCommandListener implements IDataScienceCommandListener {
@@ -47,12 +42,8 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
         this.disposableRegistry.push(
             commandManager.registerCommand(
                 Commands.OpenNotebook,
-                (file?: Uri, _cmdSource: CommandSource = CommandSource.commandPalette) => this.openNotebook(file)
-            )
-        );
-        this.disposableRegistry.push(
-            commandManager.registerCommand(Commands.OpenNewNotebookWithContent, (content: string) =>
-                this.openNewNotebookWithContent(content)
+                (file?: Uri, contents?: string, _cmdSource: CommandSource = CommandSource.commandPalette) =>
+                    this.openNotebook(file, contents)
             )
         );
         this.disposableRegistry.push(
@@ -123,26 +114,20 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
     }
 
     @captureTelemetry(Telemetry.OpenNotebook, { scope: 'command' }, false)
-    private async openNotebook(file?: Uri): Promise<INotebookEditor | undefined> {
-        let notebook: INotebookEditor | undefined;
+    private async openNotebook(file?: Uri, content?: string): Promise<void> {
         if (file && path.extname(file.fsPath).toLocaleLowerCase() === '.ipynb') {
             try {
                 // Then take the contents and load it.
-                notebook = await this.provider.open(file);
+                await this.provider.open(file);
             } catch (e) {
                 await this.dataScienceErrorHandler.handleError(e);
             }
-            return notebook;
+        } else if (content) {
+            try {
+                await this.provider.createNew(content);
+            } catch (e) {
+                await this.dataScienceErrorHandler.handleError(e);
+            }
         }
-    }
-
-    private async openNewNotebookWithContent(content: string): Promise<INotebookEditor | undefined> {
-        let notebook: INotebookEditor | undefined;
-        try {
-            notebook = await this.provider.createNew(content);
-        } catch (e) {
-            await this.dataScienceErrorHandler.handleError(e);
-        }
-        return notebook;
     }
 }

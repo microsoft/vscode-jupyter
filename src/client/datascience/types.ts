@@ -38,7 +38,7 @@ import { JupyterServerInfo } from './jupyter/jupyterConnection';
 import { JupyterInstallError } from './jupyter/jupyterInstallError';
 import { JupyterKernelSpec } from './jupyter/kernels/jupyterKernelSpec';
 import { KernelConnectionMetadata } from './jupyter/kernels/types';
-import { NotebookEvent } from './notebookExtensibility';
+import { KernelStateEventArgs } from './notebookExtensibility';
 
 // tslint:disable-next-line:no-any
 export type PromiseFunction = (...any: any[]) => Promise<any>;
@@ -169,6 +169,7 @@ export interface IJupyterNotebookProvider {
 }
 
 export interface INotebook extends IAsyncDisposable {
+    readonly kernelId: string | undefined;
     readonly resource: Resource;
     readonly connection: INotebookProviderConnection | undefined;
     kernelSocket: Observable<KernelSocketInformation | undefined>;
@@ -263,9 +264,9 @@ export interface INotebookServerOptions {
 export const INotebookExecutionLogger = Symbol('INotebookExecutionLogger');
 export interface INotebookExecutionLogger extends IDisposable {
     preExecute(cell: ICell, silent: boolean): Promise<void>;
-    postExecute(cell: ICell, silent: boolean, language: string): Promise<void>;
-    onKernelStarted(languages: string[]): void;
-    onKernelRestarted(): void;
+    postExecute(cell: ICell, silent: boolean, language: string, kernelId: string): Promise<void>;
+    onKernelStarted(kernelMetadata: KernelMessage.IInfoReply, kernelId: string): void;
+    onKernelRestarted(kernelId: string): void;
     preHandleIOPub?(msg: KernelMessage.IIOPubMessage): KernelMessage.IIOPubMessage;
 }
 
@@ -307,6 +308,7 @@ export interface IJupyterPasswordConnect {
 
 export const IJupyterSession = Symbol('IJupyterSession');
 export interface IJupyterSession extends IAsyncDisposable {
+    readonly sessionId: string | undefined;
     onSessionStatusChanged: Event<ServerStatus>;
     readonly status: ServerStatus;
     readonly workingDirectory: string;
@@ -499,8 +501,12 @@ export interface IInteractiveBase extends Disposable {
     interruptKernel(): Promise<void>;
     restartKernel(): Promise<void>;
     hasCell(id: string): Promise<boolean>;
-    createWebviewCellButton(command: string, buttonHtml: string, statusToEnable: CellState[], tooltip: string): void;
-    removeWebviewCellButton(command: string): void;
+    createWebviewCellButton(
+        command: string,
+        buttonHtml: string,
+        statusToEnable: CellState[],
+        tooltip: string
+    ): IDisposable;
 }
 
 export const IInteractiveWindow = Symbol('IInteractiveWindow');
@@ -588,7 +594,7 @@ export interface INotebookEditor extends Disposable, IInteractiveBase {
 export const INotebookExtensibility = Symbol('INotebookExtensibility');
 
 export interface INotebookExtensibility {
-    readonly onKernelStateChange: Event<NotebookEvent>;
+    readonly onKernelStateChange: Event<KernelStateEventArgs>;
 }
 
 export const IWebviewExtensibility = Symbol('IWebviewExtensibility');

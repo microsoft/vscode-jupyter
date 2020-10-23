@@ -1,6 +1,6 @@
 import { inject, injectable } from 'inversify';
 import { IDisposable } from 'monaco-editor';
-import { NotebookCellRunState } from 'vscode';
+import { Disposable, NotebookCellRunState } from 'vscode';
 import { IInteractiveWindowProvider, INotebookEditorProvider, IWebviewExtensibility } from './types';
 import { translateCellStateFromNative } from './utils';
 
@@ -16,32 +16,60 @@ export class WebviewExtensibility implements IWebviewExtensibility {
         buttonHtml: string,
         statusToEnable: NotebookCellRunState[],
         tooltip: string
-    ): IDisposable {
+    ): Disposable {
+        const disposables: IDisposable[] = [];
+        const windows = new Set();
+
+        this.interactiveWindowProvider.onDidChangeActiveInteractiveWindow((window) => {
+            if (window && !windows.has(window)) {
+                disposables.push(
+                    window.createWebviewCellButton(
+                        command,
+                        buttonHtml,
+                        statusToEnable.map(translateCellStateFromNative),
+                        tooltip
+                    )
+                );
+            }
+        });
+
         this.interactiveWindowProvider.windows.forEach((window) => {
-            window.createWebviewCellButton(
-                command,
-                buttonHtml,
-                statusToEnable.map(translateCellStateFromNative),
-                tooltip
+            windows.add(window);
+            disposables.push(
+                window.createWebviewCellButton(
+                    command,
+                    buttonHtml,
+                    statusToEnable.map(translateCellStateFromNative),
+                    tooltip
+                )
             );
         });
+
+        this.webviewNotebookProvider.onDidOpenNotebookEditor((editor) => {
+            disposables.push(
+                editor.createWebviewCellButton(
+                    command,
+                    buttonHtml,
+                    statusToEnable.map(translateCellStateFromNative),
+                    tooltip
+                )
+            );
+        });
+
         this.webviewNotebookProvider.editors.forEach((editor) => {
-            editor.createWebviewCellButton(
-                command,
-                buttonHtml,
-                statusToEnable.map(translateCellStateFromNative),
-                tooltip
+            disposables.push(
+                editor.createWebviewCellButton(
+                    command,
+                    buttonHtml,
+                    statusToEnable.map(translateCellStateFromNative),
+                    tooltip
+                )
             );
         });
 
         return {
             dispose: () => {
-                this.interactiveWindowProvider.windows.forEach((window) => {
-                    window.removeWebviewCellButton(command);
-                });
-                this.webviewNotebookProvider.editors.forEach((editor) => {
-                    editor.removeWebviewCellButton(command);
-                });
+                disposables.forEach((d) => d.dispose());
             }
         };
     }

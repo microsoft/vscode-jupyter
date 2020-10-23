@@ -3,14 +3,13 @@
 
 'use strict';
 
-import { Event } from 'vscode';
+import { Disposable, Event } from 'vscode';
 import { NotebookCellRunState } from '../../types/vscode-proposed';
 import { IPythonApiProvider, PythonApi } from './api/types';
 import { isTestExecution } from './common/constants';
 import { traceError } from './common/logger';
-import { IDisposable } from './common/types';
 import { IDataViewerDataProvider, IDataViewerFactory } from './datascience/data-viewing/types';
-import { NotebookEvent } from './datascience/notebookExtensibility';
+import { KernelStateEventArgs } from './datascience/notebookExtensibility';
 import {
     IJupyterUriProvider,
     IJupyterUriProviderRegistration,
@@ -31,13 +30,13 @@ export interface IExtensionApi {
      * @memberof IExtensionApi
      */
     ready: Promise<void>;
-    readonly onKernelStateChange: Event<NotebookEvent>;
+    readonly onKernelStateChange: Event<KernelStateEventArgs>;
     registerCellToolbarButton(
         command: string,
         buttonHtml: string,
         statusToEnable: NotebookCellRunState[],
         tooltip: string
-    ): IDisposable;
+    ): Disposable;
     /**
      * Launches Data Viewer component.
      * @param {IDataViewerDataProvider} dataProvider Instance that will be used by the Data Viewer component to fetch data.

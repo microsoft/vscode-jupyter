@@ -32,6 +32,9 @@ export class MockJupyterNotebook implements INotebook {
     public get identity(): Uri {
         return getDefaultInteractiveIdentity();
     }
+    public get kernelId(): string {
+        return '';
+    }
     public get onSessionStatusChanged(): Event<ServerStatus> {
         if (!this.onStatusChangedEvent) {
             this.onStatusChangedEvent = new EventEmitter<ServerStatus>();

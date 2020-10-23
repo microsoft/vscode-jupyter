@@ -7,7 +7,7 @@ import { ConfigurationTarget, Event, EventEmitter, Uri, WebviewPanel } from 'vsc
 import type { NotebookCell, NotebookDocument } from '../../../../types/vscode-proposed';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import { traceError } from '../../common/logger';
-import { IConfigurationService, IDisposableRegistry } from '../../common/types';
+import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../common/types';
 import { DataScience } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { sendTelemetryEvent } from '../../telemetry';
@@ -117,10 +117,7 @@ export class NotebookEditor implements INotebookEditor {
     public stopProgress(): void {
         throw new Error('Method not implemented.');
     }
-    public createWebviewCellButton(): void {
-        throw new Error('Method not implemented.');
-    }
-    public removeWebviewCellButton(): void {
+    public createWebviewCellButton(): IDisposable {
         throw new Error('Method not implemented.');
     }
     public hasCell(): Promise<boolean> {
@@ -188,7 +185,10 @@ export class NotebookEditor implements INotebookEditor {
             }).then(noop, noop);
         }
     }
-    public async notifyExecution(cell: NotebookCell) {
+    public notifyExecution(cell: NotebookCell) {
+        this.notifyExecutionInternal(cell).ignoreErrors();
+    }
+    public async notifyExecutionInternal(cell: NotebookCell) {
         this._executed.fire(this);
         this.executedCode.fire(cell.document.getText());
 
@@ -198,8 +198,17 @@ export class NotebookEditor implements INotebookEditor {
             getOnly: true
         });
         if (notebook) {
+            const id = notebook.kernelId || '';
+
+            if (
+                this.vscodeNotebook.activeNotebookEditor &&
+                this.vscodeNotebook.activeNotebookEditor.document.metadata.custom
+            ) {
+                this.vscodeNotebook.activeNotebookEditor.document.metadata.custom.kernelId = id;
+            }
+
             const loggers = notebook.getLoggers();
-            loggers.forEach((l) => l.postExecute(traslateCellFromNative(cell), true, cell.language));
+            loggers.forEach((l) => l.postExecute(traslateCellFromNative(cell), true, cell.language, id));
         }
     }
     public async interruptKernel(): Promise<void> {

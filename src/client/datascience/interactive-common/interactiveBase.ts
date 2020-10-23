@@ -39,7 +39,7 @@ import { traceError, traceInfo, traceWarning } from '../../common/logger';
 
 import { isNil } from 'lodash';
 import { IFileSystem } from '../../common/platform/types';
-import { IConfigurationService, IDisposableRegistry, IExperimentService } from '../../common/types';
+import { IConfigurationService, IDisposable, IDisposableRegistry, IExperimentService } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { isUntitledFile, noop } from '../../common/utils/misc';
@@ -501,20 +501,25 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         buttonHtml: string,
         statusToEnable: CellState[],
         tooltip: string
-    ): void {
+    ): IDisposable {
         const index = this.externalButtons.findIndex((button) => button.command === command);
         if (index === -1) {
             this.externalButtons.push({ command, buttonHtml, statusToEnable, tooltip, running: false });
             this.postMessage(InteractiveWindowMessages.UpdateExternalCellButtons, this.externalButtons).ignoreErrors();
         }
-    }
 
-    public removeWebviewCellButton(command: string): void {
-        const index = this.externalButtons.findIndex((button) => button.command === command);
-        if (index !== -1) {
-            this.externalButtons.splice(index, 1);
-            this.postMessage(InteractiveWindowMessages.UpdateExternalCellButtons, this.externalButtons).ignoreErrors();
-        }
+        return {
+            dispose: () => {
+                const buttonIndex = this.externalButtons.findIndex((button) => button.command === command);
+                if (buttonIndex !== -1) {
+                    this.externalButtons.splice(buttonIndex, 1);
+                    this.postMessage(
+                        InteractiveWindowMessages.UpdateExternalCellButtons,
+                        this.externalButtons
+                    ).ignoreErrors();
+                }
+            }
+        };
     }
 
     public abstract hasCell(id: string): Promise<boolean>;
@@ -1595,13 +1600,16 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
 
     private async hanldeExecuteExternalCommand(payload: IExternalCommandFromWebview) {
         let language = PYTHON_LANGUAGE;
+        let id: string | undefined = '';
         if (this.notebook) {
             language = getKernelConnectionLanguage(this.notebook.getKernelConnection()) || PYTHON_LANGUAGE;
+            id = this.notebook.kernelId;
         }
         await commands.executeCommand(
             payload.command,
             translateCellToNative(payload.cell, language),
-            this.isInteractive
+            this.isInteractive,
+            id
         );
         // Post message again to let the react side know the command is done executing
         this.postMessage(InteractiveWindowMessages.UpdateExternalCellButtons, this.externalButtons).ignoreErrors();
