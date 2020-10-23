@@ -235,7 +235,7 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
                     <Image
                         baseTheme={this.props.baseTheme}
                         class="image-button-image"
-                        html={button.running ? undefined : button.buttonHtml}
+                        codicon={button.running ? undefined : button.codicon}
                         image={button.running ? ImageName.Sync : ImageName.Cancel}
                     />
                 </ImageButton>

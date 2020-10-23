@@ -13,7 +13,7 @@ export class WebviewExtensibility implements IWebviewExtensibility {
 
     public registerCellToolbarButton(
         command: string,
-        buttonHtml: string,
+        codicon: string,
         statusToEnable: NotebookCellRunState[],
         tooltip: string
     ): Disposable {
@@ -25,7 +25,7 @@ export class WebviewExtensibility implements IWebviewExtensibility {
                 disposables.push(
                     window.createWebviewCellButton(
                         command,
-                        buttonHtml,
+                        codicon,
                         statusToEnable.map(translateCellStateFromNative),
                         tooltip
                     )
@@ -38,7 +38,7 @@ export class WebviewExtensibility implements IWebviewExtensibility {
             disposables.push(
                 window.createWebviewCellButton(
                     command,
-                    buttonHtml,
+                    codicon,
                     statusToEnable.map(translateCellStateFromNative),
                     tooltip
                 )
@@ -49,7 +49,7 @@ export class WebviewExtensibility implements IWebviewExtensibility {
             disposables.push(
                 editor.createWebviewCellButton(
                     command,
-                    buttonHtml,
+                    codicon,
                     statusToEnable.map(translateCellStateFromNative),
                     tooltip
                 )
@@ -60,7 +60,7 @@ export class WebviewExtensibility implements IWebviewExtensibility {
             disposables.push(
                 editor.createWebviewCellButton(
                     command,
-                    buttonHtml,
+                    codicon,
                     statusToEnable.map(translateCellStateFromNative),
                     tooltip
                 )

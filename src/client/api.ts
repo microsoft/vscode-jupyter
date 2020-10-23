@@ -33,7 +33,7 @@ export interface IExtensionApi {
     readonly onKernelStateChange: Event<KernelStateEventArgs>;
     registerCellToolbarButton(
         command: string,
-        buttonHtml: string,
+        codicon: string,
         statusToEnable: NotebookCellRunState[],
         tooltip: string
     ): Disposable;

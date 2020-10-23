@@ -503,7 +503,7 @@ export interface IInteractiveBase extends Disposable {
     hasCell(id: string): Promise<boolean>;
     createWebviewCellButton(
         command: string,
-        buttonHtml: string,
+        codicon: string,
         statusToEnable: CellState[],
         tooltip: string
     ): IDisposable;
@@ -602,7 +602,7 @@ export const IWebviewExtensibility = Symbol('IWebviewExtensibility');
 export interface IWebviewExtensibility {
     registerCellToolbarButton(
         command: string,
-        buttonHtml: string,
+        codicon: string,
         statusToEnable: NotebookCellRunState[],
         tooltip: string
     ): IDisposable;
@@ -1387,7 +1387,7 @@ export interface IDebugLoggingManager {
 
 export interface IExternalWebviewCellButton {
     command: string;
-    buttonHtml: string;
+    codicon: string;
     statusToEnable: CellState[];
     tooltip: string;
     running: boolean;

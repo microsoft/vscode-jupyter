@@ -498,13 +498,13 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
 
     public createWebviewCellButton(
         command: string,
-        buttonHtml: string,
+        codicon: string,
         statusToEnable: CellState[],
         tooltip: string
     ): IDisposable {
         const index = this.externalButtons.findIndex((button) => button.command === command);
         if (index === -1) {
-            this.externalButtons.push({ command, buttonHtml, statusToEnable, tooltip, running: false });
+            this.externalButtons.push({ command, codicon, statusToEnable, tooltip, running: false });
             this.postMessage(InteractiveWindowMessages.UpdateExternalCellButtons, this.externalButtons).ignoreErrors();
         }
 
