@@ -601,7 +601,7 @@ Type:      builtin_function_or_method`,
 
             // find the buttons on the cell itself
             const ImageButtons = afterUndo.at(afterUndo.length - 2).find(ImageButton);
-            assert.equal(ImageButtons.length, 4, 'Cell buttons not found');
+            assert.equal(ImageButtons.length, 3, 'Cell buttons not found');
 
             const goto = ImageButtons.at(1);
             const deleteButton = ImageButtons.at(3);
@@ -976,7 +976,7 @@ for i in range(100):
             await enterInput(mount, 'a=1\na', 'InteractiveCell');
             verifyHtmlOnInteractiveCell('1', CellPosition.Last);
             const ImageButtons = getLastOutputCell(mount.wrapper, 'InteractiveCell').find(ImageButton);
-            assert.equal(ImageButtons.length, 4, 'Cell buttons not found');
+            assert.equal(ImageButtons.length, 3, 'Cell buttons not found');
             const copyToSource = ImageButtons.at(2);
 
             // Then click the copy to source button
@@ -1002,7 +1002,7 @@ for i in range(100):
             // Then delete the node
             const lastCell = getLastOutputCell(mount.wrapper, 'InteractiveCell');
             const ImageButtons = lastCell.find(ImageButton);
-            assert.equal(ImageButtons.length, 4, 'Cell buttons not found');
+            assert.equal(ImageButtons.length, 3, 'Cell buttons not found');
             const deleteButton = ImageButtons.at(3);
 
             // Make sure delete works
