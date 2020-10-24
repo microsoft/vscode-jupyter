@@ -251,8 +251,10 @@ import {
     IRawNotebookSupportedService,
     IStatusProvider,
     IThemeFinder,
-    ITrustService
+    ITrustService,
+    IWebviewExtensibility
 } from '../../client/datascience/types';
+import { WebviewExtensibility } from '../../client/datascience/webviewExtensibility';
 import { ProtocolParser } from '../../client/debugger/extension/helpers/protocolParser';
 import { IProtocolParser } from '../../client/debugger/extension/types';
 import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
@@ -442,7 +444,13 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
                 instance(this.webPanelProvider)
             );
         }
-        this.serviceManager.addSingleton<INotebookExtensibility>(INotebookExtensibility, NotebookExtensibility);
+        this.serviceManager.addSingleton<IWebviewExtensibility>(IWebviewExtensibility, WebviewExtensibility);
+        this.serviceManager.addSingleton<NotebookExtensibility>(
+            NotebookExtensibility,
+            NotebookExtensibility,
+            undefined,
+            [INotebookExtensibility, INotebookExecutionLogger]
+        );
         this.serviceManager.addSingleton<IExportManager>(IExportManager, ExportManager);
         this.serviceManager.addSingleton<ExportInterpreterFinder>(ExportInterpreterFinder, ExportInterpreterFinder);
         this.serviceManager.addSingleton<ExportFileOpener>(ExportFileOpener, ExportFileOpener);

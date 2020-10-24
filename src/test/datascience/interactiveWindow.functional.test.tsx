@@ -7,10 +7,11 @@ import { parse } from 'node-html-parser';
 import * as os from 'os';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
-import { Disposable, Memento, Selection, TextDocument, TextEditor, Uri } from 'vscode';
+import { commands, Disposable, Memento, Selection, TextDocument, TextEditor, Uri } from 'vscode';
 
 import { nbformat } from '@jupyterlab/coreutils';
 import { ReactWrapper } from 'enzyme';
+import { guid } from 'inversify';
 import { anything, when } from 'ts-mockito';
 import { IApplicationShell, IDocumentManager } from '../../client/common/application/types';
 import { IFileSystem } from '../../client/common/platform/types';
@@ -24,7 +25,7 @@ import { EditorContexts } from '../../client/datascience/constants';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { InteractiveWindow } from '../../client/datascience/interactive-window/interactiveWindow';
 import { AskedForPerFileSettingKey } from '../../client/datascience/interactive-window/interactiveWindowProvider';
-import { IInteractiveWindowProvider } from '../../client/datascience/types';
+import { IInteractiveWindowProvider, IWebviewExtensibility } from '../../client/datascience/types';
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { concatMultilineString } from '../../datascience-ui/common';
 import { InteractivePanel } from '../../datascience-ui/history-react/interactivePanel';
@@ -32,6 +33,7 @@ import { IKeyboardEvent } from '../../datascience-ui/react-common/event';
 import { ImageButton } from '../../datascience-ui/react-common/imageButton';
 import { MonacoEditor } from '../../datascience-ui/react-common/monacoEditor';
 import { InterpreterService } from '../interpreters/interpreterService';
+import { MockCommands } from '../vscode-mock';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { createDocument } from './editor-integration/helpers';
 import { defaultDataScienceSettings, takeSnapshot, writeDiffSnapshot } from './helpers';
@@ -1313,5 +1315,34 @@ for i in range(100):
 
         // First window should now have foo in the title too
         assert.ok(interactiveWindowProvider.windows[0].title.includes('foo'), 'Title of first window did not change');
+    });
+
+    test('Click External Button', async () => {
+        // Register a test command
+        const commandName = guid();
+
+        const api = ioc.get<IWebviewExtensibility>(IWebviewExtensibility);
+
+        api.registerCellToolbarButton(commandName, 'add', [1, 2, 3, 4], 'testing');
+
+        // Create an interactive window so that it listens to the results.
+        const { mount } = await getOrCreateInteractiveWindow(ioc);
+
+        // Then enter some code.
+        await enterInput(mount, 'a=1\na', 'InteractiveCell');
+        verifyHtmlOnInteractiveCell('1', CellPosition.Last);
+        const ImageButtons = getLastOutputCell(mount.wrapper, 'InteractiveCell').find(ImageButton);
+        const externalButton = ImageButtons.at(3);
+
+        // Then click the gather code button
+        const externalButtonPromise = mount.waitForMessage(InteractiveWindowMessages.ExecuteExternalCommand);
+        externalButton.simulate('click');
+        await externalButtonPromise;
+
+        const updateButtons = mount.waitForMessage(InteractiveWindowMessages.UpdateExternalCellButtons);
+        await updateButtons;
+
+        const commandLog = ((commands as any) as MockCommands).log;
+        assert.ok(commandLog.includes(commandName), 'Command did not fire');
     });
 });

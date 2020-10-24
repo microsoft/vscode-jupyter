@@ -8,6 +8,7 @@ import { CodeLens, Uri } from 'vscode';
 
 import { ICommandManager, IDocumentManager } from '../../client/common/application/types';
 import { Resource } from '../../client/common/types';
+import { InteractiveWindowMessageListener } from '../../client/datascience/interactive-common/interactiveWindowMessageListener';
 import { InteractiveWindow } from '../../client/datascience/interactive-window/interactiveWindow';
 import {
     ICodeWatcher,
@@ -39,6 +40,11 @@ export async function getOrCreateInteractiveWindow(
     const window = (await interactiveWindowProvider.getOrCreate(owner)) as InteractiveWindow;
     const mount = interactiveWindowProvider.getMountedWebView(window);
     await window.show();
+
+    // tslint:disable-next-line: no-any
+    const listener = (window as any).messageListener as InteractiveWindowMessageListener;
+    // tslint:disable-next-line: no-any
+    listener.onChangeViewState((window as any).webPanel);
     return { window, mount };
 }
 
