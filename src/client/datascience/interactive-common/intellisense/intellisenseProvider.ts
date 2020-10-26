@@ -113,7 +113,7 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
         @inject(ILanguageServerProvider) private languageServerProvider: ILanguageServerProvider,
         @inject(IJupyterVariables) @named(Identifiers.ALL_VARIABLES) private variableProvider: IJupyterVariables,
         @inject(IPythonExtensionChecker) private extensionChecker: IPythonExtensionChecker
-    ) { }
+    ) {}
 
     public dispose() {
         if (this.temporaryFile) {

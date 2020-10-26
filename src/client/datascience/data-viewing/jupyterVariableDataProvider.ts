@@ -19,7 +19,7 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
     constructor(
         @inject(IJupyterVariables) @named(Identifiers.ALL_VARIABLES) private variableManager: IJupyterVariables,
         @inject(DataViewerDependencyService) private dependencyService: DataViewerDependencyService
-    ) { }
+    ) {}
 
     /**
      * Normalizes column types to the types the UI component understands.

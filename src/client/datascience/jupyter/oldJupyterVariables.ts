@@ -58,7 +58,7 @@ export class OldJupyterVariables implements IJupyterVariables {
     constructor(
         @inject(IFileSystem) private fs: IFileSystem,
         @inject(IConfigurationService) private configService: IConfigurationService
-    ) { }
+    ) {}
 
     public get refreshRequired(): Event<void> {
         return this.refreshEventEmitter.event;

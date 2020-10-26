@@ -7,6 +7,7 @@ import { DebugState, IServerState } from '../../../datascience-ui/interactive-co
 
 import type { KernelMessage } from '@jupyterlab/services';
 import { DebugProtocol } from 'vscode-debugprotocol';
+import { DebugProtocolVariable, DebugProtocolVariableContainer } from '../../../../types/vscode-proposed';
 import {
     CommonActionType,
     IAddCellAction,
@@ -33,7 +34,6 @@ import {
 } from '../types';
 import { ILanguageConfigurationDto } from './serialization';
 import { BaseReduxActionPayload } from './types';
-import { DebugProtocolVariable, DebugProtocolVariableContainer } from '../../../../types/vscode-proposed';
 
 export enum InteractiveWindowMessages {
     StartCell = 'start_cell',

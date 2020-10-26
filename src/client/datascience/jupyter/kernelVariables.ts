@@ -48,7 +48,7 @@ export class KernelVariables implements IJupyterVariables {
     private notebookState = new Map<Uri, INotebookState>();
     private refreshEventEmitter = new EventEmitter<void>();
 
-    constructor(@inject(IConfigurationService) private configService: IConfigurationService) { }
+    constructor(@inject(IConfigurationService) private configService: IConfigurationService) {}
 
     public get refreshRequired(): Event<void> {
         return this.refreshEventEmitter.event;

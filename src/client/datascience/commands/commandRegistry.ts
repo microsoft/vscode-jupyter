@@ -58,7 +58,7 @@ export class CommandRegistry implements IDisposable {
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IJupyterVariableDataProviderFactory)
         private readonly jupyterVariableDataProviderFactory: IJupyterVariableDataProviderFactory,
-        @inject(IDataViewerFactory) private readonly dataViewerFactory: IDataViewerFactory,
+        @inject(IDataViewerFactory) private readonly dataViewerFactory: IDataViewerFactory
     ) {
         this.disposables.push(this.serverSelectedCommand);
         this.disposables.push(this.notebookCommands);
@@ -126,7 +126,7 @@ export class CommandRegistry implements IDisposable {
     private registerCommand<
         E extends keyof ICommandNameArgumentTypeMapping,
         U extends ICommandNameArgumentTypeMapping[E]
-    // tslint:disable-next-line: no-any
+        // tslint:disable-next-line: no-any
     >(command: E, callback: (...args: U) => any) {
         const disposable = this.commandManager.registerCommand(command, callback, this);
         this.disposables.push(disposable);
