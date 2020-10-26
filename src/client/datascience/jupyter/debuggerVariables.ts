@@ -185,6 +185,7 @@ export class DebuggerVariables extends DebugLocationTracker
             // tslint:disable-next-line: no-suspicious-comment
             // TODO: Figure out what resource to use
             this.updateVariables(undefined, message as DebugProtocol.VariablesResponse);
+            this.monkeyPatchDataViewableVariables(message);
         } else if (message.type === 'event' && message.event === 'terminated') {
             // When the debugger exits, make sure the variables are cleared
             this.lastKnownVariables = [];
@@ -277,37 +278,38 @@ export class DebuggerVariables extends DebugLocationTracker
         }
     }
 
+    private monkeyPatchDataViewableVariables(variablesResponse: DebugProtocol.VariablesResponse) {
+        variablesResponse.body.variables.forEach((v) => {
+            if (v.type && DataViewableTypes.has(v.type)) {
+                // tslint:disable-next-line: no-any
+                (v as any).__vscodeVariableMenuContext = 'viewableInDataViewer';
+            }
+        });
+    }
+
     private updateVariables(resource: Resource, variablesResponse: DebugProtocol.VariablesResponse) {
         const exclusionList = this.configService.getSettings(resource).variableExplorerExclude
             ? this.configService.getSettings().variableExplorerExclude?.split(';')
             : [];
 
-        const allowedVariables = variablesResponse.body.variables
-            .filter((v) => {
-                if (!v.name || !v.type || !v.value) {
-                    return false;
-                }
-                if (exclusionList && exclusionList.includes(v.type)) {
-                    return false;
-                }
-                if (v.name.startsWith('_')) {
-                    return false;
-                }
-                if (KnownExcludedVariables.has(v.name)) {
-                    return false;
-                }
-                if (v.type === 'NoneType') {
-                    return false;
-                }
-                return true;
-            })
-            .map((v) => {
-                if (v.type && DataViewableTypes.has(v.type)) {
-                    // tslint:disable-next-line: no-any
-                    (v as any).__vscodeVariableMenuContext = 'viewableInDataViewer';
-                }
-                return v;
-            });
+        const allowedVariables = variablesResponse.body.variables.filter((v) => {
+            if (!v.name || !v.type || !v.value) {
+                return false;
+            }
+            if (exclusionList && exclusionList.includes(v.type)) {
+                return false;
+            }
+            if (v.name.startsWith('_')) {
+                return false;
+            }
+            if (KnownExcludedVariables.has(v.name)) {
+                return false;
+            }
+            if (v.type === 'NoneType') {
+                return false;
+            }
+            return true;
+        });
 
         this.lastKnownVariables = allowedVariables.map((v) => {
             return convertDebugProtocolVariableToIJupyterVariable(v);
