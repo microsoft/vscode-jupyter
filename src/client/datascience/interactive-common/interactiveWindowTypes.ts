@@ -33,6 +33,7 @@ import {
 } from '../types';
 import { ILanguageConfigurationDto } from './serialization';
 import { BaseReduxActionPayload } from './types';
+import { DebugProtocolVariable, DebugProtocolVariableContainer } from '../../../../types/vscode-proposed';
 
 export enum InteractiveWindowMessages {
     StartCell = 'start_cell',
@@ -332,6 +333,11 @@ export interface IInsertCell {
 export interface IShowDataViewer {
     variable: IJupyterVariable;
     columnSize: number;
+}
+
+export interface IShowDataViewerFromVariablePanel {
+    container: DebugProtocolVariableContainer | undefined;
+    variable: DebugProtocolVariable;
 }
 
 export interface IRefreshVariablesRequest {

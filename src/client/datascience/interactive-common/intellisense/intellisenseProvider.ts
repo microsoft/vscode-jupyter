@@ -113,7 +113,7 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
         @inject(ILanguageServerProvider) private languageServerProvider: ILanguageServerProvider,
         @inject(IJupyterVariables) @named(Identifiers.ALL_VARIABLES) private variableProvider: IJupyterVariables,
         @inject(IPythonExtensionChecker) private extensionChecker: IPythonExtensionChecker
-    ) {}
+    ) { }
 
     public dispose() {
         if (this.temporaryFile) {
@@ -943,7 +943,7 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
             const notebook = await this.getNotebook(token);
             if (notebook) {
                 try {
-                    const value = await this.variableProvider.getMatchingVariable(notebook, wordAtPosition, token);
+                    const value = await this.variableProvider.getMatchingVariable(wordAtPosition, notebook, token);
                     if (value) {
                         return {
                             contents: [`${wordAtPosition}: ${value.type} = ${value.value}`]
