@@ -1038,6 +1038,9 @@ export interface IWebviewPanelMessageListener extends IWebviewMessageListener, I
     onChangeViewState(panel: IWebviewPanel): void;
 }
 
+export const IWebviewViewMessageListener = Symbol('IWebviewViewMessageListener');
+export interface IWebviewViewMessageListener extends IWebviewMessageListener, IAsyncDisposable {}
+
 export type WebviewMessage = {
     /**
      * Message type

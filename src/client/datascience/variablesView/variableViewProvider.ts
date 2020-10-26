@@ -28,32 +28,32 @@ export class VariableViewProvider implements IVariableViewProvider {
         // IANHU: Check options
         webviewView.webview.options = { enableScripts: true };
 
-        webviewView.webview.html = this.getHtml(this.view.webview);
+        //webviewView.webview.html = this.getHtml(this.view.webview);
     }
 
-    private getHtml(webview: Webview) {
-        const nonce = getNonce();
+    //private getHtml(webview: Webview) {
+    //const nonce = getNonce();
 
-        return `<!DOCTYPE html>
-			<html lang="en">
-			<head>
-				<meta charset="UTF-8">
-				<!--
-					Use a content security policy to only allow loading images from https or from our extension directory,
-					and only allow scripts that have a specific nonce.
-				-->
-				<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; script-src 'nonce-${nonce}';">
-				<meta name="viewport" content="width=device-width, initial-scale=1.0">
-				
-				<title>Variables</title>
-			</head>
-			<body>
-				<ul class="color-list">
-				</ul>
-				<button class="add-color-button">Add Color</button>
-			</body>
-			</html>`;
-    }
+    //return `<!DOCTYPE html>
+    //<html lang="en">
+    //<head>
+    //<meta charset="UTF-8">
+    //<!--
+    //Use a content security policy to only allow loading images from https or from our extension directory,
+    //and only allow scripts that have a specific nonce.
+    //-->
+    //<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; script-src 'nonce-${nonce}';">
+    //<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    //<title>Variables</title>
+    //</head>
+    //<body>
+    //<ul class="color-list">
+    //</ul>
+    //<button class="add-color-button">Add Color</button>
+    //</body>
+    //</html>`;
+    //}
 }
 
 // IANHU: Check this

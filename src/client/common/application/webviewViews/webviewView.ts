@@ -20,18 +20,19 @@ export class WebviewView extends Webview implements IWebviewView {
         fs: IFileSystem,
         private disposableRegistry: IDisposableRegistry,
         private panelOptions: IWebviewViewOptions,
+        private webviewView: vscodeWebviewView,
         additionalRootPaths: Uri[] = []
     ) {
         super(fs, panelOptions);
 
-        const webViewOptions: WebviewOptions = {
-            enableScripts: true,
-            localResourceRoots: [
-                Uri.file(this.panelOptions.rootPath),
-                Uri.file(this.panelOptions.cwd),
-                ...additionalRootPaths
-            ]
-        };
+        //const webViewOptions: WebviewOptions = {
+        //enableScripts: true,
+        //localResourceRoots: [
+        //Uri.file(this.panelOptions.rootPath),
+        //Uri.file(this.panelOptions.cwd),
+        //...additionalRootPaths
+        //]
+        //};
 
         //if (panelOptions.webViewPanel) {
         //this.panel = panelOptions.webViewPanel;
@@ -51,6 +52,7 @@ export class WebviewView extends Webview implements IWebviewView {
 
         // Set our base webview from the panel
         //this.webview = this.view.webview;
+        this.webview = webviewView.webview;
 
         this.loadPromise = this.load();
     }
