@@ -705,25 +705,27 @@ export class NativeCell extends React.Component<INativeCellProps> {
         const buttons: JSX.Element[] = [];
 
         this.props.externalButtons.forEach((button, index) => {
-            buttons.push(
-                <ImageButton
-                    baseTheme={this.props.baseTheme}
-                    onClick={() => {
-                        button.running = true;
-                        this.props.runExternalCommand(button.buttonId, this.props.cellVM.cell);
-                    }}
-                    disabled={!button.statusToEnable.includes(this.props.cellVM.cell.state)}
-                    tooltip={button.tooltip}
-                    key={index}
-                >
-                    <Image
+            if (this.isCodeCell()) {
+                buttons.push(
+                    <ImageButton
                         baseTheme={this.props.baseTheme}
-                        class="image-button-image"
-                        codicon={button.running ? undefined : button.codicon}
-                        image={button.running ? ImageName.Sync : ImageName.Cancel}
-                    />
-                </ImageButton>
-            );
+                        onClick={() => {
+                            button.running = true;
+                            this.props.runExternalCommand(button.buttonId, this.props.cellVM.cell);
+                        }}
+                        disabled={!button.statusToEnable.includes(this.props.cellVM.cell.state)}
+                        tooltip={button.tooltip}
+                        key={index}
+                    >
+                        <Image
+                            baseTheme={this.props.baseTheme}
+                            class="image-button-image"
+                            codicon={button.running ? undefined : button.codicon}
+                            image={button.running ? ImageName.Sync : ImageName.Cancel}
+                        />
+                    </ImageButton>
+                );
+            }
         });
 
         return buttons;
