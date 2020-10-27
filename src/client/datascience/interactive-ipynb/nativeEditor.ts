@@ -58,6 +58,7 @@ import {
     IInteractiveWindowInfo,
     IInteractiveWindowListener,
     IJupyterDebugger,
+    IJupyterServerUriStorage,
     IJupyterVariableDataProviderFactory,
     IJupyterVariables,
     INotebookEditor,
@@ -186,7 +187,8 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         webviewPanel: WebviewPanel | undefined,
         selector: KernelSelector,
         private nbExtensibility: INotebookExtensibility,
-        private extensionChecker: IPythonExtensionChecker
+        private extensionChecker: IPythonExtensionChecker,
+        serverStorage: IJupyterServerUriStorage
     ) {
         super(
             listeners,
@@ -223,7 +225,8 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             notebookProvider,
             useCustomEditorApi,
             expService,
-            selector
+            selector,
+            serverStorage
         );
         asyncRegistry.push(this);
         asyncRegistry.push(this.trustService.onDidSetNotebookTrust(this.monitorChangesToTrust, this));

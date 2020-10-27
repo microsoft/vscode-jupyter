@@ -51,6 +51,7 @@ import {
     IDataScienceErrorHandler,
     IInteractiveWindowListener,
     IJupyterDebugger,
+    IJupyterServerUriStorage,
     IJupyterVariableDataProviderFactory,
     IJupyterVariables,
     IModelLoadOptions,
@@ -269,7 +270,8 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
             panel,
             this.serviceContainer.get<KernelSelector>(KernelSelector),
             this.serviceContainer.get<INotebookExtensibility>(INotebookExtensibility),
-            this.serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker)
+            this.serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker),
+            this.serviceContainer.get<IJupyterServerUriStorage>(IJupyterServerUriStorage)
         );
         this.openedEditor(editor);
         return editor;

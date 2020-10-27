@@ -47,7 +47,7 @@ import { StopWatch } from '../../common/utils/stopWatch';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { generateCellRangesFromDocument } from '../cellFactory';
 import { CellMatcher } from '../cellMatcher';
-import { addToUriList, translateKernelLanguageToMonaco } from '../common';
+import { translateKernelLanguageToMonaco } from '../common';
 import { Commands, Identifiers, Settings, Telemetry } from '../constants';
 import { IDataViewerFactory } from '../data-viewing/types';
 import {
@@ -85,6 +85,7 @@ import {
     IInteractiveWindowInfo,
     IInteractiveWindowListener,
     IJupyterDebugger,
+    IJupyterServerUriStorage,
     IJupyterVariableDataProviderFactory,
     IJupyterVariables,
     IJupyterVariablesRequest,
@@ -168,7 +169,8 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         private readonly notebookProvider: INotebookProvider,
         useCustomEditorApi: boolean,
         expService: IExperimentService,
-        private selector: KernelSelector
+        private selector: KernelSelector,
+        private serverStorage: IJupyterServerUriStorage
     ) {
         super(
             configuration,
@@ -897,8 +899,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
                 displayName = localize.DataScience.localJupyterServer();
             } else {
                 // Log this remote URI into our MRU list
-                addToUriList(
-                    this.globalStorage,
+                await this.serverStorage.addToUriList(
                     !isNil(serverConnection.url) ? serverConnection.url : serverConnection.displayName,
                     Date.now(),
                     serverConnection.displayName
