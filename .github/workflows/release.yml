@@ -21,7 +21,7 @@ env:
   # Key for the cache created at the end of the the 'Cache ./pythonFiles/lib/python' step.
   CACHE_PYTHONFILES: cache-pvsc-pythonFiles
   VSIX_NAME: ms-toolsai-jupyter-release.vsix
-  VSIX_NAME_PYTHON: ms-python-release-nods.vsix
+  VSIX_NAME_PYTHON: ms-python-release.vsix
   VSIX_NAME_UPLOADED_TO_BLOB: ms-toolsai-jupyter-release.vsix
   COVERAGE_REPORTS: tests-coverage-reports
   CI_PYTHON_PATH: python
