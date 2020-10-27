@@ -8,7 +8,6 @@ import { CodeLens, Uri } from 'vscode';
 
 import { ICommandManager, IDocumentManager } from '../../client/common/application/types';
 import { Resource } from '../../client/common/types';
-import { InteractiveWindowMessageListener } from '../../client/datascience/interactive-common/interactiveWindowMessageListener';
 import { InteractiveWindow } from '../../client/datascience/interactive-window/interactiveWindow';
 import {
     ICodeWatcher,

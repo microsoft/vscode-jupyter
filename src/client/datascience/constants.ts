@@ -49,9 +49,7 @@ export namespace Commands {
     export const ImportNotebook = 'jupyter.importnotebook';
     export const ImportNotebookFile = 'jupyter.importnotebookfile';
     export const OpenNotebook = 'jupyter.opennotebook';
-    export const OpenNewNotebookWithContent = 'jupyter.openNewNotebookWithContent';
     export const OpenNotebookInPreviewEditor = 'jupyter.opennotebookInPreviewEditor';
-    export const OpenNewNotebookWithContentInPreviewEditor = 'jupyter.openNewNotebookWithContentInPreviewEditor';
     export const SelectJupyterURI = 'jupyter.selectjupyteruri';
     export const SelectJupyterCommandLine = 'jupyter.selectjupytercommandline';
     export const ExportFileAsNotebook = 'jupyter.exportfileasnotebook';
