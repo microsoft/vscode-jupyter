@@ -42,6 +42,11 @@ jobs:
         with:
           node-version: ${{env.NODE_VERSION}}
 
+      - name: Use Python ${{env.PYTHON_VERSION}}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{env.PYTHON_VERSION}}
+
       # Caching of npm packages (https://github.com/actions/cache/blob/main/examples.md#node---npm)
       - name: Cache npm on linux/mac
         uses: actions/cache@v2
@@ -65,6 +70,10 @@ jobs:
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-node-
+
+      - name: Install Python libs
+        run: |
+          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
 
       - name: Build VSIX
         uses: ./.github/actions/build-vsix
@@ -305,7 +314,7 @@ jobs:
 
       # debugpy is not shipped, only installed for local tests.
       # In production, we get debugpy from python extension.
-      - name: Install functional test requirements
+      - name: Install Python Libs
         run: |
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
           python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
@@ -449,7 +458,7 @@ jobs:
 
       # debugpy is not shipped, only installed for local tests.
       # In production, we get debugpy from python extension.
-      - name: Install functional test requirements
+      - name: Install Python Libs
         run: |
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
           python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
@@ -482,14 +491,8 @@ jobs:
             using Pkg
             Pkg.add("IJulia")'
 
-      # Used by tests for installation of ipykernel.
-      # Test are enabled dyanamically when
-      # 1. `CI_PYTHON_PATH2` points to the new virtual env.
-      # 2. Virtual env is located under `src/test/datascience/` and named `.venvnokernel`.
-      - name: Create virtual environment for Tests
-        run: |
-          python -m venv .venvnokernel
-        working-directory: src/test/datascience
+      - name: Create Virtual Env for Tests
+        uses: ./.github/actions/create-venv-for-tests
 
       - name: Azure Login
         uses: azure/login@v1.1.1
@@ -521,15 +524,15 @@ jobs:
         if: (steps.test_vscode.outcome == 'failure' || steps.test_vscode.outcome == 'failure') && failure()
 
       - name: Run Native Notebook with VSCode & Jupyter
+        id: test_notebook_vscode
         uses: GabrielBB/xvfb-action@v1.4
         with:
           run: npm run testNativeNotebooksInVSCode
         env:
-            VSC_FORCE_REAL_JUPYTER: 1
-            VSC_JUPYTER_FORCE_LOGGING: 1
-            VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
-            VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
-          id: test_notebook_vscode
+          VSC_FORCE_REAL_JUPYTER: 1
+          VSC_JUPYTER_FORCE_LOGGING: 1
+          VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
+          VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
         if: matrix.test-suite == 'notebook'
 
       - name: Publish Notebook Test Report

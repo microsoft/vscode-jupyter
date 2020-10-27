@@ -115,6 +115,7 @@ export namespace Commands {
     export const ResetLoggingLevel = 'jupyter.resetLoggingLevel';
     export const CreateGitHubIssue = 'jupyter.createGitHubIssue';
     export const SubmitGitHubIssue = 'jupyter.submitGitHubIssue';
+    export const ShowDataViewer = 'jupyter.showDataViewer';
 }
 
 export namespace CodeLensCommands {
@@ -349,6 +350,8 @@ export enum Telemetry {
     KernelRegisterFailed = 'DS_INTERNAL.KERNEL_REGISTER_FAILED',
     KernelEnumeration = 'DS_INTERNAL.KERNEL_ENUMERATION',
     KernelLauncherPerf = 'DS_INTERNAL.KERNEL_LAUNCHER_PERF',
+    KernelProviderPerf = 'DS_INTERNAL.KERNEL_PROVIDER_PERF',
+    GetPreferredKernelPerf = 'DS_INTERNAL.GET_PREFERRED_KERNEL_PERF',
     KernelFinderPerf = 'DS_INTERNAL.KERNEL_FINDER_PERF',
     JupyterInstallFailed = 'DS_INTERNAL.JUPYTER_INSTALL_FAILED',
     UserInstalledModule = 'DATASCIENCE.USER_INSTALLED_MODULE',

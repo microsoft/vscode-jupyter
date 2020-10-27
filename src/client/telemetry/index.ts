@@ -542,6 +542,9 @@ export interface IEventNamePropertyMapping {
          */
         selection: 'Yes' | 'No' | undefined;
     };
+    [EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_REQUEST]: never | undefined;
+    [EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_ERROR]: never | undefined;
+    [EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_SUCCESS]: never | undefined;
     // Data Science
     [Telemetry.AddCellBelow]: never | undefined;
     [Telemetry.CodeLensAverageAcquisitionTime]: never | undefined;
@@ -875,6 +878,14 @@ export interface IEventNamePropertyMapping {
      * Total time taken to find a kernel on disc.
      */
     [Telemetry.KernelFinderPerf]: undefined | never;
+    /**
+     * Total time taken to list kernels for VS Code.
+     */
+    [Telemetry.KernelProviderPerf]: undefined | never;
+    /**
+     * Total time taken to get the preferred kernel for notebook.
+     */
+    [Telemetry.GetPreferredKernelPerf]: undefined | never;
     /**
      * Telemetry event sent if there's an error installing a jupyter required dependency
      *

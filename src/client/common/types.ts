@@ -139,7 +139,7 @@ export interface IJupyterSettings {
     readonly liveShareConnectionTimeout: number;
     readonly decorateCells: boolean;
     readonly enableCellCodeLens: boolean;
-    readonly askForLargeDataFrames: boolean;
+    askForLargeDataFrames: boolean;
     readonly enableAutoMoveToNextCell: boolean;
     readonly askForKernelRestart: boolean;
     readonly enablePlotViewer: boolean;
