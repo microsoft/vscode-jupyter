@@ -226,7 +226,7 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
                     baseTheme={this.props.baseTheme}
                     onClick={() => {
                         button.running = true;
-                        this.props.runExternalCommand(button.command, this.props.cellVM.cell);
+                        this.props.runExternalCommand(button.buttonId, this.props.cellVM.cell);
                     }}
                     disabled={!button.statusToEnable.includes(this.props.cellVM.cell.state)}
                     tooltip={button.tooltip}

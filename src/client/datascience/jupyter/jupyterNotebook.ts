@@ -164,9 +164,6 @@ export class JupyterNotebookBase implements INotebook {
     public get onKernelChanged(): Event<KernelConnectionMetadata> {
         return this.kernelChanged.event;
     }
-    public get kernelId(): string | undefined {
-        return this.session.sessionId;
-    }
     public get disposed() {
         return this._disposed;
     }
@@ -483,7 +480,7 @@ export class JupyterNotebookBase implements INotebook {
             traceInfo('restartKernel - initialSetup completed');
 
             // Tell our loggers
-            const id = this.session.sessionId || '';
+            const id = this.identity.authority.length === 0 ? this.identity.fsPath : this.identity.authority;
             this.loggers.forEach((l) => l.onKernelRestarted(id));
 
             this.kernelRestarted.fire();
@@ -736,10 +733,8 @@ export class JupyterNotebookBase implements INotebook {
     }
 
     private async logKernelStarted() {
-        const info = await this.session.requestKernelInfo();
-        const notebookMetadata = info.content as KernelMessage.IInfoReply;
-        const id = this.session.sessionId || '';
-        this.loggers.forEach((l) => l.onKernelStarted(notebookMetadata, id));
+        const id = this.identity.authority.length === 0 ? this.identity.fsPath : this.identity.authority;
+        this.loggers.forEach((l) => l.onKernelStarted(id));
     }
 
     private async initializeMatplotlib(cancelToken?: CancellationToken): Promise<void> {
@@ -1213,7 +1208,7 @@ export class JupyterNotebookBase implements INotebook {
 
     private async logPostCode(cell: ICell, silent: boolean): Promise<void> {
         const language = getKernelConnectionLanguage(this.getKernelConnection()) || PYTHON_LANGUAGE;
-        const id = this.session.sessionId || '';
+        const id = this.identity.authority.length === 0 ? this.identity.fsPath : this.identity.authority;
         await Promise.all(this.loggers.map((l) => l.postExecute(cloneDeep(cell), silent, language, id)));
     }
 

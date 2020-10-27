@@ -111,6 +111,6 @@ export const actionCreators = {
         }),
     widgetFailed: (ex: Error): CommonAction<Error> =>
         createIncomingActionWithPayload(CommonActionType.IPYWIDGET_RENDER_FAILURE, ex),
-    runExternalCommand: (command: string, cell: ICell): CommonAction<IExternalCommandFromWebview> =>
-        createIncomingActionWithPayload(InteractiveWindowMessages.ExecuteExternalCommand, { command, cell })
+    runExternalCommand: (buttonId: string, cell: ICell): CommonAction<IExternalCommandFromWebview> =>
+        createIncomingActionWithPayload(InteractiveWindowMessages.ExecuteExternalCommand, { buttonId, cell })
 };

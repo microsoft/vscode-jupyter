@@ -148,6 +148,6 @@ export const actionCreators = {
         createIncomingActionWithPayload(CommonActionType.CONTINUE, { cellId }),
     step: (cellId: string): CommonAction<ICellAction> =>
         createIncomingActionWithPayload(CommonActionType.STEP, { cellId }),
-    runExternalCommand: (command: string, cell: ICell): CommonAction<IExternalCommandFromWebview> =>
-        createIncomingActionWithPayload(InteractiveWindowMessages.ExecuteExternalCommand, { command, cell })
+    runExternalCommand: (buttonId: string, cell: ICell): CommonAction<IExternalCommandFromWebview> =>
+        createIncomingActionWithPayload(InteractiveWindowMessages.ExecuteExternalCommand, { buttonId, cell })
 };

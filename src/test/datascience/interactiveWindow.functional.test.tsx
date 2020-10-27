@@ -7,7 +7,7 @@ import { parse } from 'node-html-parser';
 import * as os from 'os';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
-import { commands, Disposable, Memento, Selection, TextDocument, TextEditor, Uri } from 'vscode';
+import { Disposable, Memento, Selection, TextDocument, TextEditor, Uri } from 'vscode';
 
 import { nbformat } from '@jupyterlab/coreutils';
 import { ReactWrapper } from 'enzyme';
@@ -33,7 +33,6 @@ import { IKeyboardEvent } from '../../datascience-ui/react-common/event';
 import { ImageButton } from '../../datascience-ui/react-common/imageButton';
 import { MonacoEditor } from '../../datascience-ui/react-common/monacoEditor';
 import { InterpreterService } from '../interpreters/interpreterService';
-import { MockCommands } from '../vscode-mock';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { createDocument } from './editor-integration/helpers';
 import { defaultDataScienceSettings, takeSnapshot, writeDiffSnapshot } from './helpers';
@@ -1318,12 +1317,22 @@ for i in range(100):
     });
 
     test('Click External Button', async () => {
+        let success = false;
         // Register a test command
-        const commandName = guid();
+        const buttonId = guid();
 
         const api = ioc.get<IWebviewExtensibility>(IWebviewExtensibility);
 
-        api.registerCellToolbarButton(commandName, 'add', [1, 2, 3, 4], 'testing');
+        api.registerCellToolbarButton(
+            buttonId,
+            () => {
+                success = true;
+                return Promise.resolve();
+            },
+            'add',
+            [1, 2, 3, 4],
+            'testing'
+        );
 
         // Create an interactive window so that it listens to the results.
         const { mount } = await getOrCreateInteractiveWindow(ioc);
@@ -1342,7 +1351,6 @@ for i in range(100):
         const updateButtons = mount.waitForMessage(InteractiveWindowMessages.UpdateExternalCellButtons);
         await updateButtons;
 
-        const commandLog = ((commands as any) as MockCommands).log;
-        assert.ok(commandLog.includes(commandName), 'Command did not fire');
+        assert.ok(success, 'External callback was not called');
     });
 });

@@ -1,6 +1,7 @@
 import { inject, injectable } from 'inversify';
 import { IDisposable } from 'monaco-editor';
 import { Disposable, NotebookCellRunState } from 'vscode';
+import { NotebookCell } from '../../../types/vscode-proposed';
 import { IInteractiveWindowProvider, INotebookEditorProvider, IWebviewExtensibility } from './types';
 import { translateCellStateFromNative } from './utils';
 
@@ -12,7 +13,8 @@ export class WebviewExtensibility implements IWebviewExtensibility {
     ) {}
 
     public registerCellToolbarButton(
-        command: string,
+        buttonId: string,
+        callback: (cell: NotebookCell, isInteractive: boolean, notebookId: string) => Promise<void>,
         codicon: string,
         statusToEnable: NotebookCellRunState[],
         tooltip: string
@@ -24,7 +26,8 @@ export class WebviewExtensibility implements IWebviewExtensibility {
             if (window && !windows.has(window)) {
                 disposables.push(
                     window.createWebviewCellButton(
-                        command,
+                        buttonId,
+                        callback,
                         codicon,
                         statusToEnable.map(translateCellStateFromNative),
                         tooltip
@@ -37,7 +40,8 @@ export class WebviewExtensibility implements IWebviewExtensibility {
             windows.add(window);
             disposables.push(
                 window.createWebviewCellButton(
-                    command,
+                    buttonId,
+                    callback,
                     codicon,
                     statusToEnable.map(translateCellStateFromNative),
                     tooltip
@@ -48,7 +52,8 @@ export class WebviewExtensibility implements IWebviewExtensibility {
         this.webviewNotebookProvider.onDidOpenNotebookEditor((editor) => {
             disposables.push(
                 editor.createWebviewCellButton(
-                    command,
+                    buttonId,
+                    callback,
                     codicon,
                     statusToEnable.map(translateCellStateFromNative),
                     tooltip
@@ -59,7 +64,8 @@ export class WebviewExtensibility implements IWebviewExtensibility {
         this.webviewNotebookProvider.editors.forEach((editor) => {
             disposables.push(
                 editor.createWebviewCellButton(
-                    command,
+                    buttonId,
+                    callback,
                     codicon,
                     statusToEnable.map(translateCellStateFromNative),
                     tooltip

@@ -16,6 +16,7 @@ import {
     Disposable,
     Event,
     LanguageConfiguration,
+    NotebookCell,
     QuickPickItem,
     Range,
     TextDocument,
@@ -169,7 +170,6 @@ export interface IJupyterNotebookProvider {
 }
 
 export interface INotebook extends IAsyncDisposable {
-    readonly kernelId: string | undefined;
     readonly resource: Resource;
     readonly connection: INotebookProviderConnection | undefined;
     kernelSocket: Observable<KernelSocketInformation | undefined>;
@@ -264,9 +264,9 @@ export interface INotebookServerOptions {
 export const INotebookExecutionLogger = Symbol('INotebookExecutionLogger');
 export interface INotebookExecutionLogger extends IDisposable {
     preExecute(cell: ICell, silent: boolean): Promise<void>;
-    postExecute(cell: ICell, silent: boolean, language: string, kernelId: string): Promise<void>;
-    onKernelStarted(kernelMetadata: KernelMessage.IInfoReply, kernelId: string): void;
-    onKernelRestarted(kernelId: string): void;
+    postExecute(cell: ICell, silent: boolean, language: string, notebookId: string): Promise<void>;
+    onKernelStarted(notebookId: string): void;
+    onKernelRestarted(notebookId: string): void;
     preHandleIOPub?(msg: KernelMessage.IIOPubMessage): KernelMessage.IIOPubMessage;
 }
 
@@ -308,7 +308,6 @@ export interface IJupyterPasswordConnect {
 
 export const IJupyterSession = Symbol('IJupyterSession');
 export interface IJupyterSession extends IAsyncDisposable {
-    readonly sessionId: string | undefined;
     onSessionStatusChanged: Event<ServerStatus>;
     readonly status: ServerStatus;
     readonly workingDirectory: string;
@@ -502,7 +501,8 @@ export interface IInteractiveBase extends Disposable {
     restartKernel(): Promise<void>;
     hasCell(id: string): Promise<boolean>;
     createWebviewCellButton(
-        command: string,
+        buttonId: string,
+        callback: (cell: NotebookCell, isInteractive: boolean, notebookId: string) => Promise<void>,
         codicon: string,
         statusToEnable: CellState[],
         tooltip: string
@@ -601,7 +601,8 @@ export const IWebviewExtensibility = Symbol('IWebviewExtensibility');
 
 export interface IWebviewExtensibility {
     registerCellToolbarButton(
-        command: string,
+        buttonId: string,
+        callback: (cell: NotebookCell, isInteractive: boolean, notebookId: string) => Promise<void>,
         codicon: string,
         statusToEnable: NotebookCellRunState[],
         tooltip: string
@@ -1386,14 +1387,15 @@ export interface IDebugLoggingManager {
 }
 
 export interface IExternalWebviewCellButton {
-    command: string;
+    buttonId: string;
     codicon: string;
     statusToEnable: CellState[];
     tooltip: string;
     running: boolean;
+    callback(cell: NotebookCell, isInteractive: boolean, notebookId: string): Promise<void>;
 }
 
 export interface IExternalCommandFromWebview {
-    command: string;
+    buttonId: string;
     cell: ICell;
 }

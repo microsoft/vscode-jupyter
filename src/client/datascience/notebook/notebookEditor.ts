@@ -198,16 +198,8 @@ export class NotebookEditor implements INotebookEditor {
             getOnly: true
         });
         if (notebook) {
-            const id = notebook.kernelId || '';
-
-            if (
-                this.vscodeNotebook.activeNotebookEditor &&
-                this.vscodeNotebook.activeNotebookEditor.document.metadata.custom
-            ) {
-                this.vscodeNotebook.activeNotebookEditor.document.metadata.custom.kernelId = id;
-            }
-
             const loggers = notebook.getLoggers();
+            const id = this.file.fsPath;
             loggers.forEach((l) => l.postExecute(traslateCellFromNative(cell), true, cell.language, id));
         }
     }

@@ -1,4 +1,3 @@
-import { KernelMessage } from '@jupyterlab/services';
 import { injectable } from 'inversify';
 import { Event, EventEmitter } from 'vscode';
 import type { NotebookCell } from '../../../types/vscode-proposed';
@@ -7,9 +6,8 @@ import { ICell, INotebookExecutionLogger, INotebookExtensibility } from './types
 import { translateCellToNative } from './utils';
 
 export type KernelStateEventArgs = {
-    kernelId: string;
+    notebookId: string;
     state: KernelState;
-    kernelMetadata?: KernelMessage.IInfoReply;
     cell?: NotebookCell;
 };
 
@@ -34,22 +32,21 @@ export class NotebookExtensibility implements INotebookExecutionLogger, INoteboo
         const nbCell = translateCellToNative(cell, language);
         if (nbCell && nbCell.code.length > 0) {
             this.kernelStateChange.fire({
-                kernelId: id,
+                notebookId: id,
                 state: KernelState.executed,
                 cell: nbCell as NotebookCell
             });
         }
     }
-    public onKernelStarted(kernelMetadata: KernelMessage.IInfoReply, id: string): void {
+    public onKernelStarted(id: string): void {
         this.kernelStateChange.fire({
-            kernelId: id,
-            state: KernelState.started,
-            kernelMetadata
+            notebookId: id,
+            state: KernelState.started
         });
     }
     public onKernelRestarted(id: string): void {
         this.kernelStateChange.fire({
-            kernelId: id,
+            notebookId: id,
             state: KernelState.restarted
         });
     }

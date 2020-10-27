@@ -38,6 +38,7 @@ import { Experiments } from '../../common/experiments/groups';
 import { traceError, traceInfo, traceWarning } from '../../common/logger';
 
 import { isNil } from 'lodash';
+import { NotebookCell } from '../../../../types/vscode-proposed';
 import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, IDisposable, IDisposableRegistry, IExperimentService } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
@@ -497,20 +498,21 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
     }
 
     public createWebviewCellButton(
-        command: string,
+        buttonId: string,
+        callback: (cell: NotebookCell, isInteractive: boolean, notebookId: string) => Promise<void>,
         codicon: string,
         statusToEnable: CellState[],
         tooltip: string
     ): IDisposable {
-        const index = this.externalButtons.findIndex((button) => button.command === command);
+        const index = this.externalButtons.findIndex((button) => button.buttonId === buttonId);
         if (index === -1) {
-            this.externalButtons.push({ command, codicon, statusToEnable, tooltip, running: false });
+            this.externalButtons.push({ buttonId, callback, codicon, statusToEnable, tooltip, running: false });
             this.postMessage(InteractiveWindowMessages.UpdateExternalCellButtons, this.externalButtons).ignoreErrors();
         }
 
         return {
             dispose: () => {
-                const buttonIndex = this.externalButtons.findIndex((button) => button.command === command);
+                const buttonIndex = this.externalButtons.findIndex((button) => button.buttonId === buttonId);
                 if (buttonIndex !== -1) {
                     this.externalButtons.splice(buttonIndex, 1);
                     this.postMessage(
@@ -1603,14 +1605,19 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         let id: string | undefined = '';
         if (this.notebook) {
             language = getKernelConnectionLanguage(this.notebook.getKernelConnection()) || PYTHON_LANGUAGE;
-            id = this.notebook.kernelId;
+            id =
+                this.notebook.identity.authority.length === 0
+                    ? this.notebook.identity.fsPath
+                    : this.notebook.identity.authority;
         }
-        await commands.executeCommand(
-            payload.command,
-            translateCellToNative(payload.cell, language),
-            this.isInteractive,
-            id
-        );
+
+        const button = this.externalButtons.find((b) => b.buttonId === payload.buttonId);
+        const cell = translateCellToNative(payload.cell, language);
+
+        if (button && cell) {
+            await button.callback(cell as NotebookCell, this.isInteractive, id);
+        }
+
         // Post message again to let the react side know the command is done executing
         this.postMessage(InteractiveWindowMessages.UpdateExternalCellButtons, this.externalButtons).ignoreErrors();
     }
