@@ -21,6 +21,7 @@ import { MockInputBox } from '../mockInputBox';
 import { MockQuickPick } from '../mockQuickPick';
 import { JupyterServerUriStorage } from '../../../client/datascience/jupyter/serverUriStorage';
 import { MockMemento } from '../../mocks/mementos';
+import { WorkspaceService } from '../../../client/common/application/workspace';
 
 // tslint:disable: max-func-body-length no-any
 suite('DataScience - Jupyter Server URI Selector', () => {
@@ -32,8 +33,8 @@ suite('DataScience - Jupyter Server URI Selector', () => {
     function createDataScienceObject(
         quickPickSelection: string,
         inputSelection: string,
-        updateCallback: (val: string) => void,
-    ): { selector: JupyterServerSelector, storage: JupyterServerUriStorage } {
+        updateCallback: (val: string) => void
+    ): { selector: JupyterServerSelector; storage: JupyterServerUriStorage } {
         dsSettings = {
             jupyterServerURI: Settings.JupyterServerLocalLaunch
             // tslint:disable-next-line: no-any
@@ -41,6 +42,7 @@ suite('DataScience - Jupyter Server URI Selector', () => {
         clipboard = mock(ClipboardService);
         const configService = mock(ConfigurationService);
         const applicationShell = mock(ApplicationShell);
+        const workspaceService = mock(WorkspaceService);
         const picker = mock(JupyterUriProviderRegistration);
         cmdManager = mock(CommandManager);
         quickPick = new MockQuickPick(quickPickSelection);
@@ -57,8 +59,13 @@ suite('DataScience - Jupyter Server URI Selector', () => {
                 return Promise.resolve();
             }
         );
+        when(workspaceService.getWorkspaceFolderIdentifier(anything())).thenReturn('1');
 
-        const storage = new JupyterServerUriStorage(instance(configService), new MockMemento())
+        const storage = new JupyterServerUriStorage(
+            instance(configService),
+            instance(workspaceService),
+            new MockMemento()
+        );
         const selector = new JupyterServerSelector(
             instance(clipboard),
             multiStepFactory,
@@ -86,13 +93,9 @@ suite('DataScience - Jupyter Server URI Selector', () => {
     });
 
     test('Quick pick MRU tests', async () => {
-        const { selector, storage } = createDataScienceObject(
-            '$(zap) Default',
-            '',
-            () => {
-                noop();
-            },
-        );
+        const { selector, storage } = createDataScienceObject('$(zap) Default', '', () => {
+            noop();
+        });
 
         await selector.selectJupyterURI(true);
         // Verify initial default items
