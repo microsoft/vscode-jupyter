@@ -3,6 +3,7 @@
 import { inject, injectable, named } from 'inversify';
 import * as keytar from 'keytar';
 import { ConfigurationTarget, Memento } from 'vscode';
+import { IWorkspaceService } from '../../common/application/types';
 import { GLOBAL_MEMENTO, IConfigurationService, IMemento } from '../../common/types';
 import { Settings } from '../constants';
 import { IJupyterServerUriStorage } from '../types';
@@ -14,6 +15,7 @@ import { IJupyterServerUriStorage } from '../types';
 export class JupyterServerUriStorage implements IJupyterServerUriStorage {
     constructor(
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
+        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento
     ) {}
     public async addToUriList(uri: string, time: number, displayName: string) {
@@ -81,7 +83,7 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
             // Should be stored in keytar storage
             const storedUri = await keytar.getPassword(
                 Settings.JupyterServerRemoteLaunchService,
-                Settings.JupyterServerRemoteLaunchAccount
+                this.getWorkspaceAccount()
             );
 
             return storedUri || uri;
@@ -106,12 +108,15 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
                 ConfigurationTarget.Workspace
             );
 
-            // Save in the keytar storage
-            await keytar.setPassword(
-                Settings.JupyterServerRemoteLaunchService,
-                Settings.JupyterServerRemoteLaunchAccount,
-                uri
-            );
+            // Save in the keytar storage (unique account per workspace)
+            await keytar.setPassword(Settings.JupyterServerRemoteLaunchService, this.getWorkspaceAccount(), uri);
         }
+    }
+
+    /**
+     * Returns a unique identifier for the current workspace
+     */
+    private getWorkspaceAccount(): string {
+        return this.workspaceService.getWorkspaceFolderIdentifier(undefined);
     }
 }

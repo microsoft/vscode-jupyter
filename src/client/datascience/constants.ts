@@ -461,7 +461,6 @@ export namespace Settings {
     export const JupyterServerLocalLaunch = 'local';
     export const JupyterServerRemoteLaunch = 'remote';
     export const JupyterServerUriList = 'jupyter.jupyterServer.uriList';
-    export const JupyterServerRemoteLaunchAccount = 'remote-uri';
     export const JupyterServerRemoteLaunchUriAccount = 'remote-uri-list';
     export const JupyterServerRemoteLaunchUriSeparator = '\r';
     export const JupyterServerRemoteLaunchService = JVSC_EXTENSION_ID;
