@@ -40,11 +40,6 @@ export async function getOrCreateInteractiveWindow(
     const window = (await interactiveWindowProvider.getOrCreate(owner)) as InteractiveWindow;
     const mount = interactiveWindowProvider.getMountedWebView(window);
     await window.show();
-
-    // tslint:disable-next-line: no-any
-    const listener = (window as any).messageListener as InteractiveWindowMessageListener;
-    // tslint:disable-next-line: no-any
-    listener.onChangeViewState((window as any).webPanel);
     return { window, mount };
 }
 

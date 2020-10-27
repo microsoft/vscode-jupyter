@@ -68,6 +68,7 @@ import {
     verifyLastCellInputState
 } from './testHelpers';
 import { ITestInteractiveWindowProvider } from './testInteractiveWindowProvider';
+import { InteractiveWindowMessageListener } from '../../client/datascience/interactive-common/interactiveWindowMessageListener';
 // tslint:disable-next-line: no-require-imports no-var-requires
 const _escape = require('lodash/escape') as typeof import('lodash/escape'); // NOSONAR
 
@@ -1335,7 +1336,13 @@ for i in range(100):
         );
 
         // Create an interactive window so that it listens to the results.
-        const { mount } = await getOrCreateInteractiveWindow(ioc);
+        const { mount, window } = await getOrCreateInteractiveWindow(ioc);
+
+        // We need to update the view state to get the external buttons
+        // tslint:disable-next-line: no-any
+        const listener = (window as any).messageListener as InteractiveWindowMessageListener;
+        // tslint:disable-next-line: no-any
+        listener.onChangeViewState((window as any).webPanel);
 
         // Then enter some code.
         await enterInput(mount, 'a=1\na', 'InteractiveCell');
