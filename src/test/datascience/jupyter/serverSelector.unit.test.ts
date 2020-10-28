@@ -39,7 +39,7 @@ suite('DataScience - Jupyter Server URI Selector', () => {
         updateCallback: (val: string) => void
     ): { selector: JupyterServerSelector; storage: JupyterServerUriStorage } {
         dsSettings = {
-            jupyterServerURI: Settings.JupyterServerLocalLaunch
+            jupyterServerType: Settings.JupyterServerLocalLaunch
             // tslint:disable-next-line: no-any
         } as any;
         clipboard = mock(ClipboardService);
@@ -60,7 +60,7 @@ suite('DataScience - Jupyter Server URI Selector', () => {
         const multiStepFactory = new MultiStepInputFactory(instance(applicationShell));
         // tslint:disable-next-line: no-any
         when(configService.getSettings(anything())).thenReturn(dsSettings as any);
-        when(configService.updateSetting('jupyterServerURI', anything(), anything(), anything())).thenCall(
+        when(configService.updateSetting('jupyterServerType', anything(), anything(), anything())).thenCall(
             (_a1, a2, _a3, _a4) => {
                 updateCallback(a2);
                 return Promise.resolve();
@@ -186,7 +186,7 @@ suite('DataScience - Jupyter Server URI Selector', () => {
     test('Remote server uri (do not reload VSCode if there is no change in settings)', async () => {
         let value = '';
         const { selector } = createDataScienceObject('$(server) Existing', 'http://localhost:1111', (v) => (value = v));
-        (<any>dsSettings).jupyterServerURI = 'http://localhost:1111';
+        (<any>dsSettings).jupyterServerType = 'remote';
         await selector.selectJupyterURI(true);
         assert.equal(value, 'http://localhost:1111', 'Already running should end up with the user inputed value');
         verify(cmdManager.executeCommand(anything(), anything())).never();

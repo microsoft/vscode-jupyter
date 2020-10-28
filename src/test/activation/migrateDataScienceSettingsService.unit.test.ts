@@ -82,7 +82,6 @@ suite('Migrate data science settings', () => {
         "jupyter.jupyterInterruptTimeout": 0,
         "jupyter.jupyterLaunchTimeout": 0,
         "jupyter.jupyterLaunchRetries": 0,
-        "jupyter.jupyterServerURI": "foo",
         "jupyter.notebookFileRoot": "foo",
         "jupyter.changeDirOnImportExport": true,
         "jupyter.useDefaultConfigForJupyter": true,

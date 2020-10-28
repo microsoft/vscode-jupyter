@@ -40,9 +40,10 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
             });
             editList.splice(0, 0, { uri, time, displayName });
 
-            // Transform the editList into just indexes
+            // Transform the editList into just indexes. Uris can't show up in
+            // non encrypted storage (so remove even the display name)
             const mementoList = editList.map((v, i) => {
-                return { index: i, time: v.time, displayName: v.displayName };
+                return { index: i, time: v.time };
             });
 
             // Then write just the indexes to global memento
@@ -50,22 +51,37 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
 
             // Write the uris to the storage in one big blob (max length issues?)
             // This is because any part of the URI may be a secret (we don't know it's just token values for instance)
-            const blob = editList.map((e) => e.uri).join(Settings.JupyterServerRemoteLaunchUriSeparator);
+            const blob = editList
+                .map(
+                    (e) =>
+                        `${e.uri}${Settings.JupyterServerRemoteLaunchNameSeparator}${
+                            !e.displayName || e.displayName === e.uri
+                                ? Settings.JupyterServerRemoteLaunchUriEqualsDisplayName
+                                : e.displayName
+                        }`
+                )
+                .join(Settings.JupyterServerRemoteLaunchUriSeparator);
             return this.storeString(Settings.JupyterServerRemoteLaunchUriListKey, blob);
         }
     }
     public async getSavedUriList(): Promise<{ uri: string; time: number; displayName?: string | undefined }[]> {
         // List is in the global memento, URIs are in encrypted storage
-        const indexes = this.globalMemento.get<{ index: number; time: number; displayName?: string }[]>(
-            Settings.JupyterServerUriList
-        );
+        const indexes = this.globalMemento.get<{ index: number; time: number }[]>(Settings.JupyterServerUriList);
         if (indexes && indexes.length > 0) {
             // Pull out the \r separated URI list (\r is an invalid URI character)
             const blob = await this.retrieveString(Settings.JupyterServerRemoteLaunchUriListKey);
             if (blob) {
-                return blob.split(Settings.JupyterServerRemoteLaunchUriSeparator).map((u, i) => {
-                    return { time: indexes[i].time, displayName: indexes[i].displayName, uri: u };
-                });
+                // Make sure same length
+                const split = blob.split(Settings.JupyterServerRemoteLaunchUriSeparator);
+                const result = [];
+                for (let i = 0; i < split.length && i < indexes.length; i += 1) {
+                    // Split out the display name and the URI (they were combined because display name may have secret tokens in it too)
+                    const uriAndDisplayName = split[i].split(Settings.JupyterServerRemoteLaunchNameSeparator);
+                    const uri = uriAndDisplayName[0];
+                    const displayName = uriAndDisplayName[1] || uri;
+                    result.push({ time: indexes[i].time, displayName, uri });
+                }
+                return result;
             }
         }
         return [];

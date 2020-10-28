@@ -463,6 +463,8 @@ export namespace Settings {
     export const JupyterServerUriList = 'jupyter.jupyterServer.uriList';
     export const JupyterServerRemoteLaunchUriListKey = 'remote-uri-list';
     export const JupyterServerRemoteLaunchUriSeparator = '\r';
+    export const JupyterServerRemoteLaunchNameSeparator = '\n';
+    export const JupyterServerRemoteLaunchUriEqualsDisplayName = 'same';
     export const JupyterServerRemoteLaunchService = JVSC_EXTENSION_ID;
     export const JupyterServerUriListMax = 10;
     // If this timeout expires, ignore the completion request sent to Jupyter.

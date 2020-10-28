@@ -32,6 +32,10 @@ export class MigrateDataScienceSettingsService implements IExtensionActivationSe
             /"python\.dataScience\.(.*?)":/g,
             (_match, capture) => `"jupyter.${capture}":`
         );
+
+        // Some settings are no longer used. Remove them.
+        fileContents = fileContents.replace(/"jupyter.jupyterServerURI".*/, '');
+
         await this.fs.writeLocalFile(filePath, fileContents);
         return fileContents;
     }
