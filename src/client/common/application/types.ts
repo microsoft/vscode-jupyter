@@ -75,6 +75,7 @@ import type {
 
 import { IAsyncDisposable, Resource } from '../types';
 import { ICommandNameArgumentTypeMapping } from './commands';
+import { WebviewView } from './webviewViews/webviewView';
 
 // tslint:disable:no-any unified-signatures
 
@@ -1141,6 +1142,15 @@ export interface IWebviewPanelOptions extends IWebviewOptions {
 export const IWebviewPanelProvider = Symbol('IWebviewPanelProvider');
 export interface IWebviewPanelProvider {
     create(options: IWebviewPanelOptions): Promise<IWebviewPanel>;
+}
+
+export interface IWebviewViewOptions extends IWebviewOptions {
+    webviewView: WebviewView;
+}
+
+export const IWebviewViewProvider = Symbol('IWebviewViewProvider');
+export interface IWebviewViewProvider {
+    create(options: IWebviewViewOptions): Promise<IWebviewView>;
 }
 
 // Wraps the vsls liveshare API

@@ -3,7 +3,7 @@
 'use strict';
 
 import { IServiceManager } from '../../ioc/types';
-import { IWebviewPanelProvider } from '../application/types';
+import { IWebviewPanelProvider, IWebviewViewProvider } from '../application/types';
 import { WebviewPanelProvider } from '../application/webviewPanels/webviewPanelProvider';
 import { InsidersBuildInstaller, StableBuildInstaller } from './extensionBuildInstaller';
 import { DataScienceProductPathService } from './productPath';
@@ -23,4 +23,5 @@ export function registerTypes(serviceManager: IServiceManager) {
 
     serviceManager.addSingleton<IProductPathService>(IProductPathService, DataScienceProductPathService);
     serviceManager.addSingleton<IWebviewPanelProvider>(IWebviewPanelProvider, WebviewPanelProvider);
+    serviceManager.addSingleton<IWebviewViewProvider>(IWebviewViewProvider, WebviewViewProvider);
 }
