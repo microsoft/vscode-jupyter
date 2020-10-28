@@ -229,6 +229,7 @@ import {
     IJupyterNotebookProvider,
     IJupyterPasswordConnect,
     IJupyterServerProvider,
+    IJupyterServerUriStorage,
     IJupyterSessionManagerFactory,
     IJupyterSubCommandExecutionService,
     IJupyterUriProviderRegistration,
@@ -298,6 +299,7 @@ import {
 } from './testNativeEditorProvider';
 import { TestPersistentStateFactory } from './testPersistentStateFactory';
 import { WebBrowserPanelProvider } from './uiTests/webBrowserPanelProvider';
+import { JupyterServerUriStorage } from '../../client/datascience/jupyter/serverUriStorage';
 
 export class DataScienceIocContainer extends UnitTestIocContainer {
     public get workingInterpreter() {
@@ -834,6 +836,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             }
         };
         this.serviceManager.addSingleton<ILanguageServerProvider>(ILanguageServerProvider, MockLanguageServerProvider);
+        this.serviceManager.addSingleton<IJupyterServerUriStorage>(IJupyterServerUriStorage, JupyterServerUriStorage);
 
         when(this.applicationShell.showErrorMessage(anyString())).thenReturn(Promise.resolve(''));
         when(this.applicationShell.showErrorMessage(anyString(), anything())).thenReturn(Promise.resolve(''));
@@ -996,6 +999,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         notifyEvent: boolean = true
     ) {
         this.forceSettingsChanged(undefined, '', dataScienceSettings, notifyEvent);
+    }
+
+    public setServerUri(uri: string): Promise<void> {
+        return this.get<IJupyterServerUriStorage>(IJupyterServerUriStorage).setUri(uri);
     }
 
     public setExtensionRootPath(newRoot: string) {
