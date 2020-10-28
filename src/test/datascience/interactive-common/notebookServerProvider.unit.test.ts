@@ -54,6 +54,9 @@ suite('DataScience - NotebookServerProvider', () => {
         const serverStorage = mock(JupyterServerUriStorage);
         when(serverStorage.getUri()).thenResolve('local');
         const serverSelector = mock(JupyterServerSelector);
+        when((jupyterExecution as any).then).thenReturn(undefined);
+        when((serverSelector as any).then).thenReturn(undefined);
+        when((serverStorage as any).then).thenReturn(undefined);
 
         // Create the server provider
         serverProvider = new NotebookServerProvider(
@@ -77,9 +80,10 @@ suite('DataScience - NotebookServerProvider', () => {
 
     test('NotebookServerProvider - Get Only - server', async () => {
         const notebookServer = mock<INotebookServer>();
+        when((notebookServer as any).then).thenReturn(undefined);
         when(jupyterExecution.getServer(anything())).thenResolve(instance(notebookServer));
 
-        const server = serverProvider.getOrCreateServer({ getOnly: true });
+        const server = await serverProvider.getOrCreateServer({ getOnly: true });
         expect(server).to.not.equal(undefined, 'Server expected to be defined');
         verify(jupyterExecution.getServer(anything())).once();
     });

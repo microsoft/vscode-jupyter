@@ -31,38 +31,41 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
         // Start with saved list.
         const uriList = await this.getSavedUriList();
 
-        // Make sure not already in the list. Redundant to add more than once.
-        // We could reorder the list but seems unnecessary?
-        if (!uriList.find((f) => f.uri === uri)) {
-            // Make sure we leave out the max
-            const editList = uriList.filter((f, i) => {
-                return f.uri !== uri && i < Settings.JupyterServerUriListMax - 1;
-            });
-            editList.splice(0, 0, { uri, time, displayName });
+        // Remove this uri if already found (going to add again with a new time)
+        const editedList = uriList.filter((f, i) => {
+            return f.uri !== uri && i < Settings.JupyterServerUriListMax - 1;
+        });
 
-            // Transform the editList into just indexes. Uris can't show up in
-            // non encrypted storage (so remove even the display name)
-            const mementoList = editList.map((v, i) => {
-                return { index: i, time: v.time };
-            });
+        // Add this entry into the liast
+        editedList.push({ uri, time, displayName: displayName || uri });
 
-            // Then write just the indexes to global memento
-            await this.globalMemento.update(Settings.JupyterServerUriList, mementoList);
+        // Sort based on time. Newest time first
+        const sorted = editedList.sort((a, b) => {
+            return b.time - a.time;
+        });
 
-            // Write the uris to the storage in one big blob (max length issues?)
-            // This is because any part of the URI may be a secret (we don't know it's just token values for instance)
-            const blob = editList
-                .map(
-                    (e) =>
-                        `${e.uri}${Settings.JupyterServerRemoteLaunchNameSeparator}${
-                            !e.displayName || e.displayName === e.uri
-                                ? Settings.JupyterServerRemoteLaunchUriEqualsDisplayName
-                                : e.displayName
-                        }`
-                )
-                .join(Settings.JupyterServerRemoteLaunchUriSeparator);
-            return this.storeString(Settings.JupyterServerRemoteLaunchUriListKey, blob);
-        }
+        // Transform the sorted into just indexes. Uris can't show up in
+        // non encrypted storage (so remove even the display name)
+        const mementoList = sorted.map((v, i) => {
+            return { index: i, time: v.time };
+        });
+
+        // Then write just the indexes to global memento
+        await this.globalMemento.update(Settings.JupyterServerUriList, mementoList);
+
+        // Write the uris to the storage in one big blob (max length issues?)
+        // This is because any part of the URI may be a secret (we don't know it's just token values for instance)
+        const blob = sorted
+            .map(
+                (e) =>
+                    `${e.uri}${Settings.JupyterServerRemoteLaunchNameSeparator}${
+                        !e.displayName || e.displayName === e.uri
+                            ? Settings.JupyterServerRemoteLaunchUriEqualsDisplayName
+                            : e.displayName
+                    }`
+            )
+            .join(Settings.JupyterServerRemoteLaunchUriSeparator);
+        return this.storeString(Settings.JupyterServerRemoteLaunchUriListKey, blob);
     }
     public async getSavedUriList(): Promise<{ uri: string; time: number; displayName?: string | undefined }[]> {
         // List is in the global memento, URIs are in encrypted storage
@@ -78,7 +81,13 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
                     // Split out the display name and the URI (they were combined because display name may have secret tokens in it too)
                     const uriAndDisplayName = split[i].split(Settings.JupyterServerRemoteLaunchNameSeparator);
                     const uri = uriAndDisplayName[0];
-                    const displayName = uriAndDisplayName[1] || uri;
+
+                    // 'same' is specified for the display name to keep storage shorter if it is the same value as the URI
+                    const displayName =
+                        uriAndDisplayName[1] === Settings.JupyterServerRemoteLaunchUriEqualsDisplayName ||
+                        !uriAndDisplayName[1]
+                            ? uri
+                            : uriAndDisplayName[1];
                     result.push({ time: indexes[i].time, displayName, uri });
                 }
                 return result;

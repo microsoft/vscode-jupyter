@@ -53,7 +53,7 @@ export class NotebookServerProvider implements IJupyterServerProvider {
         const serverOptions = await this.getNotebookServerOptions();
 
         // If we are just fetching or only want to create for local, see if exists
-        if (options.getOnly || (options.localOnly && serverOptions.uri)) {
+        if (options.getOnly || (options.localOnly && !serverOptions.uri)) {
             return this.jupyterExecution.getServer(serverOptions);
         } else {
             // Otherwise create a new server
@@ -208,10 +208,11 @@ export class NotebookServerProvider implements IJupyterServerProvider {
     private async getNotebookServerOptions(): Promise<INotebookServerOptions> {
         // Since there's one server per session, don't use a resource to figure out these settings
         let serverURI: string | undefined = await this.serverUriStorage.getUri();
-        const useDefaultConfig: boolean | undefined = this.configuration.getSettings().useDefaultConfigForJupyter;
+        const useDefaultConfig: boolean | undefined = this.configuration.getSettings(undefined)
+            .useDefaultConfigForJupyter;
 
         // For the local case pass in our URI as undefined, that way connect doesn't have to check the setting
-        if (serverURI.toLowerCase() === Settings.JupyterServerLocalLaunch) {
+        if (serverURI && serverURI.toLowerCase() === Settings.JupyterServerLocalLaunch) {
             serverURI = undefined;
         }
 
