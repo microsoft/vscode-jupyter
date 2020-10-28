@@ -356,7 +356,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
                 break;
 
             case InteractiveWindowMessages.ExecuteExternalCommand:
-                this.handleMessage(message, payload, this.hanldeExecuteExternalCommand);
+                this.handleMessage(message, payload, this.handleExecuteExternalCommand);
                 break;
 
             default:
@@ -1575,7 +1575,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         this.postMessage(InteractiveWindowMessages.UpdateDisplayData, msg).ignoreErrors();
     }
 
-    private async hanldeExecuteExternalCommand(payload: IExternalCommandFromWebview) {
+    private async handleExecuteExternalCommand(payload: IExternalCommandFromWebview) {
         let language = PYTHON_LANGUAGE;
         let id: string | undefined = '';
         if (this.notebook) {
