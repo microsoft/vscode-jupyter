@@ -880,8 +880,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         // to compute the display name. However only do this if the user is allowing auto start.
         if (
             !serverConnection &&
-            serverUri !==
-                Settings.JupyterServerLocalLaunch &&
+            serverUri !== Settings.JupyterServerLocalLaunch &&
             !this.configService.getSettings(this.owningResource).disableJupyterAutoStart
         ) {
             serverConnection = await this.notebookProvider.connect({ disableUI: true });
