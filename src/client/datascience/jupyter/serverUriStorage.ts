@@ -95,6 +95,11 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
         }
         return [];
     }
+    public async clearUriList(): Promise<void> {
+        // Clear out memento and encrypted storage
+        await this.globalMemento.update(Settings.JupyterServerUriList, []);
+        await this.storeString(Settings.JupyterServerRemoteLaunchUriListKey, undefined);
+    }
     public getUri(): Promise<string> {
         if (!this.currentUriPromise) {
             this.currentUriPromise = this.getUriInternal();
@@ -162,12 +167,20 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
         return this.appEnv.machineId; // Global key when no folder or workspace file
     }
 
-    private async storeString(key: string, value: string): Promise<void> {
+    private async storeString(key: string, value: string | undefined): Promise<void> {
         // When not in insiders, use keytar
         if (this.appEnv.channel !== 'insiders') {
-            return keytar.setPassword(Settings.JupyterServerRemoteLaunchService, key, value);
+            if (!value) {
+                await keytar.deletePassword(Settings.JupyterServerRemoteLaunchService, key);
+            } else {
+                return keytar.setPassword(Settings.JupyterServerRemoteLaunchService, key, value);
+            }
         } else {
-            await this.authenService.setPassword(key, value);
+            if (!value) {
+                await this.authenService.deletePassword(key);
+            } else {
+                await this.authenService.setPassword(key, value);
+            }
         }
     }
 

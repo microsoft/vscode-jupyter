@@ -116,6 +116,7 @@ export namespace Commands {
     export const CreateGitHubIssue = 'jupyter.createGitHubIssue';
     export const SubmitGitHubIssue = 'jupyter.submitGitHubIssue';
     export const ShowDataViewer = 'jupyter.showDataViewer';
+    export const ClearSavedJupyterUris = 'jupyter.clearSavedJupyterUris';
 }
 
 export namespace CodeLensCommands {

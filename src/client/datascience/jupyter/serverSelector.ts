@@ -60,9 +60,23 @@ export class JupyterServerSelector {
     ): Promise<InputStep<{}> | void> {
         // First step, show a quick pick to choose either the remote or the local.
         // newChoice element will be set if the user picked 'enter a new server'
+
+        // Get the list of items and show what the current value is
+        const items = await this.getUriPickList(allowLocal);
+        const uri = await this.serverUriStorage.getUri();
+        const activeItem = items.find(
+            (i) => i.url === uri || (i.label === this.localLabel && uri === Settings.JupyterServerLocalLaunch)
+        );
+        const currentValue =
+            uri === Settings.JupyterServerLocalLaunch ? DataScience.jupyterSelectURILocalLabel() : activeItem?.label;
+        const placeholder = currentValue // This will show at the top (current value really)
+            ? DataScience.jupyterSelectURIQuickPickCurrent().format(currentValue)
+            : DataScience.jupyterSelectURIQuickPickPlaceholder();
+
         const item = await input.showQuickPick<ISelectUriQuickPickItem, IQuickPickParameters<ISelectUriQuickPickItem>>({
-            placeholder: DataScience.jupyterSelectURIQuickPickPlaceholder(),
+            placeholder,
             items: await this.getUriPickList(allowLocal),
+            activeItem,
             title: allowLocal
                 ? DataScience.jupyterSelectURIQuickPickTitle()
                 : DataScience.jupyterSelectURIQuickPickTitleRemoteOnly()

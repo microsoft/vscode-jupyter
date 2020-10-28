@@ -672,6 +672,11 @@
                 "command": "jupyter.showDataViewer",
                 "title": "%jupyter.command.jupyter.showDataViewer.title%",
                 "category": "Jupyter"
+            },
+            {
+                "command": "jupyter.clearSavedJupyterUris",
+                "title": "%jupyter.command.jupyter.clearSavedJupyterUris.title%",
+                "category": "Jupyter"
             }
         ],
         "menus": {

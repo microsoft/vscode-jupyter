@@ -144,4 +144,5 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.CreateGitHubIssue]: [];
     [DSCommands.SubmitGitHubIssue]: [];
     [DSCommands.ShowDataViewer]: [IShowDataViewerFromVariablePanel];
+    [DSCommands.ClearSavedJupyterUris]: [];
 }
