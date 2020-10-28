@@ -33,6 +33,7 @@ import { VSCodeNotebook } from '../../client/common/application/notebook';
 import {
     IApplicationEnvironment,
     IApplicationShell,
+    IAuthenticationService,
     ICommandManager,
     ICustomEditorService,
     IDebugService,
@@ -300,6 +301,7 @@ import {
 import { TestPersistentStateFactory } from './testPersistentStateFactory';
 import { WebBrowserPanelProvider } from './uiTests/webBrowserPanelProvider';
 import { JupyterServerUriStorage } from '../../client/datascience/jupyter/serverUriStorage';
+import { AuthenticationService } from '../../client/common/application/authenticationService';
 
 export class DataScienceIocContainer extends UnitTestIocContainer {
     public get workingInterpreter() {
@@ -514,6 +516,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         });
 
         this.serviceManager.addSingleton<IApplicationEnvironment>(IApplicationEnvironment, ApplicationEnvironment);
+        this.serviceManager.addSingleton<IAuthenticationService>(IAuthenticationService, AuthenticationService);
         this.serviceManager.add<INotebookImporter>(INotebookImporter, JupyterImporter);
         this.serviceManager.add<INotebookExporter>(INotebookExporter, JupyterExporter);
         this.serviceManager.addSingleton<ILiveShareApi>(ILiveShareApi, MockLiveShareApi);

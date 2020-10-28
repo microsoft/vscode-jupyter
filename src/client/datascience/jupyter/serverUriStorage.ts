@@ -3,7 +3,7 @@
 import { inject, injectable, named } from 'inversify';
 import * as keytar from 'keytar';
 import { ConfigurationTarget, Memento } from 'vscode';
-import { IApplicationEnvironment, IWorkspaceService } from '../../common/application/types';
+import { IApplicationEnvironment, IAuthenticationService, IWorkspaceService } from '../../common/application/types';
 import { GLOBAL_MEMENTO, IConfigurationService, ICryptoUtils, IMemento } from '../../common/types';
 import { Settings } from '../constants';
 import { IJupyterServerUriStorage } from '../types';
@@ -13,15 +13,20 @@ import { IJupyterServerUriStorage } from '../types';
  */
 @injectable()
 export class JupyterServerUriStorage implements IJupyterServerUriStorage {
+    private currentUriPromise: Promise<string> | undefined;
     constructor(
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IApplicationEnvironment) private readonly appEnv: IApplicationEnvironment,
         @inject(ICryptoUtils) private readonly crypto: ICryptoUtils,
+        @inject(IAuthenticationService) private readonly authenService: IAuthenticationService,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento
-    ) {}
+    ) {
+        // Cache our current state so we don't keep asking for it from the encrypted storage
+        this.getUri().ignoreErrors();
+    }
     public async addToUriList(uri: string, time: number, displayName: string) {
-        // Uri list is saved partially in the global memento and partially in keytar
+        // Uri list is saved partially in the global memento and partially in encrypted storage
 
         // Start with saved list.
         const uriList = await this.getSavedUriList();
@@ -43,27 +48,20 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
             // Then write just the indexes to global memento
             await this.globalMemento.update(Settings.JupyterServerUriList, mementoList);
 
-            // Write the uris to the keytar storage in one big blob (max length issues?)
+            // Write the uris to the storage in one big blob (max length issues?)
             // This is because any part of the URI may be a secret (we don't know it's just token values for instance)
             const blob = editList.map((e) => e.uri).join(Settings.JupyterServerRemoteLaunchUriSeparator);
-            return keytar.setPassword(
-                Settings.JupyterServerRemoteLaunchService,
-                Settings.JupyterServerRemoteLaunchUriAccount,
-                blob
-            );
+            return this.storeString(Settings.JupyterServerRemoteLaunchUriListKey, blob);
         }
     }
     public async getSavedUriList(): Promise<{ uri: string; time: number; displayName?: string | undefined }[]> {
-        // List is in the global memento, URIs are in keytar storage
+        // List is in the global memento, URIs are in encrypted storage
         const indexes = this.globalMemento.get<{ index: number; time: number; displayName?: string }[]>(
             Settings.JupyterServerUriList
         );
         if (indexes && indexes.length > 0) {
             // Pull out the \r separated URI list (\r is an invalid URI character)
-            const blob = await keytar.getPassword(
-                Settings.JupyterServerRemoteLaunchService,
-                Settings.JupyterServerRemoteLaunchUriAccount
-            );
+            const blob = await this.retrieveString(Settings.JupyterServerRemoteLaunchUriListKey);
             if (blob) {
                 return blob.split(Settings.JupyterServerRemoteLaunchUriSeparator).map((u, i) => {
                     return { time: indexes[i].time, displayName: indexes[i].displayName, uri: u };
@@ -72,27 +70,18 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
         }
         return [];
     }
-    public async getUri(): Promise<string> {
-        const uri = this.configService.getSettings(undefined).jupyterServerType;
-        if (uri === Settings.JupyterServerLocalLaunch) {
-            return uri;
-        } else {
-            // If settings has a token in it, remove it
-            if (uri !== Settings.JupyterServerRemoteLaunch) {
-                await this.setUri(uri);
-            }
-
-            // Should be stored in keytar storage
-            const storedUri = await keytar.getPassword(
-                Settings.JupyterServerRemoteLaunchService,
-                this.getUriAccountKey()
-            );
-
-            return storedUri || uri;
+    public getUri(): Promise<string> {
+        if (!this.currentUriPromise) {
+            this.currentUriPromise = this.getUriInternal();
         }
+
+        return this.currentUriPromise;
     }
 
     public async setUri(uri: string) {
+        // Set the URI as our current state
+        this.currentUriPromise = Promise.resolve(uri);
+
         if (uri === Settings.JupyterServerLocalLaunch) {
             // Just save directly into the settings
             await this.configService.updateSetting(
@@ -110,8 +99,25 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
                 ConfigurationTarget.Workspace
             );
 
-            // Save in the keytar storage (unique account per workspace)
-            await keytar.setPassword(Settings.JupyterServerRemoteLaunchService, this.getUriAccountKey(), uri);
+            // Save in the storage (unique account per workspace)
+            await this.storeString(this.getUriAccountKey(), uri);
+        }
+    }
+
+    private async getUriInternal(): Promise<string> {
+        const uri = this.configService.getSettings(undefined).jupyterServerType;
+        if (uri === Settings.JupyterServerLocalLaunch || uri.length === 0) {
+            return Settings.JupyterServerLocalLaunch;
+        } else {
+            // If settings has a token in it, remove it
+            if (uri !== Settings.JupyterServerRemoteLaunch) {
+                await this.setUri(uri);
+            }
+
+            // Should be stored in encrypted storage based on the workspace
+            const storedUri = await this.retrieveString(this.getUriAccountKey());
+
+            return storedUri || uri;
         }
     }
 
@@ -127,5 +133,26 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
             return this.crypto.createHash(this.workspaceService.workspaceFile.fsPath, 'string', 'SHA512');
         }
         return this.appEnv.machineId; // Global key when no folder or workspace file
+    }
+
+    private async storeString(key: string, value: string): Promise<void> {
+        // When not in insiders, use keytar
+        if (this.appEnv.extensionChannel !== 'insiders') {
+            return keytar.setPassword(Settings.JupyterServerRemoteLaunchService, key, value);
+        } else {
+            await this.authenService.setPassword(key, value);
+        }
+    }
+
+    private async retrieveString(key: string): Promise<string | undefined> {
+        // When not in insiders, use keytar
+        if (this.appEnv.extensionChannel !== 'insiders') {
+            const val = await keytar.getPassword(Settings.JupyterServerRemoteLaunchService, key);
+            return val ? val : undefined;
+        } else {
+            // tslint:disable-next-line: no-unnecessary-local-variable
+            const val = await this.authenService.getPassword(key);
+            return val;
+        }
     }
 }
