@@ -1580,10 +1580,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         let id: string | undefined = '';
         if (this.notebook) {
             language = getKernelConnectionLanguage(this.notebook.getKernelConnection()) || PYTHON_LANGUAGE;
-            id =
-                this.notebook.identity.authority.length === 0
-                    ? this.notebook.identity.fsPath
-                    : this.notebook.identity.authority;
+            id = this.notebook.identity.toString();
         }
 
         const button = this.externalButtons.find((b) => b.buttonId === payload.buttonId);

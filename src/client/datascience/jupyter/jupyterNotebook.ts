@@ -480,8 +480,7 @@ export class JupyterNotebookBase implements INotebook {
             traceInfo('restartKernel - initialSetup completed');
 
             // Tell our loggers
-            const id = this.identity.authority.length === 0 ? this.identity.fsPath : this.identity.authority;
-            this.loggers.forEach((l) => l.onKernelRestarted(id));
+            this.loggers.forEach((l) => l.onKernelRestarted(this.getNotebookId()));
 
             this.kernelRestarted.fire();
             return;
@@ -733,8 +732,7 @@ export class JupyterNotebookBase implements INotebook {
     }
 
     private async logKernelStarted() {
-        const id = this.identity.authority.length === 0 ? this.identity.fsPath : this.identity.authority;
-        this.loggers.forEach((l) => l.onKernelStarted(id));
+        this.loggers.forEach((l) => l.onKernelStarted(this.getNotebookId()));
     }
 
     private async initializeMatplotlib(cancelToken?: CancellationToken): Promise<void> {
@@ -1208,8 +1206,9 @@ export class JupyterNotebookBase implements INotebook {
 
     private async logPostCode(cell: ICell, silent: boolean): Promise<void> {
         const language = getKernelConnectionLanguage(this.getKernelConnection()) || PYTHON_LANGUAGE;
-        const id = this.identity.authority.length === 0 ? this.identity.fsPath : this.identity.authority;
-        await Promise.all(this.loggers.map((l) => l.postExecute(cloneDeep(cell), silent, language, id)));
+        await Promise.all(
+            this.loggers.map((l) => l.postExecute(cloneDeep(cell), silent, language, this.getNotebookId()))
+        );
     }
 
     private addToCellData = (
@@ -1435,5 +1434,9 @@ export class JupyterNotebookBase implements INotebook {
         }
 
         return outputString.substr(outputString.length - outputLimit);
+    }
+
+    private getNotebookId(): string {
+        return this.identity.toString();
     }
 }

@@ -78,7 +78,7 @@ export function translateCellToNative(
     }
 }
 
-export function traslateCellFromNative(cell: NotebookCell): ICell {
+export function translateCellFromNative(cell: NotebookCell): ICell {
     const data: nbformat.ICodeCell = {
         cell_type: 'code',
         metadata: {},
