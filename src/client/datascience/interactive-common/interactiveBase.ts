@@ -875,17 +875,17 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
     }
 
     protected async getServerDisplayName(serverConnection: INotebookProviderConnection | undefined): Promise<string> {
+        const serverUri = await this.serverStorage.getUri();
         // If we don't have a server connection, make one if remote. We need the remote connection in order
         // to compute the display name. However only do this if the user is allowing auto start.
         if (
             !serverConnection &&
-            this.configService.getSettings(this.owningResource).jupyterServerURI !==
+            serverUri !==
                 Settings.JupyterServerLocalLaunch &&
             !this.configService.getSettings(this.owningResource).disableJupyterAutoStart
         ) {
             serverConnection = await this.notebookProvider.connect({ disableUI: true });
         }
-        const serverUri = this.configService.getSettings().jupyterServerURI;
         let displayName =
             serverConnection?.displayName ||
             (!serverConnection?.localLaunch ? serverConnection?.url : undefined) ||

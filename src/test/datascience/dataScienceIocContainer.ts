@@ -1131,7 +1131,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             alwaysTrustNotebooks: true,
             jupyterLaunchTimeout: 120000,
             jupyterLaunchRetries: 3,
-            jupyterServerURI: 'local',
+            jupyterServerType: 'local',
             // tslint:disable-next-line: no-invalid-template-strings
             notebookFileRoot: '${fileDirname}',
             changeDirOnImportExport: false,

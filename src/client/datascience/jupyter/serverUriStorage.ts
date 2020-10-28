@@ -3,8 +3,8 @@
 import { inject, injectable, named } from 'inversify';
 import * as keytar from 'keytar';
 import { ConfigurationTarget, Memento } from 'vscode';
-import { IWorkspaceService } from '../../common/application/types';
-import { GLOBAL_MEMENTO, IConfigurationService, IMemento } from '../../common/types';
+import { IApplicationEnvironment, IWorkspaceService } from '../../common/application/types';
+import { GLOBAL_MEMENTO, IConfigurationService, ICryptoUtils, IMemento } from '../../common/types';
 import { Settings } from '../constants';
 import { IJupyterServerUriStorage } from '../types';
 
@@ -16,6 +16,8 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
     constructor(
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
+        @inject(IApplicationEnvironment) private readonly appEnv: IApplicationEnvironment,
+        @inject(ICryptoUtils) private readonly crypto: ICryptoUtils,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento
     ) {}
     public async addToUriList(uri: string, time: number, displayName: string) {
@@ -71,7 +73,7 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
         return [];
     }
     public async getUri(): Promise<string> {
-        const uri = this.configService.getSettings(undefined).jupyterServerURI;
+        const uri = this.configService.getSettings(undefined).jupyterServerType;
         if (uri === Settings.JupyterServerLocalLaunch) {
             return uri;
         } else {
@@ -83,7 +85,7 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
             // Should be stored in keytar storage
             const storedUri = await keytar.getPassword(
                 Settings.JupyterServerRemoteLaunchService,
-                this.getWorkspaceAccount()
+                this.getUriAccountKey()
             );
 
             return storedUri || uri;
@@ -94,7 +96,7 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
         if (uri === Settings.JupyterServerLocalLaunch) {
             // Just save directly into the settings
             await this.configService.updateSetting(
-                'jupyterServerURI',
+                'jupyterServerType',
                 Settings.JupyterServerLocalLaunch,
                 undefined,
                 ConfigurationTarget.Workspace
@@ -102,21 +104,28 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
         } else {
             // This is a remote setting. Save in the settings as remote
             await this.configService.updateSetting(
-                'jupyterServerURI',
+                'jupyterServerType',
                 Settings.JupyterServerRemoteLaunch,
                 undefined,
                 ConfigurationTarget.Workspace
             );
 
             // Save in the keytar storage (unique account per workspace)
-            await keytar.setPassword(Settings.JupyterServerRemoteLaunchService, this.getWorkspaceAccount(), uri);
+            await keytar.setPassword(Settings.JupyterServerRemoteLaunchService, this.getUriAccountKey(), uri);
         }
     }
 
     /**
      * Returns a unique identifier for the current workspace
      */
-    private getWorkspaceAccount(): string {
-        return this.workspaceService.getWorkspaceFolderIdentifier(undefined);
+    private getUriAccountKey(): string {
+        if (this.workspaceService.rootPath) {
+            // Folder situation
+            return this.crypto.createHash(this.workspaceService.rootPath, 'string', 'SHA512');
+        } else if (this.workspaceService.workspaceFile) {
+            // Workspace situation
+            return this.crypto.createHash(this.workspaceService.workspaceFile.fsPath, 'string', 'SHA512');
+        }
+        return this.appEnv.machineId; // Global key when no folder or workspace file
     }
 }

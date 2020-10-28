@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { assert } from 'chai';
-import { anything, instance, mock, verify, when } from 'ts-mockito';
+import { anyString, anything, instance, mock, verify, when } from 'ts-mockito';
 
 import * as sinon from 'sinon';
 import { QuickPickItem } from 'vscode';
@@ -22,6 +22,8 @@ import { MockQuickPick } from '../mockQuickPick';
 import { JupyterServerUriStorage } from '../../../client/datascience/jupyter/serverUriStorage';
 import { MockMemento } from '../../mocks/mementos';
 import { WorkspaceService } from '../../../client/common/application/workspace';
+import { CryptoUtils } from '../../../client/common/crypto';
+import { ApplicationEnvironment } from '../../../client/common/application/applicationEnvironment';
 
 // tslint:disable: max-func-body-length no-any
 suite('DataScience - Jupyter Server URI Selector', () => {
@@ -42,8 +44,11 @@ suite('DataScience - Jupyter Server URI Selector', () => {
         clipboard = mock(ClipboardService);
         const configService = mock(ConfigurationService);
         const applicationShell = mock(ApplicationShell);
+        const applicationEnv = mock(ApplicationEnvironment);
         const workspaceService = mock(WorkspaceService);
         const picker = mock(JupyterUriProviderRegistration);
+        const crypto = mock(CryptoUtils);
+        when(crypto.createHash(anyString(), 'string')).thenCall((a1, _a2) => a1);
         cmdManager = mock(CommandManager);
         quickPick = new MockQuickPick(quickPickSelection);
         const input = new MockInputBox(inputSelection);
@@ -64,6 +69,8 @@ suite('DataScience - Jupyter Server URI Selector', () => {
         const storage = new JupyterServerUriStorage(
             instance(configService),
             instance(workspaceService),
+            instance(applicationEnv),
+            instance(crypto),
             new MockMemento()
         );
         const selector = new JupyterServerSelector(

@@ -21,6 +21,7 @@ import {
     GetServerOptions,
     IJupyterExecution,
     IJupyterServerProvider,
+    IJupyterServerUriStorage,
     INotebook,
     INotebookServer,
     INotebookServerOptions
@@ -36,7 +37,8 @@ export class NotebookServerProvider implements IJupyterServerProvider {
         @inject(IConfigurationService) private readonly configuration: IConfigurationService,
         @inject(IJupyterExecution) private readonly jupyterExecution: IJupyterExecution,
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
-        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService
+        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
+        @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage
     ) {}
     public get onNotebookCreated() {
         return this._notebookCreated.event;
@@ -46,7 +48,7 @@ export class NotebookServerProvider implements IJupyterServerProvider {
         options: GetServerOptions,
         token?: CancellationToken
     ): Promise<INotebookServer | undefined> {
-        const serverOptions = this.getNotebookServerOptions();
+        const serverOptions = await this.getNotebookServerOptions();
 
         // If we are just fetching or only want to create for local, see if exists
         if (options.getOnly || (options.localOnly && serverOptions.uri)) {
@@ -86,7 +88,7 @@ export class NotebookServerProvider implements IJupyterServerProvider {
     }
 
     private async startServer(token?: CancellationToken): Promise<INotebookServer | undefined> {
-        const serverOptions = this.getNotebookServerOptions();
+        const serverOptions = await this.getNotebookServerOptions();
 
         traceInfo(`Checking for server existence.`);
 
@@ -193,11 +195,10 @@ export class NotebookServerProvider implements IJupyterServerProvider {
         }
     }
 
-    private getNotebookServerOptions(): INotebookServerOptions {
+    private async getNotebookServerOptions(): Promise<INotebookServerOptions> {
         // Since there's one server per session, don't use a resource to figure out these settings
-        const settings = this.configuration.getSettings(undefined);
-        let serverURI: string | undefined = settings.jupyterServerURI;
-        const useDefaultConfig: boolean | undefined = settings.useDefaultConfigForJupyter;
+        let serverURI: string | undefined = await this.serverUriStorage.getUri();
+        const useDefaultConfig: boolean | undefined = this.configuration.getSettings().useDefaultConfigForJupyter;
 
         // For the local case pass in our URI as undefined, that way connect doesn't have to check the setting
         if (serverURI.toLowerCase() === Settings.JupyterServerLocalLaunch) {

@@ -104,6 +104,7 @@ import { NotebookStarter } from './jupyter/notebookStarter';
 import { OldJupyterVariables } from './jupyter/oldJupyterVariables';
 import { ServerPreload } from './jupyter/serverPreload';
 import { JupyterServerSelector } from './jupyter/serverSelector';
+import { JupyterServerUriStorage } from './jupyter/serverUriStorage';
 import { JupyterDebugService } from './jupyterDebugService';
 import { JupyterUriProviderRegistration } from './jupyterUriProviderRegistration';
 import { KernelDaemonPool } from './kernel-launcher/kernelDaemonPool';
@@ -155,6 +156,7 @@ import {
     IJupyterNotebookProvider,
     IJupyterPasswordConnect,
     IJupyterServerProvider,
+    IJupyterServerUriStorage,
     IJupyterSessionManagerFactory,
     IJupyterSubCommandExecutionService,
     IJupyterUriProviderRegistration,
@@ -318,6 +320,7 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     serviceManager.addSingleton<ITrustService>(ITrustService, TrustService);
     serviceManager.addSingleton<IFileSystemPathUtils>(IFileSystemPathUtils, FileSystemPathUtils);
     serviceManager.addSingleton<INotebookExtensibility>(INotebookExtensibility, NotebookExtensibility);
+    serviceManager.addSingleton<IJupyterServerUriStorage>(IJupyterServerUriStorage, JupyterServerUriStorage);
 
     registerGatherTypes(serviceManager);
     registerNotebookTypes(serviceManager);
