@@ -100,7 +100,8 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
             );
 
             // Save in the storage (unique account per workspace)
-            await this.storeString(this.getUriAccountKey(), uri);
+            const key = this.getUriAccountKey();
+            await this.storeString(key, uri);
         }
     }
 
@@ -115,7 +116,8 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
             }
 
             // Should be stored in encrypted storage based on the workspace
-            const storedUri = await this.retrieveString(this.getUriAccountKey());
+            const key = this.getUriAccountKey();
+            const storedUri = await this.retrieveString(key);
 
             return storedUri || uri;
         }
@@ -137,7 +139,7 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
 
     private async storeString(key: string, value: string): Promise<void> {
         // When not in insiders, use keytar
-        if (this.appEnv.extensionChannel !== 'insiders') {
+        if (this.appEnv.channel !== 'insiders') {
             return keytar.setPassword(Settings.JupyterServerRemoteLaunchService, key, value);
         } else {
             await this.authenService.setPassword(key, value);
@@ -146,7 +148,7 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
 
     private async retrieveString(key: string): Promise<string | undefined> {
         // When not in insiders, use keytar
-        if (this.appEnv.extensionChannel !== 'insiders') {
+        if (this.appEnv.channel !== 'insiders') {
             const val = await keytar.getPassword(Settings.JupyterServerRemoteLaunchService, key);
             return val ? val : undefined;
         } else {

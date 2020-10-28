@@ -16,6 +16,7 @@ import { Identifiers, Settings, Telemetry } from '../constants';
 import { JupyterInstallError } from '../jupyter/jupyterInstallError';
 import { JupyterSelfCertsError } from '../jupyter/jupyterSelfCertsError';
 import { JupyterZMQBinariesNotFoundError } from '../jupyter/jupyterZMQBinariesNotFoundError';
+import { JupyterServerSelector } from '../jupyter/serverSelector';
 import { ProgressReporter } from '../progress/progressReporter';
 import {
     GetServerOptions,
@@ -38,7 +39,8 @@ export class NotebookServerProvider implements IJupyterServerProvider {
         @inject(IJupyterExecution) private readonly jupyterExecution: IJupyterExecution,
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
-        @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage
+        @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
+        @inject(JupyterServerSelector) private serverSelector: JupyterServerSelector
     ) {}
     public get onNotebookCreated() {
         return this._notebookCreated.event;
@@ -91,6 +93,14 @@ export class NotebookServerProvider implements IJupyterServerProvider {
         const serverOptions = await this.getNotebookServerOptions();
 
         traceInfo(`Checking for server existence.`);
+
+        // If the URI is 'remote' then the encrypted storage is not working. Ask user again for server URI
+        if (serverOptions.uri === Settings.JupyterServerRemoteLaunch) {
+            await this.serverSelector.selectJupyterURI(true);
+
+            // Should have been saved
+            serverOptions.uri = await this.serverUriStorage.getUri();
+        }
 
         // Status depends upon if we're about to connect to existing server or not.
         const progressReporter = this.allowingUI

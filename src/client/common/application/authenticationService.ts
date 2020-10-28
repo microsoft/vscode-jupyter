@@ -4,15 +4,13 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import * as path from 'path';
-import { parse } from 'semver';
 import * as vscode from 'vscode';
 import { UseProposedApi } from '../constants';
-import { IPlatformService } from '../platform/types';
-import { IPathUtils } from '../types';
-import { OSType } from '../utils/platform';
-import { Channel, IApplicationEnvironment, IAuthenticationService } from './types';
+import { IApplicationEnvironment, IAuthenticationService } from './types';
 
+/**
+ * Wrapper for VS code authentication services.
+ */
 @injectable()
 export class AuthenticationService implements IAuthenticationService {
     private unsupportedEvent = new vscode.EventEmitter<void>();

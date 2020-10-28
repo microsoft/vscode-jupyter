@@ -7,6 +7,7 @@ import * as typemoq from 'typemoq';
 import { IApplicationShell } from '../../../client/common/application/types';
 import { IConfigurationService, IWatchableJupyterSettings } from '../../../client/common/types';
 import { NotebookServerProvider } from '../../../client/datascience/interactive-common/notebookServerProvider';
+import { JupyterServerSelector } from '../../../client/datascience/jupyter/serverSelector';
 import { JupyterServerUriStorage } from '../../../client/datascience/jupyter/serverUriStorage';
 import { ProgressReporter } from '../../../client/datascience/progress/progressReporter';
 import { IJupyterExecution, INotebookServer } from '../../../client/datascience/types';
@@ -52,6 +53,7 @@ suite('DataScience - NotebookServerProvider', () => {
         when(configurationService.getSettings(anything())).thenReturn(instance(pythonSettings));
         const serverStorage = mock(JupyterServerUriStorage);
         when(serverStorage.getUri()).thenResolve('local');
+        const serverSelector = mock(JupyterServerSelector);
 
         // Create the server provider
         serverProvider = new NotebookServerProvider(
@@ -60,7 +62,8 @@ suite('DataScience - NotebookServerProvider', () => {
             instance(jupyterExecution),
             instance(applicationShell),
             instance(interpreterService),
-            instance(serverStorage)
+            instance(serverStorage),
+            instance(serverSelector)
         );
     });
 

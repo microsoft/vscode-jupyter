@@ -24,6 +24,7 @@ import { MockMemento } from '../../mocks/mementos';
 import { WorkspaceService } from '../../../client/common/application/workspace';
 import { CryptoUtils } from '../../../client/common/crypto';
 import { ApplicationEnvironment } from '../../../client/common/application/applicationEnvironment';
+import { AuthenticationService } from '../../../client/common/application/authenticationService';
 
 // tslint:disable: max-func-body-length no-any
 suite('DataScience - Jupyter Server URI Selector', () => {
@@ -48,6 +49,7 @@ suite('DataScience - Jupyter Server URI Selector', () => {
         const workspaceService = mock(WorkspaceService);
         const picker = mock(JupyterUriProviderRegistration);
         const crypto = mock(CryptoUtils);
+        const authentication = mock(AuthenticationService);
         when(crypto.createHash(anyString(), 'string')).thenCall((a1, _a2) => a1);
         cmdManager = mock(CommandManager);
         quickPick = new MockQuickPick(quickPickSelection);
@@ -71,6 +73,7 @@ suite('DataScience - Jupyter Server URI Selector', () => {
             instance(workspaceService),
             instance(applicationEnv),
             instance(crypto),
+            instance(authentication),
             new MockMemento()
         );
         const selector = new JupyterServerSelector(
