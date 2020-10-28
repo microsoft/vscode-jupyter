@@ -24,7 +24,7 @@ import { ICodeCssGenerator, IThemeFinder, WebViewViewChangeEventArgs } from '../
 import { WebviewHost } from './webviewHost';
 
 @injectable() // For some reason this is necessary to get the class hierarchy to work.
-export abstract class WebviewPanelHost<IMapping> extends WebviewHost<IMapping> implements IDisposable {
+export abstract class WebviewViewHost<IMapping> extends WebviewHost<IMapping> implements IDisposable {
     protected get isDisposed(): boolean {
         return this.disposed;
     }
@@ -34,31 +34,18 @@ export abstract class WebviewPanelHost<IMapping> extends WebviewHost<IMapping> i
 
     constructor(
         @unmanaged() protected configService: IConfigurationService,
-        @unmanaged() private provider: IWebviewPanelProvider,
         @unmanaged() cssGenerator: ICodeCssGenerator,
         @unmanaged() protected themeFinder: IThemeFinder,
-        @unmanaged() protected workspaceService: IWorkspaceService,
-        @unmanaged()
-        messageListenerCtor: (
-            callback: (message: string, payload: {}) => void,
-            viewChanged: (panel: IWebviewView) => void,
-            disposed: () => void
-        ) => IWebviewViewMessageListener,
-        @unmanaged() private rootPath: string,
-        @unmanaged() private scripts: string[],
-        @unmanaged() private _title: string,
-        @unmanaged() private viewColumn: ViewColumn,
-        @unmanaged() protected readonly useCustomEditorApi: boolean,
-        @unmanaged() enableVariablesDuringDebugging: Promise<boolean>
-    ) {
-        super(
-            configService,
-            cssGenerator,
-            themeFinder,
-            workspaceService,
-            useCustomEditorApi,
-            enableVariablesDuringDebugging
-        );
+        @unmanaged() protected workspaceService: IWorkspaceService //@unmanaged() //messageListenerCtor: (
+    ) //callback: (message: string, payload: {}) => void,
+    //viewChanged: (panel: IWebviewView) => void,
+    //disposed: () => void
+    //) => IWebviewViewMessageListener,
+    //@unmanaged() protected readonly useCustomEditorApi: boolean,
+    //@unmanaged() enableVariablesDuringDebugging: Promise<boolean>
+    {
+        // IANHU: Add back in message handlers and config options
+        super(configService, cssGenerator, themeFinder, workspaceService, true, Promise.resolve(true));
 
         // Create our message listener for our web panel.
         //this.messageListener = messageListenerCtor(
@@ -76,7 +63,9 @@ export abstract class WebviewPanelHost<IMapping> extends WebviewHost<IMapping> i
         super.dispose();
     }
     public get title() {
-        return this._title;
+        // IANHU: Needed in this class?
+        return 'Testing';
+        //return this._title;
     }
 
     //tslint:disable-next-line:no-any
@@ -95,7 +84,7 @@ export abstract class WebviewPanelHost<IMapping> extends WebviewHost<IMapping> i
 
     protected shareMessage<M extends IMapping, T extends keyof M>(type: T, payload?: M[T]) {
         // Send our remote message.
-        this.messageListener.onMessage(type.toString(), payload);
+        //this.messageListener.onMessage(type.toString(), payload);
     }
 
     protected onViewStateChanged(_args: WebViewViewChangeEventArgs) {

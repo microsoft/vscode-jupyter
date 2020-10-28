@@ -3,7 +3,7 @@
 'use strict';
 import '../../common/extensions';
 
-import { inject, injectable } from 'inversify';
+import { inject, injectable, unmanaged } from 'inversify';
 import * as path from 'path';
 import { ViewColumn } from 'vscode';
 
@@ -19,9 +19,30 @@ import { HelpLinks, Telemetry } from '../constants';
 import { JupyterDataRateLimitError } from '../jupyter/jupyterDataRateLimitError';
 import { ICodeCssGenerator, IThemeFinder } from '../types';
 import { WebviewPanelHost } from '../webviews/webviewPanelHost';
+import { WebviewViewHost } from '../webviews/webviewViewHost';
+import { IVariableViewMapping } from './types';
 
 const variableViewDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'viewers');
 
+@injectable()
+export class VariableView extends WebviewViewHost<IVariableViewMapping> implements IDisposable {
+    //@inject(IConfigurationService) configuration: IConfigurationService,
+    //@inject(ICodeCssGenerator) cssGenerator: ICodeCssGenerator,
+    //@inject(IThemeFinder) themeFinder: IThemeFinder,
+    //@inject(IWorkspaceService) workspaceService: IWorkspaceService,
+    //@inject(IApplicationShell) private applicationShell: IApplicationShell
+    constructor(
+        @unmanaged() configuration: IConfigurationService,
+        @unmanaged() cssGenerator: ICodeCssGenerator,
+        @unmanaged() themeFinder: IThemeFinder,
+        @unmanaged() workspaceService: IWorkspaceService
+    ) {
+        super(configuration, cssGenerator, themeFinder, workspaceService);
+    }
+    protected get owningResource(): Resource {
+        return undefined;
+    }
+}
 //@injectable()
 //export class VariableView extends WebviewView
 

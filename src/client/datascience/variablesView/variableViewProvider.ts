@@ -2,9 +2,13 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { injectable } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { CancellationToken, Webview, WebviewView, WebviewViewResolveContext } from 'vscode';
+import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
+import { IConfigurationService } from '../../common/types';
+import { ICodeCssGenerator, IThemeFinder } from '../types';
 import { IVariableViewProvider } from './types';
+import { VariableView } from './variableView';
 
 // IANHU: Service wrapping around this? Not fully sure
 @injectable()
@@ -17,16 +21,33 @@ export class VariableViewProvider implements IVariableViewProvider {
     public readonly viewType: string = 'jupyterViewVariables';
 
     private view?: WebviewView;
+    private variableView?: VariableView;
+
+    constructor(
+        @inject(IConfigurationService) private readonly configuration: IConfigurationService,
+        @inject(ICodeCssGenerator) private readonly cssGenerator: ICodeCssGenerator,
+        @inject(IThemeFinder) private readonly themeFinder: IThemeFinder,
+        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService
+    ) {}
 
     public resolveWebviewView(
         webviewView: WebviewView,
         _context: WebviewViewResolveContext,
         _token: CancellationToken
     ): Thenable<void> | void {
+        // IANHU: Need view?
         this.view = webviewView;
 
         // IANHU: Check options
         webviewView.webview.options = { enableScripts: true };
+
+        // Create our actual variable view
+        this.variableView = new VariableView(
+            this.configuration,
+            this.cssGenerator,
+            this.themeFinder,
+            this.workspaceService
+        );
 
         //webviewView.webview.html = this.getHtml(this.view.webview);
     }
@@ -54,14 +75,4 @@ export class VariableViewProvider implements IVariableViewProvider {
     //</body>
     //</html>`;
     //}
-}
-
-// IANHU: Check this
-function getNonce() {
-    let text = '';
-    const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    for (let i = 0; i < 32; i++) {
-        text += possible.charAt(Math.floor(Math.random() * possible.length));
-    }
-    return text;
 }
