@@ -16,7 +16,7 @@ import {
     InputStep,
     IQuickPickParameters
 } from '../../common/utils/multiStepInput';
-import { captureTelemetry } from '../../telemetry';
+import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Identifiers, Settings, Telemetry } from '../constants';
 import {
     IJupyterServerUriStorage,
@@ -156,10 +156,14 @@ export class JupyterServerSelector {
         }
     }
 
-    @captureTelemetry(Telemetry.SetJupyterURIToUserSpecified)
     private async setJupyterURIToRemote(userURI: string): Promise<void> {
         const previousValue = await this.serverUriStorage.getUri();
         await this.serverUriStorage.setUri(userURI);
+
+        // Indicate setting a jupyter URI to a remote setting. Check if an azure remote or not
+        sendTelemetryEvent(Telemetry.SetJupyterURIToUserSpecified, undefined, {
+            azure: userURI.toLowerCase().includes('azure')
+        });
 
         // Reload if there's a change
         if (previousValue !== userURI) {
