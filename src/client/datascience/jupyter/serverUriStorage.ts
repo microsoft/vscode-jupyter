@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 import { inject, injectable, named } from 'inversify';
 import { ConfigurationTarget, Memento } from 'vscode';
-import { IApplicationEnvironment, IAuthenticationService, IWorkspaceService } from '../../common/application/types';
+import { IApplicationEnvironment, IEncryptedStorage, IWorkspaceService } from '../../common/application/types';
 import { GLOBAL_MEMENTO, IConfigurationService, ICryptoUtils, IMemento } from '../../common/types';
 import { Settings } from '../constants';
 import { IJupyterServerUriStorage } from '../types';
@@ -16,9 +16,9 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
     constructor(
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
-        @inject(IApplicationEnvironment) private readonly appEnv: IApplicationEnvironment,
         @inject(ICryptoUtils) private readonly crypto: ICryptoUtils,
-        @inject(IAuthenticationService) private readonly authenService: IAuthenticationService,
+        @inject(IEncryptedStorage) private readonly encryptedStorage: IEncryptedStorage,
+        @inject(IApplicationEnvironment) private readonly appEnv: IApplicationEnvironment,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento
     ) {
         // Cache our current state so we don't keep asking for it from the encrypted storage
@@ -64,14 +64,21 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
                     }`
             )
             .join(Settings.JupyterServerRemoteLaunchUriSeparator);
-        return this.storeString(Settings.JupyterServerRemoteLaunchUriListKey, blob);
+        return this.encryptedStorage.store(
+            Settings.JupyterServerRemoteLaunchService,
+            Settings.JupyterServerRemoteLaunchUriListKey,
+            blob
+        );
     }
     public async getSavedUriList(): Promise<{ uri: string; time: number; displayName?: string | undefined }[]> {
         // List is in the global memento, URIs are in encrypted storage
         const indexes = this.globalMemento.get<{ index: number; time: number }[]>(Settings.JupyterServerUriList);
         if (indexes && indexes.length > 0) {
             // Pull out the \r separated URI list (\r is an invalid URI character)
-            const blob = await this.retrieveString(Settings.JupyterServerRemoteLaunchUriListKey);
+            const blob = await this.encryptedStorage.retrieve(
+                Settings.JupyterServerRemoteLaunchService,
+                Settings.JupyterServerRemoteLaunchUriListKey
+            );
             if (blob) {
                 // Make sure same length
                 const split = blob.split(Settings.JupyterServerRemoteLaunchUriSeparator);
@@ -97,7 +104,11 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
     public async clearUriList(): Promise<void> {
         // Clear out memento and encrypted storage
         await this.globalMemento.update(Settings.JupyterServerUriList, []);
-        await this.storeString(Settings.JupyterServerRemoteLaunchUriListKey, undefined);
+        await this.encryptedStorage.store(
+            Settings.JupyterServerRemoteLaunchService,
+            Settings.JupyterServerRemoteLaunchUriListKey,
+            undefined
+        );
     }
     public getUri(): Promise<string> {
         if (!this.currentUriPromise) {
@@ -130,7 +141,7 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
 
             // Save in the storage (unique account per workspace)
             const key = this.getUriAccountKey();
-            await this.storeString(key, uri);
+            await this.encryptedStorage.store(Settings.JupyterServerRemoteLaunchService, key, uri);
         }
     }
 
@@ -146,7 +157,7 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
 
             // Should be stored in encrypted storage based on the workspace
             const key = this.getUriAccountKey();
-            const storedUri = await this.retrieveString(key);
+            const storedUri = await this.encryptedStorage.retrieve(Settings.JupyterServerRemoteLaunchService, key);
 
             return storedUri || uri;
         }
@@ -164,40 +175,5 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
             return this.crypto.createHash(this.workspaceService.workspaceFile.fsPath, 'string', 'SHA512');
         }
         return this.appEnv.machineId; // Global key when no folder or workspace file
-    }
-
-    private async storeString(key: string, value: string | undefined): Promise<void> {
-        // When not in insiders, use keytar
-        if (this.appEnv.channel !== 'insiders') {
-            // tslint:disable-next-line: no-require-imports
-            const keytar = require('keytar') as typeof import('keytar');
-
-            if (!value) {
-                await keytar.deletePassword(Settings.JupyterServerRemoteLaunchService, key);
-            } else {
-                return keytar.setPassword(Settings.JupyterServerRemoteLaunchService, key, value);
-            }
-        } else {
-            if (!value) {
-                await this.authenService.deletePassword(key);
-            } else {
-                await this.authenService.setPassword(key, value);
-            }
-        }
-    }
-
-    private async retrieveString(key: string): Promise<string | undefined> {
-        // When not in insiders, use keytar
-        if (this.appEnv.channel !== 'insiders') {
-            // tslint:disable-next-line: no-require-imports
-            const keytar = require('keytar') as typeof import('keytar');
-
-            const val = await keytar.getPassword(Settings.JupyterServerRemoteLaunchService, key);
-            return val ? val : undefined;
-        } else {
-            // tslint:disable-next-line: no-unnecessary-local-variable
-            const val = await this.authenService.getPassword(key);
-            return val;
-        }
     }
 }

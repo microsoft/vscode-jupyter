@@ -4,13 +4,14 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { parse, ParseError } from 'jsonc-parser';
+import { applyEdits, ModificationOptions, modify, parse, ParseError } from 'jsonc-parser';
 import * as path from 'path';
 import { IApplicationEnvironment, IWorkspaceService } from '../common/application/types';
 import { traceError } from '../common/logger';
 import { IFileSystem } from '../common/platform/types';
 import { Resource } from '../common/types';
 import { swallowExceptions } from '../common/utils/decorators';
+import { Settings } from '../datascience/constants';
 import { IJupyterServerUriStorage } from '../datascience/types';
 import { traceDecorators } from '../logging';
 import { IExtensionActivationService } from './types';
@@ -30,7 +31,7 @@ export class MigrateDataScienceSettingsService implements IExtensionActivationSe
 
     @swallowExceptions('Failed to update settings.json')
     public async fixSettingInFile(filePath: string): Promise<string> {
-        const fileContents = await this.fs.readLocalFile(filePath);
+        let fileContents = await this.fs.readLocalFile(filePath);
         const errors: ParseError[] = [];
         const content = parse(fileContents, errors, { allowTrailingComma: true, disallowComments: false });
         if (errors.length > 0) {
@@ -41,18 +42,36 @@ export class MigrateDataScienceSettingsService implements IExtensionActivationSe
         const dataScienceKeys = Object.keys(content).filter((f) => f.includes('python.dataScience'));
 
         // Write all of these keys to jupyter tags
+        const modificationOptions: ModificationOptions = {
+            formattingOptions: {
+                tabSize: 4,
+                insertSpaces: true
+            }
+        };
         dataScienceKeys.forEach((k) => {
-            const val = content[k];
-            delete content[k];
+            let val = content[k];
+            // Remove from the original string
+            fileContents = applyEdits(fileContents, modify(fileContents, [k], undefined, modificationOptions));
+
             // Special case. URI is no longer supported. Move it to storage
             if (k === 'python.dataScience.jupyterServerURI') {
                 this.serverUriStorage.setUri(val).ignoreErrors();
-            } else {
-                content[`jupyter.${k.substr(18)}`] = val;
+
+                // Set the setting to local or remote based on if URI is 'local'
+                val = val === Settings.JupyterServerLocalLaunch ? val : Settings.JupyterServerRemoteLaunch;
+
+                // Change the key to the jupyter version (still needs the 19 chars in front so it substr correctly)
+                k = 'xxxxxx.dataScience.jupyterServerType';
             }
+
+            // Update the new value
+            fileContents = applyEdits(
+                fileContents,
+                modify(fileContents, [`jupyter.${k.substr(19)}`], val, modificationOptions)
+            );
         });
 
-        await this.fs.writeLocalFile(filePath, JSON.stringify(content, null, 4));
+        await this.fs.writeLocalFile(filePath, fileContents);
         return fileContents;
     }
 

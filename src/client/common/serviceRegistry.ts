@@ -15,6 +15,7 @@ import { ReloadVSCodeCommandHandler } from './application/commands/reloadCommand
 import { CustomEditorService } from './application/customEditorService';
 import { DebugService } from './application/debugService';
 import { DocumentManager } from './application/documentManager';
+import { EncryptedStorage } from './application/encryptedStorage';
 import { Extensions } from './application/extensions';
 import { LanguageService } from './application/languageService';
 import { VSCodeNotebook } from './application/notebook';
@@ -26,6 +27,7 @@ import {
     ICustomEditorService,
     IDebugService,
     IDocumentManager,
+    IEncryptedStorage,
     ILanguageService,
     ILiveShareApi,
     IVSCodeNotebook
@@ -88,6 +90,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IDebugService>(IDebugService, DebugService);
     serviceManager.addSingleton<IApplicationEnvironment>(IApplicationEnvironment, ApplicationEnvironment);
     serviceManager.addSingleton<IAuthenticationService>(IAuthenticationService, AuthenticationService);
+    serviceManager.addSingleton<IEncryptedStorage>(IEncryptedStorage, EncryptedStorage);
     serviceManager.addSingleton<ILanguageService>(ILanguageService, LanguageService);
     serviceManager.addSingleton<IBrowserService>(IBrowserService, BrowserService);
     serviceManager.addSingleton<IHttpClient>(IHttpClient, HttpClient);

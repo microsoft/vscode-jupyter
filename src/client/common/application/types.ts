@@ -1634,3 +1634,9 @@ export interface IAuthenticationService {
      */
     deletePassword(key: string): Thenable<void>;
 }
+
+export const IEncryptedStorage = Symbol('IAuthenticationService');
+export interface IEncryptedStorage {
+    store(service: string, key: string, value: string | undefined): Promise<void>;
+    retrieve(service: string, key: string): Promise<string | undefined>;
+}

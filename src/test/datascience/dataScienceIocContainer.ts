@@ -38,6 +38,7 @@ import {
     ICustomEditorService,
     IDebugService,
     IDocumentManager,
+    IEncryptedStorage,
     ILiveShareApi,
     ILiveShareTestingApi,
     IVSCodeNotebook,
@@ -302,6 +303,7 @@ import { TestPersistentStateFactory } from './testPersistentStateFactory';
 import { WebBrowserPanelProvider } from './uiTests/webBrowserPanelProvider';
 import { JupyterServerUriStorage } from '../../client/datascience/jupyter/serverUriStorage';
 import { AuthenticationService } from '../../client/common/application/authenticationService';
+import { MockEncryptedStorage } from './mockEncryptedStorage';
 
 export class DataScienceIocContainer extends UnitTestIocContainer {
     public get workingInterpreter() {
@@ -839,6 +841,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             }
         };
         this.serviceManager.addSingleton<ILanguageServerProvider>(ILanguageServerProvider, MockLanguageServerProvider);
+        this.serviceManager.addSingleton<IEncryptedStorage>(IEncryptedStorage, MockEncryptedStorage);
         this.serviceManager.addSingleton<IJupyterServerUriStorage>(IJupyterServerUriStorage, JupyterServerUriStorage);
 
         when(this.applicationShell.showErrorMessage(anyString())).thenReturn(Promise.resolve(''));
