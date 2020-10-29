@@ -5,6 +5,7 @@ import '../../common/extensions';
 
 import type { nbformat } from '@jupyterlab/coreutils';
 import type { KernelMessage } from '@jupyterlab/services';
+import * as fsextra from 'fs-extra';
 import * as os from 'os';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
@@ -1517,26 +1518,20 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         // Look for the file next or our current file (this is where it's installed in the vsix)
         let filePath = path.join(__dirname, 'node_modules', 'onigasm', 'lib', 'onigasm.wasm');
         traceInfo(`Request for onigasm file at ${filePath}`);
-        if (this.fs) {
-            if (await this.fs.localFileExists(filePath)) {
-                const contents = await this.fs.readLocalData(filePath);
+        if (await fsextra.pathExists(filePath)) {
+            const contents = await fsextra.readFile(filePath);
+            this.postMessage(InteractiveWindowMessages.LoadOnigasmAssemblyResponse, contents).ignoreErrors();
+        } else {
+            // During development it's actually in the node_modules folder
+            filePath = path.join(EXTENSION_ROOT_DIR, 'node_modules', 'onigasm', 'lib', 'onigasm.wasm');
+            traceInfo(`Backup request for onigasm file at ${filePath}`);
+            if (await fsextra.pathExists(filePath)) {
+                const contents = await fsextra.readFile(filePath);
                 this.postMessage(InteractiveWindowMessages.LoadOnigasmAssemblyResponse, contents).ignoreErrors();
             } else {
-                // During development it's actually in the node_modules folder
-                filePath = path.join(EXTENSION_ROOT_DIR, 'node_modules', 'onigasm', 'lib', 'onigasm.wasm');
-                traceInfo(`Backup request for onigasm file at ${filePath}`);
-                if (await this.fs.localFileExists(filePath)) {
-                    const contents = await this.fs.readLocalData(filePath);
-                    this.postMessage(InteractiveWindowMessages.LoadOnigasmAssemblyResponse, contents).ignoreErrors();
-                } else {
-                    traceWarning('Onigasm file not found. Colorization will not be available.');
-                    this.postMessage(InteractiveWindowMessages.LoadOnigasmAssemblyResponse).ignoreErrors();
-                }
+                traceWarning('Onigasm file not found. Colorization will not be available.');
+                this.postMessage(InteractiveWindowMessages.LoadOnigasmAssemblyResponse).ignoreErrors();
             }
-        } else {
-            // This happens during testing. Onigasm not needed as we're not testing colorization.
-            traceWarning('File system not found. Colorization will not be available.');
-            this.postMessage(InteractiveWindowMessages.LoadOnigasmAssemblyResponse).ignoreErrors();
         }
     }
 
