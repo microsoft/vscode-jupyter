@@ -27,7 +27,8 @@ exports.nodeModulesToExternalize = [
     'crypto-js',
     'fontkit',
     'png-js',
-    'zeromq'
+    'zeromq',
+    'keytar'
 ];
 exports.nodeModulesToReplacePaths = [...exports.nodeModulesToExternalize];
 function getDefaultPlugins(name) {

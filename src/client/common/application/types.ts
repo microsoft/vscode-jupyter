@@ -2,9 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import {
-    AuthenticationProvider,
     AuthenticationProviderInformation,
-    AuthenticationProvidersChangeEvent,
     Breakpoint,
     BreakpointsChangeEvent,
     CancellationToken,
@@ -62,6 +60,8 @@ import {
 } from 'vscode';
 import * as vsls from 'vsls/vscode';
 import type {
+    AuthenticationProvider,
+    AuthenticationProvidersChangeEvent,
     NotebookCellLanguageChangeEvent as VSCNotebookCellLanguageChangeEvent,
     NotebookCellMetadata,
     NotebookCellMetadataChangeEvent as VSCNotebookCellMetadataChangeEvent,
