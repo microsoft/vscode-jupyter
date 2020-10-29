@@ -52,7 +52,7 @@ export class MigrateDataScienceSettingsService implements IExtensionActivationSe
             }
         });
 
-        await this.fs.writeLocalFile(filePath, JSON.stringify(content, undefined, 2));
+        await this.fs.writeLocalFile(filePath, JSON.stringify(content, null, 4));
         return fileContents;
     }
 
