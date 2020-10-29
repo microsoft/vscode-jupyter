@@ -72,11 +72,16 @@ export class PostOffice implements IDisposable {
         this.handlers = this.handlers.filter((f) => f !== handler);
     }
 
-    private acquireApi(): IVsCodeApi | undefined {
+    public acquireApi(): IVsCodeApi | undefined {
         // Only do this once as it crashes if we ask more than once
         // tslint:disable-next-line:no-typeof-undefined
         if (!this.vscodeApi && typeof acquireVsCodeApi !== 'undefined') {
+            // tslint:disable: no-console no-any
+            console.log('Acquired vscode api');
             this.vscodeApi = acquireVsCodeApi(); // NOSONAR
+            // tslint:disable-next-line: no-typeof-undefined
+        } else if (!this.vscodeApi && typeof (window as any).acquireVsCodeApi !== 'undefined') {
+            this.vscodeApi = (window as any).acquireVsCodeApi();
         }
         if (!this.registered) {
             this.registered = true;
@@ -89,17 +94,20 @@ export class PostOffice implements IDisposable {
                 // tslint:disable-next-line: no-any
                 const api = (this.vscodeApi as any) as undefined | { handleMessage?: Function };
                 if (api && api.handleMessage) {
+                    console.log(`Binding handlemessages to vscode api`);
                     api.handleMessage(this.handleMessages.bind(this));
+                } else {
+                    console.log(`api is ${api}, handlemessage is ${api?.handleMessage}`);
                 }
-            } catch {
+            } catch (e) {
                 // Ignore.
+                console.log(`Encountered error while binding handlemessages to vscode api ${e}`);
             }
         }
 
         return this.vscodeApi;
     }
-
-    private async handleMessages(ev: MessageEvent) {
+    public handleMessages(ev: MessageEvent) {
         if (this.handlers) {
             const msg = ev.data as WebviewMessage;
             if (msg) {
