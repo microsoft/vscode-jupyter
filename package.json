@@ -1252,8 +1252,6 @@
                             "NativeNotebookEditor",
                             "CustomEditor",
                             "RunByLine",
-                            "jediLSP",
-                            "debuggerDataViewer",
                             "All"
                         ]
                     },
@@ -1268,7 +1266,6 @@
                             "NativeNotebookEditor",
                             "CustomEditor",
                             "RunByLine",
-                            "debuggerDataViewer",
                             "All"
                         ]
                     },
