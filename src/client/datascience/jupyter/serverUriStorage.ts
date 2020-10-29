@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { inject, injectable, named } from 'inversify';
-import * as keytar from 'keytar';
 import { ConfigurationTarget, Memento } from 'vscode';
 import { IApplicationEnvironment, IAuthenticationService, IWorkspaceService } from '../../common/application/types';
 import { GLOBAL_MEMENTO, IConfigurationService, ICryptoUtils, IMemento } from '../../common/types';
@@ -170,6 +169,9 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
     private async storeString(key: string, value: string | undefined): Promise<void> {
         // When not in insiders, use keytar
         if (this.appEnv.channel !== 'insiders') {
+            // tslint:disable-next-line: no-require-imports
+            const keytar = require('keytar') as typeof import('keytar');
+
             if (!value) {
                 await keytar.deletePassword(Settings.JupyterServerRemoteLaunchService, key);
             } else {
@@ -187,6 +189,9 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
     private async retrieveString(key: string): Promise<string | undefined> {
         // When not in insiders, use keytar
         if (this.appEnv.channel !== 'insiders') {
+            // tslint:disable-next-line: no-require-imports
+            const keytar = require('keytar') as typeof import('keytar');
+
             const val = await keytar.getPassword(Settings.JupyterServerRemoteLaunchService, key);
             return val ? val : undefined;
         } else {

@@ -76,7 +76,7 @@ const config = {
         // Same thing for keytar
         new removeFilesWebpackPlugin({ after: { include: ['./out/client/node_modules/keytar.js'], log: false } }),
         new copyWebpackPlugin([{ from: './node_modules/keytar/**/*.js' }]),
-        new copyWebpackPlugin([{ from: './node_modules/keytar/**/*.node' }]),
+        new copyWebpackPlugin([{ from: './node_modules/keytar/**/*.node' }])
     ],
     resolve: {
         alias: {
