@@ -495,6 +495,7 @@
             {
                 "command": "jupyter.opennotebookInPreviewEditor",
                 "title": "%jupyter.command.jupyter.opennotebookInPreviewEditor.title%",
+                "enablement": "jupyter.opennotebookInPreviewEditor.enabled",
                 "category": "Jupyter"
             },
             {
@@ -759,7 +760,7 @@
                     "group": "Jupyter"
                 },
                 {
-                    "when": "resourceLangId == jupyter && jupyter.vscode.channel == 'insiders'",
+                    "when": "resourceLangId == jupyter && jupyter.vscode.channel == 'insiders' && jupyter.opennotebookInPreviewEditor.enabled",
                     "command": "jupyter.opennotebookInPreviewEditor",
                     "group": "Jupyter"
                 },
