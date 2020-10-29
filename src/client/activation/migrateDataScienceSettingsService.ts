@@ -4,12 +4,14 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
+import { parse, ParseError } from 'jsonc-parser';
 import * as path from 'path';
 import { IApplicationEnvironment, IWorkspaceService } from '../common/application/types';
 import { traceError } from '../common/logger';
 import { IFileSystem } from '../common/platform/types';
 import { Resource } from '../common/types';
 import { swallowExceptions } from '../common/utils/decorators';
+import { IJupyterServerUriStorage } from '../datascience/types';
 import { traceDecorators } from '../logging';
 import { IExtensionActivationService } from './types';
 
@@ -18,7 +20,8 @@ export class MigrateDataScienceSettingsService implements IExtensionActivationSe
     constructor(
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IApplicationEnvironment) private readonly application: IApplicationEnvironment,
-        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
+        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
+        @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage
     ) {}
 
     public async activate(resource: Resource): Promise<void> {
@@ -27,16 +30,29 @@ export class MigrateDataScienceSettingsService implements IExtensionActivationSe
 
     @swallowExceptions('Failed to update settings.json')
     public async fixSettingInFile(filePath: string): Promise<string> {
-        let fileContents = await this.fs.readLocalFile(filePath);
-        fileContents = fileContents.replace(
-            /"python\.dataScience\.(.*?)":/g,
-            (_match, capture) => `"jupyter.${capture}":`
-        );
+        const fileContents = await this.fs.readLocalFile(filePath);
+        const errors: ParseError[] = [];
+        const content = parse(fileContents, errors, { allowTrailingComma: true, disallowComments: false });
+        if (errors.length > 0) {
+            traceError('JSONC parser returned ParseError codes', errors);
+        }
 
-        // Some settings are no longer used. Remove them.
-        fileContents = fileContents.replace(/"jupyter.jupyterServerURI".*/, '');
+        // Find all of the python.datascience entries
+        const dataScienceKeys = Object.keys(content).filter((f) => f.includes('python.dataScience'));
 
-        await this.fs.writeLocalFile(filePath, fileContents);
+        // Write all of these keys to jupyter tags
+        dataScienceKeys.forEach((k) => {
+            const val = content[k];
+            delete content[k];
+            // Special case. URI is no longer supported. Move it to storage
+            if (k === 'python.dataScience.jupyterServerURI') {
+                this.serverUriStorage.setUri(val).ignoreErrors();
+            } else {
+                content[`jupyter.${k.substr(18)}`] = val;
+            }
+        });
+
+        await this.fs.writeLocalFile(filePath, JSON.stringify(content, undefined, 2));
         return fileContents;
     }
 
