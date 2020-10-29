@@ -2,9 +2,7 @@
 // Licensed under the MIT License.
 import { injectable } from 'inversify';
 import * as keytar from 'keytar';
-import {
-    IEncryptedStorage,
-} from '../../client/common/application/types';
+import { IEncryptedStorage } from '../../client/common/application/types';
 
 /**
  * Class that wraps keytar and authentication to provide a way to write out and save a string
