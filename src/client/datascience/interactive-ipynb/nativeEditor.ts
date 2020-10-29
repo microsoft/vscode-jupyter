@@ -64,7 +64,6 @@ import {
     INotebookEditor,
     INotebookEditorProvider,
     INotebookExporter,
-    INotebookExtensibility,
     INotebookImporter,
     INotebookMetadataLive,
     INotebookProvider,
@@ -94,9 +93,6 @@ const nativeEditorDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', '
 export class NativeEditor extends InteractiveBase implements INotebookEditor {
     public get onDidChangeViewState(): Event<void> {
         return this._onDidChangeViewState.event;
-    }
-    public get notebookExtensibility(): INotebookExtensibility {
-        return this.nbExtensibility;
     }
 
     public get visible(): boolean {
@@ -140,6 +136,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         return this._model;
     }
     public readonly type: 'old' | 'custom' = 'custom';
+    public isInteractive = false;
     protected savedEvent: EventEmitter<INotebookEditor> = new EventEmitter<INotebookEditor>();
     protected closedEvent: EventEmitter<INotebookEditor> = new EventEmitter<INotebookEditor>();
     protected modifiedEvent: EventEmitter<INotebookEditor> = new EventEmitter<INotebookEditor>();
@@ -186,7 +183,6 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         private _model: NativeEditorNotebookModel,
         webviewPanel: WebviewPanel | undefined,
         selector: KernelSelector,
-        private nbExtensibility: INotebookExtensibility,
         private extensionChecker: IPythonExtensionChecker,
         serverStorage: IJupyterServerUriStorage
     ) {

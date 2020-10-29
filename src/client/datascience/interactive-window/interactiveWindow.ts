@@ -90,6 +90,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     public get identity(): Uri {
         return this._identity;
     }
+    public isInteractive = true;
     private _onDidChangeViewState = new EventEmitter<void>();
     private closedEvent: EventEmitter<IInteractiveWindow> = new EventEmitter<IInteractiveWindow>();
     private waitingForExportCells: boolean = false;
@@ -100,6 +101,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     private pendingHasCell = new Map<string, Deferred<boolean>>();
     private mode: InteractiveWindowMode = 'multiple';
     private loadPromise: Promise<void>;
+
     constructor(
         listeners: IInteractiveWindowListener[],
         liveShare: ILiveShareApi,
@@ -344,6 +346,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         }
         return undefined;
     }
+
     protected async addSysInfo(reason: SysInfoReason): Promise<void> {
         await super.addSysInfo(reason);
 

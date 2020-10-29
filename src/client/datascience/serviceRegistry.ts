@@ -45,8 +45,6 @@ import { ExportToPDF } from './export/exportToPDF';
 import { ExportToPython } from './export/exportToPython';
 import { ExportUtil } from './export/exportUtil';
 import { ExportFormat, IExport, IExportManager, IExportManagerFilePicker } from './export/types';
-import { GatherListener } from './gather/gatherListener';
-import { GatherLogger } from './gather/gatherLogger';
 import { DebugListener } from './interactive-common/debugListener';
 import { IntellisenseProvider } from './interactive-common/intellisense/intellisenseProvider';
 import { LinkProvider } from './interactive-common/linkProvider';
@@ -144,7 +142,6 @@ import {
     IDataScienceErrorHandler,
     IDebugLocationTracker,
     IDigestStorage,
-    IGatherLogger,
     IInteractiveWindow,
     IInteractiveWindowListener,
     IInteractiveWindowProvider,
@@ -182,8 +179,10 @@ import {
     IRawNotebookSupportedService,
     IStatusProvider,
     IThemeFinder,
-    ITrustService
+    ITrustService,
+    IWebviewExtensibility
 } from './types';
+import { WebviewExtensibility } from './webviewExtensibility';
 
 // README: Did you make sure "dataScienceIocContainer.ts" has also been updated appropriately?
 
@@ -218,7 +217,6 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     serviceManager.add<IDataViewer>(IDataViewer, DataViewer);
     serviceManager.add<IInteractiveWindow>(IInteractiveWindow, InteractiveWindow);
     serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, DebugListener);
-    serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, GatherListener);
     serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, IntellisenseProvider);
     serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, LinkProvider);
     serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, ShowPlotListener);
@@ -319,13 +317,9 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     serviceManager.addSingleton<IDigestStorage>(IDigestStorage, DigestStorage);
     serviceManager.addSingleton<ITrustService>(ITrustService, TrustService);
     serviceManager.addSingleton<IFileSystemPathUtils>(IFileSystemPathUtils, FileSystemPathUtils);
-    serviceManager.addSingleton<INotebookExtensibility>(INotebookExtensibility, NotebookExtensibility);
     serviceManager.addSingleton<IJupyterServerUriStorage>(IJupyterServerUriStorage, JupyterServerUriStorage);
+    serviceManager.addSingleton<NotebookExtensibility>(NotebookExtensibility, NotebookExtensibility, undefined, [INotebookExtensibility, INotebookExecutionLogger]);
+    serviceManager.addSingleton<IWebviewExtensibility>(IWebviewExtensibility, WebviewExtensibility);
 
-    registerGatherTypes(serviceManager);
     registerNotebookTypes(serviceManager);
-}
-
-export function registerGatherTypes(serviceManager: IServiceManager) {
-    serviceManager.add<IGatherLogger>(IGatherLogger, GatherLogger, undefined, [INotebookExecutionLogger]);
 }

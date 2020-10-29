@@ -129,8 +129,6 @@ export interface IJupyterSettings {
     readonly collapseCellInputCodeByDefault: boolean;
     readonly maxOutputSize: number;
     readonly enableScrollingForCellOutputs: boolean;
-    readonly gatherToScript: boolean;
-    readonly gatherSpecPath: string;
     readonly sendSelectionToInteractiveWindow: boolean;
     readonly markdownRegularExpression: string;
     readonly codeRegularExpression: string;
@@ -402,4 +400,5 @@ export const IExperimentService = Symbol('IExperimentService');
 export interface IExperimentService {
     inExperiment(experimentName: Experiments): Promise<boolean>;
     getExperimentValue<T extends boolean | number | string>(experimentName: string): Promise<T | undefined>;
+    logExperiments(): void;
 }

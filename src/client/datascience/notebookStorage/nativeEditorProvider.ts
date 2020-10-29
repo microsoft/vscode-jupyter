@@ -58,7 +58,6 @@ import {
     INotebookEditor,
     INotebookEditorProvider,
     INotebookExporter,
-    INotebookExtensibility,
     INotebookImporter,
     INotebookModel,
     INotebookProvider,
@@ -269,7 +268,6 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
             model,
             panel,
             this.serviceContainer.get<KernelSelector>(KernelSelector),
-            this.serviceContainer.get<INotebookExtensibility>(INotebookExtensibility),
             this.serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker),
             this.serviceContainer.get<IJupyterServerUriStorage>(IJupyterServerUriStorage)
         );
