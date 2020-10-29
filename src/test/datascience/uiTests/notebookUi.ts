@@ -44,7 +44,7 @@ export class NotebookEditorUI extends BaseWebUI {
         await sleep(500);
 
         // Select the cell by focusing it
-        const cell = await this.getCell(cellIndex)
+        const cell = await this.getCell(cellIndex);
         cell.focus();
 
         // Take a screenshot and save at the root with the same name (upload on error)
