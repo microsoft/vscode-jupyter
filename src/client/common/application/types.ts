@@ -50,6 +50,7 @@ import {
     ViewColumn,
     WebviewPanel,
     WebviewPanelOptions,
+    WebviewView as vscodeWebviewView,
     WindowState,
     WorkspaceConfiguration,
     WorkspaceEdit,
@@ -1150,7 +1151,7 @@ export interface IWebviewViewOptions extends IWebviewOptions {
 
 export const IWebviewViewProvider = Symbol('IWebviewViewProvider');
 export interface IWebviewViewProvider {
-    create(options: IWebviewViewOptions): Promise<IWebviewView>;
+    create(options: IWebviewViewOptions, codeWebview: vscodeWebviewView): Promise<IWebviewView>;
 }
 
 // Wraps the vsls liveshare API

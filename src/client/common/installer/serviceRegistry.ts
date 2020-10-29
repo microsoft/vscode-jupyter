@@ -5,6 +5,7 @@
 import { IServiceManager } from '../../ioc/types';
 import { IWebviewPanelProvider, IWebviewViewProvider } from '../application/types';
 import { WebviewPanelProvider } from '../application/webviewPanels/webviewPanelProvider';
+import { WebviewViewProvider } from '../application/webviewViews/webviewViewProvider';
 import { InsidersBuildInstaller, StableBuildInstaller } from './extensionBuildInstaller';
 import { DataScienceProductPathService } from './productPath';
 import { IExtensionBuildInstaller, INSIDERS_INSTALLER, IProductPathService, STABLE_INSTALLER } from './types';

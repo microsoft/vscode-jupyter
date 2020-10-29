@@ -5,9 +5,14 @@ import '../../common/extensions';
 
 import { inject, injectable, unmanaged } from 'inversify';
 import * as path from 'path';
-import { ViewColumn } from 'vscode';
+import { WebviewView as vscodeWebviewView } from 'vscode';
 
-import { IApplicationShell, IWebviewPanelProvider, IWorkspaceService } from '../../common/application/types';
+import {
+    IApplicationShell,
+    IWebviewPanelProvider,
+    IWebviewViewProvider,
+    IWorkspaceService
+} from '../../common/application/types';
 import { EXTENSION_ROOT_DIR, UseCustomEditorApi } from '../../common/constants';
 import { traceError } from '../../common/logger';
 import { IConfigurationService, IDisposable, Resource } from '../../common/types';
@@ -35,10 +40,18 @@ export class VariableView extends WebviewViewHost<IVariableViewMapping> implemen
         @unmanaged() configuration: IConfigurationService,
         @unmanaged() cssGenerator: ICodeCssGenerator,
         @unmanaged() themeFinder: IThemeFinder,
-        @unmanaged() workspaceService: IWorkspaceService
+        @unmanaged() workspaceService: IWorkspaceService,
+        @unmanaged() provider: IWebviewViewProvider,
+        private readonly codeWebview: vscodeWebviewView // If we save this here and use it with show, then remove from constructor?
     ) {
-        super(configuration, cssGenerator, themeFinder, workspaceService);
+        super(configuration, cssGenerator, themeFinder, workspaceService, provider, codeWebview);
     }
+
+    // IANHU: Have this? Or part of the WebviewViewHost class?
+    public async load() {
+        await super.loadWebPanel('', this.codeWebview);
+    }
+
     protected get owningResource(): Resource {
         return undefined;
     }

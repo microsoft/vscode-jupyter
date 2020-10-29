@@ -10,6 +10,7 @@ import {
     IWebviewPanelProvider,
     IWebviewView,
     IWebviewViewMessageListener,
+    IWebviewViewProvider,
     IWorkspaceService
 } from '../../common/application/types';
 import { traceInfo } from '../../common/logger';
@@ -36,11 +37,11 @@ export abstract class WebviewViewHost<IMapping> extends WebviewHost<IMapping> im
         @unmanaged() protected configService: IConfigurationService,
         @unmanaged() cssGenerator: ICodeCssGenerator,
         @unmanaged() protected themeFinder: IThemeFinder,
-        @unmanaged() protected workspaceService: IWorkspaceService //@unmanaged() //messageListenerCtor: (
-    ) //callback: (message: string, payload: {}) => void,
-    //viewChanged: (panel: IWebviewView) => void,
-    //disposed: () => void
-    //) => IWebviewViewMessageListener,
+        @unmanaged() protected workspaceService: IWorkspaceService,
+        @unmanaged() protected provider: IWebviewViewProvider,
+        codeWebview: vscodeWebviewView
+        //@unmanaged() //messageListenerCtor: ( //callback: (message: string, payload: {}) => void, //viewChanged: (panel: IWebviewView) => void, //disposed: () => void
+    ) //) => IWebviewViewMessageListener,
     //@unmanaged() protected readonly useCustomEditorApi: boolean,
     //@unmanaged() enableVariablesDuringDebugging: Promise<boolean>
     {
@@ -91,6 +92,7 @@ export abstract class WebviewViewHost<IMapping> extends WebviewHost<IMapping> im
         noop();
     }
 
+    // IANHU: Rename / move to base class?
     protected async loadWebPanel(cwd: string, webviewView?: vscodeWebviewView) {
         // Make not disposed anymore
         this.disposed = false;

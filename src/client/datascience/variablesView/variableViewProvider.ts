@@ -4,7 +4,7 @@
 
 import { inject, injectable } from 'inversify';
 import { CancellationToken, Webview, WebviewView, WebviewViewResolveContext } from 'vscode';
-import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
+import { IApplicationShell, IWebviewViewProvider, IWorkspaceService } from '../../common/application/types';
 import { IConfigurationService } from '../../common/types';
 import { ICodeCssGenerator, IThemeFinder } from '../types';
 import { IVariableViewProvider } from './types';
@@ -27,14 +27,15 @@ export class VariableViewProvider implements IVariableViewProvider {
         @inject(IConfigurationService) private readonly configuration: IConfigurationService,
         @inject(ICodeCssGenerator) private readonly cssGenerator: ICodeCssGenerator,
         @inject(IThemeFinder) private readonly themeFinder: IThemeFinder,
-        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService
+        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
+        @inject(IWebviewViewProvider) private readonly provider: IWebviewViewProvider
     ) {}
 
-    public resolveWebviewView(
+    public async resolveWebviewView(
         webviewView: WebviewView,
         _context: WebviewViewResolveContext,
         _token: CancellationToken
-    ): Thenable<void> | void {
+    ): Promise<void> {
         // IANHU: Need view?
         this.view = webviewView;
 
@@ -46,8 +47,12 @@ export class VariableViewProvider implements IVariableViewProvider {
             this.configuration,
             this.cssGenerator,
             this.themeFinder,
-            this.workspaceService
+            this.workspaceService,
+            this.provider,
+            webviewView
         );
+
+        await this.variableView.load();
 
         //webviewView.webview.html = this.getHtml(this.view.webview);
     }
