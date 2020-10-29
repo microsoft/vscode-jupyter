@@ -1212,6 +1212,11 @@
                     "command": "jupyter.showDataViewer",
                     "category": "Jupyter",
                     "when": "false"
+                },
+                {
+                    "command": "jupyter.opennotebookInPreviewEditor",
+                    "when": "false",
+                    "category": "Jupyter"
                 }
             ],
             "debug/variables/context": [
