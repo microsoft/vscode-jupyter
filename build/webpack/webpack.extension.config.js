@@ -72,7 +72,7 @@ const config = {
         new copyWebpackPlugin([{ from: './node_modules/zeromq/**/*.js' }]),
         new copyWebpackPlugin([{ from: './node_modules/zeromq/**/*.node' }]),
         new copyWebpackPlugin([{ from: './node_modules/zeromq/**/*.json' }]),
-        new copyWebpackPlugin([{ from: './node_modules/node-gyp-build/**/*' }]),
+        new copyWebpackPlugin([{ from: './node_modules/node-gyp-build/**/*' }])
     ],
     resolve: {
         alias: {
