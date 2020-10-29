@@ -50,10 +50,12 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
         if (await this.experimentService.inExperiment(Experiments.NativeNotebook)) {
             await this.enableNotebooks();
         } else {
-            // Enable command to open in preview notebook.
-            await this.commandManager
-                .executeCommand('setContext', 'jupyter.opennotebookInPreviewEditor.enabled', true)
-                .then(noop, noop);
+            // Enable command to open in preview notebook (only for insiders).
+            if (this.env.channel === 'insiders') {
+                await this.commandManager
+                    .executeCommand('setContext', 'jupyter.opennotebookInPreviewEditor.enabled', true)
+                    .then(noop, noop);
+            }
             // Possible user was in experiment, then they opted out. In this case we need to revert the changes made to the settings file.
             // Again, this is temporary code.
             await this.disableNotebooks();
