@@ -263,9 +263,9 @@ export interface INotebookServerOptions {
 export const INotebookExecutionLogger = Symbol('INotebookExecutionLogger');
 export interface INotebookExecutionLogger extends IDisposable {
     preExecute(cell: ICell, silent: boolean): Promise<void>;
-    postExecute(cell: ICell, silent: boolean, language: string, notebookId: string): Promise<void>;
-    onKernelStarted(notebookId: string): void;
-    onKernelRestarted(notebookId: string): void;
+    postExecute(cell: ICell, silent: boolean, language: string, resource: Uri): Promise<void>;
+    onKernelStarted(resource: Uri): void;
+    onKernelRestarted(resource: Uri): void;
     preHandleIOPub?(msg: KernelMessage.IIOPubMessage): KernelMessage.IIOPubMessage;
 }
 
@@ -501,7 +501,7 @@ export interface IInteractiveBase extends Disposable {
     hasCell(id: string): Promise<boolean>;
     createWebviewCellButton(
         buttonId: string,
-        callback: (cell: NotebookCell, isInteractive: boolean, notebookId: string) => Promise<void>,
+        callback: (cell: NotebookCell, isInteractive: boolean, resource: Uri) => Promise<void>,
         codicon: string,
         statusToEnable: CellState[],
         tooltip: string
@@ -600,8 +600,7 @@ export const IWebviewExtensibility = Symbol('IWebviewExtensibility');
 
 export interface IWebviewExtensibility {
     registerCellToolbarButton(
-        buttonId: string,
-        callback: (cell: NotebookCell, isInteractive: boolean, notebookId: string) => Promise<void>,
+        callback: (cell: NotebookCell, isInteractive: boolean, resource: Uri) => Promise<void>,
         codicon: string,
         statusToEnable: NotebookCellRunState[],
         tooltip: string
@@ -1391,7 +1390,7 @@ export interface IExternalWebviewCellButton {
     statusToEnable: CellState[];
     tooltip: string;
     running: boolean;
-    callback(cell: NotebookCell, isInteractive: boolean, notebookId: string): Promise<void>;
+    callback(cell: NotebookCell, isInteractive: boolean, resource: Uri): Promise<void>;
 }
 
 export interface IExternalCommandFromWebview {

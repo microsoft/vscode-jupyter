@@ -11,7 +11,6 @@ import { Disposable, Memento, Selection, TextDocument, TextEditor, Uri } from 'v
 
 import { nbformat } from '@jupyterlab/coreutils';
 import { ReactWrapper } from 'enzyme';
-import { guid } from 'inversify';
 import { anything, when } from 'ts-mockito';
 import { IApplicationShell, IDocumentManager } from '../../client/common/application/types';
 import { IFileSystem } from '../../client/common/platform/types';
@@ -1320,12 +1319,9 @@ for i in range(100):
     test('Click External Button', async () => {
         let success = false;
         // Register a test command
-        const buttonId = guid();
-
         const api = ioc.get<IWebviewExtensibility>(IWebviewExtensibility);
 
         api.registerCellToolbarButton(
-            buttonId,
             () => {
                 success = true;
                 return Promise.resolve();

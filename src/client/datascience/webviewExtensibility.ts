@@ -1,6 +1,7 @@
 import { inject, injectable } from 'inversify';
 import { IDisposable } from 'monaco-editor';
-import { Disposable, NotebookCellRunState } from 'vscode';
+import * as uuid from 'uuid/v4';
+import { Disposable, NotebookCellRunState, Uri } from 'vscode';
 import { NotebookCell } from '../../../types/vscode-proposed';
 import { IInteractiveWindowProvider, INotebookEditorProvider, IWebviewExtensibility } from './types';
 import { translateCellStateFromNative } from './utils';
@@ -13,14 +14,14 @@ export class WebviewExtensibility implements IWebviewExtensibility {
     ) {}
 
     public registerCellToolbarButton(
-        buttonId: string,
-        callback: (cell: NotebookCell, isInteractive: boolean, notebookId: string) => Promise<void>,
+        callback: (cell: NotebookCell, isInteractive: boolean, resource: Uri) => Promise<void>,
         codicon: string,
         statusToEnable: NotebookCellRunState[],
         tooltip: string
     ): Disposable {
         const disposables: IDisposable[] = [];
         const windows = new Set();
+        const buttonId = uuid();
 
         this.interactiveWindowProvider.onDidChangeActiveInteractiveWindow((window) => {
             if (window && !windows.has(window)) {

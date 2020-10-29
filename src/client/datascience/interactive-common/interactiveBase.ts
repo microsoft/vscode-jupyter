@@ -503,7 +503,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
 
     public createWebviewCellButton(
         buttonId: string,
-        callback: (cell: NotebookCell, isInteractive: boolean, notebookId: string) => Promise<void>,
+        callback: (cell: NotebookCell, isInteractive: boolean, resource: Uri) => Promise<void>,
         codicon: string,
         statusToEnable: CellState[],
         tooltip: string
@@ -1576,18 +1576,16 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
     }
 
     private async handleExecuteExternalCommand(payload: IExternalCommandFromWebview) {
-        let language = PYTHON_LANGUAGE;
-        let id: string | undefined = '';
-        if (this.notebook) {
-            language = getKernelConnectionLanguage(this.notebook.getKernelConnection()) || PYTHON_LANGUAGE;
-            id = this.notebook.identity.toString();
-        }
-
         const button = this.externalButtons.find((b) => b.buttonId === payload.buttonId);
-        const cell = translateCellToNative(payload.cell, language);
 
-        if (button && cell) {
-            await button.callback(cell as NotebookCell, this.isInteractive, id);
+        if (this.notebook) {
+            const language = getKernelConnectionLanguage(this.notebook.getKernelConnection()) || PYTHON_LANGUAGE;
+            const id = this.notebook.identity;
+            const cell = translateCellToNative(payload.cell, language);
+
+            if (button && cell) {
+                await button.callback(cell as NotebookCell, this.isInteractive, id);
+            }
         }
 
         // Post message again to let the react side know the command is done executing

@@ -564,12 +564,7 @@ export class CellExecution {
         if (msg.content.execution_count) {
             await updateCellExecutionCount(this.editor, this.cell, msg.content.execution_count);
             loggers.forEach((l) =>
-                l.postExecute(
-                    translateCellFromNative(this.cell),
-                    true,
-                    this.cell.language,
-                    this.cell.notebook.uri.toString()
-                )
+                l.postExecute(translateCellFromNative(this.cell), true, this.cell.language, this.cell.notebook.uri)
             );
         }
     }

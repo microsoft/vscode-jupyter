@@ -1436,7 +1436,7 @@ export class JupyterNotebookBase implements INotebook {
         return outputString.substr(outputString.length - outputLimit);
     }
 
-    private getNotebookId(): string {
-        return this.identity.toString();
+    private getNotebookId(): Uri {
+        return this.identity;
     }
 }

@@ -1,12 +1,12 @@
 import { injectable } from 'inversify';
-import { Event, EventEmitter } from 'vscode';
+import { Event, EventEmitter, Uri } from 'vscode';
 import type { NotebookCell } from '../../../types/vscode-proposed';
 import { noop } from '../common/utils/misc';
 import { ICell, INotebookExecutionLogger, INotebookExtensibility } from './types';
 import { translateCellToNative } from './utils';
 
 export type KernelStateEventArgs = {
-    notebookId: string;
+    resource: Uri;
     state: KernelState;
     cell?: NotebookCell;
 };
@@ -28,25 +28,25 @@ export class NotebookExtensibility implements INotebookExecutionLogger, INoteboo
     public async preExecute(): Promise<void> {
         noop();
     }
-    public async postExecute(cell: ICell, _silent: boolean, language: string, id: string): Promise<void> {
+    public async postExecute(cell: ICell, _silent: boolean, language: string, resource: Uri): Promise<void> {
         const nbCell = translateCellToNative(cell, language);
         if (nbCell && nbCell.code.length > 0) {
             this.kernelStateChange.fire({
-                notebookId: id,
+                resource,
                 state: KernelState.executed,
                 cell: nbCell as NotebookCell
             });
         }
     }
-    public onKernelStarted(id: string): void {
+    public onKernelStarted(resource: Uri): void {
         this.kernelStateChange.fire({
-            notebookId: id,
+            resource,
             state: KernelState.started
         });
     }
-    public onKernelRestarted(id: string): void {
+    public onKernelRestarted(resource: Uri): void {
         this.kernelStateChange.fire({
-            notebookId: id,
+            resource,
             state: KernelState.restarted
         });
     }

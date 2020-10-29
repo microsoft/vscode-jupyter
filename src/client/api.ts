@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { Disposable, Event } from 'vscode';
+import { Disposable, Event, Uri } from 'vscode';
 import { NotebookCell, NotebookCellRunState } from '../../types/vscode-proposed';
 import { IPythonApiProvider, PythonApi } from './api/types';
 import { isTestExecution } from './common/constants';
@@ -32,8 +32,7 @@ export interface IExtensionApi {
     ready: Promise<void>;
     readonly onKernelStateChange: Event<KernelStateEventArgs>;
     registerCellToolbarButton(
-        buttonId: string,
-        callback: (cell: NotebookCell, isInteractive: boolean, notebookId: string) => Promise<void>,
+        callback: (cell: NotebookCell, isInteractive: boolean, resource: Uri) => Promise<void>,
         codicon: string,
         statusToEnable: NotebookCellRunState[],
         tooltip: string
