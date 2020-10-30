@@ -6,5 +6,5 @@
 import { IServiceManager } from '../ioc/types';
 
 export function registerTypes(_: IServiceManager) {
-    // serviceManager.add<IExtensionSingleActivationService>(IExtensionSingleActivationService, JoinMailingListPrompt);.
+    // serviceManager.add<IExtensionSingleActivationService>(IExtensionSingleActivationService, JoinMailingListPrompt);
 }
