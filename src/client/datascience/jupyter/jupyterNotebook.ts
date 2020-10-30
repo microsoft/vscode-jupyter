@@ -277,6 +277,7 @@ export class JupyterNotebookBase implements INotebook {
     }
 
     // Set up our initial plotting and imports
+    // tslint:disable-next-line: cyclomatic-complexity
     public async initialize(cancelToken?: CancellationToken): Promise<void> {
         if (this.ranInitialSetup) {
             return;
@@ -289,26 +290,36 @@ export class JupyterNotebookBase implements INotebook {
         try {
             // When we start our notebook initial, change to our workspace or user specified root directory
             await this.updateWorkingDirectoryAndPath();
+            let isDefinitelyNotAPythonKernel = false;
+            if (
+                this._executionInfo.kernelConnectionMetadata?.kind === 'startUsingKernelSpec' &&
+                this._executionInfo.kernelConnectionMetadata.kernelSpec.language &&
+                this._executionInfo.kernelConnectionMetadata.kernelSpec.language.toLowerCase() !==
+                    PYTHON_LANGUAGE.toLocaleLowerCase()
+            ) {
+                isDefinitelyNotAPythonKernel = true;
+            }
+            if (
+                this._executionInfo.kernelConnectionMetadata?.kind === 'connectToLiveKernel' &&
+                this._executionInfo.kernelConnectionMetadata.kernelModel.language &&
+                this._executionInfo.kernelConnectionMetadata.kernelModel.language.toLowerCase() !==
+                    PYTHON_LANGUAGE.toLocaleLowerCase()
+            ) {
+                isDefinitelyNotAPythonKernel = true;
+            }
 
             const settings = this.configService.getSettings(this.resource);
             if (settings && settings.themeMatplotlibPlots) {
                 // We're theming matplotlibs, so we have to setup our default state.
-                await this.initializeMatplotlib(cancelToken);
+                if (!isDefinitelyNotAPythonKernel) {
+                    await this.initializeMatplotlib(cancelToken);
+                }
             } else {
                 this.initializedMatplotlib = false;
                 const configInit =
                     !settings || settings.enablePlotViewer ? CodeSnippets.ConfigSvg : CodeSnippets.ConfigPng;
                 traceInfo(`Initialize config for plots for ${this.identity.toString()}`);
-                let ignoreConfigScript = false;
-                if (
-                    this._executionInfo.kernelConnectionMetadata?.kind === 'startUsingKernelSpec' &&
-                    this._executionInfo.kernelConnectionMetadata.kernelSpec.language &&
-                    this._executionInfo.kernelConnectionMetadata.kernelSpec.language.toLowerCase() !==
-                        PYTHON_LANGUAGE.toLocaleLowerCase()
-                ) {
-                    ignoreConfigScript = true;
-                }
-                if (!ignoreConfigScript) {
+                if (!isDefinitelyNotAPythonKernel) {
                     await this.executeSilently(configInit, cancelToken);
                 }
             }
