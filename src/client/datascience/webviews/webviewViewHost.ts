@@ -40,11 +40,8 @@ export abstract class WebviewViewHost<IMapping> extends WebviewHost<IMapping> im
         @unmanaged() protected workspaceService: IWorkspaceService,
         @unmanaged() protected provider: IWebviewViewProvider,
         codeWebview: vscodeWebviewView
-        //@unmanaged() //messageListenerCtor: ( //callback: (message: string, payload: {}) => void, //viewChanged: (panel: IWebviewView) => void, //disposed: () => void
-    ) //) => IWebviewViewMessageListener,
-    //@unmanaged() protected readonly useCustomEditorApi: boolean,
-    //@unmanaged() enableVariablesDuringDebugging: Promise<boolean>
-    {
+        //@unmanaged() //messageListenerCtor: ( //callback: (message: string, payload: {}) => void, //viewChanged: (panel: IWebviewView) => void, //disposed: () => void //) => IWebviewViewMessageListener, //@unmanaged() protected readonly useCustomEditorApi: boolean, //@unmanaged() enableVariablesDuringDebugging: Promise<boolean>
+    ) {
         // IANHU: Add back in message handlers and config options
         super(configService, cssGenerator, themeFinder, workspaceService, true, Promise.resolve(true));
 
@@ -93,7 +90,7 @@ export abstract class WebviewViewHost<IMapping> extends WebviewHost<IMapping> im
     }
 
     // IANHU: Rename / move to base class?
-    protected async loadWebPanel(cwd: string, webviewView?: vscodeWebviewView) {
+    protected async loadWebPanel(cwd: string, webviewView: vscodeWebviewView) {
         // Make not disposed anymore
         this.disposed = false;
 
@@ -135,9 +132,20 @@ export abstract class WebviewViewHost<IMapping> extends WebviewHost<IMapping> im
             // Set our webview after load
             //this.webview = this.webPanel;
 
+            // IANHU: bad naming? Can push to base?
+            this.webView = await this.provider.create(
+                {
+                    rootPath: '',
+                    cwd: '',
+                    title: '',
+                    scripts: []
+                },
+                webviewView
+            );
+            this.webview = this.webView;
+
             // Track if the load of our webview fails
-            // IANHU: We still need this
-            //this._disposables.push(this.webView.loadFailed(this.onWebViewLoadFailed, this));
+            this._disposables.push(this.webView.loadFailed(this.onWebViewLoadFailed, this));
 
             traceInfo('Web view created.');
         }

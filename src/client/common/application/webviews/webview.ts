@@ -4,7 +4,7 @@
 import '../../extensions';
 
 import * as path from 'path';
-import { Uri, Webview as vscodeWebview } from 'vscode';
+import { Event, EventEmitter, Uri, Webview as vscodeWebview } from 'vscode';
 import { Identifiers } from '../../../datascience/constants';
 import { IFileSystem } from '../../platform/types';
 import { IWebview, IWebviewOptions, WebviewMessage } from '../types';
@@ -12,6 +12,7 @@ import { IWebview, IWebviewOptions, WebviewMessage } from '../types';
 // Wrapper over a vscode webview. To be used with either WebviewPanel or WebviewView
 export class Webview implements IWebview {
     protected webview?: vscodeWebview;
+    protected loadFailedEmitter = new EventEmitter<void>();
     constructor(protected fs: IFileSystem, protected options: IWebviewOptions) {}
 
     public asWebviewUri(localResource: Uri) {
@@ -25,6 +26,10 @@ export class Webview implements IWebview {
         if (this.webview) {
             this.webview.postMessage(message);
         }
+    }
+
+    public get loadFailed(): Event<void> {
+        return this.loadFailedEmitter.event;
     }
 
     // tslint:disable-next-line:no-any

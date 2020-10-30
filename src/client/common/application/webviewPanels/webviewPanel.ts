@@ -14,7 +14,6 @@ import { Webview } from '../webviews/webview';
 export class WebviewPanel extends Webview implements IWebviewPanel {
     private panel: vscodeWebviewPanel | undefined;
     private loadPromise: Promise<void>;
-    private loadFailedEmitter = new EventEmitter<void>();
 
     constructor(
         fs: IFileSystem,
@@ -54,9 +53,6 @@ export class WebviewPanel extends Webview implements IWebviewPanel {
         this.loadPromise = this.load();
     }
 
-    public get loadFailed(): Event<void> {
-        return this.loadFailedEmitter.event;
-    }
     public async show(preserveFocus: boolean) {
         await this.loadPromise;
         if (this.panel) {

@@ -1059,6 +1059,10 @@ export type WebviewMessage = {
 export const IWebview = Symbol('IWebview');
 export interface IWebview {
     /**
+     * Event is fired when the load for a web panel fails
+     */
+    readonly loadFailed: Event<void>;
+    /**
      * Sends a message to the hosted html page
      */
     postMessage(message: WebviewMessage): void;
@@ -1081,22 +1085,17 @@ export const IWebviewView = Symbol('IWebviewView');
 export interface IWebviewView extends IWebview {}
 
 export interface IWebviewOptions {
+    title: string;
     rootPath: string;
     cwd: string;
     scripts: string[];
 }
 
-export interface IWebviewViewOptions extends IWebviewOptions {
-    title: string;
-}
+export interface IWebviewViewOptions extends IWebviewOptions {}
 
 // Wraps the VS Code webview panel
 export const IWebviewPanel = Symbol('IWebviewPanel');
 export interface IWebviewPanel extends IWebview {
-    /**
-     * Event is fired when the load for a web panel fails
-     */
-    readonly loadFailed: Event<void>;
     setTitle(val: string): void;
     /**
      * Makes the webpanel show up.
@@ -1146,7 +1145,7 @@ export interface IWebviewPanelProvider {
 }
 
 export interface IWebviewViewOptions extends IWebviewOptions {
-    webviewView: WebviewView;
+    webviewView?: WebviewView;
 }
 
 export const IWebviewViewProvider = Symbol('IWebviewViewProvider');

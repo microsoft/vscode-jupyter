@@ -14,7 +14,6 @@ import { Webview } from '../webviews/webview';
 export class WebviewView extends Webview implements IWebviewView {
     private view: vscodeWebviewView | undefined;
     private loadPromise: Promise<void>;
-    private loadFailedEmitter = new EventEmitter<void>();
 
     constructor(
         fs: IFileSystem,
@@ -55,10 +54,6 @@ export class WebviewView extends Webview implements IWebviewView {
         this.webview = webviewView.webview;
 
         this.loadPromise = this.load();
-    }
-
-    public get loadFailed(): Event<void> {
-        return this.loadFailedEmitter.event;
     }
 
     public async show(preserveFocus: boolean) {
