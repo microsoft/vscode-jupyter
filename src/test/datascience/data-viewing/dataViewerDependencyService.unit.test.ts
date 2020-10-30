@@ -17,6 +17,7 @@ import { Common, DataScience } from '../../../client/common/utils/localize';
 import { DataViewerDependencyService } from '../../../client/datascience/data-viewing/dataViewerDependencyService';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
+import { InterpreterService } from '../../interpreters/interpreterService';
 
 suite('DataScience - DataViewerDependencyService', () => {
     let dependencyService: DataViewerDependencyService;
@@ -38,7 +39,7 @@ suite('DataScience - DataViewerDependencyService', () => {
         installer = mock(ProductInstaller);
         appShell = mock(ApplicationShell);
         pythonExecFactory = mock(PythonExecutionFactory);
-        interpreterService = mock(IInterpreterService);
+        interpreterService = mock(InterpreterService);
 
         dependencyService = new DataViewerDependencyService(
             instance(appShell),
@@ -47,18 +48,18 @@ suite('DataScience - DataViewerDependencyService', () => {
             instance(interpreterService)
         );
 
+        when(interpreterService.getActiveInterpreter()).thenResolve(interpreter);
+        when(interpreterService.getActiveInterpreter(anything())).thenResolve(interpreter);
         // tslint:disable-next-line: no-any
         (instance(pythonExecService) as any).then = undefined;
         // tslint:disable-next-line: no-any
         (pythonExecService as any).then = undefined;
         when(pythonExecFactory.createActivatedEnvironment(anything())).thenResolve(instance(pythonExecService));
-        when(interpreterService.getActiveInterpreter()).thenResolve(interpreter);
     });
     test('All ok, if pandas is installed and version is > 1.20', async () => {
         when(
             pythonExecService.exec(deepEqual(['-c', 'import pandas;print(pandas.__version__)']), anything())
         ).thenResolve({ stdout: '0.30.0' });
-
         await dependencyService.checkAndInstallMissingDependencies(interpreter);
     });
     test('Throw exception if pandas is installed and version is = 0.20', async () => {
