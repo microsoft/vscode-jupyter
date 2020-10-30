@@ -25,6 +25,7 @@ import {
     ITrustService
 } from '../types';
 import { NativeEditorNotebookModel } from './notebookModel';
+import { VSCodeNotebookModel } from './vscNotebookModel';
 
 export const KeyPrefix = 'notebook-storage-';
 const NotebookTransferKey = 'notebook-transfered';
@@ -86,6 +87,10 @@ export class NativeEditorStorage implements INotebookStorage {
             parallelize.push(this.trustService.trustNotebook(model.file, contents));
         }
         await Promise.all(parallelize);
+        if (model instanceof VSCodeNotebookModel) {
+            // Rest of the code doesn't apply to native notebooks.
+            return;
+        }
         if (!(model instanceof NativeEditorNotebookModel)) {
             traceError('Attempted to Save with a model that is not NativeEditorNotebookModel');
             return;
