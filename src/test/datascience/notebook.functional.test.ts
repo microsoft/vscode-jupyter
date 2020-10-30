@@ -1330,8 +1330,8 @@ plt.show()`,
                     });
                 });
                 // For new approach.
-                when(ioc.mockJupyter?.productInstaller.isInstalled(Product.jupyter)).thenResolve(false as any);
-                when(ioc.mockJupyter?.productInstaller.isInstalled(Product.notebook)).thenResolve(false as any);
+                when(ioc.mockJupyter?.productInstaller.isInstalled(Product.jupyter, anything())).thenResolve(false as any);
+                when(ioc.mockJupyter?.productInstaller.isInstalled(Product.notebook, anything())).thenResolve(false as any);
                 when(ioc.mockJupyter?.productInstaller.isInstalled(Product.jupyter, anything())).thenResolve(
                     false as any
                 );

@@ -15,6 +15,7 @@ import { IPythonExecutionFactory, IPythonExecutionService } from '../../../clien
 import { IInstaller, Product } from '../../../client/common/types';
 import { Common, DataScience } from '../../../client/common/utils/localize';
 import { DataViewerDependencyService } from '../../../client/datascience/data-viewing/dataViewerDependencyService';
+import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
 
 suite('DataScience - DataViewerDependencyService', () => {
@@ -23,6 +24,7 @@ suite('DataScience - DataViewerDependencyService', () => {
     let pythonExecFactory: IPythonExecutionFactory;
     let installer: IInstaller;
     let interpreter: PythonEnvironment;
+    let interpreterService: IInterpreterService;
     let pythonExecService: IPythonExecutionService;
     setup(async () => {
         interpreter = {
@@ -36,10 +38,13 @@ suite('DataScience - DataViewerDependencyService', () => {
         installer = mock(ProductInstaller);
         appShell = mock(ApplicationShell);
         pythonExecFactory = mock(PythonExecutionFactory);
+        interpreterService = mock(IInterpreterService);
+
         dependencyService = new DataViewerDependencyService(
             instance(appShell),
             instance(installer),
-            instance(pythonExecFactory)
+            instance(pythonExecFactory),
+            instance(interpreterService)
         );
 
         // tslint:disable-next-line: no-any
@@ -47,6 +52,7 @@ suite('DataScience - DataViewerDependencyService', () => {
         // tslint:disable-next-line: no-any
         (pythonExecService as any).then = undefined;
         when(pythonExecFactory.createActivatedEnvironment(anything())).thenResolve(instance(pythonExecService));
+        when(interpreterService.getActiveInterpreter()).thenResolve(interpreter);
     });
     test('All ok, if pandas is installed and version is > 1.20', async () => {
         when(

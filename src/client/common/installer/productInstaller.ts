@@ -193,7 +193,7 @@ export class ProductInstaller implements IInstaller {
     }
     public async install(
         product: Product,
-        resource?: InterpreterUri,
+        resource: InterpreterUri,
         cancel?: CancellationToken
     ): Promise<InstallerResponse> {
         return this.createInstaller().install(product, resource, cancel);
