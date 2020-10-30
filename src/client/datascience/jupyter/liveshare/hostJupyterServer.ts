@@ -23,6 +23,7 @@ import * as localize from '../../../common/utils/localize';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
 import { Identifiers, LiveShare, LiveShareCommands, RegExpValues } from '../../constants';
+import { ProgressReporter } from '../../progress/progressReporter';
 import {
     IJupyterSession,
     IJupyterSessionManager,
@@ -35,6 +36,7 @@ import {
 } from '../../types';
 import { JupyterServerBase } from '../jupyterServer';
 import { computeWorkingDirectory } from '../jupyterUtils';
+import { getDisplayNameOrNameOfKernelConnection } from '../kernels/helpers';
 import { KernelSelector } from '../kernels/kernelSelector';
 import { HostJupyterNotebook } from './hostJupyterNotebook';
 import { LiveShareParticipantHost } from './liveShareParticipantMixin';
@@ -59,7 +61,8 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
         private fs: IFileSystem,
         private readonly kernelSelector: KernelSelector,
         private readonly interpreterService: IInterpreterService,
-        outputChannel: IOutputChannel
+        outputChannel: IOutputChannel,
+        private readonly progressReporter: ProgressReporter
     ) {
         super(
             liveShare,
@@ -192,6 +195,8 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
             return existing;
         }
 
+        let progressDisposable: vscode.Disposable | undefined;
+
         // Compute launch information from the resource and the notebook metadata
         const notebookPromise = createDeferred<INotebook>();
         // Save the notebook
@@ -203,6 +208,12 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
                 sessionManager,
                 notebookMetadata,
                 cancelToken
+            );
+
+            progressDisposable = this.progressReporter.createProgressIndicator(
+                localize.DataScience.connectingIPyKernel().format(
+                    getDisplayNameOrNameOfKernelConnection(info.kernelConnectionMetadata)
+                )
             );
 
             // If we switched kernels, try switching the possible session
@@ -263,6 +274,8 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
             // If there's an error, then reject the promise that is returned.
             // This original promise must be rejected as it is cached (check `setNotebook`).
             notebookPromise.reject(ex);
+        } finally {
+            progressDisposable?.dispose();
         }
 
         return notebookPromise.promise;

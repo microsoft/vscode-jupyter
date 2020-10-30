@@ -21,6 +21,7 @@ import {
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { DataScienceStartupTime, JUPYTER_OUTPUT_CHANNEL } from '../constants';
+import { ProgressReporter } from '../progress/progressReporter';
 import {
     IJupyterConnection,
     IJupyterSessionManagerFactory,
@@ -51,7 +52,8 @@ type JupyterServerClassType = {
         fs: IFileSystem,
         kernelSelector: KernelSelector,
         interpreterService: IInterpreterService,
-        outputChannel: IOutputChannel
+        outputChannel: IOutputChannel,
+        progressReporter: ProgressReporter
     ): IJupyterServerInterface;
 };
 // tslint:enable:callable-types
@@ -78,7 +80,8 @@ export class JupyterServerWrapper implements INotebookServer, ILiveShareHasRole 
         @inject(IInterpreterService) interpreterService: IInterpreterService,
         @inject(KernelSelector) kernelSelector: KernelSelector,
         @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) jupyterOutput: IOutputChannel,
-        @inject(IServiceContainer) serviceContainer: IServiceContainer
+        @inject(IServiceContainer) serviceContainer: IServiceContainer,
+        @inject(ProgressReporter) progressReporter: ProgressReporter
     ) {
         // The server factory will create the appropriate HostJupyterServer or GuestJupyterServer based on
         // the liveshare state.
@@ -98,7 +101,8 @@ export class JupyterServerWrapper implements INotebookServer, ILiveShareHasRole 
             fs,
             kernelSelector,
             interpreterService,
-            jupyterOutput
+            jupyterOutput,
+            progressReporter
         );
     }
 
