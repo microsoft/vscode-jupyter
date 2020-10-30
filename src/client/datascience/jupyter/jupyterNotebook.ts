@@ -299,7 +299,18 @@ export class JupyterNotebookBase implements INotebook {
                 const configInit =
                     !settings || settings.enablePlotViewer ? CodeSnippets.ConfigSvg : CodeSnippets.ConfigPng;
                 traceInfo(`Initialize config for plots for ${this.identity.toString()}`);
-                await this.executeSilently(configInit, cancelToken);
+                let ignoreConfigScript = false;
+                if (
+                    this._executionInfo.kernelConnectionMetadata?.kind === 'startUsingKernelSpec' &&
+                    this._executionInfo.kernelConnectionMetadata.kernelSpec.language &&
+                    this._executionInfo.kernelConnectionMetadata.kernelSpec.language.toLowerCase() !==
+                        PYTHON_LANGUAGE.toLocaleLowerCase()
+                ) {
+                    ignoreConfigScript = true;
+                }
+                if (!ignoreConfigScript) {
+                    await this.executeSilently(configInit, cancelToken);
+                }
             }
 
             // Run any startup commands that we specified. Support the old form too
