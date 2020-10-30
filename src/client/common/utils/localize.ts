@@ -346,8 +346,8 @@ export namespace DataScience {
     );
     export const importingFormat = localize('DataScience.importingFormat', 'Importing {0}');
     export const startingJupyter = localize('DataScience.startingJupyter', 'Starting Jupyter server');
-    export const connectingIPyKernel = localize('DataScience.connectingToIPyKernel', 'Connecting to kernel {0}');
-    export const connectedToIPyKernel = localize('DataScience.connectedToIPyKernel', 'Connected.');
+    export const connectingToKernel = localize('DataScience.connectingToKernel', 'Connecting to kernel: {0}');
+    export const connectedToKernel = localize('DataScience.connectedToKernel', 'Connected.');
     export const connectingToJupyter = localize('DataScience.connectingToJupyter', 'Connecting to Jupyter server');
     export const exportingFormat = localize('DataScience.exportingFormat', 'Exporting {0}');
     export const runAllCellsLensCommandTitle = localize('jupyter.command.jupyter.runallcells.title', 'Run all cells');

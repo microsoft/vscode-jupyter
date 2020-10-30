@@ -211,7 +211,7 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
             );
 
             progressDisposable = this.progressReporter.createProgressIndicator(
-                localize.DataScience.connectingIPyKernel().format(
+                localize.DataScience.connectingToKernel().format(
                     getDisplayNameOrNameOfKernelConnection(info.kernelConnectionMetadata)
                 )
             );

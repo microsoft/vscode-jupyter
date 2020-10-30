@@ -159,7 +159,7 @@ export class HostRawNotebookProvider
 
             progressDisposable = !disableUI
                 ? this.progressReporter.createProgressIndicator(
-                      localize.DataScience.connectingIPyKernel().format(displayName)
+                      localize.DataScience.connectingToKernel().format(displayName)
                   )
                 : undefined;
 
