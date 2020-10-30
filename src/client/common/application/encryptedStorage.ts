@@ -23,9 +23,9 @@ function getNodeModule<T>(moduleName: string): T | undefined {
 
 // Use it
 type KeyTar = {
-    setPassword(service: string, key: string): Promise<void>;
-    deletePassword(service: string): Promise<void>;
-    getPassword(service: string, key: string): Promise<string | undefined>;
+    setPassword(service: string, account: string, password: string): Promise<void>;
+    deletePassword(service: string, account: string): Promise<void>;
+    getPassword(service: string, account: string): Promise<string | undefined>;
 };
 
 const keytar = getNodeModule<KeyTar>('keytar');
