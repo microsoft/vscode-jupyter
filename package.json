@@ -1200,9 +1200,13 @@
                 },
                 {
                     "command": "jupyter.createGitHubIssue",
-                    "title": "%jupyter.command.jupyter.createGitHubIssue.title%",
                     "category": "Jupyter",
                     "when": "config.jupyter.logging.level == debug && config.noExists"
+                },
+                {
+                    "command": "jupyter.submitGitHubIssue",
+                    "category": "Jupyter",
+                    "when": "false"
                 },
                 {
                     "command": "jupyter.showDataViewer",
