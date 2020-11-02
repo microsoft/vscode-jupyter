@@ -24,8 +24,8 @@
     "qna": "https://stackoverflow.com/questions/tagged/visual-studio-code+jupyter",
     "icon": "icon.png",
     "galleryBanner": {
-        "color": "#1e415e",
-        "theme": "dark"
+        "color": "#ffffff",
+        "theme": "light"
     },
     "engines": {
         "vscode": "^1.48.0"
