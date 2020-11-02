@@ -1,16 +1,14 @@
-# Contributing to the Python extension for Visual Studio Code
+# Contributing to the Jupyter extension for Visual Studio Code
 
 ---
 
-| `release` branch                                                                                                                                                                              | `main` branch                                                                                                                                                                           | Nightly CI                                                                                                                                                                                           | coverage (`main` branch)                                                                                                                 |
+| `release` branch                                                                                                                                                                              | `main` branch                                                                                                                                                                           |  ||
 | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| [![Build Status](https://dev.azure.com/ms/vscode-jupyter/_apis/build/status/CI?branchName=release)](https://dev.azure.com/ms/vscode-jupyter/_build/latest?definitionId=88&branchName=release) | [![Build Status](https://dev.azure.com/ms/vscode-jupyter/_apis/build/status/CI?branchName=main)](https://dev.azure.com/ms/vscode-jupyter/_build/latest?definitionId=88&branchName=main) | [![Build Status](https://dev.azure.com/ms/vscode-jupyter/_apis/build/status/Nightly%20Build?branchName=main)](https://dev.azure.com/ms/vscode-jupyter/_build/latest?definitionId=85&branchName=main) | [![codecov](https://codecov.io/gh/microsoft/vscode-jupyter/branch/main/graph/badge.svg)](https://codecov.io/gh/microsoft/vscode-jupyter) |
+| [![Build Status](https://github.com/microsoft/vscode-jupyter/actions?query=workflow%3A%22Release+VSIX%22)](https://github.com/microsoft/vscode-jupyter/actions?query=workflow%3A%22Release+VSIX%22) | [![Build Status](https://github.com/microsoft/vscode-jupyter/actions?query=workflow%3A%22Insiders+VSIX%22)](https://github.com/microsoft/vscode-jupyter/actions?query=workflow%3A%22Insiders+VSIX%22) |
 
 [[Development build](https://pvsc.blob.core.windows.net/extension-builds/ms-toolsai-jupyter-insiders.vsix)]
 
 ---
-
-[For contributing to the [Microsoft Python Language Server](https://github.com/Microsoft/python-language-server) see its own repo; for [Pylance](https://github.com/microsoft/pylance-release) see its own repo; for [debugpy](https://github.com/microsoft/debugpy) see its own repo]
 
 ## Contributing a pull request
 
@@ -188,22 +186,6 @@ setting a single variable for a subprocess:
 ```shell
 VSC_JUPYTER_CI_TEST_GREP=Sorting npm run testVSCode
 ```
-
-### Testing Python Scripts
-
-The extension has a number of scripts in ./pythonFiles. Tests for these
-scripts are found in ./pythonFiles/tests. To run those tests:
-
--   `python2.7 pythonFiles/tests/run_all.py`
--   `python3 -m pythonFiles.tests`
-
-By default, functional tests are included. To exclude them:
-
-`python3 -m pythonFiles.tests --no-functional`
-
-To run only the functional tests:
-
-`python3 -m pythonFiles.tests --functional`
 
 ### Standard Debugging
 
