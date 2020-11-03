@@ -1768,6 +1768,7 @@
         "@phosphor/widgets": "^1.9.3",
         "ansi-regex": "^4.1.0",
         "ansi-to-html": "^0.6.7",
+        "ansi-to-react": "^6.0.8",
         "arch": "^2.1.0",
         "bootstrap": "^4.3.1",
         "bootstrap-less": "^3.3.8",
@@ -1851,7 +1852,7 @@
         "@types/chai": "^4.1.2",
         "@types/chai-arrays": "^1.0.2",
         "@types/chai-as-promised": "^7.1.0",
-        "@types/copy-webpack-plugin": "^4.4.2",
+        "@types/copy-webpack-plugin": "^6.0.0",
         "@types/cors": "^2.8.6",
         "@types/debug": "^4.1.5",
         "@types/dedent": "^0.7.0",
@@ -1912,7 +1913,7 @@
         "chai-as-promised": "^7.1.1",
         "codecov": "^3.7.1",
         "colors": "^1.2.1",
-        "copy-webpack-plugin": "^5.1.1",
+        "copy-webpack-plugin": "^6.2.1",
         "cors": "^2.8.5",
         "cross-env": "^6.0.3",
         "cross-spawn": "^6.0.5",
@@ -1997,12 +1998,12 @@
         "url-loader": "^1.1.2",
         "vsce": "^1.59.0",
         "vscode-test": "^1.2.3",
-        "webpack": "^4.33.0",
+        "webpack": "^4.37.0",
         "webpack-bundle-analyzer": "^3.6.0",
         "webpack-cli": "^3.1.2",
         "webpack-fix-default-import-plugin": "^1.0.3",
         "why-is-node-running": "^2.0.3",
         "yargs": "^15.4.1",
-        "yargs-parser": ">=13.1.2"
+        "yargs-parser": "^13.1.2"
     }
 }

@@ -59,20 +59,22 @@ const config = {
     externals: ['vscode', 'commonjs', ...existingModulesInOutDir],
     plugins: [
         ...common.getDefaultPlugins('extension'),
-        new copyWebpackPlugin([
-            {
-                from: './node_modules/pdfkit/js/pdfkit.standalone.js',
-                to: './node_modules/pdfkit/js/pdfkit.standalone.js'
-            }
-        ]),
+        new copyWebpackPlugin({
+            patterns: [
+                {
+                    from: './node_modules/pdfkit/js/pdfkit.standalone.js',
+                    to: './node_modules/pdfkit/js/pdfkit.standalone.js'
+                }
+            ]
+        }),
         // ZMQ requires prebuilds to be in our node_modules directory. So recreate the ZMQ structure.
         // However we don't webpack to manage this, so it was part of the excluded modules. Delete it from there
         // so at runtime we pick up the original structure.
         new removeFilesWebpackPlugin({ after: { include: ['./out/client/node_modules/zeromq.js'], log: false } }),
-        new copyWebpackPlugin([{ from: './node_modules/zeromq/**/*.js' }]),
-        new copyWebpackPlugin([{ from: './node_modules/zeromq/**/*.node' }]),
-        new copyWebpackPlugin([{ from: './node_modules/zeromq/**/*.json' }]),
-        new copyWebpackPlugin([{ from: './node_modules/node-gyp-build/**/*' }])
+        new copyWebpackPlugin({ patterns: [{ from: './node_modules/zeromq/**/*.js' }] }),
+        new copyWebpackPlugin({ patterns: [{ from: './node_modules/zeromq/**/*.node' }] }),
+        new copyWebpackPlugin({ patterns: [{ from: './node_modules/zeromq/**/*.json' }] }),
+        new copyWebpackPlugin({ patterns: [{ from: './node_modules/node-gyp-build/**/*' }] })
     ],
     resolve: {
         alias: {
