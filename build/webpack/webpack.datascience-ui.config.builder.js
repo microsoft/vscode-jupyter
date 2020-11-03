@@ -123,7 +123,7 @@ function buildConfiguration(bundle) {
                 {
                     from: 'out/ipywidgets/dist/ipywidgets.js',
                     context: './'
-                    },
+                },
                 {
                     from: 'node_modules/font-awesome/**/*',
                     context: './'
@@ -218,10 +218,7 @@ function buildConfiguration(bundle) {
         plugins: [
             new FixDefaultImportPlugin(),
             new CopyWebpackPlugin({
-                patterns: [
-                    { from: 'node_modules/requirejs/require.js' },
-                    ...filesToCopy
-                ]
+                patterns: [{ from: 'node_modules/requirejs/require.js' }, ...filesToCopy]
             }),
             new webpack.optimize.LimitChunkCountPlugin({
                 maxChunks: 100
