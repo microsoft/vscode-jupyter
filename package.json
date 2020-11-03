@@ -1,8 +1,8 @@
 {
     "name": "jupyter",
     "displayName": "Jupyter",
-    "description": "Linting, Debugging (multi-threaded, remote), Intellisense, Jupyter Notebooks, code formatting, refactoring, unit tests, snippets, and more.",
     "version": "2020.11.0-rc",
+    "description": "Language-agnostic Jupyter notebook, interactive programming and computing that supports Intellisense, code formatting, refactoring, debugging and more.",
     "featureFlags": {
         "usingNewInterpreterStorage": true
     },
