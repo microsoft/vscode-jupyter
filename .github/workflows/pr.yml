@@ -346,6 +346,10 @@ jobs:
         env:
             CI_JUPYTER_FAST_COMPILATION: 'true'
 
+      - name: Print out notebook directory
+        run: |
+          ls out/datascience-ui/notebook
+
       - name: Run functional tests
         run: npm run test:functional:parallel -- --${{matrix.test-suite}}
         env:
