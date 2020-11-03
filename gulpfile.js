@@ -224,7 +224,7 @@ gulp.task('checkDependencies', gulp.series('checkNativeDependencies'));
 if (isCI && process.env.VSC_CI_MATRIX_TEST_SUITE === 'notebook') {
     gulp.task('prePublishNonBundle', gulp.parallel('compile'));
 } else {
-    gulp.task('prePublishNonBundle', gulp.series('compile-webviews'));
+    gulp.task('prePublishNonBundle', gulp.parallel('compile', gulp.series('compile-webviews')));
 }
 
 function spawnAsync(command, args, env, rejectOnStdErr = false) {
