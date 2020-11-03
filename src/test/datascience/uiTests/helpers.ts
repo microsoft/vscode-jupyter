@@ -94,9 +94,9 @@ export class BaseWebUI implements IAsyncDisposable {
         const timer = timeoutMs
             ? setTimeout(async () => {
                   if (!promise.resolved) {
-                    // Take a screenshot and save at the root with the same name (upload on error)
-                    await this.page?.screenshot({ path: path.join(EXTENSION_ROOT_DIR, 'browser-screenshot.png') });
-                    promise.reject(new Error(`Waiting for ${message} timed out`));
+                      // Take a screenshot and save at the root with the same name (upload on error)
+                      await this.page?.screenshot({ path: path.join(EXTENSION_ROOT_DIR, 'browser-screenshot.png') });
+                      promise.reject(new Error(`Waiting for ${message} timed out`));
                   }
               }, timeoutMs)
             : undefined;
