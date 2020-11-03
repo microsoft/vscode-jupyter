@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable } from 'inversify';
-import * as path from 'path';
 import { WebviewView as vscodeWebviewView } from 'vscode';
 import { IFileSystem } from '../../platform/types';
 import { IDisposableRegistry, IExtensionContext } from '../../types';
@@ -19,12 +18,6 @@ export class WebviewViewProvider implements IWebviewViewProvider {
 
     // tslint:disable-next-line:no-any
     public async create(options: IWebviewViewOptions, codeWebview: vscodeWebviewView): Promise<IWebviewView> {
-        // Allow loading resources from the `<extension folder>/tmp` folder when in webiviews.
-        // Used by widgets to place files that are not otherwise accessible.
-        //const additionalRootPaths = [Uri.file(path.join(this.context.extensionPath, 'tmp'))];
-        //if (Array.isArray(options.additionalPaths)) {
-        //additionalRootPaths.push(...options.additionalPaths.map((item) => Uri.file(item)));
-        //}
         return new WebviewView(this.fs, this.disposableRegistry, options, codeWebview);
     }
 }

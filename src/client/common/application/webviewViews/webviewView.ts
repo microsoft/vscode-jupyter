@@ -77,14 +77,14 @@ export class WebviewView extends Webview implements IWebviewView {
                     this.disposableRegistry.push(
                         this.view.onDidDispose(() => {
                             this.view = undefined;
-                            //this.panelOptions.listener.dispose().ignoreErrors();
+                            this.panelOptions.listener.dispose().ignoreErrors();
                         })
                     );
 
                     this.disposableRegistry.push(
                         this.view.webview.onDidReceiveMessage((message) => {
                             // Pass the message onto our listener
-                            //this.panelOptions.listener.onMessage(message.type, message.payload);
+                            this.panelOptions.listener.onMessage(message.type, message.payload);
                         })
                     );
                 } else {

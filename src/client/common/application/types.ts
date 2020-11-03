@@ -1145,6 +1145,10 @@ export interface IWebviewPanelProvider {
 }
 
 export interface IWebviewViewOptions extends IWebviewOptions {
+    additionalPaths?: string[];
+    listener: IWebviewViewMessageListener;
+    // tslint:disable-next-line: no-any
+    settings?: any;
     webviewView?: vscodeWebviewView;
 }
 

@@ -7,7 +7,6 @@ import { injectable, unmanaged } from 'inversify';
 import { Uri, ViewColumn, WebviewView as vscodeWebviewView } from 'vscode';
 
 import {
-    IWebviewPanelProvider,
     IWebviewView,
     IWebviewViewMessageListener,
     IWebviewViewProvider,
@@ -30,7 +29,7 @@ export abstract class WebviewViewHost<IMapping> extends WebviewHost<IMapping> im
         return this.disposed;
     }
     private webView: IWebviewView | undefined;
-    //private messageListener: IWebviewViewMessageListener;
+    private messageListener: IWebviewViewMessageListener;
     private startupStopwatch = new StopWatch();
 
     constructor(
@@ -38,13 +37,16 @@ export abstract class WebviewViewHost<IMapping> extends WebviewHost<IMapping> im
         @unmanaged() cssGenerator: ICodeCssGenerator,
         @unmanaged() protected themeFinder: IThemeFinder,
         @unmanaged() protected workspaceService: IWorkspaceService,
+        @unmanaged()
+        messageListenerCtor: (
+            callback: (message: string, payload: {}) => void,
+            disposed: () => void
+        ) => IWebviewViewMessageListener,
         @unmanaged() protected provider: IWebviewViewProvider,
         @unmanaged() rootPath: string,
         @unmanaged() scripts: string[],
         codeWebview: vscodeWebviewView
-        //@unmanaged() //messageListenerCtor: ( //callback: (message: string, payload: {}) => void, //viewChanged: (panel: IWebviewView) => void, //disposed: () => void //) => IWebviewViewMessageListener, //@unmanaged() protected readonly useCustomEditorApi: boolean, //@unmanaged() enableVariablesDuringDebugging: Promise<boolean>
     ) {
-        // IANHU: Add back in message handlers and config options
         super(
             configService,
             cssGenerator,
@@ -57,11 +59,7 @@ export abstract class WebviewViewHost<IMapping> extends WebviewHost<IMapping> im
         );
 
         // Create our message listener for our web panel.
-        //this.messageListener = messageListenerCtor(
-        //this.onMessage.bind(this),
-        //this.webPanelViewStateChanged.bind(this),
-        //this.dispose.bind(this)
-        //);
+        this.messageListener = messageListenerCtor(this.onMessage.bind(this), this.dispose.bind(this));
     }
 
     public dispose() {
@@ -93,7 +91,7 @@ export abstract class WebviewViewHost<IMapping> extends WebviewHost<IMapping> im
 
     protected shareMessage<M extends IMapping, T extends keyof M>(type: T, payload?: M[T]) {
         // Send our remote message.
-        //this.messageListener.onMessage(type.toString(), payload);
+        this.messageListener.onMessage(type.toString(), payload);
     }
 
     protected onViewStateChanged(_args: WebViewViewChangeEventArgs) {
@@ -126,31 +124,17 @@ export abstract class WebviewViewHost<IMapping> extends WebviewHost<IMapping> im
 
             const workspaceFolder = this.workspaceService.getWorkspaceFolder(Uri.file(cwd))?.uri;
 
-            // Use this script to create our web view panel. It should contain all of the necessary
-            // script to communicate with this class.
-            //this.webPanel = await this.provider.create({
-            //viewColumn: this.viewColumn,
-            //listener: this.messageListener,
-            //title: this.title,
-            //rootPath: this.rootPath,
-            //scripts: this.scripts,
-            //settings,
-            //cwd,
-            //webViewPanel,
-            //additionalPaths: workspaceFolder ? [workspaceFolder.fsPath] : []
-            //});
-
-            // Set our webview after load
-            //this.webview = this.webPanel;
-
             // IANHU: bad naming? Can push to base?
             // IANHU: 2x reference to webviewView, just need one
             this.webView = await this.provider.create(
                 {
+                    additionalPaths: workspaceFolder ? [workspaceFolder.fsPath] : [],
                     rootPath: this.rootPath,
                     cwd,
+                    listener: this.messageListener,
                     title: '',
                     scripts: this.scripts,
+                    settings,
                     webviewView: webviewView
                 },
                 webviewView
