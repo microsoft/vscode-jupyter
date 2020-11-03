@@ -121,12 +121,12 @@ function buildConfiguration(bundle) {
         filesToCopy.push(
             ...[
                 {
-                    from: path.join(constants.ExtensionRootDir, 'out/ipywidgets/dist/ipywidgets.js'),
-                    to: path.join(constants.ExtensionRootDir, 'out', 'datascience-ui', bundleFolder)
+                    from: 'out/ipywidgets/dist/ipywidgets.js',
+                    context: './'
                 },
                 {
-                    from: path.join(constants.ExtensionRootDir, 'node_modules/font-awesome/**/*'),
-                    to: path.join(constants.ExtensionRootDir, 'out', 'datascience-ui', bundleFolder, 'node_modules')
+                    from: 'node_modules/font-awesome/**/*',
+                    context: './'
                 }
             ]
         );
@@ -218,16 +218,7 @@ function buildConfiguration(bundle) {
         plugins: [
             new FixDefaultImportPlugin(),
             new CopyWebpackPlugin({
-                patterns: [
-                    { from: './**/*.png', to: '.', context: 'src' },
-                    { from: './**/*.svg', to: '.', context: 'src' },
-                    { from: './**/*.css', to: '.', context: 'src' },
-                    {
-                        from: path.join(constants.ExtensionRootDir, 'node_modules/requirejs/require.js'),
-                        to: path.join(constants.ExtensionRootDir, 'out', 'datascience-ui', bundleFolder)
-                    },
-                    ...filesToCopy
-                ]
+                patterns: [{ from: 'node_modules/requirejs/require.js' }, ...filesToCopy]
             }),
             new webpack.optimize.LimitChunkCountPlugin({
                 maxChunks: 100
