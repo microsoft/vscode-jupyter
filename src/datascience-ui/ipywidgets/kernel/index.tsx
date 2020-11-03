@@ -6,7 +6,7 @@
 // tslint:disable: no-console
 console.log('New Kernel');
 import type { nbformat } from '@jupyterlab/coreutils';
-import type { NotebookOutputEventParams } from 'vscode-notebook-renderer';
+import type { NotebookOutputEventParams } from 'src/datascience-ui/ipywidgetsRenderer-/node_modules/vscode-notebook-renderer';
 // import { WidgetManagerComponent } from './container';
 // import * as React from 'react';
 // import * as ReactDOM from 'react-dom';
@@ -169,6 +169,7 @@ function renderIPyWidget(
             console.log('New Kernel6');
             const disposable = {
                 dispose: () => {
+                    // What if we render the same model in two cells.
                     renderedWidgets.delete(model.model_id);
                     w?.dispose();
                 }
