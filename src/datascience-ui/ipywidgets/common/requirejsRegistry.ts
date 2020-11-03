@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { WidgetScriptSource } from '../../client/datascience/ipywidgets/types';
+import { WidgetScriptSource } from '../../../client/datascience/ipywidgets/types';
 
 type NonPartial<T> = {
     [P in keyof T]-?: T[P];

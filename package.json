@@ -1672,6 +1672,18 @@
                 ],
                 "priority": "option"
             }
+        ],
+        "notebookOutputRenderer": [
+            {
+                "id": "jupyter-ipywidget-renderer",
+                "entrypoint": "./out/datascience-ui/ipywidgetsRenderer/ipywidgetsRenderer.js",
+                "entrypointxx": "./out/ipywidgets/dist/ipywidgets.js",
+                "entrypointx": "./out/ipywidgets/wow.js",
+                "displayName": "Jupyter IPyWidget Renderer",
+                "mimeTypes": [
+                    "application/vnd.jupyter.widget-view+json"
+                ]
+            }
         ]
     },
     "scripts": {
@@ -1848,6 +1860,7 @@
         "@types/untildify": "^3.0.0",
         "@types/uuid": "^3.4.3",
         "@types/vscode": "^1.47.0",
+        "@types/vscode-notebook-renderer": "^1.48.0",
         "@types/webpack-bundle-analyzer": "^2.13.0",
         "@types/winreg": "^1.2.30",
         "@types/ws": "^6.0.1",

@@ -19,7 +19,6 @@ const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 
 // Any build on the CI is considered production mode.
 const isProdBuild = constants.isCI || process.argv.includes('--mode');
-
 function getEntry(bundle) {
     switch (bundle) {
         case 'notebook':
@@ -31,6 +30,14 @@ function getEntry(bundle) {
             return {
                 plotViewer: ['babel-polyfill', `./src/datascience-ui/plot/index.tsx`],
                 dataExplorer: ['babel-polyfill', `./src/datascience-ui/data-explorer/index.tsx`]
+            };
+        case 'ipywidgetsKernel':
+            return {
+                ipywidgetsKernel: [`./src/datascience-ui/ipywidgetsKernel/index.tsx`]
+            };
+        case 'ipywidgetsRenderer':
+            return {
+                ipywidgetsRenderer: [`./src/datascience-ui/ipywidgetsRenderer/index.ts`]
             };
         default:
             throw new Error(`Bundle not supported ${bundle}`);
@@ -98,6 +105,17 @@ function getPlugins(bundle) {
             );
             break;
         }
+        case 'ipywidgetsRenderer':
+        case 'ipywidgetsKernel': {
+            const definePlugin = new webpack.DefinePlugin({
+                'process.env': {
+                    NODE_ENV: JSON.stringify('production')
+                }
+            });
+
+            plugins.push(...(isProdBuild ? [definePlugin] : []));
+            break;
+        }
         default:
             throw new Error(`Bundle not supported ${bundle}`);
     }
@@ -124,13 +142,28 @@ function buildConfiguration(bundle) {
             ]
         );
     }
+    let outputProps = {};
+    if (bundle === 'ipywidgetsKernel') {
+        outputProps = {
+            library: 'ipywidgetsKernel',
+            libraryTarget: 'window'
+        };
+    } else if (bundle === 'ipywidgetsRenderer') {
+        // Nothing.
+    } else {
+        filesToCopy.push({
+            from: path.join(constants.ExtensionRootDir, 'node_modules/requirejs/require.js'),
+            to: path.join(constants.ExtensionRootDir, 'out', 'datascience-ui', bundleFolder)
+        });
+    }
     const config = {
         context: constants.ExtensionRootDir,
         entry: getEntry(bundle),
         output: {
             path: path.join(constants.ExtensionRootDir, 'out', 'datascience-ui', bundleFolder),
             filename: '[name].js',
-            chunkFilename: `[name].bundle.js`
+            chunkFilename: `[name].bundle.js`,
+            ...outputProps
         },
         mode: 'development', // Leave as is, we'll need to see stack traces when there are errors.
         devtool: isProdBuild ? 'source-map' : 'inline-source-map',
@@ -215,10 +248,6 @@ function buildConfiguration(bundle) {
                     { from: './**/*.svg', to: '.' },
                     { from: './**/*.css', to: '.' },
                     { from: './**/*theme*.json', to: '.' },
-                    {
-                        from: path.join(constants.ExtensionRootDir, 'node_modules/requirejs/require.js'),
-                        to: path.join(constants.ExtensionRootDir, 'out', 'datascience-ui', bundleFolder)
-                    },
                     ...filesToCopy
                 ],
                 { context: 'src' }
@@ -307,8 +336,14 @@ function buildConfiguration(bundle) {
         }
     };
 
+    // Do not split for renderer kernel.
+    if (bundle === 'ipywidgetsKernel' || bundle === 'ipywidgetsRenderer') {
+        delete config.optimization.splitChunks;
+    }
     return config;
 }
 
 exports.notebooks = buildConfiguration('notebook');
 exports.viewers = buildConfiguration('viewers');
+exports.ipywidgetsKernel = buildConfiguration('ipywidgetsKernel');
+exports.ipywidgetsRenderer = buildConfiguration('ipywidgetsRenderer');

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { assert } from 'chai';
-import { warnAboutWidgetVersionsThatAreNotSupported } from '../../../datascience-ui/ipywidgets/incompatibleWidgetHandler';
+import { warnAboutWidgetVersionsThatAreNotSupported } from '../../../datascience-ui/ipywidgets/common/incompatibleWidgetHandler';
 
 // tslint:disable: max-func-body-length no-any
 suite('DataScience - Incompatible Widgets', () => {
