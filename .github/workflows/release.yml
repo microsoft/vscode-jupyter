@@ -27,7 +27,7 @@ env:
   CI_PYTHON_PATH: python
   TEST_RESULTS_DIRECTORY: .
   TEST_RESULTS_GLOB: '**/test-results*.xml'
-  IPYWIDGET_SCREENSHOT_PATH: 'execute-screenshot.png'
+  IPYWIDGET_SCREENSHOT_PATH: '*-screenshot.png'
   DISABLE_INSIDERS_EXTENSION: 1 # Disable prompts to install Insiders in tests (else it blocks activation of extension).
 
 jobs:
@@ -580,6 +580,7 @@ jobs:
         with:
           node-version: ${{env.NODE_VERSION}}
 
+
       - name: Azure Login
         uses: azure/login@v1.1.1
         with:
@@ -598,11 +599,17 @@ jobs:
 
       - name: Install dependencies (npm ci)
         run: npm ci --prefer-offline
-
-      - name: Install test requirements
+      
+      - name: pip install system test requirements
         run: |
-          python -m pip install numpy
-          python -m pip install --upgrade jupyter
+          python -m pip install --upgrade -r build/test-requirements.txt
+          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
+        shell: bash
+
+      - name: pip install smoke test requirements
+        run: |
+          python -m pip install --upgrade -r build/smoke-test-requirements.txt
+        shell: bash
 
       # Compile the test files.
       - name: Prepare for smoke tests
@@ -612,15 +619,24 @@ jobs:
       - name: Run smoke tests
         env:
           DISPLAY: 10
+          VSC_JUPYTER_FORCE_LOGGING: true
+          VSC_JUPYTER_LOG_FILE: smoke-test.log
         uses: GabrielBB/xvfb-action@v1.4
         with:
           run: node --no-force-async-hooks-checks ./out/test/smokeTest.js
 
+      - name: Upload smoke-test log
+        uses: actions/upload-artifact@v2
+        with:
+          name: smoke-test.log
+          path: './smoke-test.log'
+
+
+
   upload:
     name: Upload VSIX to Azure Blob Storage
     runs-on: ubuntu-latest
-    # Extra careful to ensure this happens only in release branch.
-    if: github.repository == 'microsoft/vscode-jupyter' && contains(github.ref,  'release')
+    if: github.repository == 'microsoft/vscode-jupyter' && startsWith(github.ref, 'refs/heads/release')
     needs: [build-vsix, lint, ts_tests, vscodeTests, smoke-tests]
     env:
       BLOB_CONTAINER_NAME: extension-builds-jupyter
