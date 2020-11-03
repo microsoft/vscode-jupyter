@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - rchiodo/smoke_test_logging
   workflow_dispatch:
 
 env:
@@ -587,22 +588,24 @@ jobs:
       - name: Download Python VSIX
         run: az storage blob download --file ${{env.VSIX_NAME_PYTHON}} --account-name pvsc --container-name extension-builds --name ${{ env.VSIX_NAME_PYTHON }}
 
-    #   - name: Download Jupyter VSIX
-    #     run: az storage blob download --file ms-toolsai-jupyter-insiders.vsix --account-name pvsc --container-name extension-builds-jupyter --name ms-toolsai-jupyter-insiders.vsix
-
       - name: Download VSIX
         uses: actions/download-artifact@v2
         with:
           name: ${{env.VSIX_NAME}}
 
-
       - name: Install dependencies (npm ci)
         run: npm ci --prefer-offline
-
-      - name: Install test requirements
+      
+      - name: pip install system test requirements
         run: |
-          python -m pip install numpy
-          python -m pip install --upgrade jupyter
+          python -m pip install --upgrade -r build/test-requirements.txt
+          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
+        shell: bash
+
+      - name: pip install smoke test requirements
+        run: |
+          python -m pip install --upgrade -r build/smoke-test-requirements.txt
+        shell: bash
 
       # Compile the test files.
       - name: Prepare for smoke tests
@@ -612,6 +615,7 @@ jobs:
       - name: Run smoke tests
         env:
           DISPLAY: 10
+          VSC_JUPYTER_FORCE_LOGGING: true
         uses: GabrielBB/xvfb-action@v1.4
         with:
           run: node --no-force-async-hooks-checks ./out/test/smokeTest.js

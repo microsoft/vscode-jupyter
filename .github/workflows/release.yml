@@ -398,6 +398,7 @@ jobs:
       - name: Run smoke tests
         env:
           DISPLAY: 10
+          VSC_JUPYTER_FORCE_LOGGING: true
         uses: GabrielBB/xvfb-action@v1.4
         with:
           run: node --no-force-async-hooks-checks ./out/test/smokeTest.js
