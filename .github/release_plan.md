@@ -2,12 +2,12 @@
 
 -   Python 3.7 and higher
 -   run `python3 -m pip install --user -r news/requirements.txt`
+-   Component governance location: https://dev.azure.com/vscode-python-datascience/vscode-python-datascience/_componentGovernance/18591?_a=alerts&typeId=68547
 
 # Release candidate (Monday, XXX XX)
 
--   [ ] Announce the code freeze on both Teams and e-mail, leave enough time for teams to surface any last minute issues that need to get in before freeze. Make sure debugger and Language Server teams are looped in as well.
--   [ ] Update `main` for the release
-    -   [ ] Create a branch against `main` for a pull request
+-   [ ] Create branch for release
+    -   [ ] Create a new branch of the form 'release-YYYY.MM'
     -   [ ] Change the version in [`package.json`](https://github.com/Microsoft/vscode-jupyter/blob/main/package.json) from a `-dev` suffix to `-rc` (🤖)
     -   [ ] Run `npm install` to make sure [`package-lock.json`](https://github.com/Microsoft/vscode-jupyter/blob/main/package.json) is up-to-date (🤖)
     -   [ ] Update [`CHANGELOG.md`](https://github.com/Microsoft/vscode-jupyter/blob/main/CHANGELOG.md) (🤖)
@@ -16,13 +16,11 @@
         -   [ ] Make sure the "Thanks" section is up-to-date (e.g. compare to versions in [`requirements.txt`](https://github.com/microsoft/vscode-jupyter/blob/main/requirements.txt))
         -   [ ] Touch up news entries (e.g. add missing periods)
         -   [ ] Check the Markdown rendering to make sure everything looks good
+    -   [ ] Update [Component Governance](https://dev.azure.com/vscode-python-datascience/vscode-python-datascience/_componentGovernance) (Click on "microsoft/vscode-jupyter" on that page). Notes are in the OneNote under Python VS Code -> Dev Process -> Component Governance.
+       -   [ ] Provide details for any automatically detected npm dependencies
+       -   [ ] Manually add any repository dependencies
     -   [ ] Update [`ThirdPartyNotices-Distribution.txt`](https://github.com/Microsoft/vscode-jupyter/blob/main/ThirdPartyNotices-Distribution.txt) by using https://tools.opensource.microsoft.com/notice (Notes for this process are in the Team OneNote under Python VS Code -> Dev Process -> Third-Party Notices / TPN file)
     -   [ ] Update [`ThirdPartyNotices-Repository.txt`](https://github.com/Microsoft/vscode-jupyter/blob/main/ThirdPartyNotices-Repository.txt) as appropriate. This file is manually edited so you can check with the teams if anything needs to be added here.
-    -   [ ] Create a pull request against `main` (🤖)
-    -   [ ] Merge pull request into `main`
--   [ ] Update the [`release` branch](https://github.com/microsoft/vscode-jupyter/branches)
-    -   [ ] If there are `release` branches that are two versions old (e.g. release-2020.[current month - 2]) you can delete them at this time
-    -   [ ] Create a new `release-YYYY.MM` branch from `main`
 -   [ ] Update `main` post-release (🤖)
     -   [ ] Bump the version number to the next monthly ("YYYY.MM.0-dev") release in the `main` branch
         -   [ ] `package.json`
@@ -30,9 +28,6 @@
     -   [ ] Create a pull request against `main`
     -   [ ] Merge pull request into `main`
 -   [ ] Announce the code freeze is over on the same channels
--   [ ] Update [Component Governance](https://dev.azure.com/vscode-python-datascience/vscode-python-datascience/_componentGovernance) (Click on "microsoft/vscode-jupyter" on that page). Notes are in the OneNote under Python VS Code -> Dev Process -> Component Governance.
-    -   [ ] Provide details for any automatically detected npm dependencies
-    -   [ ] Manually add any repository dependencies
 -   [ ] GDPR bookkeeping (@greazer) (🤖; Notes in OneNote under Python VS Code -> Dev Process -> GDPR)
 -   [ ] Open appropriate [documentation issues](https://github.com/microsoft/vscode-docs/issues?q=is%3Aissue+is%3Aopen+label%3Apython)
     -   new features
@@ -54,7 +49,7 @@
     -   [ ] Update [`CHANGELOG.md`](https://github.com/Microsoft/vscode-jupyter/blob/main/CHANGELOG.md) (🤖)
         -   [ ] Update version and date for the release section
         -   [ ] Run [`news`](https://github.com/Microsoft/vscode-jupyter/tree/main/news) and copy-and-paste new entries (typically `python news --final | code-insiders -`; quite possibly nothing new to add)
-    -   [ ] Update [`ThirdPartyNotices-Distribution.txt`](https://github.com/Microsoft/vscode-jupyter/blob/main/ThirdPartyNotices-Distribution.txt) by using https://tools.opensource.microsoft.com/notice (🤖; see team notes)
+    -   [ ] Update [`ThirdPartyNotices-Distribution.txt`](https://github.com/Microsoft/vscode-jupyter/blob/main/ThirdPartyNotices-Distribution.txt) by using https://tools.opensource.microsoft.com/notice (🤖; see team notes. You can also download this from the component governance tab. Click on the 'Components' list and click on the 'Notice' item.)
     -   [ ] Update [`ThirdPartyNotices-Repository.txt`](https://github.com/Microsoft/vscode-jupyter/blob/main/ThirdPartyNotices-Repository.txt) manually if necessary
     -   [ ] Create pull request against `release-YYYY.MM` (🤖)
     -   [ ] Merge pull request into `release-YYYY.MM`
