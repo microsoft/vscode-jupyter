@@ -217,20 +217,18 @@ function buildConfiguration(bundle) {
         },
         plugins: [
             new FixDefaultImportPlugin(),
-            new CopyWebpackPlugin(
-                [
-                    { from: './**/*.png', to: '.' },
-                    { from: './**/*.svg', to: '.' },
-                    { from: './**/*.css', to: '.' },
-                    { from: './**/*theme*.json', to: '.' },
+            new CopyWebpackPlugin({
+                patterns: [
+                    { from: './**/*.png', to: '.', context: 'src' },
+                    { from: './**/*.svg', to: '.', context: 'src' },
+                    { from: './**/*.css', to: '.', context: 'src' },
                     {
                         from: path.join(constants.ExtensionRootDir, 'node_modules/requirejs/require.js'),
                         to: path.join(constants.ExtensionRootDir, 'out', 'datascience-ui', bundleFolder)
                     },
                     ...filesToCopy
-                ],
-                { context: 'src' }
-            ),
+                ]
+            }),
             new webpack.optimize.LimitChunkCountPlugin({
                 maxChunks: 100
             }),
