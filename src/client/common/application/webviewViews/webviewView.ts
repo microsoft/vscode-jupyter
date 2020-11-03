@@ -24,34 +24,24 @@ export class WebviewView extends Webview implements IWebviewView {
     ) {
         super(fs, panelOptions);
 
-        //const webViewOptions: WebviewOptions = {
-        //enableScripts: true,
-        //localResourceRoots: [
-        //Uri.file(this.panelOptions.rootPath),
-        //Uri.file(this.panelOptions.cwd),
-        //...additionalRootPaths
-        //]
-        //};
+        const webViewOptions: WebviewOptions = {
+            enableScripts: true,
+            localResourceRoots: [
+                Uri.file(this.panelOptions.rootPath),
+                Uri.file(this.panelOptions.cwd),
+                ...additionalRootPaths
+            ]
+        };
 
-        //if (panelOptions.webViewPanel) {
-        //this.panel = panelOptions.webViewPanel;
-        //this.panel.webview.options = webViewOptions;
-        //} else {
-        //this.panel = window.createWebviewPanel(
-        //panelOptions.title.toLowerCase().replace(' ', ''),
-        //panelOptions.title,
-        //{ viewColumn: panelOptions.viewColumn, preserveFocus: true },
-        //{
-        //retainContextWhenHidden: true,
-        //enableFindWidget: true,
-        //...webViewOptions
-        //}
-        //);
-        //}
+        if (panelOptions.webviewView) {
+            this.view = panelOptions.webviewView;
+            this.view.webview.options = webViewOptions;
+        } else {
+            throw new Error('Webview Views must be passed in an initial view');
+        }
 
         // Set our base webview from the panel
-        //this.webview = this.view.webview;
-        this.webview = webviewView.webview;
+        this.webview = this.view.webview;
 
         this.loadPromise = this.load();
     }

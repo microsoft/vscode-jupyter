@@ -30,6 +30,8 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
         @unmanaged() private cssGenerator: ICodeCssGenerator,
         @unmanaged() protected themeFinder: IThemeFinder,
         @unmanaged() protected workspaceService: IWorkspaceService,
+        @unmanaged() protected rootPath: string,
+        @unmanaged() protected scripts: string[],
         @unmanaged() protected readonly useCustomEditorApi: boolean,
         @unmanaged() private readonly enableVariablesDuringDebugging: Promise<boolean>
     ) {

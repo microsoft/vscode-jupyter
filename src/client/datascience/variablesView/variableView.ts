@@ -36,6 +36,8 @@ export class VariableView extends WebviewViewHost<IVariableViewMapping> implemen
     //@inject(IThemeFinder) themeFinder: IThemeFinder,
     //@inject(IWorkspaceService) workspaceService: IWorkspaceService,
     //@inject(IApplicationShell) private applicationShell: IApplicationShell
+    //dataExplorerDir,
+    //[path.join(dataExplorerDir, 'commons.initial.bundle.js'), path.join(dataExplorerDir, 'dataExplorer.js')],
     constructor(
         @unmanaged() configuration: IConfigurationService,
         @unmanaged() cssGenerator: ICodeCssGenerator,
@@ -44,12 +46,21 @@ export class VariableView extends WebviewViewHost<IVariableViewMapping> implemen
         @unmanaged() provider: IWebviewViewProvider,
         private readonly codeWebview: vscodeWebviewView // If we save this here and use it with show, then remove from constructor?
     ) {
-        super(configuration, cssGenerator, themeFinder, workspaceService, provider, codeWebview);
+        super(
+            configuration,
+            cssGenerator,
+            themeFinder,
+            workspaceService,
+            provider,
+            variableViewDir,
+            [path.join(variableViewDir, 'commons.initial.bundle.js'), path.join(variableViewDir, 'variableView.js')],
+            codeWebview
+        );
     }
 
     // IANHU: Have this? Or part of the WebviewViewHost class?
     public async load() {
-        await super.loadWebPanel('', this.codeWebview);
+        await super.loadWebPanel(process.cwd(), this.codeWebview).catch(traceError);
     }
 
     protected get owningResource(): Resource {

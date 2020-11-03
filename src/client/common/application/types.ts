@@ -1145,7 +1145,7 @@ export interface IWebviewPanelProvider {
 }
 
 export interface IWebviewViewOptions extends IWebviewOptions {
-    webviewView?: WebviewView;
+    webviewView?: vscodeWebviewView;
 }
 
 export const IWebviewViewProvider = Symbol('IWebviewViewProvider');

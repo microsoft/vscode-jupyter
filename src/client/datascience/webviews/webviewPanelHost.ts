@@ -45,8 +45,8 @@ export abstract class WebviewPanelHost<IMapping> extends WebviewHost<IMapping> i
             viewChanged: (panel: IWebviewPanel) => void,
             disposed: () => void
         ) => IWebviewPanelMessageListener,
-        @unmanaged() private rootPath: string,
-        @unmanaged() private scripts: string[],
+        @unmanaged() rootPath: string,
+        @unmanaged() scripts: string[],
         @unmanaged() private _title: string,
         @unmanaged() private viewColumn: ViewColumn,
         @unmanaged() protected readonly useCustomEditorApi: boolean,
@@ -57,6 +57,8 @@ export abstract class WebviewPanelHost<IMapping> extends WebviewHost<IMapping> i
             cssGenerator,
             themeFinder,
             workspaceService,
+            rootPath,
+            scripts,
             useCustomEditorApi,
             enableVariablesDuringDebugging
         );

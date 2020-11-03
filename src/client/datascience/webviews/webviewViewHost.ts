@@ -39,11 +39,22 @@ export abstract class WebviewViewHost<IMapping> extends WebviewHost<IMapping> im
         @unmanaged() protected themeFinder: IThemeFinder,
         @unmanaged() protected workspaceService: IWorkspaceService,
         @unmanaged() protected provider: IWebviewViewProvider,
+        @unmanaged() rootPath: string,
+        @unmanaged() scripts: string[],
         codeWebview: vscodeWebviewView
         //@unmanaged() //messageListenerCtor: ( //callback: (message: string, payload: {}) => void, //viewChanged: (panel: IWebviewView) => void, //disposed: () => void //) => IWebviewViewMessageListener, //@unmanaged() protected readonly useCustomEditorApi: boolean, //@unmanaged() enableVariablesDuringDebugging: Promise<boolean>
     ) {
         // IANHU: Add back in message handlers and config options
-        super(configService, cssGenerator, themeFinder, workspaceService, true, Promise.resolve(true));
+        super(
+            configService,
+            cssGenerator,
+            themeFinder,
+            workspaceService,
+            rootPath,
+            scripts,
+            true,
+            Promise.resolve(true)
+        );
 
         // Create our message listener for our web panel.
         //this.messageListener = messageListenerCtor(
@@ -133,12 +144,14 @@ export abstract class WebviewViewHost<IMapping> extends WebviewHost<IMapping> im
             //this.webview = this.webPanel;
 
             // IANHU: bad naming? Can push to base?
+            // IANHU: 2x reference to webviewView, just need one
             this.webView = await this.provider.create(
                 {
-                    rootPath: '',
-                    cwd: '',
+                    rootPath: this.rootPath,
+                    cwd,
                     title: '',
-                    scripts: []
+                    scripts: this.scripts,
+                    webviewView: webviewView
                 },
                 webviewView
             );
