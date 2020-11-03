@@ -26,7 +26,7 @@ env:
   CI_PYTHON_PATH: python
   TEST_RESULTS_DIRECTORY: .
   TEST_RESULTS_GLOB: '**/test-results*.xml'
-  IPYWIDGET_SCREENSHOT_PATH: 'execute-screenshot.png'
+  IPYWIDGET_SCREENSHOT_PATH: '*-screenshot.png'
   DISABLE_INSIDERS_EXTENSION: 1 # Disable prompts to install Insiders in tests (else it blocks activation of extension).
 
 jobs:
@@ -346,6 +346,10 @@ jobs:
         env:
             CI_JUPYTER_FAST_COMPILATION: 'true'
 
+      - name: Print out notebook directory
+        run: |
+          ls ./out/datascience-ui/notebook
+
       - name: Run functional tests
         run: npm run test:functional:parallel -- --${{matrix.test-suite}}
         env:
@@ -357,7 +361,6 @@ jobs:
         uses: actions/upload-artifact@v2
         if: steps.test_functional_group.outcome == 'failure' && failure()
         with:
-          name: ${{env.IPYWIDGET_SCREENSHOT_PATH}}
           path: './${{env.IPYWIDGET_SCREENSHOT_PATH}}'
 
 
