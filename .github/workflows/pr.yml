@@ -348,7 +348,7 @@ jobs:
 
       - name: Print out notebook directory
         run: |
-          ls out/datascience-ui/notebook
+          ls ./out/datascience-ui/notebook
 
       - name: Run functional tests
         run: npm run test:functional:parallel -- --${{matrix.test-suite}}

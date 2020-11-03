@@ -76,7 +76,10 @@ gulp.task('compile-viewers', async () => {
 if (isCI && process.env.VSC_CI_MATRIX_TEST_SUITE === 'notebook') {
     gulp.task('compile-webviews', async () => {});
 } else {
-    gulp.task('compile-webviews', gulp.parallel('compile-ipywidgets', 'compile-notebooks', 'compile-viewers'));
+    gulp.task(
+        'compile-webviews',
+        gulp.series('compile-ipywidgets', gulp.parallel('compile-notebooks', 'compile-viewers'))
+    );
 }
 
 async function buildWebPackForDevOrProduction(configFile, configNameForProductionBuilds) {
@@ -221,10 +224,7 @@ gulp.task('checkDependencies', gulp.series('checkNativeDependencies'));
 if (isCI && process.env.VSC_CI_MATRIX_TEST_SUITE === 'notebook') {
     gulp.task('prePublishNonBundle', gulp.parallel('compile'));
 } else {
-    gulp.task(
-        'prePublishNonBundle',
-        gulp.parallel('compile', 'compile-ipywidgets', 'compile-ipywidgets', 'compile-notebooks', 'compile-viewers')
-    );
+    gulp.task('prePublishNonBundle', gulp.series('compile-webviews'));
 }
 
 function spawnAsync(command, args, env, rejectOnStdErr = false) {
