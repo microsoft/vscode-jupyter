@@ -3,7 +3,7 @@
 
 'use strict';
 
-import type { KernelMessage, Session } from '@jupyterlab/services';
+import type { Kernel, KernelMessage, Session } from '@jupyterlab/services';
 import type { Observable } from 'rxjs/Observable';
 import type { CancellationToken, Event, QuickPickItem, Uri } from 'vscode';
 import { NotebookCell, NotebookDocument } from '../../../../../types/vscode-proposed';
@@ -19,6 +19,20 @@ import type {
 } from '../../types';
 
 export type LiveKernelModel = IJupyterKernel & Partial<IJupyterKernelSpec> & { session: Session.IModel };
+
+export type IKernelConnectionForExecution = Pick<
+    Kernel.IKernelConnection,
+    | 'requestExecute'
+    | 'requestKernelInfo'
+    | 'removeMessageHook'
+    | 'registerMessageHook'
+    | 'requestCommInfo'
+    | 'registerCommTarget'
+    | 'sendInputReply'
+    | 'requestInspect'
+    | 'requestComplete'
+    | 'requestExecute'
+>;
 
 /**
  * Connection metadata for Live Kernels.

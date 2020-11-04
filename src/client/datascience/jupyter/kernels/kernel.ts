@@ -4,7 +4,8 @@
 'use strict';
 
 import { nbformat } from '@jupyterlab/coreutils';
-import { KernelMessage } from '@jupyterlab/services';
+import { Kernel as JupyterKernel, KernelMessage } from '@jupyterlab/services';
+import { JSONObject } from '@phosphor/coreutils';
 import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
 import * as uuid from 'uuid/v4';
@@ -27,6 +28,7 @@ import { CodeSnippets } from '../../constants';
 import { getDefaultNotebookContent, updateNotebookMetadata } from '../../notebookStorage/baseModel';
 import {
     IDataScienceErrorHandler,
+    IJupyterSession,
     INotebook,
     INotebookEditorProvider,
     INotebookProvider,
@@ -36,8 +38,98 @@ import {
 } from '../../types';
 import { isPythonKernelConnection } from './helpers';
 import { KernelExecution } from './kernelExecution';
-import type { IKernel, IKernelProvider, IKernelSelectionUsage, KernelConnectionMetadata } from './types';
+import type {
+    IKernel,
+    IKernelConnectionForExecution,
+    IKernelProvider,
+    IKernelSelectionUsage,
+    KernelConnectionMetadata
+} from './types';
 
+/**
+ * When running code, we're using the API from Jupyter Labs.
+ * Though we're using it, we have changed the signature to some extent.
+ * E.g. some methods do not return undefined & the like.
+ * When dealing with remote kernels, we're using the Juptyer Labs API directly instead of using our wrappers.
+ * This class will ensure our wrappers line up with the API in the Jupyter lab npm package.
+ * This way we can use the same code & Jupyter lab npm interfaces for local & remote kernels.
+ */
+class SessionWrapper implements IKernelConnectionForExecution {
+    constructor(private readonly session: IJupyterSession) {}
+    public requestExecute(
+        content: {
+            code: string;
+            silent?: boolean | undefined;
+            store_history?: boolean | undefined;
+            user_expressions?: JSONObject | undefined;
+            allow_stdin?: boolean | undefined;
+            stop_on_error?: boolean | undefined;
+        },
+        disposeOnDone?: boolean,
+        metadata?: JSONObject
+    ): JupyterKernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> {
+        const response = this.session.requestExecute(content, disposeOnDone, metadata);
+        if (!response) {
+            throw new Error('No Session for requestExecute');
+        }
+        return response;
+    }
+    public requestKernelInfo(): Promise<KernelMessage.IInfoReplyMsg> {
+        return this.session.requestKernelInfo();
+    }
+    public removeMessageHook(
+        msgId: string,
+        hook: (msg: KernelMessage.IIOPubMessage<KernelMessage.IOPubMessageType>) => boolean | PromiseLike<boolean>
+    ): void {
+        return this.session.removeMessageHook(msgId, hook);
+    }
+    public registerMessageHook(
+        msgId: string,
+        hook: (msg: KernelMessage.IIOPubMessage<KernelMessage.IOPubMessageType>) => boolean | PromiseLike<boolean>
+    ): void {
+        return this.session.registerMessageHook(msgId, hook);
+    }
+    public requestCommInfo(content: {
+        target_name?: string | undefined;
+        target?: string | undefined;
+    }): Promise<KernelMessage.ICommInfoReplyMsg> {
+        return this.session.requestCommInfo(content);
+    }
+    public registerCommTarget(
+        targetName: string,
+        callback: (comm: JupyterKernel.IComm, msg: KernelMessage.ICommOpenMsg) => void | PromiseLike<void>
+    ): void {
+        return this.session.registerCommTarget(targetName, callback);
+    }
+    public sendInputReply(content: KernelMessage.ReplyContent<KernelMessage.IInputReply>): void {
+        return this.session.sendInputReply(content);
+    }
+    public async requestInspect(content: {
+        code: string;
+        cursor_pos: number;
+        detail_level: 0 | 1;
+    }): Promise<KernelMessage.IInspectReplyMsg> {
+        const promise = this.session.requestInspect(content);
+        if (!promise) {
+            throw new Error('No Session for requestExecute');
+        }
+        const response = await promise;
+        if (!response) {
+            throw new Error('No Session for requestExecute');
+        }
+        return response;
+    }
+    public async requestComplete(content: {
+        code: string;
+        cursor_pos: number;
+    }): Promise<KernelMessage.ICompleteReplyMsg> {
+        const response = await this.session.requestComplete(content);
+        if (!response) {
+            throw new Error('No Session for requestExecute');
+        }
+        return response;
+    }
+}
 export class Kernel implements IKernel {
     get connection(): INotebookProviderConnection | undefined {
         return this.notebook?.connection;
@@ -140,7 +232,13 @@ export class Kernel implements IKernel {
             });
 
             this._notebookPromise
-                .then((nb) => (this.kernelExecution.notebook = this.notebook = nb))
+                .then((nb) => {
+                    this.notebook = nb;
+                    if (nb) {
+                        this.kernelExecution.kernelConnection = new SessionWrapper(nb.session);
+                        this.kernelExecution.loggers = nb.getLoggers()
+                    }
+                })
                 .catch((ex) => {
                     traceError('failed to create INotebook in kernel', ex);
                     this._notebookPromise = undefined;
@@ -169,7 +267,7 @@ export class Kernel implements IKernel {
             this._onDisposed.fire();
             this._onStatusChanged.fire(ServerStatus.Dead);
             this.notebook = undefined;
-            this.kernelExecution.notebook = undefined;
+            this.kernelExecution.kernelConnection = undefined;
         }
         this.kernelExecution.dispose();
     }

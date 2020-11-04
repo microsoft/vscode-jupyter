@@ -325,7 +325,7 @@ export interface IJupyterSession extends IAsyncDisposable {
     requestInspect(
         content: KernelMessage.IInspectRequestMsg['content']
     ): Promise<KernelMessage.IInspectReplyMsg | undefined>;
-    sendInputReply(content: string): void;
+    sendInputReply(content: KernelMessage.IInputReplyMsg['content']): void;
     changeKernel(kernelConnection: KernelConnectionMetadata, timeoutMS: number): Promise<void>;
     registerCommTarget(
         targetName: string,
