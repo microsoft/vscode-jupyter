@@ -16,6 +16,8 @@ import { traceInfo } from '../../common/logger';
 import { IDisposableRegistry } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { IInterpreterService } from '../../interpreter/contracts';
+import { JupyterRemoteServiceHelper } from '../../remote/connection/remoteService';
+import { RemoteKernelPickerProvider } from '../../remote/kernels/kernelProvider';
 import { captureTelemetry } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { areKernelConnectionsEqual } from '../jupyter/kernels/helpers';
@@ -100,7 +102,9 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
         @inject(INotebookProvider) private readonly notebookProvider: INotebookProvider,
         @inject(KernelSwitcher) private readonly kernelSwitcher: KernelSwitcher,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService
+        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
+        @inject(JupyterRemoteServiceHelper) private readonly jupyterRemoteHelper: JupyterRemoteServiceHelper,
+        @inject(RemoteKernelPickerProvider) private readonly remoteKernelProvider: RemoteKernelPickerProvider
     ) {
         this.kernelSelectionProvider.onDidChangeSelections(
             (e) => {
@@ -119,6 +123,28 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
     }
     @captureTelemetry(Telemetry.KernelProviderPerf)
     public async provideKernels(
+        document: NotebookDocument,
+        token: CancellationToken
+    ): Promise<VSCodeNotebookKernelMetadata[]> {
+        let kernels: VSCodeNotebookKernelMetadata[];
+        if (await this.jupyterRemoteHelper.isRemoteJupyterUri(document.uri)) {
+            kernels = await this.remoteKernelProvider.provideKernels(document, token);
+        } else {
+            kernels = await this.provideLocalKernels(document, token);
+        }
+
+        kernels.sort((a, b) => {
+            if (a.label > b.label) {
+                return 1;
+            } else if (a.label === b.label) {
+                return 0;
+            } else {
+                return -1;
+            }
+        });
+        return kernels;
+    }
+    public async provideLocalKernels(
         document: NotebookDocument,
         token: CancellationToken
     ): Promise<VSCodeNotebookKernelMetadata[]> {
@@ -189,15 +215,6 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
                 );
             }
         }
-        mapped.sort((a, b) => {
-            if (a.label > b.label) {
-                return 1;
-            } else if (a.label === b.label) {
-                return 0;
-            } else {
-                return -1;
-            }
-        });
         return mapped;
     }
     private createNotebookKernelMetadataFromPreferredKernel(

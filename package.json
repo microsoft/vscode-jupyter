@@ -675,6 +675,48 @@
                 "command": "jupyter.clearSavedJupyterUris",
                 "title": "%jupyter.command.jupyter.clearSavedJupyterUris.title%",
                 "category": "Jupyter"
+            },
+            {
+                "command": "jupyter.server.add",
+                "title": "%jupyter.command.jupyter.server.add.title%",
+                "category": "Jupyter",
+                "icon": "$(add)"
+            },
+            {
+                "command": "jupyter.server.logout",
+                "title": "%jupyter.command.jupyter.server.logout.title%",
+                "category": "Jupyter",
+                "icon": "$(sign-out)"
+            },
+            {
+                "command": "jupyter.server.refresh",
+                "title": "%jupyter.command.jupyter.server.refresh.title%",
+                "category": "Jupyter",
+                "icon": "$(refresh)"
+            },
+            {
+                "command": "jupyter.server.directory.new",
+                "title": "%jupyter.command.jupyter.server.directory.new.title%",
+                "category": "Jupyter",
+                "icon": "$(new-folder)"
+            },
+            {
+                "command": "jupyter.server.file.new",
+                "title": "%jupyter.command.jupyter.server.file.new.title%",
+                "category": "Jupyter",
+                "icon": "$(new-file)"
+            },
+            {
+                "command": "jupyter.server.notebook.new",
+                "title": "%jupyter.command.jupyter.server.notebook.new.title%",
+                "category": "Jupyter",
+                "icon": "$(notebook)"
+            },
+            {
+                "command": "jupyter.server.file.delete",
+                "title": "%jupyter.command.jupyter.server.file.delete.title%",
+                "category": "Jupyter",
+                "icon": "$(trash)"
             }
         ],
         "menus": {
@@ -1217,6 +1259,36 @@
                     "command": "jupyter.opennotebookInPreviewEditor",
                     "when": "false",
                     "category": "Jupyter"
+                },
+                {
+                    "command": "jupyter.server.logout",
+                    "when": "false",
+                    "category": "Jupyter"
+                },
+                {
+                    "command": "jupyter.server.directory.new",
+                    "when": "false",
+                    "category": "Jupyter"
+                },
+                {
+                    "command": "jupyter.server.file.new",
+                    "when": "false",
+                    "category": "Jupyter"
+                },
+                {
+                    "command": "jupyter.server.notebook.new",
+                    "when": "false",
+                    "category": "Jupyter"
+                },
+                {
+                    "command": "jupyter.server.file.delete",
+                    "when": "false",
+                    "category": "Jupyter"
+                },
+                {
+                    "command": "jupyter.server.refresh",
+                    "when": "false",
+                    "category": "Jupyter"
                 }
             ],
             "debug/variables/context": [
@@ -1224,6 +1296,61 @@
                     "command": "jupyter.showDataViewer",
                     "group": "1_view",
                     "when": "python.isDebuggerDataViewerExperimentEnabled && debugProtocolVariableMenuContext == 'viewableInDataViewer'"
+                }
+            ],
+            "view/title": [
+                {
+                    "command": "jupyter.server.add",
+                    "when": "view == jupyter.serversView",
+                    "group": "navigation@1"
+                }
+            ],
+            "view/item/context": [
+                {
+                    "command": "jupyter.server.logout",
+                    "when": "view == jupyter.serversView && viewItem == jupyterServer",
+                    "group": "inline@1"
+                },
+                {
+                    "command": "jupyter.server.refresh",
+                    "when": "view == jupyter.serversView && viewItem == jupyterServer",
+                    "group": "inline@1"
+                },
+                {
+                    "command": "jupyter.server.directory.new",
+                    "when": "viewItem == fileSystem || viewItem == directory",
+                    "group": "inline@0"
+                },
+                {
+                    "command": "jupyter.server.directory.new",
+                    "when": "viewItem == fileSystem || viewItem == directory"
+                },
+                {
+                    "command": "jupyter.server.file.new",
+                    "when": "viewItem == fileSystem || viewItem == directory",
+                    "group": "inline@0"
+                },
+                {
+                    "command": "jupyter.server.file.new",
+                    "when": "viewItem == fileSystem || viewItem == directory"
+                },
+                {
+                    "command": "jupyter.server.notebook.new",
+                    "when": "viewItem == fileSystem || viewItem == directory",
+                    "group": "inline@0"
+                },
+                {
+                    "command": "jupyter.server.notebook.new",
+                    "when": "viewItem == fileSystem || viewItem == directory"
+                },
+                {
+                    "command": "jupyter.server.file.delete",
+                    "when": "view == jupyter.serversView && viewItem == file",
+                    "group": "inline@0"
+                },
+                {
+                    "command": "jupyter.server.file.delete",
+                    "when": "view == jupyter.serversView && viewItem == file"
                 }
             ]
         },
@@ -1258,6 +1385,7 @@
                             "NativeNotebookEditor",
                             "CustomEditor",
                             "RunByLine",
+                            "RemoteJupyter",
                             "All"
                         ]
                     },
@@ -1272,6 +1400,7 @@
                             "NativeNotebookEditor",
                             "CustomEditor",
                             "RunByLine",
+                            "RemoteJupyter",
                             "All"
                         ]
                     },
@@ -1685,6 +1814,26 @@
                 ]
             }
         ],
+        "viewsContainers": {
+            "activitybar": [
+                {
+                    "id": "jupyter",
+                    "title": "Jupyter",
+                    "icon": "resources/jupyter.svg"
+                }
+            ]
+        },
+        "views": {
+            "jupyter": [
+                {
+                    "id": "jupyter.serversView",
+                    "name": "Servers",
+                    "icon": "resources/jupyter.svg",
+                    "contextualTitle": "Local/remote Jupyter Server(s)",
+                    "when": "remoteJupyterExperimentEnabled"
+                }
+            ]
+        },
         "notebookProvider": [
             {
                 "viewType": "jupyter-notebook",

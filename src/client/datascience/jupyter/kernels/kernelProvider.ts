@@ -9,6 +9,9 @@ import { Uri } from 'vscode';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../../common/application/types';
 import { traceInfo, traceWarning } from '../../../common/logger';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../../common/types';
+import { JupyterRemoteServiceHelper } from '../../../remote/connection/remoteService';
+import { RemoteJupyterKernel } from '../../../remote/kernels/remoteKernel';
+import { IJupyterServerAuthServiceProvider } from '../../../remote/ui/types';
 import { IDataScienceErrorHandler, INotebookEditorProvider, INotebookProvider } from '../../types';
 import { Kernel } from './kernel';
 import { KernelSelector } from './kernelSelector';
@@ -27,7 +30,9 @@ export class KernelProvider implements IKernelProvider {
         @inject(INotebookEditorProvider) private readonly editorProvider: INotebookEditorProvider,
         @inject(KernelSelector) private readonly kernelSelectionUsage: IKernelSelectionUsage,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
-        @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook
+        @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
+        @inject(JupyterRemoteServiceHelper) private readonly remoteServiceHelper: JupyterRemoteServiceHelper,
+        @inject(IJupyterServerAuthServiceProvider) private readonly remoteAuthService: IJupyterServerAuthServiceProvider
     ) {}
     public get(uri: Uri): IKernel | undefined {
         return this.kernelsByUri.get(uri.toString())?.kernel;
@@ -40,21 +45,44 @@ export class KernelProvider implements IKernelProvider {
 
         this.disposeOldKernel(uri);
 
+        let kernel: IKernel;
         const waitForIdleTimeout = this.configService.getSettings(uri).jupyterLaunchTimeout;
-        const kernel = new Kernel(
-            uri,
-            options.metadata,
-            this.notebookProvider,
-            this.disposables,
-            waitForIdleTimeout,
-            this.commandManager,
-            this.errorHandler,
-            this.editorProvider,
-            this,
-            this.kernelSelectionUsage,
-            this.appShell,
-            this.vscNotebook
-        );
+        if (
+            this.remoteServiceHelper.isRemoteExperimentEnabled &&
+            this.remoteAuthService.isConnected(uri) &&
+            (options.metadata.kind === 'startUsingKernelSpec' ||
+                options.metadata.kind === 'connectToLiveKernel' ||
+                options.metadata.kind === 'startUsingDefaultKernel')
+        ) {
+            kernel = new RemoteJupyterKernel(
+                uri,
+                options.metadata,
+                waitForIdleTimeout,
+                this.commandManager,
+                this.errorHandler,
+                this.editorProvider,
+                this,
+                this.kernelSelectionUsage,
+                this.appShell,
+                this.vscNotebook,
+                this.remoteAuthService
+            );
+        } else {
+            kernel = new Kernel(
+                uri,
+                options.metadata,
+                this.notebookProvider,
+                this.disposables,
+                waitForIdleTimeout,
+                this.commandManager,
+                this.errorHandler,
+                this.editorProvider,
+                this,
+                this.kernelSelectionUsage,
+                this.appShell,
+                this.vscNotebook
+            );
+        }
         this.asyncDisposables.push(kernel);
         this.kernelsByUri.set(uri.toString(), { options, kernel });
         this.deleteMappingIfKernelIsDisposed(uri, kernel);
