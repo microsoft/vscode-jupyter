@@ -4,7 +4,7 @@
 import '../../common/extensions';
 
 import { injectable, unmanaged } from 'inversify';
-import { Uri, ViewColumn, WebviewView as vscodeWebviewView } from 'vscode';
+import { Uri, WebviewView as vscodeWebviewView } from 'vscode';
 
 import {
     IWebviewView,
@@ -44,8 +44,7 @@ export abstract class WebviewViewHost<IMapping> extends WebviewHost<IMapping> im
         ) => IWebviewViewMessageListener,
         @unmanaged() protected provider: IWebviewViewProvider,
         @unmanaged() rootPath: string,
-        @unmanaged() scripts: string[],
-        codeWebview: vscodeWebviewView
+        @unmanaged() scripts: string[]
     ) {
         super(
             configService,

@@ -3,7 +3,7 @@
 'use strict';
 import '../../extensions';
 
-import { Event, EventEmitter, Uri, WebviewOptions, WebviewView as vscodeWebviewView, window } from 'vscode';
+import { Uri, WebviewOptions, WebviewView as vscodeWebviewView } from 'vscode';
 import { traceError } from '../../logger';
 import { IFileSystem } from '../../platform/types';
 import { IDisposableRegistry } from '../../types';
@@ -13,13 +13,11 @@ import { Webview } from '../webviews/webview';
 
 export class WebviewView extends Webview implements IWebviewView {
     private view: vscodeWebviewView | undefined;
-    private loadPromise: Promise<void>;
 
     constructor(
         fs: IFileSystem,
         private disposableRegistry: IDisposableRegistry,
         private panelOptions: IWebviewViewOptions,
-        private webviewView: vscodeWebviewView,
         additionalRootPaths: Uri[] = []
     ) {
         super(fs, panelOptions);
@@ -43,15 +41,9 @@ export class WebviewView extends Webview implements IWebviewView {
         // Set our base webview from the panel
         this.webview = this.view.webview;
 
-        this.loadPromise = this.load();
-    }
-
-    public async show(preserveFocus: boolean) {
-        await this.loadPromise;
-        if (this.view) {
-            //this.view.reveal(this.panel.viewColumn, preserveFocus);
-            // Show the view here
-        }
+        this.load().catch((error) => {
+            traceError(`Error Loading WebviewView: ${error}`);
+        });
     }
 
     public setTitle(newTitle: string) {

@@ -3,17 +3,12 @@
 'use strict';
 import '../../common/extensions';
 
-import { inject, injectable, unmanaged } from 'inversify';
+import { injectable, unmanaged } from 'inversify';
 import * as path from 'path';
 import { WebviewView as vscodeWebviewView } from 'vscode';
 
-import {
-    IApplicationShell,
-    IWebviewPanelProvider,
-    IWebviewViewProvider,
-    IWorkspaceService
-} from '../../common/application/types';
-import { EXTENSION_ROOT_DIR, UseCustomEditorApi } from '../../common/constants';
+import { IWebviewViewProvider, IWorkspaceService } from '../../common/application/types';
+import { EXTENSION_ROOT_DIR } from '../../common/constants';
 import { traceError } from '../../common/logger';
 import { IConfigurationService, IDisposable, Resource } from '../../common/types';
 import { ICodeCssGenerator, IThemeFinder } from '../types';
@@ -41,8 +36,7 @@ export class VariableView extends WebviewViewHost<IVariableViewMapping> implemen
             (c, d) => new VariableViewMessageListener(c, d),
             provider,
             variableViewDir,
-            [path.join(variableViewDir, 'commons.initial.bundle.js'), path.join(variableViewDir, 'variableView.js')],
-            codeWebview
+            [path.join(variableViewDir, 'commons.initial.bundle.js'), path.join(variableViewDir, 'variableView.js')]
         );
     }
 

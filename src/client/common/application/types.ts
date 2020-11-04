@@ -76,7 +76,6 @@ import type {
 
 import { IAsyncDisposable, Resource } from '../types';
 import { ICommandNameArgumentTypeMapping } from './commands';
-import { WebviewView } from './webviewViews/webviewView';
 
 // tslint:disable:no-any unified-signatures
 

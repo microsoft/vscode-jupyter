@@ -53,8 +53,7 @@ suite('DataScience Tests', () => {
             instance(configService),
             instance(docManager),
             instance(workspaceService),
-            instance(cmdRegistry),
-            instance(variableViewProvider)
+            instance(cmdRegistry)
         );
 
         onDidChangeSettings = sinon.stub();

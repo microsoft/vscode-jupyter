@@ -3,7 +3,7 @@
 'use strict';
 import '../../extensions';
 
-import { Event, EventEmitter, Uri, WebviewOptions, WebviewPanel as vscodeWebviewPanel, window } from 'vscode';
+import { Uri, WebviewOptions, WebviewPanel as vscodeWebviewPanel, window } from 'vscode';
 import { traceError } from '../../logger';
 import { IFileSystem } from '../../platform/types';
 import { IDisposableRegistry } from '../../types';

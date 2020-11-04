@@ -45,7 +45,6 @@ export class VariablePanel extends React.Component<IVariablePanelProps, IVariabl
         // Add ourselves as a handler for the post office
         this.postOffice.addHandler(this);
 
-        window.console.log('**** IANHU Send Started Message ****');
         // Tell the plot viewer code we have started.
         this.postOffice.sendMessage<IVariableViewMapping>(VariableViewMessages.Started);
     }
@@ -56,10 +55,7 @@ export class VariablePanel extends React.Component<IVariablePanelProps, IVariabl
     }
 
     public render = () => {
-        window.console.log('**** IANHU Render ****');
         if (this.state.settings) {
-            window.console.log('**** IANHU Render With Settings ****');
-            const baseTheme = this.computeBaseTheme();
             return (
                 <div className="variable-panel" role="group" ref={this.container}>
                     <StyleInjector
@@ -116,23 +112,4 @@ export class VariablePanel extends React.Component<IVariablePanelProps, IVariabl
             });
         }
     };
-
-    private computeBaseTheme(): string {
-        // If we're ignoring, always light
-        if (this.state.settings?.ignoreVscodeTheme) {
-            return 'vscode-light';
-        }
-
-        // Otherwise see if the style injector has figured out
-        // the theme is dark or not
-        if (this.state.forceDark !== undefined) {
-            return this.state.forceDark ? 'vscode-dark' : 'vscode-light';
-        }
-
-        return this.props.baseTheme;
-    }
-
-    //private sendMessage<M extends IVariableViewMapping, T extends keyof M>(type: T, payload?: M[T]) {
-    //this.postOffice.sendMessage<M, T>(type, payload);
-    //}
 }
