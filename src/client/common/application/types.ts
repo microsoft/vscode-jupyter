@@ -1084,7 +1084,6 @@ export const IWebviewView = Symbol('IWebviewView');
 export interface IWebviewView extends IWebview {}
 
 export interface IWebviewOptions {
-    title: string;
     rootPath: string;
     cwd: string;
     scripts: string[];

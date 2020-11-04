@@ -131,7 +131,6 @@ export abstract class WebviewViewHost<IMapping> extends WebviewHost<IMapping> im
                     rootPath: this.rootPath,
                     cwd,
                     listener: this.messageListener,
-                    title: '',
                     scripts: this.scripts,
                     settings,
                     webviewView: webviewView

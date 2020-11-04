@@ -46,13 +46,6 @@ export class WebviewView extends Webview implements IWebviewView {
         });
     }
 
-    public setTitle(newTitle: string) {
-        this.panelOptions.title = newTitle;
-        if (this.view) {
-            this.view.title = newTitle;
-        }
-    }
-
     // tslint:disable-next-line:no-any
     private async load() {
         try {
