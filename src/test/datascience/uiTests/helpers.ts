@@ -7,6 +7,7 @@ import * as path from 'path';
 import * as playwright from 'playwright-chromium';
 import { IAsyncDisposable, IDisposable } from '../../../client/common/types';
 import { createDeferred } from '../../../client/common/utils/async';
+import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { CssMessages } from '../../../client/datascience/messages';
 import { CommonActionType } from '../../../datascience-ui/interactive-common/redux/reducers/types';
@@ -91,8 +92,10 @@ export class BaseWebUI implements IAsyncDisposable {
         // Wait for the mounted web panel to send a message back to the data explorer
         const promise = createDeferred<void>();
         const timer = timeoutMs
-            ? setTimeout(() => {
+            ? setTimeout(async () => {
                   if (!promise.resolved) {
+                      // Take a screenshot and save at the root with the same name (upload on error)
+                      await this.page?.screenshot({ path: path.join(EXTENSION_ROOT_DIR, 'browser-screenshot.png') });
                       promise.reject(new Error(`Waiting for ${message} timed out`));
                   }
               }, timeoutMs)
