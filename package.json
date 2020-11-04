@@ -1710,7 +1710,8 @@
                 {
                     "type": "webview",
                     "id": "jupyterViewVariables",
-                    "name": "Variables"
+                    "name": "Variables",
+                    "when": "jupyter.nativevariableview"
                 }
             ]
         }
