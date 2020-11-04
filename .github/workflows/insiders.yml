@@ -613,6 +613,7 @@ jobs:
       - name: Run smoke tests
         env:
           DISPLAY: 10
+        uses: GabrielBB/xvfb-action@v1.4
         with:
           run: npm run testSmokeLogged
 
