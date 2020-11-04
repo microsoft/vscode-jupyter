@@ -1701,7 +1701,7 @@
                 {
                     "id": "jupyterViewContainer",
                     "title": "Jupyter",
-                    "icon": "JUNK.svg"
+                    "icon": "NOICON.svg"
                 }
             ]
         },

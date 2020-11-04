@@ -25,8 +25,7 @@ export class VariableView extends WebviewViewHost<IVariableViewMapping> implemen
         @unmanaged() cssGenerator: ICodeCssGenerator,
         @unmanaged() themeFinder: IThemeFinder,
         @unmanaged() workspaceService: IWorkspaceService,
-        @unmanaged() provider: IWebviewViewProvider,
-        private readonly codeWebview: vscodeWebviewView // If we save this here and use it with show, then remove from constructor?
+        @unmanaged() provider: IWebviewViewProvider
     ) {
         super(
             configuration,
@@ -40,9 +39,8 @@ export class VariableView extends WebviewViewHost<IVariableViewMapping> implemen
         );
     }
 
-    // IANHU: Have this? Or part of the WebviewViewHost class?
-    public async load() {
-        await super.loadWebPanel(process.cwd(), this.codeWebview).catch(traceError);
+    public async load(codeWebview: vscodeWebviewView) {
+        await super.loadWebPanel(process.cwd(), codeWebview).catch(traceError);
     }
 
     //tslint:disable-next-line:no-any

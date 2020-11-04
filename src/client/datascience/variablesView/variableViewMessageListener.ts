@@ -7,6 +7,7 @@ import { IWebviewViewMessageListener } from '../../common/application/types';
 
 // tslint:disable:no-any
 
+// Message listening class for the native variable viewer
 export class VariableViewMessageListener implements IWebviewViewMessageListener {
     private disposedCallback: () => void;
     private callback: (message: string, payload: any) => void;

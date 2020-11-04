@@ -10,6 +10,7 @@ import { ICodeCssGenerator, IThemeFinder } from '../types';
 import { IVariableViewProvider } from './types';
 import { VariableView } from './variableView';
 
+// This class creates our UI for our variable view and links it to the vs code webview view
 @injectable()
 export class VariableViewProvider implements IVariableViewProvider {
     public readonly viewType: string = 'jupyterViewVariables';
@@ -37,10 +38,9 @@ export class VariableViewProvider implements IVariableViewProvider {
             this.cssGenerator,
             this.themeFinder,
             this.workspaceService,
-            this.provider,
-            webviewView
+            this.provider
         );
 
-        await this.variableView.load();
+        await this.variableView.load(webviewView);
     }
 }
