@@ -125,18 +125,15 @@ export abstract class WebviewViewHost<IMapping> extends WebviewHost<IMapping> im
 
             // IANHU: bad naming? Can push to base?
             // IANHU: 2x reference to webviewView, just need one
-            this.webView = await this.provider.create(
-                {
-                    additionalPaths: workspaceFolder ? [workspaceFolder.fsPath] : [],
-                    rootPath: this.rootPath,
-                    cwd,
-                    listener: this.messageListener,
-                    scripts: this.scripts,
-                    settings,
-                    webviewView: webviewView
-                },
-                webviewView
-            );
+            this.webView = await this.provider.create({
+                additionalPaths: workspaceFolder ? [workspaceFolder.fsPath] : [],
+                rootPath: this.rootPath,
+                cwd,
+                listener: this.messageListener,
+                scripts: this.scripts,
+                settings,
+                webviewView: webviewView
+            });
             this.webview = this.webView;
 
             // Track if the load of our webview fails

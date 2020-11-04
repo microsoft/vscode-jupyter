@@ -1087,9 +1087,18 @@ export interface IWebviewOptions {
     rootPath: string;
     cwd: string;
     scripts: string[];
+    /**
+     * Additional paths apart from cwd and rootPath, that webview would allow loading resources/files from.
+     * E.g. required for webview to serve images from worksapces when nb is in a nested folder.
+     */
+    additionalPaths?: string[];
+    // tslint:disable-next-line: no-any
+    settings?: any;
 }
 
-export interface IWebviewViewOptions extends IWebviewOptions {}
+export interface IWebviewViewOptions extends IWebviewOptions {
+    listener: IWebviewViewMessageListener;
+}
 
 // Wraps the VS Code webview panel
 export const IWebviewPanel = Symbol('IWebviewPanel');
@@ -1125,13 +1134,6 @@ export interface IWebviewPanelOptions extends IWebviewOptions {
     viewColumn: ViewColumn;
     listener: IWebviewPanelMessageListener;
     title: string;
-    /**
-     * Additional paths apart from cwd and rootPath, that webview would allow loading resources/files from.
-     * E.g. required for webview to serve images from worksapces when nb is in a nested folder.
-     */
-    additionalPaths?: string[];
-    // tslint:disable-next-line: no-any
-    settings?: any;
     // Web panel to use if supplied by VS code instead
     webViewPanel?: WebviewPanel;
 }
@@ -1147,12 +1149,13 @@ export interface IWebviewViewOptions extends IWebviewOptions {
     listener: IWebviewViewMessageListener;
     // tslint:disable-next-line: no-any
     settings?: any;
-    webviewView?: vscodeWebviewView;
+    // Unlike for the panel, the webview is required for WebviewView
+    webviewView: vscodeWebviewView;
 }
 
 export const IWebviewViewProvider = Symbol('IWebviewViewProvider');
 export interface IWebviewViewProvider {
-    create(options: IWebviewViewOptions, codeWebview: vscodeWebviewView): Promise<IWebviewView>;
+    create(options: IWebviewViewOptions): Promise<IWebviewView>;
 }
 
 // Wraps the vsls liveshare API
