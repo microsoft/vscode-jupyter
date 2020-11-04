@@ -257,6 +257,7 @@ import {
     ITrustService
 } from '../../client/datascience/types';
 import { IVariableViewProvider } from '../../client/datascience/variablesView/types';
+import { VariableViewActivationService } from '../../client/datascience/variablesView/variableViewActivationService';
 import { VariableViewProvider } from '../../client/datascience/variablesView/variableViewProvider';
 import { ProtocolParser } from '../../client/debugger/extension/helpers/protocolParser';
 import { IProtocolParser } from '../../client/debugger/extension/types';
@@ -596,6 +597,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             JUPYTER_OUTPUT_CHANNEL
         );
         this.serviceManager.addSingleton<ICryptoUtils>(ICryptoUtils, CryptoUtils);
+        this.serviceManager.addSingleton<IExtensionSingleActivationService>(
+            IExtensionSingleActivationService,
+            VariableViewActivationService
+        );
         this.serviceManager.addSingleton<IExtensionSingleActivationService>(
             IExtensionSingleActivationService,
             ServerPreload

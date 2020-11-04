@@ -8,7 +8,13 @@ import { ICommandManager, IDocumentManager, IWorkspaceService } from '../common/
 import { PYTHON_ALLFILES, PYTHON_LANGUAGE } from '../common/constants';
 import { ContextKey } from '../common/contextKey';
 import '../common/extensions';
-import { IConfigurationService, IDisposable, IDisposableRegistry, IExtensionContext } from '../common/types';
+import {
+    IConfigurationService,
+    IDisposable,
+    IDisposableRegistry,
+    IExperimentService,
+    IExtensionContext
+} from '../common/types';
 import { debounceAsync, swallowExceptions } from '../common/utils/decorators';
 import { sendTelemetryEvent } from '../telemetry';
 import { hasCells } from './cellFactory';
@@ -45,13 +51,6 @@ export class DataScience implements IDataScience {
 
         this.extensionContext.subscriptions.push(
             vscode.languages.registerCodeLensProvider(PYTHON_ALLFILES, this.dataScienceCodeLensProvider)
-        );
-
-        this.extensionContext.subscriptions.push(
-            // IANHU: Consider not using retainContext here?
-            vscode.window.registerWebviewViewProvider(this.variableViewProvider.viewType, this.variableViewProvider, {
-                webviewOptions: { retainContextWhenHidden: true }
-            })
         );
 
         // Set our initial settings and sign up for changes
