@@ -165,9 +165,9 @@ export class MockJupyterSession implements IJupyterSession {
         });
     }
 
-    public sendInputReply(content: string) {
+    public sendInputReply(content: KernelMessage.IInputReplyMsg['content']) {
         if (this.lastRequest) {
-            this.lastRequest.sendInputReply({ value: content, status: 'ok' });
+            this.lastRequest.sendInputReply(content);
         }
     }
 

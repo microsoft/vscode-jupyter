@@ -1075,7 +1075,7 @@ export class JupyterNotebookBase implements INotebook {
                     password: hasPassword
                 })
                 .then((v) => {
-                    this.session.sendInputReply(v || '');
+                    this.session.sendInputReply({ value: v || '', status: 'ok' });
                 });
         }
     }

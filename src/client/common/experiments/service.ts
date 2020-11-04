@@ -153,6 +153,10 @@ export class ExperimentService implements IExperimentService {
         if (this.appEnvironment.channel === 'insiders' && experiment === ExperimentGroups.NativeNotebook) {
             return 'optIn';
         }
+        // If using insiders VS Code, then always enable Remote Jupyter.
+        if (this.appEnvironment.channel === 'insiders' && experiment === ExperimentGroups.RemoteJupyter) {
+            return 'optIn';
+        }
     }
     private getExperimentsUserHasManuallyOptedInto(): ExperimentGroups[] {
         return Object.values(ExperimentGroups).filter(
