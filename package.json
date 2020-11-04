@@ -1261,6 +1261,11 @@
                     "category": "Jupyter"
                 },
                 {
+                    "command": "jupyter.server.add",
+                    "when": "remoteJupyterExperimentEnabled",
+                    "category": "Jupyter"
+                },
+                {
                     "command": "jupyter.server.logout",
                     "when": "false",
                     "category": "Jupyter"
