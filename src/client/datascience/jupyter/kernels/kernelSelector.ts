@@ -9,15 +9,16 @@ import cloneDeep = require('lodash/cloneDeep');
 import { CancellationToken } from 'vscode-jsonrpc';
 import { IPythonExtensionChecker } from '../../../api/types';
 import { IApplicationShell } from '../../../common/application/types';
+import { PYTHON_LANGUAGE } from '../../../common/constants';
 import '../../../common/extensions';
-import { traceError, traceInfo, traceVerbose } from '../../../common/logger';
+import { traceDecorators, traceError, traceInfo, traceVerbose } from '../../../common/logger';
 import { IConfigurationService, IDisposableRegistry, Resource } from '../../../common/types';
 import * as localize from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
 import { StopWatch } from '../../../common/utils/stopWatch';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
-import { IEventNamePropertyMapping, sendTelemetryEvent } from '../../../telemetry';
+import { captureTelemetry, IEventNamePropertyMapping, sendTelemetryEvent } from '../../../telemetry';
 import { Commands, KnownNotebookLanguages, Settings, Telemetry } from '../../constants';
 import { IKernelFinder } from '../../kernel-launcher/types';
 import { getInterpreterInfoStoredInMetadata } from '../../notebookStorage/baseModel';
@@ -33,7 +34,7 @@ import {
     INotebookProviderConnection,
     KernelInterpreterDependencyResponse
 } from '../../types';
-import { createDefaultKernelSpec, getDisplayNameOrNameOfKernelConnection } from './helpers';
+import { createDefaultKernelSpec, getDisplayNameOrNameOfKernelConnection, isPythonKernelConnection } from './helpers';
 import { KernelSelectionProvider } from './kernelSelections';
 import { KernelService } from './kernelService';
 import {
@@ -165,6 +166,7 @@ export class KernelSelector implements IKernelSelectionUsage {
      * (will attempt to find the best matching kernel, or prompt user to use current interpreter or select one).
      */
     @reportAction(ReportableAction.KernelsGetKernelForLocalConnection)
+    @captureTelemetry(Telemetry.GetPreferredKernelPerf)
     public async getPreferredKernelForLocalConnection(
         resource: Resource,
         type: 'raw' | 'jupyter' | 'noConnection',
@@ -346,9 +348,6 @@ export class KernelSelector implements IKernelSelectionUsage {
                 cancelToken
             );
             return cloneDeep(item);
-        } else if (selection.interpreter && type === 'raw') {
-            const item = await this.useInterpreterAndDefaultKernel(selection.interpreter);
-            return cloneDeep(item);
         } else if (selection.kind === 'connectToLiveKernel') {
             sendTelemetryEvent(Telemetry.SwitchToExistingKernel, undefined, {
                 language: this.computeLanguage(selection.kernelModel.language)
@@ -372,6 +371,9 @@ export class KernelSelector implements IKernelSelectionUsage {
                     : undefined;
             await this.kernelService.updateKernelEnvironment(interpreter, selection.kernelSpec, cancelToken);
             return cloneDeep({ kernelSpec: selection.kernelSpec, interpreter, kind: 'startUsingKernelSpec' });
+        } else if (selection.interpreter && type === 'raw') {
+            const item = await this.useInterpreterAndDefaultKernel(selection.interpreter);
+            return cloneDeep(item);
         } else {
             return;
         }
@@ -403,7 +405,7 @@ export class KernelSelector implements IKernelSelectionUsage {
         let kernelConnection: KernelConnectionMetadata | undefined;
         const settings = this.configService.getSettings(resource);
         const isLocalConnection =
-            connection?.localLaunch ?? settings.jupyterServerURI.toLowerCase() === Settings.JupyterServerLocalLaunch;
+            connection?.localLaunch ?? settings.jupyterServerType.toLowerCase() === Settings.JupyterServerLocalLaunch;
 
         if (isLocalConnection) {
             kernelConnection = await this.selectLocalJupyterKernel(
@@ -500,13 +502,16 @@ export class KernelSelector implements IKernelSelectionUsage {
         notebookMetadata?: nbformat.INotebookMetadata
     ): Promise<PythonEnvironment | undefined> {
         const info = getInterpreterInfoStoredInMetadata(notebookMetadata);
-        if (!info) {
+        if (!info || !this.extensionChecker.isPythonExtensionInstalled) {
             return;
         }
         const interpreters = await this.interpreterService.getInterpreters(resource);
         return interpreters.find((item) => sha256().update(item.path).digest('hex') === info.hash);
     }
-    // Get our kernelspec and interpreter for a local raw connection
+    /**
+     * Get our kernelspec and interpreter for a local raw connection
+     */
+    @traceDecorators.verbose('Find kernel spec')
     private async getKernelForLocalRawConnection(
         resource: Resource,
         notebookMetadata?: nbformat.INotebookMetadata,
@@ -527,12 +532,8 @@ export class KernelSelector implements IKernelSelectionUsage {
         }
 
         // First use our kernel finder to locate a kernelspec on disk
-        const kernelSpec = await this.kernelFinder.findKernelSpec(
-            resource,
-            notebookMetadata?.kernelspec,
-            cancelToken,
-            ignoreDependencyCheck
-        );
+        const kernelSpec = await this.kernelFinder.findKernelSpec(resource, notebookMetadata, cancelToken);
+        const isNonPythonKernelSPec = kernelSpec?.language && kernelSpec.language !== PYTHON_LANGUAGE ? true : false;
         const activeInterpreter = this.extensionChecker.isPythonExtensionInstalled
             ? await this.interpreterService.getActiveInterpreter(resource)
             : undefined;
@@ -545,16 +546,22 @@ export class KernelSelector implements IKernelSelectionUsage {
                 interpreter: activeInterpreter
             };
         } else if (kernelSpec) {
-            // Locate the interpreter that matches our kernelspec
-            const interpreter = this.extensionChecker.isPythonExtensionInstalled
-                ? await this.kernelService.findMatchingInterpreter(kernelSpec, cancelToken)
-                : undefined;
+            // Locate the interpreter that matches our kernelspec (but don't look for interpreter if kernelspec is Not Python).
+            const interpreter =
+                this.extensionChecker.isPythonExtensionInstalled && !isNonPythonKernelSPec
+                    ? await this.kernelService.findMatchingInterpreter(kernelSpec, cancelToken)
+                    : undefined;
 
-            if (interpreter) {
+            const connectionInfo: KernelSpecConnectionMetadata = {
+                kind: 'startUsingKernelSpec',
+                kernelSpec,
+                interpreter
+            };
+            // Install missing dependencies only if we're dealing with a Python kernel.
+            if (interpreter && isPythonKernelConnection(connectionInfo)) {
                 await this.installDependenciesIntoInterpreter(interpreter, ignoreDependencyCheck, cancelToken);
             }
-
-            return { kind: 'startUsingKernelSpec', kernelSpec, interpreter };
+            return connectionInfo;
         } else {
             // No kernel specs, list them all and pick the first one
             const kernelSpecs = await this.kernelFinder.listKernelSpecs(resource);
@@ -599,7 +606,7 @@ export class KernelSelector implements IKernelSelectionUsage {
 
     // When switching to an interpreter in raw kernel mode then just create a default kernelspec for that interpreter to use
     private async useInterpreterAndDefaultKernel(interpreter: PythonEnvironment): Promise<KernelConnectionMetadata> {
-        const kernelSpec = createDefaultKernelSpec(interpreter.displayName);
+        const kernelSpec = createDefaultKernelSpec(interpreter);
         return { kernelSpec, interpreter, kind: 'startUsingPythonInterpreter' };
     }
 

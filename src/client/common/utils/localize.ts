@@ -48,11 +48,11 @@ export namespace ExtensionChannels {
     export const yesDaily = localize('ExtensionChannels.yesDaily', 'Yes, daily');
     export const promptMessage = localize(
         'ExtensionChannels.promptMessage',
-        'We noticed you are using Visual Studio Code Insiders. Would you like to use the Insiders build of the Python extension?'
+        'We noticed you are using Visual Studio Code Insiders. Would you like to use the Insiders build of the Jupyter extension?'
     );
     export const reloadToUseInsidersMessage = localize(
         'ExtensionChannels.reloadToUseInsidersMessage',
-        'Please reload Visual Studio Code to use the insiders build of the Python extension.'
+        'Please reload Visual Studio Code to use the insiders build of the Jupyter extension.'
     );
     export const downloadCompletedOutputMessage = localize(
         'ExtensionChannels.downloadCompletedOutputMessage',
@@ -157,13 +157,6 @@ export namespace DataScienceRendererExtension {
         'Notebook Renderers extension download complete.'
     );
 }
-export namespace DataScienceNotebookSurveyBanner {
-    export const bannerMessage = localize(
-        'DataScienceNotebookSurveyBanner.bannerMessage',
-        'Can you please take 2 minutes to tell us how the Preview Notebook Editor is working for you?'
-    );
-}
-
 export namespace ExtensionSurveyBanner {
     export const bannerMessage = localize(
         'ExtensionSurveyBanner.bannerMessage',
@@ -178,6 +171,11 @@ export namespace DataScience {
     export const pythonExtensionRequired = localize(
         'DataScience.pythonExtensionRequired',
         'The Python extension is required to perform that task. Click Yes to open Python extension installation page.'
+    );
+
+    export const pythonExtensionRecommended = localize(
+        'DataScience.pythonExtensionRecommended',
+        'You have opened a Python notebook. Would you like to install the Python extension?'
     );
 
     export const pythonInstalledReloadPromptMessage = localize(
@@ -348,8 +346,8 @@ export namespace DataScience {
     );
     export const importingFormat = localize('DataScience.importingFormat', 'Importing {0}');
     export const startingJupyter = localize('DataScience.startingJupyter', 'Starting Jupyter server');
-    export const connectingIPyKernel = localize('DataScience.connectingToIPyKernel', 'Connecting to IPython kernel');
-    export const connectedToIPyKernel = localize('DataScience.connectedToIPyKernel', 'Connected.');
+    export const connectingToKernel = localize('DataScience.connectingToKernel', 'Connecting to kernel: {0}');
+    export const connectedToKernel = localize('DataScience.connectedToKernel', 'Connected.');
     export const connectingToJupyter = localize('DataScience.connectingToJupyter', 'Connecting to Jupyter server');
     export const exportingFormat = localize('DataScience.exportingFormat', 'Exporting {0}');
     export const runAllCellsLensCommandTitle = localize('jupyter.command.jupyter.runallcells.title', 'Run all cells');
@@ -380,7 +378,7 @@ export namespace DataScience {
         "Don't Ask Again"
     );
     export const restartKernelMessageNo = localize('DataScience.restartKernelMessageNo', 'Cancel');
-    export const restartingKernelStatus = localize('DataScience.restartingKernelStatus', 'Restarting IPython Kernel');
+    export const restartingKernelStatus = localize('DataScience.restartingKernelStatus', 'Restarting Jupyter Kernel');
     export const restartingKernelFailed = localize(
         'DataScience.restartingKernelFailed',
         'Kernel restart failed. Jupyter server is hung. Please reload VS code.'
@@ -399,7 +397,7 @@ export namespace DataScience {
     export const collapseSingle = localize('DataScience.collapseSingle', 'Collapse');
     export const expandSingle = localize('DataScience.expandSingle', 'Expand');
     export const exportKey = localize('DataScience.export', 'Export as Jupyter notebook');
-    export const restartServer = localize('DataScience.restartServer', 'Restart IPython Kernel');
+    export const restartServer = localize('DataScience.restartServer', 'Restart Jupyter Kernel');
     export const undo = localize('DataScience.undo', 'Undo');
     export const redo = localize('DataScience.redo', 'Redo');
     export const save = localize('DataScience.save', 'Save file');
@@ -424,6 +422,10 @@ export namespace DataScience {
     export const jupyterSelectURIQuickPickPlaceholder = localize(
         'DataScience.jupyterSelectURIQuickPickPlaceholder',
         'Choose an option'
+    );
+    export const jupyterSelectURIQuickPickCurrent = localize(
+        'DataScience.jupyterSelectURIQuickPickCurrent',
+        'Current: {0}'
     );
     export const jupyterSelectURILocalLabel = localize('DataScience.jupyterSelectURILocalLabel', 'Default');
     export const jupyterSelectURILocalDetail = localize(
@@ -492,15 +494,15 @@ export namespace DataScience {
     export const notebookVersionFormat = localize('DataScience.notebookVersionFormat', 'Jupyter Notebook Version: {0}');
     export const jupyterKernelSpecNotFound = localize(
         'DataScience.jupyterKernelSpecNotFound',
-        'Cannot create a IPython kernel spec and none are available for use'
+        'Cannot create a Jupyter kernel spec and none are available for use'
     );
     export const jupyterKernelSpecModuleNotFound = localize(
         'DataScience.jupyterKernelSpecModuleNotFound',
         "'Kernelspec' module not installed in the selected interpreter ({0}).\n Please re-install or update 'jupyter'."
     );
-    export const interruptKernel = localize('DataScience.interruptKernel', 'Interrupt IPython Kernel');
+    export const interruptKernel = localize('DataScience.interruptKernel', 'Interrupt Jupyter Kernel');
     export const clearAllOutput = localize('DataScience.clearAllOutput', 'Clear All Output');
-    export const interruptKernelStatus = localize('DataScience.interruptKernelStatus', 'Interrupting IPython Kernel');
+    export const interruptKernelStatus = localize('DataScience.interruptKernelStatus', 'Interrupting Jupyter Kernel');
     export const exportCancel = localize('DataScience.exportCancel', 'Cancel');
     export const exportPythonQuickPickLabel = localize('DataScience.exportPythonQuickPickLabel', 'Python Script');
     export const exportHTMLQuickPickLabel = localize('DataScience.exportHTMLQuickPickLabel', 'HTML');
@@ -760,15 +762,6 @@ export namespace DataScience {
         'DataScience.findJupyterCommandProgressSearchCurrentPath',
         'Searching current path.'
     );
-    export const gatherError = localize('DataScience.gatherError', 'Gather internal error');
-    export const gatheredScriptDescription = localize(
-        'DataScience.gatheredScriptDescription',
-        '# This file was generated by the Gather Extension.\n# It requires version 2020.7.94776 (or newer) of the Jupyter Extension.\n#\n#     The intent is that it contains only the code required to produce\n#     the same results as the cell originally selected for gathering.\n#     Please note that the Python analysis is quite conservative, so if\n#     it is unsure whether a line of code is necessary for execution, it\n#     will err on the side of including it.\n#\n# Please let us know if you are satisfied with what was gathered here:\n# https://aka.ms/gatherfeedback\n\n'
-    );
-    export const gatheredNotebookDescriptionInMarkdown = localize(
-        'DataScience.gatheredNotebookDescriptionInMarkdown',
-        '# Gathered Notebook\nGathered from ```{0}```\n\n|   |   |\n|---|---|\n|&nbsp;&nbsp;&nbsp|This notebook was generated by the Gather Extension. It requires version 2020.7.94776 (or newer) of the Jupyter Extension, please update [here](https://command:jupyter.latestExtension). The intent is that it contains only the code and cells required to produce the same results as the cell originally selected for gathering. Please note that the Python analysis is quite conservative, so if it is unsure whether a line of code is necessary for execution, it will err on the side of including it.|\n\n**Are you satisfied with the code that was gathered?**\n\n[Yes](https://command:jupyter.gatherquality?yes) [No](https://command:jupyter.gatherquality?no)'
-    );
     export const savePngTitle = localize('DataScience.savePngTitle', 'Save Image');
     export const fallbackToUseActiveInterpreterAsKernel = localize(
         'DataScience.fallbackToUseActiveInterpeterAsKernel',
@@ -954,19 +947,9 @@ export namespace DataScience {
         'DataScience.illegalEditorConfig',
         'CustomEditor and NativeNotebook experiments cannot be turned on together'
     );
-}
-
-export namespace DebugConfigStrings {
-    export const selectConfiguration = {
-        title: localize('debug.selectConfigurationTitle'),
-        placeholder: localize('debug.selectConfigurationPlaceholder')
-    };
-}
-
-export namespace OutdatedDebugger {
-    export const outdatedDebuggerMessage = localize(
-        'OutdatedDebugger.updateDebuggerMessage',
-        'We noticed you are attaching to ptvsd (Python debugger), which was deprecated on May 1st, 2020. Please switch to [debugpy](https://aka.ms/migrateToDebugpy).'
+    export const invalidCustomEditor = localize(
+        'DataScience.invalidCustomEditor',
+        'Using the Jupyter notebook editor requires the stable version of VS code and the CustomEditor experiment to be enabled.'
     );
 }
 

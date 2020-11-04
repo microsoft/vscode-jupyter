@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import * as vscode from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { UseCustomEditorApi, UseVSCodeNotebookEditorApi } from '../common/constants';
 import { FileSystemPathUtils } from '../common/platform/fs-paths';
@@ -35,8 +36,8 @@ import { Decorator } from './editor-integration/decorator';
 import { HoverProvider } from './editor-integration/hoverProvider';
 import { DataScienceErrorHandler } from './errorHandler/errorHandler';
 import { ExportBase } from './export/exportBase';
-import { ExportDependencyChecker } from './export/exportDependencyChecker';
 import { ExportFileOpener } from './export/exportFileOpener';
+import { ExportInterpreterFinder } from './export/exportInterpreterFinder';
 import { ExportManager } from './export/exportManager';
 import { ExportManagerFilePicker } from './export/exportManagerFilePicker';
 import { ExportToHTML } from './export/exportToHTML';
@@ -44,8 +45,6 @@ import { ExportToPDF } from './export/exportToPDF';
 import { ExportToPython } from './export/exportToPython';
 import { ExportUtil } from './export/exportUtil';
 import { ExportFormat, IExport, IExportManager, IExportManagerFilePicker } from './export/types';
-import { GatherListener } from './gather/gatherListener';
-import { GatherLogger } from './gather/gatherLogger';
 import { DebugListener } from './interactive-common/debugListener';
 import { IntellisenseProvider } from './interactive-common/intellisense/intellisenseProvider';
 import { LinkProvider } from './interactive-common/linkProvider';
@@ -81,6 +80,8 @@ import { JupyterInterpreterSelector } from './jupyter/interpreter/jupyterInterpr
 import { JupyterInterpreterService } from './jupyter/interpreter/jupyterInterpreterService';
 import { JupyterInterpreterStateStore, MigrateJupyterInterpreterStateService } from './jupyter/interpreter/jupyterInterpreterStateStore';
 import { JupyterInterpreterSubCommandExecutionService } from './jupyter/interpreter/jupyterInterpreterSubCommandExecutionService';
+import { NbConvertExportToPythonService } from './jupyter/interpreter/nbconvertExportToPythonService';
+import { NbConvertInterpreterDependencyChecker } from './jupyter/interpreter/nbconvertInterpreterDependencyChecker';
 import { CellOutputMimeTypeTracker } from './jupyter/jupyterCellOutputMimeTypeTracker';
 import { JupyterDebugger } from './jupyter/jupyterDebugger';
 import { JupyterExecutionFactory } from './jupyter/jupyterExecutionFactory';
@@ -101,6 +102,7 @@ import { NotebookStarter } from './jupyter/notebookStarter';
 import { OldJupyterVariables } from './jupyter/oldJupyterVariables';
 import { ServerPreload } from './jupyter/serverPreload';
 import { JupyterServerSelector } from './jupyter/serverSelector';
+import { JupyterServerUriStorage } from './jupyter/serverUriStorage';
 import { JupyterDebugService } from './jupyterDebugService';
 import { JupyterUriProviderRegistration } from './jupyterUriProviderRegistration';
 import { KernelDaemonPool } from './kernel-launcher/kernelDaemonPool';
@@ -140,7 +142,6 @@ import {
     IDataScienceErrorHandler,
     IDebugLocationTracker,
     IDigestStorage,
-    IGatherLogger,
     IInteractiveWindow,
     IInteractiveWindowListener,
     IInteractiveWindowProvider,
@@ -152,6 +153,7 @@ import {
     IJupyterNotebookProvider,
     IJupyterPasswordConnect,
     IJupyterServerProvider,
+    IJupyterServerUriStorage,
     IJupyterSessionManagerFactory,
     IJupyterSubCommandExecutionService,
     IJupyterUriProviderRegistration,
@@ -159,6 +161,8 @@ import {
     IJupyterVariableDataProviderFactory,
     IJupyterVariables,
     IKernelDependencyService,
+    INbConvertExportToPythonService,
+    INbConvertInterpreterDependencyChecker,
     INotebookCreationTracker,
     INotebookEditor,
     INotebookEditorProvider,
@@ -175,14 +179,17 @@ import {
     IRawNotebookSupportedService,
     IStatusProvider,
     IThemeFinder,
-    ITrustService
+    ITrustService,
+    IWebviewExtensibility
 } from './types';
+import { WebviewExtensibility } from './webviewExtensibility';
 
 // README: Did you make sure "dataScienceIocContainer.ts" has also been updated appropriately?
 
 // tslint:disable-next-line: max-func-body-length
-export function registerTypes(serviceManager: IServiceManager, useVSCodeNotebookAPI: boolean, inCustomEditorApiExperiment: boolean) {
-    const usingCustomEditor = inCustomEditorApiExperiment;
+export function registerTypes(serviceManager: IServiceManager, inNotebookApiExperiment: boolean, inCustomEditorApiExperiment: boolean) {
+    const usingCustomEditor = inCustomEditorApiExperiment && !vscode.env.appName.includes('Insider'); // Don't use app manager in case it's not available yet.
+    const useVSCodeNotebookAPI = inNotebookApiExperiment && !usingCustomEditor;
     serviceManager.addSingletonInstance<boolean>(UseCustomEditorApi, usingCustomEditor);
     serviceManager.addSingletonInstance<boolean>(UseVSCodeNotebookEditorApi, useVSCodeNotebookAPI);
     serviceManager.addSingletonInstance<number>(DataScienceStartupTime, Date.now());
@@ -210,7 +217,6 @@ export function registerTypes(serviceManager: IServiceManager, useVSCodeNotebook
     serviceManager.add<IDataViewer>(IDataViewer, DataViewer);
     serviceManager.add<IInteractiveWindow>(IInteractiveWindow, InteractiveWindow);
     serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, DebugListener);
-    serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, GatherListener);
     serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, IntellisenseProvider);
     serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, LinkProvider);
     serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, ShowPlotListener);
@@ -269,6 +275,8 @@ export function registerTypes(serviceManager: IServiceManager, useVSCodeNotebook
     serviceManager.addSingleton<JupyterCommandLineSelector>(JupyterCommandLineSelector, JupyterCommandLineSelector);
     serviceManager.addSingleton<JupyterCommandLineSelectorCommand>(JupyterCommandLineSelectorCommand, JupyterCommandLineSelectorCommand);
     serviceManager.addSingleton<JupyterInterpreterDependencyService>(JupyterInterpreterDependencyService, JupyterInterpreterDependencyService);
+    serviceManager.addSingleton<INbConvertInterpreterDependencyChecker>(INbConvertInterpreterDependencyChecker, NbConvertInterpreterDependencyChecker);
+    serviceManager.addSingleton<INbConvertExportToPythonService>(INbConvertExportToPythonService, NbConvertExportToPythonService);
     serviceManager.addSingleton<JupyterInterpreterOldCacheStateStore>(JupyterInterpreterOldCacheStateStore, JupyterInterpreterOldCacheStateStore);
     serviceManager.addSingleton<JupyterInterpreterSelector>(JupyterInterpreterSelector, JupyterInterpreterSelector);
     serviceManager.addSingleton<JupyterInterpreterService>(JupyterInterpreterService, JupyterInterpreterService);
@@ -297,7 +305,7 @@ export function registerTypes(serviceManager: IServiceManager, useVSCodeNotebook
     serviceManager.add<IJupyterVariableDataProvider>(IJupyterVariableDataProvider, JupyterVariableDataProvider);
     serviceManager.addSingleton<IJupyterVariableDataProviderFactory>(IJupyterVariableDataProviderFactory, JupyterVariableDataProviderFactory);
     serviceManager.addSingleton<IExportManager>(IExportManager, ExportManager);
-    serviceManager.addSingleton<ExportDependencyChecker>(ExportDependencyChecker, ExportDependencyChecker);
+    serviceManager.addSingleton<ExportInterpreterFinder>(ExportInterpreterFinder, ExportInterpreterFinder);
     serviceManager.addSingleton<ExportFileOpener>(ExportFileOpener, ExportFileOpener);
     serviceManager.addSingleton<IExport>(IExport, ExportToPDF, ExportFormat.pdf);
     serviceManager.addSingleton<IExport>(IExport, ExportToHTML, ExportFormat.html);
@@ -310,12 +318,9 @@ export function registerTypes(serviceManager: IServiceManager, useVSCodeNotebook
     serviceManager.addSingleton<IDigestStorage>(IDigestStorage, DigestStorage);
     serviceManager.addSingleton<ITrustService>(ITrustService, TrustService);
     serviceManager.addSingleton<IFileSystemPathUtils>(IFileSystemPathUtils, FileSystemPathUtils);
-    serviceManager.addSingleton<INotebookExtensibility>(INotebookExtensibility, NotebookExtensibility);
+    serviceManager.addSingleton<IJupyterServerUriStorage>(IJupyterServerUriStorage, JupyterServerUriStorage);
+    serviceManager.addSingleton<NotebookExtensibility>(NotebookExtensibility, NotebookExtensibility, undefined, [INotebookExtensibility, INotebookExecutionLogger]);
+    serviceManager.addSingleton<IWebviewExtensibility>(IWebviewExtensibility, WebviewExtensibility);
 
-    registerGatherTypes(serviceManager);
     registerNotebookTypes(serviceManager);
-}
-
-export function registerGatherTypes(serviceManager: IServiceManager) {
-    serviceManager.add<IGatherLogger>(IGatherLogger, GatherLogger, undefined, [INotebookExecutionLogger]);
 }

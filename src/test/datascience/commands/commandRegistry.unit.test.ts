@@ -7,14 +7,17 @@ import { DebugService } from '../../../client/common/application/debugService';
 import { DocumentManager } from '../../../client/common/application/documentManager';
 import { ICommandManager } from '../../../client/common/application/types';
 import { ConfigurationService } from '../../../client/common/configuration/service';
+import { FileSystem } from '../../../client/common/platform/fileSystem';
 import { JupyterCommandLineSelectorCommand } from '../../../client/datascience/commands/commandLineSelector';
 import { CommandRegistry } from '../../../client/datascience/commands/commandRegistry';
 import { ExportCommands } from '../../../client/datascience/commands/exportCommands';
 import { NotebookCommands } from '../../../client/datascience/commands/notebookCommands';
 import { JupyterServerSelectorCommand } from '../../../client/datascience/commands/serverSelector';
 import { Commands } from '../../../client/datascience/constants';
+import { DataViewerFactory } from '../../../client/datascience/data-viewing/dataViewerFactory';
+import { JupyterVariableDataProviderFactory } from '../../../client/datascience/data-viewing/jupyterVariableDataProviderFactory';
 import { DataScienceCodeLensProvider } from '../../../client/datascience/editor-integration/codelensprovider';
-import { FileSystem } from '../../../client/datascience/fileSystem';
+import { JupyterServerUriStorage } from '../../../client/datascience/jupyter/serverUriStorage';
 import { NativeEditorProvider } from '../../../client/datascience/notebookStorage/nativeEditorProvider';
 import { MockOutputChannel } from '../../mockClasses';
 
@@ -38,7 +41,10 @@ suite('DataScience - Commands', () => {
         const configService = mock(ConfigurationService);
         const appShell = mock(ApplicationShell);
         const exportCommand = mock(ExportCommands);
+        const jupyterVariableDataProviderFactory = mock(JupyterVariableDataProviderFactory);
+        const dataViewerFactory = mock(DataViewerFactory);
         const fileSystem = mock(FileSystem);
+        const serverUriStorage = mock(JupyterServerUriStorage);
 
         commandRegistry = new CommandRegistry(
             documentManager,
@@ -54,7 +60,10 @@ suite('DataScience - Commands', () => {
             instance(appShell),
             new MockOutputChannel('Jupyter'),
             instance(exportCommand),
-            instance(fileSystem)
+            instance(fileSystem),
+            instance(jupyterVariableDataProviderFactory),
+            instance(dataViewerFactory),
+            instance(serverUriStorage)
         );
     });
 

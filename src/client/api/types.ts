@@ -25,7 +25,21 @@ export interface IPythonApiProvider {
 export const IPythonExtensionChecker = Symbol('IPythonExtensionChecker');
 export interface IPythonExtensionChecker {
     readonly isPythonExtensionInstalled: boolean;
-    installPythonExtension(): Promise<void>;
+    showPythonExtensionInstallRequiredPrompt(): Promise<void>;
+    showPythonExtensionInstallRecommendedPrompt(): Promise<void>;
+}
+
+/**
+ * This allows Python exntension to update Product enum without breaking Jupyter.
+ * I.e. we have a strict contract, else using numbers (in enums) is bound to break across products.
+ */
+export enum JupyterProductToInstall {
+    jupyter = 'jupyter',
+    ipykernel = 'ipykernel',
+    notebook = 'notebook',
+    kernelspec = 'kernelspec',
+    nbconvert = 'nbconvert',
+    pandas = 'pandas'
 }
 
 export type PythonApi = {
@@ -62,7 +76,11 @@ export type PythonApi = {
     /**
      * IInstaller
      */
-    install(product: Product, resource?: InterpreterUri, cancel?: CancellationToken): Promise<InstallerResponse>;
+    install(
+        product: JupyterProductToInstall,
+        resource?: InterpreterUri,
+        cancel?: CancellationToken
+    ): Promise<InstallerResponse>;
     /**
      * Retrieve interpreter path selected for Jupyter server from Python memento storage
      */

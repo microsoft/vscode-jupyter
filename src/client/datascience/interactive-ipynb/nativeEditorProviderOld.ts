@@ -17,6 +17,7 @@ import {
     IWorkspaceService
 } from '../../common/application/types';
 import { JUPYTER_LANGUAGE, UseCustomEditorApi } from '../../common/constants';
+import { IFileSystem } from '../../common/platform/types';
 
 import {
     GLOBAL_MEMENTO,
@@ -35,20 +36,20 @@ import { IDataViewerFactory } from '../data-viewing/types';
 import { NotebookModelChange } from '../interactive-common/interactiveWindowTypes';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
 import { NativeEditorProvider } from '../notebookStorage/nativeEditorProvider';
+import { NativeEditorNotebookModel } from '../notebookStorage/notebookModel';
 import { INotebookStorageProvider } from '../notebookStorage/notebookStorageProvider';
 import { VSCodeNotebookModel } from '../notebookStorage/vscNotebookModel';
 import {
     ICodeCssGenerator,
     IDataScienceErrorHandler,
-    IFileSystem,
     IInteractiveWindowListener,
     IJupyterDebugger,
+    IJupyterServerUriStorage,
     IJupyterVariableDataProviderFactory,
     IJupyterVariables,
     INotebookEditor,
     INotebookEditorProvider,
     INotebookExporter,
-    INotebookExtensibility,
     INotebookImporter,
     INotebookModel,
     INotebookProvider,
@@ -194,7 +195,7 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
         }
     }
 
-    protected createNotebookEditor(model: INotebookModel, panel?: WebviewPanel): NativeEditor {
+    protected createNotebookEditor(model: NativeEditorNotebookModel, panel?: WebviewPanel): NativeEditor {
         const editor = new NativeEditorOldWebView(
             this.serviceContainer.getAll<IInteractiveWindowListener>(IInteractiveWindowListener),
             this.serviceContainer.get<ILiveShareApi>(ILiveShareApi),
@@ -229,8 +230,8 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
             model,
             panel,
             this.serviceContainer.get<KernelSelector>(KernelSelector),
-            this.serviceContainer.get<INotebookExtensibility>(INotebookExtensibility),
-            this.serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker)
+            this.serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker),
+            this.serviceContainer.get<IJupyterServerUriStorage>(IJupyterServerUriStorage)
         );
         this.activeEditors.set(model.file.fsPath, editor);
         this.disposables.push(editor.closed(this.onClosedEditor.bind(this)));

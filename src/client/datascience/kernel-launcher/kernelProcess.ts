@@ -3,11 +3,13 @@
 'use strict';
 
 import { ChildProcess } from 'child_process';
+import * as fs from 'fs-extra';
 import * as tcpPortUsed from 'tcp-port-used';
 import * as tmp from 'tmp';
 import { Event, EventEmitter } from 'vscode';
 import { IPythonExtensionChecker } from '../../api/types';
 import { traceError, traceInfo, traceWarning } from '../../common/logger';
+import { IFileSystem } from '../../common/platform/types';
 import { IProcessServiceFactory, ObservableExecutionResult } from '../../common/process/types';
 import { Resource } from '../../common/types';
 import { noop, swallowExceptions } from '../../common/utils/misc';
@@ -19,7 +21,7 @@ import {
     isPythonKernelConnection
 } from '../jupyter/kernels/helpers';
 import { KernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../jupyter/kernels/types';
-import { IFileSystem, IJupyterKernelSpec } from '../types';
+import { IJupyterKernelSpec } from '../types';
 import { KernelDaemonPool } from './kernelDaemonPool';
 import { PythonKernelLauncherDaemon } from './kernelLauncherDaemon';
 import { IKernelConnection, IKernelProcess, IPythonKernelDaemon, PythonKernelDiedError } from './types';
@@ -53,7 +55,7 @@ export class KernelProcess implements IKernelProcess {
         private readonly daemonPool: KernelDaemonPool,
         private readonly _connection: IKernelConnection,
         kernelConnectionMetadata: KernelSpecConnectionMetadata | PythonKernelConnectionMetadata,
-        private readonly fs: IFileSystem,
+        private readonly fileSystem: IFileSystem,
         private readonly resource: Resource,
         private readonly extensionChecker: IPythonExtensionChecker
     ) {
@@ -127,7 +129,7 @@ export class KernelProcess implements IKernelProcess {
             this.exitEvent.fire({});
         });
         swallowExceptions(() => this.pythonKernelLauncher?.dispose());
-        swallowExceptions(async () => (this.connectionFile ? this.fs.deleteLocalFile(this.connectionFile) : noop()));
+        swallowExceptions(async () => (this.connectionFile ? fs.remove(this.connectionFile) : noop()));
     }
 
     // Make sure that the heartbeat channel is open for connections
@@ -152,10 +154,7 @@ export class KernelProcess implements IKernelProcess {
         let kernelSpec = this._kernelConnectionMetadata.kernelSpec;
         // If there is no kernelspec & when launching a Python process, generate a dummy `kernelSpec`
         if (!kernelSpec && this._kernelConnectionMetadata.kind === 'startUsingPythonInterpreter') {
-            kernelSpec = createDefaultKernelSpec(
-                this._kernelConnectionMetadata.interpreter.displayName ||
-                    this._kernelConnectionMetadata.interpreter.path
-            );
+            kernelSpec = createDefaultKernelSpec(this._kernelConnectionMetadata.interpreter);
         }
         // We always expect a kernel spec.
         if (!kernelSpec) {
@@ -208,10 +207,10 @@ export class KernelProcess implements IKernelProcess {
             // Note: We have to dispose the temp file and recreate it because otherwise the file
             // system will hold onto the file with an open handle. THis doesn't work so well when
             // a different process tries to open it.
-            const tempFile = await this.fs.createTemporaryLocalFile('.json');
+            const tempFile = await this.fileSystem.createTemporaryLocalFile('.json');
             this.connectionFile = tempFile.filePath;
             await tempFile.dispose();
-            await this.fs.writeLocalFile(this.connectionFile, JSON.stringify(this._connection));
+            await fs.writeFile(this.connectionFile, JSON.stringify(this._connection));
 
             // Then replace the connection file argument with this file
             this.launchKernelSpec.argv[indexOfConnectionFile] = this.connectionFile;

@@ -3,7 +3,7 @@
 
 'use strict';
 
-import type { Session } from '@jupyterlab/services';
+import type { KernelMessage, Session } from '@jupyterlab/services';
 import type { Observable } from 'rxjs/Observable';
 import type { CancellationToken, Event, QuickPickItem, Uri } from 'vscode';
 import { NotebookCell, NotebookDocument } from '../../../../../types/vscode-proposed';
@@ -92,7 +92,9 @@ export function getKernelConnectionId(kernelConnection: KernelConnectionMetadata
         case 'startUsingDefaultKernel':
             return `${kernelConnection.kind}#${kernelConnection}`;
         case 'startUsingKernelSpec':
-            return `${kernelConnection.kind}#${kernelConnection.kernelSpec.name}.${kernelConnection.kernelSpec.display_name}`;
+            return `${kernelConnection.kind}#${kernelConnection.kernelSpec.name}.${
+                kernelConnection.kernelSpec.display_name
+            }${(kernelConnection.kernelSpec.argv || []).join(' ')}`;
         case 'startUsingPythonInterpreter':
             return `${kernelConnection.kind}#${kernelConnection.interpreter.path}`;
         default:
@@ -130,6 +132,11 @@ export interface IKernel extends IAsyncDisposable {
     readonly onRestarted: Event<void>;
     readonly status: ServerStatus;
     readonly disposed: boolean;
+    /**
+     * Kernel information, used to save in ipynb in the metadata.
+     * Crucial for non-python notebooks, else we save the incorrect information.
+     */
+    readonly info?: KernelMessage.IInfoReplyMsg['content'];
     readonly kernelSocket: Observable<KernelSocketInformation | undefined>;
     start(): Promise<void>;
     interrupt(): Promise<InterruptResult>;

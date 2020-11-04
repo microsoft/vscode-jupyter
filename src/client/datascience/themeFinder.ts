@@ -7,10 +7,11 @@ import * as path from 'path';
 import { LanguageConfiguration } from 'vscode';
 import { EXTENSION_ROOT_DIR, PYTHON_LANGUAGE } from '../common/constants';
 import { traceError } from '../common/logger';
+import { IFileSystem } from '../common/platform/types';
 
 import { IExtensions } from '../common/types';
 import { getLanguageConfiguration } from '../language/languageConfiguration';
-import { IFileSystem, IThemeFinder } from './types';
+import { IThemeFinder } from './types';
 
 // tslint:disable:no-any
 
@@ -163,7 +164,7 @@ export class ThemeFinder implements IThemeFinder {
 
     private async findMatchingLanguages(language: string, rootPath: string): Promise<string | undefined> {
         // Environment variable to mimic missing json problem
-        if (process.env.VSC_PYTHON_MIMIC_REMOTE) {
+        if (process.env.VSC_JUPYTER_MIMIC_REMOTE) {
             return undefined;
         }
 
@@ -184,7 +185,7 @@ export class ThemeFinder implements IThemeFinder {
 
     private async findMatchingTheme(themeName: string): Promise<IThemeData | undefined> {
         // Environment variable to mimic missing json problem
-        if (process.env.VSC_PYTHON_MIMIC_REMOTE) {
+        if (process.env.VSC_JUPYTER_MIMIC_REMOTE) {
             return undefined;
         }
 

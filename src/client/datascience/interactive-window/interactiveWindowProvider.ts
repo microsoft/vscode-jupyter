@@ -17,6 +17,7 @@ import {
 } from '../../common/application/types';
 import { UseCustomEditorApi } from '../../common/constants';
 import { traceInfo } from '../../common/logger';
+import { IFileSystem } from '../../common/platform/types';
 
 import {
     GLOBAL_MEMENTO,
@@ -42,12 +43,12 @@ import { PostOffice } from '../liveshare/postOffice';
 import {
     ICodeCssGenerator,
     IDataScienceErrorHandler,
-    IFileSystem,
     IInteractiveWindow,
     IInteractiveWindowListener,
     IInteractiveWindowLoadable,
     IInteractiveWindowProvider,
     IJupyterDebugger,
+    IJupyterServerUriStorage,
     IJupyterVariableDataProviderFactory,
     IJupyterVariables,
     INotebookExporter,
@@ -198,7 +199,8 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
             mode,
             title,
             this.serviceContainer.get<KernelSelector>(KernelSelector),
-            this.serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker)
+            this.serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker),
+            this.serviceContainer.get<IJupyterServerUriStorage>(IJupyterServerUriStorage)
         );
         this._windows.push(result);
 

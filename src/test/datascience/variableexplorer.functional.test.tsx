@@ -6,10 +6,10 @@ import * as React from 'react';
 import * as AdazzleReactDataGrid from 'react-data-grid';
 import { Disposable } from 'vscode';
 import { Experiments } from '../../client/common/experiments/groups';
+import { sleep } from '../../client/common/utils/async';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { IJupyterVariable } from '../../client/datascience/types';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
-import { takeSnapshot, writeDiffSnapshot } from './helpers';
 import { addCode, getOrCreateInteractiveWindow } from './interactiveWindowTestHelpers';
 import { addCell, createNewEditor } from './nativeEditorTestHelpers';
 import { openVariableExplorer, runDoubleTest, runInteractiveTest, waitForVariablesUpdated } from './testHelpers';
@@ -24,12 +24,10 @@ const rangeInclusive = require('range-inclusive');
         const disposables: Disposable[] = [];
         let ioc: DataScienceIocContainer;
         let createdNotebook = false;
-        let snapshot: any;
 
         suiteSetup(function () {
-            snapshot = takeSnapshot();
             // These test require python, so only run with a non-mocked jupyter
-            const isRollingBuild = process.env ? process.env.VSCODE_PYTHON_ROLLING !== undefined : false;
+            const isRollingBuild = process.env ? process.env.VSC_FORCE_REAL_JUPYTER !== undefined : false;
             if (!isRollingBuild) {
                 // tslint:disable-next-line:no-console
                 console.log('Skipping Variable Explorer tests. Requires python environment');
@@ -37,7 +35,6 @@ const rangeInclusive = require('range-inclusive');
                 this.skip();
             }
         });
-
         setup(async () => {
             ioc = new DataScienceIocContainer();
             ioc.setExperimentState(Experiments.RunByLine, runByLine);
@@ -60,12 +57,6 @@ const rangeInclusive = require('range-inclusive');
             await ioc.dispose();
         });
 
-        // Uncomment this to debug hangs on exit
-        suiteTeardown(() => {
-            //      asyncDump();
-            writeDiffSnapshot(snapshot, `Variable Explorer ${runByLine}`);
-        });
-
         async function addCodeImpartial(
             wrapper: ReactWrapper<any, Readonly<{}>, React.Component>,
             code: string,
@@ -73,6 +64,8 @@ const rangeInclusive = require('range-inclusive');
             waitForVariablesCount: number = 1,
             expectError: boolean = false
         ): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
+            wrapper.update();
+            await sleep(100); // Give wrapper time to update.
             const nodes = wrapper.find('InteractivePanel');
             if (nodes.length > 0) {
                 const variablesUpdated = waitForVariables

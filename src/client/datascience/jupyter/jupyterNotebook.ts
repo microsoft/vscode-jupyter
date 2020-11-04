@@ -26,7 +26,6 @@ import { CodeSnippets, Identifiers, Telemetry } from '../constants';
 import {
     CellState,
     ICell,
-    IFileSystem,
     IJupyterSession,
     INotebook,
     INotebookCompletion,
@@ -41,9 +40,15 @@ import { KernelConnectionMetadata } from './kernels/types';
 // tslint:disable-next-line: no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
 import { concatMultilineString, formatStreamText, splitMultilineString } from '../../../datascience-ui/common';
+import { PYTHON_LANGUAGE } from '../../common/constants';
+import { IFileSystem } from '../../common/platform/types';
 import { RefBool } from '../../common/refBool';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
-import { getInterpreterFromKernelConnectionMetadata, isPythonKernelConnection } from './kernels/helpers';
+import {
+    getInterpreterFromKernelConnectionMetadata,
+    getKernelConnectionLanguage,
+    isPythonKernelConnection
+} from './kernels/helpers';
 
 class CellSubscriber {
     public get startTime(): number {
@@ -209,6 +214,8 @@ export class JupyterNotebookBase implements INotebook {
 
         // Make a copy of the launch info so we can update it in this class
         this._executionInfo = cloneDeep(executionInfo);
+
+        this.logKernelStarted().ignoreErrors();
     }
 
     public get connection() {
@@ -241,7 +248,9 @@ export class JupyterNotebookBase implements INotebook {
             }
         }
     }
-
+    public async requestKernelInfo(): Promise<KernelMessage.IInfoReplyMsg> {
+        return this.session.requestKernelInfo();
+    }
     public get onSessionStatusChanged(): Event<ServerStatus> {
         if (!this.onStatusChangedEvent) {
             this.onStatusChangedEvent = new EventEmitter<ServerStatus>();
@@ -268,6 +277,7 @@ export class JupyterNotebookBase implements INotebook {
     }
 
     // Set up our initial plotting and imports
+    // tslint:disable-next-line: cyclomatic-complexity
     public async initialize(cancelToken?: CancellationToken): Promise<void> {
         if (this.ranInitialSetup) {
             return;
@@ -275,20 +285,43 @@ export class JupyterNotebookBase implements INotebook {
         this.ranInitialSetup = true;
         this._workingDirectory = undefined;
 
+        traceInfo(`Initial setup for ${this.identity.toString()} starting ...`);
+
         try {
             // When we start our notebook initial, change to our workspace or user specified root directory
             await this.updateWorkingDirectoryAndPath();
+            let isDefinitelyNotAPythonKernel = false;
+            if (
+                this._executionInfo.kernelConnectionMetadata?.kind === 'startUsingKernelSpec' &&
+                this._executionInfo.kernelConnectionMetadata.kernelSpec.language &&
+                this._executionInfo.kernelConnectionMetadata.kernelSpec.language.toLowerCase() !==
+                    PYTHON_LANGUAGE.toLocaleLowerCase()
+            ) {
+                isDefinitelyNotAPythonKernel = true;
+            }
+            if (
+                this._executionInfo.kernelConnectionMetadata?.kind === 'connectToLiveKernel' &&
+                this._executionInfo.kernelConnectionMetadata.kernelModel.language &&
+                this._executionInfo.kernelConnectionMetadata.kernelModel.language.toLowerCase() !==
+                    PYTHON_LANGUAGE.toLocaleLowerCase()
+            ) {
+                isDefinitelyNotAPythonKernel = true;
+            }
 
             const settings = this.configService.getSettings(this.resource);
             if (settings && settings.themeMatplotlibPlots) {
                 // We're theming matplotlibs, so we have to setup our default state.
-                await this.initializeMatplotlib(cancelToken);
+                if (!isDefinitelyNotAPythonKernel) {
+                    await this.initializeMatplotlib(cancelToken);
+                }
             } else {
                 this.initializedMatplotlib = false;
                 const configInit =
                     !settings || settings.enablePlotViewer ? CodeSnippets.ConfigSvg : CodeSnippets.ConfigPng;
                 traceInfo(`Initialize config for plots for ${this.identity.toString()}`);
-                await this.executeSilently(configInit, cancelToken);
+                if (!isDefinitelyNotAPythonKernel) {
+                    await this.executeSilently(configInit, cancelToken);
+                }
             }
 
             // Run any startup commands that we specified. Support the old form too
@@ -469,7 +502,7 @@ export class JupyterNotebookBase implements INotebook {
             traceInfo('restartKernel - initialSetup completed');
 
             // Tell our loggers
-            this.loggers.forEach((l) => l.onKernelRestarted());
+            this.loggers.forEach((l) => l.onKernelRestarted(this.getNotebookId()));
 
             this.kernelRestarted.fire();
             return;
@@ -718,6 +751,10 @@ export class JupyterNotebookBase implements INotebook {
         } else {
             throw new Error(localize.DataScience.sessionDisposed());
         }
+    }
+
+    private async logKernelStarted() {
+        this.loggers.forEach((l) => l.onKernelStarted(this.getNotebookId()));
     }
 
     private async initializeMatplotlib(cancelToken?: CancellationToken): Promise<void> {
@@ -1190,7 +1227,10 @@ export class JupyterNotebookBase implements INotebook {
     }
 
     private async logPostCode(cell: ICell, silent: boolean): Promise<void> {
-        await Promise.all(this.loggers.map((l) => l.postExecute(cloneDeep(cell), silent)));
+        const language = getKernelConnectionLanguage(this.getKernelConnection()) || PYTHON_LANGUAGE;
+        await Promise.all(
+            this.loggers.map((l) => l.postExecute(cloneDeep(cell), silent, language, this.getNotebookId()))
+        );
     }
 
     private addToCellData = (
@@ -1416,5 +1456,9 @@ export class JupyterNotebookBase implements INotebook {
         }
 
         return outputString.substr(outputString.length - outputLimit);
+    }
+
+    private getNotebookId(): Uri {
+        return this.identity;
     }
 }

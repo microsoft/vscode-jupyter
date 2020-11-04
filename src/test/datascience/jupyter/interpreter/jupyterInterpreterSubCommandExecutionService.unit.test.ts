@@ -8,10 +8,11 @@ import * as chaiPromise from 'chai-as-promised';
 import * as path from 'path';
 import { Subject } from 'rxjs/Subject';
 import { anything, capture, deepEqual, instance, mock, verify, when } from 'ts-mockito';
-import { Uri } from 'vscode';
 import { PYTHON_LANGUAGE } from '../../../../client/common/constants';
 import { ProductNames } from '../../../../client/common/installer/productNames';
+import { FileSystem } from '../../../../client/common/platform/fileSystem';
 import { PathUtils } from '../../../../client/common/platform/pathUtils';
+import { IFileSystem } from '../../../../client/common/platform/types';
 import { PythonExecutionFactory } from '../../../../client/common/process/pythonExecutionFactory';
 import {
     IPythonDaemonExecutionService,
@@ -23,12 +24,10 @@ import { DataScience } from '../../../../client/common/utils/localize';
 import { noop } from '../../../../client/common/utils/misc';
 import { EXTENSION_ROOT_DIR } from '../../../../client/constants';
 import { JupyterDaemonModule } from '../../../../client/datascience/constants';
-import { FileSystem } from '../../../../client/datascience/fileSystem';
 import { JupyterInterpreterDependencyService } from '../../../../client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService';
 import { JupyterInterpreterService } from '../../../../client/datascience/jupyter/interpreter/jupyterInterpreterService';
 import { JupyterInterpreterSubCommandExecutionService } from '../../../../client/datascience/jupyter/interpreter/jupyterInterpreterSubCommandExecutionService';
 import { JupyterServerInfo } from '../../../../client/datascience/jupyter/jupyterConnection';
-import { IFileSystem } from '../../../../client/datascience/types';
 import { IInterpreterService } from '../../../../client/interpreter/contracts';
 import { MockOutputChannel } from '../../../mockClasses';
 import { createPythonInterpreter } from '../../../utils/interpreters';
@@ -99,10 +98,6 @@ suite('DataScience - Jupyter InterpreterSubCommandExecutionService', () => {
             const isSupported = await jupyterInterpreterExecutionService.isNotebookSupported(undefined);
             assert.isFalse(isSupported);
         });
-        test('Export is not supported', async () => {
-            const isSupported = await jupyterInterpreterExecutionService.getExportPackageVersion(undefined);
-            assert.isUndefined(isSupported);
-        });
         test('Jupyter cannot be started because no interpreter has been selected', async () => {
             when(interperterService.getActiveInterpreter(undefined)).thenResolve(undefined);
             const reason = await jupyterInterpreterExecutionService.getReasonForJupyterNotebookNotBeingSupported(
@@ -151,19 +146,6 @@ suite('DataScience - Jupyter InterpreterSubCommandExecutionService', () => {
         });
         test('Cannot launch notebook file in jupyter notebook', async () => {
             const promise = jupyterInterpreterExecutionService.openNotebook('some.ipynb');
-            when(jupyterDependencyService.getDependenciesNotInstalled(activePythonInterpreter, undefined)).thenResolve([
-                Product.notebook
-            ]);
-
-            await expect(promise).to.eventually.be.rejectedWith(
-                DataScience.libraryRequiredToLaunchJupyterNotInstalledInterpreter().format(
-                    activePythonInterpreter.displayName!,
-                    ProductNames.get(Product.notebook)!
-                )
-            );
-        });
-        test('Cannot export notebook to python', async () => {
-            const promise = jupyterInterpreterExecutionService.exportNotebookToPython(Uri.file('somefile.ipynb'));
             when(jupyterDependencyService.getDependenciesNotInstalled(activePythonInterpreter, undefined)).thenResolve([
                 Product.notebook
             ]);
@@ -295,31 +277,6 @@ suite('DataScience - Jupyter InterpreterSubCommandExecutionService', () => {
                     anything()
                 )
             ).once();
-        });
-        test('Cannot export notebook to python if module is not installed', async () => {
-            const file = 'somefile.ipynb';
-            when(jupyterDependencyService.isExportSupported(selectedJupyterInterpreter, anything())).thenResolve(false);
-
-            const promise = jupyterInterpreterExecutionService.exportNotebookToPython(Uri.file(file));
-
-            await expect(promise).to.eventually.be.rejectedWith(DataScience.jupyterNbConvertNotSupported());
-        });
-        test('Export notebook to python', async () => {
-            const file = 'somefile.ipynb';
-            const uri = Uri.file(file);
-            const convertOutput = 'converted';
-            when(jupyterDependencyService.isExportSupported(selectedJupyterInterpreter, anything())).thenResolve(true);
-            when(
-                execService.execModule(
-                    'jupyter',
-                    deepEqual(['nbconvert', uri.fsPath, '--to', 'python', '--stdout']),
-                    anything()
-                )
-            ).thenResolve({ stdout: convertOutput });
-
-            const output = await jupyterInterpreterExecutionService.exportNotebookToPython(uri);
-
-            assert.equal(output, convertOutput);
         });
         test('Return list of running jupyter servers', async () => {
             const file = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'vscode_datascience_helpers', 'getServerInfo.py');

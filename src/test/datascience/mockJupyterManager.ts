@@ -293,13 +293,13 @@ export class MockJupyterManager implements IJupyterSessionManager {
         this.makeActive(interpreter);
     }
 
-    public addError(code: string, message: string) {
+    public addError(code: string, message: string, traceback?: string[]) {
         // Turn the message into an nbformat.IError
         const result: nbformat.IError = {
             output_type: 'error',
             ename: message,
             evalue: message,
-            traceback: [message]
+            traceback: traceback ? traceback : [message]
         };
 
         this.addCell(code, result);
@@ -649,7 +649,6 @@ export class MockJupyterManager implements IJupyterSessionManager {
         notebookStdErr?: string[],
         notebookProc?: ChildProcess
     ) {
-        when(this.productInstaller.isInstalled(anything())).thenResolve(true);
         when(this.productInstaller.isInstalled(anything(), anything())).thenResolve(true);
         if ((supportedCommands & SupportedCommands.ipykernel) === SupportedCommands.ipykernel) {
             this.setupPythonServiceExec(service, 'ipykernel', ['--version'], () =>
@@ -665,7 +664,6 @@ export class MockJupyterManager implements IJupyterSessionManager {
                 }
             );
         } else {
-            when(this.productInstaller.isInstalled(Product.ipykernel)).thenResolve(false);
             when(this.productInstaller.isInstalled(Product.ipykernel, anything())).thenResolve(false);
         }
         if ((supportedCommands & SupportedCommands.nbconvert) === SupportedCommands.nbconvert) {
@@ -683,7 +681,6 @@ export class MockJupyterManager implements IJupyterSessionManager {
                 }
             );
         } else {
-            when(this.productInstaller.isInstalled(Product.nbconvert)).thenResolve(false);
             when(this.productInstaller.isInstalled(Product.nbconvert, anything())).thenResolve(false);
         }
         if ((supportedCommands & SupportedCommands.notebook) === SupportedCommands.notebook) {
@@ -713,7 +710,6 @@ export class MockJupyterManager implements IJupyterSessionManager {
                 notebookProc
             );
         } else {
-            when(this.productInstaller.isInstalled(Product.notebook)).thenResolve(false);
             when(this.productInstaller.isInstalled(Product.notebook, anything())).thenResolve(false);
         }
         if ((supportedCommands & SupportedCommands.kernelspec) === SupportedCommands.kernelspec) {
@@ -725,7 +721,6 @@ export class MockJupyterManager implements IJupyterSessionManager {
                 return Promise.resolve({ stdout: JSON.stringify(createKernelSpecs(kernels)) });
             });
         } else {
-            when(this.productInstaller.isInstalled(Product.kernelspec)).thenResolve(false);
             when(this.productInstaller.isInstalled(Product.kernelspec, anything())).thenResolve(false);
         }
     }

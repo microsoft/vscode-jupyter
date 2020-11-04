@@ -55,19 +55,17 @@ import {
     ICell,
     ICodeCssGenerator,
     IDataScienceErrorHandler,
-    IFileSystem,
     IInteractiveWindowInfo,
     IInteractiveWindowListener,
     IJupyterDebugger,
+    IJupyterServerUriStorage,
     IJupyterVariableDataProviderFactory,
     IJupyterVariables,
     INotebookEditor,
     INotebookEditorProvider,
     INotebookExporter,
-    INotebookExtensibility,
     INotebookImporter,
     INotebookMetadataLive,
-    INotebookModel,
     INotebookProvider,
     IStatusProvider,
     IThemeFinder,
@@ -83,19 +81,18 @@ import { concatMultilineString, splitMultilineString } from '../../../datascienc
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
 import { IPythonExtensionChecker } from '../../api/types';
 import { isTestExecution, PYTHON_LANGUAGE } from '../../common/constants';
+import { IFileSystem } from '../../common/platform/types';
 import { translateKernelLanguageToMonaco } from '../common';
 import { IDataViewerFactory } from '../data-viewing/types';
 import { getCellHashProvider } from '../editor-integration/cellhashprovider';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
 import { KernelConnectionMetadata } from '../jupyter/kernels/types';
+import { NativeEditorNotebookModel } from '../notebookStorage/notebookModel';
 
 const nativeEditorDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'notebook');
 export class NativeEditor extends InteractiveBase implements INotebookEditor {
     public get onDidChangeViewState(): Event<void> {
         return this._onDidChangeViewState.event;
-    }
-    public get notebookExtensibility(): INotebookExtensibility {
-        return this.nbExtensibility;
     }
 
     public get visible(): boolean {
@@ -135,10 +132,11 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     public get isDirty(): boolean {
         return this.model ? this.model.isDirty : false;
     }
-    public get model(): Readonly<INotebookModel> {
+    public get model(): Readonly<NativeEditorNotebookModel> {
         return this._model;
     }
     public readonly type: 'old' | 'custom' = 'custom';
+    public isInteractive = false;
     protected savedEvent: EventEmitter<INotebookEditor> = new EventEmitter<INotebookEditor>();
     protected closedEvent: EventEmitter<INotebookEditor> = new EventEmitter<INotebookEditor>();
     protected modifiedEvent: EventEmitter<INotebookEditor> = new EventEmitter<INotebookEditor>();
@@ -182,11 +180,11 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         useCustomEditorApi: boolean,
         private trustService: ITrustService,
         expService: IExperimentService,
-        private _model: INotebookModel,
+        private _model: NativeEditorNotebookModel,
         webviewPanel: WebviewPanel | undefined,
         selector: KernelSelector,
-        private nbExtensibility: INotebookExtensibility,
-        private extensionChecker: IPythonExtensionChecker
+        private extensionChecker: IPythonExtensionChecker,
+        serverStorage: IJupyterServerUriStorage
     ) {
         super(
             listeners,
@@ -223,7 +221,8 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             notebookProvider,
             useCustomEditorApi,
             expService,
-            selector
+            selector,
+            serverStorage
         );
         asyncRegistry.push(this);
         asyncRegistry.push(this.trustService.onDidSetNotebookTrust(this.monitorChangesToTrust, this));
@@ -581,6 +580,10 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         // Actually don't close, just let the error bubble out
     }
 
+    protected async setFileInKernel(_file: string, _cancelToken: CancellationToken | undefined): Promise<void> {
+        // Native editor doesn't set this as the ipython file should be set for a notebook.
+    }
+
     protected async close(): Promise<void> {
         // Fire our event
         this.closedEvent.fire(this);
@@ -731,14 +734,19 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     private async exportAs(): Promise<void> {
         // Export requires the python extension
         if (!this.extensionChecker.isPythonExtensionInstalled) {
-            return this.extensionChecker.installPythonExtension();
+            return this.extensionChecker.showPythonExtensionInstallRequiredPrompt();
         }
 
         const activeEditor = this.editorProvider.activeEditor;
         if (!activeEditor || !activeEditor.model) {
             return;
         }
-        this.commandManager.executeCommand(Commands.Export, activeEditor.model, undefined);
+        this.commandManager.executeCommand(
+            Commands.Export,
+            activeEditor.model,
+            undefined,
+            activeEditor.notebook?.getMatchingInterpreter()
+        );
     }
 
     private logNativeCommand(args: INativeCommand) {
@@ -771,7 +779,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     @captureTelemetry(Telemetry.RunByLineStart)
     private async handleRunByLine(runByLine: IRunByLine) {
         if (!this.extensionChecker.isPythonExtensionInstalled) {
-            return this.extensionChecker.installPythonExtension();
+            return this.extensionChecker.showPythonExtensionInstallRequiredPrompt();
         }
         try {
             // If there's any payload, it has the code and the id

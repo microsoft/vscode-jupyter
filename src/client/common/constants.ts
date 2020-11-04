@@ -40,7 +40,7 @@ export const DEFAULT_INTERPRETER_SETTING = 'python';
 
 export const STANDARD_OUTPUT_CHANNEL = 'STANDARD_OUTPUT_CHANNEL';
 
-export const isCI = process.env.TRAVIS === 'true' || process.env.TF_BUILD !== undefined;
+export const isCI = process.env.TF_BUILD !== undefined || process.env.GITHUB_ACTIONS === 'true';
 
 export function isTestExecution(): boolean {
     return process.env.VSC_JUPYTER_CI_TEST === '1' || isUnitTestExecution();
@@ -53,7 +53,7 @@ export function isTestExecution(): boolean {
  * @returns {boolean}
  */
 export function isUnitTestExecution(): boolean {
-    return process.env.VSC_PYTHON_UNIT_TEST === '1';
+    return process.env.VSC_JUPYTER_UNIT_TEST === '1';
 }
 
 // Temporary constant, used to indicate whether we're using custom editor api or not.

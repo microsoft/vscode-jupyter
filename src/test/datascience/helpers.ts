@@ -2,9 +2,21 @@
 // Licensed under the MIT License.
 
 'use strict';
-
 import { noop } from 'lodash';
+import * as path from 'path';
+import { Uri } from 'vscode';
+import { ICommandManager } from '../../client/common/application/types';
 import { IJupyterSettings } from '../../client/common/types';
+import { Commands } from '../../client/datascience/constants';
+import {
+    AskForSaveResult,
+    NativeEditorOldWebView
+} from '../../client/datascience/interactive-ipynb/nativeEditorOldWebView';
+import { INotebookEditorProvider } from '../../client/datascience/types';
+import { IServiceContainer } from '../../client/ioc/types';
+import { CommandSource } from '../../client/testing/common/constants';
+import { waitForCondition } from '../common';
+import { trustNotebook } from './notebook/helper';
 
 // The default base set of data science settings to use
 export function defaultDataScienceSettings(): IJupyterSettings {
@@ -22,7 +34,7 @@ export function defaultDataScienceSettings(): IJupyterSettings {
         alwaysTrustNotebooks: true,
         jupyterLaunchTimeout: 10,
         jupyterLaunchRetries: 3,
-        jupyterServerURI: 'local',
+        jupyterServerType: 'local',
         // tslint:disable-next-line: no-invalid-template-strings
         notebookFileRoot: '${fileDirname}',
         changeDirOnImportExport: false,
@@ -69,4 +81,37 @@ export function writeDiffSnapshot(_snapshot: any, _prefix: string) {
     // const file = path.join(EXTENSION_ROOT_DIR, 'tmp', `SD-${snapshotCounter}-${prefix}.json`);
     // snapshotCounter += 1;
     // fs.writeFile(file, JSON.stringify(diff), { encoding: 'utf-8' }).ignoreErrors();
+}
+
+export async function openNotebook(
+    serviceContainer: IServiceContainer,
+    ipynbFile: string,
+    options: { ignoreSavingOldNotebooks?: boolean; isNotTrusted?: boolean } = { ignoreSavingOldNotebooks: true }
+) {
+    if (!options.isNotTrusted) {
+        await trustNotebook(ipynbFile);
+    }
+    console.info(`Opening notebook ${ipynbFile}`);
+    const cmd = serviceContainer.get<ICommandManager>(ICommandManager);
+    await cmd.executeCommand(Commands.OpenNotebook, Uri.file(ipynbFile), undefined, CommandSource.commandPalette);
+    const editorProvider = serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
+    await waitForCondition(
+        async () =>
+            editorProvider.editors.length > 0 &&
+            !!editorProvider.activeEditor &&
+            editorProvider.activeEditor.file.fsPath.endsWith(path.basename(ipynbFile)),
+        30_000,
+        'Notebook not opened'
+    );
+
+    if (
+        options.ignoreSavingOldNotebooks &&
+        editorProvider.activeEditor &&
+        editorProvider.activeEditor instanceof NativeEditorOldWebView
+    ) {
+        // We don't care about changes, no need to save them.
+        // tslint:disable-next-line: no-any
+        (editorProvider.activeEditor as any).askForSave = () => Promise.resolve(AskForSaveResult.No);
+    }
+    console.info(`Opened notebook ${ipynbFile}`);
 }

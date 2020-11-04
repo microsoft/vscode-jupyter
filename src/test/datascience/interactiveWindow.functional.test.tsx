@@ -9,19 +9,22 @@ import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import { Disposable, Memento, Selection, TextDocument, TextEditor, Uri } from 'vscode';
 
+import { nbformat } from '@jupyterlab/coreutils';
 import { ReactWrapper } from 'enzyme';
 import { anything, when } from 'ts-mockito';
 import { IApplicationShell, IDocumentManager } from '../../client/common/application/types';
+import { IFileSystem } from '../../client/common/platform/types';
 import { GLOBAL_MEMENTO, IJupyterSettings, IMemento } from '../../client/common/types';
 import { createDeferred, sleep, waitForPromise } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { EXTENSION_ROOT_DIR } from '../../client/constants';
 import { generateCellsFromDocument } from '../../client/datascience/cellFactory';
+import { AllowedCellOutputKeys } from '../../client/datascience/common';
 import { EditorContexts } from '../../client/datascience/constants';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { InteractiveWindow } from '../../client/datascience/interactive-window/interactiveWindow';
 import { AskedForPerFileSettingKey } from '../../client/datascience/interactive-window/interactiveWindowProvider';
-import { IInteractiveWindowProvider } from '../../client/datascience/types';
+import { IInteractiveWindowProvider, IWebviewExtensibility } from '../../client/datascience/types';
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { concatMultilineString } from '../../datascience-ui/common';
 import { InteractivePanel } from '../../datascience-ui/history-react/interactivePanel';
@@ -64,6 +67,7 @@ import {
     verifyLastCellInputState
 } from './testHelpers';
 import { ITestInteractiveWindowProvider } from './testInteractiveWindowProvider';
+import { InteractiveWindowMessageListener } from '../../client/datascience/interactive-common/interactiveWindowMessageListener';
 // tslint:disable-next-line: no-require-imports no-var-requires
 const _escape = require('lodash/escape') as typeof import('lodash/escape'); // NOSONAR
 
@@ -120,11 +124,6 @@ suite('DataScience Interactive Window output tests', () => {
         iw.update();
         verifyHtmlOnCell(iw, 'InteractiveCell', html, cellIndex);
     }
-
-    // Uncomment this to debug hangs on exit
-    // suiteTeardown(() => {
-    //      asyncDump();
-    // });
 
     runTest(
         'Simple text',
@@ -603,10 +602,10 @@ Type:      builtin_function_or_method`,
 
             // find the buttons on the cell itself
             const ImageButtons = afterUndo.at(afterUndo.length - 2).find(ImageButton);
-            assert.equal(ImageButtons.length, 4, 'Cell buttons not found');
+            assert.equal(ImageButtons.length, 3, 'Cell buttons not found');
 
-            const goto = ImageButtons.at(1);
-            const deleteButton = ImageButtons.at(3);
+            const goto = ImageButtons.at(0);
+            const deleteButton = ImageButtons.at(2);
 
             // Make sure goto works
             goto.simulate('click');
@@ -685,53 +684,81 @@ for i in range(0, 100):
                     return;
                 }
             };
-            let exportCalled = false;
-            const appShell = TypeMoq.Mock.ofType<IApplicationShell>();
-            appShell
-                .setup((a) => a.showErrorMessage(TypeMoq.It.isAnyString()))
-                .returns((e) => {
-                    throw e;
+            const dsfs = ioc.get<IFileSystem>(IFileSystem);
+            const tf = await dsfs.createTemporaryLocalFile('.ipynb');
+            try {
+                let exportCalled = false;
+                const appShell = TypeMoq.Mock.ofType<IApplicationShell>();
+                appShell
+                    .setup((a) => a.showErrorMessage(TypeMoq.It.isAnyString()))
+                    .returns((e) => {
+                        throw e;
+                    });
+                appShell
+                    .setup((a) => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                    .returns(() => Promise.resolve(''));
+                appShell
+                    .setup((a) => a.showSaveDialog(TypeMoq.It.isAny()))
+                    .returns(() => {
+                        exportCalled = true;
+                        return Promise.resolve(Uri.file(tf.filePath));
+                    });
+                appShell.setup((a) => a.setStatusBarMessage(TypeMoq.It.isAny())).returns(() => dummyDisposable);
+                ioc.serviceManager.rebindInstance<IApplicationShell>(IApplicationShell, appShell.object);
+                const exportCode = `
+for i in range(100):
+    time.sleep(0.1)
+    raise Exception('test')
+`;
+
+                // Make sure to create the interactive window after the rebind or it gets the wrong application shell.
+                addMockData(ioc, exportCode, 'NameError', 'type/error', 'error', [
+                    '\u001b[1;31m---------------------------------------------------------------------------\u001b[0m',
+                    '\u001b[1;31mNameError\u001b[0m                                 Traceback (most recent call last)',
+                    "\u001b[1;32md:\\Source\\Testing_3\\manualTestFile.py\u001b[0m in \u001b[0;36m<module>\u001b[1;34m\u001b[0m\n\u001b[0;32m      1\u001b[0m \u001b[1;32mfor\u001b[0m \u001b[0mi\u001b[0m \u001b[1;32min\u001b[0m \u001b[0mrange\u001b[0m\u001b[1;33m(\u001b[0m\u001b[1;36m100\u001b[0m\u001b[1;33m)\u001b[0m\u001b[1;33m:\u001b[0m\u001b[1;33m\u001b[0m\u001b[1;33m\u001b[0m\u001b[0m\n\u001b[1;32m----> 2\u001b[1;33m     \u001b[0mtime\u001b[0m\u001b[1;33m.\u001b[0m\u001b[0msleep\u001b[0m\u001b[1;33m(\u001b[0m\u001b[1;36m0.1\u001b[0m\u001b[1;33m)\u001b[0m\u001b[1;33m\u001b[0m\u001b[1;33m\u001b[0m\u001b[0m\n\u001b[0m\u001b[0;32m      3\u001b[0m     \u001b[1;32mraise\u001b[0m \u001b[0mException\u001b[0m\u001b[1;33m(\u001b[0m\u001b[1;34m'test'\u001b[0m\u001b[1;33m)\u001b[0m\u001b[1;33m\u001b[0m\u001b[1;33m\u001b[0m\u001b[0m\n",
+                    "\u001b[1;31mNameError\u001b[0m: name 'time' is not defined"
+                ]);
+                await addCode(ioc, exportCode);
+                const { window, mount } = await getOrCreateInteractiveWindow(ioc);
+
+                // Export should cause exportCalled to change to true
+                const exportPromise = mount.waitForMessage(InteractiveWindowMessages.ReturnAllCells);
+                window.exportCells();
+                await exportPromise;
+                await sleep(100); // Give time for appshell to come up
+                assert.equal(exportCalled, true, 'Export is not being called during export');
+
+                // Read file contents into a jupyter structure. Make sure we have only the expected values
+                const contents = await dsfs.readLocalFile(tf.filePath);
+                const struct = JSON.parse(contents) as nbformat.INotebookContent;
+                assert.strictEqual(struct.cells.length, 1, 'Wrong number of cells');
+                const outputs = struct.cells[0].outputs as nbformat.IOutput[];
+                assert.strictEqual(outputs.length, 1, 'Not correct number of outputs');
+                assert.strictEqual(outputs[0].output_type, 'error', 'Error not found');
+                const allowedKeys = [...AllowedCellOutputKeys.error];
+                const actualKeys = Object.keys(outputs[0]);
+                assert.deepStrictEqual(allowedKeys, actualKeys, 'Invalid keys in output');
+
+                // Remove the cell
+                const exportButton = findButton(mount.wrapper, InteractivePanel, 6);
+                const undo = findButton(mount.wrapper, InteractivePanel, 2);
+
+                // Now verify if we undo, we have no cells
+                const afterUndo = await getInteractiveCellResults(ioc, () => {
+                    undo!.simulate('click');
+                    return Promise.resolve();
                 });
-            appShell
-                .setup((a) => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-                .returns(() => Promise.resolve(''));
-            appShell
-                .setup((a) => a.showSaveDialog(TypeMoq.It.isAny()))
-                .returns(() => {
-                    exportCalled = true;
-                    return Promise.resolve(undefined);
-                });
-            appShell.setup((a) => a.setStatusBarMessage(TypeMoq.It.isAny())).returns(() => dummyDisposable);
-            ioc.serviceManager.rebindInstance<IApplicationShell>(IApplicationShell, appShell.object);
 
-            // Make sure to create the interactive window after the rebind or it gets the wrong application shell.
-            await addCode(ioc, 'a=1\na');
-            const { window, mount } = await getOrCreateInteractiveWindow(ioc);
+                assert.equal(afterUndo.length, 1, 'Undo should remove cells');
 
-            // Export should cause exportCalled to change to true
-            const exportPromise = mount.waitForMessage(InteractiveWindowMessages.ReturnAllCells);
-            window.exportCells();
-            await exportPromise;
-            await sleep(100); // Give time for appshell to come up
-            assert.equal(exportCalled, true, 'Export is not being called during export');
-
-            // Remove the cell
-            const exportButton = findButton(mount.wrapper, InteractivePanel, 6);
-            const undo = findButton(mount.wrapper, InteractivePanel, 2);
-
-            // Now verify if we undo, we have no cells
-            const afterUndo = await getInteractiveCellResults(ioc, () => {
-                undo!.simulate('click');
-                return Promise.resolve();
-            });
-
-            assert.equal(afterUndo.length, 1, 'Undo should remove cells');
-
-            // Then verify we cannot click the button (it should be disabled)
-            exportCalled = false;
-            exportButton!.simulate('click');
-            await sleep(100);
-            assert.equal(exportCalled, false, 'Export should not be called when no cells visible');
+                // Then verify we cannot click the button (it should be disabled)
+                exportCalled = false;
+                exportButton!.simulate('click');
+                await sleep(100);
+                assert.equal(exportCalled, false, 'Export should not be called when no cells visible');
+            } finally {
+                tf.dispose();
+            }
         },
         () => {
             return ioc;
@@ -950,8 +977,8 @@ for i in range(0, 100):
             await enterInput(mount, 'a=1\na', 'InteractiveCell');
             verifyHtmlOnInteractiveCell('1', CellPosition.Last);
             const ImageButtons = getLastOutputCell(mount.wrapper, 'InteractiveCell').find(ImageButton);
-            assert.equal(ImageButtons.length, 4, 'Cell buttons not found');
-            const copyToSource = ImageButtons.at(2);
+            assert.equal(ImageButtons.length, 3, 'Cell buttons not found');
+            const copyToSource = ImageButtons.at(1);
 
             // Then click the copy to source button
             copyToSource.simulate('click');
@@ -976,8 +1003,8 @@ for i in range(0, 100):
             // Then delete the node
             const lastCell = getLastOutputCell(mount.wrapper, 'InteractiveCell');
             const ImageButtons = lastCell.find(ImageButton);
-            assert.equal(ImageButtons.length, 4, 'Cell buttons not found');
-            const deleteButton = ImageButtons.at(3);
+            assert.equal(ImageButtons.length, 3, 'Cell buttons not found');
+            const deleteButton = ImageButtons.at(2);
 
             // Make sure delete works
             const afterDelete = await getInteractiveCellResults(ioc, async () => {
@@ -1075,89 +1102,6 @@ for i in range(0, 100):
                 const png = root.querySelectorAll('img') as HTMLElement[];
                 assert.ok(png, 'No pngs found');
                 assert.equal(png.length, 1, 'Wrong number of pngs');
-            }
-        },
-        () => {
-            return ioc;
-        }
-    );
-
-    runTest(
-        'Gather code run from text editor',
-        async () => {
-            await forceSettingsChange({ gatherToScript: true });
-            // Enter some code.
-            const code = `${defaultCellMarker}\na=1\na`;
-            await addCode(ioc, code);
-            addMockData(ioc, code, undefined);
-            const mount = ioc.getInteractiveWebPanel(undefined);
-            const ImageButtons = getLastOutputCell(mount.wrapper, 'InteractiveCell').find(ImageButton); // This isn't rendering correctly
-            assert.equal(ImageButtons.length, 4, 'Cell buttons not found');
-            const gatherCode = ImageButtons.at(0);
-
-            // Then click the gather code button
-            const gatherPromise = mount.waitForMessage(InteractiveWindowMessages.GatherCodeToScript);
-            gatherCode.simulate('click');
-            await gatherPromise;
-            const docManager = ioc.get<IDocumentManager>(IDocumentManager) as MockDocumentManager;
-            assert.notEqual(docManager.activeTextEditor, undefined);
-            if (docManager.activeTextEditor) {
-                assert.notEqual(
-                    docManager.activeTextEditor.document
-                        .getText()
-                        .trim()
-                        .search('# This file was generated by the Gather Extension'),
-                    -1
-                );
-
-                // Basic unit test does not need to have Gather available in the build.
-                assert.notEqual(
-                    docManager.activeTextEditor.document.getText().trim().search('Gather internal error'),
-                    -1
-                );
-            }
-        },
-        () => {
-            return ioc;
-        }
-    );
-
-    runTest(
-        'Gather code run from input box',
-        async () => {
-            await forceSettingsChange({ gatherToScript: true });
-            // Create an interactive window so that it listens to the results.
-            const { mount } = await getOrCreateInteractiveWindow(ioc);
-
-            // Then enter some code.
-            await enterInput(mount, 'a=1\na', 'InteractiveCell');
-            verifyHtmlOnInteractiveCell('1', CellPosition.Last);
-            const ImageButtons = getLastOutputCell(mount.wrapper, 'InteractiveCell').find(ImageButton);
-            assert.equal(ImageButtons.length, 4, 'Cell buttons not found');
-            const gatherCode = ImageButtons.at(0);
-
-            // Then click the gather code button
-            const gatherPromise = mount.waitForMessage(InteractiveWindowMessages.GatherCodeToScript);
-            gatherCode.simulate('click');
-            await gatherPromise;
-            const docManager = ioc.get<IDocumentManager>(IDocumentManager) as MockDocumentManager;
-            assert.notEqual(docManager.activeTextEditor, undefined);
-
-            if (docManager.activeTextEditor) {
-                // Just check key parts of the document, not the whole thing.
-                assert.notEqual(
-                    docManager.activeTextEditor.document
-                        .getText()
-                        .trim()
-                        .search('# This file was generated by the Gather Extension'),
-                    -1
-                );
-
-                // Basic unit test does not need to have Gather available in the build.
-                assert.notEqual(
-                    docManager.activeTextEditor.document.getText().trim().search('Gather internal error'),
-                    -1
-                );
             }
         },
         () => {
@@ -1370,5 +1314,46 @@ for i in range(0, 100):
 
         // First window should now have foo in the title too
         assert.ok(interactiveWindowProvider.windows[0].title.includes('foo'), 'Title of first window did not change');
+    });
+
+    test('Click External Button', async () => {
+        let success = false;
+        // Register a test command
+        const api = ioc.get<IWebviewExtensibility>(IWebviewExtensibility);
+
+        api.registerCellToolbarButton(
+            () => {
+                success = true;
+                return Promise.resolve();
+            },
+            'add',
+            [1, 2, 3, 4],
+            'testing'
+        );
+
+        // Create an interactive window so that it listens to the results.
+        const { mount, window } = await getOrCreateInteractiveWindow(ioc);
+
+        // We need to update the view state to get the external buttons
+        // tslint:disable-next-line: no-any
+        const listener = (window as any).messageListener as InteractiveWindowMessageListener;
+        // tslint:disable-next-line: no-any
+        listener.onChangeViewState((window as any).webPanel);
+
+        // Then enter some code.
+        await enterInput(mount, 'a=1\na', 'InteractiveCell');
+        verifyHtmlOnInteractiveCell('1', CellPosition.Last);
+        const ImageButtons = getLastOutputCell(mount.wrapper, 'InteractiveCell').find(ImageButton);
+        const externalButton = ImageButtons.at(3);
+
+        // Then click the gather code button
+        const externalButtonPromise = mount.waitForMessage(InteractiveWindowMessages.ExecuteExternalCommand);
+        externalButton.simulate('click');
+        await externalButtonPromise;
+
+        const updateButtons = mount.waitForMessage(InteractiveWindowMessages.UpdateExternalCellButtons);
+        await updateButtons;
+
+        assert.ok(success, 'External callback was not called');
     });
 });

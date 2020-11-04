@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 
+import { nbformat } from '@jupyterlab/coreutils';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { TextDocument } from 'vscode';
@@ -64,6 +65,10 @@ export class ImportTracker implements IExtensionSingleActivationService, INotebo
         this.pendingChecks.clear();
     }
 
+    public onKernelStarted() {
+        // Do nothing on started
+    }
+
     public onKernelRestarted() {
         // Do nothing on restarted
     }
@@ -99,10 +104,11 @@ export class ImportTracker implements IExtensionSingleActivationService, INotebo
     private getNotebookLines(e: INotebookEditor): (string | undefined)[] {
         let result: (string | undefined)[] = [];
         if (e.model) {
-            e.model.cells
+            e.model
+                .getCellsWithId()
                 .filter((c) => c.data.cell_type === 'code')
                 .forEach((c) => {
-                    const cellArray = this.getCellLines(c);
+                    const cellArray = this.getCellLines(c.data as nbformat.ICodeCell);
                     if (result.length < MAX_DOCUMENT_LINES) {
                         result = [...result, ...cellArray];
                     }
@@ -111,9 +117,9 @@ export class ImportTracker implements IExtensionSingleActivationService, INotebo
         return result;
     }
 
-    private getCellLines(cell: ICell): (string | undefined)[] {
+    private getCellLines(cell: nbformat.ICodeCell): (string | undefined)[] {
         // Split into multiple lines removing line feeds on the end.
-        return splitMultilineString(cell.data.source).map((s) => s.replace(/\n/g, ''));
+        return splitMultilineString(cell.source).map((s) => s.replace(/\n/g, ''));
     }
 
     private onOpenedOrSavedDocument(document: TextDocument) {
@@ -158,8 +164,11 @@ export class ImportTracker implements IExtensionSingleActivationService, INotebo
 
     @captureTelemetry(EventName.HASHED_PACKAGE_PERF)
     private checkCell(cell: ICell) {
+        if (cell.data.cell_type !== 'code') {
+            return;
+        }
         this.pendingChecks.delete(this.createCellKey(cell));
-        const lines = this.getCellLines(cell);
+        const lines = this.getCellLines(cell.data as nbformat.ICodeCell);
         this.lookForImports(lines);
     }
 

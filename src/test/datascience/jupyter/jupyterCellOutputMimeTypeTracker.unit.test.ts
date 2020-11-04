@@ -9,15 +9,16 @@ import { sha256 } from 'hash.js';
 import rewiremock from 'rewiremock';
 import { instance, mock, when } from 'ts-mockito';
 import { EventEmitter, Uri } from 'vscode';
-import { getNamesAndValues } from '../../../client/common/utils/enum';
+import { getNamesAndValues } from '../../utils/enum';
 import { Telemetry } from '../../../client/datascience/constants';
 import { NativeEditor } from '../../../client/datascience/interactive-ipynb/nativeEditor';
 import { CellOutputMimeTypeTracker } from '../../../client/datascience/jupyter/jupyterCellOutputMimeTypeTracker';
 import { NativeEditorProvider } from '../../../client/datascience/notebookStorage/nativeEditorProvider';
-import { CellState, ICell, INotebookEditor, INotebookModel } from '../../../client/datascience/types';
+import { NativeEditorNotebookModel } from '../../../client/datascience/notebookStorage/notebookModel';
+import { CellState, ICell, INotebookEditor } from '../../../client/datascience/types';
 
 suite('DataScience - Cell Output Mimetype Tracker', () => {
-    const oldValueOfVSC_PYTHON_UNIT_TEST = process.env.VSC_PYTHON_UNIT_TEST;
+    const oldValueOfVSC_JUPYTER_UNIT_TEST = process.env.VSC_JUPYTER_UNIT_TEST;
     const oldValueOfVSC_JUPYTER_CI_TEST = process.env.VSC_JUPYTER_CI_TEST;
     let outputMimeTypeTracker: CellOutputMimeTypeTracker;
     let nativeProvider: NativeEditorProvider;
@@ -43,7 +44,7 @@ suite('DataScience - Cell Output Mimetype Tracker', () => {
     }
 
     setup(async () => {
-        process.env.VSC_PYTHON_UNIT_TEST = undefined;
+        process.env.VSC_JUPYTER_UNIT_TEST = undefined;
         process.env.VSC_JUPYTER_CI_TEST = undefined;
 
         openedNotebookEmitter = new EventEmitter<INotebookEditor>();
@@ -60,7 +61,7 @@ suite('DataScience - Cell Output Mimetype Tracker', () => {
     });
     teardown(() => {
         clock.uninstall();
-        process.env.VSC_PYTHON_UNIT_TEST = oldValueOfVSC_PYTHON_UNIT_TEST;
+        process.env.VSC_JUPYTER_UNIT_TEST = oldValueOfVSC_JUPYTER_UNIT_TEST;
         process.env.VSC_JUPYTER_CI_TEST = oldValueOfVSC_JUPYTER_CI_TEST;
         Reporter.telemetrySent = [];
         rewiremock.disable();
@@ -68,11 +69,12 @@ suite('DataScience - Cell Output Mimetype Tracker', () => {
 
     function emitNotebookEvent(cells: ICell[]) {
         const notebook = mock(NativeEditor);
-        const model = mock<INotebookModel>();
+        const model = mock(NativeEditorNotebookModel);
 
         when(notebook.file).thenReturn(Uri.file('wow'));
         when(notebook.model).thenReturn(instance(model));
         when(model.cells).thenReturn(cells);
+        when(model.getCellsWithId()).thenReturn(cells);
 
         openedNotebookEmitter.fire(instance(notebook));
     }

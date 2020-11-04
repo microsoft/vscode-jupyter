@@ -16,10 +16,10 @@ import { createEventHandler, IExtensionTestApi, waitForCondition } from '../../c
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
 import { closeActiveWindows, initialize } from '../../initialize';
 import {
-    canRunTests,
+    canRunNotebookTests,
     closeNotebooksAndCleanUpAfterTests,
     createTemporaryNotebook,
-    insertMarkdownCellAndWait,
+    insertMarkdownCell,
     trustAllNotebooks
 } from './helper';
 
@@ -44,7 +44,7 @@ suite('DataScience - VSCode Notebook (Editor Provider)', function () {
     const disposables: IDisposable[] = [];
     suiteSetup(async function () {
         api = await initialize();
-        if (!(await canRunTests())) {
+        if (!(await canRunNotebookTests())) {
             return this.skip();
         }
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
@@ -55,7 +55,7 @@ suite('DataScience - VSCode Notebook (Editor Provider)', function () {
         sinon.restore();
         await trustAllNotebooks();
         // Don't use same file (due to dirty handling, we might save in dirty.)
-        // Cuz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
+        // Coz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
         testIPynb = Uri.file(await createTemporaryNotebook(templateIPynb, disposables));
     });
     teardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
@@ -147,7 +147,7 @@ suite('DataScience - VSCode Notebook (Editor Provider)', function () {
         const notebookClosed = createEventHandler(editorProvider, 'onDidCloseNotebookEditor', disposables);
 
         const notebookEditor = await editorProvider.open(testIPynb);
-        await insertMarkdownCellAndWait('1'); // Make the file dirty (so it gets pinned).
+        await insertMarkdownCell('1'); // Make the file dirty (so it gets pinned).
         await notebookOpened.assertFired();
         await activeNotebookChanged.assertFired();
         assert.equal(activeNotebookChanged.first, notebookEditor);
@@ -194,7 +194,7 @@ suite('DataScience - VSCode Notebook (Editor Provider)', function () {
         const notebookClosed = createEventHandler(editorProvider, 'onDidCloseNotebookEditor', disposables);
 
         const editor1 = await editorProvider.open(testIPynb);
-        await insertMarkdownCellAndWait('1'); // Make the file dirty (so it gets pinned).
+        await insertMarkdownCell('1'); // Make the file dirty (so it gets pinned).
         await notebookOpened.assertFired();
         await activeNotebookChanged.assertFired();
         assert.equal(activeNotebookChanged.first, editor1);
@@ -203,7 +203,7 @@ suite('DataScience - VSCode Notebook (Editor Provider)', function () {
         // Open another notebook.
         const testIPynb2 = Uri.file(await createTemporaryNotebook(templateIPynb, disposables));
         const editor2 = await editorProvider.open(testIPynb2);
-        await insertMarkdownCellAndWait('1'); // Make the file dirty (so it gets pinned).
+        await insertMarkdownCell('1'); // Make the file dirty (so it gets pinned).
 
         await notebookOpened.assertFiredExactly(2);
         await activeNotebookChanged.assertFiredAtLeast(2);
@@ -280,7 +280,7 @@ suite('DataScience - VSCode Notebook (Editor Provider)', function () {
         assert.lengthOf(editorProvider.editors, 1, 'Should have an editor opened');
 
         // If we close one of the VS Code notebook editors, then it should not close our editor.
-        // Cuz we still have a VSC editor associated with the same file.
+        // Coz we still have a VSC editor associated with the same file.
         await commands.executeCommand('workbench.action.closeActiveEditor');
 
         // Verify we have only one VSC Notebook & still have our INotebookEditor.

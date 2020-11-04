@@ -11,7 +11,7 @@ import { CancellationToken } from 'vscode-jsonrpc';
 import { expect } from 'chai';
 import { IApplicationShell, IDocumentManager } from '../../client/common/application/types';
 import { Experiments } from '../../client/common/experiments/groups';
-import { createDeferred, waitForPromise } from '../../client/common/utils/async';
+import { createDeferred, sleep, waitForPromise } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { EXTENSION_ROOT_DIR } from '../../client/constants';
 import { Commands, Identifiers } from '../../client/datascience/constants';
@@ -49,7 +49,7 @@ suite('DataScience Debugger tests', () => {
         snapshot = takeSnapshot();
 
         // Debugger tests require jupyter to run. Othewrise can't not really testing them
-        const isRollingBuild = process.env ? process.env.VSCODE_PYTHON_ROLLING !== undefined : false;
+        const isRollingBuild = process.env ? process.env.VSC_FORCE_REAL_JUPYTER !== undefined : false;
 
         if (!isRollingBuild) {
             // tslint:disable-next-line:no-console
@@ -129,10 +129,6 @@ suite('DataScience Debugger tests', () => {
         }
     });
 
-    suiteTeardown(() => {
-        //        asyncDump();
-    });
-
     async function debugCell(
         type: 'notebook' | 'interactive',
         code: string,
@@ -208,6 +204,7 @@ suite('DataScience Debugger tests', () => {
                     await jupyterDebuggerService?.step();
                     await breakPromise.promise;
                     await mountedWebPanel.waitForMessage(InteractiveWindowMessages.VariablesComplete);
+                    await sleep(1000);
                     const variableRefresh = mountedWebPanel.waitForMessage(InteractiveWindowMessages.VariablesComplete);
                     await jupyterDebuggerService?.requestVariables();
                     await variableRefresh;
@@ -374,7 +371,7 @@ suite('DataScience Debugger tests', () => {
             // Step into this cell using the button
             let cell = getLastOutputCell(wrapper, 'NativeCell');
             let ImageButtons = cell.find(ImageButton);
-            assert.equal(ImageButtons.length, 7, 'Cell buttons not found');
+            assert.equal(ImageButtons.length, 6, 'Cell buttons not found');
             const runByLineButton = ImageButtons.at(3);
             // tslint:disable-next-line: no-any
             assert.equal((runByLineButton.instance().props as any).tooltip, 'Run by line');
@@ -406,7 +403,7 @@ suite('DataScience Debugger tests', () => {
             // Step into this cell using the button
             let cell = getLastOutputCell(wrapper, 'NativeCell');
             let ImageButtons = cell.find(ImageButton);
-            assert.equal(ImageButtons.length, 7, 'Cell buttons not found');
+            assert.equal(ImageButtons.length, 6, 'Cell buttons not found');
             const runByLineButton = ImageButtons.at(3);
             // tslint:disable-next-line: no-any
             assert.equal((runByLineButton.instance().props as any).tooltip, 'Run by line');

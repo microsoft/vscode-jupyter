@@ -4,14 +4,13 @@
 import type { nbformat } from '@jupyterlab/coreutils';
 import * as os from 'os';
 import { parse, SemVer } from 'semver';
-import { Memento, Uri } from 'vscode';
+import { Uri } from 'vscode';
 import { splitMultilineString } from '../../datascience-ui/common';
 import { traceError, traceInfo } from '../common/logger';
+import { IFileSystem } from '../common/platform/types';
 import { IPythonExecutionFactory } from '../common/process/types';
 import { DataScience } from '../common/utils/localize';
-import { noop } from '../common/utils/misc';
-import { Settings } from './constants';
-import { ICell, IFileSystem } from './types';
+import { ICell } from './types';
 
 // Can't figure out a better way to do this. Enumerate
 // the allowed keys of different output formats.
@@ -38,33 +37,12 @@ const dummyExecuteResultObj: nbformat.IExecuteResult = {
     data: {},
     metadata: {}
 };
-const AllowedKeys = {
+export const AllowedCellOutputKeys = {
     ['stream']: new Set(Object.keys(dummyStreamObj)),
     ['error']: new Set(Object.keys(dummyErrorObj)),
     ['display_data']: new Set(Object.keys(dummyDisplayObj)),
     ['execute_result']: new Set(Object.keys(dummyExecuteResultObj))
 };
-
-export function getSavedUriList(globalState: Memento): { uri: string; time: number; displayName?: string }[] {
-    const uriList = globalState.get<{ uri: string; time: number; displayName?: string }[]>(
-        Settings.JupyterServerUriList
-    );
-    return uriList
-        ? uriList.sort((a, b) => {
-              return b.time - a.time;
-          })
-        : [];
-}
-export function addToUriList(globalState: Memento, uri: string, time: number, displayName: string) {
-    const uriList = getSavedUriList(globalState);
-
-    const editList = uriList.filter((f, i) => {
-        return f.uri !== uri && i < Settings.JupyterServerUriListMax - 1;
-    });
-    editList.splice(0, 0, { uri, time, displayName });
-
-    globalState.update(Settings.JupyterServerUriList, editList).then(noop, noop);
-}
 
 function fixupOutput(output: nbformat.IOutput): nbformat.IOutput {
     let allowedKeys: Set<string>;
@@ -73,7 +51,7 @@ function fixupOutput(output: nbformat.IOutput): nbformat.IOutput {
         case 'error':
         case 'execute_result':
         case 'display_data':
-            allowedKeys = AllowedKeys[output.output_type];
+            allowedKeys = AllowedCellOutputKeys[output.output_type];
             break;
         default:
             return output;
@@ -131,11 +109,16 @@ export function traceCellResults(prefix: string, results: ICell[]) {
 }
 
 export function translateKernelLanguageToMonaco(kernelLanguage: string): string {
-    // The only known translation is C# to csharp at the moment
-    if (kernelLanguage === 'C#' || kernelLanguage === 'c#') {
-        return 'csharp';
+    // At the moment these are the only translations.
+    // python, julia, r, javascript, powershell, etc can be left as is.
+    switch (kernelLanguage.toLowerCase()) {
+        case 'c#':
+            return 'csharp';
+        case 'f#':
+            return 'fsharp';
+        default:
+            return kernelLanguage.toLowerCase();
     }
-    return kernelLanguage.toLowerCase();
 }
 
 export function generateNewNotebookUri(

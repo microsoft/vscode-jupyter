@@ -29,7 +29,8 @@ const retryIfFail = <T>(fn: () => Promise<T>) => retryIfFailOriginal<T>(fn, wait
 
 use(chaiAsPromised);
 
-[false, true].forEach((useRawKernel) => {
+// When using jupyter server, ipywidget tests seem to be a lot flakier. Always use raw kernel
+[true].forEach((useRawKernel) => {
     //import { asyncDump } from '../common/asyncDump';
     suite(`DataScience IPyWidgets (${useRawKernel ? 'With Direct Kernel' : 'With Jupyter Server'})`, () => {
         const disposables: Disposable[] = [];
@@ -39,7 +40,7 @@ use(chaiAsPromised);
             // These are UI tests, hence nothing to do with platforms.
             this.timeout(30_000); // UI Tests, need time to start jupyter.
             this.retries(3); // UI tests can be flaky.
-            if (!process.env.VSCODE_PYTHON_ROLLING) {
+            if (!process.env.VSC_FORCE_REAL_JUPYTER) {
                 // Skip all tests unless using real jupyter
                 this.skip();
             }

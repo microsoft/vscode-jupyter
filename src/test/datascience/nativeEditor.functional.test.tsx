@@ -22,6 +22,7 @@ import {
     IDocumentManager,
     IWorkspaceService
 } from '../../client/common/application/types';
+import { IFileSystem } from '../../client/common/platform/types';
 import { ICryptoUtils, IExtensionContext } from '../../client/common/types';
 import { createDeferred, sleep, waitForPromise } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
@@ -30,10 +31,10 @@ import { InteractiveWindowMessages } from '../../client/datascience/interactive-
 import { NativeEditor as NativeEditorWebView } from '../../client/datascience/interactive-ipynb/nativeEditor';
 import { IKernelSpecQuickPickItem } from '../../client/datascience/jupyter/kernels/types';
 import { KeyPrefix } from '../../client/datascience/notebookStorage/nativeEditorStorage';
+import { NativeEditorNotebookModel } from '../../client/datascience/notebookStorage/notebookModel';
 import {
     ICell,
     IDataScienceErrorHandler,
-    IFileSystem,
     IJupyterExecution,
     INotebookEditor,
     INotebookEditorProvider,
@@ -52,7 +53,6 @@ import { IMonacoEditorState, MonacoEditor } from '../../datascience-ui/react-com
 import { waitForCondition } from '../common';
 import { createTemporaryFile } from '../utils/fs';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
-import { takeSnapshot, writeDiffSnapshot } from './helpers';
 import { MockCustomEditorService } from './mockCustomEditorService';
 import { MockDocumentManager } from './mockDocumentManager';
 import { IMountedWebView, WaitForMessageOptions } from './mountedWebView';
@@ -112,7 +112,6 @@ suite('DataScience Native Editor', () => {
 
     [false, true].forEach((useCustomEditorApi) => {
         //import { asyncDump } from '../common/asyncDump';
-        let snapshot: any;
         suite(`${useCustomEditorApi ? 'With' : 'Without'} Custom Editor API`, () => {
             function createFileCell(cell: any, data: any): ICell {
                 const newCell = {
@@ -134,12 +133,6 @@ suite('DataScience Native Editor', () => {
 
                 return newCell;
             }
-            suiteSetup(() => {
-                snapshot = takeSnapshot();
-            });
-            suiteTeardown(() => {
-                writeDiffSnapshot(snapshot, `Native ${useCustomEditorApi}`);
-            });
             suite('Editor tests', () => {
                 const disposables: Disposable[] = [];
                 let ioc: DataScienceIocContainer;
@@ -210,11 +203,6 @@ suite('DataScience Native Editor', () => {
                         noop();
                     }
                 });
-
-                // Uncomment this to debug hangs on exit
-                // suiteTeardown(() => {
-                //      asyncDump();
-                // });
 
                 runMountedTest('Simple text', async () => {
                     // Create an editor so something is listening to messages
@@ -512,7 +500,7 @@ suite('DataScience Native Editor', () => {
                         ]);
 
                         // Set this as the URI to use when connecting
-                        ioc.forceDataScienceSettingsChanged({ jupyterServerURI: uri });
+                        await ioc.setServerUri(uri);
 
                         // Create a notebook and run a cell.
                         const notebook = await createNewEditor(ioc);
@@ -666,8 +654,8 @@ df.head()`;
                     // find the buttons on the cell itself
                     let cell = getLastOutputCell(wrapper, 'NativeCell');
                     let ImageButtons = cell.find(ImageButton);
-                    assert.equal(ImageButtons.length, 7, 'Cell buttons not found'); // Note, run by line is there as a button, it's just disabled.
-                    let deleteButton = ImageButtons.at(6);
+                    assert.equal(ImageButtons.length, 6, 'Cell buttons not found'); // Note, run by line is there as a button, it's just disabled.
+                    let deleteButton = ImageButtons.at(5);
 
                     // Make sure delete works
                     let afterDelete = await getNativeCellResults(ne.mount, async () => {
@@ -680,8 +668,8 @@ df.head()`;
                     // least one cell in the file.
                     cell = getLastOutputCell(wrapper, 'NativeCell');
                     ImageButtons = cell.find(ImageButton);
-                    assert.equal(ImageButtons.length, 7, 'Cell buttons not found');
-                    deleteButton = ImageButtons.at(6);
+                    assert.equal(ImageButtons.length, 6, 'Cell buttons not found');
+                    deleteButton = ImageButtons.at(5);
 
                     afterDelete = await getNativeCellResults(
                         ne.mount,
@@ -827,7 +815,14 @@ df.head()`;
                     const model = editor!.model!;
                     ioc.serviceManager.rebindInstance<ICommandManager>(ICommandManager, commandManager.object);
                     commandManager
-                        .setup((cmd) => cmd.executeCommand(Commands.Export, model, undefined))
+                        .setup((cmd) =>
+                            cmd.executeCommand(
+                                Commands.Export,
+                                model,
+                                undefined,
+                                editor?.notebook?.getMatchingInterpreter()
+                            )
+                        )
                         .returns(() => {
                             commandFired.resolve();
                             return Promise.resolve();
@@ -1035,7 +1030,7 @@ df.head()`;
 
                         // File should exist. Open and run all cells
                         const n = await openEditor(ioc, '', tf.filePath);
-                        assert.equal(n.editor.model.cells.length, 3, 'Cells not loaded');
+                        assert.equal((n.editor.model as NativeEditorNotebookModel).cells.length, 3, 'Cells not loaded');
                         const threeCellsUpdated = n.mount.waitForMessage(InteractiveWindowMessages.ExecutionRendered, {
                             numberOfTimes: 3
                         });
@@ -1149,7 +1144,7 @@ df.head()`;
                     const cell = getOutputCell(ne.mount.wrapper, 'NativeCell', 1);
                     assert.ok(cell, 'Cannot find the first cell');
                     const imageButtons = cell!.find(ImageButton);
-                    assert.equal(imageButtons.length, 7, 'Cell buttons not found');
+                    assert.equal(imageButtons.length, 6, 'Cell buttons not found');
                     const runButton = imageButtons.findWhere((w) => w.props().tooltip === 'Run cell');
                     assert.equal(runButton.length, 1, 'No run button found');
                     const update = waitForMessage(ioc, InteractiveWindowMessages.ExecutionRendered, {
@@ -1593,8 +1588,8 @@ df.head()`;
                         // Delete the cell
                         let cell = getLastOutputCell(wrapper, 'NativeCell');
                         let imageButtons = cell.find(ImageButton);
-                        assert.equal(imageButtons.length, 7, 'Cell buttons not found');
-                        const deleteButton = imageButtons.at(6);
+                        assert.equal(imageButtons.length, 6, 'Cell buttons not found');
+                        const deleteButton = imageButtons.at(5);
                         const afterDelete = await getNativeCellResults(mount, async () => {
                             deleteButton.simulate('click');
                             return Promise.resolve();
@@ -1617,7 +1612,7 @@ df.head()`;
                         // Move some cells around
                         cell = getLastOutputCell(wrapper, 'NativeCell');
                         imageButtons = cell.find(ImageButton);
-                        assert.equal(imageButtons.length, 7, 'Cell buttons not found');
+                        assert.equal(imageButtons.length, 6, 'Cell buttons not found');
                         const moveUpButton = imageButtons.at(0);
                         const afterMove = await getNativeCellResults(mount, async () => {
                             moveUpButton.simulate('click');
@@ -2869,15 +2864,19 @@ df.head()`;
                         // First cell should still have the 'collapsed' metadata
                         assert.ok(fileObject.cells[0].metadata.collapsed, 'Metadata erased during execution');
 
-                        // Old language info should be changed by the new execution
-                        assert.notEqual(fileObject.metadata.language_info.version, '1.2.3');
-
                         // Some tests don't have a kernelspec, in which case we should remove it
                         // If there is a spec, we should update the name and display name
-                        const isRollingBuild = process.env ? process.env.VSCODE_PYTHON_ROLLING !== undefined : false;
+                        const isRollingBuild = process.env ? process.env.VSC_FORCE_REAL_JUPYTER !== undefined : false;
                         if (isRollingBuild && fileObject.metadata.kernelspec) {
+                            // Old language info should be changed by the new execution
+                            assert.notEqual(fileObject.metadata.language_info.version, '1.2.3');
                             assert.notEqual(fileObject.metadata.kernelspec.display_name, 'JUNK');
                             assert.notEqual(fileObject.metadata.kernelspec.name, 'JUNK');
+                            assert.notEqual(
+                                fileObject.metadata.kernelspec.name,
+                                fileObject.metadata.kernelspec.display_name,
+                                'Kernel display name should be different than the name'
+                            );
                         }
                     });
                 });

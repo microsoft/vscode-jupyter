@@ -51,17 +51,17 @@ export function getPreDefinedConfiguration(): LoggerConfig {
 
     // Do not log to console if running tests and we're not
     // asked to do so.
-    if (process.env.VSC_PYTHON_FORCE_LOGGING) {
+    if (process.env.VSC_JUPYTER_FORCE_LOGGING) {
         config.console = {};
         // In CI there's no need for the label.
-        const isCI = process.env.TRAVIS === 'true' || process.env.TF_BUILD !== undefined;
+        const isCI = process.env.TF_BUILD !== undefined || process.env.GITHUB_ACTIONS === 'true';
         if (!isCI) {
             config.console.label = 'Jupyter Extension:';
         }
     }
-    if (process.env.VSC_PYTHON_LOG_FILE) {
+    if (process.env.VSC_JUPYTER_LOG_FILE) {
         config.file = {
-            logfile: process.env.VSC_PYTHON_LOG_FILE
+            logfile: process.env.VSC_JUPYTER_LOG_FILE
         };
     }
     return config;

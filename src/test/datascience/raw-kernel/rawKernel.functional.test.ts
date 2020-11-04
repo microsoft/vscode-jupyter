@@ -6,12 +6,13 @@ import { noop } from 'jquery';
 import * as portfinder from 'portfinder';
 import * as uuid from 'uuid/v4';
 import { IPythonExtensionChecker } from '../../../client/api/types';
+import { IFileSystem } from '../../../client/common/platform/types';
 import { IProcessServiceFactory } from '../../../client/common/process/types';
 import { createDeferred, sleep } from '../../../client/common/utils/async';
 import { KernelDaemonPool } from '../../../client/datascience/kernel-launcher/kernelDaemonPool';
 import { KernelProcess } from '../../../client/datascience/kernel-launcher/kernelProcess';
 import { createRawKernel, RawKernel } from '../../../client/datascience/raw-kernel/rawKernel';
-import { IFileSystem, IJupyterKernelSpec } from '../../../client/datascience/types';
+import { IJupyterKernelSpec } from '../../../client/datascience/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { DataScienceIocContainer } from '../dataScienceIocContainer';
 import { requestExecute, requestInspect } from './rawKernelTestHelpers';
@@ -120,12 +121,22 @@ suite('DataScience raw kernel tests', () => {
         // Hence timeout is a test failure.
         const longCellExecutionRequest = requestExecute(
             rawKernel,
-            'import time\nfor i in range(300):\n    time.sleep(1)',
+            `
+import time
+import sys
+for i in range(3000):
+    sys.stdout.write('.')
+    sys.stdout.flush()
+    time.sleep(0.1)
+    sys.stdout.write('\\\r')`,
             executionStarted
         );
 
         // Wait until the execution has started (cuz we cannot interrupt until exec has started).
         await executionStarted.promise;
+
+        // Give it a bit to start running
+        await sleep(300);
 
         // Then throw the interrupt
         await rawKernel.interrupt();

@@ -11,6 +11,7 @@ import type { nbformat } from '@jupyterlab/coreutils';
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../../common/application/types';
 import { traceError, traceInfo } from '../../../common/logger';
 
+import { IFileSystem } from '../../../common/platform/types';
 import {
     IAsyncDisposableRegistry,
     IConfigurationService,
@@ -24,6 +25,7 @@ import { noop } from '../../../common/utils/misc';
 import { IServiceContainer } from '../../../ioc/types';
 import { Identifiers, LiveShare, LiveShareCommands, Settings } from '../../constants';
 import { computeWorkingDirectory } from '../../jupyter/jupyterUtils';
+import { getDisplayNameOrNameOfKernelConnection } from '../../jupyter/kernels/helpers';
 import { KernelSelector } from '../../jupyter/kernels/kernelSelector';
 import { KernelConnectionMetadata } from '../../jupyter/kernels/types';
 import { HostJupyterNotebook } from '../../jupyter/liveshare/hostJupyterNotebook';
@@ -32,7 +34,6 @@ import { IRoleBasedObject } from '../../jupyter/liveshare/roleBasedFactory';
 import { IKernelLauncher } from '../../kernel-launcher/types';
 import { ProgressReporter } from '../../progress/progressReporter';
 import {
-    IFileSystem,
     INotebook,
     INotebookExecutionInfo,
     INotebookExecutionLogger,
@@ -136,26 +137,14 @@ export class HostRawNotebookProvider
         notebookMetadata?: nbformat.INotebookMetadata,
         cancelToken?: CancellationToken
     ): Promise<INotebook> {
+        traceInfo(`Creating raw notebook for ${identity.toString()}`);
         const notebookPromise = createDeferred<INotebook>();
         this.setNotebook(identity, notebookPromise.promise);
+        let progressDisposable: vscode.Disposable | undefined;
+        let rawSession: RawJupyterSession | undefined;
 
-        const progressReporter = !disableUI
-            ? this.progressReporter.createProgressIndicator(localize.DataScience.connectingIPyKernel())
-            : undefined;
-
-        const workingDirectory = await computeWorkingDirectory(resource, this.workspaceService);
-
-        const rawSession = new RawJupyterSession(
-            this.kernelLauncher,
-            resource,
-            this.outputChannel,
-            noop,
-            noop,
-            workingDirectory
-        );
+        traceInfo(`Getting preferred kernel for ${identity.toString()}`);
         try {
-            const launchTimeout = this.configService.getSettings().jupyterLaunchTimeout;
-
             // We need to locate kernelspec and possible interpreter for this launch based on resource and notebook metadata
             const kernelConnectionMetadata = await this.kernelSelector.getPreferredKernelForLocalConnection(
                 resource,
@@ -166,6 +155,28 @@ export class HostRawNotebookProvider
                 cancelToken
             );
 
+            const displayName = getDisplayNameOrNameOfKernelConnection(kernelConnectionMetadata);
+
+            progressDisposable = !disableUI
+                ? this.progressReporter.createProgressIndicator(
+                      localize.DataScience.connectingToKernel().format(displayName)
+                  )
+                : undefined;
+
+            traceInfo(`Computing working directory ${identity.toString()}`);
+            const workingDirectory = await computeWorkingDirectory(resource, this.workspaceService);
+
+            rawSession = new RawJupyterSession(
+                this.kernelLauncher,
+                resource,
+                this.outputChannel,
+                noop,
+                noop,
+                workingDirectory
+            );
+
+            const launchTimeout = this.configService.getSettings().jupyterLaunchTimeout;
+
             // Interpreter is optional, but we must have a kernel spec for a raw launch if using a kernelspec
             if (
                 !kernelConnectionMetadata ||
@@ -173,6 +184,7 @@ export class HostRawNotebookProvider
             ) {
                 notebookPromise.reject('Failed to find a kernelspec to use for ipykernel launch');
             } else {
+                traceInfo(`Connecting to raw session for ${identity.toString()}`);
                 await rawSession.connect(kernelConnectionMetadata, launchTimeout, cancelToken);
 
                 // Get the execution info for our notebook
@@ -207,14 +219,14 @@ export class HostRawNotebookProvider
             }
         } catch (ex) {
             // Make sure we shut down our session in case we started a process
-            rawSession.dispose().catch((error) => {
+            rawSession?.dispose().catch((error) => {
                 traceError(`Failed to dispose of raw session on launch error: ${error} `);
             });
             // If there's an error, then reject the promise that is returned.
             // This original promise must be rejected as it is cached (check `setNotebook`).
             notebookPromise.reject(ex);
         } finally {
-            progressReporter?.dispose(); // NOSONAR
+            progressDisposable?.dispose(); // NOSONAR
         }
 
         return notebookPromise.promise;

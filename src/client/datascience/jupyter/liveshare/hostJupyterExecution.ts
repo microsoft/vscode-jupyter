@@ -10,6 +10,7 @@ import * as vsls from 'vsls/vscode';
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../../common/application/types';
 import { traceInfo } from '../../../common/logger';
 
+import { IFileSystem } from '../../../common/platform/types';
 import {
     IAsyncDisposableRegistry,
     IConfigurationService,
@@ -20,13 +21,7 @@ import { noop } from '../../../common/utils/misc';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
 import { LiveShare, LiveShareCommands } from '../../constants';
-import {
-    IFileSystem,
-    IJupyterConnection,
-    IJupyterExecution,
-    INotebookServer,
-    INotebookServerOptions
-} from '../../types';
+import { IJupyterConnection, IJupyterExecution, INotebookServer, INotebookServerOptions } from '../../types';
 import { getJupyterConnectionDisplayName } from '../jupyterConnection';
 import { JupyterExecutionBase } from '../jupyterExecution';
 import { KernelSelector } from '../kernels/kernelSelector';
@@ -122,7 +117,6 @@ export class HostJupyterExecution
                 // Register handlers for all of the supported remote calls
                 if (service) {
                     service.onRequest(LiveShareCommands.isNotebookSupported, this.onRemoteIsNotebookSupported);
-                    service.onRequest(LiveShareCommands.getImportPackageVersion, this.onRemoteGetImportPackageVersion);
                     service.onRequest(LiveShareCommands.connectToNotebookServer, this.onRemoteConnectToNotebookServer);
                     service.onRequest(LiveShareCommands.getUsableJupyterPython, this.onRemoteGetUsableJupyterPython);
                 }
@@ -151,11 +145,6 @@ export class HostJupyterExecution
     private onRemoteIsNotebookSupported = (_args: any[], cancellation: CancellationToken): Promise<any> => {
         // Just call local
         return this.isNotebookSupported(cancellation);
-    };
-
-    private onRemoteGetImportPackageVersion = (_args: any[], cancellation: CancellationToken): Promise<any> => {
-        // Just call local
-        return this.getImportPackageVersion(cancellation);
     };
 
     private onRemoteConnectToNotebookServer = async (

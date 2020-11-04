@@ -11,6 +11,7 @@ import {
     IDocumentManager,
     IWorkspaceService
 } from '../../client/common/application/types';
+import { IFileSystem } from '../../client/common/platform/types';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../client/common/types';
 import { createDeferred, Deferred } from '../../client/common/utils/async';
 import { InteractiveWindowMessageListener } from '../../client/datascience/interactive-common/interactiveWindowMessageListener';
@@ -18,13 +19,12 @@ import { InteractiveWindowMessages } from '../../client/datascience/interactive-
 import { NativeEditor } from '../../client/datascience/interactive-ipynb/nativeEditor';
 import { NativeEditorProviderOld } from '../../client/datascience/interactive-ipynb/nativeEditorProviderOld';
 import { NativeEditorProvider } from '../../client/datascience/notebookStorage/nativeEditorProvider';
+import { NativeEditorNotebookModel } from '../../client/datascience/notebookStorage/notebookModel';
 import { INotebookStorageProvider } from '../../client/datascience/notebookStorage/notebookStorageProvider';
 import {
     IDataScienceErrorHandler,
-    IFileSystem,
     INotebookEditor,
     INotebookEditorProvider,
-    INotebookModel,
     INotebookProvider
 } from '../../client/datascience/types';
 import { ClassType, IServiceContainer } from '../../client/ioc/types';
@@ -75,7 +75,7 @@ function TestNativeEditorProviderMixin<T extends ClassType<NativeEditorProvider>
             return this.customDocuments.get(file.fsPath);
         }
 
-        protected createNotebookEditor(model: INotebookModel, panel?: WebviewPanel): NativeEditor {
+        protected createNotebookEditor(model: NativeEditorNotebookModel, panel?: WebviewPanel): NativeEditor {
             // Generate the mount wrapper using a custom id
             const id = uuid();
             const mounted = this.ioc!.createWebView(() => mountConnectedMainPanel('native'), id);

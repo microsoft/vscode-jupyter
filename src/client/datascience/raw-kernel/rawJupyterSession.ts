@@ -76,7 +76,6 @@ export class RawJupyterSession extends BaseJupyterSession {
 
     // Connect to the given kernelspec, which should already have ipykernel installed into its interpreter
     @captureTelemetry(Telemetry.RawKernelSessionConnect, undefined, true)
-    @reportAction(ReportableAction.RawKernelConnecting)
     public async connect(
         kernelConnection: KernelConnectionMetadata,
         timeout: number,
@@ -156,6 +155,8 @@ export class RawJupyterSession extends BaseJupyterSession {
             throw new RawKernelSessionStartError(kernelConnection);
         }
 
+        // Make sure it is idle before we return
+        await this.waitForIdleOnSession(newSession, timeoutMS);
         return newSession;
     }
 
@@ -163,6 +164,12 @@ export class RawJupyterSession extends BaseJupyterSession {
         session: ISessionWithSocket | undefined,
         statusHandler: Slot<ISessionWithSocket, Kernel.Status> | undefined
     ): Promise<void> {
+        // REmove our process exit handler. Kernel is shutting down on purpose
+        // so we don't need to listen.
+        if (this.processExitHandler) {
+            this.processExitHandler.dispose();
+            this.processExitHandler = undefined;
+        }
         return super.shutdownSession(session, statusHandler).then(() => {
             if (session) {
                 return (session as RawSession).kernelProcess.dispose();

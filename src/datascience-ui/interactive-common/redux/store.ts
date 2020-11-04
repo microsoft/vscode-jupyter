@@ -75,7 +75,8 @@ function generateDefaultState(
             },
             settings: testMode ? getDefaultSettings() : undefined, // When testing, we don't send (or wait) for the real settings.
             editorOptions: testMode ? computeEditorOptions(getDefaultSettings()) : undefined,
-            isNotebookTrusted: true
+            isNotebookTrusted: true,
+            externalButtons: []
         };
     }
 }
@@ -131,7 +132,7 @@ function createSendInfoMiddleware(): Redux.Middleware<{}, IStore> {
 }
 
 function createTestLogger() {
-    const logFileEnv = process.env.VSC_PYTHON_WEBVIEW_LOG_FILE;
+    const logFileEnv = process.env.VSC_JUPYTER_WEBVIEW_LOG_FILE;
     if (logFileEnv) {
         // tslint:disable-next-line: no-require-imports
         const log4js = require('log4js') as typeof import('log4js');
@@ -293,7 +294,7 @@ function getDebugState(vms: ICellViewModel[]): DebugState {
     return firstNonDesign ? firstNonDesign.runningByLine : DebugState.Design;
 }
 
-function createMiddleWare(testMode: boolean): Redux.Middleware<{}, IStore>[] {
+function createMiddleWare(testMode: boolean, postOffice: PostOffice): Redux.Middleware<{}, IStore>[] {
     // Create the middleware that modifies actions to queue new actions
     const queueableActions = createQueueableActionMiddleware();
 
@@ -304,8 +305,7 @@ function createMiddleWare(testMode: boolean): Redux.Middleware<{}, IStore>[] {
     // Create the test middle ware. It sends messages that are used for testing only
     // Or if testing in UI Test.
     // tslint:disable-next-line: no-any
-    const acquireVsCodeApi = (window as any).acquireVsCodeApi as Function;
-    const isUITest = acquireVsCodeApi && acquireVsCodeApi().handleMessage ? true : false;
+    const isUITest = (postOffice.acquireApi() as any)?.handleMessage ? true : false;
     const testMiddleware = testMode || isUITest ? createTestMiddleware() : undefined;
 
     // Create the logger if we're not in production mode or we're forcing logging
@@ -350,7 +350,7 @@ function createMiddleWare(testMode: boolean): Redux.Middleware<{}, IStore>[] {
         logger: testMode ? createTestLogger() : window.console
     });
     const loggerMiddleware =
-        process.env.VSC_PYTHON_FORCE_LOGGING !== undefined && !process.env.VSC_PYTHON_DS_NO_REDUX_LOGGING
+        process.env.VSC_JUPYTER_FORCE_LOGGING !== undefined && !process.env.VSC_JUPYTER_DS_NO_REDUX_LOGGING
             ? logger
             : undefined;
 
@@ -423,7 +423,7 @@ export function createStore<M>(
     });
 
     // Create our middleware
-    const middleware = createMiddleWare(testMode).concat([addMessageDirectionMiddleware]);
+    const middleware = createMiddleWare(testMode, postOffice).concat([addMessageDirectionMiddleware]);
 
     // Use this reducer and middle ware to create a store
     const store = Redux.createStore(rootReducer, Redux.applyMiddleware(...middleware));

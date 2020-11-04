@@ -2,10 +2,10 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable, named } from 'inversify';
-import { SemVer } from 'semver';
-import { CancellationToken, Event, EventEmitter, Uri } from 'vscode';
+import { CancellationToken, Event, EventEmitter } from 'vscode';
 
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../common/application/types';
+import { IFileSystem } from '../../common/platform/types';
 
 import {
     IAsyncDisposable,
@@ -18,7 +18,7 @@ import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { JUPYTER_OUTPUT_CHANNEL } from '../constants';
-import { IFileSystem, IJupyterExecution, INotebookServer, INotebookServerOptions } from '../types';
+import { IJupyterExecution, INotebookServer, INotebookServerOptions } from '../types';
 import { KernelSelector } from './kernels/kernelSelector';
 import { GuestJupyterExecution } from './liveshare/guestJupyterExecution';
 import { HostJupyterExecution } from './liveshare/hostJupyterExecution';
@@ -118,10 +118,6 @@ export class JupyterExecutionFactory implements IJupyterExecution, IAsyncDisposa
         return execution.getNotebookError();
     }
 
-    public async getImportPackageVersion(cancelToken?: CancellationToken): Promise<SemVer | undefined> {
-        const execution = await this.executionFactory.get();
-        return execution.getImportPackageVersion(cancelToken);
-    }
     public async isSpawnSupported(cancelToken?: CancellationToken): Promise<boolean> {
         const execution = await this.executionFactory.get();
         return execution.isSpawnSupported(cancelToken);
@@ -140,10 +136,6 @@ export class JupyterExecutionFactory implements IJupyterExecution, IAsyncDisposa
     public async spawnNotebook(file: string): Promise<void> {
         const execution = await this.executionFactory.get();
         return execution.spawnNotebook(file);
-    }
-    public async importNotebook(file: Uri, template: string | undefined): Promise<string> {
-        const execution = await this.executionFactory.get();
-        return execution.importNotebook(file, template);
     }
     public async getUsableJupyterPython(cancelToken?: CancellationToken): Promise<PythonEnvironment | undefined> {
         const execution = await this.executionFactory.get();

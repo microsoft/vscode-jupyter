@@ -7,6 +7,7 @@ import * as path from 'path';
 import * as playwright from 'playwright-chromium';
 import { IAsyncDisposable, IDisposable } from '../../../client/common/types';
 import { createDeferred } from '../../../client/common/utils/async';
+import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { CssMessages } from '../../../client/datascience/messages';
 import { CommonActionType } from '../../../datascience-ui/interactive-common/redux/reducers/types';
@@ -44,11 +45,15 @@ export class BaseWebUI implements IAsyncDisposable {
     private webServer?: IWebServer;
     private browser?: playwright.ChromiumBrowser;
     public async dispose() {
-        while (this.disposables.length) {
-            this.disposables.shift()?.dispose(); // NOSONAR
+        try {
+            while (this.disposables.length) {
+                this.disposables.shift()?.dispose(); // NOSONAR
+            }
+            await this.browser?.close();
+            await this.page?.close();
+        } catch {
+            // Failure on dispose doesn't really matter.
         }
-        await this.browser?.close();
-        await this.page?.close();
     }
     public async type(text: string): Promise<void> {
         await this.page?.keyboard.type(text);
@@ -87,8 +92,10 @@ export class BaseWebUI implements IAsyncDisposable {
         // Wait for the mounted web panel to send a message back to the data explorer
         const promise = createDeferred<void>();
         const timer = timeoutMs
-            ? setTimeout(() => {
+            ? setTimeout(async () => {
                   if (!promise.resolved) {
+                      // Take a screenshot and save at the root with the same name (upload on error)
+                      await this.page?.screenshot({ path: path.join(EXTENSION_ROOT_DIR, 'browser-screenshot.png') });
                       promise.reject(new Error(`Waiting for ${message} timed out`));
                   }
               }, timeoutMs)
@@ -129,7 +136,7 @@ export class BaseWebUI implements IAsyncDisposable {
      */
     public async loadUI(url: string) {
         // Configure to display browser while debugging.
-        const openBrowser = process.env.VSC_PYTHON_DS_UI_BROWSER !== undefined;
+        const openBrowser = process.env.VSC_JUPYTER_DS_UI_BROWSER !== undefined;
         this.browser = await playwright.chromium.launch({ headless: !openBrowser, devtools: openBrowser });
         await this.browser.newContext();
         this.page = await this.browser.newPage();

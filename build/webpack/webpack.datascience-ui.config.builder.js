@@ -19,6 +19,8 @@ const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 
 // Any build on the CI is considered production mode.
 const isProdBuild = constants.isCI || process.argv.includes('--mode');
+const fasterCompiler = !!process.env.CI_JUPYTER_FAST_COMPILATION;
+
 function getEntry(bundle) {
     switch (bundle) {
         case 'notebook':
@@ -45,14 +47,19 @@ function getEntry(bundle) {
 }
 
 function getPlugins(bundle) {
-    const plugins = [
+    const plugins = [];
+    // Add the Fork TS type checker only if we need a fast compilation.
+    // When running tests, we'll ignore type checking (faster).
+    // Other CI jobs can look for ts issues.
+    if (!fasterCompiler) {
         new ForkTsCheckerWebpackPlugin({
-            checkSyntacticErrors: true,
-            tsconfig: configFileName,
-            reportFiles: ['src/datascience-ui/**/*.{ts,tsx}'],
-            memoryLimit: 9096
-        })
-    ];
+            typescript: {
+                configFile: configFileName,
+                reportFiles: ['src/datascience-ui/**/*.{ts,tsx}'],
+                memoryLimit: 9096
+            }
+        });
+    }
     if (isProdBuild) {
         plugins.push(...common.getDefaultPlugins(bundle));
     }
@@ -124,6 +131,7 @@ function getPlugins(bundle) {
 }
 
 function buildConfiguration(bundle) {
+    // console.error(`Bundle = ${bundle}`);
     // Folder inside `datascience-ui` that will be created and where the files will be dumped.
     const bundleFolder = bundle;
     const filesToCopy = [];
@@ -132,12 +140,12 @@ function buildConfiguration(bundle) {
         filesToCopy.push(
             ...[
                 {
-                    from: path.join(constants.ExtensionRootDir, 'out/ipywidgets/dist/ipywidgets.js'),
-                    to: path.join(constants.ExtensionRootDir, 'out', 'datascience-ui', bundleFolder)
+                    from: 'out/ipywidgets/dist/ipywidgets.js',
+                    context: './'
                 },
                 {
-                    from: path.join(constants.ExtensionRootDir, 'node_modules/font-awesome/**/*'),
-                    to: path.join(constants.ExtensionRootDir, 'out', 'datascience-ui', bundleFolder, 'node_modules')
+                    from: 'node_modules/font-awesome/**/*',
+                    context: './'
                 }
             ]
         );
@@ -163,10 +171,11 @@ function buildConfiguration(bundle) {
             path: path.join(constants.ExtensionRootDir, 'out', 'datascience-ui', bundleFolder),
             filename: '[name].js',
             chunkFilename: `[name].bundle.js`,
+            pathinfo: false,
             ...outputProps
         },
-        mode: 'development', // Leave as is, we'll need to see stack traces when there are errors.
-        devtool: isProdBuild ? 'source-map' : 'inline-source-map',
+        mode: isProdBuild ? 'production' : 'development', // Leave as is, we'll need to see stack traces when there are errors.
+        devtool: isProdBuild ? undefined : 'inline-source-map',
         optimization: {
             minimize: isProdBuild,
             minimizer: isProdBuild ? [new TerserPlugin({ sourceMap: true })] : [],
@@ -242,16 +251,9 @@ function buildConfiguration(bundle) {
         },
         plugins: [
             new FixDefaultImportPlugin(),
-            new CopyWebpackPlugin(
-                [
-                    { from: './**/*.png', to: '.' },
-                    { from: './**/*.svg', to: '.' },
-                    { from: './**/*.css', to: '.' },
-                    { from: './**/*theme*.json', to: '.' },
-                    ...filesToCopy
-                ],
-                { context: 'src' }
-            ),
+            new CopyWebpackPlugin({
+                patterns: [{ from: 'node_modules/requirejs/require.js' }, ...filesToCopy]
+            }),
             new webpack.optimize.LimitChunkCountPlugin({
                 maxChunks: 100
             }),
@@ -285,6 +287,10 @@ function buildConfiguration(bundle) {
                                 configFile: configFileName,
                                 // Faster (turn on only on CI, for dev we don't need this).
                                 transpileOnly: true,
+                                silent: true,
+                                compilerOptions: {
+                                    skipLibCheck: true
+                                },
                                 reportFiles: ['src/datascience-ui/**/*.{ts,tsx}']
                             }
                         }
@@ -292,16 +298,18 @@ function buildConfiguration(bundle) {
                 },
                 {
                     test: /\.svg$/,
-                    use: ['svg-inline-loader']
+                    use: ['cache-loader', 'thread-loader', 'svg-inline-loader']
                 },
                 {
                     test: /\.css$/,
-                    use: ['style-loader', 'css-loader']
+                    use: ['cache-loader', 'thread-loader', 'style-loader', 'css-loader']
                 },
                 {
                     test: /\.js$/,
                     include: /node_modules.*remark.*default.*js/,
                     use: [
+                        'cache-loader',
+                        'thread-loader',
                         {
                             loader: path.resolve('./build/webpack/loaders/remarkLoader.js'),
                             options: {}
@@ -313,6 +321,8 @@ function buildConfiguration(bundle) {
                     type: 'javascript/auto',
                     include: /node_modules.*remark.*/,
                     use: [
+                        'cache-loader',
+                        'thread-loader',
                         {
                             loader: path.resolve('./build/webpack/loaders/jsonloader.js'),
                             options: {}
@@ -322,6 +332,8 @@ function buildConfiguration(bundle) {
                 {
                     test: /\.(png|woff|woff2|eot|gif|ttf)$/,
                     use: [
+                        'cache-loader',
+                        'thread-loader',
                         {
                             loader: 'url-loader?limit=100000',
                             options: { esModule: false }
@@ -330,7 +342,7 @@ function buildConfiguration(bundle) {
                 },
                 {
                     test: /\.less$/,
-                    use: ['style-loader', 'css-loader', 'less-loader']
+                    use: ['cache-loader', 'thread-loader', 'style-loader', 'css-loader', 'less-loader']
                 }
             ]
         }

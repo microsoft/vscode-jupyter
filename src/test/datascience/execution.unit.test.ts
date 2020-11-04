@@ -18,6 +18,8 @@ import { WorkspaceService } from '../../client/common/application/workspace';
 import { ConfigurationService } from '../../client/common/configuration/service';
 import { PYTHON_LANGUAGE } from '../../client/common/constants';
 import { PersistentState, PersistentStateFactory } from '../../client/common/persistentState';
+import { FileSystem } from '../../client/common/platform/fileSystem';
+import { IFileSystem } from '../../client/common/platform/types';
 import { ProcessServiceFactory } from '../../client/common/process/processFactory';
 import { PythonExecutionFactory } from '../../client/common/process/pythonExecutionFactory';
 import {
@@ -38,7 +40,6 @@ import {
     Product
 } from '../../client/common/types';
 import { EXTENSION_ROOT_DIR } from '../../client/constants';
-import { FileSystem } from '../../client/datascience/fileSystem';
 import { JupyterInterpreterDependencyService } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService';
 import { JupyterInterpreterOldCacheStateStore } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterOldCacheStateStore';
 import { JupyterInterpreterService } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterService';
@@ -48,7 +49,6 @@ import { KernelSelector } from '../../client/datascience/jupyter/kernels/kernelS
 import { NotebookStarter } from '../../client/datascience/jupyter/notebookStarter';
 import { LiveShareApi } from '../../client/datascience/liveshare/liveshare';
 import {
-    IFileSystem,
     IJupyterKernelSpec,
     IJupyterSubCommandExecutionService,
     INotebookServer
@@ -868,7 +868,7 @@ suite('Jupyter Execution', async () => {
             alwaysTrustNotebooks: true,
             jupyterLaunchTimeout: 10,
             jupyterLaunchRetries: 3,
-            jupyterServerURI: 'local',
+            jupyterServerType: 'local',
             // tslint:disable-next-line: no-invalid-template-strings
             notebookFileRoot: '${fileDirname}',
             changeDirOnImportExport: true,
@@ -967,28 +967,12 @@ suite('Jupyter Execution', async () => {
                 return true;
             }
         );
-        when(dependencyService.isExportSupported(anything(), anything())).thenCall(
-            async (interpreter: PythonEnvironment) => {
-                if (interpreter === missingNotebookPython) {
-                    return false;
-                }
-                return true;
-            }
-        );
         when(dependencyService.getDependenciesNotInstalled(anything(), anything())).thenCall(
             async (interpreter: PythonEnvironment) => {
                 if (interpreter === missingNotebookPython) {
                     return [Product.jupyter];
                 }
                 return [];
-            }
-        );
-        when(dependencyService.getNbConvertVersion(anything(), anything())).thenCall(
-            async (interpreter: PythonEnvironment) => {
-                if (interpreter === missingNotebookPython) {
-                    return undefined;
-                }
-                return new SemVer('1.1.1');
             }
         );
         const oldStore = mock(JupyterInterpreterOldCacheStateStore);
@@ -1038,8 +1022,6 @@ suite('Jupyter Execution', async () => {
         const jupyterExecutionFactory = createExecution(workingPython);
 
         await assert.eventually.equal(jupyterExecutionFactory.isNotebookSupported(), true, 'Notebook not supported');
-        const nbConvertVer = await jupyterExecutionFactory.getImportPackageVersion();
-        assert.isTrue(nbConvertVer?.compare('1.1.1') === 0);
         const usableInterpreter = await jupyterExecutionFactory.getUsableJupyterPython();
         assert.isOk(usableInterpreter, 'Usable interpreter not found');
         await assert.isFulfilled(jupyterExecutionFactory.connectToNotebookServer(), 'Should be able to start a server');
@@ -1054,8 +1036,6 @@ suite('Jupyter Execution', async () => {
         );
 
         await assert.eventually.equal(jupyterExecutionFactory.isNotebookSupported(), true, 'Notebook not supported');
-        const nbConvertVer = await jupyterExecutionFactory.getImportPackageVersion();
-        assert.isTrue(nbConvertVer?.compare('1.1.1') === 0);
         const usableInterpreter = await jupyterExecutionFactory.getUsableJupyterPython();
         assert.isOk(usableInterpreter, 'Usable interpreter not found');
         await assert.isFulfilled(jupyterExecutionFactory.connectToNotebookServer(), 'Should be able to start a server');

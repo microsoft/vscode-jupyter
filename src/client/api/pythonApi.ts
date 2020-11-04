@@ -15,7 +15,7 @@ import { inject, injectable } from 'inversify';
 import { CancellationToken, Disposable, Event, EventEmitter, Uri } from 'vscode';
 import { IApplicationEnvironment, IApplicationShell, ICommandManager } from '../common/application/types';
 import { InterpreterUri } from '../common/installer/types';
-import { IExtensions, InstallerResponse, Product, Resource } from '../common/types';
+import { IExtensions, InstallerResponse, IPersistentStateFactory, Product, Resource } from '../common/types';
 import { createDeferred } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
 import { noop } from '../common/utils/misc';
@@ -32,6 +32,7 @@ import {
     IPythonDebuggerPathProvider,
     IPythonExtensionChecker,
     IPythonInstaller,
+    JupyterProductToInstall,
     PythonApi
 } from './types';
 
@@ -66,7 +67,7 @@ export class PythonApiProvider implements IPythonApiProvider {
         this.initialized = true;
         const pythonExtension = this.extensions.getExtension<{ jupyter: { registerHooks(): void } }>(PythonExtension);
         if (!pythonExtension) {
-            await this.extensionChecker.installPythonExtension();
+            await this.extensionChecker.showPythonExtensionInstallRequiredPrompt();
         } else {
             if (!pythonExtension.isActive) {
                 await pythonExtension.activate();
@@ -83,6 +84,7 @@ export class PythonExtensionChecker implements IPythonExtensionChecker {
 
     constructor(
         @inject(IExtensions) private readonly extensions: IExtensions,
+        @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IApplicationEnvironment) private readonly appEnv: IApplicationEnvironment,
         @inject(ICommandManager) private readonly commands: ICommandManager
@@ -92,18 +94,48 @@ export class PythonExtensionChecker implements IPythonExtensionChecker {
         return this.extensions.getExtension(this.pythonExtensionId) !== undefined;
     }
 
-    public async installPythonExtension(): Promise<void> {
+    public async showPythonExtensionInstallRequiredPrompt(): Promise<void> {
         // Ask user if they want to install and then wait for them to actually install it.
         const yes = localize.Common.bannerLabelYes();
         const no = localize.Common.bannerLabelNo();
         const answer = await this.appShell.showErrorMessage(localize.DataScience.pythonExtensionRequired(), yes, no);
         if (answer === yes) {
-            // Start listening for extension changes
-            this.extensionChangeHandler = this.extensions.onDidChange(this.extensionsChangeHandler.bind(this));
-
-            // Have the user install python
-            this.appShell.openUrl(`${this.appEnv.uriScheme}:extension/${this.pythonExtensionId}`);
+            await this.installPythonExtension();
         }
+    }
+
+    public async showPythonExtensionInstallRecommendedPrompt() {
+        const key = 'ShouldShowPythonExtensionInstallRecommendedPrompt';
+        const surveyPrompt = this.persistentStateFactory.createGlobalPersistentState(key, true);
+        if (surveyPrompt.value) {
+            const yes = localize.Common.bannerLabelYes();
+            const no = localize.Common.bannerLabelNo();
+            const doNotShowAgain = localize.Common.doNotShowAgain();
+            const answer = await this.appShell.showInformationMessage(
+                localize.DataScience.pythonExtensionRecommended(),
+                yes,
+                no,
+                doNotShowAgain
+            );
+            switch (answer) {
+                case yes:
+                    await this.installPythonExtension();
+                    break;
+                case doNotShowAgain:
+                    await surveyPrompt.updateValue(false);
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+
+    private async installPythonExtension() {
+        // Start listening for extension changes
+        this.extensionChangeHandler = this.extensions.onDidChange(this.extensionsChangeHandler.bind(this));
+
+        // Have the user install python
+        this.appShell.openUrl(`${this.appEnv.uriScheme}:extension/${this.pythonExtensionId}`);
     }
 
     private async extensionsChangeHandler(): Promise<void> {
@@ -151,6 +183,15 @@ export class PythonDebuggerPathProvider implements IPythonDebuggerPathProvider {
     }
 }
 
+const ProductMapping: { [key in Product]: JupyterProductToInstall } = {
+    [Product.ipykernel]: JupyterProductToInstall.ipykernel,
+    [Product.jupyter]: JupyterProductToInstall.jupyter,
+    [Product.kernelspec]: JupyterProductToInstall.kernelspec,
+    [Product.nbconvert]: JupyterProductToInstall.nbconvert,
+    [Product.notebook]: JupyterProductToInstall.notebook,
+    [Product.pandas]: JupyterProductToInstall.pandas
+};
+
 // tslint:disable: max-classes-per-file
 @injectable()
 export class PythonInstaller implements IPythonInstaller {
@@ -161,7 +202,7 @@ export class PythonInstaller implements IPythonInstaller {
         resource?: InterpreterUri,
         cancel?: CancellationToken
     ): Promise<InstallerResponse> {
-        return this.apiProvider.getApi().then((api) => api.install(product, resource, cancel));
+        return this.apiProvider.getApi().then((api) => api.install(ProductMapping[product], resource, cancel));
     }
 }
 

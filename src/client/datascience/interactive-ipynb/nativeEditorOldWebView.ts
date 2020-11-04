@@ -17,6 +17,7 @@ import {
 import { traceError } from '../../common/logger';
 
 import { IPythonExtensionChecker } from '../../api/types';
+import { IFileSystem } from '../../common/platform/types';
 import {
     IAsyncDisposableRegistry,
     IConfigurationService,
@@ -30,20 +31,19 @@ import { Commands, Telemetry } from '../constants';
 import { IDataViewerFactory } from '../data-viewing/types';
 import { InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
+import { NativeEditorNotebookModel } from '../notebookStorage/notebookModel';
 import { INotebookStorageProvider } from '../notebookStorage/notebookStorageProvider';
 import {
     ICodeCssGenerator,
     IDataScienceErrorHandler,
-    IFileSystem,
     IInteractiveWindowListener,
     IJupyterDebugger,
+    IJupyterServerUriStorage,
     IJupyterVariableDataProviderFactory,
     IJupyterVariables,
     INotebookEditorProvider,
     INotebookExporter,
-    INotebookExtensibility,
     INotebookImporter,
-    INotebookModel,
     INotebookProvider,
     IStatusProvider,
     IThemeFinder,
@@ -52,7 +52,7 @@ import {
 import { NativeEditor } from './nativeEditor';
 import { NativeEditorSynchronizer } from './nativeEditorSynchronizer';
 
-enum AskForSaveResult {
+export enum AskForSaveResult {
     Yes,
     No,
     Cancel
@@ -101,11 +101,11 @@ export class NativeEditorOldWebView extends NativeEditor {
         private readonly storage: INotebookStorageProvider,
         trustService: ITrustService,
         expService: IExperimentService,
-        model: INotebookModel,
+        model: NativeEditorNotebookModel,
         webviewPanel: WebviewPanel | undefined,
         selector: KernelSelector,
-        notebookExtensibility: INotebookExtensibility,
-        extensionChecker: IPythonExtensionChecker
+        extensionChecker: IPythonExtensionChecker,
+        serverStorage: IJupyterServerUriStorage
     ) {
         super(
             listeners,
@@ -140,8 +140,8 @@ export class NativeEditorOldWebView extends NativeEditor {
             model,
             webviewPanel,
             selector,
-            notebookExtensibility,
-            extensionChecker
+            extensionChecker,
+            serverStorage
         );
         asyncRegistry.push(this);
         // No ui syncing in old notebooks.

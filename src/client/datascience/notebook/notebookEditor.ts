@@ -4,10 +4,10 @@
 'use strict';
 
 import { ConfigurationTarget, Event, EventEmitter, Uri, WebviewPanel } from 'vscode';
-import type { NotebookCell, NotebookDocument } from 'vscode-proposed';
+import type { NotebookCell, NotebookDocument } from '../../../../types/vscode-proposed';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import { traceError } from '../../common/logger';
-import { IConfigurationService, IDisposableRegistry } from '../../common/types';
+import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../common/types';
 import { DataScience } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { sendTelemetryEvent } from '../../telemetry';
@@ -17,13 +17,13 @@ import { IKernel, IKernelProvider } from '../jupyter/kernels/types';
 import {
     INotebook,
     INotebookEditor,
-    INotebookExtensibility,
     INotebookModel,
     INotebookProvider,
     InterruptResult,
     IStatusProvider
 } from '../types';
-import { getDefaultCodeLanguage } from './helpers/helpers';
+import { NotebookCellLanguageService } from './defaultCellLanguageService';
+import { chainWithPendingUpdates } from './helpers/notebookUpdater';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
@@ -63,9 +63,6 @@ export class NotebookEditor implements INotebookEditor {
     public get onExecutedCode(): Event<string> {
         return this.executedCode.event;
     }
-    public get notebookExtensibility(): INotebookExtensibility {
-        return this.nbExtensibility;
-    }
     public notebook?: INotebook | undefined;
 
     private changedViewState = new EventEmitter<void>();
@@ -86,7 +83,7 @@ export class NotebookEditor implements INotebookEditor {
         private readonly applicationShell: IApplicationShell,
         private readonly configurationService: IConfigurationService,
         disposables: IDisposableRegistry,
-        private readonly nbExtensibility: INotebookExtensibility
+        private readonly cellLanguageService: NotebookCellLanguageService
     ) {
         disposables.push(model.onDidEdit(() => this._modified.fire(this)));
         disposables.push(
@@ -119,35 +116,36 @@ export class NotebookEditor implements INotebookEditor {
     public stopProgress(): void {
         throw new Error('Method not implemented.');
     }
+    public createWebviewCellButton(): IDisposable {
+        throw new Error('Method not implemented.');
+    }
+    public hasCell(): Promise<boolean> {
+        return Promise.resolve(this.document.cells.length > 0);
+    }
     public undoCells(): void {
         this.commandManager.executeCommand('notebook.undo').then(noop, noop);
     }
     public redoCells(): void {
         this.commandManager.executeCommand('notebook.redo').then(noop, noop);
     }
-    public async hasCell(id: string): Promise<boolean> {
-        return this.model.cells.find((c) => c.id === id) ? true : false;
-    }
     public removeAllCells(): void {
         if (!this.vscodeNotebook.activeNotebookEditor) {
             return;
         }
-        const defaultLanguage = getDefaultCodeLanguage(this.model);
+        const defaultLanguage = this.cellLanguageService.getPreferredLanguage(this.model.metadata);
         const editor = this.vscodeNotebook.notebookEditors.find((item) => item.document === this.document);
         if (editor) {
-            editor
-                .edit((edit) =>
-                    edit.replaceCells(0, this.document.cells.length, [
-                        {
-                            cellKind: vscodeNotebookEnums.CellKind.Code,
-                            language: defaultLanguage,
-                            metadata: {},
-                            outputs: [],
-                            source: ''
-                        }
-                    ])
-                )
-                .then(noop, noop);
+            chainWithPendingUpdates(editor, (edit) =>
+                edit.replaceCells(0, this.document.cells.length, [
+                    {
+                        cellKind: vscodeNotebookEnums.CellKind.Code,
+                        language: defaultLanguage,
+                        metadata: {},
+                        outputs: [],
+                        source: ''
+                    }
+                ])
+            ).then(noop, noop);
         }
     }
     public expandAllCells(): void {
@@ -157,17 +155,15 @@ export class NotebookEditor implements INotebookEditor {
         const notebook = this.vscodeNotebook.activeNotebookEditor.document;
         const editor = this.vscodeNotebook.notebookEditors.find((item) => item.document === this.document);
         if (editor) {
-            editor
-                .edit((edit) => {
-                    notebook.cells.forEach((cell, index) => {
-                        edit.replaceCellMetadata(index, {
-                            ...cell.metadata,
-                            inputCollapsed: false,
-                            outputCollapsed: false
-                        });
+            chainWithPendingUpdates(editor, (edit) => {
+                notebook.cells.forEach((cell, index) => {
+                    edit.replaceCellMetadata(index, {
+                        ...cell.metadata,
+                        inputCollapsed: false,
+                        outputCollapsed: false
                     });
-                })
-                .then(noop, noop);
+                });
+            }).then(noop, noop);
         }
     }
     public collapseAllCells(): void {
@@ -177,23 +173,20 @@ export class NotebookEditor implements INotebookEditor {
         const notebook = this.vscodeNotebook.activeNotebookEditor.document;
         const editor = this.vscodeNotebook.notebookEditors.find((item) => item.document === this.document);
         if (editor) {
-            editor
-                .edit((edit) => {
-                    notebook.cells.forEach((cell, index) => {
-                        edit.replaceCellMetadata(index, {
-                            ...cell.metadata,
-                            inputCollapsed: true,
-                            outputCollapsed: true
-                        });
+            chainWithPendingUpdates(editor, (edit) => {
+                notebook.cells.forEach((cell, index) => {
+                    edit.replaceCellMetadata(index, {
+                        ...cell.metadata,
+                        inputCollapsed: true,
+                        outputCollapsed: true
                     });
-                })
-                .then(noop, noop);
+                });
+            }).then(noop, noop);
         }
     }
     public notifyExecution(cell: NotebookCell) {
         this._executed.fire(this);
         this.executedCode.fire(cell.document.getText());
-        this.nbExtensibility.fireKernelPostExecute(cell);
     }
     public async interruptKernel(): Promise<void> {
         if (this.restartingKernel) {
@@ -257,6 +250,7 @@ export class NotebookEditor implements INotebookEditor {
     public dispose() {
         this._closed.fire(this);
     }
+
     private async restartKernelInternal(kernel: IKernel): Promise<void> {
         this.restartingKernel = true;
 
@@ -265,7 +259,6 @@ export class NotebookEditor implements INotebookEditor {
 
         try {
             await kernel.restart();
-            this.nbExtensibility.fireKernelRestart();
         } catch (exc) {
             // If we get a kernel promise failure, then restarting timed out. Just shutdown and restart the entire server.
             // Note, this code might not be necessary, as such an error is thrown only when interrupting a kernel times out.

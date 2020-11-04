@@ -10,6 +10,7 @@ import { Event, EventEmitter, Position, Range, TextDocumentChangeEvent, TextDocu
 import { splitMultilineString } from '../../../datascience-ui/common';
 import { IDebugService, IDocumentManager } from '../../common/application/types';
 import { traceError, traceInfo } from '../../common/logger';
+import { IFileSystem } from '../../common/platform/types';
 
 import { IConfigurationService } from '../../common/types';
 import { noop } from '../../common/utils/misc';
@@ -22,7 +23,6 @@ import {
     ICellHashListener,
     ICellHashProvider,
     IFileHashes,
-    IFileSystem,
     INotebook,
     INotebookExecutionLogger
 } from '../types';
@@ -93,6 +93,10 @@ export class CellHashProvider implements ICellHashProvider, INotebookExecutionLo
                 };
             })
             .filter((e) => e.hashes.length > 0);
+    }
+
+    public onKernelStarted() {
+        noop();
     }
 
     public onKernelRestarted() {

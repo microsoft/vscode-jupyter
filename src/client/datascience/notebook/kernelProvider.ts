@@ -14,22 +14,27 @@ import {
     NotebookKernelProvider
 } from '../../../../types/vscode-proposed';
 import { IVSCodeNotebook } from '../../common/application/types';
-import { IDisposableRegistry, IExtensionContext } from '../../common/types';
+import { traceInfo } from '../../common/logger';
+import { IDisposableRegistry } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { IInterpreterService } from '../../interpreter/contracts';
-import { InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
-import { IPyWidgetMessageDispatcher } from '../ipywidgets/ipyWidgetMessageDispatcher';
-import { IPyWidgetScriptSource } from '../ipywidgets/ipyWidgetScriptSource';
+import { captureTelemetry } from '../../telemetry';
+import { Telemetry } from '../constants';
 import { areKernelConnectionsEqual } from '../jupyter/kernels/helpers';
 import { KernelSelectionProvider } from '../jupyter/kernels/kernelSelections';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
 import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
-import { getKernelConnectionId, IKernelProvider, KernelConnectionMetadata } from '../jupyter/kernels/types';
+import { getKernelConnectionId, IKernel, IKernelProvider, KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { INotebookStorageProvider } from '../notebookStorage/notebookStorageProvider';
 import { INotebook, INotebookProvider } from '../types';
-import { getNotebookMetadata, isJupyterNotebook, updateKernelInNotebookMetadata } from './helpers/helpers';
+import {
+    getNotebookMetadata,
+    isJupyterNotebook,
+    updateKernelInfoInNotebookMetadata,
+    updateKernelInNotebookMetadata
+} from './helpers/helpers';
 
-class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
+export class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
     get preloads(): Uri[] {
         return [
             Uri.file(join(this.context.extensionPath, 'out', 'ipywidgets', 'dist', 'ipywidgets.js')),
@@ -48,19 +53,41 @@ class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
         public readonly selection: Readonly<KernelConnectionMetadata>,
         public readonly isPreferred: boolean,
         private readonly kernelProvider: IKernelProvider,
-        private readonly context: IExtensionContext
+        private readonly notebook: IVSCodeNotebook
     ) {}
-    public executeCell(_: NotebookDocument, cell: NotebookCell) {
-        this.kernelProvider.getOrCreate(cell.notebook.uri, { metadata: this.selection })?.executeCell(cell); // NOSONAR
+    public executeCell(doc: NotebookDocument, cell: NotebookCell) {
+        traceInfo('Execute Cell in KernelProvider.ts');
+        const kernel = this.kernelProvider.getOrCreate(cell.notebook.uri, { metadata: this.selection });
+        if (kernel) {
+            this.updateKernelInfoInNotebookWhenAvailable(kernel, doc);
+            kernel.executeCell(cell).catch(noop);
+        }
     }
     public executeAllCells(document: NotebookDocument) {
-        this.kernelProvider.getOrCreate(document.uri, { metadata: this.selection })?.executeAllCells(document); // NOSONAR
+        const kernel = this.kernelProvider.getOrCreate(document.uri, { metadata: this.selection });
+        if (kernel) {
+            this.updateKernelInfoInNotebookWhenAvailable(kernel, document);
+            kernel.executeAllCells(document).catch(noop);
+        }
     }
     public cancelCellExecution(_: NotebookDocument, cell: NotebookCell) {
         this.kernelProvider.get(cell.notebook.uri)?.interrupt(); // NOSONAR
     }
     public cancelAllCellsExecution(document: NotebookDocument) {
         this.kernelProvider.get(document.uri)?.interrupt(); // NOSONAR
+    }
+    private updateKernelInfoInNotebookWhenAvailable(kernel: IKernel, doc: NotebookDocument) {
+        const disposable = kernel.onStatusChanged(() => {
+            if (!kernel.info) {
+                return;
+            }
+            const editor = this.notebook.notebookEditors.find((item) => item.document === doc);
+            if (!editor || editor.kernel?.id !== this.id) {
+                return;
+            }
+            disposable.dispose();
+            updateKernelInfoInNotebookMetadata(doc, kernel.info);
+        });
     }
 }
 
@@ -162,20 +189,29 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
         });
 
         // Turn this into our preferred list.
-        const mapped = withInterpreter.map((kernel) => {
-            return new VSCodeNotebookKernelMetadata(
-                kernel.label,
-                kernel.description || '',
-                kernel.detail || '',
-                kernel.selection,
-                areKernelConnectionsEqual(kernel.selection, preferredKernel),
-                this.kernelProvider,
-                this.context
-            );
-        });
+        const existingItem = new Set<string>();
+        const mapped = withInterpreter
+            .map((kernel) => {
+                return new VSCodeNotebookKernelMetadata(
+                    kernel.label,
+                    kernel.description || '',
+                    kernel.detail || '',
+                    kernel.selection,
+                    areKernelConnectionsEqual(kernel.selection, preferredKernel),
+                    this.kernelProvider,
+                    this.notebook
+                );
+            })
+            .filter((item) => {
+                if (existingItem.has(item.id)) {
+                    return false;
+                }
+                existingItem.add(item.id);
+                return true;
+            });
 
         // If no preferred kernel set but we have a language, use that to set preferred instead.
-        if (!mapped.find((v) => v.isPreferred) && document.cells.length) {
+        if (!mapped.find((v) => v.isPreferred)) {
             const languages = document.cells.map((c) => c.language);
             // Find the first that matches on language
             const indexOfKernelMatchingDocumentLanguage = kernels.findIndex((k) =>
@@ -198,7 +234,7 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
                         kernel.selection,
                         true,
                         this.kernelProvider,
-                        this.context
+                        this.notebook
                     )
                 );
             }

@@ -5,6 +5,7 @@ import '../../common/extensions';
 
 import type { nbformat } from '@jupyterlab/coreutils';
 import type { KernelMessage } from '@jupyterlab/services';
+import * as fsextra from 'fs-extra';
 import * as os from 'os';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
@@ -38,7 +39,9 @@ import { Experiments } from '../../common/experiments/groups';
 import { traceError, traceInfo, traceWarning } from '../../common/logger';
 
 import { isNil } from 'lodash';
-import { IConfigurationService, IDisposableRegistry, IExperimentService } from '../../common/types';
+import { NotebookCell } from '../../../../types/vscode-proposed';
+import { IFileSystem } from '../../common/platform/types';
+import { IConfigurationService, IDisposable, IDisposableRegistry, IExperimentService } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { isUntitledFile, noop } from '../../common/utils/misc';
@@ -46,9 +49,9 @@ import { StopWatch } from '../../common/utils/stopWatch';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { generateCellRangesFromDocument } from '../cellFactory';
 import { CellMatcher } from '../cellMatcher';
-import { addToUriList, translateKernelLanguageToMonaco } from '../common';
+import { translateKernelLanguageToMonaco } from '../common';
 import { Commands, Identifiers, Settings, Telemetry } from '../constants';
-import { ColumnWarningSize, IDataViewerFactory } from '../data-viewing/types';
+import { IDataViewerFactory } from '../data-viewing/types';
 import {
     IAddedSysInfo,
     ICopyCode,
@@ -80,11 +83,13 @@ import {
     ICell,
     ICodeCssGenerator,
     IDataScienceErrorHandler,
-    IFileSystem,
+    IExternalCommandFromWebview,
+    IExternalWebviewCellButton,
     IInteractiveBase,
     IInteractiveWindowInfo,
     IInteractiveWindowListener,
     IJupyterDebugger,
+    IJupyterServerUriStorage,
     IJupyterVariableDataProviderFactory,
     IJupyterVariables,
     IJupyterVariablesRequest,
@@ -100,7 +105,9 @@ import {
     IThemeFinder,
     WebViewViewChangeEventArgs
 } from '../types';
+import { translateCellToNative } from '../utils';
 import { WebviewPanelHost } from '../webviews/webviewPanelHost';
+import { DataViewerChecker } from './dataViewerChecker';
 import { InteractiveWindowMessageListener } from './interactiveWindowMessageListener';
 import { serializeLanguageConfiguration } from './serialization';
 
@@ -120,10 +127,13 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         return this.readyEvent.event;
     }
 
+    public abstract isInteractive: boolean;
     protected abstract get notebookMetadata(): INotebookMetadataLive | undefined;
 
     protected abstract get notebookIdentity(): INotebookIdentity;
-
+    protected fileInKernel: string | undefined;
+    protected externalButtons: IExternalWebviewCellButton[] = [];
+    protected dataViewerChecker: DataViewerChecker;
     private unfinishedCells: ICell[] = [];
     private restartingKernel: boolean = false;
     private perceivedJupyterStartupTelemetryCaptured: boolean = false;
@@ -151,7 +161,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         protected configuration: IConfigurationService,
         protected jupyterExporter: INotebookExporter,
         workspaceService: IWorkspaceService,
-        private dataExplorerFactory: IDataViewerFactory,
+        private dataViewerFactory: IDataViewerFactory,
         private jupyterVariableDataProviderFactory: IJupyterVariableDataProviderFactory,
         private jupyterVariables: IJupyterVariables,
         private jupyterDebugger: IJupyterDebugger,
@@ -166,7 +176,8 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         private readonly notebookProvider: INotebookProvider,
         useCustomEditorApi: boolean,
         expService: IExperimentService,
-        private selector: KernelSelector
+        private selector: KernelSelector,
+        private serverStorage: IJupyterServerUriStorage
     ) {
         super(
             configuration,
@@ -205,6 +216,8 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
                 l.onMessage(InteractiveWindowMessages.NotebookIdentity, this.notebookIdentity)
             );
         }, 0);
+
+        this.dataViewerChecker = new DataViewerChecker(configuration, applicationShell);
 
         // When a notebook provider first makes its connection check it to see if we should create a notebook
         this.disposables.push(
@@ -343,6 +356,10 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
 
             case InteractiveWindowMessages.MonacoReady:
                 this.readyEvent.fire();
+                break;
+
+            case InteractiveWindowMessages.ExecuteExternalCommand:
+                this.handleMessage(message, payload, this.handleExecuteExternalCommand);
                 break;
 
             default:
@@ -487,6 +504,33 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         });
     }
 
+    public createWebviewCellButton(
+        buttonId: string,
+        callback: (cell: NotebookCell, isInteractive: boolean, resource: Uri) => Promise<void>,
+        codicon: string,
+        statusToEnable: CellState[],
+        tooltip: string
+    ): IDisposable {
+        const index = this.externalButtons.findIndex((button) => button.buttonId === buttonId);
+        if (index === -1) {
+            this.externalButtons.push({ buttonId, callback, codicon, statusToEnable, tooltip, running: false });
+            this.postMessage(InteractiveWindowMessages.UpdateExternalCellButtons, this.externalButtons).ignoreErrors();
+        }
+
+        return {
+            dispose: () => {
+                const buttonIndex = this.externalButtons.findIndex((button) => button.buttonId === buttonId);
+                if (buttonIndex !== -1) {
+                    this.externalButtons.splice(buttonIndex, 1);
+                    this.postMessage(
+                        InteractiveWindowMessages.UpdateExternalCellButtons,
+                        this.externalButtons
+                    ).ignoreErrors();
+                }
+            }
+        };
+    }
+
     public abstract hasCell(id: string): Promise<boolean>;
 
     protected onViewStateChanged(args: WebViewViewChangeEventArgs) {
@@ -537,6 +581,8 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
     protected abstract closeBecauseOfFailure(exc: Error): Promise<void>;
 
     protected abstract updateNotebookOptions(kernelConnection: KernelConnectionMetadata): Promise<void>;
+
+    protected abstract setFileInKernel(file: string, cancelToken: CancellationToken | undefined): Promise<void>;
 
     protected async clearResult(id: string): Promise<void> {
         await this.ensureConnectionAndNotebook();
@@ -631,16 +677,9 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
                 }
 
                 // If the file isn't unknown, set the active kernel's __file__ variable to point to that same file.
-                if (file !== Identifiers.EmptyFileName) {
-                    await this._notebook.execute(
-                        `__file__ = '${file.replace(/\\/g, '\\\\')}'`,
-                        file,
-                        line,
-                        uuid(),
-                        cancelToken,
-                        true
-                    );
-                }
+                await this.setFileInKernel(file, cancelToken);
+
+                // Setup telemetry
                 if (stopWatch && !this.perceivedJupyterStartupTelemetryCaptured) {
                     this.perceivedJupyterStartupTelemetryCaptured = true;
                     sendTelemetryEvent(Telemetry.PerceivedJupyterStartupNotebook, stopWatch?.elapsedTime);
@@ -874,17 +913,16 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
     }
 
     protected async getServerDisplayName(serverConnection: INotebookProviderConnection | undefined): Promise<string> {
+        const serverUri = await this.serverStorage.getUri();
         // If we don't have a server connection, make one if remote. We need the remote connection in order
         // to compute the display name. However only do this if the user is allowing auto start.
         if (
             !serverConnection &&
-            this.configService.getSettings(this.owningResource).jupyterServerURI !==
-                Settings.JupyterServerLocalLaunch &&
+            serverUri !== Settings.JupyterServerLocalLaunch &&
             !this.configService.getSettings(this.owningResource).disableJupyterAutoStart
         ) {
             serverConnection = await this.notebookProvider.connect({ disableUI: true });
         }
-        const serverUri = this.configService.getSettings().jupyterServerURI;
         let displayName =
             serverConnection?.displayName ||
             (!serverConnection?.localLaunch ? serverConnection?.url : undefined) ||
@@ -898,8 +936,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
                 displayName = localize.DataScience.localJupyterServer();
             } else {
                 // Log this remote URI into our MRU list
-                addToUriList(
-                    this.globalStorage,
+                await this.serverStorage.addToUriList(
                     !isNil(serverConnection.url) ? serverConnection.url : serverConnection.displayName,
                     Date.now(),
                     serverConnection.displayName
@@ -943,6 +980,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
                 await this.ensureNotebook(serverConnection);
             }
         } catch (exc) {
+            traceError(`Exception attempting to start notebook: `, exc);
             // We should dispose ourselves if the load fails. Othewise the user
             // updates their install and we just fail again because the load promise is the same.
             await this.closeBecauseOfFailure(exc);
@@ -973,47 +1011,18 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         }
     }
 
-    private async shouldAskForLargeData(): Promise<boolean> {
-        const settings = this.configuration.getSettings(this.owningResource);
-        return settings && settings.askForLargeDataFrames === true;
-    }
-
-    private async disableAskForLargeData(): Promise<void> {
-        const settings = this.configuration.getSettings(this.owningResource);
-        if (settings) {
-            this.configuration
-                .updateSetting('askForLargeDataFrames', false, undefined, ConfigurationTarget.Global)
-                .ignoreErrors();
-        }
-    }
-
-    private async checkColumnSize(columnSize: number): Promise<boolean> {
-        if (columnSize > ColumnWarningSize && (await this.shouldAskForLargeData())) {
-            const message = localize.DataScience.tooManyColumnsMessage();
-            const yes = localize.DataScience.tooManyColumnsYes();
-            const no = localize.DataScience.tooManyColumnsNo();
-            const dontAskAgain = localize.DataScience.tooManyColumnsDontAskAgain();
-
-            const result = await this.applicationShell.showWarningMessage(message, yes, no, dontAskAgain);
-            if (result === dontAskAgain) {
-                await this.disableAskForLargeData();
-            }
-            return result === yes;
-        }
-        return true;
-    }
-
     private async showDataViewer(request: IShowDataViewer): Promise<void> {
         try {
-            if (await this.checkColumnSize(request.columnSize)) {
+            if (await this.dataViewerChecker.isRequestedColumnSizeAllowed(request.columnSize, this.owningResource)) {
                 const jupyterVariableDataProvider = await this.jupyterVariableDataProviderFactory.create(
                     request.variable,
                     this._notebook!
                 );
                 const title: string = `${localize.DataScience.dataExplorerTitle()} - ${request.variable.name}`;
-                await this.dataExplorerFactory.create(jupyterVariableDataProvider, title);
+                await this.dataViewerFactory.create(jupyterVariableDataProvider, title);
             }
         } catch (e) {
+            traceError(e);
             this.applicationShell.showErrorMessage(e.toString());
         }
     }
@@ -1422,7 +1431,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
     private async requestVariables(args: IJupyterVariablesRequest): Promise<void> {
         // Request our new list of variables
         const response: IJupyterVariablesResponse = this._notebook
-            ? await this.jupyterVariables.getVariables(this._notebook, args)
+            ? await this.jupyterVariables.getVariables(args, this._notebook)
             : {
                   totalCount: 0,
                   pageResponse: [],
@@ -1509,26 +1518,20 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         // Look for the file next or our current file (this is where it's installed in the vsix)
         let filePath = path.join(__dirname, 'node_modules', 'onigasm', 'lib', 'onigasm.wasm');
         traceInfo(`Request for onigasm file at ${filePath}`);
-        if (this.fs) {
-            if (await this.fs.localFileExists(filePath)) {
-                const contents = await this.fs.readLocalData(filePath);
+        if (await fsextra.pathExists(filePath)) {
+            const contents = await fsextra.readFile(filePath);
+            this.postMessage(InteractiveWindowMessages.LoadOnigasmAssemblyResponse, contents).ignoreErrors();
+        } else {
+            // During development it's actually in the node_modules folder
+            filePath = path.join(EXTENSION_ROOT_DIR, 'node_modules', 'onigasm', 'lib', 'onigasm.wasm');
+            traceInfo(`Backup request for onigasm file at ${filePath}`);
+            if (await fsextra.pathExists(filePath)) {
+                const contents = await fsextra.readFile(filePath);
                 this.postMessage(InteractiveWindowMessages.LoadOnigasmAssemblyResponse, contents).ignoreErrors();
             } else {
-                // During development it's actually in the node_modules folder
-                filePath = path.join(EXTENSION_ROOT_DIR, 'node_modules', 'onigasm', 'lib', 'onigasm.wasm');
-                traceInfo(`Backup request for onigasm file at ${filePath}`);
-                if (await this.fs.localFileExists(filePath)) {
-                    const contents = await this.fs.readLocalData(filePath);
-                    this.postMessage(InteractiveWindowMessages.LoadOnigasmAssemblyResponse, contents).ignoreErrors();
-                } else {
-                    traceWarning('Onigasm file not found. Colorization will not be available.');
-                    this.postMessage(InteractiveWindowMessages.LoadOnigasmAssemblyResponse).ignoreErrors();
-                }
+                traceWarning('Onigasm file not found. Colorization will not be available.');
+                this.postMessage(InteractiveWindowMessages.LoadOnigasmAssemblyResponse).ignoreErrors();
             }
-        } else {
-            // This happens during testing. Onigasm not needed as we're not testing colorization.
-            traceWarning('File system not found. Colorization will not be available.');
-            this.postMessage(InteractiveWindowMessages.LoadOnigasmAssemblyResponse).ignoreErrors();
         }
     }
 
@@ -1565,5 +1568,22 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
     private handleUpdateDisplayData(msg: KernelMessage.IUpdateDisplayDataMsg) {
         // Send to the UI to handle
         this.postMessage(InteractiveWindowMessages.UpdateDisplayData, msg).ignoreErrors();
+    }
+
+    private async handleExecuteExternalCommand(payload: IExternalCommandFromWebview) {
+        const button = this.externalButtons.find((b) => b.buttonId === payload.buttonId);
+
+        if (this.notebook) {
+            const language = getKernelConnectionLanguage(this.notebook.getKernelConnection()) || PYTHON_LANGUAGE;
+            const id = this.notebook.identity;
+            const cell = translateCellToNative(payload.cell, language);
+
+            if (button && cell) {
+                await button.callback(cell as NotebookCell, this.isInteractive, id);
+            }
+        }
+
+        // Post message again to let the react side know the command is done executing
+        this.postMessage(InteractiveWindowMessages.UpdateExternalCellButtons, this.externalButtons).ignoreErrors();
     }
 }

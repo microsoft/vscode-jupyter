@@ -9,6 +9,7 @@ import * as fastDeepEqual from 'fast-deep-equal';
 import type { NotebookCell, NotebookEditor } from '../../../../../types/vscode-proposed';
 import { createErrorOutput } from '../../../../datascience-ui/common/cellFactory';
 import { createIOutputFromCellOutputs, createVSCCellOutputsFromOutputs, translateErrorOutput } from './helpers';
+import { chainWithPendingUpdates } from './notebookUpdater';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
@@ -21,14 +22,14 @@ const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed'
 export async function handleUpdateDisplayDataMessage(
     msg: KernelMessage.IUpdateDisplayDataMsg,
     editor: NotebookEditor
-): Promise<boolean> {
+): Promise<void> {
     const document = editor.document;
-    let updated = false;
     // Find any cells that have this same display_id
     for (const cell of document.cells) {
         if (cell.cellKind !== vscodeNotebookEnums.CellKind.Code) {
-            return false;
+            continue;
         }
+        let updated = false;
 
         const outputs = createIOutputFromCellOutputs(cell.outputs);
         const changedOutputs = outputs.map((output) => {
@@ -51,15 +52,10 @@ export async function handleUpdateDisplayDataMessage(
             }
         });
 
-        if (!updated) {
-            continue;
+        if (updated) {
+            await updateCellOutput(editor, cell, changedOutputs);
         }
-
-        await updateCellOutput(editor, cell, changedOutputs);
-        updated = true;
     }
-
-    return updated;
 }
 
 /**
@@ -70,13 +66,12 @@ export async function updateCellWithErrorStatus(
     cell: NotebookCell,
     ex: Partial<Error>
 ) {
-    const cellIndex = cell.notebook.cells.indexOf(cell);
-    await notebookEditor.edit((edit) => {
-        edit.replaceCellMetadata(cellIndex, {
+    await chainWithPendingUpdates(notebookEditor, (edit) => {
+        edit.replaceCellMetadata(cell.index, {
             ...cell.metadata,
             runState: vscodeNotebookEnums.NotebookCellRunState.Error
         });
-        edit.replaceCellOutput(cellIndex, [translateErrorOutput(createErrorOutput(ex))]);
+        edit.replaceCellOutput(cell.index, [translateErrorOutput(createErrorOutput(ex))]);
     });
 }
 
@@ -87,18 +82,15 @@ export async function updateCellExecutionCount(
     editor: NotebookEditor,
     cell: NotebookCell,
     executionCount: number
-): Promise<boolean> {
+): Promise<void> {
     if (cell.metadata.executionOrder !== executionCount && executionCount) {
-        const cellIndex = editor.document.cells.indexOf(cell);
-        await editor.edit((edit) =>
-            edit.replaceCellMetadata(cellIndex, {
+        await chainWithPendingUpdates(editor, (edit) =>
+            edit.replaceCellMetadata(cell.index, {
                 ...cell.metadata,
                 executionOrder: executionCount
             })
         );
-        return true;
     }
-    return false;
 }
 
 /**
@@ -116,6 +108,5 @@ export async function updateCellOutput(editor: NotebookEditor, cell: NotebookCel
     if (cell.outputs.length === newOutput.length && fastDeepEqual(cell.outputs, newOutput)) {
         return;
     }
-    const cellIndex = cell.notebook.cells.indexOf(cell);
-    await editor.edit((edit) => edit.replaceCellOutput(cellIndex, newOutput));
+    await chainWithPendingUpdates(editor, (edit) => edit.replaceCellOutput(cell.index, newOutput));
 }

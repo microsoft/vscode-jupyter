@@ -19,10 +19,13 @@ import { IApplicationShell, IWorkspaceService } from '../../client/common/applic
 import { Cancellation, CancellationError } from '../../client/common/cancellation';
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import { traceError, traceInfo } from '../../client/common/logger';
+import { IFileSystem } from '../../client/common/platform/types';
 import { IPythonExecutionFactory } from '../../client/common/process/types';
 import { Product } from '../../client/common/types';
 import { createDeferred, waitForPromise } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
+import { ExportInterpreterFinder } from '../../client/datascience/export/exportInterpreterFinder';
+import { ExportFormat } from '../../client/datascience/export/types';
 import { getDefaultInteractiveIdentity } from '../../client/datascience/interactive-window/identity';
 import { getMessageForLibrariesNotInstalled } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService';
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
@@ -31,7 +34,6 @@ import { HostJupyterNotebook } from '../../client/datascience/jupyter/liveshare/
 import {
     CellState,
     ICell,
-    IFileSystem,
     IJupyterConnection,
     IJupyterExecution,
     IJupyterKernelSpec,
@@ -49,7 +51,6 @@ import { generateTestState, ICellViewModel } from '../../datascience-ui/interact
 import { sleep } from '../core';
 import { InterpreterService } from '../interpreters/interpreterService';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
-import { takeSnapshot, writeDiffSnapshot } from './helpers';
 import { SupportedCommands } from './mockJupyterManager';
 import { MockPythonService } from './mockPythonService';
 import { createPythonService, startRemoteServer } from './remoteTestHelpers';
@@ -64,7 +65,6 @@ suite('DataScience notebook tests', () => {
             let ioc: DataScienceIocContainer;
             let modifiedConfig = false;
             const baseUri = Uri.file('foo.py');
-            let snapshot: any;
 
             // tslint:disable-next-line: no-function-expression
             setup(async function () {
@@ -78,14 +78,6 @@ suite('DataScience notebook tests', () => {
                 ioc.forceDataScienceSettingsChanged({ disableZMQSupport: !useRawKernel });
                 await ioc.activate();
                 notebookProvider = ioc.get<INotebookProvider>(INotebookProvider);
-            });
-
-            suiteSetup(() => {
-                snapshot = takeSnapshot();
-            });
-
-            suiteTeardown(() => {
-                writeDiffSnapshot(snapshot, `Notebook ${useRawKernel}`);
             });
 
             teardown(async () => {
@@ -212,10 +204,10 @@ suite('DataScience notebook tests', () => {
                         );
                         const actualMimeType = data.hasOwnProperty(mimeType) ? mimeType : 'text/plain';
                         assert.ok((data as any)[actualMimeType], `${index}: Cell mime type not correct`);
-                        verifyValue((data as any)[actualMimeType]);
+                        verifyValue(concatMultilineString((data as any)[actualMimeType]));
                     }
                     if (text) {
-                        verifyValue(text);
+                        verifyValue(concatMultilineString(text as any));
                     }
                 } else if (cellType === 'markdown') {
                     assert.equal(cells[0].data.cell_type, cellType, `${index}: Wrong type of cell returned`);
@@ -293,8 +285,7 @@ suite('DataScience notebook tests', () => {
                 // Catch exceptions. Throw a specific assertion if the promise fails
                 try {
                     if (uri) {
-                        const newSettings = { ...ioc.getSettings(), jupyterServerURI: uri };
-                        ioc.forceDataScienceSettingsChanged(newSettings);
+                        ioc.setServerUri(uri);
                     }
                     launchingFile = launchingFile || path.join(srcDirectory(), 'foo.py');
                     const notebook = await notebookProvider.getOrCreateNotebook({
@@ -307,7 +298,7 @@ suite('DataScience notebook tests', () => {
                     return notebook;
                 } catch (exc) {
                     if (!expectFailure) {
-                        assert.ok(false, `Expected server to be created, but got ${exc}`);
+                        assert.ok(false, `Expected server to be created, but got ${exc} at ${exc.stack}`);
                     }
                 }
             }
@@ -476,7 +467,7 @@ suite('DataScience notebook tests', () => {
             runTest('Remote Password', async () => {
                 const pythonService = await createPythonService(ioc);
 
-                if (pythonService && !useRawKernel && os.platform() !== 'darwin') {
+                if (pythonService && !useRawKernel && os.platform() !== 'darwin' && os.platform() !== 'linux') {
                     const configFile = path.join(
                         EXTENSION_ROOT_DIR,
                         'src',
@@ -630,7 +621,12 @@ suite('DataScience notebook tests', () => {
                 try {
                     await fs.writeFile(temp.filePath, JSON.stringify(notebook), 'utf8');
                     // Try importing this. This should verify export works and that importing is possible
-                    const results = await importer.importFromFile(Uri.file(temp.filePath));
+                    const exportInterpreterFinder = ioc.serviceManager.get<ExportInterpreterFinder>(
+                        ExportInterpreterFinder
+                    );
+                    const usable = await exportInterpreterFinder.getExportInterpreter(ExportFormat.python, undefined);
+                    assert.isDefined(usable);
+                    const results = await importer.importFromFile(Uri.file(temp.filePath), usable!);
 
                     // Make sure we have a single chdir in our results
                     const first = results.indexOf('os.chdir');
@@ -640,9 +636,14 @@ suite('DataScience notebook tests', () => {
 
                     // Make sure we have a cell in our results
                     assert.ok(/#\s*%%/.test(results), 'No cells in returned import');
+                    assert.ok(!results.includes('tpl'), 'Formatted template with wrong arguments');
                 } finally {
-                    importer.dispose();
-                    temp.dispose();
+                    try {
+                        importer.dispose();
+                        temp.dispose();
+                    } catch (exc) {
+                        console.log(exc);
+                    }
                 }
             });
 
@@ -656,7 +657,7 @@ suite('DataScience notebook tests', () => {
             });
 
             runTest('Change Interpreter', async () => {
-                const isRollingBuild = process.env ? process.env.VSCODE_PYTHON_ROLLING !== undefined : false;
+                const isRollingBuild = process.env ? process.env.VSC_FORCE_REAL_JUPYTER !== undefined : false;
 
                 // Real Jupyter doesn't help this test at all and is tricky to set up for it, so just skip it
                 if (!isRollingBuild) {
@@ -827,13 +828,6 @@ suite('DataScience notebook tests', () => {
                     await testCancelableMethod(
                         (t: CancellationToken) => jupyterExecution.isNotebookSupported(t),
                         'Cancel did not cancel isNotebook after {0}ms',
-                        true
-                    )
-                );
-                assert.ok(
-                    await testCancelableMethod(
-                        (t: CancellationToken) => jupyterExecution.getImportPackageVersion(t),
-                        'Cancel did not cancel isImport after {0}ms',
                         true
                     )
                 );
@@ -1282,6 +1276,9 @@ plt.show()`,
                 const outputs: string[] = [];
                 @injectable()
                 class Logger implements INotebookExecutionLogger {
+                    public onKernelStarted() {
+                        // Do nothing on started
+                    }
                     public onKernelRestarted() {
                         // Do nothing on restarted
                     }
@@ -1333,8 +1330,12 @@ plt.show()`,
                     });
                 });
                 // For new approach.
-                when(ioc.mockJupyter?.productInstaller.isInstalled(Product.jupyter)).thenResolve(false as any);
-                when(ioc.mockJupyter?.productInstaller.isInstalled(Product.notebook)).thenResolve(false as any);
+                when(ioc.mockJupyter?.productInstaller.isInstalled(Product.jupyter, anything())).thenResolve(
+                    false as any
+                );
+                when(ioc.mockJupyter?.productInstaller.isInstalled(Product.notebook, anything())).thenResolve(
+                    false as any
+                );
                 when(ioc.mockJupyter?.productInstaller.isInstalled(Product.jupyter, anything())).thenResolve(
                     false as any
                 );
@@ -1398,29 +1399,6 @@ plt.show()`,
                     const server = await createNotebook();
                     assert.ok(server, 'Server died before running');
                 }
-            });
-
-            // tslint:disable-next-line: no-function-expression
-            runTest('Notebook launch retry', async function (_this: Mocha.Context) {
-                // Skipping for now. Re-enable to test idle timeouts
-                _this.skip();
-                // ioc.getSettings().jupyterLaunchRetries = 1;
-                // ioc.getSettings().jupyterLaunchTimeout = 10000;
-                //         ioc.getSettings().runStartupCommands = '%config Application.log_level="DEBUG"';
-                //         const log = `import logging
-                // logger = logging.getLogger()
-                // fhandler = logging.FileHandler(filename='D:\\Training\\mylog.log', mode='a')
-                // formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-                // fhandler.setFormatter(formatter)
-                // logger.addHandler(fhandler)
-                // logger.setLevel(logging.DEBUG)`;
-                // for (let i = 0; i < 100; i += 1) {
-                //     const notebook = await createNotebook();
-                //     assert.ok(notebook, 'did not create notebook');
-                //     await notebook!.dispose();
-                //     const exec = ioc.get<IJupyterExecution>(IJupyterExecution);
-                //     await exec.dispose();
-                // }
             });
 
             runTest('Startup commands', async () => {

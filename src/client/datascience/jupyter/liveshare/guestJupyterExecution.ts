@@ -2,11 +2,11 @@
 // Licensed under the MIT License.
 'use strict';
 import { injectable } from 'inversify';
-import { SemVer } from 'semver';
 import * as uuid from 'uuid/v4';
 import { CancellationToken } from 'vscode';
 
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../../common/application/types';
+import { IFileSystem } from '../../../common/platform/types';
 
 import {
     IAsyncDisposableRegistry,
@@ -19,7 +19,7 @@ import { IInterpreterService } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { LiveShare, LiveShareCommands } from '../../constants';
-import { IFileSystem, IJupyterConnection, INotebookServer, INotebookServerOptions } from '../../types';
+import { IJupyterConnection, INotebookServer, INotebookServerOptions } from '../../types';
 import { JupyterConnectError } from '../jupyterConnectError';
 import { JupyterExecutionBase } from '../jupyterExecution';
 import { KernelSelector } from '../kernels/kernelSelector';
@@ -82,18 +82,6 @@ export class GuestJupyterExecution extends LiveShareParticipantGuest(
         }
 
         return false;
-    }
-    public async getImportPackageVersion(cancelToken?: CancellationToken): Promise<SemVer | undefined> {
-        const service = await this.waitForService();
-
-        // Make a remote call on the proxy
-        if (service) {
-            const result = await service.request(LiveShareCommands.getImportPackageVersion, [], cancelToken);
-
-            if (result) {
-                return result as SemVer;
-            }
-        }
     }
     public isSpawnSupported(_cancelToken?: CancellationToken): Promise<boolean> {
         return Promise.resolve(false);

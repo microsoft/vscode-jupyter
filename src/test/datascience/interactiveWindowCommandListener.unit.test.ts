@@ -11,23 +11,22 @@ import { EventEmitter, Uri } from 'vscode';
 import { ApplicationShell } from '../../client/common/application/applicationShell';
 import { IApplicationShell } from '../../client/common/application/types';
 import { ConfigurationService } from '../../client/common/configuration/service';
+import { FileSystem } from '../../client/common/platform/fileSystem';
+import { IFileSystem } from '../../client/common/platform/types';
 import { IConfigurationService, IDisposable } from '../../client/common/types';
 import * as localize from '../../client/common/utils/localize';
 import { generateCells } from '../../client/datascience/cellFactory';
 import { Commands } from '../../client/datascience/constants';
 import { DataScienceErrorHandler } from '../../client/datascience/errorHandler/errorHandler';
 import { ExportFormat, IExportManager } from '../../client/datascience/export/types';
-import { FileSystem } from '../../client/datascience/fileSystem';
 import { NotebookProvider } from '../../client/datascience/interactive-common/notebookProvider';
 import { InteractiveWindowCommandListener } from '../../client/datascience/interactive-window/interactiveWindowCommandListener';
 import { InteractiveWindowProvider } from '../../client/datascience/interactive-window/interactiveWindowProvider';
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
 import { JupyterExporter } from '../../client/datascience/jupyter/jupyterExporter';
-import { JupyterImporter } from '../../client/datascience/jupyter/jupyterImporter';
 import { NativeEditorProvider } from '../../client/datascience/notebookStorage/nativeEditorProvider';
 import { NotebookStorageProvider } from '../../client/datascience/notebookStorage/notebookStorageProvider';
 import {
-    IFileSystem,
     IInteractiveWindow,
     IJupyterExecution,
     INotebook,
@@ -63,7 +62,6 @@ suite('Interactive window command listener', async () => {
     const disposableRegistry: IDisposable[] = [];
     const interactiveWindowProvider = mock(InteractiveWindowProvider);
     const dataScienceErrorHandler = mock(DataScienceErrorHandler);
-    const notebookImporter = mock(JupyterImporter);
     const notebookExporter = mock(JupyterExporter);
     let applicationShell: IApplicationShell;
     let jupyterExecution: IJupyterExecution;
@@ -122,7 +120,7 @@ suite('Interactive window command listener', async () => {
             alwaysTrustNotebooks: true,
             jupyterLaunchTimeout: 10,
             jupyterLaunchRetries: 3,
-            jupyterServerURI: '',
+            jupyterServerType: 'local',
             changeDirOnImportExport: false,
             // tslint:disable-next-line: no-invalid-template-strings
             notebookFileRoot: '${fileDirname}',
@@ -169,7 +167,6 @@ suite('Interactive window command listener', async () => {
         when(fileSystem.arePathsSame(anything(), anything())).thenReturn(true);
 
         when(interactiveWindowProvider.getOrCreate(anything())).thenResolve(interactiveWindow.object);
-        when(notebookImporter.importFromFile(anything())).thenResolve('imported');
         const metadata: nbformat.INotebookMetadata = {
             language_info: {
                 name: 'python',

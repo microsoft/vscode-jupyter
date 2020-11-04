@@ -7,6 +7,7 @@ import { Disposable, Event, EventEmitter, Memento, Uri, WebviewPanel } from 'vsc
 import { CancellationToken } from 'vscode-languageclient/node';
 import { arePathsSame } from '../../../datascience-ui/react-common/arePathsSame';
 import { IPythonExtensionChecker } from '../../api/types';
+import { ViewType } from '../../common/application/customEditorService';
 import {
     CustomDocument,
     CustomDocumentBackup,
@@ -24,6 +25,7 @@ import {
 } from '../../common/application/types';
 import { UseCustomEditorApi } from '../../common/constants';
 import { traceInfo } from '../../common/logger';
+import { IFileSystem } from '../../common/platform/types';
 
 import {
     GLOBAL_MEMENTO,
@@ -47,16 +49,15 @@ import { KernelSelector } from '../jupyter/kernels/kernelSelector';
 import {
     ICodeCssGenerator,
     IDataScienceErrorHandler,
-    IFileSystem,
     IInteractiveWindowListener,
     IJupyterDebugger,
+    IJupyterServerUriStorage,
     IJupyterVariableDataProviderFactory,
     IJupyterVariables,
     IModelLoadOptions,
     INotebookEditor,
     INotebookEditorProvider,
     INotebookExporter,
-    INotebookExtensibility,
     INotebookImporter,
     INotebookModel,
     INotebookProvider,
@@ -65,6 +66,7 @@ import {
     ITrustService
 } from '../types';
 import { getNextUntitledCounter } from './nativeEditorStorage';
+import { NativeEditorNotebookModel } from './notebookModel';
 import { NotebookModelEditEvent } from './notebookModelEditEvent';
 import { INotebookStorageProvider } from './notebookStorageProvider';
 
@@ -92,7 +94,7 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
         return [...this.openedEditors];
     }
     // Note, this constant has to match the value used in the package.json to register the webview custom editor.
-    public static readonly customEditorViewType = 'ms-toolsai.jupyter.notebook.ipynb';
+    public static readonly customEditorViewType = ViewType;
     protected readonly _onDidChangeActiveNotebookEditor = new EventEmitter<INotebookEditor | undefined>();
     protected readonly _onDidOpenNotebookEditor = new EventEmitter<INotebookEditor>();
     protected readonly _onDidEdit = new EventEmitter<CustomDocumentEditEvent>();
@@ -216,7 +218,7 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
         return this.open(uri);
     }
 
-    public async loadModel(options: IModelLoadOptions): Promise<INotebookModel> {
+    public async loadModel(options: IModelLoadOptions): Promise<NativeEditorNotebookModel> {
         // Get the model that may match this file
         let model = [...this.models.values()].find((m) => this.fs.arePathsSame(m.file, options.file));
         if (!model) {
@@ -229,10 +231,10 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
             // Make sure to listen to events on the model
             this.trackModel(model);
         }
-        return model;
+        return model as NativeEditorNotebookModel;
     }
 
-    protected createNotebookEditor(model: INotebookModel, panel?: WebviewPanel): NativeEditor {
+    protected createNotebookEditor(model: NativeEditorNotebookModel, panel?: WebviewPanel): NativeEditor {
         const editor = new NativeEditor(
             this.serviceContainer.getAll<IInteractiveWindowListener>(IInteractiveWindowListener),
             this.serviceContainer.get<ILiveShareApi>(ILiveShareApi),
@@ -266,8 +268,8 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
             model,
             panel,
             this.serviceContainer.get<KernelSelector>(KernelSelector),
-            this.serviceContainer.get<INotebookExtensibility>(INotebookExtensibility),
-            this.serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker)
+            this.serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker),
+            this.serviceContainer.get<IJupyterServerUriStorage>(IJupyterServerUriStorage)
         );
         this.openedEditor(editor);
         return editor;

@@ -5,9 +5,10 @@
 
 import { inject, injectable } from 'inversify';
 import { Event, EventEmitter, Uri } from 'vscode';
-import type { NotebookDocument, NotebookEditor as VSCodeNotebookEditor } from 'vscode-proposed';
+import type { NotebookDocument, NotebookEditor as VSCodeNotebookEditor } from '../../../../types/vscode-proposed';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import '../../common/extensions';
+import { IFileSystem } from '../../common/platform/types';
 
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
@@ -17,15 +18,9 @@ import { Commands, Telemetry } from '../constants';
 import { IKernelProvider } from '../jupyter/kernels/types';
 import { INotebookStorageProvider } from '../notebookStorage/notebookStorageProvider';
 import { VSCodeNotebookModel } from '../notebookStorage/vscNotebookModel';
-import {
-    IFileSystem,
-    INotebookEditor,
-    INotebookEditorProvider,
-    INotebookExtensibility,
-    INotebookProvider,
-    IStatusProvider
-} from '../types';
+import { INotebookEditor, INotebookEditorProvider, INotebookProvider, IStatusProvider } from '../types';
 import { JupyterNotebookView } from './constants';
+import { NotebookCellLanguageService } from './defaultCellLanguageService';
 import { isJupyterNotebook } from './helpers/helpers';
 import { NotebookEditor } from './notebookEditor';
 
@@ -70,7 +65,7 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         @inject(IStatusProvider) private readonly statusProvider: IStatusProvider,
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(IFileSystem) private readonly fs: IFileSystem,
-        @inject(INotebookExtensibility) private readonly notebookExtensibility: INotebookExtensibility
+        @inject(NotebookCellLanguageService) private readonly cellLanguageService: NotebookCellLanguageService
     ) {
         this.disposables.push(this.vscodeNotebook.onDidOpenNotebookDocument(this.onDidOpenNotebookDocument, this));
         this.disposables.push(this.vscodeNotebook.onDidCloseNotebookDocument(this.onDidCloseNotebookDocument, this));
@@ -165,7 +160,7 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
                 this.appShell,
                 this.configurationService,
                 this.disposables,
-                this.notebookExtensibility
+                this.cellLanguageService
             );
             this.onEditorOpened(editor);
         }
@@ -205,6 +200,10 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
             if (editor.model) {
                 editor.model.dispose();
             }
+        }
+        const model = this.storage.get(uri);
+        if (model) {
+            model.dispose();
         }
         this.notebookEditorsByUri.delete(uri.toString());
         this.notebooksWaitingToBeOpenedByUri.delete(uri.toString());

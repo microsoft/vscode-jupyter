@@ -3,10 +3,12 @@
 'use strict';
 import { inject, injectable } from 'inversify';
 import { ConfigurationTarget } from 'vscode';
+import { NotebookContentProvider as VSCNotebookContentProvider } from '../../../../types/vscode-proposed';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import {
     IApplicationEnvironment,
     IApplicationShell,
+    ICommandManager,
     IVSCodeNotebook,
     IWorkspaceService
 } from '../../common/application/types';
@@ -33,12 +35,13 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
         @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
         @inject(IExperimentService) private readonly experimentService: IExperimentService,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(INotebookContentProvider) private readonly notebookContentProvider: INotebookContentProvider,
+        @inject(INotebookContentProvider) private readonly notebookContentProvider: VSCNotebookContentProvider,
         @inject(VSCodeKernelPickerProvider) private readonly kernelProvider: VSCodeKernelPickerProvider,
         @inject(IApplicationEnvironment) private readonly env: IApplicationEnvironment,
         @inject(IApplicationShell) private readonly shell: IApplicationShell,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
-        @inject(IExtensionContext) private readonly extensionContext: IExtensionContext
+        @inject(IExtensionContext) private readonly extensionContext: IExtensionContext,
+        @inject(ICommandManager) private readonly commandManager: ICommandManager
     ) {}
     public async activate(): Promise<void> {
         // This condition is temporary.
@@ -47,44 +50,53 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
         if (await this.experimentService.inExperiment(Experiments.NativeNotebook)) {
             await this.enableNotebooks();
         } else {
+            // Enable command to open in preview notebook (only for insiders).
+            if (this.env.channel === 'insiders') {
+                await this.commandManager
+                    .executeCommand('setContext', 'jupyter.opennotebookInPreviewEditor.enabled', true)
+                    .then(noop, noop);
+            }
             // Possible user was in experiment, then they opted out. In this case we need to revert the changes made to the settings file.
             // Again, this is temporary code.
             await this.disableNotebooks();
         }
-        if (this.env.channel !== 'insiders') {
-            return;
-        }
-        try {
-            this.disposables.push(
-                this.vscNotebook.registerNotebookContentProvider(JupyterNotebookView, this.notebookContentProvider, {
-                    transientOutputs: false,
-                    transientMetadata: {
-                        breakpointMargin: true,
-                        editable: true,
-                        hasExecutionOrder: true,
-                        inputCollapsed: true,
-                        lastRunDuration: true,
-                        outputCollapsed: true,
-                        runStartTime: true,
-                        runnable: true,
-                        executionOrder: false,
-                        custom: false,
-                        runState: false,
-                        statusMessage: false
-                    }
-                })
-            );
-            this.disposables.push(
-                this.vscNotebook.registerNotebookKernelProvider(
-                    { filenamePattern: '**/*.ipynb', viewType: JupyterNotebookView },
-                    this.kernelProvider
-                )
-            );
-        } catch (ex) {
-            // If something goes wrong, and we're not in Insiders & not using the NativeEditor experiment, then swallow errors.
-            traceError('Failed to register VS Code Notebook API', ex);
-            if (await this.experimentService.inExperiment(Experiments.NativeNotebook)) {
-                throw ex;
+        if (this.env.channel === 'insiders') {
+            try {
+                this.disposables.push(
+                    this.vscNotebook.registerNotebookContentProvider(
+                        JupyterNotebookView,
+                        this.notebookContentProvider,
+                        {
+                            transientOutputs: false,
+                            transientMetadata: {
+                                breakpointMargin: true,
+                                editable: true,
+                                hasExecutionOrder: true,
+                                inputCollapsed: true,
+                                lastRunDuration: true,
+                                outputCollapsed: true,
+                                runStartTime: true,
+                                runnable: true,
+                                executionOrder: false,
+                                custom: false,
+                                runState: false,
+                                statusMessage: false
+                            }
+                        }
+                    )
+                );
+                this.disposables.push(
+                    this.vscNotebook.registerNotebookKernelProvider(
+                        { filenamePattern: '**/*.ipynb', viewType: JupyterNotebookView },
+                        this.kernelProvider
+                    )
+                );
+            } catch (ex) {
+                // If something goes wrong, and we're not in Insiders & not using the NativeEditor experiment, then swallow errors.
+                traceError('Failed to register VS Code Notebook API', ex);
+                if (await this.experimentService.inExperiment(Experiments.NativeNotebook)) {
+                    throw ex;
+                }
             }
         }
     }

@@ -34,7 +34,7 @@ const DocStringRegex = /.*?\[.*?;31mDocstring:.*?\[0m\s+(.*)/;
 const CountRegex = /.*?\[.*?;31mLength:.*?\[0m\s+(.*)/;
 const ShapeRegex = /^\s+\[(\d+) rows x (\d+) columns\]/m;
 
-const DataViewableTypes: Set<string> = new Set<string>(['DataFrame', 'list', 'dict', 'ndarray', 'Series']);
+const DataViewableTypes: Set<string> = new Set<string>(['DataFrame', 'list', 'dict', 'ndarray', 'Series', 'Tensor']);
 
 interface INotebookState {
     currentExecutionCount: number;
@@ -56,16 +56,16 @@ export class KernelVariables implements IJupyterVariables {
 
     // IJupyterVariables implementation
     public async getVariables(
-        notebook: INotebook,
-        request: IJupyterVariablesRequest
+        request: IJupyterVariablesRequest,
+        notebook: INotebook
     ): Promise<IJupyterVariablesResponse> {
         // Run the language appropriate variable fetch
         return this.getVariablesBasedOnKernel(notebook, request);
     }
 
     public async getMatchingVariable(
-        notebook: INotebook,
         name: string,
+        notebook: INotebook,
         token?: CancellationToken
     ): Promise<IJupyterVariable | undefined> {
         // See if in the cache
@@ -124,9 +124,9 @@ export class KernelVariables implements IJupyterVariables {
 
     public async getDataFrameRows(
         targetVariable: IJupyterVariable,
-        notebook: INotebook,
         start: number,
-        end: number
+        end: number,
+        notebook: INotebook
     ): Promise<{}> {
         // Import the data frame script directory if we haven't already
         await this.importDataFrameScripts(notebook);

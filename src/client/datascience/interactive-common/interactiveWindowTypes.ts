@@ -7,10 +7,10 @@ import { DebugState, IServerState } from '../../../datascience-ui/interactive-co
 
 import type { KernelMessage } from '@jupyterlab/services';
 import { DebugProtocol } from 'vscode-debugprotocol';
+import { DebugProtocolVariable, DebugProtocolVariableContainer } from '../../../../types/vscode-proposed';
 import {
     CommonActionType,
     IAddCellAction,
-    IChangeGatherStatus,
     ILoadIPyWidgetClassFailureAction,
     IVariableExplorerHeight,
     LoadIPyWidgetClassLoadAction,
@@ -24,6 +24,8 @@ import { CssMessages, IGetCssRequest, IGetCssResponse, IGetMonacoThemeRequest, S
 import { IGetMonacoThemeResponse } from '../monacoMessages';
 import {
     ICell,
+    IExternalCommandFromWebview,
+    IExternalWebviewCellButton,
     IInteractiveWindowInfo,
     IJupyterVariable,
     IJupyterVariablesRequest,
@@ -95,9 +97,6 @@ export enum InteractiveWindowMessages {
     SavePng = 'save_png',
     StartDebugging = 'start_debugging',
     StopDebugging = 'stop_debugging',
-    GatherCode = 'gather_code',
-    GatherCodeToScript = 'gather_code_to_script',
-    Gathering = 'gathering',
     LaunchNotebookTrustPrompt = 'launch_notebook_trust_prompt',
     TrustNotebookComplete = 'trust_notebook_complete',
     LoadAllCells = 'load_all_cells',
@@ -142,7 +141,9 @@ export enum InteractiveWindowMessages {
     DebugStateChange = 'debug_state_change',
     KernelIdle = 'kernel_idle',
     HasCell = 'has_cell',
-    HasCellResponse = 'has_cell_response'
+    HasCellResponse = 'has_cell_response',
+    UpdateExternalCellButtons = 'update_external_cell_buttons',
+    ExecuteExternalCommand = 'execute_external_command'
 }
 
 export enum IPyWidgetMessages {
@@ -332,6 +333,11 @@ export interface IInsertCell {
 export interface IShowDataViewer {
     variable: IJupyterVariable;
     columnSize: number;
+}
+
+export interface IShowDataViewerFromVariablePanel {
+    container: DebugProtocolVariableContainer | undefined;
+    variable: DebugProtocolVariable;
 }
 
 export interface IRefreshVariablesRequest {
@@ -626,9 +632,6 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.SavePng]: string | undefined;
     public [InteractiveWindowMessages.StartDebugging]: never | undefined;
     public [InteractiveWindowMessages.StopDebugging]: never | undefined;
-    public [InteractiveWindowMessages.GatherCode]: ICell;
-    public [InteractiveWindowMessages.GatherCodeToScript]: ICell;
-    public [InteractiveWindowMessages.Gathering]: IChangeGatherStatus;
     public [InteractiveWindowMessages.LaunchNotebookTrustPrompt]: never | undefined;
     public [InteractiveWindowMessages.TrustNotebookComplete]: never | undefined;
     public [InteractiveWindowMessages.LoadAllCells]: ILoadAllCells;
@@ -681,4 +684,6 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.DebugStateChange]: IDebugStateChange;
     public [InteractiveWindowMessages.HasCell]: string;
     public [InteractiveWindowMessages.HasCellResponse]: { id: string; result: boolean };
+    public [InteractiveWindowMessages.UpdateExternalCellButtons]: IExternalWebviewCellButton[];
+    public [InteractiveWindowMessages.ExecuteExternalCommand]: IExternalCommandFromWebview;
 }
