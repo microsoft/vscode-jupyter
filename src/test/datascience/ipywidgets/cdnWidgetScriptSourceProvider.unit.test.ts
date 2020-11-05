@@ -121,6 +121,7 @@ suite('DataScience - ipywidget - CDN', () => {
         suite(localLaunch ? 'Local Jupyter Server' : 'Remote Jupyter Server', () => {
             setup(() => {
                 const connection: IJupyterConnection = {
+                    id:'',
                     type: 'jupyter',
                     baseUrl: '',
                     localProcExitCode: undefined,

@@ -33,6 +33,10 @@ interface ISelectUriQuickPickItem extends QuickPickItem {
     url?: string;
 }
 
+type SelectedServer = {
+    providerId?: string;
+    uri?: string;
+};
 @injectable()
 export class JupyterServerSelector {
     private readonly localLabel = `$(zap) ${DataScience.jupyterSelectURILocalLabel()}`;
@@ -48,16 +52,18 @@ export class JupyterServerSelector {
     ) {}
 
     @captureTelemetry(Telemetry.SelectJupyterURI)
-    public selectJupyterURI(allowLocal: boolean): Promise<void> {
-        const multiStep = this.multiStepFactory.create<{}>();
-        return multiStep.run(this.startSelectingURI.bind(this, allowLocal), {});
+    public async selectJupyterURI(allowLocal: boolean): Promise<SelectedServer | undefined> {
+        const multiStep = this.multiStepFactory.create<SelectedServer>();
+        const state: SelectedServer = {};
+        await multiStep.run(this.startSelectingURI.bind(this, allowLocal), state);
+        return state.uri ? state : undefined;
     }
 
     private async startSelectingURI(
         allowLocal: boolean,
-        input: IMultiStepInput<{}>,
-        _state: {}
-    ): Promise<InputStep<{}> | void> {
+        input: IMultiStepInput<SelectedServer>,
+        state: SelectedServer
+    ): Promise<InputStep<SelectedServer> | void> {
         // First step, show a quick pick to choose either the remote or the local.
         // newChoice element will be set if the user picked 'enter a new server'
 
@@ -85,6 +91,7 @@ export class JupyterServerSelector {
             await this.setJupyterURIToLocal();
         } else if (!item.newChoice && !item.provider) {
             await this.setJupyterURIToRemote(!isNil(item.url) ? item.url : item.label);
+            state.uri = item.url;
         } else if (!item.provider) {
             return this.selectRemoteURI.bind(this);
         } else {
@@ -95,21 +102,18 @@ export class JupyterServerSelector {
     private async selectProviderURI(
         provider: IJupyterUriProvider,
         item: ISelectUriQuickPickItem,
-        _input: IMultiStepInput<{}>,
-        _state: {}
-    ): Promise<InputStep<{}> | void> {
+        _input: IMultiStepInput<SelectedServer>,
+        state: SelectedServer
+    ): Promise<InputStep<SelectedServer> | void> {
         const result = await provider.handleQuickPick(item, true);
         if (result === 'back') {
             throw InputFlowAction.back;
         }
         if (result) {
-            await this.handleProviderQuickPick(provider.id, result);
-        }
-    }
-    private async handleProviderQuickPick(id: string, result: JupyterServerUriHandle | undefined) {
-        if (result) {
-            const uri = this.generateUriFromRemoteProvider(id, result);
+            const uri = this.generateUriFromRemoteProvider(provider.id, result);
             await this.setJupyterURIToRemote(uri);
+            state.providerId = provider.id;
+            state.uri = uri;
         }
     }
 
@@ -120,7 +124,10 @@ export class JupyterServerSelector {
         }=${encodeURI(result)}`;
     }
 
-    private async selectRemoteURI(input: IMultiStepInput<{}>, _state: {}): Promise<InputStep<{}> | void> {
+    private async selectRemoteURI(
+        input: IMultiStepInput<SelectedServer>,
+        state: SelectedServer
+    ): Promise<InputStep<SelectedServer> | void> {
         let initialValue = defaultUri;
         try {
             const text = await this.clipboard.readText().catch(() => '');
@@ -139,6 +146,7 @@ export class JupyterServerSelector {
         });
 
         if (uri) {
+            state.uri = uri;
             await this.setJupyterURIToRemote(uri);
         }
     }
