@@ -74,7 +74,7 @@ export abstract class WebviewViewHost<IMapping> extends WebviewHost<IMapping> im
             listener: this.messageListener,
             scripts: this.scripts,
             settings,
-            webviewView: vscodeWebview
+            webviewHost: vscodeWebview
         });
     }
 }
