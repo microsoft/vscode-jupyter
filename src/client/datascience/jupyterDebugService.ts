@@ -64,8 +64,7 @@ class JupyterDebugSession implements DebugSession {
         return this.customRequestHandler(command, args);
     }
     public getDebugProtocolBreakpoint(_breakpoint: Breakpoint): Thenable<DebugProtocolBreakpoint | undefined> {
-        // IANHU
-        throw new Error('Not implemented');
+        return Promise.resolve(undefined);
     }
 }
 
