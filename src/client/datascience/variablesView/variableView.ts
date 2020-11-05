@@ -20,6 +20,9 @@ const variableViewDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', '
 
 @injectable()
 export class VariableView extends WebviewViewHost<IVariableViewMapping> implements IDisposable {
+    protected get owningResource(): Resource {
+        return undefined;
+    }
     constructor(
         @unmanaged() configuration: IConfigurationService,
         @unmanaged() cssGenerator: ICodeCssGenerator,
@@ -40,7 +43,13 @@ export class VariableView extends WebviewViewHost<IVariableViewMapping> implemen
     }
 
     public async load(codeWebview: vscodeWebviewView) {
-        await super.loadWebPanel(process.cwd(), codeWebview).catch(traceError);
+        await super.loadWebview(process.cwd(), codeWebview).catch(traceError);
+    }
+
+    // Used to identify this webview in telemetry, not shown to user so no localization
+    // for webview views
+    public get title(): string {
+        return 'variableView';
     }
 
     //tslint:disable-next-line:no-any
@@ -51,9 +60,5 @@ export class VariableView extends WebviewViewHost<IVariableViewMapping> implemen
         }
 
         super.onMessage(message, payload);
-    }
-
-    protected get owningResource(): Resource {
-        return undefined;
     }
 }

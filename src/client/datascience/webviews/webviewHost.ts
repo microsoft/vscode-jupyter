@@ -4,20 +4,32 @@
 import '../../common/extensions';
 
 import { injectable, unmanaged } from 'inversify';
-import { ConfigurationChangeEvent, extensions, Uri, WorkspaceConfiguration } from 'vscode';
+import {
+    ConfigurationChangeEvent,
+    extensions,
+    Uri,
+    WebviewPanel as vscodeWebviewPanel,
+    WebviewView as vscodeWebviewView,
+    WorkspaceConfiguration
+} from 'vscode';
 
 import { IWebview, IWorkspaceService } from '../../common/application/types';
 import { isTestExecution } from '../../common/constants';
+import { traceInfo } from '../../common/logger';
 import { IConfigurationService, IDisposable, Resource } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
-import { captureTelemetry } from '../../telemetry';
+import { StopWatch } from '../../common/utils/stopWatch';
+import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { DefaultTheme, GatherExtension, PythonExtension, Telemetry } from '../constants';
 import { CssMessages, IGetCssRequest, IGetMonacoThemeRequest, SharedMessages } from '../messages';
 import { ICodeCssGenerator, IJupyterExtraSettings, IThemeFinder } from '../types';
 
 @injectable() // For some reason this is necessary to get the class hierarchy to work.
 export abstract class WebviewHost<IMapping> implements IDisposable {
+    protected abstract get owningResource(): Resource;
+
+    protected abstract get title(): string;
     protected webview?: IWebview;
     protected disposed: boolean = false;
 
@@ -25,6 +37,7 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
     protected webviewInit: Deferred<void> | undefined = createDeferred<void>();
 
     protected readonly _disposables: IDisposable[] = [];
+    private startupStopwatch = new StopWatch();
     constructor(
         @unmanaged() protected configService: IConfigurationService,
         @unmanaged() private cssGenerator: ICodeCssGenerator,
@@ -63,6 +76,13 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
         }
     }
 
+    protected abstract provideWebview(
+        cwd: string,
+        settings: IJupyterExtraSettings,
+        workspaceFolder: Resource,
+        vscodeWebview?: vscodeWebviewPanel | vscodeWebviewView
+    ): Promise<IWebview>;
+
     // Post a message to our webview and update our new datascience settings
     protected onDataScienceSettingsChanged = async () => {
         // Stringify our settings to send over to the panel
@@ -77,8 +97,6 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
         return this.webview?.asWebviewUri(localResource);
     }
 
-    protected abstract get owningResource(): Resource;
-
     protected postMessage<M extends IMapping, T extends keyof M>(type: T, payload?: M[T]): Promise<void> {
         // Then send it the message
         return this.postMessageInternal(type.toString(), payload);
@@ -87,6 +105,10 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
     //tslint:disable-next-line:no-any
     protected onMessage(message: string, payload: any) {
         switch (message) {
+            case SharedMessages.Started:
+                this.webViewRendered();
+                break;
+
             case CssMessages.GetCssRequest:
                 this.handleCssRequest(payload as IGetCssRequest).ignoreErrors();
                 break;
@@ -98,6 +120,61 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
             default:
                 break;
         }
+    }
+
+    protected async loadWebview(cwd: string, webView?: vscodeWebviewPanel | vscodeWebviewView) {
+        // Make not disposed anymore
+        this.disposed = false;
+
+        // Setup our init promise for the web panel. We use this to make sure we're in sync with our
+        // react control.
+        this.webviewInit = this.webviewInit || createDeferred();
+
+        // Setup a promise that will wait until the webview passes back
+        // a message telling us what them is in use
+        this.themeIsDarkPromise = this.themeIsDarkPromise ? this.themeIsDarkPromise : createDeferred<boolean>();
+
+        traceInfo(`Loading webview. View is ${this.webview ? 'set' : 'notset'}`);
+
+        // Create our web panel (it's the UI that shows up for the history)
+        if (this.webview === undefined) {
+            // Get our settings to pass along to the react control
+            const settings = await this.generateDataScienceExtraSettings();
+
+            traceInfo('Loading web view...');
+
+            const workspaceFolder = this.workspaceService.getWorkspaceFolder(Uri.file(cwd))?.uri;
+
+            // Use this script to create our web view panel. It should contain all of the necessary
+            // script to communicate with this class.
+            //this.webPanel = await this.provider.create({
+            //viewColumn: this.viewColumn,
+            //listener: this.messageListener,
+            //title: this.title,
+            //rootPath: this.rootPath,
+            //scripts: this.scripts,
+            //settings,
+            //cwd,
+            //webViewPanel,
+            //additionalPaths: workspaceFolder ? [workspaceFolder.fsPath] : []
+            //});
+
+            //// Set our webview after load
+            //this.webview = this.webPanel;
+
+            this.webview = await this.provideWebview(cwd, settings, workspaceFolder, webView);
+
+            // Track to seee if our webview fails to load
+            this._disposables.push(this.webview.loadFailed(this.onWebViewLoadFailed, this));
+
+            traceInfo('Webview panel created.');
+        }
+
+        // Send the first settings message
+        this.onDataScienceSettingsChanged().ignoreErrors();
+
+        // Send the loc strings (skip during testing as it takes up a lot of memory)
+        this.sendLocStrings().ignoreErrors();
     }
 
     protected async generateDataScienceExtraSettings(): Promise<IJupyterExtraSettings> {
@@ -172,6 +249,29 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
     protected isDark(): Promise<boolean> {
         return this.themeIsDarkPromise ? this.themeIsDarkPromise.promise : Promise.resolve(false);
     }
+
+    // When the webview has been rendered send telemetry and initial strings + settings
+    // tslint:disable-next-line:no-any
+    protected webViewRendered() {
+        if (this.webviewInit && !this.webviewInit.resolved) {
+            // Send telemetry for startup
+            sendTelemetryEvent(Telemetry.WebviewStartup, this.startupStopwatch.elapsedTime, { type: this.title });
+
+            // Resolve our started promise. This means the webpanel is ready to go.
+            this.webviewInit.resolve();
+
+            traceInfo('Web view react rendered');
+        }
+
+        // On started, resend our init data.
+        this.sendLocStrings().ignoreErrors();
+        this.onDataScienceSettingsChanged().ignoreErrors();
+    }
+
+    // If our webview fails to load then just dispose ourselves
+    private onWebViewLoadFailed = async () => {
+        this.dispose();
+    };
 
     @captureTelemetry(Telemetry.WebviewStyleUpdate)
     private async handleCssRequest(request: IGetCssRequest): Promise<void> {

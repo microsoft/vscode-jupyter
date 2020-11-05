@@ -4,23 +4,18 @@
 import '../../common/extensions';
 
 import { injectable, unmanaged } from 'inversify';
-import { Uri, ViewColumn, WebviewPanel } from 'vscode';
+import { ViewColumn, WebviewPanel as vscodeWebviewPanel } from 'vscode';
 
 import {
+    IWebview,
     IWebviewPanel,
     IWebviewPanelMessageListener,
     IWebviewPanelProvider,
     IWorkspaceService
 } from '../../common/application/types';
-import { traceInfo } from '../../common/logger';
-import { IConfigurationService, IDisposable } from '../../common/types';
-import { createDeferred } from '../../common/utils/async';
+import { IConfigurationService, IDisposable, Resource } from '../../common/types';
 import { noop } from '../../common/utils/misc';
-import { StopWatch } from '../../common/utils/stopWatch';
-import { sendTelemetryEvent } from '../../telemetry';
-import { Telemetry } from '../constants';
-import { SharedMessages } from '../messages';
-import { ICodeCssGenerator, IThemeFinder, WebViewViewChangeEventArgs } from '../types';
+import { ICodeCssGenerator, IJupyterExtraSettings, IThemeFinder, WebViewViewChangeEventArgs } from '../types';
 import { WebviewHost } from './webviewHost';
 
 @injectable() // For some reason this is necessary to get the class hierarchy to work.
@@ -28,10 +23,15 @@ export abstract class WebviewPanelHost<IMapping> extends WebviewHost<IMapping> i
     protected get isDisposed(): boolean {
         return this.disposed;
     }
+    protected get webPanel(): IWebviewPanel | undefined {
+        if (!this.webview) {
+            return undefined;
+        }
+
+        return this.webview as IWebviewPanel;
+    }
     protected viewState: { visible: boolean; active: boolean } = { visible: false, active: false };
-    private webPanel: IWebviewPanel | undefined;
     private messageListener: IWebviewPanelMessageListener;
-    private startupStopwatch = new StopWatch();
 
     constructor(
         @unmanaged() protected configService: IConfigurationService,
@@ -88,10 +88,8 @@ export abstract class WebviewPanelHost<IMapping> extends WebviewHost<IMapping> i
 
     public dispose() {
         if (!this.isDisposed) {
-            this.disposed = true;
             if (this.webPanel) {
                 this.webPanel.close();
-                this.webPanel = undefined;
             }
         }
 
@@ -108,20 +106,6 @@ export abstract class WebviewPanelHost<IMapping> extends WebviewHost<IMapping> i
         }
     }
 
-    //tslint:disable-next-line:no-any
-    protected onMessage(message: string, payload: any) {
-        switch (message) {
-            case SharedMessages.Started:
-                this.webPanelRendered();
-                break;
-
-            default:
-                // Forward unhandled messages to the base class
-                super.onMessage(message, payload);
-                break;
-        }
-    }
-
     protected shareMessage<M extends IMapping, T extends keyof M>(type: T, payload?: M[T]) {
         // Send our remote message.
         this.messageListener.onMessage(type.toString(), payload);
@@ -131,65 +115,26 @@ export abstract class WebviewPanelHost<IMapping> extends WebviewHost<IMapping> i
         noop();
     }
 
-    protected async loadWebPanel(cwd: string, webViewPanel?: WebviewPanel) {
-        // Make not disposed anymore
-        this.disposed = false;
-
-        // Setup our init promise for the web panel. We use this to make sure we're in sync with our
-        // react control.
-        this.webviewInit = this.webviewInit || createDeferred();
-
-        // Setup a promise that will wait until the webview passes back
-        // a message telling us what them is in use
-        this.themeIsDarkPromise = this.themeIsDarkPromise ? this.themeIsDarkPromise : createDeferred<boolean>();
-
-        // Load our actual web panel
-
-        traceInfo(`Loading web panel. Panel is ${this.webPanel ? 'set' : 'notset'}`);
-
-        // Create our web panel (it's the UI that shows up for the history)
-        if (this.webPanel === undefined) {
-            // Get our settings to pass along to the react control
-            const settings = await this.generateDataScienceExtraSettings();
-
-            traceInfo('Loading web view...');
-
-            const workspaceFolder = this.workspaceService.getWorkspaceFolder(Uri.file(cwd))?.uri;
-
-            // Use this script to create our web view panel. It should contain all of the necessary
-            // script to communicate with this class.
-            this.webPanel = await this.provider.create({
-                viewColumn: this.viewColumn,
-                listener: this.messageListener,
-                title: this.title,
-                rootPath: this.rootPath,
-                scripts: this.scripts,
-                settings,
-                cwd,
-                webViewPanel,
-                additionalPaths: workspaceFolder ? [workspaceFolder.fsPath] : []
-            });
-
-            // Set our webview after load
-            this.webview = this.webPanel;
-
-            // Track to seee if our web panel fails to load
-            this._disposables.push(this.webPanel.loadFailed(this.onWebPanelLoadFailed, this));
-
-            traceInfo('Web view created.');
-        }
-
-        // Send the first settings message
-        this.onDataScienceSettingsChanged().ignoreErrors();
-
-        // Send the loc strings (skip during testing as it takes up a lot of memory)
-        this.sendLocStrings().ignoreErrors();
+    protected async provideWebview(
+        cwd: string,
+        settings: IJupyterExtraSettings,
+        workspaceFolder: Resource,
+        vscodeWebview?: vscodeWebviewPanel
+    ): Promise<IWebview> {
+        // Use this script to create our web view panel. It should contain all of the necessary
+        // script to communicate with this class.
+        return this.provider.create({
+            viewColumn: this.viewColumn,
+            listener: this.messageListener,
+            title: this.title,
+            rootPath: this.rootPath,
+            scripts: this.scripts,
+            settings,
+            cwd,
+            webViewPanel: vscodeWebview,
+            additionalPaths: workspaceFolder ? [workspaceFolder.fsPath] : []
+        });
     }
-
-    // If our webpanel fails to load then just dispose ourselves
-    private onWebPanelLoadFailed = async () => {
-        this.dispose();
-    };
 
     private webPanelViewStateChanged = (webPanel: IWebviewPanel) => {
         const visible = webPanel.isVisible();
@@ -200,21 +145,4 @@ export abstract class WebviewPanelHost<IMapping> extends WebviewHost<IMapping> i
         this.viewState.active = active;
         this.onViewStateChanged({ current, previous });
     };
-
-    // tslint:disable-next-line:no-any
-    private webPanelRendered() {
-        if (this.webviewInit && !this.webviewInit.resolved) {
-            // Send telemetry for startup
-            sendTelemetryEvent(Telemetry.WebviewStartup, this.startupStopwatch.elapsedTime, { type: this.title });
-
-            // Resolve our started promise. This means the webpanel is ready to go.
-            this.webviewInit.resolve();
-
-            traceInfo('Web view react rendered');
-        }
-
-        // On started, resend our init data.
-        this.sendLocStrings().ignoreErrors();
-        this.onDataScienceSettingsChanged().ignoreErrors();
-    }
 }

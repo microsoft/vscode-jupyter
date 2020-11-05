@@ -52,7 +52,7 @@ export class PlotViewer extends WebviewPanelHost<IPlotViewerMapping> implements 
             Promise.resolve(false)
         );
         // Load the web panel using our current directory as we don't expect to load any other files
-        super.loadWebPanel(process.cwd()).catch(traceError);
+        super.loadWebview(process.cwd()).catch(traceError);
     }
 
     public get closed(): Event<IPlotViewer> {

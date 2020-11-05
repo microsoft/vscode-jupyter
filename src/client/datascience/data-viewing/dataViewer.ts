@@ -68,7 +68,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
             this.dataProvider = dataProvider;
 
             // Load the web panel using our current directory as we don't expect to load any other files
-            await super.loadWebPanel(process.cwd()).catch(traceError);
+            await super.loadWebview(process.cwd()).catch(traceError);
 
             super.setTitle(title);
 
