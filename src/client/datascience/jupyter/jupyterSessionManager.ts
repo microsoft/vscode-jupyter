@@ -163,6 +163,13 @@ export class JupyterSessionManager implements IJupyterSessionManager {
                 return true;
             });
     }
+    public async getDefaultKernel(): Promise<string | undefined> {
+        if (!this.sessionManager) {
+            return;
+        }
+        await this.sessionManager.refreshRunning();
+        return this.sessionManager.specs?.default;
+    }
 
     public async startNew(
         kernelConnection: KernelConnectionMetadata | undefined,

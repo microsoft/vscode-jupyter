@@ -12,7 +12,13 @@ import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } 
 import { JupyterRemoteServiceHelper } from '../../../remote/connection/remoteService';
 import { RemoteJupyterKernel } from '../../../remote/kernels/remoteKernel';
 import { IJupyterServerAuthServiceProvider } from '../../../remote/ui/types';
-import { IDataScienceErrorHandler, INotebookEditorProvider, INotebookProvider } from '../../types';
+import {
+    IDataScienceErrorHandler,
+    IJupyterSessionManagerFactory,
+    INotebookEditorProvider,
+    INotebookProvider,
+    IRawNotebookSupportedService
+} from '../../types';
 import { Kernel } from './kernel';
 import { KernelSelector } from './kernelSelector';
 import { IKernel, IKernelProvider, IKernelSelectionUsage, KernelOptions } from './types';
@@ -32,7 +38,10 @@ export class KernelProvider implements IKernelProvider {
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
         @inject(JupyterRemoteServiceHelper) private readonly remoteServiceHelper: JupyterRemoteServiceHelper,
-        @inject(IJupyterServerAuthServiceProvider) private readonly remoteAuthService: IJupyterServerAuthServiceProvider
+        @inject(IJupyterServerAuthServiceProvider)
+        private readonly remoteAuthService: IJupyterServerAuthServiceProvider,
+        @inject(IJupyterSessionManagerFactory) private readonly sessionFactory: IJupyterSessionManagerFactory,
+        @inject(IRawNotebookSupportedService) private readonly rawNotebookSupported: IRawNotebookSupportedService
     ) {}
     public get(uri: Uri): IKernel | undefined {
         return this.kernelsByUri.get(uri.toString())?.kernel;
@@ -65,7 +74,9 @@ export class KernelProvider implements IKernelProvider {
                 this.kernelSelectionUsage,
                 this.appShell,
                 this.vscNotebook,
-                this.remoteAuthService
+                this.remoteAuthService,
+                this.sessionFactory,
+                this.rawNotebookSupported
             );
         } else {
             kernel = new Kernel(
@@ -80,7 +91,8 @@ export class KernelProvider implements IKernelProvider {
                 this,
                 this.kernelSelectionUsage,
                 this.appShell,
-                this.vscNotebook
+                this.vscNotebook,
+                this.rawNotebookSupported
             );
         }
         this.asyncDisposables.push(kernel);

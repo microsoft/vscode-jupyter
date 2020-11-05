@@ -39,7 +39,7 @@ export class JupyterSessionStartError extends Error {
 }
 
 export abstract class BaseJupyterSession implements IJupyterSession {
-    protected get session(): ISessionWithSocket | undefined {
+    public get session(): ISessionWithSocket | undefined {
         return this._session;
     }
     protected kernelConnectionMetadata?: KernelConnectionMetadata;
@@ -75,12 +75,9 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     private _session: ISessionWithSocket | undefined;
     private _kernelSocket = new ReplaySubject<KernelSocketInformation | undefined>();
     private _jupyterLab?: typeof import('@jupyterlab/services');
-    private ioPubEventEmitter = new EventEmitter<KernelMessage.IIOPubMessage>();
-    private ioPubHandler: Slot<ISessionWithSocket, KernelMessage.IIOPubMessage>;
 
     constructor(private restartSessionUsed: (id: Kernel.IKernelConnection) => void, public workingDirectory: string) {
         this.statusHandler = this.onStatusChanged.bind(this);
-        this.ioPubHandler = (_s, m) => this.ioPubEventEmitter.fire(m);
     }
     public dispose(): Promise<void> {
         return this.shutdown();
@@ -415,13 +412,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     // Changes the current session.
     protected setSession(session: ISessionWithSocket | undefined) {
         const oldSession = this._session;
-        if (this.ioPubHandler && oldSession) {
-            oldSession.iopubMessage.disconnect(this.ioPubHandler);
-        }
         this._session = session;
-        if (session) {
-            session.iopubMessage.connect(this.ioPubHandler);
-        }
 
         // If we have a new session, then emit the new kernel connection information.
         if (session && oldSession !== session) {

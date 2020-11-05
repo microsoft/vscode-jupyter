@@ -6,7 +6,6 @@ import { IServiceManager } from '../ioc/types';
 import { CommandRegistry } from './commands';
 import { JupyterServerAuthService } from './connection/jupyterServerAuthService';
 import { JupyterRemoteServiceHelper } from './connection/remoteService';
-import { RemoteKernelPickerProvider } from './kernels/kernelProvider';
 import { RemoteFileSystemFactory } from './ui/fileSystem';
 import { JupyterServersTreeDataProvider } from './ui/serversTreeDataProvider';
 import { JupyterServersTreeView } from './ui/serversTreeView';
@@ -21,7 +20,7 @@ export function registerTypes(serviceManager: IServiceManager) {
         IJupyterServerAuthServiceProvider,
         JupyterServerAuthService
     );
-    serviceManager.addSingleton<RemoteKernelPickerProvider>(RemoteKernelPickerProvider, RemoteKernelPickerProvider);
+    // serviceManager.addSingleton<RemoteKernelPickerProvider>(RemoteKernelPickerProvider, RemoteKernelPickerProvider);
     serviceManager.addSingleton<JupyterRemoteServiceHelper>(JupyterRemoteServiceHelper, JupyterRemoteServiceHelper);
     serviceManager.addBinding(JupyterRemoteServiceHelper, IExtensionSingleActivationService);
     serviceManager.addSingleton<RemoteFileSystemFactory>(RemoteFileSystemFactory, RemoteFileSystemFactory);

@@ -34,6 +34,7 @@ import {
     INotebookProvider,
     INotebookProviderConnection,
     InterruptResult,
+    IRawNotebookSupportedService,
     KernelSocketInformation
 } from '../../types';
 import { isPythonKernelConnection } from './helpers';
@@ -180,7 +181,8 @@ export class Kernel implements IKernel {
         private readonly kernelProvider: IKernelProvider,
         private readonly kernelSelectionUsage: IKernelSelectionUsage,
         appShell: IApplicationShell,
-        vscNotebook: IVSCodeNotebook
+        vscNotebook: IVSCodeNotebook,
+        rawNotebookSupported: IRawNotebookSupportedService
     ) {
         this.kernelExecution = new KernelExecution(
             kernelProvider,
@@ -190,7 +192,8 @@ export class Kernel implements IKernel {
             kernelSelectionUsage,
             appShell,
             vscNotebook,
-            metadata
+            metadata,
+            rawNotebookSupported
         );
     }
     public async executeCell(cell: NotebookCell): Promise<void> {

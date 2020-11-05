@@ -142,6 +142,7 @@ export interface INotebookServer extends IAsyncDisposable {
 export const IRawNotebookSupportedService = Symbol('IRawNotebookSupportedService');
 export interface IRawNotebookSupportedService {
     supported(): Promise<boolean>;
+    isSupportedForLocalLaunch(): Promise<boolean>;
 }
 
 // Provides notebooks that talk directly to kernels as opposed to a jupyter server
@@ -307,6 +308,7 @@ export interface IJupyterPasswordConnect {
 
 export const IJupyterSession = Symbol('IJupyterSession');
 export interface IJupyterSession extends IAsyncDisposable {
+    readonly session: ISessionWithSocket | undefined;
     onSessionStatusChanged: Event<ServerStatus>;
     readonly status: ServerStatus;
     readonly workingDirectory: string;
@@ -368,6 +370,7 @@ export interface IJupyterSessionManagerFactory {
 export interface IJupyterSessionManager extends IAsyncDisposable {
     readonly onRestartSessionCreated: Event<Kernel.IKernelConnection>;
     readonly onRestartSessionUsed: Event<Kernel.IKernelConnection>;
+    getDefaultKernel(): Promise<string | undefined>;
     startNew(
         kernelConnection: KernelConnectionMetadata | undefined,
         workingDirectory: string,

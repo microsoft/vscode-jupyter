@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Kernel, KernelMessage, Session, SessionManager } from '@jupyterlab/services';
+import { Kernel, KernelMessage, Session } from '@jupyterlab/services';
 // import * as path from 'path';
 import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
@@ -28,8 +28,13 @@ import {
 } from '../../datascience/jupyter/kernels/types';
 import {
     IDataScienceErrorHandler,
+    IJupyterConnection,
+    IJupyterSession,
+    IJupyterSessionManager,
+    IJupyterSessionManagerFactory,
     INotebookEditorProvider,
     InterruptResult,
+    IRawNotebookSupportedService,
     KernelSocketInformation
 } from '../../datascience/types';
 import { IJupyterServerAuthServiceProvider, IJupyterServerConnectionInfo } from '../ui/types';
@@ -105,7 +110,7 @@ export class RemoteJupyterKernel implements IKernel, IAsyncDisposable {
         return this._info;
     }
     get status(): ServerStatus {
-        return translateStatus(this._session?.status);
+        return translateStatus(this._session?.session?.status);
     }
     get disposed(): boolean {
         return this._disposed === true;
@@ -122,7 +127,8 @@ export class RemoteJupyterKernel implements IKernel, IAsyncDisposable {
     private restarting?: Deferred<void>;
     private readonly kernelExecution: KernelExecution;
     private startCancellation = new CancellationTokenSource();
-    private _session?: Session.ISession;
+    private _session?: IJupyterSession;
+    private sessionManager?: IJupyterSessionManager;
     private readonly connectionInfo: Promise<IJupyterServerConnectionInfo | undefined>;
     constructor(
         public readonly uri: Uri,
@@ -137,7 +143,9 @@ export class RemoteJupyterKernel implements IKernel, IAsyncDisposable {
         kernelSelectionUsage: IKernelSelectionUsage,
         appShell: IApplicationShell,
         vscNotebook: IVSCodeNotebook,
-        authServiceProvider: IJupyterServerAuthServiceProvider
+        authServiceProvider: IJupyterServerAuthServiceProvider,
+        private readonly sessionFactory: IJupyterSessionManagerFactory,
+        rawNotebookSupported: IRawNotebookSupportedService
     ) {
         this.kernelExecution = new KernelExecution(
             kernelProvider,
@@ -147,7 +155,8 @@ export class RemoteJupyterKernel implements IKernel, IAsyncDisposable {
             kernelSelectionUsage,
             appShell,
             vscNotebook,
-            metadata
+            metadata,
+            rawNotebookSupported
         );
         this.connectionInfo = this.getServerConnectionInfo(uri, authServiceProvider);
     }
@@ -181,19 +190,19 @@ export class RemoteJupyterKernel implements IKernel, IAsyncDisposable {
         if (this.restarting) {
             await this.restarting.promise;
         }
-        if (!this._session) {
+        if (!this._session?.session) {
             throw new Error('No active session');
         }
         // tslint:disable-next-line: no-suspicious-comment
         // TODO: Support timeouts in interrupts.
-        await this._session.kernel.interrupt();
+        await this._session.session.kernel.interrupt();
         return InterruptResult.Success;
     }
     public async dispose(): Promise<void> {
         this.restarting = undefined;
-        if (this._session) {
-            this._session.statusChanged.disconnect(this.statusChangeHandler, this);
-            await this._session.shutdown().catch(noop);
+        if (this._session?.session) {
+            this._session.session.statusChanged.disconnect(this.statusChangeHandler, this);
+            await this._session.session.shutdown().catch(noop);
             this._disposed = true;
             this._onDisposed.fire();
             this._onStatusChanged.fire(ServerStatus.Dead);
@@ -209,10 +218,10 @@ export class RemoteJupyterKernel implements IKernel, IAsyncDisposable {
         if (this.restarting) {
             return this.restarting.promise;
         }
-        if (this._session) {
+        if (this._session?.session) {
             this.restarting = createDeferred<void>();
             try {
-                await this._session.kernel.restart();
+                await this._session.session.kernel.restart();
                 await this.initializeAfterStart();
                 this.restarting.resolve();
             } catch (ex) {
@@ -234,25 +243,33 @@ export class RemoteJupyterKernel implements IKernel, IAsyncDisposable {
         if (this._session) {
             return;
         }
-        const sessionManager = new SessionManager({ serverSettings: connectionInfo.settings });
-
-        if (this.metadata.kind === 'connectToLiveKernel') {
-            // Get active sessions & find the corresponding session.
-            this._session = sessionManager.connectTo(this.metadata.kernelModel.session);
-        } else {
-            this._session = await sessionManager.startNew({
-                path: this.uri.fsPath.substring(1), // Ignore the leading '/'
-                kernelName: this.metadata.kernelSpec?.name // If no kernel spec name, let server pick default.
-            });
+        const connection: IJupyterConnection = {
+            baseUrl: connectionInfo.settings.baseUrl,
+            disconnected: new EventEmitter<number>().event,
+            displayName: '',
+            dispose: noop,
+            hostName: '',
+            localLaunch: false,
+            localProcExitCode: undefined,
+            rootDirectory: this.uri.fsPath,
+            token: connectionInfo.settings.token,
+            type: 'jupyter',
+            valid: true,
+            getAuthHeader: () => new connectionInfo.settings.Headers()
+        };
+        this.sessionManager = this.sessionManager || (await this.sessionFactory.create(connection, true));
+        this._session = await this.sessionManager.startNew(this.metadata, this.uri.fsPath);
+        if (!this._session) {
+            throw new Error('No new session');
         }
-        this.kernelExecution.kernelConnection = this._session.kernel;
-        this._session.statusChanged.connect(this.statusChangeHandler, this);
+        this.kernelExecution.kernelConnection = this._session.session?.kernel;
+        this._session.session!.statusChanged.connect(this.statusChangeHandler, this);
     }
     private statusChangeHandler(_: Session.ISession, status: Kernel.Status) {
         this._onStatusChanged.fire(translateStatus(status));
     }
     private async initializeAfterStart() {
-        if (!this._session) {
+        if (!this._session?.session) {
             return;
         }
         // this.disableJedi();
@@ -275,13 +292,14 @@ export class RemoteJupyterKernel implements IKernel, IAsyncDisposable {
         //     .requestKernelInfo()
         //     .then((item) => (this._info = item.content))
         //     .catch(traceWarning.bind('Failed to request KernelInfo'));
-        await new KernelExecutionHelper(this._session.kernel).waitForIdle(this.launchTimeout);
+        const kernel = this._session.session.kernel;
+        await new KernelExecutionHelper(kernel).waitForIdle(this.launchTimeout);
         this._kernelSocket.next({
             options: {
-                clientId: this._session.kernel.clientId,
-                id: this._session.kernel.id,
-                model: this._session.kernel.model,
-                userName: this._session.kernel.username
+                clientId: kernel.clientId,
+                id: kernel.id,
+                model: kernel.model,
+                userName: kernel.username
             }
         });
     }
