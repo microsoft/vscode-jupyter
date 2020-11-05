@@ -142,6 +142,7 @@ export interface INotebookServer extends IAsyncDisposable {
 export const IRawNotebookSupportedService = Symbol('IRawNotebookSupportedService');
 export interface IRawNotebookSupportedService {
     supported(): Promise<boolean>;
+    isSupportedForLocalLaunch(): Promise<boolean>;
 }
 
 // Provides notebooks that talk directly to kernels as opposed to a jupyter server

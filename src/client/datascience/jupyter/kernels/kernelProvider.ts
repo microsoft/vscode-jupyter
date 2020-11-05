@@ -9,7 +9,12 @@ import { Uri } from 'vscode';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../../common/application/types';
 import { traceInfo, traceWarning } from '../../../common/logger';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../../common/types';
-import { IDataScienceErrorHandler, INotebookEditorProvider, INotebookProvider } from '../../types';
+import {
+    IDataScienceErrorHandler,
+    INotebookEditorProvider,
+    INotebookProvider,
+    IRawNotebookSupportedService
+} from '../../types';
 import { Kernel } from './kernel';
 import { KernelSelector } from './kernelSelector';
 import { IKernel, IKernelProvider, IKernelSelectionUsage, KernelOptions } from './types';
@@ -27,7 +32,8 @@ export class KernelProvider implements IKernelProvider {
         @inject(INotebookEditorProvider) private readonly editorProvider: INotebookEditorProvider,
         @inject(KernelSelector) private readonly kernelSelectionUsage: IKernelSelectionUsage,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
-        @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook
+        @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
+        @inject(IRawNotebookSupportedService) private readonly rawNotebookSupported: IRawNotebookSupportedService
     ) {}
     public get(uri: Uri): IKernel | undefined {
         return this.kernelsByUri.get(uri.toString())?.kernel;
@@ -53,7 +59,8 @@ export class KernelProvider implements IKernelProvider {
             this,
             this.kernelSelectionUsage,
             this.appShell,
-            this.vscNotebook
+            this.vscNotebook,
+            this.rawNotebookSupported
         );
         this.asyncDisposables.push(kernel);
         this.kernelsByUri.set(uri.toString(), { options, kernel });
