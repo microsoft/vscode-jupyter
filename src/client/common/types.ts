@@ -76,13 +76,9 @@ export enum ModuleNamePurpose {
 export const IInstaller = Symbol('IInstaller');
 
 export interface IInstaller {
-    promptToInstall(
-        product: Product,
-        resource?: InterpreterUri,
-        cancel?: CancellationToken
-    ): Promise<InstallerResponse>;
-    install(product: Product, resource?: InterpreterUri, cancel?: CancellationToken): Promise<InstallerResponse>;
-    isInstalled(product: Product, resource?: InterpreterUri): Promise<boolean | undefined>;
+    promptToInstall(product: Product, resource: InterpreterUri, cancel?: CancellationToken): Promise<InstallerResponse>;
+    install(product: Product, resource: InterpreterUri, cancel?: CancellationToken): Promise<InstallerResponse>;
+    isInstalled(product: Product, resource: InterpreterUri): Promise<boolean | undefined>;
     translateProductToModuleName(product: Product, purpose: ModuleNamePurpose): string;
 }
 
@@ -119,7 +115,7 @@ export interface IJupyterSettings {
     readonly jupyterInterruptTimeout: number;
     readonly jupyterLaunchTimeout: number;
     readonly jupyterLaunchRetries: number;
-    readonly jupyterServerURI: string;
+    readonly jupyterServerType: string;
     readonly notebookFileRoot: string;
     readonly changeDirOnImportExport: boolean;
     readonly useDefaultConfigForJupyter: boolean;
@@ -129,8 +125,6 @@ export interface IJupyterSettings {
     readonly collapseCellInputCodeByDefault: boolean;
     readonly maxOutputSize: number;
     readonly enableScrollingForCellOutputs: boolean;
-    readonly gatherToScript: boolean;
-    readonly gatherSpecPath: string;
     readonly sendSelectionToInteractiveWindow: boolean;
     readonly markdownRegularExpression: string;
     readonly codeRegularExpression: string;
@@ -141,7 +135,7 @@ export interface IJupyterSettings {
     readonly liveShareConnectionTimeout: number;
     readonly decorateCells: boolean;
     readonly enableCellCodeLens: boolean;
-    readonly askForLargeDataFrames: boolean;
+    askForLargeDataFrames: boolean;
     readonly enableAutoMoveToNextCell: boolean;
     readonly askForKernelRestart: boolean;
     readonly enablePlotViewer: boolean;
@@ -402,4 +396,5 @@ export const IExperimentService = Symbol('IExperimentService');
 export interface IExperimentService {
     inExperiment(experimentName: Experiments): Promise<boolean>;
     getExperimentValue<T extends boolean | number | string>(experimentName: string): Promise<T | undefined>;
+    logExperiments(): void;
 }

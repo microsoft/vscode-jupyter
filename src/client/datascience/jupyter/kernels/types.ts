@@ -92,7 +92,9 @@ export function getKernelConnectionId(kernelConnection: KernelConnectionMetadata
         case 'startUsingDefaultKernel':
             return `${kernelConnection.kind}#${kernelConnection}`;
         case 'startUsingKernelSpec':
-            return `${kernelConnection.kind}#${kernelConnection.kernelSpec.name}.${kernelConnection.kernelSpec.display_name}`;
+            return `${kernelConnection.kind}#${kernelConnection.kernelSpec.name}.${
+                kernelConnection.kernelSpec.display_name
+            }${(kernelConnection.kernelSpec.argv || []).join(' ')}`;
         case 'startUsingPythonInterpreter':
             return `${kernelConnection.kind}#${kernelConnection.interpreter.path}`;
         default:

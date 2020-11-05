@@ -38,11 +38,11 @@ import {
     IDataScienceErrorHandler,
     IInteractiveWindowListener,
     IJupyterDebugger,
+    IJupyterServerUriStorage,
     IJupyterVariableDataProviderFactory,
     IJupyterVariables,
     INotebookEditorProvider,
     INotebookExporter,
-    INotebookExtensibility,
     INotebookImporter,
     INotebookProvider,
     IStatusProvider,
@@ -104,8 +104,8 @@ export class NativeEditorOldWebView extends NativeEditor {
         model: NativeEditorNotebookModel,
         webviewPanel: WebviewPanel | undefined,
         selector: KernelSelector,
-        notebookExtensibility: INotebookExtensibility,
-        extensionChecker: IPythonExtensionChecker
+        extensionChecker: IPythonExtensionChecker,
+        serverStorage: IJupyterServerUriStorage
     ) {
         super(
             listeners,
@@ -140,8 +140,8 @@ export class NativeEditorOldWebView extends NativeEditor {
             model,
             webviewPanel,
             selector,
-            notebookExtensibility,
-            extensionChecker
+            extensionChecker,
+            serverStorage
         );
         asyncRegistry.push(this);
         // No ui syncing in old notebooks.

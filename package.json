@@ -1,8 +1,8 @@
 {
     "name": "jupyter",
     "displayName": "Jupyter",
-    "description": "Linting, Debugging (multi-threaded, remote), Intellisense, Jupyter Notebooks, code formatting, refactoring, unit tests, snippets, and more.",
-    "version": "2020.9.0-dev",
+    "description": "Language-agnostic jupyter notebook, interactive programming and computing that supports Intellisense, code formatting, refactoring, debugging and more.",
+    "version": "2020.12.0-dev",
     "featureFlags": {
         "usingNewInterpreterStorage": true
     },
@@ -24,8 +24,8 @@
     "qna": "https://stackoverflow.com/questions/tagged/visual-studio-code+jupyter",
     "icon": "icon.png",
     "galleryBanner": {
-        "color": "#1e415e",
-        "theme": "dark"
+        "color": "#ffffff",
+        "theme": "light"
     },
     "engines": {
         "vscode": "^1.49.0"
@@ -495,6 +495,7 @@
             {
                 "command": "jupyter.opennotebookInPreviewEditor",
                 "title": "%jupyter.command.jupyter.opennotebookInPreviewEditor.title%",
+                "enablement": "jupyter.opennotebookInPreviewEditor.enabled",
                 "category": "Jupyter"
             },
             {
@@ -639,11 +640,6 @@
                 "enablement": "jupyter.isnativeactive"
             },
             {
-                "command": "jupyter.gatherquality",
-                "title": "DataScience.gatherQuality",
-                "category": "Jupyter"
-            },
-            {
                 "command": "jupyter.latestExtension",
                 "title": "DataScience.latestExtension",
                 "category": "Jupyter"
@@ -651,11 +647,13 @@
             {
                 "command": "jupyter.createGitHubIssue",
                 "title": "%jupyter.command.jupyter.createGitHubIssue.title%",
+                "enablement": "config.noExists",
                 "category": "Jupyter"
             },
             {
                 "command": "jupyter.submitGitHubIssue",
                 "title": "%jupyter.command.jupyter.submitGitHubIssue.title%",
+                "enablement": "config.noExists",
                 "category": "Jupyter"
             },
             {
@@ -666,6 +664,16 @@
             {
                 "command": "jupyter.resetLoggingLevel",
                 "title": "%jupyter.command.jupyter.resetLoggingLevel.title%",
+                "category": "Jupyter"
+            },
+            {
+                "command": "jupyter.showDataViewer",
+                "title": "%jupyter.command.jupyter.showDataViewer.title%",
+                "category": "Jupyter"
+            },
+            {
+                "command": "jupyter.clearSavedJupyterUris",
+                "title": "%jupyter.command.jupyter.clearSavedJupyterUris.title%",
                 "category": "Jupyter"
             }
         ],
@@ -754,7 +762,7 @@
                     "group": "Jupyter"
                 },
                 {
-                    "when": "resourceLangId == jupyter && jupyter.vscode.channel == 'insiders'",
+                    "when": "resourceLangId == jupyter && jupyter.vscode.channel == 'insiders' && jupyter.opennotebookInPreviewEditor.enabled",
                     "command": "jupyter.opennotebookInPreviewEditor",
                     "group": "Jupyter"
                 },
@@ -1167,12 +1175,6 @@
                     "when": "jupyter.isnativeactive"
                 },
                 {
-                    "command": "jupyter.gatherquality",
-                    "title": "%DataScience.gatherQuality%",
-                    "category": "Jupyter",
-                    "when": "false"
-                },
-                {
                     "command": "jupyter.latestExtension",
                     "title": "%DataScience.latestExtension%",
                     "category": "Jupyter",
@@ -1198,9 +1200,30 @@
                 },
                 {
                     "command": "jupyter.createGitHubIssue",
-                    "title": "%jupyter.command.jupyter.createGitHubIssue.title%",
                     "category": "Jupyter",
-                    "when": "config.jupyter.logging.level == debug"
+                    "when": "config.jupyter.logging.level == debug && config.noExists"
+                },
+                {
+                    "command": "jupyter.submitGitHubIssue",
+                    "category": "Jupyter",
+                    "when": "false"
+                },
+                {
+                    "command": "jupyter.showDataViewer",
+                    "category": "Jupyter",
+                    "when": "false"
+                },
+                {
+                    "command": "jupyter.opennotebookInPreviewEditor",
+                    "when": "false",
+                    "category": "Jupyter"
+                }
+            ],
+            "debug/variables/context": [
+                {
+                    "command": "jupyter.showDataViewer",
+                    "group": "1_view",
+                    "when": "python.isDebuggerDataViewerExperimentEnabled && debugProtocolVariableMenuContext == 'viewableInDataViewer'"
                 }
             ]
         },
@@ -1235,7 +1258,6 @@
                             "NativeNotebookEditor",
                             "CustomEditor",
                             "RunByLine",
-                            "jediLSP",
                             "All"
                         ]
                     },
@@ -1310,10 +1332,13 @@
                     "description": "Number of times to attempt to connect to the Jupyter Notebook",
                     "scope": "resource"
                 },
-                "jupyter.jupyterServerURI": {
+                "jupyter.jupyterServerType": {
                     "type": "string",
-                    "default": "local",
-                    "description": "When a Notebook Editor or Interactive Window session is started, create the kernel on the specified Jupyter server. Select 'local' to create a new Jupyter server on this local machine.",
+                    "enum": [
+                        "local",
+                        "remote"
+                    ],
+                    "description": "Determines the type of connection for talking to jupyter. Local will start kernels locally. Remote allows for connections to remote servers",
                     "scope": "resource"
                 },
                 "jupyter.jupyterCommandLineArguments": {
@@ -1502,18 +1527,6 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Modify plot output so that it can be expanded into a plot viewer window.",
-                    "scope": "resource"
-                },
-                "jupyter.gatherToScript": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Gather code to a python script rather than a notebook.",
-                    "scope": "resource"
-                },
-                "jupyter.gatherSpecPath": {
-                    "type": "string",
-                    "default": "",
-                    "description": "This setting specifies a folder that contains additional or replacement spec files used for analysis.",
                     "scope": "resource"
                 },
                 "jupyter.codeLenses": {
@@ -1754,15 +1767,30 @@
         "webpack": "webpack"
     },
     "dependencies": {
+        "@enonic/fnv-plus": "^1.3.0",
+        "@jupyter-widgets/base": "^2.0.1",
+        "@jupyter-widgets/controls": "^1.5.2",
+        "@jupyter-widgets/jupyterlab-manager": "^1.0.2",
+        "@jupyter-widgets/output": "^2.0.1",
         "@jupyter-widgets/schema": "^0.4.0",
         "@jupyterlab/coreutils": "^3.1.0",
         "@jupyterlab/services": "^4.2.0",
         "@loadable/component": "^5.12.0",
         "@nteract/messaging": "^7.0.0",
+        "@nteract/transform-dataresource": "^4.3.5",
+        "@nteract/transform-geojson": "^3.2.3",
+        "@nteract/transform-model-debug": "^3.2.3",
+        "@nteract/transform-plotly": "^6.0.0",
+        "@nteract/transform-vega": "^6.0.3",
+        "@nteract/transforms": "^4.4.7",
         "@octokit/rest": "^18.0.6",
-        "@types/tcp-port-used": "^1.0.0",
+        "@phosphor/widgets": "^1.9.3",
         "ansi-regex": "^4.1.0",
+        "ansi-to-html": "^0.6.7",
+        "ansi-to-react": "^6.0.8",
         "arch": "^2.1.0",
+        "bootstrap": "^4.3.1",
+        "bootstrap-less": "^3.3.8",
         "detect-indent": "^6.0.0",
         "diff-match-patch": "^1.0.0",
         "fast-deep-equal": "^2.0.1",
@@ -1785,17 +1813,29 @@
         "pdfkit": "^0.11.0",
         "plotly.js-dist": "^1.55.2",
         "portfinder": "^1.0.25",
+        "react": "^16.5.2",
+        "react-data-grid": "^6.0.2-0",
+        "react-dom": "^16.5.2",
         "react-draggable": "^4.4.2",
+        "react-redux": "^7.1.1",
+        "react-svg-pan-zoom": "^3.1.0",
+        "react-svgmt": "^1.1.8",
+        "react-virtualized": "^9.21.1",
+        "redux": "^4.0.4",
+        "redux-logger": "^3.0.6",
         "reflect-metadata": "^0.1.12",
         "request": "^2.87.0",
         "request-progress": "^3.0.0",
+        "requirejs": "^2.3.6",
         "rxjs": "^6.5.4",
         "rxjs-compat": "^6.5.4",
         "sanitize-filename": "^1.6.3",
         "semver": "^5.5.0",
+        "slickgrid": "^2.4.17",
         "stack-trace": "0.0.10",
         "string-argv": "^0.3.1",
         "strip-ansi": "^5.2.0",
+        "svg-inline-react": "^3.1.0",
         "svg-to-pdfkit": "^0.1.8",
         "tcp-port-used": "^1.0.1",
         "tmp": "^0.0.29",
@@ -1803,6 +1843,7 @@
         "uint64be": "^1.0.1",
         "unicode": "^10.0.0",
         "untildify": "^3.0.2",
+        "uuid": "^3.3.2",
         "vscode-debugprotocol": "^1.28.0",
         "vscode-extension-telemetry": "0.1.4",
         "vscode-jsonrpc": "6.0.0-next.5",
@@ -1813,7 +1854,6 @@
         "vsls": "^0.3.1291",
         "winston": "^3.2.1",
         "ws": "^6.0.0",
-        "xml2js": "^0.4.19",
         "zeromq": "^6.0.0-beta.6"
     },
     "devDependencies": {
@@ -1824,31 +1864,18 @@
         "@babel/preset-env": "^7.1.0",
         "@babel/preset-react": "^7.0.0",
         "@babel/register": "^7.9.0",
-        "@blueprintjs/select": "^3.11.2",
-        "@enonic/fnv-plus": "^1.3.0",
         "@istanbuljs/nyc-config-typescript": "^0.1.3",
-        "@jupyter-widgets/base": "^2.0.1",
-        "@jupyter-widgets/controls": "^1.5.2",
-        "@jupyter-widgets/jupyterlab-manager": "^1.0.2",
-        "@jupyter-widgets/output": "^2.0.1",
-        "@nteract/transform-dataresource": "^4.3.5",
-        "@nteract/transform-geojson": "^3.2.3",
-        "@nteract/transform-model-debug": "^3.2.3",
-        "@nteract/transform-plotly": "^6.0.0",
-        "@nteract/transform-vega": "^6.0.3",
-        "@nteract/transforms": "^4.4.7",
-        "@phosphor/widgets": "^1.9.3",
         "@sinonjs/fake-timers": "^6.0.1",
         "@testing-library/react": "^9.4.0",
         "@types/ansi-regex": "^4.0.0",
         "@types/chai": "^4.1.2",
         "@types/chai-arrays": "^1.0.2",
         "@types/chai-as-promised": "^7.1.0",
-        "@types/copy-webpack-plugin": "^4.4.2",
+        "@types/copy-webpack-plugin": "^6.0.0",
         "@types/cors": "^2.8.6",
         "@types/debug": "^4.1.5",
         "@types/dedent": "^0.7.0",
-        "@types/del": "^3.0.0",
+        "@types/del": "^4.0.0",
         "@types/diff-match-patch": "^1.0.32",
         "@types/download": "^6.2.2",
         "@types/enzyme": "^3.1.14",
@@ -1884,6 +1911,7 @@
         "@types/sinonjs__fake-timers": "^6.0.1",
         "@types/socket.io": "^2.1.4",
         "@types/stack-trace": "0.0.29",
+        "@types/tcp-port-used": "^1.0.0",
         "@types/temp": "^0.8.32",
         "@types/tmp": "0.0.33",
         "@types/untildify": "^3.0.0",
@@ -1896,10 +1924,7 @@
         "@typescript-eslint/eslint-plugin": "^3.7.0",
         "@typescript-eslint/parser": "^3.7.0",
         "acorn": "^6.4.1",
-        "ansi-to-html": "^0.6.7",
         "babel-polyfill": "^6.26.0",
-        "bootstrap": "^4.3.1",
-        "bootstrap-less": "^3.3.8",
         "cache-loader": "^4.1.0",
         "canvas": "^2.6.0",
         "chai": "^4.1.2",
@@ -1907,7 +1932,7 @@
         "chai-as-promised": "^7.1.1",
         "codecov": "^3.7.1",
         "colors": "^1.2.1",
-        "copy-webpack-plugin": "^5.1.1",
+        "copy-webpack-plugin": "^6.2.1",
         "cors": "^2.8.5",
         "cross-env": "^6.0.3",
         "cross-spawn": "^6.0.5",
@@ -1963,27 +1988,15 @@
         "postcss-loader": "^3.0.0",
         "prettier": "^2.0.2",
         "range-inclusive": "^1.0.2",
-        "react": "^16.5.2",
-        "react-data-grid": "^6.0.2-0",
-        "react-dom": "^16.5.2",
-        "react-redux": "^7.1.1",
-        "react-svg-pan-zoom": "^3.1.0",
-        "react-svgmt": "^1.1.8",
-        "react-virtualized": "^9.21.1",
-        "redux": "^4.0.4",
-        "redux-logger": "^3.0.6",
         "relative": "^3.0.2",
         "remove-files-webpack-plugin": "^1.4.0",
-        "requirejs": "^2.3.6",
         "rewiremock": "^3.13.0",
         "rimraf": "^3.0.2",
         "sinon": "^8.0.1",
-        "slickgrid": "^2.4.17",
         "socket.io": "^2.3.0",
         "source-map-support": "^0.5.12",
         "style-loader": "^0.23.1",
         "svg-inline-loader": "^0.8.0",
-        "svg-inline-react": "^3.1.0",
         "terser-webpack-plugin": "^3.1.0",
         "thread-loader": "^2.1.3",
         "transform-loader": "^0.2.4",
@@ -2002,15 +2015,14 @@
         "typescript-formatter": "^7.1.0",
         "unicode-properties": "^1.3.1",
         "url-loader": "^1.1.2",
-        "uuid": "^3.3.2",
         "vsce": "^1.59.0",
         "vscode-test": "^1.2.3",
-        "webpack": "^4.33.0",
+        "webpack": "^4.37.0",
         "webpack-bundle-analyzer": "^3.6.0",
         "webpack-cli": "^3.1.2",
         "webpack-fix-default-import-plugin": "^1.0.3",
         "why-is-node-running": "^2.0.3",
         "yargs": "^15.4.1",
-        "yargs-parser": ">=13.1.2"
+        "yargs-parser": "^13.1.2"
     }
 }

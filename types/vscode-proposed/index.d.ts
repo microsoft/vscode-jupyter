@@ -13,7 +13,9 @@ import {
     ProviderResult,
     WorkspaceEditEntryMetadata,
     Command,
-    AccessibilityInformation
+    AccessibilityInformation,
+    AuthenticationProviderInformation,
+    AuthenticationSession
 } from 'vscode';
 
 // Copy nb section from https://github.com/microsoft/vscode/blob/master/src/vs/vscode.proposed.d.ts.
@@ -84,6 +86,25 @@ export interface CellDisplayOutput {
 
 export type CellOutput = CellStreamOutput | CellErrorOutput | CellDisplayOutput;
 
+export class NotebookCellOutputItem {
+    readonly mime: string;
+    readonly value: unknown;
+    readonly metadata?: Record<string, string | number | boolean>;
+
+    constructor(mime: string, value: unknown, metadata?: Record<string, string | number | boolean>);
+}
+
+//TODO@jrieken add id?
+export class NotebookCellOutput {
+    readonly outputs: NotebookCellOutputItem[];
+    readonly metadata?: Record<string, string | number | boolean>;
+
+    constructor(outputs: NotebookCellOutputItem[], metadata?: Record<string, string | number | boolean>);
+
+    //TODO@jrieken HACK to workaround dependency issues...
+    toJSON(): any;
+}
+
 export enum NotebookCellRunState {
     Running = 1,
     Idle = 2,
@@ -100,60 +121,60 @@ export interface NotebookCellMetadata {
     /**
      * Controls whether a cell's editor is editable/readonly.
      */
-    readonly editable?: boolean;
+    editable?: boolean;
 
     /**
      * Controls if the cell is executable.
      * This metadata is ignored for markdown cell.
      */
-    readonly runnable?: boolean;
+    runnable?: boolean;
 
     /**
      * Controls if the cell has a margin to support the breakpoint UI.
      * This metadata is ignored for markdown cell.
      */
-    readonly breakpointMargin?: boolean;
+    breakpointMargin?: boolean;
 
     /**
      * Whether the [execution order](#NotebookCellMetadata.executionOrder) indicator will be displayed.
      * Defaults to true.
      */
-    readonly hasExecutionOrder?: boolean;
+    hasExecutionOrder?: boolean;
 
     /**
      * The order in which this cell was executed.
      */
-    readonly executionOrder?: number;
+    executionOrder?: number;
 
     /**
      * A status message to be shown in the cell's status bar
      */
-    readonly statusMessage?: string;
+    statusMessage?: string;
 
     /**
      * The cell's current run state
      */
-    readonly runState?: NotebookCellRunState;
+    runState?: NotebookCellRunState;
 
     /**
      * If the cell is running, the time at which the cell started running
      */
-    readonly runStartTime?: number;
+    runStartTime?: number;
 
     /**
      * The total duration of the cell's last run
      */
-    readonly lastRunDuration?: number;
+    lastRunDuration?: number;
 
     /**
      * Whether a code cell's editor is collapsed
      */
-    readonly inputCollapsed?: boolean;
+    inputCollapsed?: boolean;
 
     /**
      * Whether a code cell's outputs are collapsed
      */
-    readonly outputCollapsed?: boolean;
+    outputCollapsed?: boolean;
 
     /**
      * Additional attributes of a cell metadata.
@@ -168,8 +189,8 @@ export interface NotebookCell {
     readonly cellKind: CellKind;
     readonly document: TextDocument;
     readonly language: string;
-    readonly outputs: CellOutput[];
-    readonly metadata: NotebookCellMetadata;
+    outputs: CellOutput[];
+    metadata: NotebookCellMetadata;
 }
 
 export interface NotebookDocumentMetadata {
@@ -177,43 +198,43 @@ export interface NotebookDocumentMetadata {
      * Controls if users can add or delete cells
      * Defaults to true
      */
-    readonly editable?: boolean;
+    editable?: boolean;
 
     /**
      * Controls whether the full notebook can be run at once.
      * Defaults to true
      */
-    readonly runnable?: boolean;
+    runnable?: boolean;
 
     /**
      * Default value for [cell editable metadata](#NotebookCellMetadata.editable).
      * Defaults to true.
      */
-    readonly cellEditable?: boolean;
+    cellEditable?: boolean;
 
     /**
      * Default value for [cell runnable metadata](#NotebookCellMetadata.runnable).
      * Defaults to true.
      */
-    readonly cellRunnable?: boolean;
+    cellRunnable?: boolean;
 
     /**
      * Default value for [cell hasExecutionOrder metadata](#NotebookCellMetadata.hasExecutionOrder).
      * Defaults to true.
      */
-    readonly cellHasExecutionOrder?: boolean;
+    cellHasExecutionOrder?: boolean;
 
-    readonly displayOrder?: GlobPattern[];
+    displayOrder?: GlobPattern[];
 
     /**
      * Additional attributes of the document metadata.
      */
-    readonly custom?: { [key: string]: any };
+    custom?: { [key: string]: any };
 
     /**
      * The document's current run state
      */
-    readonly runState?: NotebookRunState;
+    runState?: NotebookRunState;
 }
 
 export interface NotebookDocumentContentOptions {
@@ -221,13 +242,13 @@ export interface NotebookDocumentContentOptions {
      * Controls if outputs change will trigger notebook document content change and if it will be used in the diff editor
      * Default to false. If the content provider doesn't persisit the outputs in the file document, this should be set to true.
      */
-    readonly transientOutputs: boolean;
+    transientOutputs: boolean;
 
     /**
      * Controls if a meetadata property change will trigger notebook document content change and if it will be used in the diff editor
      * Default to false. If the content provider doesn't persisit a metadata property in the file document, it should be set to true.
      */
-    readonly transientMetadata: { [K in keyof NotebookCellMetadata]?: boolean };
+    transientMetadata: { [K in keyof NotebookCellMetadata]?: boolean };
 }
 
 export interface NotebookDocument {
@@ -238,9 +259,9 @@ export interface NotebookDocument {
     readonly isDirty: boolean;
     readonly isUntitled: boolean;
     readonly cells: ReadonlyArray<NotebookCell>;
-    readonly contentOptions: Readonly<NotebookDocumentContentOptions>;
-    readonly languages: string[];
-    readonly metadata: Readonly<NotebookDocumentMetadata>;
+    readonly contentOptions: NotebookDocumentContentOptions;
+    languages: string[];
+    metadata: NotebookDocumentMetadata;
 }
 
 export interface NotebookConcatTextDocument {
@@ -274,7 +295,7 @@ export interface WorkspaceEdit {
     replaceNotebookCellOutput(
         uri: Uri,
         index: number,
-        outputs: CellOutput[],
+        outputs: (NotebookCellOutput | CellOutput)[],
         metadata?: WorkspaceEditEntryMetadata
     ): void;
     replaceNotebookCellMetadata(
@@ -288,7 +309,7 @@ export interface WorkspaceEdit {
 export interface NotebookEditorEdit {
     replaceMetadata(value: NotebookDocumentMetadata): void;
     replaceCells(start: number, end: number, cells: NotebookCellData[]): void;
-    replaceCellOutput(index: number, outputs: CellOutput[]): void;
+    replaceCellOutput(index: number, outputs: (NotebookCellOutput | CellOutput)[]): void;
     replaceCellMetadata(index: number, metadata: NotebookCellMetadata): void;
 }
 
@@ -338,16 +359,6 @@ export interface NotebookEditor {
     readonly viewColumn?: ViewColumn;
 
     /**
-     * Whether the panel is active (focused by the user).
-     */
-    readonly active: boolean;
-
-    /**
-     * Whether the panel is visible.
-     */
-    readonly visible: boolean;
-
-    /**
      * Fired when the panel is disposed.
      */
     readonly onDidDispose: Event<void>;
@@ -366,7 +377,7 @@ export interface NotebookEditor {
      *
      * Messages are only delivered if the editor is live.
      *
-     * @param message Body of the message. This must be a string or other json serilizable object.
+     * @param message Body of the message. This must be a string or other json serializable object.
      */
     postMessage(message: any): Thenable<boolean>;
 
@@ -519,7 +530,7 @@ interface NotebookDocumentBackup {
     /**
      * Unique identifier for the backup.
      *
-     * This id is passed back to your extension in `openCustomDocument` when opening a notebook editor from a backup.
+     * This id is passed back to your extension in `openNotebook` when opening a notebook editor from a backup.
      */
     readonly id: string;
 
@@ -562,7 +573,7 @@ export interface NotebookCommunication {
      *
      * Messages are only delivered if the editor is live.
      *
-     * @param message Body of the message. This must be a string or other json serilizable object.
+     * @param message Body of the message. This must be a string or other json serializable object.
      */
     postMessage(message: any): Thenable<boolean>;
 
@@ -677,6 +688,7 @@ export namespace notebook {
         provider: NotebookKernelProvider
     ): Disposable;
 
+    export function openNotebookDocument(uri: Uri, viewType?: string): Promise<NotebookDocument>;
     export const onDidOpenNotebookDocument: Event<NotebookDocument>;
     export const onDidCloseNotebookDocument: Event<NotebookDocument>;
     export const onDidSaveNotebookDocument: Event<NotebookDocument>;
@@ -685,14 +697,6 @@ export namespace notebook {
      * All currently known notebook documents.
      */
     export const notebookDocuments: ReadonlyArray<NotebookDocument>;
-
-    export const visibleNotebookEditors: NotebookEditor[];
-    export const onDidChangeVisibleNotebookEditors: Event<NotebookEditor[]>;
-
-    export const activeNotebookEditor: NotebookEditor | undefined;
-    export const onDidChangeActiveNotebookEditor: Event<NotebookEditor | undefined>;
-    export const onDidChangeNotebookEditorSelection: Event<NotebookEditorSelectionChangeEvent>;
-    export const onDidChangeNotebookEditorVisibleRanges: Event<NotebookEditorVisibleRangesChangeEvent>;
     export const onDidChangeNotebookDocumentMetadata: Event<NotebookDocumentMetadataChangeEvent>;
     export const onDidChangeNotebookCells: Event<NotebookCellsChangeEvent>;
     export const onDidChangeCellOutputs: Event<NotebookCellOutputsChangeEvent>;
@@ -729,4 +733,184 @@ export namespace notebook {
         alignment?: NotebookCellStatusBarAlignment,
         priority?: number
     ): NotebookCellStatusBarItem;
+}
+
+export namespace window {
+    export const visibleNotebookEditors: NotebookEditor[];
+    export const onDidChangeVisibleNotebookEditors: Event<NotebookEditor[]>;
+    export const activeNotebookEditor: NotebookEditor | undefined;
+    export const onDidChangeActiveNotebookEditor: Event<NotebookEditor | undefined>;
+    export const onDidChangeNotebookEditorSelection: Event<NotebookEditorSelectionChangeEvent>;
+    export const onDidChangeNotebookEditorVisibleRanges: Event<NotebookEditorVisibleRangesChangeEvent>;
+}
+
+//#region debug
+
+/**
+ * A DebugProtocolVariableContainer is an opaque stand-in type for the intersection of the Scope and Variable types defined in the Debug Adapter Protocol.
+ * See https://microsoft.github.io/debug-adapter-protocol/specification#Types_Scope and https://microsoft.github.io/debug-adapter-protocol/specification#Types_Variable.
+ */
+export interface DebugProtocolVariableContainer {
+    // Properties: the intersection of DAP's Scope and Variable types.
+}
+
+/**
+ * A DebugProtocolVariable is an opaque stand-in type for the Variable type defined in the Debug Adapter Protocol.
+ * See https://microsoft.github.io/debug-adapter-protocol/specification#Types_Variable.
+ */
+export interface DebugProtocolVariable {
+    // Properties: see details [here](https://microsoft.github.io/debug-adapter-protocol/specification#Base_Protocol_Variable).
+}
+//#endregion
+
+/**
+ * An [event](#Event) which fires when an [AuthenticationProvider](#AuthenticationProvider) is added or removed.
+ */
+export interface AuthenticationProvidersChangeEvent {
+    /**
+     * The ids of the [authenticationProvider](#AuthenticationProvider)s that have been added.
+     */
+    readonly added: ReadonlyArray<AuthenticationProviderInformation>;
+
+    /**
+     * The ids of the [authenticationProvider](#AuthenticationProvider)s that have been removed.
+     */
+    readonly removed: ReadonlyArray<AuthenticationProviderInformation>;
+}
+
+/**
+ * An [event](#Event) which fires when an [AuthenticationSession](#AuthenticationSession) is added, removed, or changed.
+ */
+export interface AuthenticationProviderAuthenticationSessionsChangeEvent {
+    /**
+     * The ids of the [AuthenticationSession](#AuthenticationSession)s that have been added.
+     */
+    readonly added: ReadonlyArray<string>;
+
+    /**
+     * The ids of the [AuthenticationSession](#AuthenticationSession)s that have been removed.
+     */
+    readonly removed: ReadonlyArray<string>;
+
+    /**
+     * The ids of the [AuthenticationSession](#AuthenticationSession)s that have been changed.
+     */
+    readonly changed: ReadonlyArray<string>;
+}
+
+/**
+ * **WARNING** When writing an AuthenticationProvider, `id` should be treated as part of your extension's
+ * API, changing it is a breaking change for all extensions relying on the provider. The id is
+ * treated case-sensitively.
+ */
+export interface AuthenticationProvider {
+    /**
+     * Used as an identifier for extensions trying to work with a particular
+     * provider: 'microsoft', 'github', etc. id must be unique, registering
+     * another provider with the same id will fail.
+     */
+    readonly id: string;
+
+    /**
+     * The human-readable name of the provider.
+     */
+    readonly label: string;
+
+    /**
+     * Whether it is possible to be signed into multiple accounts at once with this provider
+     */
+    readonly supportsMultipleAccounts: boolean;
+
+    /**
+     * An [event](#Event) which fires when the array of sessions has changed, or data
+     * within a session has changed.
+     */
+    readonly onDidChangeSessions: Event<AuthenticationProviderAuthenticationSessionsChangeEvent>;
+
+    /**
+     * Returns an array of current sessions.
+     */
+    getSessions(): Thenable<ReadonlyArray<AuthenticationSession>>;
+
+    /**
+     * Prompts a user to login.
+     */
+    login(scopes: string[]): Thenable<AuthenticationSession>;
+
+    /**
+     * Removes the session corresponding to session id.
+     * @param sessionId The session id to log out of
+     */
+    logout(sessionId: string): Thenable<void>;
+}
+
+export namespace authentication {
+    /**
+     * Register an authentication provider.
+     *
+     * There can only be one provider per id and an error is being thrown when an id
+     * has already been used by another provider.
+     *
+     * @param provider The authentication provider provider.
+     * @return A [disposable](#Disposable) that unregisters this provider when being disposed.
+     */
+    export function registerAuthenticationProvider(provider: AuthenticationProvider): Disposable;
+
+    /**
+     * @deprecated - getSession should now trigger extension activation.
+     * Fires with the provider id that was registered or unregistered.
+     */
+    export const onDidChangeAuthenticationProviders: Event<AuthenticationProvidersChangeEvent>;
+
+    /**
+     * @deprecated
+     * The ids of the currently registered authentication providers.
+     * @returns An array of the ids of authentication providers that are currently registered.
+     */
+    export function getProviderIds(): Thenable<ReadonlyArray<string>>;
+
+    /**
+     * @deprecated
+     * An array of the ids of authentication providers that are currently registered.
+     */
+    export const providerIds: ReadonlyArray<string>;
+
+    /**
+     * An array of the information of authentication providers that are currently registered.
+     */
+    export const providers: ReadonlyArray<AuthenticationProviderInformation>;
+
+    /**
+     * @deprecated
+     * Logout of a specific session.
+     * @param providerId The id of the provider to use
+     * @param sessionId The session id to remove
+     * provider
+     */
+    export function logout(providerId: string, sessionId: string): Thenable<void>;
+
+    /**
+     * Retrieve a password that was stored with key. Returns undefined if there
+     * is no password matching that key.
+     * @param key The key the password was stored under.
+     */
+    export function getPassword(key: string): Thenable<string | undefined>;
+
+    /**
+     * Store a password under a given key.
+     * @param key The key to store the password under
+     * @param value The password
+     */
+    export function setPassword(key: string, value: string): Thenable<void>;
+
+    /**
+     * Remove a password from storage.
+     * @param key The key the password was stored under.
+     */
+    export function deletePassword(key: string): Thenable<void>;
+
+    /**
+     * Fires when a password is set or deleted.
+     */
+    export const onDidChangePassword: Event<void>;
 }

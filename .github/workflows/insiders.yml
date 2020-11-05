@@ -25,7 +25,7 @@ env:
   CI_PYTHON_PATH: python
   TEST_RESULTS_DIRECTORY: .
   TEST_RESULTS_GLOB: '**/test-results*.xml'
-  IPYWIDGET_SCREENSHOT_PATH: 'execute-screenshot.png'
+  IPYWIDGET_SCREENSHOT_PATH: '*-screenshot.png'
   DISABLE_INSIDERS_EXTENSION: 1 # Disable prompts to install Insiders in tests (else it blocks activation of extension).
 
 jobs:
@@ -41,6 +41,11 @@ jobs:
         uses: actions/setup-node@v2.1.2
         with:
           node-version: ${{env.NODE_VERSION}}
+
+      - name: Use Python ${{env.PYTHON_VERSION}}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{env.PYTHON_VERSION}}
 
       # Caching of npm packages (https://github.com/actions/cache/blob/main/examples.md#node---npm)
       - name: Cache npm on linux/mac
@@ -65,6 +70,10 @@ jobs:
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-node-
+
+      - name: Install Python libs
+        run: |
+          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
 
       - name: Build VSIX
         uses: ./.github/actions/build-vsix
@@ -305,7 +314,7 @@ jobs:
 
       # debugpy is not shipped, only installed for local tests.
       # In production, we get debugpy from python extension.
-      - name: Install functional test requirements
+      - name: Install Python Libs
         run: |
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
           python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
@@ -336,7 +345,6 @@ jobs:
         uses: actions/upload-artifact@v2
         if: steps.test_functional_group.outcome == 'failure' && failure()
         with:
-          name: ${{env.IPYWIDGET_SCREENSHOT_PATH}}
           path: './${{env.IPYWIDGET_SCREENSHOT_PATH}}'
 
       - name: Publish Test Report
@@ -363,7 +371,7 @@ jobs:
         python: [3.8] # Use flaky tests to run against more versions of Python.
         # integration: Tests with VS Code, Python extension & real Jupyter
         # notebook: Notebook Tests with VS Code, Python extension & real Jupyter
-        test-suite: [integration, notebook]
+        test-suite: [integration]
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -449,7 +457,7 @@ jobs:
 
       # debugpy is not shipped, only installed for local tests.
       # In production, we get debugpy from python extension.
-      - name: Install functional test requirements
+      - name: Install Python Libs
         run: |
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
           python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
@@ -482,14 +490,8 @@ jobs:
             using Pkg
             Pkg.add("IJulia")'
 
-      # Used by tests for installation of ipykernel.
-      # Test are enabled dyanamically when
-      # 1. `CI_PYTHON_PATH2` points to the new virtual env.
-      # 2. Virtual env is located under `src/test/datascience/` and named `.venvnokernel`.
-      - name: Create virtual environment for Tests
-        run: |
-          python -m venv .venvnokernel
-        working-directory: src/test/datascience
+      - name: Create Virtual Env for Tests
+        uses: ./.github/actions/create-venv-for-tests
 
       - name: Azure Login
         uses: azure/login@v1.1.1
@@ -521,15 +523,15 @@ jobs:
         if: (steps.test_vscode.outcome == 'failure' || steps.test_vscode.outcome == 'failure') && failure()
 
       - name: Run Native Notebook with VSCode & Jupyter
+        id: test_notebook_vscode
         uses: GabrielBB/xvfb-action@v1.4
         with:
           run: npm run testNativeNotebooksInVSCode
         env:
-            VSC_FORCE_REAL_JUPYTER: 1
-            VSC_JUPYTER_FORCE_LOGGING: 1
-            VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
-            VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
-          id: test_notebook_vscode
+          VSC_FORCE_REAL_JUPYTER: 1
+          VSC_JUPYTER_FORCE_LOGGING: 1
+          VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
+          VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
         if: matrix.test-suite == 'notebook'
 
       - name: Publish Notebook Test Report
@@ -584,22 +586,24 @@ jobs:
       - name: Download Python VSIX
         run: az storage blob download --file ${{env.VSIX_NAME_PYTHON}} --account-name pvsc --container-name extension-builds --name ${{ env.VSIX_NAME_PYTHON }}
 
-    #   - name: Download Jupyter VSIX
-    #     run: az storage blob download --file ms-toolsai-jupyter-insiders.vsix --account-name pvsc --container-name extension-builds-jupyter --name ms-toolsai-jupyter-insiders.vsix
-
       - name: Download VSIX
         uses: actions/download-artifact@v2
         with:
           name: ${{env.VSIX_NAME}}
 
-
       - name: Install dependencies (npm ci)
         run: npm ci --prefer-offline
-
-      - name: Install test requirements
+      
+      - name: pip install system test requirements
         run: |
-          python -m pip install numpy
-          python -m pip install --upgrade jupyter
+          python -m pip install --upgrade -r build/test-requirements.txt
+          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
+        shell: bash
+
+      - name: pip install smoke test requirements
+        run: |
+          python -m pip install --upgrade -r build/smoke-test-requirements.txt
+        shell: bash
 
       # Compile the test files.
       - name: Prepare for smoke tests
@@ -609,9 +613,19 @@ jobs:
       - name: Run smoke tests
         env:
           DISPLAY: 10
+          VSC_JUPYTER_FORCE_LOGGING: true
+          VSC_JUPYTER_LOG_FILE: smoke-test.log
         uses: GabrielBB/xvfb-action@v1.4
         with:
           run: node --no-force-async-hooks-checks ./out/test/smokeTest.js
+
+      - name: Upload smoke-test log
+        uses: actions/upload-artifact@v2
+        with:
+          name: smoke-test.log
+          path: './smoke-test.log'
+
+
 
   upload:
     name: Upload VSIX to Azure Blob Storage

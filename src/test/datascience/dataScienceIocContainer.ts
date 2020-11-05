@@ -33,10 +33,12 @@ import { VSCodeNotebook } from '../../client/common/application/notebook';
 import {
     IApplicationEnvironment,
     IApplicationShell,
+    IAuthenticationService,
     ICommandManager,
     ICustomEditorService,
     IDebugService,
     IDocumentManager,
+    IEncryptedStorage,
     ILiveShareApi,
     ILiveShareTestingApi,
     IVSCodeNotebook,
@@ -135,8 +137,6 @@ import { ExportToPDF } from '../../client/datascience/export/exportToPDF';
 import { ExportToPython } from '../../client/datascience/export/exportToPython';
 import { ExportUtil } from '../../client/datascience/export/exportUtil';
 import { ExportFormat, IExport, IExportManager, IExportManagerFilePicker } from '../../client/datascience/export/types';
-import { GatherListener } from '../../client/datascience/gather/gatherListener';
-import { GatherLogger } from '../../client/datascience/gather/gatherLogger';
 import { IntellisenseProvider } from '../../client/datascience/interactive-common/intellisense/intellisenseProvider';
 import { NotebookProvider } from '../../client/datascience/interactive-common/notebookProvider';
 import { NotebookServerProvider } from '../../client/datascience/interactive-common/notebookServerProvider';
@@ -217,7 +217,6 @@ import {
     IDataScienceErrorHandler,
     IDebugLocationTracker,
     IDigestStorage,
-    IGatherLogger,
     IInteractiveWindow,
     IInteractiveWindowListener,
     IInteractiveWindowProvider,
@@ -229,6 +228,7 @@ import {
     IJupyterNotebookProvider,
     IJupyterPasswordConnect,
     IJupyterServerProvider,
+    IJupyterServerUriStorage,
     IJupyterSessionManagerFactory,
     IJupyterSubCommandExecutionService,
     IJupyterUriProviderRegistration,
@@ -254,11 +254,13 @@ import {
     IRawNotebookSupportedService,
     IStatusProvider,
     IThemeFinder,
-    ITrustService
+    ITrustService,
+    IWebviewExtensibility
 } from '../../client/datascience/types';
 import { IVariableViewProvider } from '../../client/datascience/variablesView/types';
 import { VariableViewActivationService } from '../../client/datascience/variablesView/variableViewActivationService';
 import { VariableViewProvider } from '../../client/datascience/variablesView/variableViewProvider';
+import { WebviewExtensibility } from '../../client/datascience/webviewExtensibility';
 import { ProtocolParser } from '../../client/debugger/extension/helpers/protocolParser';
 import { IProtocolParser } from '../../client/debugger/extension/types';
 import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
@@ -301,6 +303,9 @@ import {
 } from './testNativeEditorProvider';
 import { TestPersistentStateFactory } from './testPersistentStateFactory';
 import { WebBrowserPanelProvider } from './uiTests/webBrowserPanelProvider';
+import { JupyterServerUriStorage } from '../../client/datascience/jupyter/serverUriStorage';
+import { AuthenticationService } from '../../client/common/application/authenticationService';
+import { MockEncryptedStorage } from './mockEncryptedStorage';
 
 export class DataScienceIocContainer extends UnitTestIocContainer {
     public get workingInterpreter() {
@@ -448,7 +453,13 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
                 instance(this.webPanelProvider)
             );
         }
-        this.serviceManager.addSingleton<INotebookExtensibility>(INotebookExtensibility, NotebookExtensibility);
+        this.serviceManager.addSingleton<IWebviewExtensibility>(IWebviewExtensibility, WebviewExtensibility);
+        this.serviceManager.addSingleton<NotebookExtensibility>(
+            NotebookExtensibility,
+            NotebookExtensibility,
+            undefined,
+            [INotebookExtensibility, INotebookExecutionLogger]
+        );
         this.serviceManager.addSingleton<IExportManager>(IExportManager, ExportManager);
         this.serviceManager.addSingleton<ExportInterpreterFinder>(ExportInterpreterFinder, ExportInterpreterFinder);
         this.serviceManager.addSingleton<ExportFileOpener>(ExportFileOpener, ExportFileOpener);
@@ -515,6 +526,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         });
 
         this.serviceManager.addSingleton<IApplicationEnvironment>(IApplicationEnvironment, ApplicationEnvironment);
+        this.serviceManager.addSingleton<IAuthenticationService>(IAuthenticationService, AuthenticationService);
         this.serviceManager.add<INotebookImporter>(INotebookImporter, JupyterImporter);
         this.serviceManager.add<INotebookExporter>(INotebookExporter, JupyterExporter);
         this.serviceManager.addSingleton<ILiveShareApi>(ILiveShareApi, MockLiveShareApi);
@@ -625,7 +637,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
         this.serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, IntellisenseProvider);
         this.serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, AutoSaveService);
-        this.serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, GatherListener);
         this.serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, NativeEditorRunByLineListener);
         this.serviceManager.addSingleton<IPyWidgetMessageDispatcherFactory>(
             IPyWidgetMessageDispatcherFactory,
@@ -653,7 +664,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             INotebookExecutionLogger
         ]);
         this.serviceManager.addSingleton<INotebookExecutionLogger>(INotebookExecutionLogger, HoverProvider);
-        this.serviceManager.add<IGatherLogger>(IGatherLogger, GatherLogger, undefined, [INotebookExecutionLogger]);
         this.serviceManager.add<INotebookExecutionLogger>(INotebookExecutionLogger, TestExecutionLogger);
         this.serviceManager.addSingleton<ICodeLensFactory>(ICodeLensFactory, CodeLensFactory, undefined, [
             IInteractiveWindowListener
@@ -842,6 +852,8 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             }
         };
         this.serviceManager.addSingleton<ILanguageServerProvider>(ILanguageServerProvider, MockLanguageServerProvider);
+        this.serviceManager.addSingleton<IEncryptedStorage>(IEncryptedStorage, MockEncryptedStorage);
+        this.serviceManager.addSingleton<IJupyterServerUriStorage>(IJupyterServerUriStorage, JupyterServerUriStorage);
 
         when(this.applicationShell.showErrorMessage(anyString())).thenReturn(Promise.resolve(''));
         when(this.applicationShell.showErrorMessage(anyString(), anything())).thenReturn(Promise.resolve(''));
@@ -1006,6 +1018,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.forceSettingsChanged(undefined, '', dataScienceSettings, notifyEvent);
     }
 
+    public setServerUri(uri: string): Promise<void> {
+        return this.get<IJupyterServerUriStorage>(IJupyterServerUriStorage).setUri(uri);
+    }
+
     public setExtensionRootPath(newRoot: string) {
         this.extensionRootPath = newRoot;
     }
@@ -1139,7 +1155,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             alwaysTrustNotebooks: true,
             jupyterLaunchTimeout: 120000,
             jupyterLaunchRetries: 3,
-            jupyterServerURI: 'local',
+            jupyterServerType: 'local',
             // tslint:disable-next-line: no-invalid-template-strings
             notebookFileRoot: '${fileDirname}',
             changeDirOnImportExport: false,

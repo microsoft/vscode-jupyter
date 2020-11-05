@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
 'use strict';
+
 import '../../common/extensions';
 
 import { injectable, unmanaged } from 'inversify';
@@ -21,7 +23,7 @@ import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
-import { DefaultTheme, GatherExtension, PythonExtension, Telemetry } from '../constants';
+import { DefaultTheme, PythonExtension, Telemetry } from '../constants';
 import { CssMessages, IGetCssRequest, IGetMonacoThemeRequest, SharedMessages } from '../messages';
 import { ICodeCssGenerator, IJupyterExtraSettings, IThemeFinder } from '../types';
 
@@ -31,9 +33,11 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
 
     protected abstract get title(): string;
     protected webview?: IWebview;
-    protected disposed: boolean = false;
+
+    protected disposed = false;
 
     protected themeIsDarkPromise: Deferred<boolean> | undefined = createDeferred<boolean>();
+
     protected webviewInit: Deferred<void> | undefined = createDeferred<void>();
 
     protected readonly _disposables: IDisposable[] = [];
@@ -102,7 +106,7 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
         return this.postMessageInternal(type.toString(), payload);
     }
 
-    //tslint:disable-next-line:no-any
+    // tslint:disable-next-line:no-any
     protected onMessage(message: string, payload: any) {
         switch (message) {
             case SharedMessages.Started:
@@ -165,7 +169,6 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
         const editor = this.workspaceService.getConfiguration('editor');
         const workbench = this.workspaceService.getConfiguration('workbench');
         const theme = !workbench ? DefaultTheme : workbench.get<string>('colorTheme', DefaultTheme);
-        const ext = extensions.getExtension(GatherExtension);
         const pythonExt = extensions.getExtension(PythonExtension);
         const sendableSettings = JSON.parse(JSON.stringify(this.configService.getSettings(resource)));
 
@@ -187,7 +190,7 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
                     fontSize: this.getValue(editor, 'fontSize', 14),
                     fontFamily: this.getValue(editor, 'fontFamily', "Consolas, 'Courier New', monospace")
                 },
-                theme: theme,
+                theme,
                 useCustomEditorApi: this.useCustomEditorApi,
                 hasPythonExtension: pythonExt !== undefined
             },
@@ -208,8 +211,7 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
             },
             variableOptions: {
                 enableDuringDebugger: await this.enableVariablesDuringDebugging
-            },
-            gatherIsInstalled: ext ? true : false
+            }
         };
     }
 
@@ -225,7 +227,7 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
             await this.webviewInit.promise;
 
             // Then send it the message
-            this.webview?.postMessage({ type: type.toString(), payload: payload });
+            this.webview?.postMessage({ type: type.toString(), payload });
         }
     }
 

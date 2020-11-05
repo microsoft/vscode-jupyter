@@ -13,7 +13,7 @@
     "python.formatting.provider": "yapf",
     "python.pythonPath": "python",
     "jupyter.experiments.optInto": [
-        "NativeNotebook - experiment"
+        "NativeNotebookEditor"
     ],
     // Do not set this to "Microsoft", else it will result in LS being downloaded on CI
     // and that slows down tests significantly. We have other tests on CI for testing
@@ -25,8 +25,9 @@
     "files.autoSaveDelay": 1,
     // We don't want jupyter to start when testing (DS functionality or anything else).
     "jupyter.disableJupyterAutoStart": true,
+    "jupyter.logging.level": "debug",
     "python.logging.level": "debug",
     "jupyter.alwaysTrustNotebooks": true, // In UI tests we don't want prompts for `Do you want to trust thie nb...`
-    "jupyter.useNotebookEditor": true
+    "jupyter.useNotebookEditor": false
 
 }

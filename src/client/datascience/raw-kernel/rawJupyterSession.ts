@@ -76,7 +76,6 @@ export class RawJupyterSession extends BaseJupyterSession {
 
     // Connect to the given kernelspec, which should already have ipykernel installed into its interpreter
     @captureTelemetry(Telemetry.RawKernelSessionConnect, undefined, true)
-    @reportAction(ReportableAction.RawKernelConnecting)
     public async connect(
         kernelConnection: KernelConnectionMetadata,
         timeout: number,

@@ -12,6 +12,7 @@ import { traceWarning } from '../../common/logger';
 import { IPythonExecutionFactory } from '../../common/process/types';
 import { IInstaller, InstallerResponse, Product } from '../../common/types';
 import { Common, DataScience } from '../../common/utils/localize';
+import { IInterpreterService } from '../../interpreter/contracts';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../telemetry';
 import { parseSemVer } from '../common';
@@ -31,7 +32,8 @@ export class DataViewerDependencyService {
     constructor(
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
         @inject(IInstaller) private readonly installer: IInstaller,
-        @inject(IPythonExecutionFactory) private pythonFactory: IPythonExecutionFactory
+        @inject(IPythonExecutionFactory) private pythonFactory: IPythonExecutionFactory,
+        @inject(IInterpreterService) private interpreterService: IInterpreterService
     ) {}
 
     public async checkAndInstallMissingDependencies(
@@ -66,6 +68,10 @@ export class DataViewerDependencyService {
             Common.install()
         );
 
+        // When installing
+        const interpreterToInstallDependenciesInto =
+            interpreter || (await this.interpreterService.getActiveInterpreter());
+
         if (Cancellation.isCanceled(token)) {
             return;
         }
@@ -78,7 +84,11 @@ export class DataViewerDependencyService {
             });
             // Always pass a cancellation token to `install`, to ensure it waits until the module is installed.
             const response = await Promise.race([
-                this.installer.install(Product.pandas, interpreter, wrapCancellationTokens(token)),
+                this.installer.install(
+                    Product.pandas,
+                    interpreterToInstallDependenciesInto,
+                    wrapCancellationTokens(token)
+                ),
                 cancellatonPromise
             ]);
             if (response === InstallerResponse.Installed) {

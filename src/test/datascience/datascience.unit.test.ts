@@ -18,7 +18,6 @@ import { pruneCell } from '../../client/datascience/common';
 import { DataScience } from '../../client/datascience/datascience';
 import { DataScienceCodeLensProvider } from '../../client/datascience/editor-integration/codelensprovider';
 import { IDataScienceCodeLensProvider } from '../../client/datascience/types';
-import { IVariableViewProvider } from '../../client/datascience/variablesView/types';
 
 // tslint:disable: max-func-body-length
 suite('DataScience Tests', () => {
@@ -30,7 +29,6 @@ suite('DataScience Tests', () => {
     let workspaceService: IWorkspaceService;
     let cmdRegistry: CommandRegistry;
     let settings: IWatchableJupyterSettings;
-    let variableViewProvider: IVariableViewProvider;
     let onDidChangeSettings: sinon.SinonStub;
     let onDidChangeActiveTextEditor: sinon.SinonStub;
     setup(() => {
@@ -41,7 +39,6 @@ suite('DataScience Tests', () => {
         cmdRegistry = mock(CommandRegistry);
         docManager = mock(DocumentManager);
         settings = mock(JupyterSettings);
-        variableViewProvider = mock(IVariableViewProvider);
 
         dataScience = new DataScience(
             instance(cmdManager),

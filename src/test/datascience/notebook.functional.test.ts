@@ -285,8 +285,7 @@ suite('DataScience notebook tests', () => {
                 // Catch exceptions. Throw a specific assertion if the promise fails
                 try {
                     if (uri) {
-                        const newSettings = { ...ioc.getSettings(), jupyterServerURI: uri };
-                        ioc.forceDataScienceSettingsChanged(newSettings);
+                        ioc.setServerUri(uri);
                     }
                     launchingFile = launchingFile || path.join(srcDirectory(), 'foo.py');
                     const notebook = await notebookProvider.getOrCreateNotebook({
@@ -1277,6 +1276,9 @@ plt.show()`,
                 const outputs: string[] = [];
                 @injectable()
                 class Logger implements INotebookExecutionLogger {
+                    public onKernelStarted() {
+                        // Do nothing on started
+                    }
                     public onKernelRestarted() {
                         // Do nothing on restarted
                     }
@@ -1328,8 +1330,12 @@ plt.show()`,
                     });
                 });
                 // For new approach.
-                when(ioc.mockJupyter?.productInstaller.isInstalled(Product.jupyter)).thenResolve(false as any);
-                when(ioc.mockJupyter?.productInstaller.isInstalled(Product.notebook)).thenResolve(false as any);
+                when(ioc.mockJupyter?.productInstaller.isInstalled(Product.jupyter, anything())).thenResolve(
+                    false as any
+                );
+                when(ioc.mockJupyter?.productInstaller.isInstalled(Product.notebook, anything())).thenResolve(
+                    false as any
+                );
                 when(ioc.mockJupyter?.productInstaller.isInstalled(Product.jupyter, anything())).thenResolve(
                     false as any
                 );
@@ -1393,29 +1399,6 @@ plt.show()`,
                     const server = await createNotebook();
                     assert.ok(server, 'Server died before running');
                 }
-            });
-
-            // tslint:disable-next-line: no-function-expression
-            runTest('Notebook launch retry', async function (_this: Mocha.Context) {
-                // Skipping for now. Re-enable to test idle timeouts
-                _this.skip();
-                // ioc.getSettings().jupyterLaunchRetries = 1;
-                // ioc.getSettings().jupyterLaunchTimeout = 10000;
-                //         ioc.getSettings().runStartupCommands = '%config Application.log_level="DEBUG"';
-                //         const log = `import logging
-                // logger = logging.getLogger()
-                // fhandler = logging.FileHandler(filename='D:\\Training\\mylog.log', mode='a')
-                // formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-                // fhandler.setFormatter(formatter)
-                // logger.addHandler(fhandler)
-                // logger.setLevel(logging.DEBUG)`;
-                // for (let i = 0; i < 100; i += 1) {
-                //     const notebook = await createNotebook();
-                //     assert.ok(notebook, 'did not create notebook');
-                //     await notebook!.dispose();
-                //     const exec = ioc.get<IJupyterExecution>(IJupyterExecution);
-                //     await exec.dispose();
-                // }
             });
 
             runTest('Startup commands', async () => {

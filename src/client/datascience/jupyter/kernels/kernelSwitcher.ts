@@ -13,7 +13,7 @@ import { Settings } from '../../constants';
 import { RawKernelSessionStartError } from '../../raw-kernel/rawJupyterSession';
 import { IKernelDependencyService, INotebook, KernelInterpreterDependencyResponse } from '../../types';
 import { JupyterInvalidKernelError } from '../jupyterInvalidKernelError';
-import { kernelConnectionMetadataHasKernelModel, kernelConnectionMetadataHasKernelSpec } from './helpers';
+import { getDisplayNameOrNameOfKernelConnection } from './helpers';
 import { KernelSelector } from './kernelSelector';
 import { KernelConnectionMetadata } from './types';
 
@@ -30,8 +30,8 @@ export class KernelSwitcher {
         const settings = this.configService.getSettings(notebook.resource);
         const isLocalConnection =
             notebook.connection?.localLaunch ??
-            settings.jupyterServerURI.toLowerCase() === Settings.JupyterServerLocalLaunch;
-        if (!isLocalConnection) {
+            settings.jupyterServerType.toLowerCase() === Settings.JupyterServerLocalLaunch;
+        if (!notebook.connection?.localLaunch) {
             await this.switchToKernel(notebook, kernel);
             return;
         }
@@ -86,14 +86,7 @@ export class KernelSwitcher {
             );
         };
 
-        const kernelModel = kernelConnectionMetadataHasKernelModel(kernelConnection) ? kernelConnection : undefined;
-        const kernelSpec = kernelConnectionMetadataHasKernelSpec(kernelConnection) ? kernelConnection : undefined;
-        const kernelName = kernelSpec?.kernelSpec?.name || kernelModel?.kernelModel?.name;
-        // One of them is bound to be non-empty.
-        const displayName =
-            kernelConnection.kind === 'startUsingPythonInterpreter'
-                ? kernelConnection.interpreter.displayName || kernelConnection.interpreter.path
-                : kernelModel?.kernelModel?.display_name || kernelName || '';
+        const displayName = getDisplayNameOrNameOfKernelConnection(kernelConnection);
         const options: ProgressOptions = {
             location: ProgressLocation.Notification,
             cancellable: false,

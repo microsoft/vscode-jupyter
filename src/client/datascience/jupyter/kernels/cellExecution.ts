@@ -32,6 +32,7 @@ import {
     cellOutputToVSCCellOutput,
     clearCellForExecution,
     getCellStatusMessageBasedOnFirstCellErrorOutput,
+    isStreamOutput,
     updateCellExecutionTimes
 } from '../../notebook/helpers/helpers';
 import { MultiCancellationTokenSource } from '../../notebook/helpers/multiCancellationToken';
@@ -44,6 +45,7 @@ import {
     INotebookEditorProvider,
     INotebookExecutionLogger
 } from '../../types';
+import { translateCellFromNative } from '../../utils';
 import { IKernel } from './types';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
@@ -153,6 +155,7 @@ export class CellExecution {
     }
 
     public async start(kernelPromise: Promise<IKernel>, notebook: INotebook) {
+        traceInfo(`Start cell execution for cell Index ${this.cell.index}`);
         if (!this.canExecuteCell()) {
             return;
         }
@@ -199,7 +202,12 @@ export class CellExecution {
         await this.completedDurToCancellation();
         this.dispose();
     }
+    /**
+     * This method is called when all execution has been completed (successfully or failed).
+     * Or when execution has been cancelled.
+     */
     private dispose() {
+        traceInfo(`Completed cell execution for cell Index ${this.cell.index}`);
         this.disposables.forEach((d) => d.dispose());
     }
     private handleKernelRestart(kernel: IKernel) {
@@ -436,7 +444,7 @@ export class CellExecution {
             if (jupyterLab.KernelMessage.isExecuteResultMsg(msg)) {
                 await this.handleExecuteResult(msg as KernelMessage.IExecuteResultMsg, clearState);
             } else if (jupyterLab.KernelMessage.isExecuteInputMsg(msg)) {
-                await this.handleExecuteInput(msg as KernelMessage.IExecuteInputMsg, clearState);
+                await this.handleExecuteInput(msg as KernelMessage.IExecuteInputMsg, clearState, loggers);
             } else if (jupyterLab.KernelMessage.isStatusMsg(msg)) {
                 // Status is handled by the result promise. While it is running we are active. Otherwise we're stopped.
                 // So ignore status messages.
@@ -548,9 +556,16 @@ export class CellExecution {
         }
     }
 
-    private async handleExecuteInput(msg: KernelMessage.IExecuteInputMsg, _clearState: RefBool) {
+    private async handleExecuteInput(
+        msg: KernelMessage.IExecuteInputMsg,
+        _clearState: RefBool,
+        loggers: INotebookExecutionLogger[]
+    ) {
         if (msg.content.execution_count) {
             await updateCellExecutionCount(this.editor, this.cell, msg.content.execution_count);
+            loggers.forEach((l) =>
+                l.postExecute(translateCellFromNative(this.cell), true, this.cell.language, this.cell.notebook.uri)
+            );
         }
     }
 
@@ -558,6 +573,7 @@ export class CellExecution {
         traceInfo(`Kernel switching to ${msg.content.execution_state}`);
     }
     private async handleStreamMessage(msg: KernelMessage.IStreamMsg, clearState: RefBool) {
+        // tslint:disable-next-line: cyclomatic-complexity
         await chainWithPendingUpdates(this.editor, (edit) => {
             let exitingCellOutput = this.cell.outputs;
             // Clear output if waiting for a clear
@@ -569,17 +585,31 @@ export class CellExecution {
             // Might already have a stream message. If so, just add on to it.
             // We use Rich output for text streams (not CellStreamOutput, known VSC Issues).
             // https://github.com/microsoft/vscode-python/issues/14156
-            const lastOutput =
-                exitingCellOutput.length > 0 ? exitingCellOutput[exitingCellOutput.length - 1] : undefined;
-            const existing: CellDisplayOutput | undefined =
-                lastOutput && lastOutput.outputKind === vscodeNotebookEnums.CellOutputKind.Rich
-                    ? lastOutput
-                    : undefined;
-            if (existing && 'text/plain' in existing.data) {
+            const existing = exitingCellOutput.find((item) => item && isStreamOutput(item, msg.content.name)) as
+                | CellDisplayOutput
+                | undefined;
+
+            // Ensure we append to previous output, only if the streams as the same.
+            // Possible we have stderr first, then later we get output from stdout.
+            // Basically have one output for stderr & a seprate output for stdout.
+            // If we output stderr first, then stdout & then stderr, we should append the new stderr to the previous stderr output.
+            if (existing) {
+                let existingOutput: string = existing.data['text/plain'] || '';
+                let newContent = msg.content.text;
+                // Look for the ansi code `<char27>[A`. (this means move up)
+                // Not going to support `[2A` (not for now).
+                const moveUpCode = `${String.fromCharCode(27)}[A`;
+                if (msg.content.text.startsWith(moveUpCode)) {
+                    // Split message by lines & strip out the last n lines (where n = number of lines to move cursor up).
+                    const existingOutputLines = existingOutput.splitLines({ trim: false, removeEmptyEntries: false });
+                    if (existingOutputLines.length) {
+                        existingOutputLines.pop();
+                    }
+                    existingOutput = existingOutputLines.join('\n');
+                    newContent = newContent.substring(moveUpCode.length);
+                }
                 // tslint:disable-next-line:restrict-plus-operands
-                existing.data['text/plain'] = formatStreamText(
-                    concatMultilineString(`${existing.data['text/plain']}${msg.content.text}`)
-                );
+                existing.data['text/plain'] = formatStreamText(concatMultilineString(`${existingOutput}${newContent}`));
                 edit.replaceCellOutput(this.cell.index, [...exitingCellOutput]); // This is necessary to get VS code to update (for now)
             } else {
                 const originalText = formatStreamText(concatMultilineString(msg.content.text));

@@ -46,7 +46,7 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     public jupyterInterruptTimeout: number = 10_000;
     public jupyterLaunchTimeout: number = 60_000;
     public jupyterLaunchRetries: number = 3;
-    public jupyterServerURI: string = 'local';
+    public jupyterServerType: string = 'local';
     public notebookFileRoot: string = '';
     public changeDirOnImportExport: boolean = false;
     public useDefaultConfigForJupyter: boolean = false;
@@ -56,8 +56,6 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     public collapseCellInputCodeByDefault: boolean = false;
     public maxOutputSize: number = -1;
     public enableScrollingForCellOutputs: boolean = false;
-    public gatherToScript: boolean = false;
-    public gatherSpecPath: string = '';
     public sendSelectionToInteractiveWindow: boolean = false;
     public markdownRegularExpression: string = '';
     public codeRegularExpression: string = '';

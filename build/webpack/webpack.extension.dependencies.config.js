@@ -41,11 +41,13 @@ const config = {
         ...common.getDefaultPlugins('dependencies'),
         // vsls requires our package.json to be next to node_modules. It's how they
         // 'find' the calling extension.
-        new copyWebpackPlugin([{ from: './package.json', to: '.' }]),
+        new copyWebpackPlugin({ patterns: [{ from: './package.json', to: '.' }] }),
         // onigasm requires our onigasm.wasm to be in node_modules
-        new copyWebpackPlugin([
-            { from: './node_modules/onigasm/lib/onigasm.wasm', to: './node_modules/onigasm/lib/onigasm.wasm' }
-        ])
+        new copyWebpackPlugin({
+            patterns: [
+                { from: './node_modules/onigasm/lib/onigasm.wasm', to: './node_modules/onigasm/lib/onigasm.wasm' }
+            ]
+        })
     ],
     resolve: {
         alias: {
