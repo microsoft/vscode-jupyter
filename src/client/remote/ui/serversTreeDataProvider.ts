@@ -18,13 +18,14 @@ import { IDisposable, IDisposableRegistry } from '../../common/types';
 import { Commands } from '../../datascience/constants';
 import { getRemoteConnection } from '../connection/jupyterServerAuthService';
 import { RemoteFileSystemFactory } from './fileSystem';
-import { IJupyterServerConnectionInfo, IJupyterServerAuthServiceProvider, JupyterServerConnectionId } from './types';
+import { IJupyterServerAuthServiceProvider, IJupyterServerConnectionInfo, JupyterServerConnectionId } from './types';
 
-export type JupyterServerTreeNodeType = 'jupyterServer' | 'fileSystem' | 'directory' | 'file';
+export type JupyterServerTreeNodeType = 'jupyterServer' | 'fileSystem' | 'directory' | 'file' | 'kernelSessions';
 
 export abstract class BaseTreeNode<T extends JupyterServerTreeNodeType> extends TreeItem {
+    public readonly connectionId: JupyterServerConnectionId;
     constructor(
-        public readonly connectionId: JupyterServerConnectionId,
+        connectionInfo: IJupyterServerConnectionInfo,
         public readonly type: T,
         item: string | Uri,
         collapsibleState?: TreeItemCollapsibleState
@@ -32,25 +33,26 @@ export abstract class BaseTreeNode<T extends JupyterServerTreeNodeType> extends 
         // tslint:disable-next-line: no-any
         super(item as any, collapsibleState);
         this.contextValue = type;
+        this.connectionId = connectionInfo.id;
     }
 }
 
 export class ServerNode extends BaseTreeNode<'jupyterServer'> {
     constructor(info: IJupyterServerConnectionInfo) {
-        super(info.id, 'jupyterServer', info.settings.baseUrl, TreeItemCollapsibleState.Expanded);
+        super(info, 'jupyterServer', info.settings.baseUrl, TreeItemCollapsibleState.Expanded);
         this.iconPath = new ThemeIcon('server');
     }
 }
 // tslint:disable: max-classes-per-file
 export class DirectoryNode extends BaseTreeNode<'directory'> {
     constructor(info: IJupyterServerConnectionInfo, name: string, public readonly uri: Uri) {
-        super(info.id, 'directory', name, TreeItemCollapsibleState.Collapsed);
+        super(info, 'directory', name, TreeItemCollapsibleState.Collapsed);
         this.iconPath = ThemeIcon.Folder;
     }
 }
 export class FileNode extends BaseTreeNode<'file'> {
     constructor(info: IJupyterServerConnectionInfo, name: string, public readonly uri: Uri) {
-        super(info.id, 'file', name, TreeItemCollapsibleState.None);
+        super(info, 'file', name, TreeItemCollapsibleState.None);
         this.iconPath = ThemeIcon.File;
         this.resourceUri = uri;
         this.command = {
@@ -63,8 +65,15 @@ export class FileNode extends BaseTreeNode<'file'> {
 export class FileSystemNode extends BaseTreeNode<'fileSystem'> {
     public readonly uri: Uri;
     constructor(info: IJupyterServerConnectionInfo) {
-        super(info.id, 'fileSystem', 'File System', TreeItemCollapsibleState.Collapsed);
+        super(info, 'fileSystem', 'File System', TreeItemCollapsibleState.Collapsed);
         this.uri = Uri.file('/').with({ scheme: info.fileScheme });
+        this.iconPath = new ThemeIcon('remote-explorer');
+    }
+}
+
+export class KernelSessionsNode extends BaseTreeNode<'kernelSessions'> {
+    constructor(info: IJupyterServerConnectionInfo) {
+        super(info, 'kernelSessions', 'Kernel Sessions', TreeItemCollapsibleState.Collapsed);
         this.iconPath = new ThemeIcon('remote-explorer');
     }
 }
