@@ -6,7 +6,6 @@
 import { nbformat } from '@jupyterlab/coreutils';
 import * as uuid from 'uuid/v4';
 import { CancellationToken, Uri } from 'vscode';
-import { ServerStatus } from '../../../../datascience-ui/interactive-common/mainState';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../../common/application/types';
 import { traceError, traceWarning } from '../../../common/logger';
 import { IDisposableRegistry } from '../../../common/types';
@@ -120,9 +119,6 @@ export class Kernel extends BaseKernel {
         }
         return this.notebook.interruptKernel(this.launchTimeout);
     }
-    protected getStatus(): ServerStatus {
-        return this.notebook?.status ?? ServerStatus.NotStarted;
-    }
     protected isDisposed(): boolean {
         return this._disposed === true || this.notebook?.disposed === true;
     }
@@ -167,7 +163,6 @@ export class Kernel extends BaseKernel {
             this.notebook.onKernelRestarted(() => {
                 this._onRestarted.fire();
             });
-            this.notebook.onSessionStatusChanged((e) => this._onStatusChanged.fire(e), this, this.disposables);
         }
         if (isPythonKernelConnection(this.metadata)) {
             await this.notebook.setLaunchingFile(this.uri.fsPath);

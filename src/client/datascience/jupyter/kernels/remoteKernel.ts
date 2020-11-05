@@ -137,8 +137,9 @@ export class RemoteJupyterKernel extends BaseKernel {
     }
     protected async onRestart(): Promise<void> {
         if (this.jupyterSession?.session) {
-            await this.jupyterSession.session.kernel.restart();
+            await this.jupyterSession.restart(this.launchTimeout);
             await this.initializeAfterStart();
+            this._onRestarted.fire();
         }
     }
     protected async onInterrupt(): Promise<InterruptResult> {
@@ -150,9 +151,6 @@ export class RemoteJupyterKernel extends BaseKernel {
     protected async onStart(_options?: { disableUI?: boolean; token?: CancellationToken }): Promise<void> {
         await this.startKernel();
         await this.initializeAfterStart();
-    }
-    protected getStatus(): ServerStatus {
-        return translateStatus(this.jupyterSession?.session?.status);
     }
     protected isDisposed(): boolean {
         return this._disposed === true;

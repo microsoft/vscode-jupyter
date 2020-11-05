@@ -17,7 +17,7 @@ import {
 } from 'vscode';
 import { ServerStatus } from '../../../../datascience-ui/interactive-common/mainState';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../../common/application/types';
-import { IAsyncDisposable, IDisposableRegistry } from '../../../common/types';
+import { IAsyncDisposable, IDisposable, IDisposableRegistry } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
 import {
     IDataScienceErrorHandler,
@@ -44,7 +44,7 @@ export abstract class BaseKernel implements IKernel, IAsyncDisposable {
         return this._info;
     }
     get status(): ServerStatus {
-        return this.getStatus();
+        return this.jupyterSession ? this.jupyterSession.status : ServerStatus.NotStarted;
     }
     get disposed(): boolean {
         return this.isDisposed();
@@ -52,15 +52,25 @@ export abstract class BaseKernel implements IKernel, IAsyncDisposable {
     get kernelSocket(): Observable<KernelSocketInformation | undefined> {
         return this._kernelSocket.asObservable();
     }
+    protected get jupyterSession() {
+        return this._jupyterSession;
+    }
+    protected set jupyterSession(value: IJupyterSession | undefined) {
+        this._jupyterSession = value;
+        if (value) {
+            this.addStateChangeHandler();
+        }
+    }
     protected _info?: KernelMessage.IInfoReplyMsg['content'];
     protected readonly _kernelSocket = new Subject<KernelSocketInformation | undefined>();
     protected readonly _onStatusChanged = new EventEmitter<ServerStatus>();
     protected readonly _onRestarted = new EventEmitter<void>();
-    protected jupyterSession?: IJupyterSession;
     protected readonly _onDisposed = new EventEmitter<void>();
     protected restarting?: Deferred<void>;
     protected readonly kernelExecution: KernelExecution;
     protected startCancellation = new CancellationTokenSource();
+    private _jupyterSession?: IJupyterSession;
+    private sessionStateChangeHandler?: IDisposable;
     constructor(
         public readonly uri: Uri,
         public readonly metadata: Readonly<KernelConnectionMetadata>,
@@ -149,10 +159,16 @@ export abstract class BaseKernel implements IKernel, IAsyncDisposable {
             }
         }
     }
-    protected abstract getStatus(): ServerStatus;
     protected abstract isDisposed(): boolean;
     protected abstract onStart(options?: { disableUI?: boolean; token?: CancellationToken }): Promise<void>;
     protected abstract onInterrupt(): Promise<InterruptResult>;
 
     protected abstract onRestart(): Promise<void>;
+    private addStateChangeHandler() {
+        if (!this.sessionStateChangeHandler && this.jupyterSession) {
+            this.sessionStateChangeHandler = this.jupyterSession.onSessionStatusChanged((e) =>
+                this._onStatusChanged.fire(e)
+            );
+        }
+    }
 }
