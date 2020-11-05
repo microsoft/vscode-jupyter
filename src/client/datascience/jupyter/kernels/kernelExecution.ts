@@ -12,19 +12,14 @@ import { Commands, Telemetry, VSCodeNativeTelemetry } from '../../constants';
 import { MultiCancellationTokenSource } from '../../notebook/helpers/multiCancellationToken';
 import {
     IDataScienceErrorHandler,
+    IJupyterSession,
     INotebookEditorProvider,
     INotebookExecutionLogger,
     IRawNotebookSupportedService
 } from '../../types';
 import { CellExecution, CellExecutionFactory } from './cellExecution';
 import { isPythonKernelConnection } from './helpers';
-import type {
-    IKernel,
-    IKernelConnectionForExecution,
-    IKernelProvider,
-    IKernelSelectionUsage,
-    KernelConnectionMetadata
-} from './types';
+import type { IKernel, IKernelProvider, IKernelSelectionUsage, KernelConnectionMetadata } from './types';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
@@ -33,7 +28,7 @@ const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed'
  * Else the `Kernel` class gets very big.
  */
 export class KernelExecution implements IDisposable {
-    public kernelConnection?: IKernelConnectionForExecution;
+    public session?: IJupyterSession;
     public loggers?: INotebookExecutionLogger[];
 
     private readonly cellExecutions = new WeakMap<NotebookCell, CellExecution>();
@@ -61,7 +56,7 @@ export class KernelExecution implements IDisposable {
 
     @captureTelemetry(Telemetry.ExecuteNativeCell, undefined, true)
     public async executeCell(cell: NotebookCell): Promise<void> {
-        if (!this.kernelConnection) {
+        if (!this.session) {
             throw new Error('executeObservable cannot be called if kernel has not been started!');
         }
         // Cannot execute empty cells.
@@ -83,7 +78,7 @@ export class KernelExecution implements IDisposable {
     @captureTelemetry(Telemetry.ExecuteNativeCell, undefined, true)
     @captureTelemetry(VSCodeNativeTelemetry.RunAllCells, undefined, true)
     public async executeAllCells(document: NotebookDocument): Promise<void> {
-        if (!this.kernelConnection) {
+        if (!this.session) {
             throw new Error('executeObservable cannot be called if kernel has not been started!');
         }
         if (this.documentExecutions.has(document)) {
@@ -169,7 +164,7 @@ export class KernelExecution implements IDisposable {
         kernelPromise: Promise<IKernel>,
         cellExecution: CellExecution
     ): Promise<NotebookCellRunState | undefined> {
-        if (!this.kernelConnection) {
+        if (!this.session) {
             throw new Error('No notebook object');
         }
 
@@ -181,7 +176,7 @@ export class KernelExecution implements IDisposable {
         );
 
         // Start execution
-        await cellExecution.start(kernelPromise, this.kernelConnection, this.loggers || []);
+        await cellExecution.start(kernelPromise, this.session, this.loggers || []);
 
         // The result promise will resolve when complete.
         return cellExecution.result;

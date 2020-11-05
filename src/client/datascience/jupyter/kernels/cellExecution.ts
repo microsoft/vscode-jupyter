@@ -38,9 +38,14 @@ import {
 import { MultiCancellationTokenSource } from '../../notebook/helpers/multiCancellationToken';
 import { chainWithPendingUpdates } from '../../notebook/helpers/notebookUpdater';
 import { NotebookEditor } from '../../notebook/notebookEditor';
-import { IDataScienceErrorHandler, INotebookEditorProvider, INotebookExecutionLogger } from '../../types';
+import {
+    IDataScienceErrorHandler,
+    IJupyterSession,
+    INotebookEditorProvider,
+    INotebookExecutionLogger
+} from '../../types';
 import { translateCellFromNative } from '../../utils';
-import { IKernel, IKernelConnectionForExecution } from './types';
+import { IKernel } from './types';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
@@ -150,7 +155,7 @@ export class CellExecution {
 
     public async start(
         kernelPromise: Promise<IKernel>,
-        kernelConnection: IKernelConnectionForExecution,
+        jupyterSession: IJupyterSession,
         loggers: INotebookExecutionLogger[]
     ) {
         traceInfo(`Start cell execution for cell Index ${this.cell.index}`);
@@ -173,7 +178,7 @@ export class CellExecution {
         // Begin the request that will modify our cell.
         kernelPromise
             .then((kernel) => this.handleKernelRestart(kernel))
-            .then(() => this.execute(kernelConnection, loggers))
+            .then(() => this.execute(jupyterSession, loggers))
             .catch((e) => this.completedWithErrors(e))
             .finally(() => this.dispose())
             .catch(noop);
@@ -346,16 +351,12 @@ export class CellExecution {
         return code.trim().length > 0;
     }
 
-    private async execute(kernelConnection: IKernelConnectionForExecution, loggers: INotebookExecutionLogger[]) {
+    private async execute(jupyterSession: IJupyterSession, loggers: INotebookExecutionLogger[]) {
         const code = this.cell.document.getText();
-        return this.executeCodeCell(code, kernelConnection, loggers);
+        return this.executeCodeCell(code, jupyterSession, loggers);
     }
 
-    private async executeCodeCell(
-        code: string,
-        kernelConnection: IKernelConnectionForExecution,
-        loggers: INotebookExecutionLogger[]
-    ) {
+    private async executeCodeCell(code: string, jupyterSession: IJupyterSession, loggers: INotebookExecutionLogger[]) {
         // Generate metadata from our cell (some kernels expect this.)
         // tslint:disable-next-line: no-any
         const metadata: any = {
@@ -368,7 +369,7 @@ export class CellExecution {
             return this.completedSuccessfully().then(noop, noop);
         }
 
-        const request = kernelConnection.requestExecute(
+        const request = jupyterSession.requestExecute(
             {
                 code,
                 silent: false,
@@ -406,7 +407,7 @@ export class CellExecution {
             (this.requestHandlerChain = this.requestHandlerChain.then(() =>
                 this.handleReply(clearState, msg).catch(noop)
             ));
-        request.onStdin = this.handleInputRequest.bind(this, kernelConnection);
+        request.onStdin = this.handleInputRequest.bind(this, jupyterSession);
 
         // WARNING: Do not dispose `request`.
         // Even after request.done & execute_reply is sent we could have more messages coming from iopub.
@@ -502,7 +503,7 @@ export class CellExecution {
         });
     }
 
-    private handleInputRequest(kernelConnection: IKernelConnectionForExecution, msg: KernelMessage.IStdinMessage) {
+    private handleInputRequest(jupyterSession: IJupyterSession, msg: KernelMessage.IStdinMessage) {
         // Ask the user for input
         if (msg.content && 'prompt' in msg.content) {
             const hasPassword = msg.content.password !== null && (msg.content.password as boolean);
@@ -513,7 +514,7 @@ export class CellExecution {
                     password: hasPassword
                 })
                 .then((v) => {
-                    kernelConnection.sendInputReply({ value: v || '', status: 'ok' });
+                    jupyterSession.sendInputReply({ value: v || '', status: 'ok' });
                 });
         }
     }

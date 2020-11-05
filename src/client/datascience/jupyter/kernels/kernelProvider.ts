@@ -10,7 +10,6 @@ import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../../co
 import { traceInfo, traceWarning } from '../../../common/logger';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../../common/types';
 import { JupyterRemoteServiceHelper } from '../../../remote/connection/remoteService';
-import { RemoteJupyterKernel } from '../../../remote/kernels/remoteKernel';
 import { IJupyterServerAuthServiceProvider } from '../../../remote/ui/types';
 import {
     IDataScienceErrorHandler,
@@ -21,6 +20,7 @@ import {
 } from '../../types';
 import { Kernel } from './kernel';
 import { KernelSelector } from './kernelSelector';
+import { RemoteJupyterKernel } from './remoteKernel';
 import { IKernel, IKernelProvider, IKernelSelectionUsage, KernelOptions } from './types';
 
 @injectable()
@@ -66,6 +66,7 @@ export class KernelProvider implements IKernelProvider {
             kernel = new RemoteJupyterKernel(
                 uri,
                 options.metadata,
+                this.disposables,
                 waitForIdleTimeout,
                 this.commandManager,
                 this.errorHandler,

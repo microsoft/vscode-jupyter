@@ -4,218 +4,79 @@
 'use strict';
 
 import { nbformat } from '@jupyterlab/coreutils';
-import { Kernel as JupyterKernel, KernelMessage } from '@jupyterlab/services';
-import { JSONObject } from '@phosphor/coreutils';
-import { Observable } from 'rxjs/Observable';
-import { Subject } from 'rxjs/Subject';
 import * as uuid from 'uuid/v4';
-import {
-    CancellationToken,
-    CancellationTokenSource,
-    Event,
-    EventEmitter,
-    NotebookCell,
-    NotebookDocument,
-    Uri
-} from 'vscode';
+import { CancellationToken, Uri } from 'vscode';
 import { ServerStatus } from '../../../../datascience-ui/interactive-common/mainState';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../../common/application/types';
 import { traceError, traceWarning } from '../../../common/logger';
 import { IDisposableRegistry } from '../../../common/types';
-import { createDeferred, Deferred } from '../../../common/utils/async';
 import { noop } from '../../../common/utils/misc';
 import { CodeSnippets } from '../../constants';
 import { getDefaultNotebookContent, updateNotebookMetadata } from '../../notebookStorage/baseModel';
 import {
     IDataScienceErrorHandler,
-    IJupyterSession,
     INotebook,
     INotebookEditorProvider,
     INotebookProvider,
-    INotebookProviderConnection,
     InterruptResult,
-    IRawNotebookSupportedService,
-    KernelSocketInformation
+    IRawNotebookSupportedService
 } from '../../types';
+import { BaseKernel } from './baseKernel';
 import { isPythonKernelConnection } from './helpers';
-import { KernelExecution } from './kernelExecution';
-import type {
-    IKernel,
-    IKernelConnectionForExecution,
-    IKernelProvider,
-    IKernelSelectionUsage,
-    KernelConnectionMetadata
-} from './types';
+import type { IKernel, IKernelProvider, IKernelSelectionUsage, KernelConnectionMetadata } from './types';
 
-/**
- * When running code, we're using the API from Jupyter Labs.
- * Though we're using it, we have changed the signature to some extent.
- * E.g. some methods do not return undefined & the like.
- * When dealing with remote kernels, we're using the Juptyer Labs API directly instead of using our wrappers.
- * This class will ensure our wrappers line up with the API in the Jupyter lab npm package.
- * This way we can use the same code & Jupyter lab npm interfaces for local & remote kernels.
- */
-class SessionWrapper implements IKernelConnectionForExecution {
-    constructor(private readonly session: IJupyterSession) {}
-    public requestExecute(
-        content: {
-            code: string;
-            silent?: boolean | undefined;
-            store_history?: boolean | undefined;
-            user_expressions?: JSONObject | undefined;
-            allow_stdin?: boolean | undefined;
-            stop_on_error?: boolean | undefined;
-        },
-        disposeOnDone?: boolean,
-        metadata?: JSONObject
-    ): JupyterKernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> {
-        const response = this.session.requestExecute(content, disposeOnDone, metadata);
-        if (!response) {
-            throw new Error('No Session for requestExecute');
-        }
-        return response;
-    }
-    public requestKernelInfo(): Promise<KernelMessage.IInfoReplyMsg> {
-        return this.session.requestKernelInfo();
-    }
-    public removeMessageHook(
-        msgId: string,
-        hook: (msg: KernelMessage.IIOPubMessage<KernelMessage.IOPubMessageType>) => boolean | PromiseLike<boolean>
-    ): void {
-        return this.session.removeMessageHook(msgId, hook);
-    }
-    public registerMessageHook(
-        msgId: string,
-        hook: (msg: KernelMessage.IIOPubMessage<KernelMessage.IOPubMessageType>) => boolean | PromiseLike<boolean>
-    ): void {
-        return this.session.registerMessageHook(msgId, hook);
-    }
-    public requestCommInfo(content: {
-        target_name?: string | undefined;
-        target?: string | undefined;
-    }): Promise<KernelMessage.ICommInfoReplyMsg> {
-        return this.session.requestCommInfo(content);
-    }
-    public registerCommTarget(
-        targetName: string,
-        callback: (comm: JupyterKernel.IComm, msg: KernelMessage.ICommOpenMsg) => void | PromiseLike<void>
-    ): void {
-        return this.session.registerCommTarget(targetName, callback);
-    }
-    public sendInputReply(content: KernelMessage.ReplyContent<KernelMessage.IInputReply>): void {
-        return this.session.sendInputReply(content);
-    }
-    public async requestInspect(content: {
-        code: string;
-        cursor_pos: number;
-        detail_level: 0 | 1;
-    }): Promise<KernelMessage.IInspectReplyMsg> {
-        const promise = this.session.requestInspect(content);
-        if (!promise) {
-            throw new Error('No Session for requestExecute');
-        }
-        const response = await promise;
-        if (!response) {
-            throw new Error('No Session for requestExecute');
-        }
-        return response;
-    }
-    public async requestComplete(content: {
-        code: string;
-        cursor_pos: number;
-    }): Promise<KernelMessage.ICompleteReplyMsg> {
-        const response = await this.session.requestComplete(content);
-        if (!response) {
-            throw new Error('No Session for requestExecute');
-        }
-        return response;
-    }
-}
-export class Kernel implements IKernel {
-    get connection(): INotebookProviderConnection | undefined {
-        return this.notebook?.connection;
-    }
-    get onStatusChanged(): Event<ServerStatus> {
-        return this._onStatusChanged.event;
-    }
-    get onRestarted(): Event<void> {
-        return this._onRestarted.event;
-    }
-    get onDisposed(): Event<void> {
-        return this._onDisposed.event;
-    }
-    private _info?: KernelMessage.IInfoReplyMsg['content'];
-    get info(): KernelMessage.IInfoReplyMsg['content'] | undefined {
-        return this._info;
-    }
-    get status(): ServerStatus {
-        return this.notebook?.status ?? ServerStatus.NotStarted;
-    }
-    get disposed(): boolean {
-        return this._disposed === true || this.notebook?.disposed === true;
-    }
-    get kernelSocket(): Observable<KernelSocketInformation | undefined> {
-        return this._kernelSocket.asObservable();
-    }
+export class Kernel extends BaseKernel {
     private notebook?: INotebook;
     private _disposed?: boolean;
-    private readonly _kernelSocket = new Subject<KernelSocketInformation | undefined>();
-    private readonly _onStatusChanged = new EventEmitter<ServerStatus>();
-    private readonly _onRestarted = new EventEmitter<void>();
-    private readonly _onDisposed = new EventEmitter<void>();
     private _notebookPromise?: Promise<INotebook | undefined>;
     private readonly hookedNotebookForEvents = new WeakSet<INotebook>();
-    private restarting?: Deferred<void>;
     private readonly kernelValidated = new Map<string, { kernel: IKernel; promise: Promise<void> }>();
-    private readonly kernelExecution: KernelExecution;
-    private startCancellation = new CancellationTokenSource();
     constructor(
-        public readonly uri: Uri,
-        public readonly metadata: Readonly<KernelConnectionMetadata>,
+        uri: Uri,
+        metadata: Readonly<KernelConnectionMetadata>,
         private readonly notebookProvider: INotebookProvider,
-        private readonly disposables: IDisposableRegistry,
-        private readonly launchTimeout: number,
+        disposables: IDisposableRegistry,
+        launchTimeout: number,
         commandManager: ICommandManager,
-        private readonly errorHandler: IDataScienceErrorHandler,
+        errorHandler: IDataScienceErrorHandler,
         editorProvider: INotebookEditorProvider,
-        private readonly kernelProvider: IKernelProvider,
-        private readonly kernelSelectionUsage: IKernelSelectionUsage,
+        kernelProvider: IKernelProvider,
+        kernelSelectionUsage: IKernelSelectionUsage,
         appShell: IApplicationShell,
         vscNotebook: IVSCodeNotebook,
         rawNotebookSupported: IRawNotebookSupportedService
     ) {
-        this.kernelExecution = new KernelExecution(
-            kernelProvider,
+        super(
+            uri,
+            metadata,
+            disposables,
+            launchTimeout,
             commandManager,
             errorHandler,
             editorProvider,
+            kernelProvider,
             kernelSelectionUsage,
             appShell,
             vscNotebook,
-            metadata,
             rawNotebookSupported
         );
     }
-    public async executeCell(cell: NotebookCell): Promise<void> {
-        await this.start({ disableUI: false, token: this.startCancellation.token });
-        await this.kernelExecution.executeCell(cell);
-    }
-    public async executeAllCells(document: NotebookDocument): Promise<void> {
-        await this.start({ disableUI: false, token: this.startCancellation.token });
-        await this.kernelExecution.executeAllCells(document);
-    }
-    public async cancelCell(cell: NotebookCell) {
-        this.startCancellation.cancel();
-        await this.kernelExecution.cancelCell(cell);
-    }
-    public async cancelAllCells(document: NotebookDocument) {
-        this.startCancellation.cancel();
-        this.kernelExecution.cancelAllCells(document);
-    }
-    public async start(options?: { disableUI?: boolean; token?: CancellationToken }): Promise<void> {
-        if (this.restarting) {
-            await this.restarting.promise;
+    public async dispose(): Promise<void> {
+        this._notebookPromise = undefined;
+        if (this.notebook) {
+            await this.notebook.dispose();
+            this._disposed = true;
+            this.notebook = undefined;
         }
+        await super.dispose();
+    }
+    protected async onRestart(): Promise<void> {
+        if (this.notebook) {
+            await this.notebook.restartKernel(this.launchTimeout);
+            await this.initializeAfterStart();
+        }
+    }
+    protected async onStart(options?: { disableUI?: boolean; token?: CancellationToken }): Promise<void> {
         if (this._notebookPromise) {
             await this._notebookPromise;
             return;
@@ -237,9 +98,10 @@ export class Kernel implements IKernel {
             this._notebookPromise
                 .then((nb) => {
                     this.notebook = nb;
+                    this.jupyterSession = nb?.session;
                     if (nb) {
-                        this.kernelExecution.kernelConnection = new SessionWrapper(nb.session);
-                        this.kernelExecution.loggers = nb.getLoggers()
+                        this.kernelExecution.session = nb.session;
+                        this.kernelExecution.loggers = nb.getLoggers();
                     }
                 })
                 .catch((ex) => {
@@ -252,44 +114,17 @@ export class Kernel implements IKernel {
             await this.initializeAfterStart();
         }
     }
-    public async interrupt(): Promise<InterruptResult> {
-        if (this.restarting) {
-            await this.restarting.promise;
-        }
+    protected async onInterrupt(): Promise<InterruptResult> {
         if (!this.notebook) {
             throw new Error('No notebook to interrupt');
         }
         return this.notebook.interruptKernel(this.launchTimeout);
     }
-    public async dispose(): Promise<void> {
-        this.restarting = undefined;
-        this._notebookPromise = undefined;
-        if (this.notebook) {
-            await this.notebook.dispose();
-            this._disposed = true;
-            this._onDisposed.fire();
-            this._onStatusChanged.fire(ServerStatus.Dead);
-            this.notebook = undefined;
-            this.kernelExecution.kernelConnection = undefined;
-        }
-        this.kernelExecution.dispose();
+    protected getStatus(): ServerStatus {
+        return this.notebook?.status ?? ServerStatus.NotStarted;
     }
-    public async restart(): Promise<void> {
-        if (this.restarting) {
-            return this.restarting.promise;
-        }
-        if (this.notebook) {
-            this.restarting = createDeferred<void>();
-            try {
-                await this.notebook.restartKernel(this.launchTimeout);
-                await this.initializeAfterStart();
-                this.restarting.resolve();
-            } catch (ex) {
-                this.restarting.reject(ex);
-            } finally {
-                this.restarting = undefined;
-            }
-        }
+    protected isDisposed(): boolean {
+        return this._disposed === true || this.notebook?.disposed === true;
     }
     private async validate(uri: Uri): Promise<void> {
         const kernel = this.kernelProvider.get(uri);
