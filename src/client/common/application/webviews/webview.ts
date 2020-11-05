@@ -8,7 +8,6 @@ import {
     Event,
     EventEmitter,
     Uri,
-    Webview as vscodeWebview,
     WebviewOptions,
     WebviewPanel as vscodeWebviewPanel,
     WebviewView as vscodeWebviewView
@@ -25,7 +24,6 @@ export abstract class Webview implements IWebview {
     public get loadFailed(): Event<void> {
         return this.loadFailedEmitter.event;
     }
-    //protected webview?: vscodeWebview;
     protected webviewHost?: vscodeWebviewView | vscodeWebviewPanel;
     protected loadFailedEmitter = new EventEmitter<void>();
     protected loadPromise: Promise<void>;
@@ -44,17 +42,8 @@ export abstract class Webview implements IWebview {
             this.webviewHost = options.webviewHost;
             this.webviewHost.webview.options = webViewOptions;
         } else {
+            // Delegate to derived classes for creation
             this.webviewHost = this.createWebview(webViewOptions);
-            //this.panel = window.createWebviewPanel(
-            //panelOptions.title.toLowerCase().replace(' ', ''),
-            //panelOptions.title,
-            //{ viewColumn: panelOptions.viewColumn, preserveFocus: true },
-            //{
-            //retainContextWhenHidden: true,
-            //enableFindWidget: true,
-            //...webViewOptions
-            //}
-            //);
         }
 
         this.loadPromise = this.load();
@@ -147,32 +136,8 @@ export abstract class Webview implements IWebview {
                     // and translates all of the paths to vscode-resource URIs
                     this.webviewHost.webview.html = await this.generateLocalReactHtml();
 
+                    // Hook up class specific events after load
                     this.postLoad(this.webviewHost);
-
-                    // Reset when the current panel is closed
-                    //this.disposableRegistry.push(
-                    //this.panel.onDidDispose(() => {
-                    //this.panel = undefined;
-                    //this.panelOptions.listener.dispose().ignoreErrors();
-                    //})
-                    //);
-
-                    //this.disposableRegistry.push(
-                    //this.webview.onDidReceiveMessage((message) => {
-                    //// Pass the message onto our listener
-                    //this.options.listener.onMessage(message.type, message.payload);
-                    //})
-                    //);
-
-                    //this.disposableRegistry.push(
-                    //this.panel.onDidChangeViewState((_e) => {
-                    //// Pass the state change onto our listener
-                    //this.panelOptions.listener.onChangeViewState(this);
-                    //})
-                    //);
-
-                    // Set initial state
-                    //this.panelOptions.listener.onChangeViewState(this);
                 } else {
                     // Indicate that we can't load the file path
                     const badPanelString = localize.DataScience.badWebPanelFormatString();

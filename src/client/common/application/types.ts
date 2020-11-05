@@ -48,8 +48,7 @@ import {
     TreeViewOptions,
     Uri,
     ViewColumn,
-    Webview as vscodeWebview,
-    WebviewPanel,
+    WebviewPanel as vscodeWebviewPanel,
     WebviewPanelOptions,
     WebviewView as vscodeWebviewView,
     WindowState,
@@ -1097,7 +1096,7 @@ export interface IWebviewOptions {
     settings?: any;
     // Instead of creating a webview we may be passed on already created by VS Code
     //webview?: vscodeWebview;
-    webviewHost?: vscodeWebviewView | WebviewPanel;
+    webviewHost?: vscodeWebviewView | vscodeWebviewPanel;
 }
 
 export interface IWebviewViewOptions extends IWebviewOptions {
@@ -1376,7 +1375,7 @@ export interface CustomReadonlyEditorProvider<T extends CustomDocument = CustomD
      *
      * @return Optional thenable indicating that the custom editor has been resolved.
      */
-    resolveCustomEditor(document: T, webviewPanel: WebviewPanel, token: CancellationToken): Thenable<void> | void;
+    resolveCustomEditor(document: T, webviewPanel: vscodeWebviewPanel, token: CancellationToken): Thenable<void> | void;
 }
 
 /**

@@ -132,7 +132,6 @@ export abstract class WebviewPanelHost<IMapping> extends WebviewHost<IMapping> i
             settings,
             cwd,
             webviewHost: vscodeWebview,
-            //webViewPanel: vscodeWebview,
             additionalPaths: workspaceFolder ? [workspaceFolder.fsPath] : []
         });
     }
