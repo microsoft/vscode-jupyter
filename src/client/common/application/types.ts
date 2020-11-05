@@ -1095,7 +1095,6 @@ export interface IWebviewOptions {
     // tslint:disable-next-line: no-any
     settings?: any;
     // Instead of creating a webview we may be passed on already created by VS Code
-    //webview?: vscodeWebview;
     webviewHost?: vscodeWebviewView | vscodeWebviewPanel;
 }
 
@@ -1137,8 +1136,6 @@ export interface IWebviewPanelOptions extends IWebviewOptions {
     viewColumn: ViewColumn;
     listener: IWebviewPanelMessageListener;
     title: string;
-    // Web panel to use if supplied by VS code instead
-    //webViewPanel?: WebviewPanel;
 }
 
 // Wraps the VS Code api for creating a web panel
@@ -1148,12 +1145,7 @@ export interface IWebviewPanelProvider {
 }
 
 export interface IWebviewViewOptions extends IWebviewOptions {
-    additionalPaths?: string[];
     listener: IWebviewViewMessageListener;
-    // tslint:disable-next-line: no-any
-    settings?: any;
-    // Unlike for the panel, the webview is required for WebviewView
-    //webviewView: vscodeWebviewView;
 }
 
 export const IWebviewViewProvider = Symbol('IWebviewViewProvider');

@@ -34,7 +34,6 @@ export class VariablePanel extends React.Component<IVariablePanelProps, IVariabl
     // tslint:disable-next-line:max-func-body-length
     constructor(props: IVariablePanelProps, _state: IVariablePanelState) {
         super(props);
-        window.console.log('**** IANHU Variable Constructor ****');
 
         this.state = {
             settings: this.props.testMode ? getDefaultSettings() : undefined

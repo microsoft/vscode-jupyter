@@ -145,23 +145,6 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
 
             const workspaceFolder = this.workspaceService.getWorkspaceFolder(Uri.file(cwd))?.uri;
 
-            // Use this script to create our web view panel. It should contain all of the necessary
-            // script to communicate with this class.
-            //this.webPanel = await this.provider.create({
-            //viewColumn: this.viewColumn,
-            //listener: this.messageListener,
-            //title: this.title,
-            //rootPath: this.rootPath,
-            //scripts: this.scripts,
-            //settings,
-            //cwd,
-            //webViewPanel,
-            //additionalPaths: workspaceFolder ? [workspaceFolder.fsPath] : []
-            //});
-
-            //// Set our webview after load
-            //this.webview = this.webPanel;
-
             this.webview = await this.provideWebview(cwd, settings, workspaceFolder, webView);
 
             // Track to seee if our webview fails to load

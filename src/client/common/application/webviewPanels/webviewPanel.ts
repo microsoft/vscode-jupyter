@@ -10,9 +10,6 @@ import { IWebviewPanel, IWebviewPanelOptions } from '../types';
 import { Webview } from '../webviews/webview';
 
 export class WebviewPanel extends Webview implements IWebviewPanel {
-    //private panel: vscodeWebviewPanel | undefined;
-    //private loadPromise: Promise<void>;
-
     private get panel(): vscodeWebviewPanel | undefined {
         return this.webviewHost as vscodeWebviewPanel;
     }
