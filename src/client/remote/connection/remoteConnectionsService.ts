@@ -17,6 +17,7 @@ import {
 } from '../../common/types';
 import { Common, DataScience } from '../../common/utils/localize';
 import { Identifiers } from '../../datascience/constants';
+import { JupyterConnectionManager } from '../../datascience/jupyter/jupyterConnectionManager';
 import { createAuthorizingRequest } from '../../datascience/jupyter/jupyterRequest';
 import { createRemoteConnectionInfo } from '../../datascience/jupyter/jupyterUtils';
 import { createJupyterWebSocket } from '../../datascience/jupyter/jupyterWebSocket';
@@ -57,6 +58,7 @@ export class RemoteJupyterConnectionsService implements IExtensionSingleActivati
     private readonly _onDidRemoveServer = new EventEmitter<IJupyterConnection | undefined>();
     private uriToJupyterServerUri = new Map<string, IJupyterServerUri>();
     private pendingTimeouts: (NodeJS.Timeout | number)[] = [];
+    private connectionManagers = new Map<string, JupyterConnectionManager>();
     constructor(
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IConfigurationService) private readonly configuration: IConfigurationService,
@@ -91,6 +93,7 @@ export class RemoteJupyterConnectionsService implements IExtensionSingleActivati
     }
     public dispose() {
         remoteConnections = [];
+        this.connectionManagers.clear();
         this.clearTimeouts();
     }
     public async addServer(): Promise<void> {
@@ -108,8 +111,21 @@ export class RemoteJupyterConnectionsService implements IExtensionSingleActivati
         remoteConnections = remoteConnections.filter((item) => item !== itemToRemove);
         this._onDidRemoveServer.fire(itemToRemove);
     }
+    public async getConnectionService(id: string | IJupyterConnection): Promise<JupyterConnectionManager> {
+        const connectionId = typeof id === 'string' ? id : id.id;
+        if (!this.connectionManagers.has(connectionId)) {
+            const connection = remoteConnections.find((item) => item.id === connectionId);
+            if (!connection) {
+                throw new Error('Remote Server Not found');
+            }
+            const settings = await this.getServerConnectSettings(connection);
+            const manager = new JupyterConnectionManager(connection, settings);
+            this.connectionManagers.set(connectionId, manager);
+        }
+        return this.connectionManagers.get(connectionId)!;
+    }
 
-    public async getRemoteConnectionInfo(options: INotebookServerOptions) {
+    public async getRemoteConnectionInfo(options: INotebookServerOptions): Promise<IJupyterConnection> {
         if (!options.uri) {
             throw new Error('Uri cannot be undefined');
         }
