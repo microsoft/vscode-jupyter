@@ -32,6 +32,11 @@ export class RawNotebookSupportedService implements IRawNotebookSupportedService
         return !this.isZQMDisabled() && (await this.zmqSupported()) ? true : false;
     }
 
+    public async isSupportedForLocalLaunch(): Promise<boolean> {
+        // Save the ZMQ support for last, since it's probably the slowest part
+        return !this.isZQMDisabled() && (await this.zmqSupported()) ? true : false;
+    }
+
     private localLaunch(): boolean {
         const settings = this.configuration.getSettings(undefined);
         const serverType: string | undefined = settings.jupyterServerType;
