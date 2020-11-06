@@ -17,7 +17,7 @@ export const IJupyterServerConnectionService = Symbol('IJupyterConnectionsServic
 export interface IJupyterServerConnectionService {
     onDidAddServer: Event<JupyterServerConnection>;
     onDidRemoveServer: Event<JupyterServerConnection | undefined>;
-    getRemoteConnections(): Promise<JupyterServerConnection[]>;
+    getConnections(): Promise<JupyterServerConnection[]>;
     /**
      * Whether we're connected to a remote server that can handle a specific Remote Uri.
      */

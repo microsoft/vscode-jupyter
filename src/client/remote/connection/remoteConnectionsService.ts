@@ -98,7 +98,7 @@ export class JupyterServerConnectionService
         disposables.push(this._onDidAddServer);
         disposables.push(this._onDidRemoveServer);
     }
-    public async getRemoteConnections(): Promise<JupyterServerConnection[]> {
+    public async getConnections(): Promise<JupyterServerConnection[]> {
         return Array.from(remoteConnections.keys()).map((id) => {
             return {
                 id,
