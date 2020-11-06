@@ -16,8 +16,8 @@ import { traceInfo } from '../../common/logger';
 import { IDisposableRegistry } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { IInterpreterService } from '../../interpreter/contracts';
-import { JupyterRemoteServiceHelper } from '../../remote/connection/remoteService';
-import { IJupyterServerAuthServiceProvider } from '../../remote/ui/types';
+import { JupyterServerConnectionService } from '../../remote/connection/remoteConnectionsService';
+import { IJupyterServerConnectionService } from '../../remote/ui/types';
 import { captureTelemetry } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { areKernelConnectionsEqual } from '../jupyter/kernels/helpers';
@@ -35,13 +35,7 @@ import {
     LiveKernelConnectionMetadata
 } from '../jupyter/kernels/types';
 import { INotebookStorageProvider } from '../notebookStorage/notebookStorageProvider';
-import {
-    IJupyterConnection,
-    IJupyterSessionManagerFactory,
-    INotebook,
-    INotebookProvider,
-    IRawNotebookSupportedService
-} from '../types';
+import { IJupyterSessionManagerFactory, INotebook, INotebookProvider, IRawNotebookSupportedService } from '../types';
 import {
     getNotebookMetadata,
     isJupyterNotebook,
@@ -119,9 +113,8 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
         @inject(KernelSwitcher) private readonly kernelSwitcher: KernelSwitcher,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
-        @inject(JupyterRemoteServiceHelper) private readonly jupyterRemoteHelper: JupyterRemoteServiceHelper,
-        @inject(IJupyterServerAuthServiceProvider)
-        private readonly authServiceProvider: IJupyterServerAuthServiceProvider,
+        @inject(IJupyterServerConnectionService)
+        private readonly remoteConnections: JupyterServerConnectionService,
         @inject(IJupyterSessionManagerFactory) private readonly sessionFactory: IJupyterSessionManagerFactory,
         @inject(IRawNotebookSupportedService) private readonly rawNotebookSupported: IRawNotebookSupportedService
     ) {
@@ -146,7 +139,7 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
         token: CancellationToken
     ): Promise<VSCodeNotebookKernelMetadata[]> {
         let kernels: VSCodeNotebookKernelMetadata[];
-        if (await this.jupyterRemoteHelper.isRemoteJupyterUri(document.uri)) {
+        if (this.remoteConnections.findConnection(document.uri)) {
             kernels = await this.provideRemoteKernels(document, token);
         } else {
             kernels = await this.provideLocalKernels(document, token);
@@ -168,28 +161,11 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
         document: NotebookDocument,
         token: CancellationToken
     ): Promise<VSCodeNotebookKernelMetadata[]> {
-        const connections = await this.authServiceProvider.getRemoteConnections();
-        const connectionInfo = connections.find(
-            (item) => item.fileScheme.toLowerCase() === document.uri.scheme.toLowerCase()
-        );
-        if (!connectionInfo) {
+        const connection = this.remoteConnections.findConnection(document.uri);
+        if (!connection) {
             return [];
         }
-        const connection: IJupyterConnection = {
-            id: connectionInfo.id,
-            baseUrl: connectionInfo.settings.baseUrl,
-            disconnected: new EventEmitter<number>().event,
-            displayName: '',
-            dispose: noop,
-            hostName: '',
-            localLaunch: false,
-            localProcExitCode: undefined,
-            rootDirectory: document.uri.fsPath,
-            token: connectionInfo.settings.token,
-            type: 'jupyter',
-            valid: true
-        };
-        const sessionManager = await this.sessionFactory.create(connection, true);
+        const sessionManager = await this.sessionFactory.create(connection.connection, true);
 
         // tslint:disable-next-line: prefer-const
         let [preferredKernelInfo, kernels, activeInterpreter, defaultKernel] = await Promise.all([
@@ -199,7 +175,7 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
                 getNotebookMetadata(document),
                 token
             ),
-            this.kernelSelector.getKernelSelectionsForRemoteSession(document.uri, sessionManager, token),
+            this.kernelSelectionProvider.getKernelSelectionsForRemoteSession(document.uri, sessionManager, token),
             this.interpreterService.getActiveInterpreter(document.uri),
             sessionManager.getDefaultKernel()
         ]);
@@ -384,17 +360,17 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
         if (!preferredKernelInfo) {
             return;
         }
-        const preferredInfFromQuickPick = preferredInfFromQuick?.find(
+        const preferredInfoFromQuickPick = preferredInfFromQuick?.find(
             (item) => getKernelConnectionId(item.selection) === getKernelConnectionId(preferredKernelInfo!)
         );
         switch (preferredKernelInfo.kind) {
             case 'connectToLiveKernel':
                 return new VSCodeNotebookKernelMetadata(
-                    preferredInfFromQuickPick?.label || preferredKernelInfo.kernelModel.name,
-                    preferredInfFromQuickPick?.detail ||
+                    preferredInfoFromQuickPick?.label || preferredKernelInfo.kernelModel.name,
+                    preferredInfoFromQuickPick?.detail ||
                         preferredKernelInfo.kernelModel.display_name ||
                         preferredKernelInfo.kernelModel.name,
-                    preferredInfFromQuickPick?.description || preferredKernelInfo.kernelModel.name,
+                    preferredInfoFromQuickPick?.description || preferredKernelInfo.kernelModel.name,
                     preferredKernelInfo,
                     true,
                     this.kernelProvider,
@@ -402,11 +378,11 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
                 );
             case 'startUsingKernelSpec':
                 return new VSCodeNotebookKernelMetadata(
-                    preferredInfFromQuickPick?.label || preferredKernelInfo.kernelSpec.name,
-                    preferredInfFromQuickPick?.detail ||
+                    preferredInfoFromQuickPick?.label || preferredKernelInfo.kernelSpec.name,
+                    preferredInfoFromQuickPick?.detail ||
                         preferredKernelInfo.kernelSpec.display_name ||
                         preferredKernelInfo.kernelSpec.name,
-                    preferredInfFromQuickPick?.description || preferredKernelInfo.kernelSpec.name,
+                    preferredInfoFromQuickPick?.description || preferredKernelInfo.kernelSpec.name,
                     preferredKernelInfo,
                     true,
                     this.kernelProvider,
