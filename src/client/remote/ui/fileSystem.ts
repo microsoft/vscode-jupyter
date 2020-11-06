@@ -144,60 +144,12 @@ export class RemoteFileSystem implements IFileSystemProvider {
     public async writeFile(
         uri: Uri,
         _content: Uint8Array,
-        options: { create: boolean; overwrite: boolean }
+        _options: { create: boolean; overwrite: boolean }
     ): Promise<void> {
-        // Support save as, new file, etc.
-        // Check options.create // overwrite
-        if (options.create) {
-            return;
-        } else {
-            // const server = await this.getRemoteServer();
-            // const file = await server.getFileOrDirectory(uri.fsPath);
-            // if (!file) {
-            //     throw FileSystemError.FileNotFound();
-            // }
-            // if (file.type === 'directory') {
-            //     throw FileSystemError.FileIsADirectory();
-            // }
-            // await server.saveFile(file, new TextDecoder().decode(content));
-        }
-        // const basename = path.posix.basename(uri.path);
-        // const parent = this._lookupParentDirectory(uri);
-        // let entry = parent.entries.get(basename);
-        // if (entry instanceof Directory) {
-        //     throw FileSystemError.FileIsADirectory(uri);
-        // }
-        // if (!entry && !options.create) {
-        //     throw FileSystemError.FileNotFound(uri);
-        // }
-        // if (entry && options.create && !options.overwrite) {
-        //     throw FileSystemError.FileExists(uri);
-        // }
-        // if (!entry) {
-        //     entry = new File(basename);
-        //     parent.entries.set(basename, entry);
-        //     this._fireSoon({ type: FileChangeType.Created, uri });
-        // }
-        // entry.mtime = Date.now();
-        // entry.size = content.byteLength;
-        // entry.data = content;
-
         this._fireSoon({ type: FileChangeType.Changed, uri });
     }
 
-    // --- manage files/folders
-
     public rename(_oldUri: Uri, _newUri: Uri, _options: { overwrite: boolean }): void {
-        // if (!options.overwrite && this._lookup(newUri, true)) {
-        //     throw FileSystemError.FileExists(newUri);
-        // }
-        // const entry = this._lookup(oldUri, false);
-        // const oldParent = this._lookupParentDirectory(oldUri);
-        // const newParent = this._lookupParentDirectory(newUri);
-        // const newName = path.posix.basename(newUri.path);
-        // oldParent.entries.delete(entry.name);
-        // entry.name = newName;
-        // newParent.entries.set(newName, entry);
         // this._fireSoon({ type: FileChangeType.Deleted, uri: oldUri }, { type: FileChangeType.Created, uri: newUri });
     }
 
@@ -215,16 +167,7 @@ export class RemoteFileSystem implements IFileSystemProvider {
         }
     }
 
-    public createDirectory(_uri: Uri): void {
-        // const basename = path.posix.basename(uri.path);
-        // const dirname = uri.with({ path: path.posix.dirname(uri.path) });
-        // const parent = this._lookupAsDirectory(dirname, false);
-        // const entry = new Directory(basename);
-        // parent.entries.set(entry.name, entry);
-        // parent.mtime = Date.now();
-        // parent.size += 1;
-        // this._fireSoon({ type: FileChangeType.Changed, uri: dirname }, { type: FileChangeType.Created, uri });
-    }
+    public createDirectory(_uri: Uri): void {}
 
     public watch(_resource: Uri): Disposable {
         // ignore, fires for all changes...
