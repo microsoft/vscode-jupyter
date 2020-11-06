@@ -28,7 +28,7 @@
         "theme": "light"
     },
     "engines": {
-        "vscode": "^1.48.0"
+        "vscode": "^1.49.0"
     },
     "keywords": [
         "jupyter",
@@ -1708,7 +1708,26 @@
                 ],
                 "priority": "option"
             }
-        ]
+        ],
+        "viewsContainers": {
+            "activitybar": [
+                {
+                    "id": "jupyter",
+                    "title": "Jupyter",
+                    "icon": "NOICON.svg"
+                }
+            ]
+        },
+        "views": {
+            "jupyter": [
+                {
+                    "type": "webview",
+                    "id": "jupyterViewVariables",
+                    "name": "Variables",
+                    "when": "jupyter.nativevariableview"
+                }
+            ]
+        }
     },
     "scripts": {
         "package": "gulp clean && gulp prePublishBundle && vsce package -o ms-toolsai-jupyter-insiders.vsix",
@@ -1897,7 +1916,7 @@
         "@types/tmp": "0.0.33",
         "@types/untildify": "^3.0.0",
         "@types/uuid": "^3.4.3",
-        "@types/vscode": "^1.47.0",
+        "@types/vscode": "^1.49.0",
         "@types/webpack-bundle-analyzer": "^2.13.0",
         "@types/winreg": "^1.2.30",
         "@types/ws": "^6.0.1",

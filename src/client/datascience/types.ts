@@ -20,7 +20,8 @@ import {
     Range,
     TextDocument,
     TextEditor,
-    Uri
+    Uri,
+    WebviewViewProvider
 } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import type { Data as WebSocketData } from 'ws';
@@ -1383,6 +1384,11 @@ export interface ISwitchKernelOptions {
 export const IDebugLoggingManager = Symbol('IDebugLoggingManager');
 export interface IDebugLoggingManager {
     initialize(): Promise<void>;
+}
+
+// Wraps the VS Code WebviewViewProvider. VSC Prefix as we also have our own IWebviewViewProvider
+export interface IVSCWebviewViewProvider extends WebviewViewProvider {
+    readonly viewType: 'jupyterViewVariables';
 }
 
 export const IJupyterServerUriStorage = Symbol('IJupyterServerUriStorage');

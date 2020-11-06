@@ -29,7 +29,7 @@ import {
     IGetRowsRequest
 } from './types';
 
-const dataExplorereDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'viewers');
+const dataExplorerDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'viewers');
 @injectable()
 export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements IDataViewer, IDisposable {
     private dataProvider: IDataViewerDataProvider | undefined;
@@ -53,8 +53,8 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
             themeFinder,
             workspaceService,
             (c, v, d) => new DataViewerMessageListener(c, v, d),
-            dataExplorereDir,
-            [path.join(dataExplorereDir, 'commons.initial.bundle.js'), path.join(dataExplorereDir, 'dataExplorer.js')],
+            dataExplorerDir,
+            [path.join(dataExplorerDir, 'commons.initial.bundle.js'), path.join(dataExplorerDir, 'dataExplorer.js')],
             localize.DataScience.dataExplorerTitle(),
             ViewColumn.One,
             useCustomEditorApi,
@@ -68,7 +68,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
             this.dataProvider = dataProvider;
 
             // Load the web panel using our current directory as we don't expect to load any other files
-            await super.loadWebPanel(process.cwd()).catch(traceError);
+            await super.loadWebview(process.cwd()).catch(traceError);
 
             super.setTitle(title);
 

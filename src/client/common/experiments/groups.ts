@@ -8,6 +8,8 @@ export enum Experiments {
     CustomEditor = 'CustomEditor',
     // Experiment to turn on custom editor or VS Code Native Notebook API support.
     NativeNotebook = 'NativeNotebookEditor',
+    // Experiment to show native notebook variable in a separate VS Code View.
+    NativeVariableView = 'NativeVariableView',
     // Experiment to show a prompt asking users to join python mailing list.
     MailingListVariant1 = 'pythonJoinMailingListVar1',
     MailingListVariant2 = 'pythonJoinMailingListVar2',
