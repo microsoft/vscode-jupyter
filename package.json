@@ -1827,26 +1827,6 @@
                 ]
             }
         ],
-        "viewsContainers": {
-            "activitybar": [
-                {
-                    "id": "jupyter",
-                    "title": "Jupyter",
-                    "icon": "resources/jupyter.svg"
-                }
-            ]
-        },
-        "views": {
-            "jupyter": [
-                {
-                    "id": "jupyter.serversView",
-                    "name": "Servers",
-                    "icon": "resources/jupyter.svg",
-                    "contextualTitle": "Local/remote Jupyter Server(s)",
-                    "when": "remoteJupyterExperimentEnabled"
-                }
-            ]
-        },
         "notebookProvider": [
             {
                 "viewType": "jupyter-notebook",
@@ -1887,6 +1867,13 @@
                     "id": "jupyterViewVariables",
                     "name": "Variables",
                     "when": "jupyter.nativevariableview"
+                },
+                {
+                    "id": "jupyter.serversView",
+                    "name": "Servers",
+                    "icon": "resources/jupyter.svg",
+                    "contextualTitle": "Local/remote Jupyter Server(s)",
+                    "when": "remoteJupyterExperimentEnabled"
                 }
             ]
         }
