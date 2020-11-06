@@ -236,11 +236,7 @@ export class KernelSelectionProvider {
         resource: Resource,
         sessionManager: IJupyterSessionManager,
         cancelToken?: CancellationToken
-    ): Promise<
-        IKernelSpecQuickPickItem<
-            LiveKernelConnectionMetadata | KernelSpecConnectionMetadata | LiveKernelConnectionMetadata
-        >[]
-    > {
+    ): Promise<IKernelSpecQuickPickItem<LiveKernelConnectionMetadata | KernelSpecConnectionMetadata>[]> {
         const getSelections = async () => {
             const installedKernelsPromise = new InstalledJupyterKernelSelectionListProvider(
                 this.kernelService,

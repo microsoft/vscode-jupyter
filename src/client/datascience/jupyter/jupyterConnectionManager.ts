@@ -39,13 +39,13 @@ export class JupyterConnectionManager {
     public async dispose() {
         traceInfo(`Disposing session manager`);
         try {
-            if (this._contentsManager) {
-                traceInfo('SessionManager - dispose contents manager');
+            if (this._contentsManager && !this._contentsManager.isDisposed) {
+                traceInfo('ConnectionManager - dispose contents manager');
                 this._contentsManager.dispose();
                 this._contentsManager = undefined;
             }
             if (this._sessionManager && !this._sessionManager.isDisposed) {
-                traceInfo('ShutdownSessionAndConnection - dispose session manager');
+                traceInfo('ConnectionManager - dispose session manager');
                 // Make sure it finishes startup.
                 await Promise.race([sleep(10_000), this._sessionManager.ready]);
 

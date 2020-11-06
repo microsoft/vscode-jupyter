@@ -7,6 +7,7 @@ import type { Kernel } from '@jupyterlab/services';
 import { EventEmitter } from 'vscode';
 import { IConfigurationService, IDisposableRegistry, IOutputChannel } from '../../common/types';
 import { RemoteJupyterConnectionsService } from '../../remote/connection/remoteConnectionsService';
+import { IRemoteJupyterConnectionsService } from '../../remote/ui/types';
 import { JUPYTER_OUTPUT_CHANNEL } from '../constants';
 import { IJupyterConnection, IJupyterSessionManager, IJupyterSessionManagerFactory } from '../types';
 import { JupyterSessionManager } from './jupyterSessionManager';
@@ -18,7 +19,7 @@ export class JupyterSessionManagerFactory implements IJupyterSessionManagerFacto
     constructor(
         @inject(IConfigurationService) private config: IConfigurationService,
         @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) private jupyterOutput: IOutputChannel,
-        @inject(RemoteJupyterConnectionsService) private readonly remoteConnections: RemoteJupyterConnectionsService,
+        @inject(IRemoteJupyterConnectionsService) private readonly remoteConnections: RemoteJupyterConnectionsService,
         @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry
     ) {}
 
