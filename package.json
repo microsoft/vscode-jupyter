@@ -2,7 +2,7 @@
     "name": "jupyter",
     "displayName": "Jupyter",
     "version": "2020.11.0-rc",
-    "description": "Language-agnostic Jupyter notebook, interactive programming and computing that supports Intellisense, code formatting, refactoring, debugging and more.",
+    "description": "Language-agnostic Jupyter notebook, interactive programming and computing that supports Intellisense, debugging and more.",
     "featureFlags": {
         "usingNewInterpreterStorage": true
     },
