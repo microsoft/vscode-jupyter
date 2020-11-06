@@ -9,6 +9,7 @@ import { IShowDataViewerFromVariablePanel } from '../../datascience/interactive-
 import { KernelConnectionMetadata } from '../../datascience/jupyter/kernels/types';
 import { INotebookModel, ISwitchKernelOptions } from '../../datascience/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
+import { DirectoryNode, FileNode, FileSystemNode, ServerNode } from '../../remote/ui/serversTreeDataProvider';
 import { CommandSource } from '../../testing/common/constants';
 import { Commands } from '../constants';
 import { Channel } from './types';
@@ -87,6 +88,13 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     ['vscode.open']: [Uri];
     ['workbench.action.files.saveAs']: [Uri];
     ['workbench.action.files.save']: [Uri];
+    ['jupyter.server.add']: [];
+    ['jupyter.server.logout']: [ServerNode];
+    ['jupyter.server.refresh']: [ServerNode];
+    ['jupyter.server.directory.new']: [FileSystemNode | DirectoryNode];
+    ['jupyter.server.file.new']: [FileSystemNode | DirectoryNode];
+    ['jupyter.server.notebook.new']: [FileSystemNode | DirectoryNode];
+    ['jupyter.server.file.delete']: [FileNode];
     [DSCommands.ExportFileAndOutputAsNotebook]: [Uri];
     [DSCommands.RunAllCells]: [Uri];
     [DSCommands.RunCell]: [Uri, number, number, number, number];

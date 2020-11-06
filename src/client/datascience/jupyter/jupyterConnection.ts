@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import * as uuid from 'uuid/v4';
 import '../../common/extensions';
 
 import { ChildProcess } from 'child_process';
@@ -223,10 +224,18 @@ export class JupyterConnectionWaiter implements IDisposable {
 
 // Represents an active connection to a running jupyter notebook
 class JupyterConnection implements IJupyterConnection {
+    public get displayName(): string {
+        return getJupyterConnectionDisplayName(this.token, this.baseUrl);
+    }
+
+    public get disconnected(): Event<number> {
+        return this.eventEmitter.event;
+    }
     public readonly localLaunch: boolean = true;
     public readonly type = 'jupyter';
     public valid: boolean = true;
     public localProcExitCode: number | undefined;
+    public readonly id: string = uuid();
     private eventEmitter: EventEmitter<number> = new EventEmitter<number>();
     constructor(
         public readonly baseUrl: string,
@@ -246,14 +255,6 @@ class JupyterConnection implements IJupyterConnection {
                 this.eventEmitter.fire(code);
             });
         }
-    }
-
-    public get displayName(): string {
-        return getJupyterConnectionDisplayName(this.token, this.baseUrl);
-    }
-
-    public get disconnected(): Event<number> {
-        return this.eventEmitter.event;
     }
 
     public dispose() {

@@ -107,6 +107,21 @@ export class KernelSelector implements IKernelSelectionUsage {
     /**
      * Selects a kernel from a remote session.
      */
+    public async getKernelSelectionsForRemoteSession(
+        resource: Resource,
+        session: IJupyterSessionManager,
+        cancelToken?: CancellationToken
+    ): Promise<IKernelSpecQuickPickItem<LiveKernelConnectionMetadata | KernelSpecConnectionMetadata>[]> {
+        const suggestions = await this.selectionProvider.getKernelSelectionsForRemoteSession(
+            resource,
+            session,
+            cancelToken
+        );
+        return suggestions.filter((item) => !this.kernelIdsToHide.has(item.selection.kernelModel?.id || ''));
+    }
+    /**
+     * Selects a kernel from a remote session.
+     */
     public async selectRemoteKernel(
         resource: Resource,
         stopWatch: StopWatch,
@@ -114,12 +129,7 @@ export class KernelSelector implements IKernelSelectionUsage {
         cancelToken?: CancellationToken,
         currentKernelDisplayName?: string
     ): Promise<LiveKernelConnectionMetadata | KernelSpecConnectionMetadata | undefined> {
-        let suggestions = await this.selectionProvider.getKernelSelectionsForRemoteSession(
-            resource,
-            session,
-            cancelToken
-        );
-        suggestions = suggestions.filter((item) => !this.kernelIdsToHide.has(item.selection.kernelModel?.id || ''));
+        const suggestions = await this.getKernelSelectionsForRemoteSession(resource, session, cancelToken);
         const selection = await this.selectKernel<LiveKernelConnectionMetadata | KernelSpecConnectionMetadata>(
             resource,
             'jupyter',
@@ -135,6 +145,17 @@ export class KernelSelector implements IKernelSelectionUsage {
     /**
      * Select a kernel from a local session.
      */
+    public async getKernelSelectionsForLocalSession(
+        resource: Resource,
+        type: 'raw' | 'jupyter' | 'noConnection',
+        session?: IJupyterSessionManager,
+        cancelToken?: CancellationToken
+    ): Promise<IKernelSpecQuickPickItem<KernelSpecConnectionMetadata | PythonKernelConnectionMetadata>[]> {
+        return this.selectionProvider.getKernelSelectionsForLocalSession(resource, type, session, cancelToken);
+    }
+    /**
+     * Select a kernel from a local session.
+     */
     public async selectLocalKernel(
         resource: Resource,
         type: 'raw' | 'jupyter' | 'noConnection',
@@ -143,12 +164,7 @@ export class KernelSelector implements IKernelSelectionUsage {
         cancelToken?: CancellationToken,
         currentKernelDisplayName?: string
     ): Promise<KernelSpecConnectionMetadata | PythonKernelConnectionMetadata | undefined> {
-        const suggestions = await this.selectionProvider.getKernelSelectionsForLocalSession(
-            resource,
-            type,
-            session,
-            cancelToken
-        );
+        const suggestions = await this.getKernelSelectionsForLocalSession(resource, type, session, cancelToken);
         const selection = await this.selectKernel<KernelSpecConnectionMetadata | PythonKernelConnectionMetadata>(
             resource,
             type,
@@ -247,7 +263,9 @@ export class KernelSelector implements IKernelSelectionUsage {
         sessionManager?: IJupyterSessionManager,
         notebookMetadata?: INotebookMetadataLive,
         cancelToken?: CancellationToken
-    ): Promise<KernelConnectionMetadata | undefined> {
+    ): Promise<
+        LiveKernelConnectionMetadata | KernelSpecConnectionMetadata | DefaultKernelConnectionMetadata | undefined
+    > {
         const [interpreter, specs, sessions] = await Promise.all([
             this.interpreterService.getActiveInterpreter(resource),
             this.kernelService.getKernelSpecs(sessionManager, cancelToken),

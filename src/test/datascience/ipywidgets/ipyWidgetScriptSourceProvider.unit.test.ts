@@ -73,6 +73,7 @@ suite('DataScience - ipywidget - Widget Script Source Provider', () => {
         suite(localLaunch ? 'Local Jupyter Server' : 'Remote Jupyter Server', () => {
             setup(() => {
                 const connection: IJupyterConnection = {
+                    id: '',
                     type: 'jupyter',
                     valid: true,
                     displayName: '',
