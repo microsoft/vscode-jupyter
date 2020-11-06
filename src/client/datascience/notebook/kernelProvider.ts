@@ -167,8 +167,7 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
         }
         const sessionManager = await this.sessionFactory.create(connection.connection, true);
 
-        // tslint:disable-next-line: prefer-const
-        let [preferredKernelInfo, kernels, activeInterpreter, defaultKernel] = await Promise.all([
+        const result = await Promise.all([
             this.kernelSelector.getPreferredKernelForRemoteConnection(
                 document.uri,
                 sessionManager,
@@ -182,6 +181,8 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
         if (token.isCancellationRequested) {
             return [];
         }
+        let [preferredKernelInfo] = result;
+        const [, kernels, activeInterpreter, defaultKernel] = result;
         if (!preferredKernelInfo && defaultKernel) {
             preferredKernelInfo = kernels.find(
                 (item) =>
