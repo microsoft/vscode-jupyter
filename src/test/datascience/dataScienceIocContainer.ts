@@ -520,6 +520,11 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
         // Adjust all experiments to be on by default
         when(experimentService.inExperiment(anything())).thenCall((exp) => {
+            // VariableViewActivationService has an issue with the mock ExtensionContext in the functional tests
+            // Turn off the experiment until we add the testing (which will probably be in .vscode tests)
+            if (exp === 'NativeVariableView') {
+                return Promise.resolve(false);
+            }
             const setState = this.experimentState.get(exp);
             if (setState === undefined) {
                 // All experiments on by default
