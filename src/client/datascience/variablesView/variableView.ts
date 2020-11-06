@@ -51,14 +51,4 @@ export class VariableView extends WebviewViewHost<IVariableViewMapping> implemen
     public get title(): string {
         return 'variableView';
     }
-
-    //tslint:disable-next-line:no-any
-    protected onMessage(message: string, payload: any) {
-        switch (message) {
-            default:
-                break;
-        }
-
-        super.onMessage(message, payload);
-    }
 }

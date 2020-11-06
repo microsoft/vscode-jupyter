@@ -44,6 +44,7 @@ import {
     IVSCodeNotebook,
     IWebviewPanelOptions,
     IWebviewPanelProvider,
+    IWebviewViewProvider,
     IWorkspaceService
 } from '../../client/common/application/types';
 import { WebviewPanelProvider } from '../../client/common/application/webviewPanels/webviewPanelProvider';
@@ -306,6 +307,7 @@ import { WebBrowserPanelProvider } from './uiTests/webBrowserPanelProvider';
 import { JupyterServerUriStorage } from '../../client/datascience/jupyter/serverUriStorage';
 import { AuthenticationService } from '../../client/common/application/authenticationService';
 import { MockEncryptedStorage } from './mockEncryptedStorage';
+import { WebviewViewProvider } from '../../client/common/application/webviewViews/webviewViewProvider';
 
 export class DataScienceIocContainer extends UnitTestIocContainer {
     public get workingInterpreter() {
@@ -453,6 +455,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
                 instance(this.webPanelProvider)
             );
         }
+        this.serviceManager.addSingleton<IWebviewViewProvider>(IWebviewViewProvider, WebviewViewProvider);
         this.serviceManager.addSingleton<IWebviewExtensibility>(IWebviewExtensibility, WebviewExtensibility);
         this.serviceManager.addSingleton<NotebookExtensibility>(
             NotebookExtensibility,
