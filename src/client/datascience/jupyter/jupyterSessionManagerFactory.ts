@@ -6,8 +6,8 @@ import { inject, injectable, named } from 'inversify';
 import type { Kernel } from '@jupyterlab/services';
 import { EventEmitter } from 'vscode';
 import { IConfigurationService, IDisposableRegistry, IOutputChannel } from '../../common/types';
-import { RemoteJupyterConnectionsService } from '../../remote/connection/remoteConnectionsService';
-import { IRemoteJupyterConnectionsService } from '../../remote/ui/types';
+import { JupyterServerConnectionService } from '../../remote/connection/remoteConnectionsService';
+import { IJupyterServerConnectionService } from '../../remote/ui/types';
 import { JUPYTER_OUTPUT_CHANNEL } from '../constants';
 import { IJupyterConnection, IJupyterSessionManager, IJupyterSessionManagerFactory } from '../types';
 import { JupyterSessionManager } from './jupyterSessionManager';
@@ -19,7 +19,7 @@ export class JupyterSessionManagerFactory implements IJupyterSessionManagerFacto
     constructor(
         @inject(IConfigurationService) private config: IConfigurationService,
         @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) private jupyterOutput: IOutputChannel,
-        @inject(IRemoteJupyterConnectionsService) private readonly remoteConnections: RemoteJupyterConnectionsService,
+        @inject(IJupyterServerConnectionService) private readonly serverConnections: JupyterServerConnectionService,
         @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry
     ) {}
 
@@ -29,7 +29,7 @@ export class JupyterSessionManagerFactory implements IJupyterSessionManagerFacto
      * @param failOnPassword - whether or not to fail the creation if a password is required.
      */
     public async create(connInfo: IJupyterConnection, failOnPassword?: boolean): Promise<IJupyterSessionManager> {
-        const serverSettings = await this.remoteConnections.getServerConnectSettings(connInfo, failOnPassword);
+        const serverSettings = await this.serverConnections.getServerConnectSettings(connInfo, failOnPassword);
 
         const result = new JupyterSessionManager(connInfo, serverSettings, this.jupyterOutput, this.config);
         this.disposableRegistry.push(

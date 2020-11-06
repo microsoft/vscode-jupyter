@@ -3,22 +3,25 @@
 
 import { ServerConnection } from '@jupyterlab/services';
 import { Agent as HttpsAgent } from 'https';
-import { inject, injectable } from 'inversify';
+import { inject, injectable, named } from 'inversify';
 import * as nodeFetch from 'node-fetch';
-import { Event, EventEmitter } from 'vscode';
+import { Event, EventEmitter, Uri } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
+import { Experiments } from '../../common/experiments/groups';
 import { traceInfo } from '../../common/logger';
 import {
     IConfigurationService,
     IDisposableRegistry,
+    IExperimentService,
+    IOutputChannel,
     IPersistentState,
     IPersistentStateFactory
 } from '../../common/types';
 import { Common, DataScience } from '../../common/utils/localize';
-import { Identifiers } from '../../datascience/constants';
-import { JupyterConnectionManager } from '../../datascience/jupyter/jupyterConnectionManager';
+import { Identifiers, JUPYTER_OUTPUT_CHANNEL } from '../../datascience/constants';
 import { createAuthorizingRequest } from '../../datascience/jupyter/jupyterRequest';
+import { JupyterSessionManager } from '../../datascience/jupyter/jupyterSessionManager';
 import { createRemoteConnectionInfo } from '../../datascience/jupyter/jupyterUtils';
 import { createJupyterWebSocket } from '../../datascience/jupyter/jupyterWebSocket';
 import { JupyterServerSelector } from '../../datascience/jupyter/serverSelector';
@@ -30,21 +33,36 @@ import {
     INotebookServerOptions,
     JupyterServerUriHandle
 } from '../../datascience/types';
+import { IJupyterServerConnectionService, JupyterServerConnection } from '../ui/types';
+import { RemoteFileSchemeManager } from './fileSchemeManager';
+
+// tslint:disable: unified-signatures
 
 // Key for our insecure connection global state
 const GlobalStateUserAllowsInsecureConnections = 'DataScienceAllowInsecureConnections';
 
-let remoteConnections: IJupyterConnection[] = [];
+type ConnectionInfo = {
+    settings: ServerConnection.ISettings;
+    connection: IJupyterConnection;
+    fileScheme: string;
+};
+
+const remoteConnections = new Map<string, ConnectionInfo>();
+
+export function getRemoteConnection(id: string): ConnectionInfo | undefined {
+    return remoteConnections.get(id);
+}
 
 @injectable()
-export class RemoteJupyterConnectionsService implements IExtensionSingleActivationService {
-    public get onDidAddServer(): Event<IJupyterConnection> {
+export class JupyterServerConnectionService
+    implements IJupyterServerConnectionService, IExtensionSingleActivationService {
+    public get onDidAddServer(): Event<JupyterServerConnection> {
         return this._onDidAddServer.event;
     }
-    public get onDidRemoveServer(): Event<IJupyterConnection | undefined> {
+    public get onDidRemoveServer(): Event<JupyterServerConnection | undefined> {
         return this._onDidRemoveServer.event;
     }
-    protected get jupyterlab(): typeof import('@jupyterlab/services') {
+    private get jupyterlab(): typeof import('@jupyterlab/services') {
         if (!this._jupyterlab) {
             // tslint:disable-next-line: no-require-imports
             this._jupyterlab = require('@jupyterlab/services');
@@ -52,23 +70,26 @@ export class RemoteJupyterConnectionsService implements IExtensionSingleActivati
         return this._jupyterlab!;
     }
     private static secureServers = new Map<string, Promise<boolean>>();
-    protected readonly userAllowsInsecureConnections: IPersistentState<boolean>;
-    protected _jupyterlab?: typeof import('@jupyterlab/services');
-    private readonly _onDidAddServer = new EventEmitter<IJupyterConnection>();
-    private readonly _onDidRemoveServer = new EventEmitter<IJupyterConnection | undefined>();
+    private readonly userAllowsInsecureConnections: IPersistentState<boolean>;
+    private _jupyterlab?: typeof import('@jupyterlab/services');
+    private readonly _onDidAddServer = new EventEmitter<JupyterServerConnection>();
+    private readonly _onDidRemoveServer = new EventEmitter<JupyterServerConnection | undefined>();
     private uriToJupyterServerUri = new Map<string, IJupyterServerUri>();
     private pendingTimeouts: (NodeJS.Timeout | number)[] = [];
-    private connectionManagers = new Map<string, JupyterConnectionManager>();
+    private _isRemoteExperimentEnabled?: boolean;
     constructor(
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IConfigurationService) private readonly configuration: IConfigurationService,
         @inject(IJupyterUriProviderRegistration)
         private readonly jupyterPickerRegistration: IJupyterUriProviderRegistration,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
-        @inject(IJupyterPasswordConnect) protected jupyterPasswordConnect: IJupyterPasswordConnect,
-        @inject(IApplicationShell) protected appShell: IApplicationShell,
+        @inject(IJupyterPasswordConnect) private jupyterPasswordConnect: IJupyterPasswordConnect,
+        @inject(IApplicationShell) private appShell: IApplicationShell,
         @inject(JupyterServerSelector) private readonly serverSelector: JupyterServerSelector,
-        @inject(IPersistentStateFactory) protected readonly stateFactory: IPersistentStateFactory
+        @inject(RemoteFileSchemeManager) private readonly fileSchemeManager: RemoteFileSchemeManager,
+        @inject(IPersistentStateFactory) private readonly stateFactory: IPersistentStateFactory,
+        @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) private readonly jupyterOutput: IOutputChannel,
+        @inject(IExperimentService) private readonly experiment: IExperimentService
     ) {
         this.userAllowsInsecureConnections = this.stateFactory.createGlobalPersistentState<boolean>(
             GlobalStateUserAllowsInsecureConnections,
@@ -77,7 +98,41 @@ export class RemoteJupyterConnectionsService implements IExtensionSingleActivati
         disposables.push(this._onDidAddServer);
         disposables.push(this._onDidRemoveServer);
     }
+    public async getRemoteConnections(): Promise<JupyterServerConnection[]> {
+        return Array.from(remoteConnections.keys()).map((id) => {
+            return {
+                id,
+                displayName: remoteConnections.get(id)!.connection.displayName,
+                fileScheme: remoteConnections.get(id)!.fileScheme
+            };
+        });
+    }
+    public get isRemoteExperimentEnabled() {
+        if (typeof this._isRemoteExperimentEnabled !== 'boolean') {
+            throw new Error('We should not be calling isRemoteExperimentEnabled in ctors or the like');
+        }
+        return this._isRemoteExperimentEnabled;
+    }
+
+    public findConnection(remoteUri: Uri): ConnectionInfo | undefined;
+    public findConnection(jupyterConnectionId: string): ConnectionInfo | undefined;
+    public findConnection(idOrRemoteUri: Uri | string): ConnectionInfo | undefined {
+        const connectionId =
+            typeof idOrRemoteUri === 'string'
+                ? idOrRemoteUri
+                : Array.from(remoteConnections.keys()).find((id) => {
+                      const item = remoteConnections.get(id)!;
+                      return item.fileScheme === idOrRemoteUri.scheme;
+                  });
+
+        return connectionId ? remoteConnections.get(connectionId) : undefined;
+    }
+    public isConnected(remoteFileUri: Uri): boolean {
+        return Array.from(remoteConnections.values()).some((item) => item.fileScheme === remoteFileUri.scheme);
+    }
     public async activate() {
+        // This slows down loading of extension.
+        this._isRemoteExperimentEnabled = await this.experiment.inExperiment(Experiments.NativeNotebook);
         // Backwards compatibility (only used for interactive window & old notebooks).
         // Native notebooks will not store information in `jupyter.jupyterServerType`.
         this.workspace.onDidChangeConfiguration(
@@ -92,37 +147,46 @@ export class RemoteJupyterConnectionsService implements IExtensionSingleActivati
         );
     }
     public dispose() {
-        remoteConnections = [];
-        this.connectionManagers.clear();
+        remoteConnections.clear();
         this.clearTimeouts();
     }
-    public async addServer(): Promise<void> {
-        const selection = await this.serverSelector.selectJupyterURI(false);
-        if (!selection?.uri) {
-            return;
+    public async addServer(baseUrl?: string): Promise<void> {
+        if (!baseUrl) {
+            const selection = await this.serverSelector.selectJupyterURI(false);
+            baseUrl = selection?.uri;
+            if (!baseUrl) {
+                return;
+            }
         }
-        const options = await this.generateNotebookServerOptions(selection.uri);
+        const options = await this.generateNotebookServerOptions(baseUrl);
         const connection = await this.getRemoteConnectionInfo(options);
-        remoteConnections.push(connection);
-        this._onDidAddServer.fire(connection);
+        const [settings, fileScheme] = await Promise.all([
+            this.getServerConnectSettings(connection),
+            this.fileSchemeManager.getFileScheme(connection)
+        ]);
+        this.trackServer(connection, settings, fileScheme);
+        this._onDidAddServer.fire({ id: connection.id, displayName: connection.displayName, fileScheme });
     }
     public async logout(id: string): Promise<void> {
-        const itemToRemove = remoteConnections.find((item) => item.id === id);
-        remoteConnections = remoteConnections.filter((item) => item !== itemToRemove);
-        this._onDidRemoveServer.fire(itemToRemove);
-    }
-    public async getConnectionService(id: string | IJupyterConnection): Promise<JupyterConnectionManager> {
-        const connectionId = typeof id === 'string' ? id : id.id;
-        if (!this.connectionManagers.has(connectionId)) {
-            const connection = remoteConnections.find((item) => item.id === connectionId);
-            if (!connection) {
-                throw new Error('Remote Server Not found');
-            }
-            const settings = await this.getServerConnectSettings(connection);
-            const manager = new JupyterConnectionManager(connection, settings);
-            this.connectionManagers.set(connectionId, manager);
+        const info = remoteConnections.get(id);
+        remoteConnections.delete(id);
+        if (info) {
+            this._onDidRemoveServer.fire({
+                id: info.connection.id,
+                displayName: info.connection.displayName,
+                fileScheme: info.fileScheme
+            });
+        } else {
+            this._onDidRemoveServer.fire(undefined);
         }
-        return this.connectionManagers.get(connectionId)!;
+    }
+    public async createConnectionManager(id: string | IJupyterConnection): Promise<JupyterSessionManager> {
+        const connectionId = typeof id === 'string' ? id : id.id;
+        if (!remoteConnections.has(connectionId)) {
+            throw new Error('Remote Server Not found');
+        }
+        const { connection, settings } = remoteConnections.get(connectionId)!;
+        return new JupyterSessionManager(connection, settings, this.jupyterOutput, this.configuration);
     }
 
     public async getRemoteConnectionInfo(options: INotebookServerOptions): Promise<IJupyterConnection> {
@@ -139,7 +203,72 @@ export class RemoteJupyterConnectionsService implements IExtensionSingleActivati
         return createRemoteConnectionInfo(options.uri, getServerUri);
     }
 
+    /**
+     * Used by interactive & webview based notebooks.
+     * If this gets called then automatically add that server to the list.
+     */
     public async getServerConnectSettings(
+        connection: IJupyterConnection,
+        failOnPassword?: boolean
+    ): Promise<ServerConnection.ISettings> {
+        const settings = await this.getServerConnectSettingsInternal(connection, failOnPassword);
+        if (this._isRemoteExperimentEnabled && !connection.localLaunch) {
+            // Automatically add this to the remote file system.
+            const fileScheme = await this.fileSchemeManager.getFileScheme(connection);
+            this.trackServer(connection, settings, fileScheme);
+        }
+        return settings;
+    }
+
+    // If connecting on HTTP without a token prompt the user that this connection may not be secure
+    private async insecureServerWarningPrompt(): Promise<boolean> {
+        const insecureMessage = DataScience.insecureSessionMessage();
+        const insecureLabels = [Common.bannerLabelYes(), Common.bannerLabelNo(), Common.doNotShowAgain()];
+        const response = await this.appShell.showWarningMessage(insecureMessage, ...insecureLabels);
+
+        switch (response) {
+            case Common.bannerLabelYes():
+                // On yes just proceed as normal
+                return true;
+
+            case Common.doNotShowAgain():
+                // For don't ask again turn on the global true
+                await this.userAllowsInsecureConnections.updateValue(true);
+                return true;
+
+            case Common.bannerLabelNo():
+            default:
+                // No or for no choice return back false to block
+                return false;
+        }
+    }
+    // Check if our server connection is considered secure. If it is not, ask the user if they want to connect
+    // If not, throw to bail out on the process
+    private async secureConnectionCheck(connInfo: IJupyterConnection): Promise<void> {
+        // If they have turned on global server trust then everything is secure
+        if (this.userAllowsInsecureConnections.value) {
+            return;
+        }
+
+        // If they are local launch, https, or have a token, then they are secure
+        if (connInfo.localLaunch || connInfo.baseUrl.startsWith('https') || connInfo.token !== 'null') {
+            return;
+        }
+
+        // At this point prompt the user, cache the promise so we don't ask multiple times for the same server
+        let serverSecurePromise = JupyterServerConnectionService.secureServers.get(connInfo.baseUrl);
+
+        if (serverSecurePromise === undefined) {
+            serverSecurePromise = this.insecureServerWarningPrompt();
+            JupyterServerConnectionService.secureServers.set(connInfo.baseUrl, serverSecurePromise);
+        }
+
+        // If our server is not secure, throw here to bail out on the process
+        if (!(await serverSecurePromise)) {
+            throw new Error(DataScience.insecureSessionDenied());
+        }
+    }
+    private async getServerConnectSettingsInternal(
         connInfo: IJupyterConnection,
         failOnPassword?: boolean
     ): Promise<ServerConnection.ISettings> {
@@ -232,54 +361,8 @@ export class RemoteJupyterConnectionsService implements IExtensionSingleActivati
         traceInfo(`Creating server with settings : ${JSON.stringify(serverSettings)}`);
         return this.jupyterlab.ServerConnection.makeSettings(serverSettings);
     }
-
-    // If connecting on HTTP without a token prompt the user that this connection may not be secure
-    protected async insecureServerWarningPrompt(): Promise<boolean> {
-        const insecureMessage = DataScience.insecureSessionMessage();
-        const insecureLabels = [Common.bannerLabelYes(), Common.bannerLabelNo(), Common.doNotShowAgain()];
-        const response = await this.appShell.showWarningMessage(insecureMessage, ...insecureLabels);
-
-        switch (response) {
-            case Common.bannerLabelYes():
-                // On yes just proceed as normal
-                return true;
-
-            case Common.doNotShowAgain():
-                // For don't ask again turn on the global true
-                await this.userAllowsInsecureConnections.updateValue(true);
-                return true;
-
-            case Common.bannerLabelNo():
-            default:
-                // No or for no choice return back false to block
-                return false;
-        }
-    }
-    // Check if our server connection is considered secure. If it is not, ask the user if they want to connect
-    // If not, throw to bail out on the process
-    protected async secureConnectionCheck(connInfo: IJupyterConnection): Promise<void> {
-        // If they have turned on global server trust then everything is secure
-        if (this.userAllowsInsecureConnections.value) {
-            return;
-        }
-
-        // If they are local launch, https, or have a token, then they are secure
-        if (connInfo.localLaunch || connInfo.baseUrl.startsWith('https') || connInfo.token !== 'null') {
-            return;
-        }
-
-        // At this point prompt the user, cache the promise so we don't ask multiple times for the same server
-        let serverSecurePromise = RemoteJupyterConnectionsService.secureServers.get(connInfo.baseUrl);
-
-        if (serverSecurePromise === undefined) {
-            serverSecurePromise = this.insecureServerWarningPrompt();
-            RemoteJupyterConnectionsService.secureServers.set(connInfo.baseUrl, serverSecurePromise);
-        }
-
-        // If our server is not secure, throw here to bail out on the process
-        if (!(await serverSecurePromise)) {
-            throw new Error(DataScience.insecureSessionDenied());
-        }
+    private trackServer(connection: IJupyterConnection, settings: ServerConnection.ISettings, fileScheme: string) {
+        remoteConnections.set(connection.id, { connection, settings, fileScheme });
     }
 
     private clearTimeouts() {
