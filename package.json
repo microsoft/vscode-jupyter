@@ -1,7 +1,7 @@
 {
     "name": "jupyter",
     "displayName": "Jupyter",
-    "description": "Language-agnostic jupyter notebook, interactive programming and computing that supports Intellisense, code formatting, refactoring, debugging and more.",
+    "description": "Language-agnostic jupyter notebook, interactive programming and computing that supports Intellisense, refactoring, debugging and more.",
     "version": "2020.12.0-dev",
     "featureFlags": {
         "usingNewInterpreterStorage": true
