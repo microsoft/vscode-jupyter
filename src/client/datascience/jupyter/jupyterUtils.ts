@@ -5,8 +5,8 @@ import '../../common/extensions';
 
 import * as fs from 'fs-extra';
 import * as path from 'path';
+import * as uuid from 'uuid/v4';
 import { Uri } from 'vscode';
-
 import { IWorkspaceService } from '../../common/application/types';
 import { Resource } from '../../common/types';
 import { noop } from '../../common/utils/misc';
@@ -60,6 +60,7 @@ export function createRemoteConnectionInfo(
     const hostName = serverUri ? new URL(serverUri.baseUrl).hostname : url.hostname;
 
     return {
+        id: uuid(),
         type: 'jupyter',
         baseUrl,
         token,

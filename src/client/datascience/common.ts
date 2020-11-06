@@ -120,6 +120,18 @@ export function translateKernelLanguageToMonaco(kernelLanguage: string): string 
             return kernelLanguage.toLowerCase();
     }
 }
+export function translateMonacoToKernelLanguage(monacoLanguage: string): string {
+    // At the moment these are the only translations.
+    // python, julia, r, javascript, powershell, etc can be left as is.
+    switch (monacoLanguage.toLowerCase()) {
+        case 'csharp':
+            return 'c#';
+        case 'fsharp':
+            return 'f#';
+        default:
+            return monacoLanguage.toLowerCase();
+    }
+}
 
 export function generateNewNotebookUri(
     counter: number,

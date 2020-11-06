@@ -23,6 +23,7 @@ export namespace Common {
     export const noIWillDoItLater = localize('Common.noIWillDoItLater', 'No, I will do it later');
     export const notNow = localize('Common.notNow', 'Not now');
     export const doNotShowAgain = localize('Common.doNotShowAgain', 'Do not show again');
+    export const yesAndDoNotShowAgain = localize('Common.yesAndDoNotShowAgain', 'Yes and do not show again');
     export const reload = localize('Common.reload', 'Reload');
     export const moreInfo = localize('Common.moreInfo', 'More Info');
     export const learnMore = localize('Common.learnMore', 'Learn more');

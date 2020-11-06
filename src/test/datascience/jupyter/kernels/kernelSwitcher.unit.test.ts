@@ -82,6 +82,7 @@ suite('DataScience - Kernel Switcher', () => {
         suite(isLocalConnection ? 'Local Connection' : 'Remote Connection', () => {
             setup(() => {
                 const jupyterConnection: IJupyterConnection = {
+                    id: '',
                     type: 'jupyter',
                     localLaunch: isLocalConnection,
                     baseUrl: '',

@@ -24,7 +24,9 @@ export class GuestJupyterSessionManager implements IJupyterSessionManager {
     public constructor(private realSessionManager: IJupyterSessionManager) {
         noop();
     }
-
+    public getDefaultKernel(): Promise<string | undefined> {
+        return this.realSessionManager.getDefaultKernel();
+    }
     public get onRestartSessionCreated() {
         return this.restartSessionCreatedEvent.event;
     }

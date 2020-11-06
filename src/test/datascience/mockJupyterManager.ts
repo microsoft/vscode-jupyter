@@ -99,6 +99,9 @@ export class MockJupyterManager implements IJupyterSessionManager {
     private cleanTemp: (() => void) | undefined;
     private pendingSessionFailure = false;
     private pendingKernelChangeFailure = false;
+    public async getDefaultKernel(): Promise<string | undefined> {
+        return;
+    }
 
     constructor(serviceManager: IServiceManager) {
         // Make our process service factory always return this item
