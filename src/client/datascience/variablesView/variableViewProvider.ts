@@ -13,7 +13,7 @@ import { VariableView } from './variableView';
 // This class creates our UI for our variable view and links it to the vs code webview view
 @injectable()
 export class VariableViewProvider implements IVariableViewProvider {
-    public readonly viewType: string = 'jupyterViewVariables';
+    public readonly viewType = 'jupyterViewVariables';
 
     private variableView?: VariableView;
 

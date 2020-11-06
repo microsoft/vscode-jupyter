@@ -1712,14 +1712,14 @@
         "viewsContainers": {
             "activitybar": [
                 {
-                    "id": "jupyterViewContainer",
+                    "id": "jupyter",
                     "title": "Jupyter",
                     "icon": "NOICON.svg"
                 }
             ]
         },
         "views": {
-            "jupyterViewContainer": [
+            "jupyter": [
                 {
                     "type": "webview",
                     "id": "jupyterViewVariables",

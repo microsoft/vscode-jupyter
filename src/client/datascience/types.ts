@@ -1386,8 +1386,9 @@ export interface IDebugLoggingManager {
     initialize(): Promise<void>;
 }
 
-export interface IWebviewViewProvider extends WebviewViewProvider {
-    readonly viewType: string;
+// Wraps the VS Code WebviewViewProvider. VSC Prefix as we also have our own IWebviewViewProvider
+export interface IVSCWebviewViewProvider extends WebviewViewProvider {
+    readonly viewType: 'jupyterViewVariables';
 }
 
 export const IJupyterServerUriStorage = Symbol('IJupyterServerUriStorage');

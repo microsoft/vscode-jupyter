@@ -1,5 +1,5 @@
 import { CssMessages, IGetCssRequest, IGetCssResponse, SharedMessages } from '../messages';
-import { IWebviewViewProvider } from '../types';
+import { IVSCWebviewViewProvider } from '../types';
 
 export namespace VariableViewMessages {
     export const Started = SharedMessages.Started;
@@ -15,4 +15,4 @@ export class IVariableViewMapping {
 }
 
 export const IVariableViewProvider = Symbol('IVariableViewProvider');
-export interface IVariableViewProvider extends IWebviewViewProvider {}
+export interface IVariableViewProvider extends IVSCWebviewViewProvider {}
