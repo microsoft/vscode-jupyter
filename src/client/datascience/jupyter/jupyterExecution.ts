@@ -16,7 +16,8 @@ import { StopWatch } from '../../common/utils/stopWatch';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
-import { RemoteJupyterConnectionsService } from '../../remote/connection/remoteConnectionsService';
+import { JupyterServerConnectionService } from '../../remote/connection/remoteConnectionsService';
+import { IJupyterServerConnectionService } from '../../remote/ui/types';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { JupyterSessionStartError } from '../baseJupyterSession';
 import { Commands, Telemetry } from '../constants';
@@ -44,7 +45,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
     private startedEmitter: EventEmitter<INotebookServerOptions> = new EventEmitter<INotebookServerOptions>();
     private disposed: boolean = false;
     private readonly jupyterInterpreterService: IJupyterSubCommandExecutionService;
-    private readonly remoteConnections: RemoteJupyterConnectionsService;
+    private readonly remoteConnections: JupyterServerConnectionService;
 
     constructor(
         _liveShare: ILiveShareApi,
@@ -61,7 +62,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
         this.jupyterInterpreterService = serviceContainer.get<IJupyterSubCommandExecutionService>(
             IJupyterSubCommandExecutionService
         );
-        this.remoteConnections = serviceContainer.get<RemoteJupyterConnectionsService>(RemoteJupyterConnectionsService);
+        this.remoteConnections = serviceContainer.get<JupyterServerConnectionService>(IJupyterServerConnectionService);
         this.disposableRegistry.push(this.interpreterService.onDidChangeInterpreter(() => this.onSettingsChanged()));
         this.disposableRegistry.push(this);
 
