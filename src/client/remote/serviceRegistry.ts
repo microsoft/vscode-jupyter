@@ -4,26 +4,25 @@
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IServiceManager } from '../ioc/types';
 import { CommandRegistry } from './commands';
-import { JupyterServerAuthService } from './connection/jupyterServerAuthService';
-import { JupyterRemoteServiceHelper } from './connection/remoteService';
-import { RemoteFileSystemFactory } from './ui/fileSystem';
+import { RemoteFileSchemeManager } from './connection/fileSchemeManager';
+import { JupyterServerConnectionService } from './connection/remoteConnectionsService';
+import { RemoteFileSystemFactory } from './ui/fileSystemFactory';
 import { JupyterServersTreeDataProvider } from './ui/serversTreeDataProvider';
 import { JupyterServersTreeView } from './ui/serversTreeView';
-import { IJupyterServerAuthServiceProvider } from './ui/types';
+import { IJupyterServerConnectionService } from './ui/types';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<JupyterServersTreeDataProvider>(
         JupyterServersTreeDataProvider,
         JupyterServersTreeDataProvider
     );
-    serviceManager.addSingleton<IJupyterServerAuthServiceProvider>(
-        IJupyterServerAuthServiceProvider,
-        JupyterServerAuthService
+    serviceManager.addSingleton<JupyterServerConnectionService>(
+        IJupyterServerConnectionService,
+        JupyterServerConnectionService
     );
-    // serviceManager.addSingleton<RemoteKernelPickerProvider>(RemoteKernelPickerProvider, RemoteKernelPickerProvider);
-    serviceManager.addSingleton<JupyterRemoteServiceHelper>(JupyterRemoteServiceHelper, JupyterRemoteServiceHelper);
-    serviceManager.addBinding(JupyterRemoteServiceHelper, IExtensionSingleActivationService);
+    serviceManager.addBinding(IJupyterServerConnectionService, IExtensionSingleActivationService);
     serviceManager.addSingleton<RemoteFileSystemFactory>(RemoteFileSystemFactory, RemoteFileSystemFactory);
+    serviceManager.addSingleton<RemoteFileSchemeManager>(RemoteFileSchemeManager, RemoteFileSchemeManager);
     serviceManager.addBinding(RemoteFileSystemFactory, IExtensionSingleActivationService);
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,

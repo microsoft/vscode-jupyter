@@ -695,6 +695,12 @@
                 "icon": "$(refresh)"
             },
             {
+                "command": "jupyter.server.kernelSessions.refresh",
+                "title": "%jupyter.command.jupyter.server.refresh.title%",
+                "category": "Jupyter",
+                "icon": "$(refresh)"
+            },
+            {
                 "command": "jupyter.server.directory.new",
                 "title": "%jupyter.command.jupyter.server.directory.new.title%",
                 "category": "Jupyter",
@@ -1294,6 +1300,11 @@
                     "command": "jupyter.server.refresh",
                     "when": "false",
                     "category": "Jupyter"
+                },
+                {
+                    "command": "jupyter.server.kernelSessions.refresh",
+                    "when": "false",
+                    "category": "Jupyter"
                 }
             ],
             "debug/variables/context": [
@@ -1319,6 +1330,11 @@
                 {
                     "command": "jupyter.server.refresh",
                     "when": "view == jupyter.serversView && viewItem == jupyterServer",
+                    "group": "inline@1"
+                },
+                {
+                    "command": "jupyter.server.kernelSessions.refresh",
+                    "when": "view == jupyter.serversView && viewItem == kernelSessions",
                     "group": "inline@1"
                 },
                 {
