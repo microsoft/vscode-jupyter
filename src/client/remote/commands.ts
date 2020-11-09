@@ -6,37 +6,37 @@ import { IExtensionSingleActivationService } from '../activation/types';
 import { IApplicationShell, ICommandManager } from '../common/application/types';
 import { IDisposableRegistry } from '../common/types';
 import { Common } from '../common/utils/localize';
-import { RemoteFileSystemFactory } from './ui/fileSystem';
-import {
-    DirectoryNode,
-    FileNode,
-    FileSystemNode,
-    JupyterServersTreeDataProvider,
-    ServerNode
-} from './ui/serversTreeDataProvider';
-import { IJupyterServerAuthServiceProvider } from './ui/types';
-import { getRemoteConnection } from './connection/jupyterServerAuthService';
+import { JupyterServerConnectionService } from './connection/remoteConnectionsService';
+import { RemoteFileSystemFactory } from './ui/fileSystemFactory';
+import { JupyterServersTreeDataProvider } from './ui/serversTreeDataProvider';
+import { DirectoryNode, FileNode, FileSystemNode, KernelSessionsNode, ServerNode } from './ui/treeNodes';
+import { IJupyterServerConnectionService } from './ui/types';
 
 @injectable()
 export class CommandRegistry implements IExtensionSingleActivationService {
     constructor(
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
-        @inject(IJupyterServerAuthServiceProvider) private readonly authService: IJupyterServerAuthServiceProvider,
+        @inject(IJupyterServerConnectionService) private readonly connectionService: JupyterServerConnectionService,
         @inject(RemoteFileSystemFactory) private readonly fsFactory: RemoteFileSystemFactory,
         @inject(JupyterServersTreeDataProvider) private readonly dataProvider: JupyterServersTreeDataProvider,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell
     ) {}
     public async activate(): Promise<void> {
         this.disposables.push(
-            this.commandManager.registerCommand('jupyter.server.add', () => this.authService.addServer())
+            this.commandManager.registerCommand('jupyter.server.add', () => this.connectionService.addServer())
         );
         this.disposables.push(
             this.commandManager.registerCommand('jupyter.server.refresh', (item) => this.refreshServer(item))
         );
         this.disposables.push(
+            this.commandManager.registerCommand('jupyter.server.kernelSessions.refresh', (item) =>
+                this.refreshKernelSessions(item)
+            )
+        );
+        this.disposables.push(
             this.commandManager.registerCommand('jupyter.server.logout', (item) =>
-                this.authService.logout(item.connectionId)
+                this.connectionService.logout(item.data.connection.id)
             )
         );
         this.disposables.push(
@@ -57,33 +57,25 @@ export class CommandRegistry implements IExtensionSingleActivationService {
         );
     }
     private async createNew(item: FileSystemNode | DirectoryNode, type: 'file' | 'directory' | 'notebook') {
-        const connection = getRemoteConnection(item.connectionId);
-        if (!connection) {
-            return;
-        }
-        const remoteFs = this.fsFactory.getOrCreateRemoteFileSystem(connection);
+        const remoteFs = await this.fsFactory.getOrCreateRemoteFileSystem(item.data.connection);
         await remoteFs.createNew(item.uri, type);
-        this.dataProvider.refreshNode(item);
+        this.dataProvider.refreshNode(item.data);
     }
     private async refreshServer(item: ServerNode) {
-        const connection = getRemoteConnection(item.connectionId);
-        if (!connection) {
-            return;
-        }
-        this.dataProvider.refreshNode(item);
+        this.dataProvider.refreshNode(item.data);
+    }
+    private async refreshKernelSessions(item: KernelSessionsNode) {
+        this.dataProvider.refreshNode(item.data);
     }
     private async delete(item: FileNode) {
         const message = `Are you sure you want to delete ${item.label!}?`;
+        const remoteFsPromise = this.fsFactory.getOrCreateRemoteFileSystem(item.data.connection);
         const yesNo = await this.appShell.showWarningMessage(message, { modal: true }, Common.bannerLabelYes());
         if (yesNo !== Common.bannerLabelYes()) {
             return;
         }
-        const connection = getRemoteConnection(item.connectionId);
-        if (!connection) {
-            return;
-        }
-        const remoteFs = this.fsFactory.getOrCreateRemoteFileSystem(connection);
+        const remoteFs = await remoteFsPromise;
         await remoteFs.delete(item.uri);
-        this.dataProvider.refreshParent(item);
+        this.dataProvider.refreshParent(item.data);
     }
 }
