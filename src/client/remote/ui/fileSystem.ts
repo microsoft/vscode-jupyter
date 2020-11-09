@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { Contents } from '@jupyterlab/services';
 import {
     Disposable,
     Event,
@@ -28,8 +29,10 @@ export class File implements FileStat {
     public name: string;
     public path: string;
     public data?: Uint8Array;
+    public readonly format: Contents.FileFormat;
     constructor(public readonly entry: Readonly<FileEntry>) {
         this.type = FileType.File;
+        this.format = entry.format;
         this.ctime = new Date(entry.created).getTime();
         this.mtime = new Date(entry.last_modified).getTime();
         this.size = entry.size;
@@ -126,7 +129,12 @@ export class RemoteFileSystem implements IFileSystemProvider {
         const file = await this._lookup(uri, false, true);
         if (file && file instanceof File) {
             let contents: string;
-            if (file.entry.type === 'notebook' && file.entry.content && typeof file.entry.content === 'object') {
+            if (
+                file.entry.type === 'notebook' &&
+                file.format === 'json' &&
+                file.entry.content &&
+                typeof file.entry.content === 'object'
+            ) {
                 contents = JSON.stringify(file.entry.content);
             } else if (typeof file.entry.content === 'string') {
                 contents = file.entry.content;
