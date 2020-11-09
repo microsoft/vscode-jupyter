@@ -135,13 +135,13 @@ suite('Theme colors', () => {
     }
 
     // One test per known theme
-    runTest('Light (Visual Studio)', false, true);
-    runTest('Light+ (default light)', false, true);
+    runTest('Visual Studio Light', false, true);
+    runTest('Default Light+', false, true);
     runTest('Quiet Light', false, true);
     runTest('Solarized Light', false, true);
     runTest('Abyss', true, true);
-    runTest('Dark (Visual Studio)', true, true);
-    runTest('Dark+ (default dark)', true, true);
+    runTest('Visual Studio Dark', true, true);
+    runTest('Default Dark+', true, true);
     runTest('Kimbie Dark', true, true);
     runTest('Monokai', true, true);
     runTest('Monokai Dimmed', true, true);
