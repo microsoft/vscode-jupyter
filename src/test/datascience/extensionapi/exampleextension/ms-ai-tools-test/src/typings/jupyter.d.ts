@@ -1,28 +1,26 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { QuickPickItem, QuickInputButton } from 'vscode';
+import { QuickPickItem } from 'vscode';
 
-// Typings for the code in the python extension
-export interface IPythonExtensionApi {
+// Typings for the code in the jupyter extension
+export interface IJupyterExtensionApi {
     /**
      * Promise indicating whether all parts of the extension have completed loading or not.
      * @type {Promise<void>}
      * @memberof IExtensionApi
      */
     ready: Promise<void>;
-    datascience: {
-        /**
-         * Launches Data Viewer component.
-         * @param {IDataViewerDataProvider} dataProvider Instance that will be used by the Data Viewer component to fetch data.
-         * @param {string} title Data Viewer title
-         */
-        showDataViewer(dataProvider: IDataViewerDataProvider, title: string): Promise<void>;
-        /**
-         * Registers a remote server provider component that's used to pick remote jupyter server URIs
-         * @param serverProvider object called back when picking jupyter server URI
-         */
-        registerRemoteServerProvider(serverProvider: IJupyterUriProvider): void;
-    };
+    /**
+     * Launches Data Viewer component.
+     * @param {IDataViewerDataProvider} dataProvider Instance that will be used by the Data Viewer component to fetch data.
+     * @param {string} title Data Viewer title
+     */
+    showDataViewer(dataProvider: IDataViewerDataProvider, title: string): Promise<void>;
+    /**
+     * Registers a remote server provider component that's used to pick remote jupyter server URIs
+     * @param serverProvider object called back when picking jupyter server URI
+     */
+    registerRemoteServerProvider(serverProvider: IJupyterUriProvider): void;
 }
 
 export interface IDataFrameInfo {
