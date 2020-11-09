@@ -2,17 +2,17 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 import { RemoteServerPickerExample } from './serverPicker';
-import { IPythonExtensionApi } from './typings/python';
+import { IJupyterExtensionApi } from './typings/jupyter';
 
 // Register our URI picker
 export async function activate(_context: vscode.ExtensionContext) {
-    const python = vscode.extensions.getExtension<IPythonExtensionApi>('ms-toolsai.jupyter');
+    const python = vscode.extensions.getExtension<IJupyterExtensionApi>('ms-toolsai.jupyter');
     if (python) {
         if (!python.isActive) {
             await python.activate();
             await python.exports.ready;
         }
-        python.exports.datascience.registerRemoteServerProvider(new RemoteServerPickerExample());
+        python.exports.registerRemoteServerProvider(new RemoteServerPickerExample());
     }
 }
 
