@@ -6,7 +6,7 @@
 // tslint:disable: no-console
 console.log('New Kernel');
 import type { nbformat } from '@jupyterlab/coreutils';
-import type { NotebookOutputEventParams } from 'src/datascience-ui/ipywidgetsRenderer-/node_modules/vscode-notebook-renderer';
+import { NotebookOutputEventParams } from 'vscode-notebook-renderer';
 // import { WidgetManagerComponent } from './container';
 // import * as React from 'react';
 // import * as ReactDOM from 'react-dom';
@@ -89,7 +89,7 @@ class WidgetManagerComponent {
     // }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-function
+// tslint:disable-next-line no-empty
 const noop = () => {};
 
 const outputDisposables = new Map<string, { dispose(): void }>();
@@ -107,7 +107,7 @@ const renderedWidgets = new Set<string>();
  * This will be exposed as a public method on window for renderer to render output.
  */
 let stackOfWidgetsRenderStatusByOutputId: { outputId: string; container: HTMLElement; success?: boolean }[] = [];
-export function renderOutput(request: NotebookOutputEventParams) {
+function renderOutput(request: NotebookOutputEventParams) {
     console.log('New Kernel2');
     try {
         stackOfWidgetsRenderStatusByOutputId.push({ outputId: request.outputId, container: request.element });
@@ -133,7 +133,7 @@ export function renderOutput(request: NotebookOutputEventParams) {
     // postToRendererExtension('Hello', 'World');
     // postToKernel('HelloKernel', 'WorldKernel');
 }
-export function disposeOutput(outputId: string) {
+function disposeOutput(outputId: string) {
     stackOfWidgetsRenderStatusByOutputId = stackOfWidgetsRenderStatusByOutputId.filter((item) => !(outputId in item));
 }
 function renderErrorInLastOutputThatHasNotRendered(message: string) {
@@ -142,7 +142,7 @@ function renderErrorInLastOutputThatHasNotRendered(message: string) {
         .find((item) => !item.success);
     if (possiblyEmptyOutputElement) {
         //
-        console.log(message);;
+        console.log(message);
     }
 }
 function renderIPyWidget(
@@ -188,7 +188,8 @@ function renderIPyWidget(
 let widgetManagerPromise: Promise<WidgetManager> | undefined;
 async function getWidgetManager(): Promise<WidgetManager> {
     if (!widgetManagerPromise) {
-        widgetManagerPromise = new Promise((resolve) => WidgetManager.instance.subscribe(resolve));
+        // tslint:disable-next-line: promise-must-complete no-any
+        widgetManagerPromise = new Promise((resolve) => WidgetManager.instance.subscribe(resolve as any));
         widgetManagerPromise
             .then((wm) => {
                 if (wm) {
@@ -235,7 +236,7 @@ function initialize() {
 function convertVSCodeOutputToExecutResultOrDisplayData(
     request: NotebookOutputEventParams
 ): nbformat.IExecuteResult | nbformat.IDisplayData {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // tslint:disable-next-line: no-any
     const metadata: Record<string, any> = {};
     // Send metadata only for the mimeType we are interested in.
     const customMetadata = request.output.metadata?.custom;
@@ -260,6 +261,13 @@ function convertVSCodeOutputToExecutResultOrDisplayData(
         output_type: request.output.metadata?.custom?.vscode?.outputType || 'execute_result'
     };
 }
+
+// Create our window exports
+// tslint:disable-next-line: no-any
+(window as any).ipywidgetsKernel = {
+    renderOutput,
+    disposeOutput
+};
 
 console.log('Loaded Kernel');
 initialize();

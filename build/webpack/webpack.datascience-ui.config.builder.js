@@ -35,11 +35,11 @@ function getEntry(bundle) {
             };
         case 'ipywidgetsKernel':
             return {
-                ipywidgetsKernel: [`./src/datascience-ui/ipywidgetsKernel/index.tsx`]
+                ipywidgetsKernel: [`./src/datascience-ui/ipywidgets/kernel/index.tsx`]
             };
         case 'ipywidgetsRenderer':
             return {
-                ipywidgetsRenderer: [`./src/datascience-ui/ipywidgetsRenderer/index.ts`]
+                ipywidgetsRenderer: [`./src/datascience-ui/ipywidgets/renderer/index.ts`]
             };
         default:
             throw new Error(`Bundle not supported ${bundle}`);
@@ -151,12 +151,7 @@ function buildConfiguration(bundle) {
         );
     }
     let outputProps = {};
-    if (bundle === 'ipywidgetsKernel') {
-        outputProps = {
-            library: 'ipywidgetsKernel',
-            libraryTarget: 'window'
-        };
-    } else if (bundle === 'ipywidgetsRenderer') {
+    if (bundle === 'ipywidgetsRenderer' || bundle === 'ipywidgetsKernel') {
         // Nothing.
     } else {
         filesToCopy.push({

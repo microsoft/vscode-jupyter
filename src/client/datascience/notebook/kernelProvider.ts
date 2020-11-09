@@ -10,16 +10,13 @@ import {
     NotebookCell,
     NotebookCommunication,
     NotebookDocument,
-    NotebookKernel as VSCNotebookKernel,
-    NotebookKernelProvider
+    NotebookKernel as VSCNotebookKernel
 } from '../../../../types/vscode-proposed';
 import { IVSCodeNotebook } from '../../common/application/types';
 import { traceInfo } from '../../common/logger';
-import { IDisposableRegistry } from '../../common/types';
+import { IDisposableRegistry, IExtensionContext } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { IInterpreterService } from '../../interpreter/contracts';
-import { captureTelemetry } from '../../telemetry';
-import { Telemetry } from '../constants';
 import { areKernelConnectionsEqual } from '../jupyter/kernels/helpers';
 import { KernelSelectionProvider } from '../jupyter/kernels/kernelSelections';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
@@ -33,6 +30,7 @@ import {
     updateKernelInfoInNotebookMetadata,
     updateKernelInNotebookMetadata
 } from './helpers/helpers';
+import { INotebookKernelProvider } from './types';
 
 export class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
     get preloads(): Uri[] {
@@ -53,7 +51,8 @@ export class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
         public readonly selection: Readonly<KernelConnectionMetadata>,
         public readonly isPreferred: boolean,
         private readonly kernelProvider: IKernelProvider,
-        private readonly notebook: IVSCodeNotebook
+        private readonly notebook: IVSCodeNotebook,
+        private readonly context: IExtensionContext
     ) {}
     public executeCell(doc: NotebookDocument, cell: NotebookCell) {
         traceInfo('Execute Cell in KernelProvider.ts');
@@ -92,13 +91,17 @@ export class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
 }
 
 @injectable()
-export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
+export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
     public get onDidChangeKernels(): Event<NotebookDocument | undefined> {
         return this._onDidChangeKernels.event;
     }
     private readonly _onDidChangeKernels = new EventEmitter<NotebookDocument | undefined>();
+    private readonly _onDidResolveKernel = new EventEmitter<{
+        kernel: VSCNotebookKernel;
+        document: NotebookDocument;
+        webview: NotebookCommunication;
+    }>();
     private notebookKernelChangeHandled = new WeakSet<INotebook>();
-    private readonly documentDispatchers = new WeakMap<NotebookDocument, IPyWidgetMessageDispatcher>();
     constructor(
         @inject(KernelSelectionProvider) private readonly kernelSelectionProvider: KernelSelectionProvider,
         @inject(KernelSelector) private readonly kernelSelector: KernelSelector,
@@ -109,8 +112,7 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
         @inject(KernelSwitcher) private readonly kernelSwitcher: KernelSwitcher,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
-        @inject(IExtensionContext) private readonly context: IExtensionContext,
-        @inject(IPyWidgetScriptSource) private readonly scriptSource: IPyWidgetScriptSource
+        @inject(IExtensionContext) private readonly context: IExtensionContext
     ) {
         this.kernelSelectionProvider.onDidChangeSelections(
             (e) => {
@@ -127,45 +129,18 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
         );
         this.notebook.onDidChangeActiveNotebookKernel(this.onDidChangeActiveNotebookKernel, this, disposables);
     }
+
+    public get onResolvedKernel() {
+        return this._onDidResolveKernel.event;
+    }
+
     public async resolveKernel?(
-        _kernel: VSCodeNotebookKernelMetadata,
+        kernel: VSCodeNotebookKernelMetadata,
         document: NotebookDocument,
         webview: NotebookCommunication,
         _token: CancellationToken
     ): Promise<void> {
-        if (this.documentDispatchers.has(document)) {
-            return;
-        }
-        const dispatcher = new IPyWidgetMessageDispatcher(this.notebookProvider, document.uri);
-        dispatcher.postMessage((e) => {
-            webview.postMessage(e);
-        });
-        this.scriptSource.onMessage(InteractiveWindowMessages.NotebookIdentity, { resource: document.uri });
-        this.scriptSource.postMessage((e) => {
-            webview.postMessage(e);
-        });
-        this.scriptSource.postInternalMessage((e) => {
-            if (e.message === InteractiveWindowMessages.ConvertUriForUseInWebViewRequest) {
-                this.scriptSource.onMessage(InteractiveWindowMessages.ConvertUriForUseInWebViewResponse, {
-                    request: e.payload,
-                    response: webview.asWebviewUri(e.payload)
-                });
-            }
-        });
-        webview.onDidReceiveMessage((e) => {
-            // tslint:disable-next-line: no-console
-            // console.log(`Received ${e.type || e.message || e}`);
-            dispatcher.receiveMessage({ message: e.type, payload: e.payload });
-            if (e.type) {
-                this.scriptSource.onMessage(e.type, e.payload);
-            }
-            if (e === 'Loaded') {
-                webview.postMessage({ type: '__IPYWIDGET_BACKEND_READY' });
-            }
-        });
-        this.documentDispatchers.set(document, dispatcher);
-        // webview.postMessage({ type: '__IPYWIDGET_BACKEND_READY' });
-        // existingKernel?.kernelSocket
+        this._onDidResolveKernel.fire({ kernel, document, webview });
     }
 
     public async provideKernels(
@@ -199,7 +174,8 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
                     kernel.selection,
                     areKernelConnectionsEqual(kernel.selection, preferredKernel),
                     this.kernelProvider,
-                    this.notebook
+                    this.notebook,
+                    this.context
                 );
             })
             .filter((item) => {
@@ -234,7 +210,8 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
                         kernel.selection,
                         true,
                         this.kernelProvider,
-                        this.notebook
+                        this.notebook,
+                        this.context
                     )
                 );
             }
@@ -265,6 +242,7 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
                 preferredKernel,
                 true,
                 this.kernelProvider,
+                this.notebook,
                 this.context
             );
         } else if (preferredKernel.kind === 'connectToLiveKernel') {
@@ -275,6 +253,7 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
                 preferredKernel,
                 true,
                 this.kernelProvider,
+                this.notebook,
                 this.context
             );
         } else {
@@ -285,6 +264,7 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
                 preferredKernel,
                 true,
                 this.kernelProvider,
+                this.notebook,
                 this.context
             );
         }
@@ -335,8 +315,6 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
         if (existingKernel && areKernelConnectionsEqual(existingKernel.metadata, selectedKernelConnectionMetadata)) {
             return;
         }
-        // Delete the old dispatcher.
-        this.documentDispatchers.delete(document);
         // Make this the new kernel (calling this method will associate the new kernel with this Uri).
         // Calling `getOrCreate` will ensure a kernel is created and it is mapped to the Uri provided.
         // This way other parts of extension have access to this kernel immediately after event is handled.

@@ -147,7 +147,6 @@ import { NativeEditorRunByLineListener } from '../../client/datascience/interact
 import { NativeEditorSynchronizer } from '../../client/datascience/interactive-ipynb/nativeEditorSynchronizer';
 import { TrustService } from '../../client/datascience/interactive-ipynb/trustService';
 import { InteractiveWindowCommandListener } from '../../client/datascience/interactive-window/interactiveWindowCommandListener';
-import { IPyWidgetHandler } from '../../client/datascience/ipywidgets/ipywidgetHandler';
 import { IPyWidgetMessageDispatcherFactory } from '../../client/datascience/ipywidgets/ipyWidgetMessageDispatcherFactory';
 import { IPyWidgetScriptSource } from '../../client/datascience/ipywidgets/ipyWidgetScriptSource';
 import { JupyterCommandLineSelector } from '../../client/datascience/jupyter/commandLineSelector';
@@ -303,6 +302,7 @@ import { WebBrowserPanelProvider } from './uiTests/webBrowserPanelProvider';
 import { JupyterServerUriStorage } from '../../client/datascience/jupyter/serverUriStorage';
 import { AuthenticationService } from '../../client/common/application/authenticationService';
 import { MockEncryptedStorage } from './mockEncryptedStorage';
+import { WebviewIPyWidgetCoordinator } from '../../client/datascience/ipywidgets/webviewIPyWidgetCoordinator';
 
 export class DataScienceIocContainer extends UnitTestIocContainer {
     public get workingInterpreter() {
@@ -635,7 +635,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             IPyWidgetMessageDispatcherFactory
         );
         if (this.uiTest) {
-            this.serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, IPyWidgetHandler);
+            this.serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, WebviewIPyWidgetCoordinator);
         }
         this.serviceManager.add<IProtocolParser>(IProtocolParser, ProtocolParser);
         this.serviceManager.addSingleton<IJupyterDebugService>(
