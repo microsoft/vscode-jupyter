@@ -1386,7 +1386,7 @@ export class JupyterNotebookBase implements INotebook {
         // http://localhost:<port number>.
         if (data.hasOwnProperty('text/html')) {
             const text = data['text/html'];
-            if (typeof text === 'string' && text.includes('tensorboard')) {
+            if (typeof text === 'string' && text.includes('<iframe id="tensorboard-frame-')) {
                 data['text/html'] = text.replace(/new URL\((.*), window.location\)/, 'new URL("http://localhost")');
             }
         }
