@@ -5,6 +5,7 @@ import { Disposable } from 'vscode';
 import { NotebookCommunication, NotebookDocument, NotebookKernel } from '../../../../types/vscode-proposed';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IServiceContainer } from '../../ioc/types';
+import { InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
 import { INotebookKernelProvider } from '../notebook/types';
 import { CommonMessageCoordinator } from './commonMessageCoordinator';
 
@@ -47,7 +48,19 @@ export class NotebookIPyWidgetCoordinator implements IExtensionSingleActivationS
     private attachCoordinator(webview: NotebookCommunication, c: CommonMessageCoordinator) {
         if (!this.attachedWebViews.has(webview.editorId)) {
             this.attachedWebViews.add(webview.editorId);
-            this.disposables.push(c.postMessage(webview.postMessage.bind(webview)));
+            this.disposables.push(
+                c.postMessage((e) => {
+                    // Special case for webview URI translation
+                    if (e.message === InteractiveWindowMessages.ConvertUriForUseInWebViewRequest) {
+                        c.onMessage(InteractiveWindowMessages.ConvertUriForUseInWebViewResponse, {
+                            request: e.payload,
+                            response: webview.asWebviewUri(e.payload)
+                        });
+                    } else {
+                        webview.postMessage(e);
+                    }
+                })
+            );
             this.disposables.push(
                 webview.onDidReceiveMessage((m) => {
                     c.onMessage(m.type, m.payload);

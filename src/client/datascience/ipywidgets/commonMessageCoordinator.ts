@@ -191,12 +191,13 @@ export class CommonMessageCoordinator {
         const dispatcher = this.getIPyWidgetMessageDispatcher();
         const promises = [];
         if (dispatcher) {
-            this.disposables.push(dispatcher.postMessage((msg) => this.postEmitter.fire(msg)));
+            this.disposables.push(dispatcher.postMessage(this.postEmitter.fire.bind(this.postEmitter)));
             promises.push(dispatcher.initialize());
         }
         const scriptSource = this.getIPyWidgetScriptSource();
         if (scriptSource) {
-            this.disposables.push(scriptSource.postMessage((msg) => this.postEmitter.fire(msg)));
+            this.disposables.push(scriptSource.postMessage(this.postEmitter.fire.bind(this.postEmitter)));
+            this.disposables.push(scriptSource.postInternalMessage(this.postEmitter.fire.bind(this.postEmitter)));
             promises.push(scriptSource.initialize());
         }
         return Promise.all(promises);
