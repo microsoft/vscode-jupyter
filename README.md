@@ -26,7 +26,7 @@ A [Visual Studio Code Insiders](https://code.visualstudio.com/insiders/) [extens
 
      <img src=https://raw.githubusercontent.com/microsoft/vscode-jupyter/main/images/Jupyter%20README/KernelPicker.gif?>
 
-- Change the cell language by clicking the language picker or by envoking the `"Notebook: Change Cell Language"`.
+- Change the cell language by clicking the language picker or by invoking the `"Notebook: Change Cell Language"` command.
 
      <img src=https://raw.githubusercontent.com/microsoft/vscode-jupyter/main/images/Jupyter%20README/LanguagePicker.gif?>
 
