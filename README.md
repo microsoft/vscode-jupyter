@@ -11,7 +11,7 @@ A [Visual Studio Code Insiders](https://code.visualstudio.com/insiders/) [extens
 -   **Step 2.** Install the [Jupyter Extension](https://code.visualstudio.com/docs/python/python-tutorial#_prerequisites) in VS Code Insiders - CHANGE ME
 
 -   **Step 2.1** If you are interested in using Python, we recommend you install the [Python Extension](https://marketplace.visualstudio.com/items?itemName=ms-python.python) instead.
--   **Step 3.** Make sure you have a kernel specification that corresponds to the language you would like to use installed on Jupyter on your machine.
+-   **Step 3.** If not working with Python, make sure you have a kernel specification that corresponds to the language you would like to use installed on Jupyter on your machine.
 -   **Step 4.** Open or create a notebook file and start coding!
 
 ## Set up your environment
