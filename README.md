@@ -18,7 +18,7 @@ A [Visual Studio Code Insiders](https://code.visualstudio.com/insiders/) [extens
 
 <!-- use less words -->
 
-- To create a new notebook open the command palette (Windows: Ctrl + Shift P, iOS: Command + Shift + P) and select the command `"Jupyter: Create a new blank Jupyter Notebook"`
+- To create a new notebook open the command palette (Windows: Ctrl + Shift + P, iOS: Command + Shift + P) and select the command `"Jupyter: Create New Blank Jupyter Notebook"`
 
      <img src=https://raw.githubusercontent.com/microsoft/vscode-jupyter/main/images/Jupyter%20README/CreateNewNotebook.png>
 
