@@ -6,31 +6,26 @@
 // tslint:disable: no-console
 console.log('New Kernel');
 import type { nbformat } from '@jupyterlab/coreutils';
-import { NotebookOutputEventParams } from 'vscode-notebook-renderer';
-// import { WidgetManagerComponent } from './container';
-// import * as React from 'react';
-// import * as ReactDOM from 'react-dom';
-
-// Copyright (c) Microsoft Corporation. All rights reserved.
-// Licensed under the MIT License.
-
-import * as isonline from 'is-online';
+import { NotebookOutputEventParams, NotebookRendererApi } from 'vscode-notebook-renderer';
 import { SharedMessages } from '../../../client/datascience/messages';
 import { PostOffice } from '../../react-common/postOffice';
 import { WidgetManager } from '../common/manager';
 import { ScriptManager } from '../common/scriptManager';
+const JupyterIPyWidgetNotebookRenderer = 'jupyter-ipywidget-renderer';
 // import '../../client/common/extensions';
-// import { warnAboutWidgetVersionsThatAreNotSupported } from './incompatibleWidgetHandler';
-console.log('New Kernel2');
+import {
+    IInteractiveWindowMapping,
+    InteractiveWindowMessages
+} from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 class WidgetManagerComponent {
     private readonly widgetManager: WidgetManager;
     private readonly scriptManager: ScriptManager;
     private widgetsCanLoadFromCDN: boolean = false;
-    constructor(postOffice: PostOffice) {
+    constructor(private postOffice: PostOffice) {
         this.scriptManager = new ScriptManager(postOffice);
         this.scriptManager.onWidgetLoadError(this.handleLoadError.bind(this));
-        // this.scriptManager.onWidgetLoadSuccess(this.handleLoadSuccess.bind(this));
-        // this.scriptManager.onWidgetVersionNotSupported(this.handleUnsupportedWidgetVersion.bind(this));
+        this.scriptManager.onWidgetLoadSuccess(this.handleLoadSuccess.bind(this));
+        this.scriptManager.onWidgetVersionNotSupported(this.handleUnsupportedWidgetVersion.bind(this));
         // tslint:disable-next-line: no-any
         this.widgetManager = new WidgetManager(undefined as any, postOffice, this.scriptManager.getScriptLoader());
 
@@ -57,36 +52,37 @@ class WidgetManagerComponent {
         // tslint:disable-next-line: no-any
         error: any;
         timedout?: boolean;
+        isOnline: boolean;
     }) {
-        const isOnline = await isonline.default({ timeout: 1000 });
-        // this.props.postOffice.onWidgetLoadFailure({
-        //     className,
-        //     moduleName,
-        //     moduleVersion,
-        //     isOnline,
-        //     timedout,
-        //     error,
-        //     cdnsUsed: this.widgetsCanLoadFromCDN
-        // });
-        // tslint:disable-next-line: no-console
-        console.error(isOnline);
-        // tslint:disable-next-line: no-console
-        console.error(data);
-        // tslint:disable-next-line: no-console
-        console.error(this.widgetsCanLoadFromCDN);
-        renderErrorInLastOutputThatHasNotRendered('Error');
+        this.postOffice.sendMessage<IInteractiveWindowMapping>(InteractiveWindowMessages.IPyWidgetLoadFailure, {
+            className: data.className,
+            moduleName: data.moduleName,
+            moduleVersion: data.moduleVersion,
+            cdnsUsed: this.widgetsCanLoadFromCDN,
+            isOnline: data.isOnline,
+            timedout: data.timedout,
+            error: data.error
+        });
+        renderErrorInLastOutputThatHasNotRendered(data.error);
     }
 
-    // private handleLoadSuccess(className: string, moduleName: string, moduleVersion: string) {
-    //     if (!this.props.postOffice.onWidgetLoadSuccess) {
-    //         return;
-    //     }
-    //     this.props.postOffice.onWidgetLoadSuccess({
-    //         className,
-    //         moduleName,
-    //         moduleVersion
-    //     });
-    // }
+    private handleUnsupportedWidgetVersion(data: { moduleName: 'qgrid'; moduleVersion: string }) {
+        this.postOffice.sendMessage<IInteractiveWindowMapping>(
+            InteractiveWindowMessages.IPyWidgetWidgetVersionNotSupported,
+            {
+                moduleName: data.moduleName,
+                moduleVersion: data.moduleVersion
+            }
+        );
+    }
+
+    private handleLoadSuccess(data: { className: string; moduleName: string; moduleVersion: string }) {
+        this.postOffice.sendMessage<IInteractiveWindowMapping>(InteractiveWindowMessages.IPyWidgetLoadSuccess, {
+            className: data.className,
+            moduleName: data.moduleName,
+            moduleVersion: data.moduleVersion
+        });
+    }
 }
 
 // tslint:disable-next-line no-empty
@@ -108,7 +104,7 @@ const renderedWidgets = new Set<string>();
  */
 let stackOfWidgetsRenderStatusByOutputId: { outputId: string; container: HTMLElement; success?: boolean }[] = [];
 export function renderOutput(request: NotebookOutputEventParams) {
-    console.log('New Kernel2');
+    console.log('New Kernel2.5');
     try {
         stackOfWidgetsRenderStatusByOutputId.push({ outputId: request.outputId, container: request.element });
         // console.error('request', request);
@@ -133,8 +129,12 @@ export function renderOutput(request: NotebookOutputEventParams) {
     // postToRendererExtension('Hello', 'World');
     // postToKernel('HelloKernel', 'WorldKernel');
 }
-export function disposeOutput(outputId: string) {
-    stackOfWidgetsRenderStatusByOutputId = stackOfWidgetsRenderStatusByOutputId.filter((item) => !(outputId in item));
+export function disposeOutput(e: { outputId: string } | undefined) {
+    if (e) {
+        stackOfWidgetsRenderStatusByOutputId = stackOfWidgetsRenderStatusByOutputId.filter(
+            (item) => !(e.outputId in item)
+        );
+    }
 }
 function renderErrorInLastOutputThatHasNotRendered(message: string) {
     const possiblyEmptyOutputElement = [...stackOfWidgetsRenderStatusByOutputId]
@@ -218,15 +218,22 @@ async function createWidgetView(
     }
 }
 
-function initialize() {
+// tslint:disable-next-line: no-any
+function initialize(api: NotebookRendererApi<any>) {
     try {
+        // Setup the widget manager
         console.log('New Kernel7');
         const postOffice = new PostOffice();
-        // tslint:disable-next-line: no-any
-        postOffice.sendMessage<any>('Loaded' as any);
         const mgr = new WidgetManagerComponent(postOffice);
         // tslint:disable-next-line: no-any
         (window as any)._mgr = mgr;
+
+        // Attach to the renderer if possible
+        if (api) {
+            console.log('New Kernel8');
+            api.onDidCreateOutput(renderOutput);
+            api.onWillDestroyOutput(disposeOutput);
+        }
     } catch (ex) {
         // tslint:disable-next-line: no-console
         console.error('Ooops', ex);
@@ -269,6 +276,14 @@ function convertVSCodeOutputToExecutResultOrDisplayData(
     disposeOutput
 };
 
-console.log('Loaded Kernel');
-initialize();
-console.log('Loaded Kernel2');
+// tslint:disable-next-line: no-suspicious-comment
+// This is to workaround bug: https://github.com/microsoft/vscode/issues/110338
+function attemptInitialize() {
+    // tslint:disable-next-line: no-any
+    if ((window as any).vscIPyWidgets) {
+        initialize(acquireNotebookRendererApi(JupyterIPyWidgetNotebookRenderer));
+    } else {
+        setTimeout(attemptInitialize, 100);
+    }
+}
+attemptInitialize();
