@@ -12,10 +12,6 @@ import { Settings, Telemetry } from '../constants';
 import { IJupyterServerUriStorage } from '../types';
 import { JupyterServerPicker } from './serverPicker';
 
-type SelectedServer = {
-    providerId?: string;
-    uri?: string;
-};
 @injectable()
 export class JupyterServerSelector {
     constructor(
