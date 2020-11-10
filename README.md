@@ -1,6 +1,6 @@
 # Jupyter Extension for Visual Studio Code Insiders
 
-A [Visual Studio Code Insiders](https://code.visualstudio.com/insiders/) [extension](https://marketplace.visualstudio.com/VSCode) with support for [Jupyter Notebooks](https://www.python.org/) (working towards supporting all [actively supported kernels](https://github.com/jupyter/jupyter/wiki/Jupyter-kernels)), including features such as IntelliSense, debugging, and more!
+A [Visual Studio Code Insiders](https://code.visualstudio.com/insiders/) [extension](https://marketplace.visualstudio.com/VSCode) with support for [Jupyter Notebooks](https://www.jupyter.org/) (working towards supporting all [actively supported kernels](https://github.com/jupyter/jupyter/wiki/Jupyter-kernels)), including features such as IntelliSense, debugging, and more!
 
 \*If working in VS Code Stable, please see the [Python Extension ReadMe](https://github.com/microsoft/vscode-python/blob/main/README.md) or the [Python Documentation](https://code.visualstudio.com/docs/python/jupyter-support).
 
