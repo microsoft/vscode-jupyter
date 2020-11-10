@@ -631,10 +631,6 @@ export namespace DataScience {
         'DataScience.runCurrentCellAndAddBelow',
         'Run current and add cell below'
     );
-    export const variableExplorerDisabledDuringDebugging = localize(
-        'DataScience.variableExplorerDisabledDuringDebugging',
-        "Please see the Debug Side Bar's VARIABLES section."
-    );
     export const jupyterDebuggerNotInstalledError = localize(
         'DataScience.jupyterDebuggerNotInstalledError',
         'Pip module {0} is required for debugging cells. You will need to install it to debug cells.'

@@ -27,13 +27,7 @@ import {
 import { ContextKey } from '../../common/contextKey';
 import { traceError, traceInfo } from '../../common/logger';
 
-import {
-    IAsyncDisposableRegistry,
-    IConfigurationService,
-    IDisposableRegistry,
-    IExperimentService,
-    Resource
-} from '../../common/types';
+import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, Resource } from '../../common/types';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { EXTENSION_ROOT_DIR } from '../../constants';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
@@ -179,7 +173,6 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         notebookProvider: INotebookProvider,
         useCustomEditorApi: boolean,
         private trustService: ITrustService,
-        expService: IExperimentService,
         private _model: NativeEditorNotebookModel,
         webviewPanel: WebviewPanel | undefined,
         selector: KernelSelector,
@@ -220,7 +213,6 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             ViewColumn.Active,
             notebookProvider,
             useCustomEditorApi,
-            expService,
             selector,
             serverStorage
         );

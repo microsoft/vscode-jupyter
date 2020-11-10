@@ -2,8 +2,6 @@
 // Licensed under the MIT License.
 
 export enum Experiments {
-    // Experiment for supporting run by line in data science notebooks
-    RunByLine = 'RunByLine',
     // Experiment to turn on custom editor or VS Code Native Notebook API support.
     CustomEditor = 'CustomEditor',
     // Experiment to turn on custom editor or VS Code Native Notebook API support.

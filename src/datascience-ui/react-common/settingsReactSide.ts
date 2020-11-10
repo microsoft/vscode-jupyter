@@ -71,9 +71,6 @@ export function getDefaultSettings(): IJupyterExtraSettings {
             wordBasedSuggestions: true,
             parameterHintsEnabled: true
         },
-        variableOptions: {
-            enableDuringDebugger: false
-        },
         runStartupCommands: '',
         debugJustMyCode: true,
         variableQueries: [],

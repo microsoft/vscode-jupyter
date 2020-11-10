@@ -21,7 +21,6 @@ import { IFileSystem } from '../../common/platform/types';
 import {
     IConfigurationService,
     IDisposableRegistry,
-    IExperimentService,
     InteractiveWindowMode,
     IPersistentStateFactory,
     Resource
@@ -128,7 +127,6 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         workspaceStorage: Memento,
         notebookProvider: INotebookProvider,
         useCustomEditorApi: boolean,
-        expService: IExperimentService,
         private exportUtil: ExportUtil,
         owner: Resource,
         mode: InteractiveWindowMode,
@@ -171,7 +169,6 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             ViewColumn.Two,
             notebookProvider,
             useCustomEditorApi,
-            expService,
             selector,
             serverStorage
         );

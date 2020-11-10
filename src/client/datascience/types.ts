@@ -839,9 +839,6 @@ export interface IJupyterExtraSettings extends IJupyterSettings {
         wordBasedSuggestions: boolean;
         parameterHintsEnabled: boolean;
     };
-    variableOptions: {
-        enableDuringDebugger: boolean;
-    };
 }
 
 // Get variables from the currently running active Jupyter server
