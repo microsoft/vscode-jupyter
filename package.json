@@ -1257,7 +1257,6 @@
                         "enum": [
                             "NativeNotebookEditor",
                             "CustomEditor",
-                            "RunByLine",
                             "All"
                         ]
                     },
@@ -1271,7 +1270,6 @@
                         "enum": [
                             "NativeNotebookEditor",
                             "CustomEditor",
-                            "RunByLine",
                             "All"
                         ]
                     },
