@@ -25,6 +25,7 @@ import { WorkspaceService } from '../../../client/common/application/workspace';
 import { CryptoUtils } from '../../../client/common/crypto';
 import { ApplicationEnvironment } from '../../../client/common/application/applicationEnvironment';
 import { MockEncryptedStorage } from '../mockEncryptedStorage';
+import { JupyterServerPicker } from '../../../client/datascience/jupyter/serverPicker';
 
 // tslint:disable: max-func-body-length no-any
 suite('DataScience - Jupyter Server URI Selector', () => {
@@ -70,13 +71,13 @@ suite('DataScience - Jupyter Server URI Selector', () => {
             instance(applicationEnv),
             new MockMemento()
         );
-        const selector = new JupyterServerSelector(
+        const jupyterServerPicker = new JupyterServerPicker(
             instance(clipboard),
             multiStepFactory,
-            instance(cmdManager),
             instance(picker),
             storage
         );
+        const selector = new JupyterServerSelector(instance(cmdManager), storage, jupyterServerPicker);
         return { selector, storage };
     }
 
