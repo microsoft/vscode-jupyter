@@ -99,7 +99,6 @@ import { KernelService } from './jupyter/kernels/kernelService';
 import { KernelSwitcher } from './jupyter/kernels/kernelSwitcher';
 import { KernelVariables } from './jupyter/kernelVariables';
 import { NotebookStarter } from './jupyter/notebookStarter';
-import { OldJupyterVariables } from './jupyter/oldJupyterVariables';
 import { ServerPreload } from './jupyter/serverPreload';
 import { JupyterServerSelector } from './jupyter/serverSelector';
 import { JupyterServerUriStorage } from './jupyter/serverUriStorage';
@@ -270,7 +269,6 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     serviceManager.addSingleton<IJupyterSessionManagerFactory>(IJupyterSessionManagerFactory, JupyterSessionManagerFactory);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, DebuggerVariableRegistration);
     serviceManager.addSingleton<IJupyterVariables>(IJupyterVariables, JupyterVariables, Identifiers.ALL_VARIABLES);
-    serviceManager.addSingleton<IJupyterVariables>(IJupyterVariables, OldJupyterVariables, Identifiers.OLD_VARIABLES);
     serviceManager.addSingleton<IJupyterVariables>(IJupyterVariables, KernelVariables, Identifiers.KERNEL_VARIABLES);
     serviceManager.addSingleton<IJupyterVariables>(IJupyterVariables, DebuggerVariables, Identifiers.DEBUGGER_VARIABLES);
     serviceManager.addSingleton<IPlotViewerProvider>(IPlotViewerProvider, PlotViewerProvider);

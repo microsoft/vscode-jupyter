@@ -49,19 +49,9 @@ export abstract class WebviewPanelHost<IMapping> extends WebviewHost<IMapping> i
         @unmanaged() scripts: string[],
         @unmanaged() private _title: string,
         @unmanaged() private viewColumn: ViewColumn,
-        @unmanaged() protected readonly useCustomEditorApi: boolean,
-        @unmanaged() enableVariablesDuringDebugging: Promise<boolean>
+        @unmanaged() protected readonly useCustomEditorApi: boolean
     ) {
-        super(
-            configService,
-            cssGenerator,
-            themeFinder,
-            workspaceService,
-            rootPath,
-            scripts,
-            useCustomEditorApi,
-            enableVariablesDuringDebugging
-        );
+        super(configService, cssGenerator, themeFinder, workspaceService, rootPath, scripts, useCustomEditorApi);
 
         // Create our message listener for our web panel.
         this.messageListener = messageListenerCtor(

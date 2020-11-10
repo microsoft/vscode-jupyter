@@ -37,16 +37,7 @@ export abstract class WebviewViewHost<IMapping> extends WebviewHost<IMapping> im
         @unmanaged() rootPath: string,
         @unmanaged() scripts: string[]
     ) {
-        super(
-            configService,
-            cssGenerator,
-            themeFinder,
-            workspaceService,
-            rootPath,
-            scripts,
-            true,
-            Promise.resolve(true)
-        );
+        super(configService, cssGenerator, themeFinder, workspaceService, rootPath, scripts, true);
 
         // Create our message listener for our web panel.
         this.messageListener = messageListenerCtor(this.onMessage.bind(this), this.dispose.bind(this));

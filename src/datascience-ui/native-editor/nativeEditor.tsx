@@ -187,11 +187,7 @@ ${buildSettingsCss(this.props.settings)}`}</style>
             fontSize: this.props.font.size,
             executionCount: this.props.currentExecutionCount,
             refreshCount: this.props.variableState.refreshCount,
-            offsetHeight: toolbarHeight,
-            supportsDebugging:
-                this.props.settings && this.props.settings.variableOptions
-                    ? this.props.settings.variableOptions.enableDuringDebugger
-                    : false
+            offsetHeight: toolbarHeight
         };
     };
 
@@ -368,7 +364,6 @@ ${buildSettingsCss(this.props.settings)}`}</style>
                         useCustomEditorApi={this.props.settings?.extraSettings.useCustomEditorApi}
                         runningByLine={cellVM.runningByLine}
                         supportsRunByLine={
-                            this.props.settings?.variableOptions?.enableDuringDebugger &&
                             this.props.settings?.extraSettings.hasPythonExtension
                                 ? otherCellRunningByLine === undefined
                                 : false

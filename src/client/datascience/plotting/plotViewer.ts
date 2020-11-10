@@ -48,8 +48,7 @@ export class PlotViewer extends WebviewPanelHost<IPlotViewerMapping> implements 
             [path.join(plotDir, 'commons.initial.bundle.js'), path.join(plotDir, 'plotViewer.js')],
             localize.DataScience.plotViewerTitle(),
             ViewColumn.One,
-            useCustomEditorApi,
-            Promise.resolve(false)
+            useCustomEditorApi
         );
         // Load the web panel using our current directory as we don't expect to load any other files
         super.loadWebview(process.cwd()).catch(traceError);

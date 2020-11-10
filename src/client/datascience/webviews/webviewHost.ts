@@ -49,8 +49,7 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
         @unmanaged() protected workspaceService: IWorkspaceService,
         @unmanaged() protected rootPath: string,
         @unmanaged() protected scripts: string[],
-        @unmanaged() protected readonly useCustomEditorApi: boolean,
-        @unmanaged() private readonly enableVariablesDuringDebugging: Promise<boolean>
+        @unmanaged() protected readonly useCustomEditorApi: boolean
     ) {
         // Listen for settings changes from vscode.
         this._disposables.push(this.workspaceService.onDidChangeConfiguration(this.onPossibleSettingsChange, this));
@@ -208,9 +207,6 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
                 suggestSelection: this.getValue(editor, 'suggestSelection', 'recentlyUsed'),
                 wordBasedSuggestions: this.getValue(editor, 'wordBasedSuggestions', true),
                 parameterHintsEnabled: this.getValue(editor, 'parameterHints.enabled', true)
-            },
-            variableOptions: {
-                enableDuringDebugger: await this.enableVariablesDuringDebugging
             }
         };
     }
