@@ -100,6 +100,7 @@ import { KernelSwitcher } from './jupyter/kernels/kernelSwitcher';
 import { KernelVariables } from './jupyter/kernelVariables';
 import { NotebookStarter } from './jupyter/notebookStarter';
 import { OldJupyterVariables } from './jupyter/oldJupyterVariables';
+import { JupyterServerPicker } from './jupyter/serverPicker';
 import { ServerPreload } from './jupyter/serverPreload';
 import { JupyterServerSelector } from './jupyter/serverSelector';
 import { JupyterServerUriStorage } from './jupyter/serverUriStorage';
@@ -281,6 +282,7 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     serviceManager.addSingleton<JupyterInterpreterService>(JupyterInterpreterService, JupyterInterpreterService);
     serviceManager.addSingleton<JupyterInterpreterStateStore>(JupyterInterpreterStateStore, JupyterInterpreterStateStore);
     serviceManager.addSingleton<JupyterServerSelector>(JupyterServerSelector, JupyterServerSelector);
+    serviceManager.addSingleton<JupyterServerPicker>(JupyterServerPicker, JupyterServerPicker);
     serviceManager.addSingleton<JupyterServerSelectorCommand>(JupyterServerSelectorCommand, JupyterServerSelectorCommand);
     serviceManager.addSingleton<KernelSelectionProvider>(KernelSelectionProvider, KernelSelectionProvider);
     serviceManager.addSingleton<KernelSelector>(KernelSelector, KernelSelector);

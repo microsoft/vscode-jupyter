@@ -24,7 +24,7 @@ import { createAuthorizingRequest } from '../../datascience/jupyter/jupyterReque
 import { JupyterSessionManager } from '../../datascience/jupyter/jupyterSessionManager';
 import { createRemoteConnectionInfo } from '../../datascience/jupyter/jupyterUtils';
 import { createJupyterWebSocket } from '../../datascience/jupyter/jupyterWebSocket';
-import { JupyterServerSelector } from '../../datascience/jupyter/serverSelector';
+import { JupyterServerPicker } from '../../datascience/jupyter/serverPicker';
 import {
     IJupyterConnection,
     IJupyterPasswordConnect,
@@ -85,7 +85,7 @@ export class JupyterServerConnectionService
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(IJupyterPasswordConnect) private jupyterPasswordConnect: IJupyterPasswordConnect,
         @inject(IApplicationShell) private appShell: IApplicationShell,
-        @inject(JupyterServerSelector) private readonly serverSelector: JupyterServerSelector,
+        @inject(JupyterServerPicker) private readonly serverPicker: JupyterServerPicker,
         @inject(RemoteFileSchemeManager) private readonly fileSchemeManager: RemoteFileSchemeManager,
         @inject(IPersistentStateFactory) private readonly stateFactory: IPersistentStateFactory,
         @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) private readonly jupyterOutput: IOutputChannel,
@@ -152,11 +152,11 @@ export class JupyterServerConnectionService
     }
     public async addServer(baseUrl?: string): Promise<void> {
         if (!baseUrl) {
-            const selection = await this.serverSelector.selectJupyterURI(false);
-            baseUrl = selection?.uri;
-            if (!baseUrl) {
+            const selection = await this.serverPicker.selectJupyterURI(false);
+            if (selection?.selection !== 'remote') {
                 return;
             }
+            baseUrl = selection.uri;
         }
         const options = await this.generateNotebookServerOptions(baseUrl);
         const connection = await this.getRemoteConnectionInfo(options);
