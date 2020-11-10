@@ -18,11 +18,7 @@ import { traceError } from '../../common/logger';
 
 import { IPythonExtensionChecker } from '../../api/types';
 import { IFileSystem } from '../../common/platform/types';
-import {
-    IAsyncDisposableRegistry,
-    IConfigurationService,
-    IDisposableRegistry,
-} from '../../common/types';
+import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { captureTelemetry } from '../../telemetry';
