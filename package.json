@@ -1701,8 +1701,6 @@
             {
                 "id": "jupyter-ipywidget-renderer",
                 "entrypoint": "./out/datascience-ui/ipywidgetsRenderer/ipywidgetsRenderer.js",
-                "entrypointxx": "./out/ipywidgets/dist/ipywidgets.js",
-                "entrypointx": "./out/ipywidgets/wow.js",
                 "displayName": "Jupyter IPyWidget Renderer",
                 "mimeTypes": [
                     "application/vnd.jupyter.widget-view+json"

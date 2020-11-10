@@ -6,7 +6,7 @@ const JupyterIPyWidgetNotebookRenderer = 'jupyter-ipywidget-renderer';
 
 // tslint:disable-next-line: no-console
 console.log('(window as any).ipywidgetsKernel');
-// tslint:disable-next-line: no-console
+// tslint:disable: no-console no-any
 console.log((window as any).ipywidgetsKernel);
 
 function initialize(api: NotebookRendererApi<any>) {

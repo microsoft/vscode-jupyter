@@ -68,7 +68,7 @@ gulp.task('compile-notebooks', async () => {
 });
 
 gulp.task('compile-renderers', async () => {
-    console.log('Building ipywidgets');
+    console.log('Building renderers');
     await buildWebPackForDevOrProduction('./build/webpack/webpack.datascience-ui-renderers.config.js');
 });
 
@@ -83,7 +83,7 @@ if (isCI && process.env.VSC_CI_MATRIX_TEST_SUITE === 'notebook') {
 } else {
     gulp.task(
         'compile-webviews',
-        gulp.series('compile-ipywidgets', gulp.parallel('compile-notebooks', 'compile-viewers'))
+        gulp.series('compile-ipywidgets', gulp.parallel('compile-notebooks', 'compile-viewers', 'compile-renderers'))
     );
 }
 

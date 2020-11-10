@@ -30,4 +30,6 @@ if (document.readyState === 'complete') {
 
 // Create our window export. Necessary for the ipywidget code loading in the output to find our widget manager
 // tslint:disable-next-line: no-any
-(window as any).vscIPyWidgets.WidgetManager = WidgetManager;
+(window as any).vscIPyWidgets = {
+    WidgetManager
+};

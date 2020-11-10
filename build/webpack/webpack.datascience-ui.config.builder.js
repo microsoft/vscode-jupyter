@@ -35,7 +35,7 @@ function getEntry(bundle) {
             };
         case 'ipywidgetsKernel':
             return {
-                ipywidgetsKernel: [`./src/datascience-ui/ipywidgets/kernel/index.tsx`]
+                ipywidgetsKernel: [`./src/datascience-ui/ipywidgets/kernel/index.ts`]
             };
         case 'ipywidgetsRenderer':
             return {

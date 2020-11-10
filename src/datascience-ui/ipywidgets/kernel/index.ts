@@ -107,7 +107,7 @@ const renderedWidgets = new Set<string>();
  * This will be exposed as a public method on window for renderer to render output.
  */
 let stackOfWidgetsRenderStatusByOutputId: { outputId: string; container: HTMLElement; success?: boolean }[] = [];
-function renderOutput(request: NotebookOutputEventParams) {
+export function renderOutput(request: NotebookOutputEventParams) {
     console.log('New Kernel2');
     try {
         stackOfWidgetsRenderStatusByOutputId.push({ outputId: request.outputId, container: request.element });
@@ -133,7 +133,7 @@ function renderOutput(request: NotebookOutputEventParams) {
     // postToRendererExtension('Hello', 'World');
     // postToKernel('HelloKernel', 'WorldKernel');
 }
-function disposeOutput(outputId: string) {
+export function disposeOutput(outputId: string) {
     stackOfWidgetsRenderStatusByOutputId = stackOfWidgetsRenderStatusByOutputId.filter((item) => !(outputId in item));
 }
 function renderErrorInLastOutputThatHasNotRendered(message: string) {
