@@ -255,8 +255,8 @@ export class MockJupyterRequest implements Kernel.IFuture<any, any> {
     public removeMessageHook(_hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>): void {
         noop();
     }
-    public sendInputReply(content: KernelMessage.IInputReply): void {
-        if (this.currentProducer) {
+    public sendInputReply(content: KernelMessage.IInputReplyMsg['content']): void {
+        if (this.currentProducer && content.status === 'ok') {
             this.currentProducer.receiveInput(content.value);
         }
     }
