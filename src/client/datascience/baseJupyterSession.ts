@@ -42,7 +42,6 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     protected get session(): ISessionWithSocket | undefined {
         return this._session;
     }
-    protected kernelConnectionMetadata?: KernelConnectionMetadata;
     public get kernelSocket(): Observable<KernelSocketInformation | undefined> {
         return this._kernelSocket;
     }
@@ -68,6 +67,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     public get isConnected(): boolean {
         return this.connected;
     }
+    protected kernelConnectionMetadata?: KernelConnectionMetadata;
     protected onStatusChangedEvent: EventEmitter<ServerStatus> = new EventEmitter<ServerStatus>();
     protected statusHandler: Slot<ISessionWithSocket, Kernel.Status>;
     protected connected: boolean = false;
@@ -77,7 +77,6 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     private _jupyterLab?: typeof import('@jupyterlab/services');
     private ioPubEventEmitter = new EventEmitter<KernelMessage.IIOPubMessage>();
     private ioPubHandler: Slot<ISessionWithSocket, KernelMessage.IIOPubMessage>;
-
     constructor(private restartSessionUsed: (id: Kernel.IKernelConnection) => void, public workingDirectory: string) {
         this.statusHandler = this.onStatusChanged.bind(this);
         this.ioPubHandler = (_s, m) => this.ioPubEventEmitter.fire(m);
@@ -86,7 +85,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         return this.shutdown();
     }
     // Abstracts for each Session type to implement
-    public abstract async waitForIdle(timeout: number): Promise<void>;
+    public abstract waitForIdle(timeout: number): Promise<void>;
 
     public async shutdown(): Promise<void> {
         if (this.session) {
@@ -191,7 +190,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
             if (!this.session) {
                 throw new Error(localize.DataScience.sessionDisposed());
             }
-            this.restartSessionUsed(this.session.kernel);
+            this.onRestartSessionUsed(this.session.kernel);
             traceInfo(`Got new session ${this.session.kernel.id}`);
 
             // Rewire our status changed event.
@@ -320,10 +319,13 @@ export abstract class BaseJupyterSession implements IJupyterSession {
             throw new Error(localize.DataScience.sessionDisposed());
         }
     }
+    protected onRestartSessionUsed(id: Kernel.IKernelConnection) {
+        this.restartSessionUsed(id);
+    }
 
     // Sub classes need to implement their own restarting specific code
     protected abstract startRestartSession(): void;
-    protected abstract async createRestartSession(
+    protected abstract createRestartSession(
         kernelConnection: KernelConnectionMetadata | undefined,
         session: ISessionWithSocket,
         cancelToken?: CancellationToken

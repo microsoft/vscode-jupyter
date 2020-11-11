@@ -29,6 +29,28 @@ import { getNameOfKernelConnection } from './kernels/helpers';
 import { KernelConnectionMetadata } from './kernels/types';
 
 export class JupyterSession extends BaseJupyterSession {
+    /**
+     * Ensure session name is the name of the current file.
+     * If its a notebook, session name = name of ipynb file with extension.
+     * If its an interactive window, session name = name of file with extension (xyz.py or xyz.cs).
+     */
+    private get sessionName(): string {
+        if (this._sessionName) {
+            return this._sessionName;
+        }
+        if (!this.uri || !this.sessionType) {
+            this._sessionName = uuid();
+            return this._sessionName;
+        }
+        return (this._sessionName = path.basename(this.uri));
+    }
+    private get sessionType(): 'notebook' | 'file' | undefined {
+        // If we have a uri and its a notebook, the session type is `notebook`, else its `file`
+        // Remember uri could be a python or csharp file (for interactive window).
+        // If no uri provided, then default to `undefined`.
+        return this.uri?.toLocaleLowerCase().endsWith('.ipynb') ? 'notebook' : this.uri ? 'file' : undefined;
+    }
+    private _sessionName?: string;
     constructor(
         private connInfo: IJupyterConnection,
         private serverSettings: ServerConnection.ISettings,
@@ -39,12 +61,12 @@ export class JupyterSession extends BaseJupyterSession {
         private readonly restartSessionCreated: (id: Kernel.IKernelConnection) => void,
         restartSessionUsed: (id: Kernel.IKernelConnection) => void,
         readonly workingDirectory: string,
-        private readonly idleTimeout: number
+        private readonly idleTimeout: number,
+        private readonly uri?: string
     ) {
         super(restartSessionUsed, workingDirectory);
         this.kernelConnectionMetadata = kernelSpec;
     }
-
     @reportAction(ReportableAction.JupyterSessionWaitForIdleSession)
     @captureTelemetry(Telemetry.WaitForIdleJupyter, undefined, true)
     public waitForIdle(timeout: number): Promise<void> {
@@ -85,7 +107,12 @@ export class JupyterSession extends BaseJupyterSession {
                 newSession = this.sessionManager.connectTo(kernelConnection.kernelModel.session);
                 newSession.isRemoteSession = true;
             } else {
-                newSession = await this.createSession(this.serverSettings, kernelConnection, cancelToken);
+                newSession = await this.createSession(
+                    this.sessionName,
+                    this.serverSettings,
+                    kernelConnection,
+                    cancelToken
+                );
             }
 
             // Make sure it is idle before we return
@@ -101,6 +128,17 @@ export class JupyterSession extends BaseJupyterSession {
         }
 
         return newSession;
+    }
+    protected onRestartSessionUsed(id: Kernel.IKernelConnection) {
+        super.onRestartSessionUsed(id);
+        const newSession = this.session;
+        if (newSession) {
+            traceInfo(`Updating name of restart session from ${newSession.name} to ${this.sessionName}`);
+            newSession
+                .setName(this.sessionName)
+                .then(() => traceInfo('Name of restart session updated'))
+                .catch((ex) => traceError('Failed to update name of restart session', ex));
+        }
     }
 
     protected async createRestartSession(
@@ -118,7 +156,12 @@ export class JupyterSession extends BaseJupyterSession {
         let exception: any;
         while (tryCount < 3) {
             try {
-                result = await this.createSession(session.serverSettings, kernelConnection, cancelToken);
+                result = await this.createSession(
+                    `${this.sessionName} (restart)`,
+                    session.serverSettings,
+                    kernelConnection,
+                    cancelToken
+                );
                 await this.waitForIdleOnSession(result, this.idleTimeout);
                 this.restartSessionCreated(result.kernel);
                 return result;
@@ -186,19 +229,21 @@ export class JupyterSession extends BaseJupyterSession {
     }
 
     private async createSession(
+        sessionName: string,
         serverSettings: ServerConnection.ISettings,
         kernelConnection: KernelConnectionMetadata | undefined,
         cancelToken?: CancellationToken
     ): Promise<ISessionWithSocket> {
         // Create our backing file for the notebook
         const backingFile = await this.createBackingFile();
-
+        const type = this.sessionType;
         // Create our session options using this temporary notebook and our connection info
         const options: Session.IOptions = {
             path: backingFile.path,
             kernelName: getNameOfKernelConnection(kernelConnection) || '',
-            name: uuid(), // This is crucial to distinguish this session from any other.
-            serverSettings: serverSettings
+            name: sessionName,
+            serverSettings: serverSettings,
+            type
         };
 
         return Cancellation.race(
