@@ -4,6 +4,7 @@ on:
   pull_request:
     branches:
       - main
+      - remoteBase
   check_run:
     types: [rerequested, requested_action]
   workflow_dispatch:
