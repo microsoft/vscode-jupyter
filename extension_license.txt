@@ -1,5 +1,5 @@
 This license applies to the Jupyter Extension for Visual Studio Code. 
-Source Code for the Jupyter extension is available at https://github.com/microsoft/vscode-jupyter under the MIT license agreement at https://github.com/microsoft/vscode-jupyter/blob/master/LICENSE.md. Additional license information can be found in our README documentation at https://marketplace.visualstudio.com/items?itemName=ms-toolsai.jupyter. All VS Marketplace extensions, including this Jupyter Extension for Microsoft Visual Studio Code, must also be used consistent with the VS Marketplace Terms of Use at http://aka.ms/VSMarketplace-TOU
+Source Code for the Jupyter extension is available at https://github.com/microsoft/vscode-jupyter under the MIT license agreement at https://github.com/microsoft/vscode-jupyter/blob/master/LICENSE. Additional license information can be found in our README documentation at https://marketplace.visualstudio.com/items?itemName=ms-toolsai.jupyter. All VS Marketplace extensions, including this Jupyter Extension for Microsoft Visual Studio Code, must also be used consistent with the VS Marketplace Terms of Use at http://aka.ms/VSMarketplace-TOU
 
 MICROSOFT PRE-RELEASE SOFTWARE LICENSE TERMS
 JUPYTER EXTENSION FOR MICROSOFT VISUAL STUDIO CODE 
