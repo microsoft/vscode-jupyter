@@ -389,7 +389,7 @@ jobs:
         python: [3.8] # Use flaky tests to run against more versions of Python.
         # integration: Tests with VS Code, Python extension & real Jupyter
         # notebook: Notebook Tests with VS Code, Python extension & real Jupyter
-        test-suite: [integration, notebook, notebookWithoutPythonExt]
+        test-suite: [integration, notebook, remote, notebookWithoutPythonExt]
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -558,6 +558,18 @@ jobs:
           VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
         id: test_notebook_vscode
         if: matrix.test-suite == 'notebook'
+
+      - name: Run Remote with VSCode & Jupyter
+        uses: GabrielBB/xvfb-action@v1.4
+        with:
+          run: npm run testRemoteNativeNotebooksInVSCode
+        env:
+          VSC_FORCE_REAL_JUPYTER: 1
+          VSC_JUPYTER_FORCE_LOGGING: 1
+          VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
+          VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
+        id: test_remote_vscode
+        if: matrix.test-suite == 'remote'
 
       - name: Publish Notebook Test Report
         uses: scacap/action-surefire-report@v1

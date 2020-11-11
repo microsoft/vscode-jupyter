@@ -73,7 +73,10 @@ gulp.task('compile-viewers', async () => {
 
 // On CI, when running Notebook tests, we don't need old webviews.
 // Simple & temporary optimization for the Notebook Test Job.
-if (isCI && process.env.VSC_CI_MATRIX_TEST_SUITE === 'notebook') {
+if (
+    isCI &&
+    (process.env.VSC_CI_MATRIX_TEST_SUITE === 'notebook' || process.env.VSC_CI_MATRIX_TEST_SUITE === 'remote')
+) {
     gulp.task('compile-webviews', async () => {});
 } else {
     gulp.task(
