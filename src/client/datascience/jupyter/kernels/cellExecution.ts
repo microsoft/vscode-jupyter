@@ -41,7 +41,6 @@ import { NotebookEditor } from '../../notebook/notebookEditor';
 import {
     IDataScienceErrorHandler,
     IJupyterSession,
-    INotebook,
     INotebookEditorProvider,
     INotebookExecutionLogger
 } from '../../types';
@@ -154,7 +153,11 @@ export class CellExecution {
         return new CellExecution(editor, cell, errorHandler, editorProvider, appService, isPythonKernelConnection);
     }
 
-    public async start(kernelPromise: Promise<IKernel>, notebook: INotebook) {
+    public async start(
+        kernelPromise: Promise<IKernel>,
+        jupyterSession: IJupyterSession,
+        loggers: INotebookExecutionLogger[]
+    ) {
         traceInfo(`Start cell execution for cell Index ${this.cell.index}`);
         if (!this.canExecuteCell()) {
             return;
@@ -175,7 +178,7 @@ export class CellExecution {
         // Begin the request that will modify our cell.
         kernelPromise
             .then((kernel) => this.handleKernelRestart(kernel))
-            .then(() => this.execute(notebook.session, notebook.getLoggers()))
+            .then(() => this.execute(jupyterSession, loggers))
             .catch((e) => this.completedWithErrors(e))
             .finally(() => this.dispose())
             .catch(noop);
@@ -348,12 +351,12 @@ export class CellExecution {
         return code.trim().length > 0;
     }
 
-    private async execute(session: IJupyterSession, loggers: INotebookExecutionLogger[]) {
+    private async execute(jupyterSession: IJupyterSession, loggers: INotebookExecutionLogger[]) {
         const code = this.cell.document.getText();
-        return this.executeCodeCell(code, session, loggers);
+        return this.executeCodeCell(code, jupyterSession, loggers);
     }
 
-    private async executeCodeCell(code: string, session: IJupyterSession, loggers: INotebookExecutionLogger[]) {
+    private async executeCodeCell(code: string, jupyterSession: IJupyterSession, loggers: INotebookExecutionLogger[]) {
         // Generate metadata from our cell (some kernels expect this.)
         // tslint:disable-next-line: no-any
         const metadata: any = {
@@ -366,7 +369,7 @@ export class CellExecution {
             return this.completedSuccessfully().then(noop, noop);
         }
 
-        const request = session.requestExecute(
+        const request = jupyterSession.requestExecute(
             {
                 code,
                 silent: false,
@@ -404,7 +407,7 @@ export class CellExecution {
             (this.requestHandlerChain = this.requestHandlerChain.then(() =>
                 this.handleReply(clearState, msg).catch(noop)
             ));
-        request.onStdin = this.handleInputRequest.bind(this, session);
+        request.onStdin = this.handleInputRequest.bind(this, jupyterSession);
 
         // WARNING: Do not dispose `request`.
         // Even after request.done & execute_reply is sent we could have more messages coming from iopub.
@@ -500,7 +503,7 @@ export class CellExecution {
         });
     }
 
-    private handleInputRequest(session: IJupyterSession, msg: KernelMessage.IStdinMessage) {
+    private handleInputRequest(jupyterSession: IJupyterSession, msg: KernelMessage.IStdinMessage) {
         // Ask the user for input
         if (msg.content && 'prompt' in msg.content) {
             const hasPassword = msg.content.password !== null && (msg.content.password as boolean);
@@ -511,7 +514,7 @@ export class CellExecution {
                     password: hasPassword
                 })
                 .then((v) => {
-                    session.sendInputReply({ value: v || '', status: 'ok' });
+                    jupyterSession.sendInputReply({ value: v || '', status: 'ok' });
                 });
         }
     }

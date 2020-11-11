@@ -20,6 +20,31 @@ import type {
 
 export type LiveKernelModel = IJupyterKernel & Partial<IJupyterKernelSpec> & { session: Session.IModel };
 
+// export type IKernelConnectionForExecution = {
+//     requestExecute(
+//         content: KernelMessage.IExecuteRequestMsg['content'],
+//         disposeOnDone?: boolean,
+//         metadata?: JSONObject
+//     ): Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> | undefined;
+//     requestComplete(
+//         content: KernelMessage.ICompleteRequestMsg['content']
+//     ): Promise<KernelMessage.ICompleteReplyMsg | undefined>;
+//     requestInspect(
+//         content: KernelMessage.IInspectRequestMsg['content']
+//     ): Promise<KernelMessage.IInspectReplyMsg | undefined>;
+//     sendInputReply(content: KernelMessage.IInputReplyMsg['content']): void;
+//     registerCommTarget(
+//         targetName: string,
+//         callback: (comm: Kernel.IComm, msg: KernelMessage.ICommOpenMsg) => void | PromiseLike<void>
+//     ): void;
+//     requestCommInfo(content: KernelMessage.ICommInfoRequestMsg['content']): Promise<KernelMessage.ICommInfoReplyMsg>;
+//     registerMessageHook(
+//         msgId: string,
+//         hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>
+//     ): void;
+//     removeMessageHook(msgId: string, hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>): void;
+// };
+
 /**
  * Connection metadata for Live Kernels.
  * With this we are able connect to an existing kernel (instead of starting a new session).

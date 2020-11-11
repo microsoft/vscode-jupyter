@@ -9,9 +9,15 @@ import { Uri } from 'vscode';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../../common/application/types';
 import { traceInfo, traceWarning } from '../../../common/logger';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../../common/types';
-import { IDataScienceErrorHandler, INotebookEditorProvider, INotebookProvider } from '../../types';
+import {
+    IDataScienceErrorHandler,
+    INotebookEditorProvider,
+    INotebookProvider,
+    IRawNotebookSupportedService
+} from '../../types';
 import { Kernel } from './kernel';
 import { KernelSelector } from './kernelSelector';
+// import { RemoteJupyterKernel } from './remoteKernel';
 import { IKernel, IKernelProvider, IKernelSelectionUsage, KernelOptions } from './types';
 
 @injectable()
@@ -27,7 +33,12 @@ export class KernelProvider implements IKernelProvider {
         @inject(INotebookEditorProvider) private readonly editorProvider: INotebookEditorProvider,
         @inject(KernelSelector) private readonly kernelSelectionUsage: IKernelSelectionUsage,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
-        @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook
+        @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
+        // @inject(IJupyterServerConnectionService)
+        // private readonly remoteAuthService: JupyterServerConnectionService,
+        // @inject(IJupyterSessionManagerFactory) private readonly sessionFactory: IJupyterSessionManagerFactory,
+        @inject(IRawNotebookSupportedService)
+        private readonly rawNotebookSupported: IRawNotebookSupportedService
     ) {}
     public get(uri: Uri): IKernel | undefined {
         return this.kernelsByUri.get(uri.toString())?.kernel;
@@ -40,8 +51,33 @@ export class KernelProvider implements IKernelProvider {
 
         this.disposeOldKernel(uri);
 
+        let kernel: IKernel;
         const waitForIdleTimeout = this.configService.getSettings(uri).jupyterLaunchTimeout;
-        const kernel = new Kernel(
+        // if (
+        //     this.remoteAuthService.isRemoteExperimentEnabled &&
+        //     this.remoteAuthService.findConnection(uri) &&
+        //     (options.metadata.kind === 'startUsingKernelSpec' ||
+        //         options.metadata.kind === 'connectToLiveKernel' ||
+        //         options.metadata.kind === 'startUsingDefaultKernel')
+        // ) {
+        //     kernel = new RemoteJupyterKernel(
+        //         uri,
+        //         options.metadata,
+        //         this.disposables,
+        //         waitForIdleTimeout,
+        //         this.commandManager,
+        //         this.errorHandler,
+        //         this.editorProvider,
+        //         this,
+        //         this.kernelSelectionUsage,
+        //         this.appShell,
+        //         this.vscNotebook,
+        //         this.remoteAuthService,
+        //         this.sessionFactory,
+        //         this.rawNotebookSupported
+        //     );
+        // } else {
+        kernel = new Kernel(
             uri,
             options.metadata,
             this.notebookProvider,
@@ -53,8 +89,10 @@ export class KernelProvider implements IKernelProvider {
             this,
             this.kernelSelectionUsage,
             this.appShell,
-            this.vscNotebook
+            this.vscNotebook,
+            this.rawNotebookSupported
         );
+        // }
         this.asyncDisposables.push(kernel);
         this.kernelsByUri.set(uri.toString(), { options, kernel });
         this.deleteMappingIfKernelIsDisposed(uri, kernel);

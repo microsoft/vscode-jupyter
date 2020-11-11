@@ -1,7 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import type { ContentsManager, Kernel, ServerConnection, Session, SessionManager } from '@jupyterlab/services';
+import type {
+    ContentsManager,
+    Kernel,
+    ServerConnection,
+    ServiceManager,
+    Session,
+    SessionManager
+} from '@jupyterlab/services';
 import { EventEmitter } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { traceError, traceInfo } from '../../common/logger';
@@ -40,6 +47,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         return this._jupyterlab!;
     }
     private _contentsManager?: ContentsManager;
+    private _serviceManager?: ServiceManager;
     private _jupyterlab?: typeof import('@jupyterlab/services');
     private _sessionManager?: SessionManager;
     private restartSessionCreatedEvent = new EventEmitter<Kernel.IKernelConnection>();
@@ -50,8 +58,9 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         private readonly outputChannel: IOutputChannel,
         private readonly configService: IConfigurationService
     ) {
-        this._sessionManager = new this.jupyterlab.SessionManager({ serverSettings: this.serverSettings });
-        this._contentsManager = new this.jupyterlab.ContentsManager({ serverSettings: this.serverSettings });
+        this._serviceManager = new this.jupyterlab.ServiceManager({ serverSettings: this.serverSettings });
+        this._sessionManager = this._serviceManager.sessions;
+        this._contentsManager = this._serviceManager.contents;
     }
 
     public get onRestartSessionCreated() {
@@ -101,6 +110,13 @@ export class JupyterSessionManager implements IJupyterSessionManager {
     public async dispose() {
         traceInfo(`Disposing session manager`);
         try {
+            if (this._serviceManager && !this._serviceManager.isDisposed) {
+                traceInfo('ConnectionManager - dispose Service manager');
+                // Make sure it finishes startup.
+                await Promise.race([sleep(10_000), this._serviceManager.ready]);
+                this._serviceManager.dispose();
+                this._serviceManager = undefined;
+            }
             if (this._contentsManager && !this._contentsManager.isDisposed) {
                 traceInfo('ConnectionManager - dispose contents manager');
                 this._contentsManager.dispose();

@@ -10,7 +10,13 @@ import { noop } from '../../../common/utils/misc';
 import { captureTelemetry } from '../../../telemetry';
 import { Commands, Telemetry, VSCodeNativeTelemetry } from '../../constants';
 import { MultiCancellationTokenSource } from '../../notebook/helpers/multiCancellationToken';
-import { IDataScienceErrorHandler, INotebook, INotebookEditorProvider } from '../../types';
+import {
+    IDataScienceErrorHandler,
+    IJupyterSession,
+    INotebookEditorProvider,
+    INotebookExecutionLogger,
+    IRawNotebookSupportedService
+} from '../../types';
 import { CellExecution, CellExecutionFactory } from './cellExecution';
 import { isPythonKernelConnection } from './helpers';
 import type { IKernel, IKernelProvider, IKernelSelectionUsage, KernelConnectionMetadata } from './types';
@@ -22,7 +28,8 @@ const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed'
  * Else the `Kernel` class gets very big.
  */
 export class KernelExecution implements IDisposable {
-    public notebook?: INotebook;
+    public session?: IJupyterSession;
+    public loggers?: INotebookExecutionLogger[];
 
     private readonly cellExecutions = new WeakMap<NotebookCell, CellExecution>();
 
@@ -32,6 +39,7 @@ export class KernelExecution implements IDisposable {
 
     private readonly executionFactory: CellExecutionFactory;
     private readonly disposables: IDisposable[] = [];
+    private isRawNotebookSupported?: Promise<boolean>;
     constructor(
         private readonly kernelProvider: IKernelProvider,
         private readonly commandManager: ICommandManager,
@@ -40,14 +48,15 @@ export class KernelExecution implements IDisposable {
         readonly kernelSelectionUsage: IKernelSelectionUsage,
         readonly appShell: IApplicationShell,
         readonly vscNotebook: IVSCodeNotebook,
-        readonly metadata: Readonly<KernelConnectionMetadata>
+        readonly metadata: Readonly<KernelConnectionMetadata>,
+        private readonly rawNotebookSupported: IRawNotebookSupportedService
     ) {
         this.executionFactory = new CellExecutionFactory(errorHandler, editorProvider, appShell, vscNotebook);
     }
 
     @captureTelemetry(Telemetry.ExecuteNativeCell, undefined, true)
     public async executeCell(cell: NotebookCell): Promise<void> {
-        if (!this.notebook) {
+        if (!this.session) {
             throw new Error('executeObservable cannot be called if kernel has not been started!');
         }
         // Cannot execute empty cells.
@@ -69,7 +78,7 @@ export class KernelExecution implements IDisposable {
     @captureTelemetry(Telemetry.ExecuteNativeCell, undefined, true)
     @captureTelemetry(VSCodeNativeTelemetry.RunAllCells, undefined, true)
     public async executeAllCells(document: NotebookDocument): Promise<void> {
-        if (!this.notebook) {
+        if (!this.session) {
             throw new Error('executeObservable cannot be called if kernel has not been started!');
         }
         if (this.documentExecutions.has(document)) {
@@ -155,7 +164,7 @@ export class KernelExecution implements IDisposable {
         kernelPromise: Promise<IKernel>,
         cellExecution: CellExecution
     ): Promise<NotebookCellRunState | undefined> {
-        if (!this.notebook) {
+        if (!this.session) {
             throw new Error('No notebook object');
         }
 
@@ -167,21 +176,23 @@ export class KernelExecution implements IDisposable {
         );
 
         // Start execution
-        await cellExecution.start(kernelPromise, this.notebook);
+        await cellExecution.start(kernelPromise, this.session, this.loggers || []);
 
         // The result promise will resolve when complete.
         return cellExecution.result;
     }
-
     private async validateKernel(document: NotebookDocument): Promise<void> {
         const kernel = this.kernelProvider.get(document.uri);
         if (!kernel) {
             return;
         }
         if (!this.kernelValidated.get(document)) {
-            const promise = new Promise<void>((resolve) =>
+            const promise = new Promise<void>(async (resolve) => {
+                this.isRawNotebookSupported =
+                    this.isRawNotebookSupported || this.rawNotebookSupported.isSupportedForLocalLaunch();
+                const rawSupported = await this.isRawNotebookSupported;
                 this.kernelSelectionUsage
-                    .useSelectedKernel(kernel?.metadata, document.uri, 'raw')
+                    .useSelectedKernel(kernel?.metadata, document.uri, rawSupported ? 'raw' : 'jupyter')
                     .finally(() => {
                         // If there's an exception, then we cannot use the kernel and a message would have been displayed.
                         // We don't want to cache such a promise, as its possible the user later installs the dependencies.
@@ -190,8 +201,8 @@ export class KernelExecution implements IDisposable {
                         }
                     })
                     .finally(resolve)
-                    .catch(noop)
-            );
+                    .catch(noop);
+            });
 
             this.kernelValidated.set(document, { kernel, promise });
         }

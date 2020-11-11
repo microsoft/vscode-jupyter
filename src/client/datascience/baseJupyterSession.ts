@@ -39,7 +39,7 @@ export class JupyterSessionStartError extends Error {
 }
 
 export abstract class BaseJupyterSession implements IJupyterSession {
-    protected get session(): ISessionWithSocket | undefined {
+    public get session(): ISessionWithSocket | undefined {
         return this._session;
     }
     public get kernelSocket(): Observable<KernelSocketInformation | undefined> {

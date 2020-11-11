@@ -11,7 +11,7 @@ import { JupyterInvalidKernelError } from '../../client/datascience/jupyter/jupy
 import { JupyterWaitForIdleError } from '../../client/datascience/jupyter/jupyterWaitForIdleError';
 import { JupyterKernelPromiseFailedError } from '../../client/datascience/jupyter/kernels/jupyterKernelPromiseFailedError';
 import { KernelConnectionMetadata } from '../../client/datascience/jupyter/kernels/types';
-import { ICell, IJupyterSession, KernelSocketInformation } from '../../client/datascience/types';
+import { ICell, IJupyterSession, ISessionWithSocket, KernelSocketInformation } from '../../client/datascience/types';
 import { ServerStatus } from '../../datascience-ui/interactive-common/mainState';
 import { sleep } from '../core';
 import { MockJupyterRequest } from './mockJupyterRequest';
@@ -20,6 +20,7 @@ const LineFeedRegEx = /(\r\n|\n)/g;
 
 // tslint:disable:no-any no-http-string no-multiline-string max-func-body-length
 export class MockJupyterSession implements IJupyterSession {
+    public session!: ISessionWithSocket;
     public readonly workingDirectory = '';
     public readonly kernelSocket = new Observable<KernelSocketInformation | undefined>();
     private dict: Record<string, ICell>;
