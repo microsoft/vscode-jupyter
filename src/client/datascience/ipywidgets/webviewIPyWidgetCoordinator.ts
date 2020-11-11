@@ -4,7 +4,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { Event, EventEmitter, Uri } from 'vscode';
+import { Disposable, Event, EventEmitter, Uri } from 'vscode';
 import { traceError } from '../../common/logger';
 import { IServiceContainer } from '../../ioc/types';
 import { INotebookIdentity, InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
@@ -29,10 +29,12 @@ export class WebviewIPyWidgetCoordinator implements IInteractiveWindowListener {
         payload: any;
     }>();
     private messageCoordinator: CommonMessageCoordinator | undefined;
+    private messageCoordinatorEvent: Disposable | undefined;
 
     constructor(@inject(IServiceContainer) private readonly serviceContainer: IServiceContainer) {}
 
     public dispose() {
+        this.messageCoordinatorEvent?.dispose(); // NOSONAR
         this.messageCoordinator?.dispose(); // NOSONAR
     }
 
@@ -52,5 +54,6 @@ export class WebviewIPyWidgetCoordinator implements IInteractiveWindowListener {
         // the message coordinator as soon as we're sure what notebook we're in.
         this.notebookIdentity = args.resource;
         this.messageCoordinator = await CommonMessageCoordinator.create(this.notebookIdentity, this.serviceContainer);
+        this.messageCoordinatorEvent = this.messageCoordinator.postMessage((e) => this.postEmitter.fire(e));
     }
 }

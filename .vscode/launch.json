@@ -29,6 +29,8 @@
                 "VSC_JUPYTER_LOAD_EXPERIMENTS_FROM_FILE": "1",
                 // Enable this to log telemetry to the output during debugging
                 "XVSC_JUPYTER_LOG_TELEMETRY": "1",
+                // Enable this to log IPYWIDGET messages
+                "VSC_JUPYTER_LOG_IPYWIDGETS": "1",
                 // Enable this to log debugger output. Directory must exist ahead of time
                 "XDEBUGPY_LOG_DIR": "${workspaceRoot}/tmp/Debug_Output_Ex"
             },

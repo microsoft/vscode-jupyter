@@ -1,22 +1,16 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
-// Copyright (c) Microsoft Corporation. All rights reserved.
-// Licensed under the MIT License.
 // tslint:disable: no-console
-console.log('New Kernel');
 import type { nbformat } from '@jupyterlab/coreutils';
-import { NotebookOutputEventParams, NotebookRendererApi } from 'vscode-notebook-renderer';
-import { SharedMessages } from '../../../client/datascience/messages';
-import { PostOffice } from '../../react-common/postOffice';
-import { WidgetManager } from '../common/manager';
-import { ScriptManager } from '../common/scriptManager';
-const JupyterIPyWidgetNotebookRenderer = 'jupyter-ipywidget-renderer';
-// import '../../client/common/extensions';
+import { NotebookOutputEventParams } from 'vscode-notebook-renderer';
 import {
     IInteractiveWindowMapping,
     InteractiveWindowMessages
 } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
+import { SharedMessages } from '../../../client/datascience/messages';
+import { PostOffice } from '../../react-common/postOffice';
+import { WidgetManager } from '../common/manager';
+import { ScriptManager } from '../common/scriptManager';
 class WidgetManagerComponent {
     private readonly widgetManager: WidgetManager;
     private readonly scriptManager: ScriptManager;
@@ -219,7 +213,7 @@ async function createWidgetView(
 }
 
 // tslint:disable-next-line: no-any
-function initialize(api: NotebookRendererApi<any>) {
+function initialize() {
     try {
         // Setup the widget manager
         console.log('New Kernel7');
@@ -227,13 +221,6 @@ function initialize(api: NotebookRendererApi<any>) {
         const mgr = new WidgetManagerComponent(postOffice);
         // tslint:disable-next-line: no-any
         (window as any)._mgr = mgr;
-
-        // Attach to the renderer if possible
-        if (api) {
-            console.log('New Kernel8');
-            api.onDidCreateOutput(renderOutput);
-            api.onWillDestroyOutput(disposeOutput);
-        }
     } catch (ex) {
         // tslint:disable-next-line: no-console
         console.error('Ooops', ex);
@@ -281,7 +268,7 @@ function convertVSCodeOutputToExecutResultOrDisplayData(
 function attemptInitialize() {
     // tslint:disable-next-line: no-any
     if ((window as any).vscIPyWidgets) {
-        initialize(acquireNotebookRendererApi(JupyterIPyWidgetNotebookRenderer));
+        initialize();
     } else {
         setTimeout(attemptInitialize, 100);
     }

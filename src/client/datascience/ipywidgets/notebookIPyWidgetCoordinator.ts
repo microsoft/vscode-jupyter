@@ -57,7 +57,7 @@ export class NotebookIPyWidgetCoordinator implements IExtensionSingleActivationS
                             response: webview.asWebviewUri(e.payload)
                         });
                     } else {
-                        webview.postMessage(e);
+                        webview.postMessage({ type: e.message, payload: e.payload });
                     }
                 })
             );
