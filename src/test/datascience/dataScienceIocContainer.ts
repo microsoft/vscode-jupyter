@@ -272,6 +272,7 @@ import { IInterpreterService } from '../../client/interpreter/contracts';
 import { IWindowsStoreInterpreter } from '../../client/interpreter/locators/types';
 import { trustDirectoryMigrated } from '../../client/migration/migrateDigestStorage';
 import { PythonEnvironment } from '../../client/pythonEnvironments/info';
+import { JupyterServerConnectionService } from '../../client/remote/connection/remoteConnectionsService';
 import { IJupyterServerConnectionService } from '../../client/remote/ui/types';
 import { CodeExecutionHelper } from '../../client/terminals/codeExecution/helper';
 import { ICodeExecutionHelper } from '../../client/terminals/types';
@@ -308,7 +309,6 @@ import {
 } from './testNativeEditorProvider';
 import { TestPersistentStateFactory } from './testPersistentStateFactory';
 import { WebBrowserPanelProvider } from './uiTests/webBrowserPanelProvider';
-import { JupyterServerConnectionService } from '../../client/remote/connection/remoteConnectionsService';
 
 export class DataScienceIocContainer extends UnitTestIocContainer {
     public get workingInterpreter() {
