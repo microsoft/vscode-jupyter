@@ -285,7 +285,7 @@ suite('DataScience notebook tests', () => {
                 // Catch exceptions. Throw a specific assertion if the promise fails
                 try {
                     if (uri) {
-                        ioc.setServerUri(uri);
+                        ioc.setServerUri(uri).catch(noop);
                     }
                     launchingFile = launchingFile || path.join(srcDirectory(), 'foo.py');
                     const notebook = await notebookProvider.getOrCreateNotebook({

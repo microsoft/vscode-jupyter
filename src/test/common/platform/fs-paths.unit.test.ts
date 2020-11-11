@@ -7,8 +7,8 @@ import { expect } from 'chai';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import { FileSystemPathUtils } from '../../../client/common/platform/fs-paths';
-import { getNamesAndValues } from '../../utils/enum';
 import { OSType } from '../../../client/common/utils/platform';
+import { getNamesAndValues } from '../../utils/enum';
 
 interface IUtilsDeps {
     // executables
