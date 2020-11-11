@@ -107,6 +107,30 @@ export class JupyterServerConnectionService
             };
         });
     }
+    public async selectConnection(): Promise<JupyterServerConnection | undefined> {
+        const connections = await this.getConnections();
+        if (connections.length === 0) {
+            return;
+        }
+        if (connections.length === 1) {
+            return connections[0];
+        }
+        const list = connections.map((item) => {
+            return {
+                label: item.displayName,
+                item
+            };
+        });
+
+        const selection = await this.appShell.showQuickPick(list, {
+            canPickMany: false,
+            ignoreFocusOut: true,
+            matchOnDescription: true,
+            matchOnDetail: true,
+            placeHolder: DataScience.quickPickPlaceHolderLabelForSelectionOfNotebookCreationServer()
+        });
+        return selection?.item;
+    }
     public get isRemoteExperimentEnabled() {
         if (typeof this._isRemoteExperimentEnabled !== 'boolean') {
             throw new Error('We should not be calling isRemoteExperimentEnabled in ctors or the like');

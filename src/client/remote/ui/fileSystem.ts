@@ -239,13 +239,19 @@ export class RemoteFileSystem implements IFileSystemProvider {
     private async _lookup(uri: Uri, _silent: boolean, fetchContents?: boolean): Promise<Directory | File | undefined> {
         const contentManager = await this.getContentManager();
         try {
-            const item = await contentManager.get(uri.fsPath, { content: fetchContents });
+            // When using VSCode file picker (window.showOpenDialog), the paths contain a trailing `/`.
+            // That trailing `/` causes the Jupyter REST API to fall over (its not valid).
+            const path = uri.fsPath.endsWith('/') ? uri.fsPath.slice(0, -1) : uri.fsPath;
+            const item = await contentManager.get(path, { content: fetchContents });
             if (item.type === 'directory') {
                 return new Directory(item);
             } else {
                 // tslint:disable-next-line: no-any
                 return new File(item as any);
             }
+        } catch (ex) {
+            traceError(`Failed to fetch details of ${uri.fsPath}`, ex);
+            throw ex;
         } finally {
             contentManager.dispose();
         }

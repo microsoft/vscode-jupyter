@@ -15,6 +15,7 @@ import { IConfigurationService, IDisposable, IOutputChannel } from '../../common
 import { DataScience } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { LogLevel } from '../../logging/levels';
+import { NotebookCreator } from '../../remote/ui/notebookCreator';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { Commands, JUPYTER_OUTPUT_CHANNEL, Telemetry } from '../constants';
@@ -27,8 +28,7 @@ import {
     IDataScienceCodeLensProvider,
     IDataScienceCommandListener,
     IJupyterServerUriStorage,
-    IJupyterVariableDataProviderFactory,
-    INotebookEditorProvider
+    IJupyterVariableDataProviderFactory
 } from '../types';
 import { JupyterCommandLineSelectorCommand } from './commandLineSelector';
 import { ExportCommands } from './exportCommands';
@@ -50,7 +50,7 @@ export class CommandRegistry implements IDisposable {
         @inject(NotebookCommands) private readonly notebookCommands: NotebookCommands,
         @inject(JupyterCommandLineSelectorCommand)
         private readonly commandLineCommand: JupyterCommandLineSelectorCommand,
-        @inject(INotebookEditorProvider) private notebookEditorProvider: INotebookEditorProvider,
+        @inject(NotebookCreator) private readonly notebookCreator: NotebookCreator,
         @inject(IDebugService) private debugService: IDebugService,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IApplicationShell) private appShell: IApplicationShell,
@@ -449,7 +449,7 @@ export class CommandRegistry implements IDisposable {
     }
 
     private async createNewNotebook(): Promise<void> {
-        await this.notebookEditorProvider.createNew();
+        await this.notebookCreator.createNewNotebook();
     }
 
     private viewJupyterOutput() {

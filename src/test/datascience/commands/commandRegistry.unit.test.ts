@@ -18,7 +18,7 @@ import { DataViewerFactory } from '../../../client/datascience/data-viewing/data
 import { JupyterVariableDataProviderFactory } from '../../../client/datascience/data-viewing/jupyterVariableDataProviderFactory';
 import { DataScienceCodeLensProvider } from '../../../client/datascience/editor-integration/codelensprovider';
 import { JupyterServerUriStorage } from '../../../client/datascience/jupyter/serverUriStorage';
-import { NativeEditorProvider } from '../../../client/datascience/notebookStorage/nativeEditorProvider';
+import { NotebookCreator } from '../../../client/remote/ui/notebookCreator';
 import { MockOutputChannel } from '../../mockClasses';
 
 // tslint:disable: max-func-body-length
@@ -34,7 +34,7 @@ suite('DataScience - Commands', () => {
         commandLineCommand = mock(JupyterCommandLineSelectorCommand);
 
         const codeLensProvider = mock(DataScienceCodeLensProvider);
-        const notebookEditorProvider = mock(NativeEditorProvider);
+        const notebookCreator = mock(NotebookCreator);
         const debugService = mock(DebugService);
         const documentManager = mock(DocumentManager);
         commandManager = mock(CommandManager);
@@ -54,7 +54,7 @@ suite('DataScience - Commands', () => {
             instance(serverSelectorCommand),
             instance(kernelSwitcherCommand),
             instance(commandLineCommand),
-            instance(notebookEditorProvider),
+            instance(notebookCreator),
             instance(debugService),
             instance(configService),
             instance(appShell),
