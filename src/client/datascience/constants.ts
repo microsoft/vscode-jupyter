@@ -500,7 +500,6 @@ export namespace Identifiers {
     export const DefaultCodeCellMarker = '# %%';
     export const DefaultCommTarget = 'jupyter.widget';
     export const ALL_VARIABLES = 'ALL_VARIABLES';
-    export const OLD_VARIABLES = 'OLD_VARIABLES';
     export const KERNEL_VARIABLES = 'KERNEL_VARIABLES';
     export const DEBUGGER_VARIABLES = 'DEBUGGER_VARIABLES';
     export const MULTIPLEXING_DEBUGSERVICE = 'MULTIPLEXING_DEBUGSERVICE';
