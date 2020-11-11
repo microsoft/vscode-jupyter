@@ -13,7 +13,7 @@ export type JupyterServerConnection = {
     displayName: string;
     fileScheme: string;
 };
-export const IJupyterServerConnectionService = Symbol('IJupyterConnectionsService');
+export const IJupyterServerConnectionService = Symbol('IJupyterServerConnectionService');
 export interface IJupyterServerConnectionService {
     onDidAddServer: Event<JupyterServerConnection>;
     onDidRemoveServer: Event<JupyterServerConnection | undefined>;

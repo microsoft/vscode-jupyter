@@ -272,6 +272,7 @@ import { IInterpreterService } from '../../client/interpreter/contracts';
 import { IWindowsStoreInterpreter } from '../../client/interpreter/locators/types';
 import { trustDirectoryMigrated } from '../../client/migration/migrateDigestStorage';
 import { PythonEnvironment } from '../../client/pythonEnvironments/info';
+import { IJupyterServerConnectionService } from '../../client/remote/ui/types';
 import { CodeExecutionHelper } from '../../client/terminals/codeExecution/helper';
 import { ICodeExecutionHelper } from '../../client/terminals/types';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants';
@@ -307,6 +308,7 @@ import {
 } from './testNativeEditorProvider';
 import { TestPersistentStateFactory } from './testPersistentStateFactory';
 import { WebBrowserPanelProvider } from './uiTests/webBrowserPanelProvider';
+import { JupyterServerConnectionService } from '../../client/remote/connection/remoteConnectionsService';
 
 export class DataScienceIocContainer extends UnitTestIocContainer {
     public get workingInterpreter() {
@@ -504,6 +506,11 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<IPlotViewerProvider>(IPlotViewerProvider, PlotViewerProvider);
         this.serviceManager.add<IDataViewer>(IDataViewer, DataViewer);
         this.serviceManager.add<IPlotViewer>(IPlotViewer, PlotViewer);
+        this.serviceManager.addSingleton<JupyterServerConnectionService>(
+            IJupyterServerConnectionService,
+            JupyterServerConnectionService
+        );
+        this.serviceManager.addBinding(IJupyterServerConnectionService, IExtensionSingleActivationService);
 
         const experimentService = mock(ExperimentService);
         this.serviceManager.addSingletonInstance<IExperimentService>(IExperimentService, instance(experimentService));
