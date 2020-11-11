@@ -511,7 +511,7 @@ export class CellExecution {
                     password: hasPassword
                 })
                 .then((v) => {
-                    session.sendInputReply(v || '');
+                    session.sendInputReply({ value: v || '', status: 'ok' });
                 });
         }
     }
