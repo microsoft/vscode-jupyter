@@ -79,7 +79,7 @@ export class RemoteFileSystem implements IFileSystemProvider {
 
     private _emitter = new EventEmitter<FileChangeEvent[]>();
     private _bufferedEvents: FileChangeEvent[] = [];
-    private _fireSoonHandle?: NodeJS.Timer;
+    private _fireSoonHandle?: NodeJS.Timer | number;
     private readonly disposables: IDisposable[] = [];
     private jupyterServerConnectionId?: Promise<string>;
 
@@ -97,6 +97,10 @@ export class RemoteFileSystem implements IFileSystemProvider {
         this.rootFolder = Uri.file('/').with({ scheme });
     }
     public dispose() {
+        if (this._fireSoonHandle) {
+            // tslint:disable-next-line: no-any
+            clearTimeout(this._fireSoonHandle as any);
+        }
         this._isDisposed = true;
         this._emitter.dispose();
         this.disposables.forEach((d) => d.dispose());
@@ -262,7 +266,8 @@ export class RemoteFileSystem implements IFileSystemProvider {
         this._bufferedEvents.push(...events);
 
         if (this._fireSoonHandle) {
-            clearTimeout(this._fireSoonHandle);
+            // tslint:disable-next-line: no-any
+            clearTimeout(this._fireSoonHandle as any);
         }
 
         this._fireSoonHandle = setTimeout(() => {
