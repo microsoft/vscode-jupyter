@@ -1,6 +1,6 @@
 # Jupyter Extension for Visual Studio Code
 
-A [Visual Studio Code](https://code.visualstudio.com/) [extension](https://marketplace.visualstudio.com/VSCode) - CHANGE ME that provides basic notebook support for [language kernels](https://github.com/jupyter/jupyter/wiki/Jupyter-kernels) that are supported in [Jupyter Notebooks](https://jupyter.org/) today. Many language kernels will work with no modification. To enable advanced features, modifications may be needed in the VS Code language extensions.
+A [Visual Studio Code](https://code.visualstudio.com/) [extension](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.jupyter) that provides basic notebook support for [language kernels](https://github.com/jupyter/jupyter/wiki/Jupyter-kernels) that are supported in [Jupyter Notebooks](https://jupyter.org/) today. Many language kernels will work with no modification. To enable advanced features, modifications may be needed in the VS Code language extensions.
 
 
 ## Working with Python
@@ -19,7 +19,7 @@ The Jupyter Extension supports other languages such as Julia and R (as well as P
 
 -   **Step 2** If not working with Python, make sure to have a Jupyter kernelspec that corresponds to the language you would like to use installed on your machine.
 
--   **Step 3.** Install the [Jupyter Extension](https://code.visualstudio.com/docs/python/python-tutorial#_prerequisites) - CHANGE ME
+-   **Step 3.** Install the [Jupyter Extension](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.jupyter)
 
 -   **Step 4.** Open or create a notebook file and start coding!
 
@@ -83,7 +83,7 @@ The extension is available in multiple languages: `de`, `en`, `es`, `fa`, `fr`, 
 
 - Contributions are always welcome! Please see our [contributing guide](https://github.com/Microsoft/vscode-jupyter/blob/main/CONTRIBUTING.md) for more details.
 
--   If you're interested in the development of the extension, you can read about our [development process](https://github.com/Microsoft/vscode-jupyter/blob/main/CONTRIBUTING.md#development-process)
+-   If you're interested in the development of the extension, you can read about our [development process](https://github.com/microsoft/vscode-jupyter/blob/main/CONTRIBUTING.md#development-process)
 
 ## Data and telemetry
 
