@@ -379,6 +379,7 @@ export interface IJupyterSessionManager extends IAsyncDisposable {
     startNew(
         kernelConnection: KernelConnectionMetadata | undefined,
         workingDirectory: string,
+        uri?: string,
         cancelToken?: CancellationToken
     ): Promise<IJupyterSession>;
     getKernelSpecs(): Promise<IJupyterKernelSpec[]>;

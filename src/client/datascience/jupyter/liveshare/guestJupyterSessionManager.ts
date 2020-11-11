@@ -37,9 +37,10 @@ export class GuestJupyterSessionManager implements IJupyterSessionManager {
     public startNew(
         kernelConnection: KernelConnectionMetadata | undefined,
         workingDirectory: string,
+        uri: string,
         cancelToken?: CancellationToken
     ): Promise<IJupyterSession> {
-        return this.realSessionManager.startNew(kernelConnection, workingDirectory, cancelToken);
+        return this.realSessionManager.startNew(kernelConnection, workingDirectory, uri, cancelToken);
     }
 
     public async getKernelSpecs(): Promise<IJupyterKernelSpec[]> {

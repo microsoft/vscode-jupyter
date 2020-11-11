@@ -97,6 +97,7 @@ export class JupyterServerBase implements INotebookServer {
         session = await this.sessionManager.startNew(
             launchInfo.kernelConnectionMetadata,
             launchInfo.connectionInfo.rootDirectory,
+            launchInfo.uri,
             cancelToken
         );
         const idleTimeout = this.configService.getSettings().jupyterLaunchTimeout;
