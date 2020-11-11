@@ -435,6 +435,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
     public startNew(
         _kernelConnection: KernelConnectionMetadata | undefined,
         _workingDirectory: string,
+        _uri?: string,
         cancelToken?: CancellationToken
     ): Promise<IJupyterSession> {
         if (this.sessionTimeout && cancelToken) {

@@ -231,7 +231,12 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
             const session =
                 possibleSession && this.fs.areLocalPathsSame(possibleSession.workingDirectory, workingDirectory)
                     ? possibleSession
-                    : await sessionManager.startNew(info.kernelConnectionMetadata, workingDirectory, cancelToken);
+                    : await sessionManager.startNew(
+                          info.kernelConnectionMetadata,
+                          workingDirectory,
+                          resource?.toString(),
+                          cancelToken
+                      );
             traceInfo(`Started session ${this.id}`);
             return { info, session };
         };

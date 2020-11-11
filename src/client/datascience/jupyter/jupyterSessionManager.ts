@@ -69,6 +69,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
     public async startNew(
         kernelConnection: KernelConnectionMetadata | undefined,
         workingDirectory: string,
+        uri?: string,
         cancelToken?: CancellationToken
     ): Promise<IJupyterSession> {
         if (!this.connInfo || !this._sessionManager || !this._contentsManager || !this.serverSettings) {
@@ -85,7 +86,8 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             this.restartSessionCreatedEvent.fire.bind(this.restartSessionCreatedEvent),
             this.restartSessionUsedEvent.fire.bind(this.restartSessionUsedEvent),
             workingDirectory,
-            this.configService.getSettings().jupyterLaunchTimeout
+            this.configService.getSettings().jupyterLaunchTimeout,
+            uri
         );
         try {
             await session.connect(this.configService.getSettings().jupyterLaunchTimeout, cancelToken);
