@@ -7,6 +7,7 @@ import { CommandRegistry } from './commands';
 import { RemoteFileSchemeManager } from './connection/fileSchemeManager';
 import { JupyterServerConnectionService } from './connection/remoteConnectionsService';
 import { RemoteFileSystemFactory } from './ui/fileSystemFactory';
+import { NotebookCreator } from './ui/notebookCreator';
 import { JupyterServersTreeDataProvider } from './ui/serversTreeDataProvider';
 import { JupyterServersTreeView } from './ui/serversTreeView';
 import { IJupyterServerConnectionService } from './ui/types';
@@ -21,6 +22,7 @@ export function registerTypes(serviceManager: IServiceManager) {
         JupyterServerConnectionService
     );
     serviceManager.addBinding(IJupyterServerConnectionService, IExtensionSingleActivationService);
+    serviceManager.addSingleton<NotebookCreator>(NotebookCreator, NotebookCreator);
     serviceManager.addSingleton<RemoteFileSystemFactory>(RemoteFileSystemFactory, RemoteFileSystemFactory);
     serviceManager.addSingleton<RemoteFileSchemeManager>(RemoteFileSchemeManager, RemoteFileSchemeManager);
     serviceManager.addBinding(RemoteFileSystemFactory, IExtensionSingleActivationService);
