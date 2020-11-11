@@ -1,20 +1,38 @@
-# Jupyter Extension for Visual Studio Code Insiders
+# Jupyter Extension for Visual Studio Code
 
-A [Visual Studio Code Insiders](https://code.visualstudio.com/insiders/) [extension](https://marketplace.visualstudio.com/VSCode) with support for [Jupyter Notebooks](https://www.jupyter.org/) (working towards supporting all [actively supported kernels](https://github.com/jupyter/jupyter/wiki/Jupyter-kernels)), including features such as IntelliSense, debugging, and more!
+A [Visual Studio Code](https://code.visualstudio.com/) [extension](https://marketplace.visualstudio.com/VSCode) - CHANGE ME with support for [Jupyter Notebooks](https://www.jupyter.org/) (working towards supporting all [actively supported kernels](https://github.com/jupyter/jupyter/wiki/Jupyter-kernels)), including features such as IntelliSense, Jupyter Notebooks, and more!
 
-\*If working in VS Code Stable, please see the [Python Extension ReadMe](https://github.com/microsoft/vscode-python/blob/main/README.md) or the [Python Documentation](https://code.visualstudio.com/docs/python/jupyter-support).
 
-## Quick start
+## Working with Python
+
+Whether you are on VS Code Stable or VS Code Insiders, if you would like to work with Python just make sure you're using the latest version of the [Python Extension](https://marketplace.visualstudio.com/items?itemName=ms-python.python) to enjoy the joint partnership  of the Python and Juypter Extensions!
+
+Please follow the [Python Extension ReadMe](https://github.com/microsoft/vscode-python/blob/main/README.md) instructions to get started and visit the [Python Documentation](https://code.visualstudio.com/docs/python/jupyter-support) to learn more about how the Python and Jupyter Extension are working together to provide an optimum Python notebooks experience.
+
+## Working with other Languages
+
+The Jupyter Extension supports other languages such as Julia and R (as well as Python) in VS Code Insiders with our new Native Notebooks Experience!
+
+### Quick Start
 
 -   **Step 1.** Install [VS Code Insiders](https://code.visualstudio.com/insiders/)
 
--   **Step 2.** Install the [Jupyter Extension](https://code.visualstudio.com/docs/python/python-tutorial#_prerequisites) in VS Code Insiders - CHANGE ME
+-   **Step 2** If not working with Python, make sure to have a Jupyter kernelspec that corresponds to the language you would like to use installed on your machine.
 
--   **Step 2.1** If you are interested in using Python, we recommend you install the [Python Extension](https://marketplace.visualstudio.com/items?itemName=ms-python.python) instead.
--   **Step 3.** If not working with Python, make sure you have a kernel specification that corresponds to the language you would like to use installed on Jupyter on your machine.
+-   **Step 3.** Install the [Jupyter Extension](https://code.visualstudio.com/docs/python/python-tutorial#_prerequisites) - CHANGE ME
+
 -   **Step 4.** Open or create a notebook file and start coding!
 
-## Set up your environment
+- **Special Note:**  The Jupyter Extension in VS Code Insiders will include our Native Notebooks experience! To opt out:
+    - Open the command palette (Windows: Ctrl + Shift + P, iOS: Command + Shift + P) and select "Preferences: Open Settings (JSON)"
+    - Add the following code to your JSON settings:
+     `"jupyter.experiments.optOutFrom": ["NativeNotebookEditor"],`
+
+To use the latest version of the extension:
+-  Set the "jupyter.insidersChannel" setting to "daily" or "weekly" based on how often you would like the extension to check for updates
+
+
+## Notebooks Quick Start
 
 <!-- use less words -->
 
@@ -22,7 +40,7 @@ A [Visual Studio Code Insiders](https://code.visualstudio.com/insiders/) [extens
 
      <img src=https://raw.githubusercontent.com/microsoft/vscode-jupyter/main/images/Jupyter%20README/CreateNewNotebook.png>
 
-- Select your kernel by clicking on the kernel picker in the bottom right of the status bar or by envoking the `"Notebook: Select Notebook Kernel"` command.
+- Select your kernel by clicking on the kernel picker in the bottom right of the status bar or by invoking the `"Notebook: Select Notebook Kernel"` command.
 
      <img src=https://raw.githubusercontent.com/microsoft/vscode-jupyter/main/images/Jupyter%20README/KernelPicker.gif?>
 
@@ -30,9 +48,7 @@ A [Visual Studio Code Insiders](https://code.visualstudio.com/insiders/) [extens
 
      <img src=https://raw.githubusercontent.com/microsoft/vscode-jupyter/main/images/Jupyter%20README/LanguagePicker.gif?>
 
-To use the latest version of the extension:
 
--   Set the "jupyter.insidersChannel" setting to "daily" or "weekly" based on how often you would like the extension to check for updates
 
 ## Useful commands
 
@@ -49,15 +65,12 @@ To see all available Jupyter Notebook commands, open the Command Palette and typ
 
 ## Feature details
 
-Learn more about the rich features of the Jupyter extension:
+Learn more about the rich features of the Jupyter extension Python:
 
 -   [IntelliSense](https://code.visualstudio.com/docs/python/editing#_autocomplete-and-intellisense): Edit your code with auto-completion, code navigation, syntax checking and more
 
--   [Debugging](https://code.visualstudio.com/docs/python/debugging): Debug your Jupyter Notebooks with the Interactive Window experience.
-
 -   [Jupyter Notebooks](https://code.visualstudio.com/docs/python/jupyter-support): Create and edit Jupyter Notebooks, add and run code cells, render plots, visualize variables through the variable explorer, visualize dataframes with the data viewer, and more
 
--   [Environments](https://code.visualstudio.com/docs/python/environments): Automatically activate and switch between virtualenv, venv, pipenv, conda and pyenv environments
 
 ## Supported locales
 
