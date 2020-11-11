@@ -1,6 +1,6 @@
 # Jupyter Extension for Visual Studio Code
 
-A [Visual Studio Code](https://code.visualstudio.com/) [extension](https://marketplace.visualstudio.com/VSCode) - CHANGE ME with support for [Jupyter Notebooks](https://www.jupyter.org/) (working towards supporting all [actively supported kernels](https://github.com/jupyter/jupyter/wiki/Jupyter-kernels)), including features such as IntelliSense, Jupyter Notebooks, and more!
+A [Visual Studio Code](https://code.visualstudio.com/) [extension](https://marketplace.visualstudio.com/VSCode) - CHANGE ME that provides basic notebook support for [language kernels](https://github.com/jupyter/jupyter/wiki/Jupyter-kernels) that are supported in [Jupyter Notebooks](https://jupyter.org/) today. Many language kernels will work with no modification. To enable advanced features, modifications may be needed in the VS Code language extensions.
 
 
 ## Working with Python
@@ -34,8 +34,6 @@ To use the latest version of the extension:
 
 ## Notebooks Quick Start
 
-<!-- use less words -->
-
 - To create a new notebook open the command palette (Windows: Ctrl + Shift + P, iOS: Command + Shift + P) and select the command `"Jupyter: Create New Blank Jupyter Notebook"`
 
      <img src=https://raw.githubusercontent.com/microsoft/vscode-jupyter/main/images/Jupyter%20README/CreateNewNotebook.png>
@@ -65,11 +63,12 @@ To see all available Jupyter Notebook commands, open the Command Palette and typ
 
 ## Feature details
 
-Learn more about the rich features of the Jupyter extension Python:
+Learn more about the rich features of the Jupyter extension:
 
--   [IntelliSense](https://code.visualstudio.com/docs/python/editing#_autocomplete-and-intellisense): Edit your code with auto-completion, code navigation, syntax checking and more
+-   [IntelliSense](https://code.visualstudio.com/docs/python/editing#_autocomplete-and-intellisense): Edit your code with auto-completion, code navigation, syntax checking and more!
+     - *May be limited due to kernelspec of choice*
 
--   [Jupyter Notebooks](https://code.visualstudio.com/docs/python/jupyter-support): Create and edit Jupyter Notebooks, add and run code cells, render plots, visualize variables through the variable explorer, visualize dataframes with the data viewer, and more
+-   [Jupyter Notebooks](https://code.visualstudio.com/docs/python/jupyter-support): Create and edit Jupyter Notebooks, add and run code/markdown cells, render plots, create presentation-friendly versions of your notebook by exporting to HTML or PDF and more!
 
 
 ## Supported locales
