@@ -1,40 +1,52 @@
-# Jupyter extension for Visual Studio Code
+# Jupyter Extension for Visual Studio Code
 
-A [Visual Studio Code](https://code.visualstudio.com/) [extension](https://marketplace.visualstudio.com/VSCode) with rich support for the [Python language](https://www.python.org/) (for all [actively supported versions](https://devguide.python.org/#status-of-python-branches) of the language: 2.7, >=3.6), including features such as IntelliSense, linting, debugging, code navigation, code formatting, Jupyter notebook support, refactoring, variable explorer, test explorer, snippets, and more!
+A [Visual Studio Code](https://code.visualstudio.com/) [extension](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.jupyter) that provides basic notebook support for [language kernels](https://github.com/jupyter/jupyter/wiki/Jupyter-kernels) that are supported in [Jupyter Notebooks](https://jupyter.org/) today. Many language kernels will work with no modification. To enable advanced features, modifications may be needed in the VS Code language extensions.
 
-## Quick start
 
--   **Step 1.** [Install a supported version of Python on your system](https://code.visualstudio.com/docs/python/python-tutorial#_prerequisites) (note: that the system install of Python on macOS is not supported).
--   **Step 2.** Install the Jupyter extension for Visual Studio Code.
--   **Step 3.** Open or create a Python file and start coding!
+## Working with Python
 
-## Set up your environment
+Whether you are on VS Code Stable or VS Code Insiders, if you would like to work with Python just make sure you're using the latest version of the [Python Extension](https://marketplace.visualstudio.com/items?itemName=ms-python.python) to enjoy the joint partnership  of the Python and Juypter Extensions!
 
-<!-- use less words -->
+Please follow the [Python Extension ReadMe](https://github.com/microsoft/vscode-python/blob/main/README.md) instructions to get started and visit the [Python Documentation](https://code.visualstudio.com/docs/python/jupyter-support) to learn more about how the Python and Jupyter Extension are working together to provide an optimum Python notebooks experience.
 
--   Select your Python interpreter by clicking on the status bar
+## Working with other Languages
 
-     <img src=https://raw.githubusercontent.com/microsoft/vscode-jupyter/main/images/InterpreterSelectionZoom.gif width=280 height=100>
+The Jupyter Extension supports other languages such as Julia and R (as well as Python) in VS Code Insiders with our new Native Notebooks Experience!
 
--   Configure the debugger through the Debug Activity Bar
+### Quick Start
 
-      <img src=https://raw.githubusercontent.com/microsoft/vscode-jupyter/main/images/ConfigureDebugger.gif width=734 height=413>
+-   **Step 1.** Install [VS Code Insiders](https://code.visualstudio.com/insiders/)
 
--   Configure tests by running the `Configure Tests` command
+-   **Step 2** If not working with Python, make sure to have a Jupyter kernelspec that corresponds to the language you would like to use installed on your machine.
 
-      <img src=https://raw.githubusercontent.com/microsoft/vscode-jupyter/main/images/ConfigureTests.gif width=734 height=413>
+-   **Step 3.** Install the [Jupyter Extension](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.jupyter)
 
-## Jupyter Notebook quick start
+-   **Step 4.** Open or create a notebook file and start coding!
 
--   Open or create a Jupyter Notebook file (.ipynb) and start coding in our Notebook Editor!
+- **Special Note:**  The Jupyter Extension in VS Code Insiders will include our Native Notebooks experience! To opt out:
+    - Open the command palette (Windows: Ctrl + Shift + P, iOS: Command + Shift + P) and select "Preferences: Open Settings (JSON)"
+    - Add the following code to your JSON settings:
+     `"jupyter.experiments.optOutFrom": ["NativeNotebookEditor"],`
 
-      <img src=https://raw.githubusercontent.com/microsoft/vscode-jupyter/main/images/OpenOrCreateNotebook.gif width=1029 height=602>
+To use the latest version of the extension:
+-  Set the "jupyter.insidersChannel" setting to "daily" or "weekly" based on how often you would like the extension to check for updates
 
-For more information you can:
 
--   [Follow our Python tutorial](https://code.visualstudio.com/docs/python/python-tutorial#_prerequisites) with step-by-step instructions for building a simple app.
--   Check out the [Python documentation on the VS Code site](https://code.visualstudio.com/docs/languages/python) for general information about using the extension.
--   Check out the [Jupyter Notebook documentation on the VS Code site](https://code.visualstudio.com/docs/python/jupyter-support) for information about using Jupyter Notebooks in VS Code.
+## Notebooks Quick Start
+
+- To create a new notebook open the command palette (Windows: Ctrl + Shift + P, iOS: Command + Shift + P) and select the command `"Jupyter: Create New Blank Jupyter Notebook"`
+
+     <img src=https://raw.githubusercontent.com/microsoft/vscode-jupyter/main/images/Jupyter%20README/CreateNewNotebook.png>
+
+- Select your kernel by clicking on the kernel picker in the bottom right of the status bar or by invoking the `"Notebook: Select Notebook Kernel"` command.
+
+     <img src=https://raw.githubusercontent.com/microsoft/vscode-jupyter/main/images/Jupyter%20README/KernelPicker.gif?>
+
+- Change the cell language by clicking the language picker or by invoking the `"Notebook: Change Cell Language"` command.
+
+     <img src=https://raw.githubusercontent.com/microsoft/vscode-jupyter/main/images/Jupyter%20README/LanguagePicker.gif?>
+
+
 
 ## Useful commands
 
@@ -42,32 +54,22 @@ Open the Command Palette (Command+Shift+P on macOS and Ctrl+Shift+P on Windows/L
 
 | Command                               | Description                                                                                                                                                    |
 | ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Python: Select Interpreter`          | Switch between Python interpreters, versions, and environments.                                                                                                |
-| `Python: Start REPL`                  | Start an interactive Python REPL using the selected interpreter in the VS Code terminal.                                                                       |
-| `Python: Run Python File in Terminal` | Runs the active Python file in the VS Code terminal. You can also run a Python file by right-clicking on the file and selecting `Run Python File in Terminal`. |
-| `Python: Select Linter`               | Switch from Pylint to Flake8 or other supported linters.                                                                                                       |
-| `Format Document`                     | Formats code using the provided [formatter](https://code.visualstudio.com/docs/python/editing#_formatting) in the `settings.json` file.                        |
-| `Python: Configure Tests`             | Select a test framework and configure it to display the Test Explorer.                                                                                         |
+| `Jupyter: Create New Blank Jupyter Notebook`| Create a new blank Jupyter Notebook   |
+| `Notebook: Select Notebook Kernel`        | Select or switch kernels within your notebook|
+| `Notebook: Change Cell Language`        | Change the language of the cell currently in focus |
+| `Jupyter: Export to HTML Jupyter: Export to PDF` | Create a presentation-friendly version of your notebook in HTML or PDF
 
-To see all available Python commands, open the Command Palette and type `Python`.
+To see all available Jupyter Notebook commands, open the Command Palette and type `Jupyter` or `Notebook`.
 
 ## Feature details
 
 Learn more about the rich features of the Jupyter extension:
 
--   [IntelliSense](https://code.visualstudio.com/docs/python/editing#_autocomplete-and-intellisense): Edit your code with auto-completion, code navigation, syntax checking and more
--   [Linting](https://code.visualstudio.com/docs/python/linting): Get additional code analysis with Pylint, Flake8 and more
--   [Code formatting](https://code.visualstudio.com/docs/python/editing#_formatting): Format your code with black, autopep or yapf
+-   [IntelliSense](https://code.visualstudio.com/docs/python/editing#_autocomplete-and-intellisense): Edit your code with auto-completion, code navigation, syntax checking and more!
+     - *May be limited due to kernelspec of choice*
 
--   [Debugging](https://code.visualstudio.com/docs/python/debugging): Debug your Python scripts, web apps, remote or multi-threaded processes
+-   [Jupyter Notebooks](https://code.visualstudio.com/docs/python/jupyter-support): Create and edit Jupyter Notebooks, add and run code/markdown cells, render plots, create presentation-friendly versions of your notebook by exporting to HTML or PDF and more!
 
--   [Testing](https://code.visualstudio.com/docs/python/unit-testing): Run and debug tests through the Test Explorer with unittest, pytest or nose
-
--   [Jupyter Notebooks](https://code.visualstudio.com/docs/python/jupyter-support): Create and edit Jupyter Notebooks, add and run code cells, render plots, visualize variables through the variable explorer, visualize dataframes with the data viewer, and more
-
--   [Environments](https://code.visualstudio.com/docs/python/environments): Automatically activate and switch between virtualenv, venv, pipenv, conda and pyenv environments
-
--   [Refactoring](https://code.visualstudio.com/docs/python/editing#_refactoring): Restructure your Python code with variable extraction, method extraction and import sorting
 
 ## Supported locales
 
@@ -75,13 +77,13 @@ The extension is available in multiple languages: `de`, `en`, `es`, `fa`, `fr`, 
 
 ## Questions, issues, feature requests, and contributions
 
--   If you have a question about how to accomplish something with the extension, please [ask on Stack Overflow](https://stackoverflow.com/questions/tagged/visual-studio-code+python)
--   If you come across a problem with the extension, please [file an issue](https://github.com/microsoft/vscode-jupyter)
--   Contributions are always welcome! Please see our [contributing guide](https://github.com/Microsoft/vscode-jupyter/blob/main/CONTRIBUTING.md) for more details
--   Any and all feedback is appreciated and welcome!
-    -   If someone has already [filed an issue](https://github.com/Microsoft/vscode-jupyter) that encompasses your feedback, please leave a 👍/👎 reaction on the issue
-    -   Otherwise please file a new issue
--   If you're interested in the development of the extension, you can read about our [development process](https://github.com/Microsoft/vscode-jupyter/blob/main/CONTRIBUTING.md#development-process)
+-   If you have a question about how to accomplish something with the extension, please [ask on Stack Overflow](https://stackoverflow.com/questions/tagged/visual-studio-code+jupyter).
+-   Any and all feedback is appreciated and welcome! If you come across a problem with the extension, please [file an issue](https://github.com/microsoft/vscode-jupyter).
+      - If someone has already [filed an issue](https://github.com/Microsoft/vscode-jupyter) that encompasses your feedback, please leave a 👍/👎 reaction on the issue.
+
+- Contributions are always welcome! Please see our [contributing guide](https://github.com/Microsoft/vscode-jupyter/blob/main/CONTRIBUTING.md) for more details.
+
+-   If you're interested in the development of the extension, you can read about our [development process](https://github.com/microsoft/vscode-jupyter/blob/main/CONTRIBUTING.md#development-process)
 
 ## Data and telemetry
 
