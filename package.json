@@ -1,7 +1,7 @@
 {
     "name": "jupyter",
     "displayName": "Jupyter",
-    "version": "2020.11.0",
+    "version": "2020.11.1",
     "description": "Jupyter notebook support, interactive programming and computing that supports Intellisense, debugging and more.",
     "featureFlags": {
         "usingNewInterpreterStorage": true
@@ -12,7 +12,7 @@
     "author": {
         "name": "Microsoft Corporation"
     },
-    "license": "extension_license.txt",
+    "license": "SEE LICENSE IN extension_license.txt",
     "homepage": "https://github.com/Microsoft/vscode-jupyter",
     "repository": {
         "type": "git",
