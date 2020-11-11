@@ -19,6 +19,11 @@ runs:
       run: npm run updateBuildNumber -- --buildNumber $GITHUB_RUN_ID
       shell: bash
 
+    # Update the license text file
+    - name: Update license.txt
+      run: npm run updateLicense
+      shell: bash
+
     # Update change log (for release notes).
     # - run: npm run updateBuildNumber -- --buildNumber $GITHUB_RUN_ID --updateChangelog
     #   shell: bash

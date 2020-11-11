@@ -1,6 +1,6 @@
 # Changelog
 
-## 2020.11.1 (11 November 2020)
+## 2020.11.0 (11 November 2020)
 
 
 ### Thanks
