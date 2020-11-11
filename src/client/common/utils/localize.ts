@@ -952,6 +952,10 @@ export namespace DataScience {
         'DataScience.invalidCustomEditor',
         'Using the Jupyter notebook editor requires the stable version of VS code and the CustomEditor experiment to be enabled.'
     );
+    export const quickPickPlaceHolderLabelForSelectionOfNotebookCreationServer = localize(
+        'DataScience.quickPickPlaceHolderLabelForSelectionOfNotebookCreationServer',
+        'Select a Jupyter Server to create a blank Jupyter Notebook'
+    );
 }
 
 // Skip using vscode-nls and instead just compute our strings based on key values. Key values

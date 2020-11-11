@@ -312,7 +312,6 @@ export interface IJupyterPasswordConnect {
 
 export const IJupyterSession = Symbol('IJupyterSession');
 export interface IJupyterSession extends IAsyncDisposable {
-    readonly session: ISessionWithSocket | undefined;
     onSessionStatusChanged: Event<ServerStatus>;
     readonly status: ServerStatus;
     readonly workingDirectory: string;
