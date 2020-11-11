@@ -80,6 +80,13 @@ function createKernelSpecs(specs: { name: string; resourceDir: string }[]): Reco
 // This class is used to mock talking to jupyter. It mocks
 // the process services, the interpreter services, the python services, and the jupyter session
 export class MockJupyterManager implements IJupyterSessionManager {
+    public get onRestartSessionCreated() {
+        return this.restartSessionCreatedEvent.event;
+    }
+
+    public get onRestartSessionUsed() {
+        return this.restartSessionUsedEvent.event;
+    }
     public readonly productInstaller: IInstaller;
     private restartSessionCreatedEvent = new EventEmitter<Kernel.IKernelConnection>();
     private restartSessionUsedEvent = new EventEmitter<Kernel.IKernelConnection>();
@@ -99,9 +106,6 @@ export class MockJupyterManager implements IJupyterSessionManager {
     private cleanTemp: (() => void) | undefined;
     private pendingSessionFailure = false;
     private pendingKernelChangeFailure = false;
-    public async getDefaultKernel(): Promise<string | undefined> {
-        return;
-    }
 
     constructor(serviceManager: IServiceManager) {
         // Make our process service factory always return this item
@@ -208,13 +212,8 @@ export class MockJupyterManager implements IJupyterSessionManager {
         // Default used for variables
         this.addCell('_rwho_ls = %who_ls\nprint(_rwho_ls)', '');
     }
-
-    public get onRestartSessionCreated() {
-        return this.restartSessionCreatedEvent.event;
-    }
-
-    public get onRestartSessionUsed() {
-        return this.restartSessionUsedEvent.event;
+    public async getDefaultKernel(): Promise<string | undefined> {
+        return;
     }
     public getConnInfo(): IJupyterConnection {
         return this.connInfo!;

@@ -29,6 +29,7 @@ import { PythonExtensionChecker } from '../../client/api/pythonApi';
 import { ILanguageServerProvider, IPythonDebuggerPathProvider, IPythonExtensionChecker } from '../../client/api/types';
 import { ApplicationEnvironment } from '../../client/common/application/applicationEnvironment';
 import { ApplicationShell } from '../../client/common/application/applicationShell';
+import { AuthenticationService } from '../../client/common/application/authenticationService';
 import { VSCodeNotebook } from '../../client/common/application/notebook';
 import {
     IApplicationEnvironment,
@@ -182,6 +183,7 @@ import { NotebookStarter } from '../../client/datascience/jupyter/notebookStarte
 import { OldJupyterVariables } from '../../client/datascience/jupyter/oldJupyterVariables';
 import { ServerPreload } from '../../client/datascience/jupyter/serverPreload';
 import { JupyterServerSelector } from '../../client/datascience/jupyter/serverSelector';
+import { JupyterServerUriStorage } from '../../client/datascience/jupyter/serverUriStorage';
 import { JupyterDebugService } from '../../client/datascience/jupyterDebugService';
 import { JupyterUriProviderRegistration } from '../../client/datascience/jupyterUriProviderRegistration';
 import { KernelDaemonPreWarmer } from '../../client/datascience/kernel-launcher/kernelDaemonPreWarmer';
@@ -280,6 +282,7 @@ import { MockCommandManager } from './mockCommandManager';
 import { MockCustomEditorService } from './mockCustomEditorService';
 import { MockDebuggerService } from './mockDebugService';
 import { MockDocumentManager } from './mockDocumentManager';
+import { MockEncryptedStorage } from './mockEncryptedStorage';
 import { MockExtensions } from './mockExtensions';
 import { MockFileSystem } from './mockFileSystem';
 import { MockJupyterManager, SupportedCommands } from './mockJupyterManager';
@@ -300,9 +303,6 @@ import {
 } from './testNativeEditorProvider';
 import { TestPersistentStateFactory } from './testPersistentStateFactory';
 import { WebBrowserPanelProvider } from './uiTests/webBrowserPanelProvider';
-import { JupyterServerUriStorage } from '../../client/datascience/jupyter/serverUriStorage';
-import { AuthenticationService } from '../../client/common/application/authenticationService';
-import { MockEncryptedStorage } from './mockEncryptedStorage';
 
 export class DataScienceIocContainer extends UnitTestIocContainer {
     public get workingInterpreter() {

@@ -175,6 +175,7 @@ export class RemoteFileSystem implements IFileSystemProvider {
         }
     }
 
+    // tslint:disable-next-line: no-empty
     public createDirectory(_uri: Uri): void {}
 
     public watch(_resource: Uri): Disposable {

@@ -10,6 +10,7 @@ import { sleep } from '../../../client/common/utils/async';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { INotebookEditor } from '../../../client/datascience/types';
+import { noop } from '../../core';
 import { BaseWebUI } from './helpers';
 
 enum CellToolbarButton {
@@ -45,7 +46,7 @@ export class NotebookEditorUI extends BaseWebUI {
 
         // Select the cell by focusing it
         const cell = await this.getCell(cellIndex);
-        cell.focus();
+        cell.focus().catch(noop);
 
         // Take a screenshot and save at the root with the same name (upload on error)
         await this.screenshot(path.join(EXTENSION_ROOT_DIR, 'execute-screenshot.png'));

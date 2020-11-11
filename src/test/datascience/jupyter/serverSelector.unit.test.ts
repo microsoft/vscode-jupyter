@@ -3,29 +3,29 @@
 import { assert } from 'chai';
 import { anyString, anything, instance, mock, verify, when } from 'ts-mockito';
 
-import * as sinon from 'sinon';
 import * as os from 'os';
+import * as sinon from 'sinon';
 import { QuickPickItem } from 'vscode';
+import { ApplicationEnvironment } from '../../../client/common/application/applicationEnvironment';
 import { ApplicationShell } from '../../../client/common/application/applicationShell';
 import { ClipboardService } from '../../../client/common/application/clipboard';
 import { CommandManager } from '../../../client/common/application/commandManager';
 import { IClipboard, ICommandManager } from '../../../client/common/application/types';
+import { WorkspaceService } from '../../../client/common/application/workspace';
 import { ConfigurationService } from '../../../client/common/configuration/service';
+import { CryptoUtils } from '../../../client/common/crypto';
 import { IJupyterSettings } from '../../../client/common/types';
 import { DataScience } from '../../../client/common/utils/localize';
 import { MultiStepInput, MultiStepInputFactory } from '../../../client/common/utils/multiStepInput';
 import { Settings } from '../../../client/datascience/constants';
+import { JupyterServerPicker } from '../../../client/datascience/jupyter/serverPicker';
 import { JupyterServerSelector } from '../../../client/datascience/jupyter/serverSelector';
+import { JupyterServerUriStorage } from '../../../client/datascience/jupyter/serverUriStorage';
 import { JupyterUriProviderRegistration } from '../../../client/datascience/jupyterUriProviderRegistration';
+import { MockMemento } from '../../mocks/mementos';
+import { MockEncryptedStorage } from '../mockEncryptedStorage';
 import { MockInputBox } from '../mockInputBox';
 import { MockQuickPick } from '../mockQuickPick';
-import { JupyterServerUriStorage } from '../../../client/datascience/jupyter/serverUriStorage';
-import { MockMemento } from '../../mocks/mementos';
-import { WorkspaceService } from '../../../client/common/application/workspace';
-import { CryptoUtils } from '../../../client/common/crypto';
-import { ApplicationEnvironment } from '../../../client/common/application/applicationEnvironment';
-import { MockEncryptedStorage } from '../mockEncryptedStorage';
-import { JupyterServerPicker } from '../../../client/datascience/jupyter/serverPicker';
 
 // tslint:disable: max-func-body-length no-any
 suite('DataScience - Jupyter Server URI Selector', () => {

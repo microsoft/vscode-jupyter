@@ -6,12 +6,12 @@ import { ReactWrapper } from 'enzyme';
 import * as React from 'react';
 import * as sinon from 'sinon';
 import { PYTHON_LANGUAGE } from '../../client/common/constants';
-import { getNamesAndValues } from '../utils/enum';
 import { ServerStatus } from '../../datascience-ui/interactive-common/mainState';
 import { TrustMessage } from '../../datascience-ui/interactive-common/trustMessage';
 import { INativeEditorToolbarProps, Toolbar } from '../../datascience-ui/native-editor/toolbar';
 import { ImageButton } from '../../datascience-ui/react-common/imageButton';
 import { noop } from '../core';
+import { getNamesAndValues } from '../utils/enum';
 import { mountComponent } from './testHelpers';
 
 // tslint:disable: no-any use-default-type-parameter

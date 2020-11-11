@@ -14,7 +14,7 @@ suite('Migrate data science settings', () => {
     let application: IApplicationEnvironment;
     let updateDataScienceSettingsService: MigrateDataScienceSettingsService;
     let uriStorage: IJupyterServerUriStorage;
-    let uriSet: string | undefined = undefined;
+    let uriSet: string | undefined;
     const FILEPATH = '/path/to/settings.json';
     const originalSettings = `{
         "python.dataScience.allowImportFromNotebook": true,
