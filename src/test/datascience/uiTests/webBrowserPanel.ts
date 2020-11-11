@@ -144,8 +144,8 @@ export class WebBrowserPanel implements IWebviewPanel, IDisposable {
             enableScripts: true,
             localResourceRoots: [Uri.file(this.options.rootPath), Uri.file(this.options.cwd)]
         };
-        if (options.webViewPanel) {
-            this.panel = options.webViewPanel;
+        if (options.webviewHost) {
+            this.panel = options.webviewHost as WebviewPanel;
             this.panel.webview.options = webViewOptions;
         } else {
             this.panel = window.createWebviewPanel(

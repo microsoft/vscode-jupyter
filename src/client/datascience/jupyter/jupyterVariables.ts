@@ -6,8 +6,7 @@ import { inject, injectable, named } from 'inversify';
 
 import { Event, EventEmitter } from 'vscode';
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
-import { Experiments } from '../../common/experiments/groups';
-import { IDisposableRegistry, IExperimentService } from '../../common/types';
+import { IDisposableRegistry } from '../../common/types';
 import { captureTelemetry } from '../../telemetry';
 import { Identifiers, Telemetry } from '../constants';
 import {
@@ -26,12 +25,9 @@ import {
 @injectable()
 export class JupyterVariables implements IJupyterVariables {
     private refreshEventEmitter = new EventEmitter<void>();
-    private runByLineEnabled: boolean | undefined;
 
     constructor(
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
-        @inject(IExperimentService) private experimentsService: IExperimentService,
-        @inject(IJupyterVariables) @named(Identifiers.OLD_VARIABLES) private oldVariables: IJupyterVariables,
         @inject(IJupyterVariables) @named(Identifiers.KERNEL_VARIABLES) private kernelVariables: IJupyterVariables,
         @inject(IJupyterVariables)
         @named(Identifiers.DEBUGGER_VARIABLES)
@@ -39,7 +35,6 @@ export class JupyterVariables implements IJupyterVariables {
     ) {
         disposableRegistry.push(debuggerVariables.refreshRequired(this.fireRefresh.bind(this)));
         disposableRegistry.push(kernelVariables.refreshRequired(this.fireRefresh.bind(this)));
-        disposableRegistry.push(oldVariables.refreshRequired(this.fireRefresh.bind(this)));
     }
 
     public get refreshRequired(): Event<void> {
@@ -73,12 +68,6 @@ export class JupyterVariables implements IJupyterVariables {
     }
 
     private async getVariableHandler(notebook?: INotebook): Promise<IJupyterVariables> {
-        if (this.runByLineEnabled === undefined) {
-            this.runByLineEnabled = await this.experimentsService.inExperiment(Experiments.RunByLine);
-        }
-        if (!this.runByLineEnabled) {
-            return this.oldVariables;
-        }
         if (this.debuggerVariables.active && (!notebook || notebook.status === ServerStatus.Busy)) {
             return this.debuggerVariables;
         }

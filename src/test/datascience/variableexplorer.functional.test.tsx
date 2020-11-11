@@ -5,7 +5,6 @@ import { ReactWrapper } from 'enzyme';
 import * as React from 'react';
 import * as AdazzleReactDataGrid from 'react-data-grid';
 import { Disposable } from 'vscode';
-import { Experiments } from '../../client/common/experiments/groups';
 import { sleep } from '../../client/common/utils/async';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { IJupyterVariable } from '../../client/datascience/types';
@@ -37,7 +36,6 @@ const rangeInclusive = require('range-inclusive');
         });
         setup(async () => {
             ioc = new DataScienceIocContainer();
-            ioc.setExperimentState(Experiments.RunByLine, runByLine);
             ioc.registerDataScienceTypes();
             createdNotebook = false;
             await ioc.activate();

@@ -21,7 +21,6 @@ import { IFileSystem } from '../../common/platform/types';
 import {
     IConfigurationService,
     IDisposableRegistry,
-    IExperimentService,
     InteractiveWindowMode,
     IPersistentStateFactory,
     Resource
@@ -128,7 +127,6 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         workspaceStorage: Memento,
         notebookProvider: INotebookProvider,
         useCustomEditorApi: boolean,
-        expService: IExperimentService,
         private exportUtil: ExportUtil,
         owner: Resource,
         mode: InteractiveWindowMode,
@@ -171,7 +169,6 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             ViewColumn.Two,
             notebookProvider,
             useCustomEditorApi,
-            expService,
             selector,
             serverStorage
         );
@@ -187,7 +184,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         }
 
         // When opening we have to load the web panel.
-        this.loadPromise = this.loadWebPanel(this.owner ? path.dirname(this.owner.fsPath) : process.cwd())
+        this.loadPromise = this.loadWebview(this.owner ? path.dirname(this.owner.fsPath) : process.cwd())
             .then(async () => {
                 // Always load our notebook.
                 await this.ensureConnectionAndNotebook();
