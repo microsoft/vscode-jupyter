@@ -138,7 +138,7 @@ function renderIPyWidget(
 ) {
     // tslint:disable: no-console
     // console.error('Got Something to render');
-    if (renderedWidgets.has(model.model_id)) {
+    if (renderedWidgets.has(outputId)) {
         return console.error('already rendering');
     }
     const output = document.createElement('div');
@@ -147,13 +147,13 @@ function renderIPyWidget(
     ele.className = 'cell-output-ipywidget-background';
     container.appendChild(ele);
     ele.appendChild(output);
-    renderedWidgets.add(model.model_id);
+    renderedWidgets.add(outputId);
     createWidgetView(model, ele)
         .then((w) => {
             const disposable = {
                 dispose: () => {
                     // What if we render the same model in two cells.
-                    renderedWidgets.delete(model.model_id);
+                    renderedWidgets.delete(outputId);
                     w?.dispose();
                 }
             };
