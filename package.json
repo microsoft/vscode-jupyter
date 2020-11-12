@@ -1,8 +1,8 @@
 {
     "name": "jupyter",
     "displayName": "Jupyter",
-    "description": "Jupyter notebook support, interactive programming and computing that supports Intellisense, code formatting, refactoring, debugging and more.",
-    "version": "2020.12.0-dev",
+    "version": "2020.12.0.dev",
+    "description": "Jupyter notebook support, interactive programming and computing that supports Intellisense, debugging and more.",
     "featureFlags": {
         "usingNewInterpreterStorage": true
     },
@@ -12,7 +12,7 @@
     "author": {
         "name": "Microsoft Corporation"
     },
-    "license": "MIT",
+    "license": "SEE LICENSE IN LICENSE.txt",
     "homepage": "https://github.com/Microsoft/vscode-jupyter",
     "repository": {
         "type": "git",

@@ -1,8 +1,7 @@
 # Changelog
 
-### Enhancements
+## 2020.11.0 (11 November 2020)
 
-### Fixes
 
 ### Thanks
 
