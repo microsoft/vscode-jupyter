@@ -8,6 +8,7 @@ import { QuickPickItem, QuickPickOptions, Uri } from 'vscode';
 import { getLocString } from '../../../datascience-ui/react-common/locReactSide';
 import { ICommandNameArgumentTypeMapping } from '../../common/application/commands';
 import { IApplicationShell, ICommandManager } from '../../common/application/types';
+import { PYTHON_LANGUAGE } from '../../common/constants';
 import { IFileSystem } from '../../common/platform/types';
 
 import { IDisposable } from '../../common/types';
@@ -114,8 +115,10 @@ export class ExportCommands implements IDisposable {
         defaultFileName?: string,
         interpreter?: PythonEnvironment
     ): IExportQuickPickItem[] {
-        return [
-            {
+        const items: IExportQuickPickItem[] = [];
+
+        if (model.metadata && model.metadata.language_info && model.metadata.language_info.name === PYTHON_LANGUAGE) {
+            items.push({
                 label: DataScience.exportPythonQuickPickLabel(),
                 picked: true,
                 handler: () => {
@@ -124,28 +127,35 @@ export class ExportCommands implements IDisposable {
                     });
                     this.commandManager.executeCommand(Commands.ExportAsPythonScript, model, interpreter);
                 }
-            },
-            {
-                label: DataScience.exportHTMLQuickPickLabel(),
-                picked: false,
-                handler: () => {
-                    sendTelemetryEvent(Telemetry.ClickedExportNotebookAsQuickPick, undefined, {
-                        format: ExportFormat.html
-                    });
-                    this.commandManager.executeCommand(Commands.ExportToHTML, model, defaultFileName, interpreter);
+            });
+        }
+
+        items.push(
+            ...[
+                {
+                    label: DataScience.exportHTMLQuickPickLabel(),
+                    picked: false,
+                    handler: () => {
+                        sendTelemetryEvent(Telemetry.ClickedExportNotebookAsQuickPick, undefined, {
+                            format: ExportFormat.html
+                        });
+                        this.commandManager.executeCommand(Commands.ExportToHTML, model, defaultFileName, interpreter);
+                    }
+                },
+                {
+                    label: DataScience.exportPDFQuickPickLabel(),
+                    picked: false,
+                    handler: () => {
+                        sendTelemetryEvent(Telemetry.ClickedExportNotebookAsQuickPick, undefined, {
+                            format: ExportFormat.pdf
+                        });
+                        this.commandManager.executeCommand(Commands.ExportToPDF, model, defaultFileName, interpreter);
+                    }
                 }
-            },
-            {
-                label: DataScience.exportPDFQuickPickLabel(),
-                picked: false,
-                handler: () => {
-                    sendTelemetryEvent(Telemetry.ClickedExportNotebookAsQuickPick, undefined, {
-                        format: ExportFormat.pdf
-                    });
-                    this.commandManager.executeCommand(Commands.ExportToPDF, model, defaultFileName, interpreter);
-                }
-            }
-        ];
+            ]
+        );
+
+        return items;
     }
 
     private async showExportQuickPickMenu(
