@@ -358,6 +358,7 @@ suite('DataScience - JupyterSession', () => {
                         oldSessionShutDown.resolve();
                         return Promise.resolve();
                     });
+                    when(session.setName(anything())).thenResolve();
                     when(session.dispose()).thenCall(() => {
                         traceInfo('Shutting down');
                         return Promise.resolve();
