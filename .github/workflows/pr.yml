@@ -566,7 +566,7 @@ jobs:
           check_name: Notebook Test Report
         if: steps.test_notebook_vscode.outcome == 'failure' && failure()
 
-      - name: Run Native Notebook with VSCode & Jupyter (without Python)
+      - name: Run Native Notebook with VSCode & Jupyter (without Python Ext)
         uses: GabrielBB/xvfb-action@v1.4
         with:
           run: npm run testNativeNotebooksWithoutPythonInVSCode
