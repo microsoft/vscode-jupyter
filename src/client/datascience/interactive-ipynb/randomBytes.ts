@@ -60,7 +60,7 @@ export class SystemPseudoRandomNumberGenerator implements ISystemPseudoRandomNum
     // Read the first `numBytes` from /dev/urandom
     private async randomBytesForUnixLikeSystems(numBytes: number) {
         const temporaryFile = await this.fileSystem.createTemporaryLocalFile('.txt');
-        const script = `head -c ${numBytes} /dev/urandom > ${temporaryFile}`;
+        const script = `head -c ${numBytes} /dev/urandom > ${temporaryFile.filePath}`;
         const process = await this.processServiceFactory.create();
 
         traceInfo(`Executing ${script} to generate random bytes...`);
