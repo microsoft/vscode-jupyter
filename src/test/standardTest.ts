@@ -18,6 +18,9 @@ const extensionDevelopmentPath = process.env.CODE_EXTENSIONS_PATH
     : EXTENSION_ROOT_DIR_FOR_TESTS;
 
 function requiresPythonExtensionToBeInstalled() {
+    if (process.env.VSC_JUPYTER_CI_TEST_DO_NOT_INSTALL_PYTHON_EXT){
+        return;
+    }
     return process.env.TEST_FILES_SUFFIX === 'vscode.test' || process.env.TEST_FILES_SUFFIX === 'smoke.test';
 }
 
