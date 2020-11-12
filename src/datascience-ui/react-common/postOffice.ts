@@ -73,16 +73,12 @@ export class PostOffice implements IDisposable {
     }
 
     public acquireApi(): IVsCodeApi | undefined {
-        // tslint:disable: no-console
-        console.log('acquiring post office API');
         // Only do this once as it crashes if we ask more than once
         // tslint:disable-next-line:no-typeof-undefined
         if (!this.vscodeApi && typeof acquireVsCodeApi !== 'undefined') {
-            console.log('post office is using global');
             this.vscodeApi = acquireVsCodeApi(); // NOSONAR
             // tslint:disable-next-line: no-any no-typeof-undefined
         } else if (!this.vscodeApi && typeof (window as any).acquireVsCodeApi !== 'undefined') {
-            console.log('post office is using window');
             // tslint:disable-next-line: no-any
             this.vscodeApi = (window as any).acquireVsCodeApi();
         }
@@ -109,7 +105,6 @@ export class PostOffice implements IDisposable {
     private async handleMessages(ev: MessageEvent) {
         if (this.handlers) {
             const msg = ev.data as WebviewMessage;
-            console.log(`Received msg ${JSON.stringify(msg)}`);
             if (msg) {
                 this.subject.next({ type: msg.type, payload: msg.payload });
                 this.handlers.forEach((h: IMessageHandler | null) => {

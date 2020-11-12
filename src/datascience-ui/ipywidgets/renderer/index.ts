@@ -1,22 +1,27 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { NotebookRendererApi } from 'vscode-notebook-renderer';
+import { NotebookOutputEventParams, NotebookRendererApi } from 'vscode-notebook-renderer';
 const JupyterIPyWidgetNotebookRenderer = 'jupyter-ipywidget-renderer';
+
+// tslint:disable: no-any no-console
+function renderOutput(e: NotebookOutputEventParams) {
+    if ((window as any).ipywidgetsKernel?.renderOutput) {
+        return (window as any).ipywidgetsKernel?.renderOutput(e);
+    }
+    console.error('Rendering widgets on notebook open is not supported.');
+}
+
+function disposeOutput(e: { outputId: string } | undefined) {
+    if ((window as any).ipywidgetsKernel?.disposeOutput) {
+        return (window as any).ipywidgetsKernel?.disposeOutput(e);
+    }
+}
 
 // tslint:disable: no-any
 function initialize(api: NotebookRendererApi<any>) {
-    // tslint:disable-next-line: no-any
-    if (!(window as any).ipywidgetsKernel) {
-        // tslint:disable-next-line: no-console
-        console.error('Rendering IPyWidgets when loading a notebook is not supoorted.');
-        return;
-    }
-
-    // tslint:disable-next-line: no-console
-    console.log('Connecting renderer API');
-    api.onDidCreateOutput((window as any).ipywidgetsKernel.renderOutput);
-    api.onWillDestroyOutput((window as any).ipywidgetsKernel.disposeOutput);
+    api.onDidCreateOutput(renderOutput);
+    api.onWillDestroyOutput(disposeOutput);
 }
 
 initialize(acquireNotebookRendererApi(JupyterIPyWidgetNotebookRenderer));

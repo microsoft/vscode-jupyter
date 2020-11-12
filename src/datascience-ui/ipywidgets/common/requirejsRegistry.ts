@@ -44,10 +44,8 @@ function getScriptsWithAValidScriptUriToBeRegistered(scripts: WidgetScriptSource
 }
 
 function registerScriptsInRequireJs(scripts: NonPartial<WidgetScriptSource>[]) {
-    // tslint:disable-next-line: no-console
-    console.log('Require JS registry check');
     // tslint:disable-next-line: no-any
-    const requirejsfunc = ((window as any).requirejs || (global as any).requirejs) as { config: Function };
+    const requirejsfunc = (window as any).requirejs as { config: Function };
     if (!requirejsfunc) {
         window.console.error('Requirejs not found');
         throw new Error('Requirejs not found');

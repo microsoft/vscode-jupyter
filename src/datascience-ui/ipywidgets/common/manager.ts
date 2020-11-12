@@ -50,9 +50,6 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
         private readonly postOffice: PostOffice,
         private readonly scriptLoader: ScriptLoader
     ) {
-        // tslint:disable: no-console
-        console.log('Widget manager ctor');
-        // tslint:disable-next-line: no-any
         this.postOffice.addHandler(this);
 
         // Handshake.
@@ -67,7 +64,6 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
         await this.manager?.clear_state();
     }
     public handleMessage(message: string, payload?: any) {
-        console.log(`handling message in manager ${message}`);
         if (message === IPyWidgetMessages.IPyWidgets_kernelOptions) {
             this.initializeKernelAndWidgetManager(payload);
         } else if (message === IPyWidgetMessages.IPyWidgets_onRestartKernel) {
@@ -138,7 +134,6 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
         return this.manager.display_view(data, view, { node: ele });
     }
     private initializeKernelAndWidgetManager(options: KernelSocketOptions) {
-        console.log('Initialize kernel and widget manager');
         if (this.proxyKernel && fastDeepEqual(options, this.options)) {
             return;
         }

@@ -98,13 +98,9 @@ const renderedWidgets = new Set<string>();
  */
 let stackOfWidgetsRenderStatusByOutputId: { outputId: string; container: HTMLElement; success?: boolean }[] = [];
 export function renderOutput(request: NotebookOutputEventParams) {
-    console.log('New Kernel2.5');
     try {
         stackOfWidgetsRenderStatusByOutputId.push({ outputId: request.outputId, container: request.element });
-        // console.error('request', request);
         const output = convertVSCodeOutputToExecutResultOrDisplayData(request);
-        // console.log(`Rendering mimeType ${request.mimeType}`, output);
-        // console.error('request output', output);
 
         // tslint:disable-next-line: no-any
         const model = output.data['application/vnd.jupyter.widget-view+json'] as any;
@@ -112,16 +108,12 @@ export function renderOutput(request: NotebookOutputEventParams) {
             // tslint:disable-next-line: no-console
             return console.error('Nothing to render');
         }
-        console.log('New Kernel3');
         // tslint:disable: no-console
         renderIPyWidget(request.outputId, model, request.element);
     } catch (ex) {
         console.error(`Failed to render ipywidget type`, ex);
         throw ex;
     }
-
-    // postToRendererExtension('Hello', 'World');
-    // postToKernel('HelloKernel', 'WorldKernel');
 }
 export function disposeOutput(e: { outputId: string } | undefined) {
     if (e) {
@@ -144,13 +136,11 @@ function renderIPyWidget(
     model: nbformat.IMimeBundle & { model_id: string; version_major: number },
     container: HTMLElement
 ) {
-    console.log('New Kernel4');
     // tslint:disable: no-console
     // console.error('Got Something to render');
     if (renderedWidgets.has(model.model_id)) {
         return console.error('already rendering');
     }
-    console.log('New Kernel5');
     const output = document.createElement('div');
     output.className = 'cell-output cell-output';
     const ele = document.createElement('div');
@@ -160,7 +150,6 @@ function renderIPyWidget(
     renderedWidgets.add(model.model_id);
     createWidgetView(model, ele)
         .then((w) => {
-            console.log('New Kernel6');
             const disposable = {
                 dispose: () => {
                     // What if we render the same model in two cells.
@@ -216,7 +205,6 @@ async function createWidgetView(
 function initialize() {
     try {
         // Setup the widget manager
-        console.log('New Kernel7');
         const postOffice = new PostOffice();
         const mgr = new WidgetManagerComponent(postOffice);
         // tslint:disable-next-line: no-any
