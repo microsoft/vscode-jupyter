@@ -49,9 +49,9 @@ export class CommandRegistry implements IExtensionSingleActivationService {
             this.commandManager.registerCommand('jupyter.server.file.new', (item) => this.createNew(item, 'file'))
         );
         this.disposables.push(
-            this.commandManager.registerCommand('jupyter.server.notebook.new', async (item) => {
-                await this.createNew(item, 'notebook');
-            })
+            this.commandManager.registerCommand('jupyter.server.notebook.new', async (item) =>
+                this.createNew(item, 'notebook')
+            )
         );
         this.disposables.push(
             this.commandManager.registerCommand('jupyter.server.file.delete', (item) => this.delete(item))
