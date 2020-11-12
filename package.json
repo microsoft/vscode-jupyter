@@ -1,8 +1,8 @@
 {
     "name": "jupyter",
     "displayName": "Jupyter",
-    "description": "Jupyter notebook support, interactive programming and computing that supports Intellisense, code formatting, refactoring, debugging and more.",
     "version": "2020.12.0-dev",
+    "description": "Jupyter notebook support, interactive programming and computing that supports Intellisense, debugging and more.",
     "featureFlags": {
         "usingNewInterpreterStorage": true
     },
@@ -12,7 +12,7 @@
     "author": {
         "name": "Microsoft Corporation"
     },
-    "license": "MIT",
+    "license": "SEE LICENSE IN LICENSE.txt",
     "homepage": "https://github.com/Microsoft/vscode-jupyter",
     "repository": {
         "type": "git",
@@ -1751,11 +1751,13 @@
         "testNativeNotebooksInVSCode": "cross-env CODE_TESTS_WORKSPACE=src/test/datascience VSC_JUPYTER_CI_TEST_VSC_CHANNEL=insiders VSC_JUPYTER_RUN_NB_TEST=true TEST_FILES_SUFFIX=vscode.test VSC_JUPYTER_FORCE_LOGGING=1 VSC_JUPYTER_LOAD_EXPERIMENTS_FROM_FILE=true node ./out/test/testBootstrap.js ./out/test/standardTest.js",
         "testPerformance": "node ./out/test/testBootstrap.js ./out/test/performanceTest.js",
         "testSmoke": "node ./out/test/testBootstrap.js ./out/test/smokeTest.js",
+        "testSmokeLogged": "cross-env VSC_JUPYTER_FORCE_LOGGING=true VSC_JUPYTER_LOG_FILE=smoke-test.log node --no-force-async-hooks-checks ./out/test/smokeTest.js",
         "lint-staged": "node gulpfile.js",
         "lint": "tslint src/**/*.ts -t verbose",
         "prettier-fix": "prettier 'src/**/*.ts*' --write && prettier 'build/**/*.js' --write",
         "clean": "gulp clean",
         "updateBuildNumber": "gulp updateBuildNumber",
+        "updateLicense": "gulp updateLicense",
         "webpack": "webpack"
     },
     "dependencies": {
