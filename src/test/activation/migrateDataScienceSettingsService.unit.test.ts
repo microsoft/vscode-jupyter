@@ -70,7 +70,6 @@ suite('Migrate data science settings', () => {
         "python.dataScience.disableJupyterAutoStart": true,
         "python.dataScience.jupyterCommandLineArguments": ["foo", "bar"],
         "python.dataScience.alwaysScrollOnNewCell": true,
-        "python.dataScience.showKernelSelectionOnInteractiveWindow": true,
         "python.languageServer": "Pylance",
         "python.linting.enabled": false,
         "python.experiments.optOutFrom": [
@@ -130,7 +129,6 @@ suite('Migrate data science settings', () => {
         "jupyter.disableJupyterAutoStart": true,
         "jupyter.jupyterCommandLineArguments": ["foo", "bar"],
         "jupyter.alwaysScrollOnNewCell": true,
-        "jupyter.showKernelSelectionOnInteractiveWindow": true,
         "python.languageServer": "Pylance",
         "python.linting.enabled": false,
         "python.experiments.optOutFrom": [

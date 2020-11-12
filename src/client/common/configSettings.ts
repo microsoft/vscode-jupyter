@@ -91,7 +91,6 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     public jupyterCommandLineArguments: string[] = [];
     public widgetScriptSources: WidgetCDNs[] = [];
     public alwaysScrollOnNewCell: boolean = false;
-    public showKernelSelectionOnInteractiveWindow: boolean = false;
     public interactiveWindowMode: InteractiveWindowMode = 'multiple';
     // Hidden settings not surfaced in package.json
     public disableZMQSupport: boolean = false;
