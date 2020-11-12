@@ -23,7 +23,7 @@ import { allowInSecureJupyterServerConnections, removeAllJupyterServerConnection
 const tempFolder = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience', 'temp', 'temp');
 
 // tslint:disable: no-any no-invalid-this
-suite('Jupyter Server - (remote)xxx', () => {
+suite('Jupyter Server - Remote File System - (remote)', () => {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let jupyterUriWithoutAuth: Uri;

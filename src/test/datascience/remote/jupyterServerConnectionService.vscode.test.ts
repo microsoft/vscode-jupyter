@@ -17,7 +17,7 @@ import { canRunNotebookTests, disposeAllDisposables, hijackPrompt } from '../not
 import { allowInSecureJupyterServerConnections, removeAllJupyterServerConnections } from './helpers';
 
 // tslint:disable: no-any no-invalid-this
-suite('Jupyter Server - (remote)xxx', () => {
+suite('Jupyter Server - (remote)', () => {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let jupyterUri: Uri;
