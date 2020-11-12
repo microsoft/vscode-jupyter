@@ -1,6 +1,4 @@
-import * as ffi from 'ffi-napi';
 import { inject, injectable } from 'inversify';
-import * as ref from 'ref-napi';
 import { traceError, traceInfo } from '../../common/logger';
 import { IFileSystem, IPlatformService } from '../../common/platform/types';
 import { IProcessServiceFactory } from '../../common/process/types';
@@ -32,35 +30,45 @@ export class SystemPseudoRandomNumberGenerator implements ISystemPseudoRandomNum
     // Calls into BCryptGenRandom in bcrypt.dll using node-ffi
     // See https://github.com/node-ffi/node-ffi/wiki/Node-FFI-Tutorial for details on usage
     private randomBytesForWindows(numBytes: number) {
-        const BCRYPT_ALG_HANDLE = 'void*';
-        const ULONG = 'uint';
-        const PUCHAR = 'pointer';
-        const NTSTATUS = ref.types.uint32;
+        try {
+            // tslint:disable: no-require-imports
+            // Lazy-load modules required for calling BCryptGenRandom
+            const ffi = require('ffi-napi');
+            const ref = require('ref-napi');
 
-        traceInfo('Initializing FFI bindings for BCryptGenRandom...');
-        const bcryptlib = ffi.Library('BCrypt', {
-            // Name of DLL function: [ return type, [ arg1 type, arg2 type, ... ] ]
-            // https://docs.microsoft.com/en-us/windows/win32/api/bcrypt/nf-bcrypt-bcryptgenrandom
-            BCryptGenRandom: [NTSTATUS, [BCRYPT_ALG_HANDLE, PUCHAR, ULONG, ULONG]]
-        });
+            const BCRYPT_ALG_HANDLE = 'void*';
+            const ULONG = 'uint';
+            const PUCHAR = 'pointer';
+            const NTSTATUS = ref.types.uint32;
 
-        traceInfo('Calling BCryptGenRandom to generate random bytes...');
-        const pbBuffer = Buffer.alloc(numBytes);
-        const statusCodeForBCryptGenRandom = bcryptlib.BCryptGenRandom(ref.NULL, pbBuffer, numBytes, 2);
-        if (statusCodeForBCryptGenRandom !== 0) {
-            traceError(
-                `Failed to allocate random bytes with BCryptGenRandom with exit status ${statusCodeForBCryptGenRandom}.`
-            );
+            traceInfo('Initializing FFI bindings for BCryptGenRandom...');
+            const bcryptlib = ffi.Library('BCrypt', {
+                // Name of DLL function: [ return type, [ arg1 type, arg2 type, ... ] ]
+                // https://docs.microsoft.com/en-us/windows/win32/api/bcrypt/nf-bcrypt-bcryptgenrandom
+                BCryptGenRandom: [NTSTATUS, [BCRYPT_ALG_HANDLE, PUCHAR, ULONG, ULONG]]
+            });
+
+            traceInfo('Calling BCryptGenRandom to generate random bytes...');
+            const pbBuffer = Buffer.alloc(numBytes);
+            const statusCodeForBCryptGenRandom = bcryptlib.BCryptGenRandom(ref.NULL, pbBuffer, numBytes, 2);
+            if (statusCodeForBCryptGenRandom !== 0) {
+                traceError(
+                    `Failed to allocate random bytes with BCryptGenRandom with exit status ${statusCodeForBCryptGenRandom}.`
+                );
+                throw new Error('Failed to allocate random bytes for notebook trust.');
+            }
+
+            return pbBuffer;
+        } catch (e) {
+            traceError(e);
             throw new Error('Failed to allocate random bytes for notebook trust.');
         }
-
-        return pbBuffer;
     }
 
     // Read the first `numBytes` from /dev/urandom
     private async randomBytesForUnixLikeSystems(numBytes: number) {
         const temporaryFile = await this.fileSystem.createTemporaryLocalFile('.txt');
-        const script = `head -c ${numBytes} /dev/urandom > ${temporaryFile.filePath}`;
+        const script = `head -c ${numBytes} /dev/urandom > '${temporaryFile.filePath}'`;
         const process = await this.processServiceFactory.create();
 
         traceInfo(`Executing ${script} to generate random bytes...`);

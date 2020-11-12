@@ -31,7 +31,7 @@ env:
 jobs:
   build-vsix:
     name: Build VSIX
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     if: github.repository == 'microsoft/vscode-jupyter'
     steps:
       - name: Checkout
@@ -200,8 +200,8 @@ jobs:
 
       - name: Compile if not cached
         run: npx gulp prePublishNonBundle
-        # if: steps.out-cache.outputs.cache-hit == false
 
+        # if: steps.out-cache.outputs.cache-hit == false
       - name: Run TypeScript unit tests
         id: test_unittests
         run: npm run test:unittests:cover
@@ -325,12 +325,12 @@ jobs:
           python -m pip install --upgrade -r ./build/ipython-test-requirements.txt
           python -m pip install --upgrade -r ./build/conda-functional-requirements.txt
           python -m ipykernel install --user
-        # This step is slow.
 
+        # This step is slow.
       - name: Install dependencies (npm ci)
         run: npm ci --prefer-offline
-        # This step is slow.
 
+        # This step is slow.
       - name: Compile if not cached
         run: npx gulp prePublishNonBundle
 
@@ -360,8 +360,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     if: github.repository == 'microsoft/vscode-jupyter'
     env:
-        VSC_FORCE_REAL_JUPYTER: 1
-        VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
+      VSC_FORCE_REAL_JUPYTER: 1
+      VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
     strategy:
       fail-fast: false
       matrix:
@@ -468,12 +468,12 @@ jobs:
           python -m pip install --upgrade -r ./build/ipython-test-requirements.txt
           python -m pip install --upgrade -r ./build/conda-functional-requirements.txt
           python -m ipykernel install --user
-        # This step is slow.
 
+        # This step is slow.
       - name: Install dependencies (npm ci)
         run: npm ci --prefer-offline
-        # This step is slow.
 
+        # This step is slow.
       - name: Compile if not cached
         run: npx gulp prePublishNonBundle
 
@@ -542,7 +542,6 @@ jobs:
           check_name: Notebook Test Report
         if: (steps.test_notebook_vscode.outcome == 'failure' || steps.test_notebook_vscode.outcome == 'failure') && failure()
 
-
   smoke-tests:
     name: Smoke tests
     # The value of runs-on is the OS of the current job (specified in the strategy matrix below) instead of being hardcoded.
@@ -577,7 +576,6 @@ jobs:
         with:
           node-version: ${{env.NODE_VERSION}}
 
-
       - name: Azure Login
         uses: azure/login@v1.1.1
         with:
@@ -593,7 +591,7 @@ jobs:
 
       - name: Install dependencies (npm ci)
         run: npm ci --prefer-offline
-      
+
       - name: pip install system test requirements
         run: |
           python -m pip install --upgrade -r build/test-requirements.txt
@@ -624,8 +622,6 @@ jobs:
         with:
           name: smoke-test.log
           path: './smoke-test.log'
-
-
 
   upload:
     name: Upload VSIX to Azure Blob Storage
