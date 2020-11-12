@@ -10,7 +10,6 @@ import { IDisposable, IDisposableRegistry } from '../../client/common/types';
 import { PYTHON_PATH } from '../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants';
 import { initialize } from '../initialize';
-
 const testFolder = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience');
 export class JupyterServer implements IDisposable {
     public static get instance(): JupyterServer {
@@ -20,49 +19,34 @@ export class JupyterServer implements IDisposable {
         return JupyterServer._instance;
     }
     private static _instance: JupyterServer;
-    private _jupyterServerWithoutAuthProc?: ChildProcess;
-    private _jupyterServerWithoutAuth?: Promise<Uri>;
-    private _jupyterServerWithToken1234Proc?: ChildProcess;
-    private _jupyterServerWithToken1234?: Promise<Uri>;
+    private _jupyterServerWithTokenABCDProc?: ChildProcess;
+    private _jupyterServerWithTokenABCD?: Promise<Uri>;
     private constructor() {}
     public dispose() {
-        if (this._jupyterServerWithoutAuthProc) {
-            this._jupyterServerWithoutAuthProc?.kill();
-        }
-        if (this._jupyterServerWithToken1234Proc) {
-            this._jupyterServerWithToken1234Proc?.kill();
+        if (this._jupyterServerWithTokenABCDProc) {
+            this._jupyterServerWithTokenABCDProc?.kill();
         }
     }
-    public async startJupyterWithoutAuth(): Promise<Uri> {
-        if (!this._jupyterServerWithoutAuth) {
-            this._jupyterServerWithoutAuth = new Promise<Uri>(async (resolve, reject) => {
+    public async startJupyterWithToken(): Promise<Uri> {
+        const token = '7d25707a86975be50ee9757c929fef9012d27cf43153d1c1';
+        if (!this._jupyterServerWithTokenABCD) {
+            this._jupyterServerWithTokenABCD = new Promise<Uri>(async (resolve, reject) => {
                 const port = await getFreePort({ host: 'localhost' });
                 try {
-                    this._jupyterServerWithoutAuthProc = await this.startJupyterServer({ port, token: '' });
-                    resolve(Uri.parse(`http://localhost:${port}`));
+                    this._jupyterServerWithTokenABCDProc = await this.startJupyterServer({
+                        port,
+                        token
+                    });
+                    resolve(Uri.parse(`http://localhost:${port}/?token=${token}`));
                 } catch (ex) {
                     reject(ex);
                 }
             });
         }
-        return this._jupyterServerWithoutAuth;
-    }
-    public async startJupyterWithToken1234(): Promise<Uri> {
-        if (!this._jupyterServerWithToken1234) {
-            this._jupyterServerWithToken1234 = new Promise<Uri>(async (resolve, reject) => {
-                const port = await getFreePort({ host: 'localhost' });
-                try {
-                    this._jupyterServerWithToken1234Proc = await this.startJupyterServer({ port, token: '1234' });
-                    resolve(Uri.parse(`http://localhost:${port}`));
-                } catch (ex) {
-                    reject(ex);
-                }
-            });
-        }
-        return this._jupyterServerWithToken1234;
+        return this._jupyterServerWithTokenABCD;
     }
 
-    private startJupyterServer(options: { token: string; port: number }): Promise<ChildProcess> {
+    private startJupyterServer({ token, port }: { token: string; port: number }): Promise<ChildProcess> {
         return new Promise<ChildProcess>(async (resolve, reject) => {
             try {
                 const api = await initialize();
@@ -70,11 +54,14 @@ export class JupyterServer implements IDisposable {
                 const pythonExecutionService = await pythonExecFactory.create({ pythonPath: PYTHON_PATH });
                 const result = pythonExecutionService.execModuleObservable(
                     'jupyter',
-                    ['notebook', `--NotebookApp.port=${options.port}`, `--NotebookApp.token=${options.token}`],
+                    ['notebook', '--no-browser', `--NotebookApp.port=${port}`, `--NotebookApp.token=${token}`],
                     {
                         cwd: testFolder
                     }
                 );
+                if (!result.proc) {
+                    throw new Error('Starting Jupyter failed, no process');
+                }
                 api.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry).push({
                     dispose: () => {
                         if (!result.proc) {
@@ -87,10 +74,11 @@ export class JupyterServer implements IDisposable {
                         }
                     }
                 });
+
                 const subscription = result.out.subscribe((output) => {
-                    if (output.out.indexOf('The Jupyter Notebook is running at')) {
+                    if (output.out.indexOf('Use Control-C to stop this server and shut down all kernels')) {
                         subscription.unsubscribe();
-                        resolve(result.proc);
+                        resolve(result.proc!);
                     }
                 });
             } catch (ex) {

@@ -6,12 +6,13 @@
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { anything, instance, mock, when } from 'ts-mockito';
+import { ExtensionMode } from 'vscode';
 import * as tasClient from 'vscode-tas-client';
 import { ApplicationEnvironment } from '../../../client/common/application/applicationEnvironment';
 import { Channel, IApplicationEnvironment } from '../../../client/common/application/types';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import { ExperimentService } from '../../../client/common/experiments/service';
-import { IConfigurationService } from '../../../client/common/types';
+import { IConfigurationService, IExtensionContext } from '../../../client/common/types';
 import { Experiments } from '../../../client/common/utils/localize';
 import * as Telemetry from '../../../client/telemetry';
 import { EventName } from '../../../client/telemetry/constants';
@@ -26,6 +27,8 @@ suite('Experimentation service', () => {
     let appEnvironment: IApplicationEnvironment;
     let globalMemento: MockMemento;
     let outputChannel: MockOutputChannel;
+    const contextStub = mock<IExtensionContext>();
+    when(contextStub.extensionMode).thenReturn(ExtensionMode.Production);
 
     setup(() => {
         configurationService = mock(ConfigurationService);
@@ -68,7 +71,8 @@ suite('Experimentation service', () => {
                 instance(configurationService),
                 instance(appEnvironment),
                 globalMemento,
-                outputChannel
+                outputChannel,
+                instance(contextStub)
             );
 
             sinon.assert.calledWithExactly(
@@ -92,7 +96,8 @@ suite('Experimentation service', () => {
                 instance(configurationService),
                 instance(appEnvironment),
                 globalMemento,
-                outputChannel
+                outputChannel,
+                instance(contextStub)
             );
 
             sinon.assert.calledWithExactly(
@@ -115,7 +120,8 @@ suite('Experimentation service', () => {
                 instance(configurationService),
                 instance(appEnvironment),
                 globalMemento,
-                outputChannel
+                outputChannel,
+                instance(contextStub)
             );
 
             assert.deepEqual(experimentService._optInto, ['Foo - experiment']);
@@ -130,7 +136,8 @@ suite('Experimentation service', () => {
                 instance(configurationService),
                 instance(appEnvironment),
                 globalMemento,
-                outputChannel
+                outputChannel,
+                instance(contextStub)
             );
 
             assert.deepEqual(experimentService._optOutFrom, ['Foo - experiment']);
@@ -149,7 +156,8 @@ suite('Experimentation service', () => {
                 instance(configurationService),
                 instance(appEnvironment),
                 instance(globalMemento),
-                outputChannel
+                outputChannel,
+                instance(contextStub)
             );
             const output = `${Experiments.inGroup().format('pythonExperiment')}\n`;
 
@@ -192,7 +200,8 @@ suite('Experimentation service', () => {
                 instance(configurationService),
                 instance(appEnvironment),
                 globalMemento,
-                outputChannel
+                outputChannel,
+                instance(contextStub)
             );
             const result = await experimentService.inExperiment(experiment);
 
@@ -208,7 +217,8 @@ suite('Experimentation service', () => {
                 instance(configurationService),
                 instance(appEnvironment),
                 globalMemento,
-                outputChannel
+                outputChannel,
+                instance(contextStub)
             );
             const result = await experimentService.inExperiment(experiment);
 
@@ -224,7 +234,8 @@ suite('Experimentation service', () => {
                 instance(configurationService),
                 instance(appEnvironment),
                 globalMemento,
-                outputChannel
+                outputChannel,
+                instance(contextStub)
             );
             const result = await experimentService.inExperiment(experiment);
 
@@ -244,7 +255,8 @@ suite('Experimentation service', () => {
                 instance(configurationService),
                 instance(appEnvironment),
                 globalMemento,
-                outputChannel
+                outputChannel,
+                instance(contextStub)
             );
             const result = await experimentService.inExperiment(experiment);
 
@@ -264,7 +276,8 @@ suite('Experimentation service', () => {
                 instance(configurationService),
                 instance(appEnvironment),
                 globalMemento,
-                outputChannel
+                outputChannel,
+                instance(contextStub)
             );
             const result = await experimentService.inExperiment(experiment);
 
@@ -284,7 +297,8 @@ suite('Experimentation service', () => {
                 instance(configurationService),
                 instance(appEnvironment),
                 globalMemento,
-                outputChannel
+                outputChannel,
+                instance(contextStub)
             );
             const result = await experimentService.inExperiment(experiment);
 
@@ -319,7 +333,8 @@ suite('Experimentation service', () => {
                 instance(configurationService),
                 instance(appEnvironment),
                 globalMemento,
-                outputChannel
+                outputChannel,
+                instance(contextStub)
             );
             const result = await experimentService.getExperimentValue(experiment);
 
@@ -334,7 +349,8 @@ suite('Experimentation service', () => {
                 instance(configurationService),
                 instance(appEnvironment),
                 globalMemento,
-                outputChannel
+                outputChannel,
+                instance(contextStub)
             );
             const result = await experimentService.getExperimentValue(experiment);
 
@@ -349,7 +365,8 @@ suite('Experimentation service', () => {
                 instance(configurationService),
                 instance(appEnvironment),
                 globalMemento,
-                outputChannel
+                outputChannel,
+                instance(contextStub)
             );
             const result = await experimentService.getExperimentValue(experiment);
 
@@ -364,7 +381,8 @@ suite('Experimentation service', () => {
                 instance(configurationService),
                 instance(appEnvironment),
                 globalMemento,
-                outputChannel
+                outputChannel,
+                instance(contextStub)
             );
             const result = await experimentService.getExperimentValue(experiment);
 

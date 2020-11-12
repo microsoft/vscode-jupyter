@@ -9,7 +9,7 @@ import { IShowDataViewerFromVariablePanel } from '../../datascience/interactive-
 import { KernelConnectionMetadata } from '../../datascience/jupyter/kernels/types';
 import { INotebookModel, ISwitchKernelOptions } from '../../datascience/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
-import { DirectoryNode, FileNode, FileSystemNode, KernelSessionsNode, ServerNode } from '../../remote/ui/treeNodes';
+import { DirectoryTreeNodeData, FileTreeNodeData, KernelSessionsNode, ServerNode } from '../../remote/ui/treeNodes';
 import { CommandSource } from '../../testing/common/constants';
 import { Commands } from '../constants';
 import { Channel } from './types';
@@ -92,10 +92,10 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     ['jupyter.server.logout']: [ServerNode];
     ['jupyter.server.refresh']: [ServerNode];
     ['jupyter.server.kernelSessions.refresh']: [KernelSessionsNode];
-    ['jupyter.server.directory.new']: [FileSystemNode | DirectoryNode];
-    ['jupyter.server.file.new']: [FileSystemNode | DirectoryNode];
-    ['jupyter.server.notebook.new']: [FileSystemNode | DirectoryNode];
-    ['jupyter.server.file.delete']: [FileNode];
+    ['jupyter.server.directory.new']: [FileTreeNodeData | DirectoryTreeNodeData];
+    ['jupyter.server.file.new']: [FileTreeNodeData | DirectoryTreeNodeData];
+    ['jupyter.server.notebook.new']: [FileTreeNodeData | DirectoryTreeNodeData];
+    ['jupyter.server.file.delete']: [FileTreeNodeData];
     [DSCommands.ExportFileAndOutputAsNotebook]: [Uri];
     [DSCommands.RunAllCells]: [Uri];
     [DSCommands.RunCell]: [Uri, number, number, number, number];

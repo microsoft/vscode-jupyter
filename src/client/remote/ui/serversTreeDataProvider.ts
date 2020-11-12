@@ -63,7 +63,7 @@ export async function getActiveKernels(
     data: TreeNodeData<'kernelSessions'>,
     connectionService: JupyterServerConnectionService
 ): Promise<KernelSessionTreeNodeData[]> {
-    const manager = await connectionService.createConnectionManager(data.connection.id);
+    const manager = await connectionService.getServiceManager(data.connection.id);
     const [kernels, sessions] = await Promise.all([manager.getRunningKernels(), manager.getRunningSessions()]);
     return sessions.map((session) => {
         const kernel = kernels.find((item) => item.id === session.kernel.id);

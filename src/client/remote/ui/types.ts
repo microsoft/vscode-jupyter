@@ -26,8 +26,8 @@ export interface IJupyterServerConnectionService {
      * Add a new server to the list, if a base url is provided use that instead of asking user to enter it.
      * At this point, user is merely prompted to enter the credentials/token (if required).
      */
-    addServer(baseUrl?: string): Promise<void>;
-    logout(id: string): void;
+    addServer(baseUrl?: Uri): Promise<void>;
+    disconnect(id: string): void;
 }
 
 export type FileEntry = Contents.IModel & {

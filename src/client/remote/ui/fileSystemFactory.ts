@@ -4,7 +4,7 @@
 import { inject, injectable, named } from 'inversify';
 import { Memento } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
-import { GLOBAL_MEMENTO, IMemento } from '../../common/types';
+import { GLOBAL_MEMENTO, IDisposableRegistry, IMemento } from '../../common/types';
 import { swallowExceptions } from '../../common/utils/decorators';
 import { noop } from '../../common/utils/misc';
 import { RemoteFileSchemeManager } from '../connection/fileSchemeManager';
@@ -17,13 +17,14 @@ type FileSchemeBaseUri = {
 };
 @injectable()
 export class RemoteFileSystemFactory implements IExtensionSingleActivationService {
-    private readonly fileSystemsByScheme = new Map<string, RemoteFileSystem>();
-    private fileSystems = new Map<string, Promise<RemoteFileSystem>>();
+    public readonly fileSystemsByScheme = new Map<string, RemoteFileSystem>();
+    public fileSystems = new Map<string, Promise<RemoteFileSystem>>();
     private previousUpdate = Promise.resolve();
     constructor(
         @inject(IMemento) @named(GLOBAL_MEMENTO) private globalState: Memento,
         @inject(IJupyterServerConnectionService) private readonly connectionService: JupyterServerConnectionService,
-        @inject(RemoteFileSchemeManager) private readonly fileSchemeManager: RemoteFileSchemeManager
+        @inject(RemoteFileSchemeManager) private readonly fileSchemeManager: RemoteFileSchemeManager,
+        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
     ) {}
     /**
      * If users leave a remote file open & close/reload VS Code, then we need to ensure we re-connect back to those servers.
@@ -43,9 +44,11 @@ export class RemoteFileSystemFactory implements IExtensionSingleActivationServic
                     this.connectionService,
                     this.fileSchemeManager
                 );
+                this.disposables.push(fileSystem);
                 this.fileSystemsByScheme.set(remoteJupyterFileScheme.scheme, fileSystem);
             }
         }
+        this.connectionService.onDidRemoveServer(this.onDidRemoveServer, this, this.disposables);
     }
     public async getOrCreateRemoteFileSystem(connection: JupyterServerConnection) {
         if (!this.fileSystems.has(connection.id)) {
@@ -55,6 +58,19 @@ export class RemoteFileSystemFactory implements IExtensionSingleActivationServic
     }
     public getRemoteFileSystem(scheme: string) {
         return this.fileSystemsByScheme.get(scheme);
+    }
+    private async onDidRemoveServer(connection?: JupyterServerConnection) {
+        if (!connection) {
+            return;
+        }
+        const fs = await this.fileSystems.get(connection.id);
+        if (fs) {
+            try {
+                fs.dispose();
+            } catch {
+                //
+            }
+        }
     }
     private async createRemoteFileSystem(connection: JupyterServerConnection) {
         const fileScheme = connection.fileScheme;

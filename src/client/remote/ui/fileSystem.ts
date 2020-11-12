@@ -188,18 +188,11 @@ export class RemoteFileSystem implements IFileSystemProvider {
     }
     public async createNew(remotePath: Uri, type: 'file' | 'directory' | 'notebook'): Promise<Uri | undefined> {
         const contentManager = await this.getContentManager();
-        try {
-            const model = await contentManager.newUntitled({ type, path: remotePath.fsPath });
-            if (model) {
-                const uri = Uri.file(model.path).with({ scheme: this.scheme });
-                this._fireSoon(
-                    { type: FileChangeType.Created, uri },
-                    { uri: remotePath, type: FileChangeType.Changed }
-                );
-                return uri;
-            }
-        } finally {
-            contentManager.dispose();
+        const model = await contentManager.newUntitled({ type, path: remotePath.fsPath });
+        if (model) {
+            const uri = Uri.file(model.path).with({ scheme: this.scheme });
+            this._fireSoon({ type: FileChangeType.Created, uri }, { uri: remotePath, type: FileChangeType.Changed });
+            return uri;
         }
     }
     private async getJupyterConnectionId(): Promise<string> {
@@ -212,7 +205,7 @@ export class RemoteFileSystem implements IFileSystemProvider {
                     const baseUrl = await this.fileSchemeManager.getAssociatedUrl(this.scheme);
                     if (baseUrl) {
                         // Get the user to log into this.
-                        await this.remoteConnections.addServer(baseUrl);
+                        await this.remoteConnections.addServer(Uri.parse(baseUrl));
                     }
                     servers = await this.remoteConnections.getConnections();
                     server = servers.find((item) => item.fileScheme === this.scheme);
@@ -233,7 +226,7 @@ export class RemoteFileSystem implements IFileSystemProvider {
     }
     private async getContentManager() {
         const jupyterConnectionId = await this.getJupyterConnectionId();
-        const service = await this.remoteConnections.createConnectionManager(jupyterConnectionId);
+        const service = await this.remoteConnections.getServiceManager(jupyterConnectionId);
         return service.contentsManager;
     }
 

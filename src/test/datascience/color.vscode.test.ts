@@ -4,7 +4,6 @@
 import { assert } from 'chai';
 import * as TypeMoq from 'typemoq';
 import { WorkspaceConfiguration } from 'vscode';
-
 import { Extensions } from '../../client/common/application/extensions';
 import { IWorkspaceService } from '../../client/common/application/types';
 import { FileSystem } from '../../client/common/platform/fileSystem';
