@@ -11,7 +11,7 @@
     "python.linting.mypyEnabled": false,
     "python.linting.banditEnabled": false,
     "python.formatting.provider": "yapf",
-    "python.pythonPath": "/Users/donjayamanne/Desktop/Development/crap/docBug/venvDS/bin/python",
+    "python.pythonPath": "python",
     "jupyter.experiments.optInto": [
         "NativeNotebookEditor"
     ],
