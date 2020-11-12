@@ -81,7 +81,7 @@ export class PythonApiProvider implements IPythonApiProvider {
 export class PythonExtensionChecker implements IPythonExtensionChecker {
     private extensionChangeHandler: Disposable | undefined;
     private pythonExtensionId = PythonExtension;
-
+    private waitingOnInstallPrompt?: Promise<void>;
     constructor(
         @inject(IExtensions) private readonly extensions: IExtensions,
         @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory,
@@ -95,6 +95,9 @@ export class PythonExtensionChecker implements IPythonExtensionChecker {
     }
 
     public async showPythonExtensionInstallRequiredPrompt(): Promise<void> {
+        if (this.waitingOnInstallPrompt) {
+            return this.waitingOnInstallPrompt;
+        }
         // Ask user if they want to install and then wait for them to actually install it.
         const yes = localize.Common.bannerLabelYes();
         const no = localize.Common.bannerLabelNo();
@@ -111,22 +114,28 @@ export class PythonExtensionChecker implements IPythonExtensionChecker {
             const yes = localize.Common.bannerLabelYes();
             const no = localize.Common.bannerLabelNo();
             const doNotShowAgain = localize.Common.doNotShowAgain();
-            const answer = await this.appShell.showInformationMessage(
-                localize.DataScience.pythonExtensionRecommended(),
-                yes,
-                no,
-                doNotShowAgain
-            );
-            switch (answer) {
-                case yes:
-                    await this.installPythonExtension();
-                    break;
-                case doNotShowAgain:
-                    await surveyPrompt.updateValue(false);
-                    break;
-                default:
-                    break;
-            }
+
+            const promise = (this.waitingOnInstallPrompt = new Promise<void>(async (resolve) => {
+                const answer = await this.appShell.showInformationMessage(
+                    localize.DataScience.pythonExtensionRecommended(),
+                    yes,
+                    no,
+                    doNotShowAgain
+                );
+                switch (answer) {
+                    case yes:
+                        await this.installPythonExtension();
+                        break;
+                    case doNotShowAgain:
+                        await surveyPrompt.updateValue(false);
+                        break;
+                    default:
+                        break;
+                }
+                resolve();
+            }));
+            await promise;
+            this.waitingOnInstallPrompt = undefined;
         }
     }
 
