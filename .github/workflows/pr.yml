@@ -397,9 +397,11 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: ${{matrix.python}}
+        if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook'
 
       - name: Upgrade pip
         run: python -m pip install -U pip
+        if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook'
 
       - name: Use Node ${{env.NODE_VERSION}}
         uses: actions/setup-node@v2.1.2
@@ -412,7 +414,7 @@ jobs:
       # Caching (https://github.com/actions/cache/blob/main/examples.md#python---pip
       - name: Cache pip on linux
         uses: actions/cache@v2
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.os == 'ubuntu-latest' && (matrix.test-suite == 'integration' || matrix.test-suite == 'notebook')
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-${{ hashFiles('requirements.txt') }}-${{hashFiles('build/debugger-install-requirements.txt')}}-${{hashFiles('test-requirements.txt')}}-${{hashFiles('ipython-test-requirements.txt')}}-${{hashFiles('functional-test-requirements.txt')}}-${{hashFiles('conda-functional-requirements.txt')}}
@@ -421,7 +423,7 @@ jobs:
 
       - name: Cache pip on mac
         uses: actions/cache@v2
-        if: matrix.os == 'macos-latest'
+        if: matrix.os == 'macos-latest' && (matrix.test-suite == 'integration' || matrix.test-suite == 'notebook')
         with:
           path: ~/Library/Caches/pip
           key: ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-${{ hashFiles('requirements.txt') }}-${{hashFiles('build/debugger-install-requirements.txt')}}-${{hashFiles('test-requirements.txt')}}-${{hashFiles('ipython-test-requirements.txt')}}-${{hashFiles('functional-test-requirements.txt')}}-${{hashFiles('conda-functional-requirements.txt')}}
@@ -430,7 +432,7 @@ jobs:
 
       - name: Cache pip on windows
         uses: actions/cache@v2
-        if: matrix.os == 'windows-latest'
+        if: matrix.os == 'windows-latest' && (matrix.test-suite == 'integration' || matrix.test-suite == 'notebook')
         with:
           path: ~\AppData\Local\pip\Cache
           key: ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-${{ hashFiles('requirements.txt') }}-${{hashFiles('build/debugger-install-requirements.txt')}}-${{hashFiles('test-requirements.txt')}}-${{hashFiles('ipython-test-requirements.txt')}}-${{hashFiles('functional-test-requirements.txt')}}-${{hashFiles('conda-functional-requirements.txt')}}
@@ -471,6 +473,7 @@ jobs:
       # For faster/better builds of sdists.
       - run: python -m pip install wheel
         shell: bash
+        if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook'
 
       # debugpy is not shipped, only installed for local tests.
       # In production, we get debugpy from python extension.
@@ -485,6 +488,7 @@ jobs:
           python -m pip install --upgrade -r ./build/ipython-test-requirements.txt
           python -m pip install --upgrade -r ./build/conda-functional-requirements.txt
           python -m ipykernel install --user
+        if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook'
         # This step is slow.
 
       - name: Install dependencies (npm ci)
@@ -513,12 +517,12 @@ jobs:
 
       - name: Create Virtual Env for Tests
         uses: ./.github/actions/create-venv-for-tests
+        if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook'
 
       - name: Azure Login
         uses: azure/login@v1.1.1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
-        if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook'
 
       - name: Download Python VSIX
         run: az storage blob download --file ${{env.VSIX_NAME_PYTHON}} --account-name pvsc --container-name extension-builds --name ${{ env.VSIX_NAME_PYTHON }}
