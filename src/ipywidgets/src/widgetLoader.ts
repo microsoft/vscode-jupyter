@@ -9,7 +9,7 @@ async function requirePromise(pkg: string | string[]): Promise<any> {
         // tslint:disable-next-line: no-console
         console.log('require promise');
         // tslint:disable-next-line: no-any
-        const requirejsfunc = (window as any).requirejs || requirejs;
+        const requirejsfunc = (requirejs as any) || (window as any).requirejs;
         if (requirejsfunc === undefined) {
             reject('Requirejs is needed, please ensure it is loaded on the page.');
         } else {
