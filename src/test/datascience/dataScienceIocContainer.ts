@@ -309,6 +309,7 @@ import {
 } from './testNativeEditorProvider';
 import { TestPersistentStateFactory } from './testPersistentStateFactory';
 import { WebBrowserPanelProvider } from './uiTests/webBrowserPanelProvider';
+import { JupyterServerPicker } from '../../client/datascience/jupyter/serverPicker';
 
 export class DataScienceIocContainer extends UnitTestIocContainer {
     public get workingInterpreter() {
@@ -640,6 +641,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             instance(mockServerSelector)
         );
 
+        this.serviceManager.addSingleton<JupyterServerPicker>(JupyterServerPicker, JupyterServerPicker);
         this.serviceManager.addSingleton<INotebookProvider>(INotebookProvider, NotebookProvider);
         this.serviceManager.addSingleton<IJupyterNotebookProvider>(IJupyterNotebookProvider, JupyterNotebookProvider);
         this.serviceManager.addSingleton<IJupyterServerProvider>(IJupyterServerProvider, NotebookServerProvider);
