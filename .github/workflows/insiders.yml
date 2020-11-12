@@ -493,12 +493,6 @@ jobs:
       - name: Create Virtual Env for Tests
         uses: ./.github/actions/create-venv-for-tests
 
-      - name: Azure Login
-        uses: azure/login@v1.1.1
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-        if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook'
-
       - name: Download Python VSIX
         run: curl --output ${{ env.VSIX_NAME_PYTHON }} https://pvsc.blob.core.windows.net/extension-builds/${{ env.VSIX_NAME_PYTHON }}
         if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook'
@@ -576,12 +570,6 @@ jobs:
         uses: actions/setup-node@v2.1.2
         with:
           node-version: ${{env.NODE_VERSION}}
-
-
-      - name: Azure Login
-        uses: azure/login@v1.1.1
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Download Python VSIX
         run: curl --output ${{ env.VSIX_NAME_PYTHON }} https://pvsc.blob.core.windows.net/extension-builds/${{ env.VSIX_NAME_PYTHON }}
