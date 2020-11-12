@@ -1,10 +1,8 @@
 import { ISystemPseudoRandomNumberGenerator } from '../../../client/datascience/types';
 import { assert } from 'chai';
-import { Disposable } from 'vscode';
 import { DataScienceIocContainer } from '../dataScienceIocContainer';
 
 suite('DataScience - RandomBytes', () => {
-    const disposables: Disposable[] = [];
     let prng: ISystemPseudoRandomNumberGenerator;
     let ioc: DataScienceIocContainer;
     setup(() => {
@@ -15,18 +13,7 @@ suite('DataScience - RandomBytes', () => {
     });
 
     teardown(async () => {
-        for (const disposable of disposables) {
-            if (!disposable) {
-                continue;
-            }
-            // tslint:disable-next-line:no-any
-            const promise = disposable.dispose() as Promise<any>;
-            if (promise) {
-                await promise;
-            }
-        }
         await ioc.dispose();
-        delete (global as any).ascquireVsCodeApi;
     });
 
     test('Generate random bytes', async () => {
