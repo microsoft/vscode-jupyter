@@ -18,7 +18,7 @@
                 "${workspaceFolder}/out/**/*",
                 "!${workspaceFolder}/**/node_modules**/*"
             ],
-            "preLaunchTask": "Compile",
+            // "preLaunchTask": "Compile",
             "skipFiles": [
                 "<node_internals>/**"
             ],
@@ -180,7 +180,7 @@
             ],
             "preLaunchTask": "Compile",
             "skipFiles": [
-                "<node_internals>/**"
+                // "<node_internals>/**"
             ],
 			"presentation": {
 				"group": "2_tests",
@@ -200,9 +200,9 @@
             ],
             "env": {
                 "VSC_JUPYTER_ENABLED_EXPERIMENTS": "NativeNotebookEditor,RemoteJupyter", // Comma delimited list of experiments.
-                "VSC_JUPYTER_CI_TEST_GREP": "VSCode Notebook", // Leave as `VSCode Notebook` to run only Notebook tests.
+                "VSC_JUPYTER_CI_TEST_GREP": "xxx", // Leave as `VSCode Notebook` to run only Notebook tests.
                 "VSC_JUPYTER_CI_TEST_INVERT_GREP": "", // Initialize this to invert the grep (exclude tests with value defined in grep).
-                "CI_PYTHON_PATH": "<PythonPath>", // Update with path to real python interpereter used for testing.
+                "CI_PYTHON_PATH": "/Users/donjayamanne/Desktop/Development/crap/docBug/venvDS/bin/python", // Update with path to real python interpereter used for testing.
                 "VSC_FORCE_REAL_JUPYTER": "true", // Enalbe tests that require Jupyter.
                 "VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST": "", // Initialize this to run tests again Julia & other kernels.
                 "VSC_JUPYTER_RUN_NB_TEST": "true", // Initialize this to run notebook tests (must be using VSC Insiders).
@@ -212,7 +212,7 @@
             "stopOnEntry": false,
             "sourceMaps": true,
             "outFiles": ["${workspaceFolder}/out/**/*.js", "!${workspaceFolder}/**/node_modules**/*"],
-            "preLaunchTask": "Compile",
+            // "preLaunchTask": "Compile",
             "skipFiles": ["<node_internals>/**"],
 			"presentation": {
 				"group": "2_tests",
