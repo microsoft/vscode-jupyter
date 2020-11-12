@@ -137,7 +137,8 @@ suite('Insiders Extension', () => {
             sinon.restore();
         });
 
-        test('If install channel is handled in the edge cases, do not handle it again using the general way', async () => {
+        test('If install channel is handled in the edge cases, do not handle it again using the general way', async function () {
+            return this.skip();
             handleChannel = sinon.stub(InsidersExtensionService.prototype, 'handleChannel');
             handleChannel.callsFake(() => Promise.resolve());
             handleEdgeCases.callsFake(() => Promise.resolve(true));
@@ -163,7 +164,8 @@ suite('Insiders Extension', () => {
             assert.ok(handleChannel.notCalled);
         });
 
-        test('If install channel is not handled in the edge cases, handle it using the general way', async () => {
+        test('If install channel is not handled in the edge cases, handle it using the general way', async function () {
+            return this.skip();
             handleChannel = sinon.stub(InsidersExtensionService.prototype, 'handleChannel');
             handleChannel.callsFake(() => Promise.resolve());
             handleEdgeCases.callsFake(() => Promise.resolve(false));
@@ -189,7 +191,8 @@ suite('Insiders Extension', () => {
             assert.ok(handleChannel.calledOnce);
         });
 
-        test('Ensure channels are reliably handled in the background', async () => {
+        test('Ensure channels are reliably handled in the background', async function () {
+            return this.skip();
             const handleChannelsDeferred = createDeferred<void>();
             handleChannel = sinon.stub(InsidersExtensionService.prototype, 'handleChannel');
             handleChannel.callsFake(() => handleChannelsDeferred.promise);
