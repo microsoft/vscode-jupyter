@@ -526,7 +526,7 @@ export function createNotebookDocument(
  * We can confirm prompt was displayed & invoke a button click.
  */
 export async function hijackPrompt(
-    promptType: 'showErrorMessage',
+    promptType: 'showErrorMessage' | 'showWarningMessage',
     message: { exactMatch: string } | { endsWith: string },
     buttonToClick?: { text?: string; clickImmediately?: boolean },
     disposables: IDisposable[] = []
@@ -544,8 +544,9 @@ export async function hijackPrompt(
         clickButton.resolve(buttonToClick.text);
     }
     let displayCount = 0;
+    const stub = sinon.stub(appShell, promptType);
     // tslint:disable-next-line: no-function-expression
-    const stub = sinon.stub(appShell, promptType).callsFake(function (msg: string) {
+    (stub as any).callsFake(function (msg: string) {
         console.info(`Message displayed to user ${msg}.`);
         if (
             ('exactMatch' in message && msg === message.exactMatch) ||

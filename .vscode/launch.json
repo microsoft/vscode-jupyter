@@ -199,6 +199,7 @@
                 "--extensionTestsPath=${workspaceFolder}/out/test"
             ],
             "env": {
+                "VSC_JUPYTER_ENABLED_EXPERIMENTS": "NativeNotebookEditor,RemoteJupyter", // Comma delimited list of experiments.
                 "VSC_JUPYTER_CI_TEST_GREP": "VSCode Notebook", // Leave as `VSCode Notebook` to run only Notebook tests.
                 "VSC_JUPYTER_CI_TEST_INVERT_GREP": "", // Initialize this to invert the grep (exclude tests with value defined in grep).
                 "CI_PYTHON_PATH": "<PythonPath>", // Update with path to real python interpereter used for testing.

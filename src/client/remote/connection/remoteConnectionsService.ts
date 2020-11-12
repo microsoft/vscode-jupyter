@@ -39,7 +39,7 @@ import { RemoteFileSchemeManager } from './fileSchemeManager';
 // tslint:disable: unified-signatures
 
 // Key for our insecure connection global state
-const GlobalStateUserAllowsInsecureConnections = 'DataScienceAllowInsecureConnections';
+export const GlobalStateUserAllowsInsecureConnections = 'DataScienceAllowInsecureConnections';
 
 type ConnectionInfo = {
     settings: ServerConnection.ISettings;
@@ -175,6 +175,21 @@ export class JupyterServerConnectionService
         this.clearTimeouts();
     }
     public async addServer(baseUrl?: string): Promise<void> {
+        // Check if we have already added this.
+        const connections = await this.getConnections();
+        if (
+            baseUrl &&
+            connections.some((item) => {
+                const conn = this.findConnection(item.id);
+                if (!conn) {
+                    return false;
+                }
+                return conn.connection.baseUrl.toLowerCase().startsWith(baseUrl!.toLowerCase());
+            })
+        ) {
+            return;
+        }
+
         if (!baseUrl) {
             const selection = await this.serverPicker.selectJupyterURI(false);
             if (selection?.selection !== 'remote') {
@@ -191,7 +206,7 @@ export class JupyterServerConnectionService
         this.trackServer(connection, settings, fileScheme);
         this._onDidAddServer.fire({ id: connection.id, displayName: connection.displayName, fileScheme });
     }
-    public async logout(id: string): Promise<void> {
+    public logout(id: string): void {
         const info = remoteConnections.get(id);
         remoteConnections.delete(id);
         if (info) {

@@ -27,7 +27,7 @@ export interface IJupyterServerConnectionService {
      * At this point, user is merely prompted to enter the credentials/token (if required).
      */
     addServer(baseUrl?: string): Promise<void>;
-    logout(id: string): Promise<void>;
+    logout(id: string): void;
 }
 
 export type FileEntry = Contents.IModel & {

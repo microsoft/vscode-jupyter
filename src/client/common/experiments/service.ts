@@ -4,7 +4,7 @@
 'use strict';
 
 import { inject, injectable, named } from 'inversify';
-import { Memento } from 'vscode';
+import { ExtensionMode, Memento } from 'vscode';
 import { getExperimentationService, IExperimentationService, TargetPopulation } from 'vscode-tas-client';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
@@ -14,6 +14,7 @@ import {
     GLOBAL_MEMENTO,
     IConfigurationService,
     IExperimentService,
+    IExtensionContext,
     IJupyterSettings,
     IMemento,
     IOutputChannel
@@ -45,7 +46,8 @@ export class ExperimentService implements IExperimentService {
         @inject(IConfigurationService) readonly configurationService: IConfigurationService,
         @inject(IApplicationEnvironment) private readonly appEnvironment: IApplicationEnvironment,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalState: Memento,
-        @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly output: IOutputChannel
+        @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly output: IOutputChannel,
+        @inject(IExtensionContext) private readonly context: IExtensionContext
     ) {
         this.settings = configurationService.getSettings(undefined);
 
@@ -138,7 +140,13 @@ export class ExperimentService implements IExperimentService {
         if (!this.experimentationService) {
             return;
         }
-
+        if (
+            this.context.extensionMode === ExtensionMode.Test &&
+            process.env.VSC_JUPYTER_ENABLED_EXPERIMENTS &&
+            process.env.VSC_JUPYTER_ENABLED_EXPERIMENTS.includes(experiment)
+        ) {
+            return 'optIn';
+        }
         // Currently the service doesn't support opting in and out of experiments,
         // so we need to perform these checks and send the corresponding telemetry manually.
         if (this._optOutFrom.includes('All') || this._optOutFrom.includes(experiment)) {
