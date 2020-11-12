@@ -127,6 +127,13 @@ export namespace InteractiveShiftEnterBanner {
     );
 }
 
+export namespace InsidersNativeNotebooksSurveyBanner {
+    export const bannerMessage = localize(
+        'InsidersNativeNotebooksSurveyBanner.bannerMessage',
+        'Can you please take a minute to tell us about your notebooks experience in VS Code?'
+    );
+}
+
 export namespace DataScienceSurveyBanner {
     export const bannerMessage = localize(
         'DataScienceSurveyBanner.bannerMessage',
