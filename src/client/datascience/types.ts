@@ -1360,7 +1360,7 @@ export interface IJupyterUriProviderRegistration {
 }
 export const IDigestStorage = Symbol('IDigestStorage');
 export interface IDigestStorage {
-    readonly key: Promise<string>;
+    readonly key: Promise<string | undefined>;
     saveDigest(uri: Uri, digest: string): Promise<void>;
     containsDigest(uri: Uri, digest: string): Promise<boolean>;
 }
@@ -1408,4 +1408,9 @@ export interface IExternalWebviewCellButton {
 export interface IExternalCommandFromWebview {
     buttonId: string;
     cell: ICell;
+}
+
+export const ISystemPseudoRandomNumberGenerator = Symbol('ISystemPseudoRandomNumberGenerator');
+export interface ISystemPseudoRandomNumberGenerator {
+    randomBytes(numBytes: number): Promise<Buffer>;
 }

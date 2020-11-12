@@ -33,11 +33,18 @@ export class TrustService implements ITrustService {
         if (this.alwaysTrustNotebooks) {
             return true; // Skip check if user manually overrode our trust checking
         }
+        const key = await this.digestStorage.key;
+
+        // We may have failed to generate a key for first-time notebook users
+        // In this case treat all notebooks as untrusted
+        if (!key) {
+            return false;
+        }
         // Compute digest and see if notebook is trusted.
         // Check formatted & unformatted notebook. Possible user saved nb using old extension & opening using new extension.
         const [digest1, digest2] = await Promise.all([
-            this.computeDigest(notebookContents),
-            this.computeDigest(this.getFormattedContents(notebookContents))
+            this.computeDigest(notebookContents, key),
+            this.computeDigest(this.getFormattedContents(notebookContents), key)
         ]);
 
         const [digest1Valid, digest2Valid] = await Promise.all([
@@ -55,10 +62,14 @@ export class TrustService implements ITrustService {
      */
     public async trustNotebook(uri: Uri, notebookContents: string) {
         if (!this.alwaysTrustNotebooks) {
-            notebookContents = this.getFormattedContents(notebookContents);
-            // Only update digest store if the user wants us to check trust
-            const digest = await this.computeDigest(notebookContents);
-            await this.digestStorage.saveDigest(uri, digest);
+            const key = await this.digestStorage.key;
+            // If we failed to generate a key, transiently trust this notebook
+            if (key !== undefined) {
+                notebookContents = this.getFormattedContents(notebookContents);
+                // Only update digest store if the user wants us to check trust
+                const digest = await this.computeDigest(notebookContents, key);
+                await this.digestStorage.saveDigest(uri, digest);
+            }
             this._onDidSetNotebookTrust.fire();
         }
     }
@@ -77,8 +88,8 @@ export class TrustService implements ITrustService {
             return notebookContents;
         }
     }
-    private async computeDigest(notebookContents: string) {
-        const hmac = createHmac('sha256', await this.digestStorage.key);
+    private async computeDigest(notebookContents: string, key: string) {
+        const hmac = createHmac('sha256', key);
         hmac.update(notebookContents);
         return hmac.digest('hex');
     }
