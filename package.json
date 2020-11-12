@@ -1708,9 +1708,9 @@
             }
         ],
         "viewsContainers": {
-            "activitybar": [
+            "panel": [
                 {
-                    "id": "jupyter",
+                    "id": "jupyter-variables",
                     "title": "Jupyter",
                     "icon": "NOICON.svg"
                 }
