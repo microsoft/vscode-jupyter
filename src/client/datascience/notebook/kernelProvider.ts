@@ -18,7 +18,7 @@ import { noop } from '../../common/utils/misc';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { captureTelemetry } from '../../telemetry';
 import { Telemetry } from '../constants';
-import { areKernelConnectionsEqual } from '../jupyter/kernels/helpers';
+import { areKernelConnectionsEqual, isPythonKernelConnection } from '../jupyter/kernels/helpers';
 import { KernelSelectionProvider } from '../jupyter/kernels/kernelSelections';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
 import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
@@ -28,6 +28,7 @@ import { INotebook, INotebookProvider, IRawNotebookSupportedService } from '../t
 import {
     getNotebookMetadata,
     isJupyterNotebook,
+    isPythonNotebook,
     updateKernelInfoInNotebookMetadata,
     updateKernelInNotebookMetadata
 } from './helpers/helpers';
@@ -127,6 +128,7 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
         this.isRawNotebookSupported =
             this.isRawNotebookSupported || this.rawNotebookSupported.isSupportedForLocalLaunch();
         const rawSupported = await this.isRawNotebookSupported;
+        const isPythonNb = isPythonNotebook(getNotebookMetadata(document));
         const [preferredKernel, kernels, activeInterpreter] = await Promise.all([
             this.getPreferredKernel(document, token),
             this.kernelSelectionProvider.getKernelSelectionsForLocalSession(
@@ -135,7 +137,7 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
                 undefined,
                 token
             ),
-            this.interpreterService.getActiveInterpreter(document.uri)
+            isPythonNb ? this.interpreterService.getActiveInterpreter(document.uri) : Promise.resolve(undefined)
         ]);
         if (token.isCancellationRequested) {
             return [];
