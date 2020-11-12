@@ -182,6 +182,7 @@ import { KernelService } from '../../client/datascience/jupyter/kernels/kernelSe
 import { KernelSwitcher } from '../../client/datascience/jupyter/kernels/kernelSwitcher';
 import { KernelVariables } from '../../client/datascience/jupyter/kernelVariables';
 import { NotebookStarter } from '../../client/datascience/jupyter/notebookStarter';
+import { JupyterServerPicker } from '../../client/datascience/jupyter/serverPicker';
 import { ServerPreload } from '../../client/datascience/jupyter/serverPreload';
 import { JupyterServerSelector } from '../../client/datascience/jupyter/serverSelector';
 import { JupyterServerUriStorage } from '../../client/datascience/jupyter/serverUriStorage';
@@ -309,7 +310,6 @@ import {
 } from './testNativeEditorProvider';
 import { TestPersistentStateFactory } from './testPersistentStateFactory';
 import { WebBrowserPanelProvider } from './uiTests/webBrowserPanelProvider';
-import { JupyterServerPicker } from '../../client/datascience/jupyter/serverPicker';
 
 export class DataScienceIocContainer extends UnitTestIocContainer {
     public get workingInterpreter() {
