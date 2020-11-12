@@ -99,7 +99,6 @@
     "jupyter.command.jupyter.addcellbelow.title": "Add Empty Cell to File",
     "jupyter.command.jupyter.scrolltocell.title": "Scroll Cell Into View",
     "jupyter.command.jupyter.createnewnotebook.title": "Create New Blank Jupyter Notebook",
-    "DataScience.quickPickPlaceHolderLabelForSelectionOfNotebookCreationServer": "Select a Jupyter Server to create a blank Jupyter Notebook",
     "jupyter.command.jupyter.selectJupyterInterpreter.title": "Select Interpreter to start Jupyter server",
     "jupyter.command.jupyter.createGitHubIssue.title": "Create GitHub Issue",
     "jupyter.command.jupyter.submitGitHubIssue.title": "Submit GitHub Issue",
@@ -483,5 +482,8 @@
     "DataScience.illegalEditorConfig": "CustomEditor and NativeNotebook experiments cannot be turned on together",
     "DataScience.pythonExtensionRequired" : "The Python extension is required to perform that task. Click Yes to open Python extension installation page.",
     "DataScience.pythonInstalledReloadPromptMessage" : "Python extension is now installed. Reload window to activate?",
-    "DataScience.invalidCustomEditor" : "Using the Jupyter notebook editor requires the stable version of VS code and the CustomEditor experiment to be enabled."
+    "DataScience.invalidCustomEditor" : "Using the Jupyter notebook editor requires the stable version of VS code and the CustomEditor experiment to be enabled.",
+    "DataScience.quickPickPlaceHolderLabelForSelectionOfNotebookCreationServer": "Select a Jupyter Server to create a blank Jupyter Notebook",
+    "DataScience.labelToSelectFolderForCreationOfNotebookOnRemote": "Folder to create notebook",
+    "DataScience.titleFormatToSelectFolderForCreationOfNotebookOnRemote": "Select folder on Jupyter Server ({0})"
 }

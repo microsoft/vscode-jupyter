@@ -3,6 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 import { Uri, window } from 'vscode';
+import { DataScience } from '../../common/utils/localize';
 import { INotebookEditorProvider } from '../../datascience/types';
 import { JupyterServerConnectionService } from '../connection/remoteConnectionsService';
 import { RemoteFileSystemFactory } from './fileSystemFactory';
@@ -39,8 +40,8 @@ export class NotebookCreator {
             canSelectFolders: true,
             canSelectMany: false,
             defaultUri: Uri.file('/').with({ scheme: connection.fileScheme }),
-            openLabel: 'Folder to create notebook',
-            title: `Select folder on Jupyter Server (${connection.displayName})`
+            openLabel: DataScience.labelToSelectFolderForCreationOfNotebookOnRemote(),
+            title: DataScience.titleFormatToSelectFolderForCreationOfNotebookOnRemote().format(connection.displayName)
         });
         if (!remoteFolders || remoteFolders.length === 0) {
             return;
