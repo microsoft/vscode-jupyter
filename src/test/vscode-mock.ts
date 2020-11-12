@@ -93,6 +93,7 @@ export function initialize() {
 }
 
 mockedVSCode.MarkdownString = vscodeMocks.vscMock.MarkdownString;
+mockedVSCode.ExtensionMode = vscodeMocks.vscMock.ExtensionMode;
 mockedVSCode.Hover = vscodeMocks.vscMock.Hover;
 mockedVSCode.Disposable = vscodeMocks.vscMock.Disposable as any;
 mockedVSCode.ExtensionKind = vscodeMocks.vscMock.ExtensionKind;
