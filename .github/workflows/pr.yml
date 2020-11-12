@@ -21,7 +21,7 @@ env:
   # Key for the cache created at the end of the the 'Cache ./pythonFiles/lib/python' step.
   CACHE_PYTHONFILES: cache-pvsc-pythonFiles
   VSIX_NAME: ms-toolsai-jupyter-insiders.vsix
-  VSIX_NAME_PYTHON: ms-python-insiders-nods.vsix
+  VSIX_NAME_PYTHON: ms-python-insiders.vsix
   COVERAGE_REPORTS: tests-coverage-reports
   CI_PYTHON_PATH: python
   TEST_RESULTS_DIRECTORY: .
@@ -521,7 +521,7 @@ jobs:
         if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook'
 
       - name: Download Python VSIX
-        run: az storage blob download --file ${{env.VSIX_NAME_PYTHON}} --account-name pvsc --container-name extension-builds --name ${{ env.VSIX_NAME_PYTHON }}
+        run: curl --output ${{ env.VSIX_NAME_PYTHON }} https://pvsc.blob.core.windows.net/extension-builds/${{ env.VSIX_NAME_PYTHON }}
 
       - name: Run tests with VSCode & Jupyter
         uses: GabrielBB/xvfb-action@v1.4
@@ -604,7 +604,7 @@ jobs:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Download Python VSIX
-        run: az storage blob download --file ${{env.VSIX_NAME_PYTHON}} --account-name pvsc --container-name extension-builds --name ${{ env.VSIX_NAME_PYTHON }}
+        run: curl --output ${{ env.VSIX_NAME_PYTHON }} https://pvsc.blob.core.windows.net/extension-builds/${{ env.VSIX_NAME_PYTHON }}
 
       - name: Download VSIX
         uses: actions/download-artifact@v2

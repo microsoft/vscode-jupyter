@@ -21,7 +21,7 @@ env:
   # Key for the cache created at the end of the the 'Cache ./pythonFiles/lib/python' step.
   CACHE_PYTHONFILES: cache-pvsc-pythonFiles
   VSIX_NAME: ms-toolsai-jupyter-release.vsix
-  VSIX_NAME_PYTHON: ms-python-release-nods.vsix
+  VSIX_NAME_PYTHON: ms-python-release.vsix
   VSIX_NAME_UPLOADED_TO_BLOB: ms-toolsai-jupyter-release.vsix
   COVERAGE_REPORTS: tests-coverage-reports
   CI_PYTHON_PATH: python
@@ -498,7 +498,7 @@ jobs:
         if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook'
 
       - name: Download Python VSIX
-        run: az storage blob download --file ${{env.VSIX_NAME_PYTHON}} --account-name pvsc --container-name extension-builds --name ${{ env.VSIX_NAME_PYTHON }}
+        run: curl --output ${{ env.VSIX_NAME_PYTHON }} https://pvsc.blob.core.windows.net/extension-builds/${{ env.VSIX_NAME_PYTHON }}
         if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook'
 
       - name: Run tests with VSCode & Jupyter
@@ -582,7 +582,7 @@ jobs:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Download Python VSIX
-        run: az storage blob download --file ${{env.VSIX_NAME_PYTHON}} --account-name pvsc --container-name extension-builds --name ${{ env.VSIX_NAME_PYTHON }}
+        run: curl --output ${{ env.VSIX_NAME_PYTHON }} https://pvsc.blob.core.windows.net/extension-builds/${{ env.VSIX_NAME_PYTHON }}
 
       - name: Download VSIX
         uses: actions/download-artifact@v2
@@ -591,7 +591,7 @@ jobs:
 
       - name: Install dependencies (npm ci)
         run: npm ci --prefer-offline
-      
+
       - name: pip install system test requirements
         run: |
           python -m pip install --upgrade -r build/test-requirements.txt
