@@ -15,7 +15,6 @@ import { CommonMessageCoordinator } from './commonMessageCoordinator';
  * This class sets up ipywidget communication with a webview
  */
 @injectable()
-//
 export class WebviewIPyWidgetCoordinator implements IInteractiveWindowListener {
     // tslint:disable-next-line: no-any
     public get postMessage(): Event<{ message: string; payload: any }> {

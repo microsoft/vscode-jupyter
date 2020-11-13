@@ -10,6 +10,9 @@ import { InteractiveWindowMessages } from '../interactive-common/interactiveWind
 import { INotebookKernelProvider } from '../notebook/types';
 import { CommonMessageCoordinator } from './commonMessageCoordinator';
 
+/**
+ * This class wires up VSC notebooks to ipywidget communications.
+ */
 @injectable()
 export class NotebookIPyWidgetCoordinator implements IExtensionSingleActivationService {
     private messageCoordinators = new Map<string, Promise<CommonMessageCoordinator>>();
