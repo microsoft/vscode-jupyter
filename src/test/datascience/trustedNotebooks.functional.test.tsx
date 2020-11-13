@@ -9,11 +9,7 @@ import { Disposable } from 'vscode';
 import { sleep } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
-import {
-    INotebookEditor,
-    INotebookEditorProvider,
-    ITrustService
-} from '../../client/datascience/types';
+import { INotebookEditor, INotebookEditorProvider, ITrustService } from '../../client/datascience/types';
 import { CommonActionType } from '../../datascience-ui/interactive-common/redux/reducers/types';
 import { TrustMessage } from '../../datascience-ui/interactive-common/trustMessage';
 import { NativeCell } from '../../datascience-ui/native-editor/nativeCell';
