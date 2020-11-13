@@ -7,6 +7,7 @@
 import * as path from 'path';
 import * as sinon from 'sinon';
 import { Uri } from 'vscode';
+import { IPythonExtensionChecker } from '../../../client/api/types';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { IDisposable } from '../../../client/common/types';
 import { VSCodeNotebookProvider } from '../../../client/datascience/constants';
@@ -112,9 +113,12 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         // Lets try opening a python nb & validate that.
         await closeNotebooks();
 
-        // Now open an existing python notebook & confirm kernel is set to Python.
-        await openNotebook(api.serviceContainer, testEmptyPythonNb.fsPath);
-        await waitForKernelToGetAutoSelected('python');
+        const pythonChecker = api.serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker);
+        if (pythonChecker.isPythonExtensionInstalled) {
+            // Now open an existing python notebook & confirm kernel is set to Python.
+            await openNotebook(api.serviceContainer, testEmptyPythonNb.fsPath);
+            await waitForKernelToGetAutoSelected('python');
+        }
     });
     test('Can run a Julia notebook', async function () {
         this.timeout(30_000); // Can be slow to start Julia kernel on CI.

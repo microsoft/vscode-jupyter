@@ -1,8 +1,8 @@
 name: Assign DS issue to someone
 
 on:
-  issues:
-    types: [opened, labeled]
+#   issues:
+#     types: [opened, labeled]
   workflow_dispatch:
 
 jobs:

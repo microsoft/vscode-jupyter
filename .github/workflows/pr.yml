@@ -21,7 +21,6 @@ env:
   # Key for the cache created at the end of the the 'Cache ./pythonFiles/lib/python' step.
   CACHE_PYTHONFILES: cache-pvsc-pythonFiles
   VSIX_NAME: ms-toolsai-jupyter-insiders.vsix
-  VSIX_NAME_PYTHON: ms-python-insiders-nods.vsix
   COVERAGE_REPORTS: tests-coverage-reports
   CI_PYTHON_PATH: python
   TEST_RESULTS_DIRECTORY: .
@@ -388,7 +387,7 @@ jobs:
         python: [3.8] # Use flaky tests to run against more versions of Python.
         # integration: Tests with VS Code, Python extension & real Jupyter
         # notebook: Notebook Tests with VS Code, Python extension & real Jupyter
-        test-suite: [integration, notebook]
+        test-suite: [integration, notebook, notebookWithoutPythonExt]
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -397,9 +396,11 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: ${{matrix.python}}
+        if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook'
 
       - name: Upgrade pip
         run: python -m pip install -U pip
+        if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook'
 
       - name: Use Node ${{env.NODE_VERSION}}
         uses: actions/setup-node@v2.1.2
@@ -412,7 +413,7 @@ jobs:
       # Caching (https://github.com/actions/cache/blob/main/examples.md#python---pip
       - name: Cache pip on linux
         uses: actions/cache@v2
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.os == 'ubuntu-latest' && (matrix.test-suite == 'integration' || matrix.test-suite == 'notebook')
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-${{ hashFiles('requirements.txt') }}-${{hashFiles('build/debugger-install-requirements.txt')}}-${{hashFiles('test-requirements.txt')}}-${{hashFiles('ipython-test-requirements.txt')}}-${{hashFiles('functional-test-requirements.txt')}}-${{hashFiles('conda-functional-requirements.txt')}}
@@ -421,7 +422,7 @@ jobs:
 
       - name: Cache pip on mac
         uses: actions/cache@v2
-        if: matrix.os == 'macos-latest'
+        if: matrix.os == 'macos-latest' && (matrix.test-suite == 'integration' || matrix.test-suite == 'notebook')
         with:
           path: ~/Library/Caches/pip
           key: ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-${{ hashFiles('requirements.txt') }}-${{hashFiles('build/debugger-install-requirements.txt')}}-${{hashFiles('test-requirements.txt')}}-${{hashFiles('ipython-test-requirements.txt')}}-${{hashFiles('functional-test-requirements.txt')}}-${{hashFiles('conda-functional-requirements.txt')}}
@@ -430,7 +431,7 @@ jobs:
 
       - name: Cache pip on windows
         uses: actions/cache@v2
-        if: matrix.os == 'windows-latest'
+        if: matrix.os == 'windows-latest' && (matrix.test-suite == 'integration' || matrix.test-suite == 'notebook')
         with:
           path: ~\AppData\Local\pip\Cache
           key: ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-${{ hashFiles('requirements.txt') }}-${{hashFiles('build/debugger-install-requirements.txt')}}-${{hashFiles('test-requirements.txt')}}-${{hashFiles('ipython-test-requirements.txt')}}-${{hashFiles('functional-test-requirements.txt')}}-${{hashFiles('conda-functional-requirements.txt')}}
@@ -471,6 +472,7 @@ jobs:
       # For faster/better builds of sdists.
       - run: python -m pip install wheel
         shell: bash
+        if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook'
 
       # debugpy is not shipped, only installed for local tests.
       # In production, we get debugpy from python extension.
@@ -485,6 +487,7 @@ jobs:
           python -m pip install --upgrade -r ./build/ipython-test-requirements.txt
           python -m pip install --upgrade -r ./build/conda-functional-requirements.txt
           python -m ipykernel install --user
+        if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook'
         # This step is slow.
 
       - name: Install dependencies (npm ci)
@@ -513,15 +516,7 @@ jobs:
 
       - name: Create Virtual Env for Tests
         uses: ./.github/actions/create-venv-for-tests
-
-      - name: Azure Login
-        uses: azure/login@v1.1.1
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
         if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook'
-
-      - name: Download Python VSIX
-        run: az storage blob download --file ${{env.VSIX_NAME_PYTHON}} --account-name pvsc --container-name extension-builds --name ${{ env.VSIX_NAME_PYTHON }}
 
       - name: Run tests with VSCode & Jupyter
         uses: GabrielBB/xvfb-action@v1.4
@@ -540,7 +535,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           report_paths: ${{ env.TEST_RESULTS_GLOB }}
           check_name: VSCode Test Report
-        if: (steps.test_vscode.outcome == 'failure' || steps.test_vscode.outcome == 'failure') && failure()
+        if: steps.test_vscode.outcome == 'failure' && failure()
 
       - name: Run Native Notebook with VSCode & Jupyter
         uses: GabrielBB/xvfb-action@v1.4
@@ -560,7 +555,27 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           report_paths: ${{ env.TEST_RESULTS_GLOB }}
           check_name: Notebook Test Report
-        if: (steps.test_notebook_vscode.outcome == 'failure' || steps.test_notebook_vscode.outcome == 'failure') && failure()
+        if: steps.test_notebook_vscode.outcome == 'failure' && failure()
+
+      - name: Run Native Notebook with VSCode & Jupyter (without Python)
+        uses: GabrielBB/xvfb-action@v1.4
+        with:
+          run: npm run testNativeNotebooksWithoutPythonInVSCode
+        env:
+          VSC_FORCE_REAL_JUPYTER: 1
+          VSC_JUPYTER_FORCE_LOGGING: 1
+          VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
+          VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
+        id: test_notebookWithoutPythonExt_vscode
+        if: matrix.test-suite == 'notebookWithoutPythonExt'
+
+      - name: Publish Notebook Test Report
+        uses: scacap/action-surefire-report@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          report_paths: ${{ env.TEST_RESULTS_GLOB }}
+          check_name: Notebook without Python Test Report
+        if: steps.test_notebookWithoutPythonExt_vscode.outcome == 'failure' && failure()
 
 
   smoke-tests:
@@ -597,14 +612,6 @@ jobs:
         uses: actions/setup-node@v2.1.2
         with:
           node-version: ${{env.NODE_VERSION}}
-
-      - name: Azure Login
-        uses: azure/login@v1.1.1
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-      - name: Download Python VSIX
-        run: az storage blob download --file ${{env.VSIX_NAME_PYTHON}} --account-name pvsc --container-name extension-builds --name ${{ env.VSIX_NAME_PYTHON }}
 
       - name: Download VSIX
         uses: actions/download-artifact@v2

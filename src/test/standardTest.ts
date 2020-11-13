@@ -3,6 +3,7 @@
 import { spawnSync } from 'child_process';
 import * as path from 'path';
 import { downloadAndUnzipVSCode, resolveCliPathFromVSCodeExecutablePath, runTests } from 'vscode-test';
+import { PythonExtension } from '../client/datascience/constants';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from './constants';
 import { initializeLogger } from './testLogger';
 
@@ -18,6 +19,9 @@ const extensionDevelopmentPath = process.env.CODE_EXTENSIONS_PATH
     : EXTENSION_ROOT_DIR_FOR_TESTS;
 
 function requiresPythonExtensionToBeInstalled() {
+    if (process.env.VSC_JUPYTER_CI_TEST_DO_NOT_INSTALL_PYTHON_EXT) {
+        return;
+    }
     return process.env.TEST_FILES_SUFFIX === 'vscode.test' || process.env.TEST_FILES_SUFFIX === 'smoke.test';
 }
 
@@ -29,14 +33,13 @@ const channel = (process.env.VSC_JUPYTER_CI_TEST_VSC_CHANNEL || '').toLowerCase(
  * Smoke tests & tests running in VSCode require Python extension to be installed.
  */
 async function installPythonExtension(vscodeExecutablePath: string) {
-    const pythonVSIX = process.env.VSIX_NAME_PYTHON;
-    if (!requiresPythonExtensionToBeInstalled() || !pythonVSIX) {
+    if (!requiresPythonExtensionToBeInstalled()) {
         console.info('Python Extension not required');
         return;
     }
     console.info('Installing Python Extension');
     const cliPath = resolveCliPathFromVSCodeExecutablePath(vscodeExecutablePath);
-    spawnSync(cliPath, ['--install-extension', pythonVSIX], {
+    spawnSync(cliPath, ['--install-extension', PythonExtension], {
         encoding: 'utf-8',
         stdio: 'inherit'
     });

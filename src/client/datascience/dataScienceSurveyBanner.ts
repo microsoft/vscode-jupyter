@@ -5,10 +5,11 @@
 
 import { inject, injectable, named } from 'inversify';
 import { env, Event, EventEmitter, UIKind } from 'vscode';
-import { IApplicationShell } from '../common/application/types';
+import { IApplicationEnvironment, IApplicationShell } from '../common/application/types';
 import '../common/extensions';
 import {
     BANNER_NAME_DS_SURVEY,
+    BANNER_NAME_INSIDERS_NOTEBOOKS_SURVEY,
     IBrowserService,
     IJupyterExtensionBanner,
     IPersistentStateFactory
@@ -40,7 +41,10 @@ export class DataScienceSurveyBannerLogger implements IInteractiveWindowListener
         @inject(IPersistentStateFactory) private persistentState: IPersistentStateFactory,
         @inject(IJupyterExtensionBanner)
         @named(BANNER_NAME_DS_SURVEY)
-        private readonly dataScienceSurveyBanner: IJupyterExtensionBanner
+        private readonly dataScienceSurveyBanner: IJupyterExtensionBanner,
+        @inject(IJupyterExtensionBanner)
+        @named(BANNER_NAME_INSIDERS_NOTEBOOKS_SURVEY)
+        private readonly insidersNativeNotebooksSurveyBanner: IJupyterExtensionBanner
     ) {}
     // tslint:disable-next-line: no-any
     public get postMessage(): Event<{ message: string; payload: any }> {
@@ -59,7 +63,10 @@ export class DataScienceSurveyBannerLogger implements IInteractiveWindowListener
                     .updateValue(state.value + args.cellIds.length)
                     .then(() => {
                         // On every update try to show the banner.
-                        return this.dataScienceSurveyBanner.showBanner();
+                        return Promise.all([
+                            this.dataScienceSurveyBanner.showBanner(),
+                            this.insidersNativeNotebooksSurveyBanner.showBanner()
+                        ]);
                     })
                     .ignoreErrors();
             }
@@ -72,8 +79,14 @@ export class DataScienceSurveyBannerLogger implements IInteractiveWindowListener
 
 @injectable()
 export class DataScienceSurveyBanner implements IJupyterExtensionBanner {
+    public get enabled(): boolean {
+        return (
+            this.persistentState.createGlobalPersistentState<boolean>(DSSurveyStateKeys.ShowBanner, true).value &&
+            env.uiKind !== UIKind?.Web &&
+            this.applicationEnvironment.channel === 'stable'
+        );
+    }
     private disabledInCurrentSession: boolean = false;
-    private isInitialized: boolean = false;
     private bannerMessage: string = localize.DataScienceSurveyBanner.bannerMessage();
     private bannerLabels: string[] = [
         localize.DataScienceSurveyBanner.bannerLabelYes(),
@@ -86,24 +99,11 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner {
         @inject(IPersistentStateFactory) private persistentState: IPersistentStateFactory,
         @inject(IBrowserService) private browserService: IBrowserService,
         @inject(INotebookEditorProvider) editorProvider: INotebookEditorProvider,
+        @inject(IApplicationEnvironment) private applicationEnvironment: IApplicationEnvironment,
         surveyLink: string = 'https://aka.ms/pyaisurvey'
     ) {
         this.surveyLink = surveyLink;
-        this.initialize();
         editorProvider.onDidOpenNotebookEditor(this.openedNotebook.bind(this));
-    }
-
-    public initialize(): void {
-        if (this.isInitialized) {
-            return;
-        }
-        this.isInitialized = true;
-    }
-    public get enabled(): boolean {
-        return (
-            this.persistentState.createGlobalPersistentState<boolean>(DSSurveyStateKeys.ShowBanner, true).value &&
-            env.uiKind !== UIKind?.Web
-        );
     }
 
     public async showBanner(): Promise<void> {
@@ -122,11 +122,13 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner {
         switch (response) {
             case this.bannerLabels[DSSurveyLabelIndex.Yes]: {
                 await this.launchSurvey();
-                await this.disable();
+                // Disable for 6 months
+                await this.disable(6);
                 break;
             }
             case this.bannerLabels[DSSurveyLabelIndex.No]: {
-                await this.disable();
+                // Disable for 3 months
+                await this.disable(3);
                 break;
             }
             default: {
@@ -144,14 +146,15 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner {
         return executionCount >= NotebookExecutionThreshold || notebookOpenCount > NotebookOpenThreshold;
     }
 
-    public async disable(): Promise<void> {
-        await this.persistentState
-            .createGlobalPersistentState<boolean>(DSSurveyStateKeys.ShowBanner, false)
-            .updateValue(false);
-    }
-
     public async launchSurvey(): Promise<void> {
         this.browserService.launch(this.surveyLink);
+    }
+
+    private async disable(monthsTillNextPrompt: number) {
+        const expiration = monthsTillNextPrompt * 31 * 24 * 60 * 60 * 1000;
+        await this.persistentState
+            .createGlobalPersistentState<boolean>(DSSurveyStateKeys.ShowBanner, false, expiration)
+            .updateValue(false);
     }
 
     private getOpenNotebookCount(): number {
