@@ -115,7 +115,8 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
             await waitForExecutionCompletedWithErrors(cell);
         }
     });
-    test('Restarting kernel will cancel cell execution & we can re-run a cell', async () => {
+    test('Restarting kernel will cancel cell execution & we can re-run a cell', async function () {
+        return this.skip();
         await insertCodeCell('import time\nfor i in range(10000):\n  print(i)\n  time.sleep(0.1)', { index: 0 });
         const cell = vscEditor.document.cells[0];
         // Ensure we click `Yes` when prompted to restart the kernel.
