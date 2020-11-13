@@ -35,6 +35,7 @@ import {
     IApplicationEnvironment,
     IApplicationShell,
     IAuthenticationService,
+    IClipboard,
     ICommandManager,
     ICustomEditorService,
     IDebugService,
@@ -539,7 +540,13 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             }
             return Promise.resolve(setState);
         });
-
+        const clipboard = mock<IClipboard>();
+        {
+            let clipboardText = '';
+            when(clipboard.writeText(anything())).thenCall((value: string) => (clipboardText = value));
+            when(clipboard.readText()).thenResolve(clipboardText);
+            this.serviceManager.addSingletonInstance<IClipboard>(IClipboard, instance(clipboard));
+        }
         this.serviceManager.addSingleton<IApplicationEnvironment>(IApplicationEnvironment, ApplicationEnvironment);
         this.serviceManager.addSingleton<IAuthenticationService>(IAuthenticationService, AuthenticationService);
         this.serviceManager.add<INotebookImporter>(INotebookImporter, JupyterImporter);
