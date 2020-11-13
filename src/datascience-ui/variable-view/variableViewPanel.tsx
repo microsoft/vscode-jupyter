@@ -15,7 +15,7 @@ import { Image, ImageName } from '../react-common/image';
 import { ImageButton } from '../react-common/imageButton';
 import { getLocString } from '../react-common/locReactSide';
 import { Progress } from '../react-common/progress';
-import './interactivePanel.less';
+//import './interactivePanel.less';
 import { actionCreators } from './redux/actions';
 
 // tslint:disable: no-suspicious-comment
@@ -145,6 +145,6 @@ export class VariableViewPanel extends React.Component<IInteractivePanelProps> {
 }
 
 // Main export, return a redux connected editor
-export function getConnectedInteractiveEditor() {
+export function getConnectedVariableViewPanel() {
     return connect(mapStateToProps, actionCreators)(VariableViewPanel);
 }

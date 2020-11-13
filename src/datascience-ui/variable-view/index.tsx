@@ -13,10 +13,10 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
 
-import { IVsCodeApi } from '../react-common/postOffice';
+import { IVsCodeApi, PostOffice } from '../react-common/postOffice';
 import { detectBaseTheme } from '../react-common/themeDetector';
 import { createStore } from './redux/store';
-import { VariableViewPanel } from './variableViewPanel';
+import { getConnectedVariableViewPanel } from './variableViewPanel';
 
 // This special function talks to vscode from a web panel
 export declare function acquireVsCodeApi(): IVsCodeApi;
@@ -30,5 +30,13 @@ const skipDefault = testMode ? false : typeof acquireVsCodeApi !== 'undefined';
 const postOffice = new PostOffice();
 const store = createStore(skipDefault, baseTheme, testMode, postOffice);
 
+// Wire up a connected react control for our InteractiveEditor
+const ConnectedVariableViewPanel = getConnectedVariableViewPanel();
+
 // tslint:disable:no-typeof-undefined
-ReactDOM.render(document.getElementById('root') as HTMLElement);
+ReactDOM.render(
+    <Provider store={store}>
+        <ConnectedVariableViewPanel />
+    </Provider>,
+    document.getElementById('root') as HTMLElement
+);
