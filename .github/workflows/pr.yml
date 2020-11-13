@@ -21,7 +21,6 @@ env:
   # Key for the cache created at the end of the the 'Cache ./pythonFiles/lib/python' step.
   CACHE_PYTHONFILES: cache-pvsc-pythonFiles
   VSIX_NAME: ms-toolsai-jupyter-insiders.vsix
-  VSIX_NAME_PYTHON: ms-python-insiders-nods.vsix
   COVERAGE_REPORTS: tests-coverage-reports
   CI_PYTHON_PATH: python
   TEST_RESULTS_DIRECTORY: .
@@ -519,14 +518,6 @@ jobs:
         uses: ./.github/actions/create-venv-for-tests
         if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook'
 
-      - name: Azure Login
-        uses: azure/login@v1.1.1
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-      - name: Download Python VSIX
-        run: az storage blob download --file ${{env.VSIX_NAME_PYTHON}} --account-name pvsc --container-name extension-builds --name ${{ env.VSIX_NAME_PYTHON }}
-
       - name: Run tests with VSCode & Jupyter
         uses: GabrielBB/xvfb-action@v1.4
         with:
@@ -621,14 +612,6 @@ jobs:
         uses: actions/setup-node@v2.1.2
         with:
           node-version: ${{env.NODE_VERSION}}
-
-      - name: Azure Login
-        uses: azure/login@v1.1.1
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-      - name: Download Python VSIX
-        run: az storage blob download --file ${{env.VSIX_NAME_PYTHON}} --account-name pvsc --container-name extension-builds --name ${{ env.VSIX_NAME_PYTHON }}
 
       - name: Download VSIX
         uses: actions/download-artifact@v2
