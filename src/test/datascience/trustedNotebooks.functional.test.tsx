@@ -17,7 +17,12 @@ import { noop } from '../../client/common/utils/misc';
 import { IEnvironmentVariablesProvider } from '../../client/common/variables/types';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { SystemPseudoRandomNumberGenerator } from '../../client/datascience/interactive-ipynb/randomBytes';
-import { INotebookEditor, INotebookEditorProvider, ISystemPseudoRandomNumberGenerator, ITrustService } from '../../client/datascience/types';
+import {
+    INotebookEditor,
+    INotebookEditorProvider,
+    ISystemPseudoRandomNumberGenerator,
+    ITrustService
+} from '../../client/datascience/types';
 import { CommonActionType } from '../../datascience-ui/interactive-common/redux/reducers/types';
 import { TrustMessage } from '../../datascience-ui/interactive-common/trustMessage';
 import { NativeCell } from '../../datascience-ui/native-editor/nativeCell';
