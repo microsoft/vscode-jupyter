@@ -60,55 +60,21 @@ export class VariableViewPanel extends React.Component<IInteractivePanelProps> {
             this.renderCount = this.renderCount + 1;
         }
 
-        //return (
-        //<div>
-        //<h1>VARIABLES</h1>
-        //</div>
-        //);
-
         return (
             <div id="variable-view-main-panel" role="Main" style={dynamicFont}>
+                <button onClick={this.props.toggleVariableExplorer}>OPEN</button>
                 {this.renderVariablePanel(this.props.baseTheme)}
             </div>
         );
-
-        //return (
-        //<div id="main-panel" ref={this.mainPanelRef} role="Main" style={dynamicFont}>
-        //<div className="styleSetter">
-        //<style>{`${this.props.rootCss ? this.props.rootCss : ''}
-        //${buildSettingsCss(this.props.settings)}`}</style>
-        //</div>
-        //<header id="main-panel-toolbar" ref={this.mainPanelToolbarRef}>
-        //{this.renderToolbarPanel()}
-        //{progressBar}
-        //</header>
-        //<section
-        //id="main-panel-variable"
-        //aria-label={getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}
-        //>
-        //{this.renderVariablePanel(this.props.baseTheme)}
-        //</section>
-        //<main id="main-panel-content" onScroll={this.handleScroll}>
-        //{this.renderContentPanel(this.props.baseTheme)}
-        //</main>
-        //<section
-        //id="main-panel-footer"
-        //onClick={this.footerPanelClick}
-        //aria-label={getLocString('DataScience.editSection', 'Input new cells here')}
-        //>
-        //{this.renderFooterPanel(this.props.baseTheme)}
-        //</section>
-        //</div>
-        //);
     }
 
     private renderVariablePanel(baseTheme: string) {
-        //if (this.props.variableState.visible) {
-        const variableProps = this.getVariableProps(baseTheme);
-        return <VariablePanel {...variableProps} />;
-        //}
+        if (this.props.variableState.visible) {
+            const variableProps = this.getVariableProps(baseTheme);
+            return <VariablePanel {...variableProps} />;
+        }
 
-        //return null;
+        return null;
     }
 
     private getVariableProps = (baseTheme: string): IVariablePanelProps => {
