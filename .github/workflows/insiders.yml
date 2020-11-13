@@ -611,14 +611,13 @@ jobs:
       - name: Run smoke tests
         env:
           DISPLAY: 10
-          VSC_JUPYTER_FORCE_LOGGING: true
-          VSC_JUPYTER_LOG_FILE: smoke-test.log
         uses: GabrielBB/xvfb-action@v1.4
         with:
-          run: node --no-force-async-hooks-checks ./out/test/smokeTest.js
+          run: npm run testSmokeLogged
 
       - name: Upload smoke-test log
         uses: actions/upload-artifact@v2
+        if: failure()
         with:
           name: smoke-test.log
           path: './smoke-test.log'

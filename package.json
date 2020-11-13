@@ -1,8 +1,8 @@
 {
     "name": "jupyter",
     "displayName": "Jupyter",
-    "description": "Language-agnostic jupyter notebook, interactive programming and computing that supports Intellisense, code formatting, refactoring, debugging and more.",
     "version": "2020.12.0-dev",
+    "description": "Jupyter notebook support, interactive programming and computing that supports Intellisense, debugging and more.",
     "featureFlags": {
         "usingNewInterpreterStorage": true
     },
@@ -12,7 +12,7 @@
     "author": {
         "name": "Microsoft Corporation"
     },
-    "license": "MIT",
+    "license": "SEE LICENSE IN LICENSE.txt",
     "homepage": "https://github.com/Microsoft/vscode-jupyter",
     "repository": {
         "type": "git",
@@ -1404,12 +1404,6 @@
                     "description": "Automatically scroll the interactive window to show the output of the last statement executed. If false, the interactive window will only automatically scroll if the bottom of the prior cell is visible.",
                     "scope": "resource"
                 },
-                "jupyter.showKernelSelectionOnInteractiveWindow": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "When set to true, enables the kernel selector in the Interactive Window. By default, the Interactive Window will use your Python Interpreters kernel.",
-                    "scope": "resource"
-                },
                 "jupyter.enableScrollingForCellOutputs": {
                     "type": "boolean",
                     "default": true,
@@ -1755,13 +1749,17 @@
         "testVSCode": "cross-env CODE_TESTS_WORKSPACE=src/test/datascience VSC_JUPYTER_CI_TEST_VSC_CHANNEL=stable TEST_FILES_SUFFIX=vscode.test VSC_JUPYTER_FORCE_LOGGING=1 VSC_JUPYTER_LOAD_EXPERIMENTS_FROM_FILE=true node ./out/test/testBootstrap.js ./out/test/standardTest.js",
         "pretestNativeNotebooksInVSCode": "cross-env VSC_JUPYTER_CI_TEST_VSC_CHANNEL=insiders VSC_JUPYTER_RUN_NB_TEST=true node ./out/test/datascience/dsTestSetup.js",
         "testNativeNotebooksInVSCode": "cross-env CODE_TESTS_WORKSPACE=src/test/datascience VSC_JUPYTER_CI_TEST_VSC_CHANNEL=insiders VSC_JUPYTER_RUN_NB_TEST=true TEST_FILES_SUFFIX=vscode.test VSC_JUPYTER_FORCE_LOGGING=1 VSC_JUPYTER_LOAD_EXPERIMENTS_FROM_FILE=true node ./out/test/testBootstrap.js ./out/test/standardTest.js",
+        "pretestNativeNotebooksWithoutPythonInVSCode": "cross-env VSC_JUPYTER_CI_TEST_VSC_CHANNEL=insiders VSC_JUPYTER_RUN_NB_TEST=true node ./out/test/datascience/dsTestSetup.js",
+        "testNativeNotebooksWithoutPythonInVSCode": "cross-env CODE_TESTS_WORKSPACE=src/test/datascience VSC_JUPYTER_CI_TEST_VSC_CHANNEL=insiders VSC_JUPYTER_RUN_NB_TEST=true TEST_FILES_SUFFIX=vscode.test VSC_JUPYTER_FORCE_LOGGING=1 VSC_JUPYTER_LOAD_EXPERIMENTS_FROM_FILE=true VSC_JUPYTER_CI_TEST_GREP=non-python-kernel VSC_JUPYTER_CI_TEST_DO_NOT_INSTALL_PYTHON_EXT=true node ./out/test/testBootstrap.js ./out/test/standardTest.js",
         "testPerformance": "node ./out/test/testBootstrap.js ./out/test/performanceTest.js",
         "testSmoke": "node ./out/test/testBootstrap.js ./out/test/smokeTest.js",
+        "testSmokeLogged": "cross-env VSC_JUPYTER_FORCE_LOGGING=true VSC_JUPYTER_LOG_FILE=smoke-test.log node --no-force-async-hooks-checks ./out/test/smokeTest.js",
         "lint-staged": "node gulpfile.js",
         "lint": "tslint src/**/*.ts -t verbose",
         "prettier-fix": "prettier 'src/**/*.ts*' --write && prettier 'build/**/*.js' --write",
         "clean": "gulp clean",
         "updateBuildNumber": "gulp updateBuildNumber",
+        "updateLicense": "gulp updateLicense",
         "webpack": "webpack"
     },
     "dependencies": {
@@ -1812,7 +1810,7 @@
         "node-stream-zip": "^1.6.0",
         "onigasm": "^2.2.2",
         "pdfkit": "^0.11.0",
-        "plotly.js-dist": "^1.55.2",
+        "plotly.js-dist": "^1.57.1",
         "portfinder": "^1.0.25",
         "react": "^16.5.2",
         "react-data-grid": "^6.0.2-0",

@@ -11,37 +11,26 @@ import * as typemoq from 'typemoq';
 import { EventEmitter } from 'vscode';
 import { ApplicationEnvironment } from '../../client/common/application/applicationEnvironment';
 import { IApplicationShell } from '../../client/common/application/types';
+import { Experiments } from '../../client/common/experiments/groups';
+import { ExperimentService } from '../../client/common/experiments/service';
 import { IBrowserService, IPersistentState, IPersistentStateFactory } from '../../client/common/types';
-import { DataScienceSurveyBanner, DSSurveyStateKeys } from '../../client/datascience/dataScienceSurveyBanner';
+import {
+    InsidersNativeNotebooksSurveyBanner,
+    InsidersNotebookSurveyStateKeys
+} from '../../client/datascience/insidersNativeNotebookSurveyBanner';
 import { NativeEditorProvider } from '../../client/datascience/notebookStorage/nativeEditorProvider';
 import { INotebookEditor } from '../../client/datascience/types';
 
-suite('DataScience Survey Banner', () => {
+suite('Insiders Notebook Survey Banner', () => {
     let appShell: typemoq.IMock<IApplicationShell>;
     let browser: typemoq.IMock<IBrowserService>;
     const targetUri: string = 'https://microsoft.com';
 
-    const message =
-        'Can you please take 2 minutes to tell us how the Python Data Science features are working for you?';
+    const message = 'Can you please take a minute to tell us about your notebooks experience in VS Code?';
     const yes = 'Yes, take survey now';
     const no = 'No, thanks';
 
-    setup(() => {
-        appShell = typemoq.Mock.ofType<IApplicationShell>();
-        browser = typemoq.Mock.ofType<IBrowserService>();
-    });
-    test('DataScience banner should be enabled after we hit our execution count', async () => {
-        const enabledValue: boolean = true;
-        const executionCount: number = 1000;
-        const testBanner: DataScienceSurveyBanner = preparePopup(
-            executionCount,
-            0,
-            enabledValue,
-            appShell.object,
-            browser.object,
-            targetUri,
-            'stable'
-        );
+    async function runTestAndVerifyResults(testBanner: InsidersNativeNotebooksSurveyBanner) {
         const expectedUri: string = targetUri;
         let receivedUri: string = '';
         browser
@@ -62,97 +51,114 @@ suite('DataScience Survey Banner', () => {
         // verify that the calls expected were indeed made.
         browser.verifyAll();
         browser.reset();
+    }
+
+    setup(() => {
+        appShell = typemoq.Mock.ofType<IApplicationShell>();
+        browser = typemoq.Mock.ofType<IBrowserService>();
     });
 
-    test('DataScience banner should be enabled after we hit our notebook count', async () => {
+    test('Show insiders native notebooks survey banner if we hit our cell execution count', async () => {
         const enabledValue: boolean = true;
-        const testBanner: DataScienceSurveyBanner = preparePopup(
+        const testBanner: InsidersNativeNotebooksSurveyBanner = preparePopup(
+            100,
+            9,
+            enabledValue,
+            appShell.object,
+            browser.object,
+            targetUri,
+            'insiders',
+            true
+        );
+        await runTestAndVerifyResults(testBanner);
+    });
+
+    test('Show insiders native notebooks survey banner if we hit our notebook open count', async () => {
+        const enabledValue: boolean = true;
+        const testBanner: InsidersNativeNotebooksSurveyBanner = preparePopup(
             0,
             15,
             enabledValue,
             appShell.object,
             browser.object,
             targetUri,
-            'stable'
+            'insiders',
+            true
         );
-        const expectedUri: string = targetUri;
-        let receivedUri: string = '';
-        browser
-            .setup((b) =>
-                b.launch(
-                    typemoq.It.is((a: string) => {
-                        receivedUri = a;
-                        return a === expectedUri;
-                    })
-                )
-            )
-            .verifiable(typemoq.Times.once());
-        await testBanner.launchSurvey();
-        // This is technically not necessary, but it gives
-        // better output than the .verifyAll messages do.
-        expect(receivedUri).is.equal(expectedUri, 'Uri given to launch mock is incorrect.');
-
-        // verify that the calls expected were indeed made.
-        browser.verifyAll();
-        browser.reset();
+        await runTestAndVerifyResults(testBanner);
     });
 
-    test('Do not show data science banner if user is in insiders', () => {
-        appShell
-            .setup((a) =>
-                a.showInformationMessage(typemoq.It.isValue(message), typemoq.It.isValue(yes), typemoq.It.isValue(no))
-            )
-            .verifiable(typemoq.Times.never());
-        const enabledValue: boolean = false;
-        const executionCount: number = 0;
-        const notebookCount: number = 200;
-        const testBanner: DataScienceSurveyBanner = preparePopup(
-            executionCount,
-            notebookCount,
+    test('Do not show insiders native notebooks survey banner if user is in stable', () => {
+        const enabledValue: boolean = true;
+        const isInNativeNotebooksExperiment = true;
+        const testBanner: InsidersNativeNotebooksSurveyBanner = preparePopup(
+            101,
+            6,
             enabledValue,
             appShell.object,
             browser.object,
             targetUri,
-            'insiders'
+            'stable',
+            isInNativeNotebooksExperiment
         );
         testBanner.showBanner().ignoreErrors();
     });
 
-    test('Do not show data science banner when it is disabled', () => {
-        appShell
-            .setup((a) =>
-                a.showInformationMessage(typemoq.It.isValue(message), typemoq.It.isValue(yes), typemoq.It.isValue(no))
-            )
-            .verifiable(typemoq.Times.never());
-        const enabledValue: boolean = false;
-        const executionCount: number = 0;
-        const notebookCount: number = 200;
-        const testBanner: DataScienceSurveyBanner = preparePopup(
-            executionCount,
-            notebookCount,
+    test('Do not show insiders native notebooks survey banner if user is not using native notebooks', () => {
+        // Possible user is in VSCode Insiders but has opted out of the Native Notebooks experiment
+        const enabledValue: boolean = true;
+        const isInNativeNotebooksExperiment = false;
+        const testBanner: InsidersNativeNotebooksSurveyBanner = preparePopup(
+            101,
+            6,
             enabledValue,
             appShell.object,
             browser.object,
             targetUri,
-            'stable'
+            'insiders',
+            isInNativeNotebooksExperiment
         );
         testBanner.showBanner().ignoreErrors();
     });
-    test('Do not show data science banner if we have not hit our execution count or our notebook count', () => {
+
+    test('Do not show insiders native notebooks survey banner if we have not hit our execution count or our notebook count', () => {
         appShell
             .setup((a) =>
                 a.showInformationMessage(typemoq.It.isValue(message), typemoq.It.isValue(yes), typemoq.It.isValue(no))
             )
             .verifiable(typemoq.Times.never());
         const enabledValue: boolean = true;
-        const testBanner: DataScienceSurveyBanner = preparePopup(
+        const testBanner: InsidersNativeNotebooksSurveyBanner = preparePopup(
             99,
             4,
             enabledValue,
             appShell.object,
             browser.object,
             targetUri,
-            'stable'
+            'insiders',
+            true
+        );
+        testBanner.showBanner().ignoreErrors();
+    });
+
+    test("Do not show insiders native notebooks survey banner if it's been disabled", async () => {
+        appShell
+            .setup((a) =>
+                a.showInformationMessage(typemoq.It.isValue(message), typemoq.It.isValue(yes), typemoq.It.isValue(no))
+            )
+            .verifiable(typemoq.Times.never());
+        const enabledValue: boolean = false;
+        const executionCount: number = 0;
+        const notebookCount: number = 200;
+        const testBanner: InsidersNativeNotebooksSurveyBanner = preparePopup(
+            executionCount,
+            notebookCount,
+            enabledValue,
+            appShell.object,
+            browser.object,
+            targetUri,
+            'insiders',
+            true
         );
         testBanner.showBanner().ignoreErrors();
     });
@@ -165,8 +171,9 @@ function preparePopup(
     appShell: IApplicationShell,
     browser: IBrowserService,
     targetUri: string,
-    channel: 'insiders' | 'stable'
-): DataScienceSurveyBanner {
+    channel: 'insiders' | 'stable',
+    isInNativeNotebooksExperiment: boolean
+): InsidersNativeNotebooksSurveyBanner {
     let openCount = 0;
     const myfactory: typemoq.IMock<IPersistentStateFactory> = typemoq.Mock.ofType<IPersistentStateFactory>();
     const enabledValState: typemoq.IMock<IPersistentState<boolean>> = typemoq.Mock.ofType<IPersistentState<boolean>>();
@@ -180,6 +187,8 @@ function preparePopup(
     when(provider.onDidOpenNotebookEditor).thenReturn(openedEventEmitter.event);
     const applicationEnvironment = mock(ApplicationEnvironment);
     when(applicationEnvironment.channel).thenReturn(channel);
+    const experimentService = mock(ExperimentService);
+    when(experimentService.inExperiment(Experiments.NativeNotebook)).thenResolve(isInNativeNotebooksExperiment);
     enabledValState
         .setup((a) => a.updateValue(typemoq.It.isValue(true)))
         .returns(() => {
@@ -212,7 +221,10 @@ function preparePopup(
 
     myfactory
         .setup((a) =>
-            a.createGlobalPersistentState(typemoq.It.isValue(DSSurveyStateKeys.ShowBanner), typemoq.It.isValue(true))
+            a.createGlobalPersistentState(
+                typemoq.It.isValue(InsidersNotebookSurveyStateKeys.ShowBanner),
+                typemoq.It.isValue(true)
+            )
         )
         .returns(() => {
             return enabledValState.object;
@@ -220,7 +232,7 @@ function preparePopup(
     myfactory
         .setup((a) =>
             a.createGlobalPersistentState(
-                typemoq.It.isValue(DSSurveyStateKeys.ShowBanner),
+                typemoq.It.isValue(InsidersNotebookSurveyStateKeys.ShowBanner),
                 typemoq.It.isValue(true),
                 typemoq.It.isAnyNumber()
             )
@@ -231,7 +243,7 @@ function preparePopup(
     myfactory
         .setup((a) =>
             a.createGlobalPersistentState(
-                typemoq.It.isValue(DSSurveyStateKeys.ShowBanner),
+                typemoq.It.isValue(InsidersNotebookSurveyStateKeys.ShowBanner),
                 typemoq.It.isValue(false),
                 typemoq.It.isAnyNumber()
             )
@@ -242,7 +254,7 @@ function preparePopup(
     myfactory
         .setup((a) =>
             a.createGlobalPersistentState(
-                typemoq.It.isValue(DSSurveyStateKeys.ExecutionCount),
+                typemoq.It.isValue(InsidersNotebookSurveyStateKeys.ExecutionCount),
                 typemoq.It.isAnyNumber()
             )
         )
@@ -252,18 +264,19 @@ function preparePopup(
     myfactory
         .setup((a) =>
             a.createGlobalPersistentState(
-                typemoq.It.isValue(DSSurveyStateKeys.OpenNotebookCount),
+                typemoq.It.isValue(InsidersNotebookSurveyStateKeys.OpenNotebookCount),
                 typemoq.It.isAnyNumber()
             )
         )
         .returns(() => {
             return openCountState.object;
         });
-    const result = new DataScienceSurveyBanner(
+    const result = new InsidersNativeNotebooksSurveyBanner(
         appShell,
         myfactory.object,
         browser,
         instance(provider),
+        instance(experimentService),
         instance(applicationEnvironment),
         targetUri
     );

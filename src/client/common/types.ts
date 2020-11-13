@@ -161,7 +161,6 @@ export interface IJupyterSettings {
     readonly jupyterCommandLineArguments: string[];
     readonly widgetScriptSources: WidgetCDNs[];
     readonly alwaysScrollOnNewCell: boolean;
-    readonly showKernelSelectionOnInteractiveWindow: boolean;
     readonly interactiveWindowMode: InteractiveWindowMode;
     readonly disableZMQSupport: boolean;
 }
@@ -319,10 +318,10 @@ export interface IBrowserService {
 
 export const IJupyterExtensionBanner = Symbol('IJupyterExtensionBanner');
 export interface IJupyterExtensionBanner {
-    readonly enabled: boolean;
     showBanner(): Promise<void>;
 }
 export const BANNER_NAME_DS_SURVEY: string = 'DSSurveyBanner';
+export const BANNER_NAME_INSIDERS_NOTEBOOKS_SURVEY = 'DSInsidersNotebooksSurvey';
 export const BANNER_NAME_INTERACTIVE_SHIFTENTER: string = 'InteractiveShiftEnterBanner';
 
 export type DeprecatedSettingAndValue = {

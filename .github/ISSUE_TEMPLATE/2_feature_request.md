@@ -1,7 +1,7 @@
 ---
 name: General feature request
 about: Suggest an idea for this project
-labels: classify, type-enhancement
+labels: enhancement
 ---
 
 <!-- Please search existing issues to avoid creating duplicates. -->
