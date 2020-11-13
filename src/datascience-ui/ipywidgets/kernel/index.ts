@@ -27,8 +27,6 @@ class WidgetManagerComponent {
             // tslint:disable-next-line: no-any
             handleMessage: (type: string, payload?: any) => {
                 if (type === SharedMessages.UpdateSettings) {
-                    // tslint:disable-next-line: no-console
-                    // console.error('Got Message 1');
                     const settings = JSON.parse(payload);
                     this.widgetsCanLoadFromCDN = settings.widgetScriptSources.length > 0;
                 }

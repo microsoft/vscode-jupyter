@@ -20,9 +20,17 @@ export class WebviewIPyWidgetCoordinator implements IInteractiveWindowListener {
     public get postMessage(): Event<{ message: string; payload: any }> {
         return this.postEmitter.event;
     }
+    public get postInternalMessage(): Event<{ message: string; payload: any }> {
+        return this.postInternalMessageEmitter.event;
+    }
     private notebookIdentity: Uri | undefined;
     // tslint:disable-next-line: no-any
     private postEmitter: EventEmitter<{ message: string; payload: any }> = new EventEmitter<{
+        message: string;
+        // tslint:disable-next-line: no-any
+        payload: any;
+    }>();
+    private postInternalMessageEmitter: EventEmitter<{ message: string; payload: any }> = new EventEmitter<{
         message: string;
         // tslint:disable-next-line: no-any
         payload: any;
@@ -53,6 +61,13 @@ export class WebviewIPyWidgetCoordinator implements IInteractiveWindowListener {
         // the message coordinator as soon as we're sure what notebook we're in.
         this.notebookIdentity = args.resource;
         this.messageCoordinator = await CommonMessageCoordinator.create(this.notebookIdentity, this.serviceContainer);
-        this.messageCoordinatorEvent = this.messageCoordinator.postMessage((e) => this.postEmitter.fire(e));
+        this.messageCoordinatorEvent = this.messageCoordinator.postMessage((e) => {
+            // Special case a specific message. It must be posted to the internal class, not the webview
+            if (e.message === InteractiveWindowMessages.ConvertUriForUseInWebViewRequest) {
+                this.postInternalMessageEmitter.fire(e);
+            } else {
+                this.postEmitter.fire(e);
+            }
+        });
     }
 }

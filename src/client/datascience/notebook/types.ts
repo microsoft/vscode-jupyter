@@ -12,10 +12,15 @@ import {
 export const INotebookContentProvider = Symbol('INotebookContentProvider');
 
 export const INotebookKernelProvider = Symbol('INotebookKernelProvider');
-export interface INotebookKernelProvider extends NotebookKernelProvider {
-    readonly onResolvedKernel: vscode.Event<{
-        kernel: NotebookKernel;
-        document: NotebookDocument;
-        webview: NotebookCommunication;
-    }>;
+export interface INotebookKernelProvider extends NotebookKernelProvider {}
+
+export const INotebookKernelResolver = Symbol('INotebookKernelResolver');
+
+export interface INotebookKernelResolver {
+    resolveKernel(
+        kernel: NotebookKernel,
+        document: NotebookDocument,
+        webview: NotebookCommunication,
+        token: vscode.CancellationToken
+    ): Promise<void>;
 }

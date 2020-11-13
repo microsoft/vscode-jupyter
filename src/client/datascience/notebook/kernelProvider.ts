@@ -30,7 +30,7 @@ import {
     updateKernelInfoInNotebookMetadata,
     updateKernelInNotebookMetadata
 } from './helpers/helpers';
-import { INotebookKernelProvider } from './types';
+import { INotebookKernelProvider, INotebookKernelResolver } from './types';
 
 export class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
     get preloads(): Uri[] {
@@ -97,11 +97,6 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
         return this._onDidChangeKernels.event;
     }
     private readonly _onDidChangeKernels = new EventEmitter<NotebookDocument | undefined>();
-    private readonly _onDidResolveKernel = new EventEmitter<{
-        kernel: VSCNotebookKernel;
-        document: NotebookDocument;
-        webview: NotebookCommunication;
-    }>();
     private notebookKernelChangeHandled = new WeakSet<INotebook>();
     private isRawNotebookSupported?: Promise<boolean>;
     constructor(
@@ -115,7 +110,8 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IExtensionContext) private readonly context: IExtensionContext,
-        @inject(IRawNotebookSupportedService) private readonly rawNotebookSupported: IRawNotebookSupportedService
+        @inject(IRawNotebookSupportedService) private readonly rawNotebookSupported: IRawNotebookSupportedService,
+        @inject(INotebookKernelResolver) private readonly kernelResolver: INotebookKernelResolver
     ) {
         this.kernelSelectionProvider.onDidChangeSelections(
             (e) => {
@@ -133,17 +129,13 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
         this.notebook.onDidChangeActiveNotebookKernel(this.onDidChangeActiveNotebookKernel, this, disposables);
     }
 
-    public get onResolvedKernel() {
-        return this._onDidResolveKernel.event;
-    }
-
     public async resolveKernel?(
         kernel: VSCodeNotebookKernelMetadata,
         document: NotebookDocument,
         webview: NotebookCommunication,
-        _token: CancellationToken
+        token: CancellationToken
     ): Promise<void> {
-        this._onDidResolveKernel.fire({ kernel, document, webview });
+        return this.kernelResolver.resolveKernel(kernel, document, webview, token);
     }
 
     public async provideKernels(

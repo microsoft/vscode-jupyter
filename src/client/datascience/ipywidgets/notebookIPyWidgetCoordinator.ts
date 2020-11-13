@@ -1,54 +1,48 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { inject, injectable } from 'inversify';
-import { Disposable } from 'vscode';
+import { CancellationToken, Disposable } from 'vscode';
 import { NotebookCommunication, NotebookDocument, NotebookKernel } from '../../../../types/vscode-proposed';
-import { IExtensionSingleActivationService } from '../../activation/types';
 import { IVSCodeNotebook } from '../../common/application/types';
+import { Cancellation } from '../../common/cancellation';
+import { createDeferred } from '../../common/utils/async';
 import { IServiceContainer } from '../../ioc/types';
-import { InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
-import { INotebookKernelProvider } from '../notebook/types';
+import { InteractiveWindowMessages, IPyWidgetMessages } from '../interactive-common/interactiveWindowTypes';
+import { INotebookKernelResolver } from '../notebook/types';
 import { CommonMessageCoordinator } from './commonMessageCoordinator';
 
 /**
  * This class wires up VSC notebooks to ipywidget communications.
  */
 @injectable()
-export class NotebookIPyWidgetCoordinator implements IExtensionSingleActivationService {
+export class NotebookIPyWidgetCoordinator implements INotebookKernelResolver {
     private messageCoordinators = new Map<string, Promise<CommonMessageCoordinator>>();
     private attachedWebViews = new Map<string, { webviews: Set<string>; disposables: Disposable[] }>();
     private disposables: Disposable[] = [];
     constructor(
-        @inject(INotebookKernelProvider) notebookKernelProvider: INotebookKernelProvider,
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(IVSCodeNotebook) private readonly notebookProvider: IVSCodeNotebook
     ) {
-        notebookKernelProvider.onResolvedKernel(this.onResolvedKernel.bind(this));
-        if (notebookKernelProvider.onDidChangeKernels) {
-            notebookKernelProvider.onDidChangeKernels(this.onDidChangeKernels.bind(this));
-        }
         notebookProvider.onDidCloseNotebookDocument(this.onDidCloseNotebook.bind(this));
-    }
-    public async activate(): Promise<void> {
-        // We don't need to do anything here. We'll signup on resolve kernel events
     }
     public dispose(): void | undefined {
         this.messageCoordinators.forEach((v) => v.then((c) => c.dispose()));
         this.messageCoordinators.clear();
     }
-    private onResolvedKernel(arg: {
-        kernel: NotebookKernel;
-        document: NotebookDocument;
-        webview: NotebookCommunication;
-    }) {
+    public resolveKernel(
+        _kernel: NotebookKernel,
+        document: NotebookDocument,
+        webview: NotebookCommunication,
+        token: CancellationToken
+    ): Promise<void> {
         // Create a handler for this notebook if we don't already have one. Since there's one of the notebookMessageCoordinator's for the
         // entire VS code session, we have a map of notebook document to message coordinator
-        let promise = this.messageCoordinators.get(arg.document.uri.toString());
+        let promise = this.messageCoordinators.get(document.uri.toString());
         if (!promise) {
-            promise = CommonMessageCoordinator.create(arg.document.uri, this.serviceContainer);
-            this.messageCoordinators.set(arg.document.uri.toString(), promise);
+            promise = CommonMessageCoordinator.create(document.uri, this.serviceContainer);
+            this.messageCoordinators.set(document.uri.toString(), promise);
         }
-        promise.then(this.attachCoordinator.bind(this, arg.document, arg.webview)).ignoreErrors();
+        return Cancellation.race(() => promise!.then(this.attachCoordinator.bind(this, document, webview)), token);
     }
 
     private onDidCloseNotebook(e: NotebookDocument) {
@@ -62,7 +56,12 @@ export class NotebookIPyWidgetCoordinator implements IExtensionSingleActivationS
         }
     }
 
-    private attachCoordinator(document: NotebookDocument, webview: NotebookCommunication, c: CommonMessageCoordinator) {
+    private attachCoordinator(
+        document: NotebookDocument,
+        webview: NotebookCommunication,
+        c: CommonMessageCoordinator
+    ): Promise<void> {
+        const promise = createDeferred<void>();
         let attachment = this.attachedWebViews.get(document.uri.toString());
         if (!attachment) {
             attachment = { webviews: new Set<string>(), disposables: [] };
@@ -88,11 +87,16 @@ export class NotebookIPyWidgetCoordinator implements IExtensionSingleActivationS
             this.disposables.push(
                 webview.onDidReceiveMessage((m) => {
                     c.onMessage(m.type, m.payload);
+
+                    // Special case the WidgetManager loaded message. It means we're ready
+                    // to use a kernel. (IPyWidget Dispatcher uses this too)
+                    if (m.type === IPyWidgetMessages.IPyWidgets_Ready) {
+                        promise.resolve();
+                    }
                 })
             );
         }
-    }
-    private onDidChangeKernels(_document: NotebookDocument | undefined) {
-        // Might have to destroy the coordinator? It needs to resign up for kernel events
+
+        return promise.promise;
     }
 }
