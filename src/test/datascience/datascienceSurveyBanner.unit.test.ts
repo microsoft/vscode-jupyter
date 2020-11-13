@@ -9,6 +9,7 @@ import { expect } from 'chai';
 import { instance, mock, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import { EventEmitter } from 'vscode';
+import { ApplicationEnvironment } from '../../client/common/application/applicationEnvironment';
 import { IApplicationShell } from '../../client/common/application/types';
 import { IBrowserService, IPersistentState, IPersistentStateFactory } from '../../client/common/types';
 import { DataScienceSurveyBanner, DSSurveyStateKeys } from '../../client/datascience/dataScienceSurveyBanner';
@@ -38,7 +39,8 @@ suite('DataScience Survey Banner', () => {
             enabledValue,
             appShell.object,
             browser.object,
-            targetUri
+            targetUri,
+            'stable'
         );
         const expectedUri: string = targetUri;
         let receivedUri: string = '';
@@ -70,7 +72,8 @@ suite('DataScience Survey Banner', () => {
             enabledValue,
             appShell.object,
             browser.object,
-            targetUri
+            targetUri,
+            'stable'
         );
         const expectedUri: string = targetUri;
         let receivedUri: string = '';
@@ -94,6 +97,27 @@ suite('DataScience Survey Banner', () => {
         browser.reset();
     });
 
+    test('Do not show data science banner if user is in insiders', () => {
+        appShell
+            .setup((a) =>
+                a.showInformationMessage(typemoq.It.isValue(message), typemoq.It.isValue(yes), typemoq.It.isValue(no))
+            )
+            .verifiable(typemoq.Times.never());
+        const enabledValue: boolean = false;
+        const executionCount: number = 0;
+        const notebookCount: number = 200;
+        const testBanner: DataScienceSurveyBanner = preparePopup(
+            executionCount,
+            notebookCount,
+            enabledValue,
+            appShell.object,
+            browser.object,
+            targetUri,
+            'insiders'
+        );
+        testBanner.showBanner().ignoreErrors();
+    });
+
     test('Do not show data science banner when it is disabled', () => {
         appShell
             .setup((a) =>
@@ -109,7 +133,8 @@ suite('DataScience Survey Banner', () => {
             enabledValue,
             appShell.object,
             browser.object,
-            targetUri
+            targetUri,
+            'stable'
         );
         testBanner.showBanner().ignoreErrors();
     });
@@ -126,7 +151,8 @@ suite('DataScience Survey Banner', () => {
             enabledValue,
             appShell.object,
             browser.object,
-            targetUri
+            targetUri,
+            'stable'
         );
         testBanner.showBanner().ignoreErrors();
     });
@@ -138,7 +164,8 @@ function preparePopup(
     enabledValue: boolean,
     appShell: IApplicationShell,
     browser: IBrowserService,
-    targetUri: string
+    targetUri: string,
+    channel: 'insiders' | 'stable'
 ): DataScienceSurveyBanner {
     let openCount = 0;
     const myfactory: typemoq.IMock<IPersistentStateFactory> = typemoq.Mock.ofType<IPersistentStateFactory>();
@@ -151,6 +178,8 @@ function preparePopup(
     (instance(provider) as any).then = undefined;
     const openedEventEmitter = new EventEmitter<INotebookEditor>();
     when(provider.onDidOpenNotebookEditor).thenReturn(openedEventEmitter.event);
+    const applicationEnvironment = mock(ApplicationEnvironment);
+    when(applicationEnvironment.channel).thenReturn(channel);
     enabledValState
         .setup((a) => a.updateValue(typemoq.It.isValue(true)))
         .returns(() => {
@@ -190,7 +219,22 @@ function preparePopup(
         });
     myfactory
         .setup((a) =>
-            a.createGlobalPersistentState(typemoq.It.isValue(DSSurveyStateKeys.ShowBanner), typemoq.It.isValue(false))
+            a.createGlobalPersistentState(
+                typemoq.It.isValue(DSSurveyStateKeys.ShowBanner),
+                typemoq.It.isValue(true),
+                typemoq.It.isAnyNumber()
+            )
+        )
+        .returns(() => {
+            return enabledValState.object;
+        });
+    myfactory
+        .setup((a) =>
+            a.createGlobalPersistentState(
+                typemoq.It.isValue(DSSurveyStateKeys.ShowBanner),
+                typemoq.It.isValue(false),
+                typemoq.It.isAnyNumber()
+            )
         )
         .returns(() => {
             return enabledValState.object;
@@ -215,7 +259,14 @@ function preparePopup(
         .returns(() => {
             return openCountState.object;
         });
-    const result = new DataScienceSurveyBanner(appShell, myfactory.object, browser, instance(provider), targetUri);
+    const result = new DataScienceSurveyBanner(
+        appShell,
+        myfactory.object,
+        browser,
+        instance(provider),
+        instance(applicationEnvironment),
+        targetUri
+    );
 
     // Fire the number of opens specifed so that it behaves like the real editor
     for (let i = 0; i < initialOpenCount; i += 1) {
