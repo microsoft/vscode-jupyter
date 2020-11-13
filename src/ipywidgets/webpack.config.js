@@ -96,8 +96,6 @@ module.exports = [
             filename: 'ipywidgets.js',
             path: path.resolve(outDir, 'dist'),
             publicPath: 'built/',
-            library: 'vscIPyWidgets',
-            libraryTarget: 'window',
             pathinfo: false
         },
         plugins: [...common.getDefaultPlugins('ipywidgets')],

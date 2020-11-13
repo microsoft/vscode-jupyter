@@ -36,7 +36,11 @@ suite('DataScience - NativeNotebook ContentProvider', () => {
         when(vscNotebooks.onDidSaveNotebookDocument).thenReturn(new EventEmitter<NotebookDocument>().event);
         const memento = mock<Memento>();
         when(memento.get(anything())).thenReturn();
-        contentProvider = new NotebookContentProvider(instance(storageProvider), instance(compatSupport));
+        contentProvider = new NotebookContentProvider(
+            instance(storageProvider),
+            instance(compatSupport),
+            instance(vscNotebooks)
+        );
     });
     teardown(() => disposeAllDisposables(disposables));
     [true, false].forEach((isNotebookTrusted) => {

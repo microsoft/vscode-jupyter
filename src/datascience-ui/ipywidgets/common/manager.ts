@@ -12,17 +12,17 @@ import * as fastDeepEqual from 'fast-deep-equal';
 import 'rxjs/add/operator/concatMap';
 import { Observable } from 'rxjs/Observable';
 import { ReplaySubject } from 'rxjs/ReplaySubject';
-import { createDeferred, Deferred } from '../../client/common/utils/async';
+import { createDeferred, Deferred } from '../../../client/common/utils/async';
 import {
     IInteractiveWindowMapping,
     InteractiveWindowMessages,
     IPyWidgetMessages
-} from '../../client/datascience/interactive-common/interactiveWindowTypes';
-import { WIDGET_MIMETYPE } from '../../client/datascience/ipywidgets/constants';
-import { KernelSocketOptions } from '../../client/datascience/types';
-import { IMessageHandler, PostOffice } from '../react-common/postOffice';
+} from '../../../client/datascience/interactive-common/interactiveWindowTypes';
+import { WIDGET_MIMETYPE } from '../../../client/datascience/ipywidgets/constants';
+import { KernelSocketOptions } from '../../../client/datascience/types';
+import { IMessageHandler, PostOffice } from '../../react-common/postOffice';
 import { create as createKernel } from './kernel';
-import { IIPyWidgetManager, IJupyterLabWidgetManager, IJupyterLabWidgetManagerCtor } from './types';
+import { IIPyWidgetManager, IJupyterLabWidgetManager, IJupyterLabWidgetManagerCtor, ScriptLoader } from './types';
 
 // tslint:disable: no-any
 
@@ -48,15 +48,8 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
     constructor(
         private readonly widgetContainer: HTMLElement,
         private readonly postOffice: PostOffice,
-        private readonly scriptLoader: {
-            readonly widgetsRegisteredInRequireJs: Readonly<Set<string>>;
-            // tslint:disable-next-line: no-any
-            errorHandler(className: string, moduleName: string, moduleVersion: string, error: any): void;
-            loadWidgetScript(moduleName: string, moduleVersion: string): void;
-            successHandler(className: string, moduleName: string, moduleVersion: string): void;
-        }
+        private readonly scriptLoader: ScriptLoader
     ) {
-        // tslint:disable-next-line: no-any
         this.postOffice.addHandler(this);
 
         // Handshake.

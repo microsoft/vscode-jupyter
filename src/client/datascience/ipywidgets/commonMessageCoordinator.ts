@@ -4,7 +4,7 @@
 'use strict';
 
 import type { KernelMessage } from '@jupyterlab/services';
-import { inject, injectable, named } from 'inversify';
+import { injectable } from 'inversify';
 import stripAnsi from 'strip-ansi';
 import { Event, EventEmitter, Uri } from 'vscode';
 import {
@@ -12,28 +12,40 @@ import {
     LoadIPyWidgetClassLoadAction,
     NotifyIPyWidgeWidgetVersionNotSupportedAction
 } from '../../../datascience-ui/interactive-common/redux/reducers/types';
+import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
 import { traceError, traceInfo } from '../../common/logger';
-import { IDisposableRegistry, IOutputChannel } from '../../common/types';
+import { IFileSystem } from '../../common/platform/types';
+import {
+    IConfigurationService,
+    IDisposableRegistry,
+    IExtensionContext,
+    IHttpClient,
+    IOutputChannel,
+    IPersistentStateFactory
+} from '../../common/types';
 import * as localize from '../../common/utils/localize';
+import { IInterpreterService } from '../../interpreter/contracts';
+import { IServiceContainer } from '../../ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { JUPYTER_OUTPUT_CHANNEL, Telemetry } from '../constants';
-import { INotebookIdentity, InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
-import { IInteractiveWindowListener, INotebookProvider } from '../types';
+import { InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
+import { INotebookProvider } from '../types';
 import { IPyWidgetMessageDispatcherFactory } from './ipyWidgetMessageDispatcherFactory';
+import { IPyWidgetScriptSource } from './ipyWidgetScriptSource';
 import { IIPyWidgetMessageDispatcher } from './types';
 
 /**
- * This class handles all of the ipywidgets communication with the notebook
+ * This class wraps all of the ipywidgets communication with a backing notebook
  */
 @injectable()
 //
-export class IPyWidgetHandler implements IInteractiveWindowListener {
+export class CommonMessageCoordinator {
     // tslint:disable-next-line: no-any
     public get postMessage(): Event<{ message: string; payload: any }> {
         return this.postEmitter.event;
     }
     private ipyWidgetMessageDispatcher?: IIPyWidgetMessageDispatcher;
-    private notebookIdentity: Uri | undefined;
+    private ipyWidgetScriptSource?: IPyWidgetScriptSource;
     // tslint:disable-next-line: no-any
     private postEmitter: EventEmitter<{ message: string; payload: any }> = new EventEmitter<{
         message: string;
@@ -42,32 +54,28 @@ export class IPyWidgetHandler implements IInteractiveWindowListener {
     }>();
     // tslint:disable-next-line: no-require-imports
     private hashFn = require('hash.js').sha256;
+    private disposables: IDisposableRegistry;
+    private jupyterOutput: IOutputChannel;
 
-    constructor(
-        @inject(INotebookProvider) notebookProvider: INotebookProvider,
-        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(IPyWidgetMessageDispatcherFactory)
-        private readonly widgetMessageDispatcherFactory: IPyWidgetMessageDispatcherFactory,
-        @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) private jupyterOutput: IOutputChannel
-    ) {
-        disposables.push(
-            notebookProvider.onNotebookCreated(async (e) => {
-                if (e.identity.toString() === this.notebookIdentity?.toString()) {
-                    await this.initialize();
-                }
-            })
-        );
+    private constructor(private readonly identity: Uri, private readonly serviceContainer: IServiceContainer) {
+        this.disposables = this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
+        this.jupyterOutput = this.serviceContainer.get<IOutputChannel>(IOutputChannel, JUPYTER_OUTPUT_CHANNEL);
+    }
+
+    public static async create(identity: Uri, serviceContainer: IServiceContainer): Promise<CommonMessageCoordinator> {
+        const result = new CommonMessageCoordinator(identity, serviceContainer);
+        await result.initialize();
+        return result;
     }
 
     public dispose() {
         this.ipyWidgetMessageDispatcher?.dispose(); // NOSONAR
+        this.ipyWidgetScriptSource?.dispose(); // NOSONAR
     }
 
     // tslint:disable-next-line: no-any
     public onMessage(message: string, payload?: any): void {
-        if (message === InteractiveWindowMessages.NotebookIdentity) {
-            this.saveIdentity(payload).catch((ex) => traceError('Failed to initialize ipywidgetHandler', ex));
-        } else if (message === InteractiveWindowMessages.IPyWidgetLoadSuccess) {
+        if (message === InteractiveWindowMessages.IPyWidgetLoadSuccess) {
             this.sendLoadSucceededTelemetry(payload);
         } else if (message === InteractiveWindowMessages.IPyWidgetLoadFailure) {
             this.sendLoadFailureTelemetry(payload);
@@ -78,8 +86,12 @@ export class IPyWidgetHandler implements IInteractiveWindowListener {
         } else if (message === InteractiveWindowMessages.IPyWidgetUnhandledKernelMessage) {
             this.handleUnhandledMessage(payload);
         }
+
+        // Pass onto our two objects that are listening to messages
+
         // tslint:disable-next-line: no-any
         this.getIPyWidgetMessageDispatcher()?.receiveMessage({ message: message as any, payload }); // NOSONAR
+        this.getIPyWidgetScriptSource()?.onMessage(message, payload);
     }
 
     private hash(s: string): string {
@@ -148,33 +160,46 @@ export class IPyWidgetHandler implements IInteractiveWindowListener {
         }
     }
     private getIPyWidgetMessageDispatcher() {
-        if (!this.notebookIdentity) {
-            return;
-        }
         if (!this.ipyWidgetMessageDispatcher) {
-            this.ipyWidgetMessageDispatcher = this.widgetMessageDispatcherFactory.create(this.notebookIdentity);
+            this.ipyWidgetMessageDispatcher = this.serviceContainer
+                .get<IPyWidgetMessageDispatcherFactory>(IPyWidgetMessageDispatcherFactory)
+                .create(this.identity);
         }
         return this.ipyWidgetMessageDispatcher;
     }
 
-    private async saveIdentity(args: INotebookIdentity) {
-        this.notebookIdentity = args.resource;
-
-        const dispatcher = this.getIPyWidgetMessageDispatcher();
-        if (dispatcher) {
-            this.disposables.push(dispatcher.postMessage((msg) => this.postEmitter.fire(msg)));
+    private getIPyWidgetScriptSource() {
+        if (!this.ipyWidgetScriptSource) {
+            this.ipyWidgetScriptSource = new IPyWidgetScriptSource(
+                this.identity,
+                this.serviceContainer.get<INotebookProvider>(INotebookProvider),
+                this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry),
+                this.serviceContainer.get<IFileSystem>(IFileSystem),
+                this.serviceContainer.get<IInterpreterService>(IInterpreterService),
+                this.serviceContainer.get<IConfigurationService>(IConfigurationService),
+                this.serviceContainer.get<IHttpClient>(IHttpClient),
+                this.serviceContainer.get<IApplicationShell>(IApplicationShell),
+                this.serviceContainer.get<IWorkspaceService>(IWorkspaceService),
+                this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory),
+                this.serviceContainer.get<IExtensionContext>(IExtensionContext)
+            );
         }
-
-        await this.initialize();
+        return this.ipyWidgetScriptSource;
     }
 
     private async initialize() {
-        if (!this.notebookIdentity) {
-            return;
-        }
         const dispatcher = this.getIPyWidgetMessageDispatcher();
+        const promises = [];
         if (dispatcher) {
-            await dispatcher.initialize();
+            this.disposables.push(dispatcher.postMessage(this.postEmitter.fire.bind(this.postEmitter)));
+            promises.push(dispatcher.initialize());
         }
+        const scriptSource = this.getIPyWidgetScriptSource();
+        if (scriptSource) {
+            this.disposables.push(scriptSource.postMessage(this.postEmitter.fire.bind(this.postEmitter)));
+            this.disposables.push(scriptSource.postInternalMessage(this.postEmitter.fire.bind(this.postEmitter)));
+            promises.push(scriptSource.initialize());
+        }
+        return Promise.all(promises);
     }
 }

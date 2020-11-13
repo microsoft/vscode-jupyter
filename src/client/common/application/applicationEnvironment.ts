@@ -81,7 +81,9 @@ export class ApplicationEnvironment implements IApplicationEnvironment {
         return require('../../../../package.json');
     }
     public get channel(): Channel {
-        return this.appName.indexOf('Insider') > 0 ? 'insiders' : 'stable';
+        return this.appName.indexOf('Insider') > 0 || this.appName.indexOf('Code - OSS Dev') >= 0
+            ? 'insiders'
+            : 'stable';
     }
     public get extensionChannel(): Channel {
         const version = parse(this.packageJson.version);
