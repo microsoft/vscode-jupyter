@@ -4,32 +4,23 @@
 'use strict';
 
 // tslint:disable:no-require-imports no-var-requires
-import * as path from 'path';
-import { assert, expect } from 'chai';
-import * as sinon from 'sinon';
+import { assert } from 'chai';
 import { Uri, NotebookContentProvider as VSCNotebookContentProvider } from 'vscode';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { IDisposable } from '../../../client/common/types';
-import { VSCodeNotebookProvider } from '../../../client/datascience/constants';
 import { NotebookContentProvider } from '../../../client/datascience/notebook/contentProvider';
-import { NotebookCellLanguageService } from '../../../client/datascience/notebook/defaultCellLanguageService';
 import { INotebookContentProvider } from '../../../client/datascience/notebook/types';
-import { INotebookEditorProvider } from '../../../client/datascience/types';
 import { IExtensionTestApi } from '../../common';
-import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
 import { initialize } from '../../initialize';
 import { openNotebook } from '../helpers';
 import {
     canRunNotebookTests,
     closeNotebooks,
     closeNotebooksAndCleanUpAfterTests,
-    createTemporaryNotebook,
     executeCell,
-    trustAllNotebooks,
     waitForExecutionCompletedSuccessfully
 } from './helper';
 import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
-import { closeNotebook } from '../nativeEditorTestHelpers';
 
 // tslint:disable: no-any no-invalid-this
 suite('DataScience - VSCode Notebook - IPyWidget test', () => {
