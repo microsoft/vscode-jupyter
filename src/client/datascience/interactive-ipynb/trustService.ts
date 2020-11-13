@@ -1,7 +1,7 @@
 import { createHmac } from 'crypto';
 import { inject, injectable } from 'inversify';
 import { EventEmitter, Uri } from 'vscode';
-import { traceDecorators, traceError } from '../../common/logger';
+import { traceDecorators, traceError, traceInfo } from '../../common/logger';
 import { IConfigurationService } from '../../common/types';
 import { TraceOptions } from '../../logging/trace';
 import { sortObjectPropertiesRecursively } from '../notebookStorage/vscNotebookModel';
@@ -34,6 +34,7 @@ export class TrustService implements ITrustService {
             return true; // Skip check if user manually overrode our trust checking
         }
         const key = await this.digestStorage.key;
+        traceInfo(`Checking if notebook is trusted with key ${key}`);
 
         // We may have failed to generate a key for first-time notebook users
         // In this case treat all notebooks as untrusted
@@ -64,6 +65,7 @@ export class TrustService implements ITrustService {
         if (!this.alwaysTrustNotebooks) {
             const key = await this.digestStorage.key;
             try {
+                traceInfo(`Trusting notebook with key ${key}`);
                 // If we failed to generate a key, transiently trust this notebook
                 if (key) {
                     notebookContents = this.getFormattedContents(notebookContents);

@@ -33,6 +33,9 @@ suite('Smoke Tests', () => {
         // We do have a unit test testing this, however create a smoke test to
         // ensure that the bundling of the native node modules worked
         const numRequestedBytes = 1024;
+        if (!api) {
+            api = await initialize();
+        }
         const prng = api.serviceManager.get<ISystemPseudoRandomNumberGenerator>(ISystemPseudoRandomNumberGenerator);
         const generatedBytes = await prng.randomBytes(numRequestedBytes);
         const numGeneratedBytes = generatedBytes.length;
