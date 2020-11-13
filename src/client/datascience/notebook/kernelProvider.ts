@@ -11,6 +11,7 @@ import {
     NotebookKernel as VSCNotebookKernel,
     NotebookKernelProvider
 } from '../../../../types/vscode-proposed';
+import { IPythonExtensionChecker } from '../../api/types';
 import { IVSCodeNotebook } from '../../common/application/types';
 import { traceInfo } from '../../common/logger';
 import { IDisposableRegistry } from '../../common/types';
@@ -103,7 +104,8 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
         @inject(KernelSwitcher) private readonly kernelSwitcher: KernelSwitcher,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
-        @inject(IRawNotebookSupportedService) private readonly rawNotebookSupported: IRawNotebookSupportedService
+        @inject(IRawNotebookSupportedService) private readonly rawNotebookSupported: IRawNotebookSupportedService,
+        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker
     ) {
         this.kernelSelectionProvider.onDidChangeSelections(
             (e) => {
@@ -137,7 +139,9 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
                 undefined,
                 token
             ),
-            isPythonNb ? this.interpreterService.getActiveInterpreter(document.uri) : Promise.resolve(undefined)
+            isPythonNb && this.extensionChecker.isPythonExtensionInstalled
+                ? this.interpreterService.getActiveInterpreter(document.uri)
+                : Promise.resolve(undefined)
         ]);
         if (token.isCancellationRequested) {
             return [];
