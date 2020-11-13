@@ -90,7 +90,7 @@ export class DigestStorage implements IDigestStorage {
     private async initKey(): Promise<string | undefined> {
         try {
             await this.migrator.migrateKey();
-            const defaultKeyFileLocation = this.getDefaultLocation('nbsecret');
+            const defaultKeyFileLocation = this.getDefaultLocation('nbsecretblah');
 
             if (await this.fs.localFileExists(defaultKeyFileLocation)) {
                 // if the keyfile already exists, bail out
@@ -103,6 +103,8 @@ export class DigestStorage implements IDigestStorage {
             if (key) {
                 await this.fs.writeLocalFile(defaultKeyFileLocation, key);
                 return key;
+            } else {
+                traceError('Failed to initialize secret for notebook trust');
             }
         } catch (e) {
             traceError(`Encountered error while initializing secret for notebook trust: ${e}`);

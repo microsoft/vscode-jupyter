@@ -1,4 +1,5 @@
 import { exec } from 'child_process';
+import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import { traceError, traceInfo } from '../../common/logger';
 import { IPlatformService } from '../../common/platform/types';
@@ -63,14 +64,16 @@ export class SystemPseudoRandomNumberGenerator implements ISystemPseudoRandomNum
 
     // Read the first `numBytes` from /dev/urandom
     private async randomBytesForUnixLikeSystems(numBytes: number): Promise<Buffer> {
+        await fs.stat('/dev/urandom'); // Ensure file is present. If it's not we can't generate bytes
         return new Promise((resolve, reject) => {
             const script = `head -c ${numBytes} /dev/urandom`;
+            traceInfo(`Executing script ${script} to generate random bytes`);
             exec(script, { encoding: 'buffer' }, (err, stdout, stderr) => {
                 if (err) {
                     traceError(`${err}`);
                     reject(err);
                 }
-                if (stderr) {
+                if (stderr.length > 0) {
                     traceError(stderr);
                 }
                 resolve(stdout);
