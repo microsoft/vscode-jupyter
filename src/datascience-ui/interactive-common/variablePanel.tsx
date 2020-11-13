@@ -16,7 +16,6 @@ export interface IVariablePanelProps {
     executionCount: number;
     refreshCount: number;
     debugging: boolean;
-    supportsDebugging: boolean;
     fontSize: number;
     offsetHeight: number;
     gridHeight: number;
@@ -49,7 +48,6 @@ export class VariablePanel extends React.Component<IVariablePanelProps> {
                 setVariableExplorerHeight={this.props.setVariableExplorerHeight}
                 pageIn={this.props.pageIn}
                 executionCount={this.props.executionCount}
-                supportsDebugging={this.props.supportsDebugging}
                 refreshCount={this.props.refreshCount}
             />
         );

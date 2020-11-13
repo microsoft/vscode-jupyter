@@ -223,14 +223,6 @@ ${buildSettingsCss(this.props.settings)}`}</style>
     }
 
     private renderKernelSelection() {
-        // Skip showing the kernel picker when local and python extension is installed (as it interferes with the interpreter picker)
-        if (
-            this.props.kernel.serverName === getLocString('DataScience.localJupyterServer', 'local') &&
-            this.props.settings?.extraSettings.hasPythonExtension
-        ) {
-            return;
-        }
-
         return (
             <JupyterInfo
                 baseTheme={this.props.baseTheme}
@@ -349,11 +341,7 @@ ${buildSettingsCss(this.props.settings)}`}</style>
             fontSize: this.props.font.size,
             executionCount: this.props.currentExecutionCount,
             refreshCount: this.props.variableState.refreshCount,
-            offsetHeight: toolbarHeight,
-            supportsDebugging:
-                this.props.settings && this.props.settings.variableOptions
-                    ? this.props.settings.variableOptions.enableDuringDebugger
-                    : false
+            offsetHeight: toolbarHeight
         };
     };
 

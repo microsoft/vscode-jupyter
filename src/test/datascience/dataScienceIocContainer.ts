@@ -44,6 +44,7 @@ import {
     IVSCodeNotebook,
     IWebviewPanelOptions,
     IWebviewPanelProvider,
+    IWebviewViewProvider,
     IWorkspaceService
 } from '../../client/common/application/types';
 import { WebviewPanelProvider } from '../../client/common/application/webviewPanels/webviewPanelProvider';
@@ -178,7 +179,6 @@ import { KernelService } from '../../client/datascience/jupyter/kernels/kernelSe
 import { KernelSwitcher } from '../../client/datascience/jupyter/kernels/kernelSwitcher';
 import { KernelVariables } from '../../client/datascience/jupyter/kernelVariables';
 import { NotebookStarter } from '../../client/datascience/jupyter/notebookStarter';
-import { OldJupyterVariables } from '../../client/datascience/jupyter/oldJupyterVariables';
 import { ServerPreload } from '../../client/datascience/jupyter/serverPreload';
 import { JupyterServerSelector } from '../../client/datascience/jupyter/serverSelector';
 import { JupyterDebugService } from '../../client/datascience/jupyterDebugService';
@@ -256,6 +256,9 @@ import {
     ITrustService,
     IWebviewExtensibility
 } from '../../client/datascience/types';
+import { IVariableViewProvider } from '../../client/datascience/variablesView/types';
+import { VariableViewActivationService } from '../../client/datascience/variablesView/variableViewActivationService';
+import { VariableViewProvider } from '../../client/datascience/variablesView/variableViewProvider';
 import { WebviewExtensibility } from '../../client/datascience/webviewExtensibility';
 import { ProtocolParser } from '../../client/debugger/extension/helpers/protocolParser';
 import { IProtocolParser } from '../../client/debugger/extension/types';
@@ -303,6 +306,7 @@ import { JupyterServerUriStorage } from '../../client/datascience/jupyter/server
 import { AuthenticationService } from '../../client/common/application/authenticationService';
 import { MockEncryptedStorage } from './mockEncryptedStorage';
 import { WebviewIPyWidgetCoordinator } from '../../client/datascience/ipywidgets/webviewIPyWidgetCoordinator';
+import { WebviewViewProvider } from '../../client/common/application/webviewViews/webviewViewProvider';
 
 export class DataScienceIocContainer extends UnitTestIocContainer {
     public get workingInterpreter() {
@@ -450,6 +454,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
                 instance(this.webPanelProvider)
             );
         }
+        this.serviceManager.addSingleton<IWebviewViewProvider>(IWebviewViewProvider, WebviewViewProvider);
         this.serviceManager.addSingleton<IWebviewExtensibility>(IWebviewExtensibility, WebviewExtensibility);
         this.serviceManager.addSingleton<NotebookExtensibility>(
             NotebookExtensibility,
@@ -514,6 +519,11 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
         // Adjust all experiments to be on by default
         when(experimentService.inExperiment(anything())).thenCall((exp) => {
+            // VariableViewActivationService has an issue with the mock ExtensionContext in the functional tests
+            // Turn off the experiment until we add the testing (which will probably be in .vscode tests)
+            if (exp === 'NativeVariableView') {
+                return Promise.resolve(false);
+            }
             const setState = this.experimentState.get(exp);
             if (setState === undefined) {
                 // All experiments on by default
@@ -552,6 +562,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             IDataScienceCodeLensProvider,
             DataScienceCodeLensProvider
         );
+        this.serviceManager.add<IVariableViewProvider>(IVariableViewProvider, VariableViewProvider);
         this.serviceManager.add<ICodeExecutionHelper>(ICodeExecutionHelper, CodeExecutionHelper);
         this.serviceManager.add<IDataScienceCommandListener>(
             IDataScienceCommandListener,
@@ -566,11 +577,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             IJupyterVariables,
             JupyterVariables,
             Identifiers.ALL_VARIABLES
-        );
-        this.serviceManager.addSingleton<IJupyterVariables>(
-            IJupyterVariables,
-            OldJupyterVariables,
-            Identifiers.OLD_VARIABLES
         );
         this.serviceManager.addSingleton<IJupyterVariables>(
             IJupyterVariables,
@@ -605,6 +611,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             JUPYTER_OUTPUT_CHANNEL
         );
         this.serviceManager.addSingleton<ICryptoUtils>(ICryptoUtils, CryptoUtils);
+        this.serviceManager.addSingleton<IExtensionSingleActivationService>(
+            IExtensionSingleActivationService,
+            VariableViewActivationService
+        );
         this.serviceManager.addSingleton<IExtensionSingleActivationService>(
             IExtensionSingleActivationService,
             ServerPreload

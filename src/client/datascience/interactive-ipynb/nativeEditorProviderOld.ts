@@ -24,7 +24,6 @@ import {
     IAsyncDisposableRegistry,
     IConfigurationService,
     IDisposableRegistry,
-    IExperimentService,
     IMemento,
     WORKSPACE_MEMENTO
 } from '../../common/types';
@@ -226,7 +225,6 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
             this.serviceContainer.get<boolean>(UseCustomEditorApi),
             this.serviceContainer.get<INotebookStorageProvider>(INotebookStorageProvider),
             this.serviceContainer.get<ITrustService>(ITrustService),
-            this.serviceContainer.get<IExperimentService>(IExperimentService),
             model,
             panel,
             this.serviceContainer.get<KernelSelector>(KernelSelector),

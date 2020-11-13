@@ -49,8 +49,9 @@ import {
     TreeViewOptions,
     Uri,
     ViewColumn,
-    WebviewPanel,
+    WebviewPanel as vscodeWebviewPanel,
     WebviewPanelOptions,
+    WebviewView as vscodeWebviewView,
     WindowState,
     WorkspaceConfiguration,
     WorkspaceEdit,
@@ -1041,6 +1042,9 @@ export interface IWebviewPanelMessageListener extends IWebviewMessageListener, I
     onChangeViewState(panel: IWebviewPanel): void;
 }
 
+export const IWebviewViewMessageListener = Symbol('IWebviewViewMessageListener');
+export interface IWebviewViewMessageListener extends IWebviewMessageListener, IAsyncDisposable {}
+
 export type WebviewMessage = {
     /**
      * Message type
@@ -1056,6 +1060,10 @@ export type WebviewMessage = {
 // Wraps a VS Code webview
 export const IWebview = Symbol('IWebview');
 export interface IWebview {
+    /**
+     * Event is fired when the load for a web panel fails
+     */
+    readonly loadFailed: Event<void>;
     /**
      * Sends a message to the hosted html page
      */
@@ -1074,13 +1082,32 @@ export interface IWebview {
     asWebviewUri(localResource: Uri): Uri;
 }
 
+// Wraps the VS Code webview view
+export const IWebviewView = Symbol('IWebviewView');
+export interface IWebviewView extends IWebview {}
+
+export interface IWebviewOptions {
+    rootPath: string;
+    cwd: string;
+    scripts: string[];
+    /**
+     * Additional paths apart from cwd and rootPath, that webview would allow loading resources/files from.
+     * E.g. required for webview to serve images from worksapces when nb is in a nested folder.
+     */
+    additionalPaths?: string[];
+    // tslint:disable-next-line: no-any
+    settings?: any;
+    // Instead of creating a webview we may be passed on already created by VS Code
+    webviewHost?: vscodeWebviewView | vscodeWebviewPanel;
+}
+
+export interface IWebviewViewOptions extends IWebviewOptions {
+    listener: IWebviewViewMessageListener;
+}
+
 // Wraps the VS Code webview panel
 export const IWebviewPanel = Symbol('IWebviewPanel');
 export interface IWebviewPanel extends IWebview {
-    /**
-     * Event is fired when the load for a web panel fails
-     */
-    readonly loadFailed: Event<void>;
     setTitle(val: string): void;
     /**
      * Makes the webpanel show up.
@@ -1108,31 +1135,25 @@ export interface IWebviewPanel extends IWebview {
     updateCwd(cwd: string): void;
 }
 
-export interface IWebviewOptions {
-    rootPath: string;
-    cwd: string;
-    scripts: string[];
-}
-
 export interface IWebviewPanelOptions extends IWebviewOptions {
     viewColumn: ViewColumn;
     listener: IWebviewPanelMessageListener;
     title: string;
-    /**
-     * Additional paths apart from cwd and rootPath, that webview would allow loading resources/files from.
-     * E.g. required for webview to serve images from worksapces when nb is in a nested folder.
-     */
-    additionalPaths?: string[];
-    // tslint:disable-next-line: no-any
-    settings?: any;
-    // Web panel to use if supplied by VS code instead
-    webViewPanel?: WebviewPanel;
 }
 
 // Wraps the VS Code api for creating a web panel
 export const IWebviewPanelProvider = Symbol('IWebviewPanelProvider');
 export interface IWebviewPanelProvider {
     create(options: IWebviewPanelOptions): Promise<IWebviewPanel>;
+}
+
+export interface IWebviewViewOptions extends IWebviewOptions {
+    listener: IWebviewViewMessageListener;
+}
+
+export const IWebviewViewProvider = Symbol('IWebviewViewProvider');
+export interface IWebviewViewProvider {
+    create(options: IWebviewViewOptions): Promise<IWebviewView>;
 }
 
 // Wraps the vsls liveshare API
@@ -1349,7 +1370,7 @@ export interface CustomReadonlyEditorProvider<T extends CustomDocument = CustomD
      *
      * @return Optional thenable indicating that the custom editor has been resolved.
      */
-    resolveCustomEditor(document: T, webviewPanel: WebviewPanel, token: CancellationToken): Thenable<void> | void;
+    resolveCustomEditor(document: T, webviewPanel: vscodeWebviewPanel, token: CancellationToken): Thenable<void> | void;
 }
 
 /**

@@ -68,7 +68,8 @@ export class DataViewerDependencyService {
             Common.install()
         );
 
-        // When installing
+        // All data science dependencies require an interpreter to be passed in
+        // Default to the active interpreter if no interpreter is available
         const interpreterToInstallDependenciesInto =
             interpreter || (await this.interpreterService.getActiveInterpreter());
 

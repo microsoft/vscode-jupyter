@@ -2,9 +2,9 @@
 
 ---
 
-| `release` branch                                                                                                                                                                              | `main` branch                                                                                                                                                                           | Nightly CI                                                                                                                                                                                           | coverage (`main` branch)                                                                                                                 |
-| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| [![Build Status](https://dev.azure.com/ms/vscode-jupyter/_apis/build/status/CI?branchName=release)](https://dev.azure.com/ms/vscode-jupyter/_build/latest?definitionId=88&branchName=release) | [![Build Status](https://dev.azure.com/ms/vscode-jupyter/_apis/build/status/CI?branchName=main)](https://dev.azure.com/ms/vscode-jupyter/_build/latest?definitionId=88&branchName=main) | [![Build Status](https://dev.azure.com/ms/vscode-jupyter/_apis/build/status/Nightly%20Build?branchName=main)](https://dev.azure.com/ms/vscode-jupyter/_build/latest?definitionId=85&branchName=main) | [![codecov](https://codecov.io/gh/microsoft/vscode-jupyter/branch/main/graph/badge.svg)](https://codecov.io/gh/microsoft/vscode-jupyter) |
+| `main` branch |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [![Insiders VSIX](https://github.com/microsoft/vscode-jupyter/workflows/Insiders%20VSIX/badge.svg?branch=main)](https://github.com/microsoft/vscode-jupyter/workflows/Insiders%20VSIX/badge.svg?branch=main) |
 
 [[Development build](https://pvsc.blob.core.windows.net/extension-builds/ms-toolsai-jupyter-insiders.vsix)]
 
@@ -296,14 +296,3 @@ Resulting in a `ms-toolsai-jupyter-insiders.vsix` file in your `vscode-jupyter` 
 
 ⚠️ If you made changes to `package.json`, run `npm install` (instead of `npm ci`) to update `package-lock.json` and install dependencies all at once.
 
-## Development Build
-
-If you would like to use the latest version of the extension as committed to `main` that has passed our test suite, then you may set the `"jupyter.insidersChannel"` setting to `"daily"` or `"weekly"` based on how often you would like the extension to check for updates.
-
-You may also download and install the extension manually from the following
-[location](https://pvsc.blob.core.windows.net/extension-builds-jupyter/ms-toolsai-jupyter-insiders.vsix).
-Once you have downloaded the
-[ms-toolsai-jupyter-insiders.vsix](https://pvsc.blob.core.windows.net/extension-builds-jupyter/ms-toolsai-jupyter-insiders.vsix)
-file, please follow the instructions on
-[this page](https://code.visualstudio.com/docs/editor/extension-gallery#_install-from-a-vsix)
-to install the extension. Do note that the manual install will not automatically update to newer builds unless you set the `"jupyter.insidersChannel"` setting (it will get replaced with released versions from the Marketplace once they are newer than the version install manually).

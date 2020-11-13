@@ -44,6 +44,11 @@ jobs:
         with:
           node-version: ${{env.NODE_VERSION}}
 
+      - name: Use Python ${{env.PYTHON_VERSION}}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{env.PYTHON_VERSION}}
+
       # Caching of npm packages (https://github.com/actions/cache/blob/main/examples.md#node---npm)
       - name: Cache npm on linux/mac
         uses: actions/cache@v2
@@ -307,7 +312,6 @@ jobs:
 
       # For faster/better builds of sdists.
       - run: python -m pip install wheel
-        if: startsWith(matrix.test-suite, 'functional')
         shell: bash
 
       # debugpy is not shipped, only installed for local tests.
@@ -611,14 +615,13 @@ jobs:
       - name: Run smoke tests
         env:
           DISPLAY: 10
-          VSC_JUPYTER_FORCE_LOGGING: true
-          VSC_JUPYTER_LOG_FILE: smoke-test.log
         uses: GabrielBB/xvfb-action@v1.4
         with:
-          run: node --no-force-async-hooks-checks ./out/test/smokeTest.js
+          run: npm run testSmokeLogged
 
       - name: Upload smoke-test log
         uses: actions/upload-artifact@v2
+        if: failure()
         with:
           name: smoke-test.log
           path: './smoke-test.log'

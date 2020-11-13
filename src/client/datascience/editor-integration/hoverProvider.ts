@@ -6,11 +6,9 @@ import { inject, injectable, named } from 'inversify';
 import * as vscode from 'vscode';
 import { Cancellation } from '../../common/cancellation';
 import { PYTHON } from '../../common/constants';
-import { Experiments } from '../../common/experiments/groups';
 import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 
-import { IExperimentService } from '../../common/types';
 import { sleep } from '../../common/utils/async';
 import { noop } from '../../common/utils/misc';
 import { Identifiers } from '../constants';
@@ -21,20 +19,13 @@ import { ICell, IInteractiveWindowProvider, IJupyterVariables, INotebook, INoteb
 @injectable()
 export class HoverProvider implements INotebookExecutionLogger, vscode.HoverProvider {
     private runFiles = new Set<string>();
-    private enabledPromise: Promise<boolean>;
     private hoverProviderRegistration: vscode.Disposable | undefined;
 
     constructor(
-        @inject(IExperimentService) experimentService: IExperimentService,
         @inject(IJupyterVariables) @named(Identifiers.KERNEL_VARIABLES) private variableProvider: IJupyterVariables,
         @inject(IInteractiveWindowProvider) private interactiveProvider: IInteractiveWindowProvider,
         @inject(IFileSystem) private readonly fs: IFileSystem
-    ) {
-        this.enabledPromise = experimentService.inExperiment(Experiments.RunByLine).catch((reason) => {
-            traceError(`Failed to load run by line experiment ${reason}`);
-            return false;
-        });
-    }
+    ) {}
 
     public dispose() {
         if (this.hoverProviderRegistration) {
@@ -83,17 +74,8 @@ export class HoverProvider implements INotebookExecutionLogger, vscode.HoverProv
     }
 
     private async initializeHoverProvider() {
-        // Wait for our check of the experiment before enabling
-        const enabled = await this.enabledPromise;
-
         if (!this.hoverProviderRegistration) {
-            if (enabled) {
-                this.hoverProviderRegistration = vscode.languages.registerHoverProvider(PYTHON, this);
-            } else {
-                this.hoverProviderRegistration = {
-                    dispose: noop
-                };
-            }
+            this.hoverProviderRegistration = vscode.languages.registerHoverProvider(PYTHON, this);
         }
     }
 

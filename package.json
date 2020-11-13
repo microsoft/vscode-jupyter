@@ -1,8 +1,8 @@
 {
     "name": "jupyter",
     "displayName": "Jupyter",
-    "description": "Language-agnostic jupyter notebook, interactive programming and computing that supports Intellisense, code formatting, refactoring, debugging and more.",
     "version": "2020.12.0-dev",
+    "description": "Jupyter notebook support, interactive programming and computing that supports Intellisense, debugging and more.",
     "featureFlags": {
         "usingNewInterpreterStorage": true
     },
@@ -12,7 +12,7 @@
     "author": {
         "name": "Microsoft Corporation"
     },
-    "license": "MIT",
+    "license": "SEE LICENSE IN LICENSE.txt",
     "homepage": "https://github.com/Microsoft/vscode-jupyter",
     "repository": {
         "type": "git",
@@ -28,7 +28,7 @@
         "theme": "light"
     },
     "engines": {
-        "vscode": "^1.48.0"
+        "vscode": "^1.49.0"
     },
     "keywords": [
         "jupyter",
@@ -1257,7 +1257,6 @@
                         "enum": [
                             "NativeNotebookEditor",
                             "CustomEditor",
-                            "RunByLine",
                             "All"
                         ]
                     },
@@ -1271,7 +1270,6 @@
                         "enum": [
                             "NativeNotebookEditor",
                             "CustomEditor",
-                            "RunByLine",
                             "All"
                         ]
                     },
@@ -1404,12 +1402,6 @@
                     "type": "boolean",
                     "default": false,
                     "description": "Automatically scroll the interactive window to show the output of the last statement executed. If false, the interactive window will only automatically scroll if the bottom of the prior cell is visible.",
-                    "scope": "resource"
-                },
-                "jupyter.showKernelSelectionOnInteractiveWindow": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "When set to true, enables the kernel selector in the Interactive Window. By default, the Interactive Window will use your Python Interpreters kernel.",
                     "scope": "resource"
                 },
                 "jupyter.enableScrollingForCellOutputs": {
@@ -1718,7 +1710,26 @@
                 ],
                 "priority": "option"
             }
-        ]
+        ],
+        "viewsContainers": {
+            "activitybar": [
+                {
+                    "id": "jupyter",
+                    "title": "Jupyter",
+                    "icon": "NOICON.svg"
+                }
+            ]
+        },
+        "views": {
+            "jupyter": [
+                {
+                    "type": "webview",
+                    "id": "jupyterViewVariables",
+                    "name": "Variables",
+                    "when": "jupyter.nativevariableview"
+                }
+            ]
+        }
     },
     "scripts": {
         "package": "gulp clean && gulp prePublishBundle && vsce package -o ms-toolsai-jupyter-insiders.vsix",
@@ -1750,11 +1761,13 @@
         "testNativeNotebooksInVSCode": "cross-env CODE_TESTS_WORKSPACE=src/test/datascience VSC_JUPYTER_CI_TEST_VSC_CHANNEL=insiders VSC_JUPYTER_RUN_NB_TEST=true TEST_FILES_SUFFIX=vscode.test VSC_JUPYTER_FORCE_LOGGING=1 VSC_JUPYTER_LOAD_EXPERIMENTS_FROM_FILE=true node ./out/test/testBootstrap.js ./out/test/standardTest.js",
         "testPerformance": "node ./out/test/testBootstrap.js ./out/test/performanceTest.js",
         "testSmoke": "node ./out/test/testBootstrap.js ./out/test/smokeTest.js",
+        "testSmokeLogged": "cross-env VSC_JUPYTER_FORCE_LOGGING=true VSC_JUPYTER_LOG_FILE=smoke-test.log node --no-force-async-hooks-checks ./out/test/smokeTest.js",
         "lint-staged": "node gulpfile.js",
         "lint": "tslint src/**/*.ts -t verbose",
         "prettier-fix": "prettier 'src/**/*.ts*' --write && prettier 'build/**/*.js' --write",
         "clean": "gulp clean",
         "updateBuildNumber": "gulp updateBuildNumber",
+        "updateLicense": "gulp updateLicense",
         "webpack": "webpack"
     },
     "dependencies": {
@@ -1802,7 +1815,7 @@
         "node-stream-zip": "^1.6.0",
         "onigasm": "^2.2.2",
         "pdfkit": "^0.11.0",
-        "plotly.js-dist": "^1.55.2",
+        "plotly.js-dist": "^1.57.1",
         "portfinder": "^1.0.25",
         "react": "^16.5.2",
         "react-data-grid": "^6.0.2-0",
@@ -1907,7 +1920,7 @@
         "@types/tmp": "0.0.33",
         "@types/untildify": "^3.0.0",
         "@types/uuid": "^3.4.3",
-        "@types/vscode": "^1.47.0",
+        "@types/vscode": "^1.49.0",
         "@types/vscode-notebook-renderer": "^1.48.0",
         "@types/webpack-bundle-analyzer": "^2.13.0",
         "@types/winreg": "^1.2.30",

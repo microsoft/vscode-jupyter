@@ -35,13 +35,12 @@ import {
 } from '../../common/application/types';
 import { CancellationError } from '../../common/cancellation';
 import { EXTENSION_ROOT_DIR, isTestExecution, PYTHON_LANGUAGE } from '../../common/constants';
-import { Experiments } from '../../common/experiments/groups';
 import { traceError, traceInfo, traceWarning } from '../../common/logger';
 
 import { isNil } from 'lodash';
 import { NotebookCell } from '../../../../types/vscode-proposed';
 import { IFileSystem } from '../../common/platform/types';
-import { IConfigurationService, IDisposable, IDisposableRegistry, IExperimentService } from '../../common/types';
+import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { isUntitledFile, noop } from '../../common/utils/misc';
@@ -175,7 +174,6 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         viewColumn: ViewColumn,
         private readonly notebookProvider: INotebookProvider,
         useCustomEditorApi: boolean,
-        expService: IExperimentService,
         private selector: KernelSelector,
         private serverStorage: IJupyterServerUriStorage
     ) {
@@ -190,8 +188,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
             scripts,
             title,
             viewColumn,
-            useCustomEditorApi,
-            expService.inExperiment(Experiments.RunByLine)
+            useCustomEditorApi
         );
 
         // Create our unique id. We use this to skip messages we send to other interactive windows

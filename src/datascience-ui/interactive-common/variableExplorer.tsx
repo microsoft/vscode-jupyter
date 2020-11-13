@@ -30,7 +30,6 @@ interface IVariableExplorerProps {
     skipDefault?: boolean;
     variables: IJupyterVariable[];
     debugging: boolean;
-    supportsDebugging: boolean;
     fontSize: number;
     executionCount: number;
     refreshCount: number;
@@ -235,39 +234,28 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
     }
 
     private renderGrid() {
-        if (this.props.debugging && !this.props.supportsDebugging) {
-            return (
-                <span className="span-debug-message">
-                    {getLocString(
-                        'DataScience.variableExplorerDisabledDuringDebugging',
-                        "Please see the Debug Side Bar's VARIABLES section."
-                    )}
-                </span>
-            );
-        } else {
-            return (
-                <div
-                    id="variable-explorer-data-grid"
-                    role="table"
-                    aria-label={getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}
-                >
-                    <AdazzleReactDataGrid
-                        columns={this.gridColumns.map((c) => {
-                            return { ...defaultColumnProperties, ...c };
-                        })}
-                        // tslint:disable-next-line: react-this-binding-issue
-                        rowGetter={this.getRow}
-                        rowsCount={this.props.variables.length}
-                        minHeight={this.state.gridHeight}
-                        headerRowHeight={this.getRowHeight()}
-                        rowHeight={this.getRowHeight()}
-                        onRowDoubleClick={this.rowDoubleClick}
-                        emptyRowsView={VariableExplorerEmptyRowsView}
-                        rowRenderer={VariableExplorerRowRenderer}
-                    />
-                </div>
-            );
-        }
+        return (
+            <div
+                id="variable-explorer-data-grid"
+                role="table"
+                aria-label={getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}
+            >
+                <AdazzleReactDataGrid
+                    columns={this.gridColumns.map((c) => {
+                        return { ...defaultColumnProperties, ...c };
+                    })}
+                    // tslint:disable-next-line: react-this-binding-issue
+                    rowGetter={this.getRow}
+                    rowsCount={this.props.variables.length}
+                    minHeight={this.state.gridHeight}
+                    headerRowHeight={this.getRowHeight()}
+                    rowHeight={this.getRowHeight()}
+                    onRowDoubleClick={this.rowDoubleClick}
+                    emptyRowsView={VariableExplorerEmptyRowsView}
+                    rowRenderer={VariableExplorerRowRenderer}
+                />
+            </div>
+        );
     }
 
     private saveCurrentSize() {

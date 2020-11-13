@@ -99,7 +99,6 @@ import { KernelService } from './jupyter/kernels/kernelService';
 import { KernelSwitcher } from './jupyter/kernels/kernelSwitcher';
 import { KernelVariables } from './jupyter/kernelVariables';
 import { NotebookStarter } from './jupyter/notebookStarter';
-import { OldJupyterVariables } from './jupyter/oldJupyterVariables';
 import { ServerPreload } from './jupyter/serverPreload';
 import { JupyterServerSelector } from './jupyter/serverSelector';
 import { JupyterServerUriStorage } from './jupyter/serverUriStorage';
@@ -182,6 +181,9 @@ import {
     ITrustService,
     IWebviewExtensibility
 } from './types';
+import { IVariableViewProvider } from './variablesView/types';
+import { VariableViewActivationService } from './variablesView/variableViewActivationService';
+import { VariableViewProvider } from './variablesView/variableViewProvider';
 import { WebviewExtensibility } from './webviewExtensibility';
 
 // README: Did you make sure "dataScienceIocContainer.ts" has also been updated appropriately?
@@ -244,6 +246,7 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     serviceManager.addSingleton<ICodeLensFactory>(ICodeLensFactory, CodeLensFactory, undefined, [IInteractiveWindowListener]);
     serviceManager.addSingleton<IDataScience>(IDataScience, DataScience);
     serviceManager.addSingleton<IDataScienceCodeLensProvider>(IDataScienceCodeLensProvider, DataScienceCodeLensProvider);
+    serviceManager.addSingleton<IVariableViewProvider>(IVariableViewProvider, VariableViewProvider);
     serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, InteractiveWindowCommandListener);
     serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, NativeEditorCommandListener);
     serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, GitHubIssueCommandListener);
@@ -258,6 +261,7 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, NotebookUsageTracker);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, TrustCommandHandler);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, MigrateJupyterInterpreterStateService);
+    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, VariableViewActivationService);
     serviceManager.addSingleton<IInteractiveWindowListener>(IInteractiveWindowListener, DataScienceSurveyBannerLogger);
     serviceManager.addSingleton<IInteractiveWindowProvider>(IInteractiveWindowProvider, InteractiveWindowProvider);
     serviceManager.addSingleton<IJupyterDebugger>(IJupyterDebugger, JupyterDebugger, undefined, [ICellHashListener]);
@@ -266,7 +270,6 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     serviceManager.addSingleton<IJupyterSessionManagerFactory>(IJupyterSessionManagerFactory, JupyterSessionManagerFactory);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, DebuggerVariableRegistration);
     serviceManager.addSingleton<IJupyterVariables>(IJupyterVariables, JupyterVariables, Identifiers.ALL_VARIABLES);
-    serviceManager.addSingleton<IJupyterVariables>(IJupyterVariables, OldJupyterVariables, Identifiers.OLD_VARIABLES);
     serviceManager.addSingleton<IJupyterVariables>(IJupyterVariables, KernelVariables, Identifiers.KERNEL_VARIABLES);
     serviceManager.addSingleton<IJupyterVariables>(IJupyterVariables, DebuggerVariables, Identifiers.DEBUGGER_VARIABLES);
     serviceManager.addSingleton<IPlotViewerProvider>(IPlotViewerProvider, PlotViewerProvider);
