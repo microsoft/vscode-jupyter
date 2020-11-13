@@ -5,23 +5,20 @@
 
 import { assert } from 'chai';
 import * as sinon from 'sinon';
-import { commands, NotebookEditor as VSCNotebookEditor } from 'vscode';
+import { NotebookEditor as VSCNotebookEditor } from 'vscode';
 import { IApplicationShell, IVSCodeNotebook } from '../../../client/common/application/types';
 import { IConfigurationService, IDisposable, IJupyterSettings, ReadWrite } from '../../../client/common/types';
 import { createDeferredFromPromise } from '../../../client/common/utils/async';
-import { DataScience } from '../../../client/common/utils/localize';
 import { noop } from '../../../client/common/utils/misc';
 import { IKernelProvider } from '../../../client/datascience/jupyter/kernels/types';
 import { INotebookEditorProvider } from '../../../client/datascience/types';
 import { IExtensionTestApi, waitForCondition } from '../../common';
 import { initialize } from '../../initialize';
 import {
-    assertVSCCellIsNotRunning,
     assertVSCCellIsRunning,
     canRunNotebookTests,
     closeNotebooks,
     closeNotebooksAndCleanUpAfterTests,
-    executeActiveDocument,
     insertCodeCell,
     startJupyter,
     trustAllNotebooks,
@@ -115,7 +112,7 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
             await waitForExecutionCompletedWithErrors(cell);
         }
     });
-    test('Restarting kernel will cancel cell execution & we can re-run a cell', async function() {
+    test('Restarting kernel will cancel cell execution & we can re-run a cell', async function () {
         // Skipped because flakey
         // https://github.com/microsoft/vscode-jupyter/issues/393
         this.skip();
