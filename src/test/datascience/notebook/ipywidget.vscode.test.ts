@@ -55,6 +55,7 @@ suite('DataScience - VSCode Notebook - IPyWidget test', () => {
         }
         // Skip for now. Have to wait for this commit to get into insiders
         // https://github.com/microsoft/vscode/commit/2b900dcf1184ab2424f21a860179f2d97c9928a7
+        // Logged this issue to fix this: https://github.com/microsoft/vscode-jupyter/issues/1103
         this.skip();
         // await trustAllNotebooks();
         // sinon.restore();
@@ -62,7 +63,7 @@ suite('DataScience - VSCode Notebook - IPyWidget test', () => {
         // editorProvider = api.serviceContainer.get<INotebookEditorProvider>(VSCodeNotebookProvider);
         // languageService = api.serviceContainer.get<NotebookCellLanguageService>(NotebookCellLanguageService);
     });
-    setup(function() {
+    setup(function () {
         // Skip for now. Have to wait for this commit to get into insiders
         // https://github.com/microsoft/vscode/commit/2b900dcf1184ab2424f21a860179f2d97c9928a7
         this.skip();
