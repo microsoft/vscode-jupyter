@@ -11,6 +11,7 @@ import {
     NotebookKernel as VSCNotebookKernel,
     NotebookKernelProvider
 } from '../../../../types/vscode-proposed';
+import { IPythonExtensionChecker } from '../../api/types';
 import { IVSCodeNotebook } from '../../common/application/types';
 import { traceInfo } from '../../common/logger';
 import { IDisposableRegistry } from '../../common/types';
@@ -28,6 +29,7 @@ import { INotebook, INotebookProvider, IRawNotebookSupportedService } from '../t
 import {
     getNotebookMetadata,
     isJupyterNotebook,
+    isPythonNotebook,
     updateKernelInfoInNotebookMetadata,
     updateKernelInNotebookMetadata
 } from './helpers/helpers';
@@ -102,7 +104,8 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
         @inject(KernelSwitcher) private readonly kernelSwitcher: KernelSwitcher,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
-        @inject(IRawNotebookSupportedService) private readonly rawNotebookSupported: IRawNotebookSupportedService
+        @inject(IRawNotebookSupportedService) private readonly rawNotebookSupported: IRawNotebookSupportedService,
+        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker
     ) {
         this.kernelSelectionProvider.onDidChangeSelections(
             (e) => {
@@ -127,6 +130,7 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
         this.isRawNotebookSupported =
             this.isRawNotebookSupported || this.rawNotebookSupported.isSupportedForLocalLaunch();
         const rawSupported = await this.isRawNotebookSupported;
+        const isPythonNb = isPythonNotebook(getNotebookMetadata(document));
         const [preferredKernel, kernels, activeInterpreter] = await Promise.all([
             this.getPreferredKernel(document, token),
             this.kernelSelectionProvider.getKernelSelectionsForLocalSession(
@@ -135,7 +139,9 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
                 undefined,
                 token
             ),
-            this.interpreterService.getActiveInterpreter(document.uri)
+            isPythonNb && this.extensionChecker.isPythonExtensionInstalled
+                ? this.interpreterService.getActiveInterpreter(document.uri)
+                : Promise.resolve(undefined)
         ]);
         if (token.isCancellationRequested) {
             return [];
