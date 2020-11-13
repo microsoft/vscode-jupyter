@@ -95,10 +95,12 @@ export class DigestStorage implements IDigestStorage {
             if (await this.fs.localFileExists(defaultKeyFileLocation)) {
                 // if the keyfile already exists, bail out
                 return this.fs.readLocalFile(defaultKeyFileLocation);
-            } else {
-                // If it doesn't exist, create one
-                const randomBytesBuffer = await this.prng.randomBytes(1024);
-                const key = randomBytesBuffer.toString('hex');
+            }
+
+            // If it doesn't exist, create one
+            const randomBytesBuffer = await this.prng.randomBytes(1024);
+            const key = randomBytesBuffer.toString('hex');
+            if (key) {
                 await this.fs.writeLocalFile(defaultKeyFileLocation, key);
                 return key;
             }

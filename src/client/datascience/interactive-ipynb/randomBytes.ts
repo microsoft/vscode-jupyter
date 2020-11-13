@@ -1,7 +1,7 @@
+import { exec } from 'child_process';
 import { inject, injectable } from 'inversify';
 import { traceError, traceInfo } from '../../common/logger';
-import { IFileSystem, IPlatformService } from '../../common/platform/types';
-import { IProcessServiceFactory } from '../../common/process/types';
+import { IPlatformService } from '../../common/platform/types';
 import { OSType } from '../../common/utils/platform';
 import { ISystemPseudoRandomNumberGenerator } from '../types';
 
@@ -10,9 +10,7 @@ import { ISystemPseudoRandomNumberGenerator } from '../types';
 @injectable()
 export class SystemPseudoRandomNumberGenerator implements ISystemPseudoRandomNumberGenerator {
     constructor(
-        @inject(IPlatformService) private readonly platformService: IPlatformService,
-        @inject(IProcessServiceFactory) private readonly processServiceFactory: IProcessServiceFactory,
-        @inject(IFileSystem) private readonly fileSystem: IFileSystem
+        @inject(IPlatformService) private readonly platformService: IPlatformService
     ) {}
 
     public async randomBytes(numBytes: number) {
@@ -66,20 +64,19 @@ export class SystemPseudoRandomNumberGenerator implements ISystemPseudoRandomNum
     }
 
     // Read the first `numBytes` from /dev/urandom
-    private async randomBytesForUnixLikeSystems(numBytes: number) {
-        const temporaryFile = await this.fileSystem.createTemporaryLocalFile('.txt');
-        const script = `head -c ${numBytes} /dev/urandom > '${temporaryFile.filePath}'`;
-        const process = await this.processServiceFactory.create();
-
-        traceInfo(`Executing ${script} to generate random bytes...`);
-        const executionResult = await process.shellExec(script);
-        if (executionResult.stderr) {
-            traceError(executionResult.stderr);
-            throw new Error('Failed to allocate random bytes for notebook trust.');
-        }
-        if (executionResult.stdout) {
-            traceInfo(executionResult.stdout);
-        }
-        return this.fileSystem.readLocalData(temporaryFile.filePath);
+    private async randomBytesForUnixLikeSystems(numBytes: number): Promise<Buffer> {
+        return new Promise((resolve, reject) => {
+            const script = `head -c ${numBytes} /dev/urandom`;
+            exec(script, {encoding: 'buffer'}, (err, stdout, stderr) => {
+                if (err) {
+                    traceError(`${err}`);
+                    reject(err);
+                }
+                if (stderr) {
+                    traceError(stderr);
+                }
+                resolve(stdout);
+            });
+        });
     }
 }

@@ -64,7 +64,7 @@ export class TrustService implements ITrustService {
         if (!this.alwaysTrustNotebooks) {
             const key = await this.digestStorage.key;
             // If we failed to generate a key, transiently trust this notebook
-            if (key !== undefined) {
+            if (key) {
                 notebookContents = this.getFormattedContents(notebookContents);
                 // Only update digest store if the user wants us to check trust
                 const digest = await this.computeDigest(notebookContents, key);
