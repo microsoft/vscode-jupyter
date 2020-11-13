@@ -18,7 +18,6 @@ import { CommonMessageCoordinator } from './commonMessageCoordinator';
 export class NotebookIPyWidgetCoordinator implements INotebookKernelResolver {
     private messageCoordinators = new Map<string, Promise<CommonMessageCoordinator>>();
     private attachedWebViews = new Map<string, { webviews: Set<string>; disposables: Disposable[] }>();
-    private disposables: Disposable[] = [];
     constructor(
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(IVSCodeNotebook) private readonly notebookProvider: IVSCodeNotebook
