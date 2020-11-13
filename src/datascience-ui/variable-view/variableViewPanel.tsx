@@ -60,9 +60,15 @@ export class VariableViewPanel extends React.Component<IInteractivePanelProps> {
             this.renderCount = this.renderCount + 1;
         }
 
+        //return (
+        //<div>
+        //<h1>VARIABLES</h1>
+        //</div>
+        //);
+
         return (
-            <div>
-                <h1>VARIABLES</h1>
+            <div id="variable-view-main-panel" role="Main" style={dynamicFont}>
+                {this.renderVariablePanel(this.props.baseTheme)}
             </div>
         );
 
@@ -97,12 +103,12 @@ export class VariableViewPanel extends React.Component<IInteractivePanelProps> {
     }
 
     private renderVariablePanel(baseTheme: string) {
-        if (this.props.variableState.visible) {
-            const variableProps = this.getVariableProps(baseTheme);
-            return <VariablePanel {...variableProps} />;
-        }
+        //if (this.props.variableState.visible) {
+        const variableProps = this.getVariableProps(baseTheme);
+        return <VariablePanel {...variableProps} />;
+        //}
 
-        return null;
+        //return null;
     }
 
     private getVariableProps = (baseTheme: string): IVariablePanelProps => {
