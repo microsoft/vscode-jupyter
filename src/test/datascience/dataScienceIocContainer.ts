@@ -274,6 +274,7 @@ import { IInterpreterService } from '../../client/interpreter/contracts';
 import { IWindowsStoreInterpreter } from '../../client/interpreter/locators/types';
 import { trustDirectoryMigrated } from '../../client/migration/migrateDigestStorage';
 import { PythonEnvironment } from '../../client/pythonEnvironments/info';
+import { RemoteFileSchemeManager } from '../../client/remote/connection/fileSchemeManager';
 import { JupyterServerConnectionService } from '../../client/remote/connection/remoteConnectionsService';
 import { IJupyterServerConnectionService } from '../../client/remote/ui/types';
 import { CodeExecutionHelper } from '../../client/terminals/codeExecution/helper';
@@ -551,6 +552,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<IAuthenticationService>(IAuthenticationService, AuthenticationService);
         this.serviceManager.add<INotebookImporter>(INotebookImporter, JupyterImporter);
         this.serviceManager.add<INotebookExporter>(INotebookExporter, JupyterExporter);
+        this.serviceManager.addSingleton<RemoteFileSchemeManager>(RemoteFileSchemeManager, RemoteFileSchemeManager);
         this.serviceManager.addSingleton<ILiveShareApi>(ILiveShareApi, MockLiveShareApi);
         this.serviceManager.addSingleton<IExtensions>(IExtensions, MockExtensions);
         this.serviceManager.add<INotebookServer>(INotebookServer, JupyterServerWrapper);
