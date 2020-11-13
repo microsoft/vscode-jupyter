@@ -20,6 +20,7 @@ export class WebviewIPyWidgetCoordinator implements IInteractiveWindowListener {
     public get postMessage(): Event<{ message: string; payload: any }> {
         return this.postEmitter.event;
     }
+    // tslint:disable-next-line: no-any
     public get postInternalMessage(): Event<{ message: string; payload: any }> {
         return this.postInternalMessageEmitter.event;
     }
@@ -30,6 +31,7 @@ export class WebviewIPyWidgetCoordinator implements IInteractiveWindowListener {
         // tslint:disable-next-line: no-any
         payload: any;
     }>();
+    // tslint:disable-next-line: no-any
     private postInternalMessageEmitter: EventEmitter<{ message: string; payload: any }> = new EventEmitter<{
         message: string;
         // tslint:disable-next-line: no-any
