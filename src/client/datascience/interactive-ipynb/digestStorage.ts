@@ -94,6 +94,7 @@ export class DigestStorage implements IDigestStorage {
 
             if (await this.fs.localFileExists(defaultKeyFileLocation)) {
                 // if the keyfile already exists, bail out
+                traceInfo(`Found existing keyfile at ${defaultKeyFileLocation}`);
                 return this.fs.readLocalFile(defaultKeyFileLocation);
             }
 
@@ -101,6 +102,7 @@ export class DigestStorage implements IDigestStorage {
             const randomBytesBuffer = await this.prng.randomBytes(1024);
             const key = randomBytesBuffer.toString('hex');
             if (key) {
+                traceInfo(`Successfully generated keyfile`);
                 await this.fs.writeLocalFile(defaultKeyFileLocation, key);
                 return key;
             } else {

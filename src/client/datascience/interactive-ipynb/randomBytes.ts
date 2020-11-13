@@ -76,6 +76,7 @@ export class SystemPseudoRandomNumberGenerator implements ISystemPseudoRandomNum
                 if (stderr.length > 0) {
                     traceError(stderr);
                 }
+                traceInfo(`Generated random bytes of length ${stdout.length}`);
                 resolve(stdout);
             });
         });
