@@ -7,6 +7,7 @@ import * as uuid from 'uuid/v4';
 import { Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
+import { IPythonExtensionChecker } from '../../api/types';
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../common/application/types';
 import '../../common/extensions';
 import { IFileSystem } from '../../common/platform/types';
@@ -53,7 +54,8 @@ type JupyterServerClassType = {
         kernelSelector: KernelSelector,
         interpreterService: IInterpreterService,
         outputChannel: IOutputChannel,
-        progressReporter: ProgressReporter
+        progressReporter: ProgressReporter,
+        exxtensionChecker: IPythonExtensionChecker
     ): IJupyterServerInterface;
 };
 // tslint:enable:callable-types
@@ -81,7 +83,8 @@ export class JupyterServerWrapper implements INotebookServer, ILiveShareHasRole 
         @inject(KernelSelector) kernelSelector: KernelSelector,
         @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) jupyterOutput: IOutputChannel,
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
-        @inject(ProgressReporter) progressReporter: ProgressReporter
+        @inject(ProgressReporter) progressReporter: ProgressReporter,
+        @inject(IPythonExtensionChecker) extensionChecker: IPythonExtensionChecker
     ) {
         // The server factory will create the appropriate HostJupyterServer or GuestJupyterServer based on
         // the liveshare state.
@@ -102,7 +105,8 @@ export class JupyterServerWrapper implements INotebookServer, ILiveShareHasRole 
             kernelSelector,
             interpreterService,
             jupyterOutput,
-            progressReporter
+            progressReporter,
+            extensionChecker
         );
     }
 

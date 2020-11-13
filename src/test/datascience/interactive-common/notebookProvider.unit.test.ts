@@ -6,6 +6,7 @@ import * as typemoq from 'typemoq';
 import * as vscode from 'vscode';
 import { PythonExtensionChecker } from '../../../client/api/pythonApi';
 import { IWorkspaceService } from '../../../client/common/application/types';
+import { ConfigurationService } from '../../../client/common/configuration/service';
 import { IDisposableRegistry, IJupyterSettings } from '../../../client/common/types';
 import { NotebookProvider } from '../../../client/datascience/interactive-common/notebookProvider';
 import { IJupyterNotebookProvider, INotebook, IRawNotebookProvider } from '../../../client/datascience/types';
@@ -37,6 +38,7 @@ suite('DataScience - NotebookProvider', () => {
         jupyterNotebookProvider = mock<IJupyterNotebookProvider>();
         rawNotebookProvider = mock<IRawNotebookProvider>();
         const workspaceService = mock<IWorkspaceService>();
+        const configService = mock<ConfigurationService>();
 
         // Set up our settings
         dataScienceSettings = mock<IJupyterSettings>();
@@ -46,13 +48,15 @@ suite('DataScience - NotebookProvider', () => {
         when(rawNotebookProvider.supported).thenReturn(() => Promise.resolve(false));
         const extensionChecker = mock(PythonExtensionChecker);
         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
+        when(configService.getSettings(anything())).thenReturn(instance(dataScienceSettings) as any);
 
         notebookProvider = new NotebookProvider(
             instance(disposableRegistry),
             instance(rawNotebookProvider),
             instance(jupyterNotebookProvider),
             instance(workspaceService),
-            instance(extensionChecker)
+            instance(extensionChecker),
+            instance(configService)
         );
     });
 

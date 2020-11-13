@@ -453,32 +453,50 @@ export class JupyterNotebookBase implements INotebook {
     }
 
     public async getSysInfo(): Promise<ICell> {
-        // tslint:disable-next-line:no-multiline-string
-        const versionCells = await this.executeSilently(`import sys\r\nsys.version`);
-        // tslint:disable-next-line:no-multiline-string
-        const pathCells = await this.executeSilently(`import sys\r\nsys.executable`);
-        // tslint:disable-next-line:no-multiline-string
-        const notebookVersionCells = await this.executeSilently(`import notebook\r\nnotebook.version_info`);
+        const language = getKernelConnectionLanguage(this._executionInfo.kernelConnectionMetadata) || PYTHON_LANGUAGE;
+        if (language === PYTHON_LANGUAGE) {
+            // tslint:disable-next-line:no-multiline-string
+            const versionCells = await this.executeSilently(`import sys\r\nsys.version`);
+            // tslint:disable-next-line:no-multiline-string
+            const pathCells = await this.executeSilently(`import sys\r\nsys.executable`);
+            // tslint:disable-next-line:no-multiline-string
+            const notebookVersionCells = await this.executeSilently(`import notebook\r\nnotebook.version_info`);
 
-        // Both should have streamed output
-        const version = versionCells.length > 0 ? this.extractStreamOutput(versionCells[0]).trimQuotes() : '';
-        const notebookVersion =
-            notebookVersionCells.length > 0 ? this.extractStreamOutput(notebookVersionCells[0]).trimQuotes() : '';
-        const pythonPath = versionCells.length > 0 ? this.extractStreamOutput(pathCells[0]).trimQuotes() : '';
+            // Both should have streamed output
+            const version = versionCells.length > 0 ? this.extractStreamOutput(versionCells[0]).trimQuotes() : '';
+            const notebookVersion =
+                notebookVersionCells.length > 0 ? this.extractStreamOutput(notebookVersionCells[0]).trimQuotes() : '';
+            const pythonPath = versionCells.length > 0 ? this.extractStreamOutput(pathCells[0]).trimQuotes() : '';
 
-        // Combine this data together to make our sys info
-        return {
-            data: {
-                cell_type: 'messages',
-                messages: [version, notebookVersion, pythonPath],
-                metadata: {},
-                source: []
-            },
-            id: uuid(),
-            file: '',
-            line: 0,
-            state: CellState.finished
-        };
+            // Combine this data together to make our sys info
+            return {
+                data: {
+                    cell_type: 'messages',
+                    messages: [version, notebookVersion, pythonPath],
+                    metadata: {},
+                    source: []
+                },
+                id: uuid(),
+                file: '',
+                line: 0,
+                state: CellState.finished
+            };
+        } else {
+            // tslint:disable-next-line: no-suspicious-comment
+            // TODO: Provide a way for other languages to return this information
+            return {
+                data: {
+                    cell_type: 'messages',
+                    messages: [],
+                    metadata: {},
+                    source: []
+                },
+                id: uuid(),
+                file: '',
+                line: 0,
+                state: CellState.finished
+            };
+        }
     }
 
     @captureTelemetry(Telemetry.RestartJupyterTime)

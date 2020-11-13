@@ -413,10 +413,9 @@ export namespace DataScience {
         'DataScience.reloadRequired',
         'Please reload the window for new settings to take effect.'
     );
-    export const pythonVersionHeader = localize('DataScience.pythonVersionHeader', 'Python Version:');
-    export const pythonRestartHeader = localize('DataScience.pythonRestartHeader', 'Restarted Kernel:');
-    export const pythonNewHeader = localize('DataScience.pythonNewHeader', 'Started new kernel:');
-    export const pythonConnectHeader = localize('DataScience.pythonConnectHeader', 'Connected to kernel:');
+    export const restartedKernelHeader = localize('DataScience.restartedKernelHeader', 'Restarted {0}');
+    export const startedNewKernelHeader = localize('DataScience.startedNewKernelHeader', 'Started {0}');
+    export const connectKernelHeader = localize('DataScience.connectKernelHeader', 'Connected to {0}');
 
     export const jupyterSelectURIPrompt = localize(
         'DataScience.jupyterSelectURIPrompt',
