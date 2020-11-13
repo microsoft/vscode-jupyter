@@ -1,7 +1,6 @@
 import { ISystemPseudoRandomNumberGenerator } from '../../../client/datascience/types';
 import { assert } from 'chai';
 import { SystemPseudoRandomNumberGenerator } from '../../../client/datascience/interactive-ipynb/randomBytes';
-import { FileSystem } from '../../../client/common/platform/fileSystem';
 import { PlatformService } from '../../../client/common/platform/platformService';
 import { ProcessServiceFactory } from '../../../client/common/process/processFactory';
 import { BufferDecoder } from '../../../client/common/process/decoder';
@@ -13,11 +12,12 @@ import { MockOutputChannel } from '../../mockClasses';
 import { mock } from 'ts-mockito';
 import { WorkspaceService } from '../../../client/common/application/workspace';
 import { getOSType, OSType } from '../../common';
+import { MockFileSystem } from '../mockFileSystem';
 
 suite('DataScience - RandomBytes', () => {
     let prng: ISystemPseudoRandomNumberGenerator;
     setup(() => {
-        const fileSystem = new FileSystem();
+        const fileSystem = new MockFileSystem();
         const platformService = new PlatformService();
         const workspaceService = new WorkspaceService();
         const pathUtils = new PathUtils(getOSType() === OSType.Windows);
