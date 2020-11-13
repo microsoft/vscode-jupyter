@@ -445,7 +445,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         when(this.webPanelProvider.create(anything())).thenCall(this.onCreateWebPanel.bind(this));
         if (this.uiTest) {
             this.serviceManager.addSingleton<IWebviewPanelProvider>(IWebviewPanelProvider, WebBrowserPanelProvider);
-            this.serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, WebviewIPyWidgetCoordinator);
+            this.serviceManager.add<IInteractiveWindowListener>(
+                IInteractiveWindowListener,
+                WebviewIPyWidgetCoordinator
+            );
             this.serviceManager.addSingleton<IHttpClient>(IHttpClient, HttpClient);
         } else {
             this.serviceManager.addSingletonInstance<IWebviewPanelProvider>(
@@ -644,7 +647,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             IPyWidgetMessageDispatcherFactory
         );
         if (this.uiTest) {
-            this.serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, WebviewIPyWidgetCoordinator);
+            this.serviceManager.add<IInteractiveWindowListener>(
+                IInteractiveWindowListener,
+                WebviewIPyWidgetCoordinator
+            );
         }
         this.serviceManager.add<IProtocolParser>(IProtocolParser, ProtocolParser);
         this.serviceManager.addSingleton<IJupyterDebugService>(
