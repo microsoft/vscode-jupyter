@@ -5,11 +5,19 @@ import { assert, expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import { ReactWrapper } from 'enzyme';
 import * as fs from 'fs-extra';
+import { mock } from 'ts-mockito';
 import { Disposable } from 'vscode';
+import { IFileSystem, IPlatformService } from '../../client/common/platform/types';
+import { BufferDecoder } from '../../client/common/process/decoder';
+import { ProcessLogger } from '../../client/common/process/logger';
+import { ProcessServiceFactory } from '../../client/common/process/processFactory';
+import { IPathUtils } from '../../client/common/types';
 import { sleep } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
+import { IEnvironmentVariablesProvider } from '../../client/common/variables/types';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
-import { INotebookEditor, INotebookEditorProvider, ITrustService } from '../../client/datascience/types';
+import { SystemPseudoRandomNumberGenerator } from '../../client/datascience/interactive-ipynb/randomBytes';
+import { INotebookEditor, INotebookEditorProvider, ISystemPseudoRandomNumberGenerator, ITrustService } from '../../client/datascience/types';
 import { CommonActionType } from '../../datascience-ui/interactive-common/redux/reducers/types';
 import { TrustMessage } from '../../datascience-ui/interactive-common/trustMessage';
 import { NativeCell } from '../../datascience-ui/native-editor/nativeCell';
@@ -17,6 +25,7 @@ import { NativeEditor } from '../../datascience-ui/native-editor/nativeEditor';
 import { IKeyboardEvent } from '../../datascience-ui/react-common/event';
 import { ImageButton } from '../../datascience-ui/react-common/imageButton';
 import { MonacoEditor } from '../../datascience-ui/react-common/monacoEditor';
+import { MockOutputChannel } from '../mockClasses';
 import { createTemporaryFile } from '../utils/fs';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { IMountedWebView, WaitForMessageOptions } from './mountedWebView';
@@ -163,7 +172,28 @@ suite('DataScience Notebook trust', () => {
         ioc = new DataScienceIocContainer();
         ioc.registerDataScienceTypes(false);
         ioc.forceDataScienceSettingsChanged({ alwaysTrustNotebooks: false });
+        useRealSystemPseudoRandomNumberGenerator(ioc);
         return ioc.activate();
+    }
+    function useRealSystemPseudoRandomNumberGenerator(ioc: DataScienceIocContainer) {
+        const fileSystem = ioc.get<IFileSystem>(IFileSystem);
+        const platformService = ioc.get<IPlatformService>(IPlatformService);
+        const outputChannel = mock(MockOutputChannel);
+        const pathUtils = ioc.get<IPathUtils>(IPathUtils);
+        const environmentVariablesProvider = ioc.get<IEnvironmentVariablesProvider>(IEnvironmentVariablesProvider);
+
+        const processLogger = new ProcessLogger(outputChannel, pathUtils);
+        const bufferDecoder = new BufferDecoder();
+
+        const processServiceFactory = new ProcessServiceFactory(
+            environmentVariablesProvider,
+            processLogger,
+            bufferDecoder,
+            []
+        );
+
+        const prng = new SystemPseudoRandomNumberGenerator(platformService, processServiceFactory, fileSystem);
+        ioc.serviceManager.rebindInstance<ISystemPseudoRandomNumberGenerator>(ISystemPseudoRandomNumberGenerator, prng);
     }
     function simulateKeyPressOnCell(cellIndex: number, keyboardEvent: Partial<IKeyboardEvent> & { code: string }) {
         // Check to see if we have an active focused editor
