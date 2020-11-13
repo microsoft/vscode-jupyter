@@ -33,7 +33,7 @@ export class SystemPseudoRandomNumberGenerator implements ISystemPseudoRandomNum
         try {
             // tslint:disable: no-require-imports
             // Lazy-load modules required for calling BCryptGenRandom
-            const ffi = require('ffi-napi');
+            const ffi = require('ffi-napi') as typeof import('ffi-napi');
             const ref = require('ref-napi');
 
             const BCRYPT_ALG_HANDLE = 'void*';
