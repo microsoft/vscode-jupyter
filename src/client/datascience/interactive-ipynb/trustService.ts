@@ -63,14 +63,18 @@ export class TrustService implements ITrustService {
     public async trustNotebook(uri: Uri, notebookContents: string) {
         if (!this.alwaysTrustNotebooks) {
             const key = await this.digestStorage.key;
-            // If we failed to generate a key, transiently trust this notebook
-            if (key) {
-                notebookContents = this.getFormattedContents(notebookContents);
-                // Only update digest store if the user wants us to check trust
-                const digest = await this.computeDigest(notebookContents, key);
-                await this.digestStorage.saveDigest(uri, digest);
+            try {
+                // If we failed to generate a key, transiently trust this notebook
+                if (key) {
+                    notebookContents = this.getFormattedContents(notebookContents);
+                    // Only update digest store if the user wants us to check trust
+                    const digest = await this.computeDigest(notebookContents, key);
+                    await this.digestStorage.saveDigest(uri, digest);
+                }
+                this._onDidSetNotebookTrust.fire();
+            } catch (e) {
+                traceError(`Encountered error while trusting notebook ${e}`);
             }
-            this._onDidSetNotebookTrust.fire();
         }
     }
     /**
