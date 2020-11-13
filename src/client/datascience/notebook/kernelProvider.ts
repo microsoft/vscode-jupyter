@@ -11,6 +11,7 @@ import {
     NotebookKernel as VSCNotebookKernel,
     NotebookKernelProvider
 } from '../../../../types/vscode-proposed';
+import { IPythonExtensionChecker } from '../../api/types';
 import { IVSCodeNotebook } from '../../common/application/types';
 import { traceInfo } from '../../common/logger';
 import { IDisposableRegistry } from '../../common/types';
@@ -28,6 +29,7 @@ import { INotebook, INotebookProvider } from '../types';
 import {
     getNotebookMetadata,
     isJupyterNotebook,
+    isPythonNotebook,
     updateKernelInfoInNotebookMetadata,
     updateKernelInNotebookMetadata
 } from './helpers/helpers';
@@ -100,7 +102,8 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
         @inject(INotebookProvider) private readonly notebookProvider: INotebookProvider,
         @inject(KernelSwitcher) private readonly kernelSwitcher: KernelSwitcher,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService
+        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
+        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker
     ) {
         this.kernelSelectionProvider.onDidChangeSelections(
             (e) => {
@@ -122,10 +125,13 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
         document: NotebookDocument,
         token: CancellationToken
     ): Promise<VSCodeNotebookKernelMetadata[]> {
+        const isPythonNb = isPythonNotebook(getNotebookMetadata(document));
         const [preferredKernel, kernels, activeInterpreter] = await Promise.all([
             this.getPreferredKernel(document, token),
             this.kernelSelectionProvider.getKernelSelectionsForLocalSession(document.uri, 'raw', undefined, token),
-            this.interpreterService.getActiveInterpreter(document.uri)
+            isPythonNb && this.extensionChecker.isPythonExtensionInstalled
+                ? this.interpreterService.getActiveInterpreter(document.uri)
+                : Promise.resolve(undefined)
         ]);
         if (token.isCancellationRequested) {
             return [];
