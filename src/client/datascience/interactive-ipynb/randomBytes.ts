@@ -9,9 +9,7 @@ import { ISystemPseudoRandomNumberGenerator } from '../types';
 // cryptographically secure random bytes.
 @injectable()
 export class SystemPseudoRandomNumberGenerator implements ISystemPseudoRandomNumberGenerator {
-    constructor(
-        @inject(IPlatformService) private readonly platformService: IPlatformService
-    ) {}
+    constructor(@inject(IPlatformService) private readonly platformService: IPlatformService) {}
 
     public async randomBytes(numBytes: number) {
         switch (this.platformService.osType) {
@@ -67,7 +65,7 @@ export class SystemPseudoRandomNumberGenerator implements ISystemPseudoRandomNum
     private async randomBytesForUnixLikeSystems(numBytes: number): Promise<Buffer> {
         return new Promise((resolve, reject) => {
             const script = `head -c ${numBytes} /dev/urandom`;
-            exec(script, {encoding: 'buffer'}, (err, stdout, stderr) => {
+            exec(script, { encoding: 'buffer' }, (err, stdout, stderr) => {
                 if (err) {
                     traceError(`${err}`);
                     reject(err);
