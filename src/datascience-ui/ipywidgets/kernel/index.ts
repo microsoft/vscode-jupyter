@@ -81,14 +81,7 @@ class WidgetManagerComponent {
 const noop = () => {};
 
 const outputDisposables = new Map<string, { dispose(): void }>();
-const outputDisposables2 = new WeakMap<HTMLElement, { dispose(): void }>();
-// window.addEventListener('message', (e) => {
-//     // tslint:disable-next-line: no-console
-//     // console.error(`Message from backend`, e.data);
-//     if (e.data && e.data.type === 'fromKernel') {
-//         postToKernel('HelloKernel', 'WorldKernel');
-//     }
-// });
+const htmlDisposables = new WeakMap<HTMLElement, { dispose(): void }>();
 const renderedWidgets = new Set<string>();
 /**
  * Called from renderer to render output.
@@ -134,8 +127,6 @@ function renderIPyWidget(
     model: nbformat.IMimeBundle & { model_id: string; version_major: number },
     container: HTMLElement
 ) {
-    // tslint:disable: no-console
-    // console.error('Got Something to render');
     if (renderedWidgets.has(outputId)) {
         return console.error('already rendering');
     }
@@ -156,7 +147,7 @@ function renderIPyWidget(
                 }
             };
             outputDisposables.set(outputId, disposable);
-            outputDisposables2.set(ele, disposable);
+            htmlDisposables.set(ele, disposable);
             // Keep track of the fact that we have successfully rendered a widget for this outputId.
             const statusInfo = stackOfWidgetsRenderStatusByOutputId.find((item) => item.outputId === outputId);
             if (statusInfo) {
@@ -199,7 +190,6 @@ async function createWidgetView(
     }
 }
 
-// tslint:disable-next-line: no-any
 function initialize() {
     try {
         // Setup the widget manager
@@ -209,7 +199,7 @@ function initialize() {
         (window as any)._mgr = mgr;
     } catch (ex) {
         // tslint:disable-next-line: no-console
-        console.error('Ooops', ex);
+        console.error('Exception initializing WidgetManager', ex);
     }
 }
 
@@ -249,8 +239,7 @@ function convertVSCodeOutputToExecutResultOrDisplayData(
     disposeOutput
 };
 
-// tslint:disable-next-line: no-suspicious-comment
-// This is to workaround bug: https://github.com/microsoft/vscode/issues/110338
+// To ensure we initialize after the other scripts, wait for them.
 function attemptInitialize() {
     // tslint:disable-next-line: no-any
     if ((window as any).vscIPyWidgets) {

@@ -47,7 +47,7 @@ export class NotebookIPyWidgetCoordinator implements INotebookKernelResolver {
 
     private onDidCloseNotebook(e: NotebookDocument) {
         // See if this is the last copy of this document
-        if (!this.notebookProvider.notebookDocuments.find((d) => d.uri !== e.uri)) {
+        if (!this.notebookProvider.notebookDocuments.find((d) => d.uri === e.uri)) {
             const coordinator = this.messageCoordinators.get(e.uri.toString());
             coordinator?.then((c) => c.dispose());
             this.messageCoordinators.delete(e.uri.toString());
@@ -84,7 +84,7 @@ export class NotebookIPyWidgetCoordinator implements INotebookKernelResolver {
                     }
                 })
             );
-            this.disposables.push(
+            attachment.disposables.push(
                 webview.onDidReceiveMessage((m) => {
                     c.onMessage(m.type, m.payload);
 
