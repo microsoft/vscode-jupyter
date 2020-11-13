@@ -90,7 +90,7 @@ export class DigestStorage implements IDigestStorage {
     private async initKey(): Promise<string | undefined> {
         try {
             await this.migrator.migrateKey();
-            const defaultKeyFileLocation = this.getDefaultLocation('nbsecretblah');
+            const defaultKeyFileLocation = this.getDefaultLocation('nbsecret');
 
             if (await this.fs.localFileExists(defaultKeyFileLocation)) {
                 // if the keyfile already exists, bail out
