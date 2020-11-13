@@ -256,6 +256,7 @@ function convertVSCodeOutputToExecutResultOrDisplayData(
 function attemptInitialize() {
     // tslint:disable-next-line: no-any
     if ((window as any).vscIPyWidgets) {
+        console.log('IPyWidget kernel initializing...');
         initialize();
     } else {
         setTimeout(attemptInitialize, 100);

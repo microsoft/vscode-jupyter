@@ -6,15 +6,19 @@ const JupyterIPyWidgetNotebookRenderer = 'jupyter-ipywidget-renderer';
 
 // tslint:disable: no-any no-console
 function renderOutput(e: NotebookOutputEventParams) {
-    if ((window as any).ipywidgetsKernel?.renderOutput) {
-        return (window as any).ipywidgetsKernel?.renderOutput(e);
+    const renderOutputFunc =
+        (window as any).ipywidgetsKernel?.renderOutput || (global as any).ipywidgetsKernel?.renderOutput;
+    if (renderOutputFunc) {
+        return renderOutputFunc(e);
     }
     console.error('Rendering widgets on notebook open is not supported.');
 }
 
 function disposeOutput(e: { outputId: string } | undefined) {
-    if ((window as any).ipywidgetsKernel?.disposeOutput) {
-        return (window as any).ipywidgetsKernel?.disposeOutput(e);
+    const disposeOutputFunc =
+        (window as any).ipywidgetsKernel?.disposeOutput || (global as any).ipywidgetsKernel?.disposeOutput;
+    if (disposeOutputFunc) {
+        return disposeOutputFunc(e);
     }
 }
 
