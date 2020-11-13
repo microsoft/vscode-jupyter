@@ -276,6 +276,8 @@ import { trustDirectoryMigrated } from '../../client/migration/migrateDigestStor
 import { PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { RemoteFileSchemeManager } from '../../client/remote/connection/fileSchemeManager';
 import { JupyterServerConnectionService } from '../../client/remote/connection/remoteConnectionsService';
+import { RemoteFileSystemFactory } from '../../client/remote/ui/fileSystemFactory';
+import { NotebookCreator } from '../../client/remote/ui/notebookCreator';
 import { IJupyterServerConnectionService } from '../../client/remote/ui/types';
 import { CodeExecutionHelper } from '../../client/terminals/codeExecution/helper';
 import { ICodeExecutionHelper } from '../../client/terminals/types';
@@ -552,6 +554,8 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<IAuthenticationService>(IAuthenticationService, AuthenticationService);
         this.serviceManager.add<INotebookImporter>(INotebookImporter, JupyterImporter);
         this.serviceManager.add<INotebookExporter>(INotebookExporter, JupyterExporter);
+        this.serviceManager.addSingleton<RemoteFileSystemFactory>(RemoteFileSystemFactory, RemoteFileSystemFactory);
+        this.serviceManager.addSingleton<NotebookCreator>(NotebookCreator, NotebookCreator);
         this.serviceManager.addSingleton<RemoteFileSchemeManager>(RemoteFileSchemeManager, RemoteFileSchemeManager);
         this.serviceManager.addSingleton<ILiveShareApi>(ILiveShareApi, MockLiveShareApi);
         this.serviceManager.addSingleton<IExtensions>(IExtensions, MockExtensions);
