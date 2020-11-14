@@ -13,7 +13,7 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
 
-import { WidgetManagerComponent } from '../ipywidgets/container';
+import { WidgetManagerComponent } from '../ipywidgets/webViews/container';
 import { IVsCodeApi, PostOffice } from '../react-common/postOffice';
 import { detectBaseTheme } from '../react-common/themeDetector';
 import { getConnectedInteractiveEditor } from './interactivePanel';

@@ -22,7 +22,7 @@ Array.prototype.forEach.call(scripts, (script: HTMLScriptElement) => {
 // tslint:disable-next-line: no-function-expression
 const requirePromise = function (pkg: string | string[]): Promise<any> {
     return new Promise((resolve, reject) => {
-        const require = (window as any).requirejs;
+        const require = (window as any).requirejs || requirejs;
         if (require === undefined) {
             reject('Requirejs is needed, please ensure it is loaded on the page.');
         } else {
@@ -64,7 +64,7 @@ function moduleNameToCDNUrl(moduleName: string, moduleVersion: string): string {
  * The semver range is only used with the CDN.
  */
 export function requireLoader(moduleName: string, moduleVersion: string): Promise<any> {
-    const require = (window as any).requirejs;
+    const require = (window as any).requirejs || requirejs;
     if (require === undefined) {
         throw new Error('Requirejs is needed, please ensure it is loaded on the page.');
     }

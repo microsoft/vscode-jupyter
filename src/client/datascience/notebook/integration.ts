@@ -20,7 +20,7 @@ import { noop } from '../../common/utils/misc';
 import { JupyterNotebookView } from './constants';
 import { isJupyterNotebook } from './helpers/helpers';
 import { VSCodeKernelPickerProvider } from './kernelProvider';
-import { INotebookContentProvider } from './types';
+import { INotebookContentProvider, INotebookKernelProvider } from './types';
 
 const EditorAssociationUpdatedKey = 'EditorAssociationUpdatedToUseNotebooks';
 
@@ -36,7 +36,7 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
         @inject(IExperimentService) private readonly experimentService: IExperimentService,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(INotebookContentProvider) private readonly notebookContentProvider: VSCNotebookContentProvider,
-        @inject(VSCodeKernelPickerProvider) private readonly kernelProvider: VSCodeKernelPickerProvider,
+        @inject(INotebookKernelProvider) private readonly kernelProvider: VSCodeKernelPickerProvider,
         @inject(IApplicationEnvironment) private readonly env: IApplicationEnvironment,
         @inject(IApplicationShell) private readonly shell: IApplicationShell,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,

@@ -171,6 +171,8 @@
     "Logging.CurrentWorkingDirectory": "cwd:",
     "Logging.WarnUserAboutDebugLoggingSetting": "You have enabled debug logging for the Jupyter extension, which will continue to write logs to disk. Would you like to turn debug logging off?",
     "Logging.YesTurnOffDebugLogging": "Yes, turn off debug logging",
+    "Logging.NoResponse": "No",
+    "Logging.NoAndDontAskAgain": "No, and don't ask again",
     "GitHubIssue.Failure": "We encountered an error while submitting your GitHub issue. Would you still like to report an issue?",
     "GitHubIssue.copyToClipboardAndOpenIssue": "Yes, copy content to clipboard and open issue",
     "GitHubIssue.submitGitHubIssue": "✅ Submit GitHub Issue",

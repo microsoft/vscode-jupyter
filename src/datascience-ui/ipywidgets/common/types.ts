@@ -8,7 +8,7 @@ import type { Kernel, KernelMessage } from '@jupyterlab/services';
 import type { nbformat } from '@jupyterlab/services/node_modules/@jupyterlab/coreutils';
 import { ISignal } from '@phosphor/signaling';
 import { Widget } from '@phosphor/widgets';
-import { IInteractiveWindowMapping } from '../../client/datascience/interactive-common/interactiveWindowTypes';
+import { IInteractiveWindowMapping } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 
 export interface IMessageSender {
     sendMessage<M extends IInteractiveWindowMapping, T extends keyof M>(type: T, payload?: M[T]): void;
@@ -16,13 +16,17 @@ export interface IMessageSender {
 
 export type CommTargetCallback = (comm: Kernel.IComm, msg: KernelMessage.ICommOpenMsg) => void | PromiseLike<void>;
 
+export type ScriptLoader = {
+    readonly widgetsRegisteredInRequireJs: Readonly<Set<string>>;
+    // tslint:disable-next-line: no-any
+    errorHandler(className: string, moduleName: string, moduleVersion: string, error: any): void;
+    loadWidgetScript(moduleName: string, moduleVersion: string): Promise<void>;
+    successHandler(className: string, moduleName: string, moduleVersion: string): void;
+};
 export type IJupyterLabWidgetManagerCtor = new (
     kernel: Kernel.IKernelConnection,
     el: HTMLElement,
-    scriptLoader: {
-        // tslint:disable-next-line: no-any
-        errorHandler(className: string, moduleName: string, moduleVersion: string, error: any): void;
-    }
+    scriptLoader: ScriptLoader
 ) => IJupyterLabWidgetManager;
 
 export interface IJupyterLabWidgetManager {

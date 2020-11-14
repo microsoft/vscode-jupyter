@@ -118,6 +118,8 @@ export namespace Logging {
         'Logging.YesTurnOffDebugLogging',
         'Yes, turn off debug logging'
     );
+    export const NoResponse = localize('Logging.NoResponse', 'No');
+    export const NoAndDontAskAgain = localize('Logging.NoAndDontAskAgain', "No, and don't ask again");
 }
 
 export namespace InteractiveShiftEnterBanner {

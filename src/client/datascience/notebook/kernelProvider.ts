@@ -4,21 +4,20 @@
 import { inject, injectable } from 'inversify';
 // tslint:disable-next-line: no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
+import { join } from 'path';
 import { CancellationToken, Event, EventEmitter, Uri } from 'vscode';
 import {
     NotebookCell,
+    NotebookCommunication,
     NotebookDocument,
-    NotebookKernel as VSCNotebookKernel,
-    NotebookKernelProvider
+    NotebookKernel as VSCNotebookKernel
 } from '../../../../types/vscode-proposed';
 import { IPythonExtensionChecker } from '../../api/types';
 import { IVSCodeNotebook } from '../../common/application/types';
 import { traceInfo } from '../../common/logger';
-import { IDisposableRegistry } from '../../common/types';
+import { IDisposableRegistry, IExtensionContext } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { IInterpreterService } from '../../interpreter/contracts';
-import { captureTelemetry } from '../../telemetry';
-import { Telemetry } from '../constants';
 import { areKernelConnectionsEqual } from '../jupyter/kernels/helpers';
 import { KernelSelectionProvider } from '../jupyter/kernels/kernelSelections';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
@@ -33,10 +32,17 @@ import {
     updateKernelInfoInNotebookMetadata,
     updateKernelInNotebookMetadata
 } from './helpers/helpers';
+import { INotebookKernelProvider, INotebookKernelResolver } from './types';
 
 export class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
     get preloads(): Uri[] {
-        return [];
+        return [
+            Uri.file(join(this.context.extensionPath, 'out', 'ipywidgets', 'dist', 'ipywidgets.js')),
+            Uri.file(
+                join(this.context.extensionPath, 'out', 'datascience-ui', 'ipywidgetsKernel', 'ipywidgetsKernel.js')
+            ),
+            Uri.file(join(this.context.extensionPath, 'out', 'datascience-ui', 'ipywidgetsKernel', 'require.js'))
+        ];
     }
     get id() {
         return getKernelConnectionId(this.selection);
@@ -48,7 +54,8 @@ export class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
         public readonly selection: Readonly<KernelConnectionMetadata>,
         public readonly isPreferred: boolean,
         private readonly kernelProvider: IKernelProvider,
-        private readonly notebook: IVSCodeNotebook
+        private readonly notebook: IVSCodeNotebook,
+        private readonly context: IExtensionContext
     ) {}
     public executeCell(doc: NotebookDocument, cell: NotebookCell) {
         traceInfo('Execute Cell in KernelProvider.ts');
@@ -87,7 +94,7 @@ export class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
 }
 
 @injectable()
-export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
+export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
     public get onDidChangeKernels(): Event<NotebookDocument | undefined> {
         return this._onDidChangeKernels.event;
     }
@@ -104,7 +111,9 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
         @inject(KernelSwitcher) private readonly kernelSwitcher: KernelSwitcher,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
+        @inject(IExtensionContext) private readonly context: IExtensionContext,
         @inject(IRawNotebookSupportedService) private readonly rawNotebookSupported: IRawNotebookSupportedService,
+        @inject(INotebookKernelResolver) private readonly kernelResolver: INotebookKernelResolver,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker
     ) {
         this.kernelSelectionProvider.onDidChangeSelections(
@@ -122,7 +131,16 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
         );
         this.notebook.onDidChangeActiveNotebookKernel(this.onDidChangeActiveNotebookKernel, this, disposables);
     }
-    @captureTelemetry(Telemetry.KernelProviderPerf)
+
+    public async resolveKernel?(
+        kernel: VSCodeNotebookKernelMetadata,
+        document: NotebookDocument,
+        webview: NotebookCommunication,
+        token: CancellationToken
+    ): Promise<void> {
+        return this.kernelResolver.resolveKernel(kernel, document, webview, token);
+    }
+
     public async provideKernels(
         document: NotebookDocument,
         token: CancellationToken
@@ -165,7 +183,8 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
                     kernel.selection,
                     areKernelConnectionsEqual(kernel.selection, preferredKernel),
                     this.kernelProvider,
-                    this.notebook
+                    this.notebook,
+                    this.context
                 );
             })
             .filter((item) => {
@@ -200,7 +219,8 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
                         kernel.selection,
                         true,
                         this.kernelProvider,
-                        this.notebook
+                        this.notebook,
+                        this.context
                     )
                 );
             }
@@ -231,7 +251,8 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
                 preferredKernel,
                 true,
                 this.kernelProvider,
-                this.notebook
+                this.notebook,
+                this.context
             );
         } else if (preferredKernel.kind === 'connectToLiveKernel') {
             return new VSCodeNotebookKernelMetadata(
@@ -241,7 +262,8 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
                 preferredKernel,
                 true,
                 this.kernelProvider,
-                this.notebook
+                this.notebook,
+                this.context
             );
         } else {
             return new VSCodeNotebookKernelMetadata(
@@ -251,7 +273,8 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
                 preferredKernel,
                 true,
                 this.kernelProvider,
-                this.notebook
+                this.notebook,
+                this.context
             );
         }
     }
@@ -305,7 +328,6 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
         if (existingKernel && areKernelConnectionsEqual(existingKernel.metadata, selectedKernelConnectionMetadata)) {
             return;
         }
-
         // Make this the new kernel (calling this method will associate the new kernel with this Uri).
         // Calling `getOrCreate` will ensure a kernel is created and it is mapped to the Uri provided.
         // This way other parts of extension have access to this kernel immediately after event is handled.

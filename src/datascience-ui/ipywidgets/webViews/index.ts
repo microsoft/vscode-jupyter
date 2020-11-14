@@ -3,5 +3,5 @@
 
 'use strict';
 
-export { WidgetManager } from './manager';
+export { WidgetManager } from '../common/manager';
 export { WidgetManagerComponent } from './container';

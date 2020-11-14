@@ -1,13 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-'use strict';
-
-export { WidgetManager } from './manager';
 import * as base from '@jupyter-widgets/base';
 import * as widgets from '@jupyter-widgets/controls';
 import * as outputWidgets from '@jupyter-widgets/jupyterlab-manager/lib/output';
 import * as embed from './embed';
+import { WidgetManager } from './manager';
 import './widgets.css';
 
 // Export the following for `requirejs`.
@@ -27,3 +25,9 @@ if (document.readyState === 'complete') {
         embed.renderWidgets();
     });
 }
+
+// Create our window export. Necessary for the ipywidget code loading in the output to find our widget manager
+// tslint:disable-next-line: no-any
+(window as any).vscIPyWidgets = {
+    WidgetManager
+};

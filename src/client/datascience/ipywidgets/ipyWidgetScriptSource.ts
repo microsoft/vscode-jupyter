@@ -4,7 +4,6 @@
 'use strict';
 import type * as jupyterlabService from '@jupyterlab/services';
 import { sha256 } from 'hash.js';
-import { inject, injectable } from 'inversify';
 import { IDisposable } from 'monaco-editor';
 import * as path from 'path';
 import { Event, EventEmitter, Uri } from 'vscode';
@@ -25,19 +24,14 @@ import { IInterpreterService } from '../../interpreter/contracts';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
-import {
-    INotebookIdentity,
-    InteractiveWindowMessages,
-    IPyWidgetMessages
-} from '../interactive-common/interactiveWindowTypes';
-import { IInteractiveWindowListener, ILocalResourceUriConverter, INotebook, INotebookProvider } from '../types';
+import { InteractiveWindowMessages, IPyWidgetMessages } from '../interactive-common/interactiveWindowTypes';
+import { ILocalResourceUriConverter, INotebook, INotebookProvider } from '../types';
 import { IPyWidgetScriptSourceProvider } from './ipyWidgetScriptSourceProvider';
 import { WidgetScriptSource } from './types';
 // tslint:disable: no-var-requires no-require-imports
 const sanitize = require('sanitize-filename');
 
-@injectable()
-export class IPyWidgetScriptSource implements IInteractiveWindowListener, ILocalResourceUriConverter {
+export class IPyWidgetScriptSource implements ILocalResourceUriConverter {
     // tslint:disable-next-line: no-any
     public get postMessage(): Event<{ message: string; payload: any }> {
         return this.postEmitter.event;
@@ -46,8 +40,11 @@ export class IPyWidgetScriptSource implements IInteractiveWindowListener, ILocal
     public get postInternalMessage(): Event<{ message: string; payload: any }> {
         return this.postInternalMessageEmitter.event;
     }
+
+    public get rootScriptFolder(): Uri {
+        return Uri.file(this._rootScriptFolder);
+    }
     private readonly resourcesMappedToExtensionFolder = new Map<string, Promise<Uri>>();
-    private notebookIdentity?: Uri;
     private postEmitter = new EventEmitter<{
         message: string;
         // tslint:disable-next-line: no-any
@@ -72,16 +69,17 @@ export class IPyWidgetScriptSource implements IInteractiveWindowListener, ILocal
     private readonly _rootScriptFolder: string;
     private readonly createTargetWidgetScriptsFolder: Promise<string>;
     constructor(
-        @inject(IDisposableRegistry) disposables: IDisposableRegistry,
-        @inject(INotebookProvider) private readonly notebookProvider: INotebookProvider,
-        @inject(IFileSystem) private readonly fs: IFileSystem,
-        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
-        @inject(IConfigurationService) private readonly configurationSettings: IConfigurationService,
-        @inject(IHttpClient) private readonly httpClient: IHttpClient,
-        @inject(IApplicationShell) private readonly appShell: IApplicationShell,
-        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
-        @inject(IPersistentStateFactory) private readonly stateFactory: IPersistentStateFactory,
-        @inject(IExtensionContext) extensionContext: IExtensionContext
+        private readonly identity: Uri,
+        private readonly notebookProvider: INotebookProvider,
+        disposables: IDisposableRegistry,
+        private readonly fs: IFileSystem,
+        private readonly interpreterService: IInterpreterService,
+        private readonly configurationSettings: IConfigurationService,
+        private readonly httpClient: IHttpClient,
+        private readonly appShell: IApplicationShell,
+        private readonly workspaceService: IWorkspaceService,
+        private readonly stateFactory: IPersistentStateFactory,
+        extensionContext: IExtensionContext
     ) {
         this._rootScriptFolder = path.join(extensionContext.extensionPath, 'tmp', 'scripts');
         this.targetWidgetScriptsFolder = path.join(this._rootScriptFolder, 'nbextensions');
@@ -96,7 +94,7 @@ export class IPyWidgetScriptSource implements IInteractiveWindowListener, ILocal
         disposables.push(this);
         this.notebookProvider.onNotebookCreated(
             (e) => {
-                if (e.identity.toString() === this.notebookIdentity?.toString()) {
+                if (e.identity.toString() === this.identity.toString()) {
                     this.initialize().catch(traceError.bind('Failed to initialize'));
                 }
             },
@@ -115,7 +113,7 @@ export class IPyWidgetScriptSource implements IInteractiveWindowListener, ILocal
     public async asWebviewUri(localResource: Uri): Promise<Uri> {
         // Make a copy of the local file if not already in the correct location
         if (!this.isInScriptPath(localResource.fsPath)) {
-            if (this.notebookIdentity && !this.resourcesMappedToExtensionFolder.has(localResource.fsPath)) {
+            if (this.identity && !this.resourcesMappedToExtensionFolder.has(localResource.fsPath)) {
                 const deferred = createDeferred<Uri>();
                 this.resourcesMappedToExtensionFolder.set(localResource.fsPath, deferred.promise);
                 try {
@@ -153,10 +151,6 @@ export class IPyWidgetScriptSource implements IInteractiveWindowListener, ILocal
         return this.uriConversionPromises.get(key)!.promise;
     }
 
-    public get rootScriptFolder(): Uri {
-        return Uri.file(this._rootScriptFolder);
-    }
-
     public dispose() {
         while (this.disposables.length) {
             this.disposables.shift()?.dispose(); // NOSONAR
@@ -165,13 +159,7 @@ export class IPyWidgetScriptSource implements IInteractiveWindowListener, ILocal
 
     // tslint:disable-next-line: no-any
     public onMessage(message: string, payload?: any): void {
-        if (message === InteractiveWindowMessages.NotebookIdentity) {
-            this.saveIdentity(payload).catch((ex) =>
-                traceError(`Failed to initialize ${(this as Object).constructor.name}`, ex)
-            );
-        } else if (message === InteractiveWindowMessages.NotebookClose) {
-            this.dispose();
-        } else if (message === InteractiveWindowMessages.ConvertUriForUseInWebViewResponse) {
+        if (message === InteractiveWindowMessages.ConvertUriForUseInWebViewResponse) {
             const response: undefined | { request: Uri; response: Uri } = payload;
             if (response && this.uriConversionPromises.get(response.request.toString())) {
                 this.uriConversionPromises.get(response.request.toString())!.resolve(response.response);
@@ -184,6 +172,39 @@ export class IPyWidgetScriptSource implements IInteractiveWindowListener, ILocal
                 );
             }
         }
+    }
+    public async initialize() {
+        if (!this.jupyterLab) {
+            // Lazy load jupyter lab for faster extension loading.
+            // tslint:disable-next-line:no-require-imports
+            this.jupyterLab = require('@jupyterlab/services') as typeof jupyterlabService; // NOSONAR
+        }
+
+        if (!this.notebook) {
+            this.notebook = await this.notebookProvider.getOrCreateNotebook({
+                identity: this.identity,
+                disableUI: true,
+                getOnly: true
+            });
+        }
+        if (!this.notebook) {
+            return;
+        }
+        if (this.scriptProvider) {
+            return;
+        }
+        this.scriptProvider = new IPyWidgetScriptSourceProvider(
+            this.notebook,
+            this,
+            this.fs,
+            this.interpreterService,
+            this.appShell,
+            this.configurationSettings,
+            this.workspaceService,
+            this.stateFactory,
+            this.httpClient
+        );
+        await this.initializeNotebook();
     }
 
     /**
@@ -213,47 +234,6 @@ export class IPyWidgetScriptSource implements IInteractiveWindowListener, ILocal
                 payload: widgetSource
             });
         }
-    }
-    private async saveIdentity(args: INotebookIdentity) {
-        this.notebookIdentity = args.resource;
-        await this.initialize();
-    }
-
-    private async initialize() {
-        if (!this.jupyterLab) {
-            // Lazy load jupyter lab for faster extension loading.
-            // tslint:disable-next-line:no-require-imports
-            this.jupyterLab = require('@jupyterlab/services') as typeof jupyterlabService; // NOSONAR
-        }
-
-        if (!this.notebookIdentity) {
-            return;
-        }
-        if (!this.notebook) {
-            this.notebook = await this.notebookProvider.getOrCreateNotebook({
-                identity: this.notebookIdentity,
-                disableUI: true,
-                getOnly: true
-            });
-        }
-        if (!this.notebook) {
-            return;
-        }
-        if (this.scriptProvider) {
-            return;
-        }
-        this.scriptProvider = new IPyWidgetScriptSourceProvider(
-            this.notebook,
-            this,
-            this.fs,
-            this.interpreterService,
-            this.appShell,
-            this.configurationSettings,
-            this.workspaceService,
-            this.stateFactory,
-            this.httpClient
-        );
-        await this.initializeNotebook();
     }
     private async initializeNotebook() {
         if (!this.notebook) {

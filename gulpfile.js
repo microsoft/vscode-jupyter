@@ -67,6 +67,11 @@ gulp.task('compile-notebooks', async () => {
     await buildWebPackForDevOrProduction('./build/webpack/webpack.datascience-ui-notebooks.config.js');
 });
 
+gulp.task('compile-renderers', async () => {
+    console.log('Building renderers');
+    await buildWebPackForDevOrProduction('./build/webpack/webpack.datascience-ui-renderers.config.js');
+});
+
 gulp.task('compile-viewers', async () => {
     await buildWebPackForDevOrProduction('./build/webpack/webpack.datascience-ui-viewers.config.js');
 });
@@ -78,7 +83,7 @@ if (isCI && process.env.VSC_CI_MATRIX_TEST_SUITE === 'notebook') {
 } else {
     gulp.task(
         'compile-webviews',
-        gulp.series('compile-ipywidgets', gulp.parallel('compile-notebooks', 'compile-viewers'))
+        gulp.series('compile-ipywidgets', gulp.parallel('compile-notebooks', 'compile-viewers', 'compile-renderers'))
     );
 }
 
@@ -86,7 +91,8 @@ async function buildWebPackForDevOrProduction(configFile, configNameForProductio
     if (configNameForProductionBuilds) {
         await buildWebPack(configNameForProductionBuilds, ['--config', configFile], webpackEnv);
     } else {
-        await spawnAsync('npm', ['run', 'webpack', '--', '--config', configFile, '--mode', 'production'], webpackEnv);
+        console.log('Building ipywidgets in dev mode');
+        await spawnAsync('npm', ['run', 'webpack', '--', '--config', configFile, '--mode', 'development'], webpackEnv);
     }
 }
 gulp.task('webpack', async () => {
@@ -96,6 +102,7 @@ gulp.task('webpack', async () => {
     // Individually is faster on CI.
     await buildIPyWidgets();
     await buildWebPackForDevOrProduction('./build/webpack/webpack.datascience-ui-notebooks.config.js', 'production');
+    await buildWebPackForDevOrProduction('./build/webpack/webpack.datascience-ui-renderers.config.js', 'production');
     await buildWebPackForDevOrProduction('./build/webpack/webpack.datascience-ui-viewers.config.js', 'production');
     await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.config.js', 'extension');
 });
