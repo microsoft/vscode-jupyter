@@ -11,6 +11,7 @@ import { addLogfile } from './_global';
 import { LogLevel } from './levels';
 
 const SEEN_DEBUG_LOG_LEVEL_ON_ACTIVATION_AT_LEAST_ONCE = 'SeenDebugLogLevelAtLeastOnce';
+const ASKED_ALREADY_FOR_LOG_LEVEL = 'AskedAlreadyAboutLogLevel';
 
 @injectable()
 export class DebugLoggingManager implements IDebugLoggingManager {
@@ -46,12 +47,21 @@ export class DebugLoggingManager implements IDebugLoggingManager {
     }
 
     private async warnUserAboutLoggingToFile() {
-        const prompt = Logging.bannerYesTurnOffDebugLogging();
-        this.appShell.showWarningMessage(Logging.warnUserAboutDebugLoggingSetting(), ...[prompt]).then((selection) => {
-            if (selection === prompt) {
-                this.commandManager.executeCommand(Commands.ResetLoggingLevel);
-            }
-        });
+        const askedAlready = this.globalState.get<boolean>(ASKED_ALREADY_FOR_LOG_LEVEL, false);
+        if (!askedAlready) {
+            const prompt = Logging.bannerYesTurnOffDebugLogging();
+            const no = Logging.NoResponse();
+            const dontAskAgain = Logging.NoAndDontAskAgain();
+            this.appShell
+                .showWarningMessage(Logging.warnUserAboutDebugLoggingSetting(), ...[prompt, no, dontAskAgain])
+                .then((selection) => {
+                    if (selection === prompt) {
+                        this.commandManager.executeCommand(Commands.ResetLoggingLevel);
+                    } else if (selection === dontAskAgain) {
+                        this.globalState.update(ASKED_ALREADY_FOR_LOG_LEVEL, true);
+                    }
+                });
+        }
         await this.configureLoggingToFile();
     }
 }
