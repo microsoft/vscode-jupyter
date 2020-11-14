@@ -12,7 +12,6 @@ import { IVariableViewPanelActionMapping } from '../mapping';
 // Map of actions to reducers for the VariableViewPanel
 export const reducerMap: Partial<IVariableViewPanelActionMapping> = {
     [CommonActionType.SHOW_DATA_VIEWER]: Transfer.showDataViewer,
-    [InteractiveWindowMessages.ShowPlot]: Transfer.showPlot,
     [CommonActionType.LINK_CLICK]: Transfer.linkClick,
     [InteractiveWindowMessages.Activate]: CommonEffects.activate,
     [CssMessages.GetCssResponse]: CommonEffects.handleCss,
