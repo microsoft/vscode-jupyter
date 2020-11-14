@@ -55,7 +55,7 @@ type JupyterServerClassType = {
         interpreterService: IInterpreterService,
         outputChannel: IOutputChannel,
         progressReporter: ProgressReporter,
-        exxtensionChecker: IPythonExtensionChecker
+        extensionChecker: IPythonExtensionChecker
     ): IJupyterServerInterface;
 };
 // tslint:enable:callable-types
