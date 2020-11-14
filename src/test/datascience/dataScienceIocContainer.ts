@@ -251,6 +251,7 @@ import {
     IRawNotebookProvider,
     IRawNotebookSupportedService,
     IStatusProvider,
+    ISystemPseudoRandomNumberGenerator,
     IThemeFinder,
     ITrustService,
     IWebviewExtensibility
@@ -306,6 +307,7 @@ import { AuthenticationService } from '../../client/common/application/authentic
 import { MockEncryptedStorage } from './mockEncryptedStorage';
 import { WebviewIPyWidgetCoordinator } from '../../client/datascience/ipywidgets/webviewIPyWidgetCoordinator';
 import { WebviewViewProvider } from '../../client/common/application/webviewViews/webviewViewProvider';
+import { SystemPseudoRandomNumberGenerator } from '../../client/datascience/interactive-ipynb/randomBytes';
 
 export class DataScienceIocContainer extends UnitTestIocContainer {
     public get workingInterpreter() {
@@ -849,6 +851,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             this.serviceManager.addSingleton<IProcessLogger>(IProcessLogger, ProcessLogger);
         }
         this.serviceManager.addSingleton<NativeEditorSynchronizer>(NativeEditorSynchronizer, NativeEditorSynchronizer);
+        this.serviceManager.addSingleton<ISystemPseudoRandomNumberGenerator>(
+            ISystemPseudoRandomNumberGenerator,
+            SystemPseudoRandomNumberGenerator
+        );
         this.serviceManager.addSingleton<ITrustService>(ITrustService, TrustService);
         this.serviceManager.addSingleton<IDigestStorage>(IDigestStorage, DigestStorage);
         // Disable syncrhonizing edits

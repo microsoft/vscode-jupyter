@@ -61,6 +61,7 @@ import { NativeEditorProviderOld } from './interactive-ipynb/nativeEditorProvide
 import { NativeEditorRunByLineListener } from './interactive-ipynb/nativeEditorRunByLineListener';
 import { NativeEditorSynchronizer } from './interactive-ipynb/nativeEditorSynchronizer';
 import { NativeEditorViewTracker } from './interactive-ipynb/nativeEditorViewTracker';
+import { SystemPseudoRandomNumberGenerator } from './interactive-ipynb/randomBytes';
 import { TrustCommandHandler } from './interactive-ipynb/trustCommandHandler';
 import { TrustService } from './interactive-ipynb/trustService';
 import { InteractiveWindow } from './interactive-window/interactiveWindow';
@@ -176,6 +177,7 @@ import {
     IRawNotebookProvider,
     IRawNotebookSupportedService,
     IStatusProvider,
+    ISystemPseudoRandomNumberGenerator,
     IThemeFinder,
     ITrustService,
     IWebviewExtensibility
@@ -315,6 +317,7 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     serviceManager.addSingleton<ExportCommands>(ExportCommands, ExportCommands);
     serviceManager.addSingleton<IExportManagerFilePicker>(IExportManagerFilePicker, ExportManagerFilePicker);
     serviceManager.addSingleton<IJupyterUriProviderRegistration>(IJupyterUriProviderRegistration, JupyterUriProviderRegistration);
+    serviceManager.addSingleton<ISystemPseudoRandomNumberGenerator>(ISystemPseudoRandomNumberGenerator, SystemPseudoRandomNumberGenerator);
     serviceManager.addSingleton<IDigestStorage>(IDigestStorage, DigestStorage);
     serviceManager.addSingleton<ITrustService>(ITrustService, TrustService);
     serviceManager.addSingleton<IFileSystemPathUtils>(IFileSystemPathUtils, FileSystemPathUtils);
