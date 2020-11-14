@@ -23,7 +23,6 @@ export class IVariableViewPanelMapping {
     public [CssMessages.GetMonacoThemeRequest]: IGetMonacoThemeRequest; // Needed for started message
     public [CssMessages.GetMonacoThemeResponse]: IGetMonacoThemeResponse;
     public [InteractiveWindowMessages.OpenLink]: string | undefined;
-    public [InteractiveWindowMessages.ShowPlot]: string | undefined;
     public [InteractiveWindowMessages.VariablesComplete]: never | undefined;
     public [SharedMessages.UpdateSettings]: string;
     public [SharedMessages.LocInit]: string;
