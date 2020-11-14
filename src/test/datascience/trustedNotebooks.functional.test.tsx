@@ -5,8 +5,6 @@ import { assert, expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import { ReactWrapper } from 'enzyme';
 import * as fs from 'fs-extra';
-import * as os from 'os';
-import * as path from 'path';
 import { Disposable } from 'vscode';
 import { sleep } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
@@ -265,7 +263,6 @@ suite('DataScience Notebook trust', () => {
         } catch {
             noop();
         }
-        await fs.unlink(path.join(os.tmpdir(), 'nbsecret'));
     });
 
     setup(async function () {
