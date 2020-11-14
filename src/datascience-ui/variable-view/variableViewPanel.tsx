@@ -2,24 +2,12 @@
 // Licensed under the MIT License.
 import * as React from 'react';
 import { connect } from 'react-redux';
-import { Identifiers } from '../../client/datascience/constants';
-import { buildSettingsCss } from '../interactive-common/buildSettingsCss';
-import { ContentPanel, IContentPanelProps } from '../interactive-common/contentPanel';
 import { handleLinkClick } from '../interactive-common/handlers';
-import { JupyterInfo } from '../interactive-common/jupyterInfo';
-import { ICellViewModel } from '../interactive-common/mainState';
 import { IMainWithVariables, IStore } from '../interactive-common/redux/store';
 import { IVariablePanelProps, VariablePanel } from '../interactive-common/variablePanel';
-import { ErrorBoundary } from '../react-common/errorBoundary';
-import { Image, ImageName } from '../react-common/image';
-import { ImageButton } from '../react-common/imageButton';
-import { getLocString } from '../react-common/locReactSide';
-import { Progress } from '../react-common/progress';
-//import './interactivePanel.less';
 import { actionCreators } from './redux/actions';
 
 // tslint:disable: no-suspicious-comment
-
 export type IInteractivePanelProps = IMainWithVariables & typeof actionCreators;
 
 function mapStateToProps(state: IStore): IMainWithVariables {
@@ -27,11 +15,7 @@ function mapStateToProps(state: IStore): IMainWithVariables {
 }
 
 export class VariableViewPanel extends React.Component<IInteractivePanelProps> {
-    private mainPanelRef: React.RefObject<HTMLDivElement> = React.createRef<HTMLDivElement>();
-    private mainPanelToolbarRef: React.RefObject<HTMLDivElement> = React.createRef<HTMLDivElement>();
-    private contentPanelRef: React.RefObject<ContentPanel> = React.createRef<ContentPanel>();
     private renderCount: number = 0;
-    private internalScrollCount: number = 0;
 
     constructor(props: IInteractivePanelProps) {
         super(props);
@@ -39,7 +23,7 @@ export class VariableViewPanel extends React.Component<IInteractivePanelProps> {
 
     public componentDidMount() {
         document.addEventListener('click', this.linkClick, true);
-        this.props.editorLoaded();
+        this.props.editorLoaded(); // We don't have an editor, but this is basically the startup command for the webview
     }
 
     public componentWillUnmount() {
@@ -52,8 +36,6 @@ export class VariableViewPanel extends React.Component<IInteractivePanelProps> {
             fontSize: this.props.font.size,
             fontFamily: this.props.font.family
         };
-
-        const progressBar = (this.props.busy || !this.props.loaded) && !this.props.testMode ? <Progress /> : undefined;
 
         // If in test mode, update our count. Use this to determine how many renders a normal update takes.
         if (this.props.testMode) {
@@ -78,10 +60,6 @@ export class VariableViewPanel extends React.Component<IInteractivePanelProps> {
     }
 
     private getVariableProps = (baseTheme: string): IVariablePanelProps => {
-        let toolbarHeight = 0;
-        if (this.mainPanelToolbarRef.current) {
-            toolbarHeight = this.mainPanelToolbarRef.current.offsetHeight;
-        }
         return {
             gridHeight: this.props.variableState.gridHeight,
             containerHeight: this.props.variableState.containerHeight,
@@ -98,7 +76,7 @@ export class VariableViewPanel extends React.Component<IInteractivePanelProps> {
             fontSize: this.props.font.size,
             executionCount: this.props.currentExecutionCount,
             refreshCount: this.props.variableState.refreshCount,
-            offsetHeight: toolbarHeight
+            offsetHeight: 0 // No toolbar in variable view panel
         };
     };
 

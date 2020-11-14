@@ -79,15 +79,6 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
 
     private async requestVariables(args: IJupyterVariablesRequest): Promise<void> {
         // Request our new list of variables
-        //const response: IJupyterVariablesResponse = this._notebook
-        //? await this.jupyterVariables.getVariables(args, this._notebook)
-        //: {
-        //totalCount: 0,
-        //pageResponse: [],
-        //pageStartIndex: args?.startIndex,
-        //executionCount: args?.executionCount,
-        //refreshCount: args?.refreshCount || 0
-        //};
         const response: IJupyterVariablesResponse = {
             totalCount: 1,
             pageResponse: [
