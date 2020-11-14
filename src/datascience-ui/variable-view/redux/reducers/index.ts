@@ -3,11 +3,11 @@
 'use strict';
 import { InteractiveWindowMessages } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { CssMessages, SharedMessages } from '../../../../client/datascience/messages';
+import { Effects } from '../../../history-react/redux/reducers/effects'; // Reuse the updateSettings from history-react
 import { CommonEffects } from '../../../interactive-common/redux/reducers/commonEffects';
 import { Transfer } from '../../../interactive-common/redux/reducers/transfer';
 import { CommonActionType } from '../../../interactive-common/redux/reducers/types';
 import { IVariableViewPanelActionMapping } from '../mapping';
-import { Effects } from './effects';
 
 // Map of actions to reducers for the VariableViewPanel
 export const reducerMap: Partial<IVariableViewPanelActionMapping> = {
