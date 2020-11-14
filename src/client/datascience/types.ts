@@ -1410,7 +1410,10 @@ export interface IExternalCommandFromWebview {
     cell: ICell;
 }
 
-export const ISystemPseudoRandomNumberGenerator = Symbol('ISystemPseudoRandomNumberGenerator');
+// Smoke tests compile the tests but exercise the VSIX, so Symbols are not shared
+// Ensure we reuse Symbols created for existing keys so that we can retrieve the
+// Symbol matching this key from the extension API serviceManager
+export const ISystemPseudoRandomNumberGenerator = Symbol.for('ISystemPseudoRandomNumberGenerator');
 export interface ISystemPseudoRandomNumberGenerator {
     randomBytes(numBytes: number): Promise<Buffer>;
 }
