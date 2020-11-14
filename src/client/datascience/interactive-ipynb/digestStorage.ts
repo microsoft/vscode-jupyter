@@ -95,8 +95,10 @@ export class DigestStorage implements IDigestStorage {
             if (await this.fs.localFileExists(defaultKeyFileLocation)) {
                 // if the keyfile already exists, bail out
                 const contents = await this.fs.readLocalFile(defaultKeyFileLocation);
-                traceInfo(`Found existing keyfile at ${defaultKeyFileLocation} with contents ${contents}`);
-                return contents;
+                if (contents) {
+                    traceInfo(`Found existing keyfile at ${defaultKeyFileLocation} with contents ${contents}`);
+                    return contents;
+                }
             }
 
             // If it doesn't exist, create one
