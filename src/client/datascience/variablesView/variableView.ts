@@ -19,6 +19,7 @@ import { VariableViewMessageListener } from './variableViewMessageListener';
 
 const variableViewDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'viewers');
 
+// This is the client side host for the native notebook variable view webview
 @injectable()
 export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> implements IDisposable {
     protected get owningResource(): Resource {
@@ -45,7 +46,6 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
 
     public async load(codeWebview: vscodeWebviewView) {
         await super.loadWebview(process.cwd(), codeWebview).catch(traceError);
-        this.postMessage(InteractiveWindowMessages.ForceVariableRefresh).ignoreErrors();
     }
 
     // Used to identify this webview in telemetry, not shown to user so no localization
@@ -67,6 +67,7 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
         super.onMessage(message, payload);
     }
 
+    // Handle message helper function to specifically handle our message mapping type
     protected handleMessage<M extends IVariableViewPanelMapping, T extends keyof M>(
         _message: T,
         // tslint:disable-next-line:no-any
@@ -77,8 +78,9 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
         handler.bind(this)(args);
     }
 
+    // This is called when the UI side requests new variable data
     private async requestVariables(args: IJupyterVariablesRequest): Promise<void> {
-        // Request our new list of variables
+        // For now, this just returns a fake variable that we can display in the UI
         const response: IJupyterVariablesResponse = {
             totalCount: 1,
             pageResponse: [
@@ -100,6 +102,5 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
         };
 
         this.postMessage(InteractiveWindowMessages.GetVariablesResponse, response).ignoreErrors();
-        //sendTelemetryEvent(Telemetry.VariableExplorerVariableCount, undefined, { variableCount: response.totalCount });
     }
 }

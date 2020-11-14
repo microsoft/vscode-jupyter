@@ -8,22 +8,25 @@ import { IVariablePanelProps, VariablePanel } from '../interactive-common/variab
 import { actionCreators } from './redux/actions';
 
 // tslint:disable: no-suspicious-comment
-export type IInteractivePanelProps = IMainWithVariables & typeof actionCreators;
+export type IVariableViewPanelProps = IMainWithVariables & typeof actionCreators;
 
 function mapStateToProps(state: IStore): IMainWithVariables {
     return { ...state.main, variableState: state.variables };
 }
 
-export class VariableViewPanel extends React.Component<IInteractivePanelProps> {
+// This is the top level UI element for our variable view panel, hosted in a vscode webviewView
+// It mimics the structure and state of InteractivePanel to be able to share creation / redux / actions
+// with the existing variable panels, but the UI contains only the Variable part of the UI
+export class VariableViewPanel extends React.Component<IVariableViewPanelProps> {
     private renderCount: number = 0;
 
-    constructor(props: IInteractivePanelProps) {
+    constructor(props: IVariableViewPanelProps) {
         super(props);
     }
 
     public componentDidMount() {
         document.addEventListener('click', this.linkClick, true);
-        this.props.editorLoaded(); // We don't have an editor, but this is basically the startup command for the webview
+        this.props.editorLoaded(); // We don't have an editor, but this action signals that the view is ready, so just reuse it here
     }
 
     public componentWillUnmount() {
@@ -42,14 +45,18 @@ export class VariableViewPanel extends React.Component<IInteractivePanelProps> {
             this.renderCount = this.renderCount + 1;
         }
 
+        // Return our variable panel, we wrap this in one more top level element "variable-view-main-panel" so that
+        // we can size and host it differently from the variable panel in the interactive window or native editor
         return (
             <div id="variable-view-main-panel" role="Main" style={dynamicFont}>
                 <button onClick={this.props.toggleVariableExplorer}>OPEN</button>
                 {this.renderVariablePanel(this.props.baseTheme)}
             </div>
-        );
+        ); // NOTE: Currently the OPEN, button just exists to mimic the toggling of the variable view, make it easier to test when working
     }
 
+    // Render function and variable props are the same as those from InterativePanel to allow us to reuse the same
+    // control without alterations
     private renderVariablePanel(baseTheme: string) {
         if (this.props.variableState.visible) {
             const variableProps = this.getVariableProps(baseTheme);
@@ -94,7 +101,7 @@ export class VariableViewPanel extends React.Component<IInteractivePanelProps> {
     };
 }
 
-// Main export, return a redux connected editor
+// Main export, return a redux connected variable view panel
 export function getConnectedVariableViewPanel() {
     return connect(mapStateToProps, actionCreators)(VariableViewPanel);
 }

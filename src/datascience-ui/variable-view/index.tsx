@@ -30,7 +30,7 @@ const skipDefault = testMode ? false : typeof acquireVsCodeApi !== 'undefined';
 const postOffice = new PostOffice();
 const store = createStore(skipDefault, baseTheme, testMode, postOffice);
 
-// Wire up a connected react control for our InteractiveEditor
+// Create a variable view panel connected to the redux store
 const ConnectedVariableViewPanel = getConnectedVariableViewPanel();
 
 // tslint:disable:no-typeof-undefined

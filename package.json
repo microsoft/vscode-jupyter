@@ -1717,7 +1717,7 @@
             ]
         },
         "views": {
-            "jupyter": [
+            "jupyter-variables": [
                 {
                     "type": "webview",
                     "id": "jupyterViewVariables",
