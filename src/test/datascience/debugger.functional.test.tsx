@@ -31,7 +31,7 @@ import { MockDocument } from './mockDocument';
 import { MockDocumentManager } from './mockDocumentManager';
 import { addCell, createNewEditor } from './nativeEditorTestHelpers';
 import { getLastOutputCell, openVariableExplorer, runInteractiveTest, runNativeTest } from './testHelpers';
-import { verifyVariables } from './variableTestHelpers';
+//import { verifyVariables } from './variableTestHelpers';
 
 //import { asyncDump } from '../common/asyncDump';
 // tslint:disable-next-line:max-func-body-length no-any
@@ -291,20 +291,23 @@ suite('DataScience Debugger tests', () => {
     );
     runInteractiveTest(
         'Check variables',
-        async () => {
-            await debugCell('interactive', '#%%\nx = [4, 6]\nx = 5', undefined, undefined, false, () => {
-                const targetResult = {
-                    name: 'x',
-                    value: '[4, 6]',
-                    supportsDataExplorer: true,
-                    type: 'list',
-                    size: 0,
-                    shape: '',
-                    count: 2,
-                    truncated: false
-                };
-                verifyVariables(ioc!.getWrapper('interactive')!, [targetResult]);
-            });
+        async (c) => {
+            // Skip this test for now. Flakey
+            // https://github.com/microsoft/vscode-jupyter/issues/3932
+            c?.skip();
+            // await debugCell('interactive', '#%%\nx = [4, 6]\nx = 5', undefined, undefined, false, () => {
+            //     const targetResult = {
+            //         name: 'x',
+            //         value: '[4, 6]',
+            //         supportsDataExplorer: true,
+            //         type: 'list',
+            //         size: 0,
+            //         shape: '',
+            //         count: 2,
+            //         truncated: false
+            //     };
+            //     verifyVariables(ioc!.getWrapper('interactive')!, [targetResult]);
+            // });
         },
         createIOC
     );
