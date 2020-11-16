@@ -1124,6 +1124,13 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
                 );
                 await this.addSysInfo(SysInfoReason.Restart);
 
+                // Reset our file in the kernel.
+                const fileInKernel = this.fileInKernel;
+                this.fileInKernel = undefined;
+                if (fileInKernel) {
+                    await this.setFileInKernel(fileInKernel, undefined);
+                }
+
                 // Compute if dark or not.
                 const knownDark = await this.isDark();
 

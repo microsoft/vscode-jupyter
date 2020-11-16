@@ -337,7 +337,7 @@ suite('DataScience notebook tests', () => {
                 const pythonService = await createPythonService(ioc, 2);
 
                 // Skip test for older python and raw kernel and mac
-                if (pythonService && !useRawKernel && os.platform() !== 'darwin') {
+                if (pythonService && !useRawKernel && os.platform() === 'win32') {
                     // We will only connect if we allow for self signed cert connections
                     ioc.forceDataScienceSettingsChanged({
                         allowUnauthorizedRemoteConnection: true,
