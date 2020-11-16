@@ -823,29 +823,33 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
             const deferred = createDeferred<boolean>();
             this.addSysInfoPromise = deferred;
 
-            // Generate a new sys info cell and send it to the web panel.
-            const sysInfo = await this.generateSysInfoCell(reason);
-            if (sysInfo) {
-                this.sendCellsToWebView([sysInfo]);
-            }
+            try {
+                // Generate a new sys info cell and send it to the web panel.
+                const sysInfo = await this.generateSysInfoCell(reason);
+                if (sysInfo) {
+                    this.sendCellsToWebView([sysInfo]);
+                }
 
-            // For anything but start, tell the other sides of a live share session
-            if (reason !== SysInfoReason.Start && sysInfo) {
-                this.shareMessage(InteractiveWindowMessages.AddedSysInfo, {
-                    type: reason,
-                    sysInfoCell: sysInfo,
-                    id: this.id,
-                    notebookIdentity: this.notebookIdentity.resource
-                });
-            }
+                // For anything but start, tell the other sides of a live share session
+                if (reason !== SysInfoReason.Start && sysInfo) {
+                    this.shareMessage(InteractiveWindowMessages.AddedSysInfo, {
+                        type: reason,
+                        sysInfoCell: sysInfo,
+                        id: this.id,
+                        notebookIdentity: this.notebookIdentity.resource
+                    });
+                }
 
-            // For a restart, tell our window to reset
-            if (reason === SysInfoReason.Restart || reason === SysInfoReason.New) {
-                this.postMessage(InteractiveWindowMessages.RestartKernel).ignoreErrors();
-            }
+                // For a restart, tell our window to reset
+                if (reason === SysInfoReason.Restart || reason === SysInfoReason.New) {
+                    this.postMessage(InteractiveWindowMessages.RestartKernel).ignoreErrors();
+                }
 
-            traceInfo(`Sys info for ${this.id} ${reason} complete`);
-            deferred.resolve(true);
+                traceInfo(`Sys info for ${this.id} ${reason} complete`);
+                deferred.resolve(true);
+            } catch (e) {
+                deferred.reject(e);
+            }
         } else if (this.addSysInfoPromise) {
             traceInfo(`Wait for sys info for ${this.id} ${reason}`);
             await this.addSysInfoPromise.promise;

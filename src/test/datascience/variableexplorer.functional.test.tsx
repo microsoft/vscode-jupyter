@@ -269,7 +269,7 @@ myTuple = 1,2,3,4,5,6,7,8,9`;
                 openVariableExplorer(wrapper);
 
                 await addCodeImpartial(wrapper, 'a=1\na');
-                await addCodeImpartial(wrapper, basicCode, true, 2);
+                await addCodeImpartial(wrapper, basicCode, true, 1);
 
                 const targetVariables: IJupyterVariable[] = [
                     {
