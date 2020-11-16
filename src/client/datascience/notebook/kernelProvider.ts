@@ -14,10 +14,13 @@ import {
 } from '../../../../types/vscode-proposed';
 import { IPythonExtensionChecker } from '../../api/types';
 import { IVSCodeNotebook } from '../../common/application/types';
+import { PYTHON_LANGUAGE } from '../../common/constants';
 import { traceInfo } from '../../common/logger';
 import { IDisposableRegistry, IExtensionContext } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { IInterpreterService } from '../../interpreter/contracts';
+import { sendNotebookOrKernelLanguageTelemetry } from '../common';
+import { Telemetry } from '../constants';
 import { areKernelConnectionsEqual } from '../jupyter/kernels/helpers';
 import { KernelSelectionProvider } from '../jupyter/kernels/kernelSelections';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
@@ -328,6 +331,26 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
         if (existingKernel && areKernelConnectionsEqual(existingKernel.metadata, selectedKernelConnectionMetadata)) {
             return;
         }
+        switch (kernel.selection.kind) {
+            case 'startUsingPythonInterpreter':
+                sendNotebookOrKernelLanguageTelemetry(Telemetry.SwitchToExistingKernel, PYTHON_LANGUAGE);
+                break;
+            case 'connectToLiveKernel':
+                sendNotebookOrKernelLanguageTelemetry(
+                    Telemetry.SwitchToExistingKernel,
+                    kernel.selection.kernelModel.language
+                );
+                break;
+            case 'startUsingKernelSpec':
+                sendNotebookOrKernelLanguageTelemetry(
+                    Telemetry.SwitchToExistingKernel,
+                    kernel.selection.kernelSpec.language
+                );
+                break;
+            default:
+            // We don't know as its the default kernel on Jupyter server.
+        }
+
         // Make this the new kernel (calling this method will associate the new kernel with this Uri).
         // Calling `getOrCreate` will ensure a kernel is created and it is mapped to the Uri provided.
         // This way other parts of extension have access to this kernel immediately after event is handled.

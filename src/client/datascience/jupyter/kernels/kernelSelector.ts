@@ -19,7 +19,8 @@ import { StopWatch } from '../../../common/utils/stopWatch';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { captureTelemetry, IEventNamePropertyMapping, sendTelemetryEvent } from '../../../telemetry';
-import { Commands, KnownNotebookLanguages, Settings, Telemetry } from '../../constants';
+import { sendNotebookOrKernelLanguageTelemetry } from '../../common';
+import { Commands, Settings, Telemetry } from '../../constants';
 import { IKernelFinder } from '../../kernel-launcher/types';
 import { getInterpreterInfoStoredInMetadata } from '../../notebookStorage/baseModel';
 import { reportAction } from '../../progress/decorator';
@@ -351,9 +352,7 @@ export class KernelSelector implements IKernelSelectionUsage {
             );
             return cloneDeep(item);
         } else if (selection.kind === 'connectToLiveKernel') {
-            sendTelemetryEvent(Telemetry.SwitchToExistingKernel, undefined, {
-                language: this.computeLanguage(selection.kernelModel.language)
-            });
+            sendNotebookOrKernelLanguageTelemetry(Telemetry.SwitchToExistingKernel, selection.kernelModel.language);
             // tslint:disable-next-line: no-any
             const interpreter =
                 selection.kernelModel && this.extensionChecker.isPythonExtensionInstalled
@@ -365,9 +364,7 @@ export class KernelSelector implements IKernelSelectionUsage {
                 kind: 'connectToLiveKernel'
             });
         } else if (selection.kernelSpec) {
-            sendTelemetryEvent(Telemetry.SwitchToExistingKernel, undefined, {
-                language: this.computeLanguage(selection.kernelSpec.language)
-            });
+            sendNotebookOrKernelLanguageTelemetry(Telemetry.SwitchToExistingKernel, selection.kernelSpec.language);
             const interpreter =
                 selection.kernelSpec && this.extensionChecker.isPythonExtensionInstalled
                     ? await this.kernelService.findMatchingInterpreter(selection.kernelSpec, cancelToken)
@@ -702,12 +699,5 @@ export class KernelSelector implements IKernelSelectionUsage {
         if (kernelSpec) {
             return { kind: 'startUsingKernelSpec', kernelSpec, interpreter };
         }
-    }
-
-    private computeLanguage(language: string | undefined): string {
-        if (language && KnownNotebookLanguages.includes(language.toLowerCase())) {
-            return language;
-        }
-        return 'unknown';
     }
 }
