@@ -26,16 +26,17 @@ export class MigrateDataScienceSettingsService implements IExtensionActivationSe
     ) {}
 
     public async activate(resource: Resource): Promise<void> {
-        this.updateSettings(resource).ignoreErrors();
+        await this.updateSettings(resource);
     }
 
     @swallowExceptions('Failed to update settings.json')
-    public async fixSettingInFile(filePath: string): Promise<string> {
+    private async fixSettingsFile(filePath: string) {
         let fileContents = await this.fs.readLocalFile(filePath);
         const errors: ParseError[] = [];
         const content = parse(fileContents, errors, { allowTrailingComma: true, disallowComments: false });
         if (errors.length > 0) {
             traceError('JSONC parser returned ParseError codes', errors);
+            return;
         }
 
         // Find all of the python.datascience entries
@@ -64,6 +65,12 @@ export class MigrateDataScienceSettingsService implements IExtensionActivationSe
                 k = 'xxxxxx.dataScience.jupyterServerType';
             }
 
+            // If the value contains references to python.dataScience.* commands, migrate those too
+            if (typeof val === 'string') {
+                // There may be multiple occurrences of commands in the object value
+                val = val.replace(/python\.dataScience\./gi, 'jupyter.');
+            }
+
             // Update the new value
             fileContents = applyEdits(
                 fileContents,
@@ -72,13 +79,38 @@ export class MigrateDataScienceSettingsService implements IExtensionActivationSe
         });
 
         await this.fs.writeLocalFile(filePath, fileContents);
-        return fileContents;
+    }
+
+    // Users may have mapped old python.dataScience.* commands to custom keybindings
+    // in their user keybindings.json. Ensure we migrate these too.
+    private async fixKeybindingsFile(filePath: string) {
+        const fileContents = await this.fs.readLocalFile(filePath);
+        const errors: ParseError[] = [];
+        const keybindings = parse(fileContents, errors, { allowTrailingComma: true, disallowComments: false });
+        if (errors.length > 0) {
+            traceError('JSONC parser returned ParseError codes', errors);
+            return;
+        }
+        if (!Array.isArray(keybindings)) {
+            return;
+        }
+        keybindings.forEach((keybinding) => {
+            if (typeof keybinding.command === 'string') {
+                keybinding.command = keybinding.command.replace('python.dataScience.', 'jupyter.');
+            }
+        });
+        const migratedKeybindings = JSON.stringify(keybindings, undefined, 4);
+        await this.fs.writeLocalFile(filePath, migratedKeybindings);
     }
 
     @traceDecorators.error('Failed to update test settings')
     private async updateSettings(resource: Resource): Promise<void> {
-        const filesToBeFixed = await this.getFilesToBeFixed(resource);
-        await Promise.all(filesToBeFixed.map((file) => this.fixSettingInFile(file)));
+        const filesToBeFixed = (await this.getFilesToBeFixed(resource)).map((file) => this.fixSettingsFile(file));
+        const userCustomKeybindingsFile = this.application.userCustomKeybindingsFile;
+        if (userCustomKeybindingsFile) {
+            filesToBeFixed.push(this.fixKeybindingsFile(userCustomKeybindingsFile));
+        }
+        await Promise.all(filesToBeFixed);
     }
 
     private getSettingsFiles(resource: Resource): string[] {
@@ -87,7 +119,7 @@ export class MigrateDataScienceSettingsService implements IExtensionActivationSe
             settingsFiles.push(this.application.userSettingsFile);
         }
         const workspaceFolder = this.workspace.getWorkspaceFolder(resource);
-        if (workspaceFolder) {
+        if (workspaceFolder && workspaceFolder.uri) {
             settingsFiles.push(path.join(workspaceFolder.uri.fsPath, '.vscode', 'settings.json'));
         }
         return settingsFiles;
@@ -108,7 +140,7 @@ export class MigrateDataScienceSettingsService implements IExtensionActivationSe
         try {
             if (await this.fs.localFileExists(filePath)) {
                 const contents = await this.fs.readLocalFile(filePath);
-                return contents.indexOf('python.dataScience') > 0;
+                return contents.indexOf('python.dataScience.') > 0;
             } else {
                 return false;
             }

@@ -41,6 +41,28 @@ export class ApplicationEnvironment implements IApplicationEnvironment {
                 return;
         }
     }
+    public get userCustomKeybindingsFile(): string | undefined {
+        const vscodeFolderName = this.channel === 'insiders' ? 'Code - Insiders' : 'Code';
+        switch (this.platform.osType) {
+            case OSType.OSX:
+                return path.join(
+                    this.pathUtils.home,
+                    'Library',
+                    'Application Support',
+                    vscodeFolderName,
+                    'User',
+                    'keybindings.json'
+                );
+            case OSType.Linux:
+                return path.join(this.pathUtils.home, '.config', vscodeFolderName, 'User', 'keybindings.json');
+            case OSType.Windows:
+                return process.env.APPDATA
+                    ? path.join(process.env.APPDATA, vscodeFolderName, 'User', 'keybindings.json')
+                    : undefined;
+            default:
+                return;
+        }
+    }
     public get appName(): string {
         return vscode.env.appName;
     }
