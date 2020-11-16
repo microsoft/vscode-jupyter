@@ -249,7 +249,9 @@ export class KernelSelector implements IKernelSelectionUsage {
         cancelToken?: CancellationToken
     ): Promise<KernelConnectionMetadata | undefined> {
         const [interpreter, specs, sessions] = await Promise.all([
-            this.interpreterService.getActiveInterpreter(resource),
+            this.extensionChecker.isPythonExtensionInstalled
+                ? this.interpreterService.getActiveInterpreter(resource)
+                : Promise.resolve(undefined),
             this.kernelService.getKernelSpecs(sessionManager, cancelToken),
             sessionManager?.getRunningSessions()
         ]);
@@ -353,9 +355,10 @@ export class KernelSelector implements IKernelSelectionUsage {
                 language: this.computeLanguage(selection.kernelModel.language)
             });
             // tslint:disable-next-line: no-any
-            const interpreter = selection.kernelModel
-                ? await this.kernelService.findMatchingInterpreter(selection.kernelModel, cancelToken)
-                : undefined;
+            const interpreter =
+                selection.kernelModel && this.extensionChecker.isPythonExtensionInstalled
+                    ? await this.kernelService.findMatchingInterpreter(selection.kernelModel, cancelToken)
+                    : undefined;
             return cloneDeep({
                 interpreter,
                 kernelModel: selection.kernelModel,

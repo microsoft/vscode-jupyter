@@ -7,6 +7,7 @@ import * as os from 'os';
 import * as vscode from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
+import { IPythonExtensionChecker } from '../../../api/types';
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../../common/application/types';
 import { isTestExecution } from '../../../common/constants';
 import { traceInfo } from '../../../common/logger';
@@ -62,7 +63,8 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
         private readonly kernelSelector: KernelSelector,
         private readonly interpreterService: IInterpreterService,
         outputChannel: IOutputChannel,
-        private readonly progressReporter: ProgressReporter
+        private readonly progressReporter: ProgressReporter,
+        private readonly extensionChecker: IPythonExtensionChecker
     ) {
         super(
             liveShare,
@@ -300,7 +302,9 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
         };
 
         // Determine the interpreter for our resource. If different, we need a different kernel.
-        const resourceInterpreter = await this.interpreterService.getActiveInterpreter(resource);
+        const resourceInterpreter = this.extensionChecker.isPythonExtensionInstalled
+            ? await this.interpreterService.getActiveInterpreter(resource)
+            : undefined;
 
         // Find a kernel that can be used.
         // Do this only if kernel information has been provided in the metadata, or the resource's interpreter is different.

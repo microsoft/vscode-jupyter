@@ -823,29 +823,33 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
             const deferred = createDeferred<boolean>();
             this.addSysInfoPromise = deferred;
 
-            // Generate a new sys info cell and send it to the web panel.
-            const sysInfo = await this.generateSysInfoCell(reason);
-            if (sysInfo) {
-                this.sendCellsToWebView([sysInfo]);
-            }
+            try {
+                // Generate a new sys info cell and send it to the web panel.
+                const sysInfo = await this.generateSysInfoCell(reason);
+                if (sysInfo) {
+                    this.sendCellsToWebView([sysInfo]);
+                }
 
-            // For anything but start, tell the other sides of a live share session
-            if (reason !== SysInfoReason.Start && sysInfo) {
-                this.shareMessage(InteractiveWindowMessages.AddedSysInfo, {
-                    type: reason,
-                    sysInfoCell: sysInfo,
-                    id: this.id,
-                    notebookIdentity: this.notebookIdentity.resource
-                });
-            }
+                // For anything but start, tell the other sides of a live share session
+                if (reason !== SysInfoReason.Start && sysInfo) {
+                    this.shareMessage(InteractiveWindowMessages.AddedSysInfo, {
+                        type: reason,
+                        sysInfoCell: sysInfo,
+                        id: this.id,
+                        notebookIdentity: this.notebookIdentity.resource
+                    });
+                }
 
-            // For a restart, tell our window to reset
-            if (reason === SysInfoReason.Restart || reason === SysInfoReason.New) {
-                this.postMessage(InteractiveWindowMessages.RestartKernel).ignoreErrors();
-            }
+                // For a restart, tell our window to reset
+                if (reason === SysInfoReason.Restart || reason === SysInfoReason.New) {
+                    this.postMessage(InteractiveWindowMessages.RestartKernel).ignoreErrors();
+                }
 
-            traceInfo(`Sys info for ${this.id} ${reason} complete`);
-            deferred.resolve(true);
+                traceInfo(`Sys info for ${this.id} ${reason} complete`);
+                deferred.resolve(true);
+            } catch (e) {
+                deferred.reject(e);
+            }
         } else if (this.addSysInfoPromise) {
             traceInfo(`Wait for sys info for ${this.id} ${reason}`);
             await this.addSysInfoPromise.promise;
@@ -1368,11 +1372,13 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         }
     }
 
+    // tslint:disable-next-line: no-suspicious-comment
+    // TODO: Allow other kernels to support this information. Right now it just skips this for other kernels.
     private generateSysInfoCell = async (reason: SysInfoReason): Promise<ICell | undefined> => {
         // Execute the code 'import sys\r\nsys.version' and 'import sys\r\nsys.executable' to get our
         // version and executable
         if (this._notebook) {
-            const message = await this.generateSysInfoMessage(reason);
+            const message = this.getSysInfoReasonHeader(reason, this._notebook.getKernelConnection());
 
             // The server handles getting this data.
             const sysInfo = await this._notebook.getSysInfo();
@@ -1397,22 +1403,22 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         }
     };
 
-    private async generateSysInfoMessage(reason: SysInfoReason): Promise<string> {
+    private getSysInfoReasonHeader(reason: SysInfoReason, connection: KernelConnectionMetadata | undefined): string {
+        const displayName = getDisplayNameOrNameOfKernelConnection(connection);
         switch (reason) {
             case SysInfoReason.Start:
-                return localize.DataScience.pythonVersionHeader();
+            case SysInfoReason.New:
+                return localize.DataScience.startedNewKernelHeader().format(displayName);
                 break;
             case SysInfoReason.Restart:
-                return localize.DataScience.pythonRestartHeader();
+                return localize.DataScience.restartedKernelHeader().format(displayName);
                 break;
             case SysInfoReason.Interrupt:
                 return localize.DataScience.pythonInterruptFailedHeader();
                 break;
-            case SysInfoReason.New:
-                return localize.DataScience.pythonNewHeader();
                 break;
             case SysInfoReason.Connect:
-                return localize.DataScience.pythonConnectHeader();
+                return localize.DataScience.connectKernelHeader().format(displayName);
                 break;
             default:
                 traceError('Invalid SysInfoReason');

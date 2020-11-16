@@ -9,9 +9,9 @@ import { ServerStatus } from '../../../datascience-ui/interactive-common/mainSta
 import { IPythonExtensionChecker } from '../../api/types';
 import { IWorkspaceService } from '../../common/application/types';
 import { traceWarning } from '../../common/logger';
-import { IDisposableRegistry, Resource } from '../../common/types';
+import { IConfigurationService, IDisposableRegistry, Resource } from '../../common/types';
 import { noop } from '../../common/utils/misc';
-import { Identifiers } from '../constants';
+import { Identifiers, Settings } from '../constants';
 import { KernelConnectionMetadata } from '../jupyter/kernels/types';
 import {
     ConnectNotebookProviderOptions,
@@ -45,7 +45,8 @@ export class NotebookProvider implements INotebookProvider {
         @inject(IRawNotebookProvider) private readonly rawNotebookProvider: IRawNotebookProvider,
         @inject(IJupyterNotebookProvider) private readonly jupyterNotebookProvider: IJupyterNotebookProvider,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
-        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker
+        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
+        @inject(IConfigurationService) private readonly configService: IConfigurationService
     ) {
         this.rawNotebookProvider
             .supported()
@@ -74,13 +75,19 @@ export class NotebookProvider implements INotebookProvider {
 
     // Attempt to connect to our server provider, and if we do, return the connection info
     public async connect(options: ConnectNotebookProviderOptions): Promise<INotebookProviderConnection | undefined> {
+        const settings = this.configService.getSettings(undefined);
+        const serverType: string | undefined = settings.jupyterServerType;
+
         // Connect to either a jupyter server or a stubbed out raw notebook "connection"
         if (await this.rawNotebookProvider.supported()) {
             return this.rawNotebookProvider.connect({
                 ...options,
                 onConnectionMade: this.fireConnectionMade.bind(this)
             });
-        } else if (this.extensionChecker.isPythonExtensionInstalled) {
+        } else if (
+            this.extensionChecker.isPythonExtensionInstalled ||
+            serverType === Settings.JupyterServerRemoteLaunch
+        ) {
             return this.jupyterNotebookProvider.connect({
                 ...options,
                 onConnectionMade: this.fireConnectionMade.bind(this)

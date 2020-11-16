@@ -25,7 +25,7 @@ export class RawConnection implements IRawConnection {
     public readonly type = 'raw';
     public readonly localLaunch = true;
     public readonly valid = true;
-    public readonly displayName = localize.DataScience.rawConnectionDisplayName();
+    public readonly displayName = '';
     private eventEmitter: EventEmitter<number> = new EventEmitter<number>();
 
     public dispose() {
