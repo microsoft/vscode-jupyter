@@ -107,7 +107,7 @@ export class MigrateDataScienceSettingsService implements IExtensionActivationSe
     private async updateSettings(resource: Resource): Promise<void> {
         const filesToBeFixed = (await this.getFilesToBeFixed(resource)).map((file) => this.fixSettingsFile(file));
         const userCustomKeybindingsFile = this.application.userCustomKeybindingsFile;
-        if (userCustomKeybindingsFile) {
+        if (userCustomKeybindingsFile && (await this.fs.localFileExists(userCustomKeybindingsFile))) {
             filesToBeFixed.push(this.fixKeybindingsFile(userCustomKeybindingsFile));
         }
         await Promise.all(filesToBeFixed);
