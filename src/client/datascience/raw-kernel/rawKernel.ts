@@ -149,48 +149,9 @@ export class RawKernel implements Kernel.IKernel {
         throw new Error('Reconnect is not supported.');
     }
     public async interrupt(): Promise<void> {
-        if (
-            this.kernelProcess.kernelConnectionMetadata.kind === 'startUsingKernelSpec' &&
-            this.kernelProcess.kernelConnectionMetadata.kernelSpec.interrupt_mode === 'message'
-        ) {
-            const defaults = {
-                silent: true,
-                store_history: false,
-                user_expressions: {},
-                allow_stdin: false,
-                stop_on_error: true
-            };
-            const msg = KernelMessage.createMessage({
-                msgType: 'interrupt_request' as any,
-                channel: 'control',
-                username: this.realKernel.username,
-                session: this.realKernel.clientId,
-                content: defaults
-            } as any);
-
-            await new Promise<void>((resolve) => {
-                try {
-                    const resp = this.realKernel.sendControlMessage(msg as any);
-                    resp.done
-                        .then((result) => {
-                            // tslint:disable-next-line: no-console
-                            console.log(result);
-                            resolve();
-                        })
-                        .catch((ex) => {
-                            // tslint:disable-next-line: no-console
-                            console.log(ex);
-                        });
-                } catch (ex) {
-                    // tslint:disable-next-line: no-console
-                    console.error(ex);
-                }
-            });
-        } else {
-            // Send this directly to our kernel process. Don't send it through the real kernel. The
-            // real kernel will send a goofy API request to the websocket.
-            return this.kernelProcess.interrupt();
-        }
+        // Send this directly to our kernel process. Don't send it through the real kernel. The
+        // real kernel will send a goofy API request to the websocket.
+        return this.kernelProcess.interrupt();
     }
     public restart(): Promise<void> {
         throw new Error('This method should not be called. Restart is implemented at a higher level');
