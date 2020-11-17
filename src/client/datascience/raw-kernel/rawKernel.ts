@@ -1,8 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import type { Kernel, KernelMessage, ServerConnection } from '@jupyterlab/services';
+import { Kernel, KernelMessage, ServerConnection } from '@jupyterlab/services';
+// tslint:disable: no-any no-require-imports
+import cloneDeep = require('lodash/cloneDeep');
 import * as uuid from 'uuid/v4';
 import { isTestExecution } from '../../common/constants';
+import { traceError } from '../../common/logger';
 import { IDisposable } from '../../common/types';
 import { swallowExceptions } from '../../common/utils/misc';
 import { getNameOfKernelConnection } from '../jupyter/kernels/helpers';
@@ -10,7 +13,6 @@ import { IKernelProcess } from '../kernel-launcher/types';
 import { IWebSocketLike } from '../kernelSocketWrapper';
 import { IKernelSocket } from '../types';
 import { RawSocket } from './rawSocket';
-// tslint:disable: no-any no-require-imports
 
 export function suppressShutdownErrors(realKernel: any) {
     // When running under a test, mark all futures as done so we
@@ -111,7 +113,16 @@ export class RawKernel implements Kernel.IKernel {
         await this.kernelProcess.dispose();
         this.socket.dispose();
     }
-    public getSpec(): Promise<Kernel.ISpecModel> {
+    public async getSpec(): Promise<Kernel.ISpecModel> {
+        if (this.kernelProcess.kernelConnectionMetadata.kind === 'startUsingKernelSpec') {
+            const kernelSpec = cloneDeep(this.kernelProcess.kernelConnectionMetadata.kernelSpec) as any;
+            const resources = 'resources' in kernelSpec ? kernelSpec.resources : {};
+            return {
+                ...kernelSpec,
+                resources
+            };
+        }
+        traceError('Fetching kernel spec from raw kernel using JLab API');
         return this.realKernel.getSpec();
     }
     public sendShellMessage<T extends KernelMessage.ShellMessageType>(
@@ -137,10 +148,49 @@ export class RawKernel implements Kernel.IKernel {
     public reconnect(): Promise<void> {
         throw new Error('Reconnect is not supported.');
     }
-    public interrupt(): Promise<void> {
-        // Send this directly to our kernel process. Don't send it through the real kernel. The
-        // real kernel will send a goofy API request to the websocket.
-        return this.kernelProcess.interrupt();
+    public async interrupt(): Promise<void> {
+        if (
+            this.kernelProcess.kernelConnectionMetadata.kind === 'startUsingKernelSpec' &&
+            this.kernelProcess.kernelConnectionMetadata.kernelSpec.interrupt_mode === 'message'
+        ) {
+            const defaults = {
+                silent: true,
+                store_history: false,
+                user_expressions: {},
+                allow_stdin: false,
+                stop_on_error: true
+            };
+            const msg = KernelMessage.createMessage({
+                msgType: 'interrupt_request' as any,
+                channel: 'control',
+                username: this.realKernel.username,
+                session: this.realKernel.clientId,
+                content: defaults
+            } as any);
+
+            await new Promise<void>((resolve) => {
+                try {
+                    const resp = this.realKernel.sendControlMessage(msg as any);
+                    resp.done
+                        .then((result) => {
+                            // tslint:disable-next-line: no-console
+                            console.log(result);
+                            resolve();
+                        })
+                        .catch((ex) => {
+                            // tslint:disable-next-line: no-console
+                            console.log(ex);
+                        });
+                } catch (ex) {
+                    // tslint:disable-next-line: no-console
+                    console.error(ex);
+                }
+            });
+        } else {
+            // Send this directly to our kernel process. Don't send it through the real kernel. The
+            // real kernel will send a goofy API request to the websocket.
+            return this.kernelProcess.interrupt();
+        }
     }
     public restart(): Promise<void> {
         throw new Error('This method should not be called. Restart is implemented at a higher level');
