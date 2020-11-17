@@ -36,4 +36,11 @@ export class MockFileSystem extends FileSystem {
     private getFileKey(filePath: string): string {
         return filePath.toLowerCase();
     }
+    public async localFileExists(filePath: string) {
+        const exists = this.contentOverloads.has(this.getFileKey(filePath));
+        if (exists) {
+            return exists;
+        }
+        return super.localFileExists(filePath);
+    }
 }
