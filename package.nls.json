@@ -218,6 +218,7 @@
     "DataScienceSurveyBanner.bannerMessage": "Can you please take 2 minutes to tell us how the Python Data Science features are working for you?",
     "DataScienceSurveyBanner.bannerLabelYes": "Yes, take survey now",
     "DataScienceSurveyBanner.bannerLabelNo": "No, thanks",
+    "InsidersNativeNotebooksSurveyBanner.bannerMessage": "Can you please take a minute to tell us about your notebooks experience in VS Code?",
     "InteractiveShiftEnterBanner.bannerMessage": "Would you like to run code in the 'Interactive' window (an IPython console) for 'shift-enter'? Select 'No' to continue to run code in the Python Terminal. This can be changed later in settings.",
     "DataScience.restartingKernelStatus": "Restarting Jupyter Kernel",
     "DataScience.executingCode": "Executing Cell",
