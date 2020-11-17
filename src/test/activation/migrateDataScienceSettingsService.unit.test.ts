@@ -1,9 +1,11 @@
 import { assert } from 'chai';
-import { anyString, instance, mock, when } from 'ts-mockito';
+import { anyString, anything, instance, mock, when } from 'ts-mockito';
 import { MigrateDataScienceSettingsService } from '../../client/activation/migrateDataScienceSettingsService';
 import { ApplicationEnvironment } from '../../client/common/application/applicationEnvironment';
 import { IApplicationEnvironment, IWorkspaceService } from '../../client/common/application/types';
 import { WorkspaceService } from '../../client/common/application/workspace';
+import { PersistentStateFactory, PersistentState } from '../../client/common/persistentState';
+import { IPersistentStateFactory } from '../../client/common/types';
 import { JupyterServerUriStorage } from '../../client/datascience/jupyter/serverUriStorage';
 import { IJupyterServerUriStorage } from '../../client/datascience/types';
 import { MockFileSystem } from '../datascience/mockFileSystem';
@@ -14,10 +16,12 @@ suite('Migrate data science settings', () => {
     let application: IApplicationEnvironment;
     let updateDataScienceSettingsService: MigrateDataScienceSettingsService;
     let uriStorage: IJupyterServerUriStorage;
+    let persistentStateFactory: IPersistentStateFactory;
     let uriSet: string | undefined = undefined;
     const SETTINGS_FILEPATH = '/path/to/settings.json';
     const originalSettings = `{
     "python.dataScience.allowImportFromNotebook": true,
+    "jupyter.allowImportFromNotebook": true,
     "python.dataScience.alwaysTrustNotebooks": true,
     "python.dataScience.enabled": true,
     "python.dataScience.jupyterInterruptTimeout": 0,
@@ -78,12 +82,12 @@ suite('Migrate data science settings', () => {
 }`;
 
     const expectedMigratedSettings = `{
+    "jupyter.allowImportFromNotebook": true,
     "python.languageServer": "Pylance",
     "python.linting.enabled": false,
     "python.experiments.optOutFrom": [
         "DeprecatePythonPath - experiment"
     ],
-    "jupyter.allowImportFromNotebook": true,
     "jupyter.alwaysTrustNotebooks": true,
     "jupyter.enabled": true,
     "jupyter.jupyterInterruptTimeout": 0,
@@ -167,15 +171,22 @@ suite('Migrate data science settings', () => {
         when(application.userCustomKeybindingsFile).thenReturn(KEYBINDINGS_FILEPATH);
         when(application.userSettingsFile).thenReturn(SETTINGS_FILEPATH);
         workspace = mock(WorkspaceService);
+        persistentStateFactory = mock(PersistentStateFactory);
+        const persistentState = mock(PersistentState);
+        when(persistentState.value).thenReturn(false);
+        when(persistentState.updateValue(anything())).thenResolve();
+        when(persistentStateFactory.createGlobalPersistentState(anything(), anything())).thenReturn(instance(persistentState));
         uriStorage = mock(JupyterServerUriStorage);
         when(uriStorage.setUri(anyString())).thenCall((a) => {
             uriSet = a;
             return Promise.resolve();
         });
+
         updateDataScienceSettingsService = new MigrateDataScienceSettingsService(
             fs,
             instance(application),
             workspace,
+            instance(persistentStateFactory),
             instance(uriStorage)
         );
     });
