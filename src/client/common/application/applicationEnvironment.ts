@@ -8,7 +8,7 @@ import * as path from 'path';
 import { parse } from 'semver';
 import * as vscode from 'vscode';
 import { IPlatformService } from '../platform/types';
-import { IPathUtils } from '../types';
+import { IExtensionContext, IPathUtils } from '../types';
 import { OSType } from '../utils/platform';
 import { Channel, IApplicationEnvironment } from './types';
 
@@ -16,7 +16,8 @@ import { Channel, IApplicationEnvironment } from './types';
 export class ApplicationEnvironment implements IApplicationEnvironment {
     constructor(
         @inject(IPlatformService) private readonly platform: IPlatformService,
-        @inject(IPathUtils) private readonly pathUtils: IPathUtils
+        @inject(IPathUtils) private readonly pathUtils: IPathUtils,
+        @inject(IExtensionContext) private readonly extensionContext: IExtensionContext
     ) {}
 
     public get userSettingsFile(): string | undefined {
@@ -42,26 +43,7 @@ export class ApplicationEnvironment implements IApplicationEnvironment {
         }
     }
     public get userCustomKeybindingsFile(): string | undefined {
-        const vscodeFolderName = this.channel === 'insiders' ? 'Code - Insiders' : 'Code';
-        switch (this.platform.osType) {
-            case OSType.OSX:
-                return path.join(
-                    this.pathUtils.home,
-                    'Library',
-                    'Application Support',
-                    vscodeFolderName,
-                    'User',
-                    'keybindings.json'
-                );
-            case OSType.Linux:
-                return path.join(this.pathUtils.home, '.config', vscodeFolderName, 'User', 'keybindings.json');
-            case OSType.Windows:
-                return process.env.APPDATA
-                    ? path.join(process.env.APPDATA, vscodeFolderName, 'User', 'keybindings.json')
-                    : undefined;
-            default:
-                return;
-        }
+        return path.resolve(path.join(this.extensionContext.globalStoragePath, '..', '..', 'keybindings.json'));
     }
     public get appName(): string {
         return vscode.env.appName;
