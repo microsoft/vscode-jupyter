@@ -453,24 +453,19 @@ export class JupyterNotebookBase implements INotebook {
     }
 
     public async getSysInfo(): Promise<ICell> {
-        // tslint:disable-next-line:no-multiline-string
-        const versionCells = await this.executeSilently(`import sys\r\nsys.version`);
-        // tslint:disable-next-line:no-multiline-string
-        const pathCells = await this.executeSilently(`import sys\r\nsys.executable`);
-        // tslint:disable-next-line:no-multiline-string
-        const notebookVersionCells = await this.executeSilently(`import notebook\r\nnotebook.version_info`);
+        const info = await this.requestKernelInfo();
 
-        // Both should have streamed output
-        const version = versionCells.length > 0 ? this.extractStreamOutput(versionCells[0]).trimQuotes() : '';
-        const notebookVersion =
-            notebookVersionCells.length > 0 ? this.extractStreamOutput(notebookVersionCells[0]).trimQuotes() : '';
-        const pythonPath = versionCells.length > 0 ? this.extractStreamOutput(pathCells[0]).trimQuotes() : '';
+        // Gather up help links and the banner
+        const content = info.content as KernelMessage.IInfoReply;
+        const messages = [content.banner];
 
-        // Combine this data together to make our sys info
+        // Skip help links for now. Too wordy and not clickable. Can add this later
+        // content.help_links.forEach((h) => messages.push(`${h.text} : ${h.url}`));
+
         return {
             data: {
                 cell_type: 'messages',
-                messages: [version, notebookVersion, pythonPath],
+                messages: messages,
                 metadata: {},
                 source: []
             },
@@ -811,29 +806,6 @@ export class JupyterNotebookBase implements INotebook {
         // Wait for the execution to finish
         return deferred.promise;
     }
-
-    private extractStreamOutput(cell: ICell): string {
-        let result = '';
-        if (cell.state === CellState.error || cell.state === CellState.finished) {
-            const outputs = cell.data.outputs as nbformat.IOutput[];
-            if (outputs) {
-                outputs.forEach((o) => {
-                    if (o.output_type === 'stream') {
-                        const stream = o as nbformat.IStream;
-                        result = result.concat(formatStreamText(concatMultilineString(stream.text, true)));
-                    } else {
-                        const data = o.data;
-                        if (data && data.hasOwnProperty('text/plain')) {
-                            // tslint:disable-next-line:no-any
-                            result = result.concat((data as any)['text/plain']);
-                        }
-                    }
-                });
-            }
-        }
-        return result;
-    }
-
     private executeObservableImpl(
         code: string,
         file: string,

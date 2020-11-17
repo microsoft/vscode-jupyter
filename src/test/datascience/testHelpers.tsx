@@ -69,7 +69,7 @@ export function runDoubleTest(
 
 export function runInteractiveTest(
     name: string,
-    testFunc: () => Promise<void>,
+    testFunc: (c?: Mocha.Context) => Promise<void>,
     getIOC: () => Promise<DataScienceIocContainer>
 ) {
     // Run the test with just the interactive window

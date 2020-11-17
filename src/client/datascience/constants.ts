@@ -18,6 +18,14 @@ export const KernelLauncherDaemonModule = 'vscode_datascience_helpers.kernel_lau
 export const PythonExtension = 'ms-python.python';
 
 // List of 'language' names that we know about. All should be lower case as that's how we compare.
+export const KnownKernelLanguageAliases = new Map<string, string>([
+    ['qsharp', 'q#'],
+    ['csharp', 'c#'],
+    ['fsharp', 'f#'],
+    ['c++11', 'c++'],
+    ['c++12', 'c++'],
+    ['c++14', 'c++']
+]);
 export const KnownNotebookLanguages: string[] = [
     'python',
     'r',
@@ -25,11 +33,16 @@ export const KnownNotebookLanguages: string[] = [
     'c++',
     'c#',
     'f#',
+    'q#',
+    'powershell',
+    'java',
     'scala',
     'haskell',
     'bash',
     'cling',
-    'sas'
+    'rust',
+    'sas',
+    'sos'
 ];
 
 export namespace Commands {

@@ -12,8 +12,8 @@ import { isFileNotFoundError } from '../../common/platform/errors';
 import { IFileSystem } from '../../common/platform/types';
 import { GLOBAL_MEMENTO, ICryptoUtils, IExtensionContext, IMemento, WORKSPACE_MEMENTO } from '../../common/types';
 import { isUntitledFile, noop } from '../../common/utils/misc';
-import { sendTelemetryEvent } from '../../telemetry';
-import { Identifiers, KnownNotebookLanguages, Telemetry } from '../constants';
+import { sendNotebookOrKernelLanguageTelemetry } from '../common';
+import { Identifiers, Telemetry } from '../constants';
 import { InvalidNotebookFileError } from '../jupyter/invalidNotebookFileError';
 import { INotebookModelFactory } from '../notebookStorage/types';
 import {
@@ -238,12 +238,7 @@ export class NativeEditorStorage implements INotebookStorage {
             } else if (notebookJson.metadata?.kernelspec?.language) {
                 language = notebookJson.metadata?.kernelspec?.language.toString();
             }
-            if (language && !KnownNotebookLanguages.includes(language.toLowerCase())) {
-                language = 'unknown';
-            }
-            if (language) {
-                sendTelemetryEvent(Telemetry.NotebookLanguage, undefined, { language });
-            }
+            sendNotebookOrKernelLanguageTelemetry(Telemetry.NotebookLanguage, language);
         } catch {
             // If this fails, doesn't really matter
             noop();
