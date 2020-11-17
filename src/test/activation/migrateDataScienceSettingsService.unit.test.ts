@@ -175,7 +175,9 @@ suite('Migrate data science settings', () => {
         const persistentState = mock(PersistentState);
         when(persistentState.value).thenReturn(false);
         when(persistentState.updateValue(anything())).thenResolve();
-        when(persistentStateFactory.createGlobalPersistentState(anything(), anything())).thenReturn(instance(persistentState));
+        when(persistentStateFactory.createGlobalPersistentState(anything(), anything())).thenReturn(
+            instance(persistentState)
+        );
         uriStorage = mock(JupyterServerUriStorage);
         when(uriStorage.setUri(anyString())).thenCall((a) => {
             uriSet = a;
