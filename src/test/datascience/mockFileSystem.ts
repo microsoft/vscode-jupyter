@@ -36,7 +36,4 @@ export class MockFileSystem extends FileSystem {
     private getFileKey(filePath: string): string {
         return filePath.toLowerCase();
     }
-    public async localFileExists(filePath: string) {
-        return this.contentOverloads.has(this.getFileKey(filePath));
-    }
 }
