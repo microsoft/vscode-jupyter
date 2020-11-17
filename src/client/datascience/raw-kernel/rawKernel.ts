@@ -148,7 +148,7 @@ export class RawKernel implements Kernel.IKernel {
     public reconnect(): Promise<void> {
         throw new Error('Reconnect is not supported.');
     }
-    public async interrupt(): Promise<void> {
+    public interrupt(): Promise<void> {
         // Send this directly to our kernel process. Don't send it through the real kernel. The
         // real kernel will send a goofy API request to the websocket.
         return this.kernelProcess.interrupt();
