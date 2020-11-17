@@ -9,7 +9,9 @@ import { expect } from 'chai';
 import { instance, mock, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import { EventEmitter } from 'vscode';
+import { NotebookDocument } from '../../../types/vscode-proposed';
 import { ApplicationEnvironment } from '../../client/common/application/applicationEnvironment';
+import { VSCodeNotebook } from '../../client/common/application/notebook';
 import { IApplicationShell } from '../../client/common/application/types';
 import { Experiments } from '../../client/common/experiments/groups';
 import { ExperimentService } from '../../client/common/experiments/service';
@@ -18,8 +20,6 @@ import {
     InsidersNativeNotebooksSurveyBanner,
     InsidersNotebookSurveyStateKeys
 } from '../../client/datascience/insidersNativeNotebookSurveyBanner';
-import { NativeEditorProvider } from '../../client/datascience/notebookStorage/nativeEditorProvider';
-import { INotebookEditor } from '../../client/datascience/types';
 
 suite('Insiders Notebook Survey Banner', () => {
     let appShell: typemoq.IMock<IApplicationShell>;
@@ -181,10 +181,10 @@ function preparePopup(
         IPersistentState<number>
     >();
     const openCountState: typemoq.IMock<IPersistentState<number>> = typemoq.Mock.ofType<IPersistentState<number>>();
-    const provider = mock(NativeEditorProvider);
+    const provider = mock(VSCodeNotebook);
     (instance(provider) as any).then = undefined;
-    const openedEventEmitter = new EventEmitter<INotebookEditor>();
-    when(provider.onDidOpenNotebookEditor).thenReturn(openedEventEmitter.event);
+    const openedEventEmitter = new EventEmitter<NotebookDocument>();
+    when(provider.onDidOpenNotebookDocument).thenReturn(openedEventEmitter.event);
     const applicationEnvironment = mock(ApplicationEnvironment);
     when(applicationEnvironment.channel).thenReturn(channel);
     const experimentService = mock(ExperimentService);

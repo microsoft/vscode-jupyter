@@ -1,10 +1,9 @@
 import { inject, injectable } from 'inversify';
 import { env, UIKind } from 'vscode';
-import { IApplicationEnvironment, IApplicationShell } from '../common/application/types';
+import { IApplicationEnvironment, IApplicationShell, IVSCodeNotebook } from '../common/application/types';
 import { Experiments } from '../common/experiments/groups';
 import { IBrowserService, IExperimentService, IJupyterExtensionBanner, IPersistentStateFactory } from '../common/types';
 import * as localize from '../common/utils/localize';
-import { INotebookEditorProvider } from './types';
 
 export enum InsidersNotebookSurveyStateKeys {
     ShowBanner = 'ShowInsidersNotebookSurveyBanner',
@@ -40,13 +39,13 @@ export class InsidersNativeNotebooksSurveyBanner implements IJupyterExtensionBan
         @inject(IApplicationShell) private appShell: IApplicationShell,
         @inject(IPersistentStateFactory) private persistentState: IPersistentStateFactory,
         @inject(IBrowserService) private browserService: IBrowserService,
-        @inject(INotebookEditorProvider) editorProvider: INotebookEditorProvider,
+        @inject(IVSCodeNotebook) vscodeNotebook: IVSCodeNotebook,
         @inject(IExperimentService) private experimentService: IExperimentService,
         @inject(IApplicationEnvironment) private applicationEnvironment: IApplicationEnvironment,
         surveyLink: string = 'https://aka.ms/vscjupyternb'
     ) {
         this.surveyLink = surveyLink;
-        editorProvider.onDidOpenNotebookEditor(this.openedNotebook.bind(this));
+        vscodeNotebook.onDidOpenNotebookDocument(this.openedNotebook.bind(this));
     }
 
     public async showBanner(): Promise<void> {
