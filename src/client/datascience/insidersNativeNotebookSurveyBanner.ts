@@ -39,13 +39,13 @@ export class InsidersNativeNotebooksSurveyBanner implements IJupyterExtensionBan
         @inject(IApplicationShell) private appShell: IApplicationShell,
         @inject(IPersistentStateFactory) private persistentState: IPersistentStateFactory,
         @inject(IBrowserService) private browserService: IBrowserService,
-        @inject(IVSCodeNotebook) editorProvider: IVSCodeNotebook,
+        @inject(IVSCodeNotebook) vscodeNotebook: IVSCodeNotebook,
         @inject(IExperimentService) private experimentService: IExperimentService,
         @inject(IApplicationEnvironment) private applicationEnvironment: IApplicationEnvironment,
         surveyLink: string = 'https://aka.ms/vscjupyternb'
     ) {
         this.surveyLink = surveyLink;
-        editorProvider.onDidOpenNotebookDocument(this.openedNotebook.bind(this));
+        vscodeNotebook.onDidOpenNotebookDocument(this.openedNotebook.bind(this));
     }
 
     public async showBanner(): Promise<void> {
