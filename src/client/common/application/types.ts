@@ -997,6 +997,13 @@ export interface IApplicationEnvironment {
      */
     readonly userSettingsFile: string | undefined;
     /**
+     * Gets the full path to the user custom keybindings file. (may or may not exist).
+     *
+     * @type {string}
+     * @memberof IApplicationShell
+     */
+    readonly userCustomKeybindingsFile: string | undefined;
+    /**
      * The detected default shell for the extension host, this is overridden by the
      * `terminal.integrated.shell` setting for the extension host's platform.
      *
