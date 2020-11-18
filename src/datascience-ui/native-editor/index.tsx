@@ -13,8 +13,8 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
 
-import { WidgetManagerComponent } from '../ipywidgets/container';
 import { TextAreaFocusTracker } from '../interactive-common/textAreaFocusTracker';
+import { WidgetManagerComponent } from '../ipywidgets/container';
 import { IVsCodeApi, PostOffice } from '../react-common/postOffice';
 import { detectBaseTheme } from '../react-common/themeDetector';
 import { getConnectedNativeEditor } from './nativeEditor';
