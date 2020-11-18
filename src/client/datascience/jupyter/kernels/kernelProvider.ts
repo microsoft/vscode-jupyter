@@ -8,6 +8,7 @@ import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../../common/application/types';
 import { traceInfo, traceWarning } from '../../../common/logger';
+import { IFileSystem } from '../../../common/platform/types';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../../common/types';
 import {
     IDataScienceErrorHandler,
@@ -33,7 +34,8 @@ export class KernelProvider implements IKernelProvider {
         @inject(KernelSelector) private readonly kernelSelectionUsage: IKernelSelectionUsage,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
-        @inject(IRawNotebookSupportedService) private readonly rawNotebookSupported: IRawNotebookSupportedService
+        @inject(IRawNotebookSupportedService) private readonly rawNotebookSupported: IRawNotebookSupportedService,
+        @inject(IFileSystem) private readonly fs: IFileSystem
     ) {}
     public get(uri: Uri): IKernel | undefined {
         return this.kernelsByUri.get(uri.toString())?.kernel;
@@ -60,7 +62,8 @@ export class KernelProvider implements IKernelProvider {
             this.kernelSelectionUsage,
             this.appShell,
             this.vscNotebook,
-            this.rawNotebookSupported
+            this.rawNotebookSupported,
+            this.fs
         );
         this.asyncDisposables.push(kernel);
         this.kernelsByUri.set(uri.toString(), { options, kernel });

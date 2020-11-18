@@ -128,7 +128,8 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.ExportAsPythonScript]: [INotebookModel, PythonEnvironment | undefined];
     [DSCommands.ExportToHTML]: [INotebookModel, string | undefined, PythonEnvironment | undefined];
     [DSCommands.ExportToPDF]: [INotebookModel, string | undefined, PythonEnvironment | undefined];
-    [DSCommands.Export]: [Uri | INotebookModel, string | undefined, PythonEnvironment | undefined];
+    [DSCommands.Export]: [INotebookModel | undefined, string | undefined, PythonEnvironment | undefined];
+    [DSCommands.NativeNotebookExport]: [Uri];
     [DSCommands.SetJupyterKernel]: [KernelConnectionMetadata, Uri, undefined | Uri];
     [DSCommands.SwitchJupyterKernel]: [ISwitchKernelOptions | undefined];
     [DSCommands.SelectJupyterCommandLine]: [undefined | Uri];
