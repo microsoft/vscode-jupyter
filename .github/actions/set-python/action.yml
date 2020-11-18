@@ -5,7 +5,7 @@ inputs:
   PYTHON_VERSION:
      description: 'Version of python'
      required: true
-     default: ${{env.PYTHON_VERSION}}
+     default: python
 outputs:
   CI_PYTHON_PATH:
     description: 'Path to the python'
