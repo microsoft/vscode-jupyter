@@ -322,8 +322,8 @@ export class KernelFinder implements IKernelFinder {
             const secondPart = this.platformService.isMac ? macJupyterPath : linuxJupyterPath;
 
             paths.push(
-                path.join('usr', 'share', 'jupyter', 'kernels'),
-                path.join('usr', 'local', 'share', 'jupyter', 'kernels'),
+                path.join('/', 'usr', 'share', 'jupyter', 'kernels'),
+                path.join('/', 'usr', 'local', 'share', 'jupyter', 'kernels'),
                 path.join(this.pathUtils.home, secondPart)
             );
         }
