@@ -636,7 +636,7 @@ jobs:
       - name: refnapi
         run: npm uninstall ref-napi
 
-        - name: Run smoke tests
+      - name: Run smoke tests
         env:
           DISPLAY: 10
         uses: GabrielBB/xvfb-action@v1.4
