@@ -30,6 +30,7 @@ import { INotebookStorageProvider } from '../notebookStorage/notebookStorageProv
 import { INotebook, INotebookProvider, IRawNotebookSupportedService } from '../types';
 import {
     getNotebookMetadata,
+    isJupyterKernel,
     isJupyterNotebook,
     isPythonNotebook,
     updateKernelInfoInNotebookMetadata,
@@ -288,7 +289,7 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
             (this.notebook.activeNotebookEditor?.document === document
                 ? this.notebook.activeNotebookEditor
                 : undefined);
-        if (editor && editor.kernel && editor.kernel instanceof VSCodeNotebookKernelMetadata) {
+        if (editor && isJupyterKernel(editor.kernel)) {
             return editor.kernel.selection;
         }
         this.isRawNotebookSupported =
@@ -313,7 +314,7 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
         kernel: VSCNotebookKernel | undefined;
     }) {
         // We're only interested in our Jupyter Notebooks & our kernels.
-        if (!kernel || !(kernel instanceof VSCodeNotebookKernelMetadata) || !isJupyterNotebook(document)) {
+        if (!isJupyterKernel(kernel) || !isJupyterNotebook(document)) {
             return;
         }
         const selectedKernelConnectionMetadata = kernel.selection;
