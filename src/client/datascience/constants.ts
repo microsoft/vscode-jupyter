@@ -114,6 +114,7 @@ export namespace Commands {
     export const ExportToHTML = 'jupyter.exportToHTML';
     export const ExportToPDF = 'jupyter.exportToPDF';
     export const Export = 'jupyter.export';
+    export const NativeNotebookExport = 'jupyter.notebookeditor.export';
     export const SaveNotebookNonCustomEditor = 'jupyter.notebookeditor.save';
     export const SaveAsNotebookNonCustomEditor = 'jupyter.notebookeditor.saveAs';
     export const OpenNotebookNonCustomEditor = 'jupyter.notebookeditor.open';
