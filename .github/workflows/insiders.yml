@@ -125,6 +125,12 @@ jobs:
         with:
           python-version: ${{matrix.python}}
 
+      - name: Set CI Path
+        uses: ./.github/actions/set-python
+        id: set-python
+        with: 
+          PYTHON_VERSION: ${{env.PYTHON_VERSION}}
+
       - name: Run Black on Python code
         run: |
           python -m pip install -U black
