@@ -240,14 +240,14 @@ suite('Kernel Finder', () => {
                 .returns(() => Promise.resolve([path.join(interpreter1Kernel.name, 'kernel.json')]));
 
             // Global path setup
-            const globalPath = path.join('usr', 'share', 'jupyter', 'kernels');
+            const globalPath = path.join('/', 'usr', 'share', 'jupyter', 'kernels');
             const globalFullPath = path.join(globalPath, globalKernel.name, 'kernel.json');
             fileSystem
                 .setup((fs) => fs.searchLocal(typemoq.It.isAnyString(), globalPath, typemoq.It.isAny()))
                 .returns(() => Promise.resolve([path.join(globalKernel.name, 'kernel.json')]));
 
             // Empty global paths
-            const globalAPath = path.join('usr', 'local', 'share', 'jupyter', 'kernels');
+            const globalAPath = path.join('/', 'usr', 'local', 'share', 'jupyter', 'kernels');
             fileSystem
                 .setup((fs) => fs.searchLocal(typemoq.It.isAnyString(), globalAPath, typemoq.It.isAny()))
                 .returns(() => Promise.resolve([]));
