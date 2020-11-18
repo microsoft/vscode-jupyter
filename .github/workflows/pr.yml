@@ -631,6 +631,11 @@ jobs:
         run: npx tsc -p ./
         shell: bash
 
+      - name: ffinapi
+        run: npm uninstall ffi-napi
+      - name: refnapi
+        run: npm uninstall ref-napi
+
       - name: Run smoke tests
         env:
           DISPLAY: 10
