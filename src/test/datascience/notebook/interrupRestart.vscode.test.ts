@@ -159,7 +159,7 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
                 return assertVSCCellIsNotRunning(cell);
             },
             15_000,
-            'Execution not cancelled'
+            'Execution not cancelled first time.'
         );
 
         // Wait before we execute cells again.
@@ -178,7 +178,7 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         // Stop the cell (cleaner way to tear down this test, else VS Code can hang due to the fact that we delete/close notebooks & rest of the code is trying to access it).
         const interruptPromise = commands.executeCommand('jupyter.notebookeditor.interruptkernel');
         traceInfo('Step 13 Executed interrupt');
-        await waitForCondition(async () => assertVSCCellIsNotRunning(cell), 15_000, 'Execution not cancelled');
+        await waitForCondition(async () => assertVSCCellIsNotRunning(cell), 15_000, 'Execution not cancelled second time.');
         traceInfo('Step 14 execution cancelled');
         await interruptPromise;
         traceInfo('Step 15 Interrupted');
