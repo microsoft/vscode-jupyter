@@ -1,0 +1,28 @@
+name: 'Set Python'
+description: "Sets python to a specific version"
+
+inputs: 
+  PYTHON_VERSION:
+     description: 'Version of python'
+     required: true
+     default: ${{env.PYTHON_VERSION}}
+outputs:
+  CI_PYTHON_PATH:
+    description: 'Path to the python'
+    value: ${{ steps.python_run.outputs.python_path }}
+runs:
+  using: 'composite'
+  steps:
+    - name: Use Python ${{inputs.PYTHON_VERSION}}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{inputs.PYTHON_VERSION}}
+
+    - name: Output python path
+      id: python_run
+      shell: bash
+      run: python -c "import sys;print('::set-output name=python_path::' + sys.executable)"
+
+    - name: Push to environment
+      shell: bash
+      run: echo "CI_PYTHON_PATH=${{ steps.python_run.outputs.python_path }}" >> $GITHUB_ENV

@@ -23,7 +23,6 @@ env:
   VSIX_NAME: ms-toolsai-jupyter-release.vsix
   VSIX_NAME_UPLOADED_TO_BLOB: ms-toolsai-jupyter-release.vsix
   COVERAGE_REPORTS: tests-coverage-reports
-  CI_PYTHON_PATH: python
   TEST_RESULTS_DIRECTORY: .
   TEST_RESULTS_GLOB: '**/test-results*.xml'
   IPYWIDGET_SCREENSHOT_PATH: '*-screenshot.png'

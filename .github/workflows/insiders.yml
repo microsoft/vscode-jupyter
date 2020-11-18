@@ -22,7 +22,6 @@ env:
   VSIX_NAME: ms-toolsai-jupyter-insiders.vsix
   VSIX_NAME_UPLOADED_TO_BLOB: ms-toolsai-jupyter-insiders.vsix
   COVERAGE_REPORTS: tests-coverage-reports
-  CI_PYTHON_PATH: python
   TEST_RESULTS_DIRECTORY: .
   TEST_RESULTS_GLOB: '**/test-results*.xml'
   IPYWIDGET_SCREENSHOT_PATH: '*-screenshot.png'
@@ -43,9 +42,10 @@ jobs:
           node-version: ${{env.NODE_VERSION}}
 
       - name: Use Python ${{env.PYTHON_VERSION}}
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{env.PYTHON_VERSION}}
+        uses: ./.github/actions/set-python
+        id: set-python
+        with: 
+          PYTHON_VERSION: ${{env.PYTHON_VERSION}}
 
       # Caching of npm packages (https://github.com/actions/cache/blob/main/examples.md#node---npm)
       - name: Cache npm on linux/mac
@@ -601,7 +601,7 @@ jobs:
         uses: actions/upload-artifact@v2
         if: failure()
         with:
-          name: smoke-test.log
+          name: smoke-test-${{matrix.os}}.log
           path: './smoke-test.log'
 
   upload:
