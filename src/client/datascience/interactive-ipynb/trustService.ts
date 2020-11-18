@@ -34,7 +34,7 @@ export class TrustService implements ITrustService {
             return true; // Skip check if user manually overrode our trust checking
         }
         const key = await this.digestStorage.key;
-        traceInfo(`Checking if notebook is trusted with key ${key}`);
+        traceInfo(`Checking if notebook is trusted`);
 
         // We may have failed to generate a key for first-time notebook users
         // In this case treat all notebooks as untrusted
@@ -65,7 +65,7 @@ export class TrustService implements ITrustService {
         if (!this.alwaysTrustNotebooks) {
             const key = await this.digestStorage.key;
             try {
-                traceInfo(`Trusting notebook with key ${key}`);
+                traceInfo(`Trusting notebook...`);
                 // If we failed to generate a key, transiently trust this notebook
                 if (key) {
                     notebookContents = this.getFormattedContents(notebookContents);
