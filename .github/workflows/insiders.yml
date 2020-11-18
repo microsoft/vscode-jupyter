@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - rchiodo/smoke_tests_mac
   workflow_dispatch:
 
 env:
