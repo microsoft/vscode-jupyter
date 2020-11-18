@@ -31,6 +31,9 @@ export class TextAreaFocusTracker extends React.Component {
     }
 
     private setToLastKnown() {
+        // Try to set the focus to the last TEXTAREA if we are currently
+        // pointing at the BODY. Only do this for the BODY because the
+        // only thing that sets the focus to the BODY is the VS code focus code.
         if (
             document.activeElement &&
             document.activeElement.nodeName === document.body.nodeName &&
