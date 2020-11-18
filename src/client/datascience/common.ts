@@ -110,17 +110,19 @@ export function traceCellResults(prefix: string, results: ICell[]) {
     }
 }
 
+const jupyterLanguageToMonacoLanguageMapping = new Map([
+    ['c#', 'csharp'],
+    ['f#', 'fsharp'],
+    ['q#', 'qsharp'],
+    ['c++11', 'c++'],
+    ['c++12', 'c++'],
+    ['c++14', 'c++']
+]);
 export function translateKernelLanguageToMonaco(kernelLanguage: string): string {
     // At the moment these are the only translations.
     // python, julia, r, javascript, powershell, etc can be left as is.
-    switch (kernelLanguage.toLowerCase()) {
-        case 'c#':
-            return 'csharp';
-        case 'f#':
-            return 'fsharp';
-        default:
-            return kernelLanguage.toLowerCase();
-    }
+    kernelLanguage = kernelLanguage.toLowerCase();
+    return jupyterLanguageToMonacoLanguageMapping.get(kernelLanguage) || kernelLanguage;
 }
 
 export function generateNewNotebookUri(

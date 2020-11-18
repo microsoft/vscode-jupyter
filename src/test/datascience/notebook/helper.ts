@@ -34,8 +34,8 @@ import {
     LastSavedNotebookCellLanguage,
     NotebookCellLanguageService
 } from '../../../client/datascience/notebook/defaultCellLanguageService';
+import { isJupyterKernel } from '../../../client/datascience/notebook/helpers/helpers';
 import { chainWithPendingUpdates } from '../../../client/datascience/notebook/helpers/notebookUpdater';
-import { VSCodeNotebookKernelMetadata } from '../../../client/datascience/notebook/kernelProvider';
 import { NotebookEditor } from '../../../client/datascience/notebook/notebookEditor';
 import { INotebookContentProvider } from '../../../client/datascience/notebook/types';
 import { VSCodeNotebookModel } from '../../../client/datascience/notebookStorage/vscNotebookModel';
@@ -211,7 +211,7 @@ export async function waitForKernelToGetAutoSelected(expectedLanguage?: string) 
             kernelInfo = '<No specific kernel expected>';
             return true;
         }
-        if (vscodeNotebook.activeNotebookEditor.kernel instanceof VSCodeNotebookKernelMetadata) {
+        if (isJupyterKernel(vscodeNotebook.activeNotebookEditor.kernel)) {
             if (vscodeNotebook.activeNotebookEditor.kernel.selection.kind === 'startUsingKernelSpec') {
                 kernelInfo = JSON.stringify(vscodeNotebook.activeNotebookEditor.kernel.selection.kernelSpec || {});
                 return (

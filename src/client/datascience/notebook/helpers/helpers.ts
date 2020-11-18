@@ -14,7 +14,8 @@ import type {
     NotebookCellRunState,
     NotebookData,
     NotebookDocument,
-    NotebookEditor
+    NotebookEditor,
+    NotebookKernel as VSCNotebookKernel
 } from '../../../../../typings/vscode-proposed';
 import { concatMultilineString, splitMultilineString } from '../../../../datascience-ui/common';
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../common/constants';
@@ -34,6 +35,7 @@ import { KernelMessage } from '@jupyterlab/services';
 // tslint:disable-next-line: no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
 import { Uri } from 'vscode';
+import { VSCodeNotebookKernelMetadata } from '../kernelProvider';
 import { chainWithPendingUpdates } from './notebookUpdater';
 
 // This is the custom type we are adding into nbformat.IBaseCellMetadata
@@ -55,6 +57,13 @@ export function isJupyterNotebook(option: NotebookDocument | string) {
     } else {
         return option.viewType === JupyterNotebookView;
     }
+}
+
+export function isJupyterKernel(kernel?: VSCNotebookKernel): kernel is VSCodeNotebookKernelMetadata {
+    if (!kernel) {
+        return false;
+    }
+    return kernel instanceof VSCodeNotebookKernelMetadata;
 }
 
 const kernelInformationForNotebooks = new WeakMap<
