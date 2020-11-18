@@ -7,6 +7,7 @@ import { CssMessages } from '../../../../client/datascience/messages';
 import { IJupyterExtraSettings } from '../../../../client/datascience/types';
 import { IMainState } from '../../../interactive-common/mainState';
 import { postActionToExtension } from '../../../interactive-common/redux/helpers';
+import { CommonEffects } from '../../../interactive-common/redux/reducers/commonEffects';
 import { Helpers } from '../../../interactive-common/redux/reducers/helpers';
 import { ICellAction, IScrollAction } from '../../../interactive-common/redux/reducers/types';
 import { computeEditorOptions } from '../../../react-common/settingsReactSide';
@@ -140,7 +141,7 @@ export namespace Effects {
                     focused: true
                 }
             };
-        } else if (arg.prevState.editCellVM) {
+        } else if (arg.prevState.editCellVM && arg.payload.data.cellId !== Identifiers.EditCellId) {
             return {
                 ...arg.prevState,
                 editCellVM: {
@@ -150,7 +151,8 @@ export namespace Effects {
             };
         }
 
-        return arg.prevState;
+        // If no change, make sure focus updates
+        return CommonEffects.focusPending(arg.prevState);
     }
 
     export function unfocusCell(arg: InteractiveReducerArg<ICellAction>): IMainState {
