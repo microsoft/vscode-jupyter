@@ -13,13 +13,11 @@ import { IFileSystem } from '../../common/platform/types';
 
 import { IDisposable } from '../../common/types';
 import { DataScience } from '../../common/utils/localize';
-import { NotebookEditor } from '../../datascience/notebook/notebookEditor';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Commands, Telemetry } from '../constants';
 import { ExportManager } from '../export/exportManager';
 import { ExportFormat, IExportManager } from '../export/types';
-import { getNotebookMetadata } from '../notebook/helpers/helpers';
 import { INotebookEditorProvider, INotebookModel } from '../types';
 
 interface IExportQuickPickItem extends QuickPickItem {

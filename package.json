@@ -1187,6 +1187,12 @@
                     "when": "false"
                 },
                 {
+                    "command": "jupyter.export",
+                    "title": "%DataScience.notebookExportAs%",
+                    "category": "Jupyter",
+                    "when": "false"
+                },
+                {
                     "command": "jupyter.notebookeditor.export",
                     "title": "%DataScience.notebookExportAs%",
                     "category": "Jupyter",
