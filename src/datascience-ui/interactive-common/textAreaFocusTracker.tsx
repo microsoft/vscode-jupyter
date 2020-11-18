@@ -19,7 +19,7 @@ export class TextAreaFocusTracker extends React.Component {
 
     private onWindowGotFocus() {
         // When the window receives focus (from outside), on a delay attempt to reset our focus
-        setTimeout(this.setToLastKnown.bind(this), 100);
+        setTimeout(this.setToLastKnown.bind(this), 0);
     }
 
     private onWindowLostFocus() {
