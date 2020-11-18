@@ -16,6 +16,12 @@ import { IJupyterServerUriStorage } from '../datascience/types';
 import { traceDecorators } from '../logging';
 import { IExtensionActivationService } from './types';
 
+interface IKeyBinding {
+    when?: string;
+    key: string;
+    command: string;
+}
+
 @injectable()
 export class MigrateDataScienceSettingsService implements IExtensionActivationService {
     constructor(
@@ -122,15 +128,24 @@ export class MigrateDataScienceSettingsService implements IExtensionActivationSe
                 return command;
             }
         });
+        const migratedKeybindings: IKeyBinding[] = [];
         keybindings.forEach((keybinding) => {
             const command = keybinding.command;
-            if (typeof command === 'string' && !jupyterCommands.includes(command)) {
-                keybinding.command = `jupyter.${command.substr(19)}`;
+            if (typeof command === 'string' && command.startsWith('python.dataScience.')) {
+                const targetCommand = `jupyter.${command.substr(19)}`;
+                if (!jupyterCommands.includes(targetCommand)) {
+                    // If user already has a new custom keybinding for the target command,
+                    // don't migrate and also don't leave the old python.dataScience.*
+                    // keybinding behind
+                    keybinding.command = targetCommand;
+                    migratedKeybindings.push(keybinding);
+                }
+            } else {
+                migratedKeybindings.push(keybinding);
             }
         });
 
-        const migratedKeybindings = JSON.stringify(keybindings, undefined, 4);
-        await this.fs.writeLocalFile(filePath, migratedKeybindings);
+        await this.fs.writeLocalFile(filePath, JSON.stringify(migratedKeybindings, undefined, 4));
     }
 
     @traceDecorators.error('Failed to update test settings')

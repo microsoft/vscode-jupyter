@@ -155,12 +155,32 @@ suite('Migrate data science settings', () => {
     {
         "key": "ctrl+shift+enter",
         "command": "python.dataScience.runallcells"
+    },
+    {
+        "key": "ctrl+shift+enter",
+        "command": "python.dataScience.foo"
+    },
+    {
+        "key": "ctrl+shift+enter",
+        "command": "jupyter.foo"
+    },
+    {
+        "key": "ctrl+shift+alt",
+        "command": "foo"
     }
 ]`;
     const expectedMigratedKeybindings = `[
     {
         "key": "ctrl+shift+enter",
         "command": "jupyter.runallcells"
+    },
+    {
+        "key": "ctrl+shift+enter",
+        "command": "jupyter.foo"
+    },
+    {
+        "key": "ctrl+shift+alt",
+        "command": "foo"
     }
 ]`;
 
