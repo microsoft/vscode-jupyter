@@ -562,9 +562,6 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         if (this.viewState.active && !this.documentManager.activeTextEditor) {
             // Force the webpanel to reveal and take focus.
             await super.show(false);
-
-            // Send this to the react control
-            await this.postMessage(InteractiveWindowMessages.Activate);
         }
     }
 

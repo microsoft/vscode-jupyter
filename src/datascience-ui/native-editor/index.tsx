@@ -14,6 +14,7 @@ import * as ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
 
 import { WidgetManagerComponent } from '../ipywidgets/container';
+import { TextAreaFocusTracker } from '../interactive-common/textAreaFocusTracker';
 import { IVsCodeApi, PostOffice } from '../react-common/postOffice';
 import { detectBaseTheme } from '../react-common/themeDetector';
 import { getConnectedNativeEditor } from './nativeEditor';
@@ -37,6 +38,7 @@ const ConnectedNativeEditor = getConnectedNativeEditor();
 // Stick them all together
 ReactDOM.render(
     <Provider store={store}>
+        <TextAreaFocusTracker />
         <ConnectedNativeEditor />
         <WidgetManagerComponent postOffice={postOffice} widgetContainerId={'rootWidget'} store={store} />
     </Provider>,
