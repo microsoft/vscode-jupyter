@@ -11,6 +11,11 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import { unzip } from './common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, SMOKE_TEST_EXTENSIONS_DIR } from './constants';
+const { spawnSync } = require('child_process');
+
+const fullyQualifiedPythonPath = spawnSync('python', ['-c', 'import sys;print(sys.executable)'])
+    .stdout.toString()
+    .trim();
 
 class TestRunner {
     public async start() {
@@ -29,7 +34,9 @@ class TestRunner {
     }
     private async enableLanguageServer(enable: boolean) {
         // When running smoke tests, we won't have access to unbundled files.
-        const settings = `{ "python.languageServer": ${enable ? '"Microsoft"' : '"Jedi"'} }`;
+        const settings = `{ "python.languageServer": ${
+            enable ? '"Microsoft"' : '"Jedi"'
+        }, "python.pythonPath": "${fullyQualifiedPythonPath.replace('\\', '/')}" }`;
         await fs.ensureDir(
             path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'testMultiRootWkspc', 'smokeTests', '.vscode')
         );
