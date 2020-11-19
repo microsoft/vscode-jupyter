@@ -29,6 +29,18 @@ const channel = (process.env.VSC_JUPYTER_CI_TEST_VSC_CHANNEL || '').toLowerCase(
     ? 'insiders'
     : 'stable';
 
+function computePlatform() {
+    switch (process.platform) {
+        case 'darwin':
+            return 'darwin';
+        case 'win32':
+            return process.arch === 'x32' || process.arch === 'ia32' ? 'win32-archive' : 'win32-x64-archive';
+        default:
+            return 'linux-x64';
+    }
+}
+const platform = computePlatform();
+
 /**
  * Smoke tests & tests running in VSCode require Python extension to be installed.
  */
@@ -48,7 +60,7 @@ async function installPythonExtension(vscodeExecutablePath: string) {
 async function start() {
     console.log('*'.repeat(100));
     console.log('Start Standard tests');
-    const vscodeExecutablePath = await downloadAndUnzipVSCode(channel);
+    const vscodeExecutablePath = await downloadAndUnzipVSCode(channel, platform);
     const baseLaunchArgs = requiresPythonExtensionToBeInstalled() ? [] : ['--disable-extensions'];
     await installPythonExtension(vscodeExecutablePath);
     await runTests({
