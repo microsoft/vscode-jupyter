@@ -44,6 +44,7 @@ async function connectToServer() {
 function notifyCompleted(hasFailures: boolean) {
     if (!client || client.destroyed || !client.writable) {
         console.error('No client to write from');
+        process.exit(hasFailures ? 1 : 0);
         return;
     }
     try {
