@@ -24,11 +24,8 @@ import { requestExecute } from './raw-kernel/rawKernelTestHelpers';
 // Chai as promised is not part of this file
 import * as chaiAsPromised from 'chai-as-promised';
 import { IPythonExtensionChecker } from '../../client/api/types';
-import { IFileSystem, IPlatformService } from '../../client/common/platform/types';
-import { IEnvironmentVariablesService } from '../../client/common/variables/types';
-import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
-import { IInterpreterService } from '../../client/interpreter/contracts';
-import { instance, mock } from 'ts-mockito';
+import { IFileSystem } from '../../client/common/platform/types';
+import { KernelEnvironmentVariablesService } from '../../client/datascience/kernel-launcher/kernelEnvVarsService';
 use(chaiAsPromised);
 
 suite('DataScience - Kernel Launcher', () => {
@@ -57,10 +54,7 @@ suite('DataScience - Kernel Launcher', () => {
             fileSystem,
             daemonPool,
             extensionChecker,
-            instance(mock<IInterpreterService>()),
-            instance(mock<IEnvironmentActivationService>()),
-            instance(mock<IEnvironmentVariablesService>()),
-            instance(mock<IPlatformService>())
+            ioc.get<KernelEnvironmentVariablesService>(KernelEnvironmentVariablesService)
         );
         await ioc.activate();
         if (!ioc.mockJupyter) {

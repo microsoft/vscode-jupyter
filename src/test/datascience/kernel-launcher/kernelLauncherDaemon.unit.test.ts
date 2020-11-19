@@ -3,16 +3,13 @@
 
 import { assert } from 'chai';
 import { anything, deepEqual, instance, mock, when } from 'ts-mockito';
-import { IPlatformService } from '../../../client/common/platform/types';
 import { IPythonExecutionService, ObservableExecutionResult } from '../../../client/common/process/types';
 import { ReadWrite } from '../../../client/common/types';
-import { IEnvironmentVariablesService } from '../../../client/common/variables/types';
 import { KernelDaemonPool } from '../../../client/datascience/kernel-launcher/kernelDaemonPool';
+import { KernelEnvironmentVariablesService } from '../../../client/datascience/kernel-launcher/kernelEnvVarsService';
 import { PythonKernelLauncherDaemon } from '../../../client/datascience/kernel-launcher/kernelLauncherDaemon';
 import { IPythonKernelDaemon } from '../../../client/datascience/kernel-launcher/types';
 import { IJupyterKernelSpec } from '../../../client/datascience/types';
-import { IEnvironmentActivationService } from '../../../client/interpreter/activation/types';
-import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
 import { createPythonInterpreter } from '../../utils/interpreters';
 
@@ -49,10 +46,7 @@ suite('DataScience - Kernel Launcher Daemon', () => {
         );
         launcher = new PythonKernelLauncherDaemon(
             instance(daemonPool),
-            instance(mock<IInterpreterService>()),
-            instance(mock<IEnvironmentActivationService>()),
-            instance(mock<IEnvironmentVariablesService>()),
-            instance(mock<IPlatformService>())
+            instance(mock<KernelEnvironmentVariablesService>())
         );
     });
     test('Does not support launching kernels if there is no -m in argv', async () => {

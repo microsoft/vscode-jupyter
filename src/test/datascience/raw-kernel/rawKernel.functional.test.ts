@@ -6,15 +6,14 @@ import { noop } from 'jquery';
 import * as portfinder from 'portfinder';
 import * as uuid from 'uuid/v4';
 import { IPythonExtensionChecker } from '../../../client/api/types';
-import { IFileSystem, IPlatformService } from '../../../client/common/platform/types';
+import { IFileSystem } from '../../../client/common/platform/types';
 import { IProcessServiceFactory } from '../../../client/common/process/types';
 import { createDeferred, sleep } from '../../../client/common/utils/async';
-import { IEnvironmentVariablesService } from '../../../client/common/variables/types';
 import { KernelDaemonPool } from '../../../client/datascience/kernel-launcher/kernelDaemonPool';
+import { KernelEnvironmentVariablesService } from '../../../client/datascience/kernel-launcher/kernelEnvVarsService';
 import { KernelProcess } from '../../../client/datascience/kernel-launcher/kernelProcess';
 import { createRawKernel, RawKernel } from '../../../client/datascience/raw-kernel/rawKernel';
 import { IJupyterKernelSpec } from '../../../client/datascience/types';
-import { IEnvironmentActivationService } from '../../../client/interpreter/activation/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { DataScienceIocContainer } from '../dataScienceIocContainer';
 import { requestExecute, requestInspect } from './rawKernelTestHelpers';
@@ -86,10 +85,7 @@ suite('DataScience raw kernel tests', () => {
             ioc.get<IFileSystem>(IFileSystem),
             undefined,
             ioc.get<IPythonExtensionChecker>(IPythonExtensionChecker),
-            ioc.get<IInterpreterService>(IPythonExtensionChecker),
-            ioc.get<IEnvironmentActivationService>(IEnvironmentActivationService),
-            ioc.get<IEnvironmentVariablesService>(IEnvironmentVariablesService),
-            ioc.get<IPlatformService>(IPlatformService)
+            ioc.get<KernelEnvironmentVariablesService>(KernelEnvironmentVariablesService)
         );
         await kernelProcess.launch(process.cwd());
         return createRawKernel(kernelProcess, uuid());
