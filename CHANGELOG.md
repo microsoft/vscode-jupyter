@@ -6,6 +6,8 @@
 
 1. Interactive window input prompt does not allow any keyboard input.
    ([#446](https://github.com/Microsoft/vscode-jupyter/issues/446))
+1. Support opening Notebooks using Native Notebook editor even if the Python extension is not installed.
+   ([#1074](https://github.com/Microsoft/vscode-jupyter/issues/1074))   
 1. Migrate references to python.dataScience.\* in settings.json values and keybindings.json.
    ([#1088](https://github.com/Microsoft/vscode-jupyter/issues/1088))   
 
