@@ -8,6 +8,7 @@ import * as fs from 'fs-extra';
 import { AddressInfo, createServer, Server } from 'net';
 import * as path from 'path';
 import { EXTENSION_ROOT_DIR } from '../client/constants';
+import { EXTENSION_ROOT_DIR_FOR_TESTS } from './constants';
 import { noop, sleep } from './core';
 import { initializeLogger } from './testLogger';
 
@@ -39,7 +40,7 @@ Usage:
 */
 
 const testFile = process.argv[2];
-const portFile = path.join(EXTENSION_ROOT_DIR, 'port.txt');
+const portFile = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'port.txt');
 
 let proc: ChildProcess | undefined;
 let server: Server | undefined;
@@ -81,6 +82,7 @@ async function end(exitCode: number) {
 
 async function startSocketServer() {
     return new Promise((resolve) => {
+        console.log(`Creating test server`);
         server = createServer((socket) => {
             socket.on('data', (buffer) => {
                 const data = buffer.toString('utf8');
@@ -93,7 +95,11 @@ async function startSocketServer() {
                 console.error(ex);
             });
         });
-
+        server.on('error', (ex) => {
+            // Just log it, no need to do anything else.
+            console.error(ex);
+        });
+        console.log(`Listening to test server`);
         server.listen({ host: '127.0.0.1', port: 0 }, async () => {
             const port = (server!.address() as AddressInfo).port;
             console.log(`Test server listening on port ${port}`);
@@ -101,14 +107,12 @@ async function startSocketServer() {
             await fs.writeFile(portFile, port.toString());
             resolve();
         });
-        server.on('error', (ex) => {
-            // Just log it, no need to do anything else.
-            console.error(ex);
-        });
+        console.log(`Test server running`);
     });
 }
 
 async function start() {
+    console.log('Starting socket server for tests.');
     await startSocketServer();
     const options: SpawnOptions = { cwd: process.cwd(), env: process.env, detached: true, stdio: 'inherit' };
     proc = spawn(process.execPath, [testFile], options);
