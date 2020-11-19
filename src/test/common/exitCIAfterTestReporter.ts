@@ -30,21 +30,25 @@ async function connectToServer() {
             client = new net.Socket();
             client.connect({ port }, () => {
                 console.log(`Connected to port ${port}`);
-                resolve();
+                resolve(client);
             });
-            client.on('error', () => {
+            client.on('error', (err) => {
+                console.log(`Errors connecting to port ${port}: ${err}`);
                 // Swallow errors, else node will complain.
             });
         } catch {
             console.error('Failed to connect to socket server to notify completion of tests');
-            resolve();
+            resolve(client);
         }
     });
 }
-function notifyCompleted(hasFailures: boolean) {
+function notifyCompleted(hasFailures: boolean, reconnectCount: number) {
     if (!client || client.destroyed || !client.writable) {
-        console.error('No client to write from');
-        process.exit(hasFailures ? 1 : 0);
+        console.error(`No client to write from ${client}. Attempting reconnect`);
+        // Try reconnecting.
+        if (reconnectCount <= 0) {
+            connectToServer().then(notifyCompleted.bind(undefined, hasFailures, reconnectCount+1));
+        }
         return;
     }
     try {
@@ -69,7 +73,7 @@ class ExitReporter {
                 console.info('Start Exit Reporter for Mocha.');
             })
             .once(EVENT_RUN_END, async () => {
-                notifyCompleted(stats.failures > 0);
+                notifyCompleted(stats.failures > 0, 0);
                 console.info('End Exit Reporter for Mocha.');
             });
     }
