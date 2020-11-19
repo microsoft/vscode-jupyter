@@ -12,9 +12,12 @@ import * as uuid from 'uuid/v4';
 import { IPythonExtensionChecker } from '../../api/types';
 import { isTestExecution } from '../../common/constants';
 import { traceInfo } from '../../common/logger';
-import { IFileSystem } from '../../common/platform/types';
+import { IFileSystem, IPlatformService } from '../../common/platform/types';
 import { IProcessServiceFactory } from '../../common/process/types';
 import { Resource } from '../../common/types';
+import { IEnvironmentVariablesService } from '../../common/variables/types';
+import { IEnvironmentActivationService } from '../../interpreter/activation/types';
+import { IInterpreterService } from '../../interpreter/contracts';
 import { captureTelemetry } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { KernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../jupyter/kernels/types';
@@ -35,7 +38,11 @@ export class KernelLauncher implements IKernelLauncher {
         @inject(IProcessServiceFactory) private processExecutionFactory: IProcessServiceFactory,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(KernelDaemonPool) private readonly daemonPool: KernelDaemonPool,
-        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker
+        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
+        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
+        @inject(IEnvironmentActivationService) private readonly envActivation: IEnvironmentActivationService,
+        @inject(IEnvironmentVariablesService) private readonly envVarsService: IEnvironmentVariablesService,
+        @inject(IPlatformService) private readonly platformService: IPlatformService
     ) {}
 
     // This function is public so it can be called when a test shuts down
@@ -93,7 +100,11 @@ export class KernelLauncher implements IKernelLauncher {
             kernelConnectionMetadata,
             this.fs,
             resource,
-            this.extensionChecker
+            this.extensionChecker,
+            this.interpreterService,
+            this.envActivation,
+            this.envVarsService,
+            this.platformService
         );
         await kernelProcess.launch(workingDirectory);
         return kernelProcess;

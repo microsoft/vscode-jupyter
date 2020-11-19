@@ -9,10 +9,13 @@ import * as tmp from 'tmp';
 import { Event, EventEmitter } from 'vscode';
 import { IPythonExtensionChecker } from '../../api/types';
 import { traceError, traceInfo, traceWarning } from '../../common/logger';
-import { IFileSystem } from '../../common/platform/types';
+import { IFileSystem, IPlatformService } from '../../common/platform/types';
 import { IProcessServiceFactory, ObservableExecutionResult } from '../../common/process/types';
 import { Resource } from '../../common/types';
 import { noop, swallowExceptions } from '../../common/utils/misc';
+import { IEnvironmentVariablesService } from '../../common/variables/types';
+import { IEnvironmentActivationService } from '../../interpreter/activation/types';
+import { IInterpreterService } from '../../interpreter/contracts';
 import { captureTelemetry } from '../../telemetry';
 import { Telemetry } from '../constants';
 import {
@@ -57,7 +60,11 @@ export class KernelProcess implements IKernelProcess {
         kernelConnectionMetadata: KernelSpecConnectionMetadata | PythonKernelConnectionMetadata,
         private readonly fileSystem: IFileSystem,
         private readonly resource: Resource,
-        private readonly extensionChecker: IPythonExtensionChecker
+        private readonly extensionChecker: IPythonExtensionChecker,
+        private readonly interpreterService: IInterpreterService,
+        private readonly envActivation: IEnvironmentActivationService,
+        private readonly envVarsService: IEnvironmentVariablesService,
+        private readonly platformService: IPlatformService
     ) {
         this._kernelConnectionMetadata = kernelConnectionMetadata;
     }
@@ -250,7 +257,13 @@ export class KernelProcess implements IKernelProcess {
 
         // Use a daemon only if the python extension is available. It requires the active interpreter
         if (this.isPythonKernel && this.extensionChecker.isPythonExtensionInstalled) {
-            this.pythonKernelLauncher = new PythonKernelLauncherDaemon(this.daemonPool);
+            this.pythonKernelLauncher = new PythonKernelLauncherDaemon(
+                this.daemonPool,
+                this.interpreterService,
+                this.envActivation,
+                this.envVarsService,
+                this.platformService
+            );
             const kernelDaemonLaunch = await this.pythonKernelLauncher.launch(
                 this.resource,
                 workingDirectory,

@@ -24,7 +24,11 @@ import { requestExecute } from './raw-kernel/rawKernelTestHelpers';
 // Chai as promised is not part of this file
 import * as chaiAsPromised from 'chai-as-promised';
 import { IPythonExtensionChecker } from '../../client/api/types';
-import { IFileSystem } from '../../client/common/platform/types';
+import { IFileSystem, IPlatformService } from '../../client/common/platform/types';
+import { IEnvironmentVariablesService } from '../../client/common/variables/types';
+import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
+import { IInterpreterService } from '../../client/interpreter/contracts';
+import { instance, mock } from 'ts-mockito';
 use(chaiAsPromised);
 
 suite('DataScience - Kernel Launcher', () => {
@@ -48,7 +52,16 @@ suite('DataScience - Kernel Launcher', () => {
         const daemonPool = ioc.get<KernelDaemonPool>(KernelDaemonPool);
         const fileSystem = ioc.get<IFileSystem>(IFileSystem);
         const extensionChecker = ioc.get<IPythonExtensionChecker>(IPythonExtensionChecker);
-        kernelLauncher = new KernelLauncher(processServiceFactory, fileSystem, daemonPool, extensionChecker);
+        kernelLauncher = new KernelLauncher(
+            processServiceFactory,
+            fileSystem,
+            daemonPool,
+            extensionChecker,
+            instance(mock<IInterpreterService>()),
+            instance(mock<IEnvironmentActivationService>()),
+            instance(mock<IEnvironmentVariablesService>()),
+            instance(mock<IPlatformService>())
+        );
         await ioc.activate();
         if (!ioc.mockJupyter) {
             pythonInterpreter = await ioc.getJupyterCapableInterpreter();
