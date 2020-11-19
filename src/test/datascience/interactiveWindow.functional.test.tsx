@@ -259,42 +259,6 @@ for i in range(10):
     );
 
     runTest(
-        'Ctrl + 1/Ctrl + 2',
-        async () => {
-            // Create an interactive window so that it listens to the results.
-            const { mount } = await getOrCreateInteractiveWindow(ioc);
-
-            // Type in the input box
-            const editor = getInteractiveEditor(mount.wrapper);
-            typeCode(editor, 'a=1\na');
-
-            // Give focus to a random div
-            const reactDiv = mount.wrapper.find('div').first().getDOMNode();
-
-            const domDiv = reactDiv.querySelector('div');
-
-            if (domDiv && mount.wrapper) {
-                domDiv.tabIndex = -1;
-                domDiv.focus();
-
-                // send the ctrl + 1/2 message, this should put focus back on the input box
-                mount.postMessage({ type: InteractiveWindowMessages.Activate, payload: undefined });
-
-                // Then enter press shift + enter on the active element
-                const activeElement = document.activeElement;
-                if (activeElement) {
-                    await submitInput(mount, activeElement as HTMLTextAreaElement);
-                }
-            }
-
-            verifyHtmlOnInteractiveCell('1', CellPosition.Last);
-        },
-        () => {
-            return ioc;
-        }
-    );
-
-    runTest(
         'Escape/Ctrl+U',
         async () => {
             // Create an interactive window so that it listens to the results.

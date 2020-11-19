@@ -420,6 +420,18 @@ export interface IJupyterKernelSpec {
     // tslint:disable-next-line: no-any
     readonly metadata?: Record<string, any> & { interpreter?: Partial<PythonEnvironment> };
     readonly argv: string[];
+    /**
+     * Optionally where this kernel spec json is located on the local FS.
+     */
+    specFile?: string;
+    /**
+     * Optionally the Interpreter this kernel spec belongs to.
+     * You can have kernel specs that are scoped to an interpreter.
+     * E.g. if you have Python in `c:\Python\Python3.8`
+     * Then you could have kernels in `<sys.prefix folder for this interpreter>\share\jupyter\kernels`
+     * Plenty of conda packages ship kernels in this manner (beakerx, etc).
+     */
+    interpreterPath?: string;
 }
 
 export const INotebookImporter = Symbol('INotebookImporter');

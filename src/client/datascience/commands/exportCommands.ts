@@ -13,7 +13,6 @@ import { IFileSystem } from '../../common/platform/types';
 
 import { IDisposable } from '../../common/types';
 import { DataScience } from '../../common/utils/localize';
-import { isUri } from '../../common/utils/misc';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Commands, Telemetry } from '../constants';
@@ -48,6 +47,7 @@ export class ExportCommands implements IDisposable {
         this.registerCommand(Commands.Export, (model, defaultFileName?, interpreter?) =>
             this.export(model, undefined, defaultFileName, interpreter)
         );
+        this.registerCommand(Commands.NativeNotebookExport, (uri) => this.nativeNotebookExport(uri));
     }
 
     public dispose() {
@@ -63,23 +63,24 @@ export class ExportCommands implements IDisposable {
         this.disposables.push(disposable);
     }
 
+    // The export command as called by the native notebook interface
+    private async nativeNotebookExport(uri: Uri) {
+        const editor = this.notebookProvider.editors.find((item) => this.fs.arePathsSame(item.file, uri));
+
+        if (editor && editor.model) {
+            const interpreter = editor.notebook?.getMatchingInterpreter();
+            return this.export(editor.model, undefined, undefined, interpreter);
+        } else {
+            return this.export(undefined, undefined, undefined, undefined);
+        }
+    }
+
     private async export(
-        modelOrUri: Uri | INotebookModel,
+        model?: INotebookModel,
         exportMethod?: ExportFormat,
         defaultFileName?: string,
         interpreter?: PythonEnvironment
     ) {
-        defaultFileName = typeof defaultFileName === 'string' ? defaultFileName : undefined;
-        let model: INotebookModel | undefined;
-        if (modelOrUri && isUri(modelOrUri)) {
-            const uri = modelOrUri;
-            const editor = this.notebookProvider.editors.find((item) => this.fs.arePathsSame(item.file, uri));
-            if (editor && editor.model) {
-                model = editor.model;
-            }
-        } else {
-            model = modelOrUri;
-        }
         if (!model) {
             // if no model was passed then this was called from the command palette,
             // so we need to get the active editor
@@ -88,6 +89,11 @@ export class ExportCommands implements IDisposable {
                 return;
             }
             model = activeEditor.model;
+
+            // At this point also see if the active editor has a candidate interpreter to use
+            if (!interpreter) {
+                interpreter = activeEditor.notebook?.getMatchingInterpreter();
+            }
 
             if (exportMethod) {
                 sendTelemetryEvent(Telemetry.ExportNotebookAsCommand, undefined, { format: exportMethod });

@@ -322,6 +322,7 @@ suite('Kernel Finder', () => {
         });
 
         test('Basic listKernelSpecs', async () => {
+            setupFileSystem();
             setupFindFileSystem();
             const specs = await kernelFinder.listKernelSpecs(resource);
             expect(specs[0]).to.deep.include(activeKernelA);
@@ -335,6 +336,7 @@ suite('Kernel Finder', () => {
         });
 
         test('listKernelSpecs load error', async () => {
+            setupFileSystem();
             setupFindFileSystem();
             loadError = true;
             const specs = await kernelFinder.listKernelSpecs(resource);
@@ -411,7 +413,12 @@ suite('Kernel Finder', () => {
                 kernelspec: testKernelMetadata,
                 orig_nbformat: 4
             });
-            assert.deepEqual(spec, kernel, 'The found kernel spec is not the same.');
+            // Ignore some properties when comparing.
+            assert.deepEqual(
+                { ...spec, specFile: '', interpreterPath: '' },
+                { ...kernel, specFile: '', interpreterPath: '' },
+                'The found kernel spec is not the same.'
+            );
             fileSystem.reset();
         });
 
@@ -557,9 +564,9 @@ suite('Kernel Finder', () => {
                     if (pathParam.includes(cacheFile)) {
                         return Promise.resolve(
                             JSON.stringify([
-                                path.join('kernels', kernel.name, 'kernel.json'),
-                                path.join('kernels', 'kernelA', 'kernel.json'),
-                                path.join('kernels', 'kernelB', 'kernel.json')
+                                { kernelSpecFile: path.join('kernels', kernel.name, 'kernel.json') },
+                                { kernelSpecFile: path.join('kernels', 'kernelA', 'kernel.json') },
+                                { kernelSpecFile: path.join('kernels', 'kernelB', 'kernel.json') }
                             ])
                         );
                     } else if (pathParam.includes('kernelB')) {

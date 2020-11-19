@@ -85,7 +85,6 @@ export const reducerMap: Partial<INativeEditorActionMapping> = {
     [InteractiveWindowMessages.StartProgress]: CommonEffects.startProgress,
     [InteractiveWindowMessages.StopProgress]: CommonEffects.stopProgress,
     [SharedMessages.UpdateSettings]: Effects.updateSettings,
-    [InteractiveWindowMessages.Activate]: CommonEffects.activate,
     [InteractiveWindowMessages.RestartKernel]: Kernel.handleRestarted,
     [CssMessages.GetCssResponse]: CommonEffects.handleCss,
     [InteractiveWindowMessages.MonacoReady]: CommonEffects.monacoReady,

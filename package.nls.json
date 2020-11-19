@@ -2,7 +2,7 @@
     "jupyter.command.jupyter.switchOffInsidersChannel.title": "Switch to Default Channel",
     "jupyter.command.jupyter.switchToDailyChannel.title": "Switch to Insiders Daily Channel",
     "jupyter.command.jupyter.switchToWeeklyChannel.title": "Switch to Insiders Weekly Channel",
-    "jupyter.command.jupyter.exportAsPythonScript.title": "Export as Python Script",
+    "jupyter.command.jupyter.exportAsPythonScript.title": "Export to Python Script",
     "jupyter.command.jupyter.exportToHTML.title": "Export to HTML",
     "jupyter.command.jupyter.exportToPDF.title": "Export to PDF",
     "DataScience.checkingIfImportIsSupported": "Checking if import is supported",

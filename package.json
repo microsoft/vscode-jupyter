@@ -53,6 +53,7 @@
         "onCommand:jupyter.exportAsPythonScript",
         "onCommand:jupyter.exportToHTML",
         "onCommand:jupyter.exportToPDF",
+        "onCommand:jupyter.notebookeditor.export",
         "onCommand:jupyter.switchOffInsidersChannel",
         "onCommand:jupyter.switchToDailyChannel",
         "onCommand:jupyter.switchToWeeklyChannel",
@@ -273,7 +274,7 @@
                 "category": "Jupyter"
             },
             {
-                "command": "jupyter.export",
+                "command": "jupyter.notebookeditor.export",
                 "title": "%DataScience.notebookExportAs%",
                 "category": "Jupyter",
                 "icon": {
@@ -281,6 +282,11 @@
                     "dark": "resources/dark/export_to_python.svg"
                 },
                 "enablement": "notebookViewType == jupyter-notebook && jupyter.isnotebooktrusted"
+            },
+            {
+                "command": "jupyter.export",
+                "title": "%DataScience.notebookExportAs%",
+                "category": "Jupyter"
             },
             {
                 "command": "jupyter.exportAsPythonScript",
@@ -744,7 +750,7 @@
                     "when": "resourceLangId == jupyter && notebookViewType == 'jupyter-notebook' && !jupyter.isnotebooktrusted && jupyter.trustfeatureenabled"
                 },
                 {
-                    "command": "jupyter.export",
+                    "command": "jupyter.notebookeditor.export",
                     "title": "%DataScience.notebookExportAs%",
                     "group": "navigation",
                     "when": "resourceLangId == jupyter && notebookViewType == 'jupyter-notebook' && jupyter.isnotebooktrusted"
@@ -1182,6 +1188,12 @@
                 },
                 {
                     "command": "jupyter.export",
+                    "title": "%DataScience.notebookExportAs%",
+                    "category": "Jupyter",
+                    "when": "false"
+                },
+                {
+                    "command": "jupyter.notebookeditor.export",
                     "title": "%DataScience.notebookExportAs%",
                     "category": "Jupyter",
                     "when": "false"
