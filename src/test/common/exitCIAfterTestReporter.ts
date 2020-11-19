@@ -47,7 +47,7 @@ function notifyCompleted(hasFailures: boolean, reconnectCount: number) {
         console.error(`No client to write from ${client}. Attempting reconnect`);
         // Try reconnecting.
         if (reconnectCount <= 0) {
-            connectToServer().then(notifyCompleted.bind(undefined, hasFailures, reconnectCount+1));
+            connectToServer().then(notifyCompleted.bind(undefined, hasFailures, reconnectCount + 1));
         }
         return;
     }
