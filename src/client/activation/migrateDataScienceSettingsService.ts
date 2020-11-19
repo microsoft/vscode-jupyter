@@ -38,7 +38,7 @@ export class MigrateDataScienceSettingsService implements IExtensionActivationSe
             'MigratedDataScienceSettingsService',
             false
         );
-        if (true) {
+        if (!migrated.value) {
             await this.updateSettings(resource);
             migrated.updateValue(true).ignoreErrors();
         }
