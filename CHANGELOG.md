@@ -1,13 +1,13 @@
 # Changelog
 
-## 2020.11.1 (20 November 2020)
+## 2020.11.1 (19 November 2020)
 
 ### Fixes
 
 1. Interactive window input prompt does not allow any keyboard input.
    ([#446](https://github.com/Microsoft/vscode-jupyter/issues/446))
-1. CTRL+1/CTRL+2 switching with the interactive window does not put the focus back in the edit box.
-   ([#1293](https://github.com/Microsoft/vscode-jupyter/issues/1293))
+1. Migrate references to python.dataScience.\* in settings.json values and keybindings.json.
+   ([#1088](https://github.com/Microsoft/vscode-jupyter/issues/1088))   
 
 ### Thanks
 
