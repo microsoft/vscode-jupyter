@@ -7,8 +7,8 @@
 !out/datascience-ui/viewers/commons.initial.bundle.js.map
 !out/datascience-ui/viewers/dataExplorer.js.map
 !out/datascience-ui/viewers/plotViewer.js.map
-images
-docs
+images/**
+docs/**
 *.vsix
 .appveyor.yml
 .editorconfig
