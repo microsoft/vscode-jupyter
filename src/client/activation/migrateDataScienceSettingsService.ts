@@ -81,7 +81,7 @@ export class MigrateDataScienceSettingsService implements IExtensionActivationSe
 
             // tslint:disable-next-line: no-any
             let val = (content as any)[k];
-            let subkey = k.substr(19);
+            const subkey = k.substr(19);
             let newKey = `jupyter.${subkey}`;
             if (subkey === 'jupyterServerURI' && !content.hasOwnProperty('jupyter.jupyterServerType')) {
                 // Special case. URI is no longer supported. Move it to storage
