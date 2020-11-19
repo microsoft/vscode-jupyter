@@ -7,7 +7,6 @@ import { ChildProcess, spawn, SpawnOptions } from 'child_process';
 import * as fs from 'fs-extra';
 import { AddressInfo, createServer, Server } from 'net';
 import * as path from 'path';
-import { EXTENSION_ROOT_DIR } from '../client/constants';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from './constants';
 import { noop, sleep } from './core';
 import { initializeLogger } from './testLogger';
