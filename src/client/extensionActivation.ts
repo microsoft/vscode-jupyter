@@ -138,6 +138,6 @@ async function activateLegacy(
     const deprecationMgr = serviceContainer.get<IFeatureDeprecationManager>(IFeatureDeprecationManager);
     deprecationMgr.initialize();
     context.subscriptions.push(deprecationMgr);
-
+    await activationPromise;
     return { activationPromise };
 }
