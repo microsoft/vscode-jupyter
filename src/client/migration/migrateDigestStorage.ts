@@ -29,7 +29,9 @@ export class MigrateDigestStorage {
             try {
                 await this.ensuredDir;
                 const nbsecret = path.join(this.pythonExtensionStorageDir, 'nbsecret');
-                await this.fs.copyLocal(nbsecret, path.join(this.currentExtensionStorageDir, 'nbsecret'));
+                if (this.fs.localDirectoryExists(nbsecret)) {
+                    await this.fs.copyLocal(nbsecret, path.join(this.currentExtensionStorageDir, 'nbsecret'));
+                }
             } catch (e) {
                 traceInfo('Encountered error while migrating trusted notebooks nbsecret keyfile', e);
             } finally {
@@ -46,7 +48,9 @@ export class MigrateDigestStorage {
             try {
                 await this.ensuredDir;
                 const nbsignatures = path.join(this.pythonExtensionStorageDir, 'nbsignatures');
-                await this.fs.copyLocal(nbsignatures, path.join(this.currentExtensionStorageDir, 'nbsignatures'));
+                if (this.fs.localDirectoryExists(nbsignatures)) {
+                    await this.fs.copyLocal(nbsignatures, path.join(this.currentExtensionStorageDir, 'nbsignatures'));
+                }
             } catch (e) {
                 traceInfo('Encountered error while migrating trusted notebooks nbsignatures directory', e);
             } finally {
