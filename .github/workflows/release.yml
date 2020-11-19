@@ -235,6 +235,12 @@ jobs:
         with:
           python-version: ${{matrix.python}}
 
+      - name: Set CI Path
+        uses: ./.github/actions/set-python
+        id: set-python
+        with: 
+          PYTHON_VERSION: ${{matrix.python}}
+
       - name: Upgrade pip
         run: python -m pip install -U pip
 
@@ -380,6 +386,12 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: ${{matrix.python}}
+
+      - name: Set CI Path
+        uses: ./.github/actions/set-python
+        id: set-python
+        with: 
+          PYTHON_VERSION: ${{matrix.python}}
 
       - name: Upgrade pip
         run: python -m pip install -U pip
@@ -547,10 +559,6 @@ jobs:
         os: [ubuntu-latest, windows-latest]
         python: [3.8]
     steps:
-      - name: Use Python ${{matrix.python}}
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{matrix.python}}
       - name: Checkout
         uses: actions/checkout@v2
 
@@ -558,6 +566,12 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: ${{matrix.python}}
+
+      - name: Set CI Path
+        uses: ./.github/actions/set-python
+        id: set-python
+        with: 
+          PYTHON_VERSION: ${{matrix.python}}
 
       - name: Upgrade pip
         run: python -m pip install -U pip
@@ -602,7 +616,7 @@ jobs:
         uses: actions/upload-artifact@v2
         if: failure()
         with:
-          name: smoke-test.log
+          name: smoke-test-${{matrix.os}}.log
           path: './smoke-test.log'
 
 
