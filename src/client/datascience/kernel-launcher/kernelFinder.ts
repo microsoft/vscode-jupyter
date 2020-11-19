@@ -438,7 +438,7 @@ export class KernelFinder implements IKernelFinder {
         if (
             !this.cache.find(
                 (item) =>
-                    item.interpreterPath === newPath.interpreterPath && item.kernelSpecFile === item.kernelSpecFile
+                    item.interpreterPath === newPath.interpreterPath && item.kernelSpecFile === newPath.kernelSpecFile
             )
         ) {
             this.cache.push(newPath);
