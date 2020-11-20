@@ -42,13 +42,9 @@ async function connectToServer() {
         }
     });
 }
-function notifyCompleted(hasFailures: boolean, reconnectCount: number) {
+function notifyCompleted(hasFailures: boolean) {
     if (!client || client.destroyed || !client.writable) {
-        console.error(`No client to write from ${client}. Attempting reconnect`);
-        // Try reconnecting.
-        if (reconnectCount <= 0) {
-            connectToServer().then(notifyCompleted.bind(undefined, hasFailures, reconnectCount + 1));
-        }
+        console.error(`No client to write from ${client}.`);
         return;
     }
     try {
@@ -73,7 +69,7 @@ class ExitReporter {
                 console.info('Start Exit Reporter for Mocha.');
             })
             .once(EVENT_RUN_END, async () => {
-                notifyCompleted(stats.failures > 0, 0);
+                notifyCompleted(stats.failures > 0);
                 console.info('End Exit Reporter for Mocha.');
             });
     }
