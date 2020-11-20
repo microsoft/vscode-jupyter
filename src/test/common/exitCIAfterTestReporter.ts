@@ -30,20 +30,21 @@ async function connectToServer() {
             client = new net.Socket();
             client.connect({ port }, () => {
                 console.log(`Connected to port ${port}`);
-                resolve();
+                resolve(client);
             });
-            client.on('error', () => {
+            client.on('error', (err) => {
+                console.log(`Errors connecting to port ${port}: ${err}`);
                 // Swallow errors, else node will complain.
             });
         } catch {
             console.error('Failed to connect to socket server to notify completion of tests');
-            resolve();
+            resolve(client);
         }
     });
 }
 function notifyCompleted(hasFailures: boolean) {
     if (!client || client.destroyed || !client.writable) {
-        console.error('No client to write from');
+        console.error(`No client to write from ${client}.`);
         return;
     }
     try {

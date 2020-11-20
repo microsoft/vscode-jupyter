@@ -22,7 +22,6 @@ env:
   CACHE_PYTHONFILES: cache-pvsc-pythonFiles
   VSIX_NAME: ms-toolsai-jupyter-insiders.vsix
   COVERAGE_REPORTS: tests-coverage-reports
-  CI_PYTHON_PATH: python
   TEST_RESULTS_DIRECTORY: .
   TEST_RESULTS_GLOB: '**/test-results*.xml'
   IPYWIDGET_SCREENSHOT_PATH: '*-screenshot.png'

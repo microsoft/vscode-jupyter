@@ -623,7 +623,9 @@ export class KernelSelector implements IKernelSelectionUsage {
                 KernelInterpreterDependencyResponse.ok
             ) {
                 throw new Error(
-                    localize.DataScience.ipykernelNotInstalled().format(interpreter.displayName || interpreter.path)
+                    localize.DataScience.ipykernelNotInstalled().format(
+                        `${interpreter.displayName || interpreter.path}:${interpreter.path}`
+                    )
                 );
             }
         }
