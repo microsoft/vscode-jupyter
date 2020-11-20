@@ -34,13 +34,21 @@ export class MigrateDataScienceSettingsService implements IExtensionActivationSe
 
     public async activate(resource: Resource): Promise<void> {
         // Only perform the migrate once
-        const migrated = this.persistentStateFactory.createGlobalPersistentState(
+        const migratedSettings = this.persistentStateFactory.createGlobalPersistentState(
             'MigratedDataScienceSettingsService',
             false
         );
-        if (!migrated.value) {
+        const migratedKeybindings = this.persistentStateFactory.createGlobalPersistentState(
+            'MigratedDataScienceKeybindingsService',
+            false
+        );
+        if (!migratedSettings.value) {
             await this.updateSettings(resource);
-            migrated.updateValue(true).ignoreErrors();
+            migratedSettings.updateValue(true).ignoreErrors();
+        }
+        if (!migratedKeybindings.value) {
+            await this.updateKeybindings();
+            migratedKeybindings.updateValue(true).ignoreErrors();
         }
     }
 
@@ -48,7 +56,7 @@ export class MigrateDataScienceSettingsService implements IExtensionActivationSe
     private async fixSettingsFile(filePath: string) {
         let fileContents = await this.fs.readLocalFile(filePath);
 
-        if (!fileContents.toLowerCase().includes('python.datascience')) {
+        if (!fileContents.includes('python.dataScience')) {
             return;
         }
 
@@ -61,7 +69,7 @@ export class MigrateDataScienceSettingsService implements IExtensionActivationSe
 
         // Find all of the python.datascience entries
         const keys = Object.keys(content);
-        const dataScienceKeys = keys.filter((f) => f.toLowerCase().startsWith('python.datascience'));
+        const dataScienceKeys = keys.filter((f) => f.startsWith('python.dataScience'));
 
         if (dataScienceKeys.length === 0) {
             return;
@@ -109,7 +117,7 @@ export class MigrateDataScienceSettingsService implements IExtensionActivationSe
     // in their user keybindings.json. Ensure we migrate these too.
     private async fixKeybindingsFile(filePath: string) {
         const fileContents = await this.fs.readLocalFile(filePath);
-        if (!fileContents.toLowerCase().includes('python.datascience.')) {
+        if (!fileContents.includes('python.datascience.')) {
             return;
         }
         const errors: ParseError[] = [];
@@ -125,23 +133,32 @@ export class MigrateDataScienceSettingsService implements IExtensionActivationSe
         // Ensure we don't migrate a setting if the replacement command already exists
         const jupyterCommands = keybindings.map((keybinding) => {
             const command = keybinding.command;
-            if (typeof command === 'string' && command.startsWith('jupyter.')) {
+            if (typeof command === 'string' && command.includes('jupyter.')) {
                 return command;
             }
         });
         const migratedKeybindings: IKeyBinding[] = [];
         keybindings.forEach((keybinding) => {
             const command = keybinding.command;
-            if (typeof command === 'string' && command.toLowerCase().startsWith('python.datascience.')) {
-                const targetCommand = `jupyter.${command.substr(19)}`;
+            if (typeof command === 'string' && command.includes('python.datascience.')) {
+                const targetCommand = command.replace(/python\.datascience\./gi, 'jupyter.');
+                // Only migrate if the user doesn't already have an entry in the keybindings.json
+                // for the new jupyter.* equivalent of this command
                 if (!jupyterCommands.includes(targetCommand)) {
                     keybinding.command = targetCommand;
+                    // If we migrate the command, also migrate any python.datascience context
+                    // keys that might exist in a when clause
+                    const whenClause = keybinding.when;
+                    if (whenClause && typeof whenClause === 'string') {
+                        keybinding.when = whenClause.replace(/python\.datascience\./gi, 'jupyter.');
+                    }
                     migratedKeybindings.push(keybinding);
                 }
                 // If user already has a new custom keybinding for the target command,
                 // don't migrate and also don't leave the old python.datascience.*
                 // keybinding behind
             } else {
+                // Not a python.datascience keybinding, leave it alone
                 migratedKeybindings.push(keybinding);
             }
         });
@@ -152,11 +169,14 @@ export class MigrateDataScienceSettingsService implements IExtensionActivationSe
     @traceDecorators.error('Failed to update test settings')
     private async updateSettings(resource: Resource): Promise<void> {
         const filesToBeFixed = this.getSettingsFiles(resource).map((file) => this.fixSettingsFile(file));
+        await Promise.all(filesToBeFixed);
+    }
+
+    private async updateKeybindings() {
         const userCustomKeybindingsFile = this.application.userCustomKeybindingsFile;
         if (userCustomKeybindingsFile && (await this.fs.localFileExists(userCustomKeybindingsFile))) {
-            filesToBeFixed.push(this.fixKeybindingsFile(userCustomKeybindingsFile));
+            await this.fixKeybindingsFile(userCustomKeybindingsFile);
         }
-        await Promise.all(filesToBeFixed);
     }
 
     private getSettingsFiles(resource: Resource): string[] {

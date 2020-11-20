@@ -154,11 +154,11 @@ suite('Migrate data science settings', () => {
     const originalKeybindings = `[
     {
         "key": "ctrl+shift+enter",
-        "command": "python.dataScience.runallcells"
+        "command": "python.datascience.runallcells"
     },
     {
         "key": "ctrl+shift+enter",
-        "command": "python.dataScience.foo"
+        "command": "python.datascience.foo"
     },
     {
         "key": "ctrl+shift+enter",
@@ -166,7 +166,8 @@ suite('Migrate data science settings', () => {
     },
     {
         "key": "ctrl+shift+enter",
-        "command": "python.datascience.foobar"
+        "command": "python.datascience.foobar",
+        "when": "python.datascience.hascodecells"
     },
     {
         "key": "ctrl+shift+alt",
@@ -184,7 +185,8 @@ suite('Migrate data science settings', () => {
     },
     {
         "key": "ctrl+shift+enter",
-        "command": "jupyter.foobar"
+        "command": "jupyter.foobar",
+        "when": "jupyter.hascodecells"
     },
     {
         "key": "ctrl+shift+alt",
