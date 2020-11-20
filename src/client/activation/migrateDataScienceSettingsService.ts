@@ -48,7 +48,7 @@ export class MigrateDataScienceSettingsService implements IExtensionActivationSe
     private async fixSettingsFile(filePath: string) {
         let fileContents = await this.fs.readLocalFile(filePath);
 
-        if (!fileContents.includes('python.dataScience')) {
+        if (!fileContents.toLowerCase().includes('python.datascience')) {
             return;
         }
 
@@ -61,7 +61,7 @@ export class MigrateDataScienceSettingsService implements IExtensionActivationSe
 
         // Find all of the python.datascience entries
         const keys = Object.keys(content);
-        const dataScienceKeys = keys.filter((f) => f.startsWith('python.dataScience'));
+        const dataScienceKeys = keys.filter((f) => f.toLowerCase().startsWith('python.datascience'));
 
         if (dataScienceKeys.length === 0) {
             return;
@@ -81,8 +81,9 @@ export class MigrateDataScienceSettingsService implements IExtensionActivationSe
 
             // tslint:disable-next-line: no-any
             let val = (content as any)[k];
-            let newKey = `jupyter.${k.substr(19)}`;
-            if (k === 'python.dataScience.jupyterServerURI' && !content.hasOwnProperty('jupyter.jupyterServerType')) {
+            const subkey = k.substr(19);
+            let newKey = `jupyter.${subkey}`;
+            if (subkey === 'jupyterServerURI' && !content.hasOwnProperty('jupyter.jupyterServerType')) {
                 // Special case. URI is no longer supported. Move it to storage
                 this.serverUriStorage.setUri(val).ignoreErrors();
                 newKey = 'jupyter.jupyterServerType';
@@ -93,7 +94,7 @@ export class MigrateDataScienceSettingsService implements IExtensionActivationSe
                 if (typeof val === 'string') {
                     // If the value contains references to python.dataScience.* commands, migrate those too
                     // There may be multiple occurrences of commands in the object value
-                    val = val.replace(/python\.dataScience\./gi, 'jupyter.');
+                    val = val.replace(/python\.datascience\./gi, 'jupyter.');
                 }
             }
 
@@ -104,11 +105,11 @@ export class MigrateDataScienceSettingsService implements IExtensionActivationSe
         await this.fs.writeLocalFile(filePath, fileContents);
     }
 
-    // Users may have mapped old python.dataScience.* commands to custom keybindings
+    // Users may have mapped old python.datascience.* commands to custom keybindings
     // in their user keybindings.json. Ensure we migrate these too.
     private async fixKeybindingsFile(filePath: string) {
         const fileContents = await this.fs.readLocalFile(filePath);
-        if (!fileContents.includes('python.dataScience.')) {
+        if (!fileContents.toLowerCase().includes('python.datascience.')) {
             return;
         }
         const errors: ParseError[] = [];
@@ -131,15 +132,15 @@ export class MigrateDataScienceSettingsService implements IExtensionActivationSe
         const migratedKeybindings: IKeyBinding[] = [];
         keybindings.forEach((keybinding) => {
             const command = keybinding.command;
-            if (typeof command === 'string' && command.startsWith('python.dataScience.')) {
+            if (typeof command === 'string' && command.toLowerCase().startsWith('python.datascience.')) {
                 const targetCommand = `jupyter.${command.substr(19)}`;
                 if (!jupyterCommands.includes(targetCommand)) {
-                    // If user already has a new custom keybinding for the target command,
-                    // don't migrate and also don't leave the old python.dataScience.*
-                    // keybinding behind
                     keybinding.command = targetCommand;
                     migratedKeybindings.push(keybinding);
                 }
+                // If user already has a new custom keybinding for the target command,
+                // don't migrate and also don't leave the old python.datascience.*
+                // keybinding behind
             } else {
                 migratedKeybindings.push(keybinding);
             }

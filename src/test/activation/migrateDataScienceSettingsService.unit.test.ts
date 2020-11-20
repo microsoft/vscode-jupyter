@@ -165,6 +165,10 @@ suite('Migrate data science settings', () => {
         "command": "jupyter.foo"
     },
     {
+        "key": "ctrl+shift+enter",
+        "command": "python.datascience.foobar"
+    },
+    {
         "key": "ctrl+shift+alt",
         "command": "foo"
     }
@@ -177,6 +181,10 @@ suite('Migrate data science settings', () => {
     {
         "key": "ctrl+shift+enter",
         "command": "jupyter.foo"
+    },
+    {
+        "key": "ctrl+shift+enter",
+        "command": "jupyter.foobar"
     },
     {
         "key": "ctrl+shift+alt",
