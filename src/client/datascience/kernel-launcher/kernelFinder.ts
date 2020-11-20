@@ -27,7 +27,7 @@ const linuxJupyterPath = path.join('.local', 'share', 'jupyter', 'kernels');
 const macJupyterPath = path.join('Library', 'Jupyter', 'kernels');
 const baseKernelPath = path.join('share', 'jupyter', 'kernels');
 
-const cacheFile = 'kernelSpecPathCache.json';
+const cacheFile = 'kernelSpecPaths.json';
 
 type KernelSpecFileWithContainingInterpreter = { interpreterPath?: string; kernelSpecFile: string };
 
