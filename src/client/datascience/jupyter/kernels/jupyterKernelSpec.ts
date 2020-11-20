@@ -20,6 +20,7 @@ export class JupyterKernelSpec implements IJupyterKernelSpec {
     public readonly env: NodeJS.ProcessEnv | undefined;
     public display_name: string;
     public argv: string[];
+    public interrupt_mode?: 'message' | 'signal';
 
     // tslint:disable-next-line: no-any
     public metadata?: Record<string, any> & { interpreter?: Partial<PythonEnvironment> };
@@ -36,6 +37,8 @@ export class JupyterKernelSpec implements IJupyterKernelSpec {
         this.metadata = specModel.metadata;
         // tslint:disable-next-line: no-any
         this.env = specModel.env as any; // JSONObject, but should match
+        // tslint:disable-next-line: no-any
+        this.interrupt_mode = specModel.interrupt_mode as any;
     }
 }
 

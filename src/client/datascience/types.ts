@@ -432,6 +432,7 @@ export interface IJupyterKernelSpec {
      * Plenty of conda packages ship kernels in this manner (beakerx, etc).
      */
     interpreterPath?: string;
+    readonly interrupt_mode?: 'message' | 'signal';
 }
 
 export const INotebookImporter = Symbol('INotebookImporter');
