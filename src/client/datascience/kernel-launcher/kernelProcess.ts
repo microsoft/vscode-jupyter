@@ -286,13 +286,11 @@ export class KernelProcess implements IKernelProcess {
                 }
                 this.exitEvent.fire({ exitCode: exitCode || undefined });
             });
-            // tslint:disable-next-line: no-any
-            exeObs.proc.stdout.on('data', (data: any) => {
-                traceInfo(`KernelProcess output: ${data}`);
+            exeObs.proc.stdout.on('data', (data: Buffer | string) => {
+                traceInfo(`KernelProcess output: ${(data || '').toString()}`);
             });
-            // tslint:disable-next-line: no-any
-            exeObs.proc.stderr.on('data', (data: any) => {
-                traceInfo(`KernelProcess error: ${data}`);
+            exeObs.proc.stderr.on('data', (data: Buffer | string) => {
+                traceInfo(`KernelProcess error: ${(data || '').toString()}`);
             });
         } else {
             throw new Error('KernelProcess failed to launch');

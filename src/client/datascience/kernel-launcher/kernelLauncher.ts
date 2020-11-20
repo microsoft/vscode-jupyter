@@ -15,7 +15,6 @@ import { traceInfo } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IProcessServiceFactory } from '../../common/process/types';
 import { Resource } from '../../common/types';
-import { IInterpreterService } from '../../interpreter/contracts';
 import { captureTelemetry } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { KernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../jupyter/kernels/types';
@@ -38,7 +37,8 @@ export class KernelLauncher implements IKernelLauncher {
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(KernelDaemonPool) private readonly daemonPool: KernelDaemonPool,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
-        @inject(IInterpreterService) private readonly kernelEnvVarsService: KernelEnvironmentVariablesService
+        @inject(KernelEnvironmentVariablesService)
+        private readonly kernelEnvVarsService: KernelEnvironmentVariablesService
     ) {}
 
     // This function is public so it can be called when a test shuts down
@@ -88,7 +88,7 @@ export class KernelLauncher implements IKernelLauncher {
         resource: Resource,
         workingDirectory: string
     ): Promise<IKernelProcess> {
-        const connection = await this.getKernelConnection();
+        const connection = await this.getKernelConnection(kernelConnectionMetadata);
         const kernelProcess = new KernelProcess(
             this.processExecutionFactory,
             this.daemonPool,
@@ -123,10 +123,11 @@ export class KernelLauncher implements IKernelLauncher {
         return ports;
     }
 
-    private async getKernelConnection(): Promise<IKernelConnection> {
+    private async getKernelConnection(
+        kernelConnectionMetadata: KernelSpecConnectionMetadata | PythonKernelConnectionMetadata
+    ): Promise<IKernelConnection> {
         const ports = await this.getConnectionPorts();
         return {
-            version: 1,
             key: uuid(),
             signature_scheme: 'hmac-sha256',
             transport: 'tcp',
@@ -135,7 +136,8 @@ export class KernelLauncher implements IKernelLauncher {
             control_port: ports[1],
             shell_port: ports[2],
             stdin_port: ports[3],
-            iopub_port: ports[4]
+            iopub_port: ports[4],
+            kernel_name: kernelConnectionMetadata.kernelSpec?.name || 'python'
         };
     }
 }
