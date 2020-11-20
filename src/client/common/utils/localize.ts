@@ -187,9 +187,9 @@ export namespace DataScience {
         'You have opened a Python notebook. Would you like to install the Python extension?'
     );
 
-    export const pythonInstalledReloadPromptMessage = localize(
+    export const pythonExtensionInstalled = localize(
         'DataScience.pythonInstalledReloadPromptMessage',
-        'Python extension is now installed. Reload window to activate?'
+        'Python extension is now installed. Some features might not be available until a notebook or interactive window session is restarted.'
     );
     export const unknownServerUri = localize(
         'DataScience.unknownServerUri',
