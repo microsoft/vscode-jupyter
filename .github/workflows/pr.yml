@@ -398,21 +398,22 @@ jobs:
           python-version: ${{matrix.python}}
         if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook'
 
-    #   - uses: conda-incubator/setup-miniconda@v2
-    #     if: matrix.test-suite == 'conda'
-    #     with:
-    #       auto-update-conda: false
-    #       python-version: ${{ matrix.python }}
-    #       miniconda-version: "latest"
-    #       activate-environment: foo
+      - uses: conda-incubator/setup-miniconda@v2
+        if: matrix.test-suite == 'conda'
+        with:
+          auto-update-conda: false
+          python-version: ${{ matrix.python }}
+          miniconda-version: "latest"
+          activate-environment: foo
 
-    #   - name: Conda info
-    #     if: matrix.test-suite == 'conda'
-    #     shell: bash -l {0}
-    #     run: |
-    #       python --version
-    #       conda info
-    #       conda list
+      - name: Conda info
+        if: matrix.test-suite == 'conda'
+        shell: bash -l {0}
+        run: |
+          python --version
+          python -c 'import sys;print(sys.executable)'
+          conda info
+          conda list
 
       - name: Set CI Path
         uses: ./.github/actions/set-python
