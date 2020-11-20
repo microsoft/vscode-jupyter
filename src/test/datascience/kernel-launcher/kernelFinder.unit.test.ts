@@ -415,8 +415,8 @@ suite('Kernel Finder', () => {
             });
             // Ignore some properties when comparing.
             assert.deepEqual(
-                { ...spec, specFile: '', interpreterPath: '' },
-                { ...kernel, specFile: '', interpreterPath: '' },
+                { ...spec, specFile: '', interpreterPath: '', interrupt_mode: 'message' },
+                { ...kernel, specFile: '', interpreterPath: '', interrupt_mode: 'message' },
                 'The found kernel spec is not the same.'
             );
             fileSystem.reset();
