@@ -34,13 +34,21 @@ export class MigrateDataScienceSettingsService implements IExtensionActivationSe
 
     public async activate(resource: Resource): Promise<void> {
         // Only perform the migrate once
-        const migrated = this.persistentStateFactory.createGlobalPersistentState(
+        const migratedSettings = this.persistentStateFactory.createGlobalPersistentState(
             'MigratedDataScienceSettingsService',
             false
         );
-        if (!migrated.value) {
+        const migratedKeybindings = this.persistentStateFactory.createGlobalPersistentState(
+            'MigratedDataScienceKeybindingsService',
+            false
+        );
+        if (!migratedSettings.value) {
             await this.updateSettings(resource);
-            migrated.updateValue(true).ignoreErrors();
+            migratedSettings.updateValue(true).ignoreErrors();
+        }
+        if (!migratedKeybindings.value) {
+            await this.updateKeybindings();
+            migratedKeybindings.updateValue(true).ignoreErrors();
         }
     }
 
@@ -161,11 +169,14 @@ export class MigrateDataScienceSettingsService implements IExtensionActivationSe
     @traceDecorators.error('Failed to update test settings')
     private async updateSettings(resource: Resource): Promise<void> {
         const filesToBeFixed = this.getSettingsFiles(resource).map((file) => this.fixSettingsFile(file));
+        await Promise.all(filesToBeFixed);
+    }
+
+    private async updateKeybindings() {
         const userCustomKeybindingsFile = this.application.userCustomKeybindingsFile;
         if (userCustomKeybindingsFile && (await this.fs.localFileExists(userCustomKeybindingsFile))) {
-            filesToBeFixed.push(this.fixKeybindingsFile(userCustomKeybindingsFile));
+            await this.fixKeybindingsFile(userCustomKeybindingsFile);
         }
-        await Promise.all(filesToBeFixed);
     }
 
     private getSettingsFiles(resource: Resource): string[] {
