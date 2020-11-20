@@ -1,7 +1,7 @@
 name: 'Set Python'
 description: "Sets python to a specific version"
 
-inputs: 
+inputs:
   PYTHON_VERSION:
      description: 'Version of python'
      required: true
@@ -15,9 +15,9 @@ runs:
   steps:
     - name: Output python path
       id: python_run
-      shell: bash
+      shell: bash -l {0}
       run: python -c "import sys;print('::set-output name=python_path::' + sys.executable)"
 
     - name: Push to environment
-      shell: bash
+      shell: bash -l {0}
       run: echo "CI_PYTHON_PATH=${{ steps.python_run.outputs.python_path }}" >> $GITHUB_ENV
