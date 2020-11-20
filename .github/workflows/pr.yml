@@ -415,6 +415,13 @@ jobs:
           conda info
           conda list
 
+
+      - name: Conda info
+        shell: bash -l {0}
+        run: |
+          python --version
+          python -c 'import sys;print(sys.executable)'
+
       - name: Set CI Path
         uses: ./.github/actions/set-python
         id: set-python
