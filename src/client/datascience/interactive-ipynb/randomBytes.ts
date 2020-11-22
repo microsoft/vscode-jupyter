@@ -1,12 +1,12 @@
 import { exec } from 'child_process';
 import * as fs from 'fs-extra';
-import * as path from 'path';
 import { inject, injectable } from 'inversify';
+import * as path from 'path';
 import { traceError, traceInfo } from '../../common/logger';
 import { IPlatformService } from '../../common/platform/types';
 import { OSType } from '../../common/utils/platform';
-import { ISystemPseudoRandomNumberGenerator } from '../types';
 import { EXTENSION_ROOT_DIR } from '../../constants';
+import { ISystemPseudoRandomNumberGenerator } from '../types';
 
 // Wraps operating system-provided pseudorandom number generator facilities to provide
 // cryptographically secure random bytes.
