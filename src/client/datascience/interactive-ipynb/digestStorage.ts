@@ -102,8 +102,7 @@ export class DigestStorage implements IDigestStorage {
             }
 
             // If it doesn't exist, create one
-            const randomBytesBuffer = await this.prng.randomBytes(1024);
-            const key = randomBytesBuffer.toString('hex');
+            const key = await this.prng.generateRandomKey(1024);
             if (key) {
                 traceInfo(`Successfully generated keyfile`);
                 await this.fs.writeLocalFile(defaultKeyFileLocation, key);

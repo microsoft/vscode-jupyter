@@ -1,10 +1,12 @@
 import { exec } from 'child_process';
 import * as fs from 'fs-extra';
+import * as path from 'path';
 import { inject, injectable } from 'inversify';
 import { traceError, traceInfo } from '../../common/logger';
 import { IPlatformService } from '../../common/platform/types';
 import { OSType } from '../../common/utils/platform';
 import { ISystemPseudoRandomNumberGenerator } from '../types';
+import { EXTENSION_ROOT_DIR } from '../../constants';
 
 // Wraps operating system-provided pseudorandom number generator facilities to provide
 // cryptographically secure random bytes.
@@ -12,7 +14,7 @@ import { ISystemPseudoRandomNumberGenerator } from '../types';
 export class SystemPseudoRandomNumberGenerator implements ISystemPseudoRandomNumberGenerator {
     constructor(@inject(IPlatformService) private readonly platformService: IPlatformService) {}
 
-    public async randomBytes(numBytes: number) {
+    public async generateRandomKey(numBytes: number) {
         switch (this.platformService.osType) {
             case OSType.Windows:
                 return this.randomBytesForWindows(numBytes);
@@ -24,60 +26,46 @@ export class SystemPseudoRandomNumberGenerator implements ISystemPseudoRandomNum
         }
     }
 
-    // Calls into BCryptGenRandom in bcrypt.dll using node-ffi
-    // See https://github.com/node-ffi/node-ffi/wiki/Node-FFI-Tutorial for details on usage
-    private randomBytesForWindows(numBytes: number) {
-        try {
-            // tslint:disable: no-require-imports
-            // Lazy-load modules required for calling BCryptGenRandom
-            const ffi = require('ffi-napi') as typeof import('ffi-napi');
-            const ref = require('ref-napi');
-
-            const BCRYPT_ALG_HANDLE = 'void*';
-            const ULONG = 'uint';
-            const PUCHAR = 'pointer';
-            const NTSTATUS = ref.types.uint32;
-
-            traceInfo('Initializing FFI bindings for BCryptGenRandom...');
-            const bcryptlib = ffi.Library('BCrypt', {
-                // Name of DLL function: [ return type, [ arg1 type, arg2 type, ... ] ]
-                // https://docs.microsoft.com/en-us/windows/win32/api/bcrypt/nf-bcrypt-bcryptgenrandom
-                BCryptGenRandom: [NTSTATUS, [BCRYPT_ALG_HANDLE, PUCHAR, ULONG, ULONG]]
-            });
-
-            traceInfo('Calling BCryptGenRandom to generate random bytes...');
-            const pbBuffer = Buffer.alloc(numBytes);
-            const statusCodeForBCryptGenRandom = bcryptlib.BCryptGenRandom(ref.NULL, pbBuffer, numBytes, 2);
-            if (statusCodeForBCryptGenRandom !== 0) {
-                traceError(
-                    `Failed to allocate random bytes with BCryptGenRandom with exit status ${statusCodeForBCryptGenRandom}.`
-                );
-                throw new Error('Failed to allocate random bytes for notebook trust.');
-            }
-
-            return pbBuffer;
-        } catch (e) {
-            traceError(e);
-            throw new Error('Failed to allocate random bytes for notebook trust.');
-        }
+    // Run a small bundled executable which directly calls BCryptGenRandom and
+    // outputs 1024 random bytes to stdout as a hex string.
+    private async randomBytesForWindows(_numBytes: number): Promise<string> {
+        // Ensure the exe is present. If it's not we can't generate bytes for Windows 
+        const executable = path.resolve(EXTENSION_ROOT_DIR, 'out', 'BCryptGenRandom', 'BCryptGenRandom.exe');
+        await fs.stat(executable);
+        return new Promise((resolve, reject) => {
+            exec(executable, { encoding: 'buffer' }, (err, stdout, stderr) => {
+                if (err) {
+                    traceError(`${err}`);
+                    reject(`Failed to allocate random bytes for notebook trust: ${err}`);
+                }
+                if (stderr.length > 0) {
+                    traceError(stderr);
+                }
+                const key = stdout.toString('ascii');
+                traceInfo(`Generated random key of length ${key.length}`);
+                resolve(key);
+            })
+        });
     }
 
-    // Read the first `numBytes` from /dev/urandom
-    private async randomBytesForUnixLikeSystems(numBytes: number): Promise<Buffer> {
-        await fs.stat('/dev/urandom'); // Ensure file is present. If it's not we can't generate bytes
+    // Read the first `numBytes` from /dev/urandom and return it as a hex-encoded string
+    private async randomBytesForUnixLikeSystems(numBytes: number): Promise<string> {
+        // Ensure urandom file is present. If it's not we can't generate bytes
+        await fs.stat('/dev/urandom'); 
         return new Promise((resolve, reject) => {
             const script = `head -c ${numBytes} /dev/urandom`;
             traceInfo(`Executing script ${script} to generate random bytes`);
             exec(script, { encoding: 'buffer' }, (err, stdout, stderr) => {
                 if (err) {
                     traceError(`${err}`);
-                    reject(err);
+                    reject(`Failed to allocate random bytes for notebook trust: ${err}`);
                 }
                 if (stderr.length > 0) {
                     traceError(stderr);
                 }
-                traceInfo(`Generated random bytes of length ${stdout.length}`);
-                resolve(stdout);
+                const key = stdout.toString('hex');
+                traceInfo(`Generated random key of length ${key.length}`);
+                resolve(key);
             });
         });
     }

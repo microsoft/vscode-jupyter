@@ -15,12 +15,12 @@ const colors = require('colors/safe');
 const path = require('path');
 const del = require('del');
 const fs = require('fs-extra');
-const fsExtra = require('fs-extra');
 const _ = require('lodash');
 const nativeDependencyChecker = require('node-has-native-dependencies');
 const flat = require('flat');
 const { argv } = require('yargs');
 const os = require('os');
+const { ExtensionRootDir } = require('./build/util');
 
 const isCI = process.env.TF_BUILD !== undefined || process.env.GITHUB_ACTIONS === 'true';
 
@@ -112,7 +112,7 @@ gulp.task('updateLicense', async () => {
 });
 
 async function updateLicense(args) {
-    await fsExtra.copyFile('extension_license.txt', 'LICENSE.txt');
+    await fs.copyFile('extension_license.txt', 'LICENSE.txt');
 }
 
 gulp.task('updateBuildNumber', async () => {
@@ -122,7 +122,7 @@ gulp.task('updateBuildNumber', async () => {
 async function updateBuildNumber(args) {
     if (args && args.buildNumber) {
         // Edit the version number from the package.json
-        const packageJsonContents = await fsExtra.readFile('package.json', 'utf-8');
+        const packageJsonContents = await fs.readFile('package.json', 'utf-8');
         const packageJson = JSON.parse(packageJsonContents);
 
         // Change version number
@@ -136,18 +136,18 @@ async function updateBuildNumber(args) {
         packageJson.version = newVersion;
 
         // Write back to the package json
-        await fsExtra.writeFile('package.json', JSON.stringify(packageJson, null, 4), 'utf-8');
+        await fs.writeFile('package.json', JSON.stringify(packageJson, null, 4), 'utf-8');
 
         // Update the changelog.md if we are told to (this should happen on the release branch)
         if (args.updateChangelog) {
-            const changeLogContents = await fsExtra.readFile('CHANGELOG.md', 'utf-8');
+            const changeLogContents = await fs.readFile('CHANGELOG.md', 'utf-8');
             const fixedContents = changeLogContents.replace(
                 /##\s*(\d+)\.(\d+)\.(\d+)\s*\(/,
                 `## $1.$2.${buildNumberPortion} (`
             );
 
             // Write back to changelog.md
-            await fsExtra.writeFile('CHANGELOG.md', fixedContents, 'utf-8');
+            await fs.writeFile('CHANGELOG.md', fixedContents, 'utf-8');
         }
     } else {
         throw Error('buildNumber argument required for updateBuildNumber task');
@@ -232,6 +232,14 @@ function getAllowedWarningsForWebPack(buildConfig) {
     }
 }
 
+gulp.task('includeBCryptGenRandomExe', async () => {
+    const src = path.join(ExtensionRootDir, 'src', 'BCryptGenRandom', 'BCryptGenRandom.exe');
+    const dest = path.join(ExtensionRootDir, 'out', 'BCryptGenRandom', 'BcryptGenRandom.exe');
+    await fs.stat(src);
+    await fs.ensureDir(path.dirname(dest));
+    await fs.copyFile(src, dest);
+})
+
 gulp.task('prePublishBundle', gulp.series('webpack'));
 gulp.task('checkDependencies', gulp.series('checkNativeDependencies'));
 // On CI, when running Notebook tests, we don't need old webviews.
@@ -278,7 +286,7 @@ function hasNativeDependencies() {
         path.dirname(item.substring(item.indexOf('node_modules') + 'node_modules'.length)).split(path.sep)
     )
         .filter((item) => item.length > 0)
-        .filter((item) => !item.includes('zeromq') && !item.includes('keytar') && !item.includes('ffi-napi') && !item.includes('ref-napi')) // Known native modules
+        .filter((item) => !item.includes('zeromq') && !item.includes('keytar')) // Known native modules
         .filter(
             (item) =>
                 jsonProperties.findIndex((flattenedDependency) =>
