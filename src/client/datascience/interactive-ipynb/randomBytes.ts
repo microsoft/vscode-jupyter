@@ -29,7 +29,7 @@ export class SystemPseudoRandomNumberGenerator implements ISystemPseudoRandomNum
     // Run a small bundled executable which directly calls BCryptGenRandom and
     // outputs 1024 random bytes to stdout as a hex string.
     private async randomBytesForWindows(_numBytes: number): Promise<string> {
-        // Ensure the exe is present. If it's not we can't generate bytes for Windows 
+        // Ensure the exe is present. If it's not we can't generate bytes for Windows
         const executable = path.resolve(EXTENSION_ROOT_DIR, 'out', 'BCryptGenRandom', 'BCryptGenRandom.exe');
         await fs.stat(executable);
         return new Promise((resolve, reject) => {
@@ -44,14 +44,14 @@ export class SystemPseudoRandomNumberGenerator implements ISystemPseudoRandomNum
                 const key = stdout.toString('ascii');
                 traceInfo(`Generated random key of length ${key.length}`);
                 resolve(key);
-            })
+            });
         });
     }
 
     // Read the first `numBytes` from /dev/urandom and return it as a hex-encoded string
     private async randomBytesForUnixLikeSystems(numBytes: number): Promise<string> {
         // Ensure urandom file is present. If it's not we can't generate bytes
-        await fs.stat('/dev/urandom'); 
+        await fs.stat('/dev/urandom');
         return new Promise((resolve, reject) => {
             const script = `head -c ${numBytes} /dev/urandom`;
             traceInfo(`Executing script ${script} to generate random bytes`);
