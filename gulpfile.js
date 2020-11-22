@@ -240,14 +240,14 @@ gulp.task('includeBCryptGenRandomExe', async () => {
     await fs.copyFile(src, dest);
 })
 
-gulp.task('prePublishBundle', gulp.series('webpack'));
+gulp.task('prePublishBundle', gulp.series('includeBCryptGenRandomExe', 'webpack'));
 gulp.task('checkDependencies', gulp.series('checkNativeDependencies'));
 // On CI, when running Notebook tests, we don't need old webviews.
 // Simple & temporary optimization for the Notebook Test Job.
 if (isCI && process.env.VSC_CI_MATRIX_TEST_SUITE === 'notebook') {
-    gulp.task('prePublishNonBundle', gulp.parallel('compile'));
+    gulp.task('prePublishNonBundle', gulp.parallel('compile', 'includeBCryptGenRandomExe'));
 } else {
-    gulp.task('prePublishNonBundle', gulp.parallel('compile', gulp.series('compile-webviews')));
+    gulp.task('prePublishNonBundle', gulp.parallel('compile', 'includeBCryptGenRandomExe', gulp.series('compile-webviews')));
 }
 
 function spawnAsync(command, args, env, rejectOnStdErr = false) {
