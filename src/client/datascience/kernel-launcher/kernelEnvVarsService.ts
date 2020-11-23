@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { traceError } from '../../common/logger';
+import { traceError, traceInfo } from '../../common/logger';
 import { IPlatformService } from '../../common/platform/types';
 import { Resource } from '../../common/types';
 import { IEnvironmentVariablesService } from '../../common/variables/types';
@@ -28,6 +28,7 @@ export class KernelEnvironmentVariablesService {
     public async getEnvironmentVariables(resource: Resource, kernelSpec: IJupyterKernelSpec) {
         let kernelEnv = kernelSpec.env && Object.keys(kernelSpec.env).length > 0 ? kernelSpec.env : undefined;
         if (!kernelSpec.interpreterPath) {
+            traceInfo('No custom variables for Kernel as interpreter path is not defined for kernel');
             return kernelEnv;
         }
         const interpreter = await this.interpreterService
@@ -38,10 +39,13 @@ export class KernelEnvironmentVariablesService {
             });
 
         if (interpreter?.envType !== EnvironmentType.Conda) {
+            traceInfo(`No custom variables for Kernel as interpreter is not conda, but is ${interpreter?.envType}`);
             return kernelEnv;
         }
+        traceInfo('Fetching interpreter variables of Conda environment to be used as env vars of Kernel');
         const interpreterEnv = await this.envActivation.getActivatedEnvironmentVariables(resource, interpreter, true);
         if (!interpreterEnv) {
+            traceInfo('No custom variables for Kernel even thought interpreter is conda');
             return kernelEnv;
         }
 
@@ -62,6 +66,7 @@ export class KernelEnvironmentVariablesService {
         if (process.env.PYTHONPATH) {
             this.envVarsService.appendPythonPath(mergedVars, process.env.PYTHONPATH);
         }
+        traceInfo(`PATH for kernelenv ${mergedVars[this.platformService.pathVariableName]}`);
         return mergedVars;
     }
 }
