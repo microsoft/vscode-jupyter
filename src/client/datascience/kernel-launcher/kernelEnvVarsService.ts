@@ -54,6 +54,7 @@ export class KernelEnvironmentVariablesService {
             return kernelEnv;
         }
 
+        traceInfo('Got custom variables for Kernel owned by a conda interpreter');
         // Merge the env variables with that of the kernel env.
         const mergedVars = { ...process.env };
         kernelEnv = kernelEnv || {};
@@ -71,7 +72,6 @@ export class KernelEnvironmentVariablesService {
         if (process.env.PYTHONPATH) {
             this.envVarsService.appendPythonPath(mergedVars, process.env.PYTHONPATH);
         }
-        traceInfo(`PATH for kernelenv ${mergedVars[this.platformService.pathVariableName]}`);
         return mergedVars;
     }
 }

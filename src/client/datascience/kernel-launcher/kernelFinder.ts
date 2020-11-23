@@ -157,9 +157,7 @@ export class KernelFinder implements IKernelFinder {
 
         // Find all the possible places to look for this resource
         const paths = await this.findAllResourcePossibleKernelPaths(resource);
-        traceInfo(`findAllResourcePossibleKernelPaths ${JSON.stringify(paths)}`);
         const searchResults = await this.kernelGlobSearch(paths);
-        traceInfo(`findAllResourcePossibleKernelPaths.kernelGlobSearch ${JSON.stringify(searchResults)}`);
 
         await Promise.all(
             searchResults.map(async (resultPath) => {
@@ -173,7 +171,6 @@ export class KernelFinder implements IKernelFinder {
             })
         );
 
-        traceInfo(`findAllResourcePossibleKernelPaths.kernelGlobSearch.mapped ${JSON.stringify(results)}`);
         return results;
     }
 
@@ -377,16 +374,10 @@ export class KernelFinder implements IKernelFinder {
     private async kernelGlobSearch(
         paths: (string | { interpreter: PythonEnvironment; kernelSearchPath: string })[]
     ): Promise<KernelSpecFileWithContainingInterpreter[]> {
-        traceInfo(`Search in kernelGlobSearch for paths = ${JSON.stringify(paths)}`);
         const searchResults = await Promise.all(
             paths.map((searchItem) => {
                 const searchPath = typeof searchItem === 'string' ? searchItem : searchItem.kernelSearchPath;
                 return this.fs.searchLocal(`**/kernel.json`, searchPath, true).then((kernelSpecFilesFound) => {
-                    traceInfo(
-                        `Found paths ${JSON.stringify(kernelSpecFilesFound)} for ${
-                            typeof searchItem === 'string' ? undefined : searchItem.interpreter.path
-                        }`
-                    );
                     return {
                         interpreter: typeof searchItem === 'string' ? undefined : searchItem.interpreter,
                         kernelSpecFiles: kernelSpecFilesFound.map((item) => path.join(searchPath, item))
@@ -394,7 +385,6 @@ export class KernelFinder implements IKernelFinder {
                 });
             })
         );
-        traceInfo(`Search results in kernelGlobSearch ${JSON.stringify(searchResults)}`);
         const kernelSpecFiles: KernelSpecFileWithContainingInterpreter[] = [];
         searchResults.forEach((item) => {
             for (const kernelSpecFile of item.kernelSpecFiles) {
@@ -461,9 +451,9 @@ export class KernelFinder implements IKernelFinder {
                 return;
             }
             this.cache = [];
-            // this.cache = JSON.parse(
-            //     await this.fs.readLocalFile(path.join(this.context.globalStorageUri.fsPath, cacheFile))
-            // );
+            this.cache = JSON.parse(
+                await this.fs.readLocalFile(path.join(this.context.globalStorageUri.fsPath, cacheFile))
+            );
         } catch {
             traceInfo('No kernelSpec cache found.');
         }
