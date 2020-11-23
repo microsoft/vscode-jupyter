@@ -159,6 +159,7 @@ export class KernelFinder implements IKernelFinder {
         const paths = await this.findAllResourcePossibleKernelPaths(resource);
         traceInfo(`findAllResourcePossibleKernelPaths ${JSON.stringify(paths)}`);
         const searchResults = await this.kernelGlobSearch(paths);
+        traceInfo(`findAllResourcePossibleKernelPaths.kernelGlobSearch ${JSON.stringify(searchResults)}`);
 
         await Promise.all(
             searchResults.map(async (resultPath) => {
@@ -172,6 +173,7 @@ export class KernelFinder implements IKernelFinder {
             })
         );
 
+        traceInfo(`findAllResourcePossibleKernelPaths.kernelGlobSearch.mapped ${JSON.stringify(results)}`);
         return results;
     }
 
