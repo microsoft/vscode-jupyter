@@ -75,6 +75,8 @@ async function createSettings(): Promise<string> {
     const defaultSettings = {
         'python.insidersChannel': 'off',
         'jupyter.logging.level': 'debug',
+        // Disable the start page in VS Code tests, else this UI pops up and has potential to break tests.
+        // For instance if the start page UI opens up, then active editor, active notebook and the like are empty.
         'python.showStartPage': false
     };
     fs.ensureDirSync(path.dirname(settingsFile));
