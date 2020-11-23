@@ -62,7 +62,7 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
         if (!mergedVars) {
             mergedVars = {};
         }
-        this.envVarsService.mergeVariables(process.env, mergedVars!);
+        this.envVarsService.mergeVariables(mergedVars!, process.env);
         const pathVariable = this.platformService.pathVariableName;
         const pathValue = process.env[pathVariable];
         if (pathValue) {
