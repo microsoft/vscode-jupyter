@@ -1432,7 +1432,7 @@
                 "jupyter.sendSelectionToInteractiveWindow": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Determines if selected code in a python file will go to the terminal or the Interactive window when hitting shift+enter",
+                    "description": "When pressing shift+enter, send selected code in a Python file to the Jupyter interactive window as opposed to the Python terminal.",
                     "scope": "resource"
                 },
                 "jupyter.showJupyterVariableExplorer": {
