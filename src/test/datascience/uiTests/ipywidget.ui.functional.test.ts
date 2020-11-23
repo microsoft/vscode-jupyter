@@ -408,13 +408,9 @@ use(chaiAsPromised);
             const { notebookUI } = await openIPyVolumeIpynb();
             await assert.eventually.isFalse(notebookUI.cellHasOutput(3));
 
-            await notebookUI.executeCell(1);
-            await notebookUI.executeCell(2);
-            await notebookUI.executeCell(3);
-            await notebookUI.executeCell(4);
-
             // Confirm sliders and canvas are rendered.
             await retryIfFail(async () => {
+                await notebookUI.executeCell(1);
                 const cellOutputHtml = await notebookUI.getCellOutputHTML(1);
                 assert.include(cellOutputHtml, '<canvas ');
 
@@ -425,6 +421,10 @@ use(chaiAsPromised);
 
             // Confirm canvas is rendered.
             await retryIfFail(async () => {
+                await notebookUI.executeCell(2);
+                await notebookUI.executeCell(3);
+                await notebookUI.executeCell(4);
+
                 const cellOutputHtml = await notebookUI.getCellOutputHTML(4);
                 assert.include(cellOutputHtml, '<canvas ');
             });
