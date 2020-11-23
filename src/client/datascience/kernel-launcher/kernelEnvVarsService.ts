@@ -43,7 +43,12 @@ export class KernelEnvironmentVariablesService {
             return kernelEnv;
         }
         traceInfo('Fetching interpreter variables of Conda environment to be used as env vars of Kernel');
-        const interpreterEnv = await this.envActivation.getActivatedEnvironmentVariables(resource, interpreter, true);
+        const interpreterEnv = await this.envActivation
+            .getActivatedEnvironmentVariables(resource, interpreter, false)
+            .catch<undefined>((ex) => {
+                traceError('Failed to get env variables for interpreter, hence no variables for Kernel', ex);
+                return undefined;
+            });
         if (!interpreterEnv) {
             traceInfo('No custom variables for Kernel even thought interpreter is conda');
             return kernelEnv;
