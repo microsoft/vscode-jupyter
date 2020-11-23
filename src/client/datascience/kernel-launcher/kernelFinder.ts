@@ -217,20 +217,46 @@ export class KernelFinder implements IKernelFinder {
         resource: Resource,
         _cancelToken?: CancellationToken
     ): Promise<(string | { interpreter: PythonEnvironment; kernelSearchPath: string })[]> {
-        const [activePath, interpreterPaths, diskPaths] = await Promise.all([
+        const [activeInterpreterPath, interpreterPaths, diskPaths] = await Promise.all([
             this.getActiveInterpreterPath(resource),
             this.getInterpreterPaths(resource),
             this.getDiskPaths()
         ]);
 
-        return [...activePath, ...interpreterPaths, ...diskPaths];
+        const kernelSpecPathsAlreadyListed = new Set<string>();
+        const combinedInterpreterPaths = [...activeInterpreterPath, ...interpreterPaths].filter((item) => {
+            if (kernelSpecPathsAlreadyListed.has(item.kernelSearchPath)) {
+                return false;
+            }
+            kernelSpecPathsAlreadyListed.add(item.kernelSearchPath);
+            return true;
+        });
+
+        const combinedKernelPaths: (
+            | string
+            | { interpreter: PythonEnvironment; kernelSearchPath: string }
+        )[] = combinedInterpreterPaths;
+        diskPaths.forEach((item) => {
+            if (!kernelSpecPathsAlreadyListed.has(item)) {
+                combinedKernelPaths.push(item);
+            }
+        });
+
+        return combinedKernelPaths;
     }
 
-    private async getActiveInterpreterPath(resource: Resource): Promise<string[]> {
+    private async getActiveInterpreterPath(
+        resource: Resource
+    ): Promise<{ interpreter: PythonEnvironment; kernelSearchPath: string }[]> {
         const activeInterpreter = await this.getActiveInterpreter(resource);
 
         if (activeInterpreter) {
-            return [path.join(activeInterpreter.sysPrefix, 'share', 'jupyter', 'kernels')];
+            return [
+                {
+                    interpreter: activeInterpreter,
+                    kernelSearchPath: path.join(activeInterpreter.sysPrefix, 'share', 'jupyter', 'kernels')
+                }
+            ];
         }
         return [];
     }
