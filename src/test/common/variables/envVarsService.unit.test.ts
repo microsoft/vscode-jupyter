@@ -21,7 +21,7 @@ const PATHS = [
     'PATH' // non-Windows
 ];
 
-suite('Environment Variables Service', () => {
+suite('Environment Variables Servicexxx', () => {
     const filename = 'x/y/z/.env';
     let pathUtils: TypeMoq.IMock<IPathUtils>;
     let fs: TypeMoq.IMock<IFileSystem>;
@@ -175,13 +175,13 @@ PYTHON=${BINDIR}/python3\n\
 
                 expect(Object.keys(vars1)).lengthOf(2, 'Source variables modified');
                 expect(Object.keys(vars2)).lengthOf(3, 'Variables not merged');
-                expect(vars2).to.have.property('ONE', 'ONE', 'Variable overwritten');
+                expect(vars2).to.have.property('ONE', '1', 'Variable overwritten');
                 expect(vars2).to.have.property('TWO', 'TWO', 'Incorrect value');
                 expect(vars2).to.have.property('THREE', '3', 'Variable not merged');
                 verifyAll();
             });
 
-            test('Ensure path variabnles variables are not merged into target', async () => {
+            test('Ensure path variables variables are not merged into target', async () => {
                 const vars1 = { ONE: '1', TWO: 'TWO', PYTHONPATH: 'PYTHONPATH' };
                 // tslint:disable-next-line:no-any
                 (vars1 as any)[pathVariable] = 'PATH';
@@ -191,7 +191,7 @@ PYTHON=${BINDIR}/python3\n\
 
                 expect(Object.keys(vars1)).lengthOf(4, 'Source variables modified');
                 expect(Object.keys(vars2)).lengthOf(3, 'Variables not merged');
-                expect(vars2).to.have.property('ONE', 'ONE', 'Variable overwritten');
+                expect(vars2).to.have.property('ONE', '1', 'Variable overwritten');
                 expect(vars2).to.have.property('TWO', 'TWO', 'Incorrect value');
                 expect(vars2).to.have.property('THREE', '3', 'Variable not merged');
                 verifyAll();
@@ -207,7 +207,7 @@ PYTHON=${BINDIR}/python3\n\
 
                 expect(Object.keys(vars1)).lengthOf(2, 'Source variables modified');
                 expect(Object.keys(vars2)).lengthOf(5, 'Variables not merged');
-                expect(vars2).to.have.property('ONE', 'ONE', 'Variable overwritten');
+                expect(vars2).to.have.property('ONE', '1', 'Variable overwritten');
                 expect(vars2).to.have.property('TWO', 'TWO', 'Incorrect value');
                 expect(vars2).to.have.property('THREE', '3', 'Variable not merged');
                 expect(vars2).to.have.property('PYTHONPATH', 'PYTHONPATH', 'Incorrect value');
