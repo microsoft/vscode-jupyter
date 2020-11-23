@@ -410,13 +410,10 @@ jobs:
         if: matrix.test-suite == 'conda'
         shell: bash -l {0}
         run: |
-          python --version
-          python -c 'import sys;print(sys.executable)'
           conda info
           conda list
 
-
-      - name: Conda info
+      - name: Python Info
         shell: bash -l {0}
         run: |
           python --version
