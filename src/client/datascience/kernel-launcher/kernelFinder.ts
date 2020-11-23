@@ -436,7 +436,7 @@ export class KernelFinder implements IKernelFinder {
     }
 
     private async getKernelSpecFromDisk(
-        paths: string[],
+        paths: (string | { interpreter: PythonEnvironment; kernelSearchPath: string })[],
         kernelSpecMetadata?: nbformat.IKernelspecMetadata
     ): Promise<IJupyterKernelSpec | undefined> {
         const searchResults = await this.kernelGlobSearch(paths);
