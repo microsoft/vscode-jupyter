@@ -31,7 +31,7 @@ jobs:
   build-vsix:
     name: Build VSIX
     runs-on: windows-latest
-    if: github.repository == 'microsoft/vscode-jupyterxxx'
+    if: github.repository == 'microsoft/vscode-jupyter'
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -90,7 +90,7 @@ jobs:
   lint:
     name: Lint
     runs-on: ubuntu-latest
-    if: github.repository == 'microsoft/vscode-jupyterxxx'
+    if: github.repository == 'microsoft/vscode-jupyter'
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -145,7 +145,7 @@ jobs:
   ts_tests:
     name: Type Script Tests
     runs-on: ${{ matrix.os }}
-    if: github.repository == 'microsoft/vscode-jupyterxxx'
+    if: github.repository == 'microsoft/vscode-jupyter'
     strategy:
       fail-fast: false
       matrix:
@@ -218,7 +218,7 @@ jobs:
   tests:
     name: Functional Jupyter Tests
     runs-on: ${{ matrix.os }}
-    if: github.repository == 'microsoft/vscode-jupyterxxx'
+    if: github.repository == 'microsoft/vscode-jupyter'
     strategy:
       fail-fast: false
       matrix:
