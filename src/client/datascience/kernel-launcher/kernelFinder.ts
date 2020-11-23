@@ -157,7 +157,7 @@ export class KernelFinder implements IKernelFinder {
 
         // Find all the possible places to look for this resource
         const paths = await this.findAllResourcePossibleKernelPaths(resource);
-
+        traceInfo(`findAllResourcePossibleKernelPaths ${JSON.stringify(paths)}`);
         const searchResults = await this.kernelGlobSearch(paths);
 
         await Promise.all(
@@ -426,9 +426,10 @@ export class KernelFinder implements IKernelFinder {
             if (Array.isArray(this.cache) && this.cache.length > 0) {
                 return;
             }
-            this.cache = JSON.parse(
-                await this.fs.readLocalFile(path.join(this.context.globalStorageUri.fsPath, cacheFile))
-            );
+            this.cache = [];
+            // this.cache = JSON.parse(
+            //     await this.fs.readLocalFile(path.join(this.context.globalStorageUri.fsPath, cacheFile))
+            // );
         } catch {
             traceInfo('No kernelSpec cache found.');
         }
