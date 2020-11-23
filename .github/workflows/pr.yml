@@ -575,7 +575,7 @@ jobs:
           VSC_JUPYTER_FORCE_LOGGING: 1
           VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
         id: test_vscode
-        if: matrix.test-suite == 'integration' || matrix.test-suite == 'conda'
+        if: matrix.test-suite == 'integration'
 
       - name: Publish VSCode Test Report
         uses: scacap/action-surefire-report@v1
@@ -595,7 +595,7 @@ jobs:
           VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
           VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
         id: test_notebook_vscode
-        if: matrix.test-suite == 'notebook'
+        if: matrix.test-suite == 'notebook' || matrix.test-suite == 'conda'
 
       - name: Publish Notebook Test Report
         uses: scacap/action-surefire-report@v1
