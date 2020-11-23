@@ -413,6 +413,14 @@ jobs:
           conda info
           conda list
 
+
+      - name: Print VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST
+        shell: bash -l {0}
+        run: |
+          echo $VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST
+        env:
+            VSC_JUPYTER_CI_RUN_NON_JAVA_NB_TEST: ${{contains(matrix.test-suite, 'conda')}}
+
       - name: Python Info
         shell: bash -l {0}
         run: |
