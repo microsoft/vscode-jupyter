@@ -28,19 +28,19 @@ export enum EnvironmentType {
  * @prop version - the runtime version
  * @prop sysVersion - the raw value of `sys.version`
  * @prop sysPrefix - the environment's install root (`sys.prefix`)
- * @prop envType - the kind of Python environment
  */
 export type InterpreterInformation = {
     path: string;
     version?: PythonVersion;
     sysVersion?: string;
     sysPrefix: string;
-    envType?: EnvironmentType;
 };
 
 /**
  * Details about a Python environment.
+ * @prop envType - the kind of Python environment
  */
 export type PythonEnvironment = InterpreterInformation & {
     displayName?: string;
+    envType?: EnvironmentType;
 };
