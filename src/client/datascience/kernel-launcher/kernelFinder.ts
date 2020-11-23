@@ -395,10 +395,10 @@ export class KernelFinder implements IKernelFinder {
             })
         );
         traceInfo(`Search results in kernelGlobSearch ${JSON.stringify(searchResults)}`);
-        const kernelSpecFiles: { interpreter?: PythonEnvironment; kernelSpecFile: string }[] = [];
+        const kernelSpecFiles: KernelSpecFileWithContainingInterpreter[] = [];
         searchResults.forEach((item) => {
             for (const kernelSpecFile of item.kernelSpecFiles) {
-                kernelSpecFiles.push({ interpreter: item.interpreter, kernelSpecFile });
+                kernelSpecFiles.push({ interpreterPath: item.interpreter?.path, kernelSpecFile });
             }
         });
 
