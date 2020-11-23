@@ -407,12 +407,14 @@ jobs:
 
       - name: Conda info
         if: matrix.test-suite == 'conda'
+        # Use `bash -l {0}` when using the conda actions.
         shell: bash -l {0}
         run: |
           conda info
           conda list
 
       - name: Python Info
+        # Use `bash -l {0}` when using the conda actions.
         shell: bash -l {0}
         run: |
           python --version
@@ -425,6 +427,7 @@ jobs:
           PYTHON_VERSION: ${{matrix.python}}
 
       - name: Upgrade pip
+        # Use `bash -l {0}` when using the conda actions.
         shell: bash -l {0}
         run: python -m pip install -U pip
         if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook' || matrix.test-suite == 'conda'
@@ -498,16 +501,19 @@ jobs:
 
       # For faster/better builds of sdists.
       - run: python -m pip install wheel
+        # Use `bash -l {0}` when using the conda actions.
         shell: bash -l {0}
         if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook' || matrix.test-suite == 'conda'
 
       - name: Install Python Libs (python)
+        # Use `bash -l {0}` when using the conda actions.
         shell: bash -l {0}
         run: |
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
         if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook'
 
       - name: Install Python Libs (conda)
+        # Use `bash -l {0}` when using the conda actions.
         shell: bash -l {0}
         run: |
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade python-jsonrpc-server==0.4.0
@@ -516,6 +522,7 @@ jobs:
 
       - name: Install BeakerX
         if: matrix.test-suite == 'conda'
+        # Use `bash -l {0}` when using the conda actions.
         shell: bash -l {0}
         run: |
           conda install -c conda-forge beakerx
@@ -524,6 +531,7 @@ jobs:
       # debugpy is not shipped, only installed for local tests.
       # In production, we get debugpy from python extension.
       - name: Install Python Libs
+        # Use `bash -l {0}` when using the conda actions.
         shell: bash -l {0}
         run: |
           python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
