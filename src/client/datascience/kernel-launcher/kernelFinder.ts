@@ -199,6 +199,7 @@ export class KernelFinder implements IKernelFinder {
     private async loadKernelSpec(specPath: string, interpreterPath?: string): Promise<IJupyterKernelSpec | undefined> {
         let kernelJson;
         try {
+            traceInfo(`Loading kernelspec from ${specPath} for ${interpreterPath}`);
             kernelJson = JSON.parse(await this.fs.readLocalFile(specPath));
         } catch {
             traceError(`Failed to parse kernelspec ${specPath}`);
