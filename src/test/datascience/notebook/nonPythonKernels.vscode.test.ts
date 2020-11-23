@@ -6,13 +6,11 @@
 // tslint:disable:no-require-imports no-var-requires
 import * as path from 'path';
 import * as sinon from 'sinon';
-import { assert } from 'chai';
 import { Uri } from 'vscode';
 import { IPythonExtensionChecker } from '../../../client/api/types';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { IDisposable } from '../../../client/common/types';
 import { VSCodeNotebookProvider } from '../../../client/datascience/constants';
-import { IKernelFinder } from '../../../client/datascience/kernel-launcher/types';
 import { NotebookCellLanguageService } from '../../../client/datascience/notebook/defaultCellLanguageService';
 import { INotebookEditorProvider } from '../../../client/datascience/types';
 import { IExtensionTestApi, waitForCondition } from '../../common';
@@ -70,7 +68,6 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
     let testEmptyPythonNb: Uri;
     let editorProvider: INotebookEditorProvider;
     let languageService: NotebookCellLanguageService;
-    let kernelFinder: IKernelFinder;
     const testJavaKernels = (process.env.VSC_JUPYTER_CI_RUN_JAVA_NB_TEST || '').toLowerCase() === 'true';
     suiteSetup(async function () {
         api = await initialize();
@@ -82,7 +79,6 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         editorProvider = api.serviceContainer.get<INotebookEditorProvider>(VSCodeNotebookProvider);
         languageService = api.serviceContainer.get<NotebookCellLanguageService>(NotebookCellLanguageService);
-        kernelFinder = api.serviceContainer.get<IKernelFinder>(IKernelFinder);
     });
     setup(async () => {
         sinon.restore();
@@ -94,28 +90,6 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         testEmptyPythonNb = Uri.file(await createTemporaryNotebook(emptyPythonNb, disposables));
     });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
-    async function findKernelSpecWithLanguage(language: string) {
-        const kernelspecs = await kernelFinder.listKernelSpecs(undefined);
-        return kernelspecs.find((item) => (item.language || '').toLowerCase() === language.toLowerCase());
-    }
-    test('Verify Java kernel is not found in kernel specs', async function () {
-        if (testJavaKernels) {
-            return this.skip();
-        }
-        const kernelspec = await findKernelSpecWithLanguage('java');
-        assert.isUndefined(kernelspec);
-    });
-    test('Verify Java kernel is found in kernel specs', async function () {
-        if (!testJavaKernels) {
-            return this.skip();
-        }
-        const kernelspec = await findKernelSpecWithLanguage('java');
-        assert.isOk(kernelspec);
-    });
-    test('Verify Julia kernel is found in kernel specs', async function () {
-        const kernelspec = await findKernelSpecWithLanguage('julia');
-        assert.isOk(kernelspec);
-    });
     test('Automatically pick java kernel when opening a Java Notebook', async function () {
         if (!testJavaKernels) {
             return this.skip();
