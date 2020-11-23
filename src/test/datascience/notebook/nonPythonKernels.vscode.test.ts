@@ -151,4 +151,19 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
 
         assertHasTextOutputInVSCode(cell, '123456', 0, false);
     });
+    test('Can run a Java notebook', async function () {
+        if (!testJavaKernels) {
+            return this.skip();
+        }
+        this.timeout(30_000); // In case starting Java kernel is slow on CI (we know julia is slow).
+        await openNotebook(api.serviceContainer, testJavaNb.fsPath);
+        await waitForKernelToGetAutoSelected('java');
+        await executeActiveDocument();
+
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
+        // Wait till execution count changes and status is success.
+        await waitForExecutionCompletedSuccessfully(cell);
+
+        assertHasTextOutputInVSCode(cell, 'Hello', 0, false);
+    });
 });
