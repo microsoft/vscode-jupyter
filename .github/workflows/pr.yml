@@ -515,6 +515,12 @@ jobs:
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade ujson
         if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook' || matrix.test-suite == 'conda'
 
+      - name: Install BeakerX
+        if: matrix.test-suite == 'conda'
+        shell: bash -l {0}
+        run: |
+          conda install -c conda-forge beakerx
+
       # This step is slow.
       # debugpy is not shipped, only installed for local tests.
       # In production, we get debugpy from python extension.
