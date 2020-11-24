@@ -5,7 +5,8 @@ import { inject, injectable } from 'inversify';
 import { traceError, traceInfo } from '../../common/logger';
 import { IPlatformService } from '../../common/platform/types';
 import { Resource } from '../../common/types';
-import { IEnvironmentVariablesService } from '../../common/variables/types';
+import { noop } from '../../common/utils/misc';
+import { IEnvironmentVariablesProvider, IEnvironmentVariablesService } from '../../common/variables/types';
 import { IEnvironmentActivationService } from '../../interpreter/activation/types';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { EnvironmentType } from '../../pythonEnvironments/info';
@@ -17,7 +18,8 @@ export class KernelEnvironmentVariablesService {
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IEnvironmentActivationService) private readonly envActivation: IEnvironmentActivationService,
         @inject(IEnvironmentVariablesService) private readonly envVarsService: IEnvironmentVariablesService,
-        @inject(IPlatformService) private readonly platformService: IPlatformService
+        @inject(IPlatformService) private readonly platformService: IPlatformService,
+        @inject(IEnvironmentVariablesProvider) private readonly customEndVars: IEnvironmentVariablesProvider
     ) {}
     /**
      * If the kernel belongs to a conda environment, then use the env variables of the conda environment and merge that with the env variables of the kernel spec.
@@ -26,6 +28,8 @@ export class KernelEnvironmentVariablesService {
      * However, when activating the conda env, the path variables are updated to set path to the location where the java executable is located.
      */
     public async getEnvironmentVariables(resource: Resource, kernelSpec: IJupyterKernelSpec) {
+        const customEditVarsPromise = this.customEndVars.getCustomEnvironmentVariables(resource);
+        customEditVarsPromise.catch(noop); // If we return early, we don't want failing promise go unhandled.
         let kernelEnv = kernelSpec.env && Object.keys(kernelSpec.env).length > 0 ? kernelSpec.env : undefined;
         if (!kernelSpec.interpreterPath) {
             traceInfo('No custom variables for Kernel as interpreter path is not defined for kernel');
@@ -54,17 +58,28 @@ export class KernelEnvironmentVariablesService {
             return kernelEnv;
         }
 
+        let customEditVars = await customEditVarsPromise.catch((ex) =>
+            traceError('Failed to get custom env vars for kernel', ex)
+        );
         traceInfo('Got custom variables for Kernel owned by a conda interpreter');
         // Merge the env variables with that of the kernel env.
         const mergedVars = { ...process.env };
         kernelEnv = kernelEnv || {};
-        this.envVarsService.mergeVariables(interpreterEnv, mergedVars);
-        this.envVarsService.mergeVariables(kernelEnv, mergedVars);
+        customEditVars = customEditVars || {};
+        this.envVarsService.mergeVariables(interpreterEnv, mergedVars); // interpreter vars win over proc.
+        this.envVarsService.mergeVariables(kernelEnv, mergedVars); // kernels vars win over interpreter.
+        this.envVarsService.mergeVariables(customEditVars, mergedVars); // custom vars win over all.
+        if (customEditVars[this.platformService.pathVariableName]) {
+            this.envVarsService.appendPath(mergedVars, customEditVars[this.platformService.pathVariableName]!);
+        }
         if (kernelEnv[this.platformService.pathVariableName]) {
             this.envVarsService.appendPath(mergedVars, kernelEnv[this.platformService.pathVariableName]!);
         }
         if (process.env[this.platformService.pathVariableName]) {
             this.envVarsService.appendPath(mergedVars, process.env[this.platformService.pathVariableName]!);
+        }
+        if (customEditVars.PYTHONPATH) {
+            this.envVarsService.appendPythonPath(mergedVars, customEditVars.PYTHONPATH);
         }
         if (kernelEnv.PYTHONPATH) {
             this.envVarsService.appendPythonPath(mergedVars, kernelEnv.PYTHONPATH);
