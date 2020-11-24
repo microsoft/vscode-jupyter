@@ -19,12 +19,12 @@ import { retryIfFail as retryIfFailOriginal } from '../../common';
 import { mockedVSCodeNamespaces } from '../../vscode-mock';
 import { DataScienceIocContainer } from '../dataScienceIocContainer';
 import { addMockData } from '../testHelpersCore';
-import { waitTimeForUIToUpdate } from './helpers';
+import { maxWaitTimeForMessage, waitTimeForUIToUpdate } from './helpers';
 import { openNotebook } from './notebookHelpers';
 import { NotebookEditorUI } from './notebookUi';
 
 const sanitize = require('sanitize-filename');
-const ipywidgetsWaitTimeForUIToUpdate = waitTimeForUIToUpdate * 4;
+const ipywidgetsWaitTimeForUIToUpdate = waitTimeForUIToUpdate * 2 + maxWaitTimeForMessage * 3;
 // Include default timeout.
 const retryIfFail = <T>(fn: () => Promise<T>) => retryIfFailOriginal<T>(fn, ipywidgetsWaitTimeForUIToUpdate);
 
