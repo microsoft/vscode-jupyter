@@ -24,7 +24,7 @@ import { openNotebook } from './notebookHelpers';
 import { NotebookEditorUI } from './notebookUi';
 
 const sanitize = require('sanitize-filename');
-const ipywidgetsWaitTimeForUIToUpdate = waitTimeForUIToUpdate * 2;
+const ipywidgetsWaitTimeForUIToUpdate = waitTimeForUIToUpdate * 4;
 // Include default timeout.
 const retryIfFail = <T>(fn: () => Promise<T>) => retryIfFailOriginal<T>(fn, ipywidgetsWaitTimeForUIToUpdate);
 
