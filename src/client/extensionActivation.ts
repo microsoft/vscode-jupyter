@@ -9,7 +9,6 @@ import { OutputChannel, window } from 'vscode';
 import { registerTypes as activationRegisterTypes } from './activation/serviceRegistry';
 import { IExtensionActivationManager } from './activation/types';
 import { registerTypes as registerApiTypes } from './api/serviceRegistry';
-import { registerTypes as appRegisterTypes } from './application/serviceRegistry';
 import { IApplicationEnvironment, IApplicationShell, ICommandManager } from './common/application/types';
 import { STANDARD_OUTPUT_CHANNEL, UseProposedApi } from './common/constants';
 import { Experiments } from './common/experiments/groups';
@@ -118,7 +117,6 @@ async function activateLegacy(
     dataScienceRegisterTypes(serviceManager, useVSCodeNotebookAPI, inCustomEditorApiExperiment);
 
     // Language feature registrations.
-    appRegisterTypes(serviceManager);
     activationRegisterTypes(serviceManager);
 
     // "initialize" "services"
