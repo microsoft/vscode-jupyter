@@ -152,6 +152,10 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         assertHasTextOutputInVSCode(cell, '123456', 0, false);
     });
     test('Can run a Java notebook', async function () {
+        // Disabled, as activation of conda environments doesn't work on CI in Python extension.
+        // As a result we cannot get env variables of conda environments.
+        // This test requires PATH be set to conda environment that owns the jupyter kernel.
+        return this.skip();
         if (!testJavaKernels) {
             return this.skip();
         }
