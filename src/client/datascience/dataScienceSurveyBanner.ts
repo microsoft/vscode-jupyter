@@ -83,9 +83,9 @@ export type ShowBannerWithExpiryTime = { data: boolean; expiry?: number };
 @injectable()
 export class DataScienceSurveyBanner implements IJupyterExtensionBanner {
     public get enabled(): boolean {
-        // if (this.applicationEnvironment.uiKind !== UIKind.Desktop || this.applicationEnvironment.channel !== 'stable') {
-        //     return false;
-        // }
+        if (this.applicationEnvironment.uiKind !== UIKind.Desktop || this.applicationEnvironment.channel !== 'stable') {
+            return false;
+        }
         if (!this.showBannerState.value.expiry) {
             return true;
         }
