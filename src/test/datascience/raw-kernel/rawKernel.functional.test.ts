@@ -10,6 +10,7 @@ import { IFileSystem } from '../../../client/common/platform/types';
 import { IProcessServiceFactory } from '../../../client/common/process/types';
 import { createDeferred, sleep } from '../../../client/common/utils/async';
 import { KernelDaemonPool } from '../../../client/datascience/kernel-launcher/kernelDaemonPool';
+import { KernelEnvironmentVariablesService } from '../../../client/datascience/kernel-launcher/kernelEnvVarsService';
 import { KernelProcess } from '../../../client/datascience/kernel-launcher/kernelProcess';
 import { createRawKernel, RawKernel } from '../../../client/datascience/raw-kernel/rawKernel';
 import { IJupyterKernelSpec } from '../../../client/datascience/types';
@@ -83,7 +84,8 @@ suite('DataScience raw kernel tests', () => {
             { kernelSpec, interpreter, kind: 'startUsingKernelSpec' },
             ioc.get<IFileSystem>(IFileSystem),
             undefined,
-            ioc.get<IPythonExtensionChecker>(IPythonExtensionChecker)
+            ioc.get<IPythonExtensionChecker>(IPythonExtensionChecker),
+            ioc.get<KernelEnvironmentVariablesService>(KernelEnvironmentVariablesService)
         );
         await kernelProcess.launch(process.cwd());
         return createRawKernel(kernelProcess, uuid());

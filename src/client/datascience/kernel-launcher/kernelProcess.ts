@@ -23,6 +23,7 @@ import {
 import { KernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../jupyter/kernels/types';
 import { IJupyterKernelSpec } from '../types';
 import { KernelDaemonPool } from './kernelDaemonPool';
+import { KernelEnvironmentVariablesService } from './kernelEnvVarsService';
 import { PythonKernelLauncherDaemon } from './kernelLauncherDaemon';
 import { IKernelConnection, IKernelProcess, IPythonKernelDaemon, PythonKernelDiedError } from './types';
 
@@ -57,7 +58,8 @@ export class KernelProcess implements IKernelProcess {
         kernelConnectionMetadata: KernelSpecConnectionMetadata | PythonKernelConnectionMetadata,
         private readonly fileSystem: IFileSystem,
         private readonly resource: Resource,
-        private readonly extensionChecker: IPythonExtensionChecker
+        private readonly extensionChecker: IPythonExtensionChecker,
+        private readonly kernelEnvVarsService: KernelEnvironmentVariablesService
     ) {
         this._kernelConnectionMetadata = kernelConnectionMetadata;
     }
@@ -250,7 +252,7 @@ export class KernelProcess implements IKernelProcess {
 
         // Use a daemon only if the python extension is available. It requires the active interpreter
         if (this.isPythonKernel && this.extensionChecker.isPythonExtensionInstalled) {
-            this.pythonKernelLauncher = new PythonKernelLauncherDaemon(this.daemonPool);
+            this.pythonKernelLauncher = new PythonKernelLauncherDaemon(this.daemonPool, this.kernelEnvVarsService);
             const kernelDaemonLaunch = await this.pythonKernelLauncher.launch(
                 this.resource,
                 workingDirectory,
@@ -266,9 +268,12 @@ export class KernelProcess implements IKernelProcess {
         if (!exeObs) {
             // First part of argument is always the executable.
             const executable = this.launchKernelSpec.argv[0];
-            const executionService = await this.processExecutionFactory.create(this.resource);
+            const [executionService, env] = await Promise.all([
+                this.processExecutionFactory.create(this.resource),
+                this.kernelEnvVarsService.getEnvironmentVariables(this.resource, this.launchKernelSpec)
+            ]);
             exeObs = executionService.execObservable(executable, this.launchKernelSpec.argv.slice(1), {
-                env: this._kernelConnectionMetadata.kernelSpec?.env,
+                env,
                 cwd: workingDirectory
             });
         }
@@ -281,13 +286,11 @@ export class KernelProcess implements IKernelProcess {
                 }
                 this.exitEvent.fire({ exitCode: exitCode || undefined });
             });
-            // tslint:disable-next-line: no-any
-            exeObs.proc.stdout.on('data', (data: any) => {
-                traceInfo(`KernelProcess output: ${data}`);
+            exeObs.proc.stdout.on('data', (data: Buffer | string) => {
+                traceInfo(`KernelProcess output: ${(data || '').toString()}`);
             });
-            // tslint:disable-next-line: no-any
-            exeObs.proc.stderr.on('data', (data: any) => {
-                traceInfo(`KernelProcess error: ${data}`);
+            exeObs.proc.stderr.on('data', (data: Buffer | string) => {
+                traceInfo(`KernelProcess error: ${(data || '').toString()}`);
             });
         } else {
             throw new Error('KernelProcess failed to launch');

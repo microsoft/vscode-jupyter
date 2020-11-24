@@ -146,10 +146,16 @@ export function disposeAllDisposables(disposables: IDisposable[]) {
 
 export async function canRunNotebookTests() {
     if (!isInsiders() || !process.env.VSC_JUPYTER_RUN_NB_TEST) {
+        console.log(
+            `Can't run native nb tests isInsiders() = ${isInsiders()}, process.env.VSC_JUPYTER_RUN_NB_TEST = ${
+                process.env.VSC_JUPYTER_RUN_NB_TEST
+            }`
+        );
         return false;
     }
     const api = await initialize();
     const appEnv = api.serviceContainer.get<IApplicationEnvironment>(IApplicationEnvironment);
+    console.log(`Can't run native nb tests appEnv.extensionChannel = ${appEnv.extensionChannel}`);
     return appEnv.extensionChannel !== 'stable';
 }
 

@@ -42,6 +42,14 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         'notebook',
         'simpleJulia.ipynb'
     );
+    const javaNb = path.join(
+        EXTENSION_ROOT_DIR_FOR_TESTS,
+        'src',
+        'test',
+        'datascience',
+        'notebook',
+        'simpleJavaBeakerX.ipynb'
+    );
 
     const emptyPythonNb = path.join(
         EXTENSION_ROOT_DIR_FOR_TESTS,
@@ -56,9 +64,11 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
     const disposables: IDisposable[] = [];
     let vscodeNotebook: IVSCodeNotebook;
     let testJuliaNb: Uri;
+    let testJavaNb: Uri;
     let testEmptyPythonNb: Uri;
     let editorProvider: INotebookEditorProvider;
     let languageService: NotebookCellLanguageService;
+    const testJavaKernels = (process.env.VSC_JUPYTER_CI_RUN_JAVA_NB_TEST || '').toLowerCase() === 'true';
     suiteSetup(async function () {
         api = await initialize();
         if (!process.env.VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST || !(await canRunNotebookTests())) {
@@ -76,11 +86,19 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         // Don't use same file (due to dirty handling, we might save in dirty.)
         // Coz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
         testJuliaNb = Uri.file(await createTemporaryNotebook(juliaNb, disposables));
+        testJavaNb = Uri.file(await createTemporaryNotebook(javaNb, disposables));
         testEmptyPythonNb = Uri.file(await createTemporaryNotebook(emptyPythonNb, disposables));
     });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
+    test('Automatically pick java kernel when opening a Java Notebook', async function () {
+        if (!testJavaKernels) {
+            return this.skip();
+        }
+        await openNotebook(api.serviceContainer, testJavaNb.fsPath);
+        await waitForKernelToGetAutoSelected('java');
+    });
     test('Automatically pick julia kernel when opening a Julia Notebook', async () => {
-        await openNotebook(api.serviceContainer, juliaNb);
+        await openNotebook(api.serviceContainer, testJuliaNb.fsPath);
         await waitForKernelToGetAutoSelected('julia');
     });
     test('New notebook will have a Julia cell if last notebook was a julia nb', async () => {
@@ -132,5 +150,24 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         await waitForExecutionCompletedSuccessfully(cell);
 
         assertHasTextOutputInVSCode(cell, '123456', 0, false);
+    });
+    test('Can run a Java notebook', async function () {
+        // Disabled, as activation of conda environments doesn't work on CI in Python extension.
+        // As a result we cannot get env variables of conda environments.
+        // This test requires PATH be set to conda environment that owns the jupyter kernel.
+        return this.skip();
+        if (!testJavaKernels) {
+            return this.skip();
+        }
+        this.timeout(30_000); // In case starting Java kernel is slow on CI (we know julia is slow).
+        await openNotebook(api.serviceContainer, testJavaNb.fsPath);
+        await waitForKernelToGetAutoSelected('java');
+        await executeActiveDocument();
+
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
+        // Wait till execution count changes and status is success.
+        await waitForExecutionCompletedSuccessfully(cell);
+
+        assertHasTextOutputInVSCode(cell, 'Hello', 0, false);
     });
 });

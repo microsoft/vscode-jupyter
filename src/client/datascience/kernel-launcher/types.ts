@@ -21,7 +21,6 @@ export interface IKernelLauncher {
 }
 
 export interface IKernelConnection {
-    version: number;
     iopub_port: number;
     shell_port: number;
     stdin_port: number;
@@ -31,6 +30,7 @@ export interface IKernelConnection {
     ip: string;
     key: string;
     transport: 'tcp' | 'ipc';
+    kernel_name?: string;
 }
 
 export interface IKernelProcess extends IAsyncDisposable {
