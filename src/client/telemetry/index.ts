@@ -479,15 +479,6 @@ export interface IEventNamePropertyMapping {
          */
         expNameOptedOutOf?: string;
     };
-    /**
-     * Telemetry sent back when join mailing list prompt is shown.
-     */
-    [EventName.JOIN_MAILING_LIST_PROMPT]: {
-        /**
-         * Carries the selection of user when they are asked to join the mailing list.
-         */
-        selection: 'Yes' | 'No' | undefined;
-    };
     [EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_REQUEST]: never | undefined;
     [EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_ERROR]: never | undefined;
     [EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_SUCCESS]: never | undefined;
