@@ -22,8 +22,7 @@ import { InteractiveWindowMessages, IReExecuteCells } from './interactive-common
 import { IInteractiveWindowListener, INotebookEditorProvider } from './types';
 
 export enum DSSurveyStateKeys {
-    ShowBannerOldValue = 'ShowDSSurveyBanner',
-    ShowBanner = 'ShowDSSurveyBannerV1',
+    ShowBanner = 'ShowDSSurveyBanner',
     OpenNotebookCount = 'DS_OpenNotebookCount',
     ExecutionCount = 'DS_ExecutionCount'
 }
@@ -80,23 +79,17 @@ export class DataScienceSurveyBannerLogger implements IInteractiveWindowListener
     }
 }
 
-export type ShowBannerWithExpiryTime = {
-    expiryTimeInMs?: number;
-    enabled: boolean;
-};
+export type ShowBannerWithExpiryTime = { data: boolean; expiry?: number };
 @injectable()
 export class DataScienceSurveyBanner implements IJupyterExtensionBanner {
     public get enabled(): boolean {
-        if (this.applicationEnvironment.uiKind !== UIKind.Desktop || this.applicationEnvironment.channel !== 'stable') {
-            return false;
+        // if (this.applicationEnvironment.uiKind !== UIKind.Desktop || this.applicationEnvironment.channel !== 'stable') {
+        //     return false;
+        // }
+        if (!this.showBannerState.value.expiry) {
+            return true;
         }
-        if (!this.showBannerState.value.enabled) {
-            return false;
-        }
-        if (!this.showBannerState.value.expiryTimeInMs) {
-            return this.showBannerState.value.enabled;
-        }
-        return this.showBannerState.value.expiryTimeInMs! < Date.now();
+        return this.showBannerState.value.expiry! < Date.now();
     }
     private disabledInCurrentSession: boolean = false;
     private bannerMessage: string = localize.DataScienceSurveyBanner.bannerMessage();
@@ -119,7 +112,7 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner {
         this.showBannerState = this.persistentState.createGlobalPersistentState<ShowBannerWithExpiryTime>(
             DSSurveyStateKeys.ShowBanner,
             {
-                enabled: true
+                data: true
             }
         );
         editorProvider.onDidOpenNotebookEditor(this.openedNotebook.bind(this));
@@ -128,7 +121,6 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner {
         if (!this.enabled || this.disabledInCurrentSession) {
             return;
         }
-        await this.moveOldState();
         const executionCount: number = this.getExecutionCount();
         const notebookCount: number = this.getOpenNotebookCount();
         const show = await this.shouldShowBanner(executionCount, notebookCount);
@@ -167,27 +159,10 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner {
     public async launchSurvey(): Promise<void> {
         this.browserService.launch(this.surveyLink);
     }
-    private async moveOldState() {
-        const oldShowBannerState = this.persistentState.createGlobalPersistentState<
-            { data: boolean; expiry?: number } | undefined
-        >(DSSurveyStateKeys.ShowBannerOldValue, undefined);
-        // If we don't have any expiry value, then we never stored a value in storage.
-        // Meaning user either dismissed it or never got the prompt.
-        const previousExpiry = oldShowBannerState.value?.expiry;
-        if (!previousExpiry) {
-            return;
-        }
-        // Ensure the new storage has the same expiry
-        await Promise.all([
-            oldShowBannerState.updateValue(undefined),
-            this.showBannerState.updateValue({ enabled: true, expiryTimeInMs: previousExpiry })
-        ]);
-    }
-
     private async disable(monthsTillNextPrompt: number) {
         await this.showBannerState.updateValue({
-            expiryTimeInMs: monthsTillNextPrompt * 31 * MillisecondsInADay,
-            enabled: true
+            expiry: monthsTillNextPrompt * 31 * MillisecondsInADay,
+            data: true
         });
     }
 

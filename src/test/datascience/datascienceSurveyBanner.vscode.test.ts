@@ -58,11 +58,7 @@ suite('DataScience Survey Banner', () => {
         executionCountState = realStateFactory.createGlobalPersistentState<number>(DSSurveyStateKeys.ExecutionCount, 0);
         showBannerState = realStateFactory.createGlobalPersistentState<ShowBannerWithExpiryTime>(
             DSSurveyStateKeys.ShowBanner,
-            { enabled: true }
-        );
-        const oldShowBannerState = realStateFactory.createGlobalPersistentState<unknown>(
-            DSSurveyStateKeys.ShowBannerOldValue,
-            undefined
+            { data: true }
         );
 
         when(
@@ -71,9 +67,6 @@ suite('DataScience Survey Banner', () => {
         when(
             persistentStateFactory.createGlobalPersistentState(DSSurveyStateKeys.ExecutionCount, anything())
         ).thenReturn(executionCountState);
-        when(
-            persistentStateFactory.createGlobalPersistentState(DSSurveyStateKeys.ShowBannerOldValue, anything())
-        ).thenReturn(oldShowBannerState);
         when(persistentStateFactory.createGlobalPersistentState(DSSurveyStateKeys.ShowBanner, anything())).thenReturn(
             showBannerState
         );
@@ -91,7 +84,7 @@ suite('DataScience Survey Banner', () => {
     });
     test('Confirm prompt is displayed & only once per session', async () => {
         when(appShell.showInformationMessage(anything(), anything(), anything())).thenResolve();
-        await showBannerState.updateValue({ enabled: true });
+        await showBannerState.updateValue({ data: true });
         await executionCountState.updateValue(100);
 
         await bannerService.showBanner();
@@ -104,7 +97,7 @@ suite('DataScience Survey Banner', () => {
         when(appShell.showInformationMessage(anything(), anything(), anything())).thenResolve(
             localize.DataScienceSurveyBanner.bannerLabelNo() as any
         );
-        await showBannerState.updateValue({ enabled: true });
+        await showBannerState.updateValue({ data: true });
         await executionCountState.updateValue(100);
 
         await bannerService.showBanner();
@@ -134,7 +127,7 @@ suite('DataScience Survey Banner', () => {
             localize.DataScienceSurveyBanner.bannerLabelYes() as any
         );
 
-        await showBannerState.updateValue({ enabled: true });
+        await showBannerState.updateValue({ data: true });
         await executionCountState.updateValue(100);
 
         await bannerService.showBanner();
