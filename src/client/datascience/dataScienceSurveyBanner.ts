@@ -82,7 +82,7 @@ export class DataScienceSurveyBannerLogger implements IInteractiveWindowListener
 export type ShowBannerWithExpiryTime = {
     /**
      * This value is not used.
-     * We are only intereted in the value for `expiry`.
+     * We are only interested in the value for `expiry`.
      * This structure is based on the old data for older customers when we used PersistentState class.
      */
     data: boolean;
