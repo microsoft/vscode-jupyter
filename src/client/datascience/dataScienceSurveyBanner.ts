@@ -79,7 +79,20 @@ export class DataScienceSurveyBannerLogger implements IInteractiveWindowListener
     }
 }
 
-export type ShowBannerWithExpiryTime = { data: boolean; expiry?: number };
+export type ShowBannerWithExpiryTime = {
+    /**
+     * This value is not used.
+     * We are only intereted in the value for `expiry`.
+     * This structure is based on the old data for older customers when we used PersistentState class.
+     */
+    data: boolean;
+    /**
+     * If this is value `undefined`, then prompt can be displayed.
+     * If this value is `a number`, then a prompt was displayed at one point in time &
+     * we need to wait for Date.now() to be greater than that number to display it again.
+     */
+    expiry?: number;
+};
 @injectable()
 export class DataScienceSurveyBanner implements IJupyterExtensionBanner {
     public get enabled(): boolean {
@@ -161,7 +174,7 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner {
     }
     private async disable(monthsTillNextPrompt: number) {
         await this.showBannerState.updateValue({
-            expiry: monthsTillNextPrompt * 31 * MillisecondsInADay,
+            expiry: monthsTillNextPrompt * 31 * MillisecondsInADay + Date.now(),
             data: true
         });
     }
