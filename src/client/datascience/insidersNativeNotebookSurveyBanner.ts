@@ -51,13 +51,18 @@ export class InsidersNativeNotebooksSurveyBanner implements IJupyterExtensionBan
         }
         return this.showBannerState.value.expiry! < Date.now();
     }
-    private disabledInCurrentSession: boolean = false;
+
+    private disabledInCurrentSession = false;
+
     private bannerMessage: string = localize.InsidersNativeNotebooksSurveyBanner.bannerMessage();
+
     private bannerLabels: string[] = [
         localize.DataScienceSurveyBanner.bannerLabelYes(),
         localize.DataScienceSurveyBanner.bannerLabelNo()
     ];
+
     private readonly showBannerState: IPersistentState<ShowBannerWithExpiryTime>;
+
     private readonly surveyLink: string;
 
     constructor(
@@ -67,7 +72,7 @@ export class InsidersNativeNotebooksSurveyBanner implements IJupyterExtensionBan
         @inject(IVSCodeNotebook) vscodeNotebook: IVSCodeNotebook,
         @inject(IExperimentService) private experimentService: IExperimentService,
         @inject(IApplicationEnvironment) private applicationEnvironment: IApplicationEnvironment,
-        surveyLink: string = 'https://aka.ms/vscjupyternb'
+        surveyLink = 'https://aka.ms/vscjupyternb'
     ) {
         this.surveyLink = surveyLink;
         this.showBannerState = this.persistentState.createGlobalPersistentState<ShowBannerWithExpiryTime>(
