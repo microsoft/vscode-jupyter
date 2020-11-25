@@ -1,5 +1,5 @@
 import { inject, injectable } from 'inversify';
-import { env, UIKind } from 'vscode';
+import { UIKind } from 'vscode';
 import { IApplicationEnvironment, IApplicationShell, IVSCodeNotebook } from '../common/application/types';
 import { Experiments } from '../common/experiments/groups';
 import {
