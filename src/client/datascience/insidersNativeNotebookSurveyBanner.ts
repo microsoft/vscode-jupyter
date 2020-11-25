@@ -2,8 +2,15 @@ import { inject, injectable } from 'inversify';
 import { env, UIKind } from 'vscode';
 import { IApplicationEnvironment, IApplicationShell, IVSCodeNotebook } from '../common/application/types';
 import { Experiments } from '../common/experiments/groups';
-import { IBrowserService, IExperimentService, IJupyterExtensionBanner, IPersistentStateFactory } from '../common/types';
+import {
+    IBrowserService,
+    IExperimentService,
+    IJupyterExtensionBanner,
+    IPersistentState,
+    IPersistentStateFactory
+} from '../common/types';
 import * as localize from '../common/utils/localize';
+import { MillisecondsInADay } from '../constants';
 
 export enum InsidersNotebookSurveyStateKeys {
     ShowBanner = 'ShowInsidersNotebookSurveyBanner',
@@ -18,14 +25,31 @@ enum DSSurveyLabelIndex {
 
 const NotebookOpenThreshold = 5;
 const NotebookExecutionThreshold = 100;
+export type ShowBannerWithExpiryTime = {
+    /**
+     * This value is not used.
+     * We are only interested in the value for `expiry`.
+     * This structure is based on the old data for older customers when we used PersistentState class.
+     */
+    data: boolean;
+    /**
+     * If this is value `undefined`, then prompt can be displayed.
+     * If this value is `a number`, then a prompt was displayed at one point in time &
+     * we need to wait for Date.now() to be greater than that number to display it again.
+     */
+    expiry?: number;
+};
 
 @injectable()
 export class InsidersNativeNotebooksSurveyBanner implements IJupyterExtensionBanner {
     private get enabled(): boolean {
-        return (
-            this.persistentState.createGlobalPersistentState<boolean>(InsidersNotebookSurveyStateKeys.ShowBanner, true)
-                .value && env.uiKind !== UIKind?.Web
-        );
+        if (this.applicationEnvironment.uiKind !== UIKind.Desktop) {
+            return false;
+        }
+        if (!this.showBannerState.value.expiry) {
+            return true;
+        }
+        return this.showBannerState.value.expiry! < Date.now();
     }
     private disabledInCurrentSession: boolean = false;
     private bannerMessage: string = localize.InsidersNativeNotebooksSurveyBanner.bannerMessage();
@@ -33,6 +57,7 @@ export class InsidersNativeNotebooksSurveyBanner implements IJupyterExtensionBan
         localize.DataScienceSurveyBanner.bannerLabelYes(),
         localize.DataScienceSurveyBanner.bannerLabelNo()
     ];
+    private readonly showBannerState: IPersistentState<ShowBannerWithExpiryTime>;
     private readonly surveyLink: string;
 
     constructor(
@@ -45,6 +70,12 @@ export class InsidersNativeNotebooksSurveyBanner implements IJupyterExtensionBan
         surveyLink: string = 'https://aka.ms/vscjupyternb'
     ) {
         this.surveyLink = surveyLink;
+        this.showBannerState = this.persistentState.createGlobalPersistentState<ShowBannerWithExpiryTime>(
+            InsidersNotebookSurveyStateKeys.ShowBanner,
+            {
+                data: true
+            }
+        );
         vscodeNotebook.onDidOpenNotebookDocument(this.openedNotebook.bind(this));
     }
 
@@ -115,10 +146,10 @@ export class InsidersNativeNotebooksSurveyBanner implements IJupyterExtensionBan
     }
 
     private async disable(monthsTillNextPrompt: number) {
-        const expiration = monthsTillNextPrompt * 31 * 24 * 60 * 60 * 1000;
-        await this.persistentState
-            .createGlobalPersistentState<boolean>(InsidersNotebookSurveyStateKeys.ShowBanner, false, expiration)
-            .updateValue(false);
+        await this.showBannerState.updateValue({
+            expiry: monthsTillNextPrompt * 31 * MillisecondsInADay + Date.now(),
+            data: true
+        });
     }
 
     private async openedNotebook() {
