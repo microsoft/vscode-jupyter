@@ -63,6 +63,9 @@ export class ApplicationEnvironment implements IApplicationEnvironment {
     public get machineId(): string {
         return vscode.env.machineId;
     }
+    public get uiKind(): vscode.UIKind {
+        return vscode.env.uiKind;
+    }
     public get extensionName(): string {
         // tslint:disable-next-line:non-literal-require
         return this.packageJson.displayName;
