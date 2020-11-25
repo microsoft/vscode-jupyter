@@ -57,12 +57,11 @@
 
 ## Release
 
--   [ ] Publish the release via Azure DevOps
-    -   [ ] Make sure [CI](https://github.com/Microsoft/vscode-jupyter/blob/main/CONTRIBUTING.md) is passing. Try a re-run on any failing CI test stages. If tests still won't pass contact the owning team.
-    -   [ ] On Actions tab of GitHub, ensure a workflow has automatically run for the workflow `Release VSIX`.
-    -   [ ] Download the [Release VSIX](https://pvsc.blob.core.windows.net/extension-builds-jupyter/ms-toolsai-jupyter-release.vsix) & Make sure no extraneous files are being included in the `.vsix` file (make sure to check for hidden files)
-    -   [ ] Go into the `Publish Extension` workflow and manually run this workflow to publish the extension to the marketplace.
-    -   [ ] From a VSCode instance uninstall the python extension. After the publish see if the new version is available from the extensions tab. Download it and quick sanity check to make sure the extension loads.
+-   [ ] Publish the release manually
+    -   [ ] Make sure [CI](https://github.com/microsoft/vscode-jupyter/actions?query=workflow%3A%22Release+VSIX%22) is passing. Try a re-run on any failing CI test stages. If tests still won't pass check with the team.
+    -   [ ] Download the Release VSIX named [ms-tools-ai-jupyter-release.vsix]](https://pvsc.blob.core.windows.net/extension-builds-jupyter/ms-toolsai-jupyter-release.vsix) from the Azure blob store & Make sure no extraneous files are being included in the `.vsix` file (make sure to check for hidden files)
+    -   [ ] Manually upload the `ms-tools-ai-jupyter-release.vsix` to the VS Code Marketplace.
+    -   [ ] From a VSCode instance uninstall the Jupyter extension. After the publish see if the new version is available from the extensions tab. Download it and quick sanity check to make sure the extension loads.
 -   [ ] Create a [GitHub release](https://github.com/microsoft/vscode-jupyter/releases)
     -   [ ] The previous publish step should have created a release here, but it needs to be edited
     -   [ ] Edit the tag to match the version of the released extension
@@ -74,7 +73,7 @@
 
 ## Clean up after _this_ release
 
--   [ ] Go through [`info needed` issues](https://github.com/Microsoft/vscode-jupyter/issues?q=is%3Aopen+label%3A%22info+needed%22+-label%3A%22data+science%22+sort%3Aupdated-asc) and close any that have no activity for over a month (🤖)
+-   [ ] Go through [`info-needed` issues](https://github.com/microsoft/vscode-jupyter/issues?q=is%3Aissue+is%3Aopen+label%3Ainfo-needed+sort%3Acreated-asc) and close any that have no activity for over a month (🤖)
 -   [ ] GDPR bookkeeping (🤖)
 
 ## Prep for the _next_ release
