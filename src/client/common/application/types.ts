@@ -47,6 +47,7 @@ import {
     TextEditorViewColumnChangeEvent,
     TreeView,
     TreeViewOptions,
+    UIKind,
     Uri,
     ViewColumn,
     WebviewPanel,
@@ -1029,6 +1030,7 @@ export interface IApplicationEnvironment {
      * The custom uri scheme the editor registers to in the operating system.
      */
     readonly uriScheme: string;
+    readonly uiKind: UIKind;
 }
 
 export interface IWebviewMessageListener {

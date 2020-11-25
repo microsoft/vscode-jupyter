@@ -14,15 +14,13 @@ import {
 } from '../../common/application/types';
 import { Experiments } from '../../common/experiments/groups';
 import { traceError } from '../../common/logger';
-import { IDisposableRegistry, IExperimentService, IExtensionContext } from '../../common/types';
+import { IDisposableRegistry, IExperimentService } from '../../common/types';
 import { DataScience } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { JupyterNotebookView } from './constants';
 import { isJupyterNotebook } from './helpers/helpers';
 import { VSCodeKernelPickerProvider } from './kernelProvider';
 import { INotebookContentProvider } from './types';
-
-const EditorAssociationUpdatedKey = 'EditorAssociationUpdatedToUseNotebooks';
 
 /**
  * This class basically registers the necessary providers and the like with VSC.
@@ -40,7 +38,6 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
         @inject(IApplicationEnvironment) private readonly env: IApplicationEnvironment,
         @inject(IApplicationShell) private readonly shell: IApplicationShell,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
-        @inject(IExtensionContext) private readonly extensionContext: IExtensionContext,
         @inject(ICommandManager) private readonly commandManager: ICommandManager
     ) {}
     public async activate(): Promise<void> {
@@ -127,32 +124,21 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
                 viewType: 'jupyter-notebook',
                 filenamePattern: '*.ipynb'
             });
-            await Promise.all([
-                this.extensionContext.globalState.update(EditorAssociationUpdatedKey, true),
-                settings.update('editorAssociations', editorAssociations, ConfigurationTarget.Global)
-            ]);
+            await settings.update('editorAssociations', editorAssociations, ConfigurationTarget.Global);
         }
 
         // Revert the settings.
         if (
             !enable &&
-            this.extensionContext.globalState.get<boolean>(EditorAssociationUpdatedKey, false) &&
             Array.isArray(editorAssociations) &&
             editorAssociations.find((item) => isJupyterNotebook(item.viewType))
         ) {
             const updatedSettings = editorAssociations.filter((item) => !isJupyterNotebook(item.viewType));
-            await Promise.all([
-                this.extensionContext.globalState.update(EditorAssociationUpdatedKey, false),
-                settings.update('editorAssociations', updatedSettings, ConfigurationTarget.Global)
-            ]);
+            await settings.update('editorAssociations', updatedSettings, ConfigurationTarget.Global);
         }
     }
     private async disableNotebooks() {
         if (this.env.channel === 'stable') {
-            return;
-        }
-        // If we never modified the settings, then nothing to do.
-        if (!this.extensionContext.globalState.get<boolean>(EditorAssociationUpdatedKey, false)) {
             return;
         }
         await this.enableDisableEditorAssociation(false);
