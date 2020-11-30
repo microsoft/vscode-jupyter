@@ -66,8 +66,8 @@ export class NotebookEditorUI extends BaseWebUI {
 
     public async getCellOutputHTML(cellIndex: number): Promise<string> {
         const output = await this.getCellOutput(cellIndex);
-        const outputHtml = await output.getProperty('innerHTML');
-        return outputHtml?.toString() || '';
+        const outputHtml = await output.innerHTML();
+        return outputHtml;
     }
 
     public async getCellOutput(cellIndex: number): Promise<ElementHandle<Element>> {
