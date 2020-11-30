@@ -489,6 +489,13 @@ export namespace Settings {
 
 export namespace DataFrameLoading {
     export const SysPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'vscode_datascience_helpers', 'dataframes');
+    export const HelperPath = path.join(
+        EXTENSION_ROOT_DIR,
+        'pythonFiles',
+        'vscode_datascience_helpers',
+        'dataframes',
+        'helpers'
+    );
     export const DataFrameSysImport = `import sys\nsys.path.append("${SysPath.replace(/\\/g, '\\\\')}")`;
     export const DataFrameInfoImportName = '_VSCODE_InfoImport';
     export const DataFrameInfoImport = `import vscodeGetDataFrameInfo as ${DataFrameInfoImportName}`;
@@ -499,6 +506,17 @@ export namespace DataFrameLoading {
     export const VariableInfoImportName = '_VSCODE_VariableImport';
     export const VariableInfoImport = `import vscodeGetVariableInfo as ${VariableInfoImportName}`;
     export const VariableInfoFunc = `${VariableInfoImportName}._VSCODE_getVariableInfo`;
+}
+
+export namespace GetVariableInfo {
+    export const ScriptPath = path.join(
+        EXTENSION_ROOT_DIR,
+        'pythonFiles',
+        'vscode_datascience_helpers',
+        'getVariableInfo',
+        'vscodeVariableInfo.py'
+    );
+    export const VariableInfoFunc = '_VSCODE_getVariableInfo';
 }
 
 export namespace Identifiers {
