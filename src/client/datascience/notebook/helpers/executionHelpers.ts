@@ -13,6 +13,22 @@ import { chainWithPendingUpdates } from './notebookUpdater';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
+// After executing %tensorboard --logdir <log directory> to launch
+// TensorBoard inline, TensorBoard sends back an IFrame to display as output.
+// The TensorBoard app hardcodes the source URL of the IFrame to `window.location`.
+// In the VSCode context this results in the URL taking on the internal
+// vscode-webview:// scheme which doesn't work. Hence rewrite it to use
+// http://localhost:<port number>.
+export function handleTensorBoardDisplayDataOutput(data: nbformat.IMimeBundle) {
+    if (data.hasOwnProperty('text/html')) {
+        const text = data['text/html'];
+        if (typeof text === 'string' && text.includes('<iframe id="tensorboard-frame-')) {
+            data['text/html'] = text.replace(/new URL\((.*), window.location\)/, 'new URL("http://localhost")');
+        }
+    }
+    return data;
+}
+
 /**
  * Updates the cell in notebook model as well as the notebook document.
  * Update notebook document so UI is updated accordingly.
