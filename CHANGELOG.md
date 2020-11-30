@@ -1,6 +1,6 @@
 # Changelog
 
-## 2020.11.2 (25 November 2020)
+## 2020.11.2 (30 November 2020)
 
 ### Fixes
 
