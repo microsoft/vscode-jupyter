@@ -44,12 +44,12 @@ import { PYTHON_LANGUAGE } from '../../common/constants';
 import { IFileSystem } from '../../common/platform/types';
 import { RefBool } from '../../common/refBool';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
+import { handleTensorBoardDisplayDataOutput } from '../notebook/helpers/executionHelpers';
 import {
     getInterpreterFromKernelConnectionMetadata,
     getKernelConnectionLanguage,
     isPythonKernelConnection
 } from './kernels/helpers';
-import { handleTensorBoardDisplayDataOutput } from '../notebook/helpers/executionHelpers';
 
 class CellSubscriber {
     public get startTime(): number {
