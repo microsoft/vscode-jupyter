@@ -167,11 +167,12 @@ export class KernelVariables implements IJupyterVariables {
             disposables.push(notebook.onKernelRestarted(handler));
 
             // First put the code from our helper files into the notebook
-            await this.importDataFrameHelperScripts(notebook, token);
+            //await this.importDataFrameHelperScripts(notebook, token);
+            await this.runScriptFile(notebook, DataFrameLoading.ScriptPath, token);
 
             // Add in the actual imports that we need
-            const fullCode = `${DataFrameLoading.DataFrameInfoImport}\n${DataFrameLoading.DataFrameRowImport}\n${DataFrameLoading.VariableInfoImport}`;
-            await notebook.execute(fullCode, Identifiers.EmptyFileName, 0, uuid(), token, true);
+            //const fullCode = `${DataFrameLoading.DataFrameInfoImport}\n${DataFrameLoading.DataFrameRowImport}\n${DataFrameLoading.VariableInfoImport}`;
+            //await notebook.execute(fullCode, Identifiers.EmptyFileName, 0, uuid(), token, true);
             this.importedDataFrameScripts.set(notebook.identity.toString(), true);
         }
     }
@@ -189,39 +190,12 @@ export class KernelVariables implements IJupyterVariables {
             disposables.push(notebook.onDisposed(handler));
             disposables.push(notebook.onKernelChanged(handler));
             disposables.push(notebook.onKernelRestarted(handler));
+
+            //await this.importGetVariableInfoHelperScripts(notebook, token);
+            await this.runScriptFile(notebook, GetVariableInfo.ScriptPath, token);
+
+            this.importedGetVariableInfoScripts.set(notebook.identity.toString(), true);
         }
-
-        await this.importGetVariableInfoHelperScripts(notebook, token);
-    }
-
-    private async importGetVariableInfoHelperScripts(notebook: INotebook, token?: CancellationToken) {
-        // First pull all our helper files from the helper script directory
-        //const scriptFile = await this.fs.searchLocal('**/*.py', DataFrameLoading.HelperPath);
-
-        //await Promise.all(
-        //scriptFiles.map(async (file) => {
-        //return this.runScriptFile(notebook, path.join(DataFrameLoading.HelperPath, file), token);
-        //})
-        //);
-
-        await this.runScriptFile(notebook, GetVariableInfo.ScriptPath, token);
-
-        // IANHU: Check my sync here?
-        traceError('just testing');
-    }
-
-    private async importDataFrameHelperScripts(notebook: INotebook, token?: CancellationToken) {
-        // First pull all our helper files from the helper script directory
-        const scriptFiles = await this.fs.searchLocal('**/*.py', DataFrameLoading.HelperPath);
-
-        await Promise.all(
-            scriptFiles.map(async (file) => {
-                return this.runScriptFile(notebook, path.join(DataFrameLoading.HelperPath, file), token);
-            })
-        );
-
-        // IANHU: Check my sync here?
-        traceError('just testing');
     }
 
     private async runScriptFile(notebook: INotebook, scriptFile: string, token?: CancellationToken) {
@@ -233,24 +207,24 @@ export class KernelVariables implements IJupyterVariables {
         }
     }
 
-    private async importDataFrameScriptsOld(notebook: INotebook, token?: CancellationToken): Promise<void> {
-        const key = notebook.identity.toString();
-        if (!this.importedDataFrameScripts.get(key)) {
-            // Clear our flag if the notebook disposes or restarts
-            const disposables: IDisposable[] = [];
-            const handler = () => {
-                this.importedDataFrameScripts.delete(key);
-                disposables.forEach((d) => d.dispose());
-            };
-            disposables.push(notebook.onDisposed(handler));
-            disposables.push(notebook.onKernelChanged(handler));
-            disposables.push(notebook.onKernelRestarted(handler));
+    //private async importDataFrameScriptsOld(notebook: INotebook, token?: CancellationToken): Promise<void> {
+    //const key = notebook.identity.toString();
+    //if (!this.importedDataFrameScripts.get(key)) {
+    //// Clear our flag if the notebook disposes or restarts
+    //const disposables: IDisposable[] = [];
+    //const handler = () => {
+    //this.importedDataFrameScripts.delete(key);
+    //disposables.forEach((d) => d.dispose());
+    //};
+    //disposables.push(notebook.onDisposed(handler));
+    //disposables.push(notebook.onKernelChanged(handler));
+    //disposables.push(notebook.onKernelRestarted(handler));
 
-            const fullCode = `${DataFrameLoading.DataFrameSysImport}\n${DataFrameLoading.DataFrameInfoImport}\n${DataFrameLoading.DataFrameRowImport}\n${DataFrameLoading.VariableInfoImport}`;
-            await notebook.execute(fullCode, Identifiers.EmptyFileName, 0, uuid(), token, true);
-            this.importedDataFrameScripts.set(notebook.identity.toString(), true);
-        }
-    }
+    //const fullCode = `${DataFrameLoading.DataFrameSysImport}\n${DataFrameLoading.DataFrameInfoImport}\n${DataFrameLoading.DataFrameRowImport}\n${DataFrameLoading.VariableInfoImport}`;
+    //await notebook.execute(fullCode, Identifiers.EmptyFileName, 0, uuid(), token, true);
+    //this.importedDataFrameScripts.set(notebook.identity.toString(), true);
+    //}
+    //}
 
     private async getFullVariable(
         targetVariable: IJupyterVariable,
@@ -259,7 +233,7 @@ export class KernelVariables implements IJupyterVariables {
     ): Promise<IJupyterVariable> {
         // Import the data frame script directory if we haven't already
         //await this.importDataFrameScripts(notebook, token);
-        await this.importGetVariableInfoHelperScripts(notebook, token);
+        await this.importGetVariableInfoScripts(notebook, token);
 
         // Then execute a call to get the info and turn it into JSON
         const results = await notebook.execute(
