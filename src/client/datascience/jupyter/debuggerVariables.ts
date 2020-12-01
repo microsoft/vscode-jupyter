@@ -275,7 +275,7 @@ export class DebuggerVariables extends DebugLocationTracker
     }
 
     private async evaluateScriptFile(fileName: string): Promise<void> {
-        if (this.fs.localFileExists(fileName)) {
+        if (await this.fs.localFileExists(fileName)) {
             const fileContents = await this.fs.readFile(Uri.parse(fileName));
             return this.evaluate(fileContents);
         } else {

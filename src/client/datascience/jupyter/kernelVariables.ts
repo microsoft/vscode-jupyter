@@ -199,7 +199,7 @@ export class KernelVariables implements IJupyterVariables {
     }
 
     private async runScriptFile(notebook: INotebook, scriptFile: string, token?: CancellationToken) {
-        if (this.fs.localFileExists(scriptFile)) {
+        if (await this.fs.localFileExists(scriptFile)) {
             const fileContents = await this.fs.readFile(Uri.parse(scriptFile));
             return notebook.execute(fileContents, Identifiers.EmptyFileName, 0, uuid(), token, true);
         } else {
