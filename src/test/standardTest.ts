@@ -73,7 +73,6 @@ async function installPythonExtension(vscodeExecutablePath: string) {
 async function createSettings(): Promise<string> {
     const userDataDirectory = await createTempDir();
     process.env.VSC_JUPYTER_VSCODE_SETTINGS_DIR = userDataDirectory;
-    process.env.VSC_PYTHON_FORCE_LOGGING = 'true';
     const settingsFile = path.join(userDataDirectory, 'User', 'settings.json');
     const defaultSettings: Record<string, string | boolean> = {
         'python.insidersChannel': 'off',
