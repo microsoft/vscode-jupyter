@@ -87,7 +87,7 @@ function createJupyterKernelWithoutSerialization() {
 async function downloadBCryptGenRandomExecutable() {
     console.log('Downloading BCryptGenRandom.exe...');
     const executableName = 'BCryptGenRandom.exe';
-    const uri = `https://pvsc.blob.core.windows.net/extension-builds-juypter/${executableName}`;
+    const uri = `https://pvsc.blob.core.windows.net/extension-builds-jupyter/${executableName}`;
     const srcDestination = path.resolve(path.dirname(__dirname), '..', 'src', 'BCryptGenRandom');
     const destinationFilename = path.join(srcDestination, executableName);
     if (fs.existsSync(destinationFilename)) {
