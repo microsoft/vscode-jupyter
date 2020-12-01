@@ -37,9 +37,7 @@ export class EnvironmentVariablesService implements IEnvironmentVariablesService
             if (settingsNotToMerge.indexOf(setting) >= 0) {
                 return;
             }
-            if (target[setting] === undefined) {
-                target[setting] = source[setting];
-            }
+            target[setting] = source[setting];
         });
     }
 

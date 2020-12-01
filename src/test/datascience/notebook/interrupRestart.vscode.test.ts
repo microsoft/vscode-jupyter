@@ -7,6 +7,7 @@ import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { commands, NotebookEditor as VSCNotebookEditor } from 'vscode';
 import { IApplicationShell, IVSCodeNotebook } from '../../../client/common/application/types';
+import { traceInfo } from '../../../client/common/logger';
 import { IConfigurationService, IDisposable, IJupyterSettings, ReadWrite } from '../../../client/common/types';
 import { createDeferredFromPromise } from '../../../client/common/utils/async';
 import { DataScience } from '../../../client/common/utils/localize';
@@ -116,7 +117,7 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         }
     });
     test('Restarting kernel will cancel cell execution & we can re-run a cell', async function () {
-        return this.skip();
+        traceInfo('Step 1');
         await insertCodeCell('import time\nfor i in range(10000):\n  print(i)\n  time.sleep(0.1)', { index: 0 });
         const cell = vscEditor.document.cells[0];
         // Ensure we click `Yes` when prompted to restart the kernel.
@@ -124,7 +125,9 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         const showInformationMessage = sinon
             .stub(appShell, 'showInformationMessage')
             .callsFake(function (message: string) {
+                traceInfo(`Step 2. ShowInformationMessage ${message}`);
                 if (message === DataScience.restartKernelMessage()) {
+                    traceInfo(`Step 3. ShowInformationMessage & yes to restart`);
                     // User clicked ok to restart it.
                     return DataScience.restartKernelMessageYes();
                 }
@@ -133,33 +136,58 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         disposables.push({ dispose: () => showInformationMessage.restore() });
 
         (editorProvider.activeEditor as any).shouldAskForRestart = () => Promise.resolve(false);
+        traceInfo(`Step 4. Before execute`);
         await executeActiveDocument();
+        traceInfo(`Step 5. After execute`);
 
         // Wait for cell to get busy.
         await waitForCondition(async () => assertVSCCellIsRunning(cell), 15_000, 'Cell not being executed');
+        traceInfo(`Step 6. Cell is busy`);
 
         // Wait for ?s, and verify cell is still running.
         assertVSCCellIsRunning(cell);
         // Wait for some output.
         await waitForTextOutputInVSCode(cell, '1', 0, false, 15_000); // Wait for 15 seconds for it to start (possibly kernel is still starting).
+        traceInfo(`Step 7. Cell output`);
 
         // Restart the kernel.
-        let restartPromise = commands.executeCommand('jupyter.notebookeditor.restartkernel');
+        const restartPromise = commands.executeCommand('jupyter.notebookeditor.restartkernel');
 
-        await waitForCondition(async () => assertVSCCellIsNotRunning(cell), 15_000, 'Execution not cancelled');
+        await waitForCondition(
+            async () => {
+                traceInfo(`Step 8 Cell Status = ${cell.metadata.runState}`);
+                return assertVSCCellIsNotRunning(cell);
+            },
+            15_000,
+            'Execution not cancelled first time.'
+        );
 
         // Wait before we execute cells again.
+        traceInfo('Step 9 Wait for restart');
         await restartPromise;
+        traceInfo('Step 10 Restarted');
 
         // Confirm we can execute a cell (using the new kernel session).
         await executeActiveDocument();
+        traceInfo('Step 11 Executed');
 
         // Wait for cell to get busy.
         await waitForCondition(async () => assertVSCCellIsRunning(cell), 15_000, 'Cell not being executed');
+        traceInfo('Step 12 Cells executed after restart');
+        // Wait for some output.
+        await waitForTextOutputInVSCode(cell, '1', 0, false, 15_000); // Wait for 15 seconds for it to start (possibly kernel is still starting).
+        traceInfo(`Step 13. Cell output`);
 
         // Stop the cell (cleaner way to tear down this test, else VS Code can hang due to the fact that we delete/close notebooks & rest of the code is trying to access it).
-        restartPromise = commands.executeCommand('jupyter.notebookeditor.restartkernel');
-        await waitForCondition(async () => assertVSCCellIsNotRunning(cell), 15_000, 'Execution not cancelled');
-        await restartPromise;
+        const interruptPromise = commands.executeCommand('jupyter.notebookeditor.interruptkernel');
+        traceInfo('Step 14 Executed interrupt');
+        await waitForCondition(
+            async () => assertVSCCellIsNotRunning(cell),
+            15_000,
+            'Execution not cancelled second time.'
+        );
+        traceInfo('Step 15 execution cancelled');
+        await interruptPromise;
+        traceInfo('Step 16 Interrupted');
     });
 });

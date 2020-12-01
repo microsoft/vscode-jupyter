@@ -576,7 +576,10 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', () => {
                         `,
             { index: 0 }
         );
-        const cells = vscodeNotebook.activeNotebookEditor?.document.cells!;
+        if (!vscodeNotebook.activeNotebookEditor) {
+            throw new Error('No active document');
+        }
+        const cells = vscodeNotebook.activeNotebookEditor.document.cells;
 
         await executeActiveDocument();
         await waitForExecutionCompletedSuccessfully(cells[0]);

@@ -19,13 +19,14 @@ import { retryIfFail as retryIfFailOriginal } from '../../common';
 import { mockedVSCodeNamespaces } from '../../vscode-mock';
 import { DataScienceIocContainer } from '../dataScienceIocContainer';
 import { addMockData } from '../testHelpersCore';
-import { waitTimeForUIToUpdate } from './helpers';
+import { maxWaitTimeForMessage, waitTimeForUIToUpdate } from './helpers';
 import { openNotebook } from './notebookHelpers';
 import { NotebookEditorUI } from './notebookUi';
 
 const sanitize = require('sanitize-filename');
+const ipywidgetsWaitTimeForUIToUpdate = waitTimeForUIToUpdate * 2 + maxWaitTimeForMessage * 3;
 // Include default timeout.
-const retryIfFail = <T>(fn: () => Promise<T>) => retryIfFailOriginal<T>(fn, waitTimeForUIToUpdate);
+const retryIfFail = <T>(fn: () => Promise<T>) => retryIfFailOriginal<T>(fn, ipywidgetsWaitTimeForUIToUpdate);
 
 use(chaiAsPromised);
 
@@ -407,13 +408,9 @@ use(chaiAsPromised);
             const { notebookUI } = await openIPyVolumeIpynb();
             await assert.eventually.isFalse(notebookUI.cellHasOutput(3));
 
-            await notebookUI.executeCell(1);
-            await notebookUI.executeCell(2);
-            await notebookUI.executeCell(3);
-            await notebookUI.executeCell(4);
-
             // Confirm sliders and canvas are rendered.
             await retryIfFail(async () => {
+                await notebookUI.executeCell(1);
                 const cellOutputHtml = await notebookUI.getCellOutputHTML(1);
                 assert.include(cellOutputHtml, '<canvas ');
 
@@ -424,6 +421,10 @@ use(chaiAsPromised);
 
             // Confirm canvas is rendered.
             await retryIfFail(async () => {
+                await notebookUI.executeCell(2);
+                await notebookUI.executeCell(3);
+                await notebookUI.executeCell(4);
+
                 const cellOutputHtml = await notebookUI.getCellOutputHTML(4);
                 assert.include(cellOutputHtml, '<canvas ');
             });

@@ -27,6 +27,8 @@ const fileInNonRootWorkspace = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 't
 export const rootWorkspaceUri = getWorkspaceRoot();
 
 export const PYTHON_PATH = getPythonPath();
+// Useful to see on CI (when working with conda & non-conda, virtual envs & the like).
+console.log(`Python used in tests is ${PYTHON_PATH}`);
 
 const arch = require('arch');
 export const IS_64_BIT = arch() === 'x64';

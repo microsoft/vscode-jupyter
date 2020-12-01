@@ -19,6 +19,7 @@ import { captureTelemetry } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { KernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../jupyter/kernels/types';
 import { KernelDaemonPool } from './kernelDaemonPool';
+import { KernelEnvironmentVariablesService } from './kernelEnvVarsService';
 import { KernelProcess } from './kernelProcess';
 import { IKernelConnection, IKernelLauncher, IKernelProcess } from './types';
 
@@ -35,7 +36,9 @@ export class KernelLauncher implements IKernelLauncher {
         @inject(IProcessServiceFactory) private processExecutionFactory: IProcessServiceFactory,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(KernelDaemonPool) private readonly daemonPool: KernelDaemonPool,
-        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker
+        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
+        @inject(KernelEnvironmentVariablesService)
+        private readonly kernelEnvVarsService: KernelEnvironmentVariablesService
     ) {}
 
     // This function is public so it can be called when a test shuts down
@@ -85,7 +88,7 @@ export class KernelLauncher implements IKernelLauncher {
         resource: Resource,
         workingDirectory: string
     ): Promise<IKernelProcess> {
-        const connection = await this.getKernelConnection();
+        const connection = await this.getKernelConnection(kernelConnectionMetadata);
         const kernelProcess = new KernelProcess(
             this.processExecutionFactory,
             this.daemonPool,
@@ -93,7 +96,8 @@ export class KernelLauncher implements IKernelLauncher {
             kernelConnectionMetadata,
             this.fs,
             resource,
-            this.extensionChecker
+            this.extensionChecker,
+            this.kernelEnvVarsService
         );
         await kernelProcess.launch(workingDirectory);
         return kernelProcess;
@@ -119,10 +123,11 @@ export class KernelLauncher implements IKernelLauncher {
         return ports;
     }
 
-    private async getKernelConnection(): Promise<IKernelConnection> {
+    private async getKernelConnection(
+        kernelConnectionMetadata: KernelSpecConnectionMetadata | PythonKernelConnectionMetadata
+    ): Promise<IKernelConnection> {
         const ports = await this.getConnectionPorts();
         return {
-            version: 1,
             key: uuid(),
             signature_scheme: 'hmac-sha256',
             transport: 'tcp',
@@ -131,7 +136,8 @@ export class KernelLauncher implements IKernelLauncher {
             control_port: ports[1],
             shell_port: ports[2],
             stdin_port: ports[3],
-            iopub_port: ports[4]
+            iopub_port: ports[4],
+            kernel_name: kernelConnectionMetadata.kernelSpec?.name || 'python'
         };
     }
 }

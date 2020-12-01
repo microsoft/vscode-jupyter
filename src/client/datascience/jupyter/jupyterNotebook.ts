@@ -44,6 +44,7 @@ import { PYTHON_LANGUAGE } from '../../common/constants';
 import { IFileSystem } from '../../common/platform/types';
 import { RefBool } from '../../common/refBool';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
+import { handleTensorBoardDisplayDataOutput } from '../notebook/helpers/executionHelpers';
 import {
     getInterpreterFromKernelConnectionMetadata,
     getKernelConnectionLanguage,
@@ -1349,24 +1350,8 @@ export class JupyterNotebookBase implements INotebook {
         }
     }
 
-    private handleTensorBoardDisplayDataOutput(data: nbformat.IMimeBundle) {
-        // After executing %tensorboard --logdir <log directory> to launch
-        // TensorBoard inline, TensorBoard sends back an IFrame to display as output.
-        // The TensorBoard app hardcodes the source URL of the IFrame to `window.location`.
-        // In the VSCode context this results in the URL taking on the internal
-        // vscode-webview:// scheme which doesn't work. Hence rewrite it to use
-        // http://localhost:<port number>.
-        if (data.hasOwnProperty('text/html')) {
-            const text = data['text/html'];
-            if (typeof text === 'string' && text.includes('<iframe id="tensorboard-frame-')) {
-                data['text/html'] = text.replace(/new URL\((.*), window.location\)/, 'new URL("http://localhost")');
-            }
-        }
-        return data;
-    }
-
     private handleDisplayData(msg: KernelMessage.IDisplayDataMsg, clearState: RefBool, cell: ICell) {
-        const newData = this.handleTensorBoardDisplayDataOutput(msg.content.data);
+        const newData = handleTensorBoardDisplayDataOutput(msg.content.data);
         const output: nbformat.IDisplayData = {
             output_type: 'display_data',
             data: newData,

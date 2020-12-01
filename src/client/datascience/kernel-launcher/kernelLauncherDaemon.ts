@@ -13,6 +13,7 @@ import { noop } from '../../common/utils/misc';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { IJupyterKernelSpec } from '../types';
 import { KernelDaemonPool } from './kernelDaemonPool';
+import { KernelEnvironmentVariablesService } from './kernelEnvVarsService';
 import { IPythonKernelDaemon } from './types';
 
 /**
@@ -23,16 +24,21 @@ import { IPythonKernelDaemon } from './types';
 @injectable()
 export class PythonKernelLauncherDaemon implements IDisposable {
     private readonly processesToDispose: ChildProcess[] = [];
-    constructor(@inject(KernelDaemonPool) private readonly daemonPool: KernelDaemonPool) {}
+    constructor(
+        @inject(KernelDaemonPool) private readonly daemonPool: KernelDaemonPool,
+        @inject(KernelEnvironmentVariablesService)
+        private readonly kernelEnvVarsService: KernelEnvironmentVariablesService
+    ) {}
     public async launch(
         resource: Resource,
         workingDirectory: string,
         kernelSpec: IJupyterKernelSpec,
         interpreter?: PythonEnvironment
     ): Promise<{ observableOutput: ObservableExecutionResult<string>; daemon: IPythonKernelDaemon | undefined }> {
-        const [daemon, wdExists] = await Promise.all([
+        const [daemon, wdExists, env] = await Promise.all([
             this.daemonPool.get(resource, kernelSpec, interpreter),
-            fs.pathExists(workingDirectory)
+            fs.pathExists(workingDirectory),
+            this.kernelEnvVarsService.getEnvironmentVariables(resource, kernelSpec)
         ]);
 
         // Check to see if we have the type of kernelspec that we expect
@@ -47,7 +53,6 @@ export class PythonKernelLauncherDaemon implements IDisposable {
         }
         const moduleName = args[modulePrefixIndex + 1];
         const moduleArgs = args.slice(modulePrefixIndex + 2);
-        const env = kernelSpec.env && Object.keys(kernelSpec.env).length > 0 ? kernelSpec.env : undefined;
 
         // The daemon pool can return back a non-IPythonKernelDaemon if daemon service is not supported or for Python 2.
         // Use a check for the daemon.start function here before we call it.

@@ -308,6 +308,7 @@ import { MockEncryptedStorage } from './mockEncryptedStorage';
 import { WebviewIPyWidgetCoordinator } from '../../client/datascience/ipywidgets/webviewIPyWidgetCoordinator';
 import { WebviewViewProvider } from '../../client/common/application/webviewViews/webviewViewProvider';
 import { SystemPseudoRandomNumberGenerator } from '../../client/datascience/interactive-ipynb/randomBytes';
+import { KernelEnvironmentVariablesService } from '../../client/datascience/kernel-launcher/kernelEnvVarsService';
 
 export class DataScienceIocContainer extends UnitTestIocContainer {
     public get workingInterpreter() {
@@ -786,6 +787,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             ActiveEditorContextService
         );
         this.serviceManager.addSingleton<IKernelLauncher>(IKernelLauncher, KernelLauncher);
+        this.serviceManager.addSingleton<KernelEnvironmentVariablesService>(
+            KernelEnvironmentVariablesService,
+            KernelEnvironmentVariablesService
+        );
         this.serviceManager.addSingleton<IKernelFinder>(IKernelFinder, KernelFinder);
 
         this.serviceManager.addSingleton<IJupyterSubCommandExecutionService>(
