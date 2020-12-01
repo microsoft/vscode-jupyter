@@ -33,6 +33,7 @@ export function registerTypes(serviceManager: IServiceManager) {
         IExtensionSingleActivationService,
         RendererExtension
     );
+    // Disabled temporarily due to upstream VSC bug, see https://github.com/microsoft/vscode-jupyter/pull/4069
     // serviceManager.addSingleton<IExtensionSingleActivationService>(
     //     IExtensionSingleActivationService,
     //     EmptyNotebookCellLanguageService
