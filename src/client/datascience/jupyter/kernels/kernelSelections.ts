@@ -56,6 +56,14 @@ function getQuickPickItemForKernelSpec(
     // If we only have name of executable like `dotnet` or `python`, then include path to kernel json.
     // Similarly if this is a python kernel and pathTokernel is just `python`, look for corresponding interpreter that owns this and include its path.
 
+    // E.g.
+    // If its a python kernel with python path in kernel spec we display:
+    //  detail: ~/user friendly path to python interpreter
+    // If its a non-python kernel and we have the fully qualified path to executable:
+    //  detail: ~/user friendly path to executable
+    // If its a non-python kernel and we only have name of executable like `java/dotnet` & we we have the fully qualified path to interpreter that owns this kernel:
+    //  detail: ~/user friendly path to kenelspec.json file
+
     let detail = pathUtils.getDisplayName(pathToKernel);
     if (pathToKernel === path.basename(pathToKernel)) {
         const pathToInterpreterOrKernelSpec =
