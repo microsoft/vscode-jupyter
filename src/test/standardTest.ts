@@ -19,12 +19,14 @@ const workspacePath = process.env.CODE_TESTS_WORKSPACE
 const extensionDevelopmentPath = process.env.CODE_EXTENSIONS_PATH
     ? process.env.CODE_EXTENSIONS_PATH
     : EXTENSION_ROOT_DIR_FOR_TESTS;
+const isRunningSmokeTests = process.env.TEST_FILES_SUFFIX === 'smoke.test';
+const isRunningVSCodeTests = process.env.TEST_FILES_SUFFIX === 'vscode.test';
 
 function requiresPythonExtensionToBeInstalled() {
     if (process.env.VSC_JUPYTER_CI_TEST_DO_NOT_INSTALL_PYTHON_EXT) {
         return;
     }
-    return process.env.TEST_FILES_SUFFIX === 'vscode.test' || process.env.TEST_FILES_SUFFIX === 'smoke.test';
+    return isRunningVSCodeTests || isRunningSmokeTests;
 }
 
 const channel = (process.env.VSC_JUPYTER_CI_TEST_VSC_CHANNEL || '').toLowerCase().includes('insiders')
@@ -72,7 +74,7 @@ async function createSettings(): Promise<string> {
     const userDataDirectory = await createTempDir();
     process.env.VSC_JUPYTER_VSCODE_SETTINGS_DIR = userDataDirectory;
     const settingsFile = path.join(userDataDirectory, 'User', 'settings.json');
-    const defaultSettings = {
+    const defaultSettings: Record<string, string | boolean> = {
         'python.insidersChannel': 'off',
         'jupyter.logging.level': 'debug',
         'python.logging.level': 'debug',
@@ -80,6 +82,12 @@ async function createSettings(): Promise<string> {
         // For instance if the start page UI opens up, then active editor, active notebook and the like are empty.
         'python.showStartPage': false
     };
+
+    // if smoke tests, then trust everything.
+    if (isRunningSmokeTests) {
+        defaultSettings['jupyter.alwaysTrustNotebooks'] = true;
+    }
+
     fs.ensureDirSync(path.dirname(settingsFile));
     fs.writeFileSync(settingsFile, JSON.stringify(defaultSettings, undefined, 4));
     return userDataDirectory;
