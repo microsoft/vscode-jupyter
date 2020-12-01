@@ -12,9 +12,9 @@ import {
     IVSCodeNotebook,
     IWorkspaceService
 } from '../../common/application/types';
-import { Experiments } from '../../common/experiments/groups';
+import { UseVSCodeNotebookEditorApi } from '../../common/constants';
 import { traceError } from '../../common/logger';
-import { IDisposableRegistry, IExperimentService } from '../../common/types';
+import { IDisposableRegistry } from '../../common/types';
 import { DataScience } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { JupyterNotebookView } from './constants';
@@ -31,7 +31,7 @@ import { INotebookContentProvider, INotebookKernelProvider } from './types';
 export class NotebookIntegration implements IExtensionSingleActivationService {
     constructor(
         @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
-        @inject(IExperimentService) private readonly experimentService: IExperimentService,
+        @inject(UseVSCodeNotebookEditorApi) private readonly useNativeNb: boolean,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(INotebookContentProvider) private readonly notebookContentProvider: VSCNotebookContentProvider,
         @inject(INotebookKernelProvider) private readonly kernelProvider: VSCodeKernelPickerProvider,
@@ -44,7 +44,7 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
         // This condition is temporary.
         // If user belongs to the experiment, then make the necessary changes to package.json.
         // Once the API is final, we won't need to modify the package.json.
-        if (await this.experimentService.inExperiment(Experiments.NativeNotebook)) {
+        if (this.useNativeNb) {
             await this.enableNotebooks();
         } else {
             // Enable command to open in preview notebook (only for insiders).
@@ -91,7 +91,7 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
             } catch (ex) {
                 // If something goes wrong, and we're not in Insiders & not using the NativeEditor experiment, then swallow errors.
                 traceError('Failed to register VS Code Notebook API', ex);
-                if (await this.experimentService.inExperiment(Experiments.NativeNotebook)) {
+                if (this.useNativeNb) {
                     throw ex;
                 }
             }
