@@ -7,6 +7,7 @@ var fs = require('fs-extra');
 var path = require('path');
 var constants_1 = require('../constants');
 var cp = require('child_process');
+var download = require('download');
 /**
  * In order to compile the extension in strict mode, one of the dependencies (@jupyterlab) has some files that
  * just won't compile in strict mode.
@@ -83,17 +84,30 @@ function createJupyterKernelWithoutSerialization() {
  * which directly consumes BCryptGenRandom in bcrypt.dll and outputs random bytes as hex. This
  * executable is required for trusted notebooks key generation and is included with the built extension.
  */
-function downloadBCryptGenRandomExecutable() {
+async function downloadBCryptGenRandomExecutable() {
     console.log('Downloading BCryptGenRandom.exe...');
     const executableName = 'BCryptGenRandom.exe';
     const uri = `https://pvsc.blob.core.windows.net/extension-builds-juypter/${executableName}`;
-    const dest = path.resolve(path.dirname(__dirname), '..', 'src', 'BCryptGenRandom');
-    fs.ensureDirSync(dest);
-    const destination = path.join(dest, executableName);
-    cp.execSync(`curl --output ${destination} ${uri}`);
-    console.log('Downloaded BCryptGenRandom.exe.');
+    const srcDestination = path.resolve(path.dirname(__dirname), '..', 'src', 'BCryptGenRandom');
+    const destinationFilename = path.join(srcDestination, executableName);
+    if (fs.existsSync(destinationFilename)) {
+        console.log('BCryptGenRandom.exe is already downloaded.');
+    } else {
+        fs.ensureDirSync(srcDestination);
+        await download(uri, srcDestination, { filename: executableName });
+        console.log('Downloaded BCryptGenRandom.exe.');
+    }
+    const outDestination = path.resolve(path.dirname(__dirname), '..', 'out', 'BCryptGenRandom');
+    if (fs.existsSync(outDestination)) {
+        console.log('BCryptGenRandom.exe is already copied to outdir.');
+    } else {
+        fs.copyFileSync(srcDestination, outDestination);
+        console.log('Copied BCryptGenRandom.exe to outdir');
+    }
 }
 
-fixJupyterLabDTSFiles();
-createJupyterKernelWithoutSerialization();
-downloadBCryptGenRandomExecutable();
+(async () => {
+    fixJupyterLabDTSFiles();
+    createJupyterKernelWithoutSerialization();
+    await downloadBCryptGenRandomExecutable();
+})().catch((ex) => console.error('Encountered error while running postInstall step', ex));
