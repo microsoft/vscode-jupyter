@@ -65,6 +65,7 @@ export async function activate(context: IExtensionContext): Promise<IExtensionAp
     sendStartupTelemetry(ready, durations, stopWatch, serviceContainer)
         // Run in the background.
         .ignoreErrors();
+    await ready;
     return api;
 }
 

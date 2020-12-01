@@ -24,6 +24,7 @@ import { StopWatch } from '../../../common/utils/stopWatch';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../constants';
 import {
+    handleTensorBoardDisplayDataOutput,
     handleUpdateDisplayDataMessage,
     updateCellExecutionCount,
     updateCellWithErrorStatus
@@ -627,7 +628,7 @@ export class CellExecution {
     private async handleDisplayData(msg: KernelMessage.IDisplayDataMsg, clearState: RefBool) {
         const output: nbformat.IDisplayData = {
             output_type: 'display_data',
-            data: msg.content.data,
+            data: handleTensorBoardDisplayDataOutput(msg.content.data),
             metadata: msg.content.metadata,
             // tslint:disable-next-line: no-any
             transient: msg.content.transient as any // NOSONAR
