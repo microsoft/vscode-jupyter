@@ -12,7 +12,6 @@ import { KernelProvider } from '../jupyter/kernels/kernelProvider';
 import { IKernelProvider } from '../jupyter/kernels/types';
 import { NotebookContentProvider } from './contentProvider';
 import { NotebookCellLanguageService } from './defaultCellLanguageService';
-import { EmptyNotebookCellLanguageService } from './emptyNotebookCellLanguageService';
 import { NotebookIntegration } from './integration';
 import { VSCodeKernelPickerProvider } from './kernelProvider';
 import { NotebookDisposeService } from './notebookDisposeService';
@@ -34,10 +33,10 @@ export function registerTypes(serviceManager: IServiceManager) {
         IExtensionSingleActivationService,
         RendererExtension
     );
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
-        EmptyNotebookCellLanguageService
-    );
+    // serviceManager.addSingleton<IExtensionSingleActivationService>(
+    //     IExtensionSingleActivationService,
+    //     EmptyNotebookCellLanguageService
+    // );
     serviceManager.addSingleton<RendererExtensionDownloader>(RendererExtensionDownloader, RendererExtensionDownloader);
     serviceManager.addSingleton<NotebookIntegration>(NotebookIntegration, NotebookIntegration);
     serviceManager.addSingleton<IKernelProvider>(IKernelProvider, KernelProvider);
