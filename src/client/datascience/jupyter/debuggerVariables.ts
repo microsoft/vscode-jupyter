@@ -3,13 +3,14 @@
 'use strict';
 import { inject, injectable, named } from 'inversify';
 
-import { DebugAdapterTracker, Disposable, Event, EventEmitter } from 'vscode';
+import { DebugAdapterTracker, Disposable, Event, EventEmitter, Uri } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { IDebugService } from '../../common/application/types';
 import { traceError } from '../../common/logger';
+import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, Resource } from '../../common/types';
 import { sendTelemetryEvent } from '../../telemetry';
-import { DataFrameLoading, Identifiers, Telemetry } from '../constants';
+import { DataFrameLoading, GetVariableInfo, Identifiers, Telemetry } from '../constants';
 import { DebugLocationTracker } from '../debugLocationTracker';
 import {
     IConditionalJupyterVariables,
@@ -28,12 +29,14 @@ export class DebuggerVariables extends DebugLocationTracker
     implements IConditionalJupyterVariables, DebugAdapterTracker {
     private refreshEventEmitter = new EventEmitter<void>();
     private lastKnownVariables: IJupyterVariable[] = [];
-    private importedIntoKernel = new Set<string>();
+    private importedDataFrameScriptsIntoKernel = new Set<string>();
+    private importedGetVariableInfoScriptsIntoKernel = new Set<string>();
     private watchedNotebooks = new Map<string, Disposable[]>();
     private debuggingStarted = false;
     constructor(
         @inject(IJupyterDebugService) @named(Identifiers.MULTIPLEXING_DEBUGSERVICE) private debugService: IDebugService,
-        @inject(IConfigurationService) private configService: IConfigurationService
+        @inject(IConfigurationService) private configService: IConfigurationService,
+        @inject(IFileSystem) private fs: IFileSystem
     ) {
         super(undefined);
     }
@@ -194,7 +197,8 @@ export class DebuggerVariables extends DebugLocationTracker
             this.refreshEventEmitter.fire();
             const key = this.debugService.activeDebugSession?.id;
             if (key) {
-                this.importedIntoKernel.delete(key);
+                this.importedDataFrameScriptsIntoKernel.delete(key);
+                this.importedGetVariableInfoScriptsIntoKernel.delete(key);
             }
         }
     }
@@ -217,7 +221,8 @@ export class DebuggerVariables extends DebugLocationTracker
     }
 
     private resetImport(key: string) {
-        this.importedIntoKernel.delete(key);
+        this.importedDataFrameScriptsIntoKernel.delete(key);
+        this.importedGetVariableInfoScriptsIntoKernel.delete(key);
     }
 
     // tslint:disable-next-line: no-any
@@ -243,25 +248,49 @@ export class DebuggerVariables extends DebugLocationTracker
         try {
             // Run our dataframe scripts only once per session because they're slow
             const key = this.debugService.activeDebugSession?.id;
-            if (key && !this.importedIntoKernel.has(key)) {
-                await this.evaluate(DataFrameLoading.DataFrameSysImport);
-                await this.evaluate(DataFrameLoading.DataFrameInfoImport);
-                await this.evaluate(DataFrameLoading.DataFrameRowImport);
-                await this.evaluate(DataFrameLoading.VariableInfoImport);
-                this.importedIntoKernel.add(key);
+            if (key && !this.importedDataFrameScriptsIntoKernel.has(key)) {
+                //await this.evaluate(DataFrameLoading.DataFrameSysImport);
+                //await this.evaluate(DataFrameLoading.DataFrameInfoImport);
+                //await this.evaluate(DataFrameLoading.DataFrameRowImport);
+                await this.evaluateScriptFile(DataFrameLoading.ScriptPath);
+                this.importedDataFrameScriptsIntoKernel.add(key);
             }
         } catch (exc) {
             traceError('Error attempting to import in debugger', exc);
         }
     }
 
+    private async importGetVariableInfoScripts(): Promise<void> {
+        try {
+            // Run our variable info scripts only once per session because they're slow
+            const key = this.debugService.activeDebugSession?.id;
+            if (key && !this.importedGetVariableInfoScriptsIntoKernel.has(key)) {
+                //await this.evaluate(DataFrameLoading.VariableInfoImport);
+                await this.evaluateScriptFile(GetVariableInfo.ScriptPath);
+                this.importedGetVariableInfoScriptsIntoKernel.add(key);
+            }
+        } catch (exc) {
+            traceError('Error attempting to import in debugger', exc);
+        }
+    }
+
+    private async evaluateScriptFile(fileName: string): Promise<void> {
+        if (this.fs.localFileExists(fileName)) {
+            const fileContents = await this.fs.readFile(Uri.parse(fileName));
+            return this.evaluate(fileContents);
+        } else {
+            traceError('Cannot run non-existant script file');
+        }
+    }
+
     private async getFullVariable(variable: IJupyterVariable): Promise<IJupyterVariable> {
         // See if we imported or not into the kernel our special function
-        await this.importDataFrameScripts();
+        //await this.importDataFrameScripts();
+        await this.importGetVariableInfoScripts();
 
         // Then eval calling the variable info function with our target variable
         const results = await this.evaluate(
-            `${DataFrameLoading.VariableInfoFunc}(${variable.name})`,
+            `${GetVariableInfo.VariableInfoFunc}(${variable.name})`,
             // tslint:disable-next-line: no-any
             (variable as any).frameId
         );
