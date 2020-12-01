@@ -29,7 +29,7 @@ export class MigrateDigestStorage {
             try {
                 await this.ensuredDir;
                 const nbsecret = path.join(this.pythonExtensionStorageDir, 'nbsecret');
-                if (this.fs.localDirectoryExists(nbsecret)) {
+                if (await this.fs.localDirectoryExists(nbsecret)) {
                     await this.fs.copyLocal(nbsecret, path.join(this.currentExtensionStorageDir, 'nbsecret'));
                 }
             } catch (e) {
@@ -48,7 +48,7 @@ export class MigrateDigestStorage {
             try {
                 await this.ensuredDir;
                 const nbsignatures = path.join(this.pythonExtensionStorageDir, 'nbsignatures');
-                if (this.fs.localDirectoryExists(nbsignatures)) {
+                if (await this.fs.localDirectoryExists(nbsignatures)) {
                     await this.fs.copyLocal(nbsignatures, path.join(this.currentExtensionStorageDir, 'nbsignatures'));
                 }
             } catch (e) {

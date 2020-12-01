@@ -137,7 +137,11 @@ export async function run(): Promise<void> {
     const options = configure();
     const mocha = new Mocha(options);
     const testsRoot = path.join(__dirname);
-
+    console.log('Start Run.......................................');
+    console.log('Start Run.......................................');
+    console.log('Start Run.......................................');
+    console.log('Start Run.......................................');
+    console.log('Start Run.......................................');
     // Enable source map support.
     require('source-map-support').install();
 
@@ -180,6 +184,14 @@ export async function run(): Promise<void> {
     // tslint:disable: no-console
     console.time('Time taken to activate the extension');
     try {
+        console.log('Starting & waiting for extension to activte');
+        console.log('Starting & waiting for extension to activte');
+        console.log('Starting & waiting for extension to activte');
+        console.log('Starting & waiting for extension to activte');
+        console.log('Starting & waiting for extension to activte');
+        console.log('Starting & waiting for extension to activte');
+        console.log('Starting & waiting for extension to activte');
+        console.log('Starting & waiting for extension to activte');
         await activatePythonExtensionScript();
         console.timeEnd('Time taken to activate the extension');
     } catch (ex) {
