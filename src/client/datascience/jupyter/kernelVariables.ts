@@ -166,12 +166,8 @@ export class KernelVariables implements IJupyterVariables {
             disposables.push(notebook.onKernelRestarted(handler));
 
             // First put the code from our helper files into the notebook
-            //await this.importDataFrameHelperScripts(notebook, token);
             await this.runScriptFile(notebook, DataFrameLoading.ScriptPath, token);
 
-            // Add in the actual imports that we need
-            //const fullCode = `${DataFrameLoading.DataFrameInfoImport}\n${DataFrameLoading.DataFrameRowImport}\n${DataFrameLoading.VariableInfoImport}`;
-            //await notebook.execute(fullCode, Identifiers.EmptyFileName, 0, uuid(), token, true);
             this.importedDataFrameScripts.set(notebook.identity.toString(), true);
         }
     }
@@ -180,7 +176,6 @@ export class KernelVariables implements IJupyterVariables {
         const key = notebook.identity.toString();
         if (!this.importedGetVariableInfoScripts.get(key)) {
             // Clear our flag if the notebook disposes or restarts
-            // IANHU: Same as dataframe code. Refactor?
             const disposables: IDisposable[] = [];
             const handler = () => {
                 this.importedGetVariableInfoScripts.delete(key);
@@ -190,7 +185,6 @@ export class KernelVariables implements IJupyterVariables {
             disposables.push(notebook.onKernelChanged(handler));
             disposables.push(notebook.onKernelRestarted(handler));
 
-            //await this.importGetVariableInfoHelperScripts(notebook, token);
             await this.runScriptFile(notebook, GetVariableInfo.ScriptPath, token);
 
             this.importedGetVariableInfoScripts.set(notebook.identity.toString(), true);
