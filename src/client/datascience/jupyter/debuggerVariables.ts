@@ -249,9 +249,6 @@ export class DebuggerVariables extends DebugLocationTracker
             // Run our dataframe scripts only once per session because they're slow
             const key = this.debugService.activeDebugSession?.id;
             if (key && !this.importedDataFrameScriptsIntoKernel.has(key)) {
-                //await this.evaluate(DataFrameLoading.DataFrameSysImport);
-                //await this.evaluate(DataFrameLoading.DataFrameInfoImport);
-                //await this.evaluate(DataFrameLoading.DataFrameRowImport);
                 await this.evaluateScriptFile(DataFrameLoading.ScriptPath);
                 this.importedDataFrameScriptsIntoKernel.add(key);
             }
@@ -265,7 +262,6 @@ export class DebuggerVariables extends DebugLocationTracker
             // Run our variable info scripts only once per session because they're slow
             const key = this.debugService.activeDebugSession?.id;
             if (key && !this.importedGetVariableInfoScriptsIntoKernel.has(key)) {
-                //await this.evaluate(DataFrameLoading.VariableInfoImport);
                 await this.evaluateScriptFile(GetVariableInfo.ScriptPath);
                 this.importedGetVariableInfoScriptsIntoKernel.add(key);
             }
@@ -274,6 +270,7 @@ export class DebuggerVariables extends DebugLocationTracker
         }
     }
 
+    // Load the given python script file and evaluate the contents
     private async evaluateScriptFile(fileName: string): Promise<void> {
         if (await this.fs.localFileExists(fileName)) {
             const fileContents = await this.fs.readFile(Uri.parse(fileName));
@@ -285,7 +282,6 @@ export class DebuggerVariables extends DebugLocationTracker
 
     private async getFullVariable(variable: IJupyterVariable): Promise<IJupyterVariable> {
         // See if we imported or not into the kernel our special function
-        //await this.importDataFrameScripts();
         await this.importGetVariableInfoScripts();
 
         // Then eval calling the variable info function with our target variable

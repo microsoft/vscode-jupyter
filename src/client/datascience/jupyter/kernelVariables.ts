@@ -3,7 +3,6 @@
 'use strict';
 import type { nbformat } from '@jupyterlab/coreutils';
 import { inject, injectable } from 'inversify';
-import * as path from 'path';
 import stripAnsi from 'strip-ansi';
 import * as uuid from 'uuid/v4';
 

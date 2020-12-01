@@ -488,7 +488,6 @@ export namespace Settings {
 }
 
 export namespace DataFrameLoading {
-    export const SysPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'vscode_datascience_helpers', 'dataframes');
     export const ScriptPath = path.join(
         EXTENSION_ROOT_DIR,
         'pythonFiles',
@@ -496,18 +495,8 @@ export namespace DataFrameLoading {
         'dataframes',
         'vscodeDataFrame.py'
     );
-    export const DataFrameSysImport = `import sys\nsys.path.append("${SysPath.replace(/\\/g, '\\\\')}")`;
-    export const DataFrameInfoImportName = '_VSCODE_InfoImport';
-    export const DataFrameInfoImport = `import vscodeGetDataFrameInfo as ${DataFrameInfoImportName}`;
-    //export const DataFrameInfoFunc = `${DataFrameInfoImportName}._VSCODE_getDataFrameInfo`;
     export const DataFrameInfoFunc = '_VSCODE_getDataFrameInfo';
-    export const DataFrameRowImportName = '_VSCODE_RowImport';
-    export const DataFrameRowImport = `import vscodeGetDataFrameRows as ${DataFrameRowImportName}`;
-    //export const DataFrameRowFunc = `${DataFrameRowImportName}._VSCODE_getDataFrameRows`;
     export const DataFrameRowFunc = '_VSCODE_getDataFrameRows';
-    export const VariableInfoImportName = '_VSCODE_VariableImport';
-    export const VariableInfoImport = `import vscodeGetVariableInfo as ${VariableInfoImportName}`;
-    export const VariableInfoFunc = `${VariableInfoImportName}._VSCODE_getVariableInfo`;
 }
 
 export namespace GetVariableInfo {
