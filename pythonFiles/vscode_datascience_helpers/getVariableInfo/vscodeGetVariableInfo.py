@@ -2,6 +2,7 @@
 import json as _VSCODE_json
 import builtins as _VSCODE_builtins
 
+
 def _VSCODE_maybeParseTensorShape(var, result):
     try:
         vartype = type(var)

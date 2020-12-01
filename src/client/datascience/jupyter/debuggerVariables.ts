@@ -3,11 +3,10 @@
 'use strict';
 import { inject, injectable, named } from 'inversify';
 
-import { DebugAdapterTracker, Disposable, Event, EventEmitter, Uri } from 'vscode';
+import { DebugAdapterTracker, Disposable, Event, EventEmitter } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { IDebugService } from '../../common/application/types';
 import { traceError } from '../../common/logger';
-import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, Resource } from '../../common/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { DataFrameLoading, GetVariableInfo, Identifiers, Telemetry } from '../constants';
@@ -35,8 +34,7 @@ export class DebuggerVariables extends DebugLocationTracker
     private debuggingStarted = false;
     constructor(
         @inject(IJupyterDebugService) @named(Identifiers.MULTIPLEXING_DEBUGSERVICE) private debugService: IDebugService,
-        @inject(IConfigurationService) private configService: IConfigurationService,
-        @inject(IFileSystem) private fs: IFileSystem
+        @inject(IConfigurationService) private configService: IConfigurationService
     ) {
         super(undefined);
     }

@@ -40,6 +40,7 @@ def _VSCODE_getRowCount(var):
         except TypeError:
             return 0
 
+
 # Function to retrieve a set of rows for a data frame
 def _VSCODE_getDataFrameRows(df, start, end):
     df = _VSCODE_convertToDataFrame(df)
@@ -47,6 +48,7 @@ def _VSCODE_getDataFrameRows(df, start, end):
     # Turn into JSON using pandas. We use pandas because it's about 3 orders of magnitude faster to turn into JSON
     rows = df.iloc[start:end]
     return _VSCODE_pd_json.to_json(None, rows, orient="table", date_format="iso")
+
 
 # Function to get info on the passed in data frame
 def _VSCODE_getDataFrameInfo(df):
