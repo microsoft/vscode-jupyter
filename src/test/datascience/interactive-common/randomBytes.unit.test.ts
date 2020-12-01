@@ -15,7 +15,7 @@ suite('DataScience - RandomBytes', () => {
         const generatedKey = await prng.generateRandomKey(numRequestedBytes);
         const generatedKeyLength = generatedKey.length;
         assert.ok(
-            generatedKeyLength === numRequestedBytes*2, // *2 because the bytes are returned as hex
+            generatedKeyLength === numRequestedBytes * 2, // *2 because the bytes are returned as hex
             `Expected to generate ${numRequestedBytes} random bytes but instead generated ${generatedKeyLength} random bytes`
         );
         assert.ok(generatedKey !== '', `Generated key is null`);
