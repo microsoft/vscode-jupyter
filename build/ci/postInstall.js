@@ -7,7 +7,6 @@ var fs = require('fs-extra');
 var path = require('path');
 var constants_1 = require('../constants');
 var cp = require('child_process');
-var download = require('download');
 /**
  * In order to compile the extension in strict mode, one of the dependencies (@jupyterlab) has some files that
  * just won't compile in strict mode.
@@ -89,20 +88,22 @@ async function downloadBCryptGenRandomExecutable() {
     const executableName = 'BCryptGenRandom.exe';
     const uri = `https://pvsc.blob.core.windows.net/extension-builds-jupyter/${executableName}`;
     const srcDestination = path.resolve(path.dirname(__dirname), '..', 'src', 'BCryptGenRandom');
-    const destinationFilename = path.join(srcDestination, executableName);
-    if (fs.existsSync(destinationFilename)) {
+    const srcDestinationFilename = path.join(srcDestination, executableName);
+    if (fs.existsSync(srcDestinationFilename)) {
         console.log('BCryptGenRandom.exe is already downloaded.');
     } else {
         fs.ensureDirSync(srcDestination);
-        await download(uri, srcDestination, { filename: executableName });
+        cp.execSync(`curl --output ${srcDestinationFilename} ${uri}`);
         console.log('Downloaded BCryptGenRandom.exe.');
     }
     const outDestination = path.resolve(path.dirname(__dirname), '..', 'out', 'BCryptGenRandom');
-    if (fs.existsSync(outDestination)) {
+    const outDestinationFilename = path.join(outDestination, executableName);
+    if (fs.existsSync(outDestinationFilename)) {
         console.log('BCryptGenRandom.exe is already copied to outdir.');
     } else {
-        fs.copyFileSync(srcDestination, outDestination);
-        console.log('Copied BCryptGenRandom.exe to outdir');
+        fs.ensureDirSync(outDestination);
+        fs.copyFileSync(srcDestinationFilename, outDestinationFilename);
+        console.log('Copied BCryptGenRandom.exe to outdir.');
     }
 }
 
