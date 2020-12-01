@@ -505,7 +505,7 @@ export namespace GetVariableInfo {
         'pythonFiles',
         'vscode_datascience_helpers',
         'getVariableInfo',
-        'vscodeVariableInfo.py'
+        'vscodeGetVariableInfo.py'
     );
     export const VariableInfoFunc = '_VSCODE_getVariableInfo';
 }
