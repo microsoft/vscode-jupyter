@@ -168,13 +168,13 @@ export class InstalledJupyterKernelSelectionListProvider
         resource: Resource,
         cancelToken?: CancellationToken | undefined
     ): Promise<IKernelSpecQuickPickItem<KernelSpecConnectionMetadata>[]> {
-        const activeInterpreter = this.interpreterService.getActiveInterpreter(resource);
         const items = await this.kernelService.getKernelSpecs(this.sessionManager, cancelToken);
         // Always clone, so we can make changes to this.
         const selections = items.map((item) => getQuickPickItemForKernelSpec(cloneDeep(item), this.pathUtils));
 
         // Default the interpreter to the local interpreter (if none is provided).
         if (this.extensionChecker.isPythonExtensionInstalled) {
+            const activeInterpreter = this.interpreterService.getActiveInterpreter(resource);
             // This process is slow, hence the need to cache this result set.
             await Promise.all(
                 selections.map(async (kernel) => {
@@ -191,8 +191,6 @@ export class InstalledJupyterKernelSelectionListProvider
                     kernel.selection.interpreter = kernel.selection.interpreter || (await activeInterpreter);
                 })
             );
-        } else {
-            activeInterpreter.catch(noop);
         }
         sendTelemetryEvent(Telemetry.NumberOfRemoteKernelSpecs, { count: selections.length });
         return selections;
