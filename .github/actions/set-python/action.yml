@@ -4,7 +4,7 @@ description: "Sets python to a specific version"
 inputs:
   IS_CONDA_ENV:
      description: 'Whether we are using a conda environment'
-     required: true
+     required: false
      default: false
   PYTHON_VERSION:
      description: 'Version of python'
