@@ -112,7 +112,7 @@ export class DebuggerVariables extends DebugLocationTracker
 
         // Then eval calling the main function with our target variable
         const results = await this.evaluate(
-            `${DataFrameLoading.DataFrameInfoFunc}(${targetVariable.name})`,
+            `${DataFrameLoading.DataFrameInfoImportFunc}(${targetVariable.name})`,
             // tslint:disable-next-line: no-any
             (targetVariable as any).frameId
         );
@@ -157,7 +157,7 @@ export class DebuggerVariables extends DebugLocationTracker
         for (let pos = start; pos < end; pos += chunkSize) {
             const chunkEnd = Math.min(pos + chunkSize, minnedEnd);
             const results = await this.evaluate(
-                `${DataFrameLoading.DataFrameRowFunc}(${targetVariable.name}, ${pos}, ${chunkEnd})`,
+                `${DataFrameLoading.DataFrameRowImportFunc}(${targetVariable.name}, ${pos}, ${chunkEnd})`,
                 // tslint:disable-next-line: no-any
                 (targetVariable as any).frameId
             );
@@ -249,7 +249,8 @@ export class DebuggerVariables extends DebugLocationTracker
             // Run our dataframe scripts only once per session because they're slow
             const key = this.debugService.activeDebugSession?.id;
             if (key && !this.importedDataFrameScriptsIntoKernel.has(key)) {
-                await this.evaluateScriptFile(DataFrameLoading.ScriptPath);
+                await this.evaluate(DataFrameLoading.DataFrameSysImport);
+                await this.evaluate(DataFrameLoading.DataFrameImport);
                 this.importedDataFrameScriptsIntoKernel.add(key);
             }
         } catch (exc) {
@@ -262,21 +263,12 @@ export class DebuggerVariables extends DebugLocationTracker
             // Run our variable info scripts only once per session because they're slow
             const key = this.debugService.activeDebugSession?.id;
             if (key && !this.importedGetVariableInfoScriptsIntoKernel.has(key)) {
-                await this.evaluateScriptFile(GetVariableInfo.ScriptPath);
+                await this.evaluate(GetVariableInfo.GetVariableInfoSysImport);
+                await this.evaluate(GetVariableInfo.VariableInfoImport);
                 this.importedGetVariableInfoScriptsIntoKernel.add(key);
             }
         } catch (exc) {
             traceError('Error attempting to import in debugger', exc);
-        }
-    }
-
-    // Load the given python script file and evaluate the contents
-    private async evaluateScriptFile(fileName: string): Promise<void> {
-        if (await this.fs.localFileExists(fileName)) {
-            const fileContents = await this.fs.readFile(Uri.parse(fileName));
-            return this.evaluate(fileContents);
-        } else {
-            traceError('Cannot run non-existant script file');
         }
     }
 
@@ -286,7 +278,7 @@ export class DebuggerVariables extends DebugLocationTracker
 
         // Then eval calling the variable info function with our target variable
         const results = await this.evaluate(
-            `${GetVariableInfo.VariableInfoFunc}(${variable.name})`,
+            `${GetVariableInfo.VariableInfoImportFunc}(${variable.name})`,
             // tslint:disable-next-line: no-any
             (variable as any).frameId
         );

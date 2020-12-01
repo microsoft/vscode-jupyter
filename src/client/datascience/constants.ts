@@ -488,26 +488,35 @@ export namespace Settings {
 }
 
 export namespace DataFrameLoading {
-    export const ScriptPath = path.join(
-        EXTENSION_ROOT_DIR,
-        'pythonFiles',
-        'vscode_datascience_helpers',
-        'dataframes',
-        'vscodeDataFrame.py'
-    );
+    export const SysPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'vscode_datascience_helpers', 'dataframes');
+    export const DataFrameSysImport = `import sys\nsys.path.append("${SysPath.replace(/\\/g, '\\\\')}")`;
+    export const ScriptPath = path.join(SysPath, 'vscodeDataFrame.py');
+
     export const DataFrameInfoFunc = '_VSCODE_getDataFrameInfo';
     export const DataFrameRowFunc = '_VSCODE_getDataFrameRows';
+
+    // Constants for the debugger which imports the script files
+    export const DataFrameImportName = '_VSCODE_DataFrameImport';
+    export const DataFrameImport = `import vscodeDataFrame as ${DataFrameImportName}`;
+    export const DataFrameInfoImportFunc = `${DataFrameImportName}._VSCODE_getDataFrameInfo`;
+    export const DataFrameRowImportFunc = `${DataFrameImportName}._VSCODE_getDataFrameRows`;
 }
 
 export namespace GetVariableInfo {
-    export const ScriptPath = path.join(
+    export const SysPath = path.join(
         EXTENSION_ROOT_DIR,
         'pythonFiles',
         'vscode_datascience_helpers',
-        'getVariableInfo',
-        'vscodeGetVariableInfo.py'
+        'getVariableInfo'
     );
+    export const GetVariableInfoSysImport = `import sys\nsys.path.append("${SysPath.replace(/\\/g, '\\\\')}")`;
+    export const ScriptPath = path.join(SysPath, 'vscodeGetVariableInfo.py');
     export const VariableInfoFunc = '_VSCODE_getVariableInfo';
+
+    // Constants for the debugger which imports the script files
+    export const VariableInfoImportName = '_VSCODE_VariableImport';
+    export const VariableInfoImport = `import vscodeGetVariableInfo as ${VariableInfoImportName}`;
+    export const VariableInfoImportFunc = `${VariableInfoImportName}._VSCODE_getVariableInfo`;
 }
 
 export namespace Identifiers {
