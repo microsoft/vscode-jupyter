@@ -89,7 +89,7 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
     }
     private async _getEnvironmentVariables(resource?: Uri): Promise<EnvironmentVariables> {
         let customEnvVars = await this.getCustomEnvironmentVariables(resource);
-        if (customEnvVars) {
+        if (!customEnvVars) {
             customEnvVars = {};
         }
         const mergedVars: EnvironmentVariables = {};
