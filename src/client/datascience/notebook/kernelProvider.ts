@@ -11,26 +11,19 @@ import {
     NotebookDocument,
     NotebookKernel as VSCNotebookKernel
 } from '../../../../types/vscode-proposed';
-import { IVSCodeNotebook, IWorkspaceService } from '../../common/application/types';
+import { IVSCodeNotebook } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
-import { traceError, traceInfo } from '../../common/logger';
+import { traceInfo } from '../../common/logger';
 import { IDisposableRegistry, IExtensionContext } from '../../common/types';
 import { noop } from '../../common/utils/misc';
+import { captureTelemetry } from '../../telemetry';
 import { sendNotebookOrKernelLanguageTelemetry } from '../common';
 import { Telemetry } from '../constants';
 import { areKernelConnectionsEqual } from '../jupyter/kernels/helpers';
 import { KernelSelectionProvider } from '../jupyter/kernels/kernelSelections';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
 import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
-import {
-    getKernelConnectionId,
-    IKernel,
-    IKernelProvider,
-    IKernelSpecQuickPickItem,
-    KernelConnectionMetadata,
-    KernelSpecConnectionMetadata,
-    PythonKernelConnectionMetadata
-} from '../jupyter/kernels/types';
+import { getKernelConnectionId, IKernel, IKernelProvider, KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { INotebookStorageProvider } from '../notebookStorage/notebookStorageProvider';
 import { INotebook, INotebookProvider, IRawNotebookSupportedService } from '../types';
 import {
@@ -109,10 +102,6 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
     private readonly _onDidChangeKernels = new EventEmitter<NotebookDocument | undefined>();
     private notebookKernelChangeHandled = new WeakSet<INotebook>();
     private isRawNotebookSupported?: Promise<boolean>;
-    private localKernelSelectionsByResource = new Map<
-        string,
-        IKernelSpecQuickPickItem<KernelSpecConnectionMetadata | PythonKernelConnectionMetadata>[]
-    >();
     constructor(
         @inject(KernelSelectionProvider) private readonly kernelSelectionProvider: KernelSelectionProvider,
         @inject(KernelSelector) private readonly kernelSelector: KernelSelector,
@@ -124,8 +113,7 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IExtensionContext) private readonly context: IExtensionContext,
         @inject(IRawNotebookSupportedService) private readonly rawNotebookSupported: IRawNotebookSupportedService,
-        @inject(INotebookKernelResolver) private readonly kernelResolver: INotebookKernelResolver,
-        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService
+        @inject(INotebookKernelResolver) private readonly kernelResolver: INotebookKernelResolver
     ) {
         this.kernelSelectionProvider.onDidChangeSelections(
             (e) => {
@@ -151,13 +139,24 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
     ): Promise<void> {
         return this.kernelResolver.resolveKernel(kernel, document, webview, token);
     }
+    @captureTelemetry(Telemetry.NativeNotebookKernelSelectionPerf)
     public async provideKernels(
         document: NotebookDocument,
         token: CancellationToken
     ): Promise<VSCodeNotebookKernelMetadata[]> {
+        this.isRawNotebookSupported =
+            this.isRawNotebookSupported || this.rawNotebookSupported.isSupportedForLocalLaunch();
+
         const [preferredKernel, kernels] = await Promise.all([
             this.getPreferredKernel(document, token),
-            this.getKernelSelectionsForLocalSessionAndCache(document.uri, token)
+            this.isRawNotebookSupported.then((rawSupported) =>
+                this.kernelSelectionProvider.getKernelSelectionsForLocalSession(
+                    document.uri,
+                    rawSupported ? 'raw' : 'jupyter',
+                    undefined,
+                    token
+                )
+            )
         ]);
         if (token.isCancellationRequested) {
             return [];
@@ -226,36 +225,6 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
             }
         });
         return mapped;
-    }
-    private async getKernelSelectionsForLocalSessionAndCache(resource: Uri, token: CancellationToken) {
-        const key = this.workspaceService.getWorkspaceFolderIdentifier(resource);
-        this.isRawNotebookSupported =
-            this.isRawNotebookSupported || this.rawNotebookSupported.isSupportedForLocalLaunch();
-
-        // Always fetch again & cache the results.
-        // This way fetching the list of kernels is fast.
-        // If the data is outdated (user has registered new kernels or the like, they can just click again).
-        const promise = this.isRawNotebookSupported.then((rawSupported) =>
-            this.kernelSelectionProvider.getKernelSelectionsForLocalSession(
-                resource,
-                rawSupported ? 'raw' : 'jupyter',
-                undefined,
-                token
-            )
-        );
-
-        promise
-            .then((result) => {
-                if (!token.isCancellationRequested) {
-                    this.localKernelSelectionsByResource.set(key, result);
-                }
-            })
-            .catch((ex) => traceError(`Failed to get kernels for local connect for ${resource.toString()}`, ex));
-
-        if (this.localKernelSelectionsByResource.get(key)) {
-            return this.localKernelSelectionsByResource.get(key)!;
-        }
-        return promise;
     }
     private createNotebookKernelMetadataFromPreferredKernel(
         preferredKernel?: KernelConnectionMetadata

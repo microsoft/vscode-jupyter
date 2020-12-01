@@ -9,7 +9,7 @@ import * as path from 'path';
 import { CancellationToken, EventEmitter } from 'vscode';
 import { IPythonExtensionChecker } from '../../../api/types';
 import { PYTHON_LANGUAGE } from '../../../common/constants';
-import { traceError } from '../../../common/logger';
+import { traceError, traceInfo } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 import { IPathUtils, Resource } from '../../../common/types';
 import { createDeferredFromPromise } from '../../../common/utils/async';
@@ -17,11 +17,14 @@ import * as localize from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
 import { IInterpreterSelector } from '../../../interpreter/configuration/types';
 import { IInterpreterService } from '../../../interpreter/contracts';
+import { sendTelemetryEvent } from '../../../telemetry';
+import { Telemetry } from '../../constants';
 import { IKernelFinder } from '../../kernel-launcher/types';
 import { IJupyterKernelSpec, IJupyterSessionManager } from '../../types';
 import { detectDefaultKernelName, isPythonKernelConnection } from './helpers';
 import { KernelService } from './kernelService';
 import {
+    getKernelConnectionId,
     IKernelSelectionListProvider,
     IKernelSpecQuickPickItem,
     KernelSpecConnectionMetadata,
@@ -183,6 +186,7 @@ export class InstalledJupyterKernelSelectionListProvider
         } else {
             activeInterpreter.catch(noop);
         }
+        sendTelemetryEvent(Telemetry.NumberOfRemoteKernelSpecs, { count: selections.length });
         return selections;
     }
 }
@@ -196,7 +200,7 @@ export class InstalledRawKernelSelectionListProvider
         _cancelToken?: CancellationToken
     ): Promise<IKernelSpecQuickPickItem<KernelSpecConnectionMetadata>[]> {
         const items = await this.kernelFinder.listKernelSpecs(resource);
-        return items
+        const selections = items
             .filter((item) => {
                 // If we have a default kernel name and a non-absolute path just hide the item
                 // Otherwise we end up showing a bunch of "Python 3 - python" default items for
@@ -208,6 +212,8 @@ export class InstalledRawKernelSelectionListProvider
                 return true;
             })
             .map((item) => getQuickPickItemForKernelSpec(item, this.pathUtils));
+        sendTelemetryEvent(Telemetry.NumberOfLocalKernelSpecs, { count: selections.length });
+        return selections;
     }
 }
 
@@ -415,7 +421,17 @@ export class KernelSelectionProvider {
             // Sort by name.
             unifiedList.sort((a, b) => (a.label === b.label ? 0 : a.label > b.label ? 1 : -1));
 
-            return unifiedList;
+            // Remote duplicates.
+            const duplicatesList = new Set<string>();
+            return unifiedList.filter((item) => {
+                const id = getKernelConnectionId(item.selection);
+                if (duplicatesList.has(id)) {
+                    return false;
+                } else {
+                    duplicatesList.add(id);
+                    return true;
+                }
+            });
         };
 
         const liveItems = getSelections().then((items) => (this.localSuggestionsCache = items));
@@ -438,6 +454,7 @@ export class KernelSelectionProvider {
                             liveItemsList.length > 0 &&
                             JSON.stringify(liveItemsList) !== JSON.stringify(cachedItemsList)
                         ) {
+                            traceInfo('Notify changes to list of local kernels');
                             this._listChanged.fire(resource);
                         }
                     } catch (ex) {

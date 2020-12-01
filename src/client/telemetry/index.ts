@@ -374,6 +374,20 @@ export interface IEventNamePropertyMapping {
         hashedName: string;
     };
     [Telemetry.HashedCellOutputMimeTypePerf]: never | undefined;
+    [Telemetry.KernelListingPerf]: never | undefined;
+    [Telemetry.NativeNotebookKernelSelectionPerf]: never | undefined;
+    [Telemetry.NumberOfLocalKernelSpecs]: {
+        /**
+         * Number of kernel specs.
+         */
+        count: number;
+    };
+    [Telemetry.NumberOfRemoteKernelSpecs]: {
+        /**
+         * Number of kernel specs.
+         */
+        count: number;
+    };
     [Telemetry.HashedNotebookCellOutputMimeTypePerf]: never | undefined;
     [Telemetry.HashedCellOutputMimeType]: {
         /**
