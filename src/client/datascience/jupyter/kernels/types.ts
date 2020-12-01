@@ -92,9 +92,23 @@ export function getKernelConnectionId(kernelConnection: KernelConnectionMetadata
         case 'startUsingDefaultKernel':
             return `${kernelConnection.kind}#${kernelConnection}`;
         case 'startUsingKernelSpec':
+            // 1. kernelSpec.interpreterPath added by kernel finder.
+            // Helps us identify what interpreter a kernel belongs to.
+            // 2. kernelSpec.metadata?.interpreter?.path added by old approach of starting kernels (jupyter).
+            // When we register an interpreter as a kernel, then we store that interpreter info into metadata.
+            // 3. kernelConnection.interpreter
+            // This contains the resolved interpreter (using 1 & 2).
+
+            // We need to take the interpreter path into account, as its possible
+            // a user has registered a kernel with the same name in two different interpreters.
+            const interpreterPath =
+                kernelConnection.interpreter?.path ||
+                kernelConnection.kernelSpec.interpreterPath ||
+                kernelConnection.kernelSpec.metadata?.interpreter?.path ||
+                '';
             return `${kernelConnection.kind}#${kernelConnection.kernelSpec.name}.${
                 kernelConnection.kernelSpec.display_name
-            }${(kernelConnection.kernelSpec.argv || []).join(' ')}`;
+            }${(kernelConnection.kernelSpec.argv || []).join(' ')}${interpreterPath}`;
         case 'startUsingPythonInterpreter':
             return `${kernelConnection.kind}#${kernelConnection.interpreter.path}`;
         default:
