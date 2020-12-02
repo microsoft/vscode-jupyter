@@ -288,7 +288,7 @@ export class KernelSelectionProvider {
     constructor(
         @inject(KernelService) private readonly kernelService: KernelService,
         @inject(IInterpreterSelector) private readonly interpreterSelector: IInterpreterSelector,
-        @inject(IInterpreterSelector) private readonly interpreterService: IInterpreterService,
+        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IPathUtils) private readonly pathUtils: IPathUtils,
         @inject(IKernelFinder) private readonly kernelFinder: IKernelFinder,
