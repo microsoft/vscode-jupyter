@@ -832,9 +832,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
             // Raw Kernel doesn't have a mock layer, so disable ZMQ for mocked jupyter tests
             this.forceDataScienceSettingsChanged({ disableZMQSupport: true }, false);
-            console.error('Not Registering any IInterpreterService');
         } else {
-            console.error('Register test IInterpreterService');
             this.serviceManager.addSingleton<IInstaller>(IInstaller, ProductInstaller);
             this.serviceManager.addSingleton<IInterpreterService>(IInterpreterService, InterpreterService);
             this.serviceManager.addSingleton<IInterpreterSelector>(IInterpreterSelector, InterpreterSelector);

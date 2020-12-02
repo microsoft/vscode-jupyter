@@ -174,16 +174,6 @@ export class InstalledJupyterKernelSelectionListProvider
 
         // Default the interpreter to the local interpreter (if none is provided).
         if (this.extensionChecker.isPythonExtensionInstalled) {
-            // tslint:disable-next-line: no-console
-            console.error('Start1234');
-            // tslint:disable-next-line: no-console
-            console.error(`Constructor of ${(this.interpreterService as Object)?.constructor?.toString()}`);
-            // tslint:disable-next-line: no-console no-any
-            console.error(`IsInstance ${(this.interpreterService as any).toString()}`);
-            // tslint:disable-next-line: no-console no-any
-            console.error(`Typeof obj ${typeof this.interpreterService}`);
-            // tslint:disable-next-line: no-console no-any
-            console.error(`Typeof func ${typeof this.interpreterService.getActiveInterpreter}`);
             const activeInterpreter = this.interpreterService.getActiveInterpreter(resource);
             // This process is slow, hence the need to cache this result set.
             await Promise.all(
@@ -410,16 +400,22 @@ export class KernelSelectionProvider {
 
                             // If the python kernel belongs to an existing interpreter with the same path,
                             // Or if the python kernel has the exact same path as the interpreter, then its a duplicate.
+                            // Paths on windows can either contain \ or / Both work.
+                            // Thus, C:\Python.exe is the same as C:/Python.exe
+                            // In the kernelspec.json we could have paths in argv such as C:\\Python.exe or C:/Python.exe.
+                            const interpreterPathToCheck = (item.selection.interpreter.path || '').replace(/\\/g, '/');
                             return (
                                 this.fs.areLocalPathsSame(
-                                    (installedKernel.selection.kernelSpec?.argv || [])[0],
-                                    item.selection.interpreter?.path || ''
+                                    (installedKernel.selection.kernelSpec?.argv || [])[0].replace(/\\/g, '/'),
+                                    interpreterPathToCheck
                                 ) ||
                                 this.fs.areLocalPathsSame(
-                                    installedKernel.selection.kernelSpec?.interpreterPath ||
+                                    (
+                                        installedKernel.selection.kernelSpec?.interpreterPath ||
                                         installedKernel.selection.kernelSpec?.metadata?.interpreter?.path ||
-                                        '',
-                                    item.selection.interpreter?.path || ''
+                                        ''
+                                    ).replace(/\\/g, '/'),
+                                    interpreterPathToCheck
                                 )
                             );
                         })
