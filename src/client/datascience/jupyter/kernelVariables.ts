@@ -194,7 +194,7 @@ export class KernelVariables implements IJupyterVariables {
     // Read in a .py file and execute it silently in the given notebook
     private async runScriptFile(notebook: INotebook, scriptFile: string, token?: CancellationToken) {
         if (await this.fs.localFileExists(scriptFile)) {
-            const fileContents = await this.fs.readFile(Uri.parse(scriptFile));
+            const fileContents = await this.fs.readLocalFile(scriptFile);
             return notebook.execute(fileContents, Identifiers.EmptyFileName, 0, uuid(), token, true);
         } else {
             traceError('Cannot run non-existant script file');
