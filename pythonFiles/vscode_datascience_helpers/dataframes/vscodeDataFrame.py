@@ -69,7 +69,11 @@ def _VSCODE_getDataFrameInfo(df):
         columnNames = list(df)
 
     # Compute the index column. It may have been renamed
-    indexColumn = df.index.name if df.index.name else "index"
+    try:
+        indexColumn = df.index.name if df.index.name else "index"
+    except AttributeError:
+        indexColumn = "index"
+
     columnTypes = _VSCODE_builtins.list(df.dtypes)
 
     # Make sure the index column exists
