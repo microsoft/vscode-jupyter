@@ -57,14 +57,23 @@ export class ExportDialog implements IExportDialog {
                 ? defaultFileName || ''
                 : `${path.basename(source.fsPath, path.extname(source.fsPath))}${extension}`;
 
-        const directory = await computeWorkingDirectory(source, this.workspaceService);
-        const dialogUri = Uri.file(path.join(directory, targetFileName));
         const options: SaveDialogOptions = {
-            defaultUri: dialogUri,
+            defaultUri: await this.getDefaultUri(source, targetFileName),
             saveLabel: localize.DataScience.exportButtonTitle(),
             filters: fileExtensions
         };
 
         return this.applicationShell.showSaveDialog(options);
+    }
+
+    private async getDefaultUri(source: Uri | undefined, targetFileName: string): Promise<Uri> {
+        if (!source || source.scheme === 'file' || source.scheme === 'untitled') {
+            // Just combine the working directory with the file
+            return Uri.file(path.join(await computeWorkingDirectory(source, this.workspaceService), targetFileName));
+        }
+
+        // Otherwise split off the end of the path and combine it with the target file name
+        const newPath = path.join(path.dirname(source.path), targetFileName);
+        return Uri.parse(`${source.scheme}://${newPath}`);
     }
 }
