@@ -89,6 +89,7 @@ export class KernelFinder implements IKernelFinder {
         return searchBasedOnLanguage || searchBasedOnKernelSpecMetadata;
     }
     // Search all our local file system locations for installed kernel specs and return them
+    @captureTelemetry(Telemetry.KernelListingPerf)
     public async listKernelSpecs(resource: Resource): Promise<IJupyterKernelSpec[]> {
         if (!resource) {
             // We need a resource to search for related kernel specs

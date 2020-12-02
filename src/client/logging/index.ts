@@ -9,6 +9,7 @@ export {
     addOutputChannelLogging,
     logError,
     logInfo,
+    logInfoIf,
     logVerbose,
     logWarning,
     traceDecorators,

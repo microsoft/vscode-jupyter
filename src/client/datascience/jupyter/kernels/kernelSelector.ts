@@ -353,11 +353,11 @@ export class KernelSelector implements IKernelSelectionUsage {
             return cloneDeep(item);
         } else if (selection.kind === 'connectToLiveKernel') {
             sendNotebookOrKernelLanguageTelemetry(Telemetry.SwitchToExistingKernel, selection.kernelModel.language);
-            // tslint:disable-next-line: no-any
-            const interpreter =
-                selection.kernelModel && this.extensionChecker.isPythonExtensionInstalled
-                    ? await this.kernelService.findMatchingInterpreter(selection.kernelModel, cancelToken)
-                    : undefined;
+            const interpreter = selection.interpreter
+                ? selection.interpreter
+                : selection.kernelModel && this.extensionChecker.isPythonExtensionInstalled
+                ? await this.kernelService.findMatchingInterpreter(selection.kernelModel, cancelToken)
+                : undefined;
             return cloneDeep({
                 interpreter,
                 kernelModel: selection.kernelModel,
@@ -365,10 +365,11 @@ export class KernelSelector implements IKernelSelectionUsage {
             });
         } else if (selection.kernelSpec) {
             sendNotebookOrKernelLanguageTelemetry(Telemetry.SwitchToExistingKernel, selection.kernelSpec.language);
-            const interpreter =
-                selection.kernelSpec && this.extensionChecker.isPythonExtensionInstalled
-                    ? await this.kernelService.findMatchingInterpreter(selection.kernelSpec, cancelToken)
-                    : undefined;
+            const interpreter = selection.interpreter
+                ? selection.interpreter
+                : selection.kernelSpec && this.extensionChecker.isPythonExtensionInstalled
+                ? await this.kernelService.findMatchingInterpreter(selection.kernelSpec, cancelToken)
+                : undefined;
             await this.kernelService.updateKernelEnvironment(interpreter, selection.kernelSpec, cancelToken);
             return cloneDeep({ kernelSpec: selection.kernelSpec, interpreter, kind: 'startUsingKernelSpec' });
         } else if (selection.interpreter && type === 'raw') {

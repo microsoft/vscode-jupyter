@@ -92,11 +92,33 @@ export function getKernelConnectionId(kernelConnection: KernelConnectionMetadata
         case 'startUsingDefaultKernel':
             return `${kernelConnection.kind}#${kernelConnection}`;
         case 'startUsingKernelSpec':
+            // 1. kernelSpec.interpreterPath added by kernel finder.
+            // Helps us identify what interpreter a kernel belongs to.
+            // 2. kernelSpec.metadata?.interpreter?.path added by old approach of starting kernels (jupyter).
+            // When we register an interpreter as a kernel, then we store that interpreter info into metadata.
+            // 3. kernelConnection.interpreter
+            // This contains the resolved interpreter (using 1 & 2).
+
+            // We need to take the interpreter path into account, as its possible
+            // a user has registered a kernel with the same name in two different interpreters.
+            let interpreterPath =
+                kernelConnection.interpreter?.path ||
+                kernelConnection.kernelSpec.interpreterPath ||
+                kernelConnection.kernelSpec.metadata?.interpreter?.path ||
+                '';
+
+            // Paths on windows can either contain \ or / Both work.
+            // Thus, C:\Python.exe is the same as C:/Python.exe
+            // In the kernelspec.json we could have paths in argv such as C:\\Python.exe or C:/Python.exe.
+            interpreterPath = interpreterPath.replace(/\\/g, '/');
+
             return `${kernelConnection.kind}#${kernelConnection.kernelSpec.name}.${
                 kernelConnection.kernelSpec.display_name
-            }${(kernelConnection.kernelSpec.argv || []).join(' ')}`;
+            }${(kernelConnection.kernelSpec.argv || []).join(' ').replace(/\\/g, '/')}${interpreterPath}`;
         case 'startUsingPythonInterpreter':
-            return `${kernelConnection.kind}#${kernelConnection.interpreter.path}`;
+            // Paths on windows can either contain \ or / Both work.
+            // Thus, C:\Python.exe is the same as C:/Python.exe
+            return `${kernelConnection.kind}#${kernelConnection.interpreter.path.replace(/\\/g, '/')}`;
         default:
             throw new Error(`Unsupported Kernel Connection ${kernelConnection}`);
     }

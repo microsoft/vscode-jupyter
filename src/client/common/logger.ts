@@ -4,6 +4,7 @@ export {
     traceDecorators,
     logError as traceError,
     logInfo as traceInfo,
+    logInfoIf as traceInfoIf,
     logVerbose as traceVerbose,
     logWarning as traceWarning
 } from '../logging';

@@ -3,7 +3,6 @@
 
 import { inject, injectable } from 'inversify';
 // tslint:disable-next-line: no-require-imports
-import cloneDeep = require('lodash/cloneDeep');
 import { join } from 'path';
 import { CancellationToken, Event, EventEmitter, Uri } from 'vscode';
 import {
@@ -12,13 +11,12 @@ import {
     NotebookDocument,
     NotebookKernel as VSCNotebookKernel
 } from '../../../../types/vscode-proposed';
-import { IPythonExtensionChecker } from '../../api/types';
 import { IVSCodeNotebook } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { traceInfo } from '../../common/logger';
 import { IDisposableRegistry, IExtensionContext } from '../../common/types';
 import { noop } from '../../common/utils/misc';
-import { IInterpreterService } from '../../interpreter/contracts';
+import { captureTelemetry } from '../../telemetry';
 import { sendNotebookOrKernelLanguageTelemetry } from '../common';
 import { Telemetry } from '../constants';
 import { areKernelConnectionsEqual } from '../jupyter/kernels/helpers';
@@ -32,7 +30,6 @@ import {
     getNotebookMetadata,
     isJupyterKernel,
     isJupyterNotebook,
-    isPythonNotebook,
     updateKernelInfoInNotebookMetadata,
     updateKernelInNotebookMetadata
 } from './helpers/helpers';
@@ -114,11 +111,9 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
         @inject(INotebookProvider) private readonly notebookProvider: INotebookProvider,
         @inject(KernelSwitcher) private readonly kernelSwitcher: KernelSwitcher,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IExtensionContext) private readonly context: IExtensionContext,
         @inject(IRawNotebookSupportedService) private readonly rawNotebookSupported: IRawNotebookSupportedService,
-        @inject(INotebookKernelResolver) private readonly kernelResolver: INotebookKernelResolver,
-        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker
+        @inject(INotebookKernelResolver) private readonly kernelResolver: INotebookKernelResolver
     ) {
         this.kernelSelectionProvider.onDidChangeSelections(
             (e) => {
@@ -144,41 +139,32 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
     ): Promise<void> {
         return this.kernelResolver.resolveKernel(kernel, document, webview, token);
     }
-
+    @captureTelemetry(Telemetry.NativeNotebookKernelSelectionPerf)
     public async provideKernels(
         document: NotebookDocument,
         token: CancellationToken
     ): Promise<VSCodeNotebookKernelMetadata[]> {
         this.isRawNotebookSupported =
             this.isRawNotebookSupported || this.rawNotebookSupported.isSupportedForLocalLaunch();
-        const rawSupported = await this.isRawNotebookSupported;
-        const isPythonNb = isPythonNotebook(getNotebookMetadata(document));
-        const [preferredKernel, kernels, activeInterpreter] = await Promise.all([
+
+        const [preferredKernel, kernels] = await Promise.all([
             this.getPreferredKernel(document, token),
-            this.kernelSelectionProvider.getKernelSelectionsForLocalSession(
-                document.uri,
-                rawSupported ? 'raw' : 'jupyter',
-                undefined,
-                token
-            ),
-            isPythonNb && this.extensionChecker.isPythonExtensionInstalled
-                ? this.interpreterService.getActiveInterpreter(document.uri)
-                : Promise.resolve(undefined)
+            this.isRawNotebookSupported.then((rawSupported) =>
+                this.kernelSelectionProvider.getKernelSelectionsForLocalSession(
+                    document.uri,
+                    rawSupported ? 'raw' : 'jupyter',
+                    undefined,
+                    token
+                )
+            )
         ]);
         if (token.isCancellationRequested) {
             return [];
         }
 
-        // Default the interpreter to the local interpreter (if none is provided).
-        const withInterpreter = kernels.map((kernel) => {
-            const selection = cloneDeep(kernel.selection); // Always clone, so we can make changes to this.
-            selection.interpreter = selection.interpreter || activeInterpreter;
-            return { ...kernel, selection };
-        });
-
         // Turn this into our preferred list.
         const existingItem = new Set<string>();
-        const mapped = withInterpreter
+        const mapped = kernels
             .map((kernel) => {
                 return new VSCodeNotebookKernelMetadata(
                     kernel.label,

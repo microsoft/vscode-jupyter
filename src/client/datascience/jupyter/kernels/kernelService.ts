@@ -149,10 +149,9 @@ export class KernelService {
         allInterpretersPromise.ignoreErrors();
 
         // 1. Check if current interpreter has the same path
-        if (kernelSpec.metadata?.interpreter?.path) {
-            const interpreter = await this.interpreterService.getInterpreterDetails(
-                kernelSpec.metadata?.interpreter?.path
-            );
+        const interpreterPath = kernelSpec.metadata?.interpreter?.path || kernelSpec.interpreterPath;
+        if (interpreterPath) {
+            const interpreter = await this.interpreterService.getInterpreterDetails(interpreterPath);
             if (interpreter) {
                 traceInfo(
                     `Found matching interpreter based on metadata, for the kernel ${kernelSpec.name}, ${kernelSpec.display_name}`
@@ -160,7 +159,7 @@ export class KernelService {
                 return interpreter;
             }
             traceError(
-                `KernelSpec has interpreter information, however a matching interpreter could not be found for ${kernelSpec.metadata?.interpreter?.path}`
+                `KernelSpec has interpreter information, however a matching interpreter could not be found for ${interpreterPath}`
             );
         }
 
@@ -230,7 +229,7 @@ export class KernelService {
             // 5. Look for interpreter with same display name across all interpreters.
 
             // If the display name matches the active interpreter then use that.
-            // Look in all of our interpreters if we have somethign that matches this.
+            // Look in all of our interpreters if we have something that matches this.
             const allInterpreters = await allInterpretersPromise;
             if (Cancellation.isCanceled(cancelToken)) {
                 return;
