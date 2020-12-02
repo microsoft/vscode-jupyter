@@ -38,8 +38,9 @@ export class SystemPseudoRandomNumberGenerator implements ISystemPseudoRandomNum
                     traceError(`randomBytesForUnixLikeSystems err`, err);
                     reject(`Failed to allocate random bytes for notebook trust: ${err}`);
                 }
-                if (stderr.length > 0) {
-                    traceError(`randomBytesForUnixLikeSystems stderr`, stderr);
+                const stderrBuffer = stderr.toString('ascii');
+                if (stderrBuffer.length > 0) {
+                    traceError(`randomBytesForUnixLikeSystems stderr`, stderrBuffer);
                 }
                 const key = stdout.toString('ascii');
                 traceInfo(`Generated random key of length ${key.length}`);
