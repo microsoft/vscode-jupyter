@@ -122,6 +122,7 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         if (this.openedEditors.has(editor)) {
             this.openedEditors.delete(editor);
             this._onDidCloseNotebookEditor.fire(editor);
+            this._onDidChangeActiveNotebookEditor.fire(this.activeEditor);
 
             // Find all notebooks associated with this editor (ipynb file).
             const otherEditors = this.editors.filter(
