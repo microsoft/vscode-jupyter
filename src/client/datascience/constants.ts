@@ -158,6 +158,7 @@ export namespace EditorContexts {
     export const HaveCellSelected = 'jupyter.havecellselected';
     export const IsNotebookTrusted = 'jupyter.isnotebooktrusted';
     export const CanRestartNotebookKernel = 'jupyter.notebookeditor.canrestartNotebookkernel';
+    export const IsPythonNotebook = 'jupyter.ispythonnotebook';
 }
 
 export namespace RegExpValues {
