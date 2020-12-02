@@ -18,9 +18,8 @@ import { captureTelemetry } from '../../telemetry';
 import { CommandSource } from '../../testing/common/constants';
 import { generateCellRangesFromDocument, generateCellsFromDocument } from '../cellFactory';
 import { Commands, Telemetry } from '../constants';
-import { ExportFormat, IExportManager } from '../export/types';
+import { ExportFormat, IExportDialog, IExportManager } from '../export/types';
 import { JupyterInstallError } from '../jupyter/jupyterInstallError';
-import { INotebookStorageProvider } from '../notebookStorage/notebookStorageProvider';
 import {
     IDataScienceCommandListener,
     IDataScienceErrorHandler,
@@ -51,7 +50,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
         @inject(IDataScienceErrorHandler) private dataScienceErrorHandler: IDataScienceErrorHandler,
         @inject(INotebookEditorProvider) protected ipynbProvider: INotebookEditorProvider,
         @inject(IExportManager) private exportManager: IExportManager,
-        @inject(INotebookStorageProvider) private notebookStorageProvider: INotebookStorageProvider
+        @inject(IExportDialog) private exportDialog: IExportDialog
     ) {}
 
     public register(commandManager: ICommandManager): void {
@@ -188,15 +187,8 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
                     this.configuration.getSettings(activeEditor.document.uri)
                 );
                 if (cells) {
-                    const filtersKey = localize.DataScience.exportDialogFilter();
-                    const filtersObject: { [name: string]: string[] } = {};
-                    filtersObject[filtersKey] = ['ipynb'];
-
-                    // Bring up the save file dialog box
-                    const uri = await this.applicationShell.showSaveDialog({
-                        saveLabel: localize.DataScience.exportDialogTitle(),
-                        filters: filtersObject
-                    });
+                    // Bring up the export dialog box
+                    const uri = await this.exportDialog.showDialog(ExportFormat.ipynb, file);
                     await this.waitForStatus(
                         async () => {
                             if (uri) {
@@ -253,7 +245,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
                 const ranges = generateCellRangesFromDocument(activeEditor.document);
                 if (ranges.length > 0) {
                     // Ask user for path
-                    const output = await this.showExportDialog();
+                    const output = await this.showExportDialog(file);
 
                     // If that worked, we need to start a jupyter server to get our output values.
                     // In the future we could potentially only update changed cells.
@@ -354,16 +346,9 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
         }
     }
 
-    private async showExportDialog(): Promise<Uri | undefined> {
-        const filtersKey = localize.DataScience.exportDialogFilter();
-        const filtersObject: { [name: string]: string[] } = {};
-        filtersObject[filtersKey] = ['ipynb'];
-
+    private async showExportDialog(file: Uri): Promise<Uri | undefined> {
         // Bring up the save file dialog box
-        return this.applicationShell.showSaveDialog({
-            saveLabel: localize.DataScience.exportDialogTitle(),
-            filters: filtersObject
-        });
+        return this.exportDialog.showDialog(ExportFormat.ipynb, file);
     }
 
     private undoCells() {
@@ -454,8 +439,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
             await this.waitForStatus(
                 async () => {
                     const contents = await this.fileSystem.readFile(uris[0]);
-                    const model = await this.notebookStorageProvider.createNew(contents);
-                    await this.exportManager.export(ExportFormat.python, model);
+                    await this.exportManager.export(ExportFormat.python, contents, uris[0]);
                 },
                 localize.DataScience.importingFormat(),
                 uris[0].fsPath
@@ -469,8 +453,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
             await this.waitForStatus(
                 async () => {
                     const contents = await this.fileSystem.readFile(file);
-                    const model = await this.notebookStorageProvider.createNew(contents);
-                    await this.exportManager.export(ExportFormat.python, model);
+                    await this.exportManager.export(ExportFormat.python, contents, file);
                 },
                 localize.DataScience.importingFormat(),
                 file.fsPath

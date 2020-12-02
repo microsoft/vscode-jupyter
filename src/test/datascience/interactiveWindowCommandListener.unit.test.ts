@@ -18,14 +18,14 @@ import * as localize from '../../client/common/utils/localize';
 import { generateCells } from '../../client/datascience/cellFactory';
 import { Commands } from '../../client/datascience/constants';
 import { DataScienceErrorHandler } from '../../client/datascience/errorHandler/errorHandler';
-import { ExportFormat, IExportManager } from '../../client/datascience/export/types';
+import { ExportDialog } from '../../client/datascience/export/exportDialog';
+import { ExportFormat, IExportDialog, IExportManager } from '../../client/datascience/export/types';
 import { NotebookProvider } from '../../client/datascience/interactive-common/notebookProvider';
 import { InteractiveWindowCommandListener } from '../../client/datascience/interactive-window/interactiveWindowCommandListener';
 import { InteractiveWindowProvider } from '../../client/datascience/interactive-window/interactiveWindowProvider';
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
 import { JupyterExporter } from '../../client/datascience/jupyter/jupyterExporter';
 import { NativeEditorProvider } from '../../client/datascience/notebookStorage/nativeEditorProvider';
-import { NotebookStorageProvider } from '../../client/datascience/notebookStorage/notebookStorageProvider';
 import {
     IInteractiveWindow,
     IJupyterExecution,
@@ -70,10 +70,10 @@ suite('Interactive window command listener', async () => {
     const statusProvider = new MockStatusProvider();
     const commandManager = new MockCommandManager();
     const exportManager = mock<IExportManager>();
-    const notebookStorageProvider = mock(NotebookStorageProvider);
     let notebookEditorProvider: INotebookEditorProvider;
     const server = createTypeMoq<INotebookServer>('jupyter server');
     let lastFileContents: any;
+    let exportDialog: IExportDialog;
 
     teardown(() => {
         documentManager.activeTextEditor = undefined;
@@ -102,6 +102,7 @@ suite('Interactive window command listener', async () => {
         notebookEditorProvider = mock(NativeEditorProvider);
         jupyterExecution = mock(JupyterExecutionFactory);
         applicationShell = mock(ApplicationShell);
+        exportDialog = mock(ExportDialog);
 
         // Setup defaults
         when(interpreterService.onDidChangeInterpreter).thenReturn(dummyEvent.event);
@@ -113,6 +114,8 @@ suite('Interactive window command listener', async () => {
         when(serviceContainer.get<IConfigurationService>(IConfigurationService)).thenReturn(instance(configService));
         when(serviceContainer.get<IFileSystem>(IFileSystem)).thenReturn(instance(fileSystem));
         when(configService.getSettings(anything())).thenReturn(pythonSettings);
+
+        when(exportDialog.showDialog(anything(), anything())).thenReturn(Promise.resolve(Uri.file('foo')));
 
         // Setup default settings
         pythonSettings.assign({
@@ -213,7 +216,7 @@ suite('Interactive window command listener', async () => {
             instance(dataScienceErrorHandler),
             instance(notebookEditorProvider),
             instance(exportManager),
-            instance(notebookStorageProvider)
+            instance(exportDialog)
         );
         result.register(commandManager);
 
@@ -226,20 +229,17 @@ suite('Interactive window command listener', async () => {
             Promise.resolve([Uri.file('foo')])
         );
         await commandManager.executeCommand(Commands.ImportNotebook, undefined, undefined);
-        verify(exportManager.export(ExportFormat.python, anything())).once();
+        verify(exportManager.export(ExportFormat.python, anything(), anything())).once();
     });
     test('Import File', async () => {
         createCommandListener();
         await commandManager.executeCommand(Commands.ImportNotebook, Uri.file('bar.ipynb'), undefined);
-        verify(exportManager.export(ExportFormat.python, anything())).twice();
+        verify(exportManager.export(ExportFormat.python, anything(), anything())).twice();
     });
     test('Export File', async () => {
         createCommandListener();
         const doc = await documentManager.openTextDocument('bar.ipynb');
         await documentManager.showTextDocument(doc);
-        when(applicationShell.showSaveDialog(argThat((o) => o.saveLabel && o.saveLabel.includes('Export')))).thenReturn(
-            Promise.resolve(Uri.file('foo'))
-        );
         when(applicationShell.showInformationMessage(anything(), anything())).thenReturn(Promise.resolve('moo'));
         when(applicationShell.showInformationMessage(anything(), anything(), anything())).thenReturn(
             Promise.resolve('moo')
@@ -280,9 +280,6 @@ suite('Interactive window command listener', async () => {
                 return Promise.resolve(generateCells(undefined, 'a=1', 'bar.py', 0, false, uuid()));
             });
 
-        when(applicationShell.showSaveDialog(argThat((o) => o.saveLabel && o.saveLabel.includes('Export')))).thenReturn(
-            Promise.resolve(Uri.file('foo'))
-        );
         when(applicationShell.showInformationMessage(anything(), anything())).thenReturn(Promise.resolve('moo'));
         when(applicationShell.showInformationMessage(anything(), anything(), anything())).thenReturn(
             Promise.resolve('moo')
@@ -302,9 +299,6 @@ suite('Interactive window command listener', async () => {
     });
     test('Export skipped on no file', async () => {
         createCommandListener();
-        when(applicationShell.showSaveDialog(argThat((o) => o.saveLabel && o.saveLabel.includes('Export')))).thenReturn(
-            Promise.resolve(Uri.file('foo'))
-        );
         await commandManager.executeCommand(Commands.ExportFileAndOutputAsNotebook, Uri.file('bar.ipynb'));
         assert.notExists(lastFileContents, 'Export file was written to');
     });
@@ -312,9 +306,6 @@ suite('Interactive window command listener', async () => {
         createCommandListener();
         const doc = await documentManager.openTextDocument('bar.ipynb');
         await documentManager.showTextDocument(doc);
-        when(applicationShell.showSaveDialog(argThat((o) => o.saveLabel && o.saveLabel.includes('Export')))).thenReturn(
-            Promise.resolve(Uri.file('foo'))
-        );
         await commandManager.executeCommand(Commands.ExportFileAsNotebook, undefined, undefined);
         assert.ok(lastFileContents, 'Export file was not written to');
     });

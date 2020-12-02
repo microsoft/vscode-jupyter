@@ -96,5 +96,5 @@ export async function computeWorkingDirectory(resource: Resource, workspace: IWo
     }
 
     // Otherwise a file without an extension or directory doesn't exist. Just use the workspace root
-    return workspace.getWorkspaceFolder(resource)?.uri.fsPath || process.cwd();
+    return workspace.getWorkspaceFolder(resource)?.uri.fsPath || workspace.rootPath || process.cwd();
 }

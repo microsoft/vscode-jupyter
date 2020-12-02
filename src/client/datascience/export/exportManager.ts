@@ -10,11 +10,10 @@ import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { ProgressReporter } from '../progress/progressReporter';
-import { INotebookModel } from '../types';
 import { ExportFileOpener } from './exportFileOpener';
 import { ExportInterpreterFinder } from './exportInterpreterFinder';
 import { ExportUtil } from './exportUtil';
-import { ExportFormat, IExport, IExportManager, IExportManagerFilePicker } from './types';
+import { ExportFormat, IExport, IExportDialog, IExportManager } from './types';
 
 @injectable()
 export class ExportManager implements IExportManager {
@@ -23,7 +22,7 @@ export class ExportManager implements IExportManager {
         @inject(IExport) @named(ExportFormat.html) private readonly exportToHTML: IExport,
         @inject(IExport) @named(ExportFormat.python) private readonly exportToPython: IExport,
         @inject(IFileSystem) private readonly fs: IFileSystem,
-        @inject(IExportManagerFilePicker) private readonly filePicker: IExportManagerFilePicker,
+        @inject(IExportDialog) private readonly filePicker: IExportDialog,
         @inject(ProgressReporter) private readonly progressReporter: ProgressReporter,
         @inject(ExportUtil) private readonly exportUtil: ExportUtil,
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
@@ -33,7 +32,8 @@ export class ExportManager implements IExportManager {
 
     public async export(
         format: ExportFormat,
-        model: INotebookModel,
+        contents: string,
+        source: Uri,
         defaultFileName?: string,
         candidateInterpreter?: PythonEnvironment
     ): Promise<undefined> {
@@ -44,11 +44,11 @@ export class ExportManager implements IExportManager {
                 format,
                 candidateInterpreter
             );
-            target = await this.getTargetFile(format, model, defaultFileName);
+            target = await this.getTargetFile(format, source, defaultFileName);
             if (!target) {
                 return;
             }
-            await this.performExport(format, model, target, exportInterpreter);
+            await this.performExport(format, contents, target, exportInterpreter);
         } catch (e) {
             traceError('Export failed', e);
             sendTelemetryEvent(Telemetry.ExportNotebookAsFailed, undefined, { format: format });
@@ -61,19 +61,14 @@ export class ExportManager implements IExportManager {
         }
     }
 
-    private async performExport(
-        format: ExportFormat,
-        model: INotebookModel,
-        target: Uri,
-        interpreter: PythonEnvironment
-    ) {
+    private async performExport(format: ExportFormat, contents: string, target: Uri, interpreter: PythonEnvironment) {
         /* Need to make a temp directory here, instead of just a temp file. This is because
            we need to store the contents of the notebook in a file that is named the same
            as what we want the title of the exported file to be. To ensure this file path will be unique
            we store it in a temp directory. The name of the file matters because when
            exporting to certain formats the filename is used within the exported document as the title. */
         const tempDir = await this.exportUtil.generateTempDir();
-        const source = await this.makeSourceFile(target, model, tempDir);
+        const source = await this.makeSourceFile(target, contents, tempDir);
 
         const reporter = this.progressReporter.createProgressIndicator(`Exporting to ${format}`, true);
         try {
@@ -90,15 +85,11 @@ export class ExportManager implements IExportManager {
         await this.exportFileOpener.openFile(format, target);
     }
 
-    private async getTargetFile(
-        format: ExportFormat,
-        model: INotebookModel,
-        defaultFileName?: string
-    ): Promise<Uri | undefined> {
+    private async getTargetFile(format: ExportFormat, source: Uri, defaultFileName?: string): Promise<Uri | undefined> {
         let target;
 
         if (format !== ExportFormat.python) {
-            target = await this.filePicker.getExportFileLocation(format, model.file, defaultFileName);
+            target = await this.filePicker.showDialog(format, source, defaultFileName);
         } else {
             target = Uri.file((await this.fs.createTemporaryLocalFile('.py')).filePath);
         }
@@ -106,10 +97,10 @@ export class ExportManager implements IExportManager {
         return target;
     }
 
-    private async makeSourceFile(target: Uri, model: INotebookModel, tempDir: TemporaryDirectory): Promise<Uri> {
+    private async makeSourceFile(target: Uri, contents: string, tempDir: TemporaryDirectory): Promise<Uri> {
         // Creates a temporary file with the same base name as the target file
         const fileName = path.basename(target.fsPath, path.extname(target.fsPath));
-        const sourceFilePath = await this.exportUtil.makeFileInDirectory(model, `${fileName}.ipynb`, tempDir.path);
+        const sourceFilePath = await this.exportUtil.makeFileInDirectory(contents, `${fileName}.ipynb`, tempDir.path);
         return Uri.file(sourceFilePath);
     }
 

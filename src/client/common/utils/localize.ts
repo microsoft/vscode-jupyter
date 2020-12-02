@@ -719,6 +719,7 @@ export namespace DataScience {
     );
     export const notebookExportAs = localize('DataScience.notebookExportAs', 'Export As');
     export const exportAsPythonFileTitle = localize('DataScience.exportAsPythonFileTitle', 'Save As Python File');
+    export const exportButtonTitle = localize('DataScience.exportButtonTitle', 'Export');
     export const exportAsQuickPickPlaceholder = localize('DataScience.exportAsQuickPickPlaceholder', 'Export As...');
     export const openExportedFileMessage = localize(
         'DataScience.openExportedFileMessage',

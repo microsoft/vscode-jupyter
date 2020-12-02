@@ -384,6 +384,7 @@
     "DataScience.dirtyNotebookDialogFilter": "Jupyter Notebooks",
     "DataScience.exportAsPythonFileTooltip": "Convert and save to a python script",
     "DataScience.exportAsPythonFileTitle": "Save as Python File",
+    "DataScience.exportButtonTitle": "Export",
     "DataScience.runCell": "Run cell",
     "DataScience.deleteCell": "Delete cell",
     "DataScience.moveCellUp": "Move cell up",
