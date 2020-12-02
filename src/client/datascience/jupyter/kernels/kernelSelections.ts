@@ -406,7 +406,7 @@ export class KernelSelectionProvider {
                             const interpreterPathToCheck = (item.selection.interpreter.path || '').replace(/\\/g, '/');
                             return (
                                 this.fs.areLocalPathsSame(
-                                    (installedKernel.selection.kernelSpec?.argv || [])[0].replace(/\\/g, '/'),
+                                    ((installedKernel.selection.kernelSpec?.argv || [])[0] || '').replace(/\\/g, '/'),
                                     interpreterPathToCheck
                                 ) ||
                                 this.fs.areLocalPathsSame(
