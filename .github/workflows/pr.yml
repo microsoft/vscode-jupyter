@@ -421,11 +421,17 @@ jobs:
           python -c 'import sys;print(sys.executable)'
 
       - name: Set CI Path
+        if: matrix.test-suite != 'conda'
         uses: ./.github/actions/set-python
         id: set-python
         with:
           PYTHON_VERSION: ${{matrix.python}}
-          IS_CONDA_ENV: ${{ matrix.test-suite == 'conda' }}
+
+      - name: Set CI Path (conda)
+        if: matrix.test-suite == 'conda'
+        uses: ./.github/actions/set-python-conda
+        with:
+          PYTHON_VERSION: ${{matrix.python}}
 
       - name: Upgrade pip
         # Use `bash -l {0}` when using the conda actions.
