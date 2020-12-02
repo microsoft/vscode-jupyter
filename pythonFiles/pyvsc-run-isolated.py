@@ -9,8 +9,10 @@ import os.path
 import runpy
 import sys
 
+
 def normalize(path):
     return os.path.normcase(os.path.normpath(path))
+
 
 # We "isolate" the script/module (sys.argv[1]) by removing current working
 # directory or '' in sys.path and then sending the target on to runpy.
