@@ -35,11 +35,11 @@ export class SystemPseudoRandomNumberGenerator implements ISystemPseudoRandomNum
         return new Promise((resolve, reject) => {
             exec(executable, { encoding: 'buffer' }, (err, stdout, stderr) => {
                 if (err) {
-                    traceError(`randomBytesForWindows err: ${err}`);
+                    traceError(`randomBytesForUnixLikeSystems err`, err);
                     reject(`Failed to allocate random bytes for notebook trust: ${err}`);
                 }
                 if (stderr.length > 0) {
-                    traceError(`randomBytesForWindows stderr: ${stderr}`);
+                    traceError(`randomBytesForUnixLikeSystems stderr`, stderr);
                 }
                 const key = stdout.toString('ascii');
                 traceInfo(`Generated random key of length ${key.length}`);
@@ -57,11 +57,11 @@ export class SystemPseudoRandomNumberGenerator implements ISystemPseudoRandomNum
             traceInfo(`Executing script ${script} to generate random bytes`);
             exec(script, { encoding: 'buffer' }, (err, stdout, stderr) => {
                 if (err) {
-                    traceError(`randomBytesForUnixLikeSystems err: ${err}`);
+                    traceError(`randomBytesForUnixLikeSystems err`, err);
                     reject(`Failed to allocate random bytes for notebook trust: ${err}`);
                 }
                 if (stderr.length > 0) {
-                    traceError(`randomBytesForUnixLikeSystems stderr: ${stderr}`);
+                    traceError(`randomBytesForUnixLikeSystems stderr`, stderr);
                 }
                 const key = stdout.toString('hex');
                 traceInfo(`Generated random key of length ${key.length}`);
