@@ -655,6 +655,7 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: ${{matrix.python}}
+
       - name: Checkout
         uses: actions/checkout@v2
 
@@ -662,6 +663,12 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: ${{matrix.python}}
+
+      - name: Set CI Path
+        uses: ./.github/actions/set-python
+        id: set-python
+        with:
+          PYTHON_VERSION: ${{matrix.python}
 
       - name: Upgrade pip
         run: python -m pip install -U pip

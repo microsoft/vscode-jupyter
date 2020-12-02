@@ -18,25 +18,25 @@ runs:
   using: 'composite'
   steps:
     - name: Output python path
-      if: ${{ inputs.IS_CONDA_ENV == true }}
       id: python_run_conda
       # Use `bash -l {0}` when using the conda actions.
       shell: bash -l {0}
       run: python -c "import sys;print('::set-output name=python_path::' + sys.executable)"
+      if: ${{ inputs.IS_CONDA_ENV == true }}
 
     - name: Push to environment
-      if: ${{ inputs.IS_CONDA_ENV == true }}
       # Use `bash -l {0}` when using the conda actions.
       shell: bash -l {0}
       run: echo "CI_PYTHON_PATH=${{ steps.python_run_conda.outputs.python_path }}" >> $GITHUB_ENV
+      if: ${{ inputs.IS_CONDA_ENV == true }}
 
     - name: Output python path
-      if: ${{ inputs.IS_CONDA_ENV == false }}
       id: python_run
       shell: bash
       run: python -c "import sys;print('::set-output name=python_path::' + sys.executable)"
+      if: ${{ inputs.IS_CONDA_ENV == false }}
 
     - name: Push to environment
-      if: ${{ inputs.IS_CONDA_ENV == false }}
       shell: bash
       run: echo "CI_PYTHON_PATH=${{ steps.python_run.outputs.python_path }}" >> $GITHUB_ENV
+      if: ${{ inputs.IS_CONDA_ENV == false }}
