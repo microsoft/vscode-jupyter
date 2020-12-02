@@ -1579,15 +1579,16 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
 
     private async handleExecuteExternalCommand(payload: IExternalCommandFromWebview) {
         const button = this.externalButtons.find((b) => b.buttonId === payload.buttonId);
+        let language = PYTHON_LANGUAGE;
 
         if (this.notebook) {
-            const language = getKernelConnectionLanguage(this.notebook.getKernelConnection()) || PYTHON_LANGUAGE;
-            const id = this.notebook.identity;
-            const cell = translateCellToNative(payload.cell, language);
+            language = getKernelConnectionLanguage(this.notebook.getKernelConnection()) || PYTHON_LANGUAGE;
+        }
+        const id = this.notebookIdentity.resource;
+        const cell = translateCellToNative(payload.cell, language);
 
-            if (button && cell) {
-                await button.callback(cell as NotebookCell, this.isInteractive, id);
-            }
+        if (button && cell) {
+            await button.callback(cell as NotebookCell, this.isInteractive, id);
         }
 
         // Post message again to let the react side know the command is done executing
