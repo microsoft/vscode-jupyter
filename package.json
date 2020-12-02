@@ -779,7 +779,7 @@
                     "command": "jupyter.exportAsPythonScript",
                     "title": "%jupyter.command.jupyter.exportAsPythonScript.title%",
                     "category": "Jupyter",
-                    "when": "jupyter.isnativeactive && jupyter.isnotebooktrusted"
+                    "when": "jupyter.isnativeactive && jupyter.isnotebooktrusted && jupyter.ispythonnotebook"
                 },
                 {
                     "command": "jupyter.exportToHTML",
