@@ -14,7 +14,7 @@ import type {
 } from '../../../../../types/vscode-proposed';
 import { concatMultilineString, formatStreamText } from '../../../../datascience-ui/common';
 import { IApplicationShell, IVSCodeNotebook } from '../../../common/application/types';
-import { traceInfo, traceInfoIf, traceWarning } from '../../../common/logger';
+import { traceError, traceInfo, traceInfoIf, traceWarning } from '../../../common/logger';
 import { RefBool } from '../../../common/refBool';
 import { IDisposable } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
@@ -156,10 +156,10 @@ export class CellExecution {
     }
 
     public async start(kernelPromise: Promise<IKernel>, notebook: INotebook) {
-        traceInfo(
-            `Start cell execution for cell Index ${
-                this.cell.index
-            } with contents ${this.cell.document.getText().substring(0, 50)}...`
+        traceInfo(`Start cell execution for cell Index ${this.cell.index}`);
+        traceInfoIf(
+            !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
+            `Cell Exec contents ${this.cell.document.getText().substring(0, 50)}...`
         );
         if (!this.canExecuteCell()) {
             return;
@@ -422,12 +422,15 @@ export class CellExecution {
             // Solution is to wait for all messages to get processed.
             await Promise.all([request.done, this.requestHandlerChain]);
             await this.completedSuccessfully();
+            traceInfo(`Cell ${this.cell.index} executed successfully`);
         } catch (ex) {
             // @jupyterlab/services throws a `Canceled` error when the kernel is interrupted.
             // Such an error must be ignored.
             if (ex && ex instanceof Error && ex.message === 'Canceled') {
                 await this.completedSuccessfully();
+                traceInfo(`Cell ${this.cell.index} execution cancelled`);
             } else {
+                traceError(`Cell (index = ${this.cell.index}) execution completed with errors (1).`, ex);
                 await this.completedWithErrors(ex);
             }
         } finally {
@@ -490,9 +493,11 @@ export class CellExecution {
 
             // Set execution count, all messages should have it
             if ('execution_count' in msg.content && typeof msg.content.execution_count === 'number') {
+                traceInfoIf(!!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT, `Exec Count = ${msg.content.execution_count}`);
                 await updateCellExecutionCount(this.editor, this.cell, msg.content.execution_count);
             }
         } catch (err) {
+            traceError(`Cell (index = ${this.cell.index}) execution completed with errors (2).`, err);
             // If not a restart error, then tell the subscriber
             await this.completedWithErrors(err).then(noop, noop);
         }
