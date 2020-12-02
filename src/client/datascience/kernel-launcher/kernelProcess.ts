@@ -140,7 +140,6 @@ export class KernelProcess implements IKernelProcess {
             // Wait until the port is open for connection
             // First parameter is wait between retries, second parameter is total wait before error
             await tcpPortUsed.waitUntilUsed(this.connection.hb_port, 200, 30_000);
-            throw new Error('das');
         } catch (error) {
             // Make sure to dispose if we never get a heartbeat
             this.dispose().ignoreErrors();
