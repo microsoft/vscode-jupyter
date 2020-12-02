@@ -796,7 +796,7 @@ df.head()`;
                     appShell.setup((a) => a.setStatusBarMessage(TypeMoq.It.isAny())).returns(() => dummyDisposable);
                     ioc.serviceManager.rebindInstance<IApplicationShell>(IApplicationShell, appShell.object);
 
-                    // Make sure to create the interactive window after the rebind or it gets the wrong application shell.
+                    // Make sure to create the editor after the rebind or it gets the wrong application shell.
                     const ne = await createNewEditor(ioc);
                     const dirtyPromise = waitForMessage(ioc, InteractiveWindowMessages.NotebookDirty);
                     await addCell(ne.mount, 'a=1\na');
@@ -811,8 +811,8 @@ df.head()`;
                     // Click export and wait for a document to change
                     const commandFired = createDeferred();
                     const commandManager = TypeMoq.Mock.ofType<ICommandManager>();
-                    const editor = TypeMoq.Mock.ofType<INotebookEditorProvider>().object.activeEditor;
-                    const model = editor!.model!;
+                    const editor = ne.editor;
+                    const model = editor.model;
                     ioc.serviceManager.rebindInstance<ICommandManager>(ICommandManager, commandManager.object);
                     commandManager
                         .setup((cmd) =>
@@ -821,7 +821,7 @@ df.head()`;
                                 model.getContent(),
                                 model.file,
                                 undefined,
-                                editor?.notebook?.getMatchingInterpreter()
+                                editor.notebook?.getMatchingInterpreter()
                             )
                         )
                         .returns(() => {

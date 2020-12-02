@@ -68,6 +68,7 @@ import {
 } from './testHelpers';
 import { ITestInteractiveWindowProvider } from './testInteractiveWindowProvider';
 import { InteractiveWindowMessageListener } from '../../client/datascience/interactive-common/interactiveWindowMessageListener';
+import { IExportDialog } from '../../client/datascience/export/types';
 // tslint:disable-next-line: no-require-imports no-var-requires
 const _escape = require('lodash/escape') as typeof import('lodash/escape'); // NOSONAR
 
@@ -653,6 +654,7 @@ for i in range(0, 100):
             try {
                 let exportCalled = false;
                 const appShell = TypeMoq.Mock.ofType<IApplicationShell>();
+                const exportDialog = TypeMoq.Mock.ofType<IExportDialog>();
                 appShell
                     .setup((a) => a.showErrorMessage(TypeMoq.It.isAnyString()))
                     .returns((e) => {
@@ -661,14 +663,15 @@ for i in range(0, 100):
                 appShell
                     .setup((a) => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
                     .returns(() => Promise.resolve(''));
-                appShell
-                    .setup((a) => a.showSaveDialog(TypeMoq.It.isAny()))
+                exportDialog
+                    .setup((a) => a.showDialog(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
                     .returns(() => {
                         exportCalled = true;
                         return Promise.resolve(Uri.file(tf.filePath));
                     });
                 appShell.setup((a) => a.setStatusBarMessage(TypeMoq.It.isAny())).returns(() => dummyDisposable);
                 ioc.serviceManager.rebindInstance<IApplicationShell>(IApplicationShell, appShell.object);
+                ioc.serviceManager.rebindInstance<IExportDialog>(IExportDialog, exportDialog.object);
                 const exportCode = `
 for i in range(100):
     time.sleep(0.1)
