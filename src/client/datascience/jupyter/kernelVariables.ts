@@ -9,9 +9,10 @@ import * as uuid from 'uuid/v4';
 import { CancellationToken, Event, EventEmitter, Uri } from 'vscode';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { traceError } from '../../common/logger';
+import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, IDisposable } from '../../common/types';
 import * as localize from '../../common/utils/localize';
-import { DataFrameLoading, Identifiers, Settings } from '../constants';
+import { DataFrameLoading, GetVariableInfo, Identifiers, Settings } from '../constants';
 import {
     ICell,
     IJupyterVariable,
@@ -44,11 +45,15 @@ interface INotebookState {
 @injectable()
 export class KernelVariables implements IJupyterVariables {
     private importedDataFrameScripts = new Map<string, boolean>();
+    private importedGetVariableInfoScripts = new Map<string, boolean>();
     private languageToQueryMap = new Map<string, { query: string; parser: RegExp }>();
     private notebookState = new Map<Uri, INotebookState>();
     private refreshEventEmitter = new EventEmitter<void>();
 
-    constructor(@inject(IConfigurationService) private configService: IConfigurationService) {}
+    constructor(
+        @inject(IConfigurationService) private configService: IConfigurationService,
+        @inject(IFileSystem) private fs: IFileSystem
+    ) {}
 
     public get refreshRequired(): Event<void> {
         return this.refreshEventEmitter.event;
@@ -160,9 +165,39 @@ export class KernelVariables implements IJupyterVariables {
             disposables.push(notebook.onKernelChanged(handler));
             disposables.push(notebook.onKernelRestarted(handler));
 
-            const fullCode = `${DataFrameLoading.DataFrameSysImport}\n${DataFrameLoading.DataFrameInfoImport}\n${DataFrameLoading.DataFrameRowImport}\n${DataFrameLoading.VariableInfoImport}`;
-            await notebook.execute(fullCode, Identifiers.EmptyFileName, 0, uuid(), token, true);
+            // First put the code from our helper files into the notebook
+            await this.runScriptFile(notebook, DataFrameLoading.ScriptPath, token);
+
             this.importedDataFrameScripts.set(notebook.identity.toString(), true);
+        }
+    }
+
+    private async importGetVariableInfoScripts(notebook: INotebook, token?: CancellationToken): Promise<void> {
+        const key = notebook.identity.toString();
+        if (!this.importedGetVariableInfoScripts.get(key)) {
+            // Clear our flag if the notebook disposes or restarts
+            const disposables: IDisposable[] = [];
+            const handler = () => {
+                this.importedGetVariableInfoScripts.delete(key);
+                disposables.forEach((d) => d.dispose());
+            };
+            disposables.push(notebook.onDisposed(handler));
+            disposables.push(notebook.onKernelChanged(handler));
+            disposables.push(notebook.onKernelRestarted(handler));
+
+            await this.runScriptFile(notebook, GetVariableInfo.ScriptPath, token);
+
+            this.importedGetVariableInfoScripts.set(notebook.identity.toString(), true);
+        }
+    }
+
+    // Read in a .py file and execute it silently in the given notebook
+    private async runScriptFile(notebook: INotebook, scriptFile: string, token?: CancellationToken) {
+        if (await this.fs.localFileExists(scriptFile)) {
+            const fileContents = await this.fs.readFile(Uri.parse(scriptFile));
+            return notebook.execute(fileContents, Identifiers.EmptyFileName, 0, uuid(), token, true);
+        } else {
+            traceError('Cannot run non-existant script file');
         }
     }
 
@@ -171,12 +206,12 @@ export class KernelVariables implements IJupyterVariables {
         notebook: INotebook,
         token?: CancellationToken
     ): Promise<IJupyterVariable> {
-        // Import the data frame script directory if we haven't already
-        await this.importDataFrameScripts(notebook, token);
+        // Add in our get variable info script
+        await this.importGetVariableInfoScripts(notebook, token);
 
         // Then execute a call to get the info and turn it into JSON
         const results = await notebook.execute(
-            `print(${DataFrameLoading.VariableInfoFunc}(${targetVariable.name}))`,
+            `print(${GetVariableInfo.VariableInfoFunc}(${targetVariable.name}))`,
             Identifiers.EmptyFileName,
             0,
             uuid(),

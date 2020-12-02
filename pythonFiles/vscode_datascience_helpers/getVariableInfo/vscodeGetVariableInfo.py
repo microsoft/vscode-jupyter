@@ -1,9 +1,6 @@
 # Query Jupyter server for the info about a dataframe
 import json as _VSCODE_json
-import pandas as _VSCODE_pd
-import pandas.io.json as _VSCODE_pd_json
 import builtins as _VSCODE_builtins
-import vscodeDataFrameHelpers as _VSCODE_dataFrameHelpers
 
 
 def _VSCODE_maybeParseTensorShape(var, result):
