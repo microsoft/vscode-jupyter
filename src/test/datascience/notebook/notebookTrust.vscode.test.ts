@@ -10,6 +10,7 @@ import * as sinon from 'sinon';
 import { commands, Uri } from 'vscode';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { PYTHON_LANGUAGE } from '../../../client/common/constants';
+import { traceInfo } from '../../../client/common/logger';
 import { IConfigurationService, IDisposable, IJupyterSettings, ReadWrite } from '../../../client/common/types';
 import { DataScience } from '../../../client/common/utils/localize';
 import { Commands } from '../../../client/datascience/constants';
@@ -231,6 +232,7 @@ suite('DataScience - VSCode Notebook - (Trust)', function () {
                 ); // When comparing ignore white spaces at the ends.
             });
             test('Prompted to trust an untrusted notebook and trusted', async () => {
+                traceInfo('1.Start trust tests');
                 // Ensure we click `Yes` when prompted to trust the notebook.
                 const prompt = await hijackPrompt(
                     'showErrorMessage',
@@ -242,7 +244,9 @@ suite('DataScience - VSCode Notebook - (Trust)', function () {
                 const trustSetEvent = createEventHandler(trustService, 'onDidSetNotebookTrust', disposables);
 
                 // Open notebook & Confirm prompt was displayed.
+                traceInfo('2.Open notebook');
                 await openNotebook(api.serviceContainer, ipynbFile.fsPath, { isNotTrusted: true });
+                traceInfo('3.Opened notebook & waiting for condition');
                 await waitForCondition(() => prompt.displayed, 10_000, 'Prompt to trust not displayed');
                 prompt.clickButton();
 
