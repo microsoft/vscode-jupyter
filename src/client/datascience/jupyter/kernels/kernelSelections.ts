@@ -174,6 +174,16 @@ export class InstalledJupyterKernelSelectionListProvider
 
         // Default the interpreter to the local interpreter (if none is provided).
         if (this.extensionChecker.isPythonExtensionInstalled) {
+            // tslint:disable-next-line: no-console
+            console.error('Start1234');
+            // tslint:disable-next-line: no-console
+            console.error(`Constructor of ${(this.interpreterService as Object)?.constructor?.toString()}`);
+            // tslint:disable-next-line: no-console no-any
+            console.error(`IsInstance ${(this.interpreterService as any).toString()}`);
+            // tslint:disable-next-line: no-console no-any
+            console.error(`Typeof obj ${typeof this.interpreterService}`);
+            // tslint:disable-next-line: no-console no-any
+            console.error(`Typeof func ${typeof this.interpreterService.getActiveInterpreter}`);
             const activeInterpreter = this.interpreterService.getActiveInterpreter(resource);
             // This process is slow, hence the need to cache this result set.
             await Promise.all(
