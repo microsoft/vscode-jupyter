@@ -36,7 +36,7 @@ import * as localize from '../../common/utils/localize';
 import { IServiceContainer } from '../../ioc/types';
 import { Identifiers, LiveShare, LiveShareCommands } from '../constants';
 import { IDataViewerFactory } from '../data-viewing/types';
-import { ExportUtil } from '../export/exportUtil';
+import { IExportDialog } from '../export/types';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
 import { PostOffice } from '../liveshare/postOffice';
 import {
@@ -192,13 +192,13 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
             this.serviceContainer.get<Memento>(IMemento, WORKSPACE_MEMENTO),
             this.serviceContainer.get<INotebookProvider>(INotebookProvider),
             this.serviceContainer.get<boolean>(UseCustomEditorApi),
-            this.serviceContainer.get<ExportUtil>(ExportUtil),
             resource,
             mode,
             title,
             this.serviceContainer.get<KernelSelector>(KernelSelector),
             this.serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker),
-            this.serviceContainer.get<IJupyterServerUriStorage>(IJupyterServerUriStorage)
+            this.serviceContainer.get<IJupyterServerUriStorage>(IJupyterServerUriStorage),
+            this.serviceContainer.get<IExportDialog>(IExportDialog)
         );
         this._windows.push(result);
 

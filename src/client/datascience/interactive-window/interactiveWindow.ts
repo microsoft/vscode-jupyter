@@ -31,7 +31,7 @@ import { EXTENSION_ROOT_DIR } from '../../constants';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Commands, EditorContexts, Identifiers, Telemetry } from '../constants';
 import { IDataViewerFactory } from '../data-viewing/types';
-import { ExportUtil } from '../export/exportUtil';
+import { ExportFormat, IExportDialog } from '../export/types';
 import { InteractiveBase } from '../interactive-common/interactiveBase';
 import {
     INotebookIdentity,
@@ -42,6 +42,7 @@ import {
 } from '../interactive-common/interactiveWindowTypes';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
 import { KernelConnectionMetadata } from '../jupyter/kernels/types';
+import { updateNotebookMetadata } from '../notebookStorage/baseModel';
 import {
     ICell,
     ICodeCssGenerator,
@@ -56,7 +57,6 @@ import {
     IJupyterVariableDataProviderFactory,
     IJupyterVariables,
     INotebookExporter,
-    INotebookModel,
     INotebookProvider,
     IStatusProvider,
     IThemeFinder,
@@ -127,13 +127,13 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         workspaceStorage: Memento,
         notebookProvider: INotebookProvider,
         useCustomEditorApi: boolean,
-        private exportUtil: ExportUtil,
         owner: Resource,
         mode: InteractiveWindowMode,
         title: string | undefined,
         selector: KernelSelector,
         private readonly extensionChecker: IPythonExtensionChecker,
-        serverStorage: IJupyterServerUriStorage
+        serverStorage: IJupyterServerUriStorage,
+        private readonly exportDialog: IExportDialog
     ) {
         super(
             listeners,
@@ -507,19 +507,12 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         }
 
         // Should be an array of cells
-        if (cells && this.applicationShell) {
+        if (cells && this.exportDialog) {
             // Indicate busy
             this.startProgress();
             try {
-                const filtersKey = localize.DataScience.exportDialogFilter();
-                const filtersObject: Record<string, string[]> = {};
-                filtersObject[filtersKey] = ['ipynb'];
-
-                // Bring up the open file dialog box
-                const uri = await this.applicationShell.showSaveDialog({
-                    saveLabel: localize.DataScience.exportDialogTitle(),
-                    filters: filtersObject
-                });
+                // Bring up the export file dialog box
+                const uri = await this.exportDialog.showDialog(ExportFormat.ipynb, this.owningResource);
                 if (uri) {
                     await this.jupyterExporter.exportToFile(cells, uri.fsPath);
                 }
@@ -535,27 +528,32 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             return this.extensionChecker.showPythonExtensionInstallRequiredPrompt();
         }
 
-        let model: INotebookModel;
-        this.startProgress();
-        try {
-            model = await this.exportUtil.getModelFromCells(cells);
-        } finally {
-            this.stopProgress();
+        // Pull out the metadata from our active notebook
+        const metadata: nbformat.INotebookMetadata = { orig_nbformat: 3 };
+        if (this.notebook) {
+            updateNotebookMetadata(metadata, this.notebook?.getKernelConnection());
         }
-        if (model) {
-            let defaultFileName;
-            if (this.submitters && this.submitters.length) {
-                const lastSubmitter = this.submitters[this.submitters.length - 1];
-                defaultFileName = path.basename(lastSubmitter.fsPath, path.extname(lastSubmitter.fsPath));
-            }
 
-            this.commandManager.executeCommand(
-                Commands.Export,
-                model,
-                defaultFileName,
-                this.notebook?.getMatchingInterpreter()
-            );
+        // Turn the cells into a json object
+        const json = await this.jupyterExporter.translateToNotebook(cells, undefined, metadata.kernelspec);
+
+        // Turn this into a string
+        const contents = JSON.stringify(json, undefined, 4);
+
+        let defaultFileName;
+        if (this.submitters && this.submitters.length) {
+            const lastSubmitter = this.submitters[this.submitters.length - 1];
+            defaultFileName = path.basename(lastSubmitter.fsPath, path.extname(lastSubmitter.fsPath));
         }
+
+        // Then run the export command with these contents
+        this.commandManager.executeCommand(
+            Commands.Export,
+            contents,
+            this.owningResource,
+            defaultFileName,
+            this.notebook?.getMatchingInterpreter()
+        );
     }
 
     private handleModelChange(update: NotebookModelChange) {

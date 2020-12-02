@@ -735,7 +735,8 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         }
         this.commandManager.executeCommand(
             Commands.Export,
-            activeEditor.model,
+            activeEditor.model.getContent(),
+            activeEditor.model.file,
             undefined,
             activeEditor.notebook?.getMatchingInterpreter()
         );

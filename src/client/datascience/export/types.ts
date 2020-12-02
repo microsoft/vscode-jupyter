@@ -1,16 +1,16 @@
 import { CancellationToken, Uri } from 'vscode';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
-import { INotebookModel } from '../types';
 
 export enum ExportFormat {
     pdf = 'pdf',
     html = 'html',
-    python = 'python'
+    python = 'python',
+    ipynb = 'ipynb'
 }
 
 export const IExportManager = Symbol('IExportManager');
 export interface IExportManager {
-    export(format: ExportFormat, model: INotebookModel, defaultFileName?: string): Promise<undefined>;
+    export(format: ExportFormat, contents: string, source: Uri, defaultFileName?: string): Promise<undefined>;
 }
 
 export const IExport = Symbol('IExport');
@@ -18,7 +18,7 @@ export interface IExport {
     export(source: Uri, target: Uri, interpreter: PythonEnvironment, token: CancellationToken): Promise<void>;
 }
 
-export const IExportManagerFilePicker = Symbol('IExportManagerFilePicker');
-export interface IExportManagerFilePicker {
-    getExportFileLocation(format: ExportFormat, source: Uri, defaultFileName?: string): Promise<Uri | undefined>;
+export const IExportDialog = Symbol('IExportDialog');
+export interface IExportDialog {
+    showDialog(format: ExportFormat, source: Uri | undefined, defaultFileName?: string): Promise<Uri | undefined>;
 }

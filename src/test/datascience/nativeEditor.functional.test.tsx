@@ -818,7 +818,8 @@ df.head()`;
                         .setup((cmd) =>
                             cmd.executeCommand(
                                 Commands.Export,
-                                model,
+                                model.getContent(),
+                                model.file,
                                 undefined,
                                 editor?.notebook?.getMatchingInterpreter()
                             )
