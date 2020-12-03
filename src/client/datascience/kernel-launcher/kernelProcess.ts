@@ -118,7 +118,7 @@ export class KernelProcess implements IKernelProcess {
             }
         );
         // Don't return until our heartbeat channel is open for connections
-        return this.waitForHeartbeat();
+        return this.waitForHeartbeat(stderr);
     }
 
     public async dispose(): Promise<void> {
@@ -139,7 +139,7 @@ export class KernelProcess implements IKernelProcess {
     }
 
     // Make sure that the heartbeat channel is open for connections
-    private async waitForHeartbeat() {
+    private async waitForHeartbeat(stderr: string) {
         try {
             // Wait until the port is open for connection
             // First parameter is wait between retries, second parameter is total wait before error
@@ -148,7 +148,7 @@ export class KernelProcess implements IKernelProcess {
             // Make sure to dispose if we never get a heartbeat
             this.dispose().ignoreErrors();
             traceError('Timed out waiting to get a heartbeat from kernel process.');
-            throw new Error(localize.DataScience.kernelTimeout().format(Commands.ViewJupyterOutput));
+            throw new Error(localize.DataScience.kernelTimeout().format(stderr, Commands.ViewJupyterOutput));
         }
     }
 

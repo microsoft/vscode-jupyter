@@ -402,7 +402,7 @@ export namespace DataScience {
     );
     export const kernelTimeout = localize(
         'DataScience.kernelTimeout',
-        'Timed out waiting to get a heartbeat from kernel process. \nView Jupyter [log](command:{0}) for further details.'
+        'Timed out waiting to get a heartbeat from kernel process. \n{0} \nView Jupyter [log](command:{1}) for further details.'
     );
     export const kernelProcessError = localize(
         'DataScience.kernelProcessError',
