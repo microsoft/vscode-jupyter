@@ -9,9 +9,7 @@ import { QuickPickItem, QuickPickOptions, Uri } from 'vscode';
 import { getLocString } from '../../../datascience-ui/react-common/locReactSide';
 import { ICommandNameArgumentTypeMapping } from '../../common/application/commands';
 import { IApplicationShell, ICommandManager } from '../../common/application/types';
-import { PYTHON_LANGUAGE } from '../../common/constants';
 import { IFileSystem } from '../../common/platform/types';
-
 import { IDisposable } from '../../common/types';
 import { DataScience } from '../../common/utils/localize';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
