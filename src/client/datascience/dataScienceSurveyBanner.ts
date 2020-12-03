@@ -136,11 +136,12 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner {
         }
         const executionCount: number = this.getExecutionCount();
         const notebookCount: number = this.getOpenNotebookCount();
-        const show = await this.shouldShowBanner(executionCount, notebookCount);
+        const show = this.shouldShowBanner(executionCount, notebookCount);
         if (!show) {
             return;
         }
-
+        // Disable for the current session.
+        this.disabledInCurrentSession = true;
         const response = await this.appShell.showInformationMessage(this.bannerMessage, ...this.bannerLabels);
         switch (response) {
             case this.bannerLabels[DSSurveyLabelIndex.Yes]: {
@@ -154,14 +155,11 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner {
                 await this.disable(3);
                 break;
             }
-            default: {
-                // Disable for the current session.
-                this.disabledInCurrentSession = true;
-            }
+            default:
         }
     }
 
-    public async shouldShowBanner(executionCount: number, notebookOpenCount: number): Promise<boolean> {
+    public shouldShowBanner(executionCount: number, notebookOpenCount: number) {
         if (!this.enabled || this.disabledInCurrentSession) {
             return false;
         }
