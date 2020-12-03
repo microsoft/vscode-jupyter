@@ -92,7 +92,7 @@ export class InsidersNativeNotebooksSurveyBanner implements IJupyterExtensionBan
         this.disabledInCurrentSession = true;
         const executionCount: number = this.getExecutionCount();
         const notebookCount: number = this.getOpenNotebookCount();
-        const show = this.shouldShowBanner(executionCount, notebookCount);
+        const show = await this.shouldShowBanner(executionCount, notebookCount);
         if (!show) {
             return;
         }
