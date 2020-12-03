@@ -20,6 +20,7 @@ import {
     assertHasTextOutputInVSCode,
     assertNotHasTextOutputInVSCode,
     canRunNotebookTests,
+    closeNotebooks,
     closeNotebooksAndCleanUpAfterTests,
     deleteAllCellsAndWait,
     executeActiveDocument,
@@ -28,7 +29,8 @@ import {
     startJupyter,
     trustAllNotebooks,
     waitForExecutionCompletedSuccessfully,
-    waitForExecutionCompletedWithErrors
+    waitForExecutionCompletedWithErrors,
+    waitForKernelToGetAutoSelected
 } from './helper';
 
 // tslint:disable-next-line: no-var-requires no-require-imports
@@ -47,19 +49,23 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', () => {
             return this.skip();
         }
         await trustAllNotebooks();
-        await startJupyter(false); // This should create a new notebook
+        await startJupyter(true);
         sinon.restore();
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
     });
     // Use same notebook without starting kernel in every single test (use one for whole suite).
     setup(async () => {
-        clearPendingChainedUpdatesForTests();
-        await deleteAllCellsAndWait();
+        sinon.restore();
+        // Open a notebook and use this for all tests in this test suite.
+        await editorProvider.createNew();
+        await waitForKernelToGetAutoSelected();
+        assert.isOk(vscodeNotebook.activeNotebookEditor, 'No active notebook');
     });
-    teardown(() => {
+    teardown(async () => {
         // Added temporarily to identify why tests are failing.
         process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT = undefined;
+        await closeNotebooks(disposables);
     });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
     test('Execute cell using VSCode Kernel', async () => {
