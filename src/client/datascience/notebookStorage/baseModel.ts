@@ -116,20 +116,16 @@ export function updateNotebookMetadata(
         const name = kernelSpecOrModel.name || kernelSpecOrModel.display_name || '';
         const displayName = kernelSpecOrModel.display_name || kernelSpecOrModel.name || '';
         const language = kernelSpecOrModel.language || kernelSpecOrModel.language || '';
-        const languageExistsInNBMetadata = 'language' in metadata.kernelspec;
         if (
             metadata.kernelspec.name !== name ||
-            (languageExistsInNBMetadata && metadata.kernelspec.language !== language) ||
+            metadata.kernelspec.language !== language ||
             metadata.kernelspec.display_name !== displayName ||
             kernelId !== kernelSpecOrModel.id
         ) {
             changed = true;
             metadata.kernelspec.name = name;
             metadata.kernelspec.display_name = displayName;
-            // Update language if such an entry already exists in the metadata.
-            if (languageExistsInNBMetadata) {
-                metadata.kernelspec.language = language;
-            }
+            metadata.kernelspec.language = language;
             kernelId = kernelSpecOrModel.id;
         }
         try {
