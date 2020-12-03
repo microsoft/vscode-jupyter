@@ -155,9 +155,7 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner {
                 await this.disable(3);
                 break;
             }
-            default: {
-                //
-            }
+            default:
         }
     }
 

@@ -109,9 +109,7 @@ export class InsidersNativeNotebooksSurveyBanner implements IJupyterExtensionBan
                 await this.disable(3);
                 break;
             }
-            default: {
-                //
-            }
+            default:
         }
     }
 
