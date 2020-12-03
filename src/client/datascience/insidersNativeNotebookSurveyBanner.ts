@@ -91,7 +91,8 @@ export class InsidersNativeNotebooksSurveyBanner implements IJupyterExtensionBan
         if (!show) {
             return;
         }
-
+        // Disable for the current session.
+        this.disabledInCurrentSession = true;
         const response = await this.appShell.showInformationMessage(this.bannerMessage, ...this.bannerLabels);
         switch (response) {
             case this.bannerLabels[DSSurveyLabelIndex.Yes]: {
@@ -106,8 +107,7 @@ export class InsidersNativeNotebooksSurveyBanner implements IJupyterExtensionBan
                 break;
             }
             default: {
-                // Disable for the current session.
-                this.disabledInCurrentSession = true;
+                //
             }
         }
     }
