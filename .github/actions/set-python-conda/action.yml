@@ -1,4 +1,4 @@
-name: 'Set Python'
+name: 'Set Python for Conda'
 description: "Sets python to a specific version when using Conda Environments"
 # For some reason we cannot use `if` conditions in the steps of an action. Github Action throws errors.
 # Hence created a separate action and used the action conditionally.
