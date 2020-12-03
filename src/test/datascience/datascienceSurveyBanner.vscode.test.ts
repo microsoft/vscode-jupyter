@@ -76,7 +76,7 @@ suite('DataScience Survey Banner', () => {
 
         bannerService = createBannerService();
     });
-    function createBannerService(){
+    function createBannerService() {
         return new DataScienceSurveyBanner(
             instance(appShell),
             instance(persistentStateFactory),
