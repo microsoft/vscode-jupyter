@@ -74,14 +74,17 @@ suite('DataScience Survey Banner', () => {
             persistentStateFactory.createGlobalPersistentState(DSSurveyStateKeys.ShowBanner, anything(), anything())
         ).thenReturn(showBannerState);
 
-        bannerService = new DataScienceSurveyBanner(
+        bannerService = createBannerService();
+    });
+    function createBannerService(){
+        return new DataScienceSurveyBanner(
             instance(appShell),
             instance(persistentStateFactory),
             instance(browser),
             instance(editorProvider),
             instance(appEnv)
         );
-    });
+    }
     test('Confirm prompt is displayed & only once per session', async () => {
         when(appShell.showInformationMessage(anything(), anything(), anything())).thenResolve();
         await showBannerState.updateValue({ data: true });
@@ -106,18 +109,21 @@ suite('DataScience Survey Banner', () => {
         resetCalls(appShell);
 
         // Attempt to display again & it won't.
+        bannerService = createBannerService();
         await bannerService.showBanner();
         verify(browser.launch(anything())).never();
         verify(appShell.showInformationMessage(anything(), anything(), anything())).never();
 
         // Advance time by 1 month & still not displayed.
         clock.tick(MillisecondsInADay * 30);
+        bannerService = createBannerService();
         await bannerService.showBanner();
         verify(browser.launch(anything())).never();
         verify(appShell.showInformationMessage(anything(), anything(), anything())).never();
 
         // Advance time by 3.5 month & it will be displayed.
         clock.tick(MillisecondsInADay * 30 * 3.5);
+        bannerService = createBannerService();
         await bannerService.showBanner();
         verify(browser.launch(anything())).never();
         verify(appShell.showInformationMessage(anything(), anything(), anything())).once();
@@ -137,12 +143,14 @@ suite('DataScience Survey Banner', () => {
         resetCalls(appShell);
 
         // Attempt to display again & it won't.
+        bannerService = createBannerService();
         await bannerService.showBanner();
         verify(browser.launch(anything())).never();
         verify(appShell.showInformationMessage(anything(), anything(), anything())).never();
 
         // Advance time by 1 month & still not displayed.
         clock.tick(MillisecondsInADay * 30);
+        bannerService = createBannerService();
         await bannerService.showBanner();
         verify(browser.launch(anything())).never();
         verify(appShell.showInformationMessage(anything(), anything(), anything())).never();
@@ -152,6 +160,7 @@ suite('DataScience Survey Banner', () => {
         when(appShell.showInformationMessage(anything(), anything(), anything())).thenResolve(
             localize.DataScienceSurveyBanner.bannerLabelNo() as any
         );
+        bannerService = createBannerService();
         await bannerService.showBanner();
         verify(browser.launch(anything())).never();
         verify(appShell.showInformationMessage(anything(), anything(), anything())).once();
