@@ -15,6 +15,7 @@ import { traceError } from '../../common/logger';
 import { IDisposable, IDisposableRegistry, IExperimentService } from '../../common/types';
 import { setSharedProperty } from '../../telemetry';
 import { EditorContexts } from '../constants';
+import { isPythonNotebook } from '../notebook/helpers/helpers';
 import {
     IInteractiveWindow,
     IInteractiveWindowProvider,
@@ -117,7 +118,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         setSharedProperty('ds_notebookeditor', e?.type);
         this.nativeContext.set(!!e).ignoreErrors();
         this.isNotebookTrusted.set(e?.model?.isTrusted === true).ignoreErrors();
-        this.isPythonNotebook.set(e?.model?.metadata?.language_info?.name === PYTHON_LANGUAGE).ignoreErrors();
+        this.isPythonNotebook.set(isPythonNotebook(e?.model?.metadata)).ignoreErrors();
         this.updateMergedContexts();
         this.updateContextOfActiveNotebookKernel(e);
     }
