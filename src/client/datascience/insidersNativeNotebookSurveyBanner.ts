@@ -85,14 +85,14 @@ export class InsidersNativeNotebooksSurveyBanner implements IJupyterExtensionBan
     }
 
     public async showBanner(): Promise<void> {
-        if (this.disabledInCurrentSession){
+        if (this.disabledInCurrentSession) {
             return;
         }
         // Disable for the current session.
         this.disabledInCurrentSession = true;
         const executionCount: number = this.getExecutionCount();
         const notebookCount: number = this.getOpenNotebookCount();
-        const show =  this.shouldShowBanner(executionCount, notebookCount);
+        const show = this.shouldShowBanner(executionCount, notebookCount);
         if (!show) {
             return;
         }
