@@ -15,11 +15,9 @@ runs:
   steps:
     - name: Output python path
       id: python_run
-      # Use `bash -l {0}` when using the conda actions.
-      shell: bash -l {0}
+      shell: bash
       run: python -c "import sys;print('::set-output name=python_path::' + sys.executable)"
 
     - name: Push to environment
-      # Use `bash -l {0}` when using the conda actions.
-      shell: bash -l {0}
+      shell: bash
       run: echo "CI_PYTHON_PATH=${{ steps.python_run.outputs.python_path }}" >> $GITHUB_ENV
