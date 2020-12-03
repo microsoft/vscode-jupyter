@@ -136,7 +136,7 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner {
         }
         const executionCount: number = this.getExecutionCount();
         const notebookCount: number = this.getOpenNotebookCount();
-        const show = await this.shouldShowBanner(executionCount, notebookCount);
+        const show = this.shouldShowBanner(executionCount, notebookCount);
         if (!show) {
             return;
         }
@@ -161,7 +161,7 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner {
         }
     }
 
-    public async shouldShowBanner(executionCount: number, notebookOpenCount: number): Promise<boolean> {
+    public shouldShowBanner(executionCount: number, notebookOpenCount: number) {
         if (!this.enabled || this.disabledInCurrentSession) {
             return false;
         }

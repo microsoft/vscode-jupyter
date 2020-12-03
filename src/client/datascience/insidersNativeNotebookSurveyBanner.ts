@@ -85,14 +85,17 @@ export class InsidersNativeNotebooksSurveyBanner implements IJupyterExtensionBan
     }
 
     public async showBanner(): Promise<void> {
-        const executionCount: number = this.getExecutionCount();
-        const notebookCount: number = this.getOpenNotebookCount();
-        const show = await this.shouldShowBanner(executionCount, notebookCount);
-        if (!show) {
+        if (this.disabledInCurrentSession){
             return;
         }
         // Disable for the current session.
         this.disabledInCurrentSession = true;
+        const executionCount: number = this.getExecutionCount();
+        const notebookCount: number = this.getOpenNotebookCount();
+        const show =  this.shouldShowBanner(executionCount, notebookCount);
+        if (!show) {
+            return;
+        }
         const response = await this.appShell.showInformationMessage(this.bannerMessage, ...this.bannerLabels);
         switch (response) {
             case this.bannerLabels[DSSurveyLabelIndex.Yes]: {
@@ -113,7 +116,7 @@ export class InsidersNativeNotebooksSurveyBanner implements IJupyterExtensionBan
     }
 
     public async shouldShowBanner(executionCount: number, notebookOpenCount: number): Promise<boolean> {
-        if (!this.enabled || this.disabledInCurrentSession) {
+        if (!this.enabled) {
             return false;
         }
 
