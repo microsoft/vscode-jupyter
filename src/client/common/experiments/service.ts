@@ -87,6 +87,14 @@ export class ExperimentService implements IExperimentService {
             return false;
         }
 
+        // If user is already in Native Notebook experiment, then they cannot be in Custom Editor experiment.
+        if (
+            experiment === ExperimentGroups.CustomEditor &&
+            this.getOptInOptOutStatus(ExperimentGroups.NativeNotebook) === 'optIn'
+        ) {
+            return false;
+        }
+
         // Currently the service doesn't support opting in and out of experiments,
         // so we need to perform these checks and send the corresponding telemetry manually.
         switch (this.getOptInOptOutStatus(experiment)) {
