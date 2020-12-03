@@ -1267,9 +1267,13 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
     private getResourceKey(resource: Resource): string {
         if (!this.disposed) {
-            const workspace = this.serviceManager.get<IWorkspaceService>(IWorkspaceService);
-            const workspaceFolderUri = JupyterSettings.getSettingsUriAndTarget(resource, workspace).uri;
-            return workspaceFolderUri ? workspaceFolderUri.fsPath : '';
+            try {
+                const workspace = this.serviceManager.get<IWorkspaceService>(IWorkspaceService);
+                const workspaceFolderUri = JupyterSettings.getSettingsUriAndTarget(resource, workspace).uri;
+                return workspaceFolderUri ? workspaceFolderUri.fsPath : '';
+            } catch {
+                // May as well be disposed
+            }
         }
         return '';
     }
