@@ -8,13 +8,15 @@ import * as tcpPortUsed from 'tcp-port-used';
 import * as tmp from 'tmp';
 import { Event, EventEmitter } from 'vscode';
 import { IPythonExtensionChecker } from '../../api/types';
+import { WrappedError } from '../../common/errors/errorUtils';
 import { traceError, traceInfo, traceWarning } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IProcessServiceFactory, ObservableExecutionResult } from '../../common/process/types';
 import { Resource } from '../../common/types';
+import * as localize from '../../common/utils/localize';
 import { noop, swallowExceptions } from '../../common/utils/misc';
 import { captureTelemetry } from '../../telemetry';
-import { Telemetry } from '../constants';
+import { Commands, Telemetry } from '../constants';
 import {
     createDefaultKernelSpec,
     findIndexOfConnectionFile,
@@ -103,14 +105,16 @@ export class KernelProcess implements IKernelProcess {
                 if (error instanceof PythonKernelDiedError) {
                     if (this.disposed) {
                         traceInfo('KernelProcess Exit', `Exit - ${error.exitCode}, ${error.reason}`, error);
+                        return;
                     } else {
                         traceError('KernelProcess Exit', `Exit - ${error.exitCode}, ${error.reason}`, error);
                     }
-                    if (this.disposed) {
-                        return;
-                    }
                     this.exitEvent.fire({ exitCode: error.exitCode, reason: error.reason || error.message });
                 }
+                throw new WrappedError(
+                    localize.DataScience.kernelDied().format(stderr, Commands.ViewJupyterOutput),
+                    error
+                );
             }
         );
         // Don't return until our heartbeat channel is open for connections
@@ -143,9 +147,8 @@ export class KernelProcess implements IKernelProcess {
         } catch (error) {
             // Make sure to dispose if we never get a heartbeat
             this.dispose().ignoreErrors();
-            const message = 'Timed out waiting to get a heartbeat from kernel process.\n';
-            traceError(message + (error as Error).toString());
-            throw new Error(message + (error as Error).toString());
+            traceError('Timed out waiting to get a heartbeat from kernel process.');
+            throw new Error(localize.DataScience.kernelTimeout().format(Commands.ViewJupyterOutput));
         }
     }
 
@@ -292,6 +295,12 @@ export class KernelProcess implements IKernelProcess {
             });
             exeObs.proc.stderr.on('data', (data: Buffer | string) => {
                 traceInfo(`KernelProcess error: ${(data || '').toString()}`);
+                throw new Error(
+                    localize.DataScience.kernelProcessError().format(
+                        (data || '').toString(),
+                        Commands.ViewJupyterOutput
+                    )
+                );
             });
         } else {
             throw new Error('KernelProcess failed to launch');

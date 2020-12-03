@@ -400,6 +400,18 @@ export namespace DataScience {
         'DataScience.sessionStartFailedWithKernel',
         "Failed to start a session for the Kernel '{0}'. \nView Jupyter [log](command:{1}) for further details."
     );
+    export const kernelTimeout = localize(
+        'DataScience.kernelTimeout',
+        'Timed out waiting to get a heartbeat from kernel process. \nView Jupyter [log](command:{0}) for further details.'
+    );
+    export const kernelProcessError = localize(
+        'DataScience.kernelProcessError',
+        'KernelProcess error: {0} \nView Jupyter [log](command:{1}) for further details.'
+    );
+    export const kernelDied = localize(
+        'DataScience.kernelDied',
+        'The kernel died: {0}. \nView Jupyter [log](command:{1}) for further details.'
+    );
     export const executingCode = localize('DataScience.executingCode', 'Executing Cell');
     export const collapseAll = localize('DataScience.collapseAll', 'Collapse all cell inputs');
     export const expandAll = localize('DataScience.expandAll', 'Expand all cell inputs');
