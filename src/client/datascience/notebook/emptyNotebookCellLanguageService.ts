@@ -90,7 +90,7 @@ export class EmptyNotebookCellLanguageService implements IExtensionSingleActivat
                 if (monacoLanguage.toLowerCase() === cell.language) {
                     return;
                 }
-                edit.replaceCells(cell.index, 1, [
+                edit.replaceCells(cell.index, cell.index + 1, [
                     {
                         cellKind: cell.cellKind,
                         language: monacoLanguage,
