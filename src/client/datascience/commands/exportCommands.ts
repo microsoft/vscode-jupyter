@@ -9,9 +9,7 @@ import { QuickPickItem, QuickPickOptions, Uri } from 'vscode';
 import { getLocString } from '../../../datascience-ui/react-common/locReactSide';
 import { ICommandNameArgumentTypeMapping } from '../../common/application/commands';
 import { IApplicationShell, ICommandManager } from '../../common/application/types';
-import { PYTHON_LANGUAGE } from '../../common/constants';
 import { IFileSystem } from '../../common/platform/types';
-
 import { IDisposable } from '../../common/types';
 import { DataScience } from '../../common/utils/localize';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
@@ -19,6 +17,7 @@ import { sendTelemetryEvent } from '../../telemetry';
 import { Commands, Telemetry } from '../constants';
 import { ExportManager } from '../export/exportManager';
 import { ExportFormat, IExportManager } from '../export/types';
+import { isPythonNotebook } from '../notebook/helpers/helpers';
 import { INotebookEditorProvider } from '../types';
 
 interface IExportQuickPickItem extends QuickPickItem {
@@ -128,11 +127,7 @@ export class ExportCommands implements IDisposable {
         const items: IExportQuickPickItem[] = [];
         const notebook = JSON.parse(contents) as nbformat.INotebookContent;
 
-        if (
-            notebook.metadata &&
-            notebook.metadata.language_info &&
-            notebook.metadata.language_info.name === PYTHON_LANGUAGE
-        ) {
+        if (notebook.metadata && isPythonNotebook(notebook.metadata)) {
             items.push({
                 label: DataScience.exportPythonQuickPickLabel(),
                 picked: true,
