@@ -21,6 +21,7 @@ import {
     canRunNotebookTests,
     closeNotebooks,
     closeNotebooksAndCleanUpAfterTests,
+    deleteAllCellsAndWait,
     executeActiveDocument,
     executeCell,
     insertCodeCell,
@@ -58,6 +59,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', () => {
         // Open a notebook and use this for all tests in this test suite.
         await editorProvider.createNew();
         await waitForKernelToGetAutoSelected();
+        await deleteAllCellsAndWait();
         assert.isOk(vscodeNotebook.activeNotebookEditor, 'No active notebook');
     });
     teardown(async () => {
