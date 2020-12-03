@@ -3,17 +3,14 @@
 
 import { inject, injectable } from 'inversify';
 // tslint:disable-next-line: no-require-imports
-import { join } from 'path';
-import { CancellationToken, Event, EventEmitter, Uri } from 'vscode';
+import { CancellationToken, Event, EventEmitter } from 'vscode';
 import {
-    NotebookCell,
     NotebookCommunication,
     NotebookDocument,
     NotebookKernel as VSCNotebookKernel
 } from '../../../../types/vscode-proposed';
 import { IVSCodeNotebook } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
-import { traceInfo } from '../../common/logger';
 import { IDisposableRegistry, IExtensionContext } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { captureTelemetry } from '../../telemetry';
@@ -23,76 +20,17 @@ import { areKernelConnectionsEqual } from '../jupyter/kernels/helpers';
 import { KernelSelectionProvider } from '../jupyter/kernels/kernelSelections';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
 import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
-import { getKernelConnectionId, IKernel, IKernelProvider, KernelConnectionMetadata } from '../jupyter/kernels/types';
+import { IKernelProvider, KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { INotebookStorageProvider } from '../notebookStorage/notebookStorageProvider';
 import { INotebook, INotebookProvider, IRawNotebookSupportedService } from '../types';
 import {
     getNotebookMetadata,
     isJupyterKernel,
     isJupyterNotebook,
-    updateKernelInfoInNotebookMetadata,
     updateKernelInNotebookMetadata
 } from './helpers/helpers';
+import { VSCodeNotebookKernelMetadata } from './kernelWithMetadata';
 import { INotebookKernelProvider, INotebookKernelResolver } from './types';
-
-export class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
-    get preloads(): Uri[] {
-        return [
-            Uri.file(join(this.context.extensionPath, 'out', 'ipywidgets', 'dist', 'ipywidgets.js')),
-            Uri.file(
-                join(this.context.extensionPath, 'out', 'datascience-ui', 'ipywidgetsKernel', 'ipywidgetsKernel.js')
-            ),
-            Uri.file(join(this.context.extensionPath, 'out', 'datascience-ui', 'ipywidgetsKernel', 'require.js'))
-        ];
-    }
-    get id() {
-        return getKernelConnectionId(this.selection);
-    }
-    constructor(
-        public readonly label: string,
-        public readonly description: string,
-        public readonly detail: string,
-        public readonly selection: Readonly<KernelConnectionMetadata>,
-        public readonly isPreferred: boolean,
-        private readonly kernelProvider: IKernelProvider,
-        private readonly notebook: IVSCodeNotebook,
-        private readonly context: IExtensionContext
-    ) {}
-    public executeCell(doc: NotebookDocument, cell: NotebookCell) {
-        traceInfo('Execute Cell in KernelProvider.ts');
-        const kernel = this.kernelProvider.getOrCreate(cell.notebook.uri, { metadata: this.selection });
-        if (kernel) {
-            this.updateKernelInfoInNotebookWhenAvailable(kernel, doc);
-            kernel.executeCell(cell).catch(noop);
-        }
-    }
-    public executeAllCells(document: NotebookDocument) {
-        const kernel = this.kernelProvider.getOrCreate(document.uri, { metadata: this.selection });
-        if (kernel) {
-            this.updateKernelInfoInNotebookWhenAvailable(kernel, document);
-            kernel.executeAllCells(document).catch(noop);
-        }
-    }
-    public cancelCellExecution(_: NotebookDocument, cell: NotebookCell) {
-        this.kernelProvider.get(cell.notebook.uri)?.interrupt(); // NOSONAR
-    }
-    public cancelAllCellsExecution(document: NotebookDocument) {
-        this.kernelProvider.get(document.uri)?.interrupt(); // NOSONAR
-    }
-    private updateKernelInfoInNotebookWhenAvailable(kernel: IKernel, doc: NotebookDocument) {
-        const disposable = kernel.onStatusChanged(() => {
-            if (!kernel.info) {
-                return;
-            }
-            const editor = this.notebook.notebookEditors.find((item) => item.document === doc);
-            if (!editor || editor.kernel?.id !== this.id) {
-                return;
-            }
-            disposable.dispose();
-            updateKernelInfoInNotebookMetadata(doc, kernel.info);
-        });
-    }
-}
 
 @injectable()
 export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
