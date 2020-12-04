@@ -409,7 +409,9 @@ export enum Telemetry {
     TrustAllNotebooks = 'DATASCIENCE.TRUST_ALL_NOTEBOOKS',
     TrustNotebook = 'DATASCIENCE.TRUST_NOTEBOOK',
     DoNotTrustNotebook = 'DATASCIENCE.DO_NOT_TRUST_NOTEBOOK',
-    NotebookTrustPromptShown = 'DATASCIENCE.NOTEBOOK_TRUST_PROMPT_SHOWN'
+    NotebookTrustPromptShown = 'DATASCIENCE.NOTEBOOK_TRUST_PROMPT_SHOWN',
+    SyncAllCells = 'DS_INTERNAL.SYNC_ALL_CELLS',
+    SyncSingleCell = 'DS_INTERNAL.SYNC_SINGLE_CELL'
 }
 
 export enum NativeKeyboardCommandTelemetry {

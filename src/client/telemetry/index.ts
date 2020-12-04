@@ -1022,4 +1022,8 @@ export interface IEventNamePropertyMapping {
     [Telemetry.VSCNotebookCellTranslationFailed]: {
         isErrorOutput: boolean; // Whether we're trying to translate an error output when we shuldn't be.
     };
+
+    // Sync events
+    [Telemetry.SyncAllCells]: never | undefined;
+    [Telemetry.SyncSingleCell]: never | undefined;
 }

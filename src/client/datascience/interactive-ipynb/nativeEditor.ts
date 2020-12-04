@@ -236,6 +236,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         this.previouslyNotTrusted = !this._model.isTrusted;
     }
 
+    @captureTelemetry(Telemetry.SyncAllCells)
     public async syncAllCells(): Promise<void> {
         const timer = new StopWatch();
         // Ask the UI for all of our all cells
@@ -261,6 +262,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         traceInfo(`Sync all elapsed type: ${timer.elapsedTime}`);
     }
 
+    @captureTelemetry(Telemetry.SyncSingleCell)
     public async syncCell(cellId: string): Promise<void> {
         // Ask the UI for the code for this cell
         this.waitingForMessageResponse = {
