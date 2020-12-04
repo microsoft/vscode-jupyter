@@ -9,7 +9,6 @@ import { IApplicationEnvironment, IApplicationShell } from '../common/applicatio
 import '../common/extensions';
 import {
     BANNER_NAME_DS_SURVEY,
-    BANNER_NAME_INSIDERS_NOTEBOOKS_SURVEY,
     IBrowserService,
     IJupyterExtensionBanner,
     IPersistentState,
@@ -43,10 +42,7 @@ export class DataScienceSurveyBannerLogger implements IInteractiveWindowListener
         @inject(IPersistentStateFactory) private persistentState: IPersistentStateFactory,
         @inject(IJupyterExtensionBanner)
         @named(BANNER_NAME_DS_SURVEY)
-        private readonly dataScienceSurveyBanner: IJupyterExtensionBanner,
-        @inject(IJupyterExtensionBanner)
-        @named(BANNER_NAME_INSIDERS_NOTEBOOKS_SURVEY)
-        private readonly insidersNativeNotebooksSurveyBanner: IJupyterExtensionBanner
+        private readonly dataScienceSurveyBanner: IJupyterExtensionBanner
     ) {}
     // tslint:disable-next-line: no-any
     public get postMessage(): Event<{ message: string; payload: any }> {
@@ -65,10 +61,7 @@ export class DataScienceSurveyBannerLogger implements IInteractiveWindowListener
                     .updateValue(state.value + args.cellIds.length)
                     .then(() => {
                         // On every update try to show the banner.
-                        return Promise.all([
-                            this.dataScienceSurveyBanner.showBanner(),
-                            this.insidersNativeNotebooksSurveyBanner.showBanner()
-                        ]);
+                        return this.dataScienceSurveyBanner.showBanner();
                     })
                     .ignoreErrors();
             }

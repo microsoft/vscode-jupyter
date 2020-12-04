@@ -1,14 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import {
-    BANNER_NAME_DS_SURVEY,
-    BANNER_NAME_INSIDERS_NOTEBOOKS_SURVEY,
-    BANNER_NAME_INTERACTIVE_SHIFTENTER,
-    IJupyterExtensionBanner
-} from '../common/types';
+import { BANNER_NAME_DS_SURVEY, BANNER_NAME_INTERACTIVE_SHIFTENTER, IJupyterExtensionBanner } from '../common/types';
 import { DataScienceSurveyBanner } from '../datascience/dataScienceSurveyBanner';
-import { InsidersNativeNotebooksSurveyBanner } from '../datascience/insidersNativeNotebookSurveyBanner';
 import { RecommendPythonExtensionBanner } from '../datascience/recommendPythonExtensionBanner';
 import { InteractiveShiftEnterBanner } from '../datascience/shiftEnterBanner';
 import { IServiceManager } from '../ioc/types';
@@ -28,11 +22,6 @@ export function registerTypes(serviceManager: IServiceManager) {
         IJupyterExtensionBanner,
         DataScienceSurveyBanner,
         BANNER_NAME_DS_SURVEY
-    );
-    serviceManager.addSingleton<IJupyterExtensionBanner>(
-        IJupyterExtensionBanner,
-        InsidersNativeNotebooksSurveyBanner,
-        BANNER_NAME_INSIDERS_NOTEBOOKS_SURVEY
     );
     serviceManager.addSingleton<IJupyterExtensionBanner>(
         IJupyterExtensionBanner,
