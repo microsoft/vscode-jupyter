@@ -76,6 +76,7 @@ import { ServerStatus } from '../../../datascience-ui/interactive-common/mainSta
 import { IPythonExtensionChecker } from '../../api/types';
 import { isTestExecution, PYTHON_LANGUAGE } from '../../common/constants';
 import { IFileSystem } from '../../common/platform/types';
+import { createDeferred, Deferred } from '../../common/utils/async';
 import { translateKernelLanguageToMonaco } from '../common';
 import { IDataViewerFactory } from '../data-viewing/types';
 import { getCellHashProvider } from '../editor-integration/cellhashprovider';
@@ -143,6 +144,8 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     private executeCancelTokens = new Set<CancellationTokenSource>();
     private loadPromise: Promise<void>;
     private previouslyNotTrusted: boolean = false;
+    // tslint:disable-next-line: no-any
+    private waitingForMessageResponse: { message: string; result: Deferred<any> } | undefined;
 
     constructor(
         listeners: IInteractiveWindowListener[],
@@ -233,6 +236,54 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         this.previouslyNotTrusted = !this._model.isTrusted;
     }
 
+    public async syncAllCells(): Promise<void> {
+        const timer = new StopWatch();
+        // Ask the UI for all of our all cells
+        this.waitingForMessageResponse = {
+            message: InteractiveWindowMessages.ReturnAllCellCode,
+            result: createDeferred<string[]>()
+        };
+        await this.postMessage(InteractiveWindowMessages.GetAllCellCode);
+        const code = await this.waitingForMessageResponse.result.promise;
+
+        // Upload these cells into our model (so they match what is in the UI)
+        this.model.replaceCells(
+            this.model.cells.map((c, i) => {
+                return {
+                    ...c,
+                    data: {
+                        ...c.data,
+                        source: code[i]
+                    }
+                };
+            })
+        );
+        traceInfo(`Sync all elapsed type: ${timer.elapsedTime}`);
+    }
+
+    public async syncCell(cellId: string): Promise<void> {
+        // Ask the UI for the code for this cell
+        this.waitingForMessageResponse = {
+            message: InteractiveWindowMessages.ReturnCellCode,
+            result: createDeferred<ICell | undefined>()
+        };
+        await this.postMessage(InteractiveWindowMessages.GetCellCode, cellId);
+        const code = await this.waitingForMessageResponse.result.promise;
+
+        // Replace all cells, fixing the source for this item
+        this.model.replaceCells(
+            this.model.cells.map((c) => {
+                return {
+                    ...c,
+                    data: {
+                        ...c.data,
+                        source: c.id === cellId ? code : c.data.source
+                    }
+                };
+            })
+        );
+    }
+
     public async show(preserveFocus: boolean = true) {
         await this.loadPromise;
         return super.show(preserveFocus);
@@ -307,6 +358,13 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
             default:
                 break;
+        }
+
+        // Check for a message that fulfills our wait condition
+        if (this.waitingForMessageResponse && this.waitingForMessageResponse.message === message) {
+            const result = this.waitingForMessageResponse.result;
+            this.waitingForMessageResponse = undefined;
+            result.resolve(payload);
         }
     }
 
@@ -657,6 +715,9 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             // If there's any payload, it has the code and the id
             if (cell.id && cell.data.cell_type !== 'messages') {
                 traceInfo(`Executing cell ${cell.id}`);
+
+                // Make sure our model is up to date
+                await this.syncCell(cell.id);
 
                 // Clear the result if we've run before
                 await this.clearResult(cell.id);

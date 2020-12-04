@@ -42,6 +42,7 @@ import { NativeEditorNotebookModel } from '../../../client/datascience/notebookS
 import { NotebookStorageProvider } from '../../../client/datascience/notebookStorage/notebookStorageProvider';
 import { ICell, IJupyterExecution, INotebookServerOptions, ITrustService } from '../../../client/datascience/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
+import { IServiceContainer } from '../../../client/ioc/types';
 import { concatMultilineString } from '../../../datascience-ui/common';
 import { createEmptyCell } from '../../../datascience-ui/interactive-common/mainState';
 import { MockMemento } from '../../mocks/mementos';
@@ -361,8 +362,10 @@ suite('DataScience - Native Editor Storage', () => {
             new NotebookModelFactory(false, instance(mockVSC), instance(cellLanguageService)),
             instance(extensionChecker)
         );
+        const container = mock<IServiceContainer>();
+        when(container.tryGet(anything())).thenReturn(undefined);
 
-        return new NotebookStorageProvider(notebookStorage, [], instance(workspace));
+        return new NotebookStorageProvider(notebookStorage, [], instance(workspace), instance(container));
     }
 
     teardown(() => {

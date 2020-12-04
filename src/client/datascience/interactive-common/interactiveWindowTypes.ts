@@ -143,7 +143,11 @@ export enum InteractiveWindowMessages {
     HasCell = 'has_cell',
     HasCellResponse = 'has_cell_response',
     UpdateExternalCellButtons = 'update_external_cell_buttons',
-    ExecuteExternalCommand = 'execute_external_command'
+    ExecuteExternalCommand = 'execute_external_command',
+    GetCellCode = 'get_cell_code',
+    ReturnCellCode = 'return_cell_code',
+    GetAllCellCode = 'get_all_cell_code',
+    ReturnAllCellCode = 'return_all_cell_code'
 }
 
 export enum IPyWidgetMessages {
@@ -585,6 +589,10 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.ExportNotebookAs]: ICell[];
     public [InteractiveWindowMessages.GetAllCells]: never | undefined;
     public [InteractiveWindowMessages.ReturnAllCells]: ICell[];
+    public [InteractiveWindowMessages.GetCellCode]: string;
+    public [InteractiveWindowMessages.ReturnCellCode]: string;
+    public [InteractiveWindowMessages.GetAllCellCode]: never | undefined;
+    public [InteractiveWindowMessages.ReturnAllCellCode]: string[];
     public [InteractiveWindowMessages.DeleteAllCells]: IAddCellAction;
     public [InteractiveWindowMessages.Undo]: never | undefined;
     public [InteractiveWindowMessages.Redo]: never | undefined;

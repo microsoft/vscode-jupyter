@@ -9,6 +9,7 @@ import {
 } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { CssMessages } from '../../../../client/datascience/messages';
 import { ICell, IExternalCommandFromWebview } from '../../../../client/datascience/types';
+import { concatMultilineString } from '../../../common';
 import { extractInputText, getSelectedAndFocusedInfo, IMainState } from '../../mainState';
 import { isSyncingMessage, postActionToExtension } from '../helpers';
 import { Helpers } from './helpers';
@@ -95,6 +96,25 @@ export namespace Transfer {
     export function getAllCells(arg: CommonReducerArg): IMainState {
         const cells = arg.prevState.cellVMs.map((c) => c.cell);
         postActionToExtension(arg, InteractiveWindowMessages.ReturnAllCells, cells);
+        return arg.prevState;
+    }
+
+    export function getCellCode(arg: CommonReducerArg<CommonActionType, string>): IMainState {
+        const vm = arg.prevState.cellVMs.find((c) => c.cell.id === arg.payload.data);
+        postActionToExtension(
+            arg,
+            InteractiveWindowMessages.ReturnCellCode,
+            vm ? concatMultilineString(vm?.cell.data.source) : ''
+        );
+        return arg.prevState;
+    }
+
+    export function getAllCellCode(arg: CommonReducerArg): IMainState {
+        postActionToExtension(
+            arg,
+            InteractiveWindowMessages.ReturnAllCellCode,
+            arg.prevState.cellVMs.map((vm) => concatMultilineString(vm.cell.data.source))
+        );
         return arg.prevState;
     }
 
