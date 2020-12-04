@@ -45,7 +45,7 @@ export type ShowBannerWithExpiryTime = {
 
 @injectable()
 export class InsidersNativeNotebooksSurveyBanner implements IExtensionSingleActivationService {
-    public get enabled(): boolean {
+    private get enabled(): boolean {
         if (this.applicationEnvironment.uiKind !== UIKind.Desktop) {
             return false;
         }
