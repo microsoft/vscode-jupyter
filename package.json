@@ -2039,9 +2039,5 @@
         "why-is-node-running": "^2.0.3",
         "yargs": "^15.4.1",
         "yargs-parser": "^13.1.2"
-    },
-    "optionalDependencies": {
-        "ffi-napi": "^3.0.1",
-        "ref-napi": "^3.0.1"
     }
 }
