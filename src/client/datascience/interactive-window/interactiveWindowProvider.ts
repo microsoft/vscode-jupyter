@@ -70,7 +70,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
     public get onDidChangeActiveInteractiveWindow(): Event<IInteractiveWindow | undefined> {
         return this._onDidChangeActiveInteractiveWindow.event;
     }
-    public get onDidCreateInteractiveWindow(): Event<IInteractiveWindow | undefined> {
+    public get onDidCreateInteractiveWindow(): Event<IInteractiveWindow> {
         return this._onDidCreateInteractiveWindow.event;
     }
     public get activeWindow(): IInteractiveWindow | undefined {
@@ -80,7 +80,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
         return this._windows;
     }
     private readonly _onDidChangeActiveInteractiveWindow = new EventEmitter<IInteractiveWindow | undefined>();
-    private readonly _onDidCreateInteractiveWindow = new EventEmitter<IInteractiveWindow | undefined>();
+    private readonly _onDidCreateInteractiveWindow = new EventEmitter<IInteractiveWindow>();
     private lastActiveInteractiveWindow: IInteractiveWindow | undefined;
     private postOffice: PostOffice;
     private id: string;
