@@ -1,16 +1,19 @@
 import { inject, injectable } from 'inversify';
 import { UIKind } from 'vscode';
+import { IExtensionSingleActivationService } from '../activation/types';
 import { IApplicationEnvironment, IApplicationShell, IVSCodeNotebook } from '../common/application/types';
 import { Experiments } from '../common/experiments/groups';
 import {
     IBrowserService,
+    IDisposableRegistry,
     IExperimentService,
-    IJupyterExtensionBanner,
     IPersistentState,
     IPersistentStateFactory
 } from '../common/types';
 import * as localize from '../common/utils/localize';
 import { MillisecondsInADay } from '../constants';
+import { KernelState, KernelStateEventArgs } from './notebookExtensibility';
+import { INotebookExtensibility } from './types';
 
 export enum InsidersNotebookSurveyStateKeys {
     ShowBanner = 'ShowInsidersNotebookSurveyBanner',
@@ -41,8 +44,8 @@ export type ShowBannerWithExpiryTime = {
 };
 
 @injectable()
-export class InsidersNativeNotebooksSurveyBanner implements IJupyterExtensionBanner {
-    private get enabled(): boolean {
+export class InsidersNativeNotebooksSurveyBanner implements IExtensionSingleActivationService {
+    public get enabled(): boolean {
         if (this.applicationEnvironment.uiKind !== UIKind.Desktop) {
             return false;
         }
@@ -63,39 +66,43 @@ export class InsidersNativeNotebooksSurveyBanner implements IJupyterExtensionBan
 
     private readonly showBannerState: IPersistentState<ShowBannerWithExpiryTime>;
 
-    private readonly surveyLink: string;
+    private readonly surveyLink: string = 'https://aka.ms/vscjupyternb';
 
     constructor(
         @inject(IApplicationShell) private appShell: IApplicationShell,
         @inject(IPersistentStateFactory) private persistentState: IPersistentStateFactory,
         @inject(IBrowserService) private browserService: IBrowserService,
-        @inject(IVSCodeNotebook) vscodeNotebook: IVSCodeNotebook,
+        @inject(IVSCodeNotebook) private vscodeNotebook: IVSCodeNotebook,
         @inject(IExperimentService) private experimentService: IExperimentService,
         @inject(IApplicationEnvironment) private applicationEnvironment: IApplicationEnvironment,
-        surveyLink = 'https://aka.ms/vscjupyternb'
+        @inject(INotebookExtensibility) private notebookExtensibility: INotebookExtensibility,
+        @inject(IDisposableRegistry) private disposables: IDisposableRegistry
     ) {
-        this.surveyLink = surveyLink;
         this.showBannerState = this.persistentState.createGlobalPersistentState<ShowBannerWithExpiryTime>(
             InsidersNotebookSurveyStateKeys.ShowBanner,
             {
                 data: true
             }
         );
-        vscodeNotebook.onDidOpenNotebookDocument(this.openedNotebook.bind(this));
+    }
+
+    public async activate() {
+        this.vscodeNotebook.onDidOpenNotebookDocument(this.openedNotebook, this, this.disposables);
+        this.notebookExtensibility.onKernelStateChange(this.kernelStateChanged, this, this.disposables);
     }
 
     public async showBanner(): Promise<void> {
         if (this.disabledInCurrentSession) {
             return;
         }
-        // Disable for the current session.
-        this.disabledInCurrentSession = true;
         const executionCount: number = this.getExecutionCount();
         const notebookCount: number = this.getOpenNotebookCount();
         const show = await this.shouldShowBanner(executionCount, notebookCount);
         if (!show) {
             return;
         }
+        // Disable for the current session.
+        this.disabledInCurrentSession = true;
         const response = await this.appShell.showInformationMessage(this.bannerMessage, ...this.bannerLabels);
         switch (response) {
             case this.bannerLabels[DSSurveyLabelIndex.Yes]: {
@@ -131,7 +138,7 @@ export class InsidersNativeNotebooksSurveyBanner implements IJupyterExtensionBan
     private async isInsidersNativeNotebooksUser() {
         return (
             this.applicationEnvironment.channel === 'insiders' &&
-            this.experimentService.inExperiment(Experiments.NativeNotebook)
+            (await this.experimentService.inExperiment(Experiments.NativeNotebook))
         );
     }
 
@@ -165,5 +172,16 @@ export class InsidersNativeNotebooksSurveyBanner implements IJupyterExtensionBan
         );
         await state.updateValue(state.value + 1);
         return this.showBanner();
+    }
+
+    private async kernelStateChanged(kernelStateEvent: KernelStateEventArgs) {
+        if (kernelStateEvent.state === KernelState.executed) {
+            const state = this.persistentState.createGlobalPersistentState<number>(
+                InsidersNotebookSurveyStateKeys.ExecutionCount,
+                0
+            );
+            await state.updateValue(state.value + 1);
+            return this.showBanner();
+        }
     }
 }

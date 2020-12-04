@@ -11,7 +11,7 @@ export type KernelStateEventArgs = {
     cell?: NotebookCell;
 };
 
-enum KernelState {
+export enum KernelState {
     started,
     executed,
     restarted
