@@ -123,6 +123,12 @@ async function activateLegacy(
     const cmdManager = serviceContainer.get<ICommandManager>(ICommandManager);
     cmdManager.executeCommand('setContext', 'jupyter.vscode.channel', applicationEnv.channel).then(noop, noop);
 
+    // "activate" everything else
+
+    const manager = serviceContainer.get<IExtensionActivationManager>(IExtensionActivationManager);
+    context.subscriptions.push(manager);
+    const activationPromise = manager.activate();
+
     // Activate data science features
     const dataScience = serviceManager.get<IDataScience>(IDataScience);
     dataScience.activate().ignoreErrors();
@@ -130,12 +136,6 @@ async function activateLegacy(
     const deprecationMgr = serviceContainer.get<IFeatureDeprecationManager>(IFeatureDeprecationManager);
     deprecationMgr.initialize();
     context.subscriptions.push(deprecationMgr);
-
-    // "activate" everything else
-
-    const manager = serviceContainer.get<IExtensionActivationManager>(IExtensionActivationManager);
-    context.subscriptions.push(manager);
-    const activationPromise = manager.activate();
 
     return { activationPromise };
 }
