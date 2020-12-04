@@ -70,6 +70,9 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
     public get onDidChangeActiveInteractiveWindow(): Event<IInteractiveWindow | undefined> {
         return this._onDidChangeActiveInteractiveWindow.event;
     }
+    public get onDidCreateInteractiveWindow(): Event<IInteractiveWindow | undefined> {
+        return this._onDidCreateInteractiveWindow.event;
+    }
     public get activeWindow(): IInteractiveWindow | undefined {
         return this._windows.find((w) => w.active && w.visible);
     }
@@ -77,6 +80,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
         return this._windows;
     }
     private readonly _onDidChangeActiveInteractiveWindow = new EventEmitter<IInteractiveWindow | undefined>();
+    private readonly _onDidCreateInteractiveWindow = new EventEmitter<IInteractiveWindow | undefined>();
     private lastActiveInteractiveWindow: IInteractiveWindow | undefined;
     private postOffice: PostOffice;
     private id: string;
@@ -213,6 +217,9 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
 
         // Show in the background
         result.show().ignoreErrors();
+
+        // fire created event
+        this._onDidCreateInteractiveWindow.fire(result);
 
         return result;
     }
