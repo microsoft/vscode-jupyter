@@ -61,7 +61,7 @@ export class DataScienceSurveyBannerLogger implements IInteractiveWindowListener
                     .updateValue(state.value + args.cellIds.length)
                     .then(() => {
                         // On every update try to show the banner.
-                        this.dataScienceSurveyBanner.showBanner();
+                        return this.dataScienceSurveyBanner.showBanner();
                     })
                     .ignoreErrors();
             }

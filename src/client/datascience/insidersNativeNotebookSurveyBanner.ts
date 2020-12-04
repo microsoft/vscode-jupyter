@@ -136,10 +136,10 @@ export class InsidersNativeNotebooksSurveyBanner implements IExtensionSingleActi
     }
 
     private async isInsidersNativeNotebooksUser() {
-        return (
-            this.applicationEnvironment.channel === 'insiders' &&
-            (await this.experimentService.inExperiment(Experiments.NativeNotebook))
-        );
+        if (this.applicationEnvironment.channel !== 'insiders') {
+            return false;
+        }
+        return this.experimentService.inExperiment(Experiments.NativeNotebook);
     }
 
     private getOpenNotebookCount(): number {
