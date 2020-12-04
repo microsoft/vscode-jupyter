@@ -66,8 +66,6 @@ export class InsidersNativeNotebooksSurveyBanner implements IExtensionSingleActi
 
     private readonly showBannerState: IPersistentState<ShowBannerWithExpiryTime>;
 
-    private readonly surveyLink: string = 'https://aka.ms/vscjupyternb';
-
     constructor(
         @inject(IApplicationShell) private appShell: IApplicationShell,
         @inject(IPersistentStateFactory) private persistentState: IPersistentStateFactory,
@@ -132,7 +130,7 @@ export class InsidersNativeNotebooksSurveyBanner implements IExtensionSingleActi
     }
 
     public async launchSurvey(): Promise<void> {
-        this.browserService.launch(this.surveyLink);
+        this.browserService.launch('https://aka.ms/vscjupyternb');
     }
 
     private async isInsidersNativeNotebooksUser() {
