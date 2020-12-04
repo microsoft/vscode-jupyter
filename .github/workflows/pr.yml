@@ -30,7 +30,7 @@ env:
 jobs:
   build-vsix:
     name: Build VSIX
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     if: github.repository == 'microsoft/vscode-jupyter'
     steps:
       - name: Checkout

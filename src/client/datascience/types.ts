@@ -1377,7 +1377,7 @@ export interface IJupyterUriProviderRegistration {
 }
 export const IDigestStorage = Symbol('IDigestStorage');
 export interface IDigestStorage {
-    readonly key: Promise<string | undefined>;
+    readonly key: Promise<string>;
     saveDigest(uri: Uri, digest: string): Promise<void>;
     containsDigest(uri: Uri, digest: string): Promise<boolean>;
 }
@@ -1425,12 +1425,4 @@ export interface IExternalWebviewCellButton {
 export interface IExternalCommandFromWebview {
     buttonId: string;
     cell: ICell;
-}
-
-// Smoke tests compile the tests but exercise the VSIX, so Symbols are not shared
-// Ensure we reuse Symbols created for existing keys so that we can retrieve the
-// Symbol matching this key from the extension API serviceManager
-export const ISystemPseudoRandomNumberGenerator = Symbol.for('ISystemPseudoRandomNumberGenerator');
-export interface ISystemPseudoRandomNumberGenerator {
-    randomBytes(numBytes: number): Promise<Buffer>;
 }
