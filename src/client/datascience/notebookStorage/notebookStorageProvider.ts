@@ -40,17 +40,16 @@ export class NotebookStorageProvider implements INotebookStorageProvider {
         disposables.push(this);
     }
     public async save(model: INotebookModel, cancellation: CancellationToken) {
-        // Because the sync stuff is circular, don't ask for it until needed
-        const modelSync = this.serviceContainer.tryGet<INotebookModelSynchronization>(INotebookModelSynchronization);
-        if (modelSync) {
-            // When saving, we should make sure to sync the model with the UI (edits seem to be being droppped randomly in hard to repro situations)
-            await modelSync.syncAllCells(model);
-        }
+        // When saving, make sure to sync the model first
+        await this.syncModel(model);
 
         // Then actually save the model.
         await this.storage.save(model, cancellation);
     }
     public async saveAs(model: INotebookModel, targetResource: Uri) {
+        // When saving, make sure to sync the model first
+        await this.syncModel(model);
+
         const oldUri = model.file;
         await this.storage.saveAs(model, targetResource);
         if (model instanceof VSCodeNotebookModel) {
@@ -132,5 +131,14 @@ export class NotebookStorageProvider implements INotebookStorageProvider {
             this.disposables
         );
         return model;
+    }
+
+    private async syncModel(model: INotebookModel): Promise<void> {
+        // Because the sync stuff is circular, don't ask for it until needed (it depends upon something that depends upon storage)
+        const modelSync = this.serviceContainer.tryGet<INotebookModelSynchronization>(INotebookModelSynchronization);
+        if (modelSync) {
+            // When saving, we should make sure to sync the model with the UI (edits seem to be being droppped randomly in hard to repro situations)
+            return modelSync.syncAllCells(model);
+        }
     }
 }
