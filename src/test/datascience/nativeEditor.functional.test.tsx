@@ -1682,6 +1682,49 @@ df.head()`;
                             );
                         }
                     });
+                    test('Exec Cell has the same value as the UI', async () => {
+                        const cellIndex = 3;
+                        await addCell(mount, '', false);
+                        assert.ok(isCellFocused(wrapper, 'NativeCell', cellIndex));
+                        assert.equal(wrapper.find('NativeCell').length, 4, 'Cell not added');
+
+                        const notebookEditorProvider = ioc.get<INotebookEditorProvider>(INotebookEditorProvider);
+                        const editor = notebookEditorProvider.editors[0];
+                        const model = (editor as NativeEditorWebView).model;
+
+                        // Add some code into the cell
+                        const editorEnzyme = getNativeFocusedEditor(wrapper);
+                        typeCode(editorEnzyme, 'print("foo")\n');
+
+                        // Execute the cell without moving off of it
+                        let executePromise = waitForMessage(ioc, InteractiveWindowMessages.ExecutionRendered);
+                        enterEditorKey(editorEnzyme, { code: 'Enter', editorInfo: undefined, ctrlKey: true });
+                        await executePromise;
+
+                        // Verify our model has the cell
+                        assert.equal(concatMultilineString(model.cells[3].data.source), 'print("foo")\n', 'Model not updated');
+
+                        // Add some more code
+                        typeCode(editorEnzyme, 'print("foo")\n');
+
+                        executePromise = waitForMessage(ioc, InteractiveWindowMessages.ExecutionRendered);
+                        enterEditorKey(editorEnzyme, { code: 'Enter', editorInfo: undefined, ctrlKey: true });
+                        await executePromise;
+
+                        // Verify our model has the cell
+                        assert.equal(concatMultilineString(model.cells[3].data.source), 'print("foo")\nprint("foo")\n', 'Model not updated on second update');
+
+                        // Delete some code and add some code
+                        typeCode(editorEnzyme, '\b\b\bbar")\n');
+
+                        executePromise = waitForMessage(ioc, InteractiveWindowMessages.ExecutionRendered);
+                        enterEditorKey(editorEnzyme, { code: 'Enter', editorInfo: undefined, ctrlKey: true });
+                        await executePromise;
+
+                        // Verify our model has the cell
+                        assert.equal(concatMultilineString(model.cells[3].data.source), 'print("foo")\nprint("foobar")\n', 'Model not updated on third update');
+                        
+                    });                    
                     test('Updates are not lost when switching to markdown (update redux store and model)', async () => {
                         const cellIndex = 3;
                         await addCell(mount, '', false);
