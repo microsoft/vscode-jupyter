@@ -465,6 +465,10 @@ export interface IInteractiveWindowProvider {
      */
     readonly onDidChangeActiveInteractiveWindow: Event<IInteractiveWindow | undefined>;
     /**
+     * Event fired when an interactive window is created
+     */
+    readonly onDidCreateInteractiveWindow: Event<IInteractiveWindow>;
+    /**
      * Gets or creates a new interactive window and associates it with the owner. If no owner, marks as a non associated.
      * @param owner file that started this interactive window
      */

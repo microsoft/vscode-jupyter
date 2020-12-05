@@ -35,7 +35,7 @@ import { KernelMessage } from '@jupyterlab/services';
 // tslint:disable-next-line: no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
 import { Uri } from 'vscode';
-import { VSCodeNotebookKernelMetadata } from '../kernelProvider';
+import { VSCodeNotebookKernelMetadata } from '../kernelWithMetadata';
 import { chainWithPendingUpdates } from './notebookUpdater';
 
 // This is the custom type we are adding into nbformat.IBaseCellMetadata

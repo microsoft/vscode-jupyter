@@ -158,6 +158,7 @@ export namespace EditorContexts {
     export const HaveCellSelected = 'jupyter.havecellselected';
     export const IsNotebookTrusted = 'jupyter.isnotebooktrusted';
     export const CanRestartNotebookKernel = 'jupyter.notebookeditor.canrestartNotebookkernel';
+    export const IsPythonNotebook = 'jupyter.ispythonnotebook';
 }
 
 export namespace RegExpValues {
@@ -359,6 +360,8 @@ export enum Telemetry {
     CompletionTimeFromLS = 'DS_INTERNAL.COMPLETION_TIME_FROM_LS',
     CompletionTimeFromJupyter = 'DS_INTERNAL.COMPLETION_TIME_FROM_JUPYTER',
     NotebookLanguage = 'DATASCIENCE.NOTEBOOK_LANGUAGE',
+    NumberOfLocalKernelSpecs = 'DS_INTERNAL.LOCAL_KERNEL_SPEC_COUNT',
+    NumberOfRemoteKernelSpecs = 'DS_INTERNAL.REMOTE_KERNEL_SPEC_COUNT',
     KernelSpecNotFound = 'DS_INTERNAL.KERNEL_SPEC_NOT_FOUND',
     KernelRegisterFailed = 'DS_INTERNAL.KERNEL_REGISTER_FAILED',
     KernelEnumeration = 'DS_INTERNAL.KERNEL_ENUMERATION',
@@ -366,6 +369,8 @@ export enum Telemetry {
     KernelProviderPerf = 'DS_INTERNAL.KERNEL_PROVIDER_PERF',
     GetPreferredKernelPerf = 'DS_INTERNAL.GET_PREFERRED_KERNEL_PERF',
     KernelFinderPerf = 'DS_INTERNAL.KERNEL_FINDER_PERF',
+    KernelListingPerf = 'DS_INTERNAL.KERNEL_LISTING_PERF',
+    NativeNotebookKernelSelectionPerf = 'DS_INTERNAL.NATIVE_NOTEBOOK_KERNEL_SELECTION_PERF',
     JupyterInstallFailed = 'DS_INTERNAL.JUPYTER_INSTALL_FAILED',
     UserInstalledModule = 'DATASCIENCE.USER_INSTALLED_MODULE',
     JupyterCommandLineNonDefault = 'DS_INTERNAL.JUPYTER_CUSTOM_COMMAND_LINE',
@@ -490,15 +495,33 @@ export namespace Settings {
 export namespace DataFrameLoading {
     export const SysPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'vscode_datascience_helpers', 'dataframes');
     export const DataFrameSysImport = `import sys\nsys.path.append("${SysPath.replace(/\\/g, '\\\\')}")`;
-    export const DataFrameInfoImportName = '_VSCODE_InfoImport';
-    export const DataFrameInfoImport = `import vscodeGetDataFrameInfo as ${DataFrameInfoImportName}`;
-    export const DataFrameInfoFunc = `${DataFrameInfoImportName}._VSCODE_getDataFrameInfo`;
-    export const DataFrameRowImportName = '_VSCODE_RowImport';
-    export const DataFrameRowImport = `import vscodeGetDataFrameRows as ${DataFrameRowImportName}`;
-    export const DataFrameRowFunc = `${DataFrameRowImportName}._VSCODE_getDataFrameRows`;
+    export const ScriptPath = path.join(SysPath, 'vscodeDataFrame.py');
+
+    export const DataFrameInfoFunc = '_VSCODE_getDataFrameInfo';
+    export const DataFrameRowFunc = '_VSCODE_getDataFrameRows';
+
+    // Constants for the debugger which imports the script files
+    export const DataFrameImportName = '_VSCODE_DataFrameImport';
+    export const DataFrameImport = `import vscodeDataFrame as ${DataFrameImportName}`;
+    export const DataFrameInfoImportFunc = `${DataFrameImportName}._VSCODE_getDataFrameInfo`;
+    export const DataFrameRowImportFunc = `${DataFrameImportName}._VSCODE_getDataFrameRows`;
+}
+
+export namespace GetVariableInfo {
+    export const SysPath = path.join(
+        EXTENSION_ROOT_DIR,
+        'pythonFiles',
+        'vscode_datascience_helpers',
+        'getVariableInfo'
+    );
+    export const GetVariableInfoSysImport = `import sys\nsys.path.append("${SysPath.replace(/\\/g, '\\\\')}")`;
+    export const ScriptPath = path.join(SysPath, 'vscodeGetVariableInfo.py');
+    export const VariableInfoFunc = '_VSCODE_getVariableInfo';
+
+    // Constants for the debugger which imports the script files
     export const VariableInfoImportName = '_VSCODE_VariableImport';
     export const VariableInfoImport = `import vscodeGetVariableInfo as ${VariableInfoImportName}`;
-    export const VariableInfoFunc = `${VariableInfoImportName}._VSCODE_getVariableInfo`;
+    export const VariableInfoImportFunc = `${VariableInfoImportName}._VSCODE_getVariableInfo`;
 }
 
 export namespace Identifiers {

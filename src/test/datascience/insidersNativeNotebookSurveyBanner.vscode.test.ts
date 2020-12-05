@@ -8,26 +8,34 @@
 import * as fakeTimers from '@sinonjs/fake-timers';
 import * as sinon from 'sinon';
 import { anything, instance, mock, when, verify, resetCalls } from 'ts-mockito';
-import { IApplicationEnvironment, IApplicationShell } from '../../client/common/application/types';
-import { IBrowserService, IPersistentState, IPersistentStateFactory } from '../../client/common/types';
+import { IApplicationEnvironment, IApplicationShell, IVSCodeNotebook } from '../../client/common/application/types';
 import {
-    DataScienceSurveyBanner,
-    DSSurveyStateKeys,
-    ShowBannerWithExpiryTime
-} from '../../client/datascience/dataScienceSurveyBanner';
-import { INotebookEditorProvider } from '../../client/datascience/types';
+    IBrowserService,
+    IExperimentService,
+    IPersistentState,
+    IPersistentStateFactory
+} from '../../client/common/types';
+import { ShowBannerWithExpiryTime } from '../../client/datascience/dataScienceSurveyBanner';
 import { initialize } from '../initialize';
 import { noop } from '../../client/common/utils/misc';
 import { UIKind } from 'vscode';
 import * as localize from '../../client/common/utils/localize';
 import { MillisecondsInADay } from '../../client/constants';
+import {
+    InsidersNativeNotebooksSurveyBanner,
+    InsidersNotebookSurveyStateKeys
+} from '../../client/datascience/insidersNativeNotebookSurveyBanner';
+import { Experiments } from '../../client/common/experiments/groups';
+import { INotebookExtensibility } from '../../client/datascience/types';
 
-suite('DataScience Survey Banner', () => {
+suite('Insiders Native Notebooks Survey Banner', () => {
     let appShell: IApplicationShell;
     let browser: IBrowserService;
-    let bannerService: DataScienceSurveyBanner;
-    let editorProvider: INotebookEditorProvider;
+    let experimentService: IExperimentService;
+    let bannerService: InsidersNativeNotebooksSurveyBanner;
+    let vscNotebook: IVSCodeNotebook;
     let persistentStateFactory: IPersistentStateFactory;
+    let notebookExtensibility: INotebookExtensibility;
     let executionCountState: IPersistentState<number>;
     let openNotebookCountState: IPersistentState<number>;
     let showBannerState: IPersistentState<ShowBannerWithExpiryTime>;
@@ -43,46 +51,66 @@ suite('DataScience Survey Banner', () => {
         clock = fakeTimers.install();
         appShell = mock<IApplicationShell>();
         browser = mock<IBrowserService>();
-        editorProvider = mock<INotebookEditorProvider>();
+        experimentService = mock<IExperimentService>();
+        vscNotebook = mock<IVSCodeNotebook>();
         appEnv = mock<IApplicationEnvironment>();
         persistentStateFactory = mock<IPersistentStateFactory>();
+        notebookExtensibility = mock<INotebookExtensibility>();
 
         when(appEnv.uiKind).thenReturn(UIKind.Desktop);
-        when(appEnv.channel).thenReturn('stable');
-        when(editorProvider.onDidOpenNotebookEditor).thenReturn(noop as any);
+        when(appEnv.channel).thenReturn('insiders');
+        when(experimentService.inExperiment(Experiments.NativeNotebook)).thenResolve(true);
+        when(vscNotebook.onDidOpenNotebookDocument(anything(), anything(), anything())).thenReturn(noop as any);
+        when(notebookExtensibility.onKernelStateChange(anything(), anything(), anything())).thenReturn(noop as any);
         const realStateFactory = api.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
         openNotebookCountState = realStateFactory.createGlobalPersistentState<number>(
-            DSSurveyStateKeys.OpenNotebookCount,
+            InsidersNotebookSurveyStateKeys.OpenNotebookCount,
             0
         );
-        executionCountState = realStateFactory.createGlobalPersistentState<number>(DSSurveyStateKeys.ExecutionCount, 0);
+        executionCountState = realStateFactory.createGlobalPersistentState<number>(
+            InsidersNotebookSurveyStateKeys.ExecutionCount,
+            0
+        );
         showBannerState = realStateFactory.createGlobalPersistentState<ShowBannerWithExpiryTime>(
-            DSSurveyStateKeys.ShowBanner,
+            InsidersNotebookSurveyStateKeys.ShowBanner,
             { data: true }
         );
 
         when(
-            persistentStateFactory.createGlobalPersistentState(DSSurveyStateKeys.OpenNotebookCount, anything())
+            persistentStateFactory.createGlobalPersistentState(
+                InsidersNotebookSurveyStateKeys.OpenNotebookCount,
+                anything()
+            )
         ).thenReturn(openNotebookCountState);
         when(
-            persistentStateFactory.createGlobalPersistentState(DSSurveyStateKeys.ExecutionCount, anything())
+            persistentStateFactory.createGlobalPersistentState(
+                InsidersNotebookSurveyStateKeys.ExecutionCount,
+                anything()
+            )
         ).thenReturn(executionCountState);
-        when(persistentStateFactory.createGlobalPersistentState(DSSurveyStateKeys.ShowBanner, anything())).thenReturn(
-            showBannerState
-        );
         when(
-            persistentStateFactory.createGlobalPersistentState(DSSurveyStateKeys.ShowBanner, anything(), anything())
+            persistentStateFactory.createGlobalPersistentState(InsidersNotebookSurveyStateKeys.ShowBanner, anything())
+        ).thenReturn(showBannerState);
+        when(
+            persistentStateFactory.createGlobalPersistentState(
+                InsidersNotebookSurveyStateKeys.ShowBanner,
+                anything(),
+                anything()
+            )
         ).thenReturn(showBannerState);
 
         bannerService = createBannerService();
     });
     function createBannerService() {
-        return new DataScienceSurveyBanner(
+        return new InsidersNativeNotebooksSurveyBanner(
             instance(appShell),
             instance(persistentStateFactory),
             instance(browser),
-            instance(editorProvider),
-            instance(appEnv)
+            instance(vscNotebook),
+            instance(experimentService),
+            instance(appEnv),
+            instance(notebookExtensibility),
+            []
         );
     }
     test('Confirm prompt is displayed & only once per session', async () => {

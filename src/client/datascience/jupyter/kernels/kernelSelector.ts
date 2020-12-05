@@ -22,6 +22,7 @@ import { captureTelemetry, IEventNamePropertyMapping, sendTelemetryEvent } from 
 import { sendNotebookOrKernelLanguageTelemetry } from '../../common';
 import { Commands, Settings, Telemetry } from '../../constants';
 import { IKernelFinder } from '../../kernel-launcher/types';
+import { isPythonNotebook } from '../../notebook/helpers/helpers';
 import { getInterpreterInfoStoredInMetadata } from '../../notebookStorage/baseModel';
 import { reportAction } from '../../progress/decorator';
 import { ReportableAction } from '../../progress/types';
@@ -353,11 +354,11 @@ export class KernelSelector implements IKernelSelectionUsage {
             return cloneDeep(item);
         } else if (selection.kind === 'connectToLiveKernel') {
             sendNotebookOrKernelLanguageTelemetry(Telemetry.SwitchToExistingKernel, selection.kernelModel.language);
-            // tslint:disable-next-line: no-any
-            const interpreter =
-                selection.kernelModel && this.extensionChecker.isPythonExtensionInstalled
-                    ? await this.kernelService.findMatchingInterpreter(selection.kernelModel, cancelToken)
-                    : undefined;
+            const interpreter = selection.interpreter
+                ? selection.interpreter
+                : selection.kernelModel && this.extensionChecker.isPythonExtensionInstalled
+                ? await this.kernelService.findMatchingInterpreter(selection.kernelModel, cancelToken)
+                : undefined;
             return cloneDeep({
                 interpreter,
                 kernelModel: selection.kernelModel,
@@ -365,10 +366,11 @@ export class KernelSelector implements IKernelSelectionUsage {
             });
         } else if (selection.kernelSpec) {
             sendNotebookOrKernelLanguageTelemetry(Telemetry.SwitchToExistingKernel, selection.kernelSpec.language);
-            const interpreter =
-                selection.kernelSpec && this.extensionChecker.isPythonExtensionInstalled
-                    ? await this.kernelService.findMatchingInterpreter(selection.kernelSpec, cancelToken)
-                    : undefined;
+            const interpreter = selection.interpreter
+                ? selection.interpreter
+                : selection.kernelSpec && this.extensionChecker.isPythonExtensionInstalled
+                ? await this.kernelService.findMatchingInterpreter(selection.kernelSpec, cancelToken)
+                : undefined;
             await this.kernelService.updateKernelEnvironment(interpreter, selection.kernelSpec, cancelToken);
             return cloneDeep({ kernelSpec: selection.kernelSpec, interpreter, kind: 'startUsingKernelSpec' });
         } else if (selection.interpreter && type === 'raw') {
@@ -567,7 +569,8 @@ export class KernelSelector implements IKernelSelectionUsage {
             const kernelSpecs = await this.kernelFinder.listKernelSpecs(resource);
 
             // Do a bit of hack and pick a python one first if the resource is a python file
-            if (resource?.fsPath && resource.fsPath.endsWith('.py')) {
+            // Or if its a python notebook.
+            if (isPythonNotebook(notebookMetadata) || (resource?.fsPath && resource.fsPath.endsWith('.py'))) {
                 const firstPython = kernelSpecs.find((k) => k.language === 'python');
                 if (firstPython) {
                     return { kind: 'startUsingKernelSpec', kernelSpec: firstPython, interpreter: undefined };

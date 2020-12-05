@@ -15,6 +15,7 @@ import { traceError } from '../../common/logger';
 import { IDisposable, IDisposableRegistry, IExperimentService } from '../../common/types';
 import { setSharedProperty } from '../../telemetry';
 import { EditorContexts } from '../constants';
+import { isPythonNotebook } from '../notebook/helpers/helpers';
 import {
     IInteractiveWindow,
     IInteractiveWindowProvider,
@@ -39,6 +40,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
     private isNotebookTrusted: ContextKey;
     private isPythonFileActive: boolean = false;
     private inNativeNotebookExperiment: boolean = false;
+    private isPythonNotebook: ContextKey;
     constructor(
         @inject(IInteractiveWindowProvider) private readonly interactiveProvider: IInteractiveWindowProvider,
         @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider,
@@ -71,6 +73,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         );
         this.hasNativeNotebookCells = new ContextKey(EditorContexts.HaveNativeCells, this.commandManager);
         this.isNotebookTrusted = new ContextKey(EditorContexts.IsNotebookTrusted, this.commandManager);
+        this.isPythonNotebook = new ContextKey(EditorContexts.IsPythonNotebook, this.commandManager);
     }
     public dispose() {
         this.disposables.forEach((item) => item.dispose());
@@ -115,6 +118,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         setSharedProperty('ds_notebookeditor', e?.type);
         this.nativeContext.set(!!e).ignoreErrors();
         this.isNotebookTrusted.set(e?.model?.isTrusted === true).ignoreErrors();
+        this.isPythonNotebook.set(isPythonNotebook(e?.model?.metadata)).ignoreErrors();
         this.updateMergedContexts();
         this.updateContextOfActiveNotebookKernel(e);
     }

@@ -132,12 +132,12 @@ import { ExportBase } from '../../client/datascience/export/exportBase';
 import { ExportFileOpener } from '../../client/datascience/export/exportFileOpener';
 import { ExportInterpreterFinder } from '../../client/datascience/export/exportInterpreterFinder';
 import { ExportManager } from '../../client/datascience/export/exportManager';
-import { ExportManagerFilePicker } from '../../client/datascience/export/exportManagerFilePicker';
+import { ExportDialog } from '../../client/datascience/export/exportDialog';
 import { ExportToHTML } from '../../client/datascience/export/exportToHTML';
 import { ExportToPDF } from '../../client/datascience/export/exportToPDF';
 import { ExportToPython } from '../../client/datascience/export/exportToPython';
 import { ExportUtil } from '../../client/datascience/export/exportUtil';
-import { ExportFormat, IExport, IExportManager, IExportManagerFilePicker } from '../../client/datascience/export/types';
+import { ExportFormat, IExport, IExportManager, IExportDialog } from '../../client/datascience/export/types';
 import { IntellisenseProvider } from '../../client/datascience/interactive-common/intellisense/intellisenseProvider';
 import { NotebookProvider } from '../../client/datascience/interactive-common/notebookProvider';
 import { NotebookServerProvider } from '../../client/datascience/interactive-common/notebookServerProvider';
@@ -476,7 +476,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<IExport>(IExport, ExportBase, 'Export Base');
         this.serviceManager.addSingleton<ExportUtil>(ExportUtil, ExportUtil);
         this.serviceManager.addSingleton<ExportCommands>(ExportCommands, ExportCommands);
-        this.serviceManager.addSingleton<IExportManagerFilePicker>(IExportManagerFilePicker, ExportManagerFilePicker);
+        this.serviceManager.addSingleton<IExportDialog>(IExportDialog, ExportDialog);
         this.serviceManager.addSingleton<INbConvertInterpreterDependencyChecker>(
             INbConvertInterpreterDependencyChecker,
             NbConvertInterpreterDependencyChecker
@@ -1267,9 +1267,13 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
     private getResourceKey(resource: Resource): string {
         if (!this.disposed) {
-            const workspace = this.serviceManager.get<IWorkspaceService>(IWorkspaceService);
-            const workspaceFolderUri = JupyterSettings.getSettingsUriAndTarget(resource, workspace).uri;
-            return workspaceFolderUri ? workspaceFolderUri.fsPath : '';
+            try {
+                const workspace = this.serviceManager.get<IWorkspaceService>(IWorkspaceService);
+                const workspaceFolderUri = JupyterSettings.getSettingsUriAndTarget(resource, workspace).uri;
+                return workspaceFolderUri ? workspaceFolderUri.fsPath : '';
+            } catch {
+                // May as well be disposed
+            }
         }
         return '';
     }

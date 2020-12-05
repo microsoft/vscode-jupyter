@@ -15,7 +15,7 @@ export class PathUtils implements IPathUtils {
     private readonly utils: FileSystemPathUtils;
     constructor(
         // "true" if targeting a Windows host.
-        @inject(IsWindows) isWindows: boolean
+        @inject(IsWindows) private readonly isWindows: boolean
     ) {
         const osType = isWindows ? OSType.Windows : OSType.Unknown;
         // We cannot just use FileSystemPathUtils.withDefaults() because
@@ -48,6 +48,11 @@ export class PathUtils implements IPathUtils {
     }
 
     public getDisplayName(pathValue: string, cwd?: string): string {
+        // Paths on windows can either contain \ or / Both work.
+        // Thus, C:\Python.exe is the same as C:/Python.exe
+        // If we're on windows ensure we convert the / in pathValue to \.
+        // For cases like here https://github.com/microsoft/vscode-jupyter/issues/399
+        pathValue = this.isWindows ? pathValue.replace(/\//g, '\\') : pathValue;
         return this.utils.getDisplayName(pathValue, cwd);
     }
 

@@ -421,8 +421,15 @@ jobs:
           python -c 'import sys;print(sys.executable)'
 
       - name: Set CI Path
+        if: matrix.test-suite != 'conda'
         uses: ./.github/actions/set-python
         id: set-python
+        with:
+          PYTHON_VERSION: ${{matrix.python}}
+
+      - name: Set CI Path (conda)
+        if: matrix.test-suite == 'conda'
+        uses: ./.github/actions/set-python-conda
         with:
           PYTHON_VERSION: ${{matrix.python}}
 
@@ -654,6 +661,7 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: ${{matrix.python}}
+
       - name: Checkout
         uses: actions/checkout@v2
 
@@ -661,6 +669,12 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: ${{matrix.python}}
+
+      - name: Set CI Path
+        uses: ./.github/actions/set-python
+        id: set-python
+        with:
+          PYTHON_VERSION: ${{matrix.python}}
 
       - name: Upgrade pip
         run: python -m pip install -U pip
@@ -678,10 +692,16 @@ jobs:
       - name: Install dependencies (npm ci)
         run: npm ci --prefer-offline
 
-      - name: Install test requirements
+      - name: pip install system test requirements
         run: |
-          python -m pip install numpy
-          python -m pip install --upgrade jupyter
+          python -m pip install --upgrade -r build/test-requirements.txt
+          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
+        shell: bash
+
+      - name: pip install smoke test requirements
+        run: |
+          python -m pip install --upgrade -r build/smoke-test-requirements.txt
+        shell: bash
 
       # Compile the test files.
       - name: Prepare for smoke tests

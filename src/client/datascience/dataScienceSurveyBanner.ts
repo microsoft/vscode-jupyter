@@ -9,7 +9,6 @@ import { IApplicationEnvironment, IApplicationShell } from '../common/applicatio
 import '../common/extensions';
 import {
     BANNER_NAME_DS_SURVEY,
-    BANNER_NAME_INSIDERS_NOTEBOOKS_SURVEY,
     IBrowserService,
     IJupyterExtensionBanner,
     IPersistentState,
@@ -43,10 +42,7 @@ export class DataScienceSurveyBannerLogger implements IInteractiveWindowListener
         @inject(IPersistentStateFactory) private persistentState: IPersistentStateFactory,
         @inject(IJupyterExtensionBanner)
         @named(BANNER_NAME_DS_SURVEY)
-        private readonly dataScienceSurveyBanner: IJupyterExtensionBanner,
-        @inject(IJupyterExtensionBanner)
-        @named(BANNER_NAME_INSIDERS_NOTEBOOKS_SURVEY)
-        private readonly insidersNativeNotebooksSurveyBanner: IJupyterExtensionBanner
+        private readonly dataScienceSurveyBanner: IJupyterExtensionBanner
     ) {}
     // tslint:disable-next-line: no-any
     public get postMessage(): Event<{ message: string; payload: any }> {
@@ -65,10 +61,7 @@ export class DataScienceSurveyBannerLogger implements IInteractiveWindowListener
                     .updateValue(state.value + args.cellIds.length)
                     .then(() => {
                         // On every update try to show the banner.
-                        return Promise.all([
-                            this.dataScienceSurveyBanner.showBanner(),
-                            this.insidersNativeNotebooksSurveyBanner.showBanner()
-                        ]);
+                        return this.dataScienceSurveyBanner.showBanner();
                     })
                     .ignoreErrors();
             }
@@ -136,11 +129,12 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner {
         }
         const executionCount: number = this.getExecutionCount();
         const notebookCount: number = this.getOpenNotebookCount();
-        const show = await this.shouldShowBanner(executionCount, notebookCount);
+        const show = this.shouldShowBanner(executionCount, notebookCount);
         if (!show) {
             return;
         }
-
+        // Disable for the current session.
+        this.disabledInCurrentSession = true;
         const response = await this.appShell.showInformationMessage(this.bannerMessage, ...this.bannerLabels);
         switch (response) {
             case this.bannerLabels[DSSurveyLabelIndex.Yes]: {
@@ -154,14 +148,11 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner {
                 await this.disable(3);
                 break;
             }
-            default: {
-                // Disable for the current session.
-                this.disabledInCurrentSession = true;
-            }
+            default:
         }
     }
 
-    public async shouldShowBanner(executionCount: number, notebookOpenCount: number): Promise<boolean> {
+    public shouldShowBanner(executionCount: number, notebookOpenCount: number) {
         if (!this.enabled || this.disabledInCurrentSession) {
             return false;
         }
