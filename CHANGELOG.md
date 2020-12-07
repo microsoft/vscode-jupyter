@@ -43,7 +43,13 @@
 1. Use notebookIdentity instead of the notebook when handling external buttons. It handles the case when the user doesn't autostart the kernel.
    ([#414](https://github.com/Microsoft/vscode-jupyter/issues/414))
 
+## 2020.11.3 (03 December 2020)
 
+### Fixes
+
+1. Display survey prompt once per session.
+   ([#4077](https://github.com/Microsoft/vscode-jupyter/issues/4077))
+   
 ## 2020.11.2 (30 November 2020)
 
 ### Fixes
