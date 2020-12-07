@@ -111,7 +111,15 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         await openNotebook(api.serviceContainer, testJuliaNb.fsPath);
         await waitForKernelToGetAutoSelected('julia');
     });
-    test('Automatically pick csharp kernel when opening a Julia Notebook', async () => {
+    test('Automatically pick csharp kernel when opening a Julia Notebook', async function () {
+        // The .NET interactive CLI does not work if you do not have Jupyter installed.
+        // We install Jupyter on CI when we have tests with Python extension.
+        // Hence if python extension is not installed, then assume jupyter is not installed on CI.
+        // Meaning, no python extension, no jupyter, hence no .NET kernel either.
+        const pythonChecker = api.serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker);
+        if (!pythonChecker.isPythonExtensionInstalled) {
+            return this.skip();
+        }
         await openNotebook(api.serviceContainer, testCSharpNb.fsPath);
         await waitForKernelToGetAutoSelected('c#');
     });
