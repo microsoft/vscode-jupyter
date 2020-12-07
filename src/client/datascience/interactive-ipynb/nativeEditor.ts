@@ -256,7 +256,8 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                         ...c.data,
                         source: code[i]
                     }
-                };
+                    // tslint:disable-next-line: no-any
+                } as any; // Deal with nyc problems
             })
         );
         traceInfo(`Sync all elapsed type: ${timer.elapsedTime}`);
@@ -281,7 +282,8 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                         ...c.data,
                         source: c.id === cellId ? code : c.data.source
                     }
-                };
+                    // tslint:disable-next-line: no-any
+                } as any; // Deal with nyc problems
             })
         );
     }
