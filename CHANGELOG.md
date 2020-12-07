@@ -43,13 +43,30 @@
 1. Use notebookIdentity instead of the notebook when handling external buttons. It handles the case when the user doesn't autostart the kernel.
    ([#414](https://github.com/Microsoft/vscode-jupyter/issues/414))
 
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+
+-   [Python Extension](https://marketplace.visualstudio.com/items?itemName=ms-python.python)
+-   [debugpy](https://pypi.org/project/debugpy/)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+
+-   [Jupyter](https://jupyter.org/):
+    [Notebooks](https://jupyter-notebook.readthedocs.io/en/latest/?badge=latest),
+    [JupyterHub](https://jupyterhub.readthedocs.io/en/stable/),
+    [ipywidgets](https://ipywidgets.readthedocs.io/en/latest/),
+
+
 ## 2020.11.3 (03 December 2020)
 
 ### Fixes
 
 1. Display survey prompt once per session.
    ([#4077](https://github.com/Microsoft/vscode-jupyter/issues/4077))
-   
+
 ## 2020.11.2 (30 November 2020)
 
 ### Fixes
@@ -61,22 +78,6 @@
 1. Migrate references to python.dataScience.\* in when clauses of keybindings.json.
    ([#1088](https://github.com/Microsoft/vscode-jupyter/issues/1088))
 
-### Thanks
-
-Thanks to the following projects which we fully rely on to provide some of
-our features:
-
--   [Python Extension](https://marketplace.visualstudio.com/items?itemName=ms-python.python)
--   [debugpy](https://pypi.org/project/debugpy/)
-
-Also thanks to the various projects we provide integrations with which help
-make this extension useful:
-
--   [Jupyter](https://jupyter.org/):
-    [Notebooks](https://jupyter-notebook.readthedocs.io/en/latest/?badge=latest),
-    [JupyterHub](https://jupyterhub.readthedocs.io/en/stable/),
-    [ipywidgets](https://ipywidgets.readthedocs.io/en/latest/),
-
 ## 2020.11.1 (19 November 2020)
 
 ### Fixes
@@ -87,22 +88,6 @@ make this extension useful:
    ([#1074](https://github.com/Microsoft/vscode-jupyter/issues/1074))
 1. Show kernel picker in the interactive window.
    ([#411](https://github.com/Microsoft/vscode-jupyter/issues/411))
-
-### Thanks
-
-Thanks to the following projects which we fully rely on to provide some of
-our features:
-
--   [Python Extension](https://marketplace.visualstudio.com/items?itemName=ms-python.python)
--   [debugpy](https://pypi.org/project/debugpy/)
-
-Also thanks to the various projects we provide integrations with which help
-make this extension useful:
-
--   [Jupyter](https://jupyter.org/):
-    [Notebooks](https://jupyter-notebook.readthedocs.io/en/latest/?badge=latest),
-    [JupyterHub](https://jupyterhub.readthedocs.io/en/stable/),
-    [ipywidgets](https://ipywidgets.readthedocs.io/en/latest/),
 
 ## 2020.11.0 (11 November 2020)
 
