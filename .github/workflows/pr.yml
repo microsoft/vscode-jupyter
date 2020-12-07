@@ -563,6 +563,10 @@ jobs:
             VSC_CI_MATRIX_TEST_SUITE: ${{matrix.test-suite}}
             CI_JUPYTER_FAST_COMPILATION: 'true'
 
+      - name: List kernels
+        # Use `bash -l {0}` when using the conda actions.
+        shell: bash -l {0}
+        run: python -m jupyter kernelspec list
 
       # Used by tests for non-python kernels.
       # Test are enabled via env variable `VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST`
