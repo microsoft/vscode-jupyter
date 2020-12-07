@@ -546,9 +546,9 @@ jobs:
           python ./pythonFiles/install_debugpy.py
           python -m pip install numpy
           python -m pip install jupyter
-          python -m pip install r build/test-requirements.txt
-          python -m pip install -r ./build/ipython-test-requirements.txt
-          python -m pip install -r ./build/conda-functional-requirements.txt
+          python -m pip install --upgrade -r build/test-requirements.txt
+          python -m pip install --upgrade -r ./build/ipython-test-requirements.txt
+          python -m pip install --upgrade -r ./build/conda-functional-requirements.txt
           python -m ipykernel install --user
         if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook' || matrix.test-suite == 'conda'
         # This step is slow.
@@ -562,11 +562,6 @@ jobs:
         env:
             VSC_CI_MATRIX_TEST_SUITE: ${{matrix.test-suite}}
             CI_JUPYTER_FAST_COMPILATION: 'true'
-
-      - name: List kernels
-        # Use `bash -l {0}` when using the conda actions.
-        shell: bash -l {0}
-        run: python -m jupyter kernelspec list
 
       # Used by tests for non-python kernels.
       # Test are enabled via env variable `VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST`
