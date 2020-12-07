@@ -56,7 +56,7 @@ const config = {
             { enforce: 'post', test: /linebreak[\/\\]src[\/\\]linebreaker.js/, loader: 'transform-loader?brfs' }
         ]
     },
-    externals: ['vscode', 'commonjs', ...existingModulesInOutDir, 'ffi-napi', 'ref-napi'], // Don't bundle these
+    externals: ['vscode', 'commonjs', ...existingModulesInOutDir], // Don't bundle these
     plugins: [
         ...common.getDefaultPlugins('extension'),
         new copyWebpackPlugin({
@@ -74,10 +74,6 @@ const config = {
         new copyWebpackPlugin({ patterns: [{ from: './node_modules/zeromq/**/*.js' }] }),
         new copyWebpackPlugin({ patterns: [{ from: './node_modules/zeromq/**/*.node' }] }),
         new copyWebpackPlugin({ patterns: [{ from: './node_modules/zeromq/**/*.json' }] }),
-        new copyWebpackPlugin({ patterns: [{ from: './node_modules/ffi-napi/**' }] }),
-        new copyWebpackPlugin({ patterns: [{ from: './node_modules/ref-napi/**' }] }),
-        new copyWebpackPlugin({ patterns: [{ from: './node_modules/ms/**' }] }), // This is a dependency of ref-napi. Ensure it is available
-        new copyWebpackPlugin({ patterns: [{ from: './node_modules/ref-struct-di/**' }] }), // This is a dependency of ffi-napi. Ensure it is available
         new copyWebpackPlugin({ patterns: [{ from: './node_modules/node-gyp-build/**/*' }] })
     ],
     resolve: {

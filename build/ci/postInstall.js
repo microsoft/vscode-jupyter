@@ -3,9 +3,10 @@
 'use strict';
 
 var colors = require('colors/safe');
-var fs = require('fs');
+var fs = require('fs-extra');
 var path = require('path');
 var constants_1 = require('../constants');
+var download = require('download');
 /**
  * In order to compile the extension in strict mode, one of the dependencies (@jupyterlab) has some files that
  * just won't compile in strict mode.
@@ -76,5 +77,38 @@ function createJupyterKernelWithoutSerialization() {
     console.log(colors.green(destPath + ' file generated (by Jupyter VSC)'));
 }
 
-fixJupyterLabDTSFiles();
-createJupyterKernelWithoutSerialization();
+/**
+ * In order to generate random bytes on Windows without taking a dependency on native node modules
+ * which we then need to build xplat and bundle with the extension, download a prebuilt executable
+ * which directly consumes BCryptGenRandom in bcrypt.dll and outputs random bytes as hex. This
+ * executable is required for trusted notebooks key generation and is included with the built extension.
+ */
+async function downloadBCryptGenRandomExecutable() {
+    console.log('Downloading BCryptGenRandom.exe...');
+    const executableName = 'BCryptGenRandom.exe';
+    const uri = `https://pvsc.blob.core.windows.net/jupyter-dev-builds/${executableName}`;
+    const srcDestination = path.resolve(path.dirname(__dirname), '..', 'src', 'BCryptGenRandom');
+    const srcDestinationFilename = path.join(srcDestination, executableName);
+    if (fs.existsSync(srcDestinationFilename)) {
+        console.log('BCryptGenRandom.exe is already downloaded.');
+    } else {
+        fs.ensureDirSync(srcDestination);
+        await download(uri, srcDestination, { filename: executableName });
+        console.log('Downloaded BCryptGenRandom.exe.');
+    }
+    const outDestination = path.resolve(path.dirname(__dirname), '..', 'out', 'BCryptGenRandom');
+    const outDestinationFilename = path.join(outDestination, executableName);
+    if (fs.existsSync(outDestinationFilename)) {
+        console.log('BCryptGenRandom.exe is already copied to outdir.');
+    } else {
+        fs.ensureDirSync(outDestination);
+        fs.copyFileSync(srcDestinationFilename, outDestinationFilename);
+        console.log('Copied BCryptGenRandom.exe to outdir.');
+    }
+}
+
+(async () => {
+    fixJupyterLabDTSFiles();
+    createJupyterKernelWithoutSerialization();
+    await downloadBCryptGenRandomExecutable();
+})().catch((ex) => console.error('Encountered error while running postInstall step', ex));
