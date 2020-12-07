@@ -1,4 +1,4 @@
-import { createHash } from 'crypto';
+import { createHash, randomBytes } from 'crypto';
 import { inject, injectable } from 'inversify';
 import * as os from 'os';
 import * as path from 'path';
@@ -102,14 +102,16 @@ export class DigestStorage implements IDigestStorage {
             }
 
             // If it doesn't exist, create one
-            const key = await this.prng.generateRandomKey(1024);
+            let key = await this.prng.generateRandomKey(1024);
             if (key) {
-                traceInfo(`Successfully generated keyfile`);
-                await this.fs.writeLocalFile(defaultKeyFileLocation, key);
-                return key;
+                traceInfo(`Successfully generated keyfile with OS PRNG`);
             } else {
-                traceError('Failed to initialize secret for notebook trust');
+                // Fallback to crypto.randomBytes
+                traceError('Failed to initialize secret for notebook trust with OS PRNG');
+                key = randomBytes(1024).toString('hex');
             }
+            await this.fs.writeLocalFile(defaultKeyFileLocation, key);
+            return key;
         } catch (e) {
             traceError(`Encountered error while initializing secret for notebook trust: ${e}`);
             return undefined;

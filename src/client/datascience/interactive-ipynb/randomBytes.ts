@@ -1,4 +1,5 @@
 import { exec } from 'child_process';
+import { randomBytes } from 'crypto';
 import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
@@ -6,6 +7,8 @@ import { traceError, traceInfo } from '../../common/logger';
 import { IPlatformService } from '../../common/platform/types';
 import { OSType } from '../../common/utils/platform';
 import { EXTENSION_ROOT_DIR } from '../../constants';
+import { sendTelemetryEvent } from '../../telemetry';
+import { Telemetry } from '../constants';
 import { ISystemPseudoRandomNumberGenerator } from '../types';
 
 // Wraps operating system-provided pseudorandom number generator facilities to provide
@@ -32,11 +35,12 @@ export class SystemPseudoRandomNumberGenerator implements ISystemPseudoRandomNum
         // Ensure the exe is present. If it's not we can't generate bytes for Windows
         const executable = path.resolve(EXTENSION_ROOT_DIR, 'out', 'BCryptGenRandom', 'BCryptGenRandom.exe');
         await fs.stat(executable);
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve, _reject) => {
             exec(executable, { encoding: 'buffer' }, (err, stdout, stderr) => {
                 if (err) {
                     traceError(`randomBytesForUnixLikeSystems err`, err);
-                    reject(`Failed to allocate random bytes for notebook trust: ${err}`);
+                    sendTelemetryEvent(Telemetry.NativeRandomBytesGenerationFailed, undefined, undefined, err);
+                    resolve('');
                 }
                 const stderrBuffer = stderr.toString('ascii');
                 if (stderrBuffer.length > 0) {
@@ -53,13 +57,14 @@ export class SystemPseudoRandomNumberGenerator implements ISystemPseudoRandomNum
     private async randomBytesForUnixLikeSystems(numBytes: number): Promise<string> {
         // Ensure urandom file is present. If it's not we can't generate bytes
         await fs.stat('/dev/urandom');
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve, _reject) => {
             const script = `head -c ${numBytes} /dev/urandom`;
             traceInfo(`Executing script ${script} to generate random bytes`);
             exec(script, { encoding: 'buffer' }, (err, stdout, stderr) => {
                 if (err) {
                     traceError(`randomBytesForUnixLikeSystems err`, err);
-                    reject(`Failed to allocate random bytes for notebook trust: ${err}`);
+                    sendTelemetryEvent(Telemetry.NativeRandomBytesGenerationFailed, undefined, undefined, err);
+                    resolve('');
                 }
                 if (stderr.length > 0) {
                     traceError(`randomBytesForUnixLikeSystems stderr`, stderr);
