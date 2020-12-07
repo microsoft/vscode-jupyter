@@ -1420,6 +1420,10 @@ export interface IExternalWebviewCellButton {
     statusToEnable: CellState[];
     tooltip: string;
     running: boolean;
+}
+
+export interface IExternalWebviewCellButtonWithCallback extends IExternalWebviewCellButton {
+    // Callback is only used on the extension side. Don't pass to the UI
     callback(cell: NotebookCell, isInteractive: boolean, resource: Uri): Promise<void>;
 }
 

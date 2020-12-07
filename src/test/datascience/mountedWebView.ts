@@ -104,6 +104,13 @@ export class MountedWebView implements IMountedWebView, IDisposable {
     public attach(options: IWebviewPanelOptions) {
         this.webPanelListener = options.listener;
 
+        // During testing the MainPanel sends the init message before our interactive window is created.
+        // Pretend like it's happening now (well after this function returns)
+        // tslint:disable-next-line: no-any
+        setTimeout(() => {
+            this.webPanelListener!.onMessage(InteractiveWindowMessages.Started, {});
+        }, 0);
+
         // Send messages that were already posted but were missed.
         // During normal operation, the react control will not be created before
         // the webPanelListener

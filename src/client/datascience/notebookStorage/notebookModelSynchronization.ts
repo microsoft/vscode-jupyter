@@ -14,7 +14,7 @@ export class NotebookModelSynchronization implements INotebookModelSynchronizati
     ) {}
     public async syncAllCells(model: INotebookModel): Promise<void> {
         // Find the owner of this model and ask it to do the sync (this is inherently a UI operation as we need to pull the data from the UI)
-        const owner = await this.getOwner(model);
+        const owner = this.getOwner(model);
         if (owner) {
             return owner.syncAllCells();
         } else {
@@ -22,7 +22,7 @@ export class NotebookModelSynchronization implements INotebookModelSynchronizati
         }
     }
 
-    private async getOwner(model: INotebookModel): Promise<INotebookEditor | undefined> {
+    private getOwner(model: INotebookModel): INotebookEditor | undefined {
         return this.notebookEditorProvider.editors.find((e) => this.fs.arePathsSame(e.model.file, model.file));
     }
 }
