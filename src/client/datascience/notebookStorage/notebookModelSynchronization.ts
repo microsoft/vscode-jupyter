@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { traceInfo } from '../../common/logger';
+import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { INotebookEditor, INotebookEditorProvider, INotebookModel, INotebookModelSynchronization } from '../types';
 
@@ -18,7 +18,7 @@ export class NotebookModelSynchronization implements INotebookModelSynchronizati
         if (owner) {
             return owner.syncAllCells();
         } else {
-            traceInfo(`Sync all not possible for ${model.file.toString()}`);
+            traceError(`Sync all not possible for ${model.file.toString()}`);
         }
     }
 
