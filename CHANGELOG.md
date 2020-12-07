@@ -17,8 +17,6 @@
    ([#407](https://github.com/Microsoft/vscode-jupyter/issues/407))
 1. Hide webview based Notebook command `Select Kernel` when a Notebook is opened using the new VS Code Native Notebook editor.
    ([#426](https://github.com/Microsoft/vscode-jupyter/issues/426))
-1. CTRL+1/CTRL+2 switching with the interactive window does not put the focus back in the edit box.
-   ([#1293](https://github.com/Microsoft/vscode-jupyter/issues/1293))
 1. Correctly pass the candidate interpreter when exporting.
    ([#1363](https://github.com/Microsoft/vscode-jupyter/issues/1363))
 1. ```__file__``` variable not set after restarting kernel in the interactive window.
