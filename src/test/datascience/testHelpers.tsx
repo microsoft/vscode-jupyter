@@ -520,11 +520,10 @@ export function simulateKey(
             const keyText = key;
 
             if (key === '\b') {
-                domNode.value = `${before.slice(0, before.length > 0 ? before.length - 1: 0)}${after}`;
+                domNode.value = `${before.slice(0, before.length > 0 ? before.length - 1 : 0)}${after}`;
             } else {
                 domNode.value = `${before}${keyText}${after}`;
             }
-
 
             // Tell the dom node its selection start has changed. Monaco
             // reads this to determine where the character went.
@@ -650,9 +649,9 @@ export function typeCode(
         if (key === '\n') {
             keyCode = 'Enter';
         } else if (key === '\b') {
-            keyCode = 'Backspace'
+            keyCode = 'Backspace';
         } else if (key === '\u0046') {
-            keyCode = 'Delete'
+            keyCode = 'Delete';
         }
         enterKey(textArea!, key, keyCode);
     }
