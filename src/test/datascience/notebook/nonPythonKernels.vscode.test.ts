@@ -112,7 +112,7 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         await waitForKernelToGetAutoSelected('julia');
     });
     test('Automatically pick csharp kernel when opening a Julia Notebook', async () => {
-        await openNotebook(api.serviceContainer, testJuliaNb.fsPath);
+        await openNotebook(api.serviceContainer, testCSharpNb.fsPath);
         await waitForKernelToGetAutoSelected('c#');
     });
     test('New notebook will have a Julia cell if last notebook was a julia nb', async () => {
