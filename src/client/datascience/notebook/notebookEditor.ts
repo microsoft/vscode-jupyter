@@ -102,7 +102,8 @@ export class NotebookEditor implements INotebookEditor {
         // Need to read content out of the UI and save in our model
         const modifiedCells = (this.model as VSCodeNotebookModel).getCells().map((c, i) => {
             const dc = this.document.cells[i];
-            return { ...c, source: splitMultilineString(dc.document.getText()) };
+            // tslint:disable-next-line: no-any
+            return { ...c, source: splitMultilineString(dc.document.getText()) } as any; // Workaround nyc compiler problems
         });
         (this.model as VSCodeNotebookModel).replaceCells(modifiedCells);
     }
