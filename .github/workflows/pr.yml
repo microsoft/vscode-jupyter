@@ -223,6 +223,7 @@ jobs:
           name: ${{runner.os}}-${{env.COVERAGE_REPORTS}}
           path: .nyc_output
           retention-days: 1
+          if: always()
 
   tests:
     name: Functional Jupyter Tests
@@ -386,6 +387,7 @@ jobs:
           name: ${{runner.os}}-${{env.COVERAGE_REPORTS}}
           path: .nyc_output
           retention-days: 1
+          if: always()
 
   vscodeTests:
     name: VS Code Tests # These tests run with Python extension & real Jupyter
@@ -746,11 +748,13 @@ jobs:
           name: ${{runner.os}}-${{env.COVERAGE_REPORTS}}
           path: .nyc_output
           retention-days: 1
+          if: always()
 
   coverage:
     name: Coverage reports upload
     runs-on: ubuntu-latest
-    needs: [tests, smoke-tests]
+    if: always()
+    needs: [tests, smoke-tests, vscodeTests]
     defaults:
       run:
         working-directory: ${{env.special-working-directory}}
