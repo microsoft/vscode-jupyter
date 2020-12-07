@@ -545,6 +545,20 @@ export interface ILoadTmLanguageResponse {
     extensions: string[]; // Array of file extensions that map to this language
 }
 
+export interface IResponse {
+    responseId: string;
+}
+
+export interface IGetCodeRequest extends IResponse {
+    cellId: string;
+}
+export interface IReturnCodeResponse extends IResponse {
+    code: string;
+}
+export interface IReturnAllCodeResponse extends IResponse {
+    code: string[];
+}
+
 // Map all messages to specific payloads
 export class IInteractiveWindowMapping {
     public [IPyWidgetMessages.IPyWidgets_kernelOptions]: KernelSocketOptions;
@@ -589,10 +603,10 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.ExportNotebookAs]: ICell[];
     public [InteractiveWindowMessages.GetAllCells]: never | undefined;
     public [InteractiveWindowMessages.ReturnAllCells]: ICell[];
-    public [InteractiveWindowMessages.GetCellCode]: string;
-    public [InteractiveWindowMessages.ReturnCellCode]: string;
-    public [InteractiveWindowMessages.GetAllCellCode]: never | undefined;
-    public [InteractiveWindowMessages.ReturnAllCellCode]: string[];
+    public [InteractiveWindowMessages.GetCellCode]: IGetCodeRequest;
+    public [InteractiveWindowMessages.ReturnCellCode]: IReturnCodeResponse;
+    public [InteractiveWindowMessages.GetAllCellCode]: IResponse;
+    public [InteractiveWindowMessages.ReturnAllCellCode]: IReturnAllCodeResponse;
     public [InteractiveWindowMessages.DeleteAllCells]: IAddCellAction;
     public [InteractiveWindowMessages.Undo]: never | undefined;
     public [InteractiveWindowMessages.Redo]: never | undefined;

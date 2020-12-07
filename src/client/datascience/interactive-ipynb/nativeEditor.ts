@@ -34,10 +34,12 @@ import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Commands, EditorContexts, Identifiers, Telemetry } from '../constants';
 import { InteractiveBase } from '../interactive-common/interactiveBase';
 import {
+    IInteractiveWindowMapping,
     INativeCommand,
     INotebookIdentity,
     InteractiveWindowMessages,
     IReExecuteCells,
+    IResponse,
     IRunByLine,
     ISubmitNewCell,
     NotebookModelChange,
@@ -145,7 +147,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     private loadPromise: Promise<void>;
     private previouslyNotTrusted: boolean = false;
     // tslint:disable-next-line: no-any
-    private waitingForMessageResponse: { message: string; result: Deferred<any> } | undefined;
+    private waitingForMessageResponse = new Map<string, Deferred<any>>();
 
     constructor(
         listeners: IInteractiveWindowListener[],
@@ -238,14 +240,12 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
     @captureTelemetry(Telemetry.SyncAllCells)
     public async syncAllCells(): Promise<void> {
-        const timer = new StopWatch();
         // Ask the UI for all of our all cells
-        this.waitingForMessageResponse = {
-            message: InteractiveWindowMessages.ReturnAllCellCode,
-            result: createDeferred<string[]>()
-        };
-        await this.postMessage(InteractiveWindowMessages.GetAllCellCode);
-        const code = await this.waitingForMessageResponse.result.promise;
+        const result = await this.waitForMessage(
+            InteractiveWindowMessages.GetAllCellCode,
+            InteractiveWindowMessages.ReturnAllCellCode,
+            { responseId: uuid() }
+        );
 
         // Upload these cells into our model (so they match what is in the UI)
         this.model.replaceCells(
@@ -254,24 +254,22 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                     ...c,
                     data: {
                         ...c.data,
-                        source: code[i]
+                        source: result.code[i]
                     }
                     // tslint:disable-next-line: no-any
                 } as any; // Deal with nyc problems
             })
         );
-        traceInfo(`Sync all elapsed type: ${timer.elapsedTime}`);
     }
 
     @captureTelemetry(Telemetry.SyncSingleCell)
     public async syncCell(cellId: string): Promise<void> {
         // Ask the UI for the code for this cell
-        this.waitingForMessageResponse = {
-            message: InteractiveWindowMessages.ReturnCellCode,
-            result: createDeferred<ICell | undefined>()
-        };
-        await this.postMessage(InteractiveWindowMessages.GetCellCode, cellId);
-        const code = await this.waitingForMessageResponse.result.promise;
+        const result = await this.waitForMessage(
+            InteractiveWindowMessages.GetCellCode,
+            InteractiveWindowMessages.ReturnCellCode,
+            { cellId, responseId: uuid() }
+        );
 
         // Replace all cells, fixing the source for this item
         this.model.replaceCells(
@@ -280,7 +278,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                     ...c,
                     data: {
                         ...c.data,
-                        source: c.id === cellId ? code : c.data.source
+                        source: c.id === cellId ? result.code : c.data.source
                     }
                     // tslint:disable-next-line: no-any
                 } as any; // Deal with nyc problems
@@ -365,10 +363,10 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         }
 
         // Check for a message that fulfills our wait condition
-        if (this.waitingForMessageResponse && this.waitingForMessageResponse.message === message) {
-            const result = this.waitingForMessageResponse.result;
-            this.waitingForMessageResponse = undefined;
-            result.resolve(payload);
+        if (payload && payload.responseId && this.waitingForMessageResponse.has(payload.responseId)) {
+            const result = this.waitingForMessageResponse.get(payload.responseId);
+            this.waitingForMessageResponse.delete(payload.responseId);
+            result?.resolve(payload);
         }
     }
 
@@ -899,5 +897,21 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                 traceInfo(`Finished run by line on cell ${runByLine.cell.id}`);
             }
         }
+    }
+
+    private async waitForMessage<M extends IInteractiveWindowMapping, S extends keyof M, R extends keyof M>(
+        sendMessage: S,
+        _responseMessage: R, // Only here to force type for result.
+        payload: M[S] & IResponse
+    ): Promise<M[R]> {
+        // Save the reponse in our wait list
+        const deferred = createDeferred<M[R]>();
+        this.waitingForMessageResponse.set(payload.responseId, deferred);
+
+        // Post the send message
+        await this.postMessageInternal(sendMessage.toString(), payload);
+
+        // Promise should resolve when the response comes back
+        return deferred.promise;
     }
 }

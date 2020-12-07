@@ -5,7 +5,6 @@
 
 import { ConfigurationTarget, Event, EventEmitter, Uri, WebviewPanel } from 'vscode';
 import type { NotebookCell, NotebookDocument } from '../../../../types/vscode-proposed';
-import { splitMultilineString } from '../../../datascience-ui/common';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import { traceError } from '../../common/logger';
 import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../common/types';
@@ -15,7 +14,6 @@ import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { JupyterKernelPromiseFailedError } from '../jupyter/kernels/jupyterKernelPromiseFailedError';
 import { IKernel, IKernelProvider } from '../jupyter/kernels/types';
-import { VSCodeNotebookModel } from '../notebookStorage/vscNotebookModel';
 import {
     INotebook,
     INotebookEditor,
@@ -99,13 +97,8 @@ export class NotebookEditor implements INotebookEditor {
     }
     @captureTelemetry(Telemetry.SyncAllCells)
     public async syncAllCells(): Promise<void> {
-        // Need to read content out of the UI and save in our model
-        const modifiedCells = (this.model as VSCodeNotebookModel).getCells().map((c, i) => {
-            const dc = this.document.cells[i];
-            // tslint:disable-next-line: no-any
-            return { ...c, source: splitMultilineString(dc.document.getText()) } as any; // Workaround nyc compiler problems
-        });
-        (this.model as VSCodeNotebookModel).replaceCells(modifiedCells);
+        // This shouldn't be necessary for native notebooks. if it is, it's because the document
+        // is not up to date (VS code issue)
     }
     public async load(_storage: INotebookModel, _webViewPanel?: WebviewPanel): Promise<void> {
         // Not used.

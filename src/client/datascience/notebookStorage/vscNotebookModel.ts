@@ -89,14 +89,6 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
         this._cells = this.notebookJson.cells || [];
         this._preferredLanguage = cellLanguageService.getPreferredLanguage(this.metadata);
     }
-    public getCells() {
-        return this._cells;
-    }
-
-    public replaceCells(newCells: nbformat.IBaseCell[]) {
-        this._cells = newCells;
-    }
-
     public getCellCount() {
         return this.document ? this.document.cells.length : this._cells.length;
     }

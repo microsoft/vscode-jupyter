@@ -4,7 +4,9 @@
 import { Identifiers } from '../../../../client/datascience/constants';
 import {
     IEditorContentChange,
+    IGetCodeRequest,
     InteractiveWindowMessages,
+    IResponse,
     NotebookModelChange
 } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { CssMessages } from '../../../../client/datascience/messages';
@@ -99,22 +101,20 @@ export namespace Transfer {
         return arg.prevState;
     }
 
-    export function getCellCode(arg: CommonReducerArg<CommonActionType, string>): IMainState {
-        const vm = arg.prevState.cellVMs.find((c) => c.cell.id === arg.payload.data);
-        postActionToExtension(
-            arg,
-            InteractiveWindowMessages.ReturnCellCode,
-            vm ? concatMultilineString(vm?.cell.data.source) : ''
-        );
+    export function getCellCode(arg: CommonReducerArg<CommonActionType, IGetCodeRequest>): IMainState {
+        const vm = arg.prevState.cellVMs.find((c) => c.cell.id === arg.payload.data.cellId);
+        postActionToExtension(arg, InteractiveWindowMessages.ReturnCellCode, {
+            code: vm ? concatMultilineString(vm?.cell.data.source) : '',
+            responseId: arg.payload.data.responseId
+        });
         return arg.prevState;
     }
 
-    export function getAllCellCode(arg: CommonReducerArg): IMainState {
-        postActionToExtension(
-            arg,
-            InteractiveWindowMessages.ReturnAllCellCode,
-            arg.prevState.cellVMs.map((vm) => concatMultilineString(vm.cell.data.source))
-        );
+    export function getAllCellCode(arg: CommonReducerArg<CommonActionType, IResponse>): IMainState {
+        postActionToExtension(arg, InteractiveWindowMessages.ReturnAllCellCode, {
+            code: arg.prevState.cellVMs.map((vm) => concatMultilineString(vm.cell.data.source)),
+            responseId: arg.payload.data.responseId
+        });
         return arg.prevState;
     }
 
