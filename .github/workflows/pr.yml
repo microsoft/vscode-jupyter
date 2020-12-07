@@ -328,6 +328,18 @@ jobs:
       - name: Install dependencies (npm ci)
         run: npm ci --prefer-offline
         # This step is slow.
+
+      - name: Install Dot.net
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '5.0'
+
+      - name: Install .NET Interactive
+        run: dotnet tool install -g --add-source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json" Microsoft.dotnet-interactive
+
+      - name: Install .NET Kernel
+        run: dotnet interactive jupyter install
+
       - name: Install Julia
         uses: julia-actions/setup-julia@v1
         with:
