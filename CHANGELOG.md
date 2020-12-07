@@ -4,6 +4,8 @@
 
 ### Enhancements
 
+1. Add support for IPyWidget in Native Notebooks.
+   ([#251](https://github.com/Microsoft/vscode-jupyter/issues/251))
 
 ### Fixes
 
@@ -33,6 +35,8 @@
    ([#4082](https://github.com/Microsoft/vscode-jupyter/issues/4082))
 1. Ensure user cannot belong to Custom Editor experiment is already in Native Notebook experiment.
    ([#4105](https://github.com/Microsoft/vscode-jupyter/issues/4105))
+1. Fix problems with code in UI getting out of sync with code being executed or saved to disk.
+   ([#1701](https://github.com/Microsoft/vscode-jupyter/issues/1701))
 
 ### Code Health
 
