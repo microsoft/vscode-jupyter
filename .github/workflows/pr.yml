@@ -26,6 +26,7 @@ env:
   TEST_RESULTS_GLOB: '**/test-results*.xml'
   IPYWIDGET_SCREENSHOT_PATH: '*-screenshot.png'
   DISABLE_INSIDERS_EXTENSION: 1 # Disable prompts to install Insiders in tests (else it blocks activation of extension).
+  VSC_JUPYTER_INSTRUMENT_CODE_FOR_COVERAGE: true
 
 jobs:
   build-vsix:
@@ -215,6 +216,14 @@ jobs:
           report_paths: ${{ env.TEST_RESULTS_GLOB }}
           check_name: Ts-Unit Test Report
 
+      # Upload unit test coverage reports for later use in the "reports" job.
+      - name: Upload unit test coverage reports
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{runner.os}}-${{env.COVERAGE_REPORTS}}
+          path: .nyc_output
+          retention-days: 1
+
   tests:
     name: Functional Jupyter Tests
     runs-on: ${{ matrix.os }}
@@ -369,6 +378,14 @@ jobs:
           report_paths: ${{ env.TEST_RESULTS_GLOB }}
           check_name: Functional Test Report ${{matrix.test-suite}}
         if: steps.test_functional_group.outcome == 'failure' && failure()
+
+      # Upload unit test coverage reports for later use in the "reports" job.
+      - name: Upload unit test coverage reports
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{runner.os}}-${{env.COVERAGE_REPORTS}}
+          path: .nyc_output
+          retention-days: 1
 
   vscodeTests:
     name: VS Code Tests # These tests run with Python extension & real Jupyter
@@ -641,6 +658,13 @@ jobs:
           check_name: Notebook without Python Test Report
         if: steps.test_notebookWithoutPythonExt_vscode.outcome == 'failure' && failure()
 
+      # Upload unit test coverage reports for later use in the "reports" job.
+      - name: Upload unit test coverage reports
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{runner.os}}-${{env.COVERAGE_REPORTS}}
+          path: .nyc_output
+          retention-days: 1
 
   smoke-tests:
     name: Smoke tests
@@ -714,3 +738,61 @@ jobs:
         uses: GabrielBB/xvfb-action@v1.4
         with:
           run: node --no-force-async-hooks-checks ./out/test/smokeTest.js
+
+      # Upload unit test coverage reports for later use in the "reports" job.
+      - name: Upload unit test coverage reports
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{runner.os}}-${{env.COVERAGE_REPORTS}}
+          path: .nyc_output
+          retention-days: 1
+
+  coverage:
+    name: Coverage reports upload
+    runs-on: ubuntu-latest
+    needs: [tests, smoke-tests]
+    defaults:
+      run:
+        working-directory: ${{env.special-working-directory}}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Install Node
+        uses: actions/setup-node@v2.1.2
+        with:
+          node-version: ${{env.NODE_VERSION}}
+
+      - name: Install dependencies (npm ci)
+        run: npm ci --prefer-offline
+
+      # It isn't possible to specify a regex for artifact names, so we have to download each artifact manually.
+      # The name pattern is ${{runner.os}}-${{env.COVERAGE_REPORTS}}, and possible values for runner.os are `Linux`, `Windows`, or `macOS`.
+      # See https://help.github.com/en/actions/reference/contexts-and-expression-syntax-for-github-actions#runner-context
+      - name: Download Ubuntu test coverage artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: Linux-${{ env.COVERAGE_REPORTS }}
+          path: Linux-${{ env.COVERAGE_REPORTS }}
+
+      - name: Extract Ubuntu coverage artifacts to ./nyc_output
+        run: |
+          mkdir .nyc_output
+          mv Linux-${{ env.COVERAGE_REPORTS }}/* .nyc_output
+          rm -r Linux-${{ env.COVERAGE_REPORTS }}
+      - name: Generate coverage reports
+        run: npm run test:cover:report
+        continue-on-error: true
+
+      # The only location supported by the codecov action is the workspace root.
+      # See https://github.com/codecov/codecov-action#arguments
+      - name: Move codecov.yml to root
+        run: |
+          mkdir $GITHUB_WORKSPACE/.github
+          mv .github/codecov.yml $GITHUB_WORKSPACE
+      - name: Upload coverage to codecov
+        uses: codecov/codecov-action@v1
+        with:
+          # Can't use the token to disambiguate since secrets aren't available from PR-triggered runs.
+          #token: ${{ secrets.CODECOV_TOKEN }}
+          file: ./coverage/cobertura-coverage.xml

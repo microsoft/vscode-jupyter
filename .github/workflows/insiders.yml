@@ -25,6 +25,7 @@ env:
   TEST_RESULTS_GLOB: '**/test-results*.xml'
   IPYWIDGET_SCREENSHOT_PATH: '*-screenshot.png'
   DISABLE_INSIDERS_EXTENSION: 1 # Disable prompts to install Insiders in tests (else it blocks activation of extension).
+  VSC_JUPYTER_INSTRUMENT_CODE_FOR_COVERAGE: true
 
 jobs:
   build-vsix:
