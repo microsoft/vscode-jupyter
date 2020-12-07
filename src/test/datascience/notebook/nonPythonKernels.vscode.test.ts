@@ -166,6 +166,9 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         assertHasTextOutputInVSCode(cell, '123456', 0, false);
     });
     test('Can run a CSharp notebook', async function () {
+        // Disabled, as .NET interactive kernel does not run on CI.
+        // https://github.com/microsoft/vscode-jupyter/issues/4061#issuecomment-740188708
+        return this.skip();
         this.timeout(30_000); // Can be slow to start Julia kernel on CI.
         await openNotebook(api.serviceContainer, testCSharpNb.fsPath);
         await waitForKernelToGetAutoSelected();
