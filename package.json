@@ -1799,8 +1799,6 @@
         "@nteract/transforms": "^4.4.7",
         "@octokit/rest": "^18.0.6",
         "@phosphor/widgets": "^1.9.3",
-        "@types/ffi-napi": "^2.4.3",
-        "@types/ref-napi": "^1.4.1",
         "ansi-regex": "^4.1.0",
         "ansi-to-html": "^0.6.7",
         "ansi-to-react": "^6.0.8",
@@ -1827,7 +1825,7 @@
         "node-stream-zip": "^1.6.0",
         "onigasm": "^2.2.2",
         "pdfkit": "^0.11.0",
-        "plotly.js-dist": "^1.58.0",
+        "plotly.js-dist": "^1.58.1",
         "portfinder": "^1.0.25",
         "react": "^16.5.2",
         "react-data-grid": "^6.0.2-0",
@@ -2041,9 +2039,5 @@
         "why-is-node-running": "^2.0.3",
         "yargs": "^15.4.1",
         "yargs-parser": "^13.1.2"
-    },
-    "optionalDependencies": {
-        "ffi-napi": "^3.0.1",
-        "ref-napi": "^3.0.1"
     }
 }

@@ -1437,7 +1437,7 @@ export interface IExternalCommandFromWebview {
 // Symbol matching this key from the extension API serviceManager
 export const ISystemPseudoRandomNumberGenerator = Symbol.for('ISystemPseudoRandomNumberGenerator');
 export interface ISystemPseudoRandomNumberGenerator {
-    randomBytes(numBytes: number): Promise<Buffer>;
+    generateRandomKey(numBytes: number): Promise<string>;
 }
 
 export const INotebookModelSynchronization = Symbol.for('INotebookModelSynchronization');

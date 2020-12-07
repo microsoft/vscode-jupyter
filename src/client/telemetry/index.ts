@@ -1011,6 +1011,7 @@ export interface IEventNamePropertyMapping {
     [Telemetry.TrustNotebook]: never | undefined;
     [Telemetry.TrustAllNotebooks]: never | undefined;
     [Telemetry.DoNotTrustNotebook]: never | undefined;
+    [Telemetry.NativeRandomBytesGenerationFailed]: [never | undefined];
 
     // Native notebooks events
     [VSCodeNativeTelemetry.AddCell]: never | undefined;
