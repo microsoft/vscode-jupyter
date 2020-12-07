@@ -16,8 +16,6 @@ import {
     Resource
 } from '../../client/common/types';
 import { createDeferred, Deferred } from '../../client/common/utils/async';
-import { InteractiveWindowMessageListener } from '../../client/datascience/interactive-common/interactiveWindowMessageListener';
-import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { resetIdentity } from '../../client/datascience/interactive-window/identity';
 import { InteractiveWindow } from '../../client/datascience/interactive-window/interactiveWindow';
 import { InteractiveWindowProvider } from '../../client/datascience/interactive-window/interactiveWindowProvider';
@@ -106,12 +104,6 @@ export class TestInteractiveWindowProvider extends InteractiveWindowProvider imp
         const key = result.identity.toString();
         this.windowToMountMap.set(key, mounted);
         mounted.onDisposed(() => this.windowToMountMap.delete(key));
-
-        // During testing the MainPanel sends the init message before our interactive window is created.
-        // Pretend like it's happening now
-        // tslint:disable-next-line: no-any
-        const listener = (result as any).messageListener as InteractiveWindowMessageListener;
-        listener.onMessage(InteractiveWindowMessages.Started, {});
 
         // Also need the css request so that other messages can go through
         const webHost = result as InteractiveWindow;

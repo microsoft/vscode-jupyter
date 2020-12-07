@@ -121,6 +121,7 @@ import { NotebookExtensibility } from './notebookExtensibility';
 import { NotebookModelFactory } from './notebookStorage/factory';
 import { NativeEditorProvider } from './notebookStorage/nativeEditorProvider';
 import { NativeEditorStorage } from './notebookStorage/nativeEditorStorage';
+import { NotebookModelSynchronization } from './notebookStorage/notebookModelSynchronization';
 import { INotebookStorageProvider, NotebookStorageProvider } from './notebookStorage/notebookStorageProvider';
 import { INotebookModelFactory } from './notebookStorage/types';
 import { PlotViewer } from './plotting/plotViewer';
@@ -171,6 +172,7 @@ import {
     INotebookExporter,
     INotebookExtensibility,
     INotebookImporter,
+    INotebookModelSynchronization,
     INotebookProvider,
     INotebookServer,
     INotebookStorage,
@@ -216,6 +218,7 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
 
     serviceManager.add<ICellHashProvider>(ICellHashProvider, CellHashProvider, undefined, [INotebookExecutionLogger]);
     serviceManager.addSingleton<INotebookModelFactory>(INotebookModelFactory, NotebookModelFactory);
+    serviceManager.addSingleton<INotebookModelSynchronization>(INotebookModelSynchronization, NotebookModelSynchronization);
     serviceManager.addSingleton<INotebookExecutionLogger>(INotebookExecutionLogger, HoverProvider);
     serviceManager.add<ICodeWatcher>(ICodeWatcher, CodeWatcher);
     serviceManager.addSingleton<IDataScienceErrorHandler>(IDataScienceErrorHandler, DataScienceErrorHandler);

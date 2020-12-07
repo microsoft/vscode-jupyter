@@ -103,7 +103,7 @@ export async function addCell(mounted: IMountedWebView, code: string, submit: bo
     if (submit) {
         // Then run the cell (use ctrl+enter so we don't add another cell)
         update = mounted.waitForMessage(InteractiveWindowMessages.ExecutionRendered);
-        simulateKey(textArea!, 'Enter', false, true);
+        simulateKey(textArea!, 'n', 'Enter', false, true);
         return update;
     }
 }
