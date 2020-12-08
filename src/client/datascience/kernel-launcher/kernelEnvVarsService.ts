@@ -70,12 +70,6 @@ export class KernelEnvironmentVariablesService {
         this.envVarsService.mergeVariables(kernelEnv, mergedVars); // kernels vars win over interpreter.
         this.envVarsService.mergeVariables(customEditVars, mergedVars); // custom vars win over all.
         const pathVariable = this.platformService.pathVariableName;
-        if (process.env[pathVariable]) {
-            mergedVars[pathVariable] = process.env[pathVariable];
-        }
-        if (process.env.PYTHONPATH) {
-            mergedVars.PYTHONPATH = process.env.PYTHONPATH;
-        }
         if (customEditVars[pathVariable]) {
             this.envVarsService.appendPath(mergedVars, customEditVars[pathVariable]!);
         }
