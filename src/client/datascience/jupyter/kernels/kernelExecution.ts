@@ -5,7 +5,7 @@
 
 import { NotebookCell, NotebookCellRunState, NotebookDocument } from 'vscode';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../../common/application/types';
-import { IDisposable } from '../../../common/types';
+import { IDisposable, IExtensionContext } from '../../../common/types';
 import { noop } from '../../../common/utils/misc';
 import { captureTelemetry } from '../../../telemetry';
 import { Commands, Telemetry, VSCodeNativeTelemetry } from '../../constants';
@@ -47,9 +47,10 @@ export class KernelExecution implements IDisposable {
         readonly appShell: IApplicationShell,
         readonly vscNotebook: IVSCodeNotebook,
         readonly metadata: Readonly<KernelConnectionMetadata>,
-        private readonly rawNotebookSupported: IRawNotebookSupportedService
+        private readonly rawNotebookSupported: IRawNotebookSupportedService,
+        context: IExtensionContext
     ) {
-        this.executionFactory = new CellExecutionFactory(errorHandler, editorProvider, appShell, vscNotebook);
+        this.executionFactory = new CellExecutionFactory(errorHandler, editorProvider, appShell, vscNotebook, context);
     }
 
     @captureTelemetry(Telemetry.ExecuteNativeCell, undefined, true)
