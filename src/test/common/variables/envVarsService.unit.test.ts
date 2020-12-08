@@ -21,7 +21,7 @@ const PATHS = [
     'PATH' // non-Windows
 ];
 
-suite('Environment Variables Service', () => {
+suite('Environment Variables Servicexxx', () => {
     const filename = 'x/y/z/.env';
     let pathUtils: TypeMoq.IMock<IPathUtils>;
     let fs: TypeMoq.IMock<IFileSystem>;
@@ -205,7 +205,7 @@ PYTHON=${BINDIR}/python3\n\
                 variablesService.mergeVariables(vars1, vars2);
 
                 expect(Object.keys(vars1)).lengthOf(2, 'Source variables modified');
-                expect(Object.keys(vars2)).lengthOf(3, 'Variables not merged');
+                expect(Object.keys(vars2)).lengthOf(5, 'Variables not merged');
                 expect(vars2).to.have.property('ONE', '1', 'Variable overwritten');
                 expect(vars2).to.have.property('TWO', 'TWO', 'Incorrect value');
                 expect(vars2).to.have.property('THREE', '3', 'Variable not merged');
