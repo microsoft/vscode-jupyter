@@ -124,7 +124,7 @@ export class CellExecution {
         private readonly editorProvider: INotebookEditorProvider,
         private readonly applicationService: IApplicationShell,
         private readonly isPythonKernelConnection: boolean,
-        private readonly extensionContext: IExtensionContext
+        extensionContext: IExtensionContext
     ) {
         // These are only used in the tests.
         // See where this is used to understand its purpose.
@@ -232,10 +232,7 @@ export class CellExecution {
     private handleKernelRestart(kernel: IKernel) {
         kernel.onRestarted(
             async () => {
-                traceInfoIf(
-                    this.extensionContext.extensionMode !== ExtensionMode.Production,
-                    `Kernel restart handled in CellExecution, cancelling Cell Index ${this.cell.index}`
-                );
+                traceInfo(`Kernel restart handled in CellExecution, cancelling Cell Index ${this.cell.index}`);
                 this.cancel().catch(noop);
             },
             this,
