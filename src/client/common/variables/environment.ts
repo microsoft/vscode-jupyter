@@ -32,7 +32,11 @@ export class EnvironmentVariablesService implements IEnvironmentVariablesService
         if (!target) {
             return;
         }
+        const settingsNotToMerge = ['PYTHONPATH', this.pathVariable];
         Object.keys(source).forEach((setting) => {
+            if (settingsNotToMerge.indexOf(setting) >= 0) {
+                return;
+            }
             target[setting] = source[setting];
         });
     }
