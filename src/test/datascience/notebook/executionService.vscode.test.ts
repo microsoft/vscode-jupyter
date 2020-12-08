@@ -69,6 +69,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', () => {
         // Added temporarily to identify why tests are failing.
         process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT = undefined;
         await closeNotebooks(disposables);
+        await closeNotebooksAndCleanUpAfterTests(disposables);
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));

@@ -79,6 +79,7 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
     teardown(async function () {
         traceInfo(`End Test ${this.currentTest?.title}`);
         await closeNotebooks(disposables);
+        await closeNotebooksAndCleanUpAfterTests(disposables.concat(suiteDisposables));
         traceInfo(`End Test (completed) ${this.currentTest?.title}`);
     });
     suiteTeardown(async () => {
