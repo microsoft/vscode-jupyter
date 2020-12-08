@@ -124,7 +124,7 @@ export class CellExecution {
         private readonly editorProvider: INotebookEditorProvider,
         private readonly applicationService: IApplicationShell,
         private readonly isPythonKernelConnection: boolean,
-        extensionContext: IExtensionContext
+        private readonly extensionContext: IExtensionContext
     ) {
         // These are only used in the tests.
         // See where this is used to understand its purpose.
@@ -202,6 +202,7 @@ export class CellExecution {
         if (this.cancelHandled || this._completed) {
             return;
         }
+        traceInfo(`Cell execution cancelled for cell Index ${this.cell.index}`);
         this.cancelHandled = true;
         await this.initPromise;
         // We need to notify cancellation only if execution is in progress,
@@ -221,7 +222,7 @@ export class CellExecution {
      * Or when execution has been cancelled.
      */
     private dispose() {
-        traceInfo(`Completed cell execution for cell Index ${this.cell.index}`);
+        traceInfo(`Completed (dispose) cell execution for cell Index ${this.cell.index}`);
         this.disposables.forEach((d) => d.dispose());
         const deferred = CellExecution.cellsCompletedForTesting.get(this.cell);
         if (deferred) {
@@ -229,7 +230,17 @@ export class CellExecution {
         }
     }
     private handleKernelRestart(kernel: IKernel) {
-        kernel.onRestarted(async () => this.cancel(), this, this.disposables);
+        kernel.onRestarted(
+            async () => {
+                traceInfoIf(
+                    this.extensionContext.extensionMode !== ExtensionMode.Production,
+                    `Kernel restart handled in CellExecution, cancelling Cell Index ${this.cell.index}`
+                );
+                this.cancel().catch(noop);
+            },
+            this,
+            this.disposables
+        );
     }
 
     private async completedWithErrors(error: Partial<Error>) {
