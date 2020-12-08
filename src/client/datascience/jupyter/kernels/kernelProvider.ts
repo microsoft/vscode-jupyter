@@ -9,7 +9,12 @@ import { Uri } from 'vscode';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../../common/application/types';
 import { traceInfo, traceWarning } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
-import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, IExtensionContext } from '../../../common/types';
+import {
+    IAsyncDisposableRegistry,
+    IConfigurationService,
+    IDisposableRegistry,
+    IExtensionContext
+} from '../../../common/types';
 import {
     IDataScienceErrorHandler,
     INotebookEditorProvider,
