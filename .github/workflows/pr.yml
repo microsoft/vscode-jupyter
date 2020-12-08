@@ -808,13 +808,13 @@ jobs:
         run: npm run test:cover:report
         continue-on-error: true
 
-      # This doesn't seem to be working.
+      # This doesn't seem to be working. Only do this on insiders build.
       # - name: Upload coverage to codecov
       #   uses: codecov/codecov-action@v1
       #   with:
       #     file: ./coverage/cobertura-coverage.xml
 
       - name: Upload lcov info to PR
-        uses: romeovs/lcov-reporter-action@v0.2.16
+        uses: mszlgr/lcov-reporter-action@v0.2.23
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}

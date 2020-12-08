@@ -737,4 +737,6 @@ jobs:
       - name: Upload coverage to codecov
         uses: codecov/codecov-action@v1
         with:
+          # Token comes from https://app.codecov.io/gh/microsoft/vscode-jupyter/settings
+          token: ${{ secrets.CODECOV_TOKEN }} 
           file: ./coverage/cobertura-coverage.xml
