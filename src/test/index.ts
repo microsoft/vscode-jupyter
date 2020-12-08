@@ -24,6 +24,7 @@ import {
 } from './constants';
 import { initialize } from './initialize';
 import { initializeLogger } from './testLogger';
+import { setupCoverage } from './coverage';
 
 initializeLogger();
 
@@ -134,6 +135,7 @@ function activateExtensionScript() {
  * @returns {Promise<void>}
  */
 export async function run(): Promise<void> {
+    const nyc = setupCoverage();
     const options = configure();
     const mocha = new Mocha(options);
     const testsRoot = path.join(__dirname);
@@ -186,13 +188,20 @@ export async function run(): Promise<void> {
         console.error('Failed to activate python extension without errors', ex);
     }
 
-    // Run the tests.
-    await new Promise<void>((resolve, reject) => {
-        mocha.run((failures) => {
-            if (failures > 0) {
-                return reject(new Error(`${failures} total failures`));
-            }
-            resolve();
+    try {
+        // Run the tests.
+        await new Promise<void>((resolve, reject) => {
+            mocha.run((failures) => {
+                if (failures > 0) {
+                    return reject(new Error(`${failures} total failures`));
+                }
+                resolve();
+            });
         });
-    });
+    } finally {
+        if (nyc) {
+            nyc.writeCoverageFile();
+            nyc.report();
+        }
+    }
 }

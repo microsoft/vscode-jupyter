@@ -7,6 +7,7 @@
 // However if a system32 process is run first, everything works.
 import * as child_process from 'child_process';
 import * as os from 'os';
+import { setupCoverage } from './coverage';
 if (os.platform() === 'win32') {
     const proc = child_process.spawn('C:\\Windows\\System32\\Reg.exe', ['/?']);
     proc.on('error', () => {
@@ -24,5 +25,18 @@ process.env.VSC_JUPYTER_CI_TEST = '1';
 process.env.VSC_JUPYTER_UNIT_TEST = '1';
 
 import { initialize } from './vscode-mock';
+
+// Rebuild with nyc
+const nyc = setupCoverage();
+
+exports.mochaHooks = {
+    afterAll() {
+        // Also output the nyc coverage if we have any
+        if (nyc) {
+            nyc.writeCoverageFile();
+            return nyc.report();
+        }
+    }
+};
 
 initialize();
