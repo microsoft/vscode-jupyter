@@ -1,7 +1,7 @@
 const core = require('@actions/core');
 const github = require('@actions/github');
 
-const action = async () => {
+async function main() {
     const githubToken = core.getInput('github_token');
     const commit = core.getInput('commit');
 
@@ -22,7 +22,7 @@ const action = async () => {
         output: {
             title,
             summary: '',
-            annotations: annotations.slice(0, 50)
+            annotations: ['Test Annotation']
         }
     };
 
@@ -33,6 +33,9 @@ const action = async () => {
 
     const octokit = new github.GitHub(githubToken);
     await octokit.checks.create(createCheckRequest);
-};
+}
 
-module.exports = action;
+main().catch(function (err) {
+    console.log(err);
+    core.setFailed(err.message);
+});
