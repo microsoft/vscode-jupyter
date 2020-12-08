@@ -12,7 +12,7 @@ async function main() {
     const head_sha = commit || (pullRequest && pullRequest.head.sha) || github.context.sha;
     core.info(`Posting status '${status}' with conclusion '${conclusion}' to ${link} (sha: ${head_sha})`);
     const testAnnotation = {
-        path: '',
+        path: 'package.json',
         start_line: 0,
         end_line: 0,
         start_column: 0,
