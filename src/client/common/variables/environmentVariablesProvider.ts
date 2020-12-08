@@ -96,6 +96,12 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
         this.envVarsService.mergeVariables(process.env, mergedVars); // Copy current proc vars into new obj.
         this.envVarsService.mergeVariables(customEnvVars!, mergedVars); // Copy custom vars over into obj.
         const pathVariable = this.platformService.pathVariableName;
+        if (process.env[pathVariable]) {
+            mergedVars[pathVariable] = process.env[pathVariable];
+        }
+        if (process.env.PYTHONPATH) {
+            mergedVars.PYTHONPATH = process.env.PYTHONPATH;
+        }
         if (customEnvVars![pathVariable]) {
             this.envVarsService.appendPath(mergedVars!, customEnvVars![pathVariable]!);
         }
