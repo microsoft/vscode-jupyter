@@ -767,6 +767,18 @@ jobs:
       - name: Install dependencies (npm ci)
         run: npm ci --prefer-offline
 
+      - name: Cache compiled TS files
+        id: out-cache
+        uses: actions/cache@v2
+        with:
+          path: ./out
+          key: ${{runner.os}}-${{env.CACHE_OUT_DIRECTORY}}-${{hashFiles('src/**')}}
+
+      - name: Compile if not cached
+        run: npx gulp prePublishNonBundle
+        env:
+            CI_JUPYTER_FAST_COMPILATION: 'true'
+
       # It isn't possible to specify a regex for artifact names, so we have to download each artifact manually.
       # The name pattern is ${{runner.os}}-${{env.COVERAGE_REPORTS}}, and possible values for runner.os are `Linux`, `Windows`, or `macOS`.
       # See https://help.github.com/en/actions/reference/contexts-and-expression-syntax-for-github-actions#runner-context
@@ -782,6 +794,10 @@ jobs:
           mkdir .nyc_output
           mv ${{runner.os}}-${{ env.COVERAGE_REPORTS }}/* .nyc_output
           rm -r ${{runner.os}}-${{ env.COVERAGE_REPORTS }}
+
+      - name: Merge coverage reports
+        run: npx nyc merge ./.nyc_output
+        continue-on-error: true
 
       - name: Generate coverage reports
         run: npm run test:cover:report
