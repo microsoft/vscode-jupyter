@@ -778,9 +778,11 @@ jobs:
 
       - name: Extract Ubuntu coverage artifacts to ./nyc_output
         run: |
+          pwd
           mkdir .nyc_output
           mv ${{runner.os}}-${{ env.COVERAGE_REPORTS }}/* .nyc_output
           rm -r ${{runner.os}}-${{ env.COVERAGE_REPORTS }}
+
       - name: Generate coverage reports
         run: npm run test:cover:report
         continue-on-error: true
