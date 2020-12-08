@@ -27,6 +27,7 @@ import {
     insertCodeCell,
     startJupyter,
     trustAllNotebooks,
+    waitForCellExecutionToComplete,
     waitForExecutionCompletedSuccessfully,
     waitForExecutionCompletedWithErrors,
     waitForKernelToGetAutoSelected
@@ -54,15 +55,17 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', () => {
         editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
     });
     // Use same notebook without starting kernel in every single test (use one for whole suite).
-    setup(async () => {
+    setup(async function () {
         sinon.restore();
         // Open a notebook and use this for all tests in this test suite.
         await editorProvider.createNew();
         await waitForKernelToGetAutoSelected();
         await deleteAllCellsAndWait();
         assert.isOk(vscodeNotebook.activeNotebookEditor, 'No active notebook');
+        traceInfo(`Start Test ${this.currentTest?.title}`);
     });
-    teardown(async () => {
+    teardown(async function () {
+        traceInfo(`Ended Test ${this.currentTest?.title}`);
         // Added temporarily to identify why tests are failing.
         process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT = undefined;
         await closeNotebooks(disposables);
@@ -99,6 +102,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', () => {
         // After 2s, confirm status has remained unchanged.
         await sleep(2_000);
         assert.isUndefined(cell?.metadata.runState);
+        await waitForCellExecutionToComplete(cell);
     });
     test('Empty cells will not get executed when running whole document', async () => {
         await insertCodeCell('');
