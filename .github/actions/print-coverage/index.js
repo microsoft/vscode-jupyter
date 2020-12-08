@@ -7,8 +7,7 @@ async function main() {
 
     const pullRequest = github.context.payload.pull_request;
     const link = (pullRequest && pullRequest.html_url) || github.context.ref;
-    const conclusion =
-        (foundResults && annotations.length === 0) || (!foundResults && !failIfNoTests) ? 'success' : 'failure';
+    const conclusion = 'failure';
     const status = 'completed';
     const head_sha = commit || (pullRequest && pullRequest.head.sha) || github.context.sha;
     core.info(`Posting status '${status}' with conclusion '${conclusion}' to ${link} (sha: ${head_sha})`);
