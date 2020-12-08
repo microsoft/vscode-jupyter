@@ -75,17 +75,11 @@ export class KernelEnvironmentVariablesService {
         if (kernelEnv[this.platformService.pathVariableName]) {
             this.envVarsService.appendPath(mergedVars, kernelEnv[this.platformService.pathVariableName]!);
         }
-        if (process.env[this.platformService.pathVariableName]) {
-            this.envVarsService.appendPath(mergedVars, process.env[this.platformService.pathVariableName]!);
-        }
         if (customEditVars.PYTHONPATH) {
             this.envVarsService.appendPythonPath(mergedVars, customEditVars.PYTHONPATH);
         }
         if (kernelEnv.PYTHONPATH) {
             this.envVarsService.appendPythonPath(mergedVars, kernelEnv.PYTHONPATH);
-        }
-        if (process.env.PYTHONPATH) {
-            this.envVarsService.appendPythonPath(mergedVars, process.env.PYTHONPATH);
         }
         return mergedVars;
     }
