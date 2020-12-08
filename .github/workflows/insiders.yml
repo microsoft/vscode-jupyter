@@ -722,7 +722,12 @@ jobs:
           rm -r ${{runner.os}}-${{ env.COVERAGE_REPORTS }}
 
       - name: Merge coverage reports
-        run: npx nyc merge ./.nyc_output
+        run: |
+          pwd
+          npx nyc merge ./.nyc_output
+          rm -r .nyc_output
+          mkdir .nyc_output
+          mv coverage.json ./.nyc_output
         continue-on-error: true
 
       - name: Generate coverage reports
