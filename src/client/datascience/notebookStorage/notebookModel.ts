@@ -46,6 +46,9 @@ export class NativeEditorNotebookModel extends BaseNotebookModel {
     public update(change: NotebookModelChange): void {
         this.handleModelChange(change);
     }
+    public replaceCells(cells: ICell[]) {
+        this._cells = cells;
+    }
 
     public async applyEdits(edits: readonly NotebookModelChange[]): Promise<void> {
         edits.forEach((e) => this.update({ ...e, source: 'redo' }));

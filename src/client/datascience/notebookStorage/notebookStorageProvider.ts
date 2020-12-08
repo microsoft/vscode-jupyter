@@ -8,8 +8,9 @@ import { EventEmitter, Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { IWorkspaceService } from '../../common/application/types';
 import { IDisposable, IDisposableRegistry } from '../../common/types';
+import { IServiceContainer } from '../../ioc/types';
 import { generateNewNotebookUri } from '../common';
-import { IModelLoadOptions, INotebookModel, INotebookStorage } from '../types';
+import { IModelLoadOptions, INotebookModel, INotebookModelSynchronization, INotebookStorage } from '../types';
 import { getNextUntitledCounter } from './nativeEditorStorage';
 import { VSCodeNotebookModel } from './vscNotebookModel';
 
@@ -33,14 +34,22 @@ export class NotebookStorageProvider implements INotebookStorageProvider {
     constructor(
         @inject(INotebookStorage) private readonly storage: INotebookStorage,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
-        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
+        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
+        @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer
     ) {
         disposables.push(this);
     }
     public async save(model: INotebookModel, cancellation: CancellationToken) {
+        // When saving, make sure to sync the model first
+        await this.syncModel(model);
+
+        // Then actually save the model.
         await this.storage.save(model, cancellation);
     }
     public async saveAs(model: INotebookModel, targetResource: Uri) {
+        // When saving, make sure to sync the model first
+        await this.syncModel(model);
+
         const oldUri = model.file;
         await this.storage.saveAs(model, targetResource);
         if (model instanceof VSCodeNotebookModel) {
@@ -122,5 +131,14 @@ export class NotebookStorageProvider implements INotebookStorageProvider {
             this.disposables
         );
         return model;
+    }
+
+    private async syncModel(model: INotebookModel): Promise<void> {
+        // Because the sync stuff is circular, don't ask for it until needed (it depends upon something that depends upon storage)
+        const modelSync = this.serviceContainer.tryGet<INotebookModelSynchronization>(INotebookModelSynchronization);
+        if (modelSync) {
+            // When saving, we should make sure to sync the model with the UI (edits seem to be being droppped randomly in hard to repro situations)
+            return modelSync.syncAllCells(model);
+        }
     }
 }

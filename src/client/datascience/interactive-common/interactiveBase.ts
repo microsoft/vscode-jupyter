@@ -83,7 +83,7 @@ import {
     ICodeCssGenerator,
     IDataScienceErrorHandler,
     IExternalCommandFromWebview,
-    IExternalWebviewCellButton,
+    IExternalWebviewCellButtonWithCallback,
     IInteractiveBase,
     IInteractiveWindowInfo,
     IInteractiveWindowListener,
@@ -131,7 +131,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
 
     protected abstract get notebookIdentity(): INotebookIdentity;
     protected fileInKernel: string | undefined;
-    protected externalButtons: IExternalWebviewCellButton[] = [];
+    protected externalButtons: IExternalWebviewCellButtonWithCallback[] = [];
     protected dataViewerChecker: DataViewerChecker;
     private unfinishedCells: ICell[] = [];
     private restartingKernel: boolean = false;
@@ -511,7 +511,12 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         const index = this.externalButtons.findIndex((button) => button.buttonId === buttonId);
         if (index === -1) {
             this.externalButtons.push({ buttonId, callback, codicon, statusToEnable, tooltip, running: false });
-            this.postMessage(InteractiveWindowMessages.UpdateExternalCellButtons, this.externalButtons).ignoreErrors();
+            this.postMessage(
+                InteractiveWindowMessages.UpdateExternalCellButtons,
+                this.externalButtons.map((b) => {
+                    return { ...b, callback: undefined };
+                })
+            ).ignoreErrors();
         }
 
         return {
@@ -521,7 +526,9 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
                     this.externalButtons.splice(buttonIndex, 1);
                     this.postMessage(
                         InteractiveWindowMessages.UpdateExternalCellButtons,
-                        this.externalButtons
+                        this.externalButtons.map((b) => {
+                            return { ...b, callback: undefined };
+                        })
                     ).ignoreErrors();
                 }
             }

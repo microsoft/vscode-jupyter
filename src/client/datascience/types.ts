@@ -607,6 +607,7 @@ export interface INotebookEditor extends Disposable, IInteractiveBase {
     collapseAllCells(): void;
     interruptKernel(): Promise<void>;
     restartKernel(): Promise<void>;
+    syncAllCells(): Promise<void>;
 }
 
 export const INotebookExtensibility = Symbol('INotebookExtensibility');
@@ -1419,6 +1420,10 @@ export interface IExternalWebviewCellButton {
     statusToEnable: CellState[];
     tooltip: string;
     running: boolean;
+}
+
+export interface IExternalWebviewCellButtonWithCallback extends IExternalWebviewCellButton {
+    // Callback is only used on the extension side. Don't pass to the UI
     callback(cell: NotebookCell, isInteractive: boolean, resource: Uri): Promise<void>;
 }
 
@@ -1433,4 +1438,14 @@ export interface IExternalCommandFromWebview {
 export const ISystemPseudoRandomNumberGenerator = Symbol.for('ISystemPseudoRandomNumberGenerator');
 export interface ISystemPseudoRandomNumberGenerator {
     generateRandomKey(numBytes: number): Promise<string>;
+}
+
+export const INotebookModelSynchronization = Symbol.for('INotebookModelSynchronization');
+/**
+ * Service used to make sure a notebook model matches the code displayed in the UI (whichever UI is hosting the model)
+ * See this bug here:
+ * https://github.com/microsoft/vscode-jupyter/issues/1701
+ */
+export interface INotebookModelSynchronization {
+    syncAllCells(model: INotebookModel): Promise<void>;
 }
