@@ -17,7 +17,7 @@ async function main() {
         end_line: 0,
         start_column: 0,
         end_column: 0,
-        annotation_level: 'success',
+        annotation_level: 'notice',
         title: 'Test Annotation',
         message: 'You rocked it'
     };
