@@ -773,14 +773,14 @@ jobs:
       - name: Download Ubuntu test coverage artifacts
         uses: actions/download-artifact@v2
         with:
-          name: Linux-${{ env.COVERAGE_REPORTS }}
-          path: Linux-${{ env.COVERAGE_REPORTS }}
+          name: ${{runner.os}}-${{ env.COVERAGE_REPORTS }}
+          path: ${{runner.os}}-${{ env.COVERAGE_REPORTS }}
 
       - name: Extract Ubuntu coverage artifacts to ./nyc_output
         run: |
           mkdir .nyc_output
-          mv Linux-${{ env.COVERAGE_REPORTS }}/* .nyc_output
-          rm -r Linux-${{ env.COVERAGE_REPORTS }}
+          mv ${{runner.os}}-${{ env.COVERAGE_REPORTS }}/* .nyc_output
+          rm -r ${{runner.os}}-${{ env.COVERAGE_REPORTS }}
       - name: Generate coverage reports
         run: npm run test:cover:report
         continue-on-error: true
