@@ -21,7 +21,7 @@ const PATHS = [
     'PATH' // non-Windows
 ];
 
-suite('Environment Variables Servicexxx', () => {
+suite('Environment Variables Service', () => {
     const filename = 'x/y/z/.env';
     let pathUtils: TypeMoq.IMock<IPathUtils>;
     let fs: TypeMoq.IMock<IFileSystem>;
