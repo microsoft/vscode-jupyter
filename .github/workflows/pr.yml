@@ -40,6 +40,8 @@ jobs:
 
       - name: Print-coverage
         uses: ./.github/actions/print-coverage
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
   # build-vsix:
   #   name: Build VSIX
