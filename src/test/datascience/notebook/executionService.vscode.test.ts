@@ -10,7 +10,6 @@ import * as sinon from 'sinon';
 import { CellDisplayOutput, commands } from 'vscode';
 import { CellErrorOutput } from '../../../../typings/vscode-proposed';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
-import { traceInfo } from '../../../client/common/logger';
 import { IDisposable } from '../../../client/common/types';
 import { INotebookEditorProvider } from '../../../client/datascience/types';
 import { createEventHandler, IExtensionTestApi, sleep, waitForCondition } from '../../common';
@@ -590,13 +589,10 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', () => {
         if (!vscodeNotebook.activeNotebookEditor) {
             throw new Error('No active document');
         }
-        process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT = 'true';
         const cells = vscodeNotebook.activeNotebookEditor.document.cells;
-        traceInfo('1. Start execution for test of Stderr & stdout outputs');
+
         await executeActiveDocument();
-        traceInfo('2. Start execution for test of Stderr & stdout outputs');
         await waitForExecutionCompletedSuccessfully(cells[0]);
-        traceInfo('2. completed execution for test of Stderr & stdout outputs');
 
         // In cell 1 we should have the output
         // 12

@@ -14,7 +14,7 @@ import type {
 } from '../../../../../types/vscode-proposed';
 import { concatMultilineString, formatStreamText } from '../../../../datascience-ui/common';
 import { IApplicationShell, IVSCodeNotebook } from '../../../common/application/types';
-import { traceError, traceInfo, traceInfoIf, traceWarning } from '../../../common/logger';
+import { traceInfo, traceWarning } from '../../../common/logger';
 import { RefBool } from '../../../common/refBool';
 import { IDisposable } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
@@ -157,10 +157,6 @@ export class CellExecution {
 
     public async start(kernelPromise: Promise<IKernel>, notebook: INotebook) {
         traceInfo(`Start cell execution for cell Index ${this.cell.index}`);
-        traceInfoIf(
-            !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
-            `Cell Exec contents ${this.cell.document.getText().substring(0, 50)}...`
-        );
         if (!this.canExecuteCell()) {
             return;
         }
@@ -355,7 +351,6 @@ export class CellExecution {
 
     private async execute(session: IJupyterSession, loggers: INotebookExecutionLogger[]) {
         const code = this.cell.document.getText();
-        traceInfo(`Send code for execution ${this.cell.index}`);
         return this.executeCodeCell(code, session, loggers);
     }
 
@@ -422,15 +417,12 @@ export class CellExecution {
             // Solution is to wait for all messages to get processed.
             await Promise.all([request.done, this.requestHandlerChain]);
             await this.completedSuccessfully();
-            traceInfo(`Cell ${this.cell.index} executed successfully`);
         } catch (ex) {
             // @jupyterlab/services throws a `Canceled` error when the kernel is interrupted.
             // Such an error must be ignored.
             if (ex && ex instanceof Error && ex.message === 'Canceled') {
                 await this.completedSuccessfully();
-                traceInfo(`Cell ${this.cell.index} execution cancelled`);
             } else {
-                traceError(`Cell (index = ${this.cell.index}) execution completed with errors (1).`, ex);
                 await this.completedWithErrors(ex);
             }
         } finally {
@@ -451,35 +443,23 @@ export class CellExecution {
 
         try {
             if (jupyterLab.KernelMessage.isExecuteResultMsg(msg)) {
-                traceInfoIf(!!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT, 'KernelMessage = ExecuteResult');
                 await this.handleExecuteResult(msg as KernelMessage.IExecuteResultMsg, clearState);
             } else if (jupyterLab.KernelMessage.isExecuteInputMsg(msg)) {
                 await this.handleExecuteInput(msg as KernelMessage.IExecuteInputMsg, clearState, loggers);
             } else if (jupyterLab.KernelMessage.isStatusMsg(msg)) {
-                traceInfoIf(!!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT, 'KernelMessage = StatusMessage');
                 // Status is handled by the result promise. While it is running we are active. Otherwise we're stopped.
                 // So ignore status messages.
                 const statusMsg = msg as KernelMessage.IStatusMsg;
                 this.handleStatusMessage(statusMsg, clearState);
             } else if (jupyterLab.KernelMessage.isStreamMsg(msg)) {
-                traceInfoIf(
-                    !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
-                    'KernelMessage = StreamMessage',
-                    `Stream '${msg.content.name}`,
-                    msg.content.text
-                );
                 await this.handleStreamMessage(msg as KernelMessage.IStreamMsg, clearState);
             } else if (jupyterLab.KernelMessage.isDisplayDataMsg(msg)) {
-                traceInfoIf(!!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT, 'KernelMessage = DisplayMessage');
                 await this.handleDisplayData(msg as KernelMessage.IDisplayDataMsg, clearState);
             } else if (jupyterLab.KernelMessage.isUpdateDisplayDataMsg(msg)) {
-                traceInfoIf(!!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT, 'KernelMessage = UpdateDisplayMessage');
                 await handleUpdateDisplayDataMessage(msg, this.editor);
             } else if (jupyterLab.KernelMessage.isClearOutputMsg(msg)) {
-                traceInfoIf(!!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT, 'KernelMessage = CleanOutput');
                 await this.handleClearOutput(msg as KernelMessage.IClearOutputMsg, clearState);
             } else if (jupyterLab.KernelMessage.isErrorMsg(msg)) {
-                traceInfoIf(!!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT, 'KernelMessage = ErrorMessage');
                 await this.handleError(msg as KernelMessage.IErrorMsg, clearState);
             } else if (jupyterLab.KernelMessage.isCommOpenMsg(msg)) {
                 // Noop.
@@ -493,11 +473,9 @@ export class CellExecution {
 
             // Set execution count, all messages should have it
             if ('execution_count' in msg.content && typeof msg.content.execution_count === 'number') {
-                traceInfoIf(!!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT, `Exec Count = ${msg.content.execution_count}`);
                 await updateCellExecutionCount(this.editor, this.cell, msg.content.execution_count);
             }
         } catch (err) {
-            traceError(`Cell (index = ${this.cell.index}) execution completed with errors (2).`, err);
             // If not a restart error, then tell the subscriber
             await this.completedWithErrors(err).then(noop, noop);
         }
