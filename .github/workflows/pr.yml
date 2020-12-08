@@ -755,9 +755,6 @@ jobs:
     runs-on: ubuntu-latest
     if: always()
     needs: [tests, smoke-tests, vscodeTests]
-    defaults:
-      run:
-        working-directory: ${{env.special-working-directory}}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
