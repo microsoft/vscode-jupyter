@@ -19,7 +19,6 @@ import { IKernelSpecQuickPickItem } from '../../../../client/datascience/jupyter
 import { IKernelFinder } from '../../../../client/datascience/kernel-launcher/types';
 import { IJupyterKernel, IJupyterKernelSpec, IJupyterSessionManager } from '../../../../client/datascience/types';
 import { IInterpreterQuickPickItem, IInterpreterSelector } from '../../../../client/interpreter/configuration/types';
-import { IInterpreterService } from '../../../../client/interpreter/contracts';
 
 // tslint:disable-next-line: max-func-body-length
 suite('DataScience - KernelSelections', () => {
@@ -134,12 +133,9 @@ suite('DataScience - KernelSelections', () => {
         when(pathUtils.getDisplayName(anything(), anything())).thenReturn('<user friendly path>');
         const extensionChecker = mock(PythonExtensionChecker);
         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
-        const interpreterService = mock<IInterpreterService>();
-        when(interpreterService.getActiveInterpreter(anything())).thenResolve();
         kernelSelectionProvider = new KernelSelectionProvider(
             instance(kernelService),
             instance(interpreterSelector),
-            instance(interpreterService),
             instance(fs),
             instance(pathUtils),
             instance(kernelFinder),

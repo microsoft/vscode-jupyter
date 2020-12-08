@@ -9,7 +9,6 @@ import { IExtensionSingleActivationService } from '../../activation/types';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import { ContextKey } from '../../common/contextKey';
 import '../../common/extensions';
-import { traceInfo } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IDisposableRegistry } from '../../common/types';
 import { createDeferred } from '../../common/utils/async';
@@ -53,7 +52,7 @@ export class TrustCommandHandler implements IExtensionSingleActivationService {
         if (model.isTrusted) {
             return;
         }
-        traceInfo('Display prompt to trust notebook');
+
         const selection = await this.applicationShell.showErrorMessage(
             DataScience.launchNotebookTrustPrompt(),
             DataScience.trustNotebook(),
@@ -61,7 +60,7 @@ export class TrustCommandHandler implements IExtensionSingleActivationService {
             DataScience.trustAllNotebooks()
         );
         sendTelemetryEvent(Telemetry.NotebookTrustPromptShown);
-        traceInfo(`Displayed prompt to trust notebook & selected ${selection}`);
+
         switch (selection) {
             case DataScience.trustAllNotebooks():
                 commands.executeCommand('workbench.action.openSettings', 'jupyter.alwaysTrustNotebooks');

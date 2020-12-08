@@ -91,13 +91,6 @@ export function logInfo(...args: any[]) {
 }
 
 // tslint:disable-next-line:no-any
-export function logInfoIf(condition: boolean, ...args: any[]) {
-    if (condition) {
-        log(LogLevel.Info, ...args);
-    }
-}
-
-// tslint:disable-next-line:no-any
 export function logWarning(...args: any[]) {
     log(LogLevel.Warn, ...args);
 }
