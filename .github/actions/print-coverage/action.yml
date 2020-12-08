@@ -1,0 +1,6 @@
+name: 'Print coverage'
+description: "Prints coverage report as a github comment"
+
+runs:
+  using: 'node12'
+  main: 'index.js'
