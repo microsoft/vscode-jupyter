@@ -63,7 +63,7 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         dsSettings = api.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(undefined);
         oldAskForRestart = dsSettings.askForKernelRestart;
     });
-    setup(async () => {
+    setup(async function () {
         sinon.restore();
         await trustAllNotebooks();
         // Open a notebook and use this for all tests in this test suite.
@@ -73,8 +73,12 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         vscEditor = vscodeNotebook.activeNotebookEditor!;
         // Disable the prompt (when attempting to restart kernel).
         dsSettings.askForKernelRestart = false;
+        traceInfo(`Start Test ${this.currentTest?.title}`);
     });
-    teardown(() => closeNotebooks(disposables));
+    teardown(async function () {
+        await closeNotebooks(disposables);
+        traceInfo(`End Test ${this.currentTest?.title}`);
+    });
     suiteTeardown(async () => {
         if (dsSettings) {
             dsSettings.askForKernelRestart = oldAskForRestart === true;
