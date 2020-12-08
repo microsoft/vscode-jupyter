@@ -107,15 +107,21 @@ suite('DataScience - VSCode Notebook - (Trust)', function () {
     [true, false].forEach((withOutput) => {
         suite(`Test notebook ${withOutput ? 'with' : 'without'} output`, () => {
             let ipynbFile: Uri;
-            setup(async () => {
+            setup(async function () {
+                traceInfo(`Started Test ${this.currentTest?.title}`);
                 sinon.restore();
                 dsSettings!.alwaysTrustNotebooks = false;
                 // Don't use same file (due to dirty handling, we might save in dirty.)
                 // Coz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
                 const templateFileToUse = withOutput ? templateIPynbWithOutput : templateIPynbWithoutOutput;
                 ipynbFile = Uri.file(await createTemporaryNotebook(templateFileToUse, disposables));
+                traceInfo(`Started Test (completed) ${this.currentTest?.title}`);
             });
-            teardown(async () => closeNotebooks(disposables));
+            teardown(async function () {
+                traceInfo(`Ended Test ${this.currentTest?.title}`);
+                await closeNotebooks(disposables);
+                traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
+            });
             test('Opening an untrusted notebook', async () => {
                 await openNotebook(api.serviceContainer, ipynbFile.fsPath, { isNotTrusted: true });
                 const model = storageProvider.get(ipynbFile)!;

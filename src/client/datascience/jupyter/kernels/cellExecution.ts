@@ -5,7 +5,7 @@
 
 import { nbformat } from '@jupyterlab/coreutils';
 import type { KernelMessage } from '@jupyterlab/services/lib/kernel/messages';
-import { CancellationToken } from 'vscode';
+import { CancellationToken, ExtensionMode } from 'vscode';
 import type {
     CellDisplayOutput,
     NotebookCell,
@@ -14,9 +14,9 @@ import type {
 } from '../../../../../types/vscode-proposed';
 import { concatMultilineString, formatStreamText } from '../../../../datascience-ui/common';
 import { IApplicationShell, IVSCodeNotebook } from '../../../common/application/types';
-import { traceError, traceInfo, traceInfoIf, traceWarning } from '../../../common/logger';
+import { traceError, traceErrorIf, traceInfo, traceInfoIf, traceWarning } from '../../../common/logger';
 import { RefBool } from '../../../common/refBool';
-import { IDisposable } from '../../../common/types';
+import { IDisposable, IExtensionContext } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
 import { swallowExceptions } from '../../../common/utils/decorators';
 import { noop } from '../../../common/utils/misc';
@@ -56,7 +56,8 @@ export class CellExecutionFactory {
         private readonly errorHandler: IDataScienceErrorHandler,
         private readonly editorProvider: INotebookEditorProvider,
         private readonly appShell: IApplicationShell,
-        private readonly vscNotebook: IVSCodeNotebook
+        private readonly vscNotebook: IVSCodeNotebook,
+        private readonly context: IExtensionContext
     ) {}
 
     public create(cell: NotebookCell, isPythonKernelConnection: boolean) {
@@ -67,7 +68,8 @@ export class CellExecutionFactory {
             this.errorHandler,
             this.editorProvider,
             this.appShell,
-            isPythonKernelConnection
+            isPythonKernelConnection,
+            this.context
         );
     }
 }
@@ -121,24 +123,22 @@ export class CellExecution {
         private readonly errorHandler: IDataScienceErrorHandler,
         private readonly editorProvider: INotebookEditorProvider,
         private readonly applicationService: IApplicationShell,
-        private readonly isPythonKernelConnection: boolean
+        private readonly isPythonKernelConnection: boolean,
+        extensionContext: IExtensionContext
     ) {
         // These are only used in the tests.
         // See where this is used to understand its purpose.
-        let deferred = createDeferred<void>();
         if (
             !CellExecution.cellsCompletedForTesting.has(cell) ||
             CellExecution.cellsCompletedForTesting.get(cell)!.completed
         ) {
-            CellExecution.cellsCompletedForTesting.set(cell, deferred);
+            CellExecution.cellsCompletedForTesting.set(cell, createDeferred<void>());
+        } else {
+            traceErrorIf(
+                extensionContext.extensionMode !== ExtensionMode.Production,
+                `Add new Cell Completion Deferred for ${cell.index}`
+            );
         }
-        if (
-            CellExecution.cellsCompletedForTesting.has(cell) &&
-            !CellExecution.cellsCompletedForTesting.get(cell)!.completed
-        ) {
-            deferred = CellExecution.cellsCompletedForTesting.get(cell)!;
-        }
-        this.result.then(() => deferred.resolve()).catch(() => deferred.resolve());
 
         this.oldCellRunState = cell.metadata.runState;
         this.initPromise = this.enqueue();
@@ -150,9 +150,18 @@ export class CellExecution {
         errorHandler: IDataScienceErrorHandler,
         editorProvider: INotebookEditorProvider,
         appService: IApplicationShell,
-        isPythonKernelConnection: boolean
+        isPythonKernelConnection: boolean,
+        context: IExtensionContext
     ) {
-        return new CellExecution(editor, cell, errorHandler, editorProvider, appService, isPythonKernelConnection);
+        return new CellExecution(
+            editor,
+            cell,
+            errorHandler,
+            editorProvider,
+            appService,
+            isPythonKernelConnection,
+            context
+        );
     }
 
     public async start(kernelPromise: Promise<IKernel>, notebook: INotebook) {
@@ -193,6 +202,7 @@ export class CellExecution {
         if (this.cancelHandled || this._completed) {
             return;
         }
+        traceInfo(`Cell execution cancelled for cell Index ${this.cell.index}`);
         this.cancelHandled = true;
         await this.initPromise;
         // We need to notify cancellation only if execution is in progress,
@@ -212,11 +222,22 @@ export class CellExecution {
      * Or when execution has been cancelled.
      */
     private dispose() {
-        traceInfo(`Completed cell execution for cell Index ${this.cell.index}`);
+        traceInfo(`Completed (dispose) cell execution for cell Index ${this.cell.index}`);
         this.disposables.forEach((d) => d.dispose());
+        const deferred = CellExecution.cellsCompletedForTesting.get(this.cell);
+        if (deferred) {
+            deferred.resolve();
+        }
     }
     private handleKernelRestart(kernel: IKernel) {
-        kernel.onRestarted(async () => this.cancel(), this, this.disposables);
+        kernel.onRestarted(
+            async () => {
+                traceInfo(`Kernel restart handled in CellExecution, cancelling Cell Index ${this.cell.index}`);
+                this.cancel().catch(noop);
+            },
+            this,
+            this.disposables
+        );
     }
 
     private async completedWithErrors(error: Partial<Error>) {
