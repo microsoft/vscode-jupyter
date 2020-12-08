@@ -69,23 +69,18 @@ export class KernelEnvironmentVariablesService {
         this.envVarsService.mergeVariables(interpreterEnv, mergedVars); // interpreter vars win over proc.
         this.envVarsService.mergeVariables(kernelEnv, mergedVars); // kernels vars win over interpreter.
         this.envVarsService.mergeVariables(customEditVars, mergedVars); // custom vars win over all.
-        if (customEditVars[this.platformService.pathVariableName]) {
-            this.envVarsService.appendPath(mergedVars, customEditVars[this.platformService.pathVariableName]!);
+        const pathVariable = this.platformService.pathVariableName;
+        if (customEditVars[pathVariable]) {
+            this.envVarsService.appendPath(mergedVars, customEditVars[pathVariable]!);
         }
-        if (kernelEnv[this.platformService.pathVariableName]) {
-            this.envVarsService.appendPath(mergedVars, kernelEnv[this.platformService.pathVariableName]!);
-        }
-        if (process.env[this.platformService.pathVariableName]) {
-            this.envVarsService.appendPath(mergedVars, process.env[this.platformService.pathVariableName]!);
+        if (kernelEnv[pathVariable]) {
+            this.envVarsService.appendPath(mergedVars, kernelEnv[pathVariable]!);
         }
         if (customEditVars.PYTHONPATH) {
             this.envVarsService.appendPythonPath(mergedVars, customEditVars.PYTHONPATH);
         }
         if (kernelEnv.PYTHONPATH) {
             this.envVarsService.appendPythonPath(mergedVars, kernelEnv.PYTHONPATH);
-        }
-        if (process.env.PYTHONPATH) {
-            this.envVarsService.appendPythonPath(mergedVars, process.env.PYTHONPATH);
         }
         return mergedVars;
     }
