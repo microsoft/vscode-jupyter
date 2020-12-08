@@ -128,9 +128,9 @@ use(chaiAsPromised);
         async function openBqplotIpynb() {
             return openNotebookFile('bqplot_widgets.ipynb');
         }
-        async function openIPyVolumeIpynb() {
-            return openNotebookFile('ipyvolume_widgets.ipynb');
-        }
+        // async function openIPyVolumeIpynb() {
+        //     return openNotebookFile('ipyvolume_widgets.ipynb');
+        // }
         async function openPyThreejsIpynb() {
             return openNotebookFile('pythreejs_widgets.ipynb');
         }
