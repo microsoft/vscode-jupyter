@@ -20,7 +20,7 @@ async function main() {
         status,
         conclusion,
         output: {
-            title,
+            title: 'title',
             summary: '',
             annotations: ['Test Annotation']
         }
