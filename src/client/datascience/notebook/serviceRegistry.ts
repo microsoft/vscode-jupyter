@@ -16,7 +16,6 @@ import { EmptyNotebookCellLanguageService } from './emptyNotebookCellLanguageSer
 import { NotebookIntegration } from './integration';
 import { VSCodeKernelPickerProvider } from './kernelProvider';
 import { NotebookDisposeService } from './notebookDisposeService';
-import { RendererExtension } from './rendererExtension';
 import { RendererExtensionDownloader } from './rendererExtensionDownloader';
 import { INotebookContentProvider, INotebookKernelProvider, INotebookKernelResolver } from './types';
 
@@ -30,10 +29,11 @@ export function registerTypes(serviceManager: IServiceManager) {
         IExtensionSingleActivationService,
         NotebookDisposeService
     );
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
-        RendererExtension
-    );
+    // Do not install renderer extension.
+    // serviceManager.addSingleton<IExtensionSingleActivationService>(
+    //     IExtensionSingleActivationService,
+    //     RendererExtension
+    // );
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         EmptyNotebookCellLanguageService
