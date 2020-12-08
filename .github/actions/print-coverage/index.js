@@ -11,6 +11,16 @@ async function main() {
     const status = 'completed';
     const head_sha = commit || (pullRequest && pullRequest.head.sha) || github.context.sha;
     core.info(`Posting status '${status}' with conclusion '${conclusion}' to ${link} (sha: ${head_sha})`);
+    const testAnnotation = {
+        path: '',
+        start_line: 0,
+        end_line: 0,
+        start_column: 0,
+        end_column: 0,
+        annotation_level: 'success',
+        title: 'Test Annotation',
+        message: 'You rocked it'
+    };
 
     const createCheckRequest = {
         ...github.context.repo,
@@ -21,7 +31,7 @@ async function main() {
         output: {
             title: 'title',
             summary: '',
-            annotations: ['Test Annotation']
+            annotations: [testAnnotation]
         }
     };
 
