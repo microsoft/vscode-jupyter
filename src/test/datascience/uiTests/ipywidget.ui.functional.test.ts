@@ -85,7 +85,9 @@ use(chaiAsPromised);
             console.log(`IPyWidget Test State ${this.test?.state} for ${this.test?.title}`);
             if (this.test && this.test.state === 'failed') {
                 const imageName = `${sanitize(this.currentTest?.title)}.png`;
+                console.log(`Capturing screenshot into ${imageName}`);
                 await notebookUi.captureScreenshot(path.join(os.tmpdir(), 'tmp', 'screenshots', imageName));
+                console.log(`Captured screenshot into ${imageName}`);
             }
         });
         function getIpynbFilePath(fileName: string) {
