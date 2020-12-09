@@ -1,6 +1,6 @@
 # Changelog
 
-## 2020.12.0-rc (7 December 2020)
+## 2020.12.0 (7 December 2020)
 
 ### Enhancements
 
