@@ -63,7 +63,7 @@ export function runDoubleTest(
     getIOC: () => Promise<DataScienceIocContainer>
 ) {
     // Just run the test twice. Originally mounted twice, but too hard trying to figure out disposing.
-    test(`${name} (interactive)`, async function ()  {
+    test(`${name} (interactive)`, async function () {
         const testContext = this;
         await testInnerLoop(name, 'interactive', testFunc.bind(testContext), getIOC);
     });
@@ -90,7 +90,7 @@ export function runNativeTest(
     getIOC: () => Promise<DataScienceIocContainer>
 ) {
     // Run the test with just the native window
-    test(`${name} (native)`, async function ()  {
+    test(`${name} (native)`, async function () {
         const testContext = this;
         await testInnerLoop(name, 'native', testFunc.bind(testContext), getIOC);
     });
