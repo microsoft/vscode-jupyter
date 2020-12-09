@@ -220,11 +220,11 @@ jobs:
       # Upload unit test coverage reports for later use in the "reports" job.
       - name: Upload unit test coverage reports
         uses: actions/upload-artifact@v2
+        if: always()
         with:
           name: ${{runner.os}}-${{env.COVERAGE_REPORTS}}
           path: .nyc_output
           retention-days: 1
-          if: always()
 
   tests:
     name: Functional Jupyter Tests
@@ -399,11 +399,11 @@ jobs:
       # Upload unit test coverage reports for later use in the "reports" job.
       - name: Upload unit test coverage reports
         uses: actions/upload-artifact@v2
+        if: always()
         with:
           name: ${{runner.os}}-${{env.COVERAGE_REPORTS}}
           path: .nyc_output
           retention-days: 1
-          if: always()
 
   vscodeTests:
     name: VS Code Tests # These tests run with Python extension & real Jupyter
@@ -679,11 +679,11 @@ jobs:
       # Upload unit test coverage reports for later use in the "reports" job.
       - name: Upload unit test coverage reports
         uses: actions/upload-artifact@v2
+        if: always()
         with:
           name: ${{runner.os}}-${{env.COVERAGE_REPORTS}}
           path: .nyc_output
           retention-days: 1
-          if: always()
 
   smoke-tests:
     name: Smoke tests
@@ -761,11 +761,11 @@ jobs:
       # Upload unit test coverage reports for later use in the "reports" job.
       - name: Upload unit test coverage reports
         uses: actions/upload-artifact@v2
+        if: always()
         with:
           name: ${{runner.os}}-${{env.COVERAGE_REPORTS}}
           path: .nyc_output
           retention-days: 1
-          if: always()
 
   coverage:
     name: Coverage reports upload
