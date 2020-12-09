@@ -338,20 +338,20 @@ jobs:
 
       - name: Install dependencies (npm ci)
         run: npm ci --prefer-offline
-      
-      - name: Install Dot.net	
-        uses: actions/setup-dotnet@v1	
-        with:	
-          dotnet-version: ${{env.DOTNET_VERSION}}	
-        if: matrix.test-suite != 'notebookWithoutPythonExt'	
 
-      - name: Install .NET Interactive	
-        run: dotnet tool install -g --add-source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json" Microsoft.dotnet-interactive	
-        if: matrix.test-suite != 'notebookWithoutPythonExt'	
+      - name: Install Dot.net
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: ${{env.DOTNET_VERSION}}
+        if: matrix.test-suite != 'notebookWithoutPythonExt'
 
-      - name: Install .NET Kernel	
-        run: dotnet interactive jupyter install	
-        if: matrix.test-suite != 'notebookWithoutPythonExt'	
+      - name: Install .NET Interactive
+        run: dotnet tool install -g --add-source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json" Microsoft.dotnet-interactive
+        if: matrix.test-suite != 'notebookWithoutPythonExt'
+
+      - name: Install .NET Kernel
+        run: dotnet interactive jupyter install
+        if: matrix.test-suite != 'notebookWithoutPythonExt'
 
         # This step is slow.
       - name: Install Julia
@@ -600,6 +600,20 @@ jobs:
 
       # Used by tests for non-python kernels.
       # Test are enabled via env variable `VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST`
+      - name: Install Dot.net
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: ${{env.DOTNET_VERSION}}
+        if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook' || matrix.test-suite == 'conda'
+
+      - name: Install .NET Interactive
+        run: dotnet tool install -g --add-source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json" Microsoft.dotnet-interactive
+        if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook' || matrix.test-suite == 'conda'
+
+      - name: Install .NET Kernel
+        run: dotnet interactive jupyter install
+        if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook' || matrix.test-suite == 'conda'
+
       - name: Install Julia
         uses: julia-actions/setup-julia@v1
         with:
