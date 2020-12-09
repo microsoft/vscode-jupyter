@@ -17,6 +17,7 @@ import type {
     InterruptResult,
     KernelSocketInformation
 } from '../../types';
+import { isPythonKernelConnection } from './helpers';
 
 export type LiveKernelModel = IJupyterKernel & Partial<IJupyterKernelSpec> & { session: Session.IModel };
 
@@ -101,11 +102,12 @@ export function getKernelConnectionId(kernelConnection: KernelConnectionMetadata
 
             // We need to take the interpreter path into account, as its possible
             // a user has registered a kernel with the same name in two different interpreters.
-            let interpreterPath =
-                kernelConnection.interpreter?.path ||
-                kernelConnection.kernelSpec.interpreterPath ||
-                kernelConnection.kernelSpec.metadata?.interpreter?.path ||
-                '';
+            let interpreterPath = isPythonKernelConnection(kernelConnection)
+                ? kernelConnection.interpreter?.path ||
+                  kernelConnection.kernelSpec.interpreterPath ||
+                  kernelConnection.kernelSpec.metadata?.interpreter?.path ||
+                  ''
+                : '';
 
             // Paths on windows can either contain \ or / Both work.
             // Thus, C:\Python.exe is the same as C:/Python.exe
