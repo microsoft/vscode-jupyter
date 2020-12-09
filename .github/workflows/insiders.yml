@@ -568,6 +568,7 @@ jobs:
           name: ${{runner.os}}-${{env.COVERAGE_REPORTS}}
           path: .nyc_output
           retention-days: 1
+          if: always()
 
   smoke-tests:
     timeout-minutes: 30
