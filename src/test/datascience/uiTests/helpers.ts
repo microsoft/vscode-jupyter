@@ -5,6 +5,7 @@
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as playwright from 'playwright-chromium';
+import { traceInfo } from '../../../client/common/logger';
 import { IAsyncDisposable, IDisposable } from '../../../client/common/types';
 import { createDeferred } from '../../../client/common/utils/async';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
@@ -91,6 +92,7 @@ export class BaseWebUI implements IAsyncDisposable {
         const numberOfTimes = options && options.numberOfTimes ? options.numberOfTimes : 1;
         // Wait for the mounted web panel to send a message back to the data explorer
         const promise = createDeferred<void>();
+        traceInfo(`Waiting for rendered_execution with timeout ${timeoutMs}`);
         const timer = timeoutMs
             ? setTimeout(async () => {
                   if (!promise.resolved) {
@@ -104,6 +106,7 @@ export class BaseWebUI implements IAsyncDisposable {
         const dispatchedAction = `DISPATCHED_ACTION_${message}`;
         const disposable = this.webServer.onDidReceiveMessage((msg) => {
             const messageType = msg.type;
+            traceInfo(`Webserver received message ${messageType}`);
             if (messageType !== message && messageType !== dispatchedAction) {
                 return;
             }
