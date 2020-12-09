@@ -737,4 +737,4 @@ jobs:
         continue-on-error: true
 
       - name: Upload coverage to codecov
-        run: bash <(curl -s https://codecov.io/bash) -f ./coverage/cobertura-coverage.xml
+        run: bash <(curl -s https://codecov.io/bash) -f ./coverage/cobertura-coverage.xml -v
