@@ -102,8 +102,16 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
                 // Make sure the disk path directory exists. We'll be downloading it to there.
                 await this.fs.createLocalDirectory(path.dirname(diskPath));
 
-                // Then get the first one that returns.
-                tempFile = await this.downloadFastestCDN(moduleName, moduleVersion);
+                // If CDN download fails, retry up to 3 times
+                const RETRY_ATTEMPTS = 3;
+                for (let attempt = 0; attempt < RETRY_ATTEMPTS; attempt++) {
+                    // Then get the first one that returns.
+                    tempFile = await this.downloadFastestCDN(moduleName, moduleVersion);
+                    if (tempFile) {
+                        break;
+                    }
+                }
+
                 if (tempFile) {
                     // Need to copy from the temporary file to our real file (note: VSC filesystem fails to copy so just use straight file system)
                     await this.fs.copyLocal(tempFile.filePath, diskPath);
@@ -152,7 +160,7 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
                     deferred.resolve(undefined);
                 }
             })
-            .ignoreErrors();
+            .catch((e) => traceError('CDN download failed', e));
 
         // Note, we only wait until one download finishes. We don't need to wait
         // for everybody (hence the use of the deferred)

@@ -534,16 +534,20 @@ export async function waitForCondition(
 export async function retryIfFail<T>(fn: () => Promise<T>, timeoutMs: number = 60_000): Promise<T> {
     let lastEx: Error | undefined;
     const started = new Date().getTime();
+    let attempt = 0;
     while (timeoutMs > new Date().getTime() - started) {
         try {
+            console.log(`retryIfFail attempt ${attempt}`);
             // tslint:disable-next-line: no-unnecessary-local-variable
             const result = await fn();
             // Capture result, if no exceptions return that.
             return result;
         } catch (ex) {
+            console.log(`retryIfFail attempt ${attempt} failed with exception`, ex);
             lastEx = ex;
+            await sleep(10);
+            attempt += 1;
         }
-        await sleep(10);
     }
     if (lastEx) {
         throw lastEx;
