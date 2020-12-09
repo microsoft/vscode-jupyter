@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - rchiodo/codecov_uplooad
   workflow_dispatch:
 
 env:
@@ -736,8 +737,7 @@ jobs:
         continue-on-error: true
 
       - name: Upload coverage to codecov
-        uses: codecov/codecov-action@v1
+        run: bash <(curl -s https://codecov.io/bash)
         with:
           # Token comes from https://app.codecov.io/gh/microsoft/vscode-jupyter/settings
           token: ${{ secrets.CODECOV_TOKEN }} 
-          file: ./coverage/cobertura-coverage.xml
