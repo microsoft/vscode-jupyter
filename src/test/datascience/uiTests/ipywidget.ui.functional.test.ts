@@ -82,6 +82,7 @@ use(chaiAsPromised);
         });
         let notebookUi: NotebookEditorUI;
         teardown(async function () {
+            console.log(`IPyWidget Test State ${this.test?.state} for ${this.test?.title}`);
             if (this.test && this.test.state === 'failed') {
                 const imageName = `${sanitize(this.currentTest?.title)}.png`;
                 await notebookUi.captureScreenshot(path.join(os.tmpdir(), 'tmp', 'screenshots', imageName));
