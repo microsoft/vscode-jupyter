@@ -9,7 +9,7 @@ import * as sinon from 'sinon';
 import { Uri } from 'vscode';
 import { IPythonExtensionChecker } from '../../../client/api/types';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
-import { traceInfo } from '../../../client/common/logger';
+import { traceInfo, traceInfoIf } from '../../../client/common/logger';
 import { IDisposable } from '../../../client/common/types';
 import { VSCodeNotebookProvider } from '../../../client/datascience/constants';
 import { NotebookCellLanguageService } from '../../../client/datascience/notebook/defaultCellLanguageService';
@@ -102,7 +102,10 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         testEmptyPythonNb = Uri.file(await createTemporaryNotebook(emptyPythonNb, disposables));
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
     });
-    teardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
+    teardown(async () => {
+        process.env.VSC_CI_ENABLE_TOO_MUCH_LOGGING = undefined;
+        await closeNotebooksAndCleanUpAfterTests(disposables);
+    });
     test('Automatically pick java kernel when opening a Java Notebook', async function () {
         if (!testJavaKernels) {
             return this.skip();
@@ -123,7 +126,10 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         if (!pythonChecker.isPythonExtensionInstalled) {
             return this.skip();
         }
+        process.env.VSC_CI_ENABLE_TOO_MUCH_LOGGING = 'true';
+        traceInfoIf(!!process.env.VSC_CI_ENABLE_TOO_MUCH_LOGGING, '1. Open Notebook');
         await openNotebook(api.serviceContainer, testCSharpNb.fsPath);
+        traceInfoIf(!!process.env.VSC_CI_ENABLE_TOO_MUCH_LOGGING, '2. Wait for kernel to get selected');
         await waitForKernelToGetAutoSelected('c#');
     });
     test('New notebook will have a Julia cell if last notebook was a julia nb', async () => {

@@ -554,7 +554,7 @@ export async function hijackPrompt(
     const stub = sinon.stub(appShell, promptType).callsFake(function (msg: string) {
         console.info(`Message displayed to user ${msg}.`);
         if (
-            ('exactMatch' in message && msg === message.exactMatch) ||
+            ('exactMatch' in message && msg.trim() === message.exactMatch.trim()) ||
             ('endsWith' in message && msg.endsWith(message.endsWith))
         ) {
             console.debug(`Exact Message found ${msg} with condition ${JSON.stringify(message)}`);
