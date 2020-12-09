@@ -9,6 +9,7 @@ import * as sinon from 'sinon';
 import { Uri } from 'vscode';
 import { IPythonExtensionChecker } from '../../../client/api/types';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
+import { traceInfo } from '../../../client/common/logger';
 import { IDisposable } from '../../../client/common/types';
 import { VSCodeNotebookProvider } from '../../../client/datascience/constants';
 import { NotebookCellLanguageService } from '../../../client/datascience/notebook/defaultCellLanguageService';
@@ -89,7 +90,8 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         editorProvider = api.serviceContainer.get<INotebookEditorProvider>(VSCodeNotebookProvider);
         languageService = api.serviceContainer.get<NotebookCellLanguageService>(NotebookCellLanguageService);
     });
-    setup(async () => {
+    setup(async function () {
+        traceInfo(`Start Test ${this.currentTest?.title}`);
         sinon.restore();
         await closeNotebooks();
         // Don't use same file (due to dirty handling, we might save in dirty.)
@@ -98,8 +100,9 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         testJavaNb = Uri.file(await createTemporaryNotebook(javaNb, disposables));
         testCSharpNb = Uri.file(await createTemporaryNotebook(csharpNb, disposables));
         testEmptyPythonNb = Uri.file(await createTemporaryNotebook(emptyPythonNb, disposables));
+        traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
     });
-    suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
+    teardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
     test('Automatically pick java kernel when opening a Java Notebook', async function () {
         if (!testJavaKernels) {
             return this.skip();
