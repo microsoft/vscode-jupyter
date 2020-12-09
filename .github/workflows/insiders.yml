@@ -744,15 +744,6 @@ jobs:
           path_to_write_report: ./coverage/codecov_report.txt
           verbose: true
 
-      # Upload code cov report
-      - name: Upload code cov report
-        uses: actions/upload-artifact@v2
-        if: always()
-        with:
-          name: ${{runner.os}}-codecov_report.txt
-          path: ./coverage/codecov_report.txt
-          retention-days: 1
-
       # Alternative method for uploading
       # - name: Upload coverage to codecov
       #  run: bash <(curl -s https://codecov.io/bash) -f ./coverage/cobertura-coverage.xml -v
