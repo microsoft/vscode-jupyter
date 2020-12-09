@@ -736,15 +736,12 @@ jobs:
         run: npm run test:cover:report
         continue-on-error: true
 
-      - name: Move codecov.yml to root
-        run: |
-          mv .github/codecov.yml $GITHUB_WORKSPACE
-
       - name: Upload coverage to codecov
         uses: codecov/codecov-action@v1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           file: ./coverage/cobertura-coverage.xml
+          verbose: true
 
       # Alternative method for uploading
       # - name: Upload coverage to codecov
