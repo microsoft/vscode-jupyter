@@ -262,7 +262,7 @@
                 "--ui=tdd",
                 "--recursive",
                 "--colors",
-                "--grep", "Check variables",
+                // "--grep", "<suite>",
                 "--timeout=300000",
                 "--exit"
             ],
@@ -289,7 +289,7 @@
                 "${workspaceFolder}/out/**/*.js",
                 "!${workspaceFolder}/**/node_modules**/*"
             ],
-            // "preLaunchTask": "Compile",
+            "preLaunchTask": "Compile",
             "skipFiles": [
                 "<node_internals>/**"
             ],
