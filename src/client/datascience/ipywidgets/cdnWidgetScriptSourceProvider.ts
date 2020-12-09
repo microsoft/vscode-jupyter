@@ -104,12 +104,20 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
 
                 // If CDN download fails, retry up to 3 times
                 const RETRY_ATTEMPTS = 3;
-                for (let attempt = 0; attempt < RETRY_ATTEMPTS; attempt++) {
+                let attempt = 0;
+                while (attempt < RETRY_ATTEMPTS) {
                     // Then get the first one that returns.
+                    traceInfo(`Attempt ${attempt}: downloading ${moduleName} v${moduleVersion} from CDN...`);
                     tempFile = await this.downloadFastestCDN(moduleName, moduleVersion);
                     if (tempFile) {
+                        traceInfo(`Successfully downloaded scripts from CDN to ${tempFile.filePath}`);
                         break;
                     }
+                    traceInfo(
+                        `Attempt ${attempt} to download ${moduleName} v${moduleVersion} from CDN failed. Retrying...`
+                    );
+                    await sleep(10);
+                    attempt += 1;
                 }
 
                 if (tempFile) {
