@@ -404,13 +404,9 @@ export namespace DataScience {
         'DataScience.kernelTimeout',
         'Timed out waiting to get a heartbeat from kernel process. \n{0} \nView Jupyter [log](command:{1}) for further details.'
     );
-    export const kernelProcessError = localize(
-        'DataScience.kernelProcessError',
-        'KernelProcess error: {0} \nView Jupyter [log](command:{1}) for further details.'
-    );
     export const kernelDied = localize(
         'DataScience.kernelDied',
-        'The kernel died: {0}. \nView Jupyter [log](command:{1}) for further details.'
+        'The kernel died. View Jupyter [log](command:{0}) for further details. \nError: {1}...'
     );
     export const executingCode = localize('DataScience.executingCode', 'Executing Cell');
     export const collapseAll = localize('DataScience.collapseAll', 'Collapse all cell inputs');
