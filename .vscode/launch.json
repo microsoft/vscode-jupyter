@@ -247,7 +247,12 @@
 			"presentation": {
 				"group": "2_tests",
 				"order": 7
-			}
+            },
+            "env": {
+                // Remove 'X' prefix to run with coverage
+                "XVSC_JUPYTER_INSTRUMENT_CODE_FOR_COVERAGE": "1"
+            },
+            
         },
         {
             "name": "Functional Tests (without VS Code, *.functional.test.ts)",
@@ -343,7 +348,7 @@
             "name": "Gulp tasks (helpful for debugging gulpfile.js)",
             "program": "${workspaceFolder}/node_modules/gulp/bin/gulp.js",
             "args": [
-                "watch"
+                "compile"
             ],
             "skipFiles": [
                 "<node_internals>/**"

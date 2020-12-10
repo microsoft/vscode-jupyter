@@ -31,6 +31,7 @@ const nyc = setupCoverage();
 
 exports.mochaHooks = {
     afterAll() {
+        this.timeout(30000);
         // Also output the nyc coverage if we have any
         if (nyc) {
             nyc.writeCoverageFile();

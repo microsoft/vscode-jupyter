@@ -13,11 +13,12 @@ export function setupCoverage() {
     if (!process.env.VSC_JUPYTER_INSTRUMENT_CODE_FOR_COVERAGE) {
         return;
     }
-    const reports = ['lcovonly', 'text', 'text-summary', 'html'];
+    const reports = ['text', 'text-summary'];
     const NYC = require('nyc');
     const nyc = new NYC({
         cwd: path.join(EXTENSION_ROOT_DIR_FOR_TESTS),
-        include: ['**/out/client/**/*.js'],
+        extension: ['.ts'],
+        include: ['**/src/client/**/*.ts', '**/out/client/**/*.js'],
         exclude: ['**/test/**', '.vscode-test/**', '**/ipywidgets/**', '**/node_modules/**'],
         reporter: reports,
         all: true,
@@ -25,7 +26,8 @@ export function setupCoverage() {
         hookRequire: true,
         hookRunInContext: true,
         hookRunInThisContext: true,
-        excludeNodeModules: true
+        excludeNodeModules: true,
+        sourceMap: true
     });
 
     nyc.reset();
