@@ -1,5 +1,12 @@
 # Changelog
 
+## 2020.12.1 (10 December 2020)
+
+### Fixes
+
+1. Fix support for IPyWidgets in Interactive Window.
+   ([#4203](https://github.com/Microsoft/vscode-jupyter/issues/4203))
+
 ## 2020.12.0 (9 December 2020)
 
 ### Enhancements
