@@ -111,7 +111,9 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
             // Then get the first one that returns.
             tempFile = await this.downloadFastestCDN(moduleName, moduleVersion);
             if (tempFile) {
-                traceInfo(`Widget Script downloaded for ${moduleName}:${moduleVersion}`);
+                traceInfo(
+                    `Widget Script downloaded for ${moduleName}:${moduleVersion} from ${tempFile.filePath} into ${diskPath}`
+                );
                 // Need to copy from the temporary file to our real file (note: VSC filesystem fails to copy so just use straight file system)
                 await this.fs.copyLocal(tempFile.filePath, diskPath);
 
