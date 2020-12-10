@@ -23,26 +23,17 @@ const os = require('os');
 const { ExtensionRootDir } = require('./build/util');
 const isCI = process.env.TF_BUILD !== undefined || process.env.GITHUB_ACTIONS === 'true';
 
-gulp.task('compile', (done) => {
-    const sourcemaps = require('gulp-sourcemaps');
-    let failed = false;
-    const tsProject = ts.createProject('tsconfig.json');
-    const tsResult = tsProject
-        .src()
-        .pipe(sourcemaps.init({ largeFile: true }))
-        .pipe(tsProject())
-        .on('error', () => (failed = true));
-
-    return tsResult.js
-        .pipe(
-            sourcemaps.mapSources(function (sourcePath, file) {
-                // source paths are prefixed with '../src/'
-                return '../src/' + sourcePath;
-            })
-        )
-        .pipe(sourcemaps.write('../out', { sourceRoot: '' }))
-        .pipe(gulp.dest('out'))
-        .on('finish', () => (failed ? done(new Error('TypeScript compilation errors')) : done()));
+gulp.task('compile', async (done) => {
+    // Use tsc so we can generate source maps that look just like tsc does (gulp-sourcemap does not generate them the same way)
+    try {
+        const stdout = await spawnAsync('tsc', ['-p', './'], {}, true);
+        if (stdout.toLowerCase().includes('error ts')) {
+            throw new Error(`Compile errors: \n${stdout}`);
+        }
+        done();
+    } catch (e) {
+        done(e);
+    }
 });
 
 gulp.task('output:clean', () => del(['coverage']));
