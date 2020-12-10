@@ -1,4 +1,4 @@
-# Contributing to the Python extension for Visual Studio Code
+# Contributing to the Jupyter extension for Visual Studio Code
 
 ---
 
