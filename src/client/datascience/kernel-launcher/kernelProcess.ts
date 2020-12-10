@@ -148,21 +148,25 @@ export class KernelProcess implements IKernelProcess {
         // Don't return until our heartbeat channel is open for connections or the kernel died
         try {
             await Promise.race([
-                tcpPortUsed.waitUntilUsed(this.connection.hb_port, 200, 30_000), 
+                tcpPortUsed.waitUntilUsed(this.connection.hb_port, 200, 30_000),
                 createPromiseFromCancellation({
                     token: cancelWaiting.token,
-                    cancelAction: "reject",
+                    cancelAction: 'reject',
                     defaultValue: undefined
                 })
             ]);
-        }
-        catch (e) {
+        } catch (e) {
             // Make sure to dispose if we never get a heartbeat
             this.dispose().ignoreErrors();
 
             if (cancelWaiting.token.isCancellationRequested) {
                 traceError(stderrProc || stderr);
-                throw new Error(localize.DataScience.kernelDied().format(Commands.ViewJupyterOutput, (stderrProc || stderr).substring(0, 100)));
+                throw new Error(
+                    localize.DataScience.kernelDied().format(
+                        Commands.ViewJupyterOutput,
+                        (stderrProc || stderr).substring(0, 100)
+                    )
+                );
             } else {
                 traceError('Timed out waiting to get a heartbeat from kernel process.');
                 throw new Error(localize.DataScience.kernelTimeout().format(Commands.ViewJupyterOutput));
