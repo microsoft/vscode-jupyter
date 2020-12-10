@@ -85,7 +85,6 @@ export class KernelProcess implements IKernelProcess {
 
         let stdout = '';
         let stderr = '';
-        let stdoutProc = '';
         let stderrProc = '';
         let exitEventFired = false;
         const cancelWaiting = new CancellationTokenSource();
@@ -103,13 +102,12 @@ export class KernelProcess implements IKernelProcess {
         });
 
         exeObs.proc!.stdout.on('data', (data: Buffer | string) => {
-            stdoutProc += data.toString();
-            traceInfo(`Kernel Output: ${stdoutProc}`);
+            traceInfo(`KernelProcess output: ${(data || '').toString()}`);
         });
 
         exeObs.proc!.stderr.on('data', (data: Buffer | string) => {
             stderrProc += data.toString();
-            traceWarning(`StdErr from Kernel Process ${stderrProc}`);
+            traceInfo(`KernelProcess error: ${(data || '').toString()}`);
         });
 
         exeObs.out.subscribe(
