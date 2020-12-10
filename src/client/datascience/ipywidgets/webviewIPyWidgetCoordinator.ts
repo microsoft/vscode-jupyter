@@ -71,6 +71,6 @@ export class WebviewIPyWidgetCoordinator implements IInteractiveWindowListener {
                 this.postEmitter.fire(e);
             }
         });
-        this.messageCoordinator.initialize();
+        return this.messageCoordinator.initialize();
     }
 }
