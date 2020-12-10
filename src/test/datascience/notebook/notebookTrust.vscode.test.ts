@@ -108,6 +108,7 @@ suite('DataScience - VSCode Notebook - (Trust)', function () {
         suite(`Test notebook ${withOutput ? 'with' : 'without'} output`, () => {
             let ipynbFile: Uri;
             setup(async function () {
+                process.env.VSC_CI_ENABLE_TOO_MUCH_LOGGING = 'true';
                 traceInfo(`Started Test ${this.currentTest?.title}`);
                 sinon.restore();
                 dsSettings!.alwaysTrustNotebooks = false;
@@ -121,6 +122,7 @@ suite('DataScience - VSCode Notebook - (Trust)', function () {
                 traceInfo(`Ended Test ${this.currentTest?.title}`);
                 await closeNotebooks(disposables);
                 traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
+                process.env.VSC_CI_ENABLE_TOO_MUCH_LOGGING = undefined;
             });
             test('Opening an untrusted notebook', async () => {
                 await openNotebook(api.serviceContainer, ipynbFile.fsPath, { isNotTrusted: true });
