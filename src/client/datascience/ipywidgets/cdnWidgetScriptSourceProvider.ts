@@ -88,7 +88,7 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         }
         return this.cache.get(key)!;
     }
-    public async getWidgetScriptSourceImplementation(
+    private async getWidgetScriptSourceImplementation(
         moduleName: string,
         moduleVersion: string
     ): Promise<WidgetScriptSource> {
