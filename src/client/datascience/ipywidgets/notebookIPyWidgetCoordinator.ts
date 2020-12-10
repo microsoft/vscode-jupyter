@@ -39,7 +39,7 @@ export class NotebookIPyWidgetCoordinator implements INotebookKernelResolver {
         let promise = this.messageCoordinators.get(document.uri.toString());
         if (!promise) {
             const coordinator = CommonMessageCoordinator.create(document.uri, this.serviceContainer);
-            const promise = coordinator.initialize().then(() => coordinator);
+            promise = coordinator.initialize().then(() => coordinator);
             this.messageCoordinators.set(document.uri.toString(), promise);
         }
         return Cancellation.race(() => promise!.then(this.attachCoordinator.bind(this, document, webview)), token);
