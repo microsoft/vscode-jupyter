@@ -62,10 +62,8 @@ export class CommonMessageCoordinator {
         this.jupyterOutput = this.serviceContainer.get<IOutputChannel>(IOutputChannel, JUPYTER_OUTPUT_CHANNEL);
     }
 
-    public static async create(identity: Uri, serviceContainer: IServiceContainer): Promise<CommonMessageCoordinator> {
-        const result = new CommonMessageCoordinator(identity, serviceContainer);
-        await result.initialize();
-        return result;
+    public static create(identity: Uri, serviceContainer: IServiceContainer): CommonMessageCoordinator {
+        return new CommonMessageCoordinator(identity, serviceContainer);
     }
 
     public dispose() {
@@ -92,6 +90,19 @@ export class CommonMessageCoordinator {
         // tslint:disable-next-line: no-any
         this.getIPyWidgetMessageDispatcher()?.receiveMessage({ message: message as any, payload }); // NOSONAR
         this.getIPyWidgetScriptSource()?.onMessage(message, payload);
+    }
+
+    public async initialize() {
+        const dispatcher = this.getIPyWidgetMessageDispatcher();
+        const promises = [];
+        if (dispatcher) {
+            promises.push(dispatcher.initialize());
+        }
+        const scriptSource = this.getIPyWidgetScriptSource();
+        if (scriptSource) {
+            promises.push(scriptSource.initialize());
+        }
+        return Promise.all(promises);
     }
 
     private hash(s: string): string {
@@ -164,6 +175,9 @@ export class CommonMessageCoordinator {
             this.ipyWidgetMessageDispatcher = this.serviceContainer
                 .get<IPyWidgetMessageDispatcherFactory>(IPyWidgetMessageDispatcherFactory)
                 .create(this.identity);
+            this.disposables.push(
+                this.ipyWidgetMessageDispatcher.postMessage(this.postEmitter.fire.bind(this.postEmitter))
+            );
         }
         return this.ipyWidgetMessageDispatcher;
     }
@@ -183,23 +197,11 @@ export class CommonMessageCoordinator {
                 this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory),
                 this.serviceContainer.get<IExtensionContext>(IExtensionContext)
             );
+            this.disposables.push(this.ipyWidgetScriptSource.postMessage(this.postEmitter.fire.bind(this.postEmitter)));
+            this.disposables.push(
+                this.ipyWidgetScriptSource.postInternalMessage(this.postEmitter.fire.bind(this.postEmitter))
+            );
         }
         return this.ipyWidgetScriptSource;
-    }
-
-    private async initialize() {
-        const dispatcher = this.getIPyWidgetMessageDispatcher();
-        const promises = [];
-        if (dispatcher) {
-            this.disposables.push(dispatcher.postMessage(this.postEmitter.fire.bind(this.postEmitter)));
-            promises.push(dispatcher.initialize());
-        }
-        const scriptSource = this.getIPyWidgetScriptSource();
-        if (scriptSource) {
-            this.disposables.push(scriptSource.postMessage(this.postEmitter.fire.bind(this.postEmitter)));
-            this.disposables.push(scriptSource.postInternalMessage(this.postEmitter.fire.bind(this.postEmitter)));
-            promises.push(scriptSource.initialize());
-        }
-        return Promise.all(promises);
     }
 }
