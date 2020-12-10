@@ -348,7 +348,7 @@
             "name": "Gulp tasks (helpful for debugging gulpfile.js)",
             "program": "${workspaceFolder}/node_modules/gulp/bin/gulp.js",
             "args": [
-                "watch"
+                "compile"
             ],
             "skipFiles": [
                 "<node_internals>/**"

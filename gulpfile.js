@@ -21,17 +21,27 @@ const flat = require('flat');
 const { argv } = require('yargs');
 const os = require('os');
 const { ExtensionRootDir } = require('./build/util');
-
 const isCI = process.env.TF_BUILD !== undefined || process.env.GITHUB_ACTIONS === 'true';
 
 gulp.task('compile', (done) => {
+    const sourcemaps = require('gulp-sourcemaps');
     let failed = false;
     const tsProject = ts.createProject('tsconfig.json');
-    tsProject
+    const tsResult = tsProject
         .src()
+        .pipe(sourcemaps.init({ largeFile: true }))
         .pipe(tsProject())
-        .on('error', () => (failed = true))
-        .js.pipe(gulp.dest('out'))
+        .on('error', () => (failed = true));
+
+    return tsResult.js
+        .pipe(
+            sourcemaps.mapSources(function (sourcePath, file) {
+                // source paths are prefixed with '../src/'
+                return '../src/' + sourcePath;
+            })
+        )
+        .pipe(sourcemaps.write('../out', { sourceRoot: '' }))
+        .pipe(gulp.dest('out'))
         .on('finish', () => (failed ? done(new Error('TypeScript compilation errors')) : done()));
 });
 
@@ -241,7 +251,7 @@ gulp.task('includeBCryptGenRandomExe', async () => {
     await fs.stat(src);
     await fs.ensureDir(path.dirname(dest));
     await fs.copyFile(src, dest);
-})
+});
 
 gulp.task('prePublishBundle', gulp.series('includeBCryptGenRandomExe', 'webpack'));
 gulp.task('checkDependencies', gulp.series('checkNativeDependencies'));
@@ -250,7 +260,10 @@ gulp.task('checkDependencies', gulp.series('checkNativeDependencies'));
 if (isCI && process.env.VSC_CI_MATRIX_TEST_SUITE === 'notebook') {
     gulp.task('prePublishNonBundle', gulp.parallel('compile', 'includeBCryptGenRandomExe'));
 } else {
-    gulp.task('prePublishNonBundle', gulp.parallel('compile', 'includeBCryptGenRandomExe', gulp.series('compile-webviews')));
+    gulp.task(
+        'prePublishNonBundle',
+        gulp.parallel('compile', 'includeBCryptGenRandomExe', gulp.series('compile-webviews'))
+    );
 }
 
 function spawnAsync(command, args, env, rejectOnStdErr = false) {
