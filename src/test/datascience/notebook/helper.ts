@@ -132,7 +132,11 @@ export async function createTemporaryFile(options: {
 export async function createTemporaryNotebook(templateFile: string, disposables: IDisposable[]): Promise<string> {
     const extension = path.extname(templateFile);
     fs.ensureDirSync(path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'tmp'));
-    const tempFile = tmp.tmpNameSync({ postfix: extension, dir: path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'tmp') });
+    const tempFile = tmp.tmpNameSync({
+        postfix: extension,
+        dir: path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'tmp'),
+        prefix: path.basename(templateFile, '.ipynb')
+    });
     await fs.copyFile(templateFile, tempFile);
     disposables.push({ dispose: () => swallowExceptions(() => fs.unlinkSync(tempFile)) });
     return tempFile;
