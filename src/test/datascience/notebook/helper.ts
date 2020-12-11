@@ -217,11 +217,13 @@ export async function waitForKernelToGetAutoSelected(expectedLanguage?: string) 
         if (!vscodeNotebook.activeNotebookEditor.kernel) {
             return false;
         }
-        if (!expectedLanguage) {
-            kernelInfo = '<No specific kernel expected>';
-            return true;
-        }
         if (isJupyterKernel(vscodeNotebook.activeNotebookEditor.kernel)) {
+            if (!expectedLanguage) {
+                kernelInfo = `<No specific kernel expected> ${JSON.stringify(
+                    vscodeNotebook.activeNotebookEditor.kernel.selection
+                )}`;
+                return true;
+            }
             if (vscodeNotebook.activeNotebookEditor.kernel.selection.kind === 'startUsingKernelSpec') {
                 kernelInfo = JSON.stringify(vscodeNotebook.activeNotebookEditor.kernel.selection.kernelSpec || {});
                 return (
@@ -236,6 +238,10 @@ export async function waitForKernelToGetAutoSelected(expectedLanguage?: string) 
             // We don't support testing other kernels, not required hence not added.
             // tslint:disable-next-line: no-console
             console.error('Testing other kernel connections not supported');
+        }
+        if (!expectedLanguage) {
+            kernelInfo = '<No specific kernel expected>. Non Jupyter Kernel';
+            return true;
         }
         return false;
     };
