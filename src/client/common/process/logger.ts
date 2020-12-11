@@ -38,7 +38,7 @@ export class ProcessLogger implements IProcessLogger {
         }
 
         info.forEach((line) => {
-            traceInfo(line);
+            traceInfo(`Process Execution: ${line}`);
             this.outputChannel.appendLine(line);
         });
     }
