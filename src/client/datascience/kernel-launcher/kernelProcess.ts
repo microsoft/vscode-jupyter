@@ -9,7 +9,7 @@ import * as tmp from 'tmp';
 import { CancellationTokenSource, Event, EventEmitter } from 'vscode';
 import { IPythonExtensionChecker } from '../../api/types';
 import { createPromiseFromCancellation } from '../../common/cancellation';
-import { traceError, traceInfo, traceWarning } from '../../common/logger';
+import { traceError, traceInfo, traceInfoIf, traceWarning } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IProcessServiceFactory, ObservableExecutionResult } from '../../common/process/types';
 import { Resource } from '../../common/types';
@@ -145,6 +145,7 @@ export class KernelProcess implements IKernelProcess {
 
         // Don't return until our heartbeat channel is open for connections or the kernel died
         try {
+            traceInfoIf(!!process.env.VSC_JUPYTER_FORCE_LOGGING, 'Wait for Raw Socket to connect');
             await Promise.race([
                 tcpPortUsed.waitUntilUsed(this.connection.hb_port, 200, 30_000),
                 createPromiseFromCancellation({
@@ -153,6 +154,7 @@ export class KernelProcess implements IKernelProcess {
                     defaultValue: undefined
                 })
             ]);
+            traceInfoIf(!!process.env.VSC_JUPYTER_FORCE_LOGGING, 'Raw Socket to connected');
         } catch (e) {
             // Make sure to dispose if we never get a heartbeat
             this.dispose().ignoreErrors();

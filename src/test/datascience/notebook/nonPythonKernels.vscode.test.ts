@@ -104,6 +104,7 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
     });
     teardown(async () => {
         process.env.VSC_CI_ENABLE_TOO_MUCH_LOGGING = undefined;
+        process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT = undefined;
         await closeNotebooksAndCleanUpAfterTests(disposables);
     });
     test('Automatically pick java kernel when opening a Java Notebook', async function () {
@@ -187,6 +188,7 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         if (pythonChecker.isPythonExtensionInstalled) {
             return this.skip();
         }
+        process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT = 'true';
         this.timeout(30_000); // Can be slow to start csharp kernel on CI.
         await openNotebook(api.serviceContainer, testCSharpNb.fsPath);
         await waitForKernelToGetAutoSelected();
