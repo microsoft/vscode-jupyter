@@ -154,7 +154,7 @@ export class KernelProcess implements IKernelProcess {
                     defaultValue: undefined
                 })
             ]);
-            traceInfoIf(!!process.env.VSC_JUPYTER_FORCE_LOGGING, 'Raw Socket to connected');
+            traceInfoIf(!!process.env.VSC_JUPYTER_FORCE_LOGGING, 'Raw Socket connected');
         } catch (e) {
             // Make sure to dispose if we never get a heartbeat
             this.dispose().ignoreErrors();

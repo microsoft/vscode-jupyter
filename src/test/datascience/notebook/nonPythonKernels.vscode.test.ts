@@ -193,12 +193,17 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT = 'true';
         this.timeout(30_000); // Can be slow to start csharp kernel on CI.
         await openNotebook(api.serviceContainer, testCSharpNb.fsPath);
+        traceInfo('1. Notebook opened');
         await waitForKernelToGetAutoSelected('c#');
+        traceInfo('2. Kernel Selected');
         await executeActiveDocument();
+        traceInfo('3. Document executed');
 
         const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
         // Wait till execution count changes and status is success.
+        traceInfo('4. Waiting for completion of cell');
         await waitForExecutionCompletedSuccessfully(cell);
+        traceInfo('5. Cell executed');
 
         assertHasTextOutputInVSCode(cell, 'Hello', 0, false);
     });
