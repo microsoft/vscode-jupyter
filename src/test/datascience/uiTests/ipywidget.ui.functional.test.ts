@@ -13,6 +13,7 @@ import * as os from 'os';
 import * as path from 'path';
 import * as sinon from 'sinon';
 import { Disposable } from 'vscode';
+import { traceInfo } from '../../../client/common/logger';
 import { sleep } from '../../../client/common/utils/async';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 import { retryIfFail as retryIfFailOriginal } from '../../common';
@@ -47,6 +48,7 @@ use(chaiAsPromised);
             }
         });
         setup(async function () {
+            traceInfo(`Start Test ${this.currentTest?.title}`);
             ioc = new DataScienceIocContainer(true);
             ioc.setExtensionRootPath(EXTENSION_ROOT_DIR);
             if (ioc.mockJupyter && useRawKernel) {
@@ -63,8 +65,10 @@ use(chaiAsPromised);
             });
 
             await ioc.activate();
+            traceInfo(`Start Test Complete ${this.currentTest?.title}`);
         });
-        teardown(async () => {
+        teardown(async function () {
+            traceInfo(`Ended Test ${this.currentTest?.title}`);
             sinon.restore();
             mockedVSCodeNamespaces.window?.reset();
             for (const disposable of disposables) {
