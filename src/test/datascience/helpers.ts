@@ -90,10 +90,10 @@ export async function openNotebook(
     options: { ignoreSavingOldNotebooks?: boolean; isNotTrusted?: boolean } = { ignoreSavingOldNotebooks: true }
 ) {
     if (!options.isNotTrusted) {
-        console.info(`Trust notebook before opening ${ipynbFile}`);
+        traceInfo(`Trust notebook before opening ${ipynbFile}`);
         await trustNotebook(ipynbFile);
     }
-    console.info(`Opening notebook ${ipynbFile}`);
+    traceInfo(`Opening notebook ${ipynbFile}`);
     const cmd = serviceContainer.get<ICommandManager>(ICommandManager);
     await cmd.executeCommand(Commands.OpenNotebook, Uri.file(ipynbFile), undefined, CommandSource.commandPalette);
     const editorProvider = serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
@@ -116,5 +116,5 @@ export async function openNotebook(
         // tslint:disable-next-line: no-any
         (editorProvider.activeEditor as any).askForSave = () => Promise.resolve(AskForSaveResult.No);
     }
-    console.info(`Opened notebook ${ipynbFile}`);
+    traceInfo(`Opened notebook ${ipynbFile}`);
 }

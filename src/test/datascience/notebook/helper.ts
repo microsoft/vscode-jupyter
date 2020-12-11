@@ -19,6 +19,7 @@ import {
 } from '../../../../typings/vscode-proposed';
 import { IApplicationEnvironment, IApplicationShell, IVSCodeNotebook } from '../../../client/common/application/types';
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
+import { traceInfo } from '../../../client/common/logger';
 import {
     GLOBAL_MEMENTO,
     IConfigurationService,
@@ -249,10 +250,10 @@ export async function waitForKernelToGetAutoSelected(expectedLanguage?: string) 
     // Wait for the active kernel to be a julia kernel.
     const errorMessage = expectedLanguage ? `${expectedLanguage} kernel not auto selected` : 'Kernel not auto selected';
     await waitForCondition(async () => isRightKernel(), 15_000, errorMessage);
-    console.info(`Preferred kernel auto selected for Native Notebook for ${kernelInfo}.`);
+    traceInfo(`Preferred kernel auto selected for Native Notebook for ${kernelInfo}.`);
 }
 export async function trustNotebook(ipynbFile: string | Uri) {
-    console.info(`Trusting Notebook ${ipynbFile}`);
+    traceInfo(`Trusting Notebook ${ipynbFile}`);
     const api = await initialize();
     const uri = typeof ipynbFile === 'string' ? Uri.file(ipynbFile) : ipynbFile;
     const content = await fs.readFile(uri.fsPath, { encoding: 'utf8' });
@@ -562,24 +563,24 @@ export async function hijackPrompt(
     let displayCount = 0;
     // tslint:disable-next-line: no-function-expression
     const stub = sinon.stub(appShell, promptType).callsFake(function (msg: string) {
-        console.info(`Message displayed to user ${msg}.`);
-        console.info(`Message condition ${JSON.stringify(message)}`);
+        traceInfo(`Message displayed to user ${msg}.`);
+        traceInfo(`Message condition ${JSON.stringify(message)}`);
         if (
             ('exactMatch' in message && msg.trim() === message.exactMatch.trim()) ||
             ('endsWith' in message && msg.endsWith(message.endsWith))
         ) {
-            console.info(`Exact Message found ${msg} with condition ${JSON.stringify(message)}`);
+            traceInfo(`Exact Message found ${msg} with condition ${JSON.stringify(message)}`);
             displayCount += 1;
             displayed.resolve(true);
             if (buttonToClick) {
                 return clickButton.promise;
             }
         } else {
-            console.info(`Message not found, looking for message ${JSON.stringify(message)}`);
-            console.info(`Exact match ${'exactMatch' in message ? 'true' : 'false'}`);
-            console.info(`Exact match ${'exactMatch' in message && msg.trim() === message.exactMatch.trim()}`);
-            console.info(`EndsWith ${'endsWith' in message ? 'true' : 'false'}`);
-            console.info(`EndsWith ${'endsWith' in message && msg.endsWith(message.endsWith)}`);
+            traceInfo(`Message not found, looking for message ${JSON.stringify(message)}`);
+            traceInfo(`Exact match ${'exactMatch' in message ? 'true' : 'false'}`);
+            traceInfo(`Exact match ${'exactMatch' in message && msg.trim() === message.exactMatch.trim()}`);
+            traceInfo(`EndsWith ${'endsWith' in message ? 'true' : 'false'}`);
+            traceInfo(`EndsWith ${'endsWith' in message && msg.endsWith(message.endsWith)}`);
         }
         // tslint:disable-next-line: no-any
         return (appShell[promptType] as any).wrappedMethod.apply(appShell, arguments);
