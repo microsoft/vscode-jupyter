@@ -174,7 +174,7 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         this.timeout(30_000); // Can be slow to start Julia kernel on CI.
         await openNotebook(api.serviceContainer, testJuliaNb.fsPath);
         await insertCodeCell('123456', { language: 'julia', index: 0 });
-        await waitForKernelToGetAutoSelected();
+        await waitForKernelToGetAutoSelected('julia');
         await executeActiveDocument();
 
         const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
@@ -187,13 +187,13 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         // C# Kernels can only be installed when you have Jupyter
         // On CI we install Jupyter only when testing with Python extension.
         const pythonChecker = api.serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker);
-        if (pythonChecker.isPythonExtensionInstalled) {
+        if (!pythonChecker.isPythonExtensionInstalled) {
             return this.skip();
         }
         process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT = 'true';
         this.timeout(30_000); // Can be slow to start csharp kernel on CI.
         await openNotebook(api.serviceContainer, testCSharpNb.fsPath);
-        await waitForKernelToGetAutoSelected();
+        await waitForKernelToGetAutoSelected('c#');
         await executeActiveDocument();
 
         const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
