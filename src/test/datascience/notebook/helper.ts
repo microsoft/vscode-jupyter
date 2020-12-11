@@ -19,7 +19,7 @@ import {
 } from '../../../../typings/vscode-proposed';
 import { IApplicationEnvironment, IApplicationShell, IVSCodeNotebook } from '../../../client/common/application/types';
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
-import { traceInfo } from '../../../client/common/logger';
+import { traceInfo, traceInfoIf } from '../../../client/common/logger';
 import {
     GLOBAL_MEMENTO,
     IConfigurationService,
@@ -343,8 +343,10 @@ function assertHasExecutionCompletedWithErrors(cell: NotebookCell) {
 }
 export function assertHasTextOutputInVSCode(cell: NotebookCell, text: string, index: number = 0, isExactMatch = true) {
     const cellOutputs = cell.outputs;
-    assert.ok(cellOutputs, 'No output');
+    assert.ok(cellOutputs.length, 'No output');
     assert.equal(cellOutputs[index].outputKind, vscodeNotebookEnums.CellOutputKind.Rich, 'Incorrect output kind');
+    const output = (cellOutputs[index] as CellDisplayOutput);
+    traceInfoIf(!!process.env.VSC_CI_ENABLE_TOO_MUCH_LOGGING, `Cell Output ${JSON.stringify(output)}`);
     const outputText = (cellOutputs[index] as CellDisplayOutput).data['text/plain'].trim();
     if (isExactMatch) {
         assert.equal(outputText, text, 'Incorrect output');
