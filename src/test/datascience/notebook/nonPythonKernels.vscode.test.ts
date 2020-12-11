@@ -183,6 +183,10 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         assertHasTextOutputInVSCode(cell, '123456', 0, false);
     });
     test('Can run a CSharp notebook', async function () {
+        const pythonChecker = api.serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker);
+        if (pythonChecker.isPythonExtensionInstalled) {
+            return this.skip();
+        }
         this.timeout(30_000); // Can be slow to start csharp kernel on CI.
         await openNotebook(api.serviceContainer, testCSharpNb.fsPath);
         await waitForKernelToGetAutoSelected();
