@@ -61,7 +61,7 @@ suite('DataScience - VSCode Notebook - (Trust) (slow)', function () {
     let vscodeNotebook: IVSCodeNotebook;
     let trustService: ITrustService;
     suiteSetup(async function () {
-        this.timeout(30_000); // Opening, closing & opening nbs again & waiting for prompts can be slow.
+        this.timeout(15_000);
         api = await initialize();
         if (!(await canRunNotebookTests())) {
             return this.skip();
@@ -239,7 +239,7 @@ suite('DataScience - VSCode Notebook - (Trust) (slow)', function () {
                     'Original raw content on disc not same as json content saved on disc after saving'
                 ); // When comparing ignore white spaces at the ends.
             });
-            test('Prompted to trust an untrusted notebook and trusted', async function () {
+            test('Prompted to trust an untrusted notebook and trusted', async () => {
                 traceInfo('1.Start trust tests');
                 // Ensure we click `Yes` when prompted to trust the notebook.
                 const prompt = await hijackPrompt(

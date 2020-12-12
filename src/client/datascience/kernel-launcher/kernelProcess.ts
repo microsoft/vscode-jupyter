@@ -145,7 +145,6 @@ export class KernelProcess implements IKernelProcess {
 
         // Don't return until our heartbeat channel is open for connections or the kernel died
         try {
-            traceInfoIf(!!process.env.VSC_JUPYTER_FORCE_LOGGING, 'Wait for Raw Socket to connect');
             await Promise.race([
                 tcpPortUsed.waitUntilUsed(this.connection.hb_port, 200, 30_000),
                 createPromiseFromCancellation({
@@ -154,7 +153,6 @@ export class KernelProcess implements IKernelProcess {
                     defaultValue: undefined
                 })
             ]);
-            traceInfoIf(!!process.env.VSC_JUPYTER_FORCE_LOGGING, 'Raw Socket connected');
         } catch (e) {
             // Make sure to dispose if we never get a heartbeat
             this.dispose().ignoreErrors();

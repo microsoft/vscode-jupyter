@@ -345,8 +345,6 @@ export function assertHasTextOutputInVSCode(cell: NotebookCell, text: string, in
     const cellOutputs = cell.outputs;
     assert.ok(cellOutputs.length, 'No output');
     assert.equal(cellOutputs[index].outputKind, vscodeNotebookEnums.CellOutputKind.Rich, 'Incorrect output kind');
-    const output = (cellOutputs[index] as CellDisplayOutput);
-    traceInfoIf(!!process.env.VSC_CI_ENABLE_TOO_MUCH_LOGGING, `Cell Output ${JSON.stringify(output)}`);
     const outputText = (cellOutputs[index] as CellDisplayOutput).data['text/plain'].trim();
     if (isExactMatch) {
         assert.equal(outputText, text, 'Incorrect output');
@@ -565,24 +563,17 @@ export async function hijackPrompt(
     let displayCount = 0;
     // tslint:disable-next-line: no-function-expression
     const stub = sinon.stub(appShell, promptType).callsFake(function (msg: string) {
-        traceInfo(`Message displayed to user ${msg}.`);
-        traceInfo(`Message condition ${JSON.stringify(message)}`);
+        traceInfo(`Message displayed to user '${msg}', condition ${JSON.stringify(message)}`);
         if (
             ('exactMatch' in message && msg.trim() === message.exactMatch.trim()) ||
             ('endsWith' in message && msg.endsWith(message.endsWith))
         ) {
-            traceInfo(`Exact Message found ${msg} with condition ${JSON.stringify(message)}`);
+            traceInfo(`Exact Message found '${msg}'`);
             displayCount += 1;
             displayed.resolve(true);
             if (buttonToClick) {
                 return clickButton.promise;
             }
-        } else {
-            traceInfo(`Message not found, looking for message ${JSON.stringify(message)}`);
-            traceInfo(`Exact match ${'exactMatch' in message ? 'true' : 'false'}`);
-            traceInfo(`Exact match ${'exactMatch' in message && msg.trim() === message.exactMatch.trim()}`);
-            traceInfo(`EndsWith ${'endsWith' in message ? 'true' : 'false'}`);
-            traceInfo(`EndsWith ${'endsWith' in message && msg.endsWith(message.endsWith)}`);
         }
         // tslint:disable-next-line: no-any
         return (appShell[promptType] as any).wrappedMethod.apply(appShell, arguments);
