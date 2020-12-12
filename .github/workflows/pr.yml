@@ -353,6 +353,7 @@ jobs:
         env:
           VSC_FORCE_REAL_JUPYTER: 1
           VSC_JUPYTER_FORCE_LOGGING: 1
+          VSCODE_JUPYTER_FORCE_TEST_SYNC: 1
         id: test_functional_group
 
       - name: Upload screenshots
