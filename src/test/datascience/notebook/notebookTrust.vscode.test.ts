@@ -273,12 +273,6 @@ suite('DataScience - VSCode Notebook - (Trust) (slow)', function () {
                 // Reopening it & we should not get prompted.
                 traceInfo('8.Verify prompt count');
                 assert.equal(prompt.getDisplayCount(), 1, 'Prompt should have been once before');
-                traceInfo('9.Close notebook');
-                await closeNotebooks();
-                traceInfo('10.Open Notebook');
-                await openNotebook(api.serviceContainer, ipynbFile.fsPath, { isNotTrusted: true });
-                traceInfo('11.Verify no more prompts');
-                assert.equal(prompt.getDisplayCount(), 1, 'Prompt should not have been displayed again');
             });
             test('Prompted to trust an untrusted notebook and not trusted', async () => {
                 // Ensure we click `No` when prompted to trust the notebook.
