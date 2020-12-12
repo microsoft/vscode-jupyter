@@ -6,6 +6,7 @@
 import { sha256 } from 'hash.js';
 import * as path from 'path';
 import request from 'request';
+import * as fse from 'fs-extra';
 import { Uri } from 'vscode';
 import { traceError, traceInfo } from '../../common/logger';
 import { IFileSystem, TemporaryFile } from '../../common/platform/types';
@@ -133,8 +134,11 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
                         diskPath
                     )}`
                 );
+
+
                 // Need to copy from the temporary file to our real file (note: VSC filesystem fails to copy so just use straight file system)
-                await this.fs.copyLocal(tempFile.filePath, diskPath);
+                await fse.copy(tempFile.filePath, diskPath, { overwrite: false, errorOnExist: false }); // Don't overwrite if alreayd exists
+                // await this.fs.copyLocal(tempFile.filePath, diskPath);
 
                 // Now we can generate the script URI so the local converter doesn't try to copy it.
                 const scriptUri = (await this.localResourceUriConverter.asWebviewUri(Uri.file(diskPath))).toString();
