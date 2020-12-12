@@ -108,7 +108,6 @@ suite('DataScience - VSCode Notebook - (Trust) (slow)', function () {
         suite(`Test notebook ${withOutput ? 'with' : 'without'} output`, () => {
             let ipynbFile: Uri;
             setup(async function () {
-                process.env.VSC_CI_ENABLE_TOO_MUCH_LOGGING = 'true';
                 traceInfo(`Started Test ${this.currentTest?.title}`);
                 sinon.restore();
                 dsSettings!.alwaysTrustNotebooks = false;
@@ -121,8 +120,6 @@ suite('DataScience - VSCode Notebook - (Trust) (slow)', function () {
             teardown(async function () {
                 traceInfo(`Ended Test ${this.currentTest?.title}`);
                 await closeNotebooks(disposables);
-                traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
-                process.env.VSC_CI_ENABLE_TOO_MUCH_LOGGING = undefined;
             });
             test('Opening an untrusted notebook', async () => {
                 await openNotebook(api.serviceContainer, ipynbFile.fsPath, { isNotTrusted: true });
@@ -240,7 +237,6 @@ suite('DataScience - VSCode Notebook - (Trust) (slow)', function () {
                 ); // When comparing ignore white spaces at the ends.
             });
             test('Prompted to trust an untrusted notebook and trusted', async () => {
-                traceInfo('1.Start trust tests');
                 // Ensure we click `Yes` when prompted to trust the notebook.
                 const prompt = await hijackPrompt(
                     'showErrorMessage',
@@ -252,26 +248,19 @@ suite('DataScience - VSCode Notebook - (Trust) (slow)', function () {
                 const trustSetEvent = createEventHandler(trustService, 'onDidSetNotebookTrust', disposables);
 
                 // Open notebook & Confirm prompt was displayed.
-                traceInfo('2.Open notebook');
                 await openNotebook(api.serviceContainer, ipynbFile.fsPath, { isNotTrusted: true });
-                traceInfo('3.Opened notebook & waiting for condition');
                 await waitForCondition(() => prompt.displayed, 10_000, 'Prompt to trust not displayed');
-                traceInfo('4.Click button');
                 prompt.clickButton();
 
                 // Verify a document was trusted.
-                traceInfo('5.Assert trusted');
                 await trustSetEvent.assertFiredAtLeast(1, 10_000);
 
                 // Confirm the notebook is now trusted.
-                traceInfo('6.Get model');
                 const model = storageProvider.get(ipynbFile)!;
                 assert.isTrue(model.isTrusted);
-                traceInfo('7.Wait for document to be trusted');
                 await waitForCondition(async () => assertDocumentTrust(true, withOutput), 10_000, 'Not trusted');
 
                 // Reopening it & we should not get prompted.
-                traceInfo('8.Verify prompt count');
                 assert.equal(prompt.getDisplayCount(), 1, 'Prompt should have been once before');
             });
             test('Prompted to trust an untrusted notebook and not trusted', async () => {
