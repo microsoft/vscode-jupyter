@@ -9,7 +9,7 @@ import * as tmp from 'tmp';
 import { CancellationTokenSource, Event, EventEmitter } from 'vscode';
 import { IPythonExtensionChecker } from '../../api/types';
 import { createPromiseFromCancellation } from '../../common/cancellation';
-import { traceError, traceInfo, traceInfoIf, traceWarning } from '../../common/logger';
+import { traceError, traceInfo, traceWarning } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IProcessServiceFactory, ObservableExecutionResult } from '../../common/process/types';
 import { Resource } from '../../common/types';

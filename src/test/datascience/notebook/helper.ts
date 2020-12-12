@@ -19,7 +19,7 @@ import {
 } from '../../../../typings/vscode-proposed';
 import { IApplicationEnvironment, IApplicationShell, IVSCodeNotebook } from '../../../client/common/application/types';
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
-import { traceInfo, traceInfoIf } from '../../../client/common/logger';
+import { traceInfo } from '../../../client/common/logger';
 import {
     GLOBAL_MEMENTO,
     IConfigurationService,
