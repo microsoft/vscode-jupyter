@@ -3,10 +3,10 @@
 
 'use strict';
 
+import * as fse from 'fs-extra';
 import { sha256 } from 'hash.js';
 import * as path from 'path';
 import request from 'request';
-import * as fse from 'fs-extra';
 import { Uri } from 'vscode';
 import { traceError, traceInfo } from '../../common/logger';
 import { IFileSystem, TemporaryFile } from '../../common/platform/types';
