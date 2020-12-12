@@ -205,8 +205,19 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         traceInfo('4. Waiting for completion of cell');
         await waitForExecutionCompletedSuccessfully(cell);
         traceInfo('5. Cell executed');
+        traceInfo(`6. Cell output length ${cell.outputs.length}`);
 
-        assertHasTextOutputInVSCode(cell, 'Hello', 0, false);
+        // For some reason C# kernel sends multiple outputs.
+        // First output can contain `text/html` with some Jupyter UI specific stuff.
+        try {
+            assertHasTextOutputInVSCode(cell, 'Hello', 0, false);
+        } catch (ex) {
+            if (cell.outputs.length > 1) {
+                assertHasTextOutputInVSCode(cell, 'Hello', 1, false);
+            } else {
+                throw ex;
+            }
+        }
     });
     test('Can run a Java notebook', async function () {
         // Disabled, as activation of conda environments doesn't work on CI in Python extension.
