@@ -135,7 +135,6 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
                     )}`
                 );
 
-
                 // Need to copy from the temporary file to our real file (note: VSC filesystem fails to copy so just use straight file system)
                 await fse.copy(tempFile.filePath, diskPath, { overwrite: false, errorOnExist: false }); // Don't overwrite if alreayd exists
                 // await this.fs.copyLocal(tempFile.filePath, diskPath);
