@@ -107,15 +107,23 @@ suite('DataScience - VSCode Notebook - (Trust)', function () {
     [true, false].forEach((withOutput) => {
         suite(`Test notebook ${withOutput ? 'with' : 'without'} output`, () => {
             let ipynbFile: Uri;
-            setup(async () => {
+            setup(async function () {
+                process.env.VSC_CI_ENABLE_TOO_MUCH_LOGGING = 'true';
+                traceInfo(`Started Test ${this.currentTest?.title}`);
                 sinon.restore();
                 dsSettings!.alwaysTrustNotebooks = false;
                 // Don't use same file (due to dirty handling, we might save in dirty.)
                 // Coz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
                 const templateFileToUse = withOutput ? templateIPynbWithOutput : templateIPynbWithoutOutput;
                 ipynbFile = Uri.file(await createTemporaryNotebook(templateFileToUse, disposables));
+                traceInfo(`Started Test (completed) ${this.currentTest?.title}`);
             });
-            teardown(async () => closeNotebooks(disposables));
+            teardown(async function () {
+                traceInfo(`Ended Test ${this.currentTest?.title}`);
+                await closeNotebooks(disposables);
+                traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
+                process.env.VSC_CI_ENABLE_TOO_MUCH_LOGGING = undefined;
+            });
             test('Opening an untrusted notebook', async () => {
                 await openNotebook(api.serviceContainer, ipynbFile.fsPath, { isNotTrusted: true });
                 const model = storageProvider.get(ipynbFile)!;
@@ -248,20 +256,28 @@ suite('DataScience - VSCode Notebook - (Trust)', function () {
                 await openNotebook(api.serviceContainer, ipynbFile.fsPath, { isNotTrusted: true });
                 traceInfo('3.Opened notebook & waiting for condition');
                 await waitForCondition(() => prompt.displayed, 10_000, 'Prompt to trust not displayed');
+                traceInfo('4.Click button');
                 prompt.clickButton();
 
                 // Verify a document was trusted.
+                traceInfo('5.Assert trusted');
                 await trustSetEvent.assertFiredAtLeast(1, 10_000);
 
                 // Confirm the notebook is now trusted.
+                traceInfo('6.Get model');
                 const model = storageProvider.get(ipynbFile)!;
                 assert.isTrue(model.isTrusted);
+                traceInfo('7.Wait for document to be trusted');
                 await waitForCondition(async () => assertDocumentTrust(true, withOutput), 10_000, 'Not trusted');
 
                 // Reopening it & we should not get prompted.
+                traceInfo('8.Verify prompt count');
                 assert.equal(prompt.getDisplayCount(), 1, 'Prompt should have been once before');
+                traceInfo('9.Close notebook');
                 await closeNotebooks();
+                traceInfo('10.Open Notebook');
                 await openNotebook(api.serviceContainer, ipynbFile.fsPath, { isNotTrusted: true });
+                traceInfo('11.Verify no more prompts');
                 assert.equal(prompt.getDisplayCount(), 1, 'Prompt should not have been displayed again');
             });
             test('Prompted to trust an untrusted notebook and not trusted', async () => {

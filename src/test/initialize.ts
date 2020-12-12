@@ -76,23 +76,43 @@ export async function closeActiveNotebooks(): Promise<void> {
 }
 
 async function closeWindowsInternal() {
-    return new Promise<void>((resolve, reject) => {
-        // Attempt to fix #1301.
-        // Lets not waste too much time.
-        const timer = setTimeout(() => {
-            reject(new Error("Command 'workbench.action.closeAllEditors' timed out"));
-        }, 15000);
-        vscode.commands.executeCommand('workbench.action.closeAllEditors').then(
-            () => {
-                clearTimeout(timer);
-                resolve();
-            },
-            (ex) => {
-                clearTimeout(timer);
-                reject(ex);
-            }
-        );
-    });
+    class CloseEditorsTimeoutError extends Error {
+        constructor() {
+            super("Command 'workbench.action.closeAllEditors' timed out");
+        }
+    }
+    const closeWindowsImplementation = (timeout = 15_000) => {
+        return new Promise<void>((resolve, reject) => {
+            // Attempt to fix #1301.
+            // Lets not waste too much time.
+            const timer = setTimeout(() => reject(new CloseEditorsTimeoutError()), timeout);
+            vscode.commands.executeCommand('workbench.action.closeAllEditors').then(
+                () => {
+                    clearTimeout(timer);
+                    resolve();
+                },
+                (ex) => {
+                    clearTimeout(timer);
+                    reject(ex);
+                }
+            );
+        });
+    };
+
+    // For some reason some times the command times out.
+    // If this happens, just wait & retry, no idea why VS Code is flaky.
+    // Lets wait & retry executing the command again, hopefully it'll work second time.
+    try {
+        await closeWindowsImplementation();
+    } catch (ex) {
+        if (ex instanceof CloseEditorsTimeoutError) {
+            // Try again with a smaller timeout (no idea why VSCode is timeout out here).
+            sleep(500); // Possible VSC is busy & wasn't able to handle previous command.
+            await closeWindowsImplementation(5_000);
+        } else {
+            throw ex;
+        }
+    }
 }
 
 function isANotebookOpen() {

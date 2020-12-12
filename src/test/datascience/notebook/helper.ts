@@ -295,7 +295,7 @@ function assertHasExecutionCompletedSuccessfully(cell: NotebookCell) {
  *  Wait for VSC to perform some last minute clean up of cells.
  * In tests we can end up deleting cells. However if extension is still dealing with the cells, we need to give it some time to finish.
  */
-async function waitForCellExecutionToComplete(cell: NotebookCell) {
+export async function waitForCellExecutionToComplete(cell: NotebookCell) {
     if (!CellExecution.cellsCompletedForTesting.has(cell)) {
         CellExecution.cellsCompletedForTesting.set(cell, createDeferred<void>());
     }
@@ -553,16 +553,23 @@ export async function hijackPrompt(
     // tslint:disable-next-line: no-function-expression
     const stub = sinon.stub(appShell, promptType).callsFake(function (msg: string) {
         console.info(`Message displayed to user ${msg}.`);
+        console.info(`Message condition ${JSON.stringify(message)}`);
         if (
-            ('exactMatch' in message && msg === message.exactMatch) ||
+            ('exactMatch' in message && msg.trim() === message.exactMatch.trim()) ||
             ('endsWith' in message && msg.endsWith(message.endsWith))
         ) {
-            console.debug(`Exact Message found ${msg} with condition ${JSON.stringify(message)}`);
+            console.info(`Exact Message found ${msg} with condition ${JSON.stringify(message)}`);
             displayCount += 1;
             displayed.resolve(true);
             if (buttonToClick) {
                 return clickButton.promise;
             }
+        } else {
+            console.info(`Message not found, looking for message ${JSON.stringify(message)}`);
+            console.info(`Exact match ${'exactMatch' in message ? 'true' : 'false'}`);
+            console.info(`Exact match ${'exactMatch' in message && msg.trim() === message.exactMatch.trim()}`);
+            console.info(`EndsWith ${'endsWith' in message ? 'true' : 'false'}`);
+            console.info(`EndsWith ${'endsWith' in message && msg.endsWith(message.endsWith)}`);
         }
         // tslint:disable-next-line: no-any
         return (appShell[promptType] as any).wrappedMethod.apply(appShell, arguments);

@@ -42,6 +42,8 @@
         "build",
         "out",
         "ipywidgets",
-        "tmp"
+        "tmp",
+        ".nyc_output",
+        ".git"
     ]
 }

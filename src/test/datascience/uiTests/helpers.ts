@@ -144,6 +144,14 @@ export class BaseWebUI implements IAsyncDisposable {
         await this.browser.newContext();
         this.page = await this.browser.newPage();
         await this.page.goto(url);
+        this.page.on('console', (output) => {
+            try {
+                // Log output for diagnostic purposes (see what errors & the like are printed in console).
+                console.info(`IPyWidgets Browser: ${output.type()} ${output.text()}`);
+            } catch {
+                //
+            }
+        });
     }
 
     public async captureScreenshot(filePath: string): Promise<void> {

@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+
   workflow_dispatch:
 
 env:
@@ -25,6 +26,7 @@ env:
   TEST_RESULTS_GLOB: '**/test-results*.xml'
   IPYWIDGET_SCREENSHOT_PATH: '*-screenshot.png'
   DISABLE_INSIDERS_EXTENSION: 1 # Disable prompts to install Insiders in tests (else it blocks activation of extension).
+  VSC_JUPYTER_INSTRUMENT_CODE_FOR_COVERAGE: true
 
 jobs:
   build-vsix:
@@ -202,7 +204,7 @@ jobs:
         # if: steps.out-cache.outputs.cache-hit == false
       - name: Run TypeScript unit tests
         id: test_unittests
-        run: npm run test:unittests:cover
+        run: npm run test:unittests
 
       - name: Publish Test Report
         uses: scacap/action-surefire-report@v1
@@ -211,6 +213,15 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           report_paths: ${{ env.TEST_RESULTS_GLOB }}
           check_name: Ts-Unit Test Report
+
+      # Upload unit test coverage reports for later use in the "reports" job.
+      - name: Upload unit test coverage reports
+        uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          name: ${{runner.os}}-${{env.COVERAGE_REPORTS}}
+          path: .nyc_output
+          retention-days: 1
 
   tests:
     name: Functional Jupyter Tests
@@ -358,6 +369,15 @@ jobs:
           report_paths: ${{ env.TEST_RESULTS_GLOB }}
           check_name: Functional Test Report ${{matrix.test-suite}} ${{matrix.os}}
         if: steps.test_functional_group.outcome == 'failure' && failure()
+
+      # Upload unit test coverage reports for later use in the "reports" job.
+      - name: Upload unit test coverage reports
+        uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          name: ${{runner.os}}-${{env.COVERAGE_REPORTS}}
+          path: .nyc_output
+          retention-days: 1
 
   vscodeTests:
     name: VS Code Tests # These tests run with Python extension & real Jupyter
@@ -542,6 +562,16 @@ jobs:
           check_name: Notebook Test Report
         if: (steps.test_notebook_vscode.outcome == 'failure' || steps.test_notebook_vscode.outcome == 'failure') && failure()
 
+      # Upload unit test coverage reports for later use in the "reports" job.
+      - name: Upload unit test coverage reports
+        uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          name: ${{runner.os}}-${{env.COVERAGE_REPORTS}}
+          path: .nyc_output
+          retention-days: 1
+          if: always()
+
   smoke-tests:
     timeout-minutes: 30
     name: Smoke tests
@@ -617,6 +647,15 @@ jobs:
           name: smoke-test-${{matrix.os}}.log
           path: './smoke-test.log'
 
+      # Upload unit test coverage reports for later use in the "reports" job.
+      - name: Upload unit test coverage reports
+        uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          name: ${{runner.os}}-${{env.COVERAGE_REPORTS}}
+          path: .nyc_output
+          retention-days: 1
+
   upload:
     name: Upload VSIX to Azure Blob Storage
     runs-on: ubuntu-latest
@@ -639,3 +678,72 @@ jobs:
 
       - name: Upload to Blob Storage
         run: az storage blob upload --file ${{ env.VSIX_NAME }} --account-name pvsc --container-name ${{ env.BLOB_CONTAINER_NAME }} --name ${{ env.VSIX_NAME_UPLOADED_TO_BLOB }}
+
+  coverage:
+    name: Coverage reports upload
+    runs-on: ubuntu-latest
+    if: always()
+    needs: [ts_tests, vscodeTests, smoke-tests, tests]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Install Node
+        uses: actions/setup-node@v2.1.2
+        with:
+          node-version: ${{env.NODE_VERSION}}
+
+      - name: Install dependencies (npm ci)
+        run: npm ci --prefer-offline
+
+      - name: Cache compiled TS files
+        id: out-cache
+        uses: actions/cache@v2
+        with:
+          path: ./out
+          key: ${{runner.os}}-${{env.CACHE_OUT_DIRECTORY}}-${{hashFiles('src/**')}}
+
+      - name: Compile if not cached
+        run: npx gulp prePublishNonBundle
+        env:
+            CI_JUPYTER_FAST_COMPILATION: 'true'
+
+      # It isn't possible to specify a regex for artifact names, so we have to download each artifact manually.
+      # The name pattern is ${{runner.os}}-${{env.COVERAGE_REPORTS}}, and possible values for runner.os are `Linux`, `Windows`, or `macOS`.
+      # See https://help.github.com/en/actions/reference/contexts-and-expression-syntax-for-github-actions#runner-context
+      - name: Download Ubuntu test coverage artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: ${{runner.os}}-${{ env.COVERAGE_REPORTS }}
+          path: ${{runner.os}}-${{ env.COVERAGE_REPORTS }}
+
+      - name: Extract Ubuntu coverage artifacts to ./nyc_output
+        run: |
+          pwd
+          mkdir .nyc_output
+          mv ${{runner.os}}-${{ env.COVERAGE_REPORTS }}/* .nyc_output
+          rm -r ${{runner.os}}-${{ env.COVERAGE_REPORTS }}
+
+      - name: Merge coverage reports
+        run: |
+          pwd
+          npx nyc merge ./.nyc_output
+          rm -r .nyc_output
+          mkdir .nyc_output
+          mv coverage.json ./.nyc_output
+        continue-on-error: true
+
+      - name: Generate coverage reports
+        run: npm run test:cover:report
+        continue-on-error: true
+
+      - name: Upload coverage to codecov
+        uses: codecov/codecov-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          file: ./coverage/cobertura-coverage.xml
+          path_to_write_report: ./coverage/codecov_report.txt
+
+      # Alternative method for uploading
+      # - name: Upload coverage to codecov
+      #  run: bash <(curl -s https://codecov.io/bash) -f ./coverage/cobertura-coverage.xml -v

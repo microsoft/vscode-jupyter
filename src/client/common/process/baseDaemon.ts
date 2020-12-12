@@ -66,6 +66,7 @@ export abstract class BasePythonDaemon {
         // Make sure that we only dispose once so we are not sending multiple kill signals or notifications
         // This daemon can be held by multiple disposes such as a jupyter server daemon process which can
         // be disposed by both the connection and the main async disposable
+        this.connectionClosedMessage = 'Daemon disposed from dispose()';
         if (!this.disposed) {
             try {
                 this.disposed = true;
@@ -177,7 +178,7 @@ export abstract class BasePythonDaemon {
         return Object.keys(options).every((item) => daemonSupportedSpawnOptions.indexOf(item as any) >= 0);
     }
     protected sendRequestWithoutArgs<R, E, RO>(type: RequestType0<R, E, RO>): Thenable<R> {
-        if (this.proc && typeof this.proc.exitCode !== 'number') {
+        if (this.isAlive && this.proc && typeof this.proc.exitCode !== 'number') {
             return Promise.race([this.connection.sendRequest(type), this.connectionClosedDeferred.promise]);
         }
         return this.connectionClosedDeferred.promise;
@@ -186,7 +187,7 @@ export abstract class BasePythonDaemon {
         if (!this.isAlive || typeof this.proc.exitCode === 'number') {
             traceError('Daemon is handling a request after death.');
         }
-        if (this.proc && typeof this.proc.exitCode !== 'number') {
+        if (this.isAlive && this.proc && typeof this.proc.exitCode !== 'number') {
             // Throw an error if the connection has been closed.
             return Promise.race([this.connection.sendRequest(type, params), this.connectionClosedDeferred.promise]);
         }

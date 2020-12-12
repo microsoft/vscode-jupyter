@@ -70,7 +70,7 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         const settings = this.configurationSettings.getSettings(undefined);
         return settings.widgetScriptSources;
     }
-    private cache = new Map<string, WidgetScriptSource>();
+    private cache = new Map<string, Promise<WidgetScriptSource>>();
     constructor(
         private readonly configurationSettings: IConfigurationService,
         private readonly httpClient: IHttpClient,
@@ -83,67 +83,73 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
     public async getWidgetScriptSource(moduleName: string, moduleVersion: string): Promise<WidgetScriptSource> {
         // First see if we already have it downloaded.
         const key = this.getModuleKey(moduleName, moduleVersion);
+        if (!this.cache.get(key)) {
+            this.cache.set(key, this.getWidgetScriptSourceImplementation(moduleName, moduleVersion));
+        }
+        return this.cache.get(key)!;
+    }
+    private async getWidgetScriptSourceImplementation(
+        moduleName: string,
+        moduleVersion: string
+    ): Promise<WidgetScriptSource> {
+        // First see if we already have it downloaded.
+        const key = this.getModuleKey(moduleName, moduleVersion);
         const diskPath = path.join(this.localResourceUriConverter.rootScriptFolder.fsPath, key, 'index.js');
-        let cached = this.cache.get(key);
         let tempFile: TemporaryFile | undefined;
 
         // Might be on disk, try there first.
-        if (!cached) {
-            if (diskPath && (await this.fs.localFileExists(diskPath))) {
-                const scriptUri = (await this.localResourceUriConverter.asWebviewUri(Uri.file(diskPath))).toString();
-                cached = { moduleName, scriptUri, source: 'cdn' };
-                this.cache.set(key, cached);
-            }
+        if (diskPath && (await this.fs.localFileExists(diskPath))) {
+            const scriptUri = (await this.localResourceUriConverter.asWebviewUri(Uri.file(diskPath))).toString();
+            return { moduleName, scriptUri, source: 'cdn' };
         }
 
         // If still not found, download it.
-        if (!cached) {
-            try {
-                // Make sure the disk path directory exists. We'll be downloading it to there.
-                await this.fs.createLocalDirectory(path.dirname(diskPath));
+        try {
+            // Make sure the disk path directory exists. We'll be downloading it to there.
+            await this.fs.createLocalDirectory(path.dirname(diskPath));
 
-                // If CDN download fails, retry up to 3 times
-                const RETRY_ATTEMPTS = 3;
-                let attempt = 0;
-                while (attempt < RETRY_ATTEMPTS) {
-                    // Then get the first one that returns.
-                    traceInfo(`Attempt ${attempt}: downloading ${moduleName} v${moduleVersion} from CDN...`);
-                    tempFile = await this.downloadFastestCDN(moduleName, moduleVersion);
-                    if (tempFile) {
-                        traceInfo(`Successfully downloaded scripts from CDN to ${tempFile.filePath}`);
-                        break;
-                    }
-                    traceInfo(
-                        `Attempt ${attempt} to download ${moduleName} v${moduleVersion} from CDN failed. Retrying...`
-                    );
-                    await sleep(10);
-                    attempt += 1;
-                }
-
+            // If CDN download fails, retry up to 3 times
+            const RETRY_ATTEMPTS = 3;
+            let attempt = 0;
+            while (attempt < RETRY_ATTEMPTS) {
+                // Then get the first one that returns.
+                traceInfo(`Attempt ${attempt}: downloading ${moduleName} v${moduleVersion} from CDN...`);
+                tempFile = await this.downloadFastestCDN(moduleName, moduleVersion);
                 if (tempFile) {
-                    // Need to copy from the temporary file to our real file (note: VSC filesystem fails to copy so just use straight file system)
-                    await this.fs.copyLocal(tempFile.filePath, diskPath);
-
-                    // Now we can generate the script URI so the local converter doesn't try to copy it.
-                    const scriptUri = (
-                        await this.localResourceUriConverter.asWebviewUri(Uri.file(diskPath))
-                    ).toString();
-                    cached = { moduleName, scriptUri, source: 'cdn' };
-                } else {
-                    cached = { moduleName };
+                    traceInfo(`Successfully downloaded scripts from CDN to ${tempFile.filePath}`);
+                    break;
                 }
-            } catch (exc) {
-                traceError('Error downloading from CDN: ', exc);
-                cached = { moduleName };
-            } finally {
-                if (tempFile) {
-                    tempFile.dispose();
-                }
+                traceInfo(
+                    `Attempt ${attempt} to download ${moduleName} v${moduleVersion} from CDN failed. Retrying...`
+                );
+                await sleep(10);
+                attempt += 1;
             }
-            this.cache.set(key, cached);
-        }
 
-        return cached;
+            if (tempFile) {
+                traceInfo(
+                    !!process.env.VSC_JUPYTER_FORCE_LOGGING,
+                    `Widget Script downloaded for ${moduleName}:${moduleVersion}, already downloaded ${await this.fs.localFileExists(
+                        diskPath
+                    )}`
+                );
+                // Need to copy from the temporary file to our real file (note: VSC filesystem fails to copy so just use straight file system)
+                await this.fs.copyLocal(tempFile.filePath, diskPath);
+
+                // Now we can generate the script URI so the local converter doesn't try to copy it.
+                const scriptUri = (await this.localResourceUriConverter.asWebviewUri(Uri.file(diskPath))).toString();
+                return { moduleName, scriptUri, source: 'cdn' };
+            } else {
+                return { moduleName };
+            }
+        } catch (exc) {
+            traceError('Error downloading from CDN: ', exc);
+            return { moduleName };
+        } finally {
+            if (tempFile) {
+                tempFile.dispose();
+            }
+        }
     }
 
     private async downloadFastestCDN(moduleName: string, moduleVersion: string) {

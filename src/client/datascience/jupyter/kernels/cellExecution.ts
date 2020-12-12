@@ -5,7 +5,7 @@
 
 import { nbformat } from '@jupyterlab/coreutils';
 import type { KernelMessage } from '@jupyterlab/services/lib/kernel/messages';
-import { CancellationToken } from 'vscode';
+import { CancellationToken, ExtensionMode } from 'vscode';
 import type {
     CellDisplayOutput,
     NotebookCell,
@@ -14,9 +14,9 @@ import type {
 } from '../../../../../types/vscode-proposed';
 import { concatMultilineString, formatStreamText } from '../../../../datascience-ui/common';
 import { IApplicationShell, IVSCodeNotebook } from '../../../common/application/types';
-import { traceError, traceInfo, traceInfoIf, traceWarning } from '../../../common/logger';
+import { traceError, traceErrorIf, traceInfoIf, traceWarning } from '../../../common/logger';
 import { RefBool } from '../../../common/refBool';
-import { IDisposable } from '../../../common/types';
+import { IDisposable, IExtensionContext } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
 import { swallowExceptions } from '../../../common/utils/decorators';
 import { noop } from '../../../common/utils/misc';
@@ -34,6 +34,7 @@ import {
     clearCellForExecution,
     getCellStatusMessageBasedOnFirstCellErrorOutput,
     isStreamOutput,
+    traceCellMessage,
     updateCellExecutionTimes
 } from '../../notebook/helpers/helpers';
 import { MultiCancellationTokenSource } from '../../notebook/helpers/multiCancellationToken';
@@ -56,7 +57,8 @@ export class CellExecutionFactory {
         private readonly errorHandler: IDataScienceErrorHandler,
         private readonly editorProvider: INotebookEditorProvider,
         private readonly appShell: IApplicationShell,
-        private readonly vscNotebook: IVSCodeNotebook
+        private readonly vscNotebook: IVSCodeNotebook,
+        private readonly context: IExtensionContext
     ) {}
 
     public create(cell: NotebookCell, isPythonKernelConnection: boolean) {
@@ -67,7 +69,8 @@ export class CellExecutionFactory {
             this.errorHandler,
             this.editorProvider,
             this.appShell,
-            isPythonKernelConnection
+            isPythonKernelConnection,
+            this.context
         );
     }
 }
@@ -121,24 +124,22 @@ export class CellExecution {
         private readonly errorHandler: IDataScienceErrorHandler,
         private readonly editorProvider: INotebookEditorProvider,
         private readonly applicationService: IApplicationShell,
-        private readonly isPythonKernelConnection: boolean
+        private readonly isPythonKernelConnection: boolean,
+        extensionContext: IExtensionContext
     ) {
         // These are only used in the tests.
         // See where this is used to understand its purpose.
-        let deferred = createDeferred<void>();
         if (
             !CellExecution.cellsCompletedForTesting.has(cell) ||
             CellExecution.cellsCompletedForTesting.get(cell)!.completed
         ) {
-            CellExecution.cellsCompletedForTesting.set(cell, deferred);
+            CellExecution.cellsCompletedForTesting.set(cell, createDeferred<void>());
+        } else {
+            traceErrorIf(
+                extensionContext.extensionMode !== ExtensionMode.Production,
+                `Add new Cell Completion Deferred for ${cell.index}`
+            );
         }
-        if (
-            CellExecution.cellsCompletedForTesting.has(cell) &&
-            !CellExecution.cellsCompletedForTesting.get(cell)!.completed
-        ) {
-            deferred = CellExecution.cellsCompletedForTesting.get(cell)!;
-        }
-        this.result.then(() => deferred.resolve()).catch(() => deferred.resolve());
 
         this.oldCellRunState = cell.metadata.runState;
         this.initPromise = this.enqueue();
@@ -150,13 +151,26 @@ export class CellExecution {
         errorHandler: IDataScienceErrorHandler,
         editorProvider: INotebookEditorProvider,
         appService: IApplicationShell,
-        isPythonKernelConnection: boolean
+        isPythonKernelConnection: boolean,
+        context: IExtensionContext
     ) {
-        return new CellExecution(editor, cell, errorHandler, editorProvider, appService, isPythonKernelConnection);
+        return new CellExecution(
+            editor,
+            cell,
+            errorHandler,
+            editorProvider,
+            appService,
+            isPythonKernelConnection,
+            context
+        );
     }
 
     public async start(kernelPromise: Promise<IKernel>, notebook: INotebook) {
-        traceInfo(`Start cell execution for cell Index ${this.cell.index}`);
+        if (this.cancelHandled) {
+            traceCellMessage(this.cell, 'Not starting as it was cancelled');
+            return;
+        }
+        traceCellMessage(this.cell, 'Start execution');
         traceInfoIf(
             !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
             `Cell Exec contents ${this.cell.document.getText().substring(0, 50)}...`
@@ -193,6 +207,7 @@ export class CellExecution {
         if (this.cancelHandled || this._completed) {
             return;
         }
+        traceCellMessage(this.cell, 'Execution cancelled');
         this.cancelHandled = true;
         await this.initPromise;
         // We need to notify cancellation only if execution is in progress,
@@ -204,7 +219,7 @@ export class CellExecution {
         if (!this.started) {
             await this.dequeue();
         }
-        await this.completedDurToCancellation();
+        await this.completedDueToCancellation();
         this.dispose();
     }
     /**
@@ -212,29 +227,44 @@ export class CellExecution {
      * Or when execution has been cancelled.
      */
     private dispose() {
-        traceInfo(`Completed cell execution for cell Index ${this.cell.index}`);
+        traceCellMessage(this.cell, 'Execution disposed');
         this.disposables.forEach((d) => d.dispose());
+        const deferred = CellExecution.cellsCompletedForTesting.get(this.cell);
+        if (deferred) {
+            deferred.resolve();
+        }
     }
     private handleKernelRestart(kernel: IKernel) {
-        kernel.onRestarted(async () => this.cancel(), this, this.disposables);
+        kernel.onRestarted(
+            async () => {
+                traceCellMessage(this.cell, 'Kernel restart handled in CellExecution, cancelling cell');
+                this.cancel().catch(noop);
+            },
+            this,
+            this.disposables
+        );
     }
 
     private async completedWithErrors(error: Partial<Error>) {
+        traceCellMessage(this.cell, 'Completed with errors');
         this.sendPerceivedCellExecute();
-        await chainWithPendingUpdates(this.editor, (edit) =>
+        await chainWithPendingUpdates(this.editor, (edit) => {
+            traceCellMessage(this.cell, 'Update run run duration');
             edit.replaceCellMetadata(this.cell.index, {
                 ...this.cell.metadata,
                 lastRunDuration: this.stopWatch.elapsedTime
-            })
-        );
+            });
+        });
         await updateCellWithErrorStatus(this.editor, this.cell, error);
         this.errorHandler.handleError((error as unknown) as Error).ignoreErrors();
 
         this._completed = true;
+        traceCellMessage(this.cell, 'Completed with errors, & resolving');
         this._result.resolve(this.cell.metadata.runState);
     }
 
     private async completedSuccessfully() {
+        traceCellMessage(this.cell, 'Completed successfully');
         this.sendPerceivedCellExecute();
         let statusMessage = '';
         // If we requested a cancellation, then assume it did not even run.
@@ -254,33 +284,38 @@ export class CellExecution {
             statusMessage = getCellStatusMessageBasedOnFirstCellErrorOutput(this.cell.outputs);
         }
 
-        await chainWithPendingUpdates(this.editor, (edit) =>
+        await chainWithPendingUpdates(this.editor, (edit) => {
+            traceCellMessage(this.cell, `Update cell state ${runState} and message '${statusMessage}'`);
             edit.replaceCellMetadata(this.cell.index, {
                 ...this.cell.metadata,
                 runState,
                 statusMessage
-            })
-        );
+            });
+        });
 
         this._completed = true;
+        traceCellMessage(this.cell, 'Completed successfully & resolving');
         this._result.resolve(this.cell.metadata.runState);
     }
 
-    private async completedDurToCancellation() {
+    private async completedDueToCancellation() {
+        traceCellMessage(this.cell, 'Completed due to cancellation');
         await updateCellExecutionTimes(this.editor, this.cell, {
             startTime: this.cell.metadata.runStartTime,
             lastRunDuration: this.stopWatch.elapsedTime
         });
 
-        await chainWithPendingUpdates(this.editor, (edit) =>
+        await chainWithPendingUpdates(this.editor, (edit) => {
+            traceCellMessage(this.cell, 'Update cell statue as idle and message as empty');
             edit.replaceCellMetadata(this.cell.index, {
                 ...this.cell.metadata,
                 runState: vscodeNotebookEnums.NotebookCellRunState.Idle,
                 statusMessage: ''
-            })
-        );
+            });
+        });
 
         this._completed = true;
+        traceCellMessage(this.cell, 'Cell cancelled & resolving');
         this._result.resolve(this.cell.metadata.runState);
     }
 
@@ -307,13 +342,15 @@ export class CellExecution {
             this.oldCellRunState === vscodeNotebookEnums.NotebookCellRunState.Running
                 ? vscodeNotebookEnums.NotebookCellRunState.Idle
                 : this.oldCellRunState;
-        await chainWithPendingUpdates(this.editor, (edit) =>
+        await chainWithPendingUpdates(this.editor, (edit) => {
+            traceCellMessage(this.cell, 'Update cell state as it was dequeued');
+
             edit.replaceCellMetadata(this.cell.index, {
                 ...this.cell.metadata,
                 runStartTime: undefined,
                 runState
-            })
-        );
+            });
+        });
         this._completed = true;
         this._result.resolve(this.cell.metadata.runState);
     }
@@ -326,12 +363,13 @@ export class CellExecution {
         if (!this.canExecuteCell()) {
             return;
         }
-        await chainWithPendingUpdates(this.editor, (edit) =>
+        await chainWithPendingUpdates(this.editor, (edit) => {
+            traceCellMessage(this.cell, 'Update cell state as it was enqueued');
             edit.replaceCellMetadata(this.cell.index, {
                 ...this.cell.metadata,
                 runState: vscodeNotebookEnums.NotebookCellRunState.Running
-            })
-        );
+            });
+        });
     }
 
     private sendPerceivedCellExecute() {
@@ -355,7 +393,7 @@ export class CellExecution {
 
     private async execute(session: IJupyterSession, loggers: INotebookExecutionLogger[]) {
         const code = this.cell.document.getText();
-        traceInfo(`Send code for execution ${this.cell.index}`);
+        traceCellMessage(this.cell, 'Send code for execution');
         return this.executeCodeCell(code, session, loggers);
     }
 
@@ -369,6 +407,7 @@ export class CellExecution {
 
         // Skip if no code to execute
         if (code.trim().length === 0) {
+            traceCellMessage(this.cell, 'Empty cell execution');
             return this.completedSuccessfully().then(noop, noop);
         }
 
@@ -391,6 +430,7 @@ export class CellExecution {
 
         // Listen to the response messages and update state as we go
         if (!request) {
+            traceError(`Cell execution failed without request, for cell Index ${this.cell.index}`);
             return this.completedWithErrors(new Error('Session cannot generate requests')).then(noop, noop);
         }
 
@@ -420,17 +460,19 @@ export class CellExecution {
             // When the request finishes we are done
             // request.done resolves even before all iopub messages have been sent through.
             // Solution is to wait for all messages to get processed.
+            traceCellMessage(this.cell, 'Wait for jupyter execution');
             await Promise.all([request.done, this.requestHandlerChain]);
+            traceCellMessage(this.cell, 'Jupyter execution completed');
             await this.completedSuccessfully();
-            traceInfo(`Cell ${this.cell.index} executed successfully`);
+            traceCellMessage(this.cell, 'Executed successfully in executeCell');
         } catch (ex) {
             // @jupyterlab/services throws a `Canceled` error when the kernel is interrupted.
             // Such an error must be ignored.
             if (ex && ex instanceof Error && ex.message === 'Canceled') {
                 await this.completedSuccessfully();
-                traceInfo(`Cell ${this.cell.index} execution cancelled`);
+                traceCellMessage(this.cell, 'Cancellation execution error');
             } else {
-                traceError(`Cell (index = ${this.cell.index}) execution completed with errors (1).`, ex);
+                traceCellMessage(this.cell, 'Some other execution error');
                 await this.completedWithErrors(ex);
             }
         } finally {
@@ -510,6 +552,7 @@ export class CellExecution {
         const converted = cellOutputToVSCCellOutput(output);
 
         await chainWithPendingUpdates(this.editor, (edit) => {
+            traceCellMessage(this.cell, 'Update output');
             let existingOutput = [...this.cell.outputs];
 
             // Clear if necessary
@@ -593,11 +636,12 @@ export class CellExecution {
     }
 
     private handleStatusMessage(msg: KernelMessage.IStatusMsg, _clearState: RefBool) {
-        traceInfo(`Kernel switching to ${msg.content.execution_state}`);
+        traceCellMessage(this.cell, `Kernel switching to ${msg.content.execution_state}`);
     }
     private async handleStreamMessage(msg: KernelMessage.IStreamMsg, clearState: RefBool) {
         // tslint:disable-next-line: cyclomatic-complexity
         await chainWithPendingUpdates(this.editor, (edit) => {
+            traceCellMessage(this.cell, 'Update streamed output');
             let exitingCellOutput = this.cell.outputs;
             // Clear output if waiting for a clear
             if (clearState.value) {
@@ -665,7 +709,10 @@ export class CellExecution {
             clearState.update(true);
         } else {
             // Clear all outputs and start over again.
-            await chainWithPendingUpdates(this.editor, (edit) => edit.replaceCellOutput(this.cell.index, []));
+            await chainWithPendingUpdates(this.editor, (edit) => {
+                traceCellMessage(this.cell, 'Handle clear output message & clear output');
+                edit.replaceCellOutput(this.cell.index, []);
+            });
         }
     }
 

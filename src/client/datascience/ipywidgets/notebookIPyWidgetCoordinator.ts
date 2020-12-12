@@ -38,7 +38,8 @@ export class NotebookIPyWidgetCoordinator implements INotebookKernelResolver {
         // entire VS code session, we have a map of notebook document to message coordinator
         let promise = this.messageCoordinators.get(document.uri.toString());
         if (!promise) {
-            promise = CommonMessageCoordinator.create(document.uri, this.serviceContainer);
+            const coordinator = CommonMessageCoordinator.create(document.uri, this.serviceContainer);
+            promise = coordinator.initialize().then(() => coordinator);
             this.messageCoordinators.set(document.uri.toString(), promise);
         }
         return Cancellation.race(() => promise!.then(this.attachCoordinator.bind(this, document, webview)), token);

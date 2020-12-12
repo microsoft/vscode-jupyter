@@ -8,6 +8,7 @@ export {
     setLoggingLevel,
     addOutputChannelLogging,
     logError,
+    logErrorIf,
     logInfo,
     logInfoIf,
     logVerbose,

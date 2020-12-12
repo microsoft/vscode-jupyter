@@ -59,29 +59,41 @@ async function testInnerLoop(
 
 export function runDoubleTest(
     name: string,
-    testFunc: (type: 'native' | 'interactive') => Promise<void>,
+    testFunc: (this: Mocha.Context, type: 'native' | 'interactive') => Promise<void>,
     getIOC: () => Promise<DataScienceIocContainer>
 ) {
     // Just run the test twice. Originally mounted twice, but too hard trying to figure out disposing.
-    test(`${name} (interactive)`, async () => testInnerLoop(name, 'interactive', testFunc, getIOC));
-    test(`${name} (native)`, async () => testInnerLoop(name, 'native', testFunc, getIOC));
+    test(`${name} (interactive)`, async function () {
+        const testContext = this;
+        await testInnerLoop(name, 'interactive', testFunc.bind(testContext), getIOC);
+    });
+    test(`${name} (native)`, async function () {
+        const testContext = this;
+        await testInnerLoop(name, 'native', testFunc.bind(testContext), getIOC);
+    });
 }
 
 export function runInteractiveTest(
     name: string,
-    testFunc: (c?: Mocha.Context) => Promise<void>,
+    testFunc: (this: Mocha.Context) => Promise<void>,
     getIOC: () => Promise<DataScienceIocContainer>
 ) {
     // Run the test with just the interactive window
-    test(`${name} (interactive)`, async () => testInnerLoop(name, 'interactive', (_t) => testFunc(), getIOC));
+    test(`${name} (interactive)`, async function () {
+        const testContext = this;
+        await testInnerLoop(name, 'interactive', testFunc.bind(testContext), getIOC);
+    });
 }
 export function runNativeTest(
     name: string,
-    testFunc: () => Promise<void>,
+    testFunc: (this: Mocha.Context) => Promise<void>,
     getIOC: () => Promise<DataScienceIocContainer>
 ) {
     // Run the test with just the native window
-    test(`${name} (native)`, async () => testInnerLoop(name, 'native', (_t) => testFunc(), getIOC));
+    test(`${name} (native)`, async function () {
+        const testContext = this;
+        await testInnerLoop(name, 'native', testFunc.bind(testContext), getIOC);
+    });
 }
 
 export function addMockData(

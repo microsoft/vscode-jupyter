@@ -36,7 +36,6 @@ suite('Environment Variables Service', () => {
         );
     });
     function verifyAll() {
-        pathUtils.verifyAll();
         fs.verifyAll();
     }
     function setFile(fileName: string, text: string) {

@@ -20,6 +20,8 @@ if ((Reflect as any).metadata === undefined) {
     require('reflect-metadata');
 }
 
+import { setupCoverage } from './coverage';
+
 process.env.VSC_JUPYTER_CI_TEST = '1';
 process.env.VSC_JUPYTER_UNIT_TEST = '1';
 process.env.NODE_ENV = 'production'; // Make sure react is using production bits or we can run out of memory.
@@ -82,12 +84,23 @@ if (process.argv.indexOf('--fast') === -1) {
     setupTranspile();
 }
 
+// Rebuild with nyc
+const nyc = setupCoverage();
+
 exports.mochaHooks = {
     afterAll() {
+        let nycPromise: Promise<void> | undefined;
+
+        // Output the nyc coverage if we have any
+        if (nyc) {
+            nyc.writeCoverageFile();
+            nycPromise = nyc.report();
+        }
+
         const kernelLauncherMod = require('../client/datascience/kernel-launcher/kernelLauncher');
 
         // After all tests run, clean up the kernel launcher mutex files
-        return kernelLauncherMod.KernelLauncher.cleanupStartPort();
+        return kernelLauncherMod.KernelLauncher.cleanupStartPort().then(() => nycPromise);
     }
 };
 

@@ -21,7 +21,7 @@ import { ServerStatus } from '../../../../datascience-ui/interactive-common/main
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../../common/application/types';
 import { traceError, traceWarning } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
-import { IDisposableRegistry } from '../../../common/types';
+import { IDisposableRegistry, IExtensionContext } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
 import { noop } from '../../../common/utils/misc';
 import { CodeSnippets } from '../../constants';
@@ -92,7 +92,8 @@ export class Kernel implements IKernel {
         appShell: IApplicationShell,
         vscNotebook: IVSCodeNotebook,
         rawNotebookSupported: IRawNotebookSupportedService,
-        private readonly fs: IFileSystem
+        private readonly fs: IFileSystem,
+        context: IExtensionContext
     ) {
         this.kernelExecution = new KernelExecution(
             kernelProvider,
@@ -103,7 +104,8 @@ export class Kernel implements IKernel {
             appShell,
             vscNotebook,
             metadata,
-            rawNotebookSupported
+            rawNotebookSupported,
+            context
         );
     }
     public async executeCell(cell: NotebookCell): Promise<void> {

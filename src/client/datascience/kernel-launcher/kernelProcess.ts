@@ -6,15 +6,17 @@ import { ChildProcess } from 'child_process';
 import * as fs from 'fs-extra';
 import * as tcpPortUsed from 'tcp-port-used';
 import * as tmp from 'tmp';
-import { Event, EventEmitter } from 'vscode';
+import { CancellationTokenSource, Event, EventEmitter } from 'vscode';
 import { IPythonExtensionChecker } from '../../api/types';
+import { createPromiseFromCancellation } from '../../common/cancellation';
 import { traceError, traceInfo, traceWarning } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IProcessServiceFactory, ObservableExecutionResult } from '../../common/process/types';
 import { Resource } from '../../common/types';
+import * as localize from '../../common/utils/localize';
 import { noop, swallowExceptions } from '../../common/utils/misc';
 import { captureTelemetry } from '../../telemetry';
-import { Telemetry } from '../constants';
+import { Commands, Telemetry } from '../constants';
 import {
     createDefaultKernelSpec,
     findIndexOfConnectionFile,
@@ -83,6 +85,31 @@ export class KernelProcess implements IKernelProcess {
 
         let stdout = '';
         let stderr = '';
+        let stderrProc = '';
+        let exitEventFired = false;
+        const cancelWaiting = new CancellationTokenSource();
+
+        exeObs.proc!.on('exit', (exitCode) => {
+            traceInfo('KernelProcess Exit', `Exit - ${exitCode}`, stderrProc);
+            if (this.disposed) {
+                return;
+            }
+            if (!exitEventFired) {
+                this.exitEvent.fire({ exitCode: exitCode || undefined, reason: stderrProc });
+                exitEventFired = true;
+            }
+            cancelWaiting.cancel();
+        });
+
+        exeObs.proc!.stdout.on('data', (data: Buffer | string) => {
+            traceInfo(`KernelProcess output: ${(data || '').toString()}`);
+        });
+
+        exeObs.proc!.stderr.on('data', (data: Buffer | string) => {
+            stderrProc += data.toString();
+            traceInfo(`KernelProcess error: ${(data || '').toString()}`);
+        });
+
         exeObs.out.subscribe(
             (output) => {
                 if (output.source === 'stderr') {
@@ -103,18 +130,46 @@ export class KernelProcess implements IKernelProcess {
                 if (error instanceof PythonKernelDiedError) {
                     if (this.disposed) {
                         traceInfo('KernelProcess Exit', `Exit - ${error.exitCode}, ${error.reason}`, error);
+                        return;
                     } else {
                         traceError('KernelProcess Exit', `Exit - ${error.exitCode}, ${error.reason}`, error);
                     }
-                    if (this.disposed) {
-                        return;
+                    if (!exitEventFired) {
+                        this.exitEvent.fire({ exitCode: error.exitCode, reason: error.reason || error.message });
+                        exitEventFired = true;
                     }
-                    this.exitEvent.fire({ exitCode: error.exitCode, reason: error.reason || error.message });
+                    cancelWaiting.cancel();
                 }
             }
         );
-        // Don't return until our heartbeat channel is open for connections
-        return this.waitForHeartbeat();
+
+        // Don't return until our heartbeat channel is open for connections or the kernel died
+        try {
+            await Promise.race([
+                tcpPortUsed.waitUntilUsed(this.connection.hb_port, 200, 30_000),
+                createPromiseFromCancellation({
+                    token: cancelWaiting.token,
+                    cancelAction: 'reject',
+                    defaultValue: undefined
+                })
+            ]);
+        } catch (e) {
+            // Make sure to dispose if we never get a heartbeat
+            this.dispose().ignoreErrors();
+
+            if (cancelWaiting.token.isCancellationRequested) {
+                traceError(stderrProc || stderr);
+                throw new Error(
+                    localize.DataScience.kernelDied().format(
+                        Commands.ViewJupyterOutput,
+                        (stderrProc || stderr).substring(0, 100)
+                    )
+                );
+            } else {
+                traceError('Timed out waiting to get a heartbeat from kernel process.');
+                throw new Error(localize.DataScience.kernelTimeout().format(Commands.ViewJupyterOutput));
+            }
+        }
     }
 
     public async dispose(): Promise<void> {
@@ -132,20 +187,6 @@ export class KernelProcess implements IKernelProcess {
         });
         swallowExceptions(() => this.pythonKernelLauncher?.dispose());
         swallowExceptions(async () => (this.connectionFile ? fs.remove(this.connectionFile) : noop()));
-    }
-
-    // Make sure that the heartbeat channel is open for connections
-    private async waitForHeartbeat() {
-        try {
-            // Wait until the port is open for connection
-            // First parameter is wait between retries, second parameter is total wait before error
-            await tcpPortUsed.waitUntilUsed(this.connection.hb_port, 200, 30_000);
-        } catch (error) {
-            // Make sure to dispose if we never get a heartbeat
-            this.dispose().ignoreErrors();
-            traceError('Timed out waiting to get a heartbeat from kernel process.');
-            throw new Error('Timed out waiting to get a heartbeat from kernel process.');
-        }
     }
 
     private get launchKernelSpec(): IJupyterKernelSpec {
@@ -278,21 +319,7 @@ export class KernelProcess implements IKernelProcess {
             });
         }
 
-        if (exeObs && exeObs.proc) {
-            exeObs.proc.on('exit', (exitCode) => {
-                traceInfo('KernelProcess Exit', `Exit - ${exitCode}`);
-                if (this.disposed) {
-                    return;
-                }
-                this.exitEvent.fire({ exitCode: exitCode || undefined });
-            });
-            exeObs.proc.stdout.on('data', (data: Buffer | string) => {
-                traceInfo(`KernelProcess output: ${(data || '').toString()}`);
-            });
-            exeObs.proc.stderr.on('data', (data: Buffer | string) => {
-                traceInfo(`KernelProcess error: ${(data || '').toString()}`);
-            });
-        } else {
+        if (!exeObs || !exeObs.proc) {
             throw new Error('KernelProcess failed to launch');
         }
 

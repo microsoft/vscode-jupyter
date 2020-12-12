@@ -8,7 +8,12 @@ import type { KernelMessage } from '@jupyterlab/services';
 import * as fastDeepEqual from 'fast-deep-equal';
 import type { NotebookCell, NotebookEditor } from '../../../../../types/vscode-proposed';
 import { createErrorOutput } from '../../../../datascience-ui/common/cellFactory';
-import { createIOutputFromCellOutputs, createVSCCellOutputsFromOutputs, translateErrorOutput } from './helpers';
+import {
+    createIOutputFromCellOutputs,
+    createVSCCellOutputsFromOutputs,
+    traceCellMessage,
+    translateErrorOutput
+} from './helpers';
 import { chainWithPendingUpdates } from './notebookUpdater';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
@@ -83,6 +88,7 @@ export async function updateCellWithErrorStatus(
     ex: Partial<Error>
 ) {
     await chainWithPendingUpdates(notebookEditor, (edit) => {
+        traceCellMessage(cell, 'Update with error state & output');
         edit.replaceCellMetadata(cell.index, {
             ...cell.metadata,
             runState: vscodeNotebookEnums.NotebookCellRunState.Error
@@ -100,12 +106,13 @@ export async function updateCellExecutionCount(
     executionCount: number
 ): Promise<void> {
     if (cell.metadata.executionOrder !== executionCount && executionCount) {
-        await chainWithPendingUpdates(editor, (edit) =>
+        await chainWithPendingUpdates(editor, (edit) => {
+            traceCellMessage(cell, 'Update execution count');
             edit.replaceCellMetadata(cell.index, {
                 ...cell.metadata,
                 executionOrder: executionCount
-            })
-        );
+            });
+        });
     }
 }
 

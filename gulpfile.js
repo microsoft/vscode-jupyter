@@ -21,18 +21,19 @@ const flat = require('flat');
 const { argv } = require('yargs');
 const os = require('os');
 const { ExtensionRootDir } = require('./build/util');
-
 const isCI = process.env.TF_BUILD !== undefined || process.env.GITHUB_ACTIONS === 'true';
 
-gulp.task('compile', (done) => {
-    let failed = false;
-    const tsProject = ts.createProject('tsconfig.json');
-    tsProject
-        .src()
-        .pipe(tsProject())
-        .on('error', () => (failed = true))
-        .js.pipe(gulp.dest('out'))
-        .on('finish', () => (failed ? done(new Error('TypeScript compilation errors')) : done()));
+gulp.task('compile', async (done) => {
+    // Use tsc so we can generate source maps that look just like tsc does (gulp-sourcemap does not generate them the same way)
+    try {
+        const stdout = await spawnAsync('tsc', ['-p', './'], {}, true);
+        if (stdout.toLowerCase().includes('error ts')) {
+            throw new Error(`Compile errors: \n${stdout}`);
+        }
+        done();
+    } catch (e) {
+        done(e);
+    }
 });
 
 gulp.task('output:clean', () => del(['coverage']));
@@ -241,7 +242,7 @@ gulp.task('includeBCryptGenRandomExe', async () => {
     await fs.stat(src);
     await fs.ensureDir(path.dirname(dest));
     await fs.copyFile(src, dest);
-})
+});
 
 gulp.task('prePublishBundle', gulp.series('includeBCryptGenRandomExe', 'webpack'));
 gulp.task('checkDependencies', gulp.series('checkNativeDependencies'));
@@ -250,7 +251,10 @@ gulp.task('checkDependencies', gulp.series('checkNativeDependencies'));
 if (isCI && process.env.VSC_CI_MATRIX_TEST_SUITE === 'notebook') {
     gulp.task('prePublishNonBundle', gulp.parallel('compile', 'includeBCryptGenRandomExe'));
 } else {
-    gulp.task('prePublishNonBundle', gulp.parallel('compile', 'includeBCryptGenRandomExe', gulp.series('compile-webviews')));
+    gulp.task(
+        'prePublishNonBundle',
+        gulp.parallel('compile', 'includeBCryptGenRandomExe', gulp.series('compile-webviews'))
+    );
 }
 
 function spawnAsync(command, args, env, rejectOnStdErr = false) {
