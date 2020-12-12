@@ -7,7 +7,7 @@ import * as uuid from 'uuid/v4';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { InteractiveWindowMessages } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { CellState, ICell } from '../../../../client/datascience/types';
-import { concatMultilineString } from '../../../common';
+import { concatMultilineString, splitMultilineString } from '../../../common';
 import { createCellFrom } from '../../../common/cellFactory';
 import {
     CursorPos,
@@ -32,28 +32,32 @@ export namespace Execution {
     function executeRange(
         prevState: IMainState,
         cellIds: string[],
+        code: string[],
         // tslint:disable-next-line: no-any
         originalArg: NativeEditorReducerArg<any>
     ): IMainState {
         const newVMs = [...prevState.cellVMs];
         const cellIdsToExecute: string[] = [];
-        cellIds.forEach((cellId) => {
+        const codeToExecute: string[] = [];
+        cellIds.forEach((cellId, i) => {
             const index = prevState.cellVMs.findIndex((cell) => cell.cell.id === cellId);
             if (index === -1) {
                 return;
             }
             const orig = prevState.cellVMs[index];
             // noop if the submitted code is just a cell marker
-            if (orig.cell.data.cell_type === 'code' && concatMultilineString(orig.cell.data.source)) {
+            if (orig.cell.data.cell_type === 'code' && code[i]) {
                 // When cloning cells, preserve the metadata (hence deep clone).
                 const clonedCell = cloneDeep(orig.cell.data);
                 // Update our input cell to be in progress again and clear outputs
                 clonedCell.outputs = [];
+                clonedCell.source = splitMultilineString(code[i]);
                 newVMs[index] = Helpers.asCellViewModel({
                     ...orig,
                     cell: { ...orig.cell, state: CellState.executing, data: clonedCell }
                 });
                 cellIdsToExecute.push(orig.cell.id);
+                codeToExecute.push(code[i]);
             }
         });
 
@@ -61,7 +65,8 @@ export namespace Execution {
         if (cellIdsToExecute.length > 0) {
             // Send a message if a code cell
             postActionToExtension(originalArg, InteractiveWindowMessages.ReExecuteCells, {
-                cellIds: cellIdsToExecute
+                cellIds: cellIdsToExecute,
+                code: codeToExecute
             });
         }
 
@@ -76,7 +81,10 @@ export namespace Execution {
         if (index > 0) {
             // Get all cellIds until `index`.
             const cellIds = arg.prevState.cellVMs.slice(0, index).map((cellVm) => cellVm.cell.id);
-            return executeRange(arg.prevState, cellIds, arg);
+            const code = arg.prevState.cellVMs
+                .slice(0, index)
+                .map((cellVm) => concatMultilineString(cellVm.cell.data.source));
+            return executeRange(arg.prevState, cellIds, code, arg);
         }
         return arg.prevState;
     }
@@ -84,6 +92,7 @@ export namespace Execution {
     export function executeCellAndAdvance(arg: NativeEditorReducerArg<IExecuteAction>): IMainState {
         queueIncomingActionWithPayload(arg, CommonActionType.EXECUTE_CELL, {
             cellId: arg.payload.data.cellId,
+            code: arg.payload.data.code,
             moveOp: arg.payload.data.moveOp
         });
         if (arg.payload.data.moveOp === 'add') {
@@ -104,7 +113,7 @@ export namespace Execution {
         const index = arg.prevState.cellVMs.findIndex((c) => c.cell.id === arg.payload.data.cellId);
         if (index >= 0 && arg.payload.data.cellId) {
             // Start executing this cell.
-            const executeResult = executeRange(arg.prevState, [arg.payload.data.cellId], arg);
+            const executeResult = executeRange(arg.prevState, [arg.payload.data.cellId], [arg.payload.data.code], arg);
 
             // Modify the execute result if moving
             if (arg.payload.data.moveOp === 'select') {
@@ -137,12 +146,18 @@ export namespace Execution {
         return arg.prevState;
     }
 
-    export function executeCellAndBelow(arg: NativeEditorReducerArg<ICellAction>): IMainState {
+    export function executeCellAndBelow(arg: NativeEditorReducerArg<IExecuteAction>): IMainState {
         const index = arg.prevState.cellVMs.findIndex((c) => c.cell.id === arg.payload.data.cellId);
         if (index >= 0) {
             // Get all cellIds starting from `index`.
             const cellIds = arg.prevState.cellVMs.slice(index).map((cellVm) => cellVm.cell.id);
-            return executeRange(arg.prevState, cellIds, arg);
+            const code = arg.prevState.cellVMs
+                .slice(index)
+                .map((cellVm) => concatMultilineString(cellVm.cell.data.source));
+
+            // First one should come from the UI
+            code[0] = arg.payload.data.code;
+            return executeRange(arg.prevState, cellIds, code, arg);
         }
         return arg.prevState;
     }
@@ -150,7 +165,8 @@ export namespace Execution {
     export function executeAllCells(arg: NativeEditorReducerArg): IMainState {
         if (arg.prevState.cellVMs.length > 0) {
             const cellIds = arg.prevState.cellVMs.map((cellVm) => cellVm.cell.id);
-            return executeRange(arg.prevState, cellIds, arg);
+            const code = arg.prevState.cellVMs.map((cellVm) => concatMultilineString(cellVm.cell.data.source));
+            return executeRange(arg.prevState, cellIds, code, arg);
         }
         return arg.prevState;
     }
@@ -166,6 +182,7 @@ export namespace Execution {
                     ...arg.payload,
                     data: {
                         cellId: selectionInfo.selectedCellId,
+                        code: concatMultilineString(arg.prevState.cellVMs[index].cell.data.source),
                         moveOp: 'none'
                     }
                 }

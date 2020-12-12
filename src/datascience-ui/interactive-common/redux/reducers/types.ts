@@ -102,7 +102,7 @@ export type CommonActionTypeMapping = {
     [CommonActionType.EXECUTE_CELL]: IExecuteAction;
     [CommonActionType.EXECUTE_ALL_CELLS]: never | undefined;
     [CommonActionType.EXECUTE_ABOVE]: ICellAction;
-    [CommonActionType.EXECUTE_CELL_AND_BELOW]: ICellAction;
+    [CommonActionType.EXECUTE_CELL_AND_BELOW]: IExecuteAction;
     [CommonActionType.RESTART_KERNEL]: never | undefined;
     [CommonActionType.INTERRUPT_KERNEL]: never | undefined;
     [CommonActionType.EXPORT]: never | undefined;
@@ -192,6 +192,7 @@ export interface IEditCellAction extends ICodeAction {
 // I.e. when using the operation `add`, we need the corresponding `IAddCellAction`.
 // They are mutually exclusive, if not `add`, then there's no `newCellId`.
 export type IExecuteAction = ICellAction & {
+    code: string;
     moveOp: 'select' | 'none' | 'add';
 };
 
