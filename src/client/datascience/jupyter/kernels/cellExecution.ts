@@ -677,7 +677,10 @@ export class CellExecution {
                 }
                 // tslint:disable-next-line:restrict-plus-operands
                 existing.data['text/plain'] = formatStreamText(concatMultilineString(`${existingOutput}${newContent}`));
-                traceInfoIf(!!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT, `Append Output '${existing.data['text/plain']}'`);
+                traceInfoIf(
+                    !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
+                    `Append Output '${existing.data['text/plain']}'`
+                );
                 edit.replaceCellOutput(this.cell.index, [...exitingCellOutput]); // This is necessary to get VS code to update (for now)
             } else {
                 const originalText = formatStreamText(concatMultilineString(msg.content.text));
