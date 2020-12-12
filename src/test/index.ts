@@ -10,6 +10,10 @@ require('./common/exitCIAfterTestReporter');
 if ((Reflect as any).metadata === undefined) {
     require('reflect-metadata');
 }
+// Always place at top, must be done before we import any of the files from src/client folder.
+// We need to ensure nyc gets a change to setup necessary hooks before files are loaded.
+const { setupCoverage } = require('./coverage');
+const nyc = setupCoverage();
 
 import * as glob from 'glob';
 import * as Mocha from 'mocha';
@@ -24,7 +28,6 @@ import {
 } from './constants';
 import { initialize } from './initialize';
 import { initializeLogger } from './testLogger';
-import { setupCoverage } from './coverage';
 
 initializeLogger();
 
@@ -135,7 +138,6 @@ function activateExtensionScript() {
  * @returns {Promise<void>}
  */
 export async function run(): Promise<void> {
-    const nyc = setupCoverage();
     const options = configure();
     const mocha = new Mocha(options);
     const testsRoot = path.join(__dirname);
@@ -201,7 +203,7 @@ export async function run(): Promise<void> {
     } finally {
         if (nyc) {
             nyc.writeCoverageFile();
-            nyc.report();
+            await nyc.report(); // This is async.
         }
     }
 }
