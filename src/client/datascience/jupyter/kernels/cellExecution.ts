@@ -172,7 +172,7 @@ export class CellExecution {
         }
         traceCellMessage(this.cell, 'Start execution');
         traceInfoIf(
-            !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
+            !!process.env.VSC_JUPYTER_FORCE_LOGGING,
             `Cell Exec contents ${this.cell.document.getText().substring(0, 50)}...`
         );
         if (!this.canExecuteCell()) {
@@ -677,14 +677,9 @@ export class CellExecution {
                 }
                 // tslint:disable-next-line:restrict-plus-operands
                 existing.data['text/plain'] = formatStreamText(concatMultilineString(`${existingOutput}${newContent}`));
-                traceInfoIf(
-                    !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
-                    `Append Output '${existing.data['text/plain']}'`
-                );
                 edit.replaceCellOutput(this.cell.index, [...exitingCellOutput]); // This is necessary to get VS code to update (for now)
             } else {
                 const originalText = formatStreamText(concatMultilineString(msg.content.text));
-                traceInfoIf(!!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT, `Insert Output '${originalText}'`);
                 // Create a new stream entry
                 const output: nbformat.IStream = {
                     output_type: 'stream',
