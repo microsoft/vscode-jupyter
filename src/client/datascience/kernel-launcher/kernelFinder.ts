@@ -148,6 +148,7 @@ export class KernelFinder implements IKernelFinder {
         }
     }
 
+    @traceDecorators.verbose('Find kernel spec based on language')
     private async findKernelSpecBasedOnLanguage(resource: Resource, language: string) {
         const specs = await this.listKernelSpecs(resource);
         return specs.find((item) => item.language?.toLowerCase() === language.toLowerCase());

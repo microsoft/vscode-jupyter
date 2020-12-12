@@ -172,7 +172,7 @@ export class CellExecution {
         }
         traceCellMessage(this.cell, 'Start execution');
         traceInfoIf(
-            !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
+            !!process.env.VSC_JUPYTER_FORCE_LOGGING,
             `Cell Exec contents ${this.cell.document.getText().substring(0, 50)}...`
         );
         if (!this.canExecuteCell()) {

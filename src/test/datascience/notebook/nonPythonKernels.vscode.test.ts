@@ -9,7 +9,7 @@ import * as sinon from 'sinon';
 import { Uri } from 'vscode';
 import { IPythonExtensionChecker } from '../../../client/api/types';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
-import { traceInfo, traceInfoIf } from '../../../client/common/logger';
+import { traceInfo } from '../../../client/common/logger';
 import { IDisposable } from '../../../client/common/types';
 import { VSCodeNotebookProvider } from '../../../client/datascience/constants';
 import { NotebookCellLanguageService } from '../../../client/datascience/notebook/defaultCellLanguageService';
@@ -103,7 +103,6 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
     });
     teardown(async () => {
-        process.env.VSC_CI_ENABLE_TOO_MUCH_LOGGING = undefined;
         await closeNotebooksAndCleanUpAfterTests(disposables);
     });
     test('Automatically pick java kernel when opening a Java Notebook', async function () {
@@ -126,10 +125,7 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         if (!pythonChecker.isPythonExtensionInstalled) {
             return this.skip();
         }
-        process.env.VSC_CI_ENABLE_TOO_MUCH_LOGGING = 'true';
-        traceInfoIf(!!process.env.VSC_CI_ENABLE_TOO_MUCH_LOGGING, '1. Open Notebook');
         await openNotebook(api.serviceContainer, testCSharpNb.fsPath);
-        traceInfoIf(!!process.env.VSC_CI_ENABLE_TOO_MUCH_LOGGING, '2. Wait for kernel to get selected');
         await waitForKernelToGetAutoSelected('c#');
     });
     test('New notebook will have a Julia cell if last notebook was a julia nb', async () => {
@@ -173,7 +169,7 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         this.timeout(30_000); // Can be slow to start Julia kernel on CI.
         await openNotebook(api.serviceContainer, testJuliaNb.fsPath);
         await insertCodeCell('123456', { language: 'julia', index: 0 });
-        await waitForKernelToGetAutoSelected();
+        await waitForKernelToGetAutoSelected('julia');
         await executeActiveDocument();
 
         const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
@@ -183,19 +179,33 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         assertHasTextOutputInVSCode(cell, '123456', 0, false);
     });
     test('Can run a CSharp notebook', async function () {
-        // Disabled, as .NET interactive kernel does not run on CI.
-        // https://github.com/microsoft/vscode-jupyter/issues/4061#issuecomment-740188708
-        return this.skip();
+        // C# Kernels can only be installed when you have Jupyter
+        // On CI we install Jupyter only when testing with Python extension.
+        const pythonChecker = api.serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker);
+        if (!pythonChecker.isPythonExtensionInstalled) {
+            return this.skip();
+        }
         this.timeout(30_000); // Can be slow to start csharp kernel on CI.
         await openNotebook(api.serviceContainer, testCSharpNb.fsPath);
-        await waitForKernelToGetAutoSelected();
+        await waitForKernelToGetAutoSelected('c#');
         await executeActiveDocument();
 
         const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
         // Wait till execution count changes and status is success.
         await waitForExecutionCompletedSuccessfully(cell);
 
-        assertHasTextOutputInVSCode(cell, 'Hello', 0, false);
+        // For some reason C# kernel sends multiple outputs.
+        // First output can contain `text/html` with some Jupyter UI specific stuff.
+        try {
+            traceInfo(`Cell output length ${cell.outputs.length}`);
+            assertHasTextOutputInVSCode(cell, 'Hello', 0, false);
+        } catch (ex) {
+            if (cell.outputs.length > 1) {
+                assertHasTextOutputInVSCode(cell, 'Hello', 1, false);
+            } else {
+                throw ex;
+            }
+        }
     });
     test('Can run a Java notebook', async function () {
         // Disabled, as activation of conda environments doesn't work on CI in Python extension.
