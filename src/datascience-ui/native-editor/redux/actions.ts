@@ -59,8 +59,8 @@ export const actionCreators = {
             cellId,
             newCellId: uuid()
         }),
-    executeCell: (cellId: string, moveOp: 'add' | 'select' | 'none') =>
-        createIncomingActionWithPayload(CommonActionType.EXECUTE_CELL_AND_ADVANCE, { cellId, moveOp }),
+    executeCell: (cellId: string, code: string, moveOp: 'add' | 'select' | 'none') =>
+        createIncomingActionWithPayload(CommonActionType.EXECUTE_CELL_AND_ADVANCE, { cellId, code, moveOp }),
     focusCell: (cellId: string, cursorPos: CursorPos = CursorPos.Current): CommonAction<ICellAndCursorAction> =>
         createIncomingActionWithPayload(CommonActionType.FOCUS_CELL, { cellId, cursorPos }),
     unfocusCell: (cellId: string, code: string) =>
@@ -70,8 +70,8 @@ export const actionCreators = {
     executeAllCells: (): CommonAction => createIncomingAction(CommonActionType.EXECUTE_ALL_CELLS),
     executeAbove: (cellId: string): CommonAction<ICellAction> =>
         createIncomingActionWithPayload(CommonActionType.EXECUTE_ABOVE, { cellId }),
-    executeCellAndBelow: (cellId: string): CommonAction<ICellAction> =>
-        createIncomingActionWithPayload(CommonActionType.EXECUTE_CELL_AND_BELOW, { cellId }),
+    executeCellAndBelow: (cellId: string, code: string): CommonAction<ICellAction> =>
+        createIncomingActionWithPayload(CommonActionType.EXECUTE_CELL_AND_BELOW, { cellId, code, moveOp: 'none' }),
     toggleVariableExplorer: (): CommonAction => createIncomingAction(CommonActionType.TOGGLE_VARIABLE_EXPLORER),
     setVariableExplorerHeight: (containerHeight: number, gridHeight: number): CommonAction<IVariableExplorerHeight> =>
         createIncomingActionWithPayload(CommonActionType.SET_VARIABLE_EXPLORER_HEIGHT, { containerHeight, gridHeight }),

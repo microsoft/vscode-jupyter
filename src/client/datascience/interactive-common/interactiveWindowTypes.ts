@@ -248,6 +248,7 @@ export interface ISubmitNewCell {
 
 export interface IReExecuteCells {
     cellIds: string[];
+    code: string[];
 }
 
 export interface IProvideCompletionItemsRequest {
