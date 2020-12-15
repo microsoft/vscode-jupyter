@@ -1720,16 +1720,16 @@
             }
         ],
         "viewsContainers": {
-            "activitybar": [
+            "panel": [
                 {
-                    "id": "jupyter",
+                    "id": "jupyter-variables",
                     "title": "Jupyter",
                     "icon": "NOICON.svg"
                 }
             ]
         },
         "views": {
-            "jupyter": [
+            "jupyter-variables": [
                 {
                     "type": "webview",
                     "id": "jupyterViewVariables",

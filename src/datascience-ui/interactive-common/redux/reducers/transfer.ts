@@ -321,6 +321,14 @@ export namespace Transfer {
         return arg.prevState;
     }
 
+    // Variable view is basically a modified / reduced version of IW / Notebooks, different started function here to skip MonacoTheme request
+    export function variableViewStarted(arg: CommonReducerArg): IMainState {
+        // Send all of our initial requests
+        postActionToExtension(arg, InteractiveWindowMessages.Started);
+        postActionToExtension(arg, CssMessages.GetCssRequest, { isDark: arg.prevState.baseTheme !== 'vscode-light' });
+        return arg.prevState;
+    }
+
     export function loadedAllCells(arg: CommonReducerArg): IMainState {
         postActionToExtension(arg, InteractiveWindowMessages.LoadAllCellsComplete, {
             cells: arg.prevState.cellVMs.map((c) => c.cell)

@@ -1,17 +1,28 @@
+import { IVariableExplorerHeight } from '../../../datascience-ui/interactive-common/redux/reducers/types';
+import {
+    InteractiveWindowMessages,
+    IShowDataViewer
+} from '../../datascience/interactive-common/interactiveWindowTypes';
 import { CssMessages, IGetCssRequest, IGetCssResponse, SharedMessages } from '../messages';
-import { IVSCWebviewViewProvider } from '../types';
+import { IJupyterVariablesRequest, IJupyterVariablesResponse, IVSCWebviewViewProvider } from '../types';
 
-export namespace VariableViewMessages {
-    export const Started = SharedMessages.Started;
-    export const UpdateSettings = SharedMessages.UpdateSettings;
-}
-
-// Map all messages to specific payloads
-export class IVariableViewMapping {
-    public [VariableViewMessages.Started]: never | undefined;
-    public [VariableViewMessages.UpdateSettings]: string;
+// Mapping of Message to payload that our VariableViewPanel needs to support
+export class IVariableViewPanelMapping {
+    public [InteractiveWindowMessages.ForceVariableRefresh]: never | undefined;
+    public [InteractiveWindowMessages.SettingsUpdated]: string;
+    public [InteractiveWindowMessages.Activate]: never | undefined;
+    public [InteractiveWindowMessages.ShowDataViewer]: IShowDataViewer;
+    public [InteractiveWindowMessages.GetVariablesRequest]: IJupyterVariablesRequest;
+    public [InteractiveWindowMessages.GetVariablesResponse]: IJupyterVariablesResponse;
+    public [InteractiveWindowMessages.VariableExplorerToggle]: boolean;
+    public [InteractiveWindowMessages.SetVariableExplorerHeight]: IVariableExplorerHeight;
+    public [InteractiveWindowMessages.VariableExplorerHeightResponse]: IVariableExplorerHeight;
     public [CssMessages.GetCssRequest]: IGetCssRequest;
     public [CssMessages.GetCssResponse]: IGetCssResponse;
+    public [InteractiveWindowMessages.OpenLink]: string | undefined;
+    public [InteractiveWindowMessages.VariablesComplete]: never | undefined;
+    public [SharedMessages.UpdateSettings]: string;
+    public [SharedMessages.LocInit]: string;
 }
 
 export const IVariableViewProvider = Symbol('IVariableViewProvider');

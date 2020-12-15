@@ -11,18 +11,32 @@ import '../common/index.css';
 
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
+import { Provider } from 'react-redux';
 
-import { IVsCodeApi } from '../react-common/postOffice';
+import { IVsCodeApi, PostOffice } from '../react-common/postOffice';
 import { detectBaseTheme } from '../react-common/themeDetector';
-import { VariablePanel } from './variablePanel';
+import { createStore } from './redux/store';
+import { getConnectedVariableViewPanel } from './variableViewPanel';
 
 // This special function talks to vscode from a web panel
 export declare function acquireVsCodeApi(): IVsCodeApi;
-
 const baseTheme = detectBaseTheme();
+// tslint:disable-next-line: no-any
+const testMode = (window as any).inTestMode;
+// tslint:disable-next-line: no-typeof-undefined
+const skipDefault = testMode ? false : typeof acquireVsCodeApi !== 'undefined';
+
+// Create the redux store
+const postOffice = new PostOffice();
+const store = createStore(skipDefault, baseTheme, testMode, postOffice);
+
+// Create a variable view panel connected to the redux store
+const ConnectedVariableViewPanel = getConnectedVariableViewPanel();
 
 // tslint:disable:no-typeof-undefined
 ReactDOM.render(
-    <VariablePanel baseTheme={baseTheme} skipDefault={typeof acquireVsCodeApi !== 'undefined'} />,
+    <Provider store={store}>
+        <ConnectedVariableViewPanel />
+    </Provider>,
     document.getElementById('root') as HTMLElement
 );

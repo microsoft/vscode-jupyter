@@ -104,6 +104,7 @@ const messageWithMessageTypes: MessageMapping<IInteractiveWindowMapping> & Messa
     [CommonActionType.LOAD_IPYWIDGET_CLASS_FAILURE]: MessageType.other,
     [CommonActionType.IPYWIDGET_WIDGET_VERSION_NOT_SUPPORTED]: MessageType.other,
     [CommonActionType.IPYWIDGET_RENDER_FAILURE]: MessageType.other,
+    [CommonActionType.VARIABLE_VIEW_LOADED]: MessageType.other,
 
     // Types from InteractiveWindowMessages
     [InteractiveWindowMessages.Activate]: MessageType.other,
