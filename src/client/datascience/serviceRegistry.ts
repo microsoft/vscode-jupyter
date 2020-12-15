@@ -36,15 +36,16 @@ import { Decorator } from './editor-integration/decorator';
 import { HoverProvider } from './editor-integration/hoverProvider';
 import { DataScienceErrorHandler } from './errorHandler/errorHandler';
 import { ExportBase } from './export/exportBase';
+import { ExportDialog } from './export/exportDialog';
 import { ExportFileOpener } from './export/exportFileOpener';
 import { ExportInterpreterFinder } from './export/exportInterpreterFinder';
 import { ExportManager } from './export/exportManager';
-import { ExportManagerFilePicker } from './export/exportManagerFilePicker';
 import { ExportToHTML } from './export/exportToHTML';
 import { ExportToPDF } from './export/exportToPDF';
 import { ExportToPython } from './export/exportToPython';
 import { ExportUtil } from './export/exportUtil';
-import { ExportFormat, IExport, IExportManager, IExportManagerFilePicker } from './export/types';
+import { ExportFormat, IExport, IExportDialog, IExportManager } from './export/types';
+import { InsidersNativeNotebooksSurveyBanner } from './insidersNativeNotebookSurveyBanner';
 import { DebugListener } from './interactive-common/debugListener';
 import { IntellisenseProvider } from './interactive-common/intellisense/intellisenseProvider';
 import { LinkProvider } from './interactive-common/linkProvider';
@@ -61,14 +62,14 @@ import { NativeEditorProviderOld } from './interactive-ipynb/nativeEditorProvide
 import { NativeEditorRunByLineListener } from './interactive-ipynb/nativeEditorRunByLineListener';
 import { NativeEditorSynchronizer } from './interactive-ipynb/nativeEditorSynchronizer';
 import { NativeEditorViewTracker } from './interactive-ipynb/nativeEditorViewTracker';
+import { SystemPseudoRandomNumberGenerator } from './interactive-ipynb/randomBytes';
 import { TrustCommandHandler } from './interactive-ipynb/trustCommandHandler';
 import { TrustService } from './interactive-ipynb/trustService';
 import { InteractiveWindow } from './interactive-window/interactiveWindow';
 import { InteractiveWindowCommandListener } from './interactive-window/interactiveWindowCommandListener';
 import { InteractiveWindowProvider } from './interactive-window/interactiveWindowProvider';
-import { IPyWidgetHandler } from './ipywidgets/ipywidgetHandler';
 import { IPyWidgetMessageDispatcherFactory } from './ipywidgets/ipyWidgetMessageDispatcherFactory';
-import { IPyWidgetScriptSource } from './ipywidgets/ipyWidgetScriptSource';
+import { WebviewIPyWidgetCoordinator } from './ipywidgets/webviewIPyWidgetCoordinator';
 import { JupyterCommandLineSelector } from './jupyter/commandLineSelector';
 import { DebuggerVariableRegistration } from './jupyter/debuggerVariableRegistration';
 import { DebuggerVariables } from './jupyter/debuggerVariables';
@@ -106,6 +107,7 @@ import { JupyterDebugService } from './jupyterDebugService';
 import { JupyterUriProviderRegistration } from './jupyterUriProviderRegistration';
 import { KernelDaemonPool } from './kernel-launcher/kernelDaemonPool';
 import { KernelDaemonPreWarmer } from './kernel-launcher/kernelDaemonPreWarmer';
+import { KernelEnvironmentVariablesService } from './kernel-launcher/kernelEnvVarsService';
 import { KernelFinder } from './kernel-launcher/kernelFinder';
 import { KernelLauncher } from './kernel-launcher/kernelLauncher';
 import { IKernelFinder, IKernelLauncher } from './kernel-launcher/types';
@@ -119,6 +121,7 @@ import { NotebookExtensibility } from './notebookExtensibility';
 import { NotebookModelFactory } from './notebookStorage/factory';
 import { NativeEditorProvider } from './notebookStorage/nativeEditorProvider';
 import { NativeEditorStorage } from './notebookStorage/nativeEditorStorage';
+import { NotebookModelSynchronization } from './notebookStorage/notebookModelSynchronization';
 import { INotebookStorageProvider, NotebookStorageProvider } from './notebookStorage/notebookStorageProvider';
 import { INotebookModelFactory } from './notebookStorage/types';
 import { PlotViewer } from './plotting/plotViewer';
@@ -169,6 +172,7 @@ import {
     INotebookExporter,
     INotebookExtensibility,
     INotebookImporter,
+    INotebookModelSynchronization,
     INotebookProvider,
     INotebookServer,
     INotebookStorage,
@@ -177,6 +181,7 @@ import {
     IRawNotebookProvider,
     IRawNotebookSupportedService,
     IStatusProvider,
+    ISystemPseudoRandomNumberGenerator,
     IThemeFinder,
     ITrustService,
     IWebviewExtensibility
@@ -213,6 +218,7 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
 
     serviceManager.add<ICellHashProvider>(ICellHashProvider, CellHashProvider, undefined, [INotebookExecutionLogger]);
     serviceManager.addSingleton<INotebookModelFactory>(INotebookModelFactory, NotebookModelFactory);
+    serviceManager.addSingleton<INotebookModelSynchronization>(INotebookModelSynchronization, NotebookModelSynchronization);
     serviceManager.addSingleton<INotebookExecutionLogger>(INotebookExecutionLogger, HoverProvider);
     serviceManager.add<ICodeWatcher>(ICodeWatcher, CodeWatcher);
     serviceManager.addSingleton<IDataScienceErrorHandler>(IDataScienceErrorHandler, DataScienceErrorHandler);
@@ -222,8 +228,7 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, IntellisenseProvider);
     serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, LinkProvider);
     serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, ShowPlotListener);
-    serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, IPyWidgetHandler);
-    serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, IPyWidgetScriptSource);
+    serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, WebviewIPyWidgetCoordinator);
     serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, NativeEditorRunByLineListener);
     serviceManager.add<IJupyterCommandFactory>(IJupyterCommandFactory, JupyterCommandFactory);
     serviceManager.add<INotebookExporter>(INotebookExporter, JupyterExporter);
@@ -236,6 +241,7 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     serviceManager.addSingleton<IJupyterNotebookProvider>(IJupyterNotebookProvider, JupyterNotebookProvider);
     serviceManager.add<IPlotViewer>(IPlotViewer, PlotViewer);
     serviceManager.addSingleton<IKernelLauncher>(IKernelLauncher, KernelLauncher);
+    serviceManager.addSingleton<KernelEnvironmentVariablesService>(KernelEnvironmentVariablesService, KernelEnvironmentVariablesService);
     serviceManager.addSingleton<IKernelFinder>(IKernelFinder, KernelFinder);
     serviceManager.addSingleton<ActiveEditorContextService>(ActiveEditorContextService, ActiveEditorContextService);
     serviceManager.addSingleton<CellOutputMimeTypeTracker>(CellOutputMimeTypeTracker, CellOutputMimeTypeTracker, undefined, [IExtensionSingleActivationService, INotebookExecutionLogger]);
@@ -315,14 +321,17 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     serviceManager.addSingleton<IExport>(IExport, ExportBase, 'Export Base');
     serviceManager.addSingleton<ExportUtil>(ExportUtil, ExportUtil);
     serviceManager.addSingleton<ExportCommands>(ExportCommands, ExportCommands);
-    serviceManager.addSingleton<IExportManagerFilePicker>(IExportManagerFilePicker, ExportManagerFilePicker);
+    serviceManager.addSingleton<IExportDialog>(IExportDialog, ExportDialog);
     serviceManager.addSingleton<IJupyterUriProviderRegistration>(IJupyterUriProviderRegistration, JupyterUriProviderRegistration);
+    serviceManager.addSingleton<ISystemPseudoRandomNumberGenerator>(ISystemPseudoRandomNumberGenerator, SystemPseudoRandomNumberGenerator);
     serviceManager.addSingleton<IDigestStorage>(IDigestStorage, DigestStorage);
     serviceManager.addSingleton<ITrustService>(ITrustService, TrustService);
     serviceManager.addSingleton<IFileSystemPathUtils>(IFileSystemPathUtils, FileSystemPathUtils);
     serviceManager.addSingleton<IJupyterServerUriStorage>(IJupyterServerUriStorage, JupyterServerUriStorage);
-    serviceManager.addSingleton<NotebookExtensibility>(NotebookExtensibility, NotebookExtensibility, undefined, [INotebookExtensibility, INotebookExecutionLogger]);
+    serviceManager.addSingleton<INotebookExtensibility>(INotebookExtensibility, NotebookExtensibility);
+    serviceManager.addBinding(INotebookExtensibility, INotebookExecutionLogger);
     serviceManager.addSingleton<IWebviewExtensibility>(IWebviewExtensibility, WebviewExtensibility);
+    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, InsidersNativeNotebooksSurveyBanner);
 
     registerNotebookTypes(serviceManager);
 }

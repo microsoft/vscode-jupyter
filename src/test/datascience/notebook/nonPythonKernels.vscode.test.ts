@@ -7,7 +7,9 @@
 import * as path from 'path';
 import * as sinon from 'sinon';
 import { Uri } from 'vscode';
+import { IPythonExtensionChecker } from '../../../client/api/types';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
+import { traceInfo } from '../../../client/common/logger';
 import { IDisposable } from '../../../client/common/types';
 import { VSCodeNotebookProvider } from '../../../client/datascience/constants';
 import { NotebookCellLanguageService } from '../../../client/datascience/notebook/defaultCellLanguageService';
@@ -41,6 +43,22 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         'notebook',
         'simpleJulia.ipynb'
     );
+    const csharpNb = path.join(
+        EXTENSION_ROOT_DIR_FOR_TESTS,
+        'src',
+        'test',
+        'datascience',
+        'notebook',
+        'simpleCSharp.ipynb'
+    );
+    const javaNb = path.join(
+        EXTENSION_ROOT_DIR_FOR_TESTS,
+        'src',
+        'test',
+        'datascience',
+        'notebook',
+        'simpleJavaBeakerX.ipynb'
+    );
 
     const emptyPythonNb = path.join(
         EXTENSION_ROOT_DIR_FOR_TESTS,
@@ -55,9 +73,12 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
     const disposables: IDisposable[] = [];
     let vscodeNotebook: IVSCodeNotebook;
     let testJuliaNb: Uri;
+    let testJavaNb: Uri;
+    let testCSharpNb: Uri;
     let testEmptyPythonNb: Uri;
     let editorProvider: INotebookEditorProvider;
     let languageService: NotebookCellLanguageService;
+    const testJavaKernels = (process.env.VSC_JUPYTER_CI_RUN_JAVA_NB_TEST || '').toLowerCase() === 'true';
     suiteSetup(async function () {
         api = await initialize();
         if (!process.env.VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST || !(await canRunNotebookTests())) {
@@ -69,18 +90,43 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         editorProvider = api.serviceContainer.get<INotebookEditorProvider>(VSCodeNotebookProvider);
         languageService = api.serviceContainer.get<NotebookCellLanguageService>(NotebookCellLanguageService);
     });
-    setup(async () => {
+    setup(async function () {
+        traceInfo(`Start Test ${this.currentTest?.title}`);
         sinon.restore();
         await closeNotebooks();
         // Don't use same file (due to dirty handling, we might save in dirty.)
         // Coz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
         testJuliaNb = Uri.file(await createTemporaryNotebook(juliaNb, disposables));
+        testJavaNb = Uri.file(await createTemporaryNotebook(javaNb, disposables));
+        testCSharpNb = Uri.file(await createTemporaryNotebook(csharpNb, disposables));
         testEmptyPythonNb = Uri.file(await createTemporaryNotebook(emptyPythonNb, disposables));
+        traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
     });
-    suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
+    teardown(async () => {
+        await closeNotebooksAndCleanUpAfterTests(disposables);
+    });
+    test('Automatically pick java kernel when opening a Java Notebook', async function () {
+        if (!testJavaKernels) {
+            return this.skip();
+        }
+        await openNotebook(api.serviceContainer, testJavaNb.fsPath);
+        await waitForKernelToGetAutoSelected('java');
+    });
     test('Automatically pick julia kernel when opening a Julia Notebook', async () => {
-        await openNotebook(api.serviceContainer, juliaNb);
+        await openNotebook(api.serviceContainer, testJuliaNb.fsPath);
         await waitForKernelToGetAutoSelected('julia');
+    });
+    test('Automatically pick csharp kernel when opening a csharp notebook', async function () {
+        // The .NET interactive CLI does not work if you do not have Jupyter installed.
+        // We install Jupyter on CI when we have tests with Python extension.
+        // Hence if python extension is not installed, then assume jupyter is not installed on CI.
+        // Meaning, no python extension, no jupyter, hence no .NET kernel either.
+        const pythonChecker = api.serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker);
+        if (!pythonChecker.isPythonExtensionInstalled) {
+            return this.skip();
+        }
+        await openNotebook(api.serviceContainer, testCSharpNb.fsPath);
+        await waitForKernelToGetAutoSelected('c#');
     });
     test('New notebook will have a Julia cell if last notebook was a julia nb', async () => {
         await openNotebook(api.serviceContainer, testJuliaNb.fsPath);
@@ -112,15 +158,18 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         // Lets try opening a python nb & validate that.
         await closeNotebooks();
 
-        // Now open an existing python notebook & confirm kernel is set to Python.
-        await openNotebook(api.serviceContainer, testEmptyPythonNb.fsPath);
-        await waitForKernelToGetAutoSelected('python');
+        const pythonChecker = api.serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker);
+        if (pythonChecker.isPythonExtensionInstalled) {
+            // Now open an existing python notebook & confirm kernel is set to Python.
+            await openNotebook(api.serviceContainer, testEmptyPythonNb.fsPath);
+            await waitForKernelToGetAutoSelected('python');
+        }
     });
     test('Can run a Julia notebook', async function () {
         this.timeout(30_000); // Can be slow to start Julia kernel on CI.
         await openNotebook(api.serviceContainer, testJuliaNb.fsPath);
         await insertCodeCell('123456', { language: 'julia', index: 0 });
-        await waitForKernelToGetAutoSelected();
+        await waitForKernelToGetAutoSelected('julia');
         await executeActiveDocument();
 
         const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
@@ -128,5 +177,53 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         await waitForExecutionCompletedSuccessfully(cell);
 
         assertHasTextOutputInVSCode(cell, '123456', 0, false);
+    });
+    test('Can run a CSharp notebook', async function () {
+        // C# Kernels can only be installed when you have Jupyter
+        // On CI we install Jupyter only when testing with Python extension.
+        const pythonChecker = api.serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker);
+        if (!pythonChecker.isPythonExtensionInstalled) {
+            return this.skip();
+        }
+        this.timeout(30_000); // Can be slow to start csharp kernel on CI.
+        await openNotebook(api.serviceContainer, testCSharpNb.fsPath);
+        await waitForKernelToGetAutoSelected('c#');
+        await executeActiveDocument();
+
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
+        // Wait till execution count changes and status is success.
+        await waitForExecutionCompletedSuccessfully(cell);
+
+        // For some reason C# kernel sends multiple outputs.
+        // First output can contain `text/html` with some Jupyter UI specific stuff.
+        try {
+            traceInfo(`Cell output length ${cell.outputs.length}`);
+            assertHasTextOutputInVSCode(cell, 'Hello', 0, false);
+        } catch (ex) {
+            if (cell.outputs.length > 1) {
+                assertHasTextOutputInVSCode(cell, 'Hello', 1, false);
+            } else {
+                throw ex;
+            }
+        }
+    });
+    test('Can run a Java notebook', async function () {
+        // Disabled, as activation of conda environments doesn't work on CI in Python extension.
+        // As a result we cannot get env variables of conda environments.
+        // This test requires PATH be set to conda environment that owns the jupyter kernel.
+        return this.skip();
+        if (!testJavaKernels) {
+            return this.skip();
+        }
+        this.timeout(30_000); // In case starting Java kernel is slow on CI (we know julia is slow).
+        await openNotebook(api.serviceContainer, testJavaNb.fsPath);
+        await waitForKernelToGetAutoSelected('java');
+        await executeActiveDocument();
+
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
+        // Wait till execution count changes and status is success.
+        await waitForExecutionCompletedSuccessfully(cell);
+
+        assertHasTextOutputInVSCode(cell, 'Hello', 0, false);
     });
 });

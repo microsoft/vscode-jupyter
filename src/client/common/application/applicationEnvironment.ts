@@ -8,7 +8,7 @@ import * as path from 'path';
 import { parse } from 'semver';
 import * as vscode from 'vscode';
 import { IPlatformService } from '../platform/types';
-import { IPathUtils } from '../types';
+import { IExtensionContext, IPathUtils } from '../types';
 import { OSType } from '../utils/platform';
 import { Channel, IApplicationEnvironment } from './types';
 
@@ -16,7 +16,8 @@ import { Channel, IApplicationEnvironment } from './types';
 export class ApplicationEnvironment implements IApplicationEnvironment {
     constructor(
         @inject(IPlatformService) private readonly platform: IPlatformService,
-        @inject(IPathUtils) private readonly pathUtils: IPathUtils
+        @inject(IPathUtils) private readonly pathUtils: IPathUtils,
+        @inject(IExtensionContext) private readonly extensionContext: IExtensionContext
     ) {}
 
     public get userSettingsFile(): string | undefined {
@@ -41,6 +42,9 @@ export class ApplicationEnvironment implements IApplicationEnvironment {
                 return;
         }
     }
+    public get userCustomKeybindingsFile(): string | undefined {
+        return path.resolve(this.extensionContext.globalStoragePath, '..', '..', 'keybindings.json');
+    }
     public get appName(): string {
         return vscode.env.appName;
     }
@@ -58,6 +62,9 @@ export class ApplicationEnvironment implements IApplicationEnvironment {
     }
     public get machineId(): string {
         return vscode.env.machineId;
+    }
+    public get uiKind(): vscode.UIKind {
+        return vscode.env.uiKind;
     }
     public get extensionName(): string {
         // tslint:disable-next-line:non-literal-require
@@ -81,7 +88,9 @@ export class ApplicationEnvironment implements IApplicationEnvironment {
         return require('../../../../package.json');
     }
     public get channel(): Channel {
-        return this.appName.indexOf('Insider') > 0 ? 'insiders' : 'stable';
+        return this.appName.indexOf('Insider') > 0 || this.appName.indexOf('Code - OSS Dev') >= 0
+            ? 'insiders'
+            : 'stable';
     }
     public get extensionChannel(): Channel {
         const version = parse(this.packageJson.version);

@@ -8,18 +8,19 @@ import { isFileNotFoundError } from '../../common/platform/errors';
 import { IFileSystem } from '../../common/platform/types';
 import { IExtensionContext } from '../../common/types';
 import { MigrateDigestStorage } from '../../migration/migrateDigestStorage';
-import { IDigestStorage } from '../types';
+import { IDigestStorage, ISystemPseudoRandomNumberGenerator } from '../types';
 
 @injectable()
 export class DigestStorage implements IDigestStorage {
-    public readonly key: Promise<string>;
+    public readonly key: Promise<string | undefined>;
     private digestDir: Promise<string>;
     private loggedFileLocations = new Set();
     private migrator: MigrateDigestStorage;
 
     constructor(
         @inject(IFileSystem) private fs: IFileSystem,
-        @inject(IExtensionContext) private extensionContext: IExtensionContext
+        @inject(IExtensionContext) private extensionContext: IExtensionContext,
+        @inject(ISystemPseudoRandomNumberGenerator) private prng: ISystemPseudoRandomNumberGenerator
     ) {
         this.migrator = new MigrateDigestStorage(extensionContext, fs);
         this.key = this.initKey();
@@ -86,21 +87,34 @@ export class DigestStorage implements IDigestStorage {
      * Get or create a local secret key, used in computing HMAC hashes of trusted
      * checkpoints in the notebook's execution history
      */
-    private async initKey(): Promise<string> {
-        await this.migrator.migrateKey();
-        const defaultKeyFileLocation = this.getDefaultLocation('nbsecret');
+    private async initKey(): Promise<string | undefined> {
+        try {
+            await this.migrator.migrateKey();
+            const defaultKeyFileLocation = this.getDefaultLocation('nbsecret');
 
-        if (await this.fs.localFileExists(defaultKeyFileLocation)) {
-            // if the keyfile already exists, bail out
-            return this.fs.readLocalFile(defaultKeyFileLocation);
-        } else {
+            if (await this.fs.localFileExists(defaultKeyFileLocation)) {
+                // if the keyfile already exists, bail out
+                const contents = await this.fs.readLocalFile(defaultKeyFileLocation);
+                if (contents) {
+                    traceInfo(`Found existing keyfile at ${defaultKeyFileLocation}`);
+                    return contents;
+                }
+            }
+
             // If it doesn't exist, create one
-            // Key must be generated from a cryptographically secure pseudorandom function:
-            // https://nodejs.org/api/crypto.html#crypto_crypto_randombytes_size_callback
-            // No callback is provided so random bytes will be generated synchronously
-            const key = randomBytes(1024).toString('hex');
+            let key = await this.prng.generateRandomKey(1024);
+            if (key) {
+                traceInfo(`Successfully generated keyfile with OS PRNG`);
+            } else {
+                // Fallback to crypto.randomBytes
+                traceError('Failed to initialize secret for notebook trust with OS PRNG');
+                key = randomBytes(1024).toString('hex');
+            }
             await this.fs.writeLocalFile(defaultKeyFileLocation, key);
             return key;
+        } catch (e) {
+            traceError(`Encountered error while initializing secret for notebook trust: ${e}`);
+            return undefined;
         }
     }
 

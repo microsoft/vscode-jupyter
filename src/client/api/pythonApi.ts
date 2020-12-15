@@ -13,7 +13,7 @@
 
 import { inject, injectable } from 'inversify';
 import { CancellationToken, Disposable, Event, EventEmitter, Uri } from 'vscode';
-import { IApplicationEnvironment, IApplicationShell, ICommandManager } from '../common/application/types';
+import { IApplicationEnvironment, IApplicationShell } from '../common/application/types';
 import { InterpreterUri } from '../common/installer/types';
 import { IExtensions, InstallerResponse, IPersistentStateFactory, Product, Resource } from '../common/types';
 import { createDeferred } from '../common/utils/async';
@@ -81,20 +81,27 @@ export class PythonApiProvider implements IPythonApiProvider {
 export class PythonExtensionChecker implements IPythonExtensionChecker {
     private extensionChangeHandler: Disposable | undefined;
     private pythonExtensionId = PythonExtension;
-
+    private waitingOnInstallPrompt?: Promise<void>;
     constructor(
         @inject(IExtensions) private readonly extensions: IExtensions,
         @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
-        @inject(IApplicationEnvironment) private readonly appEnv: IApplicationEnvironment,
-        @inject(ICommandManager) private readonly commands: ICommandManager
-    ) {}
+        @inject(IApplicationEnvironment) private readonly appEnv: IApplicationEnvironment
+    ) {
+        // If the python extension is not installed listen to see if anything does install it
+        if (!this.isPythonExtensionInstalled) {
+            this.extensionChangeHandler = this.extensions.onDidChange(this.extensionsChangeHandler.bind(this));
+        }
+    }
 
     public get isPythonExtensionInstalled() {
         return this.extensions.getExtension(this.pythonExtensionId) !== undefined;
     }
 
     public async showPythonExtensionInstallRequiredPrompt(): Promise<void> {
+        if (this.waitingOnInstallPrompt) {
+            return this.waitingOnInstallPrompt;
+        }
         // Ask user if they want to install and then wait for them to actually install it.
         const yes = localize.Common.bannerLabelYes();
         const no = localize.Common.bannerLabelNo();
@@ -111,47 +118,46 @@ export class PythonExtensionChecker implements IPythonExtensionChecker {
             const yes = localize.Common.bannerLabelYes();
             const no = localize.Common.bannerLabelNo();
             const doNotShowAgain = localize.Common.doNotShowAgain();
-            const answer = await this.appShell.showInformationMessage(
-                localize.DataScience.pythonExtensionRecommended(),
-                yes,
-                no,
-                doNotShowAgain
-            );
-            switch (answer) {
-                case yes:
-                    await this.installPythonExtension();
-                    break;
-                case doNotShowAgain:
-                    await surveyPrompt.updateValue(false);
-                    break;
-                default:
-                    break;
-            }
+
+            const promise = (this.waitingOnInstallPrompt = new Promise<void>(async (resolve) => {
+                const answer = await this.appShell.showInformationMessage(
+                    localize.DataScience.pythonExtensionRecommended(),
+                    yes,
+                    no,
+                    doNotShowAgain
+                );
+                switch (answer) {
+                    case yes:
+                        await this.installPythonExtension();
+                        break;
+                    case doNotShowAgain:
+                        await surveyPrompt.updateValue(false);
+                        break;
+                    default:
+                        break;
+                }
+                resolve();
+            }));
+            await promise;
+            this.waitingOnInstallPrompt = undefined;
         }
     }
 
     private async installPythonExtension() {
-        // Start listening for extension changes
-        this.extensionChangeHandler = this.extensions.onDidChange(this.extensionsChangeHandler.bind(this));
-
         // Have the user install python
         this.appShell.openUrl(`${this.appEnv.uriScheme}:extension/${this.pythonExtensionId}`);
     }
 
     private async extensionsChangeHandler(): Promise<void> {
-        // Track extension installation state and prompt to reload when it becomes available.
+        // On extension change see if python was installed, if so unhook our extension change watcher and
+        // notify the user that they might need to restart notebooks or interactive windows
         if (this.isPythonExtensionInstalled && this.extensionChangeHandler) {
             this.extensionChangeHandler.dispose();
             this.extensionChangeHandler = undefined;
 
-            const response = await this.appShell.showWarningMessage(
-                localize.DataScience.pythonInstalledReloadPromptMessage(),
-                localize.Common.bannerLabelYes(),
-                localize.Common.bannerLabelNo()
-            );
-            if (response === localize.Common.bannerLabelYes()) {
-                this.commands.executeCommand('workbench.action.reloadWindow');
-            }
+            this.appShell
+                .showInformationMessage(localize.DataScience.pythonExtensionInstalled(), localize.Common.ok())
+                .then(noop);
         }
     }
 }

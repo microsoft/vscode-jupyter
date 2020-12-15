@@ -132,12 +132,12 @@ import { ExportBase } from '../../client/datascience/export/exportBase';
 import { ExportFileOpener } from '../../client/datascience/export/exportFileOpener';
 import { ExportInterpreterFinder } from '../../client/datascience/export/exportInterpreterFinder';
 import { ExportManager } from '../../client/datascience/export/exportManager';
-import { ExportManagerFilePicker } from '../../client/datascience/export/exportManagerFilePicker';
+import { ExportDialog } from '../../client/datascience/export/exportDialog';
 import { ExportToHTML } from '../../client/datascience/export/exportToHTML';
 import { ExportToPDF } from '../../client/datascience/export/exportToPDF';
 import { ExportToPython } from '../../client/datascience/export/exportToPython';
 import { ExportUtil } from '../../client/datascience/export/exportUtil';
-import { ExportFormat, IExport, IExportManager, IExportManagerFilePicker } from '../../client/datascience/export/types';
+import { ExportFormat, IExport, IExportManager, IExportDialog } from '../../client/datascience/export/types';
 import { IntellisenseProvider } from '../../client/datascience/interactive-common/intellisense/intellisenseProvider';
 import { NotebookProvider } from '../../client/datascience/interactive-common/notebookProvider';
 import { NotebookServerProvider } from '../../client/datascience/interactive-common/notebookServerProvider';
@@ -148,9 +148,7 @@ import { NativeEditorRunByLineListener } from '../../client/datascience/interact
 import { NativeEditorSynchronizer } from '../../client/datascience/interactive-ipynb/nativeEditorSynchronizer';
 import { TrustService } from '../../client/datascience/interactive-ipynb/trustService';
 import { InteractiveWindowCommandListener } from '../../client/datascience/interactive-window/interactiveWindowCommandListener';
-import { IPyWidgetHandler } from '../../client/datascience/ipywidgets/ipywidgetHandler';
 import { IPyWidgetMessageDispatcherFactory } from '../../client/datascience/ipywidgets/ipyWidgetMessageDispatcherFactory';
-import { IPyWidgetScriptSource } from '../../client/datascience/ipywidgets/ipyWidgetScriptSource';
 import { JupyterCommandLineSelector } from '../../client/datascience/jupyter/commandLineSelector';
 import { DebuggerVariableRegistration } from '../../client/datascience/jupyter/debuggerVariableRegistration';
 import { DebuggerVariables } from '../../client/datascience/jupyter/debuggerVariables';
@@ -253,6 +251,7 @@ import {
     IRawNotebookProvider,
     IRawNotebookSupportedService,
     IStatusProvider,
+    ISystemPseudoRandomNumberGenerator,
     IThemeFinder,
     ITrustService,
     IWebviewExtensibility
@@ -306,7 +305,10 @@ import { WebBrowserPanelProvider } from './uiTests/webBrowserPanelProvider';
 import { JupyterServerUriStorage } from '../../client/datascience/jupyter/serverUriStorage';
 import { AuthenticationService } from '../../client/common/application/authenticationService';
 import { MockEncryptedStorage } from './mockEncryptedStorage';
+import { WebviewIPyWidgetCoordinator } from '../../client/datascience/ipywidgets/webviewIPyWidgetCoordinator';
 import { WebviewViewProvider } from '../../client/common/application/webviewViews/webviewViewProvider';
+import { SystemPseudoRandomNumberGenerator } from '../../client/datascience/interactive-ipynb/randomBytes';
+import { KernelEnvironmentVariablesService } from '../../client/datascience/kernel-launcher/kernelEnvVarsService';
 
 export class DataScienceIocContainer extends UnitTestIocContainer {
     public get workingInterpreter() {
@@ -446,7 +448,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         when(this.webPanelProvider.create(anything())).thenCall(this.onCreateWebPanel.bind(this));
         if (this.uiTest) {
             this.serviceManager.addSingleton<IWebviewPanelProvider>(IWebviewPanelProvider, WebBrowserPanelProvider);
-            this.serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, IPyWidgetScriptSource);
+            this.serviceManager.add<IInteractiveWindowListener>(
+                IInteractiveWindowListener,
+                WebviewIPyWidgetCoordinator
+            );
             this.serviceManager.addSingleton<IHttpClient>(IHttpClient, HttpClient);
         } else {
             this.serviceManager.addSingletonInstance<IWebviewPanelProvider>(
@@ -471,7 +476,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<IExport>(IExport, ExportBase, 'Export Base');
         this.serviceManager.addSingleton<ExportUtil>(ExportUtil, ExportUtil);
         this.serviceManager.addSingleton<ExportCommands>(ExportCommands, ExportCommands);
-        this.serviceManager.addSingleton<IExportManagerFilePicker>(IExportManagerFilePicker, ExportManagerFilePicker);
+        this.serviceManager.addSingleton<IExportDialog>(IExportDialog, ExportDialog);
         this.serviceManager.addSingleton<INbConvertInterpreterDependencyChecker>(
             INbConvertInterpreterDependencyChecker,
             NbConvertInterpreterDependencyChecker
@@ -645,7 +650,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             IPyWidgetMessageDispatcherFactory
         );
         if (this.uiTest) {
-            this.serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, IPyWidgetHandler);
+            this.serviceManager.add<IInteractiveWindowListener>(
+                IInteractiveWindowListener,
+                WebviewIPyWidgetCoordinator
+            );
         }
         this.serviceManager.add<IProtocolParser>(IProtocolParser, ProtocolParser);
         this.serviceManager.addSingleton<IJupyterDebugService>(
@@ -779,6 +787,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             ActiveEditorContextService
         );
         this.serviceManager.addSingleton<IKernelLauncher>(IKernelLauncher, KernelLauncher);
+        this.serviceManager.addSingleton<KernelEnvironmentVariablesService>(
+            KernelEnvironmentVariablesService,
+            KernelEnvironmentVariablesService
+        );
         this.serviceManager.addSingleton<IKernelFinder>(IKernelFinder, KernelFinder);
 
         this.serviceManager.addSingleton<IJupyterSubCommandExecutionService>(
@@ -844,6 +856,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             this.serviceManager.addSingleton<IProcessLogger>(IProcessLogger, ProcessLogger);
         }
         this.serviceManager.addSingleton<NativeEditorSynchronizer>(NativeEditorSynchronizer, NativeEditorSynchronizer);
+        this.serviceManager.addSingleton<ISystemPseudoRandomNumberGenerator>(
+            ISystemPseudoRandomNumberGenerator,
+            SystemPseudoRandomNumberGenerator
+        );
         this.serviceManager.addSingleton<ITrustService>(ITrustService, TrustService);
         this.serviceManager.addSingleton<IDigestStorage>(IDigestStorage, DigestStorage);
         // Disable syncrhonizing edits
@@ -1251,9 +1267,13 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
     private getResourceKey(resource: Resource): string {
         if (!this.disposed) {
-            const workspace = this.serviceManager.get<IWorkspaceService>(IWorkspaceService);
-            const workspaceFolderUri = JupyterSettings.getSettingsUriAndTarget(resource, workspace).uri;
-            return workspaceFolderUri ? workspaceFolderUri.fsPath : '';
+            try {
+                const workspace = this.serviceManager.get<IWorkspaceService>(IWorkspaceService);
+                const workspaceFolderUri = JupyterSettings.getSettingsUriAndTarget(resource, workspace).uri;
+                return workspaceFolderUri ? workspaceFolderUri.fsPath : '';
+            } catch {
+                // May as well be disposed
+            }
         }
         return '';
     }

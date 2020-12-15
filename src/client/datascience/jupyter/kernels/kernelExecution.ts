@@ -5,10 +5,12 @@
 
 import { NotebookCell, NotebookCellRunState, NotebookDocument } from 'vscode';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../../common/application/types';
-import { IDisposable } from '../../../common/types';
+import { traceInfo } from '../../../common/logger';
+import { IDisposable, IExtensionContext } from '../../../common/types';
 import { noop } from '../../../common/utils/misc';
 import { captureTelemetry } from '../../../telemetry';
 import { Commands, Telemetry, VSCodeNativeTelemetry } from '../../constants';
+import { traceCellMessage } from '../../notebook/helpers/helpers';
 import { MultiCancellationTokenSource } from '../../notebook/helpers/multiCancellationToken';
 import {
     IDataScienceErrorHandler,
@@ -47,9 +49,10 @@ export class KernelExecution implements IDisposable {
         readonly appShell: IApplicationShell,
         readonly vscNotebook: IVSCodeNotebook,
         readonly metadata: Readonly<KernelConnectionMetadata>,
-        private readonly rawNotebookSupported: IRawNotebookSupportedService
+        private readonly rawNotebookSupported: IRawNotebookSupportedService,
+        context: IExtensionContext
     ) {
-        this.executionFactory = new CellExecutionFactory(errorHandler, editorProvider, appShell, vscNotebook);
+        this.executionFactory = new CellExecutionFactory(errorHandler, editorProvider, appShell, vscNotebook, context);
     }
 
     @captureTelemetry(Telemetry.ExecuteNativeCell, undefined, true)
@@ -67,8 +70,10 @@ export class KernelExecution implements IDisposable {
         const kernel = this.getKernel(cell.notebook);
 
         try {
+            traceCellMessage(cell, 'executeCell started in KernelExecution');
             await this.executeIndividualCell(kernel, cellExecution);
         } finally {
+            traceCellMessage(cell, 'executeCell completed in KernelExecution');
             this.cellExecutions.delete(cell);
         }
     }
@@ -90,6 +95,7 @@ export class KernelExecution implements IDisposable {
         this.documentExecutions.set(document, cancelTokenSource);
         const kernel = this.getKernel(document);
 
+        traceInfo('Update notebook execution state as running');
         await editor.edit((edit) =>
             edit.replaceMetadata({ ...document.metadata, runState: vscodeNotebookEnums.NotebookRunState.Running })
         );
@@ -108,22 +114,30 @@ export class KernelExecution implements IDisposable {
         );
 
         try {
+            codeCellsToExecute.forEach((exec) => traceCellMessage(exec.cell, 'Ready to execute'));
             for (const cellToExecute of codeCellsToExecute) {
+                traceCellMessage(cellToExecute.cell, 'Before Execute individual cell');
                 const result = this.executeIndividualCell(kernel, cellToExecute);
                 result.finally(() => this.cellExecutions.delete(cellToExecute.cell)).catch(noop);
                 const executionResult = await result;
+                traceCellMessage(cellToExecute.cell, `After Execute individual cell ${executionResult}`);
                 // If a cell has failed or execution cancelled, the get out.
                 if (
                     cancelTokenSource.token.isCancellationRequested ||
                     executionResult === vscodeNotebookEnums.NotebookCellRunState.Error
                 ) {
+                    traceInfo(
+                        `Cancel all remaining cells ${cancelTokenSource.token.isCancellationRequested} || ${executionResult}`
+                    );
                     await Promise.all(codeCellsToExecute.map((cell) => cell.cancel())); // Cancel pending cells.
                     break;
                 }
             }
         } finally {
+            traceInfo(`Cancel all remaining cells after finally`);
             await Promise.all(codeCellsToExecute.map((cell) => cell.cancel())); // Cancel pending cells.
             this.documentExecutions.delete(document);
+            traceInfo('Restore notebook state to idle');
             await editor.edit((edit) =>
                 edit.replaceMetadata({ ...document.metadata, runState: vscodeNotebookEnums.NotebookRunState.Idle })
             );
@@ -132,7 +146,10 @@ export class KernelExecution implements IDisposable {
 
     public async cancelCell(cell: NotebookCell) {
         if (this.cellExecutions.get(cell)) {
+            traceCellMessage(cell, 'Cancel cell from Kernel Execution');
             await this.cellExecutions.get(cell)!.cancel();
+        } else {
+            traceCellMessage(cell, 'Cannot cancel cell execution from Kernel Execution');
         }
     }
 
@@ -140,6 +157,7 @@ export class KernelExecution implements IDisposable {
         if (this.documentExecutions.get(document)) {
             this.documentExecutions.get(document)!.cancel();
         }
+        traceInfo('Cancel document execution');
         document.cells.forEach((cell) => this.cancelCell(cell));
     }
     public dispose() {
@@ -168,7 +186,10 @@ export class KernelExecution implements IDisposable {
 
         cellExecution.token.onCancellationRequested(
             // Interrupt kernel only if we need to cancel a cell execution.
-            () => this.commandManager.executeCommand(Commands.NotebookEditorInterruptKernel).then(noop, noop),
+            () => {
+                traceCellMessage(cellExecution.cell, 'Cell cancellation requested');
+                this.commandManager.executeCommand(Commands.NotebookEditorInterruptKernel).then(noop, noop);
+            },
             this,
             this.disposables
         );

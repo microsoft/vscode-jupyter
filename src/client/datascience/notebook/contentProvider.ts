@@ -15,6 +15,7 @@ import type {
     NotebookDocumentContentChangeEvent,
     NotebookDocumentOpenContext
 } from '../../../../types/vscode-proposed';
+import { IVSCodeNotebook } from '../../common/application/types';
 import { MARKDOWN_LANGUAGE } from '../../common/constants';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { DataScience } from '../../common/utils/localize';
@@ -39,15 +40,25 @@ export class NotebookContentProvider implements VSCNotebookContentProvider {
     public get onDidChangeNotebook() {
         return this.notebookChanged.event;
     }
+    public webviews = new Map<string, NotebookCommunication[]>();
     private notebookChanged = new EventEmitter<NotebookDocumentContentChangeEvent>();
     private readonly nativeNotebookModelsWaitingToGetReloaded = new WeakMap<INotebookModel, Deferred<void>>();
     constructor(
         @inject(INotebookStorageProvider) private readonly notebookStorage: INotebookStorageProvider,
         @inject(NotebookEditorCompatibilitySupport)
-        private readonly compatibilitySupport: NotebookEditorCompatibilitySupport
-    ) {}
-    public async resolveNotebook(_document: NotebookDocument, _webview: NotebookCommunication): Promise<void> {
-        // Later
+        private readonly compatibilitySupport: NotebookEditorCompatibilitySupport,
+        @inject(IVSCodeNotebook) readonly notebookProvider: IVSCodeNotebook
+    ) {
+        notebookProvider.onDidCloseNotebookDocument(this.onDidCloseNotebook.bind(this));
+    }
+    public async resolveNotebook(document: NotebookDocument, webview: NotebookCommunication): Promise<void> {
+        // Add webviews to list. Used for testing
+        let list = this.webviews.get(document.uri.toString());
+        if (!list) {
+            list = [];
+            this.webviews.set(document.uri.toString(), list);
+        }
+        list.push(webview);
     }
     public async openNotebook(uri: Uri, openContext: NotebookDocumentOpenContext): Promise<NotebookData> {
         if (!this.compatibilitySupport.canOpenWithVSCodeNotebookEditor(uri)) {
@@ -142,5 +153,9 @@ export class NotebookContentProvider implements VSCNotebookContentProvider {
             id,
             delete: () => this.notebookStorage.deleteBackup(model, id).ignoreErrors()
         };
+    }
+
+    private onDidCloseNotebook(e: NotebookDocument) {
+        this.webviews.delete(e.uri.toString());
     }
 }

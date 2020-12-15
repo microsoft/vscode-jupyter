@@ -23,7 +23,7 @@ export class WebviewExtensibility implements IWebviewExtensibility {
         const windows = new Set();
         const buttonId = uuid();
 
-        this.interactiveWindowProvider.onDidChangeActiveInteractiveWindow((window) => {
+        this.interactiveWindowProvider.onDidCreateInteractiveWindow((window) => {
             if (window && !windows.has(window)) {
                 disposables.push(
                     window.createWebviewCellButton(

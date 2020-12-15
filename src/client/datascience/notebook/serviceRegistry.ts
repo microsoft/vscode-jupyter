@@ -7,14 +7,17 @@ import { NotebookContentProvider as VSCNotebookContentProvider } from '../../../
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IServiceManager } from '../../ioc/types';
 import { GitHubIssueCodeLensProvider } from '../../logging/gitHubIssueCodeLensProvider';
+import { NotebookIPyWidgetCoordinator } from '../ipywidgets/notebookIPyWidgetCoordinator';
 import { KernelProvider } from '../jupyter/kernels/kernelProvider';
 import { IKernelProvider } from '../jupyter/kernels/types';
 import { NotebookContentProvider } from './contentProvider';
 import { NotebookCellLanguageService } from './defaultCellLanguageService';
+import { EmptyNotebookCellLanguageService } from './emptyNotebookCellLanguageService';
 import { NotebookIntegration } from './integration';
 import { VSCodeKernelPickerProvider } from './kernelProvider';
 import { NotebookDisposeService } from './notebookDisposeService';
-import { INotebookContentProvider } from './types';
+import { RendererExtensionDownloader } from './rendererExtensionDownloader';
+import { INotebookContentProvider, INotebookKernelProvider, INotebookKernelResolver } from './types';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<VSCNotebookContentProvider>(INotebookContentProvider, NotebookContentProvider);
@@ -26,9 +29,19 @@ export function registerTypes(serviceManager: IServiceManager) {
         IExtensionSingleActivationService,
         NotebookDisposeService
     );
+    // Do not install renderer extension.
+    // serviceManager.addSingleton<IExtensionSingleActivationService>(
+    //     IExtensionSingleActivationService,
+    //     RendererExtension
+    // );
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        EmptyNotebookCellLanguageService
+    );
+    serviceManager.addSingleton<RendererExtensionDownloader>(RendererExtensionDownloader, RendererExtensionDownloader);
     serviceManager.addSingleton<NotebookIntegration>(NotebookIntegration, NotebookIntegration);
     serviceManager.addSingleton<IKernelProvider>(IKernelProvider, KernelProvider);
-    serviceManager.addSingleton<VSCodeKernelPickerProvider>(VSCodeKernelPickerProvider, VSCodeKernelPickerProvider);
+    serviceManager.addSingleton<INotebookKernelProvider>(INotebookKernelProvider, VSCodeKernelPickerProvider);
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         GitHubIssueCodeLensProvider
@@ -37,5 +50,6 @@ export function registerTypes(serviceManager: IServiceManager) {
         IExtensionSingleActivationService,
         NotebookCellLanguageService
     );
+    serviceManager.addSingleton<INotebookKernelResolver>(INotebookKernelResolver, NotebookIPyWidgetCoordinator);
     serviceManager.addSingleton<NotebookCellLanguageService>(NotebookCellLanguageService, NotebookCellLanguageService);
 }

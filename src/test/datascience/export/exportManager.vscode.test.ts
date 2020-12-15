@@ -12,9 +12,8 @@ import { ExportFileOpener } from '../../../client/datascience/export/exportFileO
 import { ExportInterpreterFinder } from '../../../client/datascience/export/exportInterpreterFinder';
 import { ExportManager } from '../../../client/datascience/export/exportManager';
 import { ExportUtil } from '../../../client/datascience/export/exportUtil';
-import { ExportFormat, IExport, IExportManagerFilePicker } from '../../../client/datascience/export/types';
+import { ExportFormat, IExport, IExportDialog } from '../../../client/datascience/export/types';
 import { ProgressReporter } from '../../../client/datascience/progress/progressReporter';
-import { INotebookModel } from '../../../client/datascience/types';
 
 suite('DataScience - Export Manager', () => {
     let exporter: ExportManager;
@@ -23,15 +22,14 @@ suite('DataScience - Export Manager', () => {
     let exportPdf: IExport;
     let fileSystem: IFileSystem;
     let exportUtil: ExportUtil;
-    let filePicker: IExportManagerFilePicker;
+    let filePicker: IExportDialog;
     let appShell: IApplicationShell;
     let exportFileOpener: ExportFileOpener;
     let exportInterpreterFinder: ExportInterpreterFinder;
-    const model = mock<INotebookModel>();
     setup(async () => {
         exportUtil = mock<ExportUtil>();
         const reporter = mock(ProgressReporter);
-        filePicker = mock<IExportManagerFilePicker>();
+        filePicker = mock<IExportDialog>();
         fileSystem = mock<IFileSystem>();
         exportPython = mock<IExport>();
         exportHtml = mock<IExport>();
@@ -40,7 +38,7 @@ suite('DataScience - Export Manager', () => {
         exportFileOpener = mock<ExportFileOpener>();
         exportInterpreterFinder = mock<ExportInterpreterFinder>();
         // tslint:disable-next-line: no-any
-        when(filePicker.getExportFileLocation(anything(), anything(), anything())).thenReturn(
+        when(filePicker.showDialog(anything(), anything(), anything())).thenReturn(
             Promise.resolve(Uri.file('test.pdf'))
         );
         // tslint:disable-next-line: no-empty
@@ -51,7 +49,7 @@ suite('DataScience - Export Manager', () => {
         // tslint:disable-next-line: no-empty
         when(fileSystem.createTemporaryLocalFile(anything())).thenResolve({ filePath: 'test', dispose: () => {} });
         when(exportPdf.export(anything(), anything(), anything(), anything())).thenResolve();
-        when(filePicker.getExportFileLocation(anything(), anything())).thenResolve(Uri.file('foo'));
+        when(filePicker.showDialog(anything(), anything())).thenResolve(Uri.file('foo'));
         when(exportInterpreterFinder.getExportInterpreter(anything())).thenResolve();
         when(exportFileOpener.openFile(anything(), anything())).thenResolve();
         // tslint:disable-next-line: no-any
@@ -71,27 +69,27 @@ suite('DataScience - Export Manager', () => {
     });
 
     test('Remove svg is called when exporting to PDF', async () => {
-        await exporter.export(ExportFormat.pdf, model);
+        await exporter.export(ExportFormat.pdf, 'model', Uri.file('foo'));
         verify(exportUtil.removeSvgs(anything())).once();
     });
     test('Erorr message is shown if export fails', async () => {
         when(exportHtml.export(anything(), anything(), anything(), anything())).thenThrow(new Error('failed...'));
-        await exporter.export(ExportFormat.html, model);
+        await exporter.export(ExportFormat.html, 'model', Uri.file('foo'));
         verify(appShell.showErrorMessage(anything())).once();
         verify(exportFileOpener.openFile(anything(), anything())).never();
     });
     test('Export to PDF is called when export method is PDF', async () => {
-        await exporter.export(ExportFormat.pdf, model);
+        await exporter.export(ExportFormat.pdf, 'model', Uri.file('foo'));
         verify(exportPdf.export(anything(), anything(), anything(), anything())).once();
         verify(exportFileOpener.openFile(ExportFormat.pdf, anything())).once();
     });
     test('Export to HTML is called when export method is HTML', async () => {
-        await exporter.export(ExportFormat.html, model);
+        await exporter.export(ExportFormat.html, 'model', Uri.file('foo'));
         verify(exportHtml.export(anything(), anything(), anything(), anything())).once();
         verify(exportFileOpener.openFile(ExportFormat.html, anything())).once();
     });
     test('Export to Python is called when export method is Python', async () => {
-        await exporter.export(ExportFormat.python, model);
+        await exporter.export(ExportFormat.python, 'model', Uri.file('foo'));
         verify(exportPython.export(anything(), anything(), anything(), anything())).once();
         verify(exportFileOpener.openFile(ExportFormat.python, anything())).once();
     });

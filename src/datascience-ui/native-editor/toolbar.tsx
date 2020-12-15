@@ -5,9 +5,11 @@ import * as React from 'react';
 import { connect } from 'react-redux';
 import { NativeMouseCommandTelemetry } from '../../client/datascience/constants';
 import { IJupyterExtraSettings } from '../../client/datascience/types';
+import { concatMultilineString } from '../common';
 import { JupyterInfo } from '../interactive-common/jupyterInfo';
 import {
     getSelectedAndFocusedInfo,
+    ICellViewModel,
     IFont,
     IServerState,
     SelectionAndFocusedInfo,
@@ -30,6 +32,7 @@ type INativeEditorDataProps = {
     selectionFocusedInfo: SelectionAndFocusedInfo;
     variablesVisible: boolean;
     settings?: IJupyterExtraSettings;
+    cellVMs: ICellViewModel[];
 };
 export type INativeEditorToolbarProps = INativeEditorDataProps & {
     sendCommand: typeof actionCreators.sendCommand;
@@ -100,7 +103,13 @@ export class Toolbar extends React.PureComponent<INativeEditorToolbarProps> {
             if (selectedInfo.selectedCellId && typeof selectedInfo.selectedCellIndex === 'number') {
                 // tslint:disable-next-line: no-suspicious-comment
                 // TODO: Is the source going to be up to date during run below?
-                this.props.executeCellAndBelow(selectedInfo.selectedCellId);
+                this.props.executeCellAndBelow(
+                    selectedInfo.selectedCellId,
+                    concatMultilineString(
+                        this.props.cellVMs.find((vm) => vm.cell.id === selectedInfo.selectedCellId)?.cell.data.source ||
+                            []
+                    )
+                );
                 this.props.sendCommand(NativeMouseCommandTelemetry.RunBelow);
             }
         };

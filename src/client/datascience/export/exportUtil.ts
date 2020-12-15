@@ -6,14 +6,13 @@ import * as uuid from 'uuid/v4';
 import { Uri } from 'vscode';
 import { IFileSystem, TemporaryDirectory } from '../../common/platform/types';
 import { sleep } from '../../common/utils/async';
-import { ICell, INotebookExporter, INotebookModel, INotebookStorage } from '../types';
+import { INotebookStorage } from '../types';
 
 @injectable()
 export class ExportUtil {
     constructor(
         @inject(IFileSystem) private fs: IFileSystem,
-        @inject(INotebookStorage) private notebookStorage: INotebookStorage,
-        @inject(INotebookExporter) private jupyterExporter: INotebookExporter
+        @inject(INotebookStorage) private notebookStorage: INotebookStorage
     ) {}
 
     public async generateTempDir(): Promise<TemporaryDirectory> {
@@ -40,30 +39,12 @@ export class ExportUtil {
         };
     }
 
-    public async makeFileInDirectory(model: INotebookModel, fileName: string, dirPath: string): Promise<string> {
+    public async makeFileInDirectory(contents: string, fileName: string, dirPath: string): Promise<string> {
         const newFilePath = path.join(dirPath, fileName);
 
-        await this.fs.writeLocalFile(newFilePath, model.getContent());
+        await this.fs.writeLocalFile(newFilePath, contents);
 
         return newFilePath;
-    }
-
-    public async getModelFromCells(cells: ICell[]): Promise<INotebookModel> {
-        const tempDir = await this.generateTempDir();
-        const tempFile = await this.fs.createTemporaryLocalFile('.ipynb');
-        let model: INotebookModel;
-
-        try {
-            await this.jupyterExporter.exportToFile(cells, tempFile.filePath, false);
-            const newPath = path.join(tempDir.path, '.ipynb');
-            await this.fs.copyLocal(tempFile.filePath, newPath);
-            model = await this.notebookStorage.getOrCreateModel({ file: Uri.file(newPath) });
-        } finally {
-            tempFile.dispose();
-            tempDir.dispose();
-        }
-
-        return model;
     }
 
     public async removeSvgs(source: Uri) {

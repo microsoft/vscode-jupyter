@@ -455,12 +455,12 @@ export class NativeCell extends React.Component<INativeCellProps> {
 
     private runAndMove() {
         // Submit this cell
-        this.submitCell(this.props.lastCell ? 'add' : 'select');
+        this.submitCell(this.getCurrentCode(), this.props.lastCell ? 'add' : 'select');
     }
 
     private runAndAdd() {
         // Submit this cell
-        this.submitCell('add');
+        this.submitCell(this.getCurrentCode(), 'add');
     }
 
     private ctrlEnterCell = (e: IKeyboardEvent) => {
@@ -474,12 +474,12 @@ export class NativeCell extends React.Component<INativeCellProps> {
         }
 
         // Submit this cell
-        this.submitCell('none');
+        this.submitCell(this.getCurrentCode(), 'none');
         this.props.sendCommand(NativeKeyboardCommandTelemetry.Run);
     };
 
-    private submitCell = (moveOp: 'add' | 'select' | 'none') => {
-        this.props.executeCell(this.cellId, moveOp);
+    private submitCell = (code: string, moveOp: 'add' | 'select' | 'none') => {
+        this.props.executeCell(this.cellId, code, moveOp);
     };
 
     private addNewCell = () => {

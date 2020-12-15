@@ -83,7 +83,7 @@ import {
     ICodeCssGenerator,
     IDataScienceErrorHandler,
     IExternalCommandFromWebview,
-    IExternalWebviewCellButton,
+    IExternalWebviewCellButtonWithCallback,
     IInteractiveBase,
     IInteractiveWindowInfo,
     IInteractiveWindowListener,
@@ -131,7 +131,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
 
     protected abstract get notebookIdentity(): INotebookIdentity;
     protected fileInKernel: string | undefined;
-    protected externalButtons: IExternalWebviewCellButton[] = [];
+    protected externalButtons: IExternalWebviewCellButtonWithCallback[] = [];
     protected dataViewerChecker: DataViewerChecker;
     private unfinishedCells: ICell[] = [];
     private restartingKernel: boolean = false;
@@ -511,7 +511,12 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         const index = this.externalButtons.findIndex((button) => button.buttonId === buttonId);
         if (index === -1) {
             this.externalButtons.push({ buttonId, callback, codicon, statusToEnable, tooltip, running: false });
-            this.postMessage(InteractiveWindowMessages.UpdateExternalCellButtons, this.externalButtons).ignoreErrors();
+            this.postMessage(
+                InteractiveWindowMessages.UpdateExternalCellButtons,
+                this.externalButtons.map((b) => {
+                    return { ...b, callback: undefined };
+                })
+            ).ignoreErrors();
         }
 
         return {
@@ -521,7 +526,9 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
                     this.externalButtons.splice(buttonIndex, 1);
                     this.postMessage(
                         InteractiveWindowMessages.UpdateExternalCellButtons,
-                        this.externalButtons
+                        this.externalButtons.map((b) => {
+                            return { ...b, callback: undefined };
+                        })
                     ).ignoreErrors();
                 }
             }
@@ -559,9 +566,6 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         if (this.viewState.active && !this.documentManager.activeTextEditor) {
             // Force the webpanel to reveal and take focus.
             await super.show(false);
-
-            // Send this to the react control
-            await this.postMessage(InteractiveWindowMessages.Activate);
         }
     }
 
@@ -823,29 +827,33 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
             const deferred = createDeferred<boolean>();
             this.addSysInfoPromise = deferred;
 
-            // Generate a new sys info cell and send it to the web panel.
-            const sysInfo = await this.generateSysInfoCell(reason);
-            if (sysInfo) {
-                this.sendCellsToWebView([sysInfo]);
-            }
+            try {
+                // Generate a new sys info cell and send it to the web panel.
+                const sysInfo = await this.generateSysInfoCell(reason);
+                if (sysInfo) {
+                    this.sendCellsToWebView([sysInfo]);
+                }
 
-            // For anything but start, tell the other sides of a live share session
-            if (reason !== SysInfoReason.Start && sysInfo) {
-                this.shareMessage(InteractiveWindowMessages.AddedSysInfo, {
-                    type: reason,
-                    sysInfoCell: sysInfo,
-                    id: this.id,
-                    notebookIdentity: this.notebookIdentity.resource
-                });
-            }
+                // For anything but start, tell the other sides of a live share session
+                if (reason !== SysInfoReason.Start && sysInfo) {
+                    this.shareMessage(InteractiveWindowMessages.AddedSysInfo, {
+                        type: reason,
+                        sysInfoCell: sysInfo,
+                        id: this.id,
+                        notebookIdentity: this.notebookIdentity.resource
+                    });
+                }
 
-            // For a restart, tell our window to reset
-            if (reason === SysInfoReason.Restart || reason === SysInfoReason.New) {
-                this.postMessage(InteractiveWindowMessages.RestartKernel).ignoreErrors();
-            }
+                // For a restart, tell our window to reset
+                if (reason === SysInfoReason.Restart || reason === SysInfoReason.New) {
+                    this.postMessage(InteractiveWindowMessages.RestartKernel).ignoreErrors();
+                }
 
-            traceInfo(`Sys info for ${this.id} ${reason} complete`);
-            deferred.resolve(true);
+                traceInfo(`Sys info for ${this.id} ${reason} complete`);
+                deferred.resolve(true);
+            } catch (e) {
+                deferred.reject(e);
+            }
         } else if (this.addSysInfoPromise) {
             traceInfo(`Wait for sys info for ${this.id} ${reason}`);
             await this.addSysInfoPromise.promise;
@@ -1120,6 +1128,13 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
                 );
                 await this.addSysInfo(SysInfoReason.Restart);
 
+                // Reset our file in the kernel.
+                const fileInKernel = this.fileInKernel;
+                this.fileInKernel = undefined;
+                if (fileInKernel) {
+                    await this.setFileInKernel(fileInKernel, undefined);
+                }
+
                 // Compute if dark or not.
                 const knownDark = await this.isDark();
 
@@ -1368,11 +1383,13 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         }
     }
 
+    // tslint:disable-next-line: no-suspicious-comment
+    // TODO: Allow other kernels to support this information. Right now it just skips this for other kernels.
     private generateSysInfoCell = async (reason: SysInfoReason): Promise<ICell | undefined> => {
         // Execute the code 'import sys\r\nsys.version' and 'import sys\r\nsys.executable' to get our
         // version and executable
         if (this._notebook) {
-            const message = await this.generateSysInfoMessage(reason);
+            const message = this.getSysInfoReasonHeader(reason, this._notebook.getKernelConnection());
 
             // The server handles getting this data.
             const sysInfo = await this._notebook.getSysInfo();
@@ -1397,22 +1414,22 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         }
     };
 
-    private async generateSysInfoMessage(reason: SysInfoReason): Promise<string> {
+    private getSysInfoReasonHeader(reason: SysInfoReason, connection: KernelConnectionMetadata | undefined): string {
+        const displayName = getDisplayNameOrNameOfKernelConnection(connection);
         switch (reason) {
             case SysInfoReason.Start:
-                return localize.DataScience.pythonVersionHeader();
+            case SysInfoReason.New:
+                return localize.DataScience.startedNewKernelHeader().format(displayName);
                 break;
             case SysInfoReason.Restart:
-                return localize.DataScience.pythonRestartHeader();
+                return localize.DataScience.restartedKernelHeader().format(displayName);
                 break;
             case SysInfoReason.Interrupt:
                 return localize.DataScience.pythonInterruptFailedHeader();
                 break;
-            case SysInfoReason.New:
-                return localize.DataScience.pythonNewHeader();
                 break;
             case SysInfoReason.Connect:
-                return localize.DataScience.pythonConnectHeader();
+                return localize.DataScience.connectKernelHeader().format(displayName);
                 break;
             default:
                 traceError('Invalid SysInfoReason');
@@ -1569,15 +1586,16 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
 
     private async handleExecuteExternalCommand(payload: IExternalCommandFromWebview) {
         const button = this.externalButtons.find((b) => b.buttonId === payload.buttonId);
+        let language = PYTHON_LANGUAGE;
 
         if (this.notebook) {
-            const language = getKernelConnectionLanguage(this.notebook.getKernelConnection()) || PYTHON_LANGUAGE;
-            const id = this.notebook.identity;
-            const cell = translateCellToNative(payload.cell, language);
+            language = getKernelConnectionLanguage(this.notebook.getKernelConnection()) || PYTHON_LANGUAGE;
+        }
+        const id = this.notebookIdentity.resource;
+        const cell = translateCellToNative(payload.cell, language);
 
-            if (button && cell) {
-                await button.callback(cell as NotebookCell, this.isInteractive, id);
-            }
+        if (button && cell) {
+            await button.callback(cell as NotebookCell, this.isInteractive, id);
         }
 
         // Post message again to let the react side know the command is done executing

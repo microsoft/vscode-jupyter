@@ -47,6 +47,7 @@ import {
     TextEditorViewColumnChangeEvent,
     TreeView,
     TreeViewOptions,
+    UIKind,
     Uri,
     ViewColumn,
     WebviewPanel as vscodeWebviewPanel,
@@ -997,6 +998,13 @@ export interface IApplicationEnvironment {
      */
     readonly userSettingsFile: string | undefined;
     /**
+     * Gets the full path to the user custom keybindings file. (may or may not exist).
+     *
+     * @type {string}
+     * @memberof IApplicationShell
+     */
+    readonly userCustomKeybindingsFile: string | undefined;
+    /**
      * The detected default shell for the extension host, this is overridden by the
      * `terminal.integrated.shell` setting for the extension host's platform.
      *
@@ -1023,6 +1031,7 @@ export interface IApplicationEnvironment {
      * The custom uri scheme the editor registers to in the operating system.
      */
     readonly uriScheme: string;
+    readonly uiKind: UIKind;
 }
 
 export interface IWebviewMessageListener {

@@ -118,12 +118,21 @@ export namespace Logging {
         'Logging.YesTurnOffDebugLogging',
         'Yes, turn off debug logging'
     );
+    export const NoResponse = localize('Logging.NoResponse', 'No');
+    export const NoAndDontAskAgain = localize('Logging.NoAndDontAskAgain', "No, and don't ask again");
 }
 
 export namespace InteractiveShiftEnterBanner {
     export const bannerMessage = localize(
         'InteractiveShiftEnterBanner.bannerMessage',
         'Would you like shift-enter to send code to the new Interactive Window experience?'
+    );
+}
+
+export namespace InsidersNativeNotebooksSurveyBanner {
+    export const bannerMessage = localize(
+        'InsidersNativeNotebooksSurveyBanner.bannerMessage',
+        'Can you please take a minute to tell us about your notebooks experience in VS Code?'
     );
 }
 
@@ -178,9 +187,9 @@ export namespace DataScience {
         'You have opened a Python notebook. Would you like to install the Python extension?'
     );
 
-    export const pythonInstalledReloadPromptMessage = localize(
+    export const pythonExtensionInstalled = localize(
         'DataScience.pythonInstalledReloadPromptMessage',
-        'Python extension is now installed. Reload window to activate?'
+        'Python extension is now installed. Some features might not be available until a notebook or interactive window session is restarted.'
     );
     export const unknownServerUri = localize(
         'DataScience.unknownServerUri',
@@ -391,6 +400,14 @@ export namespace DataScience {
         'DataScience.sessionStartFailedWithKernel',
         "Failed to start a session for the Kernel '{0}'. \nView Jupyter [log](command:{1}) for further details."
     );
+    export const kernelTimeout = localize(
+        'DataScience.kernelTimeout',
+        'Timed out waiting to get a heartbeat from kernel process. \n{0} \nView Jupyter [log](command:{1}) for further details.'
+    );
+    export const kernelDied = localize(
+        'DataScience.kernelDied',
+        'The kernel died. View Jupyter [log](command:{0}) for further details. \nError: {1}...'
+    );
     export const executingCode = localize('DataScience.executingCode', 'Executing Cell');
     export const collapseAll = localize('DataScience.collapseAll', 'Collapse all cell inputs');
     export const expandAll = localize('DataScience.expandAll', 'Expand all cell inputs');
@@ -406,10 +423,9 @@ export namespace DataScience {
         'DataScience.reloadRequired',
         'Please reload the window for new settings to take effect.'
     );
-    export const pythonVersionHeader = localize('DataScience.pythonVersionHeader', 'Python Version:');
-    export const pythonRestartHeader = localize('DataScience.pythonRestartHeader', 'Restarted Kernel:');
-    export const pythonNewHeader = localize('DataScience.pythonNewHeader', 'Started new kernel:');
-    export const pythonConnectHeader = localize('DataScience.pythonConnectHeader', 'Connected to kernel:');
+    export const restartedKernelHeader = localize('DataScience.restartedKernelHeader', 'Restarted {0}');
+    export const startedNewKernelHeader = localize('DataScience.startedNewKernelHeader', 'Started {0}');
+    export const connectKernelHeader = localize('DataScience.connectKernelHeader', 'Connected to {0}');
 
     export const jupyterSelectURIPrompt = localize(
         'DataScience.jupyterSelectURIPrompt',
@@ -711,6 +727,7 @@ export namespace DataScience {
     );
     export const notebookExportAs = localize('DataScience.notebookExportAs', 'Export As');
     export const exportAsPythonFileTitle = localize('DataScience.exportAsPythonFileTitle', 'Save As Python File');
+    export const exportButtonTitle = localize('DataScience.exportButtonTitle', 'Export');
     export const exportAsQuickPickPlaceholder = localize('DataScience.exportAsQuickPickPlaceholder', 'Export As...');
     export const openExportedFileMessage = localize(
         'DataScience.openExportedFileMessage',

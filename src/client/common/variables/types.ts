@@ -9,6 +9,13 @@ export const IEnvironmentVariablesService = Symbol('IEnvironmentVariablesService
 
 export interface IEnvironmentVariablesService {
     parseFile(filePath?: string, baseVars?: EnvironmentVariables): Promise<EnvironmentVariables | undefined>;
+    /**
+     * The variables in `source` trumps variables already in `target`.
+     * If we have an env variable `ABC` defined in both, then the variable defined in `source` wins.
+     * If we do not have a variable defined in `source`, then variable in `target` wins.
+     * Some variables such as PYTHONPATH and PATH are not altered in `target`.
+     * Use `appendPythonPath` & `appendPath` to update the `PYTHONPATH` & `PATH` variables in the `target` with those from `source`.
+     */
     mergeVariables(source: EnvironmentVariables, target: EnvironmentVariables): void;
     appendPythonPath(vars: EnvironmentVariables, ...pythonPaths: string[]): void;
     appendPath(vars: EnvironmentVariables, ...paths: string[]): void;

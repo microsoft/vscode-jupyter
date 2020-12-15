@@ -14,6 +14,9 @@ import { EnvironmentVariables, IEnvironmentVariablesProvider, IEnvironmentVariab
 const CACHE_DURATION = 60 * 60 * 1000;
 @injectable()
 export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvider, Disposable {
+    public get onDidEnvironmentVariablesChange(): Event<Uri | undefined> {
+        return this.changeEventEmitter.event;
+    }
     public trackedWorkspaceFolders = new Set<string>();
     private fileWatchers = new Map<string, FileSystemWatcher>();
     private disposables: Disposable[] = [];
@@ -29,10 +32,6 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
         this.changeEventEmitter = new EventEmitter();
         const disposable = this.workspaceService.onDidChangeConfiguration(this.configurationChanged, this);
         this.disposables.push(disposable);
-    }
-
-    public get onDidEnvironmentVariablesChange(): Event<Uri | undefined> {
-        return this.changeEventEmitter.event;
     }
 
     public dispose() {
@@ -56,22 +55,6 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
         const promise = this._getEnvironmentVariables(resource);
         promise.then((result) => (cacheStoreIndexedByWorkspaceFolder.data = result)).ignoreErrors();
         return promise;
-    }
-    public async _getEnvironmentVariables(resource?: Uri): Promise<EnvironmentVariables> {
-        let mergedVars = await this.getCustomEnvironmentVariables(resource);
-        if (!mergedVars) {
-            mergedVars = {};
-        }
-        this.envVarsService.mergeVariables(process.env, mergedVars!);
-        const pathVariable = this.platformService.pathVariableName;
-        const pathValue = process.env[pathVariable];
-        if (pathValue) {
-            this.envVarsService.appendPath(mergedVars!, pathValue);
-        }
-        if (process.env.PYTHONPATH) {
-            this.envVarsService.appendPythonPath(mergedVars!, process.env.PYTHONPATH);
-        }
-        return mergedVars;
     }
     public async getCustomEnvironmentVariables(resource?: Uri): Promise<EnvironmentVariables | undefined> {
         const workspaceFolderUri = this.getWorkspaceFolderUri(resource);
@@ -103,6 +86,29 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
             this.disposables.push(envFileWatcher.onDidCreate(() => this.onEnvironmentFileCreated(workspaceFolderUri)));
             this.disposables.push(envFileWatcher.onDidDelete(() => this.onEnvironmentFileChanged(workspaceFolderUri)));
         }
+    }
+    private async _getEnvironmentVariables(resource?: Uri): Promise<EnvironmentVariables> {
+        let customEnvVars = await this.getCustomEnvironmentVariables(resource);
+        if (!customEnvVars) {
+            customEnvVars = {};
+        }
+        const mergedVars: EnvironmentVariables = {};
+        this.envVarsService.mergeVariables(process.env, mergedVars); // Copy current proc vars into new obj.
+        this.envVarsService.mergeVariables(customEnvVars!, mergedVars); // Copy custom vars over into obj.
+        const pathVariable = this.platformService.pathVariableName;
+        if (process.env[pathVariable]) {
+            mergedVars[pathVariable] = process.env[pathVariable];
+        }
+        if (process.env.PYTHONPATH) {
+            mergedVars.PYTHONPATH = process.env.PYTHONPATH;
+        }
+        if (customEnvVars![pathVariable]) {
+            this.envVarsService.appendPath(mergedVars!, customEnvVars![pathVariable]!);
+        }
+        if (customEnvVars!.PYTHONPATH) {
+            this.envVarsService.appendPythonPath(mergedVars!, customEnvVars!.PYTHONPATH);
+        }
+        return mergedVars;
     }
     private getWorkspaceFolderUri(resource?: Uri): Uri | undefined {
         if (!resource) {

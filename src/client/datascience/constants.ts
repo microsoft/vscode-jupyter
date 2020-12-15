@@ -18,6 +18,14 @@ export const KernelLauncherDaemonModule = 'vscode_datascience_helpers.kernel_lau
 export const PythonExtension = 'ms-python.python';
 
 // List of 'language' names that we know about. All should be lower case as that's how we compare.
+export const KnownKernelLanguageAliases = new Map<string, string>([
+    ['qsharp', 'q#'],
+    ['csharp', 'c#'],
+    ['fsharp', 'f#'],
+    ['c++11', 'c++'],
+    ['c++12', 'c++'],
+    ['c++14', 'c++']
+]);
 export const KnownNotebookLanguages: string[] = [
     'python',
     'r',
@@ -25,11 +33,16 @@ export const KnownNotebookLanguages: string[] = [
     'c++',
     'c#',
     'f#',
+    'q#',
+    'powershell',
+    'java',
     'scala',
     'haskell',
     'bash',
     'cling',
-    'sas'
+    'rust',
+    'sas',
+    'sos'
 ];
 
 export namespace Commands {
@@ -101,6 +114,7 @@ export namespace Commands {
     export const ExportToHTML = 'jupyter.exportToHTML';
     export const ExportToPDF = 'jupyter.exportToPDF';
     export const Export = 'jupyter.export';
+    export const NativeNotebookExport = 'jupyter.notebookeditor.export';
     export const SaveNotebookNonCustomEditor = 'jupyter.notebookeditor.save';
     export const SaveAsNotebookNonCustomEditor = 'jupyter.notebookeditor.saveAs';
     export const OpenNotebookNonCustomEditor = 'jupyter.notebookeditor.open';
@@ -144,6 +158,7 @@ export namespace EditorContexts {
     export const HaveCellSelected = 'jupyter.havecellselected';
     export const IsNotebookTrusted = 'jupyter.isnotebooktrusted';
     export const CanRestartNotebookKernel = 'jupyter.notebookeditor.canrestartNotebookkernel';
+    export const IsPythonNotebook = 'jupyter.ispythonnotebook';
 }
 
 export namespace RegExpValues {
@@ -345,6 +360,8 @@ export enum Telemetry {
     CompletionTimeFromLS = 'DS_INTERNAL.COMPLETION_TIME_FROM_LS',
     CompletionTimeFromJupyter = 'DS_INTERNAL.COMPLETION_TIME_FROM_JUPYTER',
     NotebookLanguage = 'DATASCIENCE.NOTEBOOK_LANGUAGE',
+    NumberOfLocalKernelSpecs = 'DS_INTERNAL.LOCAL_KERNEL_SPEC_COUNT',
+    NumberOfRemoteKernelSpecs = 'DS_INTERNAL.REMOTE_KERNEL_SPEC_COUNT',
     KernelSpecNotFound = 'DS_INTERNAL.KERNEL_SPEC_NOT_FOUND',
     KernelRegisterFailed = 'DS_INTERNAL.KERNEL_REGISTER_FAILED',
     KernelEnumeration = 'DS_INTERNAL.KERNEL_ENUMERATION',
@@ -352,6 +369,8 @@ export enum Telemetry {
     KernelProviderPerf = 'DS_INTERNAL.KERNEL_PROVIDER_PERF',
     GetPreferredKernelPerf = 'DS_INTERNAL.GET_PREFERRED_KERNEL_PERF',
     KernelFinderPerf = 'DS_INTERNAL.KERNEL_FINDER_PERF',
+    KernelListingPerf = 'DS_INTERNAL.KERNEL_LISTING_PERF',
+    NativeNotebookKernelSelectionPerf = 'DS_INTERNAL.NATIVE_NOTEBOOK_KERNEL_SELECTION_PERF',
     JupyterInstallFailed = 'DS_INTERNAL.JUPYTER_INSTALL_FAILED',
     UserInstalledModule = 'DATASCIENCE.USER_INSTALLED_MODULE',
     JupyterCommandLineNonDefault = 'DS_INTERNAL.JUPYTER_CUSTOM_COMMAND_LINE',
@@ -390,7 +409,10 @@ export enum Telemetry {
     TrustAllNotebooks = 'DATASCIENCE.TRUST_ALL_NOTEBOOKS',
     TrustNotebook = 'DATASCIENCE.TRUST_NOTEBOOK',
     DoNotTrustNotebook = 'DATASCIENCE.DO_NOT_TRUST_NOTEBOOK',
-    NotebookTrustPromptShown = 'DATASCIENCE.NOTEBOOK_TRUST_PROMPT_SHOWN'
+    NotebookTrustPromptShown = 'DATASCIENCE.NOTEBOOK_TRUST_PROMPT_SHOWN',
+    SyncAllCells = 'DS_INTERNAL.SYNC_ALL_CELLS',
+    SyncSingleCell = 'DS_INTERNAL.SYNC_SINGLE_CELL',
+    NativeRandomBytesGenerationFailed = 'DS_INTERNAL.NATIVE_RANDOM_BYTES_GENERATION_FAILED'
 }
 
 export enum NativeKeyboardCommandTelemetry {
@@ -476,15 +498,33 @@ export namespace Settings {
 export namespace DataFrameLoading {
     export const SysPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'vscode_datascience_helpers', 'dataframes');
     export const DataFrameSysImport = `import sys\nsys.path.append("${SysPath.replace(/\\/g, '\\\\')}")`;
-    export const DataFrameInfoImportName = '_VSCODE_InfoImport';
-    export const DataFrameInfoImport = `import vscodeGetDataFrameInfo as ${DataFrameInfoImportName}`;
-    export const DataFrameInfoFunc = `${DataFrameInfoImportName}._VSCODE_getDataFrameInfo`;
-    export const DataFrameRowImportName = '_VSCODE_RowImport';
-    export const DataFrameRowImport = `import vscodeGetDataFrameRows as ${DataFrameRowImportName}`;
-    export const DataFrameRowFunc = `${DataFrameRowImportName}._VSCODE_getDataFrameRows`;
+    export const ScriptPath = path.join(SysPath, 'vscodeDataFrame.py');
+
+    export const DataFrameInfoFunc = '_VSCODE_getDataFrameInfo';
+    export const DataFrameRowFunc = '_VSCODE_getDataFrameRows';
+
+    // Constants for the debugger which imports the script files
+    export const DataFrameImportName = '_VSCODE_DataFrameImport';
+    export const DataFrameImport = `import vscodeDataFrame as ${DataFrameImportName}`;
+    export const DataFrameInfoImportFunc = `${DataFrameImportName}._VSCODE_getDataFrameInfo`;
+    export const DataFrameRowImportFunc = `${DataFrameImportName}._VSCODE_getDataFrameRows`;
+}
+
+export namespace GetVariableInfo {
+    export const SysPath = path.join(
+        EXTENSION_ROOT_DIR,
+        'pythonFiles',
+        'vscode_datascience_helpers',
+        'getVariableInfo'
+    );
+    export const GetVariableInfoSysImport = `import sys\nsys.path.append("${SysPath.replace(/\\/g, '\\\\')}")`;
+    export const ScriptPath = path.join(SysPath, 'vscodeGetVariableInfo.py');
+    export const VariableInfoFunc = '_VSCODE_getVariableInfo';
+
+    // Constants for the debugger which imports the script files
     export const VariableInfoImportName = '_VSCODE_VariableImport';
     export const VariableInfoImport = `import vscodeGetVariableInfo as ${VariableInfoImportName}`;
-    export const VariableInfoFunc = `${VariableInfoImportName}._VSCODE_getVariableInfo`;
+    export const VariableInfoImportFunc = `${VariableInfoImportName}._VSCODE_getVariableInfo`;
 }
 
 export namespace Identifiers {

@@ -8,7 +8,13 @@ import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../../common/application/types';
 import { traceInfo, traceWarning } from '../../../common/logger';
-import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../../common/types';
+import { IFileSystem } from '../../../common/platform/types';
+import {
+    IAsyncDisposableRegistry,
+    IConfigurationService,
+    IDisposableRegistry,
+    IExtensionContext
+} from '../../../common/types';
 import {
     IDataScienceErrorHandler,
     INotebookEditorProvider,
@@ -33,15 +39,30 @@ export class KernelProvider implements IKernelProvider {
         @inject(KernelSelector) private readonly kernelSelectionUsage: IKernelSelectionUsage,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
-        @inject(IRawNotebookSupportedService) private readonly rawNotebookSupported: IRawNotebookSupportedService
+        @inject(IRawNotebookSupportedService) private readonly rawNotebookSupported: IRawNotebookSupportedService,
+        @inject(IFileSystem) private readonly fs: IFileSystem,
+        @inject(IExtensionContext) private readonly context: IExtensionContext
     ) {}
     public get(uri: Uri): IKernel | undefined {
         return this.kernelsByUri.get(uri.toString())?.kernel;
     }
     public getOrCreate(uri: Uri, options: KernelOptions): IKernel | undefined {
         const existingKernelInfo = this.kernelsByUri.get(uri.toString());
-        if (existingKernelInfo && fastDeepEqual(existingKernelInfo.options.metadata, options.metadata)) {
-            return existingKernelInfo.kernel;
+        if (existingKernelInfo) {
+            if (
+                existingKernelInfo.options.metadata.kind === 'startUsingKernelSpec' &&
+                options.metadata.kind === 'startUsingKernelSpec'
+            ) {
+                // When using a specific kernelspec, just compare the actual kernel specs
+                if (fastDeepEqual(existingKernelInfo.options.metadata.kernelSpec, options.metadata.kernelSpec)) {
+                    return existingKernelInfo.kernel;
+                }
+            } else {
+                // If not launching via kernelspec, compare the entire metadata
+                if (fastDeepEqual(existingKernelInfo.options.metadata, options.metadata)) {
+                    return existingKernelInfo.kernel;
+                }
+            }
         }
 
         this.disposeOldKernel(uri);
@@ -60,7 +81,9 @@ export class KernelProvider implements IKernelProvider {
             this.kernelSelectionUsage,
             this.appShell,
             this.vscNotebook,
-            this.rawNotebookSupported
+            this.rawNotebookSupported,
+            this.fs,
+            this.context
         );
         this.asyncDisposables.push(kernel);
         this.kernelsByUri.set(uri.toString(), { options, kernel });

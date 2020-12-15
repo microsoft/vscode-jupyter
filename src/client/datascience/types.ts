@@ -420,6 +420,19 @@ export interface IJupyterKernelSpec {
     // tslint:disable-next-line: no-any
     readonly metadata?: Record<string, any> & { interpreter?: Partial<PythonEnvironment> };
     readonly argv: string[];
+    /**
+     * Optionally where this kernel spec json is located on the local FS.
+     */
+    specFile?: string;
+    /**
+     * Optionally the Interpreter this kernel spec belongs to.
+     * You can have kernel specs that are scoped to an interpreter.
+     * E.g. if you have Python in `c:\Python\Python3.8`
+     * Then you could have kernels in `<sys.prefix folder for this interpreter>\share\jupyter\kernels`
+     * Plenty of conda packages ship kernels in this manner (beakerx, etc).
+     */
+    interpreterPath?: string;
+    readonly interrupt_mode?: 'message' | 'signal';
 }
 
 export const INotebookImporter = Symbol('INotebookImporter');
@@ -451,6 +464,10 @@ export interface IInteractiveWindowProvider {
      * Event fired when the active interactive window changes
      */
     readonly onDidChangeActiveInteractiveWindow: Event<IInteractiveWindow | undefined>;
+    /**
+     * Event fired when an interactive window is created
+     */
+    readonly onDidCreateInteractiveWindow: Event<IInteractiveWindow>;
     /**
      * Gets or creates a new interactive window and associates it with the owner. If no owner, marks as a non associated.
      * @param owner file that started this interactive window
@@ -590,6 +607,7 @@ export interface INotebookEditor extends Disposable, IInteractiveBase {
     collapseAllCells(): void;
     interruptKernel(): Promise<void>;
     restartKernel(): Promise<void>;
+    syncAllCells(): Promise<void>;
 }
 
 export const INotebookExtensibility = Symbol('INotebookExtensibility');
@@ -1360,7 +1378,7 @@ export interface IJupyterUriProviderRegistration {
 }
 export const IDigestStorage = Symbol('IDigestStorage');
 export interface IDigestStorage {
-    readonly key: Promise<string>;
+    readonly key: Promise<string | undefined>;
     saveDigest(uri: Uri, digest: string): Promise<void>;
     containsDigest(uri: Uri, digest: string): Promise<boolean>;
 }
@@ -1402,10 +1420,32 @@ export interface IExternalWebviewCellButton {
     statusToEnable: CellState[];
     tooltip: string;
     running: boolean;
+}
+
+export interface IExternalWebviewCellButtonWithCallback extends IExternalWebviewCellButton {
+    // Callback is only used on the extension side. Don't pass to the UI
     callback(cell: NotebookCell, isInteractive: boolean, resource: Uri): Promise<void>;
 }
 
 export interface IExternalCommandFromWebview {
     buttonId: string;
     cell: ICell;
+}
+
+// Smoke tests compile the tests but exercise the VSIX, so Symbols are not shared
+// Ensure we reuse Symbols created for existing keys so that we can retrieve the
+// Symbol matching this key from the extension API serviceManager
+export const ISystemPseudoRandomNumberGenerator = Symbol.for('ISystemPseudoRandomNumberGenerator');
+export interface ISystemPseudoRandomNumberGenerator {
+    generateRandomKey(numBytes: number): Promise<string>;
+}
+
+export const INotebookModelSynchronization = Symbol.for('INotebookModelSynchronization');
+/**
+ * Service used to make sure a notebook model matches the code displayed in the UI (whichever UI is hosting the model)
+ * See this bug here:
+ * https://github.com/microsoft/vscode-jupyter/issues/1701
+ */
+export interface INotebookModelSynchronization {
+    syncAllCells(model: INotebookModel): Promise<void>;
 }

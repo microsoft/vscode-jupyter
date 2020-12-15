@@ -374,6 +374,20 @@ export interface IEventNamePropertyMapping {
         hashedName: string;
     };
     [Telemetry.HashedCellOutputMimeTypePerf]: never | undefined;
+    [Telemetry.KernelListingPerf]: never | undefined;
+    [Telemetry.NativeNotebookKernelSelectionPerf]: never | undefined;
+    [Telemetry.NumberOfLocalKernelSpecs]: {
+        /**
+         * Number of kernel specs.
+         */
+        count: number;
+    };
+    [Telemetry.NumberOfRemoteKernelSpecs]: {
+        /**
+         * Number of kernel specs.
+         */
+        count: number;
+    };
     [Telemetry.HashedNotebookCellOutputMimeTypePerf]: never | undefined;
     [Telemetry.HashedCellOutputMimeType]: {
         /**
@@ -478,15 +492,6 @@ export interface IEventNamePropertyMapping {
          * Carries the name of the experiment user has been opted out of manually
          */
         expNameOptedOutOf?: string;
-    };
-    /**
-     * Telemetry sent back when join mailing list prompt is shown.
-     */
-    [EventName.JOIN_MAILING_LIST_PROMPT]: {
-        /**
-         * Carries the selection of user when they are asked to join the mailing list.
-         */
-        selection: 'Yes' | 'No' | undefined;
     };
     [EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_REQUEST]: never | undefined;
     [EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_ERROR]: never | undefined;
@@ -1006,6 +1011,7 @@ export interface IEventNamePropertyMapping {
     [Telemetry.TrustNotebook]: never | undefined;
     [Telemetry.TrustAllNotebooks]: never | undefined;
     [Telemetry.DoNotTrustNotebook]: never | undefined;
+    [Telemetry.NativeRandomBytesGenerationFailed]: [never | undefined];
 
     // Native notebooks events
     [VSCodeNativeTelemetry.AddCell]: never | undefined;
@@ -1017,4 +1023,8 @@ export interface IEventNamePropertyMapping {
     [Telemetry.VSCNotebookCellTranslationFailed]: {
         isErrorOutput: boolean; // Whether we're trying to translate an error output when we shuldn't be.
     };
+
+    // Sync events
+    [Telemetry.SyncAllCells]: never | undefined;
+    [Telemetry.SyncSingleCell]: never | undefined;
 }

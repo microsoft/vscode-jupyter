@@ -32,6 +32,8 @@ import { MockDocumentManager } from './mockDocumentManager';
 import { addCell, createNewEditor } from './nativeEditorTestHelpers';
 import { getLastOutputCell, openVariableExplorer, runInteractiveTest, runNativeTest } from './testHelpers';
 import { verifyVariables } from './variableTestHelpers';
+import { traceInfoIf } from '../../client/common/logger';
+//import { verifyVariables } from './variableTestHelpers';
 
 //import { asyncDump } from '../common/asyncDump';
 // tslint:disable-next-line:max-func-body-length no-any
@@ -104,6 +106,7 @@ suite('DataScience Debugger tests', () => {
     }
 
     teardown(async () => {
+        process.env.VSC_CI_ENABLE_TOO_MUCH_LOGGING = undefined;
         for (const disposable of disposables) {
             if (!disposable) {
                 continue;
@@ -155,8 +158,9 @@ suite('DataScience Debugger tests', () => {
         }
 
         // Start the jupyter server
+        traceInfoIf(!!process.env.VSC_CI_ENABLE_TOO_MUCH_LOGGING, 'Getting interactive window');
         const history = await getOrCreateInteractiveWindow(ioc);
-
+        traceInfoIf(!!process.env.VSC_CI_ENABLE_TOO_MUCH_LOGGING, 'Got interactive window');
         const expectedBreakLine = breakpoint && !breakpointFile ? breakpoint.start.line : 2; // 2 because of the 'breakpoint()' that gets added
 
         // Debug this code. We should either hit the breakpoint or stop on entry
@@ -173,6 +177,7 @@ suite('DataScience Debugger tests', () => {
 
             disposables.push(jupyterDebuggerService!.onBreakpointHit(() => breakPromise.resolve()));
             const done = history.window.debugCode(code, Uri.file(fileName), 0, docManager.activeTextEditor);
+            traceInfoIf(!!process.env.VSC_CI_ENABLE_TOO_MUCH_LOGGING, 'Waiting for breakpoint on debug');
             await waitForPromise(Promise.race([done, breakPromise.promise]), 60000);
             if (expectError) {
                 assert.ok(lastErrorMessage, 'Error did not occur when expected');
@@ -184,7 +189,7 @@ suite('DataScience Debugger tests', () => {
                 assert.ok(stackFrames, 'Stack trace not computable');
                 assert.ok(stackFrames.length >= 1, 'Not enough frames');
                 assert.equal(stackFrames[0].line, expectedBreakLine, 'Stopped on wrong line number');
-
+                traceInfoIf(!!process.env.VSC_CI_ENABLE_TOO_MUCH_LOGGING, 'Waiting for code lens');
                 await waitForPromise(newLensPromise.promise, 10_000);
 
                 verifyCodeLenses(expectedBreakLine);
@@ -200,12 +205,17 @@ suite('DataScience Debugger tests', () => {
                     const mountedWebPanel =
                         type === 'notebook' ? ioc.getNativeWebPanel(undefined) : ioc.getInteractiveWebPanel(undefined);
                     breakPromise = createDeferred<void>();
+                    traceInfoIf(!!process.env.VSC_CI_ENABLE_TOO_MUCH_LOGGING, 'Waiting for Jupyter.step');
                     await jupyterDebuggerService?.step();
+                    traceInfoIf(!!process.env.VSC_CI_ENABLE_TOO_MUCH_LOGGING, 'Waiting for break point again');
                     await breakPromise.promise;
+                    traceInfoIf(!!process.env.VSC_CI_ENABLE_TOO_MUCH_LOGGING, 'Waiting for variables complete');
                     await mountedWebPanel.waitForMessage(InteractiveWindowMessages.VariablesComplete);
                     await sleep(1000);
                     const variableRefresh = mountedWebPanel.waitForMessage(InteractiveWindowMessages.VariablesComplete);
+                    traceInfoIf(!!process.env.VSC_CI_ENABLE_TOO_MUCH_LOGGING, 'Waiting for variables request');
                     await jupyterDebuggerService?.requestVariables();
+                    traceInfoIf(!!process.env.VSC_CI_ENABLE_TOO_MUCH_LOGGING, 'Waiting for variables refresh');
                     await variableRefresh;
 
                     // Force an update so we render whatever the current state is
@@ -221,8 +231,10 @@ suite('DataScience Debugger tests', () => {
                 }
 
                 // Verify break location
+                traceInfoIf(!!process.env.VSC_CI_ENABLE_TOO_MUCH_LOGGING, 'Waiting for Jupyter.continue');
                 await jupyterDebuggerService!.continue();
 
+                traceInfoIf(!!process.env.VSC_CI_ENABLE_TOO_MUCH_LOGGING, 'Waiting for code lens promise');
                 await waitForPromise(newLensPromise.promise, 10_000);
 
                 verifyCodeLenses(undefined);
@@ -230,13 +242,14 @@ suite('DataScience Debugger tests', () => {
             }
         });
 
+        traceInfoIf(!!process.env.VSC_CI_ENABLE_TOO_MUCH_LOGGING, 'Waiting for result promise');
         if (!expectError) {
             const cellResults = await resultPromise;
             assert.ok(cellResults, 'No cell results after finishing debugging');
         } else {
             try {
                 await resultPromise;
-            } catch {
+            } catch (ex) {
                 noop();
             }
         }
@@ -291,7 +304,8 @@ suite('DataScience Debugger tests', () => {
     );
     runInteractiveTest(
         'Check variables',
-        async () => {
+        async function () {
+            process.env.VSC_CI_ENABLE_TOO_MUCH_LOGGING = 'true';
             await debugCell('interactive', '#%%\nx = [4, 6]\nx = 5', undefined, undefined, false, () => {
                 const targetResult = {
                     name: 'x',

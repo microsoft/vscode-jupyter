@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 
 env:
-  NODE_VERSION: 12.15.0
+  NODE_VERSION: 12.14.1
   PYTHON_VERSION: 3.8
   JULIA_VERSION: 1.5.2
   MOCHA_REPORTER_JUNIT: true # Use the mocha-multi-reporters and send output to both console (spec) and JUnit (mocha-junit-reporter). Also enables a reporter which exits the process running the tests if it haven't already.
@@ -21,10 +21,8 @@ env:
   # Key for the cache created at the end of the the 'Cache ./pythonFiles/lib/python' step.
   CACHE_PYTHONFILES: cache-pvsc-pythonFiles
   VSIX_NAME: ms-toolsai-jupyter-release.vsix
-  VSIX_NAME_PYTHON: ms-python-release-nods.vsix
   VSIX_NAME_UPLOADED_TO_BLOB: ms-toolsai-jupyter-release.vsix
   COVERAGE_REPORTS: tests-coverage-reports
-  CI_PYTHON_PATH: python
   TEST_RESULTS_DIRECTORY: .
   TEST_RESULTS_GLOB: '**/test-results*.xml'
   IPYWIDGET_SCREENSHOT_PATH: '*-screenshot.png'
@@ -33,7 +31,7 @@ env:
 jobs:
   build-vsix:
     name: Build VSIX
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     if: github.repository == 'microsoft/vscode-jupyter'
     steps:
       - name: Checkout
@@ -43,6 +41,11 @@ jobs:
         uses: actions/setup-node@v2.1.2
         with:
           node-version: ${{env.NODE_VERSION}}
+
+      - name: Use Python ${{env.PYTHON_VERSION}}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{env.PYTHON_VERSION}}
 
       # Caching of npm packages (https://github.com/actions/cache/blob/main/examples.md#node---npm)
       - name: Cache npm on linux/mac
@@ -201,7 +204,7 @@ jobs:
         # if: steps.out-cache.outputs.cache-hit == false
       - name: Run TypeScript unit tests
         id: test_unittests
-        run: npm run test:unittests:cover
+        run: npm run test:unittests
 
       - name: Publish Test Report
         uses: scacap/action-surefire-report@v1
@@ -231,6 +234,12 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: ${{matrix.python}}
+
+      - name: Set CI Path
+        uses: ./.github/actions/set-python
+        id: set-python
+        with: 
+          PYTHON_VERSION: ${{matrix.python}}
 
       - name: Upgrade pip
         run: python -m pip install -U pip
@@ -307,7 +316,6 @@ jobs:
 
       # For faster/better builds of sdists.
       - run: python -m pip install wheel
-        if: startsWith(matrix.test-suite, 'functional')
         shell: bash
 
       # debugpy is not shipped, only installed for local tests.
@@ -378,6 +386,12 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: ${{matrix.python}}
+
+      - name: Set CI Path
+        uses: ./.github/actions/set-python
+        id: set-python
+        with: 
+          PYTHON_VERSION: ${{matrix.python}}
 
       - name: Upgrade pip
         run: python -m pip install -U pip
@@ -491,16 +505,6 @@ jobs:
       - name: Create Virtual Env for Tests
         uses: ./.github/actions/create-venv-for-tests
 
-      - name: Azure Login
-        uses: azure/login@v1.1.1
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-        if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook'
-
-      - name: Download Python VSIX
-        run: az storage blob download --file ${{env.VSIX_NAME_PYTHON}} --account-name pvsc --container-name extension-builds --name ${{ env.VSIX_NAME_PYTHON }}
-        if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook'
-
       - name: Run tests with VSCode & Jupyter
         uses: GabrielBB/xvfb-action@v1.4
         with:
@@ -542,6 +546,7 @@ jobs:
 
 
   smoke-tests:
+    timeout-minutes: 30
     name: Smoke tests
     # The value of runs-on is the OS of the current job (specified in the strategy matrix below) instead of being hardcoded.
     runs-on: ${{ matrix.os }}
@@ -555,10 +560,6 @@ jobs:
         os: [ubuntu-latest, windows-latest]
         python: [3.8]
     steps:
-      - name: Use Python ${{matrix.python}}
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{matrix.python}}
       - name: Checkout
         uses: actions/checkout@v2
 
@@ -567,6 +568,12 @@ jobs:
         with:
           python-version: ${{matrix.python}}
 
+      - name: Set CI Path
+        uses: ./.github/actions/set-python
+        id: set-python
+        with: 
+          PYTHON_VERSION: ${{matrix.python}}
+
       - name: Upgrade pip
         run: python -m pip install -U pip
 
@@ -574,15 +581,6 @@ jobs:
         uses: actions/setup-node@v2.1.2
         with:
           node-version: ${{env.NODE_VERSION}}
-
-
-      - name: Azure Login
-        uses: azure/login@v1.1.1
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-      - name: Download Python VSIX
-        run: az storage blob download --file ${{env.VSIX_NAME_PYTHON}} --account-name pvsc --container-name extension-builds --name ${{ env.VSIX_NAME_PYTHON }}
 
       - name: Download VSIX
         uses: actions/download-artifact@v2
@@ -611,16 +609,15 @@ jobs:
       - name: Run smoke tests
         env:
           DISPLAY: 10
-          VSC_JUPYTER_FORCE_LOGGING: true
-          VSC_JUPYTER_LOG_FILE: smoke-test.log
         uses: GabrielBB/xvfb-action@v1.4
         with:
-          run: node --no-force-async-hooks-checks ./out/test/smokeTest.js
+          run: npm run testSmokeLogged
 
       - name: Upload smoke-test log
         uses: actions/upload-artifact@v2
+        if: failure()
         with:
-          name: smoke-test.log
+          name: smoke-test-${{matrix.os}}.log
           path: './smoke-test.log'
 
 

@@ -14,8 +14,6 @@ import {
 import { IFileSystem } from '../../client/common/platform/types';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../client/common/types';
 import { createDeferred, Deferred } from '../../client/common/utils/async';
-import { InteractiveWindowMessageListener } from '../../client/datascience/interactive-common/interactiveWindowMessageListener';
-import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { NativeEditor } from '../../client/datascience/interactive-ipynb/nativeEditor';
 import { NativeEditorProviderOld } from '../../client/datascience/interactive-ipynb/nativeEditorProviderOld';
 import { NativeEditorProvider } from '../../client/datascience/notebookStorage/nativeEditorProvider';
@@ -101,12 +99,6 @@ function TestNativeEditorProviderMixin<T extends ClassType<NativeEditorProvider>
             const key = result.file.toString();
             this.windowToMountMap.set(key, mounted);
             mounted.onDisposed(() => this.windowToMountMap.delete(key));
-
-            // During testing the MainPanel sends the init message before our interactive window is created.
-            // Pretend like it's happening now
-            // tslint:disable-next-line: no-any
-            const listener = (result as any).messageListener as InteractiveWindowMessageListener;
-            listener.onMessage(InteractiveWindowMessages.Started, {});
 
             // Also need the css request so that other messages can go through
             const webHost = result as NativeEditor;

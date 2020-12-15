@@ -13,7 +13,8 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
 
-import { WidgetManagerComponent } from '../ipywidgets/container';
+import { TextAreaFocusTracker } from '../interactive-common/textAreaFocusTracker';
+import { WidgetManagerComponent } from '../ipywidgets/webViews/container';
 import { IVsCodeApi, PostOffice } from '../react-common/postOffice';
 import { detectBaseTheme } from '../react-common/themeDetector';
 import { getConnectedInteractiveEditor } from './interactivePanel';
@@ -38,6 +39,7 @@ const ConnectedInteractiveEditor = getConnectedInteractiveEditor();
 // tslint:disable:no-typeof-undefined
 ReactDOM.render(
     <Provider store={store}>
+        <TextAreaFocusTracker />
         <ConnectedInteractiveEditor />
         <WidgetManagerComponent postOffice={postOffice} widgetContainerId={'rootWidget'} store={store} />
     </Provider>,

@@ -14,12 +14,13 @@ import type {
     NotebookCellRunState,
     NotebookData,
     NotebookDocument,
-    NotebookEditor
+    NotebookEditor,
+    NotebookKernel as VSCNotebookKernel
 } from '../../../../../typings/vscode-proposed';
 import { concatMultilineString, splitMultilineString } from '../../../../datascience-ui/common';
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../common/constants';
 import '../../../common/extensions';
-import { traceError, traceWarning } from '../../../common/logger';
+import { traceError, traceInfo, traceWarning } from '../../../common/logger';
 import { isUntitledFile } from '../../../common/utils/misc';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../constants';
@@ -34,6 +35,7 @@ import { KernelMessage } from '@jupyterlab/services';
 // tslint:disable-next-line: no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
 import { Uri } from 'vscode';
+import { VSCodeNotebookKernelMetadata } from '../kernelWithMetadata';
 import { chainWithPendingUpdates } from './notebookUpdater';
 
 // This is the custom type we are adding into nbformat.IBaseCellMetadata
@@ -55,6 +57,13 @@ export function isJupyterNotebook(option: NotebookDocument | string) {
     } else {
         return option.viewType === JupyterNotebookView;
     }
+}
+
+export function isJupyterKernel(kernel?: VSCNotebookKernel): kernel is VSCodeNotebookKernelMetadata {
+    if (!kernel) {
+        return false;
+    }
+    return kernel instanceof VSCodeNotebookKernelMetadata;
 }
 
 const kernelInformationForNotebooks = new WeakMap<
@@ -395,6 +404,12 @@ export async function clearCellForExecution(editor: NotebookEditor, cell: Notebo
     await updateCellExecutionTimes(editor, cell);
 }
 
+export function traceCellMessage(cell: NotebookCell, message: string) {
+    traceInfo(
+        `Cell Index:${cell.index}, state:${cell.metadata.runState}, exec: ${cell.metadata.executionOrder}. ${message}`
+    );
+}
+
 /**
  * Store execution start and end times.
  * Stored as ISO for portability.
@@ -438,13 +453,14 @@ export async function updateCellExecutionTimes(
     // customMetadata.metadata.vscode.end_execution_time = endTimeISO;
     // customMetadata.metadata.vscode.start_execution_time = startTimeISO;
     const lastRunDuration = times.lastRunDuration ?? cell.metadata.lastRunDuration;
-    await chainWithPendingUpdates(editor, (edit) =>
+    await chainWithPendingUpdates(editor, (edit) => {
+        traceCellMessage(cell, 'Update run duration');
         edit.replaceCellMetadata(cell.index, {
             ...cell.metadata,
             // custom: customMetadata,
             lastRunDuration
-        })
-    );
+        });
+    });
 }
 
 function createCodeCellFromNotebookCell(cell: NotebookCell): nbformat.ICodeCell {

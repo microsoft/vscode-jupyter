@@ -125,10 +125,11 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.GotoPrevCellInFile]: [];
     [DSCommands.ScrollToCell]: [Uri, string];
     [DSCommands.ViewJupyterOutput]: [];
-    [DSCommands.ExportAsPythonScript]: [INotebookModel, PythonEnvironment | undefined];
-    [DSCommands.ExportToHTML]: [INotebookModel, string | undefined, PythonEnvironment | undefined];
-    [DSCommands.ExportToPDF]: [INotebookModel, string | undefined, PythonEnvironment | undefined];
-    [DSCommands.Export]: [Uri | INotebookModel, string | undefined, PythonEnvironment | undefined];
+    [DSCommands.ExportAsPythonScript]: [string | undefined, Uri | undefined, PythonEnvironment | undefined];
+    [DSCommands.ExportToHTML]: [string | undefined, Uri | undefined, string | undefined, PythonEnvironment | undefined];
+    [DSCommands.ExportToPDF]: [string | undefined, Uri | undefined, string | undefined, PythonEnvironment | undefined];
+    [DSCommands.Export]: [string | undefined, Uri | undefined, string | undefined, PythonEnvironment | undefined];
+    [DSCommands.NativeNotebookExport]: [Uri];
     [DSCommands.SetJupyterKernel]: [KernelConnectionMetadata, Uri, undefined | Uri];
     [DSCommands.SwitchJupyterKernel]: [ISwitchKernelOptions | undefined];
     [DSCommands.SelectJupyterCommandLine]: [undefined | Uri];

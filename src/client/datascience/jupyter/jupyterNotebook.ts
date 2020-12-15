@@ -44,6 +44,7 @@ import { PYTHON_LANGUAGE } from '../../common/constants';
 import { IFileSystem } from '../../common/platform/types';
 import { RefBool } from '../../common/refBool';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
+import { handleTensorBoardDisplayDataOutput } from '../notebook/helpers/executionHelpers';
 import {
     getInterpreterFromKernelConnectionMetadata,
     getKernelConnectionLanguage,
@@ -453,24 +454,19 @@ export class JupyterNotebookBase implements INotebook {
     }
 
     public async getSysInfo(): Promise<ICell> {
-        // tslint:disable-next-line:no-multiline-string
-        const versionCells = await this.executeSilently(`import sys\r\nsys.version`);
-        // tslint:disable-next-line:no-multiline-string
-        const pathCells = await this.executeSilently(`import sys\r\nsys.executable`);
-        // tslint:disable-next-line:no-multiline-string
-        const notebookVersionCells = await this.executeSilently(`import notebook\r\nnotebook.version_info`);
+        const info = await this.requestKernelInfo();
 
-        // Both should have streamed output
-        const version = versionCells.length > 0 ? this.extractStreamOutput(versionCells[0]).trimQuotes() : '';
-        const notebookVersion =
-            notebookVersionCells.length > 0 ? this.extractStreamOutput(notebookVersionCells[0]).trimQuotes() : '';
-        const pythonPath = versionCells.length > 0 ? this.extractStreamOutput(pathCells[0]).trimQuotes() : '';
+        // Gather up help links and the banner
+        const content = info.content as KernelMessage.IInfoReply;
+        const messages = [content.banner];
 
-        // Combine this data together to make our sys info
+        // Skip help links for now. Too wordy and not clickable. Can add this later
+        // content.help_links.forEach((h) => messages.push(`${h.text} : ${h.url}`));
+
         return {
             data: {
                 cell_type: 'messages',
-                messages: [version, notebookVersion, pythonPath],
+                messages: messages,
                 metadata: {},
                 source: []
             },
@@ -811,29 +807,6 @@ export class JupyterNotebookBase implements INotebook {
         // Wait for the execution to finish
         return deferred.promise;
     }
-
-    private extractStreamOutput(cell: ICell): string {
-        let result = '';
-        if (cell.state === CellState.error || cell.state === CellState.finished) {
-            const outputs = cell.data.outputs as nbformat.IOutput[];
-            if (outputs) {
-                outputs.forEach((o) => {
-                    if (o.output_type === 'stream') {
-                        const stream = o as nbformat.IStream;
-                        result = result.concat(formatStreamText(concatMultilineString(stream.text, true)));
-                    } else {
-                        const data = o.data;
-                        if (data && data.hasOwnProperty('text/plain')) {
-                            // tslint:disable-next-line:no-any
-                            result = result.concat((data as any)['text/plain']);
-                        }
-                    }
-                });
-            }
-        }
-        return result;
-    }
-
     private executeObservableImpl(
         code: string,
         file: string,
@@ -1377,24 +1350,8 @@ export class JupyterNotebookBase implements INotebook {
         }
     }
 
-    private handleTensorBoardDisplayDataOutput(data: nbformat.IMimeBundle) {
-        // After executing %tensorboard --logdir <log directory> to launch
-        // TensorBoard inline, TensorBoard sends back an IFrame to display as output.
-        // The TensorBoard app hardcodes the source URL of the IFrame to `window.location`.
-        // In the VSCode context this results in the URL taking on the internal
-        // vscode-webview:// scheme which doesn't work. Hence rewrite it to use
-        // http://localhost:<port number>.
-        if (data.hasOwnProperty('text/html')) {
-            const text = data['text/html'];
-            if (typeof text === 'string' && text.includes('<iframe id="tensorboard-frame-')) {
-                data['text/html'] = text.replace(/new URL\((.*), window.location\)/, 'new URL("http://localhost")');
-            }
-        }
-        return data;
-    }
-
     private handleDisplayData(msg: KernelMessage.IDisplayDataMsg, clearState: RefBool, cell: ICell) {
-        const newData = this.handleTensorBoardDisplayDataOutput(msg.content.data);
+        const newData = handleTensorBoardDisplayDataOutput(msg.content.data);
         const output: nbformat.IDisplayData = {
             output_type: 'display_data',
             data: newData,

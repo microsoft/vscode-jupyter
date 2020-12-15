@@ -58,13 +58,12 @@ export class InsidersExtensionService implements IExtensionSingleActivationServi
     }
 
     public async initChannel() {
-        const channel = this.extensionChannelService.getChannel();
-        const isDefault = this.extensionChannelService.isChannelUsingDefaultConfiguration;
-
-        const alreadyHandled = await this.handleEdgeCases(channel, isDefault);
-        if (!alreadyHandled) {
-            this.handleChannel(channel).ignoreErrors();
-        }
+        // const channel = this.extensionChannelService.getChannel();
+        // const isDefault = this.extensionChannelService.isChannelUsingDefaultConfiguration;
+        // const alreadyHandled = await this.handleEdgeCases(channel, isDefault);
+        // if (!alreadyHandled) {
+        //     this.handleChannel(channel).ignoreErrors();
+        // }
     }
 
     // Everything past here is the "channel handler" implementation.

@@ -10,6 +10,7 @@ import * as sinon from 'sinon';
 import { commands, Uri } from 'vscode';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { PYTHON_LANGUAGE } from '../../../client/common/constants';
+import { traceInfo } from '../../../client/common/logger';
 import { IConfigurationService, IDisposable, IJupyterSettings, ReadWrite } from '../../../client/common/types';
 import { DataScience } from '../../../client/common/utils/localize';
 import { Commands } from '../../../client/datascience/constants';
@@ -35,7 +36,7 @@ import {
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
 // tslint:disable: no-any no-invalid-this no-function-expression
-suite('DataScience - VSCode Notebook - (Trust)', function () {
+suite('DataScience - VSCode Notebook - (Trust) (slow)', function () {
     const templateIPynbWithOutput = path.join(
         EXTENSION_ROOT_DIR_FOR_TESTS,
         'src',
@@ -106,15 +107,20 @@ suite('DataScience - VSCode Notebook - (Trust)', function () {
     [true, false].forEach((withOutput) => {
         suite(`Test notebook ${withOutput ? 'with' : 'without'} output`, () => {
             let ipynbFile: Uri;
-            setup(async () => {
+            setup(async function () {
+                traceInfo(`Started Test ${this.currentTest?.title}`);
                 sinon.restore();
                 dsSettings!.alwaysTrustNotebooks = false;
                 // Don't use same file (due to dirty handling, we might save in dirty.)
                 // Coz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
                 const templateFileToUse = withOutput ? templateIPynbWithOutput : templateIPynbWithoutOutput;
                 ipynbFile = Uri.file(await createTemporaryNotebook(templateFileToUse, disposables));
+                traceInfo(`Started Test (completed) ${this.currentTest?.title}`);
             });
-            teardown(async () => closeNotebooks(disposables));
+            teardown(async function () {
+                traceInfo(`Ended Test ${this.currentTest?.title}`);
+                await closeNotebooks(disposables);
+            });
             test('Opening an untrusted notebook', async () => {
                 await openNotebook(api.serviceContainer, ipynbFile.fsPath, { isNotTrusted: true });
                 const model = storageProvider.get(ipynbFile)!;
@@ -256,9 +262,6 @@ suite('DataScience - VSCode Notebook - (Trust)', function () {
 
                 // Reopening it & we should not get prompted.
                 assert.equal(prompt.getDisplayCount(), 1, 'Prompt should have been once before');
-                await closeNotebooks();
-                await openNotebook(api.serviceContainer, ipynbFile.fsPath, { isNotTrusted: true });
-                assert.equal(prompt.getDisplayCount(), 1, 'Prompt should not have been displayed again');
             });
             test('Prompted to trust an untrusted notebook and not trusted', async () => {
                 // Ensure we click `No` when prompted to trust the notebook.

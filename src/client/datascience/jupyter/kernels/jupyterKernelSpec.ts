@@ -17,23 +17,28 @@ export class JupyterKernelSpec implements IJupyterKernelSpec {
     public name: string;
     public language: string;
     public path: string;
-    public specFile: string | undefined;
     public readonly env: NodeJS.ProcessEnv | undefined;
     public display_name: string;
     public argv: string[];
+    public interrupt_mode?: 'message' | 'signal';
 
     // tslint:disable-next-line: no-any
     public metadata?: Record<string, any> & { interpreter?: Partial<PythonEnvironment> };
-    constructor(specModel: Kernel.ISpecModel, file?: string) {
+    constructor(
+        specModel: Kernel.ISpecModel,
+        public readonly specFile?: string,
+        public readonly interpreterPath?: string
+    ) {
         this.name = specModel.name;
         this.argv = specModel.argv;
         this.language = specModel.language;
         this.path = specModel.argv && specModel.argv.length > 0 ? specModel.argv[0] : '';
-        this.specFile = file;
         this.display_name = specModel.display_name;
         this.metadata = specModel.metadata;
         // tslint:disable-next-line: no-any
         this.env = specModel.env as any; // JSONObject, but should match
+        // tslint:disable-next-line: no-any
+        this.interrupt_mode = specModel.interrupt_mode as any;
     }
 }
 

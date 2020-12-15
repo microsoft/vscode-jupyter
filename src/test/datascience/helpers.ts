@@ -6,6 +6,7 @@ import { noop } from 'lodash';
 import * as path from 'path';
 import { Uri } from 'vscode';
 import { ICommandManager } from '../../client/common/application/types';
+import { traceInfo } from '../../client/common/logger';
 import { IJupyterSettings } from '../../client/common/types';
 import { Commands } from '../../client/datascience/constants';
 import {
@@ -89,12 +90,14 @@ export async function openNotebook(
     options: { ignoreSavingOldNotebooks?: boolean; isNotTrusted?: boolean } = { ignoreSavingOldNotebooks: true }
 ) {
     if (!options.isNotTrusted) {
+        traceInfo(`Trust notebook before opening ${ipynbFile}`);
         await trustNotebook(ipynbFile);
     }
-    console.info(`Opening notebook ${ipynbFile}`);
+    traceInfo(`Opening notebook ${ipynbFile}`);
     const cmd = serviceContainer.get<ICommandManager>(ICommandManager);
     await cmd.executeCommand(Commands.OpenNotebook, Uri.file(ipynbFile), undefined, CommandSource.commandPalette);
     const editorProvider = serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
+    traceInfo('Wait for notebook to be the active editor');
     await waitForCondition(
         async () =>
             editorProvider.editors.length > 0 &&
@@ -113,5 +116,5 @@ export async function openNotebook(
         // tslint:disable-next-line: no-any
         (editorProvider.activeEditor as any).askForSave = () => Promise.resolve(AskForSaveResult.No);
     }
-    console.info(`Opened notebook ${ipynbFile}`);
+    traceInfo(`Opened notebook ${ipynbFile}`);
 }

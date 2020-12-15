@@ -34,10 +34,12 @@ import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Commands, EditorContexts, Identifiers, Telemetry } from '../constants';
 import { InteractiveBase } from '../interactive-common/interactiveBase';
 import {
+    IInteractiveWindowMapping,
     INativeCommand,
     INotebookIdentity,
     InteractiveWindowMessages,
     IReExecuteCells,
+    IResponse,
     IRunByLine,
     ISubmitNewCell,
     NotebookModelChange,
@@ -76,6 +78,7 @@ import { ServerStatus } from '../../../datascience-ui/interactive-common/mainSta
 import { IPythonExtensionChecker } from '../../api/types';
 import { isTestExecution, PYTHON_LANGUAGE } from '../../common/constants';
 import { IFileSystem } from '../../common/platform/types';
+import { createDeferred, Deferred } from '../../common/utils/async';
 import { translateKernelLanguageToMonaco } from '../common';
 import { IDataViewerFactory } from '../data-viewing/types';
 import { getCellHashProvider } from '../editor-integration/cellhashprovider';
@@ -143,6 +146,8 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     private executeCancelTokens = new Set<CancellationTokenSource>();
     private loadPromise: Promise<void>;
     private previouslyNotTrusted: boolean = false;
+    // tslint:disable-next-line: no-any
+    private waitingForMessageResponse = new Map<string, Deferred<any>>();
 
     constructor(
         listeners: IInteractiveWindowListener[],
@@ -233,6 +238,54 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         this.previouslyNotTrusted = !this._model.isTrusted;
     }
 
+    @captureTelemetry(Telemetry.SyncAllCells)
+    public async syncAllCells(): Promise<void> {
+        // Ask the UI for all of our all cells
+        const result = await this.waitForMessage(
+            InteractiveWindowMessages.GetAllCellCode,
+            InteractiveWindowMessages.ReturnAllCellCode,
+            { responseId: uuid() }
+        );
+
+        // Upload these cells into our model (so they match what is in the UI)
+        this.model.replaceCells(
+            this.model.cells.map((c, i) => {
+                return {
+                    ...c,
+                    data: {
+                        ...c.data,
+                        source: result.code[i]
+                    }
+                    // tslint:disable-next-line: no-any
+                } as any; // Deal with nyc problems
+            })
+        );
+    }
+
+    @captureTelemetry(Telemetry.SyncSingleCell)
+    public async syncCell(cellId: string): Promise<void> {
+        // Ask the UI for the code for this cell
+        const result = await this.waitForMessage(
+            InteractiveWindowMessages.GetCellCode,
+            InteractiveWindowMessages.ReturnCellCode,
+            { cellId, responseId: uuid() }
+        );
+
+        // Replace all cells, fixing the source for this item
+        this.model.replaceCells(
+            this.model.cells.map((c) => {
+                return {
+                    ...c,
+                    data: {
+                        ...c.data,
+                        source: c.id === cellId ? result.code : c.data.source
+                    }
+                    // tslint:disable-next-line: no-any
+                } as any; // Deal with nyc problems
+            })
+        );
+    }
+
     public async show(preserveFocus: boolean = true) {
         await this.loadPromise;
         return super.show(preserveFocus);
@@ -307,6 +360,13 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
             default:
                 break;
+        }
+
+        // Check for a message that fulfills our wait condition
+        if (payload && payload.responseId && this.waitingForMessageResponse.has(payload.responseId)) {
+            const result = this.waitingForMessageResponse.get(payload.responseId);
+            this.waitingForMessageResponse.delete(payload.responseId);
+            result?.resolve(payload);
         }
     }
 
@@ -434,7 +494,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                     continue;
                 }
                 cellsExecuting.add(cell);
-                await this.reexecuteCell(cell, tokenSource.token);
+                await this.reexecuteCell(cell, info.code[i], tokenSource.token);
                 cellsExecuting.delete(cell);
 
                 // Check the new state of our cell
@@ -652,7 +712,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         ]);
     }
 
-    private async reexecuteCell(cell: ICell, cancelToken: CancellationToken): Promise<void> {
+    private async reexecuteCell(cell: ICell, code: string, cancelToken: CancellationToken): Promise<void> {
         try {
             // If there's any payload, it has the code and the id
             if (cell.id && cell.data.cell_type !== 'messages') {
@@ -666,7 +726,6 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                     cell.data.metadata.tags = cell.data.metadata.tags.filter((t) => t !== 'outputPrepend');
                 }
 
-                const code = concatMultilineString(cell.data.source);
                 // Send to ourselves.
                 await this.submitCode(code, Identifiers.EmptyFileName, 0, cell.id, cell.data, undefined, cancelToken);
             }
@@ -735,7 +794,8 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         }
         this.commandManager.executeCommand(
             Commands.Export,
-            activeEditor.model,
+            activeEditor.model.getContent(),
+            activeEditor.model.file,
             undefined,
             activeEditor.notebook?.getMatchingInterpreter()
         );
@@ -833,5 +893,21 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                 traceInfo(`Finished run by line on cell ${runByLine.cell.id}`);
             }
         }
+    }
+
+    private async waitForMessage<M extends IInteractiveWindowMapping, S extends keyof M, R extends keyof M>(
+        sendMessage: S,
+        _responseMessage: R, // Only here to force type for result.
+        payload: M[S] & IResponse
+    ): Promise<M[R]> {
+        // Save the reponse in our wait list
+        const deferred = createDeferred<M[R]>();
+        this.waitingForMessageResponse.set(payload.responseId, deferred);
+
+        // Post the send message
+        await this.postMessageInternal(sendMessage.toString(), payload);
+
+        // Promise should resolve when the response comes back
+        return deferred.promise;
     }
 }

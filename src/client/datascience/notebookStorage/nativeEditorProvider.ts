@@ -307,6 +307,7 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
     private closedEditor(editor: INotebookEditor): void {
         this.openedEditors.delete(editor);
         this._onDidCloseNotebookEditor.fire(editor);
+        this._onDidChangeActiveNotebookEditor.fire(this.activeEditor);
     }
     private trackModel(model: INotebookModel) {
         if (!this.models.has(model)) {

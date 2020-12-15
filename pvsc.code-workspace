@@ -107,6 +107,27 @@
                 "skipFiles": [
                     "<node_internals>/**"
                 ]
+            },
+            {
+                "type": "extensionHost",
+                "request": "launch",
+                "name": "Jupyter + Renderer Extension",
+                "args": [
+                    "--enable-proposed-api",
+                    "--extensionDevelopmentPath=${workspaceFolder:vscode-jupyter}",
+                    "--extensionDevelopmentPath=${workspaceFolder:vscode-notebook-renderers}"
+                ],
+                "stopOnEntry": false,
+                "sourceMaps": true,
+                "outFiles": [
+                    "${workspaceFolder:vscode-jupyter}/out/**/*.js",
+                    "!${workspaceFolder:vscode-jupyter}/**/node_modules**/*",
+                    "${workspaceFolder:vscode-notebook-renderers}/out/**/*.js",
+                    "!${workspaceFolder:vscode-notebook-renderers}/**/node_modules**/*"
+                ],
+                "skipFiles": [
+                    "<node_internals>/**"
+                ]
             }
         ],
         "compounds": []

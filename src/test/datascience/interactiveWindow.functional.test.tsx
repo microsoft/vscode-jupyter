@@ -68,6 +68,7 @@ import {
 } from './testHelpers';
 import { ITestInteractiveWindowProvider } from './testInteractiveWindowProvider';
 import { InteractiveWindowMessageListener } from '../../client/datascience/interactive-common/interactiveWindowMessageListener';
+import { IExportDialog } from '../../client/datascience/export/types';
 // tslint:disable-next-line: no-require-imports no-var-requires
 const _escape = require('lodash/escape') as typeof import('lodash/escape'); // NOSONAR
 
@@ -252,42 +253,6 @@ for i in range(10):
             await addCode(ioc, 'a=1\na');
 
             verifyLastCellInputState(ioc.getWrapper('interactive'), 'InteractiveCell', CellInputState.Expanded);
-        },
-        () => {
-            return ioc;
-        }
-    );
-
-    runTest(
-        'Ctrl + 1/Ctrl + 2',
-        async () => {
-            // Create an interactive window so that it listens to the results.
-            const { mount } = await getOrCreateInteractiveWindow(ioc);
-
-            // Type in the input box
-            const editor = getInteractiveEditor(mount.wrapper);
-            typeCode(editor, 'a=1\na');
-
-            // Give focus to a random div
-            const reactDiv = mount.wrapper.find('div').first().getDOMNode();
-
-            const domDiv = reactDiv.querySelector('div');
-
-            if (domDiv && mount.wrapper) {
-                domDiv.tabIndex = -1;
-                domDiv.focus();
-
-                // send the ctrl + 1/2 message, this should put focus back on the input box
-                mount.postMessage({ type: InteractiveWindowMessages.Activate, payload: undefined });
-
-                // Then enter press shift + enter on the active element
-                const activeElement = document.activeElement;
-                if (activeElement) {
-                    await submitInput(mount, activeElement as HTMLTextAreaElement);
-                }
-            }
-
-            verifyHtmlOnInteractiveCell('1', CellPosition.Last);
         },
         () => {
             return ioc;
@@ -689,6 +654,7 @@ for i in range(0, 100):
             try {
                 let exportCalled = false;
                 const appShell = TypeMoq.Mock.ofType<IApplicationShell>();
+                const exportDialog = TypeMoq.Mock.ofType<IExportDialog>();
                 appShell
                     .setup((a) => a.showErrorMessage(TypeMoq.It.isAnyString()))
                     .returns((e) => {
@@ -697,14 +663,15 @@ for i in range(0, 100):
                 appShell
                     .setup((a) => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
                     .returns(() => Promise.resolve(''));
-                appShell
-                    .setup((a) => a.showSaveDialog(TypeMoq.It.isAny()))
+                exportDialog
+                    .setup((a) => a.showDialog(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
                     .returns(() => {
                         exportCalled = true;
                         return Promise.resolve(Uri.file(tf.filePath));
                     });
                 appShell.setup((a) => a.setStatusBarMessage(TypeMoq.It.isAny())).returns(() => dummyDisposable);
                 ioc.serviceManager.rebindInstance<IApplicationShell>(IApplicationShell, appShell.object);
+                ioc.serviceManager.rebindInstance<IExportDialog>(IExportDialog, exportDialog.object);
                 const exportCode = `
 for i in range(100):
     time.sleep(0.1)

@@ -13,19 +13,21 @@ import * as os from 'os';
 import * as path from 'path';
 import * as sinon from 'sinon';
 import { Disposable } from 'vscode';
+import { traceInfo } from '../../../client/common/logger';
 import { sleep } from '../../../client/common/utils/async';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 import { retryIfFail as retryIfFailOriginal } from '../../common';
 import { mockedVSCodeNamespaces } from '../../vscode-mock';
 import { DataScienceIocContainer } from '../dataScienceIocContainer';
 import { addMockData } from '../testHelpersCore';
-import { waitTimeForUIToUpdate } from './helpers';
+import { maxWaitTimeForMessage, waitTimeForUIToUpdate } from './helpers';
 import { openNotebook } from './notebookHelpers';
 import { NotebookEditorUI } from './notebookUi';
 
 const sanitize = require('sanitize-filename');
+const ipywidgetsWaitTimeForUIToUpdate = waitTimeForUIToUpdate * 2 + maxWaitTimeForMessage * 3;
 // Include default timeout.
-const retryIfFail = <T>(fn: () => Promise<T>) => retryIfFailOriginal<T>(fn, waitTimeForUIToUpdate);
+const retryIfFail = <T>(fn: () => Promise<T>) => retryIfFailOriginal<T>(fn, ipywidgetsWaitTimeForUIToUpdate);
 
 use(chaiAsPromised);
 
@@ -46,6 +48,7 @@ use(chaiAsPromised);
             }
         });
         setup(async function () {
+            traceInfo(`Start Test ${this.currentTest?.title}`);
             ioc = new DataScienceIocContainer(true);
             ioc.setExtensionRootPath(EXTENSION_ROOT_DIR);
             if (ioc.mockJupyter && useRawKernel) {
@@ -62,8 +65,10 @@ use(chaiAsPromised);
             });
 
             await ioc.activate();
+            traceInfo(`Start Test Complete ${this.currentTest?.title}`);
         });
-        teardown(async () => {
+        teardown(async function () {
+            traceInfo(`Ended Test ${this.currentTest?.title}`);
             sinon.restore();
             mockedVSCodeNamespaces.window?.reset();
             for (const disposable of disposables) {
@@ -127,9 +132,9 @@ use(chaiAsPromised);
         async function openBqplotIpynb() {
             return openNotebookFile('bqplot_widgets.ipynb');
         }
-        async function openIPyVolumeIpynb() {
-            return openNotebookFile('ipyvolume_widgets.ipynb');
-        }
+        // async function openIPyVolumeIpynb() {
+        //     return openNotebookFile('ipyvolume_widgets.ipynb');
+        // }
         async function openPyThreejsIpynb() {
             return openNotebookFile('pythreejs_widgets.ipynb');
         }
@@ -403,30 +408,32 @@ use(chaiAsPromised);
                 assert.include(cellOutputHtml, '>100.000</td>');
             });
         });
-        test('Render ipyvolume', async () => {
-            const { notebookUI } = await openIPyVolumeIpynb();
-            await assert.eventually.isFalse(notebookUI.cellHasOutput(3));
+        test('Render ipyvolume', async function () {
+            // See bug https://github.com/microsoft/vscode-jupyter/issues/4152
+            this.skip();
+            // const { notebookUI } = await openIPyVolumeIpynb();
+            // await assert.eventually.isFalse(notebookUI.cellHasOutput(3));
 
-            await notebookUI.executeCell(1);
-            await notebookUI.executeCell(2);
-            await notebookUI.executeCell(3);
-            await notebookUI.executeCell(4);
+            // // Confirm sliders and canvas are rendered.
+            // await retryIfFail(async () => {
+            //     await notebookUI.executeCell(1);
+            //     const cellOutputHtml = await notebookUI.getCellOutputHTML(1);
+            //     assert.include(cellOutputHtml, '<canvas ');
 
-            // Confirm sliders and canvas are rendered.
-            await retryIfFail(async () => {
-                const cellOutputHtml = await notebookUI.getCellOutputHTML(1);
-                assert.include(cellOutputHtml, '<canvas ');
+            //     const cellOutput = await notebookUI.getCellOutput(1);
+            //     const sliders = await cellOutput.$$('div.ui-slider');
+            //     assert.equal(sliders.length, 2);
+            // });
 
-                const cellOutput = await notebookUI.getCellOutput(1);
-                const sliders = await cellOutput.$$('div.ui-slider');
-                assert.equal(sliders.length, 2);
-            });
+            // // Confirm canvas is rendered.
+            // await retryIfFail(async () => {
+            //     await notebookUI.executeCell(2);
+            //     await notebookUI.executeCell(3);
+            //     await notebookUI.executeCell(4);
 
-            // Confirm canvas is rendered.
-            await retryIfFail(async () => {
-                const cellOutputHtml = await notebookUI.getCellOutputHTML(4);
-                assert.include(cellOutputHtml, '<canvas ');
-            });
+            //     const cellOutputHtml = await notebookUI.getCellOutputHTML(4);
+            //     assert.include(cellOutputHtml, '<canvas ');
+            // });
         });
         test('Render pythreejs', async () => {
             const { notebookUI } = await openPyThreejsIpynb();

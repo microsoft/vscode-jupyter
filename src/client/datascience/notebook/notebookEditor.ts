@@ -10,7 +10,7 @@ import { traceError } from '../../common/logger';
 import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../common/types';
 import { DataScience } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
-import { sendTelemetryEvent } from '../../telemetry';
+import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { JupyterKernelPromiseFailedError } from '../jupyter/kernels/jupyterKernelPromiseFailedError';
 import { IKernel, IKernelProvider } from '../jupyter/kernels/types';
@@ -94,6 +94,11 @@ export class NotebookEditor implements INotebookEditor {
             })
         );
         disposables.push(model.onDidDispose(this._closed.fire.bind(this._closed, this)));
+    }
+    @captureTelemetry(Telemetry.SyncAllCells)
+    public async syncAllCells(): Promise<void> {
+        // This shouldn't be necessary for native notebooks. if it is, it's because the document
+        // is not up to date (VS code issue)
     }
     public async load(_storage: INotebookModel, _webViewPanel?: WebviewPanel): Promise<void> {
         // Not used.

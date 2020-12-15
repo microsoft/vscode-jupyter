@@ -25,6 +25,7 @@ import { requestExecute } from './raw-kernel/rawKernelTestHelpers';
 import * as chaiAsPromised from 'chai-as-promised';
 import { IPythonExtensionChecker } from '../../client/api/types';
 import { IFileSystem } from '../../client/common/platform/types';
+import { KernelEnvironmentVariablesService } from '../../client/datascience/kernel-launcher/kernelEnvVarsService';
 use(chaiAsPromised);
 
 suite('DataScience - Kernel Launcher', () => {
@@ -48,7 +49,13 @@ suite('DataScience - Kernel Launcher', () => {
         const daemonPool = ioc.get<KernelDaemonPool>(KernelDaemonPool);
         const fileSystem = ioc.get<IFileSystem>(IFileSystem);
         const extensionChecker = ioc.get<IPythonExtensionChecker>(IPythonExtensionChecker);
-        kernelLauncher = new KernelLauncher(processServiceFactory, fileSystem, daemonPool, extensionChecker);
+        kernelLauncher = new KernelLauncher(
+            processServiceFactory,
+            fileSystem,
+            daemonPool,
+            extensionChecker,
+            ioc.get<KernelEnvironmentVariablesService>(KernelEnvironmentVariablesService)
+        );
         await ioc.activate();
         if (!ioc.mockJupyter) {
             pythonInterpreter = await ioc.getJupyterCapableInterpreter();

@@ -31,7 +31,7 @@ export type WaitForMessageOptions = {
     numberOfTimes?: number;
 };
 
-const maxWaitTimeForMessage = 75_000;
+export const maxWaitTimeForMessage = 75_000;
 /**
  * UI could take a while to update, could be slower on CI server.
  * (500ms is generally enough, but increasing to 3s to avoid flaky CI tests).
@@ -141,6 +141,14 @@ export class BaseWebUI implements IAsyncDisposable {
         await this.browser.newContext();
         this.page = await this.browser.newPage();
         await this.page.goto(url);
+        this.page.on('console', (output) => {
+            try {
+                // Log output for diagnostic purposes (see what errors & the like are printed in console).
+                console.info(`IPyWidgets Browser: ${output.type()} ${output.text()}`);
+            } catch {
+                //
+            }
+        });
     }
 
     public async captureScreenshot(filePath: string): Promise<void> {

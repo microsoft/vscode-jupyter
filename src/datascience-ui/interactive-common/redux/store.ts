@@ -349,10 +349,14 @@ function createMiddleWare(testMode: boolean, postOffice: PostOffice): Redux.Midd
         },
         logger: testMode ? createTestLogger() : window.console
     });
+
+    // Environment variables only work in functional tests (browser doesn't have access to env). In order for logging to be present in
+    // development, you have to hardcode this
     const loggerMiddleware =
         process.env.VSC_JUPYTER_FORCE_LOGGING !== undefined && !process.env.VSC_JUPYTER_DS_NO_REDUX_LOGGING
             ? logger
             : undefined;
+    // logger;
 
     const results: Redux.Middleware<{}, IStore>[] = [];
     results.push(queueableActions);

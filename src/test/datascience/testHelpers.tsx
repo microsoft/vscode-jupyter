@@ -59,29 +59,41 @@ async function testInnerLoop(
 
 export function runDoubleTest(
     name: string,
-    testFunc: (type: 'native' | 'interactive') => Promise<void>,
+    testFunc: (this: Mocha.Context, type: 'native' | 'interactive') => Promise<void>,
     getIOC: () => Promise<DataScienceIocContainer>
 ) {
     // Just run the test twice. Originally mounted twice, but too hard trying to figure out disposing.
-    test(`${name} (interactive)`, async () => testInnerLoop(name, 'interactive', testFunc, getIOC));
-    test(`${name} (native)`, async () => testInnerLoop(name, 'native', testFunc, getIOC));
+    test(`${name} (interactive)`, async function () {
+        const testContext = this;
+        await testInnerLoop(name, 'interactive', testFunc.bind(testContext), getIOC);
+    });
+    test(`${name} (native)`, async function () {
+        const testContext = this;
+        await testInnerLoop(name, 'native', testFunc.bind(testContext), getIOC);
+    });
 }
 
 export function runInteractiveTest(
     name: string,
-    testFunc: () => Promise<void>,
+    testFunc: (this: Mocha.Context) => Promise<void>,
     getIOC: () => Promise<DataScienceIocContainer>
 ) {
     // Run the test with just the interactive window
-    test(`${name} (interactive)`, async () => testInnerLoop(name, 'interactive', (_t) => testFunc(), getIOC));
+    test(`${name} (interactive)`, async function () {
+        const testContext = this;
+        await testInnerLoop(name, 'interactive', testFunc.bind(testContext), getIOC);
+    });
 }
 export function runNativeTest(
     name: string,
-    testFunc: () => Promise<void>,
+    testFunc: (this: Mocha.Context) => Promise<void>,
     getIOC: () => Promise<DataScienceIocContainer>
 ) {
     // Run the test with just the native window
-    test(`${name} (native)`, async () => testInnerLoop(name, 'native', (_t) => testFunc(), getIOC));
+    test(`${name} (native)`, async function () {
+        const testContext = this;
+        await testInnerLoop(name, 'native', testFunc.bind(testContext), getIOC);
+    });
 }
 
 export function addMockData(
@@ -485,6 +497,7 @@ export async function getCellResults(
 export function simulateKey(
     domNode: HTMLTextAreaElement,
     key: string,
+    code: string,
     shiftDown?: boolean,
     ctrlKey?: boolean,
     altKey?: boolean,
@@ -502,23 +515,27 @@ export function simulateKey(
     // 1) keydown
     // 2) keypress
     // 3) keyup
-    let event = createKeyboardEvent('keydown', { key, code: key, shiftKey: shiftDown, ctrlKey, altKey, metaKey });
+    let event = createKeyboardEvent('keydown', { key, code, shiftKey: shiftDown, ctrlKey, altKey, metaKey });
 
     // Dispatch. Result can be swallowed. If so skip the next event.
     let result = domNode.dispatchEvent(event);
     if (result) {
-        event = createKeyboardEvent('keypress', { key, code: key, shiftKey: shiftDown, ctrlKey, altKey, metaKey });
+        event = createKeyboardEvent('keypress', { key, code, shiftKey: shiftDown, ctrlKey, altKey, metaKey });
         result = domNode.dispatchEvent(event);
         if (result) {
-            event = createKeyboardEvent('keyup', { key, code: key, shiftKey: shiftDown, ctrlKey, altKey, metaKey });
+            event = createKeyboardEvent('keyup', { key, code, shiftKey: shiftDown, ctrlKey, altKey, metaKey });
             domNode.dispatchEvent(event);
 
             // Update our value. This will reset selection to zero.
             const before = domNode.value.slice(0, selectionStart);
             const after = domNode.value.slice(selectionStart);
-            const keyText = key === 'Enter' ? '\n' : key;
+            const keyText = key;
 
-            domNode.value = `${before}${keyText}${after}`;
+            if (key === '\b') {
+                domNode.value = `${before.slice(0, before.length > 0 ? before.length - 1 : 0)}${after}`;
+            } else {
+                domNode.value = `${before}${keyText}${after}`;
+            }
 
             // Tell the dom node its selection start has changed. Monaco
             // reads this to determine where the character went.
@@ -537,7 +554,7 @@ export async function submitInput(mountedWebView: IMountedWebView, textArea: HTM
     const renderPromise = mountedWebView.waitForMessage(InteractiveWindowMessages.ExecutionRendered);
 
     // Submit a keypress into the textarea
-    simulateKey(textArea, 'Enter', true);
+    simulateKey(textArea, '\n', 'Enter', true);
 
     return renderPromise;
 }
@@ -545,13 +562,14 @@ export async function submitInput(mountedWebView: IMountedWebView, textArea: HTM
 function enterKey(
     textArea: HTMLTextAreaElement,
     key: string,
+    code: string,
     shiftDown?: boolean,
     ctrlKey?: boolean,
     altKey?: boolean,
     metaKey?: boolean
 ) {
     // Simulate a key press
-    simulateKey(textArea, key, shiftDown, ctrlKey, altKey, metaKey);
+    simulateKey(textArea, key, code, shiftDown, ctrlKey, altKey, metaKey);
 }
 
 export function getInteractiveEditor(
@@ -618,6 +636,7 @@ export function enterEditorKey(
     enterKey(
         textArea!,
         keyboardEvent.code,
+        keyboardEvent.code,
         keyboardEvent.shiftKey,
         keyboardEvent.ctrlKey,
         keyboardEvent.altKey,
@@ -637,11 +656,16 @@ export function typeCode(
 
     // Now simulate entering all of the keys
     for (let i = 0; i < code.length; i += 1) {
-        let keyCode = code.charAt(i);
-        if (keyCode === '\n') {
+        let key = code.charAt(i);
+        let keyCode = key;
+        if (key === '\n') {
             keyCode = 'Enter';
+        } else if (key === '\b') {
+            keyCode = 'Backspace';
+        } else if (key === '\u0046') {
+            keyCode = 'Delete';
         }
-        enterKey(textArea!, keyCode);
+        enterKey(textArea!, key, keyCode);
     }
 
     return textArea;

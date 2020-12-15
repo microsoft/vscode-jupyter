@@ -115,14 +115,17 @@ export function updateNotebookMetadata(
         // Spec exists, just update name and display_name
         const name = kernelSpecOrModel.name || kernelSpecOrModel.display_name || '';
         const displayName = kernelSpecOrModel.display_name || kernelSpecOrModel.name || '';
+        const language = kernelSpecOrModel.language || kernelSpecOrModel.language || '';
         if (
             metadata.kernelspec.name !== name ||
+            metadata.kernelspec.language !== language ||
             metadata.kernelspec.display_name !== displayName ||
             kernelId !== kernelSpecOrModel.id
         ) {
             changed = true;
             metadata.kernelspec.name = name;
             metadata.kernelspec.display_name = displayName;
+            metadata.kernelspec.language = language;
             kernelId = kernelSpecOrModel.id;
         }
         try {

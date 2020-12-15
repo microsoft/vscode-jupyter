@@ -10,6 +10,8 @@ import { traceError, traceInfo } from '../common/logger';
 import { IFileSystem } from '../common/platform/types';
 import { IPythonExecutionFactory } from '../common/process/types';
 import { DataScience } from '../common/utils/localize';
+import { sendTelemetryEvent } from '../telemetry';
+import { KnownKernelLanguageAliases, KnownNotebookLanguages, Telemetry } from './constants';
 import { ICell } from './types';
 
 // Can't figure out a better way to do this. Enumerate
@@ -108,17 +110,19 @@ export function traceCellResults(prefix: string, results: ICell[]) {
     }
 }
 
+const jupyterLanguageToMonacoLanguageMapping = new Map([
+    ['c#', 'csharp'],
+    ['f#', 'fsharp'],
+    ['q#', 'qsharp'],
+    ['c++11', 'c++'],
+    ['c++12', 'c++'],
+    ['c++14', 'c++']
+]);
 export function translateKernelLanguageToMonaco(kernelLanguage: string): string {
     // At the moment these are the only translations.
     // python, julia, r, javascript, powershell, etc can be left as is.
-    switch (kernelLanguage.toLowerCase()) {
-        case 'c#':
-            return 'csharp';
-        case 'f#':
-            return 'fsharp';
-        default:
-            return kernelLanguage.toLowerCase();
-    }
+    kernelLanguage = kernelLanguage.toLowerCase();
+    return jupyterLanguageToMonacoLanguageMapping.get(kernelLanguage) || kernelLanguage;
 }
 
 export function generateNewNotebookUri(
@@ -182,4 +186,16 @@ export function parseSemVer(versionString: string): SemVer | undefined {
         const build = parseInt(versionMatch[3], 10);
         return parse(`${major}.${minor}.${build}`, true) ?? undefined;
     }
+}
+
+export function sendNotebookOrKernelLanguageTelemetry(
+    telemetryEvent: Telemetry.SwitchToExistingKernel | Telemetry.NotebookLanguage,
+    language: string = 'unknown'
+) {
+    language = (language || 'unknown').toLowerCase();
+    language = KnownKernelLanguageAliases.get(language) || language;
+    if (!KnownNotebookLanguages.includes(language)) {
+        language = 'unknown';
+    }
+    sendTelemetryEvent(telemetryEvent, undefined, { language });
 }

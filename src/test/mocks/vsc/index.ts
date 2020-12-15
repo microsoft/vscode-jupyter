@@ -298,4 +298,19 @@ export namespace vscMock {
         Directory = 2,
         SymbolicLink = 64
     }
+
+    /**
+     * Possible kinds of UI that can use extensions.
+     */
+    export enum UIKind {
+        /**
+         * Extensions are accessed from a desktop application.
+         */
+        Desktop = 1,
+
+        /**
+         * Extensions are accessed from a web browser.
+         */
+        Web = 2
+    }
 }

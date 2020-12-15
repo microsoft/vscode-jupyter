@@ -9,7 +9,7 @@ import { IDebugService } from '../../common/application/types';
 import { traceError } from '../../common/logger';
 import { IConfigurationService, Resource } from '../../common/types';
 import { sendTelemetryEvent } from '../../telemetry';
-import { DataFrameLoading, Identifiers, Telemetry } from '../constants';
+import { DataFrameLoading, GetVariableInfo, Identifiers, Telemetry } from '../constants';
 import { DebugLocationTracker } from '../debugLocationTracker';
 import {
     IConditionalJupyterVariables,
@@ -28,7 +28,8 @@ export class DebuggerVariables extends DebugLocationTracker
     implements IConditionalJupyterVariables, DebugAdapterTracker {
     private refreshEventEmitter = new EventEmitter<void>();
     private lastKnownVariables: IJupyterVariable[] = [];
-    private importedIntoKernel = new Set<string>();
+    private importedDataFrameScriptsIntoKernel = new Set<string>();
+    private importedGetVariableInfoScriptsIntoKernel = new Set<string>();
     private watchedNotebooks = new Map<string, Disposable[]>();
     private debuggingStarted = false;
     constructor(
@@ -109,7 +110,7 @@ export class DebuggerVariables extends DebugLocationTracker
 
         // Then eval calling the main function with our target variable
         const results = await this.evaluate(
-            `${DataFrameLoading.DataFrameInfoFunc}(${targetVariable.name})`,
+            `${DataFrameLoading.DataFrameInfoImportFunc}(${targetVariable.name})`,
             // tslint:disable-next-line: no-any
             (targetVariable as any).frameId
         );
@@ -154,7 +155,7 @@ export class DebuggerVariables extends DebugLocationTracker
         for (let pos = start; pos < end; pos += chunkSize) {
             const chunkEnd = Math.min(pos + chunkSize, minnedEnd);
             const results = await this.evaluate(
-                `${DataFrameLoading.DataFrameRowFunc}(${targetVariable.name}, ${pos}, ${chunkEnd})`,
+                `${DataFrameLoading.DataFrameRowImportFunc}(${targetVariable.name}, ${pos}, ${chunkEnd})`,
                 // tslint:disable-next-line: no-any
                 (targetVariable as any).frameId
             );
@@ -194,7 +195,8 @@ export class DebuggerVariables extends DebugLocationTracker
             this.refreshEventEmitter.fire();
             const key = this.debugService.activeDebugSession?.id;
             if (key) {
-                this.importedIntoKernel.delete(key);
+                this.importedDataFrameScriptsIntoKernel.delete(key);
+                this.importedGetVariableInfoScriptsIntoKernel.delete(key);
             }
         }
     }
@@ -217,7 +219,8 @@ export class DebuggerVariables extends DebugLocationTracker
     }
 
     private resetImport(key: string) {
-        this.importedIntoKernel.delete(key);
+        this.importedDataFrameScriptsIntoKernel.delete(key);
+        this.importedGetVariableInfoScriptsIntoKernel.delete(key);
     }
 
     // tslint:disable-next-line: no-any
@@ -243,12 +246,24 @@ export class DebuggerVariables extends DebugLocationTracker
         try {
             // Run our dataframe scripts only once per session because they're slow
             const key = this.debugService.activeDebugSession?.id;
-            if (key && !this.importedIntoKernel.has(key)) {
+            if (key && !this.importedDataFrameScriptsIntoKernel.has(key)) {
                 await this.evaluate(DataFrameLoading.DataFrameSysImport);
-                await this.evaluate(DataFrameLoading.DataFrameInfoImport);
-                await this.evaluate(DataFrameLoading.DataFrameRowImport);
-                await this.evaluate(DataFrameLoading.VariableInfoImport);
-                this.importedIntoKernel.add(key);
+                await this.evaluate(DataFrameLoading.DataFrameImport);
+                this.importedDataFrameScriptsIntoKernel.add(key);
+            }
+        } catch (exc) {
+            traceError('Error attempting to import in debugger', exc);
+        }
+    }
+
+    private async importGetVariableInfoScripts(): Promise<void> {
+        try {
+            // Run our variable info scripts only once per session because they're slow
+            const key = this.debugService.activeDebugSession?.id;
+            if (key && !this.importedGetVariableInfoScriptsIntoKernel.has(key)) {
+                await this.evaluate(GetVariableInfo.GetVariableInfoSysImport);
+                await this.evaluate(GetVariableInfo.VariableInfoImport);
+                this.importedGetVariableInfoScriptsIntoKernel.add(key);
             }
         } catch (exc) {
             traceError('Error attempting to import in debugger', exc);
@@ -257,11 +272,11 @@ export class DebuggerVariables extends DebugLocationTracker
 
     private async getFullVariable(variable: IJupyterVariable): Promise<IJupyterVariable> {
         // See if we imported or not into the kernel our special function
-        await this.importDataFrameScripts();
+        await this.importGetVariableInfoScripts();
 
         // Then eval calling the variable info function with our target variable
         const results = await this.evaluate(
-            `${DataFrameLoading.VariableInfoFunc}(${variable.name})`,
+            `${GetVariableInfo.VariableInfoImportFunc}(${variable.name})`,
             // tslint:disable-next-line: no-any
             (variable as any).frameId
         );

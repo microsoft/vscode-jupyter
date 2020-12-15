@@ -19,6 +19,7 @@ import {
 } from '../../../../typings/vscode-proposed';
 import { IApplicationEnvironment, IApplicationShell, IVSCodeNotebook } from '../../../client/common/application/types';
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
+import { traceInfo } from '../../../client/common/logger';
 import {
     GLOBAL_MEMENTO,
     IConfigurationService,
@@ -34,8 +35,8 @@ import {
     LastSavedNotebookCellLanguage,
     NotebookCellLanguageService
 } from '../../../client/datascience/notebook/defaultCellLanguageService';
+import { isJupyterKernel } from '../../../client/datascience/notebook/helpers/helpers';
 import { chainWithPendingUpdates } from '../../../client/datascience/notebook/helpers/notebookUpdater';
-import { VSCodeNotebookKernelMetadata } from '../../../client/datascience/notebook/kernelProvider';
 import { NotebookEditor } from '../../../client/datascience/notebook/notebookEditor';
 import { INotebookContentProvider } from '../../../client/datascience/notebook/types';
 import { VSCodeNotebookModel } from '../../../client/datascience/notebookStorage/vscNotebookModel';
@@ -132,7 +133,11 @@ export async function createTemporaryFile(options: {
 export async function createTemporaryNotebook(templateFile: string, disposables: IDisposable[]): Promise<string> {
     const extension = path.extname(templateFile);
     fs.ensureDirSync(path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'tmp'));
-    const tempFile = tmp.tmpNameSync({ postfix: extension, dir: path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'tmp') });
+    const tempFile = tmp.tmpNameSync({
+        postfix: extension,
+        dir: path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'tmp'),
+        prefix: path.basename(templateFile, '.ipynb')
+    });
     await fs.copyFile(templateFile, tempFile);
     disposables.push({ dispose: () => swallowExceptions(() => fs.unlinkSync(tempFile)) });
     return tempFile;
@@ -146,10 +151,16 @@ export function disposeAllDisposables(disposables: IDisposable[]) {
 
 export async function canRunNotebookTests() {
     if (!isInsiders() || !process.env.VSC_JUPYTER_RUN_NB_TEST) {
+        console.log(
+            `Can't run native nb tests isInsiders() = ${isInsiders()}, process.env.VSC_JUPYTER_RUN_NB_TEST = ${
+                process.env.VSC_JUPYTER_RUN_NB_TEST
+            }`
+        );
         return false;
     }
     const api = await initialize();
     const appEnv = api.serviceContainer.get<IApplicationEnvironment>(IApplicationEnvironment);
+    console.log(`Can't run native nb tests appEnv.extensionChannel = ${appEnv.extensionChannel}`);
     return appEnv.extensionChannel !== 'stable';
 }
 
@@ -207,11 +218,13 @@ export async function waitForKernelToGetAutoSelected(expectedLanguage?: string) 
         if (!vscodeNotebook.activeNotebookEditor.kernel) {
             return false;
         }
-        if (!expectedLanguage) {
-            kernelInfo = '<No specific kernel expected>';
-            return true;
-        }
-        if (vscodeNotebook.activeNotebookEditor.kernel instanceof VSCodeNotebookKernelMetadata) {
+        if (isJupyterKernel(vscodeNotebook.activeNotebookEditor.kernel)) {
+            if (!expectedLanguage) {
+                kernelInfo = `<No specific kernel expected> ${JSON.stringify(
+                    vscodeNotebook.activeNotebookEditor.kernel.selection
+                )}`;
+                return true;
+            }
             if (vscodeNotebook.activeNotebookEditor.kernel.selection.kind === 'startUsingKernelSpec') {
                 kernelInfo = JSON.stringify(vscodeNotebook.activeNotebookEditor.kernel.selection.kernelSpec || {});
                 return (
@@ -227,16 +240,20 @@ export async function waitForKernelToGetAutoSelected(expectedLanguage?: string) 
             // tslint:disable-next-line: no-console
             console.error('Testing other kernel connections not supported');
         }
+        if (!expectedLanguage) {
+            kernelInfo = '<No specific kernel expected>. Non Jupyter Kernel';
+            return true;
+        }
         return false;
     };
 
     // Wait for the active kernel to be a julia kernel.
     const errorMessage = expectedLanguage ? `${expectedLanguage} kernel not auto selected` : 'Kernel not auto selected';
     await waitForCondition(async () => isRightKernel(), 15_000, errorMessage);
-    console.info(`Preferred kernel auto selected for Native Notebook for ${kernelInfo}.`);
+    traceInfo(`Preferred kernel auto selected for Native Notebook for ${kernelInfo}.`);
 }
 export async function trustNotebook(ipynbFile: string | Uri) {
-    console.info(`Trusting Notebook ${ipynbFile}`);
+    traceInfo(`Trusting Notebook ${ipynbFile}`);
     const api = await initialize();
     const uri = typeof ipynbFile === 'string' ? Uri.file(ipynbFile) : ipynbFile;
     const content = await fs.readFile(uri.fsPath, { encoding: 'utf8' });
@@ -289,7 +306,7 @@ function assertHasExecutionCompletedSuccessfully(cell: NotebookCell) {
  *  Wait for VSC to perform some last minute clean up of cells.
  * In tests we can end up deleting cells. However if extension is still dealing with the cells, we need to give it some time to finish.
  */
-async function waitForCellExecutionToComplete(cell: NotebookCell) {
+export async function waitForCellExecutionToComplete(cell: NotebookCell) {
     if (!CellExecution.cellsCompletedForTesting.has(cell)) {
         CellExecution.cellsCompletedForTesting.set(cell, createDeferred<void>());
     }
@@ -326,7 +343,7 @@ function assertHasExecutionCompletedWithErrors(cell: NotebookCell) {
 }
 export function assertHasTextOutputInVSCode(cell: NotebookCell, text: string, index: number = 0, isExactMatch = true) {
     const cellOutputs = cell.outputs;
-    assert.ok(cellOutputs, 'No output');
+    assert.ok(cellOutputs.length, 'No output');
     assert.equal(cellOutputs[index].outputKind, vscodeNotebookEnums.CellOutputKind.Rich, 'Incorrect output kind');
     const outputText = (cellOutputs[index] as CellDisplayOutput).data['text/plain'].trim();
     if (isExactMatch) {
@@ -546,12 +563,12 @@ export async function hijackPrompt(
     let displayCount = 0;
     // tslint:disable-next-line: no-function-expression
     const stub = sinon.stub(appShell, promptType).callsFake(function (msg: string) {
-        console.info(`Message displayed to user ${msg}.`);
+        traceInfo(`Message displayed to user '${msg}', condition ${JSON.stringify(message)}`);
         if (
-            ('exactMatch' in message && msg === message.exactMatch) ||
+            ('exactMatch' in message && msg.trim() === message.exactMatch.trim()) ||
             ('endsWith' in message && msg.endsWith(message.endsWith))
         ) {
-            console.debug(`Exact Message found ${msg} with condition ${JSON.stringify(message)}`);
+            traceInfo(`Exact Message found '${msg}'`);
             displayCount += 1;
             displayed.resolve(true);
             if (buttonToClick) {

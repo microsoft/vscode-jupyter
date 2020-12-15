@@ -15,24 +15,25 @@ const colors = require('colors/safe');
 const path = require('path');
 const del = require('del');
 const fs = require('fs-extra');
-const fsExtra = require('fs-extra');
 const _ = require('lodash');
 const nativeDependencyChecker = require('node-has-native-dependencies');
 const flat = require('flat');
 const { argv } = require('yargs');
 const os = require('os');
-
+const { ExtensionRootDir } = require('./build/util');
 const isCI = process.env.TF_BUILD !== undefined || process.env.GITHUB_ACTIONS === 'true';
 
-gulp.task('compile', (done) => {
-    let failed = false;
-    const tsProject = ts.createProject('tsconfig.json');
-    tsProject
-        .src()
-        .pipe(tsProject())
-        .on('error', () => (failed = true))
-        .js.pipe(gulp.dest('out'))
-        .on('finish', () => (failed ? done(new Error('TypeScript compilation errors')) : done()));
+gulp.task('compile', async (done) => {
+    // Use tsc so we can generate source maps that look just like tsc does (gulp-sourcemap does not generate them the same way)
+    try {
+        const stdout = await spawnAsync('tsc', ['-p', './'], {}, true);
+        if (stdout.toLowerCase().includes('error ts')) {
+            throw new Error(`Compile errors: \n${stdout}`);
+        }
+        done();
+    } catch (e) {
+        done(e);
+    }
 });
 
 gulp.task('output:clean', () => del(['coverage']));
@@ -67,6 +68,11 @@ gulp.task('compile-notebooks', async () => {
     await buildWebPackForDevOrProduction('./build/webpack/webpack.datascience-ui-notebooks.config.js');
 });
 
+gulp.task('compile-renderers', async () => {
+    console.log('Building renderers');
+    await buildWebPackForDevOrProduction('./build/webpack/webpack.datascience-ui-renderers.config.js');
+});
+
 gulp.task('compile-viewers', async () => {
     await buildWebPackForDevOrProduction('./build/webpack/webpack.datascience-ui-viewers.config.js');
 });
@@ -78,7 +84,7 @@ if (isCI && process.env.VSC_CI_MATRIX_TEST_SUITE === 'notebook') {
 } else {
     gulp.task(
         'compile-webviews',
-        gulp.series('compile-ipywidgets', gulp.parallel('compile-notebooks', 'compile-viewers'))
+        gulp.series('compile-ipywidgets', gulp.parallel('compile-notebooks', 'compile-viewers', 'compile-renderers'))
     );
 }
 
@@ -86,7 +92,8 @@ async function buildWebPackForDevOrProduction(configFile, configNameForProductio
     if (configNameForProductionBuilds) {
         await buildWebPack(configNameForProductionBuilds, ['--config', configFile], webpackEnv);
     } else {
-        await spawnAsync('npm', ['run', 'webpack', '--', '--config', configFile, '--mode', 'production'], webpackEnv);
+        console.log('Building ipywidgets in dev mode');
+        await spawnAsync('npm', ['run', 'webpack', '--', '--config', configFile, '--mode', 'development'], webpackEnv);
     }
 }
 gulp.task('webpack', async () => {
@@ -96,9 +103,18 @@ gulp.task('webpack', async () => {
     // Individually is faster on CI.
     await buildIPyWidgets();
     await buildWebPackForDevOrProduction('./build/webpack/webpack.datascience-ui-notebooks.config.js', 'production');
+    await buildWebPackForDevOrProduction('./build/webpack/webpack.datascience-ui-renderers.config.js', 'production');
     await buildWebPackForDevOrProduction('./build/webpack/webpack.datascience-ui-viewers.config.js', 'production');
     await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.config.js', 'extension');
 });
+
+gulp.task('updateLicense', async () => {
+    await updateLicense(argv);
+});
+
+async function updateLicense(args) {
+    await fs.copyFile('extension_license.txt', 'LICENSE.txt');
+}
 
 gulp.task('updateBuildNumber', async () => {
     await updateBuildNumber(argv);
@@ -107,7 +123,7 @@ gulp.task('updateBuildNumber', async () => {
 async function updateBuildNumber(args) {
     if (args && args.buildNumber) {
         // Edit the version number from the package.json
-        const packageJsonContents = await fsExtra.readFile('package.json', 'utf-8');
+        const packageJsonContents = await fs.readFile('package.json', 'utf-8');
         const packageJson = JSON.parse(packageJsonContents);
 
         // Change version number
@@ -121,18 +137,18 @@ async function updateBuildNumber(args) {
         packageJson.version = newVersion;
 
         // Write back to the package json
-        await fsExtra.writeFile('package.json', JSON.stringify(packageJson, null, 4), 'utf-8');
+        await fs.writeFile('package.json', JSON.stringify(packageJson, null, 4), 'utf-8');
 
         // Update the changelog.md if we are told to (this should happen on the release branch)
         if (args.updateChangelog) {
-            const changeLogContents = await fsExtra.readFile('CHANGELOG.md', 'utf-8');
+            const changeLogContents = await fs.readFile('CHANGELOG.md', 'utf-8');
             const fixedContents = changeLogContents.replace(
                 /##\s*(\d+)\.(\d+)\.(\d+)\s*\(/,
                 `## $1.$2.${buildNumberPortion} (`
             );
 
             // Write back to changelog.md
-            await fsExtra.writeFile('CHANGELOG.md', fixedContents, 'utf-8');
+            await fs.writeFile('CHANGELOG.md', fixedContents, 'utf-8');
         }
     } else {
         throw Error('buildNumber argument required for updateBuildNumber task');
@@ -217,14 +233,28 @@ function getAllowedWarningsForWebPack(buildConfig) {
     }
 }
 
-gulp.task('prePublishBundle', gulp.series('webpack'));
+gulp.task('includeBCryptGenRandomExe', async () => {
+    const src = path.join(ExtensionRootDir, 'src', 'BCryptGenRandom', 'BCryptGenRandom.exe');
+    const dest = path.join(ExtensionRootDir, 'out', 'BCryptGenRandom', 'BcryptGenRandom.exe');
+    if (fs.existsSync(dest)) {
+        return;
+    }
+    await fs.stat(src);
+    await fs.ensureDir(path.dirname(dest));
+    await fs.copyFile(src, dest);
+});
+
+gulp.task('prePublishBundle', gulp.series('includeBCryptGenRandomExe', 'webpack'));
 gulp.task('checkDependencies', gulp.series('checkNativeDependencies'));
 // On CI, when running Notebook tests, we don't need old webviews.
 // Simple & temporary optimization for the Notebook Test Job.
 if (isCI && process.env.VSC_CI_MATRIX_TEST_SUITE === 'notebook') {
-    gulp.task('prePublishNonBundle', gulp.parallel('compile'));
+    gulp.task('prePublishNonBundle', gulp.parallel('compile', 'includeBCryptGenRandomExe'));
 } else {
-    gulp.task('prePublishNonBundle', gulp.parallel('compile', gulp.series('compile-webviews')));
+    gulp.task(
+        'prePublishNonBundle',
+        gulp.parallel('compile', 'includeBCryptGenRandomExe', gulp.series('compile-webviews'))
+    );
 }
 
 function spawnAsync(command, args, env, rejectOnStdErr = false) {

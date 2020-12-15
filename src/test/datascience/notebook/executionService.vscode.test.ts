@@ -10,8 +10,8 @@ import * as sinon from 'sinon';
 import { CellDisplayOutput, commands } from 'vscode';
 import { CellErrorOutput } from '../../../../typings/vscode-proposed';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
+import { traceInfo } from '../../../client/common/logger';
 import { IDisposable } from '../../../client/common/types';
-import { clearPendingChainedUpdatesForTests } from '../../../client/datascience/notebook/helpers/notebookUpdater';
 import { INotebookEditorProvider } from '../../../client/datascience/types';
 import { createEventHandler, IExtensionTestApi, sleep, waitForCondition } from '../../common';
 import { initialize } from '../../initialize';
@@ -19,6 +19,7 @@ import {
     assertHasTextOutputInVSCode,
     assertNotHasTextOutputInVSCode,
     canRunNotebookTests,
+    closeNotebooks,
     closeNotebooksAndCleanUpAfterTests,
     deleteAllCellsAndWait,
     executeActiveDocument,
@@ -27,7 +28,8 @@ import {
     startJupyter,
     trustAllNotebooks,
     waitForExecutionCompletedSuccessfully,
-    waitForExecutionCompletedWithErrors
+    waitForExecutionCompletedWithErrors,
+    waitForKernelToGetAutoSelected
 } from './helper';
 
 // tslint:disable-next-line: no-var-requires no-require-imports
@@ -46,15 +48,29 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', () => {
             return this.skip();
         }
         await trustAllNotebooks();
-        await startJupyter(false); // This should create a new notebook
+        await startJupyter(true);
         sinon.restore();
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
     });
     // Use same notebook without starting kernel in every single test (use one for whole suite).
-    setup(async () => {
-        clearPendingChainedUpdatesForTests();
+    setup(async function () {
+        traceInfo(`Start Test ${this.currentTest?.title}`);
+        sinon.restore();
+        // Open a notebook and use this for all tests in this test suite.
+        await editorProvider.createNew();
+        await waitForKernelToGetAutoSelected();
         await deleteAllCellsAndWait();
+        assert.isOk(vscodeNotebook.activeNotebookEditor, 'No active notebook');
+        traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
+    });
+    teardown(async function () {
+        traceInfo(`Ended Test ${this.currentTest?.title}`);
+        // Added temporarily to identify why tests are failing.
+        process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT = undefined;
+        await closeNotebooks(disposables);
+        await closeNotebooksAndCleanUpAfterTests(disposables);
+        traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
     test('Execute cell using VSCode Kernel', async () => {
@@ -576,10 +592,16 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', () => {
                         `,
             { index: 0 }
         );
-        const cells = vscodeNotebook.activeNotebookEditor?.document.cells!;
-
+        if (!vscodeNotebook.activeNotebookEditor) {
+            throw new Error('No active document');
+        }
+        process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT = 'true';
+        const cells = vscodeNotebook.activeNotebookEditor.document.cells;
+        traceInfo('1. Start execution for test of Stderr & stdout outputs');
         await executeActiveDocument();
+        traceInfo('2. Start execution for test of Stderr & stdout outputs');
         await waitForExecutionCompletedSuccessfully(cells[0]);
+        traceInfo('2. completed execution for test of Stderr & stdout outputs');
 
         // In cell 1 we should have the output
         // 12

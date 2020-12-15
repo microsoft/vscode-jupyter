@@ -20,7 +20,8 @@ import {
 import { ServerStatus } from '../../../../datascience-ui/interactive-common/mainState';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../../common/application/types';
 import { traceError, traceWarning } from '../../../common/logger';
-import { IDisposableRegistry } from '../../../common/types';
+import { IFileSystem } from '../../../common/platform/types';
+import { IDisposableRegistry, IExtensionContext } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
 import { noop } from '../../../common/utils/misc';
 import { CodeSnippets } from '../../constants';
@@ -85,12 +86,14 @@ export class Kernel implements IKernel {
         private readonly launchTimeout: number,
         commandManager: ICommandManager,
         private readonly errorHandler: IDataScienceErrorHandler,
-        editorProvider: INotebookEditorProvider,
+        private readonly editorProvider: INotebookEditorProvider,
         private readonly kernelProvider: IKernelProvider,
         private readonly kernelSelectionUsage: IKernelSelectionUsage,
         appShell: IApplicationShell,
         vscNotebook: IVSCodeNotebook,
-        rawNotebookSupported: IRawNotebookSupportedService
+        rawNotebookSupported: IRawNotebookSupportedService,
+        private readonly fs: IFileSystem,
+        context: IExtensionContext
     ) {
         this.kernelExecution = new KernelExecution(
             kernelProvider,
@@ -101,7 +104,8 @@ export class Kernel implements IKernel {
             appShell,
             vscNotebook,
             metadata,
-            rawNotebookSupported
+            rawNotebookSupported,
+            context
         );
     }
     public async executeCell(cell: NotebookCell): Promise<void> {
@@ -223,6 +227,13 @@ export class Kernel implements IKernel {
         if (!this.notebook) {
             return;
         }
+
+        // Set the notebook property on the matching editor
+        const editor = this.editorProvider.editors.find((item) => this.fs.arePathsSame(item.file, this.uri));
+        if (editor) {
+            editor.notebook = this.notebook;
+        }
+
         this.disableJedi();
         if (!this.hookedNotebookForEvents.has(this.notebook)) {
             this.hookedNotebookForEvents.add(this.notebook);

@@ -3,29 +3,48 @@
 
 'use strict';
 
+import { assert } from 'chai';
 // tslint:disable:max-func-body-length no-invalid-this no-any
 
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { openFile, setAutoSaveDelayInWorkspaceRoot, waitForCondition } from '../common';
+import { ISystemPseudoRandomNumberGenerator } from '../../client/datascience/types';
+import { IExtensionTestApi, openFile, setAutoSaveDelayInWorkspaceRoot, waitForCondition } from '../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_SMOKE_TEST } from '../constants';
 import { noop, sleep } from '../core';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
 
 const timeoutForCellToRun = 3 * 60 * 1_000;
-
-suite('Smoke Test: Interactive Window', () => {
+suite('Smoke Tests', () => {
+    let api: IExtensionTestApi;
     suiteSetup(async function () {
         if (!IS_SMOKE_TEST) {
             return this.skip();
         }
-        await initialize();
+        api = await initialize();
         await setAutoSaveDelayInWorkspaceRoot(1);
     });
     setup(initializeTest);
     suiteTeardown(closeActiveWindows);
     teardown(closeActiveWindows);
+
+    test('Random bytes generation', async () => {
+        // We do have a unit test testing this, however create a smoke test to
+        // ensure that the bundling of the native node modules worked
+        const numRequestedBytes = 1024;
+        if (!api) {
+            api = await initialize();
+        }
+        const prng = api.serviceManager.get<ISystemPseudoRandomNumberGenerator>(ISystemPseudoRandomNumberGenerator);
+        const generatedKey = await prng.generateRandomKey(numRequestedBytes);
+        const generatedKeyLength = generatedKey.length;
+        assert.ok(
+            generatedKeyLength === numRequestedBytes * 2, // *2 because the bytes are returned as hex
+            `Expected to generate ${numRequestedBytes} random bytes but instead generated ${generatedKeyLength} random bytes`
+        );
+        assert.ok(generatedKey !== '', `Generated key is null`);
+    });
 
     test('Run Cell in interactive window', async () => {
         const file = path.join(

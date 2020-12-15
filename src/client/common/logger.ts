@@ -3,7 +3,9 @@
 export {
     traceDecorators,
     logError as traceError,
+    logErrorIf as traceErrorIf,
     logInfo as traceInfo,
+    logInfoIf as traceInfoIf,
     logVerbose as traceVerbose,
     logWarning as traceWarning
 } from '../logging';

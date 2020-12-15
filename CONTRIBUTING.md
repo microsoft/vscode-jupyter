@@ -1,4 +1,4 @@
-# Contributing to the Python extension for Visual Studio Code
+# Contributing to the Jupyter extension for Visual Studio Code
 
 ---
 
@@ -16,7 +16,7 @@
 
 ### Prerequisites
 
-1. [Node.js](https://nodejs.org/) 12.15
+1. [Node.js](https://nodejs.org/) 12.14.1
 1. [Python](https://www.python.org/) 2.7 or later
 1. Windows, macOS, or Linux
 1. [Visual Studio Code](https://code.visualstudio.com/)
@@ -296,14 +296,3 @@ Resulting in a `ms-toolsai-jupyter-insiders.vsix` file in your `vscode-jupyter` 
 
 ⚠️ If you made changes to `package.json`, run `npm install` (instead of `npm ci`) to update `package-lock.json` and install dependencies all at once.
 
-## Development Build
-
-If you would like to use the latest version of the extension as committed to `main` that has passed our test suite, then you may set the `"jupyter.insidersChannel"` setting to `"daily"` or `"weekly"` based on how often you would like the extension to check for updates.
-
-You may also download and install the extension manually from the following
-[location](https://pvsc.blob.core.windows.net/extension-builds-jupyter/ms-toolsai-jupyter-insiders.vsix).
-Once you have downloaded the
-[ms-toolsai-jupyter-insiders.vsix](https://pvsc.blob.core.windows.net/extension-builds-jupyter/ms-toolsai-jupyter-insiders.vsix)
-file, please follow the instructions on
-[this page](https://code.visualstudio.com/docs/editor/extension-gallery#_install-from-a-vsix)
-to install the extension. Do note that the manual install will not automatically update to newer builds unless you set the `"jupyter.insidersChannel"` setting (it will get replaced with released versions from the Marketplace once they are newer than the version install manually).

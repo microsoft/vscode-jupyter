@@ -4,17 +4,19 @@
 'use strict';
 
 import { inject, injectable, named } from 'inversify';
-import { env, Event, EventEmitter, UIKind } from 'vscode';
-import { IApplicationShell } from '../common/application/types';
+import { Event, EventEmitter, UIKind } from 'vscode';
+import { IApplicationEnvironment, IApplicationShell } from '../common/application/types';
 import '../common/extensions';
 import {
     BANNER_NAME_DS_SURVEY,
     IBrowserService,
     IJupyterExtensionBanner,
+    IPersistentState,
     IPersistentStateFactory
 } from '../common/types';
 import * as localize from '../common/utils/localize';
 import { noop } from '../common/utils/misc';
+import { MillisecondsInADay } from '../constants';
 import { InteractiveWindowMessages, IReExecuteCells } from './interactive-common/interactiveWindowTypes';
 import { IInteractiveWindowListener, INotebookEditorProvider } from './types';
 
@@ -70,15 +72,38 @@ export class DataScienceSurveyBannerLogger implements IInteractiveWindowListener
     }
 }
 
+export type ShowBannerWithExpiryTime = {
+    /**
+     * This value is not used.
+     * We are only interested in the value for `expiry`.
+     * This structure is based on the old data for older customers when we used PersistentState class.
+     */
+    data: boolean;
+    /**
+     * If this is value `undefined`, then prompt can be displayed.
+     * If this value is `a number`, then a prompt was displayed at one point in time &
+     * we need to wait for Date.now() to be greater than that number to display it again.
+     */
+    expiry?: number;
+};
 @injectable()
 export class DataScienceSurveyBanner implements IJupyterExtensionBanner {
+    public get enabled(): boolean {
+        if (this.applicationEnvironment.uiKind !== UIKind.Desktop || this.applicationEnvironment.channel !== 'stable') {
+            return false;
+        }
+        if (!this.showBannerState.value.expiry) {
+            return true;
+        }
+        return this.showBannerState.value.expiry! < Date.now();
+    }
     private disabledInCurrentSession: boolean = false;
-    private isInitialized: boolean = false;
     private bannerMessage: string = localize.DataScienceSurveyBanner.bannerMessage();
     private bannerLabels: string[] = [
         localize.DataScienceSurveyBanner.bannerLabelYes(),
         localize.DataScienceSurveyBanner.bannerLabelNo()
     ];
+    private readonly showBannerState: IPersistentState<ShowBannerWithExpiryTime>;
     private readonly surveyLink: string;
 
     constructor(
@@ -86,57 +111,48 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner {
         @inject(IPersistentStateFactory) private persistentState: IPersistentStateFactory,
         @inject(IBrowserService) private browserService: IBrowserService,
         @inject(INotebookEditorProvider) editorProvider: INotebookEditorProvider,
+        @inject(IApplicationEnvironment) private applicationEnvironment: IApplicationEnvironment,
         surveyLink: string = 'https://aka.ms/pyaisurvey'
     ) {
         this.surveyLink = surveyLink;
-        this.initialize();
+        this.showBannerState = this.persistentState.createGlobalPersistentState<ShowBannerWithExpiryTime>(
+            DSSurveyStateKeys.ShowBanner,
+            {
+                data: true
+            }
+        );
         editorProvider.onDidOpenNotebookEditor(this.openedNotebook.bind(this));
     }
-
-    public initialize(): void {
-        if (this.isInitialized) {
-            return;
-        }
-        this.isInitialized = true;
-    }
-    public get enabled(): boolean {
-        return (
-            this.persistentState.createGlobalPersistentState<boolean>(DSSurveyStateKeys.ShowBanner, true).value &&
-            env.uiKind !== UIKind?.Web
-        );
-    }
-
     public async showBanner(): Promise<void> {
         if (!this.enabled || this.disabledInCurrentSession) {
             return;
         }
-
         const executionCount: number = this.getExecutionCount();
         const notebookCount: number = this.getOpenNotebookCount();
-        const show = await this.shouldShowBanner(executionCount, notebookCount);
+        const show = this.shouldShowBanner(executionCount, notebookCount);
         if (!show) {
             return;
         }
-
+        // Disable for the current session.
+        this.disabledInCurrentSession = true;
         const response = await this.appShell.showInformationMessage(this.bannerMessage, ...this.bannerLabels);
         switch (response) {
             case this.bannerLabels[DSSurveyLabelIndex.Yes]: {
                 await this.launchSurvey();
-                await this.disable();
+                // Disable for 6 months
+                await this.disable(6);
                 break;
             }
             case this.bannerLabels[DSSurveyLabelIndex.No]: {
-                await this.disable();
+                // Disable for 3 months
+                await this.disable(3);
                 break;
             }
-            default: {
-                // Disable for the current session.
-                this.disabledInCurrentSession = true;
-            }
+            default:
         }
     }
 
-    public async shouldShowBanner(executionCount: number, notebookOpenCount: number): Promise<boolean> {
+    public shouldShowBanner(executionCount: number, notebookOpenCount: number) {
         if (!this.enabled || this.disabledInCurrentSession) {
             return false;
         }
@@ -144,14 +160,14 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner {
         return executionCount >= NotebookExecutionThreshold || notebookOpenCount > NotebookOpenThreshold;
     }
 
-    public async disable(): Promise<void> {
-        await this.persistentState
-            .createGlobalPersistentState<boolean>(DSSurveyStateKeys.ShowBanner, false)
-            .updateValue(false);
-    }
-
     public async launchSurvey(): Promise<void> {
         this.browserService.launch(this.surveyLink);
+    }
+    private async disable(monthsTillNextPrompt: number) {
+        await this.showBannerState.updateValue({
+            expiry: monthsTillNextPrompt * 31 * MillisecondsInADay + Date.now(),
+            data: true
+        });
     }
 
     private getOpenNotebookCount(): number {

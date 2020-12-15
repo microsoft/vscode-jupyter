@@ -11,7 +11,7 @@ import { IPythonExtensionChecker } from '../../../api/types';
 import { IApplicationShell } from '../../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../../common/constants';
 import '../../../common/extensions';
-import { traceDecorators, traceError, traceInfo, traceVerbose } from '../../../common/logger';
+import { traceDecorators, traceError, traceInfo, traceInfoIf, traceVerbose } from '../../../common/logger';
 import { IConfigurationService, IDisposableRegistry, Resource } from '../../../common/types';
 import * as localize from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
@@ -19,8 +19,10 @@ import { StopWatch } from '../../../common/utils/stopWatch';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { captureTelemetry, IEventNamePropertyMapping, sendTelemetryEvent } from '../../../telemetry';
-import { Commands, KnownNotebookLanguages, Settings, Telemetry } from '../../constants';
+import { sendNotebookOrKernelLanguageTelemetry } from '../../common';
+import { Commands, Settings, Telemetry } from '../../constants';
 import { IKernelFinder } from '../../kernel-launcher/types';
+import { isPythonNotebook } from '../../notebook/helpers/helpers';
 import { getInterpreterInfoStoredInMetadata } from '../../notebookStorage/baseModel';
 import { reportAction } from '../../progress/decorator';
 import { ReportableAction } from '../../progress/types';
@@ -249,7 +251,9 @@ export class KernelSelector implements IKernelSelectionUsage {
         cancelToken?: CancellationToken
     ): Promise<KernelConnectionMetadata | undefined> {
         const [interpreter, specs, sessions] = await Promise.all([
-            this.interpreterService.getActiveInterpreter(resource),
+            this.extensionChecker.isPythonExtensionInstalled
+                ? this.interpreterService.getActiveInterpreter(resource)
+                : Promise.resolve(undefined),
             this.kernelService.getKernelSpecs(sessionManager, cancelToken),
             sessionManager?.getRunningSessions()
         ]);
@@ -349,11 +353,10 @@ export class KernelSelector implements IKernelSelectionUsage {
             );
             return cloneDeep(item);
         } else if (selection.kind === 'connectToLiveKernel') {
-            sendTelemetryEvent(Telemetry.SwitchToExistingKernel, undefined, {
-                language: this.computeLanguage(selection.kernelModel.language)
-            });
-            // tslint:disable-next-line: no-any
-            const interpreter = selection.kernelModel
+            sendNotebookOrKernelLanguageTelemetry(Telemetry.SwitchToExistingKernel, selection.kernelModel.language);
+            const interpreter = selection.interpreter
+                ? selection.interpreter
+                : selection.kernelModel && this.extensionChecker.isPythonExtensionInstalled
                 ? await this.kernelService.findMatchingInterpreter(selection.kernelModel, cancelToken)
                 : undefined;
             return cloneDeep({
@@ -362,13 +365,12 @@ export class KernelSelector implements IKernelSelectionUsage {
                 kind: 'connectToLiveKernel'
             });
         } else if (selection.kernelSpec) {
-            sendTelemetryEvent(Telemetry.SwitchToExistingKernel, undefined, {
-                language: this.computeLanguage(selection.kernelSpec.language)
-            });
-            const interpreter =
-                selection.kernelSpec && this.extensionChecker.isPythonExtensionInstalled
-                    ? await this.kernelService.findMatchingInterpreter(selection.kernelSpec, cancelToken)
-                    : undefined;
+            sendNotebookOrKernelLanguageTelemetry(Telemetry.SwitchToExistingKernel, selection.kernelSpec.language);
+            const interpreter = selection.interpreter
+                ? selection.interpreter
+                : selection.kernelSpec && this.extensionChecker.isPythonExtensionInstalled
+                ? await this.kernelService.findMatchingInterpreter(selection.kernelSpec, cancelToken)
+                : undefined;
             await this.kernelService.updateKernelEnvironment(interpreter, selection.kernelSpec, cancelToken);
             return cloneDeep({ kernelSpec: selection.kernelSpec, interpreter, kind: 'startUsingKernelSpec' });
         } else if (selection.interpreter && type === 'raw') {
@@ -533,6 +535,10 @@ export class KernelSelector implements IKernelSelectionUsage {
 
         // First use our kernel finder to locate a kernelspec on disk
         const kernelSpec = await this.kernelFinder.findKernelSpec(resource, notebookMetadata, cancelToken);
+        traceInfoIf(
+            !!process.env.VSC_JUPYTER_FORCE_LOGGING,
+            `Kernel spec found ${JSON.stringify(kernelSpec)}, metadata ${JSON.stringify(notebookMetadata || '')}`
+        );
         const isNonPythonKernelSPec = kernelSpec?.language && kernelSpec.language !== PYTHON_LANGUAGE ? true : false;
         const activeInterpreter = this.extensionChecker.isPythonExtensionInstalled
             ? await this.interpreterService.getActiveInterpreter(resource)
@@ -567,7 +573,8 @@ export class KernelSelector implements IKernelSelectionUsage {
             const kernelSpecs = await this.kernelFinder.listKernelSpecs(resource);
 
             // Do a bit of hack and pick a python one first if the resource is a python file
-            if (resource?.fsPath && resource.fsPath.endsWith('.py')) {
+            // Or if its a python notebook.
+            if (isPythonNotebook(notebookMetadata) || (resource?.fsPath && resource.fsPath.endsWith('.py'))) {
                 const firstPython = kernelSpecs.find((k) => k.language === 'python');
                 if (firstPython) {
                     return { kind: 'startUsingKernelSpec', kernelSpec: firstPython, interpreter: undefined };
@@ -623,7 +630,9 @@ export class KernelSelector implements IKernelSelectionUsage {
                 KernelInterpreterDependencyResponse.ok
             ) {
                 throw new Error(
-                    localize.DataScience.ipykernelNotInstalled().format(interpreter.displayName || interpreter.path)
+                    localize.DataScience.ipykernelNotInstalled().format(
+                        `${interpreter.displayName || interpreter.path}:${interpreter.path}`
+                    )
                 );
             }
         }
@@ -699,12 +708,5 @@ export class KernelSelector implements IKernelSelectionUsage {
         if (kernelSpec) {
             return { kind: 'startUsingKernelSpec', kernelSpec, interpreter };
         }
-    }
-
-    private computeLanguage(language: string | undefined): string {
-        if (language && KnownNotebookLanguages.includes(language.toLowerCase())) {
-            return language;
-        }
-        return 'unknown';
     }
 }

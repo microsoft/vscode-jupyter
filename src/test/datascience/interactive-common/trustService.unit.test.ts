@@ -5,6 +5,7 @@
 import { assert } from 'chai';
 import * as fs from 'fs-extra';
 import * as os from 'os';
+import { SystemPseudoRandomNumberGenerator } from '../../../client/datascience/interactive-ipynb/randomBytes';
 import { anything, instance, mock, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import { Uri } from 'vscode';
@@ -14,9 +15,11 @@ import { IExtensionContext } from '../../../client/common/types';
 import { DigestStorage } from '../../../client/datascience/interactive-ipynb/digestStorage';
 import { TrustService } from '../../../client/datascience/interactive-ipynb/trustService';
 import { MockMemento } from '../../mocks/mementos';
+import { PlatformService } from '../../../client/common/platform/platformService';
 
 suite('DataScience - TrustService', () => {
     let trustService: TrustService;
+    let prng: SystemPseudoRandomNumberGenerator;
     let alwaysTrustNotebooks: boolean = false;
     setup(() => {
         alwaysTrustNotebooks = false;
@@ -34,7 +37,8 @@ suite('DataScience - TrustService', () => {
         when(fileSystem.readLocalFile(anything())).thenCall((f) => fs.readFile(f));
         when(fileSystem.createLocalDirectory(anything())).thenCall((d) => fs.mkdir(d));
         when(fileSystem.localDirectoryExists(anything())).thenCall((d) => fs.pathExists(d));
-        const digestStorage = new DigestStorage(instance(fileSystem), context.object);
+        prng = new SystemPseudoRandomNumberGenerator(new PlatformService());
+        const digestStorage = new DigestStorage(instance(fileSystem), context.object, prng);
         trustService = new TrustService(digestStorage, instance(configService));
     });
 

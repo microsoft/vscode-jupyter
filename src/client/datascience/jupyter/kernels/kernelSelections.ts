@@ -4,21 +4,27 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
+import { cloneDeep } from 'lodash';
 import * as path from 'path';
 import { CancellationToken, EventEmitter } from 'vscode';
 import { IPythonExtensionChecker } from '../../../api/types';
-import { traceError } from '../../../common/logger';
+import { PYTHON_LANGUAGE } from '../../../common/constants';
+import { traceError, traceInfo } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 import { IPathUtils, Resource } from '../../../common/types';
 import { createDeferredFromPromise } from '../../../common/utils/async';
 import * as localize from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
 import { IInterpreterSelector } from '../../../interpreter/configuration/types';
+import { IInterpreterService } from '../../../interpreter/contracts';
+import { sendTelemetryEvent } from '../../../telemetry';
+import { Telemetry } from '../../constants';
 import { IKernelFinder } from '../../kernel-launcher/types';
 import { IJupyterKernelSpec, IJupyterSessionManager } from '../../types';
-import { detectDefaultKernelName } from './helpers';
+import { detectDefaultKernelName, isPythonKernelConnection } from './helpers';
 import { KernelService } from './kernelService';
 import {
+    getKernelConnectionId,
     IKernelSelectionListProvider,
     IKernelSpecQuickPickItem,
     KernelSpecConnectionMetadata,
@@ -30,6 +36,7 @@ import {
 // Small classes, hence all put into one file.
 // tslint:disable: max-classes-per-file
 
+const isSimplePythonDisplayName = /python\s?\d?\.?\d?/;
 /**
  * Given a kernel spec, this will return a quick pick item with appropriate display names and the like.
  *
@@ -41,10 +48,35 @@ function getQuickPickItemForKernelSpec(
     kernelSpec: IJupyterKernelSpec,
     pathUtils: IPathUtils
 ): IKernelSpecQuickPickItem<KernelSpecConnectionMetadata> {
+    // If we have a matching interpreter, then display that path in the dropdown else path of the kernelspec.
+    const pathToKernel = kernelSpec.metadata?.interpreter?.path || kernelSpec.path;
+
+    // Its possible we could have kernels with the same name.
+    // Include the path of the interpreter that owns this kernel or path of kernelspec.json file in description.
+    // If we only have name of executable like `dotnet` or `python`, then include path to kernel json.
+    // Similarly if this is a python kernel and pathTokernel is just `python`, look for corresponding interpreter that owns this and include its path.
+
+    // E.g.
+    // If its a python kernel with python path in kernel spec we display:
+    //  detail: ~/user friendly path to python interpreter
+    // If its a non-python kernel and we have the fully qualified path to executable:
+    //  detail: ~/user friendly path to executable
+    // If its a non-python kernel and we only have name of executable like `java/dotnet` & we we have the fully qualified path to interpreter that owns this kernel:
+    //  detail: ~/user friendly path to kenelspec.json file
+
+    let detail = pathUtils.getDisplayName(pathToKernel);
+    if (pathToKernel === path.basename(pathToKernel)) {
+        const pathToInterpreterOrKernelSpec =
+            kernelSpec.language?.toLowerCase() === PYTHON_LANGUAGE.toLocaleLowerCase()
+                ? kernelSpec.interpreterPath
+                : kernelSpec.specFile || '';
+        if (pathToInterpreterOrKernelSpec) {
+            detail = pathUtils.getDisplayName(pathToInterpreterOrKernelSpec);
+        }
+    }
     return {
         label: kernelSpec.display_name,
-        // If we have a matching interpreter, then display that path in the dropdown else path of the kernelspec.
-        detail: pathUtils.getDisplayName(kernelSpec.metadata?.interpreter?.path || kernelSpec.path),
+        detail,
         selection: {
             kernelModel: undefined,
             kernelSpec: kernelSpec,
@@ -128,14 +160,40 @@ export class InstalledJupyterKernelSelectionListProvider
     constructor(
         private readonly kernelService: KernelService,
         private readonly pathUtils: IPathUtils,
+        private readonly extensionChecker: IPythonExtensionChecker,
+        private readonly interpreterService: IInterpreterService,
         private readonly sessionManager?: IJupyterSessionManager
     ) {}
     public async getKernelSelections(
-        _resource: Resource,
+        resource: Resource,
         cancelToken?: CancellationToken | undefined
     ): Promise<IKernelSpecQuickPickItem<KernelSpecConnectionMetadata>[]> {
         const items = await this.kernelService.getKernelSpecs(this.sessionManager, cancelToken);
-        return items.map((item) => getQuickPickItemForKernelSpec(item, this.pathUtils));
+        // Always clone, so we can make changes to this.
+        const selections = items.map((item) => getQuickPickItemForKernelSpec(cloneDeep(item), this.pathUtils));
+
+        // Default the interpreter to the local interpreter (if none is provided).
+        if (this.extensionChecker.isPythonExtensionInstalled) {
+            const activeInterpreter = this.interpreterService.getActiveInterpreter(resource);
+            // This process is slow, hence the need to cache this result set.
+            await Promise.all(
+                selections.map(async (kernel) => {
+                    // Find matching interpreter for Python kernels.
+                    if (
+                        !kernel.selection.interpreter &&
+                        kernel.selection.kernelSpec &&
+                        kernel.selection.kernelSpec?.language === PYTHON_LANGUAGE.toLocaleLowerCase()
+                    ) {
+                        kernel.selection.interpreter = await this.kernelService.findMatchingInterpreter(
+                            kernel.selection.kernelSpec
+                        );
+                    }
+                    kernel.selection.interpreter = kernel.selection.interpreter || (await activeInterpreter);
+                })
+            );
+        }
+        sendTelemetryEvent(Telemetry.NumberOfRemoteKernelSpecs, { count: selections.length });
+        return selections;
     }
 }
 
@@ -148,7 +206,7 @@ export class InstalledRawKernelSelectionListProvider
         _cancelToken?: CancellationToken
     ): Promise<IKernelSpecQuickPickItem<KernelSpecConnectionMetadata>[]> {
         const items = await this.kernelFinder.listKernelSpecs(resource);
-        return items
+        const selections = items
             .filter((item) => {
                 // If we have a default kernel name and a non-absolute path just hide the item
                 // Otherwise we end up showing a bunch of "Python 3 - python" default items for
@@ -160,6 +218,8 @@ export class InstalledRawKernelSelectionListProvider
                 return true;
             })
             .map((item) => getQuickPickItemForKernelSpec(item, this.pathUtils));
+        sendTelemetryEvent(Telemetry.NumberOfLocalKernelSpecs, { count: selections.length });
+        return selections;
     }
 }
 
@@ -218,6 +278,7 @@ export class KernelSelectionProvider {
     constructor(
         @inject(KernelService) private readonly kernelService: KernelService,
         @inject(IInterpreterSelector) private readonly interpreterSelector: IInterpreterSelector,
+        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IPathUtils) private readonly pathUtils: IPathUtils,
         @inject(IKernelFinder) private readonly kernelFinder: IKernelFinder,
@@ -241,6 +302,8 @@ export class KernelSelectionProvider {
             const installedKernelsPromise = new InstalledJupyterKernelSelectionListProvider(
                 this.kernelService,
                 this.pathUtils,
+                this.extensionChecker,
+                this.interpreterService,
                 sessionManager
             ).getKernelSelections(resource, cancelToken);
             const liveKernelsPromise = new ActiveJupyterSessionKernelSelectionListProvider(
@@ -295,6 +358,8 @@ export class KernelSelectionProvider {
                     installedKernelsPromise = new InstalledJupyterKernelSelectionListProvider(
                         this.kernelService,
                         this.pathUtils,
+                        this.extensionChecker,
+                        this.interpreterService,
                         sessionManager
                     ).getKernelSelections(resource, cancelToken);
                     break;
@@ -315,19 +380,45 @@ export class KernelSelectionProvider {
                 .filter((item) => {
                     // If the interpreter is registered as a kernel then don't inlcude it.
                     if (
-                        installedKernels.find(
-                            (installedKernel) =>
-                                installedKernel.selection.kernelSpec?.display_name ===
-                                    item.selection.interpreter?.displayName &&
-                                (this.fs.areLocalPathsSame(
-                                    (installedKernel.selection.kernelSpec?.argv || [])[0],
-                                    item.selection.interpreter?.path || ''
+                        installedKernels.find((installedKernel) => {
+                            if (!isPythonKernelConnection(installedKernel.selection)) {
+                                return false;
+                            }
+
+                            const kernelDisplayName =
+                                installedKernel.selection.kernelSpec?.display_name ||
+                                installedKernel.selection.kernelSpec?.name ||
+                                '';
+                            // Possible user has a kernel named `Python` or `Python 3`.
+                            // & if we have such a kernel, we should not display the corresponding interpreter.
+                            if (
+                                kernelDisplayName !== item.selection.interpreter?.displayName &&
+                                !isSimplePythonDisplayName.test(kernelDisplayName.toLowerCase())
+                            ) {
+                                return false;
+                            }
+
+                            // If the python kernel belongs to an existing interpreter with the same path,
+                            // Or if the python kernel has the exact same path as the interpreter, then its a duplicate.
+                            // Paths on windows can either contain \ or / Both work.
+                            // Thus, C:\Python.exe is the same as C:/Python.exe
+                            // In the kernelspec.json we could have paths in argv such as C:\\Python.exe or C:/Python.exe.
+                            const interpreterPathToCheck = (item.selection.interpreter.path || '').replace(/\\/g, '/');
+                            return (
+                                this.fs.areLocalPathsSame(
+                                    ((installedKernel.selection.kernelSpec?.argv || [])[0] || '').replace(/\\/g, '/'),
+                                    interpreterPathToCheck
                                 ) ||
-                                    this.fs.areLocalPathsSame(
-                                        installedKernel.selection.kernelSpec?.metadata?.interpreter?.path || '',
-                                        item.selection.interpreter?.path || ''
-                                    ))
-                        )
+                                this.fs.areLocalPathsSame(
+                                    (
+                                        installedKernel.selection.kernelSpec?.interpreterPath ||
+                                        installedKernel.selection.kernelSpec?.metadata?.interpreter?.path ||
+                                        ''
+                                    ).replace(/\\/g, '/'),
+                                    interpreterPathToCheck
+                                )
+                            );
+                        })
                     ) {
                         return false;
                     }
@@ -342,7 +433,17 @@ export class KernelSelectionProvider {
             // Sort by name.
             unifiedList.sort((a, b) => (a.label === b.label ? 0 : a.label > b.label ? 1 : -1));
 
-            return unifiedList;
+            // Remote duplicates.
+            const duplicatesList = new Set<string>();
+            return unifiedList.filter((item) => {
+                const id = getKernelConnectionId(item.selection);
+                if (duplicatesList.has(id)) {
+                    return false;
+                } else {
+                    duplicatesList.add(id);
+                    return true;
+                }
+            });
         };
 
         const liveItems = getSelections().then((items) => (this.localSuggestionsCache = items));
@@ -365,6 +466,7 @@ export class KernelSelectionProvider {
                             liveItemsList.length > 0 &&
                             JSON.stringify(liveItemsList) !== JSON.stringify(cachedItemsList)
                         ) {
+                            traceInfo('Notify changes to list of local kernels');
                             this._listChanged.fire(resource);
                         }
                     } catch (ex) {
