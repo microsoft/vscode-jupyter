@@ -26,12 +26,11 @@ export class VariableViewPanel extends React.Component<IVariableViewPanelProps> 
 
     public componentDidMount() {
         document.addEventListener('click', this.linkClick, true);
-        this.props.editorLoaded(); // We don't have an editor, but this action signals that the view is ready, so just reuse it here
+        this.props.variableViewLoaded();
     }
 
     public componentWillUnmount() {
         document.removeEventListener('click', this.linkClick);
-        this.props.editorUnmounted();
     }
 
     public render() {

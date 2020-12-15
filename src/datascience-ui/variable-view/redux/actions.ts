@@ -38,8 +38,7 @@ export const actionCreators = {
         createIncomingActionWithPayload(CommonActionType.SET_VARIABLE_EXPLORER_HEIGHT, { containerHeight, gridHeight }),
     showDataViewer: (variable: IJupyterVariable, columnSize: number): CommonAction<IShowDataViewerAction> =>
         createIncomingActionWithPayload(CommonActionType.SHOW_DATA_VIEWER, { variable, columnSize }),
-    editorLoaded: (): CommonAction => createIncomingAction(CommonActionType.EDITOR_LOADED),
-    editorUnmounted: (): CommonAction => createIncomingAction(CommonActionType.UNMOUNT),
+    variableViewLoaded: (): CommonAction => createIncomingAction(CommonActionType.VARIABLE_VIEW_LOADED),
     getVariableData: (
         newExecutionCount: number,
         refreshCount: number,

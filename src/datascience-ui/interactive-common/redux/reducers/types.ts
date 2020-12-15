@@ -83,7 +83,8 @@ export enum CommonActionType {
     TOGGLE_OUTPUT = 'action.toggle_output',
     TOGGLE_VARIABLE_EXPLORER = 'action.toggle_variable_explorer',
     UNFOCUS_CELL = 'action.unfocus_cell',
-    UNMOUNT = 'action.unmount'
+    UNMOUNT = 'action.unmount',
+    VARIABLE_VIEW_LOADED = 'action.variable_view_loaded'
 }
 
 export type CommonActionTypeMapping = {
@@ -146,6 +147,7 @@ export type CommonActionTypeMapping = {
     [CommonActionType.STEP]: ICellAction;
     [CommonActionType.CONTINUE]: ICellAction;
     [CommonActionType.RUN_BY_LINE]: ICellAction;
+    [CommonActionType.VARIABLE_VIEW_LOADED]: never | undefined;
 };
 
 export interface IShowDataViewerAction extends IShowDataViewer {}

@@ -17,5 +17,5 @@ export const reducerMap: Partial<IVariableViewPanelActionMapping> = {
     [CssMessages.GetCssResponse]: CommonEffects.handleCss,
     [SharedMessages.UpdateSettings]: Effects.updateSettings,
     [SharedMessages.LocInit]: CommonEffects.handleLocInit,
-    [CommonActionType.EDITOR_LOADED]: Transfer.started
+    [CommonActionType.VARIABLE_VIEW_LOADED]: Transfer.variableViewStarted
 };
