@@ -49,8 +49,8 @@ export namespace Commands {
     export const RunAllCells = 'jupyter.runallcells';
     export const RunAllCellsAbove = 'jupyter.runallcellsabove';
     export const RunCellAndAllBelow = 'jupyter.runcellandallbelow';
-    export const NativeNotebookRunAllCellsAbove = 'jupyter.notebookEditor.runallcellsabove';
-    export const NativeNotebookRunCellAndAllBelow = 'jupyter.notebookEditor.runcellandallbelow';
+    export const NativeNotebookRunAllCellsAbove = 'jupyter.notebookeditor.runallcellsabove';
+    export const NativeNotebookRunCellAndAllBelow = 'jupyter.notebookeditor.runcellandallbelow';
     export const SetJupyterKernel = 'jupyter.setKernel';
     export const SwitchJupyterKernel = 'jupyter.switchKernel';
     export const RunAllCellsAbovePalette = 'jupyter.runallcellsabove.palette';

@@ -285,14 +285,14 @@ export class NotebookEditor implements INotebookEditor {
         }
     }
 
-    private getSelectedCellId(uri: Uri): string {
+    private getSelectedCellId(uri: Uri): string | undefined {
         const editor = this.vscodeNotebook.notebookEditors.find((nb) => nb.document.uri.toString() === uri.toString());
 
         if (editor && editor.selection) {
             return editor.selection.uri.toString();
         }
 
-        return '';
+        return undefined;
     }
 
     private runCellRange(cells: NotebookCell[]) {
@@ -303,8 +303,7 @@ export class NotebookEditor implements INotebookEditor {
         }
 
         cells.forEach(async (cell) => {
-            // 2 means code cell
-            if (cell.cellKind === 2) {
+            if (cell.cellKind === vscodeNotebookEnums.CellKind.Code) {
                 await kernel.executeCell(cell);
             }
         });

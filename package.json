@@ -280,7 +280,7 @@
                 "enablement": "notebookViewType == jupyter-notebook && jupyter.isnotebooktrusted"
             },
             {
-                "command": "jupyter.notebookEditor.runallcellsabove",
+                "command": "jupyter.notebookeditor.runallcellsabove",
                 "title": "%DataScience.runAbove%",
                 "category": "Jupyter",
                 "icon": {
@@ -290,7 +290,7 @@
                 "enablement": "notebookViewType == jupyter-notebook && jupyter.isnotebooktrusted"
             },
             {
-                "command": "jupyter.notebookEditor.runcellandallbelow",
+                "command": "jupyter.notebookeditor.runcellandallbelow",
                 "title": "%DataScience.runBelow%",
                 "category": "Jupyter",
                 "icon": {
@@ -754,13 +754,13 @@
             ],
             "editor/title": [
                 {
-                    "command": "jupyter.notebookEditor.runallcellsabove",
+                    "command": "jupyter.notebookeditor.runallcellsabove",
                     "title": "%DataScience.runAbove%",
                     "group": "navigation",
                     "when": "resourceLangId == jupyter && notebookViewType == 'jupyter-notebook' && jupyter.isnotebooktrusted && jupyter.havenativecells"
                 },
                 {
-                    "command": "jupyter.notebookEditor.runcellandallbelow",
+                    "command": "jupyter.notebookeditor.runcellandallbelow",
                     "title": "%DataScience.runBelow%",
                     "group": "navigation",
                     "when": "resourceLangId == jupyter && notebookViewType == 'jupyter-notebook' && jupyter.isnotebooktrusted && jupyter.havenativecells"
