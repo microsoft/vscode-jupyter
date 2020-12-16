@@ -12,7 +12,13 @@ import { EXTENSION_ROOT_DIR } from '../../common/constants';
 import { traceError } from '../../common/logger';
 import { IConfigurationService, IDisposable, Resource } from '../../common/types';
 import { InteractiveWindowMessages } from '../../datascience/interactive-common/interactiveWindowTypes';
-import { ICodeCssGenerator, IJupyterVariablesRequest, IJupyterVariablesResponse, IThemeFinder } from '../types';
+import {
+    ICodeCssGenerator,
+    IJupyterVariables,
+    IJupyterVariablesRequest,
+    INotebookEditorProvider,
+    IThemeFinder
+} from '../types';
 import { WebviewViewHost } from '../webviews/webviewViewHost';
 import { IVariableViewPanelMapping } from './types';
 import { VariableViewMessageListener } from './variableViewMessageListener';
@@ -30,7 +36,9 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
         @unmanaged() cssGenerator: ICodeCssGenerator,
         @unmanaged() themeFinder: IThemeFinder,
         @unmanaged() workspaceService: IWorkspaceService,
-        @unmanaged() provider: IWebviewViewProvider
+        @unmanaged() provider: IWebviewViewProvider,
+        @unmanaged() private readonly variables: IJupyterVariables,
+        @unmanaged() private readonly notebookEditorProvider: INotebookEditorProvider
     ) {
         super(
             configuration,
@@ -79,28 +87,38 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
     }
 
     // This is called when the UI side requests new variable data
-    private async requestVariables(args: IJupyterVariablesRequest): Promise<void> {
-        // For now, this just returns a fake variable that we can display in the UI
-        const response: IJupyterVariablesResponse = {
-            totalCount: 1,
-            pageResponse: [
-                {
-                    name: 'test',
-                    value: 'testing',
-                    executionCount: args?.executionCount,
-                    supportsDataExplorer: false,
-                    type: 'string',
-                    size: 1,
-                    shape: '(1, 1)',
-                    count: 1,
-                    truncated: false
-                }
-            ],
-            pageStartIndex: args?.startIndex,
-            executionCount: args?.executionCount,
-            refreshCount: args?.refreshCount || 0
-        };
+    //private async requestVariables(args: IJupyterVariablesRequest): Promise<void> {
+    //// For now, this just returns a fake variable that we can display in the UI
+    //const response: IJupyterVariablesResponse = {
+    //totalCount: 1,
+    //pageResponse: [
+    //{
+    //name: 'test',
+    //value: 'testing',
+    //executionCount: args?.executionCount,
+    //supportsDataExplorer: false,
+    //type: 'string',
+    //size: 1,
+    //shape: '(1, 1)',
+    //count: 1,
+    //truncated: false
+    //}
+    //],
+    //pageStartIndex: args?.startIndex,
+    //executionCount: args?.executionCount,
+    //refreshCount: args?.refreshCount || 0
+    //};
 
-        this.postMessage(InteractiveWindowMessages.GetVariablesResponse, response).ignoreErrors();
+    //this.postMessage(InteractiveWindowMessages.GetVariablesResponse, response).ignoreErrors();
+    //}
+
+    private async requestVariables(args: IJupyterVariablesRequest): Promise<void> {
+        // Test to see if we can hook up to the active notebook
+        // Need to test for only native notebooks here?
+        if (this.notebookEditorProvider.activeEditor && this.notebookEditorProvider.activeEditor.notebook) {
+            const response = await this.variables.getVariables(args, this.notebookEditorProvider.activeEditor.notebook);
+
+            this.postMessage(InteractiveWindowMessages.GetVariablesResponse, response).ignoreErrors(); // Trace errors here?
+        }
     }
 }
