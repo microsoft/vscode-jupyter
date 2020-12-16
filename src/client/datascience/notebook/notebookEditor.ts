@@ -4,14 +4,14 @@
 'use strict';
 
 import { ConfigurationTarget, Event, EventEmitter, Uri, WebviewPanel } from 'vscode';
-import type { NotebookCell, NotebookDocument } from '../../../../types/vscode-proposed';
+import { NotebookCell, NotebookDocument } from '../../../../types/vscode-proposed';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import { traceError } from '../../common/logger';
 import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../common/types';
 import { DataScience } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
-import { Telemetry } from '../constants';
+import { Commands, Telemetry } from '../constants';
 import { JupyterKernelPromiseFailedError } from '../jupyter/kernels/jupyterKernelPromiseFailedError';
 import { IKernel, IKernelProvider } from '../jupyter/kernels/types';
 import {
@@ -94,6 +94,14 @@ export class NotebookEditor implements INotebookEditor {
             })
         );
         disposables.push(model.onDidDispose(this._closed.fire.bind(this._closed, this)));
+        disposables.push(
+            commandManager.registerCommand(Commands.NativeNotebookRunAllCellsAbove, (uri) => this.runAbove(uri))
+        );
+        disposables.push(
+            commandManager.registerCommand(Commands.NativeNotebookRunCellAndAllBelow, (uri) =>
+                this.runCellAndBelow(uri)
+            )
+        );
     }
     @captureTelemetry(Telemetry.SyncAllCells)
     public async syncAllCells(): Promise<void> {
@@ -254,6 +262,52 @@ export class NotebookEditor implements INotebookEditor {
     }
     public dispose() {
         this._closed.fire(this);
+    }
+
+    public runAbove(uri: Uri): void {
+        const cellId = this.getSelectedCellId(uri);
+        const index = this.document.cells.findIndex((c) => c.uri.toString() === cellId);
+
+        if (index > 0) {
+            // Get all cellIds until `index`.
+            const cells = this.document.cells.slice(0, index).map((cell) => cell);
+            this.runCellRange(cells);
+        }
+    }
+    public runCellAndBelow(uri: Uri): void {
+        const cellId = this.getSelectedCellId(uri);
+        const index = this.document.cells.findIndex((c) => c.uri.toString() === cellId);
+
+        if (index >= 0) {
+            // Get all cellIds starting from `index`.
+            const cells = this.document.cells.slice(index).map((cell) => cell);
+            this.runCellRange(cells);
+        }
+    }
+
+    private getSelectedCellId(uri: Uri): string {
+        const editor = this.vscodeNotebook.notebookEditors.find((nb) => nb.document.uri.toString() === uri.toString());
+
+        if (editor && editor.selection) {
+            return editor.selection.uri.toString();
+        }
+
+        return '';
+    }
+
+    private runCellRange(cells: NotebookCell[]) {
+        const kernel = this.kernelProvider.get(this.file);
+
+        if (!kernel || this.restartingKernel) {
+            return;
+        }
+
+        cells.forEach(async (cell) => {
+            // 2 means code cell
+            if (cell.cellKind === 2) {
+                await kernel.executeCell(cell);
+            }
+        });
     }
 
     private async restartKernelInternal(kernel: IKernel): Promise<void> {

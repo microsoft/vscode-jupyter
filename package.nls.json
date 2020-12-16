@@ -394,6 +394,8 @@
     "DataScience.insertAbove": "Insert cell above",
     "DataScience.addCell": "Add cell",
     "DataScience.runAll": "Run all cells",
+    "DataScience.runAbove": "Run cells above",
+    "DataScience.runBelow": "Run cell and below",
     "DataScience.convertingToPythonFile": "Converting ipynb to python file",
     "DataScience.untitledNotebookMessage": "Your changes will be lost if you don't save them.",
     "DataScience.untitledNotebookYes": "Save",
