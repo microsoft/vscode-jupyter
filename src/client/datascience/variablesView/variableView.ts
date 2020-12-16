@@ -10,15 +10,18 @@ import { WebviewView as vscodeWebviewView } from 'vscode';
 import { IWebviewViewProvider, IWorkspaceService } from '../../common/application/types';
 import { EXTENSION_ROOT_DIR } from '../../common/constants';
 import { traceError } from '../../common/logger';
-import { IConfigurationService, IDisposable, Resource } from '../../common/types';
+import { IConfigurationService, IDisposable, IDisposableRegistry, Resource } from '../../common/types';
 import { InteractiveWindowMessages } from '../../datascience/interactive-common/interactiveWindowTypes';
+import { KernelState, KernelStateEventArgs } from '../notebookExtensibility';
 import {
     ICodeCssGenerator,
     IJupyterVariables,
     IJupyterVariablesRequest,
     INotebookEditorProvider,
+    INotebookExtensibility,
     IThemeFinder
 } from '../types';
+import { translateCellFromNative } from '../utils';
 import { WebviewViewHost } from '../webviews/webviewViewHost';
 import { IVariableViewPanelMapping } from './types';
 import { VariableViewMessageListener } from './variableViewMessageListener';
@@ -38,7 +41,9 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
         @unmanaged() workspaceService: IWorkspaceService,
         @unmanaged() provider: IWebviewViewProvider,
         @unmanaged() private readonly variables: IJupyterVariables,
-        @unmanaged() private readonly notebookEditorProvider: INotebookEditorProvider
+        @unmanaged() private readonly notebookEditorProvider: INotebookEditorProvider,
+        @unmanaged() private readonly notebookExtensibility: INotebookExtensibility,
+        @unmanaged() private readonly disposables: IDisposableRegistry
     ) {
         super(
             configuration,
@@ -50,6 +55,7 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
             variableViewDir,
             [path.join(variableViewDir, 'commons.initial.bundle.js'), path.join(variableViewDir, 'variableView.js')]
         );
+        this.notebookExtensibility.onKernelStateChange(this.kernelStateChanged, this, this.disposables);
     }
 
     public async load(codeWebview: vscodeWebviewView) {
@@ -86,32 +92,6 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
         handler.bind(this)(args);
     }
 
-    // This is called when the UI side requests new variable data
-    //private async requestVariables(args: IJupyterVariablesRequest): Promise<void> {
-    //// For now, this just returns a fake variable that we can display in the UI
-    //const response: IJupyterVariablesResponse = {
-    //totalCount: 1,
-    //pageResponse: [
-    //{
-    //name: 'test',
-    //value: 'testing',
-    //executionCount: args?.executionCount,
-    //supportsDataExplorer: false,
-    //type: 'string',
-    //size: 1,
-    //shape: '(1, 1)',
-    //count: 1,
-    //truncated: false
-    //}
-    //],
-    //pageStartIndex: args?.startIndex,
-    //executionCount: args?.executionCount,
-    //refreshCount: args?.refreshCount || 0
-    //};
-
-    //this.postMessage(InteractiveWindowMessages.GetVariablesResponse, response).ignoreErrors();
-    //}
-
     private async requestVariables(args: IJupyterVariablesRequest): Promise<void> {
         // Test to see if we can hook up to the active notebook
         // Need to test for only native notebooks here?
@@ -119,6 +99,17 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
             const response = await this.variables.getVariables(args, this.notebookEditorProvider.activeEditor.notebook);
 
             this.postMessage(InteractiveWindowMessages.GetVariablesResponse, response).ignoreErrors(); // Trace errors here?
+        }
+    }
+
+    // Called when the kernel state is changed. Need to inform the UI that something has executed
+    // Maybe just use INotebookExecutionLogger directly since we convert to ICell?
+    private async kernelStateChanged(kernelStateEvent: KernelStateEventArgs) {
+        if (kernelStateEvent.state === KernelState.executed && kernelStateEvent.cell) {
+            const oldCell = translateCellFromNative(kernelStateEvent.cell);
+
+            // IANHU: Just use a message to update execution count? Not the entire cell?
+            this.postMessage(InteractiveWindowMessages.FinishCell, {});
         }
     }
 }
