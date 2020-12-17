@@ -11,7 +11,7 @@ import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../c
 import { DataScience } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
-import { Commands, Telemetry } from '../constants';
+import { Telemetry } from '../constants';
 import { JupyterKernelPromiseFailedError } from '../jupyter/kernels/jupyterKernelPromiseFailedError';
 import { IKernel, IKernelProvider } from '../jupyter/kernels/types';
 import {
@@ -82,7 +82,7 @@ export class NotebookEditor implements INotebookEditor {
         private readonly statusProvider: IStatusProvider,
         private readonly applicationShell: IApplicationShell,
         private readonly configurationService: IConfigurationService,
-        private readonly disposables: IDisposableRegistry,
+        disposables: IDisposableRegistry,
         private readonly cellLanguageService: NotebookCellLanguageService
     ) {
         disposables.push(model.onDidEdit(() => this._modified.fire(this)));
@@ -94,7 +94,6 @@ export class NotebookEditor implements INotebookEditor {
             })
         );
         disposables.push(model.onDidDispose(this._closed.fire.bind(this._closed, this)));
-        this.init().ignoreErrors();
     }
     @captureTelemetry(Telemetry.SyncAllCells)
     public async syncAllCells(): Promise<void> {
@@ -275,24 +274,6 @@ export class NotebookEditor implements INotebookEditor {
             // Get all cellIds starting from `index`.
             const cells = this.document.cells.slice(index).map((cell) => cell);
             this.runCellRange(cells);
-        }
-    }
-
-    private async init() {
-        const commands = await this.commandManager.getCommands();
-        const index = commands.findIndex((c) => c === Commands.NativeNotebookRunAllCellsAbove);
-
-        if (index === -1) {
-            this.disposables.push(
-                this.commandManager.registerCommand(Commands.NativeNotebookRunAllCellsAbove, (uri) =>
-                    this.runAbove(uri)
-                )
-            );
-            this.disposables.push(
-                this.commandManager.registerCommand(Commands.NativeNotebookRunCellAndAllBelow, (uri) =>
-                    this.runCellAndBelow(uri)
-                )
-            );
         }
     }
 
