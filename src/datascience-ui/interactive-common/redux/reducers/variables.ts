@@ -208,7 +208,7 @@ function updateExecutionCount(arg: VariableReducerArg<{ executionCount: number }
 
     // IANHU: Combine with the below function?
     // If the variables are visible, refresh them
-    if (arg.prevState.visible && executionCount) {
+    if (arg.prevState.visible && executionCount && executionCount > arg.prevState.currentExecutionCount) {
         return handleRequest({
             ...arg,
             payload: {
