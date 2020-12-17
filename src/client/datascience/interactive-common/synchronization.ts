@@ -130,6 +130,7 @@ const messageWithMessageTypes: MessageMapping<IInteractiveWindowMapping> & Messa
     [InteractiveWindowMessages.GetAllCells]: MessageType.other,
     [InteractiveWindowMessages.GetCellCode]: MessageType.other,
     [InteractiveWindowMessages.ForceVariableRefresh]: MessageType.other,
+    [InteractiveWindowMessages.UpdateVariableViewExecutionCount]: MessageType.other,
     [InteractiveWindowMessages.GetVariablesRequest]: MessageType.other,
     [InteractiveWindowMessages.GetVariablesResponse]: MessageType.other,
     [InteractiveWindowMessages.GotoCodeCell]: MessageType.syncWithLiveShare,

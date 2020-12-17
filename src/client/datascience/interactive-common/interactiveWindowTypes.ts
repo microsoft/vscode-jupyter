@@ -75,6 +75,7 @@ export enum InteractiveWindowMessages {
     SetVariableExplorerHeight = 'set_variable_explorer_height',
     VariableExplorerHeightResponse = 'variable_explorer_height_response',
     ForceVariableRefresh = 'force_variable_refresh',
+    UpdateVariableViewExecutionCount = 'update_variable_view_execution_count',
     ProvideCompletionItemsRequest = 'provide_completion_items_request',
     CancelCompletionItemsRequest = 'cancel_completion_items_request',
     ProvideCompletionItemsResponse = 'provide_completion_items_response',
@@ -591,6 +592,7 @@ export class IInteractiveWindowMapping {
     public [IPyWidgetMessages.IPyWidgets_mirror_execute]: { id: string; msg: KernelMessage.IExecuteRequestMsg };
     public [InteractiveWindowMessages.StartCell]: ICell;
     public [InteractiveWindowMessages.ForceVariableRefresh]: never | undefined;
+    public [InteractiveWindowMessages.UpdateVariableViewExecutionCount]: { executionCount: number };
     public [InteractiveWindowMessages.FinishCell]: IFinishCell;
     public [InteractiveWindowMessages.UpdateCellWithExecutionResults]: ICell;
     public [InteractiveWindowMessages.GotoCodeCell]: IGotoCode;

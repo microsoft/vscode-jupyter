@@ -21,7 +21,6 @@ import {
     INotebookExtensibility,
     IThemeFinder
 } from '../types';
-import { translateCellFromNative } from '../utils';
 import { WebviewViewHost } from '../webviews/webviewViewHost';
 import { IVariableViewPanelMapping } from './types';
 import { VariableViewMessageListener } from './variableViewMessageListener';
@@ -105,11 +104,16 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
     // Called when the kernel state is changed. Need to inform the UI that something has executed
     // Maybe just use INotebookExecutionLogger directly since we convert to ICell?
     private async kernelStateChanged(kernelStateEvent: KernelStateEventArgs) {
-        if (kernelStateEvent.state === KernelState.executed && kernelStateEvent.cell) {
-            const oldCell = translateCellFromNative(kernelStateEvent.cell);
-
+        if (
+            kernelStateEvent.state === KernelState.executed &&
+            kernelStateEvent.cell &&
+            kernelStateEvent.cell.metadata.executionOrder
+        ) {
             // IANHU: Just use a message to update execution count? Not the entire cell?
-            this.postMessage(InteractiveWindowMessages.FinishCell, {});
+            //this.postMessage(InteractiveWindowMessages.FinishCell, {});
+            this.postMessage(InteractiveWindowMessages.UpdateVariableViewExecutionCount, {
+                executionCount: kernelStateEvent.cell.metadata.executionOrder
+            }).ignoreErrors();
         }
     }
 }
