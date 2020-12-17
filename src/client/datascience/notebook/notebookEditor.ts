@@ -28,7 +28,6 @@ import { chainWithPendingUpdates } from './helpers/notebookUpdater';
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
 export class NotebookEditor implements INotebookEditor {
-    public readonly type = 'native';
     public get onDidChangeViewState(): Event<void> {
         return this.changedViewState.event;
     }
@@ -63,6 +62,7 @@ export class NotebookEditor implements INotebookEditor {
     public get onExecutedCode(): Event<string> {
         return this.executedCode.event;
     }
+    public readonly type = 'native';
     public notebook?: INotebook | undefined;
 
     private changedViewState = new EventEmitter<void>();
@@ -82,7 +82,7 @@ export class NotebookEditor implements INotebookEditor {
         private readonly statusProvider: IStatusProvider,
         private readonly applicationShell: IApplicationShell,
         private readonly configurationService: IConfigurationService,
-        disposables: IDisposableRegistry,
+        private readonly disposables: IDisposableRegistry,
         private readonly cellLanguageService: NotebookCellLanguageService
     ) {
         disposables.push(model.onDidEdit(() => this._modified.fire(this)));
@@ -94,14 +94,7 @@ export class NotebookEditor implements INotebookEditor {
             })
         );
         disposables.push(model.onDidDispose(this._closed.fire.bind(this._closed, this)));
-        disposables.push(
-            commandManager.registerCommand(Commands.NativeNotebookRunAllCellsAbove, (uri) => this.runAbove(uri))
-        );
-        disposables.push(
-            commandManager.registerCommand(Commands.NativeNotebookRunCellAndAllBelow, (uri) =>
-                this.runCellAndBelow(uri)
-            )
-        );
+        this.init().ignoreErrors();
     }
     @captureTelemetry(Telemetry.SyncAllCells)
     public async syncAllCells(): Promise<void> {
@@ -282,6 +275,24 @@ export class NotebookEditor implements INotebookEditor {
             // Get all cellIds starting from `index`.
             const cells = this.document.cells.slice(index).map((cell) => cell);
             this.runCellRange(cells);
+        }
+    }
+
+    private async init() {
+        const commands = await this.commandManager.getCommands();
+        const index = commands.findIndex((c) => c === Commands.NativeNotebookRunAllCellsAbove);
+
+        if (index === -1) {
+            this.disposables.push(
+                this.commandManager.registerCommand(Commands.NativeNotebookRunAllCellsAbove, (uri) =>
+                    this.runAbove(uri)
+                )
+            );
+            this.disposables.push(
+                this.commandManager.registerCommand(Commands.NativeNotebookRunCellAndAllBelow, (uri) =>
+                    this.runCellAndBelow(uri)
+                )
+            );
         }
     }
 
