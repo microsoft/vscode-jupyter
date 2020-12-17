@@ -2,6 +2,7 @@ import { inject, injectable } from 'inversify';
 import { IDisposable } from 'monaco-editor';
 import * as uuid from 'uuid/v4';
 import { Disposable, NotebookCellRunState, Uri } from 'vscode';
+
 import { NotebookCell } from '../../../types/vscode-proposed';
 import { IInteractiveWindowProvider, INotebookEditorProvider, IWebviewExtensibility } from './types';
 import { translateCellStateFromNative } from './utils';

@@ -3,10 +3,12 @@
 
 'use strict';
 
+import '../common/extensions';
+
 import { inject, injectable } from 'inversify';
+
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IPythonExtensionChecker } from '../api/types';
-import '../common/extensions';
 import { IPythonDaemonExecutionService, IPythonExecutionFactory } from '../common/process/types';
 import { IDisposableRegistry } from '../common/types';
 import { debounceAsync, swallowExceptions } from '../common/utils/decorators';

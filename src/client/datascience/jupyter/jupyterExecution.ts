@@ -125,13 +125,13 @@ export class JupyterExecutionBase implements IJupyterExecution {
         return this.isNotebookSupported(cancelToken);
     }
 
-    //tslint:disable:cyclomatic-complexity max-func-body-length
+    /* eslint-disable complexity,  */
     public connectToNotebookServer(
         options?: INotebookServerOptions,
         cancelToken?: CancellationToken
     ): Promise<INotebookServer | undefined> {
         // Return nothing if we cancel
-        // tslint:disable-next-line: max-func-body-length
+        // eslint-disable-next-line
         return Cancellation.race(async () => {
             let result: INotebookServer | undefined;
             let connection: IJupyterConnection | undefined;
@@ -210,7 +210,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                         purpose: options ? options.purpose : uuid()
                     };
 
-                    // tslint:disable-next-line: no-constant-condition
+                    // eslint-disable-next-line no-constant-condition
                     while (true) {
                         try {
                             traceInfo(
@@ -383,7 +383,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
         }
     }
 
-    // tslint:disable-next-line: max-func-body-length
+    // eslint-disable-next-line
     @captureTelemetry(Telemetry.StartJupyter)
     private async startNotebookServer(
         useDefaultConfig: boolean,
@@ -408,7 +408,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
     }
 
     private clearTimeouts() {
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         this.pendingTimeouts.forEach((t) => clearTimeout(t as any));
         this.pendingTimeouts = [];
     }

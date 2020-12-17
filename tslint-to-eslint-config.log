@@ -1,0 +1,77 @@
+6 ESLint rules behave differently from their TSLint counterparts:
+  * @typescript-eslint/no-unused-expressions:
+    - The TSLint optional config "allow-new" is the default ESLint behavior and will no longer be ignored.
+  * brace-style:
+    - ESLint's brace-style will check all tokens.
+  * no-console:
+    - Custom console methods, if they exist, will no longer be allowed.
+  * no-invalid-this:
+    - Functions in methods will no longer be ignored.
+  * no-underscore-dangle:
+    - Leading or trailing underscores (_) on identifiers will now be forbidden.
+  * one-var:
+    - Variables declared in for loops will no longer be checked.
+
+61 rules are not known by tslint-to-eslint-config to have ESLint equivalents:
+  * tslint-to-eslint-config does not know the ESLint equivalent for TSLint's "chai-prefer-contains-to-index-of".
+  * tslint-to-eslint-config does not know the ESLint equivalent for TSLint's "chai-vague-errors".
+  * tslint-to-eslint-config does not know the ESLint equivalent for TSLint's "encoding".
+  * tslint-to-eslint-config does not know the ESLint equivalent for TSLint's "import-name".
+  * tslint-to-eslint-config does not know the ESLint equivalent for TSLint's "insecure-random".
+  * tslint-to-eslint-config does not know the ESLint equivalent for TSLint's "jquery-deferred-must-complete".
+  * tslint-to-eslint-config does not know the ESLint equivalent for TSLint's "match-default-export-name".
+  * tslint-to-eslint-config does not know the ESLint equivalent for TSLint's "messages-must-be-localized".
+  * tslint-to-eslint-config does not know the ESLint equivalent for TSLint's "mocha-avoid-only".
+  * tslint-to-eslint-config does not know the ESLint equivalent for TSLint's "mocha-no-side-effect-code".
+  * tslint-to-eslint-config does not know the ESLint equivalent for TSLint's "mocha-unneeded-done".
+  * tslint-to-eslint-config does not know the ESLint equivalent for TSLint's "no-cookies".
+  * tslint-to-eslint-config does not know the ESLint equivalent for TSLint's "no-delete-expression".
+  * tslint-to-eslint-config does not know the ESLint equivalent for TSLint's "no-disable-auto-sanitization".
+  * tslint-to-eslint-config does not know the ESLint equivalent for TSLint's "no-document-domain".
+  * tslint-to-eslint-config does not know the ESLint equivalent for TSLint's "no-document-write".
+  * tslint-to-eslint-config does not know the ESLint equivalent for TSLint's "no-exec-script".
+  * tslint-to-eslint-config does not know the ESLint equivalent for TSLint's "no-function-constructor-with-string-args".
+  * tslint-to-eslint-config does not know the ESLint equivalent for TSLint's "no-function-expression".
+  * tslint-to-eslint-config does not know the ESLint equivalent for TSLint's "no-http-string".
+  * tslint-to-eslint-config does not know the ESLint equivalent for TSLint's "no-increment-decrement".
+  * tslint-to-eslint-config does not know the ESLint equivalent for TSLint's "no-inner-html".
+  * tslint-to-eslint-config does not know the ESLint equivalent for TSLint's "no-jquery-raw-elements".
+  * tslint-to-eslint-config does not know the ESLint equivalent for TSLint's "no-string-based-set-immediate".
+  * tslint-to-eslint-config does not know the ESLint equivalent for TSLint's "no-string-based-set-interval".
+  * tslint-to-eslint-config does not know the ESLint equivalent for TSLint's "no-suspicious-comment".
+  * tslint-to-eslint-config does not know the ESLint equivalent for TSLint's "no-typeof-undefined".
+  * tslint-to-eslint-config does not know the ESLint equivalent for TSLint's "no-unnecessary-bind".
+  * tslint-to-eslint-config does not know the ESLint equivalent for TSLint's "no-unnecessary-callback-wrapper".
+  * tslint-to-eslint-config does not know the ESLint equivalent for TSLint's "no-unnecessary-field-initialization".
+  * tslint-to-eslint-config does not know the ESLint equivalent for TSLint's "no-unnecessary-local-variable".
+  * tslint-to-eslint-config does not know the ESLint equivalent for TSLint's "no-unnecessary-override".
+  * tslint-to-eslint-config does not know the ESLint equivalent for TSLint's "no-unsupported-browser-code".
+  * tslint-to-eslint-config does not know the ESLint equivalent for TSLint's "no-useless-files".
+  * tslint-to-eslint-config does not know the ESLint equivalent for TSLint's "no-with-statement".
+  * tslint-to-eslint-config does not know the ESLint equivalent for TSLint's "non-literal-require".
+  * tslint-to-eslint-config does not know the ESLint equivalent for TSLint's "possible-timing-attack".
+  * tslint-to-eslint-config does not know the ESLint equivalent for TSLint's "prefer-array-literal".
+  * tslint-to-eslint-config does not know the ESLint equivalent for TSLint's "prefer-method-signature".
+  * tslint-to-eslint-config does not know the ESLint equivalent for TSLint's "prettier".
+  * tslint-to-eslint-config does not know the ESLint equivalent for TSLint's "promise-must-complete".
+  * tslint-to-eslint-config does not know the ESLint equivalent for TSLint's "react-a11y-anchors".
+  * tslint-to-eslint-config does not know the ESLint equivalent for TSLint's "react-a11y-aria-unsupported-elements".
+  * tslint-to-eslint-config does not know the ESLint equivalent for TSLint's "react-a11y-event-has-role".
+  * tslint-to-eslint-config does not know the ESLint equivalent for TSLint's "react-a11y-image-button-has-alt".
+  * tslint-to-eslint-config does not know the ESLint equivalent for TSLint's "react-a11y-img-has-alt".
+  * tslint-to-eslint-config does not know the ESLint equivalent for TSLint's "react-a11y-lang".
+  * tslint-to-eslint-config does not know the ESLint equivalent for TSLint's "react-a11y-meta".
+  * tslint-to-eslint-config does not know the ESLint equivalent for TSLint's "react-a11y-props".
+  * tslint-to-eslint-config does not know the ESLint equivalent for TSLint's "react-a11y-proptypes".
+  * tslint-to-eslint-config does not know the ESLint equivalent for TSLint's "react-a11y-role".
+  * tslint-to-eslint-config does not know the ESLint equivalent for TSLint's "react-a11y-role-has-required-aria-props".
+  * tslint-to-eslint-config does not know the ESLint equivalent for TSLint's "react-a11y-role-supports-aria-props".
+  * tslint-to-eslint-config does not know the ESLint equivalent for TSLint's "react-a11y-tabindex-no-positive".
+  * tslint-to-eslint-config does not know the ESLint equivalent for TSLint's "react-a11y-titles".
+  * tslint-to-eslint-config does not know the ESLint equivalent for TSLint's "react-anchor-blank-noopener".
+  * tslint-to-eslint-config does not know the ESLint equivalent for TSLint's "react-iframe-missing-sandbox".
+  * tslint-to-eslint-config does not know the ESLint equivalent for TSLint's "react-no-dangerous-html".
+  * tslint-to-eslint-config does not know the ESLint equivalent for TSLint's "react-this-binding-issue".
+  * tslint-to-eslint-config does not know the ESLint equivalent for TSLint's "react-unused-props-and-state".
+  * tslint-to-eslint-config does not know the ESLint equivalent for TSLint's "use-named-parameter".
+

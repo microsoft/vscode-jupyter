@@ -1,4 +1,5 @@
 import { ConfigurationTarget } from 'vscode';
+
 import { IApplicationShell } from '../../common/application/types';
 import { IConfigurationService, Resource } from '../../common/types';
 import * as localize from '../../common/utils/localize';

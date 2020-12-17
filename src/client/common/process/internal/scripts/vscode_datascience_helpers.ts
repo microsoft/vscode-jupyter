@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import * as path from 'path';
+
 import { _ISOLATED as ISOLATED, _SCRIPTS_DIR } from './index';
 
 const SCRIPTS_DIR = path.join(_SCRIPTS_DIR, 'vscode_datascience_helpers');

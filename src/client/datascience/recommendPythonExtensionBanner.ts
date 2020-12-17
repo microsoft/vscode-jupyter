@@ -1,4 +1,5 @@
 import { inject, injectable } from 'inversify';
+
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IPythonExtensionChecker } from '../api/types';
 import { isPythonNotebook } from './notebook/helpers/helpers';

@@ -4,6 +4,7 @@
 import * as fs from 'fs';
 import { SemVer } from 'semver';
 import * as vscode from 'vscode';
+
 import { OSType } from '../utils/platform';
 
 //===========================

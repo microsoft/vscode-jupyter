@@ -12,6 +12,7 @@ import { Observable } from 'rxjs/Observable';
 import * as sinon from 'sinon';
 import { anything, instance, mock, reset, verify, when } from 'ts-mockito';
 import { MessageConnection } from 'vscode-jsonrpc';
+
 import { IPlatformService } from '../../../client/common/platform/types';
 import { ProcessLogger } from '../../../client/common/process/logger';
 import { PythonDaemonExecutionService } from '../../../client/common/process/pythonDaemon';
@@ -23,17 +24,17 @@ import { noop } from '../../core';
 import { asyncDump } from '../asyncDump';
 use(chaiPromised);
 
-// tslint:disable: no-any max-func-body-length
+/* eslint-disable @typescript-eslint/no-explicit-any,  */
 suite('Daemon - Python Daemon Pool', () => {
     class DaemonPool extends PythonDaemonExecutionServicePool {
-        // tslint:disable-next-line: no-unnecessary-override
+        // eslint-disable-next-line
         public createConnection(proc: ChildProcess) {
             return super.createConnection(proc);
         }
     }
-    // tslint:disable-next-line: no-any use-default-type-parameter
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unnecessary-type-arguments
     let sendRequestStub: sinon.SinonStub<any[], any>;
-    // tslint:disable-next-line: no-any use-default-type-parameter
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unnecessary-type-arguments
     let listenStub: sinon.SinonStub<any[], any>;
     let pythonExecService: IPythonExecutionService;
     let platformService: IPlatformService;
@@ -50,7 +51,7 @@ suite('Daemon - Python Daemon Pool', () => {
         sendRequestStub.returns({ pong: 'hello' });
     });
     teardown(function () {
-        // tslint:disable-next-line: no-invalid-this
+        // eslint-disable-next-line no-invalid-this
         if (this.currentTest && this.currentTest.state === 'failed') {
             asyncDump();
         }

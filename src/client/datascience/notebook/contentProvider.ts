@@ -5,6 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import { CancellationToken, EventEmitter, Uri } from 'vscode';
+
 import type {
     NotebookCommunication,
     NotebookContentProvider as VSCNotebookContentProvider,
@@ -25,7 +26,7 @@ import { INotebookStorageProvider } from '../notebookStorage/notebookStorageProv
 import { VSCodeNotebookModel } from '../notebookStorage/vscNotebookModel';
 import { INotebookModel } from '../types';
 import { NotebookEditorCompatibilitySupport } from './notebookEditorCompatibilitySupport';
-// tslint:disable-next-line: no-var-requires no-require-imports
+// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 /**
  * This class is responsible for reading a notebook file (ipynb or other files) and returning VS Code with the NotebookData.

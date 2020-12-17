@@ -5,6 +5,7 @@ import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
+
 import { IFileSystem } from '../../../client/common/platform/types';
 import { createPythonEnv } from '../../../client/common/process/pythonEnvironment';
 import { createPythonProcessService } from '../../../client/common/process/pythonProcess';
@@ -16,7 +17,7 @@ const isolated = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'pythonFiles', 'pyvsc-r
 
 use(chaiAsPromised);
 
-// tslint:disable-next-line: max-func-body-length
+// eslint-disable-next-line
 suite('PythonProcessService', () => {
     let processService: TypeMoq.IMock<IProcessService>;
     let fileSystem: TypeMoq.IMock<IFileSystem>;
@@ -32,7 +33,7 @@ suite('PythonProcessService', () => {
         const options = {};
         const observable = {
             proc: undefined,
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             out: {} as any,
             dispose: () => {
                 noop();
@@ -55,7 +56,7 @@ suite('PythonProcessService', () => {
         const options = {};
         const observable = {
             proc: undefined,
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             out: {} as any,
             dispose: () => {
                 noop();

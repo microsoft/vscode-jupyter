@@ -3,6 +3,7 @@
 'use strict';
 import { inject, injectable, named } from 'inversify';
 import { DebugAdapterTracker, DebugAdapterTrackerFactory, DebugSession, ProviderResult } from 'vscode';
+
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IDebugService } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';

@@ -4,6 +4,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
+
 import { IWorkspaceService } from '../../../common/application/types';
 import { IPersistentState, IPersistentStateFactory } from '../../../common/types';
 

@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-//tslint:disable:trailing-comma no-any
+/* eslint-disable comma-dangle, @typescript-eslint/no-explicit-any */
 import { ReactWrapper } from 'enzyme';
 import { interfaces } from 'inversify';
 import * as os from 'os';
@@ -22,13 +22,13 @@ import {
     WorkspaceFoldersChangeEvent
 } from 'vscode';
 import * as vsls from 'vsls/vscode';
-import { KernelDaemonPool } from '../../client/datascience/kernel-launcher/kernelDaemonPool';
 
 import { IExtensionSingleActivationService } from '../../client/activation/types';
 import { PythonExtensionChecker } from '../../client/api/pythonApi';
 import { ILanguageServerProvider, IPythonDebuggerPathProvider, IPythonExtensionChecker } from '../../client/api/types';
 import { ApplicationEnvironment } from '../../client/common/application/applicationEnvironment';
 import { ApplicationShell } from '../../client/common/application/applicationShell';
+import { AuthenticationService } from '../../client/common/application/authenticationService';
 import { VSCodeNotebook } from '../../client/common/application/notebook';
 import {
     IApplicationEnvironment,
@@ -48,6 +48,7 @@ import {
     IWorkspaceService
 } from '../../client/common/application/types';
 import { WebviewPanelProvider } from '../../client/common/application/webviewPanels/webviewPanelProvider';
+import { WebviewViewProvider } from '../../client/common/application/webviewViews/webviewViewProvider';
 import { WorkspaceService } from '../../client/common/application/workspace';
 import { AsyncDisposableRegistry } from '../../client/common/asyncDisposableRegistry';
 import { JupyterSettings } from '../../client/common/configSettings';
@@ -129,15 +130,15 @@ import { CodeWatcher } from '../../client/datascience/editor-integration/codewat
 import { HoverProvider } from '../../client/datascience/editor-integration/hoverProvider';
 import { DataScienceErrorHandler } from '../../client/datascience/errorHandler/errorHandler';
 import { ExportBase } from '../../client/datascience/export/exportBase';
+import { ExportDialog } from '../../client/datascience/export/exportDialog';
 import { ExportFileOpener } from '../../client/datascience/export/exportFileOpener';
 import { ExportInterpreterFinder } from '../../client/datascience/export/exportInterpreterFinder';
 import { ExportManager } from '../../client/datascience/export/exportManager';
-import { ExportDialog } from '../../client/datascience/export/exportDialog';
 import { ExportToHTML } from '../../client/datascience/export/exportToHTML';
 import { ExportToPDF } from '../../client/datascience/export/exportToPDF';
 import { ExportToPython } from '../../client/datascience/export/exportToPython';
 import { ExportUtil } from '../../client/datascience/export/exportUtil';
-import { ExportFormat, IExport, IExportManager, IExportDialog } from '../../client/datascience/export/types';
+import { ExportFormat, IExport, IExportDialog, IExportManager } from '../../client/datascience/export/types';
 import { IntellisenseProvider } from '../../client/datascience/interactive-common/intellisense/intellisenseProvider';
 import { NotebookProvider } from '../../client/datascience/interactive-common/notebookProvider';
 import { NotebookServerProvider } from '../../client/datascience/interactive-common/notebookServerProvider';
@@ -146,9 +147,11 @@ import { DigestStorage } from '../../client/datascience/interactive-ipynb/digest
 import { NativeEditorCommandListener } from '../../client/datascience/interactive-ipynb/nativeEditorCommandListener';
 import { NativeEditorRunByLineListener } from '../../client/datascience/interactive-ipynb/nativeEditorRunByLineListener';
 import { NativeEditorSynchronizer } from '../../client/datascience/interactive-ipynb/nativeEditorSynchronizer';
+import { SystemPseudoRandomNumberGenerator } from '../../client/datascience/interactive-ipynb/randomBytes';
 import { TrustService } from '../../client/datascience/interactive-ipynb/trustService';
 import { InteractiveWindowCommandListener } from '../../client/datascience/interactive-window/interactiveWindowCommandListener';
 import { IPyWidgetMessageDispatcherFactory } from '../../client/datascience/ipywidgets/ipyWidgetMessageDispatcherFactory';
+import { WebviewIPyWidgetCoordinator } from '../../client/datascience/ipywidgets/webviewIPyWidgetCoordinator';
 import { JupyterCommandLineSelector } from '../../client/datascience/jupyter/commandLineSelector';
 import { DebuggerVariableRegistration } from '../../client/datascience/jupyter/debuggerVariableRegistration';
 import { DebuggerVariables } from '../../client/datascience/jupyter/debuggerVariables';
@@ -180,9 +183,12 @@ import { KernelVariables } from '../../client/datascience/jupyter/kernelVariable
 import { NotebookStarter } from '../../client/datascience/jupyter/notebookStarter';
 import { ServerPreload } from '../../client/datascience/jupyter/serverPreload';
 import { JupyterServerSelector } from '../../client/datascience/jupyter/serverSelector';
+import { JupyterServerUriStorage } from '../../client/datascience/jupyter/serverUriStorage';
 import { JupyterDebugService } from '../../client/datascience/jupyterDebugService';
 import { JupyterUriProviderRegistration } from '../../client/datascience/jupyterUriProviderRegistration';
+import { KernelDaemonPool } from '../../client/datascience/kernel-launcher/kernelDaemonPool';
 import { KernelDaemonPreWarmer } from '../../client/datascience/kernel-launcher/kernelDaemonPreWarmer';
+import { KernelEnvironmentVariablesService } from '../../client/datascience/kernel-launcher/kernelEnvVarsService';
 import { KernelFinder } from '../../client/datascience/kernel-launcher/kernelFinder';
 import { KernelLauncher } from '../../client/datascience/kernel-launcher/kernelLauncher';
 import { IKernelFinder, IKernelLauncher } from '../../client/datascience/kernel-launcher/types';
@@ -282,6 +288,7 @@ import { MockCommandManager } from './mockCommandManager';
 import { MockCustomEditorService } from './mockCustomEditorService';
 import { MockDebuggerService } from './mockDebugService';
 import { MockDocumentManager } from './mockDocumentManager';
+import { MockEncryptedStorage } from './mockEncryptedStorage';
 import { MockExtensions } from './mockExtensions';
 import { MockFileSystem } from './mockFileSystem';
 import { MockJupyterManager, SupportedCommands } from './mockJupyterManager';
@@ -302,13 +309,6 @@ import {
 } from './testNativeEditorProvider';
 import { TestPersistentStateFactory } from './testPersistentStateFactory';
 import { WebBrowserPanelProvider } from './uiTests/webBrowserPanelProvider';
-import { JupyterServerUriStorage } from '../../client/datascience/jupyter/serverUriStorage';
-import { AuthenticationService } from '../../client/common/application/authenticationService';
-import { MockEncryptedStorage } from './mockEncryptedStorage';
-import { WebviewIPyWidgetCoordinator } from '../../client/datascience/ipywidgets/webviewIPyWidgetCoordinator';
-import { WebviewViewProvider } from '../../client/common/application/webviewViews/webviewViewProvider';
-import { SystemPseudoRandomNumberGenerator } from '../../client/datascience/interactive-ipynb/randomBytes';
-import { KernelEnvironmentVariablesService } from '../../client/datascience/kernel-launcher/kernelEnvVarsService';
 
 export class DataScienceIocContainer extends UnitTestIocContainer {
     public get workingInterpreter() {
@@ -336,7 +336,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     }
     private static jupyterInterpreters: PythonEnvironment[] = [];
     public applicationShell!: ApplicationShell;
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public datascience!: TypeMoq.IMock<IDataScience>;
     public shouldMockJupyter: boolean;
     public attemptedPythonExtension: boolean = false;
@@ -396,7 +396,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
         if (!this.uiTest) {
             // Blur window focus so we don't have editors polling
-            // tslint:disable-next-line: no-require-imports
+            // eslint-disable-next-line @typescript-eslint/no-require-imports
             const reactHelpers = require('./reactHelpers') as typeof import('./reactHelpers');
             reactHelpers.blurWindow();
         }
@@ -406,7 +406,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
         if (!this.uiTest) {
             // Clear out the monaco global services. Some of these services are preventing shutdown.
-            // tslint:disable: no-require-imports
+            /* eslint-disable @typescript-eslint/no-require-imports */
             const services = require('monaco-editor/esm/vs/editor/standalone/browser/standaloneServices') as any;
             if (services.StaticServices) {
                 const keys = Object.keys(services.StaticServices);
@@ -434,7 +434,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         reset(this.webPanelProvider);
     }
 
-    //tslint:disable:max-func-body-length
+    /* eslint-disable  */
     public registerDataScienceTypes(useCustomEditor: boolean = false) {
         this.serviceManager.addSingletonInstance<number>(DataScienceStartupTime, Date.now());
         this.serviceManager.addSingletonInstance<DataScienceIocContainer>(DataScienceIocContainer, this);
@@ -958,7 +958,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
                     // Log this all the time. Useful in determining why a test may not pass.
                     const message = `Setting interpreter to ${list[0].displayName || list[0].path} -> ${list[0].path}`;
                     traceInfo(message);
-                    // tslint:disable-next-line: no-console
+                    // eslint-disable-next-line no-console
                     console.log(message);
 
                     // Also set this as the interpreter to use for jupyter
@@ -974,7 +974,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         }
     }
 
-    // tslint:disable:any
+    /* eslint-disable */
     public createWebView(
         mount: () => ReactWrapper<any, Readonly<{}>, React.Component>,
         id: string,
@@ -1137,7 +1137,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         partial: Partial<IJupyterSettings>,
         notifyEvent: boolean = true
     ) {
-        // tslint:disable-next-line: no-suspicious-comment
+        // eslint-disable-next-line
         // TODO: Python path will not be updated by this code so tests are unlikely to pass
         const settings = this.getSettings(resource) as MockJupyterSettings;
         if (partial) {
@@ -1174,7 +1174,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             jupyterLaunchTimeout: 120000,
             jupyterLaunchRetries: 3,
             jupyterServerType: 'local',
-            // tslint:disable-next-line: no-invalid-template-strings
+            // eslint-disable-next-line no-template-curly-in-string
             notebookFileRoot: '${fileDirname}',
             changeDirOnImportExport: false,
             useDefaultConfigForJupyter: true,
@@ -1219,15 +1219,15 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             public ignoreCreateEvents: boolean = false;
             public ignoreChangeEvents: boolean = false;
             public ignoreDeleteEvents: boolean = false;
-            //tslint:disable-next-line:no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             public onDidChange(_listener: (e: Uri) => any, _thisArgs?: any, _disposables?: Disposable[]): Disposable {
                 return { dispose: noop };
             }
-            //tslint:disable-next-line:no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             public onDidDelete(_listener: (e: Uri) => any, _thisArgs?: any, _disposables?: Disposable[]): Disposable {
                 return { dispose: noop };
             }
-            //tslint:disable-next-line:no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             public onDidCreate(_listener: (e: Uri) => any, _thisArgs?: any, _disposables?: Disposable[]): Disposable {
                 return { dispose: noop };
             }

@@ -4,6 +4,7 @@
 import { nbformat } from '@jupyterlab/coreutils/lib/nbformat';
 import { inject, injectable } from 'inversify';
 import { Memento, Uri } from 'vscode';
+
 import { IVSCodeNotebook } from '../../common/application/types';
 import { UseVSCodeNotebookEditorApi } from '../../common/constants';
 import { ICryptoUtils } from '../../common/types';

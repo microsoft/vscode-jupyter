@@ -8,8 +8,8 @@ import { anything, instance, mock, when } from 'ts-mockito';
 import { Matcher } from 'ts-mockito/lib/matcher/type/Matcher';
 import * as typemoq from 'typemoq';
 import { ConfigurationChangeEvent, EventEmitter, FileType, TextEditor, Uri } from 'vscode';
-
 import { CancellationToken } from 'vscode-jsonrpc';
+
 import { PythonExtensionChecker } from '../../../client/api/pythonApi';
 import { DocumentManager } from '../../../client/common/application/documentManager';
 import {
@@ -48,9 +48,9 @@ import { createEmptyCell } from '../../../datascience-ui/interactive-common/main
 import { MockMemento } from '../../mocks/mementos';
 import { MockWorkspaceConfiguration } from '../mockWorkspaceConfig';
 
-// tslint:disable: no-any chai-vague-errors no-unused-expression
+/* eslint-disable @typescript-eslint/no-explicit-any, , @typescript-eslint/no-unused-expressions */
 
-// tslint:disable: max-func-body-length
+/* eslint-disable  */
 suite('DataScience - Native Editor Storage', () => {
     let workspace: IWorkspaceService;
     let configService: IConfigurationService;

@@ -6,9 +6,9 @@ import '../../common/extensions';
 import { ChildProcess } from 'child_process';
 import { Subscription } from 'rxjs';
 import { CancellationToken, Disposable, Event, EventEmitter } from 'vscode';
+
 import { Cancellation, CancellationError } from '../../common/cancellation';
 import { traceInfo, traceWarning } from '../../common/logger';
-
 import { IFileSystem } from '../../common/platform/types';
 import { ObservableExecutionResult, Output } from '../../common/process/types';
 import { IConfigurationService, IDisposable } from '../../common/types';
@@ -19,7 +19,7 @@ import { RegExpValues } from '../constants';
 import { IJupyterConnection } from '../types';
 import { JupyterConnectError } from './jupyterConnectError';
 
-// tslint:disable-next-line:no-require-imports no-var-requires no-any
+// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires, @typescript-eslint/no-explicit-any
 const namedRegexp = require('named-js-regexp');
 const urlMatcher = namedRegexp(RegExpValues.UrlPatternRegEx);
 
@@ -96,7 +96,7 @@ export class JupyterConnectionWaiter implements IDisposable {
         );
     }
     public dispose() {
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         clearTimeout(this.launchTimeout as any);
         this.subscriptions.forEach((d) => d.unsubscribe());
     }
@@ -106,11 +106,11 @@ export class JupyterConnectionWaiter implements IDisposable {
     }
 
     private createConnection(baseUrl: string, token: string, hostName: string, processDisposable: Disposable) {
-        // tslint:disable-next-line: no-use-before-declare
+        // eslint-disable-next-line @typescript-eslint/no-use-before-define
         return new JupyterConnection(baseUrl, token, hostName, this.rootDir, processDisposable, this.launchResult.proc);
     }
 
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private output(data: any) {
         if (!this.connectionDisposed) {
             traceInfo(data.toString('utf8'));
@@ -118,7 +118,7 @@ export class JupyterConnectionWaiter implements IDisposable {
     }
 
     // From a list of jupyter server infos try to find the matching jupyter that we launched
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private getJupyterURL(serverInfos: JupyterServerInfo[] | undefined, data: any) {
         if (serverInfos && serverInfos.length > 0 && !this.startPromise.completed) {
             const matchInfo = serverInfos.find((info) =>
@@ -138,9 +138,9 @@ export class JupyterConnectionWaiter implements IDisposable {
         }
     }
 
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private getJupyterURLFromString(data: any) {
-        // tslint:disable-next-line:no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const urlMatch = urlMatcher.exec(data) as any;
         const groups = urlMatch.groups() as RegExpValues.IUrlPatternGroupType;
         if (urlMatch && !this.startPromise.completed && groups && (groups.LOCAL || groups.IP)) {
@@ -149,7 +149,7 @@ export class JupyterConnectionWaiter implements IDisposable {
             const uriString = `${groups.PREFIX}${host}${groups.REST}`;
 
             // URL is not being found for some reason. Pull it in forcefully
-            // tslint:disable-next-line:no-require-imports
+            // eslint-disable-next-line @typescript-eslint/no-require-imports
             const URL = require('url').URL;
             let url: URL;
             try {
@@ -169,7 +169,7 @@ export class JupyterConnectionWaiter implements IDisposable {
         }
     }
 
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private extractConnectionInformation = (data: any) => {
         this.output(data);
 
@@ -193,7 +193,7 @@ export class JupyterConnectionWaiter implements IDisposable {
     };
 
     private resolveStartPromise = (baseUrl: string, token: string, hostName: string) => {
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         clearTimeout(this.launchTimeout as any);
         if (!this.startPromise.rejected) {
             const connection = this.createConnection(baseUrl, token, hostName, this.launchResult);
@@ -207,9 +207,9 @@ export class JupyterConnectionWaiter implements IDisposable {
         }
     };
 
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private rejectStartPromise = (message: string) => {
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         clearTimeout(this.launchTimeout as any);
         if (!this.startPromise.resolved) {
             this.startPromise.reject(

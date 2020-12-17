@@ -1,8 +1,8 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { CancellationToken, Uri } from 'vscode';
-import { IFileSystem } from '../../common/platform/types';
 
+import { IFileSystem } from '../../common/platform/types';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../common/process/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { reportAction } from '../progress/decorator';
@@ -25,7 +25,7 @@ export class ExportBase implements IExport {
         _target: Uri,
         _interpreter: PythonEnvironment,
         _token: CancellationToken
-        // tslint:disable-next-line: no-empty
+        // eslint-disable-next-line no-empty,@typescript-eslint/no-empty-function
     ): Promise<void> {}
 
     @reportAction(ReportableAction.PerformingExport)

@@ -15,6 +15,7 @@ import { Observable } from 'rxjs/Observable';
 import * as sinon from 'sinon';
 import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import { createMessageConnection, StreamMessageReader, StreamMessageWriter } from 'vscode-jsonrpc/node';
+
 import { IPlatformService } from '../../../client/common/platform/types';
 import { ProcessLogger } from '../../../client/common/process/logger';
 import { PythonDaemonExecutionServicePool } from '../../../client/common/process/pythonDaemonPool';
@@ -36,7 +37,7 @@ import { isPythonVersion, PYTHON_PATH, waitForCondition } from '../../common';
 import { createTemporaryFile } from '../../utils/fs';
 use(chaiPromised);
 
-// tslint:disable: max-func-body-length
+/* eslint-disable  */
 suite('Daemon - Python Daemon Pool', () => {
     // Set PYTHONPATH to pickup our module and the jsonrpc modules.
     const envPythonPath = `${path.join(EXTENSION_ROOT_DIR, 'pythonFiles')}${path.delimiter}${path.join(
@@ -54,7 +55,7 @@ suite('Daemon - Python Daemon Pool', () => {
     let createDaemonServicesSpy: sinon.SinonSpy<[], Promise<IPythonDaemonExecutionService | IDisposable>>;
     let logger: IProcessLogger;
     class DaemonPool extends PythonDaemonExecutionServicePool {
-        // tslint:disable-next-line: no-unnecessary-override
+        // eslint-disable-next-line
         public createDaemonService<T extends IPythonDaemonExecutionService | IDisposable>(): Promise<T> {
             return super.createDaemonService();
         }
@@ -69,7 +70,7 @@ suite('Daemon - Python Daemon Pool', () => {
     });
     setup(async function () {
         if (isPythonVersion('2.7')) {
-            // tslint:disable-next-line: no-invalid-this
+            // eslint-disable-next-line no-invalid-this
             return this.skip();
         }
         logger = mock(ProcessLogger);
@@ -87,7 +88,7 @@ suite('Daemon - Python Daemon Pool', () => {
             connection.listen();
             disposables.push({ dispose: () => pythonProc.kill() });
             disposables.push({ dispose: () => connection.dispose() });
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             return { proc: pythonProc, dispose: noop, out: undefined as any };
         });
         const options = {
@@ -334,7 +335,7 @@ suite('Daemon - Python Daemon Pool', () => {
                 s.next({ out: 'mypid', source: 'stdout' });
                 s.complete();
             });
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             return { proc: new EventEmitter() as any, dispose: noop, out: observable };
         });
         // This will use a damon.

@@ -1,10 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import * as WebSocketWS from 'ws';
+
 import { ClassType } from '../ioc/types';
 import { IKernelSocket } from './types';
 
-// tslint:disable: no-any prefer-method-signature
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export type IWebSocketLike = {
     onopen: (event: { target: any }) => void;
     onerror: (event: { error: any; message: string; type: string; target: any }) => void;
@@ -104,12 +105,12 @@ export function KernelSocketWrapper<T extends ClassType<IWebSocketLike>>(SuperCl
             this.receiveHooks = this.receiveHooks.filter((l) => l !== hook);
         }
 
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         public addSendHook(patch: (data: any, cb?: (err?: Error) => void) => Promise<void>): void {
             this.sendHooks.push(patch);
         }
 
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         public removeSendHook(patch: (data: any, cb?: (err?: Error) => void) => Promise<void>): void {
             this.sendHooks = this.sendHooks.filter((p) => p !== patch);
         }

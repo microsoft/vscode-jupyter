@@ -3,7 +3,7 @@
 
 'use strict';
 
-// tslint:disable:no-require-imports no-var-requires no-any
+/* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires, @typescript-eslint/no-explicit-any */
 // Always place at the top, to ensure other modules are imported first.
 require('./common/exitCIAfterTestReporter');
 
@@ -14,6 +14,7 @@ if ((Reflect as any).metadata === undefined) {
 import * as glob from 'glob';
 import * as Mocha from 'mocha';
 import * as path from 'path';
+
 import { IS_CI_SERVER_TEST_DEBUGGER } from './ciConstants';
 import {
     IS_MULTI_ROOT_TEST,
@@ -22,9 +23,9 @@ import {
     TEST_RETRYCOUNT,
     TEST_TIMEOUT
 } from './constants';
+import { setupCoverage } from './coverage';
 import { initialize } from './initialize';
 import { initializeLogger } from './testLogger';
-import { setupCoverage } from './coverage';
 
 initializeLogger();
 
@@ -46,7 +47,7 @@ process.on('unhandledRejection', (ex: any, _a) => {
             message.push(ex.stack);
         }
     }
-    // tslint:disable-next-line: no-console
+    // eslint-disable-next-line no-console
     console.log(`Unhandled Promise Rejection with the message ${message.join(', ')}`);
 });
 
@@ -122,7 +123,7 @@ function activateExtensionScript() {
     });
     const initializationPromise = initialize();
     const promise = Promise.race([initializationPromise, failed]);
-    // tslint:disable-next-line: no-console
+    // eslint-disable-next-line no-console
     promise.finally(() => clearTimeout(timer!)).catch((e) => console.error(e));
     return initializationPromise;
 }
@@ -178,7 +179,7 @@ export async function run(): Promise<void> {
     // Setup test files that need to be run.
     testFiles.forEach((file) => mocha.addFile(path.join(testsRoot, file)));
 
-    // tslint:disable: no-console
+    /* eslint-disable no-console */
     console.time('Time taken to activate the extension');
     try {
         console.log('Starting & waiting for Python extension to activate');

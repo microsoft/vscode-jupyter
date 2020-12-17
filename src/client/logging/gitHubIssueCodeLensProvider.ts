@@ -1,5 +1,6 @@
 import { inject, injectable } from 'inversify';
 import { CancellationToken, CodeLens, languages, Position, Range, TextDocument } from 'vscode';
+
 import { IExtensionSingleActivationService } from '../activation/types';
 import { GITHUB_ISSUE_MARKDOWN_FILE } from '../common/constants';
 import { IExtensionContext } from '../common/types';

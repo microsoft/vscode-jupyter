@@ -8,7 +8,7 @@
  */
 
 // https://stackoverflow.com/questions/39877156/how-to-extend-string-prototype-and-use-it-next-in-typescript
-// tslint:disable-next-line:interface-name
+// eslint-disable-next-line @typescript-eslint/naming-convention
 declare interface String {
     /**
      * Split a string using the cr and lf characters and return them as an array.
@@ -92,7 +92,7 @@ String.prototype.trimQuotes = function (this: string): string {
     return this.replace(/(^['"])|(['"]$)/g, '');
 };
 
-// tslint:disable-next-line:interface-name
+// eslint-disable-next-line @typescript-eslint/naming-convention
 declare interface Promise<T> {
     /**
      * Catches task error and ignores them.
@@ -104,7 +104,7 @@ declare interface Promise<T> {
  * Explicitly tells that promise should be run asynchonously.
  */
 Promise.prototype.ignoreErrors = function <T>(this: Promise<T>) {
-    // tslint:disable-next-line:no-empty
+    // eslint-disable-next-line no-empty, @typescript-eslint/no-empty-function
     this.catch(() => {});
 };
 

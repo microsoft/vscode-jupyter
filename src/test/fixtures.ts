@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import * as fs from 'fs-extra';
+
 import { sleep } from '../client/common/utils/async';
 import { PYTHON_PATH } from './common';
 import { Proc, spawn } from './proc';
@@ -39,9 +40,9 @@ export class CleanupFixture {
                         await res;
                     }
                 } catch (err) {
-                    // tslint:disable-next-line:no-console
+                    // eslint-disable-next-line no-console
                     console.error(`cleanup ${i + 1} failed: ${err}`);
-                    // tslint:disable-next-line:no-console
+                    // eslint-disable-next-line no-console
                     console.error('moving on...');
                 }
             })

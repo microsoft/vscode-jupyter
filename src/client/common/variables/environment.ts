@@ -3,6 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
+
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { IFileSystem } from '../platform/types';

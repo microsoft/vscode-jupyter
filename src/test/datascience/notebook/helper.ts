@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-// tslint:disable: no-var-requires no-require-imports no-invalid-this no-any
+/* eslint-disable @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports, no-invalid-this, @typescript-eslint/no-explicit-any */
 
 import { nbformat } from '@jupyterlab/coreutils';
 import { assert, expect } from 'chai';
@@ -11,6 +11,7 @@ import * as sinon from 'sinon';
 import * as tmp from 'tmp';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { commands, Memento, TextDocument, Uri } from 'vscode';
+
 import {
     CellDisplayOutput,
     NotebookCell,
@@ -237,7 +238,7 @@ export async function waitForKernelToGetAutoSelected(expectedLanguage?: string) 
                 return expectedLanguage.toLowerCase() === PYTHON_LANGUAGE.toLowerCase();
             }
             // We don't support testing other kernels, not required hence not added.
-            // tslint:disable-next-line: no-console
+            // eslint-disable-next-line no-console
             console.error('Testing other kernel connections not supported');
         }
         if (!expectedLanguage) {
@@ -561,7 +562,7 @@ export async function hijackPrompt(
         clickButton.resolve(buttonToClick.text);
     }
     let displayCount = 0;
-    // tslint:disable-next-line: no-function-expression
+    // eslint-disable-next-line
     const stub = sinon.stub(appShell, promptType).callsFake(function (msg: string) {
         traceInfo(`Message displayed to user '${msg}', condition ${JSON.stringify(message)}`);
         if (
@@ -575,7 +576,7 @@ export async function hijackPrompt(
                 return clickButton.promise;
             }
         }
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         return (appShell[promptType] as any).wrappedMethod.apply(appShell, arguments);
     });
     const disposable = { dispose: () => stub.restore() };

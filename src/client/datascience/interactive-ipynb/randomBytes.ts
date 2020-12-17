@@ -2,6 +2,7 @@ import { exec } from 'child_process';
 import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
+
 import { traceError, traceInfo } from '../../common/logger';
 import { IPlatformService } from '../../common/platform/types';
 import { OSType } from '../../common/utils/platform';

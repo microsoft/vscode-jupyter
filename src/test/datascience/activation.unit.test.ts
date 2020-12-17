@@ -5,6 +5,7 @@
 
 import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import { EventEmitter } from 'vscode';
+
 import { IExtensionSingleActivationService } from '../../client/activation/types';
 import { PythonExtensionChecker } from '../../client/api/pythonApi';
 import { PythonExecutionFactory } from '../../client/common/process/pythonExecutionFactory';

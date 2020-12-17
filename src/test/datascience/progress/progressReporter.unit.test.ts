@@ -6,6 +6,7 @@
 import { assert } from 'chai';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { CancellationToken, CancellationTokenSource, Progress as VSCProgress } from 'vscode';
+
 import { ApplicationShell } from '../../../client/common/application/applicationShell';
 import { IApplicationShell } from '../../../client/common/application/types';
 import { getUserMessageForAction } from '../../../client/datascience/progress/messages';
@@ -17,7 +18,7 @@ type Task<R> = (
     token: CancellationToken
 ) => Promise<R>;
 
-// tslint:disable-next-line: max-func-body-length
+// eslint-disable-next-line
 suite('DataScience - Progress Reporter', () => {
     let reporter: ProgressReporter;
     let vscodeProgressReporter: VSCProgress<{ message?: string | undefined; increment?: number | undefined }>;

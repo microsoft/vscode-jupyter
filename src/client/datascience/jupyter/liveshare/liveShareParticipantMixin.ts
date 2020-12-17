@@ -1,17 +1,18 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import '../../../common/extensions';
+
 import * as vsls from 'vsls/vscode';
 
 import { ILiveShareApi } from '../../../common/application/types';
-import '../../../common/extensions';
 import { IAsyncDisposable } from '../../../common/types';
 import { noop } from '../../../common/utils/misc';
 import { ClassType } from '../../../ioc/types';
 import { ILiveShareParticipant } from './types';
 import { waitForGuestService, waitForHostService } from './utils';
 
-// tslint:disable:no-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 export class LiveShareParticipantDefault implements IAsyncDisposable {
     constructor(..._rest: any[]) {

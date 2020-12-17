@@ -7,6 +7,7 @@ import { Observable } from 'rxjs/Observable';
 import { Event, EventEmitter, Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
+
 import { ServerStatus } from '../../../../datascience-ui/interactive-common/mainState';
 import { ILiveShareApi } from '../../../common/application/types';
 import { CancellationError } from '../../../common/cancellation';
@@ -38,7 +39,7 @@ export class GuestJupyterNotebook
     implements INotebook, ILiveShareParticipant {
     private get jupyterLab(): typeof import('@jupyterlab/services') {
         if (!this._jupyterLab) {
-            // tslint:disable-next-line:no-require-imports
+            // eslint-disable-next-line @typescript-eslint/no-require-imports
             this._jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services'); // NOSONAR
         }
         return this._jupyterLab!;
@@ -277,16 +278,16 @@ export class GuestJupyterNotebook
     public sendCommMessage(
         buffers: (ArrayBuffer | ArrayBufferView)[],
         content: { comm_id: string; data: JSONObject; target_name: string | undefined },
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         metadata: any,
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         msgId: any
     ): Kernel.IShellFuture<
         KernelMessage.IShellMessage<'comm_msg'>,
         KernelMessage.IShellMessage<KernelMessage.ShellMessageType>
     > {
         const shellMessage = this.jupyterLab?.KernelMessage.createMessage<KernelMessage.ICommMsgMsg<'shell'>>({
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             msgType: 'comm_msg',
             channel: 'shell',
             buffers,
@@ -319,7 +320,7 @@ export class GuestJupyterNotebook
             channel: 'shell',
             content: {
                 status: 'ok'
-                // tslint:disable-next-line: no-any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
             } as any,
             metadata: {},
             session: '1',
@@ -354,7 +355,7 @@ export class GuestJupyterNotebook
         }
     };
 
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private async sendRequest(command: string, args: any[]): Promise<any> {
         const service = await this.waitForService();
         if (service) {

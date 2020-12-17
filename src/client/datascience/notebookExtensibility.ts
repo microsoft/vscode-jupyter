@@ -1,5 +1,6 @@
 import { injectable } from 'inversify';
 import { Event, EventEmitter, Uri } from 'vscode';
+
 import type { NotebookCell } from '../../../types/vscode-proposed';
 import { noop } from '../common/utils/misc';
 import { ICell, INotebookExecutionLogger, INotebookExtensibility } from './types';

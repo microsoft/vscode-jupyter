@@ -3,17 +3,16 @@
 'use strict';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-
 import { LanguageConfiguration } from 'vscode';
+
 import { EXTENSION_ROOT_DIR, PYTHON_LANGUAGE } from '../common/constants';
 import { traceError } from '../common/logger';
 import { IFileSystem } from '../common/platform/types';
-
 import { IExtensions } from '../common/types';
 import { getLanguageConfiguration } from '../language/languageConfiguration';
 import { IThemeFinder } from './types';
 
-// tslint:disable:no-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 interface IThemeData {
     rootFile: string;

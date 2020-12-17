@@ -4,6 +4,7 @@
 'use strict';
 
 import * as assert from 'assert';
+
 import { chain, createDeferred, flattenIterator } from '../../../client/common/utils/async';
 
 suite('Deferred', () => {

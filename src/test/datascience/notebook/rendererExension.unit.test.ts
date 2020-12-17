@@ -3,6 +3,7 @@
 
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { EventEmitter, Extension, ExtensionKind, Uri } from 'vscode';
+
 import { NotebookDocument } from '../../../../types/vscode-proposed';
 import { IExtensionSingleActivationService } from '../../../client/activation/types';
 import { VSCodeNotebook } from '../../../client/common/application/notebook';

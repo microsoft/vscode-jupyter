@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { assert } from 'chai';
+
 import { IJupyterSettings } from '../../client/common/types';
 import {
     createEmptyCell,
@@ -12,7 +13,7 @@ import {
 } from '../../datascience-ui/interactive-common/mainState';
 import { defaultDataScienceSettings } from './helpers';
 
-// tslint:disable: max-func-body-length no-any
+/* eslint-disable , @typescript-eslint/no-explicit-any */
 suite('DataScience MainState', () => {
     function cloneVM(cvm: ICellViewModel, newCode: string, debugging?: boolean): ICellViewModel {
         const result = {
@@ -29,7 +30,7 @@ suite('DataScience MainState', () => {
         };
 
         // Typecast so that the build works. ICell.MetaData doesn't like reassigning
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         return (result as any) as ICellViewModel;
     }
 

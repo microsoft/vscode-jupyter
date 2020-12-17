@@ -3,9 +3,9 @@
 'use strict';
 import { Kernel, KernelMessage } from '@jupyterlab/services';
 import { JSONObject } from '@phosphor/coreutils/lib/json';
+import { Observable } from 'rxjs/Observable';
 import { CancellationTokenSource, Event, EventEmitter } from 'vscode';
 
-import { Observable } from 'rxjs/Observable';
 import { noop } from '../../client/common/utils/misc';
 import { JupyterInvalidKernelError } from '../../client/datascience/jupyter/jupyterInvalidKernelError';
 import { JupyterWaitForIdleError } from '../../client/datascience/jupyter/jupyterWaitForIdleError';
@@ -18,7 +18,7 @@ import { MockJupyterRequest } from './mockJupyterRequest';
 
 const LineFeedRegEx = /(\r\n|\n)/g;
 
-// tslint:disable:no-any no-http-string no-multiline-string max-func-body-length
+/* eslint-disable @typescript-eslint/no-explicit-any, , no-multi-str,  */
 export class MockJupyterSession implements IJupyterSession {
     public readonly workingDirectory = '';
     public readonly kernelSocket = new Observable<KernelSocketInformation | undefined>();
@@ -228,16 +228,16 @@ export class MockJupyterSession implements IJupyterSession {
     public sendCommMessage(
         buffers: (ArrayBuffer | ArrayBufferView)[],
         content: { comm_id: string; data: JSONObject; target_name: string | undefined },
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         metadata: any,
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         msgId: any
     ): Kernel.IShellFuture<
         KernelMessage.IShellMessage<'comm_msg'>,
         KernelMessage.IShellMessage<KernelMessage.ShellMessageType>
     > {
         const shellMessage = KernelMessage.createMessage<KernelMessage.ICommMsgMsg<'shell'>>({
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             msgType: 'comm_msg',
             channel: 'shell',
             buffers,
@@ -270,7 +270,7 @@ export class MockJupyterSession implements IJupyterSession {
             channel: 'shell',
             content: {
                 status: 'ok'
-                // tslint:disable-next-line: no-any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
             } as any,
             metadata: {},
             session: '1',
@@ -304,9 +304,9 @@ export class MockJupyterSession implements IJupyterSession {
         if (this.dict.hasOwnProperty(withoutLines)) {
             return this.dict[withoutLines] as ICell;
         }
-        // tslint:disable-next-line:no-console
+        // eslint-disable-next-line no-console
         console.log(`Cell '${code}' not found in mock`);
-        // tslint:disable-next-line:no-console
+        // eslint-disable-next-line no-console
         console.log(`Dict has these keys ${Object.keys(this.dict).join('","')}`);
         throw new Error(`Cell '${code}' not found in mock`);
     };

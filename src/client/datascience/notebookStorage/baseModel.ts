@@ -7,6 +7,7 @@ import * as fastDeepEqual from 'fast-deep-equal';
 import { sha256 } from 'hash.js';
 import { cloneDeep } from 'lodash';
 import { Event, EventEmitter, Memento, Uri } from 'vscode';
+
 import { ICryptoUtils } from '../../common/types';
 import { isUntitledFile } from '../../common/utils/misc';
 import { pruneCell } from '../common';
@@ -35,13 +36,13 @@ export function getInterpreterInfoStoredInMetadata(
         return;
     }
     // See `updateNotebookMetadata` to determine how & where exactly interpreter hash is stored.
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const kernelSpecMetadata: undefined | any = metadata.kernelspec.metadata as any;
     const interpreterHash = kernelSpecMetadata?.interpreter?.hash;
     return interpreterHash ? { displayName: metadata.kernelspec.name, hash: interpreterHash } : undefined;
 }
 
-// tslint:disable-next-line: cyclomatic-complexity
+// eslint-disable-next-line complexity
 export function updateNotebookMetadata(
     metadata?: nbformat.INotebookMetadata,
     kernelConnection?: KernelConnectionMetadata,
@@ -130,7 +131,7 @@ export function updateNotebookMetadata(
         }
         try {
             // This is set only for when we select an interpreter.
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             delete (metadata.kernelspec as any).metadata;
         } catch {
             // Noop.
@@ -217,7 +218,7 @@ export abstract class BaseNotebookModel implements INotebookModel {
                   id: this.kernelId
               }
             : // Fix nyc compiler problem
-              // tslint:disable-next-line: no-any
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               (this.notebookJson.metadata as any);
     }
     public get isTrusted() {
@@ -297,7 +298,7 @@ export abstract class BaseNotebookModel implements INotebookModel {
         }
     }
 
-    // tslint:disable-next-line: cyclomatic-complexity
+    // eslint-disable-next-line complexity
     private updateVersionInfo(kernelConnection: KernelConnectionMetadata | undefined): boolean {
         const { changed, kernelId } = updateNotebookMetadata(this.notebookJson.metadata, kernelConnection);
         if (kernelId) {

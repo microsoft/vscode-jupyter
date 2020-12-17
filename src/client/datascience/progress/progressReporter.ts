@@ -5,6 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import { CancellationToken, CancellationTokenSource, Progress as VSCProgress, ProgressLocation } from 'vscode';
+
 import { IApplicationShell } from '../../common/application/types';
 import { IDisposable } from '../../common/types';
 import { createDeferred } from '../../common/utils/async';

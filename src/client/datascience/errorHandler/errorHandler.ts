@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { inject, injectable } from 'inversify';
+
 import { IApplicationShell } from '../../common/application/types';
 import { traceError } from '../../common/logger';
 import * as localize from '../../common/utils/localize';

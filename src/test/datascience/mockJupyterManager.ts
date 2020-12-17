@@ -2,19 +2,19 @@
 // Licensed under the MIT License.
 'use strict';
 import { nbformat } from '@jupyterlab/coreutils';
+import type { Kernel, Session } from '@jupyterlab/services';
 import { ChildProcess } from 'child_process';
 import * as fs from 'fs-extra';
 import * as os from 'os';
 import * as path from 'path';
 import { Observable } from 'rxjs/Observable';
 import * as tmp from 'tmp';
+import { anything, instance, mock, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import * as uuid from 'uuid/v4';
 import { EventEmitter, Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 
-import type { Kernel, Session } from '@jupyterlab/services';
-import { anything, instance, mock, when } from 'ts-mockito';
 import { Cancellation } from '../../client/common/cancellation';
 import { ProductInstaller } from '../../client/common/installer/productInstaller';
 import {
@@ -48,7 +48,7 @@ import { MockJupyterSession } from './mockJupyterSession';
 import { MockProcessService } from './mockProcessService';
 import { MockPythonService } from './mockPythonService';
 
-// tslint:disable:no-any no-http-string no-multiline-string max-func-body-length
+/* eslint-disable @typescript-eslint/no-explicit-any, , no-multi-str,  */
 
 const MockJupyterTimeDelay = 10;
 const LineFeedRegEx = /(\r\n|\n)/g;
@@ -145,7 +145,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
         serviceManager.addSingletonInstance<IInstaller>(IInstaller, instance(this.productInstaller));
 
         // Setup our default kernel spec (this is just a dummy value)
-        // tslint:disable-next-line:no-octal-literal
+        // eslint-disable-next-line no-octal, no-octal-escape
         this.kernelSpecs.push({
             name: '0e8519db-0895-416c-96df-fa80131ecea0',
             dir: 'C:\\Users\\rchiodo\\AppData\\Roaming\\jupyter\\kernels\\0e8519db-0895-416c-96df-fa80131ecea0'

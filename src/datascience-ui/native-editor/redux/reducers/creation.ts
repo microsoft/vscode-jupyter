@@ -245,7 +245,7 @@ export namespace Creation {
             arg.payload.data.changes.forEach((c) => {
                 const source = newVM.inputBlockText;
                 const before = source.slice(0, c.rangeOffset);
-                // tslint:disable-next-line: restrict-plus-operands
+                // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
                 const after = source.slice(c.rangeOffset + c.rangeLength);
                 newVM.inputBlockText = `${before}${c.text}${after}`;
             });
@@ -423,7 +423,7 @@ export namespace Creation {
         const disabledQueueArg = { ...arg, queueAction: noop };
         switch (arg.payload.data.kind) {
             case 'clear':
-                // tslint:disable-next-line: no-any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 return Execution.clearAllOutputs(disabledQueueArg as any);
             case 'edit':
                 return applyCellEdit({

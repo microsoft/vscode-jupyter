@@ -5,6 +5,7 @@ import { assert } from 'chai';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as sinon from 'sinon';
+
 import { IVSCodeNotebook } from '../../../../client/common/application/types';
 import { ProductNames } from '../../../../client/common/installer/productNames';
 import { BufferDecoder } from '../../../../client/common/process/decoder';
@@ -26,7 +27,7 @@ import {
     waitForKernelToGetAutoSelected
 } from '../../notebook/helper';
 
-// tslint:disable: no-invalid-this max-func-body-length no-function-expression no-any
+/* eslint-disable no-invalid-this, , , @typescript-eslint/no-explicit-any */
 suite('DataScience Install IPyKernel (slow) (install)', () => {
     const disposables: IDisposable[] = [];
     let nbFile: string;

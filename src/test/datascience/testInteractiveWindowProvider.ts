@@ -4,6 +4,7 @@
 import { inject, injectable, named } from 'inversify';
 import * as uuid from 'uuid/v4';
 import { Memento, Uri } from 'vscode';
+
 import { IApplicationShell, ILiveShareApi } from '../../client/common/application/types';
 import { IFileSystem } from '../../client/common/platform/types';
 import {

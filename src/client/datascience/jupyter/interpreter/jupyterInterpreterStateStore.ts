@@ -5,6 +5,7 @@
 
 import { inject, injectable, named } from 'inversify';
 import { Memento } from 'vscode';
+
 import { IExtensionSingleActivationService } from '../../../activation/types';
 import { IPythonApiProvider, IPythonExtensionChecker } from '../../../api/types';
 import { GLOBAL_MEMENTO, IMemento } from '../../../common/types';

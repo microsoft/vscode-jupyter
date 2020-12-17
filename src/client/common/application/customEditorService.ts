@@ -30,10 +30,10 @@ export class CustomEditorService implements ICustomEditorService {
         }
     ): vscode.Disposable {
         if (this.useCustomEditorApi) {
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             return (vscode.window as any).registerCustomEditorProvider(viewType, provider, options);
         } else {
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             return (vscode.window as any).registerCustomEditorProvider(viewType, new InvalidCustomEditor(), options);
         }
     }
@@ -44,7 +44,7 @@ export class CustomEditorService implements ICustomEditorService {
         }
     }
 
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private async enableCustomEditors() {
         // This code is temporary.
         const settings = this.workspace.getConfiguration('workbench', undefined);

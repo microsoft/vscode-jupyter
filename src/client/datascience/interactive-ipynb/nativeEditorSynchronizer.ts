@@ -4,13 +4,13 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { IFileSystem } from '../../common/platform/types';
 
+import { IFileSystem } from '../../common/platform/types';
 import { IInteractiveWindowMapping, InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
 import { SyncPayload } from '../interactive-common/types';
 import { INotebookEditor } from '../types';
 
-// tslint:disable: no-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 type UserActionNotificationCallback = <M extends IInteractiveWindowMapping, T extends keyof M>(
     type: T,

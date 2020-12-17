@@ -9,7 +9,6 @@ import * as vsls from 'vsls/vscode';
 
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../../common/application/types';
 import { traceInfo } from '../../../common/logger';
-
 import { IFileSystem } from '../../../common/platform/types';
 import {
     IAsyncDisposableRegistry,
@@ -30,7 +29,7 @@ import { LiveShareParticipantHost } from './liveShareParticipantMixin';
 import { IRoleBasedObject } from './roleBasedFactory';
 import { ServerCache } from './serverCache';
 
-// tslint:disable:no-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 // This class is really just a wrapper around a jupyter execution that also provides a shared live share service
 export class HostJupyterExecution

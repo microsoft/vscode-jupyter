@@ -3,12 +3,13 @@
 
 'use strict';
 
-// tslint:disable:no-any max-func-body-length
+/* eslint-disable @typescript-eslint/no-explicit-any,  */
 
 import { expect } from 'chai';
 import * as fs from 'fs';
 import * as glob from 'glob';
 import * as path from 'path';
+
 import { ApplicationEnvironment } from '../client/common/application/applicationEnvironment';
 import { IApplicationEnvironment } from '../client/common/application/types';
 import { EXTENSION_ROOT_DIR } from '../client/common/constants';
@@ -21,7 +22,7 @@ suite('Extension version tests', () => {
     suiteSetup(async function () {
         // Skip the entire suite if running locally
         if (!branchName) {
-            // tslint:disable-next-line: no-invalid-this
+            // eslint-disable-next-line no-invalid-this
             return this.skip();
         }
     });
@@ -33,7 +34,7 @@ suite('Extension version tests', () => {
 
     test('If we are running a pipeline in the main branch, the extension version in `package.json` should have the "-dev" suffix', async function () {
         if (branchName !== 'main') {
-            // tslint:disable-next-line: no-invalid-this
+            // eslint-disable-next-line no-invalid-this
             return this.skip();
         }
 
@@ -45,7 +46,7 @@ suite('Extension version tests', () => {
 
     test('If we are running a pipeline in the release branch, the extension version in `package.json` should not have the "-dev" suffix', async function () {
         if (!branchName!.startsWith('release')) {
-            // tslint:disable-next-line: no-invalid-this
+            // eslint-disable-next-line no-invalid-this
             return this.skip();
         }
 

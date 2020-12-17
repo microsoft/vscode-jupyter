@@ -3,10 +3,12 @@
 
 'use strict';
 
+import '../common/extensions';
+
 import { inject, injectable } from 'inversify';
 import { ConfigurationTarget } from 'vscode';
+
 import { IApplicationShell } from '../common/application/types';
-import '../common/extensions';
 import { IConfigurationService, IJupyterExtensionBanner, IPersistentStateFactory } from '../common/types';
 import * as localize from '../common/utils/localize';
 import { captureTelemetry, sendTelemetryEvent } from '../telemetry';

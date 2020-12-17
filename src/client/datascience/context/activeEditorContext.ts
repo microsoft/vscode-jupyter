@@ -5,6 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import { TextEditor } from 'vscode';
+
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { ICommandManager, IDocumentManager } from '../../common/application/types';

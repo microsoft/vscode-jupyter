@@ -1,13 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import '../common/extensions';
+
 import type { JSONObject } from '@phosphor/coreutils';
 import { inject, injectable } from 'inversify';
 import * as vscode from 'vscode';
+
 import { ICommandManager, IDocumentManager, IWorkspaceService } from '../common/application/types';
 import { PYTHON_ALLFILES, PYTHON_LANGUAGE } from '../common/constants';
 import { ContextKey } from '../common/contextKey';
-import '../common/extensions';
 import { IConfigurationService, IDisposable, IDisposableRegistry, IExtensionContext } from '../common/types';
 import { debounceAsync, swallowExceptions } from '../common/utils/decorators';
 import { sendTelemetryEvent } from '../telemetry';
@@ -92,7 +94,7 @@ export class DataScience implements IDataScience {
     @swallowExceptions('Sending DataScience Settings Telemetry failed')
     private async sendSettingsTelemetry(): Promise<void> {
         // Get our current settings. This is what we want to send.
-        // tslint:disable-next-line:no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const settings = this.configuration.getSettings() as any;
 
         // Translate all of the 'string' based settings into known values or not.

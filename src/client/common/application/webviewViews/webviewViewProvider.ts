@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable } from 'inversify';
+
 import { IFileSystem } from '../../platform/types';
 import { IDisposableRegistry } from '../../types';
 import { IWebviewView, IWebviewViewOptions, IWebviewViewProvider } from '../types';
@@ -14,7 +15,7 @@ export class WebviewViewProvider implements IWebviewViewProvider {
         @inject(IFileSystem) private readonly fs: IFileSystem
     ) {}
 
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public async create(options: IWebviewViewOptions): Promise<IWebviewView> {
         return new WebviewView(this.fs, this.disposableRegistry, options);
     }

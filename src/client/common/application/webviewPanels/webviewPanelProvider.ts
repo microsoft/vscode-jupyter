@@ -4,6 +4,7 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Uri } from 'vscode';
+
 import { IFileSystem } from '../../platform/types';
 import { IDisposableRegistry, IExtensionContext } from '../../types';
 import { IWebviewPanel, IWebviewPanelOptions, IWebviewPanelProvider } from '../types';
@@ -17,7 +18,7 @@ export class WebviewPanelProvider implements IWebviewPanelProvider {
         @inject(IExtensionContext) private readonly context: IExtensionContext
     ) {}
 
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public async create(options: IWebviewPanelOptions): Promise<IWebviewPanel> {
         // Allow loading resources from the `<extension folder>/tmp` folder when in webiviews.
         // Used by widgets to place files that are not otherwise accessible.

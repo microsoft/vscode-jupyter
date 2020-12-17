@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { assert } from 'chai';
+
 import { InputHistory } from '../../datascience-ui/interactive-common/inputHistory';
 
 suite('DataScience InputHistory', () => {

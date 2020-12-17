@@ -4,7 +4,7 @@
 import * as TypeMoq from 'typemoq';
 import { Range, TextDocument, TextLine, Uri } from 'vscode';
 
-// tslint:disable:max-func-body-length no-trailing-whitespace no-multiline-string
+/* eslint-disable , no-trailing-spaces, no-multi-str */
 // Disable whitespace / multiline as we use that to pass in our fake file strings
 
 // Helper function to create a document and get line count and lines

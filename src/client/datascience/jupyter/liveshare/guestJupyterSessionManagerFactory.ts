@@ -3,6 +3,7 @@
 'use strict';
 import type { Kernel } from '@jupyterlab/services';
 import { EventEmitter } from 'vscode';
+
 import { noop } from '../../../common/utils/misc';
 import { IJupyterConnection, IJupyterSessionManager, IJupyterSessionManagerFactory } from '../../types';
 import { GuestJupyterSessionManager } from './guestJupyterSessionManager';

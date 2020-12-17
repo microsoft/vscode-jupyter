@@ -5,6 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import * as vscode from 'vscode';
+
 import { UseProposedApi } from '../constants';
 import { IApplicationEnvironment, IAuthenticationService } from './types';
 

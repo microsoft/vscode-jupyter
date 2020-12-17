@@ -11,7 +11,7 @@ import { ILiveShareHasRole, ILiveShareParticipant } from './types';
 
 export interface IRoleBasedObject extends IAsyncDisposable, ILiveShareParticipant {}
 
-// tslint:disable:no-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export class RoleBasedFactory<T extends IRoleBasedObject, CtorType extends ClassType<T>> implements ILiveShareHasRole {
     private ctorArgs: ConstructorParameters<CtorType>[];
     private firstTime: boolean = true;

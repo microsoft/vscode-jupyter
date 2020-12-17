@@ -2,6 +2,7 @@ import { Diff, diff_match_patch } from 'diff-match-patch';
 import { injectable } from 'inversify';
 import { EOL } from 'os';
 import { Position, Range, TextEdit, Uri, WorkspaceEdit } from 'vscode';
+
 import { IEditorUtils } from './types';
 
 // Code borrowed from goFormat.ts (Go Extension for VS Code)
@@ -57,11 +58,11 @@ function getTextEditsInternal(before: string, diffs: [number, string][], startLi
     let edit: Edit | null = null;
     let end: Position;
 
-    // tslint:disable-next-line:prefer-for-of
+    // eslint-disable-next-line @typescript-eslint/prefer-for-of
     for (let i = 0; i < diffs.length; i += 1) {
         let start = new Position(line, character);
         // Compute the line/character after the diff is applied.
-        // tslint:disable-next-line:prefer-for-of
+        // eslint-disable-next-line @typescript-eslint/prefer-for-of
         for (let curr = 0; curr < diffs[i][1].length; curr += 1) {
             if (diffs[i][1][curr] !== '\n') {
                 character += 1;
@@ -71,9 +72,9 @@ function getTextEditsInternal(before: string, diffs: [number, string][], startLi
             }
         }
 
-        // tslint:disable-next-line:no-require-imports
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
         const dmp = require('diff-match-patch') as typeof import('diff-match-patch');
-        // tslint:disable-next-line:switch-default
+        // eslint-disable-next-line default-case
         switch (diffs[i][0]) {
             case dmp.DIFF_DELETE:
                 if (
@@ -148,7 +149,7 @@ function patch_fromText(textline: string): Patch[] {
         if (!m) {
             throw new Error(`Invalid patch string: ${text[textPointer]}`);
         }
-        // tslint:disable-next-line:no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const patch = new (<any>diff_match_patch).patch_obj();
         patches.push(patch);
         patch.start1 = parseInt(m[1], 10);
@@ -173,7 +174,7 @@ function patch_fromText(textline: string): Patch[] {
             patch.length2 = parseInt(m[4], 10);
         }
         textPointer += 1;
-        // tslint:disable-next-line:no-require-imports
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
         const dmp = require('diff-match-patch') as typeof import('diff-match-patch');
 
         while (textPointer < text.length) {
@@ -228,7 +229,7 @@ export class EditorUtils implements IEditorUtils {
         // # Work around missing newline (http://bugs.python.org/issue2142).
         patch = patch.replace(/\\ No newline at end of file[\r\n]/, '');
 
-        // tslint:disable-next-line:no-require-imports
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
         const dmp = require('diff-match-patch') as typeof import('diff-match-patch');
         const d = new dmp.diff_match_patch();
         const patches = patch_fromText.call(d, patch);

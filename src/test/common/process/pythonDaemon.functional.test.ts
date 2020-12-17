@@ -18,6 +18,7 @@ import {
     StreamMessageReader,
     StreamMessageWriter
 } from 'vscode-jsonrpc/node';
+
 import { IPlatformService } from '../../../client/common/platform/types';
 import { PythonDaemonExecutionService } from '../../../client/common/process/pythonDaemon';
 import { IPythonExecutionService } from '../../../client/common/process/types';
@@ -29,7 +30,7 @@ import { isPythonVersion, PYTHON_PATH } from '../../common';
 import { createTemporaryFile } from '../../utils/fs';
 use(chaiPromised);
 
-// tslint:disable-next-line: max-func-body-length
+// eslint-disable-next-line
 suite('Daemon', () => {
     // Set PYTHONPATH to pickup our module and the jsonrpc modules.
     const envPythonPath = `${path.join(EXTENSION_ROOT_DIR, 'pythonFiles')}${path.delimiter}${path.join(
@@ -56,7 +57,7 @@ suite('Daemon', () => {
     });
     setup(async function () {
         if (isPythonVersion('2.7')) {
-            // tslint:disable-next-line: no-invalid-this
+            // eslint-disable-next-line no-invalid-this
             return this.skip();
         }
         // Enable the following to log everything going on at pyton end.

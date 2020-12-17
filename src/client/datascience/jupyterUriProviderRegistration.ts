@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { IFileSystem } from '../common/platform/types';
 
+import { IFileSystem } from '../common/platform/types';
 import { IExtensions } from '../common/types';
 import * as localize from '../common/utils/localize';
 import { EXTENSION_ROOT_DIR } from '../constants';

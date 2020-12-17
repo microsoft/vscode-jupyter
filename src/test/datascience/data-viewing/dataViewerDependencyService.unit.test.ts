@@ -7,6 +7,7 @@ import { assert } from 'chai';
 import * as path from 'path';
 import { SemVer } from 'semver';
 import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
+
 import { ApplicationShell } from '../../../client/common/application/applicationShell';
 import { IApplicationShell } from '../../../client/common/application/types';
 import { ProductInstaller } from '../../../client/common/installer/productInstaller';
@@ -50,9 +51,9 @@ suite('DataScience - DataViewerDependencyService', () => {
 
         when(interpreterService.getActiveInterpreter()).thenResolve(interpreter);
         when(interpreterService.getActiveInterpreter(anything())).thenResolve(interpreter);
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (instance(pythonExecService) as any).then = undefined;
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (pythonExecService as any).then = undefined;
         when(pythonExecFactory.createActivatedEnvironment(anything())).thenResolve(instance(pythonExecService));
     });
@@ -84,7 +85,7 @@ suite('DataScience - DataViewerDependencyService', () => {
         when(
             pythonExecService.exec(deepEqual(['-c', 'import pandas;print(pandas.__version__)']), anything())
         ).thenReject(new Error('Not Found'));
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         when(appShell.showErrorMessage(anything(), anything())).thenResolve(Common.install() as any);
         when(installer.install(Product.pandas, interpreter, anything())).thenResolve();
 
@@ -97,7 +98,7 @@ suite('DataScience - DataViewerDependencyService', () => {
         when(
             pythonExecService.exec(deepEqual(['-c', 'import pandas;print(pandas.__version__)']), anything())
         ).thenReject(new Error('Not Found'));
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         when(appShell.showErrorMessage(anything(), anything())).thenResolve();
 
         const promise = dependencyService.checkAndInstallMissingDependencies(interpreter);

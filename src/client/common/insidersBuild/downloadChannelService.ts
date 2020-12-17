@@ -5,6 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import { ConfigurationChangeEvent, ConfigurationTarget, Event, EventEmitter } from 'vscode';
+
 import { IWorkspaceService } from '../application/types';
 import { traceDecorators } from '../logger';
 import { IConfigurationService, IDisposable, IDisposableRegistry, IJupyterSettings } from '../types';

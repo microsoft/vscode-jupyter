@@ -5,6 +5,7 @@ import { assert } from 'chai';
 import { noop } from 'jquery';
 import * as portfinder from 'portfinder';
 import * as uuid from 'uuid/v4';
+
 import { IPythonExtensionChecker } from '../../../client/api/types';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { IProcessServiceFactory } from '../../../client/common/process/types';
@@ -18,7 +19,7 @@ import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { DataScienceIocContainer } from '../dataScienceIocContainer';
 import { requestExecute, requestInspect } from './rawKernelTestHelpers';
 
-// tslint:disable:no-any no-multiline-string max-func-body-length no-console max-classes-per-file trailing-comma
+/* eslint-disable @typescript-eslint/no-explicit-any, no-multi-str, , no-console, max-classes-per-file, comma-dangle */
 suite('DataScience raw kernel tests', () => {
     let ioc: DataScienceIocContainer;
     let rawKernel: RawKernel;
@@ -41,7 +42,7 @@ suite('DataScience raw kernel tests', () => {
         ioc.registerDataScienceTypes();
         await ioc.activate();
         if (ioc.mockJupyter) {
-            // tslint:disable-next-line: no-invalid-this
+            // eslint-disable-next-line no-invalid-this
             this.skip();
         } else {
             const port = await portfinder.getPortPromise({ startPort: 57718 });

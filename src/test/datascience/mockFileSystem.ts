@@ -3,6 +3,7 @@
 'use strict';
 
 import { Uri } from 'vscode';
+
 import { FileSystem } from '../../client/common/platform/fileSystem';
 import { FakeVSCodeFileSystemAPI } from '../serviceRegistry';
 

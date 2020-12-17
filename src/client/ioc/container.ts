@@ -3,6 +3,7 @@
 
 import { EventEmitter } from 'events';
 import { Container, decorate, injectable, interfaces } from 'inversify';
+
 import { traceWarning } from '../common/logger';
 import { Abstract, IServiceContainer, Newable } from './types';
 

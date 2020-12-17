@@ -5,7 +5,7 @@
 /**
  * Represents a UUID as defined by rfc4122.
  */
-// tslint:disable-next-line: interface-name
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export interface UUID {
     /**
      * @returns the canonical representation in sets of hexadecimal numbers separated by dashes.
@@ -29,7 +29,7 @@ class V4UUID extends ValueUUID {
     private static readonly _timeHighBits = ['8', '9', 'a', 'b'];
 
     private static _oneOf(array: string[]): string {
-        // tslint:disable:insecure-random
+        /* eslint-disable  */
         return array[Math.floor(array.length * Math.random())];
     }
 
@@ -37,7 +37,7 @@ class V4UUID extends ValueUUID {
         return V4UUID._oneOf(V4UUID._chars);
     }
 
-    // tslint:disable-next-line: member-ordering
+    // eslint-disable-next-line @typescript-eslint/member-ordering
     constructor() {
         super(
             [

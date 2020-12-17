@@ -15,6 +15,7 @@ import {
     workspace,
     WorkspaceEdit
 } from 'vscode';
+
 import { IApplicationEnvironment, IApplicationShell, ICommandManager } from '../common/application/types';
 import { MARKDOWN_LANGUAGE } from '../common/constants';
 import { traceError } from '../common/logger';

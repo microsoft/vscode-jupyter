@@ -7,6 +7,7 @@ import { Kernel, KernelMessage, ServerConnection } from '@jupyterlab/services';
 import { DefaultKernel } from '@jupyterlab/services/lib/kernel/default';
 import type { ISignal, Signal } from '@phosphor/signaling';
 import * as WebSocketWS from 'ws';
+
 import { createDeferred, Deferred } from '../../../client/common/utils/async';
 import { deserializeDataViews, serializeDataViews } from '../../../client/common/utils/serializers';
 import {
@@ -16,9 +17,9 @@ import {
 import { KernelSocketOptions } from '../../../client/datascience/types';
 import { IMessageHandler, PostOffice } from '../../react-common/postOffice';
 
-// tslint:disable:no-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
-// tslint:disable: no-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // Proxy kernel that wraps the default kernel. We need this entire class because
 // we can't derive from DefaultKernel.
 class ProxyKernel implements IMessageHandler, Kernel.IKernel {
@@ -130,7 +131,7 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
         );
 
         // Hook up to watch iopub messages from the real kernel
-        // tslint:disable-next-line: no-require-imports
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
         const signaling = require('@phosphor/signaling') as typeof import('@phosphor/signaling');
         this._ioPubMessageSignal = new signaling.Signal<this, KernelMessage.IIOPubMessage>(this);
         this.realKernel.iopubMessage.connect(this.onIOPubMessage, this);
@@ -213,7 +214,7 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
         return this.realKernel.requestExecute(content, disposeOnDone, metadata);
     }
     public requestDebug(
-        // tslint:disable-next-line: no-banned-terms
+        // eslint-disable-next-line no-caller,no-eval
         content: { seq: number; type: 'request'; command: string; arguments?: any },
         disposeOnDone?: boolean
     ): Kernel.IControlFuture<KernelMessage.IDebugRequestMsg, KernelMessage.IDebugReplyMsg> {
@@ -415,9 +416,9 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
         if (result !== undefined) {
             this.hookResults.delete(args.msg.header.msg_id);
 
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             if ((result as any).then) {
-                // tslint:disable-next-line: no-any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 (result as any).then((r: boolean) => {
                     this.postOffice.sendMessage<IInteractiveWindowMapping>(
                         IPyWidgetMessages.IPyWidgets_MessageHookResult,

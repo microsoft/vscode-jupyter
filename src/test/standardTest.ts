@@ -1,13 +1,14 @@
-// tslint:disable:no-console
+/* eslint-disable no-console */
 
 import { spawnSync } from 'child_process';
-import * as path from 'path';
 import * as fs from 'fs-extra';
+import * as path from 'path';
+import * as tmp from 'tmp';
 import { downloadAndUnzipVSCode, resolveCliPathFromVSCodeExecutablePath, runTests } from 'vscode-test';
+
 import { PythonExtension } from '../client/datascience/constants';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from './constants';
 import { initializeLogger } from './testLogger';
-import * as tmp from 'tmp';
 
 initializeLogger();
 

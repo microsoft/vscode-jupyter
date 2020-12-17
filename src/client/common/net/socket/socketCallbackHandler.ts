@@ -1,11 +1,12 @@
-// tslint:disable:quotemark ordered-imports member-ordering one-line prefer-const
+/* eslint-disable @typescript-eslint/quotes, @typescript-eslint/member-ordering, brace-style, prefer-const */
 
 'use strict';
 
-import * as net from 'net';
 import { EventEmitter } from 'events';
-import { SocketStream } from './SocketStream';
+import * as net from 'net';
+
 import { SocketServer } from './socketServer';
+import { SocketStream } from './SocketStream';
 
 export abstract class SocketCallbackHandler extends EventEmitter {
     private _stream!: SocketStream;

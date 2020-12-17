@@ -12,6 +12,7 @@ import type {
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import { CancellationToken } from 'vscode-jsonrpc';
+
 import { Cancellation } from '../../common/cancellation';
 import { traceError, traceInfo } from '../../common/logger';
 import { IOutputChannel } from '../../common/types';
@@ -114,7 +115,7 @@ export class JupyterSession extends BaseJupyterSession {
         }
         let result: ISessionWithSocket | undefined;
         let tryCount = 0;
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         let exception: any;
         while (tryCount < 3) {
             try {
@@ -210,7 +211,7 @@ export class JupyterSession extends BaseJupyterSession {
                         );
 
                         // Add on the kernel sock information
-                        // tslint:disable-next-line: no-any
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         (session as any).kernelSocketInformation = {
                             socket: JupyterWebSockets.get(session.kernel.id),
                             options: {

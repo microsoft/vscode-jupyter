@@ -1,17 +1,18 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import '../../common/extensions';
+
 import type { nbformat } from '@jupyterlab/coreutils';
 import { inject, injectable, named } from 'inversify';
 import * as uuid from 'uuid/v4';
 import { Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
+
 import { IPythonExtensionChecker } from '../../api/types';
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../common/application/types';
-import '../../common/extensions';
 import { IFileSystem } from '../../common/platform/types';
-
 import {
     IAsyncDisposableRegistry,
     IConfigurationService,
@@ -38,7 +39,7 @@ import { ILiveShareHasRole } from './liveshare/types';
 
 interface IJupyterServerInterface extends IRoleBasedObject, INotebookServer {}
 
-// tslint:disable:callable-types
+/* eslint-disable @typescript-eslint/prefer-function-type */
 type JupyterServerClassType = {
     new (
         liveShare: ILiveShareApi,
@@ -58,7 +59,7 @@ type JupyterServerClassType = {
         extensionChecker: IPythonExtensionChecker
     ): IJupyterServerInterface;
 };
-// tslint:enable:callable-types
+/* eslint-enable @typescript-eslint/prefer-function-type */
 
 // This class wraps either a HostJupyterServer or a GuestJupyterServer based on the liveshare state. It abstracts
 // out the live share specific parts.

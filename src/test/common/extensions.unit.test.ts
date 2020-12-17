@@ -1,5 +1,6 @@
-import { expect } from 'chai';
 import '../../client/common/extensions';
+
+import { expect } from 'chai';
 
 // Defines a Mocha test suite to group tests of similar kind together
 suite('String Extensions', () => {
@@ -72,7 +73,7 @@ suite('String Extensions', () => {
         expect(formatString.format('one', 'two', 'three')).to.be.equal(expectedString);
     });
     test('String should remove quotes', () => {
-        //tslint:disable:no-multiline-string
+        /* eslint-disable no-multi-str */
         const quotedString = `'foo is "bar" is foo' is bar'`;
         const quotedString2 = `foo is "bar" is foo' is bar'`;
         const quotedString3 = `foo is "bar" is foo' is bar`;

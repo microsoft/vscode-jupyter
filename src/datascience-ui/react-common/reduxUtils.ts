@@ -2,12 +2,13 @@
 // Licensed under the MIT License.
 'use strict';
 import { Action, AnyAction, Middleware, Reducer } from 'redux';
+
 import { BaseReduxActionPayload } from '../../client/datascience/interactive-common/types';
 
-// tslint:disable-next-line: interface-name
+// eslint-disable-next-line @typescript-eslint/naming-convention
 interface TypedAnyAction<T> extends Action<T> {
     // Allows any extra properties to be defined in an action.
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [extraProps: string]: any;
 }
 export type QueueAnotherFunc<T> = (nextAction: Action<T>) => void;

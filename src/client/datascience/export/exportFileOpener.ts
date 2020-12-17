@@ -1,8 +1,8 @@
 import { inject, injectable } from 'inversify';
 import { Position, Uri } from 'vscode';
+
 import { IApplicationShell, IDocumentManager } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
-
 import { IFileSystem } from '../../common/platform/types';
 import { IBrowserService } from '../../common/types';
 import * as localize from '../../common/utils/localize';

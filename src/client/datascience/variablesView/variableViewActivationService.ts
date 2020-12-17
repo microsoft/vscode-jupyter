@@ -1,5 +1,6 @@
 import { inject, injectable } from 'inversify';
 import { window } from 'vscode';
+
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { ICommandManager } from '../../common/application/types';
 import { ContextKey } from '../../common/contextKey';

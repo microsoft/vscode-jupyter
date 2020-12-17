@@ -5,6 +5,7 @@ import type { KernelMessage } from '@jupyterlab/services';
 import { assert } from 'chai';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { Uri } from 'vscode';
+
 import { DebugService } from '../../client/common/application/debugService';
 import { WorkspaceService } from '../../client/common/application/workspace';
 import { ConfigurationService } from '../../client/common/configuration/service';
@@ -37,9 +38,9 @@ suite('DataScience JupyterUtils', () => {
         []
     );
 
-    // tslint:disable: no-invalid-template-strings
+    /* eslint-disable no-template-curly-in-string */
     test('expanding file variables', async function () {
-        // tslint:disable-next-line: no-invalid-this
+        // eslint-disable-next-line no-invalid-this
         this.timeout(10000);
         const uri = Uri.file('test/bar');
         const folder = { index: 0, name: '', uri };
@@ -85,7 +86,7 @@ suite('DataScience JupyterUtils', () => {
             metadata: {}
         };
 
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         return (hashProvider.preHandleIOPub(dummyMessage).content as any).transient;
     }
 

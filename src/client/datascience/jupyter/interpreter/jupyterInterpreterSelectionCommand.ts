@@ -4,6 +4,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
+
 import { IExtensionSingleActivationService } from '../../../activation/types';
 import { ICommandManager } from '../../../common/application/types';
 import { IDisposableRegistry } from '../../../common/types';

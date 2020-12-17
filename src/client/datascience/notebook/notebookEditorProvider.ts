@@ -3,13 +3,14 @@
 
 'use strict';
 
+import '../../common/extensions';
+
 import { inject, injectable } from 'inversify';
 import { Event, EventEmitter, Uri } from 'vscode';
+
 import type { NotebookDocument, NotebookEditor as VSCodeNotebookEditor } from '../../../../types/vscode-proposed';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../common/application/types';
-import '../../common/extensions';
 import { IFileSystem } from '../../common/platform/types';
-
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { IServiceContainer } from '../../ioc/types';

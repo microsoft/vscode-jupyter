@@ -5,6 +5,7 @@ import * as glob from 'glob';
 import * as path from 'path';
 import { parse, SemVer } from 'semver';
 import { promisify } from 'util';
+
 import { traceError, traceVerbose, traceWarning } from '../../client/common/logger';
 import { BufferDecoder } from '../../client/common/process/decoder';
 import { ProcessService } from '../../client/common/process/proc';
@@ -13,7 +14,7 @@ import { parseCondaEnvFileContents } from './condaHelper';
 import { isCondaEnvironment } from './condaLocator';
 
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
-// tslint:disable-next-line:no-require-imports no-var-requires
+// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
 const untildify: (value: string) => string = require('untildify');
 
 // This glob pattern will match all of the following:

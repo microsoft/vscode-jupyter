@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-// tslint:disable:no-console no-require-imports no-var-requires
+/* eslint-disable no-console, @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 
 // Must always be on top to setup expected env.
 process.env.VSC_JUPYTER_SMOKE_TEST = '1';
@@ -9,6 +9,7 @@ process.env.VSC_JUPYTER_SMOKE_TEST = '1';
 import { spawn } from 'child_process';
 import * as fs from 'fs-extra';
 import * as path from 'path';
+
 import { unzip } from './common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, SMOKE_TEST_EXTENSIONS_DIR } from './constants';
 

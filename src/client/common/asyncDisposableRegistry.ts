@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { injectable } from 'inversify';
+
 import { IAsyncDisposable, IAsyncDisposableRegistry, IDisposable } from './types';
 
 // List of disposables that need to run a promise.

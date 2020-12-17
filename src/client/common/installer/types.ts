@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { Uri } from 'vscode';
+
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { Product, Resource } from '../types';
 

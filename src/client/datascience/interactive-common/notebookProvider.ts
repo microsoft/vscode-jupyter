@@ -5,6 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import { EventEmitter, Uri } from 'vscode';
+
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
 import { IPythonExtensionChecker } from '../../api/types';
 import { IWorkspaceService } from '../../common/application/types';

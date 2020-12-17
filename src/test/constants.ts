@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import * as path from 'path';
+
 import { IS_CI_SERVER, IS_CI_SERVER_TEST_DEBUGGER } from './ciConstants';
 
 // Activating extension for Multiroot and Debugger CI tests for Windows takes just over 2 minutes sometimes, so 3 minutes seems like a safe margin
@@ -21,7 +22,7 @@ function isMultitrootTest() {
         return false;
     }
     try {
-        // tslint:disable-next-line:no-require-imports
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
         const vscode = require('vscode');
         const workspace = vscode.workspace;
         return Array.isArray(workspace.workspaceFolders) && workspace.workspaceFolders.length > 1;

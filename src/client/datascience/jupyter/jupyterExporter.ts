@@ -6,8 +6,8 @@ import { inject, injectable } from 'inversify';
 import * as os from 'os';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
-
 import { Uri } from 'vscode';
+
 import { concatMultilineString } from '../../../datascience-ui/common';
 import { createCodeCell } from '../../../datascience-ui/common/cellFactory';
 import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
@@ -57,7 +57,7 @@ export class JupyterExporter implements INotebookExporter {
         const notebook = await this.translateToNotebook(cells, directoryChange);
 
         try {
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const contents = JSON.stringify(notebook);
             await this.trustService.trustNotebook(Uri.file(file), contents);
             await this.fileSystem.writeFile(Uri.file(file), contents);
@@ -116,7 +116,7 @@ export class JupyterExporter implements INotebookExporter {
                 version: pythonNumber
             },
             orig_nbformat: 2,
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             kernelspec: kernelSpec as any
         };
 

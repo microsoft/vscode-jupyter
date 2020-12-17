@@ -1,8 +1,8 @@
 import { inject, injectable } from 'inversify';
+
 import { Resource } from '../../client/common/types';
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
 import { IInterpreterQuickPickItem, IInterpreterSelector } from '../../client/interpreter/configuration/types';
 import { IInterpreterService } from '../../client/interpreter/contracts';
 

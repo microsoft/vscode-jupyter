@@ -3,6 +3,7 @@
 
 import type { nbformat } from '@jupyterlab/coreutils';
 import { Memento, Uri } from 'vscode';
+
 import { NotebookDocument } from '../../../../types/vscode-proposed';
 import { IVSCodeNotebook } from '../../common/application/types';
 import { ICryptoUtils } from '../../common/types';
@@ -18,7 +19,7 @@ import {
 import { BaseNotebookModel, getDefaultNotebookContentForNativeNotebooks } from './baseModel';
 
 // https://github.com/microsoft/vscode-python/issues/13155
-// tslint:disable-next-line: no-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function sortObjectPropertiesRecursively(obj: any): any {
     if (Array.isArray(obj)) {
         return obj.map(sortObjectPropertiesRecursively);
@@ -27,11 +28,11 @@ export function sortObjectPropertiesRecursively(obj: any): any {
         return (
             Object.keys(obj)
                 .sort()
-                // tslint:disable-next-line: no-any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 .reduce<Record<string, any>>((sortedObj, prop) => {
                     sortedObj[prop] = sortObjectPropertiesRecursively(obj[prop]);
                     return sortedObj;
-                    // tslint:disable-next-line: no-any
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 }, {}) as any
         );
     }
@@ -168,7 +169,7 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
             // The output can contain custom metadata, we need to remove that.
             json.cells = json.cells.map((cell) => {
                 const metadata = { ...cell.metadata };
-                // tslint:disable-next-line: no-any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const outputs: nbformat.IOutput[] = Array.isArray(cell.outputs) ? (cell.outputs as any) : [];
                 outputs.forEach((output: nbformat.IOutput) => {
                     if (
@@ -186,7 +187,7 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
                 return {
                     ...cell,
                     metadata
-                    // tslint:disable-next-line: no-any
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 } as any;
             });
         }

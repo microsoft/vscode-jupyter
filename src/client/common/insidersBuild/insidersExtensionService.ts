@@ -6,6 +6,7 @@
 import '../extensions';
 
 import { inject, injectable, named } from 'inversify';
+
 import { IExtensionSingleActivationService } from '../../../client/activation/types';
 import { IServiceContainer } from '../../ioc/types';
 import { IApplicationEnvironment, ICommandManager } from '../application/types';

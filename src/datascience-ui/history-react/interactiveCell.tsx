@@ -48,7 +48,7 @@ interface IInteractiveCellBaseProps {
 
 type IInteractiveCellProps = IInteractiveCellBaseProps & typeof actionCreators;
 
-// tslint:disable: react-this-binding-issue
+/* eslint-disable */
 export class InteractiveCell extends React.Component<IInteractiveCellProps> {
     private codeRef: React.RefObject<CellInput> = React.createRef<CellInput>();
     private wrapperRef: React.RefObject<HTMLDivElement> = React.createRef<HTMLDivElement>();
@@ -85,7 +85,7 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
 
     private scrollAndFlash() {
         if (this.wrapperRef && this.wrapperRef.current) {
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             if ((this.wrapperRef.current as any).scrollIntoView) {
                 this.wrapperRef.current.scrollIntoView({ behavior: 'auto', block: 'nearest', inline: 'nearest' });
             }
@@ -108,7 +108,7 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
 
             // Scroll into view (since we have focus). However this function
             // is not supported on enzyme
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             if ((this.wrapperRef.current as any).scrollIntoView) {
                 this.wrapperRef.current.scrollIntoView({ behavior: 'auto', block: 'nearest', inline: 'nearest' });
             }

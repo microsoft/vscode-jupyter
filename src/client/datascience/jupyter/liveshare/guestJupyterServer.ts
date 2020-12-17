@@ -5,6 +5,7 @@ import * as uuid from 'uuid/v4';
 import { Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
+
 import { ILiveShareApi, IWorkspaceService } from '../../../common/application/types';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, Resource } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
@@ -137,7 +138,7 @@ export class GuestJupyterServer
         if (!launchInfo) {
             return LiveShare.JupyterServerSharedService;
         }
-        // tslint:disable-next-line:no-suspicious-comment
+        // eslint-disable-next-line
         // TODO: Should there be some separator in the name?
         return `${LiveShare.JupyterServerSharedService}${launchInfo.purpose}`;
     }

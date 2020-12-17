@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import * as vscode from 'vscode';
+
 import { IExtensionSingleActivationService } from '../activation/types';
 import { UseCustomEditorApi, UseVSCodeNotebookEditorApi } from '../common/constants';
 import { FileSystemPathUtils } from '../common/platform/fs-paths';
@@ -193,7 +194,7 @@ import { WebviewExtensibility } from './webviewExtensibility';
 
 // README: Did you make sure "dataScienceIocContainer.ts" has also been updated appropriately?
 
-// tslint:disable-next-line: max-func-body-length
+// eslint-disable-next-line
 export function registerTypes(serviceManager: IServiceManager, inNotebookApiExperiment: boolean, inCustomEditorApiExperiment: boolean) {
     const usingCustomEditor = inCustomEditorApiExperiment && !vscode.env.appName.includes('Insider'); // Don't use app manager in case it's not available yet.
     const useVSCodeNotebookAPI = inNotebookApiExperiment && !usingCustomEditor;

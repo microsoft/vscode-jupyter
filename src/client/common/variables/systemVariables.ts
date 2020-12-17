@@ -10,7 +10,7 @@ import { IDocumentManager, IWorkspaceService } from '../application/types';
 import * as Types from '../utils/sysTypes';
 import { IStringDictionary, ISystemVariables } from './types';
 
-/* tslint:disable:rule1 no-any no-unnecessary-callback-wrapper jsdoc-format no-for-in prefer-const no-increment-decrement */
+/* eslint-disable , @typescript-eslint/no-explicit-any, no-restricted-syntax, prefer-const,  */
 
 abstract class AbstractSystemVariables implements ISystemVariables {
     public resolve(value: string): string;
@@ -18,7 +18,7 @@ abstract class AbstractSystemVariables implements ISystemVariables {
     public resolve(value: IStringDictionary<string>): IStringDictionary<string>;
     public resolve(value: IStringDictionary<string[]>): IStringDictionary<string[]>;
     public resolve(value: IStringDictionary<IStringDictionary<string>>): IStringDictionary<IStringDictionary<string>>;
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public resolve(value: any): any {
         if (Types.isString(value)) {
             return this.__resolveString(value);
@@ -32,7 +32,7 @@ abstract class AbstractSystemVariables implements ISystemVariables {
     }
 
     public resolveAny<T>(value: T): T;
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public resolveAny(value: any): any {
         if (Types.isString(value)) {
             return this.__resolveString(value);
@@ -48,7 +48,7 @@ abstract class AbstractSystemVariables implements ISystemVariables {
     private __resolveString(value: string): string {
         const regexp = /\$\{(.*?)\}/g;
         return value.replace(regexp, (match: string, name: string) => {
-            // tslint:disable-next-line:no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const newValue = (<any>this)[name];
             if (Types.isString(newValue)) {
                 return newValue;
@@ -64,19 +64,19 @@ abstract class AbstractSystemVariables implements ISystemVariables {
         const result: IStringDictionary<string | IStringDictionary<string> | string[]> = Object.create(null);
         Object.keys(values).forEach((key) => {
             const value = values[key];
-            // tslint:disable-next-line:no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             result[key] = <any>this.resolve(<any>value);
         });
         return result;
     }
 
     private __resolveAnyLiteral<T>(values: T): T;
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private __resolveAnyLiteral(values: any): any {
         const result: IStringDictionary<string | IStringDictionary<string> | string[]> = Object.create(null);
         Object.keys(values).forEach((key) => {
             const value = values[key];
-            // tslint:disable-next-line:no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             result[key] = <any>this.resolveAny(<any>value);
         });
         return result;
@@ -87,7 +87,7 @@ abstract class AbstractSystemVariables implements ISystemVariables {
     }
 
     private __resolveAnyArray<T>(value: T[]): T[];
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private __resolveAnyArray(value: any[]): any[] {
         return value.map((s) => this.resolveAny(s));
     }

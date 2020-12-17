@@ -4,6 +4,7 @@ import type { Kernel } from '@jupyterlab/services/lib/kernel/kernel';
 import { assert } from 'chai';
 import { anything, capture, instance, mock, verify, when } from 'ts-mockito';
 import { EventEmitter, Uri } from 'vscode';
+
 import { PythonExtensionChecker } from '../../../client/api/pythonApi';
 import { ApplicationShell } from '../../../client/common/application/applicationShell';
 import { CommandManager } from '../../../client/common/application/commandManager';
@@ -31,7 +32,7 @@ import { NativeEditorProvider } from '../../../client/datascience/notebookStorag
 import { IInteractiveWindowProvider, INotebookEditorProvider } from '../../../client/datascience/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 
-// tslint:disable: max-func-body-length no-any
+/* eslint-disable , @typescript-eslint/no-explicit-any */
 suite('DataScience - Notebook Commands', () => {
     let notebookCommands: NotebookCommands;
     let commandManager: ICommandManager;
@@ -44,7 +45,7 @@ suite('DataScience - Notebook Commands', () => {
         name: 'CurrentKernel',
         numberOfConnections: 0,
         id: '2232',
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         session: {} as any
     };
     const localKernel = {
@@ -91,7 +92,7 @@ suite('DataScience - Notebook Commands', () => {
     ];
 
     [true, false].forEach((isLocalConnection) => {
-        // tslint:disable-next-line: max-func-body-length
+        // eslint-disable-next-line
         suite(isLocalConnection ? 'Local Connection' : 'Remote Connection', () => {
             setup(() => {
                 interactiveWindowProvider = mock(InteractiveWindowProvider);
@@ -132,7 +133,7 @@ suite('DataScience - Notebook Commands', () => {
                 );
 
                 const configService = mock(ConfigurationService);
-                // tslint:disable-next-line: no-http-string
+                // eslint-disable-next-line
                 const settings = { jupyterServerType: isLocalConnection ? 'local' : 'remote' };
                 when(configService.getSettings(anything())).thenReturn(settings as any);
                 const extensionChecker = mock(PythonExtensionChecker);
@@ -198,11 +199,11 @@ suite('DataScience - Notebook Commands', () => {
                 ).once();
             });
             suite('Command Handler', () => {
-                // tslint:disable-next-line: no-any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 let commandHandler: Function;
                 setup(() => {
                     notebookCommands.register();
-                    // tslint:disable-next-line: no-any
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     commandHandler = capture(commandManager.registerCommand as any).first()[1] as Function;
                     commandHandler = commandHandler.bind(notebookCommands);
                 });
@@ -232,7 +233,7 @@ suite('DataScience - Notebook Commands', () => {
                 test('Should switch kernel using the active Native Editor', async () => {
                     const nativeEditor = createNotebookMock();
                     const uri = Uri.file('test.ipynb');
-                    // tslint:disable-next-line: no-any
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     when(notebookEditorProvider.activeEditor).thenReturn({
                         file: uri,
                         model: { metadata: undefined }
@@ -246,7 +247,7 @@ suite('DataScience - Notebook Commands', () => {
                 test('Should switch kernel using the active Interactive Window', async () => {
                     const interactiveWindow = createNotebookMock();
                     const uri = Uri.parse('history://foobar');
-                    // tslint:disable-next-line: no-any
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     when(interactiveWindowProvider.activeWindow).thenReturn({
                         identity: uri
                     } as any);

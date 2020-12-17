@@ -1,14 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import '../../../common/extensions';
+
 import { Observable } from 'rxjs/Observable';
 import * as vscode from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
-import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../../common/application/types';
-import '../../../common/extensions';
-import { traceError } from '../../../common/logger';
 
+import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../../common/application/types';
+import { traceError } from '../../../common/logger';
 import { IConfigurationService, IDisposableRegistry, Resource } from '../../../common/types';
 import { createDeferred } from '../../../common/utils/async';
 import { Identifiers, LiveShare, LiveShareCommands } from '../../constants';
@@ -27,11 +28,11 @@ import { ResponseQueue } from './responseQueue';
 import { IRoleBasedObject } from './roleBasedFactory';
 import { IExecuteObservableResponse, IResponseMapping, IServerResponse, ServerResponseType } from './types';
 
-// tslint:disable-next-line: no-require-imports
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
 import { IFileSystem } from '../../../common/platform/types';
 
-// tslint:disable:no-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 export class HostJupyterNotebook
     extends LiveShareParticipantHost(JupyterNotebookBase, LiveShare.JupyterNotebookSharedService)

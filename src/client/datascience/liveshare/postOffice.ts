@@ -11,7 +11,7 @@ import { IAsyncDisposable } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { LiveShare } from '../constants';
 
-// tslint:disable:no-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 interface IMessageArgs {
     args: string;

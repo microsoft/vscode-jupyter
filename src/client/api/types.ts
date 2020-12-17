@@ -3,6 +3,7 @@
 
 import { CancellationToken, Disposable, Event, Uri } from 'vscode';
 import * as lsp from 'vscode-languageserver-protocol';
+
 import { InterpreterUri } from '../common/installer/types';
 import { InstallerResponse, Product, Resource } from '../common/types';
 import { IInterpreterQuickPickItem } from '../interpreter/configuration/types';

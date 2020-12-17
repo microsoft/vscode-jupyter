@@ -3,6 +3,7 @@
 'use strict';
 import { inject, injectable } from 'inversify';
 import { ConfigurationTarget } from 'vscode';
+
 import { NotebookContentProvider as VSCNotebookContentProvider } from '../../../../types/vscode-proposed';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import {

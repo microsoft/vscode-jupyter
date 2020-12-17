@@ -7,7 +7,6 @@ import { inject, injectable } from 'inversify';
 import { commands, Event, EventEmitter, Position, Range, Selection, TextEditorRevealType, Uri } from 'vscode';
 
 import { IApplicationShell, ICommandManager, IDocumentManager } from '../../common/application/types';
-
 import { IFileSystem } from '../../common/platform/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
@@ -20,7 +19,7 @@ const LineQueryRegex = /line=(\d+)/;
 // in a markdown cell using the syntax: https://command:[my.vscode.command].
 const linkCommandAllowList = ['jupyter.latestExtension', 'jupyter.enableLoadingWidgetScriptsFromThirdPartySource'];
 
-// tslint:disable: no-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 @injectable()
 export class LinkProvider implements IInteractiveWindowListener {
     private postEmitter: EventEmitter<{ message: string; payload: any }> = new EventEmitter<{

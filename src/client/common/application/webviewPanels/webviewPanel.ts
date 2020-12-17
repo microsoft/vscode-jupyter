@@ -4,6 +4,7 @@
 import '../../extensions';
 
 import { Uri, WebviewOptions, WebviewPanel as vscodeWebviewPanel, window } from 'vscode';
+
 import { IFileSystem } from '../../platform/types';
 import { IDisposableRegistry } from '../../types';
 import { IWebviewPanel, IWebviewPanelOptions } from '../types';

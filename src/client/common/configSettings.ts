@@ -1,5 +1,7 @@
 'use strict';
 
+import '../common/extensions';
+
 import {
     ConfigurationChangeEvent,
     ConfigurationTarget,
@@ -9,7 +11,7 @@ import {
     Uri,
     WorkspaceConfiguration
 } from 'vscode';
-import '../common/extensions';
+
 import { LogLevel } from '../logging/levels';
 import { IWorkspaceService } from './application/types';
 import { WorkspaceService } from './application/workspace';
@@ -28,9 +30,9 @@ import {
 import { debounceSync } from './utils/decorators';
 import { SystemVariables } from './variables/systemVariables';
 
-// tslint:disable:no-require-imports no-var-requires
+/* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 
-// tslint:disable-next-line:completed-docs
+// eslint-disable-next-line
 export class JupyterSettings implements IWatchableJupyterSettings {
     public get onDidChange(): Event<void> {
         return this._changeEmitter.event;
@@ -106,7 +108,7 @@ export class JupyterSettings implements IWatchableJupyterSettings {
         this._workspaceRoot = workspaceFolder;
         this.initialize();
     }
-    // tslint:disable-next-line:function-name
+    // eslint-disable-next-line
     public static getInstance(resource: Uri | undefined, workspace?: IWorkspaceService): JupyterSettings {
         workspace = workspace || new WorkspaceService();
         const workspaceFolderUri = JupyterSettings.getSettingsUriAndTarget(resource, workspace).uri;
@@ -116,11 +118,11 @@ export class JupyterSettings implements IWatchableJupyterSettings {
             const settings = new JupyterSettings(workspaceFolderUri, workspace);
             JupyterSettings.jupyterSettings.set(workspaceFolderKey, settings);
         }
-        // tslint:disable-next-line:no-non-null-assertion
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         return JupyterSettings.jupyterSettings.get(workspaceFolderKey)!;
     }
 
-    // tslint:disable-next-line:type-literal-delimiter
+    // eslint-disable-next-line @typescript-eslint/member-delimiter-style
     public static getSettingsUriAndTarget(
         resource: Uri | undefined,
         workspace?: IWorkspaceService
@@ -137,17 +139,17 @@ export class JupyterSettings implements IWatchableJupyterSettings {
         return { uri: workspaceFolderUri, target };
     }
 
-    // tslint:disable-next-line:function-name
+    // eslint-disable-next-line
     public static dispose() {
         if (!isTestExecution()) {
             throw new Error('Dispose can only be called from unit tests');
         }
-        // tslint:disable-next-line:no-void-expression
+        // eslint-disable-next-line no-void
         JupyterSettings.jupyterSettings.forEach((item) => item && item.dispose());
         JupyterSettings.jupyterSettings.clear();
     }
     public dispose() {
-        // tslint:disable-next-line:no-unsafe-any
+        // eslint-disable-next-line
         this._disposables.forEach((disposable) => disposable && disposable.dispose());
         this._disposables = [];
     }
@@ -155,19 +157,19 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     public toJSON() {
         // Override this so settings can be turned into JSON without a circular problem
 
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const result: any = {};
         const allowedKeys = this.getSerializableKeys();
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         allowedKeys.forEach((k) => (result[k] = (<any>this)[k]));
         return result;
     }
-    // tslint:disable-next-line:cyclomatic-complexity max-func-body-length
+    // eslint-disable-next-line complexity,
     protected update(jupyterConfig: WorkspaceConfiguration) {
         const workspaceRoot = this._workspaceRoot?.fsPath;
         const systemVariables: SystemVariables = new SystemVariables(undefined, workspaceRoot, this._workspace);
 
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const loggingSettings = systemVariables.resolveAny(jupyterConfig.get<any>('logging'))!;
         if (loggingSettings) {
             loggingSettings.level = convertSettingTypeToLogLevel(loggingSettings.level);
@@ -197,7 +199,7 @@ export class JupyterSettings implements IWatchableJupyterSettings {
         keys.forEach((k) => {
             // Replace variables with their actual value.
             const val = systemVariables.resolveAny(jupyterConfig.get(k));
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (<any>this)[k] = val;
         });
     }

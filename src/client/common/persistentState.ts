@@ -5,6 +5,7 @@
 
 import { inject, injectable, named } from 'inversify';
 import { Memento } from 'vscode';
+
 import { GLOBAL_MEMENTO, IMemento, IPersistentState, IPersistentStateFactory, WORKSPACE_MEMENTO } from './types';
 
 export class PersistentState<T> implements IPersistentState<T> {

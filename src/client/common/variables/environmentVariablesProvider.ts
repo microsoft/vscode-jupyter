@@ -3,6 +3,7 @@
 import { inject, injectable, optional } from 'inversify';
 import * as path from 'path';
 import { ConfigurationChangeEvent, Disposable, Event, EventEmitter, FileSystemWatcher, Uri } from 'vscode';
+
 import { sendFileCreationTelemetry } from '../../telemetry/envFileTelemetry';
 import { IWorkspaceService } from '../application/types';
 import { traceVerbose } from '../logger';
@@ -60,7 +61,7 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
         const workspaceFolderUri = this.getWorkspaceFolderUri(resource);
         this.trackedWorkspaceFolders.add(workspaceFolderUri ? workspaceFolderUri.fsPath : '');
 
-        // tslint:disable-next-line: no-suspicious-comment
+        // eslint-disable-next-line
         // TODO: This should be added to the python API (or this entire service should move there)
         // https://github.com/microsoft/vscode-jupyter/issues/51
         const envFile = workspaceFolderUri?.fsPath ? path.join(workspaceFolderUri.fsPath, '.env') : '.env';

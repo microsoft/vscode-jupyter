@@ -44,7 +44,7 @@ function generateDefaultState(
         return generateTestState('', editable);
     } else {
         return {
-            // tslint:disable-next-line: no-typeof-undefined
+            // eslint-disable-next-line
             skipDefault,
             testMode,
             baseTheme: baseTheme,
@@ -134,7 +134,7 @@ function createSendInfoMiddleware(): Redux.Middleware<{}, IStore> {
 function createTestLogger() {
     const logFileEnv = process.env.VSC_JUPYTER_WEBVIEW_LOG_FILE;
     if (logFileEnv) {
-        // tslint:disable-next-line: no-require-imports
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
         const log4js = require('log4js') as typeof import('log4js');
         const logFilePath = path.isAbsolute(logFileEnv) ? logFileEnv : path.join(EXTENSION_ROOT_DIR, logFileEnv);
         log4js.configure({
@@ -149,12 +149,12 @@ function createTestMiddleware(): Redux.Middleware<{}, IStore> {
     // Make sure all dynamic imports are loaded.
     const transformPromise = forceLoad();
 
-    // tslint:disable-next-line: cyclomatic-complexity
+    // eslint-disable-next-line complexity
     return (store) => (next) => (action) => {
         const prevState = store.getState();
         const res = next(action);
         const afterState = store.getState();
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const sendMessage = (message: any, payload?: any) => {
             setTimeout(() => {
                 transformPromise
@@ -304,7 +304,7 @@ function createMiddleWare(testMode: boolean, postOffice: PostOffice): Redux.Midd
 
     // Create the test middle ware. It sends messages that are used for testing only
     // Or if testing in UI Test.
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const isUITest = (postOffice.acquireApi() as any)?.handleMessage ? true : false;
     const testMiddleware = testMode || isUITest ? createTestMiddleware() : undefined;
 
@@ -316,28 +316,28 @@ function createMiddleWare(testMode: boolean, postOffice: PostOffice): Redux.Midd
         InteractiveWindowMessages.LoadTmLanguageResponse
     ];
     const logger = createLogger({
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         stateTransformer: (state: any) => {
             if (!state || typeof state !== 'object') {
                 return state;
             }
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const rootState = { ...state } as any;
             if ('main' in rootState && typeof rootState.main === 'object') {
-                // tslint:disable-next-line: no-any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const main = (rootState.main = ({ ...rootState.main } as any) as Partial<IMainState>);
                 main.rootCss = reduceLogMessage;
                 main.rootStyle = reduceLogMessage;
-                // tslint:disable-next-line: no-any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 main.editorOptions = reduceLogMessage as any;
-                // tslint:disable-next-line: no-any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 main.settings = reduceLogMessage as any;
             }
             rootState.monaco = reduceLogMessage;
 
             return rootState;
         },
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         actionTransformer: (action: any) => {
             if (!action) {
                 return action;
@@ -435,7 +435,7 @@ export function createStore<M>(
     // Make all messages from the post office dispatch to the store, changing the type to
     // turn them into actions.
     postOffice.addHandler({
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         handleMessage(message: string, payload?: any): boolean {
             // Double check this is one of our messages. React will actually post messages here too during development
             if (isAllowedMessage(message)) {

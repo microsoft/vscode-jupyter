@@ -3,12 +3,13 @@
 
 'use strict';
 
+import '../../common/extensions';
+
 import { inject, injectable } from 'inversify';
 import { ConfigurationChangeEvent, Event, EventEmitter, TextEditor, Uri, WindowState } from 'vscode';
-import { IApplicationShell, IDocumentManager, IWorkspaceService } from '../../common/application/types';
-import '../../common/extensions';
-import { IFileSystem } from '../../common/platform/types';
 
+import { IApplicationShell, IDocumentManager, IWorkspaceService } from '../../common/application/types';
+import { IFileSystem } from '../../common/platform/types';
 import { IDisposable } from '../../common/types';
 import { INotebookIdentity, InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
 import {
@@ -19,7 +20,7 @@ import {
     WebViewViewChangeEventArgs
 } from '../types';
 
-// tslint:disable: no-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 /**
  * Sends notifications to Notebooks to save the notebook.

@@ -9,6 +9,7 @@ import { IDisposable } from 'monaco-editor';
 import * as sinon from 'sinon';
 import * as TypeMoq from 'typemoq';
 import { EventEmitter, Uri, ViewColumn, WebviewPanel } from 'vscode';
+
 import { traceInfo } from '../../../client/common/logger';
 import { noop } from '../../../client/common/utils/misc';
 import { INotebookEditor, INotebookEditorProvider } from '../../../client/datascience/types';
@@ -51,7 +52,7 @@ function createWebViewPanel(): WebviewPanel {
     const webViewPanel: Partial<WebviewPanel> = {
         webview: {
             html: ''
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any,
         reveal: noop,
         onDidDispose: disposeEventEmitter.event.bind(disposeEventEmitter),
@@ -70,11 +71,11 @@ function createWebViewPanel(): WebviewPanel {
         )
         .returns(() => {
             traceInfo(`Mock webview ${JSON.stringify(webViewPanel)} should be returned.`);
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             return webViewPanel as any;
         });
 
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return webViewPanel as any;
 }
 
@@ -92,7 +93,7 @@ export async function openNotebook(
     // Wait for UI to load, i.e. until we get the message `LoadAllCellsComplete`.
     const uiLoaded = notebookUI.waitUntilLoaded();
 
-    // tslint:disable-next-line: insecure-random
+    // eslint-disable-next-line
     let port = Math.floor(Math.random() * Math.floor(1000)) + 9000;
     try {
         port = await getFreePort({ host: 'localhost' });

@@ -4,6 +4,7 @@
 'use strict';
 
 import { instance, mock, verify } from 'ts-mockito';
+
 import { EnvironmentVariablesService } from '../../../client/common/variables/environment';
 import { EnvironmentVariablesProvider } from '../../../client/common/variables/environmentVariablesProvider';
 import { registerTypes } from '../../../client/common/variables/serviceRegistry';

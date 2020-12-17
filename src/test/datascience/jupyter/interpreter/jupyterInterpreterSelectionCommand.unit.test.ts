@@ -6,6 +6,7 @@
 import { assert } from 'chai';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { Disposable } from 'vscode';
+
 import { IExtensionSingleActivationService } from '../../../../client/activation/types';
 import { CommandManager } from '../../../../client/common/application/commandManager';
 import { ICommandManager } from '../../../../client/common/application/types';

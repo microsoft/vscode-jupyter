@@ -5,6 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
+
 import { IDisposableRegistry } from '../types';
 import { IEnvironmentVariablesProvider } from '../variables/types';
 import { ProcessService } from './proc';

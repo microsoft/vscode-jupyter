@@ -22,6 +22,7 @@ import {
     WorkspaceFolder
 } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
+
 import { traceError, traceInfo } from '../common/logger';
 import { IDisposable, IDisposableRegistry } from '../common/types';
 import { createDeferred } from '../common/utils/async';
@@ -30,7 +31,7 @@ import { EXTENSION_ROOT_DIR } from '../constants';
 import { IProtocolParser } from '../debugger/extension/types';
 import { IJupyterDebugService } from './types';
 
-// tslint:disable:no-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 // For debugging set these environment variables
 // PYDEVD_DEBUG=True
@@ -68,7 +69,7 @@ class JupyterDebugSession implements DebugSession {
     }
 }
 
-//tslint:disable:trailing-comma no-any no-multiline-string
+/* eslint-disable comma-dangle, @typescript-eslint/no-explicit-any, no-multi-str */
 /**
  * IJupyterDebugService that talks directly to the debugger. Supports both run by line and
  * regular debugging (regular is used in tests).

@@ -1,4 +1,5 @@
 import * as path from 'path';
+
 import { traceInfo } from '../common/logger';
 import { IFileSystem } from '../common/platform/types';
 import { IExtensionContext } from '../common/types';

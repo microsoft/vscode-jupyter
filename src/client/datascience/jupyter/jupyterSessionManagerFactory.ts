@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { inject, injectable, named } from 'inversify';
-import { IApplicationShell } from '../../common/application/types';
-
 import type { Kernel } from '@jupyterlab/services';
+import { inject, injectable, named } from 'inversify';
 import { EventEmitter } from 'vscode';
+
+import { IApplicationShell } from '../../common/application/types';
 import {
     IConfigurationService,
     IDisposableRegistry,

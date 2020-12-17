@@ -3,6 +3,7 @@
 'use strict';
 
 import * as winston from 'winston';
+
 import { IOutputChannel } from '../common/types';
 import { CallInfo } from '../common/utils/decorators';
 import { getFormatter } from './formatters';
@@ -75,36 +76,36 @@ export function log(logLevel: LogLevel, ...args: Arguments) {
     logToAll([globalLogger], logLevel, args);
 }
 
-// tslint:disable-next-line:no-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function logVerbose(...args: any[]) {
     log(LogLevel.Info, ...args);
 }
 
-// tslint:disable-next-line:no-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function logError(...args: any[]) {
     log(LogLevel.Error, ...args);
 }
 
-// tslint:disable-next-line:no-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function logInfo(...args: any[]) {
     log(LogLevel.Info, ...args);
 }
 
-// tslint:disable-next-line:no-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function logInfoIf(condition: boolean, ...args: any[]) {
     if (condition) {
         log(LogLevel.Info, ...args);
     }
 }
 
-// tslint:disable-next-line:no-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function logErrorIf(condition: boolean, ...args: any[]) {
     if (condition) {
         log(LogLevel.Error, ...args);
     }
 }
 
-// tslint:disable-next-line:no-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function logWarning(...args: any[]) {
     log(LogLevel.Warn, ...args);
 }

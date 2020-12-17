@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { anything, instance, mock, verify } from 'ts-mockito';
+
 import { ApplicationShell } from '../../../client/common/application/applicationShell';
 import { CommandManager } from '../../../client/common/application/commandManager';
 import { DebugService } from '../../../client/common/application/debugService';
@@ -21,7 +22,7 @@ import { JupyterServerUriStorage } from '../../../client/datascience/jupyter/ser
 import { NativeEditorProvider } from '../../../client/datascience/notebookStorage/nativeEditorProvider';
 import { MockOutputChannel } from '../../mockClasses';
 
-// tslint:disable: max-func-body-length
+/* eslint-disable  */
 suite('DataScience - Commands', () => {
     let kernelSwitcherCommand: NotebookCommands;
     let serverSelectorCommand: JupyterServerSelectorCommand;
@@ -103,7 +104,7 @@ suite('DataScience - Commands', () => {
             Commands.ViewJupyterOutput
         ].forEach((command) => {
             test(`Should register Command ${command}`, () => {
-                // tslint:disable-next-line: no-any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 verify(commandManager.registerCommand(command as any, anything(), commandRegistry)).once();
             });
         });

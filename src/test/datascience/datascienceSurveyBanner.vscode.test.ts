@@ -3,13 +3,18 @@
 
 'use strict';
 
-// tslint:disable:no-any max-func-body-length
+/* eslint-disable @typescript-eslint/no-explicit-any,  */
 
 import * as fakeTimers from '@sinonjs/fake-timers';
 import * as sinon from 'sinon';
-import { anything, instance, mock, when, verify, resetCalls } from 'ts-mockito';
+import { anything, instance, mock, resetCalls, verify, when } from 'ts-mockito';
+import { UIKind } from 'vscode';
+
 import { IApplicationEnvironment, IApplicationShell } from '../../client/common/application/types';
 import { IBrowserService, IPersistentState, IPersistentStateFactory } from '../../client/common/types';
+import * as localize from '../../client/common/utils/localize';
+import { noop } from '../../client/common/utils/misc';
+import { MillisecondsInADay } from '../../client/constants';
 import {
     DataScienceSurveyBanner,
     DSSurveyStateKeys,
@@ -17,10 +22,6 @@ import {
 } from '../../client/datascience/dataScienceSurveyBanner';
 import { INotebookEditorProvider } from '../../client/datascience/types';
 import { initialize } from '../initialize';
-import { noop } from '../../client/common/utils/misc';
-import { UIKind } from 'vscode';
-import * as localize from '../../client/common/utils/localize';
-import { MillisecondsInADay } from '../../client/constants';
 
 suite('DataScience Survey Banner', () => {
     let appShell: IApplicationShell;

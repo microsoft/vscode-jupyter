@@ -4,6 +4,7 @@
 'use strict';
 
 import { anything, capture, instance, mock, verify, when } from 'ts-mockito';
+
 import { ApplicationShell } from '../../../../client/common/application/applicationShell';
 import { CommandManager } from '../../../../client/common/application/commandManager';
 import { ReloadVSCodeCommandHandler } from '../../../../client/common/application/commands/reloadCommand';
@@ -28,7 +29,7 @@ suite('Common Commands ReloadCommand', () => {
     });
     test('Display prompt to reload VS Code with message passed into command', async () => {
         const message = 'Hello World!';
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const commandHandler = capture(cmdManager.registerCommand as any).first()[1] as Function;
 
         await commandHandler.call(reloadCommandHandler, message);
@@ -37,9 +38,9 @@ suite('Common Commands ReloadCommand', () => {
     });
     test('Do not reload VS Code if user selects `Reload` option', async () => {
         const message = 'Hello World!';
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const commandHandler = capture(cmdManager.registerCommand as any).first()[1] as Function;
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         when(appShell.showInformationMessage(message, Common.reload())).thenResolve(Common.reload() as any);
 
         await commandHandler.call(reloadCommandHandler, message);
@@ -49,7 +50,7 @@ suite('Common Commands ReloadCommand', () => {
     });
     test('Do not reload VS Code if user does not select `Reload` option', async () => {
         const message = 'Hello World!';
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const commandHandler = capture(cmdManager.registerCommand as any).first()[1] as Function;
         when(appShell.showInformationMessage(message, Common.reload())).thenResolve();
 

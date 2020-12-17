@@ -1,18 +1,19 @@
-// tslint:disable-next-line: no-single-line-block-comment
+// eslint-disable-next-line
 /* eslint-disable comma-dangle */
-// tslint:disable-next-line: no-single-line-block-comment
+// eslint-disable-next-line
 /* eslint-disable max-classes-per-file */
-// tslint:disable-next-line: no-single-line-block-comment
+// eslint-disable-next-line
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
-// tslint:disable-next-line: no-single-line-block-comment
+// eslint-disable-next-line
 /* eslint-disable class-methods-use-this */
-// tslint:disable-next-line: no-single-line-block-comment
+// eslint-disable-next-line
 /* eslint-disable consistent-return */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
 import { CancellationToken, Disposable, Event, EventEmitter, Uri } from 'vscode';
+
 import { IApplicationEnvironment, IApplicationShell } from '../common/application/types';
 import { InterpreterUri } from '../common/installer/types';
 import { IExtensions, InstallerResponse, IPersistentStateFactory, Product, Resource } from '../common/types';
@@ -36,7 +37,7 @@ import {
     PythonApi
 } from './types';
 
-// tslint:disable: max-classes-per-file
+/* eslint-disable max-classes-per-file */
 @injectable()
 export class PythonApiProvider implements IPythonApiProvider {
     private readonly api = createDeferred<PythonApi>();
@@ -198,7 +199,7 @@ const ProductMapping: { [key in Product]: JupyterProductToInstall } = {
     [Product.pandas]: JupyterProductToInstall.pandas
 };
 
-// tslint:disable: max-classes-per-file
+/* eslint-disable max-classes-per-file */
 @injectable()
 export class PythonInstaller implements IPythonInstaller {
     constructor(@inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider) {}
@@ -212,7 +213,7 @@ export class PythonInstaller implements IPythonInstaller {
     }
 }
 
-// tslint:disable-next-line: max-classes-per-file
+// eslint-disable-next-line max-classes-per-file
 @injectable()
 export class EnvironmentActivationService implements IEnvironmentActivationService {
     constructor(@inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider) {}
@@ -227,7 +228,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
     }
 }
 
-// tslint:disable-next-line: max-classes-per-file
+// eslint-disable-next-line max-classes-per-file
 @injectable()
 export class InterpreterSelector implements IInterpreterSelector {
     constructor(@inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider) {}
@@ -236,7 +237,7 @@ export class InterpreterSelector implements IInterpreterSelector {
         return this.apiProvider.getApi().then((api) => api.getSuggestions(resource));
     }
 }
-// tslint:disable-next-line: max-classes-per-file
+// eslint-disable-next-line max-classes-per-file
 @injectable()
 export class InterpreterService implements IInterpreterService {
     private readonly didChangeInterpreter = new EventEmitter<void>();

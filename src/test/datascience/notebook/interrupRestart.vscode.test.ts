@@ -6,6 +6,7 @@
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { commands, NotebookEditor as VSCNotebookEditor } from 'vscode';
+
 import { IApplicationShell, IVSCodeNotebook } from '../../../client/common/application/types';
 import { traceInfo } from '../../../client/common/logger';
 import { IConfigurationService, IDisposable, IJupyterSettings, ReadWrite } from '../../../client/common/types';
@@ -31,7 +32,7 @@ import {
     waitForTextOutputInVSCode
 } from './helper';
 
-// tslint:disable: no-any no-invalid-this no-function-expression
+/* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this,  */
 /*
  * This test focuses on interrupting, restarting kernels.
  * We will not use actual kernels, just ensure the appropriate methods are invoked on the appropriate classes.

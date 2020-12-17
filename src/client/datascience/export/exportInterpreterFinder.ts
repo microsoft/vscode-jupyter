@@ -1,4 +1,5 @@
 import { inject, injectable } from 'inversify';
+
 import * as localize from '../../common/utils/localize';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { JupyterInterpreterService } from '../jupyter/interpreter/jupyterInterpreterService';

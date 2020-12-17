@@ -8,10 +8,9 @@ import { InteractiveShiftEnterBanner } from '../datascience/shiftEnterBanner';
 import { IServiceManager } from '../ioc/types';
 import { ExtensionActivationManager } from './activationManager';
 import { MigrateDataScienceSettingsService } from './migrateDataScienceSettingsService';
-
 import { IExtensionActivationManager, IExtensionActivationService, IExtensionSingleActivationService } from './types';
 
-// tslint:disable-next-line: max-func-body-length
+// eslint-disable-next-line
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.add<IExtensionActivationManager>(IExtensionActivationManager, ExtensionActivationManager);
     serviceManager.addSingleton<IExtensionActivationService>(

@@ -7,6 +7,7 @@ import * as fs from 'fs-extra';
 import * as tcpPortUsed from 'tcp-port-used';
 import * as tmp from 'tmp';
 import { CancellationTokenSource, Event, EventEmitter } from 'vscode';
+
 import { IPythonExtensionChecker } from '../../api/types';
 import { createPromiseFromCancellation } from '../../common/cancellation';
 import { traceError, traceInfo, traceWarning } from '../../common/logger';
@@ -205,7 +206,7 @@ export class KernelProcess implements IKernelProcess {
         }
         if (!Array.isArray(kernelSpec.argv)) {
             traceError('KernelSpec.argv in KernelPrcess is undefined');
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             this._launchKernelSpec = undefined;
         } else {
             // Copy our kernelspec and assign a new argv array

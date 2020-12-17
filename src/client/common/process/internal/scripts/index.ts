@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import * as path from 'path';
+
 import { EXTENSION_ROOT_DIR } from '../../../constants';
 
 // It is simpler to hard-code it instead of using vscode.ExtensionContext.extensionPath.
@@ -72,7 +73,7 @@ namespace _completion {
         id: number;
     };
     type _Response1 = {
-        // tslint:disable-next-line:no-any no-banned-terms
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any, no-caller, no-eval
         arguments: any[];
     };
     type _Response2 =
@@ -197,11 +198,11 @@ export function refactor(root: string): [string[], (out: string) => object[]] {
     const script = path.join(SCRIPTS_DIR, 'refactor.py');
     const args = [ISOLATED, script, root];
 
-    // tslint:disable-next-line:no-suspicious-comment
+    // eslint-disable-next-line
     // TODO: Make the return type more specific, like we did
     // with completion().
     function parse(out: string): object[] {
-        // tslint:disable-next-line:no-suspicious-comment
+        // eslint-disable-next-line
         // TODO: Also handle "STARTED"?
         return out
             .split(/\r?\n/g)

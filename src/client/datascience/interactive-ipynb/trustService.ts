@@ -1,6 +1,7 @@
 import { createHmac } from 'crypto';
 import { inject, injectable } from 'inversify';
 import { EventEmitter, Uri } from 'vscode';
+
 import { traceDecorators, traceError, traceInfo } from '../../common/logger';
 import { IConfigurationService } from '../../common/types';
 import { TraceOptions } from '../../logging/trace';

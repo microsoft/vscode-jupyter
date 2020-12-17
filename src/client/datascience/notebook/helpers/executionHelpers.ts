@@ -6,6 +6,7 @@
 import type { nbformat } from '@jupyterlab/coreutils';
 import type { KernelMessage } from '@jupyterlab/services';
 import * as fastDeepEqual from 'fast-deep-equal';
+
 import type { NotebookCell, NotebookEditor } from '../../../../../types/vscode-proposed';
 import { createErrorOutput } from '../../../../datascience-ui/common/cellFactory';
 import {
@@ -15,7 +16,7 @@ import {
     translateErrorOutput
 } from './helpers';
 import { chainWithPendingUpdates } from './notebookUpdater';
-// tslint:disable-next-line: no-var-requires no-require-imports
+// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
 // After executing %tensorboard --logdir <log directory> to launch
@@ -57,7 +58,7 @@ export async function handleUpdateDisplayDataMessage(
             if (
                 (output.output_type === 'display_data' || output.output_type === 'execute_result') &&
                 output.transient &&
-                // tslint:disable-next-line: no-any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 (output.transient as any).display_id === msg.content.transient.display_id
             ) {
                 // Remember we have updated output for this cell.

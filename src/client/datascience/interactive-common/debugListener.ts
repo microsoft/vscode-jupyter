@@ -11,7 +11,7 @@ import { Identifiers } from '../constants';
 import { IInteractiveWindowListener, IJupyterDebugService } from '../types';
 import { InteractiveWindowMessages } from './interactiveWindowTypes';
 
-// tslint:disable: no-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 @injectable()
 export class DebugListener implements IInteractiveWindowListener {
     private postEmitter: EventEmitter<{ message: string; payload: any }> = new EventEmitter<{

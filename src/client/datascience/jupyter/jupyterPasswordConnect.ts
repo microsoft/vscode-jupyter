@@ -6,6 +6,7 @@ import { inject, injectable } from 'inversify';
 import * as nodeFetch from 'node-fetch';
 import { URLSearchParams } from 'url';
 import { ConfigurationTarget } from 'vscode';
+
 import { IApplicationShell } from '../../common/application/types';
 import { IAsyncDisposableRegistry, IConfigurationService } from '../../common/types';
 import * as localize from '../../common/utils/localize';

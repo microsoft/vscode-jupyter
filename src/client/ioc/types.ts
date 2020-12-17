@@ -2,27 +2,28 @@
 // Licensed under the MIT License.
 
 import { interfaces } from 'inversify';
+
 import { IDisposable } from '../common/types';
 
-//tslint:disable:callable-types
-// tslint:disable-next-line:interface-name
+/* eslint-disable @typescript-eslint/prefer-function-type */
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export interface Newable<T> {
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     new (...args: any[]): T;
 }
-//tslint:enable:callable-types
+/* eslint-enable @typescript-eslint/prefer-function-type */
 
-// tslint:disable-next-line:interface-name
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export interface Abstract<T> {
     prototype: T;
 }
 
-//tslint:disable:callable-types
+/* eslint-disable @typescript-eslint/prefer-function-type */
 export type ClassType<T> = {
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     new (...args: any[]): T;
 };
-//tslint:enable:callable-types
+/* eslint-enable @typescript-eslint/prefer-function-type */
 
 export const IServiceManager = Symbol('IServiceManager');
 

@@ -5,6 +5,7 @@
 
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { Uri } from 'vscode';
+
 import { IApplicationShell } from '../../../client/common/application/types';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { IDisposable } from '../../../client/common/types';
@@ -37,22 +38,22 @@ suite('DataScience - Export Manager', () => {
         appShell = mock<IApplicationShell>();
         exportFileOpener = mock<ExportFileOpener>();
         exportInterpreterFinder = mock<ExportInterpreterFinder>();
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         when(filePicker.showDialog(anything(), anything(), anything())).thenReturn(
             Promise.resolve(Uri.file('test.pdf'))
         );
-        // tslint:disable-next-line: no-empty
+        // eslint-disable-next-line no-empty,@typescript-eslint/no-empty-function
         when(appShell.showErrorMessage(anything())).thenResolve();
-        // tslint:disable-next-line: no-empty
+        // eslint-disable-next-line no-empty,@typescript-eslint/no-empty-function
         when(exportUtil.generateTempDir()).thenResolve({ path: 'test', dispose: () => {} });
         when(exportUtil.makeFileInDirectory(anything(), anything(), anything())).thenResolve('foo');
-        // tslint:disable-next-line: no-empty
+        // eslint-disable-next-line no-empty,@typescript-eslint/no-empty-function
         when(fileSystem.createTemporaryLocalFile(anything())).thenResolve({ filePath: 'test', dispose: () => {} });
         when(exportPdf.export(anything(), anything(), anything(), anything())).thenResolve();
         when(filePicker.showDialog(anything(), anything())).thenResolve(Uri.file('foo'));
         when(exportInterpreterFinder.getExportInterpreter(anything())).thenResolve();
         when(exportFileOpener.openFile(anything(), anything())).thenResolve();
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         when(reporter.createProgressIndicator(anything(), anything())).thenReturn(instance(mock<IDisposable>()) as any);
         exporter = new ExportManager(
             instance(exportPdf),

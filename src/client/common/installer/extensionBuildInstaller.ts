@@ -5,6 +5,7 @@
 
 import { inject, injectable, named } from 'inversify';
 import { Uri } from 'vscode';
+
 import { IApplicationShell, ICommandManager } from '../application/types';
 import { JVSC_EXTENSION_ID, Octicons, STANDARD_OUTPUT_CHANNEL } from '../constants';
 import { traceDecorators } from '../logger';

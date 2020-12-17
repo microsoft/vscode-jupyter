@@ -5,6 +5,7 @@
 import { injectable } from 'inversify';
 import * as os from 'os';
 import { coerce, SemVer } from 'semver';
+
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName, PlatformErrors } from '../../telemetry/constants';
 import { getOSType, OSType } from '../utils/platform';
@@ -72,7 +73,7 @@ export class PlatformService implements IPlatformService {
         return os.release();
     }
     public get is64bit(): boolean {
-        // tslint:disable-next-line:no-require-imports
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
         const arch = require('arch');
         return arch() === 'x64';
     }

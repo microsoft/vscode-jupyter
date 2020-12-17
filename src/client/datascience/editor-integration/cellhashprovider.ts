@@ -11,7 +11,6 @@ import { splitMultilineString } from '../../../datascience-ui/common';
 import { IDebugService, IDocumentManager } from '../../common/application/types';
 import { traceError, traceInfo } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
-
 import { IConfigurationService } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { getCellResource } from '../cellFactory';
@@ -27,9 +26,9 @@ import {
     INotebookExecutionLogger
 } from '../types';
 
-// tslint:disable-next-line:no-require-imports no-var-requires
+// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
 const _escapeRegExp = require('lodash/escapeRegExp') as typeof import('lodash/escapeRegExp'); // NOSONAR
-// tslint:disable-next-line: no-require-imports no-var-requires
+// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
 const _escape = require('lodash/escape') as typeof import('lodash/escape'); // NOSONAR
 const LineNumberMatchRegex = /(;32m[ ->]*?)(\d+)(.*)/g;
 
@@ -47,10 +46,10 @@ interface IRangedCellHash extends ICellHash {
 // hashes for cells.
 @injectable()
 export class CellHashProvider implements ICellHashProvider, INotebookExecutionLogger {
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private postEmitter: EventEmitter<{ message: string; payload: any }> = new EventEmitter<{
         message: string;
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         payload: any;
     }>();
     // Map of file to Map of start line to actual hash
@@ -79,7 +78,7 @@ export class CellHashProvider implements ICellHashProvider, INotebookExecutionLo
         return this.updateEventEmitter.event;
     }
 
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public get postMessage(): Event<{ message: string; payload: any }> {
         return this.postEmitter.event;
     }
@@ -166,7 +165,7 @@ export class CellHashProvider implements ICellHashProvider, INotebookExecutionLo
         return `<ipython-input-${expectedCount}-${hash}>`;
     }
 
-    // tslint:disable-next-line: cyclomatic-complexity
+    // eslint-disable-next-line complexity
     public async addCellHash(cell: ICell, expectedCount: number): Promise<void> {
         // Find the text document that matches. We need more information than
         // the add code gives us
@@ -445,7 +444,7 @@ export class CellHashProvider implements ICellHashProvider, INotebookExecutionLo
 export function getCellHashProvider(notebook: INotebook): ICellHashProvider | undefined {
     const logger = notebook.getLoggers().find((f) => f instanceof CellHashProvider);
     if (logger) {
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         return (logger as any) as ICellHashProvider;
     }
 }

@@ -2,13 +2,13 @@
 // Licensed under the MIT License.
 'use strict';
 
-//tslint:disable:max-func-body-length match-default-export-name no-any
+/* eslint-disable , , @typescript-eslint/no-explicit-any */
 import { expect } from 'chai';
 import rewiremock from 'rewiremock';
-import * as TypeMoq from 'typemoq';
-
 import { instance, mock, verify, when } from 'ts-mockito';
+import * as TypeMoq from 'typemoq';
 import { WorkspaceConfiguration } from 'vscode';
+
 import { IWorkspaceService } from '../../client/common/application/types';
 import { WorkspaceService } from '../../client/common/application/workspace';
 import { EXTENSION_ROOT_DIR } from '../../client/constants';
@@ -100,7 +100,7 @@ suite('Telemetry', () => {
         const properties = { hello: 'world', foo: 'bar' };
         const measures = { start: 123, end: 987 };
 
-        // tslint:disable-next-line:no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         sendTelemetryEvent(eventName as any, measures, properties as any);
 
         expect(Reporter.eventName).to.deep.equal([eventName]);
@@ -130,7 +130,7 @@ suite('Telemetry', () => {
 
         setSharedProperty('one' as any, 'two' as any);
 
-        // tslint:disable-next-line:no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         sendTelemetryEvent(eventName as any, measures, properties as any);
 
         expect(Reporter.eventName).to.deep.equal([eventName]);
@@ -148,7 +148,7 @@ suite('Telemetry', () => {
 
         setSharedProperty('foo' as any, 'baz' as any);
 
-        // tslint:disable-next-line:no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         sendTelemetryEvent(eventName as any, measures, properties as any);
 
         expect(Reporter.eventName).to.deep.equal([eventName]);
@@ -164,7 +164,7 @@ suite('Telemetry', () => {
         const properties = { hello: 'world', foo: 'bar' };
         const measures = { start: 123, end: 987 };
 
-        // tslint:disable-next-line:no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         sendTelemetryEvent(eventName as any, measures, properties as any, error);
 
         const expectedErrorProperties = {
@@ -208,7 +208,7 @@ suite('Telemetry', () => {
         const properties = { hello: 'world', foo: 'bar' };
         const measures = { start: 123, end: 987 };
 
-        // tslint:disable-next-line:no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         sendTelemetryEvent(eventName as any, measures, properties as any, error);
 
         const expectedErrorProperties = {

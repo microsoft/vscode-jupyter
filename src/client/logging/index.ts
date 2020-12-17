@@ -3,9 +3,6 @@
 'use strict';
 
 export {
-    // aliases
-    // (for convenience)
-    setLoggingLevel,
     addOutputChannelLogging,
     logError,
     logErrorIf,
@@ -13,6 +10,9 @@ export {
     logInfoIf,
     logVerbose,
     logWarning,
+    // aliases
+    // (for convenience)
+    setLoggingLevel,
     traceDecorators,
     tracing
 } from './_global';

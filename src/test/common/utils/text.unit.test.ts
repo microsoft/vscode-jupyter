@@ -3,10 +3,11 @@
 
 'use strict';
 
-// tslint:disable:max-func-body-length no-any no-require-imports no-var-requires
+/* eslint-disable , @typescript-eslint/no-explicit-any, @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 
 import { expect } from 'chai';
 import { Position, Range } from 'vscode';
+
 import { parsePosition, parseRange } from '../../../client/common/utils/text';
 
 suite('parseRange()', () => {

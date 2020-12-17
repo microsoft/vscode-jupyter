@@ -15,6 +15,7 @@ import {
     WorkspaceFolder,
     WorkspaceFoldersChangeEvent
 } from 'vscode';
+
 import { Resource } from '../types';
 import { getOSType, OSType } from '../utils/platform';
 import { IWorkspaceService } from './types';

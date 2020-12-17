@@ -4,14 +4,15 @@
 'use strict';
 
 import '@jupyter-widgets/controls/css/labvariables.css';
+import 'rxjs/add/operator/concatMap';
 
 import type { Kernel, KernelMessage } from '@jupyterlab/services';
 import type { nbformat } from '@jupyterlab/services/node_modules/@jupyterlab/coreutils';
 import { Widget } from '@phosphor/widgets';
 import * as fastDeepEqual from 'fast-deep-equal';
-import 'rxjs/add/operator/concatMap';
 import { Observable } from 'rxjs/Observable';
 import { ReplaySubject } from 'rxjs/ReplaySubject';
+
 import { createDeferred, Deferred } from '../../../client/common/utils/async';
 import {
     IInteractiveWindowMapping,
@@ -24,7 +25,7 @@ import { IMessageHandler, PostOffice } from '../../react-common/postOffice';
 import { create as createKernel } from './kernel';
 import { IIPyWidgetManager, IJupyterLabWidgetManager, IJupyterLabWidgetManagerCtor, ScriptLoader } from './types';
 
-// tslint:disable: no-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
     public static get instance(): Observable<WidgetManager | undefined> {
@@ -130,7 +131,7 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
         // Hence the promise to wait until it has been created.
         const model = await modelPromise;
         const view = await this.manager.create_view(model, { el: ele });
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         return this.manager.display_view(data, view, { node: ele });
     }
     private initializeKernelAndWidgetManager(options: KernelSocketOptions) {
@@ -145,7 +146,7 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
         this.manager?.dispose(); // NOSONAR
         try {
             // The JupyterLabWidgetManager will be exposed in the global variable `window.ipywidgets.main` (check webpack config - src/ipywidgets/webpack.config.js).
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const JupyterLabWidgetManager = (window as any).vscIPyWidgets.WidgetManager as IJupyterLabWidgetManagerCtor;
             if (!JupyterLabWidgetManager) {
                 throw new Error('JupyterLabWidgetManadger not defined. Please include/check ipywidgets.js file');
@@ -162,7 +163,7 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
             // Tell the observable about our new manager
             WidgetManager._instance.next(this);
         } catch (ex) {
-            // tslint:disable-next-line: no-console
+            // eslint-disable-next-line no-console
             console.error('Failed to initialize WidgetManager', ex);
         }
     }
@@ -170,7 +171,7 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
      * Ensure we create the model for the display data.
      */
     private handleDisplayDataMessage(_sender: any, payload: KernelMessage.IIOPubMessage) {
-        // tslint:disable-next-line:no-require-imports
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
         const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services'); // NOSONAR
 
         if (!jupyterLab.KernelMessage.isDisplayDataMsg(payload)) {
@@ -179,7 +180,7 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
         const displayMsg = payload as KernelMessage.IDisplayDataMsg;
 
         if (displayMsg.content && displayMsg.content.data && displayMsg.content.data[WIDGET_MIMETYPE]) {
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const data = displayMsg.content.data[WIDGET_MIMETYPE] as any;
             const modelId = data.model_id;
             let deferred = this.modelIdsToBeDisplayed.get(modelId);

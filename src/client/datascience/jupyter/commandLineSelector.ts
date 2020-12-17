@@ -4,9 +4,10 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-// tslint:disable-next-line: import-name
+// eslint-disable-next-line
 import parseArgsStringToArgv from 'string-argv';
 import { ConfigurationChangeEvent, ConfigurationTarget, QuickPickItem, Uri } from 'vscode';
+
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../common/application/types';
 import { IConfigurationService } from '../../common/types';
 import { DataScience } from '../../common/utils/localize';

@@ -8,6 +8,7 @@ import * as os from 'os';
 import { Subject } from 'rxjs/Subject';
 import * as util from 'util';
 import { MessageConnection, NotificationType, RequestType, RequestType0 } from 'vscode-jsonrpc';
+
 import { IPlatformService } from '../../common/platform/types';
 import { traceError, traceInfo, traceVerbose, traceWarning } from '../logger';
 import { IDisposable } from '../types';
@@ -44,7 +45,7 @@ export abstract class BasePythonDaemon {
     protected get closed() {
         return this.connectionClosedDeferred.promise;
     }
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private readonly connectionClosedDeferred: Deferred<any>;
     private disposables: IDisposable[] = [];
     private disposed = false;
@@ -55,7 +56,7 @@ export abstract class BasePythonDaemon {
         public readonly proc: ChildProcess,
         public readonly connection: MessageConnection
     ) {
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         this.connectionClosedDeferred = createDeferred<any>();
         // This promise gets used conditionally, if it doesn't get used, and the promise is rejected,
         // then node logs errors. We don't want that, hence add a dummy error handler.
@@ -174,7 +175,7 @@ export abstract class BasePythonDaemon {
             'mergeStdOutErr',
             'extraVariables'
         ];
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         return Object.keys(options).every((item) => daemonSupportedSpawnOptions.indexOf(item as any) >= 0);
     }
     protected sendRequestWithoutArgs<R, E, RO>(type: RequestType0<R, E, RO>): Thenable<R> {
@@ -208,7 +209,7 @@ export abstract class BasePythonDaemon {
             let response: ExecResponse;
             if ('fileName' in moduleOrFile) {
                 const request = new RequestType<
-                    // tslint:disable-next-line: no-any
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     { file_name: string; args: string[]; cwd?: string; env?: any },
                     ExecResponse,
                     void,
@@ -222,7 +223,7 @@ export abstract class BasePythonDaemon {
                 });
             } else {
                 const request = new RequestType<
-                    // tslint:disable-next-line: no-any
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     { module_name: string; args: string[]; cwd?: string; env?: any },
                     ExecResponse,
                     void,
@@ -306,7 +307,7 @@ export abstract class BasePythonDaemon {
         options: SpawnOptions
     ): Promise<ExecutionResult<string>> {
         const request = new RequestType<
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             { file_name: string; args: string[]; cwd?: string; env?: any },
             ExecResponse,
             void,
@@ -327,7 +328,7 @@ export abstract class BasePythonDaemon {
         options: SpawnOptions
     ): Promise<ExecutionResult<string>> {
         const request = new RequestType<
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             { module_name: string; args: string[]; cwd?: string; env?: any },
             ExecResponse,
             void,
@@ -343,7 +344,7 @@ export abstract class BasePythonDaemon {
         return response;
     }
     private monitorConnection() {
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const logConnectionStatus = (msg: string, ex?: any) => {
             if (!this.disposed) {
                 this.connectionClosedMessage += msg + (ex ? `, With Error: ${util.format(ex)}` : '');

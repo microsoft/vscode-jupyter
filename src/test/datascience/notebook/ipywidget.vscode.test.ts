@@ -3,11 +3,13 @@
 
 'use strict';
 
-// tslint:disable:no-require-imports no-var-requires
+/* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 import { assert } from 'chai';
-import { Uri, NotebookContentProvider as VSCNotebookContentProvider } from 'vscode';
+import { NotebookContentProvider as VSCNotebookContentProvider, Uri } from 'vscode';
+
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { IDisposable } from '../../../client/common/types';
+import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { NotebookContentProvider } from '../../../client/datascience/notebook/contentProvider';
 import { INotebookContentProvider } from '../../../client/datascience/notebook/types';
 import { IExtensionTestApi } from '../../common';
@@ -20,9 +22,8 @@ import {
     executeCell,
     waitForExecutionCompletedSuccessfully
 } from './helper';
-import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 
-// tslint:disable: no-any no-invalid-this
+/* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - VSCode Notebook - IPyWidget test', () => {
     // const widgetsNB = path.join(
     //     EXTENSION_ROOT_DIR_FOR_TESTS,

@@ -4,6 +4,7 @@
 import { assert } from 'chai';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { EventEmitter, Uri } from 'vscode';
+
 import { IWorkspaceService } from '../../../client/common/application/types';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { DaemonExecutionFactoryCreationOptions, IPythonExecutionFactory } from '../../../client/common/process/types';
@@ -17,7 +18,7 @@ import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
 import { sleep } from '../../core';
 import { createPythonInterpreter } from '../../utils/interpreters';
 
-// tslint:disable: max-func-body-length no-any
+/* eslint-disable , @typescript-eslint/no-explicit-any */
 suite('DataScience - Kernel Daemon Pool', () => {
     const interpreter1 = createPythonInterpreter({ path: 'interpreter1' });
     const interpreter2 = createPythonInterpreter({ path: 'interpreter2' });

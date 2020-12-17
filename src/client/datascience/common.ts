@@ -5,6 +5,7 @@ import type { nbformat } from '@jupyterlab/coreutils';
 import * as os from 'os';
 import { parse, SemVer } from 'semver';
 import { Uri } from 'vscode';
+
 import { splitMultilineString } from '../../datascience-ui/common';
 import { traceError, traceInfo } from '../common/logger';
 import { IFileSystem } from '../common/platform/types';
@@ -72,15 +73,15 @@ export function pruneCell(cell: nbformat.ICell): nbformat.ICell {
     const result = ({
         ...cell,
         source: splitMultilineString(cell.source)
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any) as nbformat.ICell; // nyc (code coverage) barfs on this so just trick it.
 
     // Remove outputs and execution_count from non code cells
     if (result.cell_type !== 'code') {
         // Map to any so nyc will build.
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         delete (<any>result).outputs;
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         delete (<any>result).execution_count;
     } else {
         // Clean outputs from code cells

@@ -2,13 +2,12 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable, named } from 'inversify';
-
 import * as vscode from 'vscode';
+
 import { Cancellation } from '../../common/cancellation';
 import { PYTHON } from '../../common/constants';
 import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
-
 import { sleep } from '../../common/utils/async';
 import { noop } from '../../common/utils/misc';
 import { Identifiers } from '../constants';
@@ -37,7 +36,7 @@ export class HoverProvider implements INotebookExecutionLogger, vscode.HoverProv
         noop();
     }
 
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public onKernelRestarted() {
         this.runFiles.clear();
     }

@@ -6,6 +6,7 @@
 import { assert } from 'chai';
 import * as path from 'path';
 import { ElementHandle } from 'playwright-chromium';
+
 import { sleep } from '../../../client/common/utils/async';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
@@ -53,7 +54,7 @@ export class NotebookEditorUI extends BaseWebUI {
         // Click the run button.
         const runButton = await this.getToolbarButton(cellIndex, CellToolbarButton.run);
 
-        // tslint:disable-next-line: no-console
+        // eslint-disable-next-line no-console
         console.log(`Executing cell ${cellIndex} by clicking ${runButton.toString()}`);
         await Promise.all([runButton.click({ button: 'left', force: true, timeout: 0 }), renderedPromise]);
     }

@@ -3,14 +3,13 @@
 'use strict';
 import '../../../common/extensions';
 
+import type { nbformat } from '@jupyterlab/coreutils';
 import * as vscode from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
 
-import type { nbformat } from '@jupyterlab/coreutils';
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../../common/application/types';
 import { traceError, traceInfo } from '../../../common/logger';
-
 import { IFileSystem } from '../../../common/platform/types';
 import {
     IAsyncDisposableRegistry,
@@ -44,8 +43,8 @@ import { calculateWorkingDirectory } from '../../utils';
 import { RawJupyterSession } from '../rawJupyterSession';
 import { RawNotebookProviderBase } from '../rawNotebookProvider';
 
-// tslint:disable-next-line: no-require-imports
-// tslint:disable:no-any
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 export class HostRawNotebookProvider
     extends LiveShareParticipantHost(RawNotebookProviderBase, LiveShare.RawNotebookProviderService)

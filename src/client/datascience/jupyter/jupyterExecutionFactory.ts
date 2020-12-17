@@ -6,7 +6,6 @@ import { CancellationToken, Event, EventEmitter } from 'vscode';
 
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../common/application/types';
 import { IFileSystem } from '../../common/platform/types';
-
 import {
     IAsyncDisposable,
     IAsyncDisposableRegistry,
@@ -27,7 +26,7 @@ import { NotebookStarter } from './notebookStarter';
 
 interface IJupyterExecutionInterface extends IRoleBasedObject, IJupyterExecution {}
 
-// tslint:disable:callable-types
+/* eslint-disable @typescript-eslint/prefer-function-type */
 type JupyterExecutionClassType = {
     new (
         liveShare: ILiveShareApi,
@@ -44,7 +43,7 @@ type JupyterExecutionClassType = {
         serviceContainer: IServiceContainer
     ): IJupyterExecutionInterface;
 };
-// tslint:enable:callable-types
+/* eslint-enable @typescript-eslint/prefer-function-type */
 
 @injectable()
 export class JupyterExecutionFactory implements IJupyterExecution, IAsyncDisposable {

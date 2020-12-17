@@ -3,11 +3,12 @@
 
 'use strict';
 
-// tslint:disable:no-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { assert } from 'chai';
 import { instance, mock, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
+
 import {
     ExtensionInsidersDailyChannelRule,
     ExtensionInsidersOffChannelRule,

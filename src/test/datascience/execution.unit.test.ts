@@ -12,6 +12,7 @@ import { Matcher } from 'ts-mockito/lib/matcher/type/Matcher';
 import * as TypeMoq from 'typemoq';
 import * as uuid from 'uuid/v4';
 import { CancellationTokenSource, ConfigurationChangeEvent, Disposable, EventEmitter } from 'vscode';
+
 import { ApplicationShell } from '../../client/common/application/applicationShell';
 import { IApplicationShell, IWorkspaceService } from '../../client/common/application/types';
 import { WorkspaceService } from '../../client/common/application/workspace';
@@ -63,7 +64,7 @@ import { MockOutputChannel } from '../mockClasses';
 import { MockJupyterServer } from './mockJupyterServer';
 import { MockJupyterSettings } from './mockJupyterSettings';
 
-// tslint:disable:no-any no-http-string no-multiline-string max-func-body-length
+/* eslint-disable @typescript-eslint/no-explicit-any, , no-multi-str,  */
 class DisposableRegistry implements IAsyncDisposableRegistry {
     private disposables: Disposable[] = [];
 
@@ -144,7 +145,7 @@ suite('Jupyter Execution', async () => {
     setup(() => {
         workingKernelSpec = createTempSpec(workingPython.path);
         ipykernelInstallCount = 0;
-        // tslint:disable-next-line:no-invalid-this
+        // eslint-disable-next-line no-invalid-this
     });
 
     teardown(() => {
@@ -156,7 +157,7 @@ suite('Jupyter Execution', async () => {
         return disposableRegistry.dispose();
     }
 
-    // tslint:disable-next-line: max-classes-per-file
+    // eslint-disable-next-line max-classes-per-file
     class FunctionMatcher extends Matcher {
         private func: (obj: any) => boolean;
         constructor(func: (obj: any) => boolean) {
@@ -869,7 +870,7 @@ suite('Jupyter Execution', async () => {
             jupyterLaunchTimeout: 10,
             jupyterLaunchRetries: 3,
             jupyterServerType: 'local',
-            // tslint:disable-next-line: no-invalid-template-strings
+            // eslint-disable-next-line no-template-curly-in-string
             notebookFileRoot: '${fileDirname}',
             changeDirOnImportExport: true,
             useDefaultConfigForJupyter: true,

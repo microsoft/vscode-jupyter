@@ -3,13 +3,14 @@
 
 'use strict';
 
+import '../../common/extensions';
+
 import { sha256 } from 'hash.js';
 import { ConfigurationChangeEvent, ConfigurationTarget } from 'vscode';
+
 import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
-import '../../common/extensions';
 import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
-
 import {
     IConfigurationService,
     IHttpClient,

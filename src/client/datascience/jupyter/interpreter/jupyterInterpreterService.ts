@@ -3,11 +3,13 @@
 
 'use strict';
 
+import '../../../common/extensions';
+
 import { inject, injectable } from 'inversify';
 import { Event, EventEmitter } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
+
 import { createPromiseFromCancellation } from '../../../common/cancellation';
-import '../../../common/extensions';
 import { noop } from '../../../common/utils/misc';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';

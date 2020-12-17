@@ -5,6 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import { CancellationToken } from 'vscode';
+
 import { IApplicationShell } from '../../../common/application/types';
 import { Cancellation, createPromiseFromCancellation, wrapCancellationTokens } from '../../../common/cancellation';
 import { ProductNames } from '../../../common/installer/productNames';

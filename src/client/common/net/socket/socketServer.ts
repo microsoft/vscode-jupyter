@@ -1,6 +1,7 @@
 import { EventEmitter } from 'events';
 import { injectable } from 'inversify';
 import * as net from 'net';
+
 import { ISocketServer } from '../../types';
 import { createDeferred, Deferred } from '../../utils/async';
 import { noop } from '../../utils/misc';
@@ -25,7 +26,7 @@ export class SocketServer extends EventEmitter implements ISocketServer {
         }
         try {
             this.socketServer.close();
-            // tslint:disable-next-line:no-empty
+            // eslint-disable-next-line no-empty,@typescript-eslint/no-empty-function
         } catch (ex) {}
         this.socketServer = undefined;
     }

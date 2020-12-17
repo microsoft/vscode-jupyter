@@ -3,12 +3,14 @@
 
 'use strict';
 
+import '../../common/extensions';
+
 import { inject, injectable } from 'inversify';
+
 import { NotebookCell, NotebookDocument } from '../../../../types/vscode-proposed';
 import { IPythonExtensionChecker } from '../../api/types';
 import { IVSCodeNotebook } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
-import '../../common/extensions';
 import { IConfigurationService, IDisposableRegistry, Resource } from '../../common/types';
 import { swallowExceptions } from '../../common/utils/decorators';
 import {

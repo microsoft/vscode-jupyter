@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
+
 import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { INotebookEditor, INotebookEditorProvider, INotebookModel, INotebookModelSynchronization } from '../types';

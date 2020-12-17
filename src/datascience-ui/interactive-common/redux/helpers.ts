@@ -4,6 +4,7 @@
 'use strict';
 
 import * as Redux from 'redux';
+
 import {
     IInteractiveWindowMapping,
     InteractiveWindowMessages
@@ -25,7 +26,7 @@ const AllowedMessages = [
     ...Object.values(CommonActionType)
 ];
 export function isAllowedMessage(message: string) {
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return AllowedMessages.includes(message as any);
 }
 export function isAllowedAction(action: Redux.AnyAction) {
@@ -33,9 +34,9 @@ export function isAllowedAction(action: Redux.AnyAction) {
 }
 
 type ReducerArg = {
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     queueAction: QueueAnotherFunc<any>;
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     payload?: BaseReduxActionPayload<any>;
 };
 
@@ -47,7 +48,7 @@ export function queueIncomingActionWithPayload<
         return;
     }
 
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const action = { type, payload: { data, messageDirection: 'incoming' } as any } as any;
     originalReducerArg.queueAction(action);
 }
@@ -56,7 +57,7 @@ export function queueIncomingAction<M extends IInteractiveWindowMapping & Common
     originalReducerArg: ReducerArg,
     type: K
 ): void {
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     queueIncomingActionWithPayload(originalReducerArg, type as any, undefined);
 }
 
@@ -71,24 +72,24 @@ export function postActionToExtension<K, M extends IInteractiveWindowMapping, T 
 /**
  * Post a message to the extension (via dispatcher actions).
  */
-// tslint:disable-next-line: unified-signatures
+// eslint-disable-next-line @typescript-eslint/unified-signatures
 export function postActionToExtension<K, M extends IInteractiveWindowMapping, T extends keyof M = keyof M>(
     originalReducerArg: ReducerArg,
     message: T,
     payload?: M[T]
 ): void;
-// tslint:disable-next-line: no-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function postActionToExtension(originalReducerArg: ReducerArg, message: any, payload?: any) {
     if (!checkToPostBasedOnOriginalMessageType(originalReducerArg.payload?.messageType)) {
         return;
     }
 
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const newPayload: BaseReduxActionPayload<any> = ({
         data: payload,
         messageDirection: 'outgoing',
         messageType: MessageType.other
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any) as BaseReduxActionPayload<any>;
     const action = { type: CommonActionType.PostOutgoingMessage, payload: { payload: newPayload, type: message } };
     originalReducerArg.queueAction(action);
@@ -130,17 +131,17 @@ export function reBroadcastMessageIfRequired(
         return;
     }
     // Check if we need to re-broadcast this message to other editors/sessions.
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const result = shouldRebroadcast(message as any, payload);
     if (result[0]) {
         // Mark message as incoming, to indicate this will be sent into the other webviews.
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const syncPayloadData: BaseReduxActionPayload<any> = {
             data: payload?.data,
             messageType: result[1],
             messageDirection: 'incoming'
         };
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const syncPayload: SyncPayload = { type: message, payload: syncPayloadData };
         // First focus on UX perf, hence the setTimeout (i.e. ensure other code in event loop executes).
         setTimeout(() => dispatcher(InteractiveWindowMessages.Sync, syncPayload), 1);

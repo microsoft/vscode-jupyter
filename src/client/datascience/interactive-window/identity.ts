@@ -1,9 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+import '../../common/extensions';
+
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import { Uri } from 'vscode';
-import '../../common/extensions';
+
 import * as localize from '../../common/utils/localize';
 
 let identities: string[] = [];

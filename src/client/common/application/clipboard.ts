@@ -5,6 +5,7 @@
 
 import { injectable } from 'inversify';
 import { env } from 'vscode';
+
 import { IClipboard } from './types';
 
 @injectable()

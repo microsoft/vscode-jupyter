@@ -3,6 +3,7 @@
 'use strict';
 import { nbformat } from '@jupyterlab/coreutils';
 import type { KernelMessage } from '@jupyterlab/services';
+
 import { Identifiers } from '../../../../client/datascience/constants';
 import { InteractiveWindowMessages } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { IGetCssResponse } from '../../../../client/datascience/messages';
@@ -162,7 +163,7 @@ export namespace CommonEffects {
                     if (
                         (o.output_type === 'display_data' || o.output_type === 'execute_result') &&
                         o.transient &&
-                        // tslint:disable-next-line: no-any
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         (o.transient as any).display_id === arg.payload.data.content.transient.display_id
                     ) {
                         // Remember this as a match

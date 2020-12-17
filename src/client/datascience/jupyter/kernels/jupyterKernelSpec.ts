@@ -4,10 +4,10 @@
 import type { Kernel } from '@jupyterlab/services';
 import * as path from 'path';
 import { CancellationToken } from 'vscode';
+
 import { createPromiseFromCancellation } from '../../../common/cancellation';
 import { traceInfo } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
-
 import { IPythonExecutionFactory } from '../../../common/process/types';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { getRealPath } from '../../common';
@@ -22,7 +22,7 @@ export class JupyterKernelSpec implements IJupyterKernelSpec {
     public argv: string[];
     public interrupt_mode?: 'message' | 'signal';
 
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public metadata?: Record<string, any> & { interpreter?: Partial<PythonEnvironment> };
     constructor(
         specModel: Kernel.ISpecModel,
@@ -35,9 +35,9 @@ export class JupyterKernelSpec implements IJupyterKernelSpec {
         this.path = specModel.argv && specModel.argv.length > 0 ? specModel.argv[0] : '';
         this.display_name = specModel.display_name;
         this.metadata = specModel.metadata;
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         this.env = specModel.env as any; // JSONObject, but should match
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         this.interrupt_mode = specModel.interrupt_mode as any;
     }
 }

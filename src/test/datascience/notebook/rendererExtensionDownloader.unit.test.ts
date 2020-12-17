@@ -4,6 +4,7 @@
 import { assert } from 'chai';
 import { anything, capture, instance, mock, verify, when } from 'ts-mockito';
 import { Uri } from 'vscode';
+
 import { IApplicationShell, ICommandManager } from '../../../client/common/application/types';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { IFileDownloader, IOutputChannel } from '../../../client/common/types';
@@ -11,7 +12,7 @@ import { RendererExtensionDownloadUri } from '../../../client/datascience/notebo
 import { RendererExtensionDownloader } from '../../../client/datascience/notebook/rendererExtensionDownloader';
 import { noop } from '../../core';
 
-// tslint:disable: no-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 suite('DataScience - NativeNotebook Download Renderer Extension', () => {
     let downloader: RendererExtensionDownloader;
     let appShell: IApplicationShell;

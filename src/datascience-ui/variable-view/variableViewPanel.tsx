@@ -7,7 +7,7 @@ import { IMainWithVariables, IStore } from '../interactive-common/redux/store';
 import { IVariablePanelProps, VariablePanel } from '../interactive-common/variablePanel';
 import { actionCreators } from './redux/actions';
 
-// tslint:disable: no-suspicious-comment
+/* eslint-disable  */
 export type IVariableViewPanelProps = IMainWithVariables & typeof actionCreators;
 
 function mapStateToProps(state: IStore): IMainWithVariables {

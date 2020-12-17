@@ -33,8 +33,8 @@
     "[javascript]": {
         "editor.formatOnSave": true
     },
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
     "typescript.tsdk": "./node_modules/typescript/lib", // we want to use the TS server from our node_modules folder to control its version
-    "tslint.enable": true,
     "python.linting.enabled": false,
     "python.testing.promptToConfigure": false,
     "python.workspaceSymbols.enabled": false,
@@ -45,8 +45,7 @@
     "prettier.printWidth": 120,
     "prettier.singleQuote": true,
     "editor.codeActionsOnSave": {
-        "source.fixAll.eslint": true,
-        "source.fixAll.tslint": true
+        "source.fixAll.eslint": true
     },
     "python.languageServer": "Microsoft",
     "python.analysis.logLevel": "Trace",
@@ -59,5 +58,9 @@
         "--max-line-length=88"
     ],
     "typescript.preferences.importModuleSpecifier": "relative",
-    "debug.javascript.usePreview": false
+    "debug.javascript.usePreview": false,
+    "eslint.debug": true,
+    "eslint.lintTask.enable": true,
+    "eslint.lintTask.options": "src -c .eslintrc.js -ignore-pattern 'src/ipywidgets/**/*.*'",
+    "xeslint.options": { "configFile": ".eslintrc.js" }
 }

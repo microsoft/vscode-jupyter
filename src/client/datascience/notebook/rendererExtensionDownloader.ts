@@ -3,10 +3,10 @@
 
 import { inject, injectable, named } from 'inversify';
 import { Uri } from 'vscode';
+
 import { IApplicationShell, ICommandManager } from '../../common/application/types';
 import { Octicons, STANDARD_OUTPUT_CHANNEL } from '../../common/constants';
 import { vsixFileExtension } from '../../common/installer/extensionBuildInstaller';
-
 import { IFileSystem } from '../../common/platform/types';
 import { IFileDownloader, IOutputChannel } from '../../common/types';
 import { DataScienceRendererExtension } from '../../common/utils/localize';

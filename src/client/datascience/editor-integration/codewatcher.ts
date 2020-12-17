@@ -19,7 +19,6 @@ import {
 
 import { IDocumentManager } from '../../common/application/types';
 import { IFileSystem } from '../../common/platform/types';
-
 import { IConfigurationService, IDisposable, IJupyterSettings, Resource } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { StopWatch } from '../../common/utils/stopWatch';

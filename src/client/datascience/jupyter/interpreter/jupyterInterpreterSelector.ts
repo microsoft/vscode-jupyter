@@ -6,6 +6,7 @@
 import { inject, injectable } from 'inversify';
 import { QuickPickOptions } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
+
 import { IApplicationShell, IWorkspaceService } from '../../../common/application/types';
 import { Cancellation } from '../../../common/cancellation';
 import { IPathUtils } from '../../../common/types';

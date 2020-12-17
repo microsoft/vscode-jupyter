@@ -5,8 +5,8 @@
 
 import { inject, injectable } from 'inversify';
 import { CancellationToken, Uri } from 'vscode';
-import { traceError } from '../../../common/logger';
 
+import { traceError } from '../../../common/logger';
 import { IPythonDaemonExecutionService, IPythonExecutionFactory } from '../../../common/process/types';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { JupyterDaemonModule } from '../../constants';

@@ -5,11 +5,11 @@
 
 import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
+
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IApplicationShell } from '../../common/application/types';
 import { UseVSCodeNotebookEditorApi } from '../../common/constants';
 import { IFileSystem } from '../../common/platform/types';
-
 import { DataScience } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';

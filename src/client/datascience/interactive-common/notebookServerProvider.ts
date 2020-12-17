@@ -5,6 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import { CancellationToken, ConfigurationTarget, EventEmitter, Uri } from 'vscode';
+
 import { IApplicationShell } from '../../common/application/types';
 import { CancellationError, wrapCancellationTokens } from '../../common/cancellation';
 import { traceInfo } from '../../common/logger';

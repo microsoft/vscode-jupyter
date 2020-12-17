@@ -4,6 +4,7 @@
 import * as fs from 'fs-extra';
 import { applyEdits, ModificationOptions, modify } from 'jsonc-parser';
 import * as path from 'path';
+
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants';
 
 const settingsFile = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src/test/datascience/.vscode/settings.json');
@@ -67,11 +68,11 @@ function updateTestsForOldNotebooks() {
 updatePackageJsonForTests();
 
 if (process.env.VSC_JUPYTER_CI_TEST_VSC_CHANNEL === 'insiders' && process.env.VSC_JUPYTER_RUN_NB_TEST) {
-    // tslint:disable-next-line: no-console
+    // eslint-disable-next-line no-console
     console.info('Updated settings for Native Notebook tests');
     updateTestsForNativeNotebooks();
 } else {
-    // tslint:disable-next-line: no-console
+    // eslint-disable-next-line no-console
     console.info('Updated settings for Standard Notebook tests');
     updateTestsForOldNotebooks();
 }

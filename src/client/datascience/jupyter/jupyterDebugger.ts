@@ -6,6 +6,7 @@ import { inject, injectable, named } from 'inversify';
 import * as uuid from 'uuid/v4';
 import { DebugConfiguration, Disposable } from 'vscode';
 import * as vsls from 'vsls/vscode';
+
 import { concatMultilineString } from '../../../datascience-ui/common';
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
 import { IPythonDebuggerPathProvider } from '../../api/types';
@@ -138,7 +139,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
             traceInfo('connected to notebook during debugging');
 
             // First check if this is a live share session. Skip debugging attach on the guest
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const hasRole = (notebook as any) as ILiveShareHasRole;
             if (hasRole && hasRole.role && hasRole.role === vsls.Role.Guest) {
                 traceInfo('guest mode attach skipped');
@@ -221,7 +222,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         const extraPaths: string[] = [];
 
         // Add the settings path first as it takes precedence over the ptvsd extension path
-        // tslint:disable-next-line:no-multiline-string
+        // eslint-disable-next-line no-multi-str
         let settingsPath = this.configService.getSettings(notebook.resource).debugpyDistPath;
         // Escape windows path chars so they end up in the source escaped
         if (settingsPath) {
@@ -330,7 +331,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
             if (outputs.length > 0) {
                 const data = outputs[0].data;
                 if (data && data.hasOwnProperty('text/plain')) {
-                    // tslint:disable-next-line:no-any
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     return concatMultilineString((data as any)['text/plain']);
                 }
                 if (outputs[0].output_type === 'stream') {
@@ -367,7 +368,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         //             `import ptvsd
         // ptvsd.enable_attach(('0.0.0.0', ${portNumber}))
         // print("('${connectionInfo.hostName}', ${portNumber})")` :
-        //             // tslint:disable-next-line: no-multiline-string
+        // eslint-disable-next-line no-multi-str
         //             `import ptvsd
         // port = ${Settings.RemoteDebuggerPortBegin}
         // attached = False

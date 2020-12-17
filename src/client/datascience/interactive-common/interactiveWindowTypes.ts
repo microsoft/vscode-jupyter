@@ -1,13 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import type { KernelMessage } from '@jupyterlab/services';
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import { Uri } from 'vscode';
-import { DebugState, IServerState } from '../../../datascience-ui/interactive-common/mainState';
-
-import type { KernelMessage } from '@jupyterlab/services';
 import { DebugProtocol } from 'vscode-debugprotocol';
+
 import { DebugProtocolVariable, DebugProtocolVariableContainer } from '../../../../types/vscode-proposed';
+import { DebugState, IServerState } from '../../../datascience-ui/interactive-common/mainState';
 import {
     CommonActionType,
     IAddCellAction,
@@ -540,7 +540,7 @@ export interface IRunByLine {
 export interface ILoadTmLanguageResponse {
     languageId: string;
     scopeName: string; // Name in the tmlanguage scope file (scope.python instead of python)
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     languageConfiguration: ILanguageConfigurationDto;
     languageJSON: string; // Contents of the tmLanguage.json file
     extensions: string[]; // Array of file extensions that map to this language
@@ -569,7 +569,7 @@ export class IInteractiveWindowMapping {
     public [IPyWidgetMessages.IPyWidgets_onRestartKernel]: never | undefined;
     public [IPyWidgetMessages.IPyWidgets_onKernelChanged]: never | undefined;
     public [IPyWidgetMessages.IPyWidgets_registerCommTarget]: string;
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public [IPyWidgetMessages.IPyWidgets_binary_msg]: { id: string; data: any };
     public [IPyWidgetMessages.IPyWidgets_msg]: { id: string; data: string };
     public [IPyWidgetMessages.IPyWidgets_msg_received]: { id: string };
@@ -668,7 +668,7 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.SaveAll]: ISaveAll;
     public [InteractiveWindowMessages.Sync]: {
         type: InteractiveWindowMessages | SharedMessages | CommonActionType;
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         payload: BaseReduxActionPayload<any>;
     };
     public [InteractiveWindowMessages.NativeCommand]: INativeCommand;

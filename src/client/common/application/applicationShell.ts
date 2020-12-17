@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 
-// tslint:disable:no-var-requires no-any unified-signatures
+/* eslint-disable @typescript-eslint/no-var-requires, @typescript-eslint/no-explicit-any, @typescript-eslint/unified-signatures */
 
 import { injectable } from 'inversify';
 import {
@@ -33,6 +33,7 @@ import {
     WorkspaceFolder,
     WorkspaceFolderPickOptions
 } from 'vscode';
+
 import { IApplicationShell } from './types';
 
 @injectable()

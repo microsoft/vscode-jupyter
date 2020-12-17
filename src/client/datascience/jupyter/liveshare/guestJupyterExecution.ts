@@ -7,7 +7,6 @@ import { CancellationToken } from 'vscode';
 
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../../common/application/types';
 import { IFileSystem } from '../../../common/platform/types';
-
 import {
     IAsyncDisposableRegistry,
     IConfigurationService,

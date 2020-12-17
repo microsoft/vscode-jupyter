@@ -1,12 +1,13 @@
 // Licensed under the MIT License.
 // Copyright (c) Microsoft Corporation. All rights reserved.
 
-// tslint:disable: no-var-requires no-require-imports no-invalid-this no-any
+/* eslint-disable @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports, no-invalid-this, @typescript-eslint/no-explicit-any */
 import { nbformat } from '@jupyterlab/coreutils';
 import { assert } from 'chai';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import { Uri } from 'vscode';
+
 import { IDisposable } from '../../../client/common/types';
 import { ExportUtil } from '../../../client/datascience/export/exportUtil';
 import { IExtensionTestApi } from '../../common';
@@ -23,7 +24,7 @@ suite('DataScience - Export Util', () => {
         // Export Util tests require jupyter to run. Otherwise can't
         // run any of our variable execution code
         if (!process.env.VSC_FORCE_REAL_JUPYTER) {
-            // tslint:disable-next-line:no-invalid-this
+            // eslint-disable-next-line no-invalid-this
             this.skip();
         }
     });

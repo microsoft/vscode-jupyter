@@ -204,14 +204,14 @@ ${buildSettingsCss(this.props.settings)}`}</style>
         return this.props.isNotebookTrusted;
     };
 
-    // tslint:disable-next-line: cyclomatic-complexity
+    // eslint-disable-next-line complexity
     private mainKeyDown = (event: KeyboardEvent) => {
         if (!this.isNotebookTrusted()) {
             return; // Disable keyboard interaction with untrusted notebooks
         }
         // Handler for key down presses in the main panel
         switch (event.key) {
-            // tslint:disable-next-line: no-suspicious-comment
+            // eslint-disable-next-line
             // TODO: How to have this work for when the keyboard shortcuts are changed?
             case 's': {
                 if (!this.props.settings?.extraSettings.useCustomEditorApi) {

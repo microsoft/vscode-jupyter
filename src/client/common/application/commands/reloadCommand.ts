@@ -4,6 +4,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
+
 import { IExtensionSingleActivationService } from '../../../activation/types';
 import { Common } from '../../utils/localize';
 import { noop } from '../../utils/misc';

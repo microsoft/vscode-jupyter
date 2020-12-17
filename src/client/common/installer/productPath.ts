@@ -3,11 +3,12 @@
 
 'use strict';
 
-// tslint:disable:max-classes-per-file
+/* eslint-disable max-classes-per-file */
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Uri } from 'vscode';
+
 import { IServiceContainer } from '../../ioc/types';
 import { IConfigurationService, IInstaller, ModuleNamePurpose, Product } from '../types';
 import { IProductPathService } from './types';
@@ -28,7 +29,7 @@ export abstract class BaseProductPathsService implements IProductPathService {
         let moduleName: string | undefined;
         try {
             moduleName = this.productInstaller.translateProductToModuleName(product, ModuleNamePurpose.run);
-            // tslint:disable-next-line:no-empty
+            // eslint-disable-next-line no-empty,@typescript-eslint/no-empty-function
         } catch {}
 
         // User may have customized the module name or provided the fully qualifieid path.

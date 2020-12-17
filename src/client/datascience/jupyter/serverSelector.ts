@@ -6,6 +6,7 @@
 import { inject, injectable } from 'inversify';
 import { isNil } from 'lodash';
 import { QuickPickItem, Uri } from 'vscode';
+
 import { IClipboard, ICommandManager } from '../../common/application/types';
 import { DataScience } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
@@ -114,7 +115,7 @@ export class JupyterServerSelector {
     }
 
     private generateUriFromRemoteProvider(id: string, result: JupyterServerUriHandle) {
-        // tslint:disable-next-line: no-http-string
+        // eslint-disable-next-line
         return `${Identifiers.REMOTE_URI}?${Identifiers.REMOTE_URI_ID_PARAM}=${id}&${
             Identifiers.REMOTE_URI_HANDLE_PARAM
         }=${encodeURI(result)}`;
@@ -174,7 +175,7 @@ export class JupyterServerSelector {
     }
     private validateSelectJupyterURI = async (inputText: string): Promise<string | undefined> => {
         try {
-            // tslint:disable-next-line:no-unused-expression
+            // eslint-disable-next-line @typescript-eslint/no-unused-expressions
             new URL(inputText);
 
             // Double check http

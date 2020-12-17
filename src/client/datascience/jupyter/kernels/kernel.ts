@@ -17,6 +17,7 @@ import {
     NotebookDocument,
     Uri
 } from 'vscode';
+
 import { ServerStatus } from '../../../../datascience-ui/interactive-common/mainState';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../../common/application/types';
 import { traceError, traceWarning } from '../../../common/logger';

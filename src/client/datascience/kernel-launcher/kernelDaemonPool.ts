@@ -4,10 +4,10 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
+
 import { IWorkspaceService } from '../../common/application/types';
 import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
-
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../common/process/types';
 import { IDisposable, Resource } from '../../common/types';
 import { noop } from '../../common/utils/misc';

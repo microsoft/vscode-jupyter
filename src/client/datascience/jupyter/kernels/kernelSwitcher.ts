@@ -5,6 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import { ProgressLocation, ProgressOptions } from 'vscode';
+
 import { IApplicationShell } from '../../../common/application/types';
 import { IConfigurationService } from '../../../common/types';
 import { DataScience } from '../../../common/utils/localize';
@@ -39,7 +40,7 @@ export class KernelSwitcher {
         // Keep retrying, until it works or user cancels.
         // Sometimes if a bad kernel is selected, starting a session can fail.
         // In such cases we need to let the user know about this and prompt them to select another kernel.
-        // tslint:disable-next-line: no-constant-condition
+        // eslint-disable-next-line no-constant-condition
         while (true) {
             try {
                 await this.switchToKernel(notebook, kernel);

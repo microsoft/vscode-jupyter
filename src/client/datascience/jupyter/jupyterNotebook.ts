@@ -1,5 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+import '../../common/extensions';
+
 import type { nbformat } from '@jupyterlab/coreutils';
 import type { Kernel, KernelMessage } from '@jupyterlab/services';
 import type { JSONObject } from '@phosphor/coreutils';
@@ -8,12 +10,11 @@ import { Subscriber } from 'rxjs/Subscriber';
 import * as uuid from 'uuid/v4';
 import { Disposable, Event, EventEmitter, Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
+
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../common/application/types';
 import { CancellationError, createPromiseFromCancellation } from '../../common/cancellation';
-import '../../common/extensions';
 import { traceError, traceInfo, traceWarning } from '../../common/logger';
-
 import { IConfigurationService, IDisposableRegistry, Resource } from '../../common/types';
 import { createDeferred, Deferred, waitForPromise } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
@@ -37,7 +38,7 @@ import {
 import { expandWorkingDir } from './jupyterUtils';
 import { KernelConnectionMetadata } from './kernels/types';
 
-// tslint:disable-next-line: no-require-imports
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
 import { concatMultilineString, formatStreamText, splitMultilineString } from '../../../datascience-ui/common';
 import { PYTHON_LANGUAGE } from '../../common/constants';
@@ -93,7 +94,7 @@ class CellSubscriber {
         }
     }
 
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public error(sessionStartTime: number | undefined, err: any) {
         if (this.isValid(sessionStartTime)) {
             this.subscriber.error(err);
@@ -113,7 +114,7 @@ class CellSubscriber {
         this.attemptToFinish();
     }
 
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public reject(e: any) {
         if (!this.deferred.completed) {
             this.cellRef.state = CellState.error;
@@ -278,7 +279,7 @@ export class JupyterNotebookBase implements INotebook {
     }
 
     // Set up our initial plotting and imports
-    // tslint:disable-next-line: cyclomatic-complexity
+    // eslint-disable-next-line complexity
     public async initialize(cancelToken?: CancellationToken): Promise<void> {
         if (this.ranInitialSetup) {
             return;
@@ -704,9 +705,9 @@ export class JupyterNotebookBase implements INotebook {
     public sendCommMessage(
         buffers: (ArrayBuffer | ArrayBufferView)[],
         content: { comm_id: string; data: JSONObject; target_name: string | undefined },
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         metadata: any,
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         msgId: any
     ): Kernel.IShellFuture<
         KernelMessage.IShellMessage<'comm_msg'>,
@@ -848,7 +849,7 @@ export class JupyterNotebookBase implements INotebook {
     private generateRequest = (
         code: string,
         silent?: boolean,
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         metadata?: Record<string, any>
     ): Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> | undefined => {
         //traceInfo(`Executing code in jupyter : ${code}`);
@@ -955,12 +956,12 @@ export class JupyterNotebookBase implements INotebook {
         silent: boolean | undefined,
         clearState: RefBool,
         msg: KernelMessage.IIOPubMessage
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ) {
         // Let our loggers get a first crack at the message. They may change it
         this.getLoggers().forEach((f) => (msg = f.preHandleIOPub ? f.preHandleIOPub(msg) : msg));
 
-        // tslint:disable-next-line:no-require-imports
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
         const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
 
         // Create a trimming function. Only trim user output. Silent output requires the full thing
@@ -1059,7 +1060,7 @@ export class JupyterNotebookBase implements INotebook {
         clearState: RefBool,
         msg: KernelMessage.IShellControlMessage
     ) {
-        // tslint:disable-next-line:no-require-imports
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
         const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
 
         // Create a trimming function. Only trim user output. Silent output requires the full thing
@@ -1078,7 +1079,7 @@ export class JupyterNotebookBase implements INotebook {
         }
     }
 
-    // tslint:disable-next-line: max-func-body-length
+    // eslint-disable-next-line
     private handleCodeRequest = (subscriber: CellSubscriber, silent?: boolean) => {
         // Generate a new request if we still can
         if (subscriber.isValid(this.sessionStartTime)) {
@@ -1235,7 +1236,7 @@ export class JupyterNotebookBase implements INotebook {
         // Check our length on text output
         if (msg.content.data && msg.content.data.hasOwnProperty('text/plain')) {
             msg.content.data['text/plain'] = splitMultilineString(
-                // tslint:disable-next-line: no-any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 trimFunc(concatMultilineString(msg.content.data['text/plain'] as any))
             );
         }
@@ -1246,7 +1247,7 @@ export class JupyterNotebookBase implements INotebook {
                 output_type: 'execute_result',
                 data: msg.content.data,
                 metadata: msg.content.metadata,
-                // tslint:disable-next-line: no-any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 transient: msg.content.transient as any, // NOSONAR
                 execution_count: msg.content.execution_count
             },
@@ -1264,7 +1265,7 @@ export class JupyterNotebookBase implements INotebook {
         if (reply.payload) {
             reply.payload.forEach((o) => {
                 if (o.data && o.data.hasOwnProperty('text/plain')) {
-                    // tslint:disable-next-line: no-any
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     const str = concatMultilineString((o.data as any)['text/plain']); // NOSONAR
                     const data = trimFunc(str);
                     this.addToCellData(
@@ -1315,7 +1316,7 @@ export class JupyterNotebookBase implements INotebook {
                 : undefined;
         if (existing) {
             const originalText = formatStreamText(
-                // tslint:disable-next-line: no-any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 `${concatMultilineString(existing.text as any)}${concatMultilineString(msg.content.text)}`
             );
             originalTextLength = originalText.length;
@@ -1356,7 +1357,7 @@ export class JupyterNotebookBase implements INotebook {
             output_type: 'display_data',
             data: newData,
             metadata: msg.content.metadata,
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             transient: msg.content.transient as any // NOSONAR
         };
         this.addToCellData(cell, output, clearState);
@@ -1404,7 +1405,7 @@ export class JupyterNotebookBase implements INotebook {
             traceback: msg.content.traceback
         };
         if (msg.content.hasOwnProperty('transient')) {
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             output.transient = (msg.content as any).transient;
         }
         this.addToCellData(cell, output, clearState);

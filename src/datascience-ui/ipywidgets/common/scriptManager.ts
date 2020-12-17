@@ -3,9 +3,11 @@
 
 'use strict';
 
+import '../../../client/common/extensions';
+
 import { EventEmitter } from 'events';
 import * as isonline from 'is-online';
-import '../../../client/common/extensions';
+
 import { createDeferred, Deferred } from '../../../client/common/utils/async';
 import { noop } from '../../../client/common/utils/misc';
 import {
@@ -39,7 +41,7 @@ export class ScriptManager extends EventEmitter {
     constructor(private readonly postOffice: PostOffice) {
         super();
         postOffice.addHandler({
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             handleMessage: (type: string, payload?: any) => {
                 if (type === SharedMessages.UpdateSettings) {
                     const settings = JSON.parse(payload) as IJupyterExtraSettings;
@@ -59,7 +61,7 @@ export class ScriptManager extends EventEmitter {
     public getScriptLoader(): ScriptLoader {
         return {
             widgetsRegisteredInRequireJs: this.widgetsRegisteredInRequireJs,
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             errorHandler: (className: string, moduleName: string, moduleVersion: string, error: any) =>
                 this.handleLoadError(className, moduleName, moduleVersion, error).catch(noop),
             loadWidgetScript: (moduleName: string, moduleVersion: string) =>
@@ -78,7 +80,7 @@ export class ScriptManager extends EventEmitter {
             className: string;
             moduleName: string;
             moduleVersion: string;
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             error: any;
             timedout?: boolean;
             isOnline: boolean;
@@ -97,7 +99,7 @@ export class ScriptManager extends EventEmitter {
      * Or check local FS then fall back to CDN (depending on the order defined by the user).
      */
     public loadWidgetScript(moduleName: string, moduleVersion: string): Promise<void> {
-        // tslint:disable-next-line: no-console
+        // eslint-disable-next-line no-console
         console.log(`Fetch IPyWidget source for ${moduleName}`);
         let request = this.widgetSourceRequests.get(moduleName);
         if (!request) {
@@ -117,7 +119,7 @@ export class ScriptManager extends EventEmitter {
 
             request.timer = setTimeout(() => {
                 if (request && !request.deferred.resolved) {
-                    // tslint:disable-next-line: no-console
+                    // eslint-disable-next-line no-console
                     console.error(`Timeout waiting to get widget source for ${moduleName}, ${moduleVersion}`);
                     this.handleLoadError(
                         '<class>',
@@ -157,7 +159,7 @@ export class ScriptManager extends EventEmitter {
                 }
             })
             .catch((ex) =>
-                // tslint:disable-next-line: no-console
+                // eslint-disable-next-line no-console
                 console.error(`Failed to load Widget Script from Extension for for ${moduleName}, ${moduleVersion}`, ex)
             );
     }
@@ -205,7 +207,7 @@ export class ScriptManager extends EventEmitter {
             }
             request.deferred.resolve();
             if (request.timer !== undefined) {
-                // tslint:disable-next-line: no-any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 clearTimeout(request.timer as any); // This is to make this work on Node and Browser
             }
         });
@@ -220,7 +222,7 @@ export class ScriptManager extends EventEmitter {
         className: string,
         moduleName: string,
         moduleVersion: string,
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         error: any,
         timedout: boolean = false
     ) {

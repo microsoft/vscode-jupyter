@@ -4,6 +4,7 @@ import { expect } from 'chai';
 import { anything, instance, mock, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import * as vscode from 'vscode';
+
 import { PythonExtensionChecker } from '../../../client/api/pythonApi';
 import { IWorkspaceService } from '../../../client/common/application/types';
 import { ConfigurationService } from '../../../client/common/configuration/service';
@@ -15,7 +16,7 @@ function Uri(filename: string): vscode.Uri {
     return vscode.Uri.file(filename);
 }
 
-// tslint:disable:no-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 function createTypeMoq<T>(tag: string): typemoq.IMock<T> {
     // Use typemoqs for those things that are resolved as promises. mockito doesn't allow nesting of mocks. ES6 Proxy class
     // is the problem. We still need to make it thenable though. See this issue: https://github.com/florinn/typemoq/issues/67
@@ -25,7 +26,7 @@ function createTypeMoq<T>(tag: string): typemoq.IMock<T> {
     return result;
 }
 
-// tslint:disable: max-func-body-length
+/* eslint-disable  */
 suite('DataScience - NotebookProvider', () => {
     let notebookProvider: NotebookProvider;
     let disposableRegistry: IDisposableRegistry;

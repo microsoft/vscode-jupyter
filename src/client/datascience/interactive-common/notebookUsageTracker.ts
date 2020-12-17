@@ -3,6 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 import { EventEmitter } from 'vscode';
+
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IWorkspaceService } from '../../common/application/types';
 import { IDisposableRegistry } from '../../common/types';

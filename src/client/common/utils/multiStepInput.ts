@@ -3,10 +3,11 @@
 
 'use strict';
 
-// tslint:disable:max-func-body-length no-any no-unnecessary-class
+/* eslint-disable , @typescript-eslint/no-explicit-any, @typescript-eslint/no-extraneous-class */
 
 import { inject, injectable } from 'inversify';
 import { Disposable, QuickInput, QuickInputButton, QuickInputButtons, QuickPickItem } from 'vscode';
+
 import { IApplicationShell } from '../application/types';
 
 // Borrowed from https://github.com/Microsoft/vscode-extension-samples/blob/master/quickinput-sample/src/multiStepInput.ts
@@ -36,7 +37,7 @@ export interface IQuickPickParameters<T extends QuickPickItem> {
     shouldResume?(): Promise<boolean>;
 }
 
-// tslint:disable-next-line: interface-name
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export interface InputBoxParameters {
     title: string;
     password?: boolean;

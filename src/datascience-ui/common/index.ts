@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { nbformat } from '@jupyterlab/coreutils/lib/nbformat';
+
 import { noop } from '../../client/common/utils/misc';
 
 const SingleQuoteMultiline = "'''";
@@ -153,7 +154,7 @@ export function generateMarkdownFromCodeLines(lines: string[]) {
     return appendLineFeed(extractComments(lines.slice(lines.length > 1 ? 1 : 0)));
 }
 
-// tslint:disable-next-line: cyclomatic-complexity
+// eslint-disable-next-line complexity
 export function parseForComments(
     lines: string[],
     foundCommentLine: (s: string, i: number) => void,

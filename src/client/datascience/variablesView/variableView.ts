@@ -54,7 +54,7 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
         return 'variableView';
     }
 
-    //tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     protected onMessage(message: string, payload: any) {
         switch (message) {
             case InteractiveWindowMessages.GetVariablesRequest:
@@ -70,7 +70,7 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
     // Handle message helper function to specifically handle our message mapping type
     protected handleMessage<M extends IVariableViewPanelMapping, T extends keyof M>(
         _message: T,
-        // tslint:disable-next-line:no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         payload: any,
         handler: (args: M[T]) => void
     ) {

@@ -3,30 +3,31 @@
 
 'use strict';
 
-// tslint:disable:no-any max-func-body-length
+/* eslint-disable @typescript-eslint/no-explicit-any,  */
 
 import * as fakeTimers from '@sinonjs/fake-timers';
 import * as sinon from 'sinon';
-import { anything, instance, mock, when, verify, resetCalls } from 'ts-mockito';
+import { anything, instance, mock, resetCalls, verify, when } from 'ts-mockito';
+import { UIKind } from 'vscode';
+
 import { IApplicationEnvironment, IApplicationShell, IVSCodeNotebook } from '../../client/common/application/types';
+import { Experiments } from '../../client/common/experiments/groups';
 import {
     IBrowserService,
     IExperimentService,
     IPersistentState,
     IPersistentStateFactory
 } from '../../client/common/types';
-import { ShowBannerWithExpiryTime } from '../../client/datascience/dataScienceSurveyBanner';
-import { initialize } from '../initialize';
-import { noop } from '../../client/common/utils/misc';
-import { UIKind } from 'vscode';
 import * as localize from '../../client/common/utils/localize';
+import { noop } from '../../client/common/utils/misc';
 import { MillisecondsInADay } from '../../client/constants';
+import { ShowBannerWithExpiryTime } from '../../client/datascience/dataScienceSurveyBanner';
 import {
     InsidersNativeNotebooksSurveyBanner,
     InsidersNotebookSurveyStateKeys
 } from '../../client/datascience/insidersNativeNotebookSurveyBanner';
-import { Experiments } from '../../client/common/experiments/groups';
 import { INotebookExtensibility } from '../../client/datascience/types';
+import { initialize } from '../initialize';
 
 suite('Insiders Native Notebooks Survey Banner', () => {
     let appShell: IApplicationShell;

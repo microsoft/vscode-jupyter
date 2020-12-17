@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { assert } from 'chai';
+
 import { IJupyterSettings } from '../../client/common/types';
 import { CellMatcher } from '../../client/datascience/cellMatcher';
 import { defaultDataScienceSettings } from './helpers';
@@ -14,7 +15,7 @@ suite('DataScience CellMatcher', () => {
         assert.ok(matcher1.isMarkdown('# %% [markdown]'), 'Base markdown is wrong');
         assert.equal(matcher1.exec('# %% TITLE'), 'TITLE', 'Title not found');
 
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (<any>settings).defaultCellMarker = '# %% CODE HERE';
         const matcher2 = new CellMatcher(settings);
         assert.ok(matcher2.isCode('# %%'), 'Code not found');

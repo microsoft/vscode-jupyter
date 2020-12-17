@@ -5,6 +5,7 @@
 
 import { inject, injectable, multiInject, optional } from 'inversify';
 import { TextDocument } from 'vscode';
+
 import { IPythonExtensionChecker } from '../api/types';
 import { IActiveResourceService, IDocumentManager, IWorkspaceService } from '../common/application/types';
 import { PYTHON_LANGUAGE } from '../common/constants';

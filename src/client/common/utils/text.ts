@@ -4,6 +4,7 @@
 'use strict';
 
 import { Position, Range } from 'vscode';
+
 import { isNumber } from './sysTypes';
 
 /**

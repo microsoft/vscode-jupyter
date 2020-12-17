@@ -7,6 +7,7 @@ import { inject, injectable } from 'inversify';
 import { cloneDeep } from 'lodash';
 import * as path from 'path';
 import { CancellationToken, EventEmitter } from 'vscode';
+
 import { IPythonExtensionChecker } from '../../../api/types';
 import { PYTHON_LANGUAGE } from '../../../common/constants';
 import { traceError, traceInfo } from '../../../common/logger';
@@ -34,7 +35,7 @@ import {
 } from './types';
 
 // Small classes, hence all put into one file.
-// tslint:disable: max-classes-per-file
+/* eslint-disable max-classes-per-file */
 
 const isSimplePythonDisplayName = /python\s?\d?\.?\d?/;
 /**
@@ -133,7 +134,7 @@ export class ActiveJupyterSessionKernelSelectionListProvider
             const matchingSpec: Partial<IJupyterKernelSpec> =
                 kernelSpecs.find((spec) => spec.name === item.kernel.name) || {};
             const activeKernel = activeKernels.find((active) => active.id === item.kernel.id) || {};
-            // tslint:disable-next-line: no-object-literal-type-assertion
+            // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
             return {
                 ...item.kernel,
                 ...matchingSpec,
@@ -373,7 +374,7 @@ export class KernelSelectionProvider {
                   )
                 : Promise.resolve([]);
 
-            // tslint:disable-next-line: prefer-const
+            // eslint-disable-next-line prefer-const
             let [installedKernels, interpreters] = await Promise.all([installedKernelsPromise, interpretersPromise]);
 
             interpreters = interpreters

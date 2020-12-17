@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 import { inject, injectable } from 'inversify';
 import { env } from 'vscode';
+
 import { IApplicationEnvironment, IAuthenticationService, IEncryptedStorage } from './types';
 
 declare const __webpack_require__: typeof require;
@@ -63,7 +64,7 @@ export class EncryptedStorage implements IEncryptedStorage {
             const val = await keytar?.getPassword(service, key);
             return val ? val : undefined;
         } else {
-            // tslint:disable-next-line: no-unnecessary-local-variable
+            // eslint-disable-next-line
             const val = await this.authenService.getPassword(`${service}.${key}`);
             return val;
         }

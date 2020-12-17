@@ -5,6 +5,7 @@ import { nbformat } from '@jupyterlab/coreutils/lib/nbformat';
 import * as fastDeepEqual from 'fast-deep-equal';
 import * as uuid from 'uuid/v4';
 import { Memento, Uri } from 'vscode';
+
 import { concatMultilineString, splitMultilineString } from '../../../datascience-ui/common';
 import { createCodeCell } from '../../../datascience-ui/common/cellFactory';
 import { ICryptoUtils } from '../../common/types';
@@ -285,7 +286,7 @@ export class NativeEditorNotebookModel extends BaseNotebookModel {
         return true;
     }
 
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private asCell(cell: any): ICell {
         // Works around problems with setting a cell to another one in the nyc compiler.
         return cell as ICell;

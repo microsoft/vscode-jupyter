@@ -9,6 +9,7 @@ import * as os from 'os';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import { CancellationToken, Disposable } from 'vscode';
+
 import { CancellationError, createPromiseFromCancellation } from '../../common/cancellation';
 import { WrappedError } from '../../common/errors/errorUtils';
 import { traceInfo } from '../../common/logger';
@@ -55,7 +56,7 @@ export class NotebookStarter implements Disposable {
             }
         }
     }
-    // tslint:disable-next-line: max-func-body-length
+    // eslint-disable-next-line
     @reportAction(ReportableAction.NotebookStart)
     public async start(
         useDefaultConfig: boolean,

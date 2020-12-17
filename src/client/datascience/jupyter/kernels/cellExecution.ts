@@ -6,6 +6,7 @@
 import { nbformat } from '@jupyterlab/coreutils';
 import type { KernelMessage } from '@jupyterlab/services/lib/kernel/messages';
 import { CancellationToken, ExtensionMode } from 'vscode';
+
 import type {
     CellDisplayOutput,
     NotebookCell,
@@ -49,7 +50,7 @@ import {
 } from '../../types';
 import { translateCellFromNative } from '../../utils';
 import { IKernel } from './types';
-// tslint:disable-next-line: no-var-requires no-require-imports
+// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
 export class CellExecutionFactory {
@@ -62,7 +63,7 @@ export class CellExecutionFactory {
     ) {}
 
     public create(cell: NotebookCell, isPythonKernelConnection: boolean) {
-        // tslint:disable-next-line: no-use-before-declare
+        // eslint-disable-next-line @typescript-eslint/no-use-before-define
         return CellExecution.fromCell(
             this.vscNotebook.notebookEditors.find((e) => e.document === cell.notebook)!,
             cell,
@@ -399,7 +400,7 @@ export class CellExecution {
 
     private async executeCodeCell(code: string, session: IJupyterSession, loggers: INotebookExecutionLogger[]) {
         // Generate metadata from our cell (some kernels expect this.)
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const metadata: any = {
             ...(this.cell.metadata?.custom?.metadata || {}), // Send the Cell Metadata
             ...{ cellId: this.cell.uri.toString() }
@@ -488,7 +489,7 @@ export class CellExecution {
         // Let our loggers get a first crack at the message. They may change it
         loggers.forEach((f) => (msg = f.preHandleIOPub ? f.preHandleIOPub(msg) : msg));
 
-        // tslint:disable-next-line:no-require-imports
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
         const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
 
         try {
@@ -590,7 +591,7 @@ export class CellExecution {
                 output_type: 'execute_result',
                 data: msg.content.data,
                 metadata: msg.content.metadata,
-                // tslint:disable-next-line: no-any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 transient: msg.content.transient as any, // NOSONAR
                 execution_count: msg.content.execution_count
             },
@@ -608,7 +609,7 @@ export class CellExecution {
                             {
                                 // Mark as stream output so the text is formatted because it likely has ansi codes in it.
                                 output_type: 'stream',
-                                // tslint:disable-next-line: no-any
+                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                                 text: (o.data as any)['text/plain'].toString(),
                                 name: 'stdout',
                                 metadata: {},
@@ -639,7 +640,7 @@ export class CellExecution {
         traceCellMessage(this.cell, `Kernel switching to ${msg.content.execution_state}`);
     }
     private async handleStreamMessage(msg: KernelMessage.IStreamMsg, clearState: RefBool) {
-        // tslint:disable-next-line: cyclomatic-complexity
+        // eslint-disable-next-line complexity
         await chainWithPendingUpdates(this.editor, (edit) => {
             traceCellMessage(this.cell, 'Update streamed output');
             let exitingCellOutput = this.cell.outputs;
@@ -675,7 +676,7 @@ export class CellExecution {
                     existingOutput = existingOutputLines.join('\n');
                     newContent = newContent.substring(moveUpCode.length);
                 }
-                // tslint:disable-next-line:restrict-plus-operands
+                // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
                 existing.data['text/plain'] = formatStreamText(concatMultilineString(`${existingOutput}${newContent}`));
                 edit.replaceCellOutput(this.cell.index, [...exitingCellOutput]); // This is necessary to get VS code to update (for now)
             } else {
@@ -696,7 +697,7 @@ export class CellExecution {
             output_type: 'display_data',
             data: handleTensorBoardDisplayDataOutput(msg.content.data),
             metadata: msg.content.metadata,
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             transient: msg.content.transient as any // NOSONAR
         };
         await this.addToCellData(output, clearState);
@@ -728,7 +729,7 @@ export class CellExecution {
 
     @swallowExceptions()
     private async handleReply(clearState: RefBool, msg: KernelMessage.IShellControlMessage) {
-        // tslint:disable-next-line:no-require-imports
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
         const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
 
         if (jupyterLab.KernelMessage.isExecuteReplyMsg(msg)) {

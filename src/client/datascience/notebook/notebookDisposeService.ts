@@ -4,6 +4,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
+
 import { NotebookDocument } from '../../../../typings/vscode-proposed';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IApplicationEnvironment, IVSCodeNotebook } from '../../common/application/types';

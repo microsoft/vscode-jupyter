@@ -5,6 +5,7 @@
 
 import { assert } from 'chai';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
+
 import { ApplicationShell } from '../../../../client/common/application/applicationShell';
 import { IApplicationShell } from '../../../../client/common/application/types';
 import { ProductInstaller } from '../../../../client/common/installer/productInstaller';
@@ -21,7 +22,7 @@ import {
 import { IJupyterCommand, IJupyterCommandFactory } from '../../../../client/datascience/types';
 import { PythonEnvironment } from '../../../../client/pythonEnvironments/info';
 
-// tslint:disable: max-func-body-length no-any
+/* eslint-disable , @typescript-eslint/no-explicit-any */
 
 suite('DataScience - Jupyter Interpreter Configuration', () => {
     let configuration: JupyterInterpreterDependencyService;
@@ -88,7 +89,7 @@ suite('DataScience - Jupyter Interpreter Configuration', () => {
         when(installer.isInstalled(Product.jupyter, pythonInterpreter)).thenResolve(true);
         when(installer.isInstalled(Product.notebook, pythonInterpreter)).thenResolve(true);
         when(appShell.showErrorMessage(anything(), anything(), anything(), anything())).thenResolve(
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             DataScience.jupyterInstall() as any
         );
         when(command.exec(anything(), anything())).thenReject(new Error('Not found'));
@@ -117,7 +118,7 @@ suite('DataScience - Jupyter Interpreter Configuration', () => {
         when(installer.isInstalled(Product.jupyter, pythonInterpreter)).thenResolve(false);
         when(installer.isInstalled(Product.notebook, pythonInterpreter)).thenResolve(true);
         when(appShell.showErrorMessage(anything(), anything(), anything(), anything())).thenResolve(
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             DataScience.jupyterInstall() as any
         );
         when(installer.install(anything(), anything(), anything())).thenResolve(installerResponse);
@@ -135,7 +136,7 @@ suite('DataScience - Jupyter Interpreter Configuration', () => {
         when(installer.isInstalled(Product.jupyter, pythonInterpreter)).thenResolve(false);
         when(installer.isInstalled(Product.notebook, pythonInterpreter)).thenResolve(false);
         when(appShell.showErrorMessage(anything(), anything(), anything(), anything())).thenResolve(
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             DataScience.jupyterInstall() as any
         );
         when(installer.install(Product.jupyter, anything(), anything())).thenResolve(jupyterInstallerResponse);

@@ -3,10 +3,12 @@
 
 'use strict';
 
+import '../../common/extensions';
+
 import { inject, injectable } from 'inversify';
 import { Event, EventEmitter, Uri } from 'vscode';
+
 import { UseVSCodeNotebookEditorApi } from '../../common/constants';
-import '../../common/extensions';
 import { IDisposableRegistry } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import { OurNotebookProvider, VSCodeNotebookProvider } from '../constants';

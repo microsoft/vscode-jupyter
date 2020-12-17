@@ -12,7 +12,7 @@ This block of code merely launches the tests by using either the dev or release 
 and spawning the tests (mimic user starting tests from command line), this way we can run tests multiple times.
 */
 
-// tslint:disable:no-console no-require-imports no-var-requires
+/* eslint-disable no-console, @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 
 // Must always be on top to setup expected env.
 process.env.VSC_JUPYTER_PERF_TEST = '1';
@@ -22,6 +22,7 @@ import * as download from 'download';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as request from 'request';
+
 import { EXTENSION_ROOT_DIR, JVSC_EXTENSION_ID } from '../client/common/constants';
 import { unzip } from './common';
 import { initializeLogger } from './testLogger';
@@ -135,7 +136,7 @@ class TestRunner {
     }
 
     private async getDevVersion(): Promise<string> {
-        // tslint:disable-next-line:non-literal-require
+        // eslint-disable-next-line
         return require(path.join(EXTENSION_ROOT_DIR, 'package.json')).version;
     }
 

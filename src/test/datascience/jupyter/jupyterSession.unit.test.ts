@@ -25,7 +25,7 @@ import { KernelConnectionMetadata, LiveKernelModel } from '../../../client/datas
 import { IJupyterConnection, IJupyterKernelSpec } from '../../../client/datascience/types';
 import { MockOutputChannel } from '../../mockClasses';
 
-// tslint:disable: max-func-body-length no-any
+/* eslint-disable , @typescript-eslint/no-explicit-any */
 suite('DataScience - JupyterSession', () => {
     type ISession = Session.ISession & {
         /**
@@ -78,7 +78,7 @@ suite('DataScience - JupyterSession', () => {
         when(kernel.status).thenReturn('idle');
         when(connection.rootDirectory).thenReturn('');
         const channel = new MockOutputChannel('JUPYTER');
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (instance(session) as any).then = undefined;
         sessionManager = mock(SessionManager);
         contentsManager = mock(ContentsManager);
@@ -102,9 +102,9 @@ suite('DataScience - JupyterSession', () => {
 
     async function connect() {
         const nbFile = 'file path';
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         when(contentsManager.newUntitled(anything())).thenResolve({ path: nbFile } as any);
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         when(contentsManager.rename(anything(), anything())).thenResolve({ path: nbFile } as any);
         when(contentsManager.delete(anything())).thenResolve();
         when(sessionManager.startNew(anything())).thenResolve(instance(session));
@@ -219,7 +219,7 @@ suite('DataScience - JupyterSession', () => {
                     },
                     shutdown: () => Promise.resolve(),
                     isRemoteSession: false
-                    // tslint:disable-next-line: no-any
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 } as any,
                 id: 'liveKernel'
             };
@@ -243,7 +243,7 @@ suite('DataScience - JupyterSession', () => {
                     when(remoteSession.statusChanged).thenReturn(instance(signal));
                     verify(sessionManager.startNew(anything())).once();
                     when(sessionManager.connectTo(newActiveRemoteKernel.session)).thenReturn(
-                        // tslint:disable-next-line: no-any
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         newActiveRemoteKernel.session as any
                     );
 
@@ -295,7 +295,7 @@ suite('DataScience - JupyterSession', () => {
                 when(newSession.statusChanged).thenReturn(instance(newStatusChangedSignal));
                 when(newSession.kernelChanged).thenReturn(instance(newKernelChangedSignal));
                 when(newSession.iopubMessage).thenReturn(instance(newIoPubSignal));
-                // tslint:disable-next-line: no-any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 (instance(newSession) as any).then = undefined;
                 newSessionCreated = createDeferred();
                 when(session.isRemoteSession).thenReturn(false);
@@ -338,9 +338,9 @@ suite('DataScience - JupyterSession', () => {
                     const future = mock<
                         Kernel.IFuture<KernelMessage.IShellControlMessage, KernelMessage.IShellControlMessage>
                     >();
-                    // tslint:disable-next-line: no-any
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     when(future.done).thenReturn(Promise.resolve(undefined as any));
-                    // tslint:disable-next-line: no-any
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     when(kernel.requestExecute(anything(), anything(), anything())).thenReturn(instance(future) as any);
 
                     const result = jupyterSession.requestExecute({ code: '', allow_stdin: false, silent: false });

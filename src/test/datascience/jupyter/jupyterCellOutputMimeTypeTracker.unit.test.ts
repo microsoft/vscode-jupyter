@@ -5,17 +5,18 @@ import { nbformat } from '@jupyterlab/coreutils';
 import * as fakeTimers from '@sinonjs/fake-timers';
 import { expect } from 'chai';
 import { sha256 } from 'hash.js';
-// tslint:disable-next-line: match-default-export-name
+// eslint-disable-next-line
 import rewiremock from 'rewiremock';
 import { instance, mock, when } from 'ts-mockito';
 import { EventEmitter, Uri } from 'vscode';
-import { getNamesAndValues } from '../../utils/enum';
+
 import { Telemetry } from '../../../client/datascience/constants';
 import { NativeEditor } from '../../../client/datascience/interactive-ipynb/nativeEditor';
 import { CellOutputMimeTypeTracker } from '../../../client/datascience/jupyter/jupyterCellOutputMimeTypeTracker';
 import { NativeEditorProvider } from '../../../client/datascience/notebookStorage/nativeEditorProvider';
 import { NativeEditorNotebookModel } from '../../../client/datascience/notebookStorage/notebookModel';
 import { CellState, ICell, INotebookEditor } from '../../../client/datascience/types';
+import { getNamesAndValues } from '../../utils/enum';
 
 suite('DataScience - Cell Output Mimetype Tracker', () => {
     const oldValueOfVSC_JUPYTER_UNIT_TEST = process.env.VSC_JUPYTER_UNIT_TEST;

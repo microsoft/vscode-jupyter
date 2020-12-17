@@ -29,13 +29,13 @@ function getScriptsWithAValidScriptUriToBeRegistered(scripts: WidgetScriptSource
     return scripts
         .filter((source) => {
             if (source.scriptUri) {
-                // tslint:disable-next-line: no-console
+                // eslint-disable-next-line no-console
                 console.log(
                     `Source for IPyWidget ${source.moduleName} found in ${source.source} @ ${source.scriptUri}.`
                 );
                 return true;
             } else {
-                // tslint:disable-next-line: no-console
+                // eslint-disable-next-line no-console
                 console.error(`Source for IPyWidget ${source.moduleName} not found.`);
                 return false;
             }
@@ -44,7 +44,7 @@ function getScriptsWithAValidScriptUriToBeRegistered(scripts: WidgetScriptSource
 }
 
 function registerScriptsInRequireJs(scripts: NonPartial<WidgetScriptSource>[]) {
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const requirejsfunc = (window as any).requirejs as { config: Function };
     if (!requirejsfunc) {
         window.console.error('Requirejs not found');

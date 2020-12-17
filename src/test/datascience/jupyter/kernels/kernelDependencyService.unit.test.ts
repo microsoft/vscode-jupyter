@@ -5,6 +5,7 @@
 
 import { assert } from 'chai';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
+
 import { IApplicationShell } from '../../../../client/common/application/types';
 import { IInstaller, InstallerResponse, Product } from '../../../../client/common/types';
 import { Common } from '../../../../client/common/utils/localize';
@@ -12,9 +13,9 @@ import { KernelDependencyService } from '../../../../client/datascience/jupyter/
 import { KernelInterpreterDependencyResponse } from '../../../../client/datascience/types';
 import { createPythonInterpreter } from '../../../utils/interpreters';
 
-// tslint:disable: no-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
-// tslint:disable-next-line: max-func-body-length
+// eslint-disable-next-line
 suite('DataScience - Kernel Dependency Service', () => {
     let dependencyService: KernelDependencyService;
     let appShell: IApplicationShell;

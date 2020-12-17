@@ -4,7 +4,7 @@
 
 import * as React from 'react';
 
-// tslint:disable:no-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 interface IVariableExplorerRowProps {
     renderBaseRow(props: any): JSX.Element;
 }

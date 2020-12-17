@@ -2,12 +2,13 @@
 // Licensed under the MIT License.
 import { expect } from 'chai';
 import { workspace } from 'vscode';
+
 import { IAsyncDisposableRegistry, IConfigurationService } from '../../../client/common/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { getExtensionSettings } from '../../common';
 import { initialize } from '../../initialize';
 
-// tslint:disable-next-line:max-func-body-length
+// eslint-disable-next-line
 suite('Configuration Service', () => {
     let serviceContainer: IServiceContainer;
     suiteSetup(async () => {

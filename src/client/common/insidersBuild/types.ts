@@ -1,4 +1,5 @@
 import { Event } from 'vscode';
+
 import { IPersistentState } from '../types';
 
 export const IExtensionChannelRule = Symbol('IExtensionChannelRule');

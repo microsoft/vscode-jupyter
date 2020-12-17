@@ -5,12 +5,13 @@
 
 import * as fs from 'fs-extra';
 import * as path from 'path';
+
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { noop } from '../../core';
 import { IWebServer } from './webBrowserPanel';
 
-// tslint:disable: no-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 export type RequestFromUI = {
     type: 'fromUI';

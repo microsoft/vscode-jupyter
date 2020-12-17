@@ -5,17 +5,18 @@
 import { assert } from 'chai';
 import * as fs from 'fs-extra';
 import * as os from 'os';
-import { SystemPseudoRandomNumberGenerator } from '../../../client/datascience/interactive-ipynb/randomBytes';
 import { anything, instance, mock, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import { Uri } from 'vscode';
+
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import { FileSystem } from '../../../client/common/platform/fileSystem';
+import { PlatformService } from '../../../client/common/platform/platformService';
 import { IExtensionContext } from '../../../client/common/types';
 import { DigestStorage } from '../../../client/datascience/interactive-ipynb/digestStorage';
+import { SystemPseudoRandomNumberGenerator } from '../../../client/datascience/interactive-ipynb/randomBytes';
 import { TrustService } from '../../../client/datascience/interactive-ipynb/trustService';
 import { MockMemento } from '../../mocks/mementos';
-import { PlatformService } from '../../../client/common/platform/platformService';
 
 suite('DataScience - TrustService', () => {
     let trustService: TrustService;
@@ -30,7 +31,7 @@ suite('DataScience - TrustService', () => {
         const globalState = new MockMemento();
         context.setup((c) => c.globalState).returns(() => globalState);
         when(configService.getSettings()).thenCall(() => {
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             return { alwaysTrustNotebooks } as any;
         });
         when(fileSystem.appendLocalFile(anything(), anything())).thenCall((f, c) => fs.appendFile(f, c));

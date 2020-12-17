@@ -1,6 +1,7 @@
 import { ReactWrapper } from 'enzyme';
 import { noop } from 'lodash';
 import { Event, EventEmitter, Uri } from 'vscode';
+
 import {
     IWebviewPanel,
     IWebviewPanelMessageListener,
@@ -31,11 +32,11 @@ export type WaitForMessageOptions = {
 
     // Optional check for the payload of the message
     // will only return (or count) message if this returns true
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     withPayload?(payload: any): boolean;
 };
 
-// tslint:disable: no-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export interface IMountedWebView extends IWebviewPanel, IDisposable {
     readonly id: string;
     readonly wrapper: ReactWrapper<any, Readonly<{}>, React.Component>;
@@ -64,19 +65,19 @@ export class MountedWebView implements IMountedWebView, IDisposable {
         // Setup the acquireVsCodeApi. The react control will cache this value when it's mounted.
         const globalAcquireVsCodeApi = (): IVsCodeApi => {
             return {
-                // tslint:disable-next-line:no-any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 postMessage: (msg: any) => {
                     this.postMessageToWebPanel(msg);
                 },
-                // tslint:disable-next-line:no-any no-empty
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any, no-empty,@typescript-eslint/no-empty-function
                 setState: (_msg: any) => {},
-                // tslint:disable-next-line:no-any no-empty
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any, no-empty,@typescript-eslint/no-empty-function
                 getState: () => {
                     return {};
                 }
             };
         };
-        // tslint:disable-next-line:no-string-literal
+        // eslint-disable-next-line @typescript-eslint/dot-notation
         (global as any)['acquireVsCodeApi'] = globalAcquireVsCodeApi;
 
         // Remap event handlers to point to the container.
@@ -106,7 +107,7 @@ export class MountedWebView implements IMountedWebView, IDisposable {
 
         // During testing the MainPanel sends the init message before our interactive window is created.
         // Pretend like it's happening now (well after this function returns)
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         setTimeout(() => {
             this.webPanelListener!.onMessage(InteractiveWindowMessages.Started, {});
         }, 0);
@@ -197,7 +198,7 @@ export class MountedWebView implements IMountedWebView, IDisposable {
     public postMessage(m: WebviewMessage): void {
         // Actually send to the UI
         if (this.reactMessageCallback) {
-            // tslint:disable-next-line: no-require-imports
+            // eslint-disable-next-line @typescript-eslint/no-require-imports
             const reactHelpers = require('./reactHelpers') as typeof import('./reactHelpers');
             const message = reactHelpers.createMessageEvent(m);
             this.reactMessageCallback(message);

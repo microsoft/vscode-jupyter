@@ -3,10 +3,11 @@
 
 'use strict';
 
-// tslint:disable:no-any max-func-body-length no-invalid-this max-classes-per-file
+/* eslint-disable @typescript-eslint/no-explicit-any, , no-invalid-this, max-classes-per-file */
 
 import { expect } from 'chai';
 import { ChildProcess, spawn } from 'child_process';
+
 import { ProcessService } from '../../../client/common/process/proc';
 import { createDeferred, Deferred } from '../../../client/common/utils/async';
 import { PYTHON_PATH } from '../../common';
@@ -17,7 +18,7 @@ interface IProcData {
 }
 
 suite('Process - Process Service', function () {
-    // tslint:disable-next-line:no-invalid-this
+    // eslint-disable-next-line no-invalid-this
     this.timeout(5000);
     const procsToKill: IProcData[] = [];
     teardown(() => {

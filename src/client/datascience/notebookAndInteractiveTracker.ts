@@ -5,6 +5,7 @@
 
 import { inject, injectable, named } from 'inversify';
 import { Memento, Uri } from 'vscode';
+
 import { PYTHON_LANGUAGE } from '../common/constants';
 import { IDisposableRegistry, IMemento, WORKSPACE_MEMENTO } from '../common/types';
 import { getKernelConnectionLanguage } from './jupyter/kernels/helpers';

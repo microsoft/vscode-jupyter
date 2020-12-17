@@ -3,11 +3,12 @@
 
 'use strict';
 
-// tslint:disable:no-require-imports no-var-requires
+/* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 import { assert, expect } from 'chai';
 import * as path from 'path';
 import * as sinon from 'sinon';
 import { Uri } from 'vscode';
+
 import { NotebookCell } from '../../../../typings/vscode-proposed';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { IDisposable } from '../../../client/common/types';
@@ -29,10 +30,10 @@ import {
     waitForExecutionCompletedSuccessfully,
     waitForExecutionCompletedWithErrors
 } from './helper';
-// tslint:disable-next-line:no-require-imports no-var-requires
+// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
-// tslint:disable: no-any no-invalid-this
+/* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - VSCode Notebook - (Saving) (slow)', function () {
     this.timeout(60_000);
     let api: IExtensionTestApi;
@@ -134,7 +135,7 @@ suite('DataScience - VSCode Notebook - (Saving) (slow)', function () {
             assert.isEmpty(cell4.metadata.statusMessage || '', 'Cell 4 status should be empty'); // Not executed.
 
             // Persisting these require us to save custom metadata in ipynb. Not sure users would like this. We'll have more changes in ipynb files.
-            // tslint:disable-next-line: no-suspicious-comment
+            // eslint-disable-next-line
             // TODO: Discuss whether we need to persist these.
             // assert.isOk(cell1.metadata.runStartTime, 'Start time should be > 0');
             // assert.isOk(cell1.metadata.lastRunDuration, 'Duration should be > 0');

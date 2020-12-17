@@ -4,12 +4,13 @@
 
 import type { Kernel } from '@jupyterlab/services';
 import * as fastDeepEqual from 'fast-deep-equal';
+
 import { IJupyterKernelSpec } from '../../types';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
-// tslint:disable-next-line: no-var-requires no-require-imports
+// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const NamedRegexp = require('named-js-regexp') as typeof import('named-js-regexp');
 import { nbformat } from '@jupyterlab/coreutils';
-// tslint:disable-next-line: no-require-imports
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
 import { PYTHON_LANGUAGE } from '../../../common/constants';
 import { ReadWrite } from '../../../common/types';
@@ -143,7 +144,7 @@ export function getLanguageInNotebookMetadata(metadata?: nbformat.INotebookMetad
         return;
     }
     // If kernel spec is defined & we have a language in that, then use that information.
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const kernelSpec: IJupyterKernelSpec | undefined = metadata.kernelspec as any;
     // When a kernel spec is stored in ipynb, the `language` of the kernel spec is also saved.
     // Unfortunately there's no strong typing for this.
@@ -242,7 +243,7 @@ export function detectDefaultKernelName(name: string) {
 }
 
 export function cleanEnvironment<T>(spec: T): T {
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const copy = cloneDeep(spec) as { env?: any };
 
     if (copy.env) {

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import * as uuid from 'uuid/v4';
+
 import { NativeKeyboardCommandTelemetry, NativeMouseCommandTelemetry } from '../../../client/datascience/constants';
 import {
     IInteractiveWindowMapping,
@@ -36,7 +37,7 @@ function createIncomingActionWithPayload<
     M extends IInteractiveWindowMapping & CommonActionTypeMapping,
     K extends keyof M
 >(type: K, data: M[K]): CommonAction<M[K]> {
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return { type, payload: { data, messageDirection: 'incoming' } as any } as any;
 }
 // This function isn't made common and not exported, to ensure it isn't used elsewhere.

@@ -7,6 +7,7 @@ import { assert } from 'chai';
 import * as path from 'path';
 import * as sinon from 'sinon';
 import { commands, Uri } from 'vscode';
+
 import { ICommandManager, IVSCodeNotebook } from '../../../client/common/application/types';
 import { IDisposable } from '../../../client/common/types';
 import { JupyterNotebookView } from '../../../client/datascience/notebook/constants';
@@ -24,7 +25,7 @@ import {
 } from './helper';
 
 suite('DataScience - VSCode Notebook (Editor Provider)', function () {
-    // tslint:disable: no-invalid-this no-any
+    /* eslint-disable no-invalid-this, @typescript-eslint/no-explicit-any */
     this.timeout(5_000);
 
     let api: IExtensionTestApi;

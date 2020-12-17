@@ -4,12 +4,13 @@
 'use strict';
 
 import { Event } from 'vscode';
+
 import { IDisposable } from '../../common/types';
 import { IPyWidgetMessages } from '../interactive-common/interactiveWindowTypes';
 
 export interface IPyWidgetMessage {
     message: IPyWidgetMessages;
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     payload: any;
 }
 
@@ -17,9 +18,9 @@ export interface IPyWidgetMessage {
  * Used to send/receive messages related to IPyWidgets
  */
 export interface IIPyWidgetMessageDispatcher extends IDisposable {
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     postMessage: Event<IPyWidgetMessage>;
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     receiveMessage(message: IPyWidgetMessage): void;
     initialize(): Promise<void>;
 }

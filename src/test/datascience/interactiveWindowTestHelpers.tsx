@@ -61,7 +61,7 @@ export async function runCodeLens(
     await documentManager.showTextDocument(uri);
     const commandManager = ioc.get<ICommandManager>(ICommandManager);
     if (codeLens && codeLens.command) {
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await commandManager.executeCommand(codeLens.command.command as any, ...codeLens.command.arguments);
     }
 }
@@ -74,7 +74,7 @@ export function closeInteractiveWindow(ioc: DataScienceIocContainer, window: IIn
 
 export function runTest(
     name: string,
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     testFunc: (context: Mocha.Context) => Promise<void>,
     getIOC: () => DataScienceIocContainer
 ) {
@@ -83,10 +83,10 @@ export function runTest(
         const jupyterExecution = ioc.get<IJupyterExecution>(IJupyterExecution);
         if (await jupyterExecution.isNotebookSupported()) {
             addMockData(ioc, 'a=1\na', 1);
-            // tslint:disable-next-line: no-invalid-this
+            // eslint-disable-next-line no-invalid-this
             await testFunc(this);
         } else {
-            // tslint:disable-next-line:no-invalid-this
+            // eslint-disable-next-line no-invalid-this
             this.skip();
         }
     });
@@ -97,7 +97,7 @@ export async function addCode(
     code: string,
     expectError: boolean = false,
     uri: Uri = Uri.file('foo.py')
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
     const { window } = await getOrCreateInteractiveWindow(ioc);
     return getInteractiveCellResults(ioc, async () => {

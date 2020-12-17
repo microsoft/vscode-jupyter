@@ -1,4 +1,5 @@
 import { Disposable } from 'vscode';
+
 import { IInteractiveBase, IStatusProvider } from '../../client/datascience/types';
 import { noop } from '../core';
 export class MockStatusProvider implements IStatusProvider {

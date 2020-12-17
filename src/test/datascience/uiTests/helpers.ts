@@ -5,6 +5,7 @@
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as playwright from 'playwright-chromium';
+
 import { IAsyncDisposable, IDisposable } from '../../../client/common/types';
 import { createDeferred } from '../../../client/common/utils/async';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
@@ -13,7 +14,7 @@ import { CssMessages } from '../../../client/datascience/messages';
 import { CommonActionType } from '../../../datascience-ui/interactive-common/redux/reducers/types';
 import { IWebServer } from './webBrowserPanel';
 
-// tslint:disable:max-func-body-length trailing-comma no-any no-multiline-string
+/* eslint-disable , comma-dangle, @typescript-eslint/no-explicit-any, no-multi-str */
 export type WaitForMessageOptions = {
     /**
      * Timeout for waiting for message.
@@ -156,7 +157,7 @@ export class BaseWebUI implements IAsyncDisposable {
             await fs.ensureDir(path.basename(filePath));
         }
         await this.page?.screenshot({ path: filePath });
-        // tslint:disable-next-line: no-console
+        // eslint-disable-next-line no-console
         console.info(`Screenshot captured in ${filePath}`);
     }
 }

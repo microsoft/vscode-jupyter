@@ -4,6 +4,7 @@
 
 import { inject, injectable } from 'inversify';
 import { CancellationToken, WebviewView, WebviewViewResolveContext } from 'vscode';
+
 import { IWebviewViewProvider, IWorkspaceService } from '../../common/application/types';
 import { IConfigurationService } from '../../common/types';
 import { ICodeCssGenerator, IThemeFinder } from '../types';

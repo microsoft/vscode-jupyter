@@ -3,13 +3,14 @@
 
 'use strict';
 
-// tslint:disable:no-invalid-this no-console
+/* eslint-disable no-invalid-this, no-console */
 
 import { expect } from 'chai';
 import * as fs from 'fs-extra';
 import { EOL } from 'os';
 import * as path from 'path';
 import { commands, extensions } from 'vscode';
+
 import { JVSC_EXTENSION_ID } from '../../client/common/constants';
 import { StopWatch } from '../../client/common/utils/stopWatch';
 

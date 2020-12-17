@@ -6,10 +6,10 @@
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
 import { CancellationToken } from 'vscode';
+
 import { Cancellation } from '../../../common/cancellation';
 import { traceError, traceInfo, traceWarning } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
-
 import {
     IPythonDaemonExecutionService,
     IPythonExecutionFactory,

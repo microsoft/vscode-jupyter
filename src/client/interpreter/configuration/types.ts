@@ -1,4 +1,5 @@
 import { QuickPickItem } from 'vscode';
+
 import { Resource } from '../../common/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 

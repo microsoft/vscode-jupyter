@@ -5,6 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import { Disposable, Event, EventEmitter, Uri } from 'vscode';
+
 import { traceError } from '../../common/logger';
 import { IServiceContainer } from '../../ioc/types';
 import { INotebookIdentity, InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
@@ -16,25 +17,25 @@ import { CommonMessageCoordinator } from './commonMessageCoordinator';
  */
 @injectable()
 export class WebviewIPyWidgetCoordinator implements IInteractiveWindowListener {
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public get postMessage(): Event<{ message: string; payload: any }> {
         return this.postEmitter.event;
     }
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public get postInternalMessage(): Event<{ message: string; payload: any }> {
         return this.postInternalMessageEmitter.event;
     }
     private notebookIdentity: Uri | undefined;
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private postEmitter: EventEmitter<{ message: string; payload: any }> = new EventEmitter<{
         message: string;
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         payload: any;
     }>();
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private postInternalMessageEmitter: EventEmitter<{ message: string; payload: any }> = new EventEmitter<{
         message: string;
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         payload: any;
     }>();
     private messageCoordinator: CommonMessageCoordinator | undefined;
@@ -47,7 +48,7 @@ export class WebviewIPyWidgetCoordinator implements IInteractiveWindowListener {
         this.messageCoordinator?.dispose(); // NOSONAR
     }
 
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public onMessage(message: string, payload?: any): void {
         if (message === InteractiveWindowMessages.NotebookIdentity) {
             this.saveIdentity(payload).catch((ex) => traceError('Failed to initialize ipywidgetHandler', ex));

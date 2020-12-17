@@ -3,7 +3,7 @@
 
 'use strict';
 
-// tslint:disable: no-var-requires no-require-imports max-func-body-length no-any match-default-export-name
+/* eslint-disable @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports, , @typescript-eslint/no-explicit-any,  */
 import * as assert from 'assert';
 import { expect } from 'chai';
 import * as fsExtra from 'fs-extra';
@@ -14,6 +14,7 @@ import * as sinon from 'sinon';
 import { Readable } from 'stream';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { Progress } from 'vscode';
+
 import { ApplicationShell } from '../../../client/common/application/applicationShell';
 import { IApplicationShell } from '../../../client/common/application/types';
 import { FileDownloader } from '../../../client/common/net/fileDownloader';

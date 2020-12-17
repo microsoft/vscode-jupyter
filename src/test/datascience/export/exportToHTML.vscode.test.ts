@@ -1,10 +1,11 @@
 // Licensed under the MIT License.
 // Copyright (c) Microsoft Corporation. All rights reserved.
 
-// tslint:disable: no-var-requires no-require-imports no-invalid-this no-any
+/* eslint-disable @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports, no-invalid-this, @typescript-eslint/no-explicit-any */
 import { assert } from 'chai';
 import * as path from 'path';
 import { CancellationTokenSource, Uri } from 'vscode';
+
 import { IFileSystem } from '../../../client/common/platform/types';
 import { ExportInterpreterFinder } from '../../../client/datascience/export/exportInterpreterFinder';
 import { ExportFormat, IExport } from '../../../client/datascience/export/types';
@@ -21,12 +22,12 @@ suite('DataScience - Export HTML', () => {
         // run any of our variable execution code
         const isRollingBuild = process.env ? process.env.VSC_FORCE_REAL_JUPYTER !== undefined : false;
         if (!isRollingBuild) {
-            // tslint:disable-next-line:no-console
+            // eslint-disable-next-line no-console
             console.log('Skipping Export to HTML tests. Requires python environment');
-            // tslint:disable-next-line:no-invalid-this
+            // eslint-disable-next-line no-invalid-this
             this.skip();
         }
-        // tslint:disable-next-line:no-invalid-this
+        // eslint-disable-next-line no-invalid-this
         this.skip();
     });
     teardown(closeActiveWindows);

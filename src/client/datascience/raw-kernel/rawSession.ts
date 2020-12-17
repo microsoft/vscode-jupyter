@@ -1,9 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+import '../../common/extensions';
+
 import type { Kernel, KernelMessage, ServerConnection, Session } from '@jupyterlab/services';
 import type { ISignal, Signal } from '@phosphor/signaling';
 import * as uuid from 'uuid/v4';
-import '../../common/extensions';
+
 import { traceError } from '../../common/logger';
 import { IDisposable } from '../../common/types';
 import { IKernelProcess } from '../kernel-launcher/types';
@@ -32,7 +34,7 @@ export class RawSession implements ISessionWithSocket {
 
     // RawSession owns the lifetime of the kernel process and will dispose it
     constructor(public kernelProcess: IKernelProcess) {
-        // tslint:disable-next-line: no-require-imports
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
         const signaling = require('@phosphor/signaling') as typeof import('@phosphor/signaling');
         this._statusChanged = new signaling.Signal<this, Kernel.Status>(this);
         this._kernelChanged = new signaling.Signal<this, Session.IKernelChangedArgs>(this);

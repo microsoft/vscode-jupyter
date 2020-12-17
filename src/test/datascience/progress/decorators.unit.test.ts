@@ -4,6 +4,7 @@
 'use strict';
 
 import { anything, deepEqual, instance, mock, verify } from 'ts-mockito';
+
 import { createDeferred } from '../../../client/common/utils/async';
 import {
     disposeRegisteredReporters,

@@ -3,8 +3,8 @@
 'use strict';
 import type { JSONObject } from '@phosphor/coreutils';
 import { inject, injectable, named } from 'inversify';
-
 import { Event, EventEmitter } from 'vscode';
+
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
 import { IDisposableRegistry } from '../../common/types';
 import { captureTelemetry } from '../../telemetry';

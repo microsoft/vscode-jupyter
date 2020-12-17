@@ -3,6 +3,7 @@
 
 import { nbformat } from '@jupyterlab/coreutils/lib/nbformat';
 import { Memento, Uri } from 'vscode';
+
 import { ICryptoUtils } from '../../common/types';
 import { ICell, INotebookModel } from '../types';
 

@@ -1,9 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+import '../../common/extensions';
+
 import type { nbformat } from '@jupyterlab/coreutils';
 import * as path from 'path';
 import * as uuid from 'uuid';
 import { CancellationToken, Event, EventEmitter, Memento, Uri, ViewColumn } from 'vscode';
+
 import { IPythonExtensionChecker } from '../../api/types';
 import {
     IApplicationShell,
@@ -14,10 +17,8 @@ import {
     IWorkspaceService
 } from '../../common/application/types';
 import { ContextKey } from '../../common/contextKey';
-import '../../common/extensions';
 import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
-
 import {
     IConfigurationService,
     IDisposableRegistry,
@@ -243,7 +244,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         this.postMessage(InteractiveWindowMessages.GetAllCells).ignoreErrors();
     }
 
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public onMessage(message: string, payload: any) {
         super.onMessage(message, payload);
 
@@ -361,7 +362,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     }
 
     @captureTelemetry(Telemetry.SubmitCellThroughInput, undefined, false)
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     protected submitNewCell(info: ISubmitNewCell) {
         // If there's any payload, it has the code and the id
         if (info && info.code && info.id) {
@@ -499,7 +500,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     }
 
     @captureTelemetry(Telemetry.ExportNotebookInteractive, undefined, false)
-    // tslint:disable-next-line: no-any no-empty
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, no-empty,@typescript-eslint/no-empty-function
     private async export(cells: ICell[]) {
         // Export requires the python extension
         if (!this.extensionChecker.isPythonExtensionInstalled) {
@@ -567,7 +568,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         }
     }
 
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private handleReturnAllCells(cells: ICell[]) {
         // See what we're waiting for.
         if (this.waitingForExportCells) {

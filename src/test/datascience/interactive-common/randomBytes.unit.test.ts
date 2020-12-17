@@ -1,7 +1,8 @@
-import { ISystemPseudoRandomNumberGenerator } from '../../../client/datascience/types';
 import { assert } from 'chai';
-import { SystemPseudoRandomNumberGenerator } from '../../../client/datascience/interactive-ipynb/randomBytes';
+
 import { PlatformService } from '../../../client/common/platform/platformService';
+import { SystemPseudoRandomNumberGenerator } from '../../../client/datascience/interactive-ipynb/randomBytes';
+import { ISystemPseudoRandomNumberGenerator } from '../../../client/datascience/types';
 
 suite('DataScience - RandomBytes', () => {
     let prng: ISystemPseudoRandomNumberGenerator;

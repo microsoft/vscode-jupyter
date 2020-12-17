@@ -6,6 +6,7 @@ import type { nbformat } from '@jupyterlab/coreutils';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { CancellationToken } from 'vscode';
+
 import { IPythonExtensionChecker } from '../../api/types';
 import { IWorkspaceService } from '../../common/application/types';
 import { traceDecorators, traceError, traceInfo, traceWarning } from '../../common/logger';
@@ -267,7 +268,7 @@ export class KernelFinder implements IKernelFinder {
     ): Promise<{ interpreter: PythonEnvironment; kernelSearchPath: string }[]> {
         if (this.extensionChecker.isPythonExtensionInstalled) {
             const interpreters = await this.interpreterService.getInterpreters(resource);
-            // tslint:disable-next-line: no-console
+            // eslint-disable-next-line no-console
             console.debug(`Search all interpreters ${interpreters.map((item) => item.path).join(', ')}`);
             const interpreterPaths = new Set<string>();
             return interpreters

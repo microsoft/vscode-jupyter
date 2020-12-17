@@ -5,6 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
+
 import { ICommandManager } from '../../common/application/types';
 import { IDisposable } from '../../common/types';
 import { Commands } from '../constants';

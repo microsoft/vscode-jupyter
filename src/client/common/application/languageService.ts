@@ -6,6 +6,7 @@
 import { injectable } from 'inversify';
 import { CompletionItemProvider, DocumentSelector, languages } from 'vscode';
 import { Disposable } from 'vscode-jsonrpc';
+
 import { ILanguageService } from './types';
 
 @injectable()

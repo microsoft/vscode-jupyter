@@ -2,10 +2,11 @@
 // Licensed under the MIT License.
 'use strict';
 import { assert } from 'chai';
+
 import { generateCells } from '../../client/datascience/cellFactory';
 import { removeLinesFromFrontAndBack, stripComments } from '../../datascience-ui/common';
 
-// tslint:disable: max-func-body-length
+/* eslint-disable  */
 suite('DataScience CellFactory', () => {
     test('parsing cells', () => {
         let cells = generateCells(undefined, '#%%\na=1\na', 'foo', 0, true, '1');
@@ -32,7 +33,7 @@ suite('DataScience CellFactory', () => {
         assert.equal(cells[0].data.cell_type, 'markdown', 'Markdown cell not generated');
         assert.equal(cells[0].data.source.length, 2, 'Lines for cell not emitted');
 
-        // tslint:disable-next-line: no-multiline-string
+        // eslint-disable-next-line no-multi-str
         const multilineCode = `#%%
 myvar = """ # Lorem Ipsum
 Lorem ipsum dolor sit amet, consectetur adipiscing elit.
@@ -43,7 +44,7 @@ Sed mattis dui diam, et blandit augue mattis vestibulum.
 Suspendisse ornare interdum velit. Suspendisse potenti.
 Morbi molestie lacinia sapien nec porttitor. Nam at vestibulum nisi.
 """`;
-        // tslint:disable-next-line: no-multiline-string
+        // eslint-disable-next-line no-multi-str
         const multilineTwo = `#%%
 """ # Lorem Ipsum
 Lorem ipsum dolor sit amet, consectetur adipiscing elit.
@@ -63,9 +64,9 @@ Morbi molestie lacinia sapien nec porttitor. Nam at vestibulum nisi.
         assert.equal(cells.length, 1, 'code cell multline failed');
         assert.equal(cells[0].data.cell_type, 'code', 'Code cell not generated');
         assert.equal(cells[0].data.source.length, 10, 'Lines for cell not emitted');
-        // tslint:disable-next-line: no-multiline-string
+        // eslint-disable-next-line no-multi-str
         assert.equal(cells[0].data.source[9], `""" print('bob')`, 'Lines for cell not emitted');
-        // tslint:disable-next-line: no-multiline-string
+        // eslint-disable-next-line no-multi-str
         const multilineMarkdown = `#%% [markdown]
 # ## Block of Interest
 #
@@ -93,7 +94,7 @@ Morbi molestie lacinia sapien nec porttitor. Nam at vestibulum nisi.
         assert.equal(cells[0].data.source.length, 20, 'Lines for cell not emitted');
         assert.equal(cells[0].data.source[17], '          - Item 1-a-3-c\n', 'Lines for markdown not emitted');
 
-        // tslint:disable-next-line: no-multiline-string
+        // eslint-disable-next-line no-multi-str
         const multilineQuoteWithOtherDelimiter = `#%% [markdown]
 '''
 ### Take a look
@@ -107,7 +108,7 @@ Morbi molestie lacinia sapien nec porttitor. Nam at vestibulum nisi.
         assert.equal(cells[0].data.source.length, 3, 'Lines for cell not emitted');
         assert.equal(cells[0].data.source[2], '""" Not a comment delimiter', 'Lines for markdown not emitted');
 
-        // tslint:disable-next-line: no-multiline-string
+        // eslint-disable-next-line no-multi-str
         const multilineQuoteInFunc = `#%%
 import requests
 def download(url, filename):
@@ -127,7 +128,7 @@ def download(url, filename):
             'Lines for cell not emitted'
         );
 
-        // tslint:disable-next-line: no-multiline-string
+        // eslint-disable-next-line no-multi-str
         const multilineMarkdownWithCell = `#%% [markdown]
 # # Define a simple class
 class Pizza(object):

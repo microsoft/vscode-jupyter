@@ -8,6 +8,7 @@
 import * as util from 'util';
 import * as winston from 'winston';
 import * as Transport from 'winston-transport';
+
 import { getFormatter } from './formatters';
 import { LogLevel, resolveLevelName } from './levels';
 import { getConsoleTransport, getFileTransport, isConsoleTransport } from './transports';
@@ -39,7 +40,7 @@ interface IConfigurableLogger {
     add(transport: Transport): void;
 }
 
-// tslint:disable-next-line: no-suspicious-comment
+// eslint-disable-next-line
 /**
  * TODO: We should actually have this method in `./_global.ts` as this is exported globally.
  * But for some reason, importing '../client/logging/_global' fails when launching the tests.

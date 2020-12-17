@@ -1,11 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import '../../common/extensions';
+
 import * as uuid from 'uuid/v4';
 import { Event, EventEmitter, Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
+
 import { ILiveShareApi } from '../../common/application/types';
-import '../../common/extensions';
 import { traceInfo } from '../../common/logger';
 import { IAsyncDisposableRegistry, Resource } from '../../common/types';
 import * as localize from '../../common/utils/localize';

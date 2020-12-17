@@ -7,6 +7,7 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { parse } from 'semver';
 import * as vscode from 'vscode';
+
 import { IPlatformService } from '../platform/types';
 import { IExtensionContext, IPathUtils } from '../types';
 import { OSType } from '../utils/platform';
@@ -67,7 +68,7 @@ export class ApplicationEnvironment implements IApplicationEnvironment {
         return vscode.env.uiKind;
     }
     public get extensionName(): string {
-        // tslint:disable-next-line:non-literal-require
+        // eslint-disable-next-line
         return this.packageJson.displayName;
     }
     /**
@@ -82,9 +83,9 @@ export class ApplicationEnvironment implements IApplicationEnvironment {
     public get shell(): string {
         return vscode.env.shell;
     }
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public get packageJson(): any {
-        // tslint:disable-next-line:non-literal-require no-require-imports
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
         return require('../../../../package.json');
     }
     public get channel(): Channel {

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import * as path from 'path';
+
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from './constants';
 
 /**

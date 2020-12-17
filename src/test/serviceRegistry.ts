@@ -5,6 +5,7 @@ import * as fsextra from 'fs-extra';
 import { Container } from 'inversify';
 import * as path from 'path';
 import { Disposable, Memento, OutputChannel, Uri } from 'vscode';
+
 import { STANDARD_OUTPUT_CHANNEL } from '../client/common/constants';
 import { convertStat } from '../client/common/platform/fileSystemUtils';
 import { FileStat, FileType } from '../client/common/platform/types';
@@ -149,7 +150,7 @@ export class IocContainer {
             if (!disposable) {
                 continue;
             }
-            // tslint:disable-next-line:no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const promise = disposable.dispose() as Promise<any>;
             if (promise) {
                 await promise;

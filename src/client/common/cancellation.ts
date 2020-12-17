@@ -3,6 +3,7 @@
 'use strict';
 
 import { CancellationToken, CancellationTokenSource } from 'vscode';
+
 import { createDeferred } from './utils/async';
 import * as localize from './utils/localize';
 

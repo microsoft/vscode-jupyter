@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import * as vscode from 'vscode';
+
 import * as localize from '../common/utils/localize';
 import { IJupyterServerUri, IJupyterUriProvider, JupyterServerUriHandle } from './types';
 
@@ -30,9 +31,9 @@ export class JupyterUriProviderWrapper implements IJupyterUriProvider {
         item: vscode.QuickPickItem,
         back: boolean
     ): Promise<JupyterServerUriHandle | 'back' | undefined> {
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         if ((item as any).original) {
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             return this.provider.handleQuickPick((item as any).original, back);
         }
         return this.provider.handleQuickPick(item, back);

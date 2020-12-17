@@ -4,11 +4,12 @@
 
 import { inject, injectable } from 'inversify';
 import { Event, EventEmitter, Uri } from 'vscode';
-import { getInterpreterInfo } from '.';
+
 import { IPythonExtensionChecker } from '../../client/api/types';
 import { Resource } from '../../client/common/types';
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { PythonEnvironment } from '../../client/pythonEnvironments/info';
+import { getInterpreterInfo } from '.';
 
 let interpretersCache: Promise<PythonEnvironment[]> | undefined;
 @injectable()

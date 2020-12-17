@@ -4,6 +4,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
+
 import * as localize from '../../common/utils/localize';
 import {
     ConnectNotebookProviderOptions,

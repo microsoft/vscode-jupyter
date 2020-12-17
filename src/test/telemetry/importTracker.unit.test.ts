@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-//tslint:disable:max-func-body-length match-default-export-name no-any no-multiline-string no-trailing-whitespace
+/* eslint-disable , , @typescript-eslint/no-explicit-any, no-multi-str, no-trailing-spaces */
 import { expect } from 'chai';
 import rewiremock from 'rewiremock';
 import * as TypeMoq from 'typemoq';
@@ -17,7 +17,7 @@ import { createDocument } from '../datascience/editor-integration/helpers';
 suite('Import Tracker', () => {
     const oldValueOfVSC_JUPYTER_UNIT_TEST = process.env.VSC_JUPYTER_UNIT_TEST;
     const oldValueOfVSC_JUPYTER_CI_TEST = process.env.VSC_JUPYTER_CI_TEST;
-    // tslint:disable-next-line:no-require-imports
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const hashJs = require('hash.js');
     let importTracker: ImportTracker;
     let documentManager: TypeMoq.IMock<IDocumentManager>;

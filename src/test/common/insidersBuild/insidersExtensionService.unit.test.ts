@@ -3,7 +3,7 @@
 
 'use strict';
 
-// tslint:disable:no-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import * as assert from 'assert';
 import { expect } from 'chai';
@@ -11,6 +11,7 @@ import * as sinon from 'sinon';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import { EventEmitter } from 'vscode';
+
 import { ApplicationEnvironment } from '../../../client/common/application/applicationEnvironment';
 import { CommandManager } from '../../../client/common/application/commandManager';
 import { Channel, IApplicationEnvironment, ICommandManager } from '../../../client/common/application/types';
@@ -109,7 +110,7 @@ suite('Insiders Extension', () => {
         });
     });
 
-    // tslint:disable-next-line: max-func-body-length
+    // eslint-disable-next-line
     suite('Insiders Extension Service - Activation', () => {
         let appEnvironment: IApplicationEnvironment;
         let serviceContainer: IServiceContainer;
@@ -226,7 +227,7 @@ suite('Insiders Extension', () => {
         });
     });
 
-    // tslint:disable-next-line: max-func-body-length
+    // eslint-disable-next-line
     suite('Insiders Extension Service - Function handleEdgeCases()', () => {
         let appEnvironment: TypeMoq.IMock<IApplicationEnvironment>;
         let serviceContainer: TypeMoq.IMock<IServiceContainer>;
@@ -480,7 +481,7 @@ suite('Insiders Extension', () => {
         });
     });
 
-    // tslint:disable-next-line: max-func-body-length
+    // eslint-disable-next-line
     suite('Insiders Extension Service - Function registerCommandsAndHandlers()', () => {
         let appEnvironment: IApplicationEnvironment;
         let serviceContainer: IServiceContainer;

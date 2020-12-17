@@ -7,6 +7,7 @@ import type { KernelMessage } from '@jupyterlab/services';
 import { injectable } from 'inversify';
 import stripAnsi from 'strip-ansi';
 import { Event, EventEmitter, Uri } from 'vscode';
+
 import {
     ILoadIPyWidgetClassFailureAction,
     LoadIPyWidgetClassLoadAction,
@@ -40,19 +41,19 @@ import { IIPyWidgetMessageDispatcher } from './types';
 @injectable()
 //
 export class CommonMessageCoordinator {
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public get postMessage(): Event<{ message: string; payload: any }> {
         return this.postEmitter.event;
     }
     private ipyWidgetMessageDispatcher?: IIPyWidgetMessageDispatcher;
     private ipyWidgetScriptSource?: IPyWidgetScriptSource;
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private postEmitter: EventEmitter<{ message: string; payload: any }> = new EventEmitter<{
         message: string;
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         payload: any;
     }>();
-    // tslint:disable-next-line: no-require-imports
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     private hashFn = require('hash.js').sha256;
     private disposables: IDisposableRegistry;
     private jupyterOutput: IOutputChannel;
@@ -71,7 +72,7 @@ export class CommonMessageCoordinator {
         this.ipyWidgetScriptSource?.dispose(); // NOSONAR
     }
 
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public onMessage(message: string, payload?: any): void {
         if (message === InteractiveWindowMessages.IPyWidgetLoadSuccess) {
             this.sendLoadSucceededTelemetry(payload);
@@ -87,7 +88,7 @@ export class CommonMessageCoordinator {
 
         // Pass onto our two objects that are listening to messages
 
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         this.getIPyWidgetMessageDispatcher()?.receiveMessage({ message: message as any, payload }); // NOSONAR
         this.getIPyWidgetScriptSource()?.onMessage(message, payload);
     }

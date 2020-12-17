@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable } from 'inversify';
+
 import { traceError, traceInfo } from '../../common/logger';
 import { IConfigurationService } from '../../common/types';
 import { sendTelemetryEvent } from '../../telemetry';

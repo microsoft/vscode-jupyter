@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { assert } from 'chai';
+
 import { formatStreamText } from '../../datascience-ui/common';
 
 suite('DataScience Common Tests', () => {

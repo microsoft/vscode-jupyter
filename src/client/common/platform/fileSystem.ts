@@ -4,6 +4,7 @@ import { injectable } from 'inversify';
 import * as tmp from 'tmp';
 import { promisify } from 'util';
 import * as vscode from 'vscode';
+
 import { traceError } from '../logger';
 import { createDirNotEmptyError, isFileNotFoundError } from './errors';
 import { convertFileType, convertStat, getHashString } from './fileSystemUtils';
@@ -123,7 +124,7 @@ export class FileSystem implements IFileSystem {
     }
 
     public async searchLocal(globPattern: string, cwd?: string, dot?: boolean): Promise<string[]> {
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         let options: any;
         if (cwd) {
             options = { ...options, cwd };
@@ -183,7 +184,7 @@ export class FileSystem implements IFileSystem {
     }
 
     private async lstat(filename: string): Promise<vscode.FileStat> {
-        // tslint:disable-next-line: no-suspicious-comment
+        // eslint-disable-next-line
         // TODO https://github.com/microsoft/vscode/issues/71204 (84514)):
         //   This functionality has been requested for the VS Code API.
         const stat = await fs.lstat(filename);

@@ -1,5 +1,6 @@
 import { inject, injectable, named } from 'inversify';
 import { Memento, Uri } from 'vscode';
+
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { UseCustomEditorApi } from '../../common/constants';
 import { IDisposableRegistry, IMemento, WORKSPACE_MEMENTO } from '../../common/types';

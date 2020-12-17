@@ -1,8 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import * as path from 'path';
 import '../../client/common/extensions';
+
+import * as path from 'path';
+
 import { traceError } from '../../client/common/logger';
 import { BufferDecoder } from '../../client/common/process/decoder';
 import { PythonEnvInfo } from '../../client/common/process/internal/scripts';

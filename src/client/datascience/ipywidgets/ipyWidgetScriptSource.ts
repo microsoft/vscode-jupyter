@@ -7,10 +7,10 @@ import { sha256 } from 'hash.js';
 import { IDisposable } from 'monaco-editor';
 import * as path from 'path';
 import { Event, EventEmitter, Uri } from 'vscode';
+
 import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
 import { traceError, traceInfo } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
-
 import {
     IConfigurationService,
     IDisposableRegistry,
@@ -28,15 +28,15 @@ import { InteractiveWindowMessages, IPyWidgetMessages } from '../interactive-com
 import { ILocalResourceUriConverter, INotebook, INotebookProvider } from '../types';
 import { IPyWidgetScriptSourceProvider } from './ipyWidgetScriptSourceProvider';
 import { WidgetScriptSource } from './types';
-// tslint:disable: no-var-requires no-require-imports
+/* eslint-disable @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports */
 const sanitize = require('sanitize-filename');
 
 export class IPyWidgetScriptSource implements ILocalResourceUriConverter {
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public get postMessage(): Event<{ message: string; payload: any }> {
         return this.postEmitter.event;
     }
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public get postInternalMessage(): Event<{ message: string; payload: any }> {
         return this.postInternalMessageEmitter.event;
     }
@@ -47,12 +47,12 @@ export class IPyWidgetScriptSource implements ILocalResourceUriConverter {
     private readonly resourcesMappedToExtensionFolder = new Map<string, Promise<Uri>>();
     private postEmitter = new EventEmitter<{
         message: string;
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         payload: any;
     }>();
     private postInternalMessageEmitter = new EventEmitter<{
         message: string;
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         payload: any;
     }>();
     private notebook?: INotebook;
@@ -157,7 +157,7 @@ export class IPyWidgetScriptSource implements ILocalResourceUriConverter {
         }
     }
 
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public onMessage(message: string, payload?: any): void {
         if (message === InteractiveWindowMessages.ConvertUriForUseInWebViewResponse) {
             const response: undefined | { request: Uri; response: Uri } = payload;
@@ -176,7 +176,7 @@ export class IPyWidgetScriptSource implements ILocalResourceUriConverter {
     public async initialize() {
         if (!this.jupyterLab) {
             // Lazy load jupyter lab for faster extension loading.
-            // tslint:disable-next-line:no-require-imports
+            // eslint-disable-next-line @typescript-eslint/no-require-imports
             this.jupyterLab = require('@jupyterlab/services') as typeof jupyterlabService; // NOSONAR
         }
 

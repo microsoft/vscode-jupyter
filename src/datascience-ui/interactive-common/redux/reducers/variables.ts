@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { Reducer } from 'redux';
+
 import {
     IFinishCell,
     IInteractiveWindowMapping,

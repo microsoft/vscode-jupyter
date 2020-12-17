@@ -4,6 +4,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
+
 import { Resource } from '../types';
 import { IActiveResourceService, IDocumentManager, IWorkspaceService } from './types';
 

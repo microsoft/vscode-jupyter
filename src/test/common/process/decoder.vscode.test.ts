@@ -3,6 +3,7 @@
 
 import { expect } from 'chai';
 import { encode, encodingExists } from 'iconv-lite';
+
 import { BufferDecoder } from '../../../client/common/process/decoder';
 import { initialize } from '../../initialize';
 
@@ -20,7 +21,7 @@ suite('Decoder', () => {
 
     test('Test decoding cp932 strings', function () {
         if (!encodingExists('cp866')) {
-            // tslint:disable-next-line:no-invalid-this
+            // eslint-disable-next-line no-invalid-this
             this.skip();
         }
         const value = 'Sample input string Сделать это';

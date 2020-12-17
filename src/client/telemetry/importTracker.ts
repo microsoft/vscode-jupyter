@@ -2,18 +2,20 @@
 // Licensed under the MIT License.
 'use strict';
 
+import '../common/extensions';
+
 import { nbformat } from '@jupyterlab/coreutils';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { TextDocument } from 'vscode';
-import { captureTelemetry, sendTelemetryEvent } from '.';
+
 import { splitMultilineString } from '../../datascience-ui/common';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IDocumentManager } from '../common/application/types';
 import { isTestExecution } from '../common/constants';
-import '../common/extensions';
 import { noop } from '../common/utils/misc';
 import { ICell, INotebookEditor, INotebookEditorProvider, INotebookExecutionLogger } from '../datascience/types';
+import { captureTelemetry, sendTelemetryEvent } from '.';
 import { EventName } from './constants';
 
 /*
@@ -48,7 +50,7 @@ const testExecution = isTestExecution();
 export class ImportTracker implements IExtensionSingleActivationService, INotebookExecutionLogger {
     private pendingChecks = new Map<string, NodeJS.Timer | number>();
     private sentMatches: Set<string> = new Set<string>();
-    // tslint:disable-next-line:no-require-imports
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     private hashFn = require('hash.js').sha256;
 
     constructor(
@@ -143,7 +145,7 @@ export class ImportTracker implements IExtensionSingleActivationService, INotebo
         // If already scheduled, cancel.
         const currentTimeout = this.pendingChecks.get(file);
         if (currentTimeout) {
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             clearTimeout(currentTimeout as any);
             this.pendingChecks.delete(file);
         }

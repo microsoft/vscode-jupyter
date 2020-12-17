@@ -6,6 +6,7 @@
 import { assert } from 'chai';
 import { anyString, anything, instance, mock, verify, when } from 'ts-mockito';
 import { Memento } from 'vscode';
+
 import {
     JupyterInterpreterDependencyResponse,
     JupyterInterpreterDependencyService
@@ -19,7 +20,7 @@ import { PythonEnvironment } from '../../../../client/pythonEnvironments/info';
 import { MockMemento } from '../../../mocks/mementos';
 import { createPythonInterpreter } from '../../../utils/interpreters';
 
-// tslint:disable: max-func-body-length
+/* eslint-disable  */
 
 suite('DataScience - Jupyter Interpreter Service', () => {
     let jupyterInterpreterService: JupyterInterpreterService;

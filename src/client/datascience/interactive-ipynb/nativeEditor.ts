@@ -1,7 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import '../../common/extensions';
+
+import type { nbformat } from '@jupyterlab/coreutils';
 import * as path from 'path';
+import * as uuid from 'uuid/v4';
 import {
     CancellationToken,
     CancellationTokenSource,
@@ -12,9 +16,7 @@ import {
     ViewColumn,
     WebviewPanel
 } from 'vscode';
-import '../../common/extensions';
 
-import * as uuid from 'uuid/v4';
 import { createErrorOutput } from '../../../datascience-ui/common/cellFactory';
 import {
     IApplicationShell,
@@ -26,7 +28,6 @@ import {
 } from '../../common/application/types';
 import { ContextKey } from '../../common/contextKey';
 import { traceError, traceInfo } from '../../common/logger';
-
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, Resource } from '../../common/types';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { EXTENSION_ROOT_DIR } from '../../constants';
@@ -69,9 +70,7 @@ import {
     WebViewViewChangeEventArgs
 } from '../types';
 import { NativeEditorSynchronizer } from './nativeEditorSynchronizer';
-
-import type { nbformat } from '@jupyterlab/coreutils';
-// tslint:disable-next-line: no-require-imports
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
 import { concatMultilineString, splitMultilineString } from '../../../datascience-ui/common';
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
@@ -146,7 +145,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     private executeCancelTokens = new Set<CancellationTokenSource>();
     private loadPromise: Promise<void>;
     private previouslyNotTrusted: boolean = false;
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private waitingForMessageResponse = new Map<string, Deferred<any>>();
 
     constructor(
@@ -256,7 +255,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                         ...c.data,
                         source: result.code[i]
                     }
-                    // tslint:disable-next-line: no-any
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 } as any; // Deal with nyc problems
             })
         );
@@ -280,7 +279,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                         ...c.data,
                         source: c.id === cellId ? result.code : c.data.source
                     }
-                    // tslint:disable-next-line: no-any
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 } as any; // Deal with nyc problems
             })
         );
@@ -296,7 +295,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         return this.close();
     }
 
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public onMessage(message: string, payload: any) {
         super.onMessage(message, payload);
         switch (message) {
@@ -450,7 +449,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     }
 
     @captureTelemetry(Telemetry.SubmitCellThroughInput, undefined, false)
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     protected submitNewCell(info: ISubmitNewCell) {
         // If there's any payload, it has the code and the id
         if (info && info.code && info.id) {
@@ -478,7 +477,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     }
 
     @captureTelemetry(Telemetry.ExecuteNativeCell, undefined, true)
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     protected async reexecuteCells(info: IReExecuteCells): Promise<void> {
         // This is here for existing functional tests that somehow pass undefined into this method.
         if (!this.model || !info || !Array.isArray(info.cellIds)) {
@@ -682,7 +681,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     private renameVariableExplorerHeights(name: string, updatedName: string) {
         // Updates the workspace storage to reflect the updated name of the notebook
         // should be called if the name of the notebook changes
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const value = this.workspaceStorage.get(VariableExplorerStateKeys.height, {} as any);
         if (!(name in value)) {
             return; // Nothing to update
@@ -735,7 +734,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             // Make this error our cell output
             this.sendCellsToWebView([
                 {
-                    // tslint:disable-next-line: no-any
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     data: { ...cell.data, outputs: [createErrorOutput(exc)] } as any, // nyc compiler issue
                     id: cell.id,
                     file: Identifiers.EmptyFileName,
@@ -878,7 +877,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             // Make this error our cell output
             this.sendCellsToWebView([
                 {
-                    // tslint:disable-next-line: no-any
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     data: { ...runByLine.cell.data, outputs: [createErrorOutput(exc)] } as any, // nyc compiler issue
                     id: runByLine.cell.id,
                     file: Identifiers.EmptyFileName,

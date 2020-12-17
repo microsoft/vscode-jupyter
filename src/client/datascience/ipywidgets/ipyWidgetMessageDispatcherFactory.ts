@@ -5,6 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import { Event, EventEmitter, Uri } from 'vscode';
+
 import { IDisposable, IDisposableRegistry } from '../../common/types';
 import { INotebook, INotebookProvider } from '../types';
 import { IPyWidgetMessageDispatcher } from './ipyWidgetMessageDispatcher';

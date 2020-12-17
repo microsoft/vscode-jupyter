@@ -5,12 +5,13 @@
 
 import { assert } from 'chai';
 import { Uri, workspace } from 'vscode';
+
 import { PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { IKernelFinder } from '../../../client/datascience/kernel-launcher/types';
 import { IExtensionTestApi } from '../../common';
 import { initialize } from '../../initialize';
 
-// tslint:disable: no-any no-invalid-this
+/* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - Kernels Finder', () => {
     let api: IExtensionTestApi;
     let kernelFinder: IKernelFinder;

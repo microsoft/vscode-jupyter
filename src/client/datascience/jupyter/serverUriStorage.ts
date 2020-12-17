@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 import { inject, injectable, named } from 'inversify';
 import { ConfigurationTarget, Memento } from 'vscode';
+
 import { IApplicationEnvironment, IEncryptedStorage, IWorkspaceService } from '../../common/application/types';
 import { GLOBAL_MEMENTO, IConfigurationService, ICryptoUtils, IMemento } from '../../common/types';
 import { Settings } from '../constants';

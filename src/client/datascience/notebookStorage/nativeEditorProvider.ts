@@ -5,6 +5,7 @@ import { inject, injectable } from 'inversify';
 import * as uuid from 'uuid/v4';
 import { Disposable, Event, EventEmitter, Memento, Uri, WebviewPanel } from 'vscode';
 import { CancellationToken } from 'vscode-languageclient/node';
+
 import { arePathsSame } from '../../../datascience-ui/react-common/arePathsSame';
 import { IPythonExtensionChecker } from '../../api/types';
 import { ViewType } from '../../common/application/customEditorService';
@@ -26,7 +27,6 @@ import {
 import { UseCustomEditorApi } from '../../common/constants';
 import { traceInfo } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
-
 import {
     GLOBAL_MEMENTO,
     IAsyncDisposableRegistry,

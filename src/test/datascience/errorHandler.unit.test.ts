@@ -3,6 +3,7 @@
 'use strict';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
+
 import { IApplicationShell } from '../../client/common/application/types';
 import * as localize from '../../client/common/utils/localize';
 import { DataScienceErrorHandler } from '../../client/datascience/errorHandler/errorHandler';

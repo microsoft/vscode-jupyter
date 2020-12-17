@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { CancellationToken, Event, EventEmitter, Uri, WebviewPanel } from 'vscode';
+
 import * as localize from '../../common/utils/localize';
 import { INotebookEditor } from '../../datascience/types';
 import {

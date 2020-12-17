@@ -1,12 +1,11 @@
-import { IFileSystem } from '../platform/types';
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
 import { buildPythonExecInfo, PythonExecInfo } from '../../pythonEnvironments/exec';
 import { InterpreterInformation } from '../../pythonEnvironments/info';
 import { getExecutablePath } from '../../pythonEnvironments/info/executable';
 import { getInterpreterInfo } from '../../pythonEnvironments/info/interpreter';
 import { traceError, traceInfo } from '../logger';
+import { IFileSystem } from '../platform/types';
 import * as internalPython from './internal/python';
 import { ExecutionResult, IProcessService, ShellOptions, SpawnOptions } from './types';
 
@@ -129,7 +128,7 @@ export function createCondaEnv(
     const deps = createDeps(
         async (filename) => fs.localFileExists(filename),
         pythonArgv,
-        // tslint:disable-next-line:no-suspicious-comment
+        // eslint-disable-next-line
         // TODO: Use pythonArgv here once 'conda run' can be
         // run without buffering output.
         // See https://github.com/microsoft/vscode-python/issues/8473.

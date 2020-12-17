@@ -2,9 +2,10 @@
 // Licensed under the MIT License.
 
 import * as nodepath from 'path';
+
 import { getOSType, OSType } from '../utils/platform';
 import { IExecutables, IFileSystemPaths, IFileSystemPathUtils } from './types';
-// tslint:disable-next-line:no-var-requires no-require-imports
+// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const untildify = require('untildify');
 
 // The parts of node's 'path' module used by FileSystemPaths.

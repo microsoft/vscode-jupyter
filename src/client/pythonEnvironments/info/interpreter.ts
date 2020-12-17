@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { InterpreterInformation } from '.';
 import { interpreterInfo as getInterpreterInfoCommand, PythonEnvInfo } from '../../common/process/internal/scripts';
 import { copyPythonExecInfo, PythonExecInfo } from '../exec';
+import { InterpreterInformation } from '.';
 import { parsePythonVersion } from './pythonVersion';
 
 /**

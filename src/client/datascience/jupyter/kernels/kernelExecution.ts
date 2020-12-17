@@ -4,6 +4,7 @@
 'use strict';
 
 import { NotebookCell, NotebookCellRunState, NotebookDocument } from 'vscode';
+
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../../common/application/types';
 import { traceInfo } from '../../../common/logger';
 import { IDisposable, IExtensionContext } from '../../../common/types';
@@ -21,7 +22,7 @@ import {
 import { CellExecution, CellExecutionFactory } from './cellExecution';
 import { isPythonKernelConnection } from './helpers';
 import type { IKernel, IKernelProvider, IKernelSelectionUsage, KernelConnectionMetadata } from './types';
-// tslint:disable-next-line: no-var-requires no-require-imports
+// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
 /**

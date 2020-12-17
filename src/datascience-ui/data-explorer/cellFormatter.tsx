@@ -21,7 +21,7 @@ class CellFormatter extends React.Component<ICellFormatterProps> {
     public render() {
         // Render based on type
         if (this.props.value !== null && this.props.columnDef && this.props.columnDef.hasOwnProperty('type')) {
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const columnType = (this.props.columnDef as any).type;
             switch (columnType) {
                 case ColumnType.Bool:
@@ -67,7 +67,7 @@ class CellFormatter extends React.Component<ICellFormatterProps> {
 export function cellFormatterFunc(
     _row: number,
     _cell: number,
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     value: any,
     columnDef: Slick.Column<ISlickRow>,
     _dataContext: Slick.SlickData

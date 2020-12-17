@@ -3,10 +3,11 @@
 
 'use strict';
 
-// tslint:disable:no-var-requires
+/* eslint-disable @typescript-eslint/no-var-requires */
 
 import { injectable } from 'inversify';
 import { env, Uri } from 'vscode';
+
 import { IBrowserService } from '../types';
 
 export function launch(url: string) {

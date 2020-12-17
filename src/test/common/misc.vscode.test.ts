@@ -4,6 +4,7 @@
 'use strict';
 
 import { expect } from 'chai';
+
 import { isTestExecution } from '../../client/common/constants';
 
 // Defines a Mocha test suite to group tests of similar kind together

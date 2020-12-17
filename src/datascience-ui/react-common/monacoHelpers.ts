@@ -1,4 +1,5 @@
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
+
 import {
     IEditorContentChange,
     IEditorPosition,

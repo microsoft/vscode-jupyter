@@ -6,6 +6,7 @@
 import { inject, injectable } from 'inversify';
 import { parse, ParseError } from 'jsonc-parser';
 import type * as requestTypes from 'request';
+
 import { IHttpClient } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import { IWorkspaceService } from '../application/types';
@@ -20,7 +21,7 @@ export class HttpClient implements IHttpClient {
     }
 
     public async downloadFile(uri: string): Promise<requestTypes.Request> {
-        // tslint:disable-next-line:no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const request = ((await import('request')) as any) as typeof requestTypes;
         return request(uri, this.requestOptions);
     }
@@ -34,7 +35,7 @@ export class HttpClient implements IHttpClient {
         if (strict) {
             return JSON.parse(body);
         } else {
-            // tslint:disable-next-line: prefer-const
+            // eslint-disable-next-line prefer-const
             let errors: ParseError[] = [];
             const content = parse(body, errors, { allowTrailingComma: true, disallowComments: false }) as T;
             if (errors.length > 0) {
@@ -45,7 +46,7 @@ export class HttpClient implements IHttpClient {
     }
 
     public async exists(uri: string): Promise<boolean> {
-        // tslint:disable-next-line:no-require-imports
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
         const request = require('request') as typeof requestTypes;
         return new Promise<boolean>((resolve) => {
             try {
@@ -59,7 +60,7 @@ export class HttpClient implements IHttpClient {
         });
     }
     private async getContents(uri: string): Promise<string> {
-        // tslint:disable-next-line:no-require-imports
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
         const request = require('request') as typeof requestTypes;
         return new Promise<string>((resolve, reject) => {
             request(uri, this.requestOptions, (ex, response, body) => {

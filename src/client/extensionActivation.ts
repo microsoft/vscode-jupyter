@@ -3,7 +3,7 @@
 
 'use strict';
 
-// tslint:disable:max-func-body-length
+/* eslint-disable */
 import { OutputChannel, window } from 'vscode';
 
 import { registerTypes as activationRegisterTypes } from './activation/serviceRegistry';
@@ -49,7 +49,7 @@ export async function activateComponents(
 /////////////////////////////
 // old activation code
 
-// tslint:disable-next-line:no-suspicious-comment
+// eslint-disable-next-line
 // TODO: Gradually move simple initialization
 // and DI registration currently in this function over
 // to initializeComponents().  Likewise with complex

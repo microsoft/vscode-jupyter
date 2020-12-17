@@ -5,6 +5,7 @@
 
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { TextEditor, Uri } from 'vscode';
+
 import { IApplicationShell, IDocumentManager } from '../../../client/common/application/types';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { IBrowserService, IDisposable } from '../../../client/common/types';
@@ -26,9 +27,9 @@ suite('DataScience - Export File Opener', () => {
         browserService = mock<IBrowserService>();
         const reporter = mock(ProgressReporter);
         const editor = mock<TextEditor>();
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (instance(editor) as any).then = undefined;
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         when(reporter.createProgressIndicator(anything())).thenReturn(instance(mock<IDisposable>()) as any);
         when(documentManager.openTextDocument(anything())).thenResolve();
         when(documentManager.showTextDocument(anything())).thenReturn(Promise.resolve(instance(editor)));

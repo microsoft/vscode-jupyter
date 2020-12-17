@@ -3,12 +3,14 @@
 
 'use strict';
 
+import '../../common/extensions';
+
 import { inject, injectable } from 'inversify';
 import { commands, Uri } from 'vscode';
+
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import { ContextKey } from '../../common/contextKey';
-import '../../common/extensions';
 import { traceInfo } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IDisposableRegistry } from '../../common/types';

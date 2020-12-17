@@ -7,13 +7,14 @@ import { ChildProcess, spawn, SpawnOptions } from 'child_process';
 import * as fs from 'fs-extra';
 import { AddressInfo, createServer, Server } from 'net';
 import * as path from 'path';
+
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from './constants';
 import { noop, sleep } from './core';
 import { initializeLogger } from './testLogger';
 
 initializeLogger();
 
-// tslint:disable: no-console
+/* eslint-disable no-console */
 
 /*
 This is a simple work around for tests tasks not completing on CI.

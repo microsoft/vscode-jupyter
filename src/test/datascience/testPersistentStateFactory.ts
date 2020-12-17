@@ -1,10 +1,11 @@
 import { Memento } from 'vscode';
+
 import { PersistentStateFactory } from '../../client/common/persistentState';
 import { IPersistentState, IPersistentStateFactory } from '../../client/common/types';
 
 const PrefixesToStore = ['INTERPRETERS_CACHE'];
 
-// tslint:disable-next-line: no-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const persistedState = new Map<string, any>();
 
 class TestPersistentState<T> implements IPersistentState<T> {

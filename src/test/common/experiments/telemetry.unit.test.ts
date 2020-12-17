@@ -5,6 +5,7 @@
 
 import { assert } from 'chai';
 import * as sinon from 'sinon';
+
 import { ExperimentationTelemetry } from '../../../client/common/experiments/telemetry';
 import * as Telemetry from '../../../client/telemetry';
 

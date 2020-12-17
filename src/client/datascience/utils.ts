@@ -2,18 +2,17 @@
 // Licensed under the MIT License.
 'use strict';
 
+import { nbformat } from '@jupyterlab/coreutils/lib/nbformat';
 import * as path from 'path';
 import { Uri } from 'vscode';
 
-import { IWorkspaceService } from '../common/application/types';
-import { IFileSystem } from '../common/platform/types';
-
-import { nbformat } from '@jupyterlab/coreutils/lib/nbformat';
 import type { NotebookCell, NotebookCellRunState } from '../../../types/vscode-proposed';
 import { concatMultilineString } from '../../datascience-ui/common';
+import { IWorkspaceService } from '../common/application/types';
+import { IFileSystem } from '../common/platform/types';
 import { IConfigurationService } from '../common/types';
 import { CellState, ICell } from './types';
-// tslint:disable-next-line: no-var-requires no-require-imports
+// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
 export async function calculateWorkingDirectory(

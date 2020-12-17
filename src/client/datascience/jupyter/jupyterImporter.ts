@@ -6,8 +6,8 @@ import '../../common/extensions';
 import { inject, injectable } from 'inversify';
 import * as os from 'os';
 import * as path from 'path';
-
 import { Uri } from 'vscode';
+
 import { IWorkspaceService } from '../../common/application/types';
 import { traceError } from '../../common/logger';
 import { IFileSystem, IPlatformService } from '../../common/platform/types';
@@ -23,7 +23,7 @@ export class JupyterImporter implements INotebookImporter {
     public isDisposed: boolean = false;
     // Template that changes markdown cells to have # %% [markdown] in the comments
     private readonly nbconvertBaseTemplateFormat =
-        // tslint:disable-next-line:no-multiline-string
+        // eslint-disable-next-line no-multi-str
         `{%- extends '{0}' -%}
 {% block codecell %}
 {1}

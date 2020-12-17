@@ -6,6 +6,7 @@
 import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
 import { ConfigurationTarget, Uri, WorkspaceConfiguration } from 'vscode';
+
 import { IWorkspaceService } from '../../../client/common/application/types';
 import { JupyterSettings } from '../../../client/common/configSettings';
 import { ConfigurationService } from '../../../client/common/configuration/service';
@@ -49,7 +50,7 @@ suite('Configuration Service', () => {
 
     test('Do not update global settings if global value is already equal to the new value', async () => {
         const workspaceConfig = setupConfigProvider();
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         workspaceConfig.setup((w) => w.inspect('setting')).returns(() => ({ globalValue: 'globalValue' } as any));
         workspaceConfig
             .setup((w) => w.update('setting', 'globalValue', ConfigurationTarget.Global))
@@ -63,7 +64,7 @@ suite('Configuration Service', () => {
 
     test('Update global settings if global value is not equal to the new value', async () => {
         const workspaceConfig = setupConfigProvider();
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         workspaceConfig.setup((w) => w.inspect('setting')).returns(() => ({ globalValue: 'globalValue' } as any));
         workspaceConfig
             .setup((w) => w.update('setting', 'newGlobalValue', ConfigurationTarget.Global))
@@ -77,7 +78,7 @@ suite('Configuration Service', () => {
 
     test('Do not update workspace settings if workspace value is already equal to the new value', async () => {
         const workspaceConfig = setupConfigProvider();
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         workspaceConfig.setup((w) => w.inspect('setting')).returns(() => ({ workspaceValue: 'workspaceValue' } as any));
         workspaceConfig
             .setup((w) => w.update('setting', 'workspaceValue', ConfigurationTarget.Workspace))
@@ -91,7 +92,7 @@ suite('Configuration Service', () => {
 
     test('Update workspace settings if workspace value is not equal to the new value', async () => {
         const workspaceConfig = setupConfigProvider();
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         workspaceConfig.setup((w) => w.inspect('setting')).returns(() => ({ workspaceValue: 'workspaceValue' } as any));
         workspaceConfig
             .setup((w) => w.update('setting', 'newWorkspaceValue', ConfigurationTarget.Workspace))
@@ -107,7 +108,7 @@ suite('Configuration Service', () => {
         const workspaceConfig = setupConfigProvider();
         workspaceConfig
             .setup((w) => w.inspect('setting'))
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             .returns(() => ({ workspaceFolderValue: 'workspaceFolderValue' } as any));
         workspaceConfig
             .setup((w) => w.update('setting', 'workspaceFolderValue', ConfigurationTarget.WorkspaceFolder))
@@ -128,7 +129,7 @@ suite('Configuration Service', () => {
         const workspaceConfig = setupConfigProvider();
         workspaceConfig
             .setup((w) => w.inspect('setting'))
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             .returns(() => ({ workspaceFolderValue: 'workspaceFolderValue' } as any));
         workspaceConfig
             .setup((w) => w.update('setting', 'newWorkspaceFolderValue', ConfigurationTarget.WorkspaceFolder))

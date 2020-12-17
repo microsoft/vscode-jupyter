@@ -2,8 +2,9 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-// tslint:disable-next-line: no-require-imports
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 import { CancellationToken, Event, EventEmitter } from 'vscode';
+
 import {
     NotebookCommunication,
     NotebookDocument,
@@ -245,7 +246,7 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
 
         const model = this.storageProvider.get(document.uri);
         if (!model || !model.isTrusted) {
-            // tslint:disable-next-line: no-suspicious-comment
+            // eslint-disable-next-line
             // TODO: https://github.com/microsoft/vscode-python/issues/13476
             // If a model is not trusted, we cannot change the kernel (this results in changes to notebook metadata).
             // This is because we store selected kernel in the notebook metadata.
@@ -305,7 +306,7 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
                     this.disposables
                 );
             }
-            // tslint:disable-next-line: no-suspicious-comment
+            // eslint-disable-next-line
             // TODO: https://github.com/microsoft/vscode-python/issues/13514
             // We need to handle these exceptions in `siwthKernelWithRetry`.
             // We shouldn't handle them here, as we're already handling some errors in the `siwthKernelWithRetry` method.

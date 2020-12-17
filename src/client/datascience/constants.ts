@@ -3,6 +3,7 @@
 'use strict';
 
 import * as path from 'path';
+
 import { EXTENSION_ROOT_DIR, JVSC_EXTENSION_ID, PYTHON_LANGUAGE } from '../common/constants';
 import { IS_WINDOWS } from '../common/platform/constants';
 import { IVariableQuery } from '../common/types';

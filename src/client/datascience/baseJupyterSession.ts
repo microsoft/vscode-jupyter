@@ -8,6 +8,7 @@ import { Observable } from 'rxjs/Observable';
 import { ReplaySubject } from 'rxjs/ReplaySubject';
 import { Event, EventEmitter } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
+
 import { ServerStatus } from '../../datascience-ui/interactive-common/mainState';
 import { traceError, traceInfo, traceWarning } from '../common/logger';
 import { sleep, waitForPromise } from '../common/utils/async';
@@ -48,7 +49,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     }
     private get jupyterLab(): undefined | typeof import('@jupyterlab/services') {
         if (!this._jupyterLab) {
-            // tslint:disable-next-line:no-require-imports
+            // eslint-disable-next-line @typescript-eslint/no-require-imports
             this._jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services'); // NOSONAR
         }
         return this._jupyterLab;
@@ -245,7 +246,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
 
     public sendInputReply(content: string) {
         if (this.session && this.session.kernel) {
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             this.session.kernel.sendInputReply({ value: content, status: 'ok' });
         }
     }
@@ -264,9 +265,9 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     public sendCommMessage(
         buffers: (ArrayBuffer | ArrayBufferView)[],
         content: { comm_id: string; data: JSONObject; target_name: string | undefined },
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         metadata: any,
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         msgId: any
     ): Kernel.IShellFuture<
         KernelMessage.IShellMessage<'comm_msg'>,
@@ -274,7 +275,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     > {
         if (this.session && this.session.kernel && this.jupyterLab) {
             const shellMessage = this.jupyterLab.KernelMessage.createMessage<KernelMessage.ICommMsgMsg<'shell'>>({
-                // tslint:disable-next-line: no-any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 msgType: 'comm_msg',
                 channel: 'shell',
                 buffers,
@@ -338,7 +339,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     protected async waitForIdleOnSession(session: ISessionWithSocket | undefined, timeout: number): Promise<void> {
         if (session && session.kernel) {
             traceInfo(`Waiting for idle on (kernel): ${session.kernel.id} -> ${session.kernel.status}`);
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const statusHandler = (resolve: () => void, reject: (exc: any) => void, e: Kernel.Status | undefined) => {
                 if (e === 'idle') {
                     resolve();

@@ -1,10 +1,11 @@
 import { assert } from 'chai';
 import { anyString, anything, instance, mock, when } from 'ts-mockito';
+
 import { MigrateDataScienceSettingsService } from '../../client/activation/migrateDataScienceSettingsService';
 import { ApplicationEnvironment } from '../../client/common/application/applicationEnvironment';
 import { IApplicationEnvironment, IWorkspaceService } from '../../client/common/application/types';
 import { WorkspaceService } from '../../client/common/application/workspace';
-import { PersistentStateFactory, PersistentState } from '../../client/common/persistentState';
+import { PersistentState, PersistentStateFactory } from '../../client/common/persistentState';
 import { IPersistentStateFactory } from '../../client/common/types';
 import { JupyterServerUriStorage } from '../../client/datascience/jupyter/serverUriStorage';
 import { IJupyterServerUriStorage } from '../../client/datascience/types';

@@ -16,7 +16,7 @@ import { IMountedWebView } from './mountedWebView';
 import { getCellResults, getNativeFocusedEditor, injectCode, simulateKey } from './testHelpers';
 import { ITestNativeEditorProvider } from './testNativeEditorProvider';
 
-// tslint:disable: no-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 async function getOrCreateNativeEditor(ioc: DataScienceIocContainer, uri?: Uri) {
     const notebookEditorProvider = ioc.get<ITestNativeEditorProvider>(INotebookEditorProvider);
@@ -50,7 +50,7 @@ export async function openEditor(
     return getOrCreateNativeEditor(ioc, uri);
 }
 
-// tslint:disable-next-line: no-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function getNativeCellResults(
     mounted: IMountedWebView,
     updater: () => Promise<void>,
@@ -59,10 +59,10 @@ export function getNativeCellResults(
     return getCellResults(mounted, 'NativeCell', updater, renderPromiseGenerator);
 }
 
-// tslint:disable-next-line:no-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function runMountedTest(name: string, testFunc: (context: Mocha.Context) => Promise<void>) {
     test(name, async function () {
-        // tslint:disable-next-line: no-invalid-this
+        // eslint-disable-next-line no-invalid-this
         await testFunc(this);
     });
 }
@@ -80,7 +80,7 @@ export function focusCell(mounted: IMountedWebView, index: number): Promise<void
     return Promise.resolve();
 }
 
-// tslint:disable-next-line: no-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function addCell(mounted: IMountedWebView, code: string, submit: boolean = true): Promise<void> {
     // First get the main toolbar. We'll use this to add a cell.
     const toolbar = mounted.wrapper.find('#main-panel-toolbar');

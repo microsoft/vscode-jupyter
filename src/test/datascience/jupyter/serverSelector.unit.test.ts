@@ -1,32 +1,32 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { assert } from 'chai';
-import { anyString, anything, instance, mock, verify, when } from 'ts-mockito';
-
-import * as sinon from 'sinon';
 import * as os from 'os';
+import * as sinon from 'sinon';
+import { anyString, anything, instance, mock, verify, when } from 'ts-mockito';
 import { QuickPickItem } from 'vscode';
+
+import { ApplicationEnvironment } from '../../../client/common/application/applicationEnvironment';
 import { ApplicationShell } from '../../../client/common/application/applicationShell';
 import { ClipboardService } from '../../../client/common/application/clipboard';
 import { CommandManager } from '../../../client/common/application/commandManager';
 import { IClipboard, ICommandManager } from '../../../client/common/application/types';
+import { WorkspaceService } from '../../../client/common/application/workspace';
 import { ConfigurationService } from '../../../client/common/configuration/service';
+import { CryptoUtils } from '../../../client/common/crypto';
 import { IJupyterSettings } from '../../../client/common/types';
 import { DataScience } from '../../../client/common/utils/localize';
 import { MultiStepInput, MultiStepInputFactory } from '../../../client/common/utils/multiStepInput';
 import { Settings } from '../../../client/datascience/constants';
 import { JupyterServerSelector } from '../../../client/datascience/jupyter/serverSelector';
+import { JupyterServerUriStorage } from '../../../client/datascience/jupyter/serverUriStorage';
 import { JupyterUriProviderRegistration } from '../../../client/datascience/jupyterUriProviderRegistration';
+import { MockMemento } from '../../mocks/mementos';
+import { MockEncryptedStorage } from '../mockEncryptedStorage';
 import { MockInputBox } from '../mockInputBox';
 import { MockQuickPick } from '../mockQuickPick';
-import { JupyterServerUriStorage } from '../../../client/datascience/jupyter/serverUriStorage';
-import { MockMemento } from '../../mocks/mementos';
-import { WorkspaceService } from '../../../client/common/application/workspace';
-import { CryptoUtils } from '../../../client/common/crypto';
-import { ApplicationEnvironment } from '../../../client/common/application/applicationEnvironment';
-import { MockEncryptedStorage } from '../mockEncryptedStorage';
 
-// tslint:disable: max-func-body-length no-any
+/* eslint-disable , @typescript-eslint/no-explicit-any */
 suite('DataScience - Jupyter Server URI Selector', () => {
     let quickPick: MockQuickPick | undefined;
     let cmdManager: ICommandManager;
@@ -39,7 +39,7 @@ suite('DataScience - Jupyter Server URI Selector', () => {
     ): { selector: JupyterServerSelector; storage: JupyterServerUriStorage } {
         dsSettings = {
             jupyterServerType: Settings.JupyterServerLocalLaunch
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any;
         clipboard = mock(ClipboardService);
         const configService = mock(ConfigurationService);
@@ -57,7 +57,7 @@ suite('DataScience - Jupyter Server URI Selector', () => {
         when(applicationShell.createInputBox()).thenReturn(input);
         when(applicationEnv.machineId).thenReturn(os.hostname());
         const multiStepFactory = new MultiStepInputFactory(instance(applicationShell));
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         when(configService.getSettings(anything())).thenReturn(dsSettings as any);
         when(workspaceService.getWorkspaceFolderIdentifier(anything())).thenReturn('1');
         const encryptedStorage = new MockEncryptedStorage();

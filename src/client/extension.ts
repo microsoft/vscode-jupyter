@@ -1,9 +1,9 @@
 'use strict';
 
-// tslint:disable:no-var-requires no-require-imports
+/* eslint-disable @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports */
 
 // This line should always be right on top.
-// tslint:disable:no-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 if ((Reflect as any).metadata === undefined) {
     require('reflect-metadata');
 }
@@ -84,7 +84,7 @@ export function deactivate(): Thenable<void> {
 /////////////////////////////
 // activation helpers
 
-// tslint:disable-next-line:max-func-body-length
+// eslint-disable-next-line
 async function activateUnsafe(
     context: IExtensionContext,
     startupStopWatch: StopWatch,
@@ -111,7 +111,7 @@ async function activateUnsafe(
     return [api, activationPromise, serviceContainer];
 }
 
-// tslint:disable-next-line:no-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function displayProgress(promise: Promise<any>) {
     const progressOptions: ProgressOptions = { location: ProgressLocation.Window, title: Common.loadingExtension() };
     window.withProgress(progressOptions, () => promise);
@@ -134,10 +134,10 @@ interface IAppShell {
 
 function notifyUser(msg: string) {
     try {
-        // tslint:disable-next-line:no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         let appShell: IAppShell = (window as any) as IAppShell;
         if (activatedServiceContainer) {
-            // tslint:disable-next-line:no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             appShell = (activatedServiceContainer.get<IApplicationShell>(IApplicationShell) as any) as IAppShell;
         }
         appShell.showErrorMessage(msg).ignoreErrors();

@@ -3,6 +3,7 @@
 
 'use strict';
 import * as path from 'path';
+
 import { getOSType, OSType } from '../../client/common/utils/platform';
 
 // Provide functionality of IFileSystem arePathsSame for the React components

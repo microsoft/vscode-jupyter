@@ -4,6 +4,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
+
 import { traceDecorators } from '../logger';
 import { IPersistentStateFactory } from '../types';
 import { IExtensionChannelRule } from './types';

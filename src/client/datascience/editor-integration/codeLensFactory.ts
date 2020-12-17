@@ -7,7 +7,6 @@ import { CodeLens, Command, Event, EventEmitter, Range, TextDocument, Uri } from
 import { IDocumentManager } from '../../common/application/types';
 import { traceWarning } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
-
 import { IConfigurationService, Resource } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
@@ -47,10 +46,10 @@ type PerNotebookData = {
 @injectable()
 export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowListener {
     private updateEvent: EventEmitter<void> = new EventEmitter<void>();
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private postEmitter: EventEmitter<{ message: string; payload: any }> = new EventEmitter<{
         message: string;
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         payload: any;
     }>();
     private notebookData = new Map<string, PerNotebookData>();
@@ -70,12 +69,12 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
         noop();
     }
 
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public get postMessage(): Event<{ message: string; payload: any }> {
         return this.postEmitter.event;
     }
 
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public onMessage(message: string, payload?: any) {
         switch (message) {
             case InteractiveWindowMessages.NotebookIdentity:
@@ -320,7 +319,7 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
         return fullCommandList;
     }
 
-    // tslint:disable-next-line: max-func-body-length
+    // eslint-disable-next-line
     private createCodeLens(
         document: TextDocument,
         cellRange: { range: Range; cell_type: string },
@@ -478,13 +477,13 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
         }
     }
 
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private generateCodeLens(range: Range, commandName: string, title: string, args?: any[]): CodeLens {
         return new CodeLens(range, generateCommand(commandName, title, args));
     }
 }
 
-// tslint:disable-next-line: no-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function generateCommand(commandName: string, title: string, args?: any[]): Command {
     return {
         arguments: args,

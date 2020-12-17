@@ -6,6 +6,7 @@ import '../../common/extensions';
 import * as path from 'path';
 import { CancellationTokenSource, Memento, Uri, WebviewPanel } from 'vscode';
 
+import { IPythonExtensionChecker } from '../../api/types';
 import {
     IApplicationShell,
     ICommandManager,
@@ -15,8 +16,6 @@ import {
     IWorkspaceService
 } from '../../common/application/types';
 import { traceError } from '../../common/logger';
-
-import { IPythonExtensionChecker } from '../../api/types';
 import { IFileSystem } from '../../common/platform/types';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../common/types';
 import * as localize from '../../common/utils/localize';
@@ -219,7 +218,7 @@ export class NativeEditorOldWebView extends NativeEditor {
         const yes = localize.DataScience.dirtyNotebookYes();
         const no = localize.DataScience.dirtyNotebookNo();
         const result = await this.applicationShell.showInformationMessage(
-            // tslint:disable-next-line: messages-must-be-localized
+            // eslint-disable-next-line
             `${message1}\n${message2}`,
             { modal: true },
             yes,

@@ -4,8 +4,8 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { CancellationTokenSource, Memento, TextDocument, TextEditor, Uri, WebviewPanel } from 'vscode';
-
 import { CancellationToken } from 'vscode-jsonrpc';
+
 import { IPythonExtensionChecker } from '../../api/types';
 import {
     IApplicationShell,
@@ -18,7 +18,6 @@ import {
 } from '../../common/application/types';
 import { JUPYTER_LANGUAGE, UseCustomEditorApi } from '../../common/constants';
 import { IFileSystem } from '../../common/platform/types';
-
 import {
     GLOBAL_MEMENTO,
     IAsyncDisposableRegistry,
@@ -60,7 +59,7 @@ import { NativeEditor } from './nativeEditor';
 import { NativeEditorOldWebView } from './nativeEditorOldWebView';
 import { NativeEditorSynchronizer } from './nativeEditorSynchronizer';
 
-// tslint:disable-next-line:no-require-imports no-var-requires
+// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
 const debounce = require('lodash/debounce') as typeof import('lodash/debounce');
 
 @injectable()

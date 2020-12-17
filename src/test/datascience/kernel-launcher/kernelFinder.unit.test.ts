@@ -6,8 +6,8 @@ import { assert, expect } from 'chai';
 import * as path from 'path';
 import { anything, instance, mock, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
-
 import { Uri } from 'vscode';
+
 import { PythonExtensionChecker } from '../../../client/api/pythonApi';
 import { IWorkspaceService } from '../../../client/common/application/types';
 import { IFileSystem, IPlatformService } from '../../../client/common/platform/types';

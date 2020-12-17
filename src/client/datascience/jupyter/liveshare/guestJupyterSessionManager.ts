@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { CancellationToken } from 'vscode-jsonrpc';
-
 import type { Kernel, Session } from '@jupyterlab/services';
 import { EventEmitter } from 'vscode';
+import { CancellationToken } from 'vscode-jsonrpc';
+
 import { noop } from '../../../common/utils/misc';
 import {
     IJupyterConnection,

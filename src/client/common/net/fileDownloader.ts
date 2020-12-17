@@ -7,6 +7,7 @@ import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import * as requestTypes from 'request';
 import { Progress } from 'vscode';
+
 import { IApplicationShell } from '../application/types';
 import { Octicons } from '../constants';
 import { IFileSystem } from '../platform/types';
@@ -64,7 +65,7 @@ export class FileDownloader implements IFileDownloader {
                     );
                 }
             });
-            // tslint:disable-next-line: no-require-imports
+            // eslint-disable-next-line @typescript-eslint/no-require-imports
             const requestProgress = require('request-progress');
             requestProgress(request)
                 .on('progress', (state: RequestProgressState) => {

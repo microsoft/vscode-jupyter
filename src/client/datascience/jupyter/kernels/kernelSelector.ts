@@ -4,13 +4,15 @@ import type { nbformat } from '@jupyterlab/coreutils';
 import type { Kernel } from '@jupyterlab/services';
 import { sha256 } from 'hash.js';
 import { inject, injectable } from 'inversify';
-// tslint:disable-next-line: no-require-imports
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
+import '../../../common/extensions';
+
 import { CancellationToken } from 'vscode-jsonrpc';
+
 import { IPythonExtensionChecker } from '../../../api/types';
 import { IApplicationShell } from '../../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../../common/constants';
-import '../../../common/extensions';
 import { traceDecorators, traceError, traceInfo, traceInfoIf, traceVerbose } from '../../../common/logger';
 import { IConfigurationService, IDisposableRegistry, Resource } from '../../../common/types';
 import * as localize from '../../../common/utils/localize';
@@ -242,7 +244,7 @@ export class KernelSelector implements IKernelSelectionUsage {
      * Gets a kernel that needs to be used with a remote session.
      * (will attempt to find the best matching kernel, or prompt user to use current interpreter or select one).
      */
-    // tslint:disable-next-line: cyclomatic-complexity
+    // eslint-disable-next-line complexity
     @reportAction(ReportableAction.KernelsGetKernelForRemoteConnection)
     public async getPreferredKernelForRemoteConnection(
         resource: Resource,
@@ -262,7 +264,7 @@ export class KernelSelector implements IKernelSelectionUsage {
         if (notebookMetadata && notebookMetadata.id) {
             const session = sessions?.find((s) => s.kernel.id === notebookMetadata?.id);
             if (session) {
-                // tslint:disable-next-line: no-any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const liveKernel = session.kernel as any;
                 const lastActivityTime = liveKernel.last_activity
                     ? new Date(Date.parse(liveKernel.last_activity.toString()))

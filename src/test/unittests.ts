@@ -7,16 +7,17 @@
 // However if a system32 process is run first, everything works.
 import * as child_process from 'child_process';
 import * as os from 'os';
+
 import { setupCoverage } from './coverage';
 if (os.platform() === 'win32') {
     const proc = child_process.spawn('C:\\Windows\\System32\\Reg.exe', ['/?']);
     proc.on('error', () => {
-        // tslint:disable-next-line: no-console
+        // eslint-disable-next-line no-console
         console.error('error during reg.exe');
     });
 }
 
-// tslint:disable:no-any no-require-imports no-var-requires
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 if ((Reflect as any).metadata === undefined) {
     require('reflect-metadata');
 }

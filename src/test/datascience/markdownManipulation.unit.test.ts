@@ -2,9 +2,10 @@
 // Licensed under the MIT License.
 'use strict';
 import { expect } from 'chai';
+
 import { fixMarkdown } from '../../datascience-ui/interactive-common/markdownManipulation';
 
-// tslint:disable: max-func-body-length
+/* eslint-disable  */
 suite('DataScience - Markdown Manipulation', () => {
     const markdown1 = `\\begin{align}
 \\nabla \\cdot \\vec{\\mathbf{E}} & = 4 \\pi \\rho \\\\
