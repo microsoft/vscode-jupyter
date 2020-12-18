@@ -418,6 +418,13 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         throw Error('Not implemented Exception');
     }
 
+    public runAbove(): void {
+        throw Error('Not implemented Exception');
+    }
+    public runCellAndBelow(): void {
+        throw Error('Not implemented Exception');
+    }
+
     protected addSysInfo(reason: SysInfoReason): Promise<void> {
         // We need to send a message when restarting
         if (reason === SysInfoReason.Restart || reason === SysInfoReason.New) {

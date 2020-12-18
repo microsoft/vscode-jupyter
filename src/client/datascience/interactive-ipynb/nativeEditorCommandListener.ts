@@ -55,6 +55,14 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
         this.disposableRegistry.push(
             commandManager.registerCommand(Commands.NotebookEditorAddCellBelow, () => this.addCellBelow())
         );
+        this.disposableRegistry.push(
+            commandManager.registerCommand(Commands.NativeNotebookRunAllCellsAbove, (uri) => this.runAbove(uri))
+        );
+        this.disposableRegistry.push(
+            commandManager.registerCommand(Commands.NativeNotebookRunCellAndAllBelow, (uri) =>
+                this.runCellAndBelow(uri)
+            )
+        );
     }
 
     private runAllCells() {
@@ -128,6 +136,19 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
             } catch (e) {
                 await this.dataScienceErrorHandler.handleError(e);
             }
+        }
+    }
+
+    private runAbove(uri: Uri): void {
+        const activeEditor = this.provider.activeEditor;
+        if (activeEditor) {
+            activeEditor.runAbove(uri);
+        }
+    }
+    private runCellAndBelow(uri: Uri): void {
+        const activeEditor = this.provider.activeEditor;
+        if (activeEditor) {
+            activeEditor.runCellAndBelow(uri);
         }
     }
 }

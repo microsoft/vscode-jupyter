@@ -280,6 +280,26 @@
                 "enablement": "notebookViewType == jupyter-notebook && jupyter.isnotebooktrusted"
             },
             {
+                "command": "jupyter.notebookeditor.runallcellsabove",
+                "title": "%DataScience.runAbove%",
+                "category": "Jupyter",
+                "icon": {
+                    "light": "resources/light/runabove.svg",
+                    "dark": "resources/dark/runabove-inverse.svg"
+                },
+                "enablement": "notebookViewType == jupyter-notebook && jupyter.isnotebooktrusted"
+            },
+            {
+                "command": "jupyter.notebookeditor.runcellandallbelow",
+                "title": "%DataScience.runBelow%",
+                "category": "Jupyter",
+                "icon": {
+                    "light": "resources/light/runbelow.svg",
+                    "dark": "resources/dark/runbelow-inverse.svg"
+                },
+                "enablement": "notebookViewType == jupyter-notebook && jupyter.isnotebooktrusted"
+            },
+            {
                 "command": "jupyter.export",
                 "title": "%DataScience.notebookExportAs%",
                 "category": "Jupyter"
@@ -733,6 +753,18 @@
                 }
             ],
             "editor/title": [
+                {
+                    "command": "jupyter.notebookeditor.runallcellsabove",
+                    "title": "%DataScience.runAbove%",
+                    "group": "navigation",
+                    "when": "resourceLangId == jupyter && notebookViewType == 'jupyter-notebook' && jupyter.isnotebooktrusted && jupyter.havenativecells"
+                },
+                {
+                    "command": "jupyter.notebookeditor.runcellandallbelow",
+                    "title": "%DataScience.runBelow%",
+                    "group": "navigation",
+                    "when": "resourceLangId == jupyter && notebookViewType == 'jupyter-notebook' && jupyter.isnotebooktrusted && jupyter.havenativecells"
+                },
                 {
                     "command": "jupyter.notebookeditor.restartkernel",
                     "title": "%jupyter.command.jupyter.restartkernel.title%",

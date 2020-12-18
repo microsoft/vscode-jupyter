@@ -4,7 +4,7 @@
 'use strict';
 
 import { ConfigurationTarget, Event, EventEmitter, Uri, WebviewPanel } from 'vscode';
-import type { NotebookCell, NotebookDocument } from '../../../../types/vscode-proposed';
+import { NotebookCell, NotebookDocument } from '../../../../types/vscode-proposed';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import { traceError } from '../../common/logger';
 import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../common/types';
@@ -28,7 +28,6 @@ import { chainWithPendingUpdates } from './helpers/notebookUpdater';
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
 export class NotebookEditor implements INotebookEditor {
-    public readonly type = 'native';
     public get onDidChangeViewState(): Event<void> {
         return this.changedViewState.event;
     }
@@ -63,6 +62,7 @@ export class NotebookEditor implements INotebookEditor {
     public get onExecutedCode(): Event<string> {
         return this.executedCode.event;
     }
+    public readonly type = 'native';
     public notebook?: INotebook | undefined;
 
     private changedViewState = new EventEmitter<void>();
@@ -254,6 +254,51 @@ export class NotebookEditor implements INotebookEditor {
     }
     public dispose() {
         this._closed.fire(this);
+    }
+
+    public runAbove(uri: Uri): void {
+        const cellId = this.getSelectedCellId(uri);
+        const index = this.document.cells.findIndex((c) => c.uri.toString() === cellId);
+
+        if (index > 0) {
+            // Get all cellIds until `index`.
+            const cells = this.document.cells.slice(0, index).map((cell) => cell);
+            this.runCellRange(cells);
+        }
+    }
+    public runCellAndBelow(uri: Uri): void {
+        const cellId = this.getSelectedCellId(uri);
+        const index = this.document.cells.findIndex((c) => c.uri.toString() === cellId);
+
+        if (index >= 0) {
+            // Get all cellIds starting from `index`.
+            const cells = this.document.cells.slice(index).map((cell) => cell);
+            this.runCellRange(cells);
+        }
+    }
+
+    private getSelectedCellId(uri: Uri): string | undefined {
+        const editor = this.vscodeNotebook.notebookEditors.find((nb) => nb.document.uri.toString() === uri.toString());
+
+        if (editor && editor.selection) {
+            return editor.selection.uri.toString();
+        }
+
+        return undefined;
+    }
+
+    private runCellRange(cells: NotebookCell[]) {
+        const kernel = this.kernelProvider.get(this.file);
+
+        if (!kernel || this.restartingKernel) {
+            return;
+        }
+
+        cells.forEach(async (cell) => {
+            if (cell.cellKind === vscodeNotebookEnums.CellKind.Code) {
+                await kernel.executeCell(cell);
+            }
+        });
     }
 
     private async restartKernelInternal(kernel: IKernel): Promise<void> {
