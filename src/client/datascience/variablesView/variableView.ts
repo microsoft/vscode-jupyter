@@ -18,6 +18,7 @@ import {
     IJupyterVariables,
     IJupyterVariablesRequest,
     INotebookEditorProvider,
+    INotebookExecutionLogger,
     INotebookExtensibility,
     IThemeFinder
 } from '../types';
@@ -107,7 +108,8 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
         if (
             kernelStateEvent.state === KernelState.executed &&
             kernelStateEvent.cell &&
-            kernelStateEvent.cell.metadata.executionOrder
+            kernelStateEvent.cell.metadata.executionOrder &&
+            kernelStateEvent.silent !== true
         ) {
             // IANHU: Just use a message to update execution count? Not the entire cell?
             //this.postMessage(InteractiveWindowMessages.FinishCell, {});

@@ -629,6 +629,7 @@ export class CellExecution {
     ) {
         if (msg.content.execution_count) {
             await updateCellExecutionCount(this.editor, this.cell, msg.content.execution_count);
+            // IANHU: Move this to the finalize section. In the initial request msg correctly reflect silent instead of just passing true
             loggers.forEach((l) =>
                 l.postExecute(translateCellFromNative(this.cell), true, this.cell.language, this.cell.notebook.uri)
             );
