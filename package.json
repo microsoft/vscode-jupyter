@@ -1855,7 +1855,7 @@
         "node-stream-zip": "^1.6.0",
         "onigasm": "^2.2.2",
         "pdfkit": "^0.11.0",
-        "plotly.js-dist": "^1.58.3",
+        "plotly.js-dist": "^1.58.4",
         "portfinder": "^1.0.25",
         "react": "^16.5.2",
         "react-data-grid": "^6.0.2-0",
