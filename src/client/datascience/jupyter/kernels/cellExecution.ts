@@ -476,6 +476,10 @@ export class CellExecution {
                 await this.completedWithErrors(ex);
             }
         } finally {
+            // After execution log our post execute, regardless of success or failure
+            loggers.forEach((l) =>
+                l.postExecute(translateCellFromNative(this.cell), false, this.cell.language, this.cell.notebook.uri)
+            );
             cancelDisposable.dispose();
         }
     }
@@ -630,9 +634,9 @@ export class CellExecution {
         if (msg.content.execution_count) {
             await updateCellExecutionCount(this.editor, this.cell, msg.content.execution_count);
             // IANHU: Move this to the finalize section. In the initial request msg correctly reflect silent instead of just passing true
-            loggers.forEach((l) =>
-                l.postExecute(translateCellFromNative(this.cell), true, this.cell.language, this.cell.notebook.uri)
-            );
+            //loggers.forEach((l) =>
+            //l.postExecute(translateCellFromNative(this.cell), true, this.cell.language, this.cell.notebook.uri)
+            //);
         }
     }
 
