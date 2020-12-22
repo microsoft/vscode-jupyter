@@ -17,6 +17,7 @@ import {
     ICodeCssGenerator,
     IJupyterVariables,
     IJupyterVariablesRequest,
+    INotebookEditor,
     INotebookEditorProvider,
     //INotebookExecutionLogger,
     INotebookExtensibility,
@@ -56,6 +57,7 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
             [path.join(variableViewDir, 'commons.initial.bundle.js'), path.join(variableViewDir, 'variableView.js')]
         );
         this.notebookExtensibility.onKernelStateChange(this.kernelStateChanged, this, this.disposables);
+        this.notebookEditorProvider.onDidChangeActiveNotebookEditor(this.activeEditorChanged, this, this.disposables);
     }
 
     public async load(codeWebview: vscodeWebviewView) {
@@ -111,11 +113,20 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
             kernelStateEvent.cell.metadata.executionOrder &&
             kernelStateEvent.silent !== true
         ) {
-            // IANHU: Just use a message to update execution count? Not the entire cell?
-            //this.postMessage(InteractiveWindowMessages.FinishCell, {});
-            this.postMessage(InteractiveWindowMessages.UpdateVariableViewExecutionCount, {
-                executionCount: kernelStateEvent.cell.metadata.executionOrder
-            }).ignoreErrors();
+            // IANHU: Only update if it's the active document updating here
+            if (
+                this.notebookEditorProvider.activeEditor &&
+                this.notebookEditorProvider.activeEditor.file.toString() === kernelStateEvent.resource.toString()
+            ) {
+                this.postMessage(InteractiveWindowMessages.UpdateVariableViewExecutionCount, {
+                    executionCount: kernelStateEvent.cell.metadata.executionOrder
+                }).ignoreErrors();
+            }
         }
+    }
+
+    private async activeEditorChanged(_editor: INotebookEditor | undefined) {
+        // When the active editor changes we want to force a refresh of variables
+        this.postMessage(InteractiveWindowMessages.ForceVariableRefresh).ignoreErrors();
     }
 }
