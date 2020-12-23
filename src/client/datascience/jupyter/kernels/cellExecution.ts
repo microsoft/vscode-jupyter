@@ -500,7 +500,7 @@ export class CellExecution {
                 traceInfoIf(!!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT, 'KernelMessage = ExecuteResult');
                 await this.handleExecuteResult(msg as KernelMessage.IExecuteResultMsg, clearState);
             } else if (jupyterLab.KernelMessage.isExecuteInputMsg(msg)) {
-                await this.handleExecuteInput(msg as KernelMessage.IExecuteInputMsg, clearState, loggers);
+                await this.handleExecuteInput(msg as KernelMessage.IExecuteInputMsg, clearState);
             } else if (jupyterLab.KernelMessage.isStatusMsg(msg)) {
                 traceInfoIf(!!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT, 'KernelMessage = StatusMessage');
                 // Status is handled by the result promise. While it is running we are active. Otherwise we're stopped.
@@ -626,17 +626,9 @@ export class CellExecution {
         }
     }
 
-    private async handleExecuteInput(
-        msg: KernelMessage.IExecuteInputMsg,
-        _clearState: RefBool,
-        loggers: INotebookExecutionLogger[]
-    ) {
+    private async handleExecuteInput(msg: KernelMessage.IExecuteInputMsg, _clearState: RefBool) {
         if (msg.content.execution_count) {
             await updateCellExecutionCount(this.editor, this.cell, msg.content.execution_count);
-            // IANHU: Move this to the finalize section. In the initial request msg correctly reflect silent instead of just passing true
-            //loggers.forEach((l) =>
-            //l.postExecute(translateCellFromNative(this.cell), true, this.cell.language, this.cell.notebook.uri)
-            //);
         }
     }
 

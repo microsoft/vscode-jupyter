@@ -4,11 +4,13 @@
 
 import { inject, injectable, named } from 'inversify';
 import { CancellationToken, WebviewView, WebviewViewResolveContext } from 'vscode';
-import { IWebviewViewProvider, IWorkspaceService } from '../../common/application/types';
+import { IApplicationShell, IWebviewViewProvider, IWorkspaceService } from '../../common/application/types';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
 import { Identifiers } from '../constants';
+import { IDataViewerFactory } from '../data-viewing/types';
 import {
     ICodeCssGenerator,
+    IJupyterVariableDataProviderFactory,
     IJupyterVariables,
     INotebookEditorProvider,
     INotebookExtensibility,
@@ -33,7 +35,11 @@ export class VariableViewProvider implements IVariableViewProvider {
         @inject(IJupyterVariables) @named(Identifiers.ALL_VARIABLES) private variables: IJupyterVariables,
         @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider,
         @inject(INotebookExtensibility) private readonly notebookExtensibility: INotebookExtensibility,
-        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
+        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
+        @inject(IApplicationShell) private readonly appShell: IApplicationShell,
+        @inject(IJupyterVariableDataProviderFactory)
+        private readonly jupyterVariableDataProviderFactory: IJupyterVariableDataProviderFactory,
+        @inject(IDataViewerFactory) private readonly dataViewerFactory: IDataViewerFactory
     ) {}
 
     public async resolveWebviewView(
@@ -53,7 +59,10 @@ export class VariableViewProvider implements IVariableViewProvider {
             this.variables,
             this.notebookEditorProvider,
             this.notebookExtensibility,
-            this.disposables
+            this.disposables,
+            this.appShell,
+            this.jupyterVariableDataProviderFactory,
+            this.dataViewerFactory
         );
 
         await this.variableView.load(webviewView);
