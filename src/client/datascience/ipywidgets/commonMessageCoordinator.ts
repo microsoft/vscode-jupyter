@@ -47,23 +47,38 @@ export class CommonMessageCoordinator {
     private ipyWidgetMessageDispatcher?: IIPyWidgetMessageDispatcher;
     private ipyWidgetScriptSource?: IPyWidgetScriptSource;
     // tslint:disable-next-line: no-any
-    private postEmitter: EventEmitter<{ message: string; payload: any }> = new EventEmitter<{
-        message: string;
-        // tslint:disable-next-line: no-any
-        payload: any;
-    }>();
+    private postEmitter: EventEmitter<{ message: string; payload: any }>;
     // tslint:disable-next-line: no-require-imports
     private hashFn = require('hash.js').sha256;
     private disposables: IDisposableRegistry;
     private jupyterOutput: IOutputChannel;
 
-    private constructor(private readonly identity: Uri, private readonly serviceContainer: IServiceContainer) {
+    private constructor(
+        private readonly identity: Uri,
+        private readonly serviceContainer: IServiceContainer,
+        // tslint:disable-next-line: no-any
+        postEmitter?: EventEmitter<{ message: string; payload: any }>
+    ) {
+        this.postEmitter =
+            postEmitter ??
+            new EventEmitter<{
+                message: string;
+                // tslint:disable-next-line: no-any
+                payload: any;
+            }>();
         this.disposables = this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
         this.jupyterOutput = this.serviceContainer.get<IOutputChannel>(IOutputChannel, JUPYTER_OUTPUT_CHANNEL);
     }
 
-    public static create(identity: Uri, serviceContainer: IServiceContainer): CommonMessageCoordinator {
-        return new CommonMessageCoordinator(identity, serviceContainer);
+    public static async create(
+        identity: Uri,
+        serviceContainer: IServiceContainer,
+        // tslint:disable-next-line: no-any
+        postEmitter?: EventEmitter<{ message: string; payload: any }>
+    ): Promise<CommonMessageCoordinator> {
+        const result = new CommonMessageCoordinator(identity, serviceContainer, postEmitter);
+        await result.initialize();
+        return result;
     }
 
     public dispose() {
@@ -92,17 +107,11 @@ export class CommonMessageCoordinator {
         this.getIPyWidgetScriptSource()?.onMessage(message, payload);
     }
 
-    public async initialize() {
-        const dispatcher = this.getIPyWidgetMessageDispatcher();
-        const promises = [];
-        if (dispatcher) {
-            promises.push(dispatcher.initialize());
-        }
-        const scriptSource = this.getIPyWidgetScriptSource();
-        if (scriptSource) {
-            promises.push(scriptSource.initialize());
-        }
-        return Promise.all(promises);
+    private initialize(): Promise<[void, void]> {
+        return Promise.all([
+            this.getIPyWidgetMessageDispatcher()?.initialize(),
+            this.getIPyWidgetScriptSource()?.initialize()
+        ]);
     }
 
     private hash(s: string): string {
