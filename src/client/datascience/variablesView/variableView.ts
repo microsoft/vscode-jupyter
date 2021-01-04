@@ -26,7 +26,6 @@ import {
     IJupyterVariablesRequest,
     INotebookEditor,
     INotebookEditorProvider,
-    //INotebookExecutionLogger,
     INotebookExtensibility,
     IThemeFinder
 } from '../types';

@@ -427,17 +427,6 @@ export class CellExecution {
             false,
             metadata
         );
-        //const request = session.requestExecute(
-        //{
-        //code,
-        //silent: false,
-        //stop_on_error: false,
-        //allow_stdin: true,
-        //store_history: true
-        //},
-        //false,
-        //metadata
-        //);
 
         // Listen to messages and update our cell execution state appropriately
 
