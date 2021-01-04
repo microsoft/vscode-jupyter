@@ -32,10 +32,12 @@ suite('DataScience - Jupyter Server URI Selector', () => {
     let cmdManager: ICommandManager;
     let dsSettings: IJupyterSettings;
     let clipboard: IClipboard;
+    let setting: string;
 
     function createDataScienceObject(
         quickPickSelection: string,
-        inputSelection: string
+        inputSelection: string,
+        hasFolders: boolean
     ): { selector: JupyterServerSelector; storage: JupyterServerUriStorage } {
         dsSettings = {
             jupyterServerType: Settings.JupyterServerLocalLaunch
@@ -59,7 +61,12 @@ suite('DataScience - Jupyter Server URI Selector', () => {
         const multiStepFactory = new MultiStepInputFactory(instance(applicationShell));
         // tslint:disable-next-line: no-any
         when(configService.getSettings(anything())).thenReturn(dsSettings as any);
+        when(configService.updateSetting(anything(), anything(), anything(), anything())).thenCall((_s, v) => {
+            setting = v;
+            return Promise.resolve();
+        });
         when(workspaceService.getWorkspaceFolderIdentifier(anything())).thenReturn('1');
+        when(workspaceService.hasWorkspaceFolders).thenReturn(hasFolders);
         const encryptedStorage = new MockEncryptedStorage();
 
         const storage = new JupyterServerUriStorage(
@@ -83,7 +90,22 @@ suite('DataScience - Jupyter Server URI Selector', () => {
     teardown(() => sinon.restore());
 
     test('Local pick server uri', async () => {
-        const { selector, storage } = createDataScienceObject('$(zap) Default', '');
+        const { selector, storage } = createDataScienceObject('$(zap) Default', '', true);
+        await selector.selectJupyterURI(true);
+        let value = await storage.getUri();
+        assert.equal(value, Settings.JupyterServerLocalLaunch, 'Default should pick local launch');
+
+        // Try a second time.
+        await selector.selectJupyterURI(true);
+        value = await storage.getUri();
+        assert.equal(value, Settings.JupyterServerLocalLaunch, 'Default should pick local launch');
+
+        // Verify active items
+        assert.equal(quickPick?.items.length, 2, 'Wrong number of items in the quick pick');
+    });
+
+    test('Local pick server uri with no workspace', async () => {
+        const { selector, storage } = createDataScienceObject('$(zap) Default', '', false);
         await selector.selectJupyterURI(true);
         let value = await storage.getUri();
         assert.equal(value, Settings.JupyterServerLocalLaunch, 'Default should pick local launch');
@@ -98,7 +120,7 @@ suite('DataScience - Jupyter Server URI Selector', () => {
     });
 
     test('Quick pick MRU tests', async () => {
-        const { selector, storage } = createDataScienceObject('$(zap) Default', '');
+        const { selector, storage } = createDataScienceObject('$(zap) Default', '', true);
 
         await selector.selectJupyterURI(true);
         // Verify initial default items
@@ -155,21 +177,29 @@ suite('DataScience - Jupyter Server URI Selector', () => {
     }
 
     test('Remote server uri', async () => {
-        const { selector, storage } = createDataScienceObject('$(server) Existing', 'http://localhost:1111');
+        const { selector, storage } = createDataScienceObject('$(server) Existing', 'http://localhost:1111', true);
         await selector.selectJupyterURI(true);
         const value = await storage.getUri();
         assert.equal(value, 'http://localhost:1111', 'Already running should end up with the user inputed value');
+        assert.equal(setting, 'remote');
+    });
+    test('Remote server uri no workspace', async () => {
+        const { selector, storage } = createDataScienceObject('$(server) Existing', 'http://localhost:1111', false);
+        await selector.selectJupyterURI(true);
+        const value = await storage.getUri();
+        assert.equal(value, 'http://localhost:1111', 'Already running should end up with the user inputed value');
+        assert.equal(setting, 'remote');
     });
 
     test('Remote server uri no local', async () => {
-        const { selector, storage } = createDataScienceObject('$(server) Existing', 'http://localhost:1111');
+        const { selector, storage } = createDataScienceObject('$(server) Existing', 'http://localhost:1111', true);
         await selector.selectJupyterURI(false);
         const value = await storage.getUri();
         assert.equal(value, 'http://localhost:1111', 'Already running should end up with the user inputed value');
     });
 
     test('Remote server uri (reload VSCode if there is a change in settings)', async () => {
-        const { selector, storage } = createDataScienceObject('$(server) Existing', 'http://localhost:1111');
+        const { selector, storage } = createDataScienceObject('$(server) Existing', 'http://localhost:1111', true);
         await selector.selectJupyterURI(true);
         const value = await storage.getUri();
         assert.equal(value, 'http://localhost:1111', 'Already running should end up with the user inputed value');
@@ -177,7 +207,7 @@ suite('DataScience - Jupyter Server URI Selector', () => {
     });
 
     test('Remote server uri (do not reload VSCode if there is no change in settings)', async () => {
-        const { selector, storage } = createDataScienceObject('$(server) Existing', 'http://localhost:1111');
+        const { selector, storage } = createDataScienceObject('$(server) Existing', 'http://localhost:1111', true);
         await storage.setUri('http://localhost:1111');
 
         await selector.selectJupyterURI(true);
@@ -187,7 +217,7 @@ suite('DataScience - Jupyter Server URI Selector', () => {
     });
 
     test('Invalid server uri', async () => {
-        const { selector, storage } = createDataScienceObject('$(server) Existing', 'httx://localhost:1111');
+        const { selector, storage } = createDataScienceObject('$(server) Existing', 'httx://localhost:1111', true);
         await selector.selectJupyterURI(true);
         const value = await storage.getUri();
         assert.notEqual(value, 'httx://localhost:1111', 'Already running should validate');
@@ -199,7 +229,7 @@ suite('DataScience - Jupyter Server URI Selector', () => {
 
         async function testDefaultUri(expectedDefaultUri: string, clipboardValue?: string) {
             const showInputBox = sinon.spy(MultiStepInput.prototype, 'showInputBox');
-            const { selector } = createDataScienceObject('$(server) Existing', 'http://localhost:1111');
+            const { selector } = createDataScienceObject('$(server) Existing', 'http://localhost:1111', true);
             when(clipboard.readText()).thenResolve(clipboardValue || '');
 
             await selector.selectJupyterURI(true);

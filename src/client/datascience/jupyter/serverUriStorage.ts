@@ -124,24 +124,22 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
 
         if (uri === Settings.JupyterServerLocalLaunch) {
             // Just save directly into the settings
-            await this.configService.updateSetting(
-                'jupyterServerType',
-                Settings.JupyterServerLocalLaunch,
-                undefined,
-                ConfigurationTarget.Workspace
-            );
+            await this.updateServerType(Settings.JupyterServerLocalLaunch);
         } else {
             // This is a remote setting. Save in the settings as remote
-            await this.configService.updateSetting(
-                'jupyterServerType',
-                Settings.JupyterServerRemoteLaunch,
-                undefined,
-                ConfigurationTarget.Workspace
-            );
+            await this.updateServerType(Settings.JupyterServerRemoteLaunch);
 
             // Save in the storage (unique account per workspace)
             const key = this.getUriAccountKey();
             await this.encryptedStorage.store(Settings.JupyterServerRemoteLaunchService, key, uri);
+        }
+    }
+
+    private async updateServerType(val: string): Promise<void> {
+        if (this.workspaceService.hasWorkspaceFolders) {
+            return this.configService.updateSetting('jupyterServerType', val, undefined, ConfigurationTarget.Workspace);
+        } else {
+            return this.configService.updateSetting('jupyterServerType', val, undefined, ConfigurationTarget.Global);
         }
     }
 
