@@ -5,6 +5,7 @@
 import { inject, injectable, named } from 'inversify';
 import { CancellationToken, WebviewView, WebviewViewResolveContext } from 'vscode';
 import { IApplicationShell, IWebviewViewProvider, IWorkspaceService } from '../../common/application/types';
+import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
 import { Identifiers } from '../constants';
 import { IDataViewerFactory } from '../data-viewing/types';
@@ -39,7 +40,8 @@ export class VariableViewProvider implements IVariableViewProvider {
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IJupyterVariableDataProviderFactory)
         private readonly jupyterVariableDataProviderFactory: IJupyterVariableDataProviderFactory,
-        @inject(IDataViewerFactory) private readonly dataViewerFactory: IDataViewerFactory
+        @inject(IDataViewerFactory) private readonly dataViewerFactory: IDataViewerFactory,
+        @inject(IFileSystem) private readonly fileSystem: IFileSystem
     ) {}
 
     public async resolveWebviewView(
@@ -62,7 +64,8 @@ export class VariableViewProvider implements IVariableViewProvider {
             this.disposables,
             this.appShell,
             this.jupyterVariableDataProviderFactory,
-            this.dataViewerFactory
+            this.dataViewerFactory,
+            this.fileSystem
         );
 
         await this.variableView.load(webviewView);

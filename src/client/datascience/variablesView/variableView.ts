@@ -10,6 +10,7 @@ import { WebviewView as vscodeWebviewView } from 'vscode';
 import { IApplicationShell, IWebviewViewProvider, IWorkspaceService } from '../../common/application/types';
 import { EXTENSION_ROOT_DIR } from '../../common/constants';
 import { traceError } from '../../common/logger';
+import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, IDisposable, IDisposableRegistry, Resource } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import {
@@ -58,7 +59,8 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
         @unmanaged() private readonly disposables: IDisposableRegistry,
         @unmanaged() private readonly appShell: IApplicationShell,
         @unmanaged() private readonly jupyterVariableDataProviderFactory: IJupyterVariableDataProviderFactory,
-        @unmanaged() private readonly dataViewerFactory: IDataViewerFactory
+        @unmanaged() private readonly dataViewerFactory: IDataViewerFactory,
+        @unmanaged() private readonly fileSystem: IFileSystem
     ) {
         super(
             configuration,
@@ -161,7 +163,7 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
             // We only want to update the variable view execution count when it's the active document executing
             if (
                 this.notebookEditorProvider.activeEditor &&
-                this.notebookEditorProvider.activeEditor.file.toString() === kernelStateEvent.resource.toString()
+                this.fileSystem.arePathsSame(this.notebookEditorProvider.activeEditor.file, kernelStateEvent.resource)
             ) {
                 this.postMessage(InteractiveWindowMessages.UpdateVariableViewExecutionCount, {
                     executionCount: kernelStateEvent.cell.metadata.executionOrder
