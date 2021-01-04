@@ -413,16 +413,13 @@ export class CellExecution {
 
         // For Jupyter requests, silent === don't output, while store_history === don't update execution count
         // https://jupyter-client.readthedocs.io/en/stable/api/client.html#jupyter_client.KernelClient.execute
-        // for our usage (such as variable requests) we do want output, but we don't want to update execution count
-        const executeSilently = false;
-
         const request = session.requestExecute(
             {
                 code,
                 silent: false,
                 stop_on_error: false,
                 allow_stdin: true,
-                store_history: !executeSilently
+                store_history: true
             },
             false,
             metadata
@@ -482,15 +479,13 @@ export class CellExecution {
             }
         } finally {
             // After execution log our post execute, regardless of success or failure
-            // Use our definition of silent here, not the silent on the request message as the
-            // meaning is different
+
+            // For our post execution logging we consider silent either silent execution or
+            // non-silent execution with store_history set to false
+            // Explicit false check as undefined store_history defaults to true if silent is false
+            const wasSilent = request.msg.content.silent || request.msg.content.store_history === false;
             loggers.forEach((l) =>
-                l.postExecute(
-                    translateCellFromNative(this.cell),
-                    executeSilently,
-                    this.cell.language,
-                    this.cell.notebook.uri
-                )
+                l.postExecute(translateCellFromNative(this.cell), wasSilent, this.cell.language, this.cell.notebook.uri)
             );
             cancelDisposable.dispose();
         }
