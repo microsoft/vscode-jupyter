@@ -479,5 +479,6 @@
     "DataScience.illegalEditorConfig": "CustomEditor and NativeNotebook experiments cannot be turned on together",
     "DataScience.pythonExtensionRequired" : "The Python extension is required to perform that task. Click Yes to open Python extension installation page.",
     "DataScience.pythonExtensionInstalled" : "Python extension is now installed. Some features might not be available until a notebook or interactive window session is restarted.",
-    "DataScience.invalidCustomEditor" : "Using the Jupyter notebook editor requires the stable version of VS code and the CustomEditor experiment to be enabled."
+    "DataScience.invalidCustomEditor" : "Using the Jupyter notebook editor requires the stable version of VS code and the CustomEditor experiment to be enabled.",
+    "DataScience.showDataViewerFail" : "Failed to create the Data Viewer. Check the Jupyter tab of the Output window for more info."
 }

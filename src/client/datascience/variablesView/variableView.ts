@@ -16,6 +16,8 @@ import {
     InteractiveWindowMessages,
     IShowDataViewer
 } from '../../datascience/interactive-common/interactiveWindowTypes';
+import { sendTelemetryEvent } from '../../telemetry';
+import { Telemetry } from '../constants';
 import { IDataViewerFactory } from '../data-viewing/types';
 import { DataViewerChecker } from '../interactive-common/dataViewerChecker';
 import { KernelState, KernelStateEventArgs } from '../notebookExtensibility';
@@ -131,7 +133,8 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
             }
         } catch (e) {
             traceError(e);
-            this.appShell.showErrorMessage(e.toString());
+            sendTelemetryEvent(Telemetry.FailedShowDataViewer);
+            this.appShell.showErrorMessage(localize.DataScience.showDataViewerFail());
         }
     }
 
