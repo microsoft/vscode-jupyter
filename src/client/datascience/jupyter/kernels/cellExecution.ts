@@ -411,17 +411,33 @@ export class CellExecution {
             return this.completedSuccessfully().then(noop, noop);
         }
 
+        // For Jupyter requests, silent === don't output, while store_history === don't update execution count
+        // https://jupyter-client.readthedocs.io/en/stable/api/client.html#jupyter_client.KernelClient.execute
+        // for our usage (such as variable requests) we do want output, but we don't want to update execution count
+        const executeSilently = false;
+
         const request = session.requestExecute(
             {
                 code,
                 silent: false,
                 stop_on_error: false,
                 allow_stdin: true,
-                store_history: true // Silent actually means don't output anything. Store_history is what affects execution_count
+                store_history: !executeSilently
             },
             false,
             metadata
         );
+        //const request = session.requestExecute(
+        //{
+        //code,
+        //silent: false,
+        //stop_on_error: false,
+        //allow_stdin: true,
+        //store_history: true
+        //},
+        //false,
+        //metadata
+        //);
 
         // Listen to messages and update our cell execution state appropriately
 
@@ -477,8 +493,15 @@ export class CellExecution {
             }
         } finally {
             // After execution log our post execute, regardless of success or failure
+            // Use our definition of silent here, not the silent on the request message as the
+            // meaning is different
             loggers.forEach((l) =>
-                l.postExecute(translateCellFromNative(this.cell), false, this.cell.language, this.cell.notebook.uri)
+                l.postExecute(
+                    translateCellFromNative(this.cell),
+                    executeSilently,
+                    this.cell.language,
+                    this.cell.notebook.uri
+                )
             );
             cancelDisposable.dispose();
         }
