@@ -208,7 +208,9 @@
                 "VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST": "", // Initialize this to run tests again Julia & other kernels.
                 "VSC_JUPYTER_RUN_NB_TEST": "true", // Initialize this to run notebook tests (must be using VSC Insiders).
                 "VSC_JUPYTER_LOAD_EXPERIMENTS_FROM_FILE": "true",
-                "TEST_FILES_SUFFIX": "vscode.test"
+                "TEST_FILES_SUFFIX": "vscode.test",
+                "XVSC_JUPYTER_INSTRUMENT_CODE_FOR_COVERAGE": "1",
+                "XVSC_JUPYTER_INSTRUMENT_CODE_FOR_COVERAGE_HTML": "1" //Enable to get full coverage repor (in coverage folder).
             },
             "stopOnEntry": false,
             "sourceMaps": true,
@@ -250,9 +252,10 @@
             },
             "env": {
                 // Remove 'X' prefix to run with coverage
-                "XVSC_JUPYTER_INSTRUMENT_CODE_FOR_COVERAGE": "1"
+                "XVSC_JUPYTER_INSTRUMENT_CODE_FOR_COVERAGE": "1",
+                "XVSC_JUPYTER_INSTRUMENT_CODE_FOR_COVERAGE_HTML": "1" //Enable to get full coverage repor (in coverage folder).
             },
-            
+
         },
         {
             "name": "Functional Tests (without VS Code, *.functional.test.ts)",

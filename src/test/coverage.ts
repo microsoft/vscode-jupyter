@@ -13,7 +13,8 @@ export function setupCoverage() {
     if (!process.env.VSC_JUPYTER_INSTRUMENT_CODE_FOR_COVERAGE) {
         return;
     }
-    const reports = ['text', 'text-summary'];
+    const htmlReport = process.env.VSC_JUPYTER_INSTRUMENT_CODE_FOR_COVERAGE_HTML ? ['html'] : [];
+    const reports = htmlReport.concat(['text', 'text-summary']);
     const NYC = require('nyc');
     const nyc = new NYC({
         cwd: path.join(EXTENSION_ROOT_DIR_FOR_TESTS),
@@ -21,6 +22,7 @@ export function setupCoverage() {
         include: ['**/src/client/**/*.ts', '**/out/client/**/*.js'],
         exclude: ['**/test/**', '.vscode-test/**', '**/ipywidgets/**', '**/node_modules/**'],
         reporter: reports,
+        'report-dir': path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'coverage'),
         all: true,
         instrument: true,
         hookRequire: true,
@@ -33,5 +35,5 @@ export function setupCoverage() {
     nyc.reset();
     nyc.wrap();
 
-    return nyc as { writeCoverageFile: Function; report: Function };
+    return nyc as { writeCoverageFile: Function; report: () => Promise<void> };
 }
