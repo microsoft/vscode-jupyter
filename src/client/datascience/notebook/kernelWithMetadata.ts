@@ -13,6 +13,7 @@ import { getKernelConnectionId, IKernel, IKernelProvider, KernelConnectionMetada
 import { updateKernelInfoInNotebookMetadata } from './helpers/helpers';
 
 export class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
+    private pendingExecution: Promise<void> | undefined;
     get preloads(): Uri[] {
         return [
             Uri.file(join(this.context.extensionPath, 'out', 'ipywidgets', 'dist', 'ipywidgets.js')),
@@ -36,18 +37,18 @@ export class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
         private readonly context: IExtensionContext
     ) {}
     public executeCell(doc: NotebookDocument, cell: NotebookCell) {
-        traceInfo('Execute Cell in kernelWithMetadata.ts');
+        traceInfo(`Execute Cell ${cell.document.uri.toString()} in kernelWithMetadata.ts`);
         const kernel = this.kernelProvider.getOrCreate(cell.notebook.uri, { metadata: this.selection });
         if (kernel) {
             this.updateKernelInfoInNotebookWhenAvailable(kernel, doc);
-            kernel.executeCell(cell).catch(noop);
+            return this.chainExecution(() => kernel.executeCell(cell));
         }
     }
     public executeAllCells(document: NotebookDocument) {
         const kernel = this.kernelProvider.getOrCreate(document.uri, { metadata: this.selection });
         if (kernel) {
             this.updateKernelInfoInNotebookWhenAvailable(kernel, document);
-            kernel.executeAllCells(document).catch(noop);
+            return this.chainExecution(() => kernel.executeAllCells(document));
         }
     }
     public cancelCellExecution(_: NotebookDocument, cell: NotebookCell) {
@@ -68,5 +69,11 @@ export class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
             disposable.dispose();
             updateKernelInfoInNotebookMetadata(doc, kernel.info);
         });
+    }
+
+    private chainExecution(next: () => Promise<void>): Promise<void> {
+        const prev = this.pendingExecution ?? Promise.resolve();
+        this.pendingExecution = prev.then(next);
+        return this.pendingExecution;
     }
 }
