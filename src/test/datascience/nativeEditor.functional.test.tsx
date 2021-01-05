@@ -2347,7 +2347,11 @@ df.head()`;
                             assert.equal(isCellFocused(wrapper, 'NativeCell', 1), false);
                             assert.equal(wrapper.find('NativeCell').length, 4);
                             // Verify our model is correct
-                            assert.equal(notebookEditor?.model.cellCount, 4, 'Undo is not changing cell count in model')
+                            assert.equal(
+                                notebookEditor?.model.cellCount,
+                                4,
+                                'Undo is not changing cell count in model'
+                            );
 
                             // Press 'meta+z'. This should do nothing
                             simulateKeyPressOnCell(0, { code: 'z', metaKey: true });
@@ -2371,7 +2375,11 @@ df.head()`;
                             assert.equal(isCellSelected(wrapper, 'NativeCell', 1), false);
                             assert.equal(wrapper.find('NativeCell').length, 3);
                             // Verify our model is correct
-                            assert.equal(notebookEditor?.model.cellCount, 3, 'Undo is not changing cell count in model')
+                            assert.equal(
+                                notebookEditor?.model.cellCount,
+                                3,
+                                'Undo is not changing cell count in model'
+                            );
 
                             // Press 'shift+z' to redo
                             update = waitForMessage(ioc, InteractiveWindowMessages.ExecutionRendered);
@@ -2385,7 +2393,11 @@ df.head()`;
                             assert.equal(isCellFocused(wrapper, 'NativeCell', 1), false);
                             assert.equal(wrapper.find('NativeCell').length, 4);
                             // Verify our model is correct
-                            assert.equal(notebookEditor?.model.cellCount, 4, 'Redo is not changing cell count in model')
+                            assert.equal(
+                                notebookEditor?.model.cellCount,
+                                4,
+                                'Redo is not changing cell count in model'
+                            );
 
                             // Press 'z' to undo.
                             update = waitForMessage(ioc, InteractiveWindowMessages.ExecutionRendered);
@@ -2398,7 +2410,11 @@ df.head()`;
                             assert.equal(wrapper.find('NativeCell').length, 3);
 
                             // Verify our model is correct
-                            assert.equal(notebookEditor?.model.cellCount, 3, 'Undo is not changing cell count in model')
+                            assert.equal(
+                                notebookEditor?.model.cellCount,
+                                3,
+                                'Undo is not changing cell count in model'
+                            );
                         }
                     });
 
