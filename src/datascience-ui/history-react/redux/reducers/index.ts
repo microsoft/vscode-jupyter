@@ -44,10 +44,10 @@ export const reducerMap: Partial<IInteractiveActionMapping> = {
     [CommonActionType.LOAD_IPYWIDGET_CLASS_FAILURE]: CommonEffects.handleLoadIPyWidgetClassFailure,
     [CommonActionType.IPYWIDGET_WIDGET_VERSION_NOT_SUPPORTED]: CommonEffects.notifyAboutUnsupportedWidgetVersions,
     [CommonActionType.IPYWIDGET_RENDER_FAILURE]: CommonEffects.handleIPyWidgetRenderFailure,
+    [CommonActionType.UNDO]: Execution.undo,
+    [CommonActionType.REDO]: Execution.redo,
 
     // Messages from the webview (some are ignored)
-    [InteractiveWindowMessages.Undo]: Execution.undo,
-    [InteractiveWindowMessages.Redo]: Execution.redo,
     [InteractiveWindowMessages.StartCell]: Creation.startCell,
     [InteractiveWindowMessages.FinishCell]: Creation.finishCell,
     [InteractiveWindowMessages.UpdateCellWithExecutionResults]: Creation.updateCell,
@@ -70,5 +70,7 @@ export const reducerMap: Partial<IInteractiveActionMapping> = {
     [InteractiveWindowMessages.UpdateDisplayData]: CommonEffects.handleUpdateDisplayData,
     [InteractiveWindowMessages.HasCell]: Transfer.hasCell,
     [InteractiveWindowMessages.UpdateExternalCellButtons]: CommonEffects.handleWebviewButtons,
-    [InteractiveWindowMessages.ExecuteExternalCommand]: Transfer.executeExternalCommand
+    [InteractiveWindowMessages.ExecuteExternalCommand]: Transfer.executeExternalCommand,
+    [InteractiveWindowMessages.UndoCommand]: Execution.undo,
+    [InteractiveWindowMessages.RedoCommand]: Execution.redo
 };
