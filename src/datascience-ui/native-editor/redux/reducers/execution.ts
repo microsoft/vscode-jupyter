@@ -240,13 +240,18 @@ export namespace Execution {
             const cells = arg.prevState.undoStack[arg.prevState.undoStack.length - 1];
             const undoStack = arg.prevState.undoStack.slice(0, arg.prevState.undoStack.length - 1);
             const redoStack = Helpers.pushStack(arg.prevState.redoStack, arg.prevState.cellVMs);
-            postActionToExtension(arg, InteractiveWindowMessages.Undo);
+            postActionToExtension(
+                arg,
+                InteractiveWindowMessages.Undo,
+                cells.map((c) => c.cell)
+            );
             return {
                 ...arg.prevState,
                 cellVMs: cells,
                 undoStack: undoStack,
                 redoStack: redoStack,
-                skipNextScroll: true
+                skipNextScroll: true,
+                dirty: true
             };
         }
 
@@ -259,13 +264,18 @@ export namespace Execution {
             const cells = arg.prevState.redoStack[arg.prevState.redoStack.length - 1];
             const redoStack = arg.prevState.redoStack.slice(0, arg.prevState.redoStack.length - 1);
             const undoStack = Helpers.pushStack(arg.prevState.undoStack, arg.prevState.cellVMs);
-            postActionToExtension(arg, InteractiveWindowMessages.Redo);
+            postActionToExtension(
+                arg,
+                InteractiveWindowMessages.Redo,
+                cells.map((c) => c.cell)
+            );
             return {
                 ...arg.prevState,
                 cellVMs: cells,
                 undoStack: undoStack,
                 redoStack: redoStack,
-                skipNextScroll: true
+                skipNextScroll: true,
+                dirty: true
             };
         }
 

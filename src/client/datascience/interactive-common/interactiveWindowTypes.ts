@@ -609,8 +609,8 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.GetAllCellCode]: IResponse;
     public [InteractiveWindowMessages.ReturnAllCellCode]: IReturnAllCodeResponse;
     public [InteractiveWindowMessages.DeleteAllCells]: IAddCellAction;
-    public [InteractiveWindowMessages.Undo]: never | undefined;
-    public [InteractiveWindowMessages.Redo]: never | undefined;
+    public [InteractiveWindowMessages.Undo]: ICell[];
+    public [InteractiveWindowMessages.Redo]: ICell[];
     public [InteractiveWindowMessages.ExpandAll]: never | undefined;
     public [InteractiveWindowMessages.CollapseAll]: never | undefined;
     public [InteractiveWindowMessages.StartProgress]: never | undefined;

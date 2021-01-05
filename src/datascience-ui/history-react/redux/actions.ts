@@ -49,8 +49,8 @@ export const actionCreators = {
     deleteAllCells: (): CommonAction => createIncomingAction(InteractiveWindowMessages.DeleteAllCells),
     deleteCell: (cellId: string): CommonAction<ICellAction> =>
         createIncomingActionWithPayload(CommonActionType.DELETE_CELL, { cellId }),
-    undo: (): CommonAction => createIncomingAction(InteractiveWindowMessages.Undo),
-    redo: (): CommonAction => createIncomingAction(InteractiveWindowMessages.Redo),
+    undo: (): CommonAction => createIncomingAction(CommonActionType.UNDO),
+    redo: (): CommonAction => createIncomingAction(CommonActionType.REDO),
     linkClick: (href: string): CommonAction<ILinkClickAction> =>
         createIncomingActionWithPayload(CommonActionType.LINK_CLICK, { href }),
     showPlot: (imageHtml: string) => createIncomingActionWithPayload(InteractiveWindowMessages.ShowPlot, imageHtml),

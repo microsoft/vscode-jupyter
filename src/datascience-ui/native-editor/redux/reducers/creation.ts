@@ -100,8 +100,8 @@ export namespace Creation {
         if (position >= 0) {
             newList.splice(position, 0, newVM);
         } else {
-            newList.splice(0, 0, newVM);
-            position = 0;
+            newList.splice(newList.length, 0, newVM);
+            position = newList.length;
         }
 
         const result = {
@@ -296,7 +296,7 @@ export namespace Creation {
             // Otherwise just a straight delete
             const index = arg.prevState.cellVMs.findIndex((c) => c.cell.id === arg.payload.data.cellId);
             if (index >= 0) {
-                Transfer.postModelRemove(arg, 0, cells[index].cell);
+                Transfer.postModelRemove(arg, index, cells[index].cell);
 
                 // Recompute select/focus if this item has either
                 const previousSelection = getSelectedAndFocusedInfo(arg.prevState);
