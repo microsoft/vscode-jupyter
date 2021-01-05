@@ -263,7 +263,7 @@ function convertToMonacoMarkdown(
         | vscode.MarkedString[]
 ): monacoEditor.IMarkdownString[] {
     // tslint:disable-next-line: no-any
-    if (strings.hasOwnProperty('kind') || (strings as any).kind) {
+    if ('kind' in (strings as any)) {
         const content = strings as vscodeLanguageClient.MarkupContent;
         return [
             {
@@ -271,7 +271,7 @@ function convertToMonacoMarkdown(
             }
         ];
         // tslint:disable-next-line: no-any
-    } else if (strings.hasOwnProperty('value') || (strings as any).value) {
+    } else if ('value' in (strings as any)) {
         // tslint:disable-next-line: no-any
         const content = strings as any;
         return [
