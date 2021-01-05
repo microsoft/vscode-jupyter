@@ -51,6 +51,8 @@ export enum InteractiveWindowMessages {
     DeleteAllCells = 'delete_all_cells',
     Undo = 'undo',
     Redo = 'redo',
+    UndoCommand = 'undo.command', // Only used by the interactive window
+    RedoCommand = 'redo.command',
     ExpandAll = 'expand_all',
     CollapseAll = 'collapse_all',
     StartProgress = 'start_progress',
@@ -611,6 +613,8 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.DeleteAllCells]: IAddCellAction;
     public [InteractiveWindowMessages.Undo]: ICell[];
     public [InteractiveWindowMessages.Redo]: ICell[];
+    public [InteractiveWindowMessages.UndoCommand]: never | undefined;
+    public [InteractiveWindowMessages.RedoCommand]: never | undefined;
     public [InteractiveWindowMessages.ExpandAll]: never | undefined;
     public [InteractiveWindowMessages.CollapseAll]: never | undefined;
     public [InteractiveWindowMessages.StartProgress]: never | undefined;

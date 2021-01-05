@@ -100,8 +100,8 @@ export namespace Creation {
         if (position >= 0) {
             newList.splice(position, 0, newVM);
         } else {
-            newList.splice(newList.length, 0, newVM);
-            position = newList.length;
+            newList.splice(0, 0, newVM);
+            position = 0;
         }
 
         const result = {
@@ -145,7 +145,19 @@ export namespace Creation {
     }
 
     export function insertBelow(arg: NativeEditorReducerArg<ICellAction & IAddCellAction>): IMainState {
-        const newVM = prepareCellVM(createEmptyCell(arg.payload.data.newCellId, null), false, arg.prevState.settings);
+        return insertExistingBelow({
+            ...arg,
+            payload: {
+                ...arg.payload,
+                data: { ...arg.payload.data, cell: createEmptyCell(arg.payload.data.newCellId, null) }
+            }
+        });
+    }
+
+    export function insertExistingBelow(
+        arg: NativeEditorReducerArg<ICellAction & IAddCellAction & { cell: ICell }>
+    ): IMainState {
+        const newVM = prepareCellVM(arg.payload.data.cell, false, arg.prevState.settings);
         const newList = [...arg.prevState.cellVMs];
 
         // Find the position where we want to insert
@@ -370,17 +382,29 @@ export namespace Creation {
                     payload: { ...arg.payload, data: { cellId: arg.payload.data.cell.id } }
                 });
             case 'remove':
-                const cellBelow =
-                    arg.prevState.cellVMs.length > arg.payload.data.index
-                        ? arg.prevState.cellVMs[arg.payload.data.index].cell
-                        : undefined;
-                return insertExistingAbove({
-                    ...disabledQueueArg,
-                    payload: {
-                        ...arg.payload,
-                        data: { cell: arg.payload.data.cell, cellId: cellBelow ? cellBelow.id : undefined }
-                    }
-                });
+                if (arg.prevState.cellVMs.length > arg.payload.data.index) {
+                    const cellBelow = arg.prevState.cellVMs[arg.payload.data.index].cell;
+                    return insertExistingAbove({
+                        ...disabledQueueArg,
+                        payload: {
+                            ...arg.payload,
+                            data: { cell: arg.payload.data.cell, cellId: cellBelow ? cellBelow.id : undefined }
+                        }
+                    });
+                } else {
+                    // Delete is outside current range. Insert at the bottom
+                    return insertExistingBelow({
+                        ...disabledQueueArg,
+                        payload: {
+                            ...arg.payload,
+                            data: {
+                                cell: arg.payload.data.cell,
+                                cellId: undefined,
+                                newCellId: arg.payload.data.cell.id
+                            }
+                        }
+                    });
+                }
             case 'remove_all':
                 return loadAllCells({
                     ...disabledQueueArg,

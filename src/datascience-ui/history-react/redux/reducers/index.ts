@@ -70,5 +70,7 @@ export const reducerMap: Partial<IInteractiveActionMapping> = {
     [InteractiveWindowMessages.UpdateDisplayData]: CommonEffects.handleUpdateDisplayData,
     [InteractiveWindowMessages.HasCell]: Transfer.hasCell,
     [InteractiveWindowMessages.UpdateExternalCellButtons]: CommonEffects.handleWebviewButtons,
-    [InteractiveWindowMessages.ExecuteExternalCommand]: Transfer.executeExternalCommand
+    [InteractiveWindowMessages.ExecuteExternalCommand]: Transfer.executeExternalCommand,
+    [InteractiveWindowMessages.UndoCommand]: Execution.undo,
+    [InteractiveWindowMessages.RedoCommand]: Execution.redo
 };

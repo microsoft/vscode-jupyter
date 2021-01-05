@@ -208,6 +208,8 @@ const messageWithMessageTypes: MessageMapping<IInteractiveWindowMapping> & Messa
     [InteractiveWindowMessages.SubmitNewCell]: MessageType.other,
     [InteractiveWindowMessages.Sync]: MessageType.other,
     [InteractiveWindowMessages.Undo]: MessageType.other,
+    [InteractiveWindowMessages.UndoCommand]: MessageType.other,
+    [InteractiveWindowMessages.RedoCommand]: MessageType.other,
     [InteractiveWindowMessages.UnfocusedCellEditor]: MessageType.syncWithLiveShare,
     [InteractiveWindowMessages.UpdateCellWithExecutionResults]:
         MessageType.syncAcrossSameNotebooks | MessageType.syncWithLiveShare,
