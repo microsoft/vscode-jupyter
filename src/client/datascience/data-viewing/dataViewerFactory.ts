@@ -7,6 +7,8 @@ import { inject, injectable } from 'inversify';
 
 import { IAsyncDisposable, IAsyncDisposableRegistry } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
+import { captureTelemetry } from '../../telemetry';
+import { Telemetry } from '../constants';
 import { IDataViewer, IDataViewerDataProvider, IDataViewerFactory } from './types';
 
 @injectable()
@@ -23,6 +25,7 @@ export class DataViewerFactory implements IDataViewerFactory, IAsyncDisposable {
         await Promise.all(this.activeExplorers.map((d) => d.dispose()));
     }
 
+    @captureTelemetry(Telemetry.StartShowDataViewer)
     public async create(dataProvider: IDataViewerDataProvider, title: string): Promise<IDataViewer> {
         let result: IDataViewer | undefined;
 

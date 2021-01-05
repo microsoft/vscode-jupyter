@@ -411,13 +411,15 @@ export class CellExecution {
             return this.completedSuccessfully().then(noop, noop);
         }
 
+        // For Jupyter requests, silent === don't output, while store_history === don't update execution count
+        // https://jupyter-client.readthedocs.io/en/stable/api/client.html#jupyter_client.KernelClient.execute
         const request = session.requestExecute(
             {
                 code,
                 silent: false,
                 stop_on_error: false,
                 allow_stdin: true,
-                store_history: true // Silent actually means don't output anything. Store_history is what affects execution_count
+                store_history: true
             },
             false,
             metadata
@@ -476,6 +478,15 @@ export class CellExecution {
                 await this.completedWithErrors(ex);
             }
         } finally {
+            // After execution log our post execute, regardless of success or failure
+
+            // For our post execution logging we consider silent either silent execution or
+            // non-silent execution with store_history set to false
+            // Explicit false check as undefined store_history defaults to true if silent is false
+            const wasSilent = request.msg.content.silent || request.msg.content.store_history === false;
+            loggers.forEach((l) =>
+                l.postExecute(translateCellFromNative(this.cell), wasSilent, this.cell.language, this.cell.notebook.uri)
+            );
             cancelDisposable.dispose();
         }
     }
@@ -496,7 +507,7 @@ export class CellExecution {
                 traceInfoIf(!!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT, 'KernelMessage = ExecuteResult');
                 await this.handleExecuteResult(msg as KernelMessage.IExecuteResultMsg, clearState);
             } else if (jupyterLab.KernelMessage.isExecuteInputMsg(msg)) {
-                await this.handleExecuteInput(msg as KernelMessage.IExecuteInputMsg, clearState, loggers);
+                await this.handleExecuteInput(msg as KernelMessage.IExecuteInputMsg, clearState);
             } else if (jupyterLab.KernelMessage.isStatusMsg(msg)) {
                 traceInfoIf(!!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT, 'KernelMessage = StatusMessage');
                 // Status is handled by the result promise. While it is running we are active. Otherwise we're stopped.
@@ -622,16 +633,9 @@ export class CellExecution {
         }
     }
 
-    private async handleExecuteInput(
-        msg: KernelMessage.IExecuteInputMsg,
-        _clearState: RefBool,
-        loggers: INotebookExecutionLogger[]
-    ) {
+    private async handleExecuteInput(msg: KernelMessage.IExecuteInputMsg, _clearState: RefBool) {
         if (msg.content.execution_count) {
             await updateCellExecutionCount(this.editor, this.cell, msg.content.execution_count);
-            loggers.forEach((l) =>
-                l.postExecute(translateCellFromNative(this.cell), true, this.cell.language, this.cell.notebook.uri)
-            );
         }
     }
 

@@ -9,6 +9,7 @@ export type KernelStateEventArgs = {
     resource: Uri;
     state: KernelState;
     cell?: NotebookCell;
+    silent?: boolean;
 };
 
 export enum KernelState {
@@ -28,13 +29,14 @@ export class NotebookExtensibility implements INotebookExecutionLogger, INoteboo
     public async preExecute(): Promise<void> {
         noop();
     }
-    public async postExecute(cell: ICell, _silent: boolean, language: string, resource: Uri): Promise<void> {
+    public async postExecute(cell: ICell, silent: boolean, language: string, resource: Uri): Promise<void> {
         const nbCell = translateCellToNative(cell, language);
         if (nbCell && nbCell.code.length > 0) {
             this.kernelStateChange.fire({
                 resource,
                 state: KernelState.executed,
-                cell: nbCell as NotebookCell
+                cell: nbCell as NotebookCell,
+                silent
             });
         }
     }

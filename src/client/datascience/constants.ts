@@ -287,7 +287,9 @@ export enum Telemetry {
     ShiftEnterBannerShown = 'DS_INTERNAL.SHIFTENTER_BANNER_SHOWN',
     EnableInteractiveShiftEnter = 'DATASCIENCE.ENABLE_INTERACTIVE_SHIFT_ENTER',
     DisableInteractiveShiftEnter = 'DATASCIENCE.DISABLE_INTERACTIVE_SHIFT_ENTER',
-    ShowDataViewer = 'DATASCIENCE.SHOW_DATA_EXPLORER',
+    StartShowDataViewer = 'DATASCIENCE.START_SHOW_DATA_EXPLORER', // Called by the factory when attempting to load the data viewer
+    ShowDataViewer = 'DATASCIENCE.SHOW_DATA_EXPLORER', // Called by the data viewer itself when it is actually loaded
+    FailedShowDataViewer = 'DATASCIENCE.FAILED_SHOW_DATA_EXPLORER', // Called by the factory when the data viewer fails to load
     RunFileInteractive = 'DATASCIENCE.RUN_FILE_INTERACTIVE',
     DebugFileInteractive = 'DATASCIENCE.DEBUG_FILE_INTERACTIVE',
     PandasNotInstalled = 'DS_INTERNAL.SHOW_DATA_NO_PANDAS',

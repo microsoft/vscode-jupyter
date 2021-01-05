@@ -643,7 +643,9 @@ export interface IEventNamePropertyMapping {
         azure: boolean;
     };
     [Telemetry.ShiftEnterBannerShown]: never | undefined;
+    [Telemetry.StartShowDataViewer]: never | undefined;
     [Telemetry.ShowDataViewer]: { rows: number | undefined; columns: number | undefined };
+    [Telemetry.FailedShowDataViewer]: never | undefined;
     [Telemetry.CreateNewInteractive]: never | undefined;
     [Telemetry.StartJupyter]: never | undefined;
     [Telemetry.StartJupyterProcess]: never | undefined;

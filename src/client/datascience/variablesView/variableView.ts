@@ -7,12 +7,31 @@ import { injectable, unmanaged } from 'inversify';
 import * as path from 'path';
 import { WebviewView as vscodeWebviewView } from 'vscode';
 
-import { IWebviewViewProvider, IWorkspaceService } from '../../common/application/types';
+import { IApplicationShell, IWebviewViewProvider, IWorkspaceService } from '../../common/application/types';
 import { EXTENSION_ROOT_DIR } from '../../common/constants';
 import { traceError } from '../../common/logger';
-import { IConfigurationService, IDisposable, Resource } from '../../common/types';
-import { InteractiveWindowMessages } from '../../datascience/interactive-common/interactiveWindowTypes';
-import { ICodeCssGenerator, IJupyterVariablesRequest, IJupyterVariablesResponse, IThemeFinder } from '../types';
+import { IFileSystem } from '../../common/platform/types';
+import { IConfigurationService, IDisposable, IDisposableRegistry, Resource } from '../../common/types';
+import * as localize from '../../common/utils/localize';
+import {
+    InteractiveWindowMessages,
+    IShowDataViewer
+} from '../../datascience/interactive-common/interactiveWindowTypes';
+import { sendTelemetryEvent } from '../../telemetry';
+import { Telemetry } from '../constants';
+import { IDataViewerFactory } from '../data-viewing/types';
+import { DataViewerChecker } from '../interactive-common/dataViewerChecker';
+import { KernelState, KernelStateEventArgs } from '../notebookExtensibility';
+import {
+    ICodeCssGenerator,
+    IJupyterVariableDataProviderFactory,
+    IJupyterVariables,
+    IJupyterVariablesRequest,
+    INotebookEditor,
+    INotebookEditorProvider,
+    INotebookExtensibility,
+    IThemeFinder
+} from '../types';
 import { WebviewViewHost } from '../webviews/webviewViewHost';
 import { IVariableViewPanelMapping } from './types';
 import { VariableViewMessageListener } from './variableViewMessageListener';
@@ -20,8 +39,11 @@ import { VariableViewMessageListener } from './variableViewMessageListener';
 const variableViewDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'viewers');
 
 // This is the client side host for the native notebook variable view webview
+// It handles passing messages to and from the react view as well as tracking
+// code execution changes and active editor switches
 @injectable()
 export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> implements IDisposable {
+    private dataViewerChecker: DataViewerChecker;
     protected get owningResource(): Resource {
         return undefined;
     }
@@ -30,7 +52,15 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
         @unmanaged() cssGenerator: ICodeCssGenerator,
         @unmanaged() themeFinder: IThemeFinder,
         @unmanaged() workspaceService: IWorkspaceService,
-        @unmanaged() provider: IWebviewViewProvider
+        @unmanaged() provider: IWebviewViewProvider,
+        @unmanaged() private readonly variables: IJupyterVariables,
+        @unmanaged() private readonly notebookEditorProvider: INotebookEditorProvider,
+        @unmanaged() private readonly notebookExtensibility: INotebookExtensibility,
+        @unmanaged() private readonly disposables: IDisposableRegistry,
+        @unmanaged() private readonly appShell: IApplicationShell,
+        @unmanaged() private readonly jupyterVariableDataProviderFactory: IJupyterVariableDataProviderFactory,
+        @unmanaged() private readonly dataViewerFactory: IDataViewerFactory,
+        @unmanaged() private readonly fileSystem: IFileSystem
     ) {
         super(
             configuration,
@@ -42,6 +72,12 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
             variableViewDir,
             [path.join(variableViewDir, 'commons.initial.bundle.js'), path.join(variableViewDir, 'variableView.js')]
         );
+
+        // We need to know if kernel state changes or if the active notebook editor is changed
+        this.notebookExtensibility.onKernelStateChange(this.kernelStateChanged, this, this.disposables);
+        this.notebookEditorProvider.onDidChangeActiveNotebookEditor(this.activeEditorChanged, this, this.disposables);
+
+        this.dataViewerChecker = new DataViewerChecker(configuration, appShell);
     }
 
     public async load(codeWebview: vscodeWebviewView) {
@@ -59,6 +95,9 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
         switch (message) {
             case InteractiveWindowMessages.GetVariablesRequest:
                 this.handleMessage(message, payload, this.requestVariables);
+                break;
+            case InteractiveWindowMessages.ShowDataViewer:
+                this.handleMessage(message, payload, this.showDataViewer);
                 break;
             default:
                 break;
@@ -78,29 +117,63 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
         handler.bind(this)(args);
     }
 
-    // This is called when the UI side requests new variable data
-    private async requestVariables(args: IJupyterVariablesRequest): Promise<void> {
-        // For now, this just returns a fake variable that we can display in the UI
-        const response: IJupyterVariablesResponse = {
-            totalCount: 1,
-            pageResponse: [
-                {
-                    name: 'test',
-                    value: 'testing',
-                    executionCount: args?.executionCount,
-                    supportsDataExplorer: false,
-                    type: 'string',
-                    size: 1,
-                    shape: '(1, 1)',
-                    count: 1,
-                    truncated: false
-                }
-            ],
-            pageStartIndex: args?.startIndex,
-            executionCount: args?.executionCount,
-            refreshCount: args?.refreshCount || 0
-        };
+    // Handle a request from the react UI to show our data viewer
+    private async showDataViewer(request: IShowDataViewer): Promise<void> {
+        try {
+            if (
+                this.notebookEditorProvider.activeEditor &&
+                this.notebookEditorProvider.activeEditor.notebook &&
+                (await this.dataViewerChecker.isRequestedColumnSizeAllowed(request.columnSize, this.owningResource))
+            ) {
+                // Create a variable data provider and pass it to the data viewer factory to create the data viewer
+                const jupyterVariableDataProvider = await this.jupyterVariableDataProviderFactory.create(
+                    request.variable,
+                    this.notebookEditorProvider.activeEditor.notebook
+                );
+                const title: string = `${localize.DataScience.dataExplorerTitle()} - ${request.variable.name}`;
+                await this.dataViewerFactory.create(jupyterVariableDataProvider, title);
+            }
+        } catch (e) {
+            traceError(e);
+            sendTelemetryEvent(Telemetry.FailedShowDataViewer);
+            this.appShell.showErrorMessage(localize.DataScience.showDataViewerFail());
+        }
+    }
 
-        this.postMessage(InteractiveWindowMessages.GetVariablesResponse, response).ignoreErrors();
+    // Variables for the current active editor are being requested, check that we have a valid active editor
+    // and use the variables interface to fetch them and pass them to the variable view UI
+    private async requestVariables(args: IJupyterVariablesRequest): Promise<void> {
+        if (this.notebookEditorProvider.activeEditor && this.notebookEditorProvider.activeEditor.notebook) {
+            const response = await this.variables.getVariables(args, this.notebookEditorProvider.activeEditor.notebook);
+
+            this.postMessage(InteractiveWindowMessages.GetVariablesResponse, response).ignoreErrors();
+        }
+    }
+
+    // When the kernel state is changed we need to see if it's a cell from the active document that finished execution
+    // If so update the execution count on the variable view to refresh variables
+    private async kernelStateChanged(kernelStateEvent: KernelStateEventArgs) {
+        // Check for non-silent executes from the current cell that have an execution order
+        if (
+            kernelStateEvent.state === KernelState.executed &&
+            kernelStateEvent.cell &&
+            kernelStateEvent.cell.metadata.executionOrder &&
+            kernelStateEvent.silent !== true
+        ) {
+            // We only want to update the variable view execution count when it's the active document executing
+            if (
+                this.notebookEditorProvider.activeEditor &&
+                this.fileSystem.arePathsSame(this.notebookEditorProvider.activeEditor.file, kernelStateEvent.resource)
+            ) {
+                this.postMessage(InteractiveWindowMessages.UpdateVariableViewExecutionCount, {
+                    executionCount: kernelStateEvent.cell.metadata.executionOrder
+                }).ignoreErrors();
+            }
+        }
+    }
+
+    private async activeEditorChanged(_editor: INotebookEditor | undefined) {
+        // When the active editor changes we want to force a refresh of variables
+        this.postMessage(InteractiveWindowMessages.ForceVariableRefresh).ignoreErrors();
     }
 }

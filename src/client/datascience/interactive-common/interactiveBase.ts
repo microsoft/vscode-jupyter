@@ -1028,7 +1028,8 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
             }
         } catch (e) {
             traceError(e);
-            this.applicationShell.showErrorMessage(e.toString());
+            sendTelemetryEvent(Telemetry.FailedShowDataViewer);
+            this.applicationShell.showErrorMessage(localize.DataScience.showDataViewerFail());
         }
     }
 

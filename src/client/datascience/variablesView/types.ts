@@ -1,5 +1,6 @@
 import { IVariableExplorerHeight } from '../../../datascience-ui/interactive-common/redux/reducers/types';
 import {
+    IFinishCell,
     InteractiveWindowMessages,
     IShowDataViewer
 } from '../../datascience/interactive-common/interactiveWindowTypes';
@@ -23,6 +24,8 @@ export class IVariableViewPanelMapping {
     public [InteractiveWindowMessages.VariablesComplete]: never | undefined;
     public [SharedMessages.UpdateSettings]: string;
     public [SharedMessages.LocInit]: string;
+    public [InteractiveWindowMessages.FinishCell]: IFinishCell;
+    public [InteractiveWindowMessages.UpdateVariableViewExecutionCount]: { executionCount: number };
 }
 
 export const IVariableViewProvider = Symbol('IVariableViewProvider');

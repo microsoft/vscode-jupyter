@@ -2,11 +2,21 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { inject, injectable } from 'inversify';
+import { inject, injectable, named } from 'inversify';
 import { CancellationToken, WebviewView, WebviewViewResolveContext } from 'vscode';
-import { IWebviewViewProvider, IWorkspaceService } from '../../common/application/types';
-import { IConfigurationService } from '../../common/types';
-import { ICodeCssGenerator, IThemeFinder } from '../types';
+import { IApplicationShell, IWebviewViewProvider, IWorkspaceService } from '../../common/application/types';
+import { IFileSystem } from '../../common/platform/types';
+import { IConfigurationService, IDisposableRegistry } from '../../common/types';
+import { Identifiers } from '../constants';
+import { IDataViewerFactory } from '../data-viewing/types';
+import {
+    ICodeCssGenerator,
+    IJupyterVariableDataProviderFactory,
+    IJupyterVariables,
+    INotebookEditorProvider,
+    INotebookExtensibility,
+    IThemeFinder
+} from '../types';
 import { IVariableViewProvider } from './types';
 import { VariableView } from './variableView';
 
@@ -22,7 +32,16 @@ export class VariableViewProvider implements IVariableViewProvider {
         @inject(ICodeCssGenerator) private readonly cssGenerator: ICodeCssGenerator,
         @inject(IThemeFinder) private readonly themeFinder: IThemeFinder,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
-        @inject(IWebviewViewProvider) private readonly provider: IWebviewViewProvider
+        @inject(IWebviewViewProvider) private readonly webviewViewProvider: IWebviewViewProvider,
+        @inject(IJupyterVariables) @named(Identifiers.ALL_VARIABLES) private variables: IJupyterVariables,
+        @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider,
+        @inject(INotebookExtensibility) private readonly notebookExtensibility: INotebookExtensibility,
+        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
+        @inject(IApplicationShell) private readonly appShell: IApplicationShell,
+        @inject(IJupyterVariableDataProviderFactory)
+        private readonly jupyterVariableDataProviderFactory: IJupyterVariableDataProviderFactory,
+        @inject(IDataViewerFactory) private readonly dataViewerFactory: IDataViewerFactory,
+        @inject(IFileSystem) private readonly fileSystem: IFileSystem
     ) {}
 
     public async resolveWebviewView(
@@ -38,7 +57,15 @@ export class VariableViewProvider implements IVariableViewProvider {
             this.cssGenerator,
             this.themeFinder,
             this.workspaceService,
-            this.provider
+            this.webviewViewProvider,
+            this.variables,
+            this.notebookEditorProvider,
+            this.notebookExtensibility,
+            this.disposables,
+            this.appShell,
+            this.jupyterVariableDataProviderFactory,
+            this.dataViewerFactory,
+            this.fileSystem
         );
 
         await this.variableView.load(webviewView);

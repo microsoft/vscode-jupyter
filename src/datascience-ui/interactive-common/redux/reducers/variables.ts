@@ -203,6 +203,33 @@ function handleRestarted(arg: VariableReducerArg): IVariableState {
     };
 }
 
+// Update the execution count associated with the currently active variable view
+function updateExecutionCount(arg: VariableReducerArg<{ executionCount: number }>): IVariableState {
+    const executionCount = arg.payload.data.executionCount;
+
+    // If the variables are visible, refresh them
+    if (arg.prevState.visible && executionCount && executionCount > arg.prevState.currentExecutionCount) {
+        return handleRequest({
+            ...arg,
+            payload: {
+                ...arg.payload,
+                data: {
+                    executionCount,
+                    sortColumn: 'name',
+                    sortAscending: true,
+                    startIndex: 0,
+                    pageSize: arg.prevState.pageSize,
+                    refreshCount: arg.prevState.refreshCount
+                }
+            }
+        });
+    }
+    return {
+        ...arg.prevState,
+        currentExecutionCount: executionCount ? executionCount : arg.prevState.currentExecutionCount
+    };
+}
+
 function handleFinishCell(arg: VariableReducerArg<IFinishCell>): IVariableState {
     const executionCount = arg.payload.data.cell.data.execution_count
         ? parseInt(arg.payload.data.cell.data.execution_count.toString(), 10)
@@ -285,7 +312,8 @@ const reducerMap: Partial<VariableActionMapping> = {
     [InteractiveWindowMessages.VariableExplorerHeightResponse]: handleVariableExplorerHeightResponse,
     [CommonActionType.GET_VARIABLE_DATA]: handleRequest,
     [InteractiveWindowMessages.GetVariablesResponse]: handleResponse,
-    [CommonActionType.RUN_BY_LINE]: handleDebugStart
+    [CommonActionType.RUN_BY_LINE]: handleDebugStart,
+    [InteractiveWindowMessages.UpdateVariableViewExecutionCount]: updateExecutionCount
 };
 
 export function generateVariableReducer(
