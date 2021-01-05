@@ -22,6 +22,7 @@ const { argv } = require('yargs');
 const os = require('os');
 const { ExtensionRootDir } = require('./build/util');
 const isCI = process.env.TF_BUILD !== undefined || process.env.GITHUB_ACTIONS === 'true';
+const { downloadRendererExtension } = require('./build/ci/downloadRenderer');
 
 gulp.task('compile', async (done) => {
     // Use tsc so we can generate source maps that look just like tsc does (gulp-sourcemap does not generate them the same way)
@@ -244,16 +245,20 @@ gulp.task('includeBCryptGenRandomExe', async () => {
     await fs.copyFile(src, dest);
 });
 
-gulp.task('prePublishBundle', gulp.series('includeBCryptGenRandomExe', 'webpack'));
+gulp.task('downloadRendererExtension', async () => {
+    await downloadRendererExtension();
+});
+
+gulp.task('prePublishBundle', gulp.series('includeBCryptGenRandomExe', 'downloadRendererExtension', 'webpack'));
 gulp.task('checkDependencies', gulp.series('checkNativeDependencies'));
 // On CI, when running Notebook tests, we don't need old webviews.
 // Simple & temporary optimization for the Notebook Test Job.
 if (isCI && process.env.VSC_CI_MATRIX_TEST_SUITE === 'notebook') {
-    gulp.task('prePublishNonBundle', gulp.parallel('compile', 'includeBCryptGenRandomExe'));
+    gulp.task('prePublishNonBundle', gulp.parallel('compile', 'includeBCryptGenRandomExe', 'downloadRendererExtension'));
 } else {
     gulp.task(
         'prePublishNonBundle',
-        gulp.parallel('compile', 'includeBCryptGenRandomExe', gulp.series('compile-webviews'))
+        gulp.parallel('compile', 'includeBCryptGenRandomExe', 'downloadRendererExtension', gulp.series('compile-webviews'))
     );
 }
 
