@@ -592,7 +592,7 @@ function translateStreamOutput(output: nbformat.IStream, outputType: nbformat.Ou
     return {
         outputKind: vscodeNotebookEnums.CellOutputKind.Rich,
         data: {
-            ['text/plain']: concatMultilineString(output.text, true)
+            ['text/plain']: concatMultilineString(output.text)
         },
         metadata: {
             custom: { vscode: { outputType, name: output.name } }
