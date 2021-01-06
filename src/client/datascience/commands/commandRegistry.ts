@@ -116,6 +116,7 @@ export class CommandRegistry implements IDisposable {
             this.enableLoadingWidgetScriptsFromThirdParty
         );
         this.registerCommand(Commands.ClearSavedJupyterUris, this.clearJupyterUris);
+        this.registerCommand(Commands.OpenVariableView, this.openVariableView);
         if (this.commandListeners) {
             this.commandListeners.forEach((listener: IDataScienceCommandListener) => {
                 listener.register(this.commandManager);
@@ -183,6 +184,13 @@ export class CommandRegistry implements IDisposable {
 
     private async clearJupyterUris(): Promise<void> {
         return this.serverUriStorage.clearUriList();
+    }
+
+    // IANHU: Move over to a variable view command registry?
+    private async openVariableView(): Promise<void> {
+        //this.commandManager.executeCommand('workbench.action.openView');
+        // IANHU: Make an activation command?
+        this.commandManager.executeCommand('jupyterViewVariables.focus');
     }
 
     private async runAllCells(file: Uri | undefined): Promise<void> {

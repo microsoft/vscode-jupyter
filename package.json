@@ -697,6 +697,11 @@
                 "command": "jupyter.clearSavedJupyterUris",
                 "title": "%jupyter.command.jupyter.clearSavedJupyterUris.title%",
                 "category": "Jupyter"
+            },
+            {
+                "command": "jupyter.openVariableView",
+                "title": "%jupyter.command.jupyter.openVariableView.title%",
+                "category": "Jupyter"
             }
         ],
         "menus": {

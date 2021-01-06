@@ -87,6 +87,8 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     ['vscode.open']: [Uri];
     ['workbench.action.files.saveAs']: [Uri];
     ['workbench.action.files.save']: [Uri];
+    ['workbench.action.openView']: [];
+    ['jupyterViewVariables.focus']: [];
     [DSCommands.ExportFileAndOutputAsNotebook]: [Uri];
     [DSCommands.RunAllCells]: [Uri];
     [DSCommands.RunCell]: [Uri, number, number, number, number];
@@ -147,4 +149,5 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.SubmitGitHubIssue]: [];
     [DSCommands.ShowDataViewer]: [IShowDataViewerFromVariablePanel];
     [DSCommands.ClearSavedJupyterUris]: [];
+    [DSCommands.OpenVariableView]: [];
 }
