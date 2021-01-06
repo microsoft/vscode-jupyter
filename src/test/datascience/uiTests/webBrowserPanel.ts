@@ -3,6 +3,7 @@
 'use strict';
 import * as cors from 'cors';
 import * as express from 'express';
+import * as fs from 'fs';
 import * as http from 'http';
 import { IDisposable } from 'monaco-editor';
 import * as path from 'path';
@@ -78,8 +79,34 @@ export class WebServer implements IWebServer {
             const hashKey = queryKeys ? queryKeys.find((q) => q.startsWith('hash=')) : undefined;
             if (hashKey) {
                 const diskLocation = path.join(EXTENSION_ROOT_DIR, 'tmp', 'scripts', hashKey.substr(5), 'index.js');
+                console.log(
+                    `Fetching source for ${hashKey} maps to ${diskLocation}, exists = ${fs.existsSync(diskLocation)}`
+                );
                 res.sendFile(diskLocation);
             } else {
+                console.error(`Source not found ${queryKeys.join(', ')}`);
+                res.status(404).end();
+            }
+        });
+        this.app.get('/nbextensionssource', (req, res) => {
+            // Query has been messed up in sending to the web site. Works in vscode though, so don't try
+            // to fix the encoding.
+            const queryKeys = Object.keys(req.query);
+            const hashKey = queryKeys ? queryKeys.find((q) => q.startsWith('hash=')) : undefined;
+            if (hashKey) {
+                const diskLocation = path.join(
+                    EXTENSION_ROOT_DIR,
+                    'tmp',
+                    'scripts',
+                    'nbextensions',
+                    `${hashKey.substr(5)}.js`
+                );
+                console.log(
+                    `Fetching source for ${hashKey} maps to ${diskLocation}, exists = ${fs.existsSync(diskLocation)}`
+                );
+                res.sendFile(diskLocation);
+            } else {
+                console.error(`Source not found ${queryKeys.join(', ')}`);
                 res.status(404).end();
             }
         });
@@ -186,10 +213,26 @@ export class WebBrowserPanel implements IWebviewPanel, IDisposable {
     public asWebviewUri(localResource: Uri): Uri {
         const filePath = localResource.fsPath;
         const name = path.basename(path.dirname(filePath));
-        if (name !== 'nbextensions' && this.serverUrl) {
-            // This is a CDN download, Remap to our webserver
-            const remapped = `${this.serverUrl}/source?hash=${name}`;
-            return Uri.parse(remapped);
+        if (this.serverUrl) {
+            if (name === 'nbextensions') {
+                // This is a CDN download, Remap to our webserver
+                const remapped = `${this.serverUrl}/nbextensionssource?hash=${path.basename(filePath, '.js')}`;
+                console.log(
+                    `${localResource.toString()} mapped to ${remapped} in Tests, exists = ${fs.existsSync(
+                        localResource.fsPath
+                    )}`
+                );
+                return Uri.parse(remapped);
+            } else {
+                // This is a CDN download, Remap to our webserver
+                const remapped = `${this.serverUrl}/source?hash=${name}`;
+                console.log(
+                    `${localResource.toString()} mapped to ${remapped} in Tests, exists = ${fs.existsSync(
+                        localResource.fsPath
+                    )}`
+                );
+                return Uri.parse(remapped);
+            }
         }
         return localResource;
     }

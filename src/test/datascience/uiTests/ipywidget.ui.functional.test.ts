@@ -34,14 +34,14 @@ use(chaiAsPromised);
 // When using jupyter server, ipywidget tests seem to be a lot flakier. Always use raw kernel
 [true].forEach((useRawKernel) => {
     //import { asyncDump } from '../common/asyncDump';
-    suite(`DataScience IPyWidgets (${useRawKernel ? 'With Direct Kernel' : 'With Jupyter Server'})`, () => {
+    suite(`DataScience IPyWidgets (${useRawKernel ? 'With Direct Kernel' : 'With Jupyter Server'})`, function () {
         const disposables: Disposable[] = [];
         let ioc: DataScienceIocContainer;
+        // These are UI tests, hence nothing to do with platforms.
+        this.timeout(30_000); // UI Tests, need time to start jupyter.
+        this.retries(3); // UI tests can be flaky.
 
         suiteSetup(function () {
-            // These are UI tests, hence nothing to do with platforms.
-            this.timeout(30_000); // UI Tests, need time to start jupyter.
-            this.retries(3); // UI tests can be flaky.
             if (!process.env.VSC_FORCE_REAL_JUPYTER) {
                 // Skip all tests unless using real jupyter
                 this.skip();
@@ -132,9 +132,9 @@ use(chaiAsPromised);
         async function openBqplotIpynb() {
             return openNotebookFile('bqplot_widgets.ipynb');
         }
-        // async function openIPyVolumeIpynb() {
-        //     return openNotebookFile('ipyvolume_widgets.ipynb');
-        // }
+        async function openIPyVolumeIpynb() {
+            return openNotebookFile('ipyvolume_widgets.ipynb');
+        }
         async function openPyThreejsIpynb() {
             return openNotebookFile('pythreejs_widgets.ipynb');
         }
@@ -408,32 +408,31 @@ use(chaiAsPromised);
                 assert.include(cellOutputHtml, '>100.000</td>');
             });
         });
-        test('Render ipyvolume', async function () {
-            // See bug https://github.com/microsoft/vscode-jupyter/issues/4152
-            this.skip();
-            // const { notebookUI } = await openIPyVolumeIpynb();
-            // await assert.eventually.isFalse(notebookUI.cellHasOutput(3));
+        test('Render ipyvolume (slider, color picker, figure)', async function () {
+            const { notebookUI } = await openIPyVolumeIpynb();
+            await assert.eventually.isFalse(notebookUI.cellHasOutput(1));
+            await notebookUI.executeCell(1);
 
-            // // Confirm sliders and canvas are rendered.
-            // await retryIfFail(async () => {
-            //     await notebookUI.executeCell(1);
-            //     const cellOutputHtml = await notebookUI.getCellOutputHTML(1);
-            //     assert.include(cellOutputHtml, '<canvas ');
+            // Confirm sliders and canvas are rendered.
+            await retryIfFail(async () => {
+                const cellOutputHtml = await notebookUI.getCellOutputHTML(1);
+                assert.include(cellOutputHtml, '<canvas ');
 
-            //     const cellOutput = await notebookUI.getCellOutput(1);
-            //     const sliders = await cellOutput.$$('div.ui-slider');
-            //     assert.equal(sliders.length, 2);
-            // });
+                const cellOutput = await notebookUI.getCellOutput(1);
+                const sliders = await cellOutput.$$('div.ui-slider');
+                assert.equal(sliders.length, 2);
+            });
+        });
+        test('Render ipyvolume (figure)', async function () {
+            const { notebookUI } = await openIPyVolumeIpynb();
+            await assert.eventually.isFalse(notebookUI.cellHasOutput(2));
+            await notebookUI.executeCell(2);
 
-            // // Confirm canvas is rendered.
-            // await retryIfFail(async () => {
-            //     await notebookUI.executeCell(2);
-            //     await notebookUI.executeCell(3);
-            //     await notebookUI.executeCell(4);
-
-            //     const cellOutputHtml = await notebookUI.getCellOutputHTML(4);
-            //     assert.include(cellOutputHtml, '<canvas ');
-            // });
+            // Confirm canvas is rendered.
+            await retryIfFail(async () => {
+                const cellOutputHtml = await notebookUI.getCellOutputHTML(2);
+                assert.include(cellOutputHtml, '<canvas ');
+            });
         });
         test('Render pythreejs', async () => {
             const { notebookUI } = await openPyThreejsIpynb();
@@ -459,10 +458,9 @@ use(chaiAsPromised);
                 assert.include(cellOutputHtml, '<canvas ');
             });
         });
-        test('Render beakerx', async () => {
+        test('Render beakerx (plot)', async () => {
             const { notebookUI } = await openBeakerXIpynb();
             await assert.eventually.isFalse(notebookUI.cellHasOutput(1));
-            await assert.eventually.isFalse(notebookUI.cellHasOutput(2));
 
             await notebookUI.executeCell(1);
             await retryIfFail(async () => {
@@ -475,6 +473,10 @@ use(chaiAsPromised);
                 const legends = await cellOutput.$$('div.plot-legend');
                 assert.isAtLeast(legends.length, 1);
             });
+        });
+        test('Render beakerx (histogram)', async () => {
+            const { notebookUI } = await openBeakerXIpynb();
+            await assert.eventually.isFalse(notebookUI.cellHasOutput(2));
 
             await notebookUI.executeCell(2);
             await retryIfFail(async () => {
