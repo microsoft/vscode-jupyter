@@ -11,6 +11,7 @@ import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { CssMessages } from '../../../client/datascience/messages';
 import { CommonActionType } from '../../../datascience-ui/interactive-common/redux/reducers/types';
+import { noop } from '../../core';
 import { IWebServer } from './webBrowserPanel';
 
 // tslint:disable:max-func-body-length trailing-comma no-any no-multiline-string
@@ -95,7 +96,7 @@ export class BaseWebUI implements IAsyncDisposable {
             ? setTimeout(async () => {
                   if (!promise.resolved) {
                       // Take a screenshot and save at the root with the same name (upload on error)
-                      await this.page?.screenshot({ path: path.join(EXTENSION_ROOT_DIR, 'browser-screenshot.png') });
+                      await this.page?.screenshot({ path: path.join(EXTENSION_ROOT_DIR, 'browser-screenshot.png') }).catch(noop);
                       promise.reject(new Error(`Waiting for ${message} timed out`));
                   }
               }, timeoutMs)
