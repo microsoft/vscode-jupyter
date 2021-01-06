@@ -31,6 +31,7 @@ env:
 
 jobs:
   read-next-job:
+    runs-on: ubuntu-latest
     name: read-job-contents
     if: github.repository == 'microsoft/vscode-jupyter'
     outputs:
@@ -46,6 +47,7 @@ jobs:
         id: set-steps
         run: echo "::set-output name=next-steps::{\"run\":[\"echo 'Hello from json'\"]}"
   test-next-job:
+    runs-on: ubuntu-latest
     name: run-job-contents
     if: github.repository == 'microsoft/vscode-jupyter'
     steps:
