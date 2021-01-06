@@ -411,10 +411,10 @@ use(chaiAsPromised);
         test('Render ipyvolume 1', async function () {
             const { notebookUI } = await openIPyVolumeIpynb();
             await assert.eventually.isFalse(notebookUI.cellHasOutput(1));
+            await notebookUI.executeCell(1);
 
             // Confirm sliders and canvas are rendered.
             await retryIfFail(async () => {
-                await notebookUI.executeCell(1);
                 const cellOutputHtml = await notebookUI.getCellOutputHTML(1);
                 assert.include(cellOutputHtml, '<canvas ');
 
@@ -426,11 +426,10 @@ use(chaiAsPromised);
         test('Render ipyvolume 2', async function () {
             const { notebookUI } = await openIPyVolumeIpynb();
             await assert.eventually.isFalse(notebookUI.cellHasOutput(2));
+            await notebookUI.executeCell(2);
 
             // Confirm canvas is rendered.
             await retryIfFail(async () => {
-                await notebookUI.executeCell(2);
-
                 const cellOutputHtml = await notebookUI.getCellOutputHTML(2);
                 assert.include(cellOutputHtml, '<canvas ');
             });
