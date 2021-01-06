@@ -8,7 +8,6 @@ import { NotebookCell, NotebookDocument, NotebookKernel as VSCNotebookKernel } f
 import { IVSCodeNotebook } from '../../common/application/types';
 import { traceInfo } from '../../common/logger';
 import { IExtensionContext } from '../../common/types';
-import { noop } from '../../common/utils/misc';
 import { getKernelConnectionId, IKernel, IKernelProvider, KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { updateKernelInfoInNotebookMetadata } from './helpers/helpers';
 
