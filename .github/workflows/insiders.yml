@@ -55,6 +55,8 @@ jobs:
     runs-on: ubuntu-latest
     name: run-job-contents
     if: github.repository == 'microsoft/vscode-jupyter'
-    steps: ${{ fromJson(needs.read-next-job.outputs.next-steps)}}
+    steps: 
+      - name: Print json
+        run: echo ${{needs.read-next-job.outputs.next-steps}}
 
 
