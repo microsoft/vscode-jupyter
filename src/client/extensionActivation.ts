@@ -129,13 +129,13 @@ async function activateLegacy(
     context.subscriptions.push(manager);
     const activationPromise = manager.activate();
 
-    // Activate data science features
+    // Activate data science features after base features.
     const dataScience = serviceManager.get<IDataScience>(IDataScience);
-    dataScience.activate().ignoreErrors();
+    const dsActivationPromise = dataScience.activate();
 
     const deprecationMgr = serviceContainer.get<IFeatureDeprecationManager>(IFeatureDeprecationManager);
     deprecationMgr.initialize();
     context.subscriptions.push(deprecationMgr);
 
-    return { activationPromise };
+    return { activationPromise: activationPromise.then(() => dsActivationPromise) };
 }
