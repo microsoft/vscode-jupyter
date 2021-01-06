@@ -81,32 +81,4 @@ suite('DataScience - VariableView', () => {
 
         expect(false).to.equal(true);
     });
-
-    //test('Can run a widget notebook', async function () {
-        //await openNotebook(api.serviceContainer, testWidgetNb.fsPath);
-        //const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
-        //const contentProvider = api.serviceContainer.get<VSCNotebookContentProvider>(
-            //INotebookContentProvider
-        //) as NotebookContentProvider;
-
-        //// Content provider should have a public member that maps webviews. Listen to messages on this webview
-        //const webviews = contentProvider.webviews.get(cell.document.uri.toString());
-        //assert.equal(webviews?.length, 1, 'No webviews found in content provider');
-        //let loaded = false;
-        //if (webviews) {
-            //webviews[0].onDidReceiveMessage((e) => {
-                //if (e.type === InteractiveWindowMessages.IPyWidgetLoadSuccess) {
-                    //loaded = true;
-                //}
-            //});
-        //}
-
-        //// Execute cell. It should load and render the widget
-        //await executeCell(cell);
-
-        //// Wait till execution count changes and status is success.
-        //await waitForExecutionCompletedSuccessfully(cell);
-
-        //assert.ok(loaded, 'Widget did not load successfully during execution');
-    //});
 });

@@ -22,6 +22,7 @@ export class VariableViewPanel extends React.Component<IVariableViewPanelProps> 
 
     constructor(props: IVariableViewPanelProps) {
         super(props);
+        this.props.toggleVariableExplorer();
     }
 
     public componentDidMount() {
@@ -48,9 +49,6 @@ export class VariableViewPanel extends React.Component<IVariableViewPanelProps> 
         // we can size and host it differently from the variable panel in the interactive window or native editor
         return (
             <div id="variable-view-main-panel" role="Main" style={dynamicFont}>
-                <button id="TEST-OPEN" onClick={this.props.toggleVariableExplorer}>
-                    OPEN
-                </button>
                 {this.renderVariablePanel(this.props.baseTheme)}
             </div>
         ); // NOTE: Currently the OPEN, button just exists to mimic the toggling of the variable view, make it easier to test when working
