@@ -69,7 +69,6 @@ suite('Notebook Editor tests', () => {
         );
 
         const firstCell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
-        // await waitForExecutionCompletedSuccessfully(firstCell);
         const thirdCell = vscodeNotebook.activeNotebookEditor?.document.cells![2]!;
         await waitForExecutionCompletedSuccessfully(thirdCell);
 
@@ -98,7 +97,6 @@ suite('Notebook Editor tests', () => {
         const firstCell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
         await waitForExecutionCompletedSuccessfully(firstCell);
         const thirdCell = vscodeNotebook.activeNotebookEditor?.document.cells![2]!;
-        // await waitForExecutionCompletedSuccessfully(thirdCell);
 
         // The first cell should have a runState of Success
         assert.strictEqual(firstCell?.metadata.runState, vscodeNotebookEnums.NotebookCellRunState.Success);
