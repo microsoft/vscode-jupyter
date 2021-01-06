@@ -458,10 +458,9 @@ use(chaiAsPromised);
                 assert.include(cellOutputHtml, '<canvas ');
             });
         });
-        test('Render beakerx', async () => {
+        test('Render beakerx 1', async () => {
             const { notebookUI } = await openBeakerXIpynb();
             await assert.eventually.isFalse(notebookUI.cellHasOutput(1));
-            await assert.eventually.isFalse(notebookUI.cellHasOutput(2));
 
             await notebookUI.executeCell(1);
             await retryIfFail(async () => {
@@ -474,6 +473,10 @@ use(chaiAsPromised);
                 const legends = await cellOutput.$$('div.plot-legend');
                 assert.isAtLeast(legends.length, 1);
             });
+        });
+        test('Render beakerx 2', async () => {
+            const { notebookUI } = await openBeakerXIpynb();
+            await assert.eventually.isFalse(notebookUI.cellHasOutput(2));
 
             await notebookUI.executeCell(2);
             await retryIfFail(async () => {
