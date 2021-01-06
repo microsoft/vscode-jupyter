@@ -44,7 +44,7 @@ jobs:
         uses: fabasoad/yaml-json-xml-converter-action@main
         id: yamlToJson
         with: 
-          path: './jobs/test.yml'
+          path: './.github/workflows/jobs/test.yml'
           from: 'yaml'
           to: 'json'
 
