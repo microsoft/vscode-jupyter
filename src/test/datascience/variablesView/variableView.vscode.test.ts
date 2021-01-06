@@ -64,7 +64,7 @@ suite('DataScience - VariableView', () => {
     // Test showing the variable view
     test('Can show variableView', async function () {
         // Add one simple cell and execute it
-        await insertCodeCell('test = "testing"', { index: 0 });
+        await insertCodeCell('test = "MYTESTVALUE"', { index: 0 });
         const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
         await executeCell(cell);
         
@@ -73,12 +73,12 @@ suite('DataScience - VariableView', () => {
         //commands.executeCommand("workbench.action.openView");
 
         // IANHU: Remove, just for testing
-        await sleep(30_000);
+        await sleep(5_000);
 
         // Now check to see if we can actually look at the variable view
         const variableView = variableViewProvider.variableView;
         const htmlResult = await variableView?.getElementByIdAsync('variable-view-main-panel');
 
-        expect(false).to.equal(true);
+        expect(htmlResult).to.contain('MYTESTVALUE');
     });
 });
