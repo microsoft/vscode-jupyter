@@ -50,13 +50,13 @@ jobs:
 
       - name: Read json
         id: set-steps
-        run: echo "::set-output name=next-steps::{${{ steps.yamlToJson.outputs.data }}}"
+        run: echo "::set-output name=next-steps::${{ steps.yamlToJson.outputs.data }}"
   test-next-job:
     runs-on: ubuntu-latest
     name: run-job-contents
     if: github.repository == 'microsoft/vscode-jupyter'
     steps: 
       - name: Print json
-        run: echo ${{needs.read-next-job.outputs.next-steps}}
+        run: echo "${{needs.read-next-job.outputs.next-steps}}""
 
 
