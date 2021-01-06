@@ -59,16 +59,22 @@ suite('Notebook Editor tests', () => {
         await insertCodeCell('print("1")', { index: 1 });
         await insertCodeCell('print("2")', { index: 2 });
 
-        // select first cell
-        await selectCell(vscodeNotebook.activeNotebookEditor?.document!, 0, 0);
+        // select second cell
+        await selectCell(vscodeNotebook.activeNotebookEditor?.document!, 1, 1);
 
         // run command
         await commandManager.executeCommand(
             Commands.NativeNotebookRunCellAndAllBelow,
             vscodeNotebook.activeNotebookEditor?.document.uri!
         );
+
+        const firstCell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
+        // await waitForExecutionCompletedSuccessfully(firstCell);
         const thirdCell = vscodeNotebook.activeNotebookEditor?.document.cells![2]!;
         await waitForExecutionCompletedSuccessfully(thirdCell);
+
+        // The first cell should have an undefined runState
+        assert.strictEqual(firstCell?.metadata.runState, undefined);
 
         // The third cell should have a runState of Success
         assert.strictEqual(thirdCell?.metadata.runState, vscodeNotebookEnums.NotebookCellRunState.Success);
@@ -88,10 +94,16 @@ suite('Notebook Editor tests', () => {
             Commands.NativeNotebookRunAllCellsAbove,
             vscodeNotebook.activeNotebookEditor?.document.uri!
         );
+
         const firstCell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
         await waitForExecutionCompletedSuccessfully(firstCell);
+        const thirdCell = vscodeNotebook.activeNotebookEditor?.document.cells![2]!;
+        // await waitForExecutionCompletedSuccessfully(thirdCell);
 
         // The first cell should have a runState of Success
         assert.strictEqual(firstCell?.metadata.runState, vscodeNotebookEnums.NotebookCellRunState.Success);
+
+        // The third cell should have an undefined runState
+        assert.strictEqual(thirdCell?.metadata.runState, undefined);
     });
 });
