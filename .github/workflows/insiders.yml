@@ -49,5 +49,9 @@ jobs:
     name: run-job-contents
     if: github.repository == 'microsoft/vscode-jupyter'
     steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
       -name: test output
        run: echo "Some output"
+
