@@ -39,9 +39,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
+      - name: Print output
+        run: echo ${{toJson(read-next-job.steps)}}
+
       - name: Read json
         id: set-steps
-        run: echo "::set-output name=next-steps::{\"run\":\"echo 'Hello from json'\"}"
+        run: echo "::set-output name=next-steps::{\"run\":[\"echo 'Hello from json'\"]}"
   test-next-job:
     name: run-job-contents
     if: github.repository == 'microsoft/vscode-jupyter'
