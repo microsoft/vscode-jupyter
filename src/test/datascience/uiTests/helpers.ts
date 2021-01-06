@@ -144,6 +144,10 @@ export class BaseWebUI implements IAsyncDisposable {
         await this.browser.newContext();
         this.page = await this.browser.newPage();
         await this.page.goto(url);
+        this.page.route('**', (route) => {
+            console.log(`Playwright browser Url requested ${route.request().url()}`);
+            route.continue();
+        });
         this.page.on('console', (output) => {
             try {
                 // Log output for diagnostic purposes (see what errors & the like are printed in console).
