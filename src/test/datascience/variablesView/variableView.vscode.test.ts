@@ -1,8 +1,9 @@
-import { expect } from 'chai';
+import { assert, expect } from 'chai';
 import { commands } from 'vscode';
-import { ICommandManager } from '../../../client/common/application/types';
+import * as sinon from 'sinon';
+import { ICommandManager, IVSCodeNotebook } from '../../../client/common/application/types';
 import { IDisposable } from '../../../client/common/types';
-import { Commands } from '../../../client/datascience/constants';
+import { Commands, VSCodeNotebookProvider } from '../../../client/datascience/constants';
 import { IVariableViewProvider } from '../../../client/datascience/variablesView/types';
 import { IExtensionTestApi } from '../../common';
 import { sleep } from '../../core';
@@ -11,16 +12,23 @@ import {
     canRunNotebookTests,
     closeNotebooks,
     closeNotebooksAndCleanUpAfterTests,
+    deleteAllCellsAndWait,
     executeCell,
+    insertCodeCell,
+    startJupyter,
     trustAllNotebooks,
-    waitForExecutionCompletedSuccessfully
+    waitForExecutionCompletedSuccessfully,
+    waitForKernelToGetAutoSelected
 } from '../notebook/helper';
+import { INotebookEditorProvider } from '../../../client/datascience/types';
 
 suite('DataScience - VariableView', () => {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let commandManager: ICommandManager;
     let variableViewProvider: IVariableViewProvider;
+    let editorProvider: INotebookEditorProvider;
+    let vscodeNotebook: IVSCodeNotebook;
     suiteSetup(async function () {
         api = await initialize();
 
@@ -29,16 +37,25 @@ suite('DataScience - VariableView', () => {
             return this.skip();
         }
         await trustAllNotebooks();
+        await startJupyter(true);
+        sinon.restore();
         commandManager = api.serviceContainer.get<ICommandManager>(ICommandManager);
         variableViewProvider = api.serviceContainer.get<IVariableViewProvider>(IVariableViewProvider);
-        // sinon.restore();
-        // vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
-        // editorProvider = api.serviceContainer.get<INotebookEditorProvider>(VSCodeNotebookProvider);
-        // languageService = api.serviceContainer.get<NotebookCellLanguageService>(NotebookCellLanguageService);
+        vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
+        editorProvider = api.serviceContainer.get<INotebookEditorProvider>(VSCodeNotebookProvider);
     });
-    setup(function () {
-        // sinon.restore();
-        // await closeNotebooks();
+    setup(async function () {
+        sinon.restore();
+
+        // Create an editor to use for our tests
+        await editorProvider.createNew();
+        await waitForKernelToGetAutoSelected();
+        await deleteAllCellsAndWait();
+        assert.isOk(vscodeNotebook.activeNotebookEditor, 'No active notebook');
+    });
+    teardown(async function () {
+        await closeNotebooks(disposables);
+        await closeNotebooksAndCleanUpAfterTests(disposables);
     });
     
     // Cleanup after suite is finished
@@ -46,6 +63,10 @@ suite('DataScience - VariableView', () => {
 
     // Test showing the variable view
     test('Can show variableView', async function () {
+        // Add one simple cell and execute it
+        await insertCodeCell('test = "testing"', { index: 0 });
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
+        await executeCell(cell);
         
         // Send the command to open the view
         commandManager.executeCommand(Commands.OpenVariableView);
