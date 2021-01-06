@@ -34,14 +34,14 @@ use(chaiAsPromised);
 // When using jupyter server, ipywidget tests seem to be a lot flakier. Always use raw kernel
 [true].forEach((useRawKernel) => {
     //import { asyncDump } from '../common/asyncDump';
-    suite(`DataScience IPyWidgets (${useRawKernel ? 'With Direct Kernel' : 'With Jupyter Server'})`, () => {
+    suite(`DataScience IPyWidgets (${useRawKernel ? 'With Direct Kernel' : 'With Jupyter Server'})`, function () {
         const disposables: Disposable[] = [];
         let ioc: DataScienceIocContainer;
+        // These are UI tests, hence nothing to do with platforms.
+        this.timeout(30_000); // UI Tests, need time to start jupyter.
+        this.retries(3); // UI tests can be flaky.
 
         suiteSetup(function () {
-            // These are UI tests, hence nothing to do with platforms.
-            this.timeout(30_000); // UI Tests, need time to start jupyter.
-            this.retries(3); // UI tests can be flaky.
             if (!process.env.VSC_FORCE_REAL_JUPYTER) {
                 // Skip all tests unless using real jupyter
                 this.skip();
