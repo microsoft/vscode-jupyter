@@ -295,6 +295,20 @@ function handleDebugStart(arg: VariableReducerArg<ICellAction>): IVariableState 
     return arg.prevState;
 }
 
+function getElementByIdRequest(arg: VariableReducerArg<string>): IVariableState {
+    console.log(`**** getElementByIdRequest ${arg.payload.data}`);
+    //postActionToExtension(arg, InteractiveWindowMessages.SetVariableExplorerHeight, {
+    //containerHeight,
+    //gridHeight
+    //});
+    const element = document.getElementById(arg.payload.data);
+
+    if (element) {
+        postActionToExtension(arg, InteractiveWindowMessages.GetElementByIdResponse, element.innerHTML);
+    }
+    return arg.prevState;
+}
+
 type VariableReducerFunctions<T> = {
     [P in keyof T]: T[P] extends never | undefined ? VariableReducerFunc : VariableReducerFunc<T[P]>;
 };
@@ -313,7 +327,8 @@ const reducerMap: Partial<VariableActionMapping> = {
     [CommonActionType.GET_VARIABLE_DATA]: handleRequest,
     [InteractiveWindowMessages.GetVariablesResponse]: handleResponse,
     [CommonActionType.RUN_BY_LINE]: handleDebugStart,
-    [InteractiveWindowMessages.UpdateVariableViewExecutionCount]: updateExecutionCount
+    [InteractiveWindowMessages.UpdateVariableViewExecutionCount]: updateExecutionCount,
+    [InteractiveWindowMessages.GetElementByIdRequest]: getElementByIdRequest
 };
 
 export function generateVariableReducer(

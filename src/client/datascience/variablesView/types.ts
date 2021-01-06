@@ -27,6 +27,8 @@ export class IVariableViewPanelMapping {
     public [SharedMessages.LocInit]: string;
     public [InteractiveWindowMessages.FinishCell]: IFinishCell;
     public [InteractiveWindowMessages.UpdateVariableViewExecutionCount]: { executionCount: number };
+    public [InteractiveWindowMessages.GetElementByIdRequest]: string;
+    public [InteractiveWindowMessages.GetElementByIdResponse]: string;
 }
 
 export const IVariableViewProvider = Symbol('IVariableViewProvider');

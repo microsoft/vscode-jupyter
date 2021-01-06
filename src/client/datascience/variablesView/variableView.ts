@@ -90,6 +90,11 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
         return 'variableView';
     }
 
+    // IANHU: Just for testing, remove? reduce access?
+    public getElementById(id: string) {
+        this.postMessage(InteractiveWindowMessages.GetElementByIdRequest, 'variable-view-main-panel').ignoreErrors();
+    }
+
     //tslint:disable-next-line:no-any
     protected onMessage(message: string, payload: any) {
         switch (message) {
@@ -98,6 +103,9 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
                 break;
             case InteractiveWindowMessages.ShowDataViewer:
                 this.handleMessage(message, payload, this.showDataViewer);
+                break;
+            case InteractiveWindowMessages.GetElementByIdResponse:
+                traceError(payload);
                 break;
             default:
                 break;

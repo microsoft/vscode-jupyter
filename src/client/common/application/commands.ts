@@ -150,4 +150,5 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.ShowDataViewer]: [IShowDataViewerFromVariablePanel];
     [DSCommands.ClearSavedJupyterUris]: [];
     [DSCommands.OpenVariableView]: [];
+    [DSCommands.TESTCOMMAND]: [];
 }

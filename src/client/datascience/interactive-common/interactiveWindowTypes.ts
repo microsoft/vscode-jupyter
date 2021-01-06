@@ -148,7 +148,9 @@ export enum InteractiveWindowMessages {
     GetCellCode = 'get_cell_code',
     ReturnCellCode = 'return_cell_code',
     GetAllCellCode = 'get_all_cell_code',
-    ReturnAllCellCode = 'return_all_cell_code'
+    ReturnAllCellCode = 'return_all_cell_code',
+    GetElementByIdRequest = 'get_element_by_id_request',
+    GetElementByIdResponse = 'get_element_by_id_response'
 }
 
 export enum IPyWidgetMessages {
@@ -711,4 +713,6 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.HasCellResponse]: { id: string; result: boolean };
     public [InteractiveWindowMessages.UpdateExternalCellButtons]: IExternalWebviewCellButton[];
     public [InteractiveWindowMessages.ExecuteExternalCommand]: IExternalCommandFromWebview;
+    public [InteractiveWindowMessages.GetElementByIdRequest]: string;
+    public [InteractiveWindowMessages.GetElementByIdResponse]: string;
 }
