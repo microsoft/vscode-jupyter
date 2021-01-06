@@ -55,13 +55,16 @@ async function downloadRendererExtension() {
 
         console.log('Extracting Renderer extension');
         const extensionDir = path.join(downloadDir, 'extensionDir');
-        await unzip(downloadedFile, extensionDir)
+        await unzip(downloadedFile, extensionDir);
         console.log('Extracted Renderer extension');
 
-        await fs.copy(path.join(extensionDir, 'out', 'client_renderer'), path.join(ExtensionRootDir, 'out', 'client_renderer'));
+        await fs.copy(
+            path.join(extensionDir, 'out', 'client_renderer'),
+            path.join(ExtensionRootDir, 'out', 'client_renderer')
+        );
         console.log('Copied Renderer extension output.');
     } finally {
-        if (typeof cleanup == 'function'){
+        if (typeof cleanup == 'function') {
             try {
                 cleanup();
             } catch {
