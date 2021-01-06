@@ -19,6 +19,7 @@ import { JupyterVariableDataProviderFactory } from '../../../client/datascience/
 import { DataScienceCodeLensProvider } from '../../../client/datascience/editor-integration/codelensprovider';
 import { JupyterServerUriStorage } from '../../../client/datascience/jupyter/serverUriStorage';
 import { NativeEditorProvider } from '../../../client/datascience/notebookStorage/nativeEditorProvider';
+import { IVariableViewProvider } from '../../../client/datascience/variablesView/types';
 import { MockOutputChannel } from '../../mockClasses';
 
 // tslint:disable: max-func-body-length
@@ -45,6 +46,7 @@ suite('DataScience - Commands', () => {
         const dataViewerFactory = mock(DataViewerFactory);
         const fileSystem = mock(FileSystem);
         const serverUriStorage = mock(JupyterServerUriStorage);
+        const variableViewProvider = mock<IVariableViewProvider>(); // IANHU: Remove
 
         commandRegistry = new CommandRegistry(
             documentManager,
@@ -63,7 +65,8 @@ suite('DataScience - Commands', () => {
             instance(fileSystem),
             instance(jupyterVariableDataProviderFactory),
             instance(dataViewerFactory),
-            instance(serverUriStorage)
+            instance(serverUriStorage),
+            instance(variableViewProvider)
         );
     });
 

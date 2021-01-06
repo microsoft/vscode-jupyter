@@ -92,7 +92,7 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
 
     // IANHU: Just for testing, remove? reduce access?
     public getElementById(id: string) {
-        this.postMessage(InteractiveWindowMessages.GetElementByIdRequest, 'variable-view-main-panel').ignoreErrors();
+        this.postMessage(InteractiveWindowMessages.GetElementByIdRequest, id).ignoreErrors();
     }
 
     //tslint:disable-next-line:no-any

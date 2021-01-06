@@ -56,6 +56,9 @@ suite('DataScience - VariableView', () => {
 
         // Now check to see if we can actually look at the variable view
         const variableView = variableViewProvider.variableView;
+        variableView?.getElementById('variable-view-main-panel');
+
+        await sleep(60_000);
     
         expect(false).to.equal(true);
     });
