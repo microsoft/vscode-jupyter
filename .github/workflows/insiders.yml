@@ -57,6 +57,6 @@ jobs:
     if: github.repository == 'microsoft/vscode-jupyter'
     steps: 
       - name: Print json
-        run: echo "${{needs.read-next-job.outputs.next-steps}}""
+        run: echo "${{toJson(needs.read-next-job.outputs.next-steps)}}""
 
 
