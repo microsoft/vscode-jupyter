@@ -7,7 +7,7 @@ import { sha256 } from 'hash.js';
 import * as path from 'path';
 import request from 'request';
 import { Uri } from 'vscode';
-import { traceError, traceInfo } from '../../common/logger';
+import { traceError, traceInfo, traceInfoIf } from '../../common/logger';
 import { IFileSystem, TemporaryFile } from '../../common/platform/types';
 import { IConfigurationService, IHttpClient, WidgetCDNs } from '../../common/types';
 import { createDeferred, sleep } from '../../common/utils/async';
@@ -111,7 +111,7 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
             // Then get the first one that returns.
             tempFile = await this.downloadFastestCDN(moduleName, moduleVersion);
             if (tempFile && !(await this.fs.localFileExists(diskPath))) {
-                traceInfo(
+                traceInfoIf(
                     !!process.env.VSC_JUPYTER_FORCE_LOGGING,
                     `Widget Script downloaded for ${moduleName}:${moduleVersion}, already downloaded ${await this.fs.localFileExists(
                         diskPath
