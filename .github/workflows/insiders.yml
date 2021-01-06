@@ -40,7 +40,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Print output
-        run: echo ${{toJson(read-next-job.steps)}}
+        run: echo ${{toJson(steps)}}
 
       - name: Read json
         id: set-steps
