@@ -110,15 +110,17 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
 
             // Then get the first one that returns.
             tempFile = await this.downloadFastestCDN(moduleName, moduleVersion);
-            if (tempFile && !(await this.fs.localFileExists(diskPath))) {
+            if (tempFile) {
                 traceInfoIf(
                     !!process.env.VSC_JUPYTER_FORCE_LOGGING,
                     `Widget Script downloaded for ${moduleName}:${moduleVersion}, already downloaded ${await this.fs.localFileExists(
                         diskPath
                     )}`
                 );
-                // Need to copy from the temporary file to our real file (note: VSC filesystem fails to copy so just use straight file system)
-                await this.fs.copyLocal(tempFile.filePath, diskPath);
+                if (!(await this.fs.localFileExists(diskPath))) {
+                    // Need to copy from the temporary file to our real file (note: VSC filesystem fails to copy so just use straight file system)
+                    await this.fs.copyLocal(tempFile.filePath, diskPath);
+                }
 
                 // Now we can generate the script URI so the local converter doesn't try to copy it.
                 const scriptUri = (await this.localResourceUriConverter.asWebviewUri(Uri.file(diskPath))).toString();
