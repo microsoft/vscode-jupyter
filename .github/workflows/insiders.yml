@@ -53,6 +53,7 @@ jobs:
         run: echo "::set-output name=next-steps::${{ steps.yamlToJson.outputs.data }}"
   test-next-job:
     runs-on: ubuntu-latest
+    needs: read-next-job
     name: run-job-contents
     if: github.repository == 'microsoft/vscode-jupyter'
     steps: 
