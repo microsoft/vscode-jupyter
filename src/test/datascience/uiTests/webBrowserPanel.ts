@@ -3,6 +3,7 @@
 'use strict';
 import * as cors from 'cors';
 import * as express from 'express';
+import * as fs from 'fs';
 import * as http from 'http';
 import { IDisposable } from 'monaco-editor';
 import * as path from 'path';
@@ -78,7 +79,9 @@ export class WebServer implements IWebServer {
             const hashKey = queryKeys ? queryKeys.find((q) => q.startsWith('hash=')) : undefined;
             if (hashKey) {
                 const diskLocation = path.join(EXTENSION_ROOT_DIR, 'tmp', 'scripts', hashKey.substr(5), 'index.js');
-                console.log(`Fetching source for ${hashKey} maps to ${diskLocation}`);
+                console.log(
+                    `Fetching source for ${hashKey} maps to ${diskLocation}, exists = ${fs.existsSync(diskLocation)}`
+                );
                 res.sendFile(diskLocation);
             } else {
                 console.error(`Source not found ${queryKeys.join(', ')}`);
@@ -98,7 +101,9 @@ export class WebServer implements IWebServer {
                     'nbextensions',
                     `${hashKey.substr(5)}.js`
                 );
-                console.log(`Fetching source for ${hashKey} maps to ${diskLocation}`);
+                console.log(
+                    `Fetching source for ${hashKey} maps to ${diskLocation}, exists = ${fs.existsSync(diskLocation)}`
+                );
                 res.sendFile(diskLocation);
             } else {
                 console.error(`Source not found ${queryKeys.join(', ')}`);
@@ -212,10 +217,20 @@ export class WebBrowserPanel implements IWebviewPanel, IDisposable {
             if (name === 'nbextensions') {
                 // This is a CDN download, Remap to our webserver
                 const remapped = `${this.serverUrl}/nbextensionssource?hash=${path.basename(filePath, '.js')}`;
+                console.log(
+                    `${localResource.toString()} mapped to ${remapped} in Tests, exists = ${fs.existsSync(
+                        localResource.fsPath
+                    )}`
+                );
                 return Uri.parse(remapped);
             } else {
                 // This is a CDN download, Remap to our webserver
                 const remapped = `${this.serverUrl}/source?hash=${name}`;
+                console.log(
+                    `${localResource.toString()} mapped to ${remapped} in Tests, exists = ${fs.existsSync(
+                        localResource.fsPath
+                    )}`
+                );
                 return Uri.parse(remapped);
             }
         }
