@@ -16,9 +16,11 @@ import {
     closeNotebooksAndCleanUpAfterTests,
     deleteAllCellsAndWait,
     insertCodeCell,
+    selectCell,
     waitForExecutionCompletedSuccessfully,
     waitForKernelToGetAutoSelected
 } from './helper';
+// import { window as win } from '../../../../typings/vscode-proposed';
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
 suite('Notebook Editor tests', () => {
@@ -54,8 +56,6 @@ suite('Notebook Editor tests', () => {
 
     test('Run cells below', async function () {
         // add some cells
-        // https://github.com/microsoft/vscode-jupyter/issues/4250
-        this.skip();
         await insertCodeCell('print("0")', { index: 0 });
         await insertCodeCell('print("1")', { index: 1 });
         await insertCodeCell('print("2")', { index: 2 });
@@ -73,20 +73,13 @@ suite('Notebook Editor tests', () => {
     });
 
     test('Run cells above', async function () {
-        // This test is skipped because there is no way of selecting a cell in this context
-        // since by default the first cell is selected nothing happens when running all cells above
-        // https://github.com/microsoft/vscode-jupyter/issues/4250
-        this.skip();
         // add some cells
         await insertCodeCell('print("0")', { index: 0 });
         await insertCodeCell('print("1")', { index: 1 });
         await insertCodeCell('print("2")', { index: 2 });
 
         // select second cell
-        // this tries to get the second cell selected by running it, but it doesn't work
-        // const secondCell = vscodeNotebook.activeNotebookEditor?.document.cells![1]!;
-        // await executeCell(secondCell);
-        // await waitForExecutionCompletedSuccessfully(secondCell);
+        await selectCell(vscodeNotebook.activeNotebookEditor?.document!, 1, 1);
 
         // run command
         await commandManager.executeCommand(

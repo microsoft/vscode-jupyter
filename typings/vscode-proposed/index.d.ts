@@ -13,7 +13,8 @@ import {
     ProviderResult,
     WorkspaceEditEntryMetadata,
     Command,
-    AccessibilityInformation
+    AccessibilityInformation,
+    Position
 } from 'vscode';
 
 // Copy nb section from https://github.com/microsoft/vscode/blob/master/src/vs/vscode.proposed.d.ts.
@@ -665,6 +666,13 @@ export interface NotebookEditorDecorationType {
     dispose(): void;
 }
 
+export interface NotebookDocumentShowOptions {
+    viewColumn?: ViewColumn;
+    preserveFocus?: boolean;
+    preview?: boolean;
+    selection?: NotebookCellRange;
+}
+
 export namespace notebook {
     export function registerNotebookContentProvider(
         notebookType: string,
@@ -740,4 +748,8 @@ export namespace window {
     export const onDidChangeActiveNotebookEditor: Event<NotebookEditor | undefined>;
     export const onDidChangeNotebookEditorSelection: Event<NotebookEditorSelectionChangeEvent>;
     export const onDidChangeNotebookEditorVisibleRanges: Event<NotebookEditorVisibleRangesChangeEvent>;
+    export function showNotebookDocument(
+        document: NotebookDocument,
+        options?: NotebookDocumentShowOptions
+    ): Promise<NotebookEditor>;
 }
