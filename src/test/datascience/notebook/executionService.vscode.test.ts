@@ -82,6 +82,16 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', () => {
         // Wait till execution count changes and status is success.
         await waitForExecutionCompletedSuccessfully(cell);
     });
+    test('Leading whitespace not suppressed', async () => {
+        await insertCodeCell('print("\tho")\nprint("\tho")\nprint("\tho")\n', { index: 0 });
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
+
+        await executeCell(cell);
+
+        await waitForExecutionCompletedSuccessfully(cell);
+        const output = (cell.outputs[0] as CellDisplayOutput).data['text/plain'];
+        assert.equal(output, '\tho\n\tho\n\tho\n', 'Cell with leading whitespace has incorrect output');
+    });
     test('Executed events are triggered', async () => {
         await insertCodeCell('print("Hello World")');
         const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
