@@ -20,7 +20,6 @@ import {
     waitForExecutionCompletedSuccessfully,
     waitForKernelToGetAutoSelected
 } from './helper';
-// import { window as win } from '../../../../typings/vscode-proposed';
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
 suite('Notebook Editor tests', () => {
