@@ -422,16 +422,6 @@ use(chaiAsPromised);
                 const sliders = await cellOutput.$$('div.ui-slider');
                 assert.equal(sliders.length, 2);
             });
-
-            // Confirm canvas is rendered.
-            await retryIfFail(async () => {
-                await notebookUI.executeCell(2);
-                await notebookUI.executeCell(3);
-                await notebookUI.executeCell(4);
-
-                const cellOutputHtml = await notebookUI.getCellOutputHTML(4);
-                assert.include(cellOutputHtml, '<canvas ');
-            });
         });
         test('Render pythreejs', async () => {
             const { notebookUI } = await openPyThreejsIpynb();
