@@ -3,6 +3,7 @@ import { commands } from 'vscode';
 import { ICommandManager } from '../../../client/common/application/types';
 import { IDisposable } from '../../../client/common/types';
 import { Commands } from '../../../client/datascience/constants';
+import { IVariableViewProvider } from '../../../client/datascience/variablesView/types';
 import { IExtensionTestApi } from '../../common';
 import { sleep } from '../../core';
 import { initialize } from '../../initialize';
@@ -19,6 +20,7 @@ suite('DataScience - VariableView', () => {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let commandManager: ICommandManager;
+    let variableViewProvider: IVariableViewProvider;
     suiteSetup(async function () {
         api = await initialize();
 
@@ -28,6 +30,7 @@ suite('DataScience - VariableView', () => {
         }
         await trustAllNotebooks();
         commandManager = api.serviceContainer.get<ICommandManager>(ICommandManager);
+        variableViewProvider = api.serviceContainer.get<IVariableViewProvider>(IVariableViewProvider);
         // sinon.restore();
         // vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         // editorProvider = api.serviceContainer.get<INotebookEditorProvider>(VSCodeNotebookProvider);
@@ -50,6 +53,9 @@ suite('DataScience - VariableView', () => {
 
         // IANHU: Remove, just for testing
         await sleep(60_000);
+
+        // Now check to see if we can actually look at the variable view
+        const variableView = variableViewProvider.variableView;
     
         expect(false).to.equal(true);
     });

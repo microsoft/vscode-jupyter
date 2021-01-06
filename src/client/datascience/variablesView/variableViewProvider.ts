@@ -25,7 +25,8 @@ import { VariableView } from './variableView';
 export class VariableViewProvider implements IVariableViewProvider {
     public readonly viewType = 'jupyterViewVariables';
 
-    private variableView?: VariableView;
+    // IANHU: Just for testing. Don't actually want this public
+    public variableView?: VariableView;
 
     constructor(
         @inject(IConfigurationService) private readonly configuration: IConfigurationService,
