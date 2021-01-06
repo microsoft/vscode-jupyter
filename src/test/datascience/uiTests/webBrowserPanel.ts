@@ -96,8 +96,7 @@ export class WebServer implements IWebServer {
                     'tmp',
                     'scripts',
                     'nbextensions',
-                    hashKey.substr(5),
-                    'index.js'
+                    `${hashKey.substr(5)}.js`
                 );
                 console.log(`Fetching source for ${hashKey} maps to ${diskLocation}`);
                 res.sendFile(diskLocation);
