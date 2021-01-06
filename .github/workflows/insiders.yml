@@ -52,6 +52,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      -name: test output
-       run: echo "Some output"
+      - name: test output
+        run: echo "Some output"
 
