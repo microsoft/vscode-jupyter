@@ -48,4 +48,6 @@ jobs:
   test-next-job:
     name: run-job-contents
     if: github.repository == 'microsoft/vscode-jupyter'
-    steps: ${{fromJson(needs.read-next-job.outputs.next-steps)}}
+    steps:
+      -name: test output
+       run: echo ${{fromJson(needs.read-next-job.outputs.next-steps)}}

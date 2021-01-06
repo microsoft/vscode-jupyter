@@ -43,7 +43,3 @@ jobs:
       - name: Read json
         id: set-steps
         run: echo "::set-output name=next-steps::{\"run\":\"echo 'Hello from json'\"}"
-  test-next-job:
-    name: run-job-contents
-    if: github.repository == 'microsoft/vscode-jupyter'
-    steps: ${{fromJson(needs.read-next-job.outputs.next-steps)}}
