@@ -296,11 +296,6 @@ function handleDebugStart(arg: VariableReducerArg<ICellAction>): IVariableState 
 }
 
 function getElementByIdRequest(arg: VariableReducerArg<string>): IVariableState {
-    console.log(`**** getElementByIdRequest ${arg.payload.data}`);
-    //postActionToExtension(arg, InteractiveWindowMessages.SetVariableExplorerHeight, {
-    //containerHeight,
-    //gridHeight
-    //});
     const element = document.getElementById(arg.payload.data);
 
     if (element) {

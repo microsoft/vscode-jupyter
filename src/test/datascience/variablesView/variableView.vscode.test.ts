@@ -1,5 +1,4 @@
 import { assert, expect } from 'chai';
-import { commands } from 'vscode';
 import * as sinon from 'sinon';
 import { ICommandManager, IVSCodeNotebook } from '../../../client/common/application/types';
 import { IDisposable } from '../../../client/common/types';
@@ -67,6 +66,7 @@ suite('DataScience - VariableView', () => {
         await insertCodeCell('test = "MYTESTVALUE"', { index: 0 });
         const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
         await executeCell(cell);
+        await waitForExecutionCompletedSuccessfully(cell);
         
         // Send the command to open the view
         commandManager.executeCommand(Commands.OpenVariableView);
