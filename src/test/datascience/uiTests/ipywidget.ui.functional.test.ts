@@ -408,9 +408,9 @@ use(chaiAsPromised);
                 assert.include(cellOutputHtml, '>100.000</td>');
             });
         });
-        test('Render ipyvolume', async function () {
+        test('Render ipyvolume 1', async function () {
             const { notebookUI } = await openIPyVolumeIpynb();
-            await assert.eventually.isFalse(notebookUI.cellHasOutput(3));
+            await assert.eventually.isFalse(notebookUI.cellHasOutput(1));
 
             // Confirm sliders and canvas are rendered.
             await retryIfFail(async () => {
@@ -421,6 +421,18 @@ use(chaiAsPromised);
                 const cellOutput = await notebookUI.getCellOutput(1);
                 const sliders = await cellOutput.$$('div.ui-slider');
                 assert.equal(sliders.length, 2);
+            });
+        });
+        test('Render ipyvolume 2', async function () {
+            const { notebookUI } = await openIPyVolumeIpynb();
+            await assert.eventually.isFalse(notebookUI.cellHasOutput(2));
+
+            // Confirm canvas is rendered.
+            await retryIfFail(async () => {
+                await notebookUI.executeCell(2);
+
+                const cellOutputHtml = await notebookUI.getCellOutputHTML(2);
+                assert.include(cellOutputHtml, '<canvas ');
             });
         });
         test('Render pythreejs', async () => {
