@@ -408,7 +408,7 @@ use(chaiAsPromised);
                 assert.include(cellOutputHtml, '>100.000</td>');
             });
         });
-        test('Render ipyvolume 1', async function () {
+        test('Render ipyvolume (slider, color picker, figure)', async function () {
             const { notebookUI } = await openIPyVolumeIpynb();
             await assert.eventually.isFalse(notebookUI.cellHasOutput(1));
             await notebookUI.executeCell(1);
@@ -423,7 +423,7 @@ use(chaiAsPromised);
                 assert.equal(sliders.length, 2);
             });
         });
-        test('Render ipyvolume 2', async function () {
+        test('Render ipyvolume (figure)', async function () {
             const { notebookUI } = await openIPyVolumeIpynb();
             await assert.eventually.isFalse(notebookUI.cellHasOutput(2));
             await notebookUI.executeCell(2);
@@ -458,7 +458,7 @@ use(chaiAsPromised);
                 assert.include(cellOutputHtml, '<canvas ');
             });
         });
-        test('Render beakerx 1', async () => {
+        test('Render beakerx (plot)', async () => {
             const { notebookUI } = await openBeakerXIpynb();
             await assert.eventually.isFalse(notebookUI.cellHasOutput(1));
 
@@ -474,7 +474,7 @@ use(chaiAsPromised);
                 assert.isAtLeast(legends.length, 1);
             });
         });
-        test('Render beakerx 2', async () => {
+        test('Render beakerx (histogram)', async () => {
             const { notebookUI } = await openBeakerXIpynb();
             await assert.eventually.isFalse(notebookUI.cellHasOutput(2));
 
