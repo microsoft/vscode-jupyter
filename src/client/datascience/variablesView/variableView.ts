@@ -12,6 +12,7 @@ import { EXTENSION_ROOT_DIR } from '../../common/constants';
 import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, IDisposable, IDisposableRegistry, Resource } from '../../common/types';
+import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import {
     InteractiveWindowMessages,
@@ -43,6 +44,8 @@ const variableViewDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', '
 // code execution changes and active editor switches
 @injectable()
 export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> implements IDisposable {
+    private activeElementRequest?: Deferred<string>;
+
     private dataViewerChecker: DataViewerChecker;
     protected get owningResource(): Resource {
         return undefined;
@@ -95,6 +98,19 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
         this.postMessage(InteractiveWindowMessages.GetElementByIdRequest, id).ignoreErrors();
     }
 
+    public async getElementByIdAsync(id: string): Promise<string> {
+        if (!this.activeElementRequest) {
+            this.activeElementRequest = createDeferred<string>();
+
+            this.postMessage(InteractiveWindowMessages.GetElementByIdRequest, id).ignoreErrors();
+        } else {
+            // IANHU: Error here? Don't really care to handle overlaying request just for test code
+            throw new Error('getElementById request already in progress');
+        }
+
+        return this.activeElementRequest.promise;
+    }
+
     //tslint:disable-next-line:no-any
     protected onMessage(message: string, payload: any) {
         switch (message) {
@@ -106,6 +122,9 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
                 break;
             case InteractiveWindowMessages.GetElementByIdResponse:
                 traceError(payload);
+                if (this.activeElementRequest) {
+                    this.activeElementRequest.resolve(payload);
+                }
                 break;
             default:
                 break;

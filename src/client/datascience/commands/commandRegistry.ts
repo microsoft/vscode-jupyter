@@ -201,7 +201,9 @@ export class CommandRegistry implements IDisposable {
         const variableView = this.variableViewProvider.variableView;
 
         if (variableView) {
-            variableView.getElementById('variable-view-main-panel');;
+            //variableView.getElementById('variable-view-main-panel');;
+            const result = await variableView.getElementByIdAsync('variable-view-main-panel');
+            traceError(result);
         }
     }
 

@@ -52,14 +52,12 @@ suite('DataScience - VariableView', () => {
         //commands.executeCommand("workbench.action.openView");
 
         // IANHU: Remove, just for testing
-        await sleep(60_000);
+        await sleep(30_000);
 
         // Now check to see if we can actually look at the variable view
         const variableView = variableViewProvider.variableView;
-        variableView?.getElementById('variable-view-main-panel');
+        const htmlResult = await variableView?.getElementByIdAsync('variable-view-main-panel');
 
-        await sleep(60_000);
-    
         expect(false).to.equal(true);
     });
 
