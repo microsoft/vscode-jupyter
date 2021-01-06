@@ -81,6 +81,7 @@ export class WebServer implements IWebServer {
                 console.log(`Fetching source for ${hashKey} maps to ${diskLocation}`);
                 res.sendFile(diskLocation);
             } else {
+                console.error(`Source not found ${queryKeys.join(', ')}`);
                 res.status(404).end();
             }
         });
@@ -101,6 +102,7 @@ export class WebServer implements IWebServer {
                 console.log(`Fetching source for ${hashKey} maps to ${diskLocation}`);
                 res.sendFile(diskLocation);
             } else {
+                console.error(`Source not found ${queryKeys.join(', ')}`);
                 res.status(404).end();
             }
         });
