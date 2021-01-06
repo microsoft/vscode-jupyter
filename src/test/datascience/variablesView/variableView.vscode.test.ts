@@ -4,6 +4,7 @@ import { ICommandManager } from '../../../client/common/application/types';
 import { IDisposable } from '../../../client/common/types';
 import { Commands } from '../../../client/datascience/constants';
 import { IExtensionTestApi } from '../../common';
+import { sleep } from '../../core';
 import { initialize } from '../../initialize';
 import {
     canRunNotebookTests,
@@ -26,7 +27,7 @@ suite('DataScience - VariableView', () => {
             return this.skip();
         }
         await trustAllNotebooks();
-        //commandManager = api.serviceContainer.get<ICommandManager>(ICommandManager);
+        commandManager = api.serviceContainer.get<ICommandManager>(ICommandManager);
         // sinon.restore();
         // vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         // editorProvider = api.serviceContainer.get<INotebookEditorProvider>(VSCodeNotebookProvider);
@@ -46,6 +47,9 @@ suite('DataScience - VariableView', () => {
         // Send the command to open the view
         commandManager.executeCommand(Commands.OpenVariableView);
         //commands.executeCommand("workbench.action.openView");
+
+        // IANHU: Remove, just for testing
+        await sleep(60_000);
     
         expect(false).to.equal(true);
     });
