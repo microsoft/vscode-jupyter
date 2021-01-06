@@ -59,7 +59,7 @@ suite('Notebook Editor tests', () => {
         await insertCodeCell('print("1")', { index: 1 });
         await insertCodeCell('print("2")', { index: 2 });
 
-        // select second cell
+        // select first cell
         await selectCell(vscodeNotebook.activeNotebookEditor?.document!, 0, 0);
 
         // run command
