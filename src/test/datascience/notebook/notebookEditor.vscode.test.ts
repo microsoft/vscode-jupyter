@@ -53,32 +53,6 @@ suite('Notebook Editor tests', () => {
     });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
 
-    test('Run cells below', async function () {
-        // add some cells
-        await insertCodeCell('print("0")', { index: 0 });
-        await insertCodeCell('print("1")', { index: 1 });
-        await insertCodeCell('print("2")', { index: 2 });
-
-        // select second cell
-        await selectCell(vscodeNotebook.activeNotebookEditor?.document!, 1, 1);
-
-        // run command
-        await commandManager.executeCommand(
-            Commands.NativeNotebookRunCellAndAllBelow,
-            vscodeNotebook.activeNotebookEditor?.document.uri!
-        );
-
-        const firstCell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
-        const thirdCell = vscodeNotebook.activeNotebookEditor?.document.cells![2]!;
-        await waitForExecutionCompletedSuccessfully(thirdCell);
-
-        // The first cell should have an undefined runState
-        assert.strictEqual(firstCell?.metadata.runState, undefined);
-
-        // The third cell should have a runState of Success
-        assert.strictEqual(thirdCell?.metadata.runState, vscodeNotebookEnums.NotebookCellRunState.Success);
-    });
-
     test('Run cells above', async function () {
         // add some cells
         await insertCodeCell('print("0")', { index: 0 });
@@ -103,5 +77,31 @@ suite('Notebook Editor tests', () => {
 
         // The third cell should have an undefined runState
         assert.strictEqual(thirdCell?.metadata.runState, undefined);
+    });
+
+    test('Run cells below', async function () {
+        // add some cells
+        await insertCodeCell('print("0")', { index: 0 });
+        await insertCodeCell('print("1")', { index: 1 });
+        await insertCodeCell('print("2")', { index: 2 });
+
+        // select second cell
+        await selectCell(vscodeNotebook.activeNotebookEditor?.document!, 1, 1);
+
+        // run command
+        await commandManager.executeCommand(
+            Commands.NativeNotebookRunCellAndAllBelow,
+            vscodeNotebook.activeNotebookEditor?.document.uri!
+        );
+
+        const firstCell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
+        const thirdCell = vscodeNotebook.activeNotebookEditor?.document.cells![2]!;
+        await waitForExecutionCompletedSuccessfully(thirdCell);
+
+        // The first cell should have an undefined runState
+        assert.strictEqual(firstCell?.metadata.runState, undefined);
+
+        // The third cell should have a runState of Success
+        assert.strictEqual(thirdCell?.metadata.runState, vscodeNotebookEnums.NotebookCellRunState.Success);
     });
 });
