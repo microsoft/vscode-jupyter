@@ -1,7 +1,7 @@
 name: Repository Dispatch
 on:
   repository_dispatch:
-    types: [build-vsix]
+    types: [dispatch]
 
 jobs:
   build-vsix:
