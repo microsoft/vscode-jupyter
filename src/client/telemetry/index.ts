@@ -1029,4 +1029,9 @@ export interface IEventNamePropertyMapping {
     // Sync events
     [Telemetry.SyncAllCells]: never | undefined;
     [Telemetry.SyncSingleCell]: never | undefined;
+
+    // When users connect to a remote kernel, we store the kernel id so we can re-connect to that
+    // when user opens the same notebook. We only store the last 100.
+    // If user stores more than 100 (or what ever the number is), then we send this telemetry.
+    [Telemetry.TotalNumberOfSavedRemoteKernelIdsExceeded]: never | undefined;
 }

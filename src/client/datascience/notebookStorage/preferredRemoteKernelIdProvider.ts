@@ -4,10 +4,12 @@
 import { inject, injectable, named } from 'inversify';
 import { Memento, Uri } from 'vscode';
 import { GLOBAL_MEMENTO, ICryptoUtils, IMemento } from '../../common/types';
+import { sendTelemetryEvent } from '../../telemetry';
+import { Telemetry } from '../constants';
 
 export const ActiveKernelIdList = 'Active_Kernel_Id_List';
 // This is the number of kernel ids that will be remembered between opening and closing VS code
-export const MaximumKernelIdListSize = 40;
+export const MaximumKernelIdListSize = 100;
 
 type KernelIdListEntry = {
     fileHash: string;
@@ -48,6 +50,7 @@ export class PreferredRemoteKernelIdProvider {
 
         // Prune list if too big
         while (list.length > MaximumKernelIdListSize) {
+            sendTelemetryEvent(Telemetry.TotalNumberOfSavedRemoteKernelIdsExceeded);
             list.shift();
         }
         await this.globalMemento.update(ActiveKernelIdList, list);

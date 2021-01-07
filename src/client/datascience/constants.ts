@@ -315,6 +315,7 @@ export enum Telemetry {
      */
     SelectJupyterInterpreterCommand = 'DATASCIENCE.SELECT_JUPYTER_INTERPRETER_Command',
     StartJupyterProcess = 'DS_INTERNAL.START_JUPYTER_PROCESS',
+    TotalNumberOfSavedRemoteKernelIdsExceeded = 'DS_INTERNAL.SAVED_REMOTE_KERNEL_IDS_EXCEEDED',
     WaitForIdleJupyter = 'DS_INTERNAL.WAIT_FOR_IDLE_JUPYTER',
     HiddenCellTime = 'DS_INTERNAL.HIDDEN_EXECUTION_TIME',
     RestartJupyterTime = 'DS_INTERNAL.RESTART_JUPYTER_TIME',
