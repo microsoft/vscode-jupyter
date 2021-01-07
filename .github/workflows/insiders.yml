@@ -42,7 +42,7 @@ jobs:
         uses: peter-evans/repository-dispatch@v1
         id: dispatch-another
         with: 
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.CODECOV_TOKEN }}
           event-type: build-vsix
           client-payload: '{ "payload": "Hello from insiders 2" }'
 
