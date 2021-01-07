@@ -43,7 +43,9 @@ jobs:
         id: dispatch-another
         with: 
           token: ${{ secrets.DISPATCH_TOKEN }}
-          event-type: build-vsix
-          client-payload: '{ "payload": "Hello from insiders 5" }'
+          owner: microsoft
+          repo: vscode-jupyter
+          event_type: build-vsix
+          client_payload: '{ "payload": "Hello from insiders 5" }'
 
 
