@@ -43,7 +43,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       vsix_name: ${{ env.vsix_name }}
-      functional_matrix: ${{ env.test_matrix_os }}
+      test_matrix_os: ${{ env.test_matrix_os }}
     if: github.repository == 'microsoft/vscode-jupyter'
     steps:
       - name: dump_event
