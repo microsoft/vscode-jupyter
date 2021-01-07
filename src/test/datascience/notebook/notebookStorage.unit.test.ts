@@ -12,7 +12,10 @@ import { sleep } from '../../../client/common/utils/async';
 import { NotebookModelChange } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { BaseNotebookModel } from '../../../client/datascience/notebookStorage/baseModel';
 import { NativeEditorNotebookModel } from '../../../client/datascience/notebookStorage/notebookModel';
-import { ActiveKernelIdList, MaximumKernelIdListSize } from '../../../client/datascience/notebookStorage/preferredRemoteKernelIdProvider';
+import {
+    ActiveKernelIdList,
+    MaximumKernelIdListSize
+} from '../../../client/datascience/notebookStorage/preferredRemoteKernelIdProvider';
 import { MockMemento } from '../../mocks/mementos';
 
 suite('DataScience - Notebook Storage', () => {
