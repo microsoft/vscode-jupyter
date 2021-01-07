@@ -116,6 +116,7 @@ export class CommandRegistry implements IDisposable {
             this.enableLoadingWidgetScriptsFromThirdParty
         );
         this.registerCommand(Commands.ClearSavedJupyterUris, this.clearJupyterUris);
+        this.registerCommand(Commands.OpenVariableView, this.openVariableView);
         if (this.commandListeners) {
             this.commandListeners.forEach((listener: IDataScienceCommandListener) => {
                 listener.register(this.commandManager);
@@ -487,6 +488,10 @@ export class CommandRegistry implements IDisposable {
         env.openExternal(Uri.parse(`https://marketplace.visualstudio.com/items?itemName=ms-toolsai.jupyter`));
     }
 
+    // Open up our variable viewer using the command that VS Code provides for this
+    private async openVariableView(): Promise<void> {
+        this.commandManager.executeCommand('jupyterViewVariables.focus');
+    }
     private async onVariablePanelShowDataViewerRequest(request: IShowDataViewerFromVariablePanel) {
         sendTelemetryEvent(EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_REQUEST);
         if (this.debugService.activeDebugSession) {
