@@ -65,6 +65,7 @@
         "onCommand:jupyter.exportfileandoutputasnotebook",
         "onCommand:jupyter.selectJupyterInterpreter",
         "onCommand:jupyter.selectjupytercommandline",
+        "onCommand:jupyter.openVariableView",
         "onNotebook:jupyter-notebook",
         "onCustomEditor:jupyter.notebook.ipynb"
     ],
@@ -697,6 +698,11 @@
             {
                 "command": "jupyter.clearSavedJupyterUris",
                 "title": "%jupyter.command.jupyter.clearSavedJupyterUris.title%",
+                "category": "Jupyter"
+            },
+            {
+                "command": "jupyter.openVariableView",
+                "title": "%jupyter.command.jupyter.openVariableView.title%",
                 "category": "Jupyter"
             }
         ],
