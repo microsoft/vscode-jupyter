@@ -1165,14 +1165,23 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
 
     private selectNewKernel() {
         // This is handled by a command.
-        this.commandManager.executeCommand(Commands.SwitchJupyterKernel, {
-            identity: this.notebookIdentity.resource,
-            resource: this.owningResource,
-            currentKernelDisplayName:
-                this.notebookMetadata?.kernelspec?.display_name ||
-                this.notebookMetadata?.kernelspec?.name ||
-                getDisplayNameOrNameOfKernelConnection(this._notebook?.getKernelConnection())
-        });
+        this.commandManager
+            .executeCommand(Commands.SwitchJupyterKernel, {
+                identity: this.notebookIdentity.resource,
+                resource: this.owningResource,
+                currentKernelDisplayName:
+                    this.notebookMetadata?.kernelspec?.display_name ||
+                    this.notebookMetadata?.kernelspec?.name ||
+                    getDisplayNameOrNameOfKernelConnection(this._notebook?.getKernelConnection())
+            })
+            .then(async () => {
+                // Reset our file in the kernel.
+                const fileInKernel = this.fileInKernel;
+                this.fileInKernel = undefined;
+                if (fileInKernel) {
+                    await this.setFileInKernel(fileInKernel, undefined);
+                }
+            });
     }
 
     private async createNotebook(serverConnection: INotebookProviderConnection): Promise<INotebook> {
