@@ -78,11 +78,14 @@ jobs:
     needs: pick_environment
     name: test_pick
     runs-on: ubuntu-latest
+    env:
+      TEST_MATRIX_OS: ${{ toJson(needs.pick_environment.outputs.test_matrix_os) }}
+      VSIX_NAME: ${{ needs.pick_environment.outputs.vsix_name }}
     steps:
       - name: dump
         run: | 
-          echo "VSIX_NAME ${{ needs.pick_environment.outputs.vsix_name }}"
-          echo "TEST_MATRIX_OS ${{ toJson(fromJson(needs.pick_environment.outputs.test_matrix_os)) }}"
+          echo -e "VSIX_NAME $VSIX_NAME"
+          echo -e "TEST_MATRIX_OS $TEST_MATRIX_OS"
 
   # build-vsix:
   #   needs: pick_environment
