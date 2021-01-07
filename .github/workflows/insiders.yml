@@ -60,6 +60,7 @@ jobs:
     needs: read-next-job
     name: run-job-contents
     if: github.repository == 'microsoft/vscode-jupyter'
-    steps: ${{fromJson(needs.read-next-job.outputs.next-steps)}}
+    steps: 
+      ${{fromJson(needs.read-next-job.outputs.next-steps)}}
 
 
