@@ -45,6 +45,11 @@ jobs:
       vsix_name: ${{ env.vsix_name }}
     if: github.repository == 'microsoft/vscode-jupyter'
     steps:
+      - name: dump_event
+        run: |
+          echo "Event is ${{ github.event }}"
+          echo "Ref is ${{ github.ref }}"
+
       - name: pr
         if: github.event == 'pull_request'
         run: echo "vsix_name=ms-toolsai-jupyter-insiders.vsix" >> $GITHUB_ENV
