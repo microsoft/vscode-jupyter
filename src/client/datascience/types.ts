@@ -120,7 +120,7 @@ export interface INotebookCompletion {
     metadata: {};
 }
 
-export type INotebookMetadataLive = nbformat.INotebookMetadata & { id?: string };
+export type INotebookMetadataLive = nbformat.INotebookMetadata;
 
 // Talks to a jupyter ipython kernel to retrieve data for cells
 export const INotebookServer = Symbol('INotebookServer');
@@ -257,7 +257,6 @@ export interface INotebookServerOptions {
     workingDir?: string;
     purpose: string;
     metadata?: INotebookMetadataLive;
-    disableUI?: boolean;
     skipSearchingForKernel?: boolean;
     allowUI(): boolean;
 }

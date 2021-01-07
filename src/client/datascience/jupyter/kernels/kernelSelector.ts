@@ -23,7 +23,7 @@ import { sendNotebookOrKernelLanguageTelemetry } from '../../common';
 import { Commands, Settings, Telemetry } from '../../constants';
 import { IKernelFinder } from '../../kernel-launcher/types';
 import { isPythonNotebook } from '../../notebook/helpers/helpers';
-import { getInterpreterInfoStoredInMetadata } from '../../notebookStorage/baseModel';
+import { getInterpreterInfoStoredInMetadata, PreferredRemoteKernelIdProvider } from '../../notebookStorage/baseModel';
 import { reportAction } from '../../progress/decorator';
 import { ReportableAction } from '../../progress/types';
 import {
@@ -75,7 +75,8 @@ export class KernelSelector implements IKernelSelectionUsage {
         @inject(IJupyterSessionManagerFactory) private jupyterSessionManagerFactory: IJupyterSessionManagerFactory,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
-        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker
+        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
+        @inject(PreferredRemoteKernelIdProvider) private readonly preferredRemoteKernelIdProvider: PreferredRemoteKernelIdProvider
     ) {
         disposableRegistry.push(
             this.jupyterSessionManagerFactory.onRestartSessionCreated(this.addKernelToIgnoreList.bind(this))
@@ -259,8 +260,9 @@ export class KernelSelector implements IKernelSelectionUsage {
         ]);
 
         // First check for a live active session.
-        if (notebookMetadata && notebookMetadata.id) {
-            const session = sessions?.find((s) => s.kernel.id === notebookMetadata?.id);
+        const preferredKernelId = resource ? this.preferredRemoteKernelIdProvider.getPreferredRemoteKernelId(resource) : undefined;
+        if (preferredKernelId) {
+            const session = sessions?.find((s) => s.kernel.id === preferredKernelId);
             if (session) {
                 // tslint:disable-next-line: no-any
                 const liveKernel = session.kernel as any;

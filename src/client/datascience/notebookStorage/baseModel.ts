@@ -5,10 +5,11 @@ import { nbformat } from '@jupyterlab/coreutils/lib/nbformat';
 import { KernelMessage } from '@jupyterlab/services';
 import * as fastDeepEqual from 'fast-deep-equal';
 import { sha256 } from 'hash.js';
+import { inject, injectable, named } from 'inversify';
 import { cloneDeep } from 'lodash';
 import { Event, EventEmitter, Memento, Uri } from 'vscode';
-import { ICryptoUtils } from '../../common/types';
-import { isUntitledFile } from '../../common/utils/misc';
+import { GLOBAL_MEMENTO, ICryptoUtils, IMemento } from '../../common/types';
+import { isUntitledFile, noop } from '../../common/utils/misc';
 import { pruneCell } from '../common';
 import { NotebookModelChange } from '../interactive-common/interactiveWindowTypes';
 import {
@@ -27,6 +28,47 @@ type KernelIdListEntry = {
     fileHash: string;
     kernelId: string | undefined;
 };
+
+
+@injectable()
+export class PreferredRemoteKernelIdProvider {
+    constructor(
+        @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento,
+        @inject(ICryptoUtils) private crypto: ICryptoUtils
+    ) {}
+
+    public getPreferredRemoteKernelId(uri: Uri): string | undefined {
+        // Stored as a list so we don't take up too much space
+        const list: KernelIdListEntry[] = this.globalMemento.get<KernelIdListEntry[]>(ActiveKernelIdList, []);
+        if (list) {
+            // Not using a map as we're only going to store the last 40 items.
+            const fileHash = this.crypto.createHash(uri.toString(), 'string');
+            const entry = list.find((l) => l.fileHash === fileHash);
+            return entry?.kernelId;
+        }
+    }
+
+    public async storePreferredRemoteKernelId(uri: Uri, id: string | undefined): Promise<void> {
+        const list: KernelIdListEntry[] = this.globalMemento.get<KernelIdListEntry[]>(ActiveKernelIdList, []);
+        const fileHash = this.crypto.createHash(uri.toString(), 'string');
+        const index = list.findIndex((l) => l.fileHash === fileHash);
+        // Always remove old spot (we'll push on the back for new ones)
+        if (index >= 0) {
+            list.splice(index, 1);
+        }
+
+        // If adding a new one, push
+        if (id) {
+            list.push({ fileHash, kernelId: id });
+        }
+
+        // Prune list if too big
+        while (list.length > MaximumKernelIdListSize) {
+            list.shift();
+        }
+        await this.globalMemento.update(ActiveKernelIdList, list);
+    }
+}
 
 export function getInterpreterInfoStoredInMetadata(
     metadata?: nbformat.INotebookMetadata
@@ -232,11 +274,12 @@ export abstract class BaseNotebookModel implements INotebookModel {
     protected _editEventEmitter = new EventEmitter<NotebookModelChange>();
     protected _kernelConnection?: KernelConnectionMetadata;
     private kernelId: string | undefined;
+    private readonly preferredRemoteKernelIdStorage: PreferredRemoteKernelIdProvider;
     constructor(
         protected _isTrusted: boolean,
         protected _file: Uri,
         protected globalMemento: Memento,
-        private crypto: ICryptoUtils,
+        crypto: ICryptoUtils,
         protected notebookJson: Partial<nbformat.INotebookContent> = {},
         public readonly indentAmount: string = ' ',
         private readonly pythonNumber: number = 3,
@@ -249,6 +292,7 @@ export abstract class BaseNotebookModel implements INotebookModel {
         if (initializeJsonIfRequired) {
             this.ensureNotebookJson();
         }
+        this.preferredRemoteKernelIdStorage = new PreferredRemoteKernelIdProvider(globalMemento, crypto);
         this.kernelId = this.getStoredKernelId();
     }
     public dispose() {
@@ -316,33 +360,9 @@ export abstract class BaseNotebookModel implements INotebookModel {
         return JSON.stringify(json, null, this.indentAmount);
     }
     private getStoredKernelId(): string | undefined {
-        // Stored as a list so we don't take up too much space
-        const list: KernelIdListEntry[] = this.globalMemento.get<KernelIdListEntry[]>(ActiveKernelIdList, []);
-        if (list) {
-            // Not using a map as we're only going to store the last 40 items.
-            const fileHash = this.crypto.createHash(this._file.toString(), 'string');
-            const entry = list.find((l) => l.fileHash === fileHash);
-            return entry?.kernelId;
-        }
+        return this.preferredRemoteKernelIdStorage.getPreferredRemoteKernelId(this._file);
     }
     private setStoredKernelId(id: string | undefined) {
-        const list: KernelIdListEntry[] = this.globalMemento.get<KernelIdListEntry[]>(ActiveKernelIdList, []);
-        const fileHash = this.crypto.createHash(this._file.toString(), 'string');
-        const index = list.findIndex((l) => l.fileHash === fileHash);
-        // Always remove old spot (we'll push on the back for new ones)
-        if (index >= 0) {
-            list.splice(index, 1);
-        }
-
-        // If adding a new one, push
-        if (id) {
-            list.push({ fileHash, kernelId: id });
-        }
-
-        // Prune list if too big
-        while (list.length > MaximumKernelIdListSize) {
-            list.shift();
-        }
-        return this.globalMemento.update(ActiveKernelIdList, list);
+        this.preferredRemoteKernelIdStorage.storePreferredRemoteKernelId(this._file, id).catch(noop);
     }
 }
