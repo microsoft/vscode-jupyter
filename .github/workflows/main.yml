@@ -77,7 +77,13 @@ jobs:
   test_pick:
     needs: pick_environment
     name: test_pick
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    if: github.repository == 'microsoft/vscode-jupyter'
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ${{fromJson(needs.pick_environment.outputs.test_matrix_os)}}
+        test-suite: [ts-unit]    
     env:
       TEST_MATRIX_OS: ${{ toJson(needs.pick_environment.outputs.test_matrix_os) }}
       VSIX_NAME: ${{ needs.pick_environment.outputs.vsix_name }}
