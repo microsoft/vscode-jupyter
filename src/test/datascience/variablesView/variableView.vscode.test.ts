@@ -85,8 +85,15 @@ suite('DataScience - VariableView', () => {
 
         // Now check to see if we can actually look at the variable view
         const variableView = variableViewProvider.variableView;
-        const htmlResult = await variableView?.getElementByIdAsync('variable-view-main-panel');
+        
+        if (variableView) {
+            console.log('**** found variableView');
+        }
 
+        const htmlResult = await variableView?.getElementByIdAsync('variable-view-main-panel');
+        const rootHtml = await variableView?.getElementByIdAsync('root');
+
+        console.log(`**** rootHTML ${rootHtml}`);
         console.log(`**** htmlResult ${htmlResult} ****`);
 
         expect(htmlResult).to.contain('MYTESTVALUE');

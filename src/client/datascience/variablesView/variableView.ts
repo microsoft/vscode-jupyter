@@ -124,6 +124,7 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
                 traceError(payload);
                 if (this.activeElementRequest) {
                     this.activeElementRequest.resolve(payload);
+                    this.activeElementRequest = undefined;
                 }
                 break;
             default:
