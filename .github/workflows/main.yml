@@ -47,7 +47,7 @@ jobs:
     steps:
       - name: dump_event
         run: |
-          echo "Event is ${{ github.event_name }}"
+          echo "Event is ${{ github.event_name }} ${{ toJson(github.event) }}"
           echo "Ref is ${{ github.ref }}"
 
       - name: pr
