@@ -533,7 +533,11 @@ export class KernelSelector implements IKernelSelectionUsage {
             };
             // Install missing dependencies only if we're dealing with a Python kernel.
             if (interpreterStoredInKernelSpec && isPythonKernelConnection(connectionInfo)) {
-                await this.installDependenciesIntoInterpreter(interpreterStoredInKernelSpec, ignoreDependencyCheck, cancelToken);
+                await this.installDependenciesIntoInterpreter(
+                    interpreterStoredInKernelSpec,
+                    ignoreDependencyCheck,
+                    cancelToken
+                );
             }
             return connectionInfo;
         }
