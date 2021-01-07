@@ -319,26 +319,26 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
             // Is this assumption correct, do we not search for kernel information when starting a notebook without selecting a kernel.
             // Doesn't extension today rely on this code to select a default kernel? (mayby not)..
             let kernelInfo: KernelConnectionMetadata | undefined;
-             if (launchInfo.connectionInfo.localLaunch && kernelConnection?.kind !== 'connectToLiveKernel'){
+            if (launchInfo.connectionInfo.localLaunch && kernelConnection?.kind !== 'connectToLiveKernel') {
                 kernelInfo = kernelConnection;
-            } else if (!launchInfo.connectionInfo.localLaunch && kernelConnection?.kind === 'connectToLiveKernel'){
+            } else if (!launchInfo.connectionInfo.localLaunch && kernelConnection?.kind === 'connectToLiveKernel') {
                 kernelInfo = kernelConnection;
             } else {
                 kernelInfo = await (launchInfo.connectionInfo.localLaunch
-                ? this.kernelSelector.getPreferredKernelForLocalConnection(
-                      resource,
-                      'jupyter',
-                      sessionManager,
-                      undefined,
-                      isTestExecution(),
-                      cancelToken
-                  )
-                : this.kernelSelector.getPreferredKernelForRemoteConnection(
-                      resource,
-                      sessionManager,
-                      undefined,
-                      cancelToken
-                  ));
+                    ? this.kernelSelector.getPreferredKernelForLocalConnection(
+                          resource,
+                          'jupyter',
+                          sessionManager,
+                          undefined,
+                          isTestExecution(),
+                          cancelToken
+                      )
+                    : this.kernelSelector.getPreferredKernelForRemoteConnection(
+                          resource,
+                          sessionManager,
+                          undefined,
+                          cancelToken
+                      ));
             }
             if (kernelInfo) {
                 launchInfo.kernelConnectionMetadata = kernelInfo;

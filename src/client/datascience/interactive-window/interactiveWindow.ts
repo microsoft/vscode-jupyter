@@ -100,6 +100,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     private pendingHasCell = new Map<string, Deferred<boolean>>();
     private mode: InteractiveWindowMode = 'multiple';
     private loadPromise: Promise<void>;
+    private _kernelConnection?: KernelConnectionMetadata;
 
     constructor(
         listeners: IInteractiveWindowListener[],
@@ -388,7 +389,6 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     protected get notebookMetadata(): Readonly<nbformat.INotebookMetadata> | undefined {
         return undefined;
     }
-    private _kernelConnection?: KernelConnectionMetadata;
     protected get kernelConnection(): KernelConnectionMetadata | undefined {
         return this._kernelConnection;
     }

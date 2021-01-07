@@ -146,14 +146,16 @@ export class HostRawNotebookProvider
         try {
             // We need to locate kernelspec and possible interpreter for this launch based on resource and notebook metadata
             // TODO: Confirm this logic is valid.
-            const kernelConnectionMetadata = kernelConnection || await this.kernelSelector.getPreferredKernelForLocalConnection(
-                resource,
-                'raw',
-                undefined,
-                undefined,
-                disableUI,
-                cancelToken
-            );
+            const kernelConnectionMetadata =
+                kernelConnection ||
+                (await this.kernelSelector.getPreferredKernelForLocalConnection(
+                    resource,
+                    'raw',
+                    undefined,
+                    undefined,
+                    disableUI,
+                    cancelToken
+                ));
 
             const displayName = getDisplayNameOrNameOfKernelConnection(kernelConnectionMetadata);
 
