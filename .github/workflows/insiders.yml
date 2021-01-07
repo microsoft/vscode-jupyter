@@ -38,12 +38,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Dispatch another workflow
-        uses: peter-evans/repository-dispatch@v1
+      - name: Dispatch another workflow and wait
+        uses: felixp8/dispatch-and-wait@v0.1.0
         id: dispatch-another
         with: 
           token: ${{ secrets.DISPATCH_TOKEN }}
-          event-type: dispatch
+          event-type: build-vsix
           client-payload: '{ "payload": "Hello from insiders 5" }'
 
 
