@@ -30,36 +30,20 @@ env:
   VSC_JUPYTER_INSTRUMENT_CODE_FOR_COVERAGE: true
 
 jobs:
-  read-next-job:
+  dispatch:
     runs-on: ubuntu-latest
-    name: read-job-contents
+    name: dispatch
     if: github.repository == 'microsoft/vscode-jupyter'
-    outputs:
-      next-steps: ${{ steps.set-steps.outputs.next-steps }}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Convert to json
-        uses: fabasoad/yaml-json-xml-converter-action@main
-        id: yamlToJson
+      - name: Dispatch another workflow
+        uses: peter-evans/repository-dispatch@v1
+        id: dispatch-another
         with: 
-          path: './.github/workflows/jobs/test.yml'
-          from: 'yaml'
-          to: 'json'
-
-      - name: Read json
-        id: set-steps
-        run: |
-          content='${{ toJson(fromJson(steps.yamlToJson.outputs.data).jobs.build-vsix.steps[0]) }}'
-          content=${content//$'\n'/''}
-          content=${content//$'\t'/''}          
-          echo "::set-output name=next-steps::$content"
-  test-next-job:
-    runs-on: ubuntu-latest
-    needs: read-next-job
-    name: run-job-contents
-    if: github.repository == 'microsoft/vscode-jupyter'
-    steps: [${{fromJson(needs.read-next-job.outputs.next-steps)}}]
+          token: ${{ secrets.GITHUB_TOKEN }}
+          event-type: build-vsix
+          client-payload: '{ "payload": "Hello from insiders" }'
 
 

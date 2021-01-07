@@ -1,8 +1,7 @@
-name: Test job
+name: Repository Dispatch
 on:
-  push:
-    branches:
-      - rchiodo/test_from_json
+  repository_dispatch:
+    types: [build-vsix]
 
 jobs:
   build-vsix:
@@ -12,4 +11,4 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Test output
-        run: echo "Some Output" 
+        run: echo "${{ github.event.client_payload.payload }}" 
