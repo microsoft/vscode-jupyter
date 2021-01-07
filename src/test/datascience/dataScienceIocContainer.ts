@@ -309,6 +309,7 @@ import { WebviewIPyWidgetCoordinator } from '../../client/datascience/ipywidgets
 import { WebviewViewProvider } from '../../client/common/application/webviewViews/webviewViewProvider';
 import { SystemPseudoRandomNumberGenerator } from '../../client/datascience/interactive-ipynb/randomBytes';
 import { KernelEnvironmentVariablesService } from '../../client/datascience/kernel-launcher/kernelEnvVarsService';
+import { PreferredRemoteKernelIdProvider } from '../../client/datascience/notebookStorage/preferredRemoteKernelIdProvider';
 import { NotebookWatcher } from '../../client/datascience/variablesView/notebookWatcher';
 
 export class DataScienceIocContainer extends UnitTestIocContainer {
@@ -478,6 +479,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<ExportUtil>(ExportUtil, ExportUtil);
         this.serviceManager.addSingleton<ExportCommands>(ExportCommands, ExportCommands);
         this.serviceManager.addSingleton<IExportDialog>(IExportDialog, ExportDialog);
+        this.serviceManager.addSingleton<PreferredRemoteKernelIdProvider>(
+            PreferredRemoteKernelIdProvider,
+            PreferredRemoteKernelIdProvider
+        );
         this.serviceManager.addSingleton<INbConvertInterpreterDependencyChecker>(
             INbConvertInterpreterDependencyChecker,
             NbConvertInterpreterDependencyChecker
