@@ -373,7 +373,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         return this.model.metadata;
     }
 
-    protected get kernelConnection(): KernelConnectionMetadata | undefined {
+    protected get kernelConnection(): Readonly<KernelConnectionMetadata> | undefined {
         return this.model.kernelConnection;
     }
 

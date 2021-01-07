@@ -17,6 +17,7 @@ import {
     IConfigurationService,
     IDisposableRegistry,
     IOutputChannel,
+    ReadWrite,
     Resource
 } from '../../../common/types';
 import { createDeferred } from '../../../common/utils/async';
@@ -42,6 +43,7 @@ import { KernelConnectionMetadata } from '../kernels/types';
 import { HostJupyterNotebook } from './hostJupyterNotebook';
 import { LiveShareParticipantHost } from './liveShareParticipantMixin';
 import { IRoleBasedObject } from './roleBasedFactory';
+import { cloneDeep } from 'lodash';
 // tslint:disable:no-any
 
 export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBase, LiveShare.JupyterServerSharedService)
@@ -341,11 +343,11 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
                       ));
             }
             if (kernelInfo) {
-                launchInfo.kernelConnectionMetadata = kernelInfo;
-
                 // For the interpreter, make sure to select the one matching the kernel.
-                launchInfo.kernelConnectionMetadata.interpreter =
-                    launchInfo.kernelConnectionMetadata.interpreter || resourceInterpreter;
+                const interpreter = kernelInfo.interpreter || resourceInterpreter;
+                const readWriteKernelInfo = cloneDeep(kernelInfo) as ReadWrite<KernelConnectionMetadata>;
+                readWriteKernelInfo.interpreter = interpreter;
+                launchInfo.kernelConnectionMetadata = readWriteKernelInfo;
                 changedKernel = true;
             }
         }

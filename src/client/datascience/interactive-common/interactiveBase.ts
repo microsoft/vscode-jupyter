@@ -127,7 +127,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
 
     public abstract isInteractive: boolean;
     protected abstract get notebookMetadata(): Readonly<nbformat.INotebookMetadata> | undefined;
-    protected abstract get kernelConnection(): KernelConnectionMetadata | undefined;
+    protected abstract get kernelConnection(): Readonly<KernelConnectionMetadata> | undefined;
 
     protected abstract get notebookIdentity(): INotebookIdentity;
     protected fileInKernel: string | undefined;

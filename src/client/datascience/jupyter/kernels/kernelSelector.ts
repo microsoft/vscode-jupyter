@@ -12,7 +12,7 @@ import { IApplicationShell } from '../../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../../common/constants';
 import '../../../common/extensions';
 import { traceDecorators, traceError, traceInfo, traceInfoIf, traceVerbose } from '../../../common/logger';
-import { IConfigurationService, IDisposableRegistry, Resource } from '../../../common/types';
+import { IConfigurationService, IDisposableRegistry, ReadWrite, Resource } from '../../../common/types';
 import * as localize from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
 import { StopWatch } from '../../../common/utils/stopWatch';
@@ -229,15 +229,15 @@ export class KernelSelector implements IKernelSelectionUsage {
         telemetryProps.kernelSpecFound = !!selection?.kernelSpec;
         telemetryProps.interpreterFound = !!selection?.interpreter;
         sendTelemetryEvent(Telemetry.FindKernelForLocalConnection, stopWatch.elapsedTime, telemetryProps);
-        const itemToReturn = cloneDeep(selection);
-        if (itemToReturn) {
+        if (selection) {
+            const itemToReturn = cloneDeep(selection) as ReadWrite<KernelSpecConnectionMetadata | PythonKernelConnectionMetadata | DefaultKernelConnectionMetadata>;
             itemToReturn.interpreter =
                 itemToReturn.interpreter ||
                 (this.extensionChecker.isPythonExtensionInstalled
                     ? await this.interpreterService.getActiveInterpreter(resource)
                     : undefined);
+            return itemToReturn;
         }
-        return itemToReturn;
     }
 
     /**

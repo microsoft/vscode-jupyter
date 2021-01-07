@@ -389,7 +389,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     protected get notebookMetadata(): Readonly<nbformat.INotebookMetadata> | undefined {
         return undefined;
     }
-    protected get kernelConnection(): KernelConnectionMetadata | undefined {
+    protected get kernelConnection(): Readonly<KernelConnectionMetadata> | undefined {
         return this._kernelConnection;
     }
 

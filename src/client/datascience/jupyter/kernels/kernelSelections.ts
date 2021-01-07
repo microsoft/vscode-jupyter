@@ -11,7 +11,7 @@ import { IPythonExtensionChecker } from '../../../api/types';
 import { PYTHON_LANGUAGE } from '../../../common/constants';
 import { traceError, traceInfo } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
-import { IPathUtils, Resource } from '../../../common/types';
+import { IPathUtils, ReadWrite, Resource } from '../../../common/types';
 import { createDeferredFromPromise } from '../../../common/utils/async';
 import * as localize from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
@@ -177,18 +177,17 @@ export class InstalledJupyterKernelSelectionListProvider
             const activeInterpreter = this.interpreterService.getActiveInterpreter(resource);
             // This process is slow, hence the need to cache this result set.
             await Promise.all(
-                selections.map(async (kernel) => {
+                selections.map(async (item) => {
+                    const selection = item.selection as ReadWrite<KernelSpecConnectionMetadata>;
                     // Find matching interpreter for Python kernels.
                     if (
-                        !kernel.selection.interpreter &&
-                        kernel.selection.kernelSpec &&
-                        kernel.selection.kernelSpec?.language === PYTHON_LANGUAGE.toLocaleLowerCase()
+                        !selection.interpreter &&
+                        selection.kernelSpec &&
+                        selection.kernelSpec?.language === PYTHON_LANGUAGE.toLocaleLowerCase()
                     ) {
-                        kernel.selection.interpreter = await this.kernelService.findMatchingInterpreter(
-                            kernel.selection.kernelSpec
-                        );
+                        selection.interpreter = await this.kernelService.findMatchingInterpreter(selection.kernelSpec);
                     }
-                    kernel.selection.interpreter = kernel.selection.interpreter || (await activeInterpreter);
+                    selection.interpreter = item.selection.interpreter || (await activeInterpreter);
                 })
             );
         }

@@ -181,7 +181,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                     // Create a server tha  t we will then attempt to connect to.
                     result = this.serviceContainer.get<INotebookServer>(INotebookServer);
 
-                    // In a remote non quest situation, figure out a kernel spec too.
+                    // In a remote non guest situation, figure out a kernel spec too.
                     if (
                         (!kernelConnectionMetadata ||
                             !kernelConnectionMetadataHasKernelSpec(kernelConnectionMetadata)) &&
@@ -192,13 +192,16 @@ export class JupyterExecutionBase implements IJupyterExecution {
                             IJupyterSessionManagerFactory
                         );
                         const sessionManager = await sessionManagerFactory.create(connection);
-                        kernelConnectionMetadata = await this.kernelSelector.getPreferredKernelForRemoteConnection(
-                            undefined,
-                            sessionManager,
-                            options?.metadata,
-                            cancelToken
-                        );
-                        await sessionManager.dispose();
+                        try {
+                            kernelConnectionMetadata = await this.kernelSelector.getPreferredKernelForRemoteConnection(
+                                undefined,
+                                sessionManager,
+                                options?.metadata,
+                                cancelToken
+                            );
+                        } finally {
+                            await sessionManager.dispose();
+                        }
                     }
 
                     // Populate the launch info that we are starting our server with
