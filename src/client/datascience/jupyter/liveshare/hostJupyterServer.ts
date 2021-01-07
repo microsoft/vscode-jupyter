@@ -38,10 +38,10 @@ import { JupyterServerBase } from '../jupyterServer';
 import { computeWorkingDirectory } from '../jupyterUtils';
 import { getDisplayNameOrNameOfKernelConnection } from '../kernels/helpers';
 import { KernelSelector } from '../kernels/kernelSelector';
+import { KernelConnectionMetadata } from '../kernels/types';
 import { HostJupyterNotebook } from './hostJupyterNotebook';
 import { LiveShareParticipantHost } from './liveShareParticipantMixin';
 import { IRoleBasedObject } from './roleBasedFactory';
-import { KernelConnectionMetadata } from '../kernels/types';
 // tslint:disable:no-any
 
 export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBase, LiveShare.JupyterServerSharedService)
@@ -313,7 +313,7 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
             kernelConnection ||
             resourceInterpreter?.displayName !== launchInfo.kernelConnectionMetadata?.interpreter?.displayName
         ) {
-            // TODO: Need to read and ensure this logic is correct.
+            // Need to read and ensure this logic is correct.
             // Basically, if we have the connection information, then there's no need to perform any search.
             // If we don't have the kernel connection information, then we haven't performed the search
             // Is this assumption correct, do we not search for kernel information when starting a notebook without selecting a kernel.

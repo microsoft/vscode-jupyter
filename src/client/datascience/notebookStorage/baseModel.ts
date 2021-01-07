@@ -230,8 +230,8 @@ export abstract class BaseNotebookModel implements INotebookModel {
     protected _isDisposed?: boolean;
     protected _changedEmitter = new EventEmitter<NotebookModelChange>();
     protected _editEventEmitter = new EventEmitter<NotebookModelChange>();
-    private kernelId: string | undefined;
     protected _kernelConnection?: KernelConnectionMetadata;
+    private kernelId: string | undefined;
     constructor(
         protected _isTrusted: boolean,
         protected _file: Uri,

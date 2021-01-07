@@ -145,7 +145,7 @@ export class HostRawNotebookProvider
         traceInfo(`Getting preferred kernel for ${identity.toString()}`);
         try {
             // We need to locate kernelspec and possible interpreter for this launch based on resource and notebook metadata
-            // TODO: Confirm this logic is valid.
+            // Confirm this logic is valid.
             const kernelConnectionMetadata =
                 kernelConnection ||
                 (await this.kernelSelector.getPreferredKernelForLocalConnection(
