@@ -189,13 +189,6 @@ export class CommandRegistry implements IDisposable {
         return this.serverUriStorage.clearUriList();
     }
 
-    // IANHU: Move over to a variable view command registry?
-    private async openVariableView(): Promise<void> {
-        //this.commandManager.executeCommand('workbench.action.openView');
-        // IANHU: Make an activation command?
-        this.commandManager.executeCommand('jupyterViewVariables.focus');
-    }
-
     // IANHU Just for testing, also remove injections required here
     private async handleTESTCOMMAND(): Promise<void> {
         const variableView = this.variableViewProvider.variableView;
@@ -509,6 +502,12 @@ export class CommandRegistry implements IDisposable {
         env.openExternal(Uri.parse(`https://marketplace.visualstudio.com/items?itemName=ms-toolsai.jupyter`));
     }
 
+    // Open up our variable viewer using the command that VS Code provides for this
+    private async openVariableView(): Promise<void> {
+        // For all contributed views vscode creates a command with the format [view ID].focus to focus that view
+        // It's the given way to focus a single view so using that here, note that it needs to match the view ID
+        return this.commandManager.executeCommand('jupyterViewVariables.focus');
+    }
     private async onVariablePanelShowDataViewerRequest(request: IShowDataViewerFromVariablePanel) {
         sendTelemetryEvent(EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_REQUEST);
         if (this.debugService.activeDebugSession) {

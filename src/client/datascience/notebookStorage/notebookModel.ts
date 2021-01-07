@@ -46,8 +46,11 @@ export class NativeEditorNotebookModel extends BaseNotebookModel {
     public update(change: NotebookModelChange): void {
         this.handleModelChange(change);
     }
-    public replaceCells(cells: ICell[]) {
+    public replaceCells(cells: ICell[], markDirty?: boolean) {
         this._cells = cells;
+        if (markDirty) {
+            this.changeCount += 1;
+        }
     }
 
     public async applyEdits(edits: readonly NotebookModelChange[]): Promise<void> {

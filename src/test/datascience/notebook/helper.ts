@@ -10,7 +10,7 @@ import * as path from 'path';
 import * as sinon from 'sinon';
 import * as tmp from 'tmp';
 import { anything, instance, mock, when } from 'ts-mockito';
-import { commands, Memento, TextDocument, Uri } from 'vscode';
+import { commands, Memento, TextDocument, Uri, window } from 'vscode';
 import {
     CellDisplayOutput,
     NotebookCell,
@@ -54,6 +54,12 @@ async function getServices() {
         editorProvider: api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider),
         serviceContainer: api.serviceContainer
     };
+}
+
+export async function selectCell(notebook: NotebookDocument, start: number, end: number) {
+    await window.showNotebookDocument(notebook, {
+        selection: { start, end }
+    });
 }
 
 export async function insertMarkdownCell(source: string) {
@@ -160,8 +166,11 @@ export async function canRunNotebookTests() {
     }
     const api = await initialize();
     const appEnv = api.serviceContainer.get<IApplicationEnvironment>(IApplicationEnvironment);
-    console.log(`Can't run native nb tests appEnv.extensionChannel = ${appEnv.extensionChannel}`);
-    return appEnv.extensionChannel !== 'stable';
+    const canRunTests = appEnv.extensionChannel !== 'stable';
+    if (!canRunTests) {
+        console.log(`Can't run native nb tests appEnv.extensionChannel = ${appEnv.extensionChannel}`);
+    }
+    return canRunTests;
 }
 
 export async function shutdownAllNotebooks() {

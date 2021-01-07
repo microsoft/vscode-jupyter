@@ -31,6 +31,7 @@ suite('DataScience - VariableView', () => {
     let editorProvider: INotebookEditorProvider;
     let vscodeNotebook: IVSCodeNotebook;
     suiteSetup(async function () {
+        this.timeout(120_000); // IANHU: From other tests? Reduce this?
         console.log('**** Start variableView suiteSetup ****');
         api = await initialize();
 
@@ -79,7 +80,7 @@ suite('DataScience - VariableView', () => {
         //commands.executeCommand("workbench.action.openView");
 
         // IANHU: Remove, just for testing
-        await sleep(5_000);
+        await sleep(15_000);
 
         console.log('**** Sleep finished ****');
 

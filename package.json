@@ -39,7 +39,8 @@
         "Extension Packs",
         "Data Science",
         "Machine Learning",
-        "Notebooks"
+        "Notebooks",
+        "Visualization"
     ],
     "activationEvents": [
         "onLanguage:python",
@@ -1308,6 +1309,7 @@
                         "enum": [
                             "NativeNotebookEditor",
                             "CustomEditor",
+                            "NativeVariableView",
                             "All"
                         ]
                     },
@@ -1748,6 +1750,31 @@
                 "mimeTypes": [
                     "application/vnd.jupyter.widget-view+json"
                 ]
+            },
+            {
+                "id": "jupyter-notebook-renderer",
+                "entrypoint": "./out/client_renderer/renderers.js",
+                "displayName": "Jupyter Notebook Renderer",
+                "mimeTypes": [
+                    "application/geo+json",
+                    "application/vdom.v1+json",
+                    "application/vnd.dataresource+json",
+                    "application/vnd.plotly.v1+json",
+                    "application/vnd.vega.v2+json",
+                    "application/vnd.vega.v3+json",
+                    "application/vnd.vega.v4+json",
+                    "application/vnd.vega.v5+json",
+                    "application/vnd.vegalite.v1+json",
+                    "application/vnd.vegalite.v2+json",
+                    "application/vnd.vegalite.v3+json",
+                    "application/vnd.vegalite.v4+json",
+                    "application/x-nteract-model-debug+json",
+                    "image/gif",
+                    "image/png",
+                    "image/jpeg",
+                    "text/latex",
+                    "text/vnd.plotly.v1+html"
+                ]
             }
         ],
         "customEditors": [
@@ -1905,7 +1932,7 @@
         "vscode-languageclient": "7.0.0-next.9",
         "vscode-languageserver": "7.0.0-next.7",
         "vscode-languageserver-protocol": "3.16.0-next.7",
-        "vscode-tas-client": "^0.1.4",
+        "vscode-tas-client": "^0.1.17",
         "vsls": "^0.3.1291",
         "winston": "^3.2.1",
         "ws": "^6.0.0",

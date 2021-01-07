@@ -33,6 +33,7 @@ interface ICommandNameWithoutArgumentTypeMapping {
     ['editor.action.formatDocument']: [];
     ['editor.action.rename']: [];
     ['jupyter.selectJupyterInterpreter']: [];
+    ['jupyterViewVariables.focus']: [];
     [DSCommands.RunCurrentCell]: [];
     [DSCommands.RunCurrentCellAdvance]: [];
     [DSCommands.ExecSelectionInInteractiveWindow]: [];
@@ -58,6 +59,7 @@ interface ICommandNameWithoutArgumentTypeMapping {
     [DSCommands.CreateNewNotebook]: [];
     [DSCommands.EnableDebugLogging]: [];
     [DSCommands.ResetLoggingLevel]: [];
+    [DSCommands.OpenVariableView]: [];
 }
 
 /**

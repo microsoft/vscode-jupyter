@@ -2,11 +2,14 @@
 // Licensed under the MIT License.
 'use strict';
 
-var colors = require('colors/safe');
-var fs = require('fs-extra');
-var path = require('path');
-var constants_1 = require('../constants');
-var download = require('download');
+const colors = require('colors/safe');
+const fs = require('fs-extra');
+const path = require('path');
+const tmp = require('tmp');
+const constants = require('../constants');
+const download = require('download');
+const { downloadRendererExtension } = require('./downloadRenderer');
+
 /**
  * In order to compile the extension in strict mode, one of the dependencies (@jupyterlab) has some files that
  * just won't compile in strict mode.
@@ -25,7 +28,7 @@ function fixJupyterLabDTSFiles() {
         'lib',
         'settingregistry.d.ts'
     );
-    var filePath = path.join(constants_1.ExtensionRootDir, relativePath);
+    var filePath = path.join(constants.ExtensionRootDir, relativePath);
     if (!fs.existsSync(filePath)) {
         throw new Error("Type Definition file from JupyterLab not found '" + filePath + "' (pvsc post install script)");
     }
@@ -58,7 +61,7 @@ function fixJupyterLabDTSFiles() {
  */
 function createJupyterKernelWithoutSerialization() {
     var relativePath = path.join('node_modules', '@jupyterlab', 'services', 'lib', 'kernel', 'default.js');
-    var filePath = path.join(constants_1.ExtensionRootDir, relativePath);
+    var filePath = path.join(constants.ExtensionRootDir, relativePath);
     if (!fs.existsSync(filePath)) {
         throw new Error(
             "Jupyter lab default kernel not found '" + filePath + "' (Jupyter Extension post install script)"
@@ -111,4 +114,5 @@ async function downloadBCryptGenRandomExecutable() {
     fixJupyterLabDTSFiles();
     createJupyterKernelWithoutSerialization();
     await downloadBCryptGenRandomExecutable();
+    await downloadRendererExtension();
 })().catch((ex) => console.error('Encountered error while running postInstall step', ex));

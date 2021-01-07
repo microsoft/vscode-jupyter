@@ -48,8 +48,8 @@ export const reducerMap: Partial<INativeEditorActionMapping> = {
     [CommonActionType.TOGGLE_LINE_NUMBERS]: Effects.toggleLineNumbers,
     [CommonActionType.TOGGLE_OUTPUT]: Effects.toggleOutput,
     [CommonActionType.CHANGE_CELL_TYPE]: Execution.changeCellType,
-    [InteractiveWindowMessages.Undo]: Execution.undo,
-    [InteractiveWindowMessages.Redo]: Execution.redo,
+    [CommonActionType.UNDO]: Execution.undo,
+    [CommonActionType.REDO]: Execution.redo,
     [CommonActionType.ARROW_UP]: Movement.arrowUp,
     [CommonActionType.ARROW_DOWN]: Movement.arrowDown,
     [CommonActionType.EDIT_CELL]: Transfer.editCell,
@@ -66,6 +66,8 @@ export const reducerMap: Partial<INativeEditorActionMapping> = {
     [CommonActionType.STEP]: Execution.step,
     [CommonActionType.RUN_BY_LINE]: Execution.runByLine,
     [CommonActionType.OPEN_SETTINGS]: CommonEffects.openSettings,
+    [CommonActionType.UNDO]: Execution.undo,
+    [CommonActionType.REDO]: Execution.redo,
 
     // Messages from the webview (some are ignored)
     [InteractiveWindowMessages.StartCell]: Creation.startCell,
@@ -83,8 +85,6 @@ export const reducerMap: Partial<INativeEditorActionMapping> = {
     [InteractiveWindowMessages.GetAllCells]: Transfer.getAllCells,
     [InteractiveWindowMessages.GetCellCode]: Transfer.getCellCode,
     [InteractiveWindowMessages.GetAllCellCode]: Transfer.getAllCellCode,
-    [InteractiveWindowMessages.Undo]: Execution.undo,
-    [InteractiveWindowMessages.Redo]: Execution.redo,
     [InteractiveWindowMessages.StartProgress]: CommonEffects.startProgress,
     [InteractiveWindowMessages.StopProgress]: CommonEffects.stopProgress,
     [SharedMessages.UpdateSettings]: Effects.updateSettings,

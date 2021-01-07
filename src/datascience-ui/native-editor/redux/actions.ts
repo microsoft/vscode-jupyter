@@ -97,8 +97,8 @@ export const actionCreators = {
         createIncomingActionWithPayload(CommonActionType.TOGGLE_OUTPUT, { cellId }),
     deleteCell: (cellId: string): CommonAction<ICellAction> =>
         createIncomingActionWithPayload(CommonActionType.DELETE_CELL, { cellId }),
-    undo: (): CommonAction => createIncomingAction(InteractiveWindowMessages.Undo),
-    redo: (): CommonAction => createIncomingAction(InteractiveWindowMessages.Redo),
+    undo: (): CommonAction => createIncomingAction(CommonActionType.UNDO),
+    redo: (): CommonAction => createIncomingAction(CommonActionType.REDO),
     arrowUp: (cellId: string, code: string): CommonAction<ICodeAction> =>
         createIncomingActionWithPayload(CommonActionType.ARROW_UP, { cellId, code }),
     arrowDown: (cellId: string, code: string): CommonAction<ICodeAction> =>

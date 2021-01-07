@@ -22,6 +22,8 @@ export class VariableViewPanel extends React.Component<IVariableViewPanelProps> 
 
     constructor(props: IVariableViewPanelProps) {
         super(props);
+
+        // For the variable view we want to start toggled open
         this.props.toggleVariableExplorer();
     }
 

@@ -406,12 +406,12 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
 
     @captureTelemetry(Telemetry.Undo)
     public undoCells() {
-        this.postMessage(InteractiveWindowMessages.Undo).ignoreErrors();
+        this.postMessage(InteractiveWindowMessages.UndoCommand).ignoreErrors();
     }
 
     @captureTelemetry(Telemetry.Redo)
     public redoCells() {
-        this.postMessage(InteractiveWindowMessages.Redo).ignoreErrors();
+        this.postMessage(InteractiveWindowMessages.RedoCommand).ignoreErrors();
     }
 
     @captureTelemetry(Telemetry.DeleteAllCells)

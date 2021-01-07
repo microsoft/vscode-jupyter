@@ -29,6 +29,7 @@ import { KernelSelector } from '../jupyter/kernels/kernelSelector';
 import { NativeEditorNotebookModel } from '../notebookStorage/notebookModel';
 import { INotebookStorageProvider } from '../notebookStorage/notebookStorageProvider';
 import {
+    ICell,
     ICodeCssGenerator,
     IDataScienceErrorHandler,
     IInteractiveWindowListener,
@@ -155,6 +156,21 @@ export class NativeEditorOldWebView extends NativeEditor {
                 this.setClean().ignoreErrors();
             }
         });
+    }
+
+    // tslint:disable-next-line: no-any
+    public onMessage(message: string, payload: any) {
+        super.onMessage(message, payload);
+        switch (message) {
+            case InteractiveWindowMessages.Undo:
+            case InteractiveWindowMessages.Redo:
+                // Payload should be the new cells. Just replace all cells
+                this.model?.replaceCells(payload as ICell[], true);
+                this.setDirty().ignoreErrors();
+                break;
+            default:
+                break;
+        }
     }
 
     protected async close(): Promise<void> {
