@@ -1560,6 +1560,12 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         } else {
             await this.addSysInfo(SysInfoReason.New);
         }
+        // Reset our file in the kernel.
+        const fileInKernel = this.fileInKernel;
+        this.fileInKernel = undefined;
+        if (fileInKernel) {
+            await this.setFileInKernel(fileInKernel, undefined);
+        }
         return this.updateNotebookOptions(kernelConnection);
     }
 
