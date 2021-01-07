@@ -250,10 +250,12 @@ export class Kernel implements IKernel {
         if (isPythonKernelConnection(this.metadata)) {
             await this.notebook.setLaunchingFile(this.uri.fsPath);
         }
-        await this.notebook
-            .requestKernelInfo()
-            .then((item) => (this._info = item.content))
-            .catch(traceWarning.bind('Failed to request KernelInfo'));
+        if (!this._info) {
+            await this.notebook
+                .requestKernelInfo()
+                .then((item) => (this._info = item.content))
+                .catch(traceWarning.bind('Failed to request KernelInfo'));
+        }
         await this.notebook.waitForIdle(this.launchTimeout);
     }
 

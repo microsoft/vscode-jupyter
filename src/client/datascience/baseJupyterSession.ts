@@ -126,6 +126,16 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         if (!this.session) {
             throw new Error('Cannot request KernelInfo, Session not initialized.');
         }
+        // if (this.session.kernel.info) {
+        //     const z: KernelMessage.IInfoReplyMsg = {
+        //         content: this.session.kernel.info,
+        //         parent_header: asd,
+        //         channel: 'shell',
+        //         header: ,
+        //         metadata: {}
+        //     };
+        //     return Promise.resolve(z);
+        // }
         return this.session.kernel.requestKernelInfo();
     }
     public async changeKernel(kernelConnection: KernelConnectionMetadata, timeoutMS: number): Promise<void> {
