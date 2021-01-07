@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import type { nbformat } from '@jupyterlab/coreutils';
 import { inject, injectable, named } from 'inversify';
 import { Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
@@ -20,6 +19,7 @@ import {
 import { IServiceContainer } from '../../ioc/types';
 import { DataScienceStartupTime, JUPYTER_OUTPUT_CHANNEL } from '../constants';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
+import { KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { IRoleBasedObject, RoleBasedFactory } from '../jupyter/liveshare/roleBasedFactory';
 import { ILiveShareHasRole } from '../jupyter/liveshare/types';
 import { IKernelLauncher } from '../kernel-launcher/types';
@@ -120,11 +120,11 @@ export class RawNotebookProviderWrapper implements IRawNotebookProvider, ILiveSh
         identity: Uri,
         resource: Resource,
         disableUI: boolean,
-        notebookMetadata: nbformat.INotebookMetadata,
+        kernelConnection: KernelConnectionMetadata,
         cancelToken: CancellationToken
     ): Promise<INotebook> {
         const notebookProvider = await this.serverFactory.get();
-        return notebookProvider.createNotebook(identity, resource, disableUI, notebookMetadata, cancelToken);
+        return notebookProvider.createNotebook(identity, resource, disableUI, kernelConnection, cancelToken);
     }
 
     public async getNotebook(identity: Uri): Promise<INotebook | undefined> {

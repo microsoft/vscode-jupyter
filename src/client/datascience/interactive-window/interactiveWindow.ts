@@ -385,12 +385,16 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         }
     }
 
-    protected get notebookMetadata(): nbformat.INotebookMetadata | undefined {
+    protected get notebookMetadata(): Readonly<nbformat.INotebookMetadata> | undefined {
         return undefined;
     }
+    private _kernelConnection?: KernelConnectionMetadata;
+    protected get kernelConnection(): KernelConnectionMetadata | undefined {
+        return this._kernelConnection;
+    }
 
-    protected async updateNotebookOptions(_kernelConnection: KernelConnectionMetadata): Promise<void> {
-        // Do nothing as this data isn't stored in our options.
+    protected async updateNotebookOptions(kernelConnection: KernelConnectionMetadata): Promise<void> {
+        this._kernelConnection = kernelConnection;
     }
 
     protected get notebookIdentity(): INotebookIdentity {

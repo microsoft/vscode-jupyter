@@ -3,7 +3,6 @@
 
 'use strict';
 
-import { nbformat } from '@jupyterlab/coreutils';
 import { KernelMessage } from '@jupyterlab/services';
 import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
@@ -25,7 +24,6 @@ import { IDisposableRegistry, IExtensionContext } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
 import { noop } from '../../../common/utils/misc';
 import { CodeSnippets } from '../../constants';
-import { getDefaultNotebookContent, updateNotebookMetadata } from '../../notebookStorage/baseModel';
 import {
     IDataScienceErrorHandler,
     INotebook,
@@ -133,16 +131,12 @@ export class Kernel implements IKernel {
             return;
         } else {
             await this.validate(this.uri);
-            const metadata = ((getDefaultNotebookContent().metadata || {}) as unknown) as nbformat.INotebookMetadata;
-            // Create a dummy notebook metadata & update the metadata before starting the notebook (required to ensure we fetch & start the right kernel).
-            // Lower layers of code below getOrCreateNotebook searches for kernels again using the metadata.
-            updateNotebookMetadata(metadata, this.metadata);
             this._notebookPromise = this.notebookProvider.getOrCreateNotebook({
                 identity: this.uri,
                 resource: this.uri,
                 disableUI: options?.disableUI,
                 getOnly: false,
-                metadata,
+                kernelConnection: this.metadata,
                 token: options?.token
             });
 

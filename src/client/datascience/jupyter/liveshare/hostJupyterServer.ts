@@ -31,7 +31,6 @@ import {
     IJupyterSessionManagerFactory,
     INotebook,
     INotebookExecutionLogger,
-    INotebookMetadataLive,
     INotebookServer,
     INotebookServerLaunchInfo
 } from '../../types';
@@ -42,6 +41,7 @@ import { KernelSelector } from '../kernels/kernelSelector';
 import { HostJupyterNotebook } from './hostJupyterNotebook';
 import { LiveShareParticipantHost } from './liveShareParticipantMixin';
 import { IRoleBasedObject } from './roleBasedFactory';
+import { KernelConnectionMetadata } from '../kernels/types';
 // tslint:disable:no-any
 
 export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBase, LiveShare.JupyterServerSharedService)
@@ -182,7 +182,7 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
         disposableRegistry: IDisposableRegistry,
         configService: IConfigurationService,
         serviceContainer: IServiceContainer,
-        notebookMetadata?: INotebookMetadataLive,
+        kernelConnection?: KernelConnectionMetadata,
         cancelToken?: CancellationToken
     ): Promise<INotebook> {
         // See if already exists.
@@ -208,7 +208,7 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
             const { info, changedKernel } = await this.computeLaunchInfo(
                 resource,
                 sessionManager,
-                notebookMetadata,
+                kernelConnection,
                 cancelToken
             );
 
@@ -286,7 +286,7 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
     private async computeLaunchInfo(
         resource: Resource,
         sessionManager: IJupyterSessionManager,
-        notebookMetadata?: INotebookMetadataLive,
+        kernelConnection?: KernelConnectionMetadata,
         cancelToken?: CancellationToken
     ): Promise<{ info: INotebookServerLaunchInfo; changedKernel: boolean }> {
         // First we need our launch information so we can start a new session (that's what our notebook is really)
@@ -310,26 +310,36 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
         // Do this only if kernel information has been provided in the metadata, or the resource's interpreter is different.
         let changedKernel = false;
         if (
-            notebookMetadata?.kernelspec ||
-            notebookMetadata?.id ||
+            kernelConnection ||
             resourceInterpreter?.displayName !== launchInfo.kernelConnectionMetadata?.interpreter?.displayName
         ) {
-            const kernelInfo = await (launchInfo.connectionInfo.localLaunch
+            // TODO: Need to read and ensure this logic is correct.
+            // Basically, if we have the connection information, then there's no need to perform any search.
+            // If we don't have the kernel connection information, then we haven't performed the search
+            // Is this assumption correct, do we not search for kernel information when starting a notebook without selecting a kernel.
+            // Doesn't extension today rely on this code to select a default kernel? (mayby not)..
+            let kernelInfo: KernelConnectionMetadata | undefined;
+             if (launchInfo.connectionInfo.localLaunch && kernelConnection?.kind !== 'connectToLiveKernel'){
+                kernelInfo = kernelConnection;
+            } else if (!launchInfo.connectionInfo.localLaunch && kernelConnection?.kind === 'connectToLiveKernel'){
+                kernelInfo = kernelConnection;
+            } else {
+                kernelInfo = await (launchInfo.connectionInfo.localLaunch
                 ? this.kernelSelector.getPreferredKernelForLocalConnection(
                       resource,
                       'jupyter',
                       sessionManager,
-                      notebookMetadata,
+                      undefined,
                       isTestExecution(),
                       cancelToken
                   )
                 : this.kernelSelector.getPreferredKernelForRemoteConnection(
                       resource,
                       sessionManager,
-                      notebookMetadata,
+                      undefined,
                       cancelToken
                   ));
-
+            }
             if (kernelInfo) {
                 launchInfo.kernelConnectionMetadata = kernelInfo;
 

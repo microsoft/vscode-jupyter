@@ -210,7 +210,7 @@ export abstract class BaseNotebookModel implements INotebookModel {
     public get onDidEdit(): Event<NotebookModelChange> {
         return this._editEventEmitter.event;
     }
-    public get metadata(): INotebookMetadataLive | undefined {
+    public get metadata(): Readonly<INotebookMetadataLive> | undefined {
         return this.kernelId && this.notebookJson.metadata
             ? {
                   ...this.notebookJson.metadata,
@@ -231,6 +231,7 @@ export abstract class BaseNotebookModel implements INotebookModel {
     protected _changedEmitter = new EventEmitter<NotebookModelChange>();
     protected _editEventEmitter = new EventEmitter<NotebookModelChange>();
     private kernelId: string | undefined;
+    protected _kernelConnection?: KernelConnectionMetadata;
     constructor(
         protected _isTrusted: boolean,
         protected _file: Uri,
@@ -299,6 +300,7 @@ export abstract class BaseNotebookModel implements INotebookModel {
 
     // tslint:disable-next-line: cyclomatic-complexity
     private updateVersionInfo(kernelConnection: KernelConnectionMetadata | undefined): boolean {
+        this._kernelConnection = kernelConnection;
         const { changed, kernelId } = updateNotebookMetadata(this.notebookJson.metadata, kernelConnection);
         if (kernelId) {
             this.kernelId = kernelId;

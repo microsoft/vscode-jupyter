@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import type { nbformat } from '@jupyterlab/coreutils';
 import { inject, injectable, named } from 'inversify';
 import * as uuid from 'uuid/v4';
 import { Uri } from 'vscode';
@@ -31,6 +30,7 @@ import {
     INotebookServerLaunchInfo
 } from '../types';
 import { KernelSelector } from './kernels/kernelSelector';
+import { KernelConnectionMetadata } from './kernels/types';
 import { GuestJupyterServer } from './liveshare/guestJupyterServer';
 import { HostJupyterServer } from './liveshare/hostJupyterServer';
 import { IRoleBasedObject, RoleBasedFactory } from './liveshare/roleBasedFactory';
@@ -127,11 +127,11 @@ export class JupyterServerWrapper implements INotebookServer, ILiveShareHasRole 
     public async createNotebook(
         resource: Resource,
         identity: Uri,
-        notebookMetadata?: nbformat.INotebookMetadata,
+        kernelConnection?: KernelConnectionMetadata,
         cancelToken?: CancellationToken
     ): Promise<INotebook> {
         const server = await this.serverFactory.get();
-        return server.createNotebook(resource, identity, notebookMetadata, cancelToken);
+        return server.createNotebook(resource, identity, kernelConnection, cancelToken);
     }
 
     public async shutdown(): Promise<void> {

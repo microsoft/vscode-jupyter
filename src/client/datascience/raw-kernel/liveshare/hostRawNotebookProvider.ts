@@ -7,7 +7,6 @@ import * as vscode from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
 
-import type { nbformat } from '@jupyterlab/coreutils';
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../../common/application/types';
 import { traceError, traceInfo } from '../../../common/logger';
 
@@ -95,13 +94,13 @@ export class HostRawNotebookProvider
                     async (args: any[], _cancellation: CancellationToken) => {
                         const resource = this.parseUri(args[0]);
                         const identity = this.parseUri(args[1]);
-                        const notebookMetadata = JSON.parse(args[2]) as nbformat.INotebookMetadata;
+                        const kernelConnection = JSON.parse(args[2]) as KernelConnectionMetadata;
                         // Don't return the notebook. We don't want it to be serialized. We just want its live share server to be started.
                         const notebook = (await this.createNotebook(
                             identity!,
                             resource,
                             true, // Disable UI for this creation
-                            notebookMetadata,
+                            kernelConnection,
                             undefined
                         )) as HostJupyterNotebook;
                         await notebook.onAttach(api);
@@ -134,7 +133,7 @@ export class HostRawNotebookProvider
         resource: Resource,
         identity: vscode.Uri,
         disableUI?: boolean,
-        notebookMetadata?: nbformat.INotebookMetadata,
+        kernelConnection?: KernelConnectionMetadata,
         cancelToken?: CancellationToken
     ): Promise<INotebook> {
         traceInfo(`Creating raw notebook for ${identity.toString()}`);
@@ -146,11 +145,12 @@ export class HostRawNotebookProvider
         traceInfo(`Getting preferred kernel for ${identity.toString()}`);
         try {
             // We need to locate kernelspec and possible interpreter for this launch based on resource and notebook metadata
-            const kernelConnectionMetadata = await this.kernelSelector.getPreferredKernelForLocalConnection(
+            // TODO: Confirm this logic is valid.
+            const kernelConnectionMetadata = kernelConnection || await this.kernelSelector.getPreferredKernelForLocalConnection(
                 resource,
                 'raw',
                 undefined,
-                notebookMetadata,
+                undefined,
                 disableUI,
                 cancelToken
             );
@@ -180,7 +180,7 @@ export class HostRawNotebookProvider
             // Interpreter is optional, but we must have a kernel spec for a raw launch if using a kernelspec
             if (
                 !kernelConnectionMetadata ||
-                (!kernelConnectionMetadata?.kernelSpec && kernelConnectionMetadata?.kind === 'startUsingKernelSpec')
+                (kernelConnectionMetadata?.kind === 'startUsingKernelSpec' && !kernelConnectionMetadata?.kernelSpec)
             ) {
                 notebookPromise.reject('Failed to find a kernelspec to use for ipykernel launch');
             } else {

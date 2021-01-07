@@ -153,7 +153,7 @@ export class NotebookProvider implements INotebookProvider {
                   options.identity,
                   resource,
                   options.disableUI,
-                  options.metadata,
+                  options.kernelConnection,
                   options.token
               )
             : this.jupyterNotebookProvider.createNotebook(options);

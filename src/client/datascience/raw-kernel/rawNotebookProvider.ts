@@ -12,10 +12,10 @@ import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { captureTelemetry } from '../../telemetry';
 import { Telemetry } from '../constants';
+import { KernelConnectionMetadata } from '../jupyter/kernels/types';
 import {
     ConnectNotebookProviderOptions,
     INotebook,
-    INotebookMetadataLive,
     IRawConnection,
     IRawNotebookProvider,
     IRawNotebookSupportedService
@@ -82,10 +82,10 @@ export class RawNotebookProviderBase implements IRawNotebookProvider {
         identity: Uri,
         resource: Resource,
         disableUI: boolean,
-        notebookMetadata: INotebookMetadataLive,
+        kernelConnection: KernelConnectionMetadata,
         cancelToken?: CancellationToken
     ): Promise<INotebook> {
-        return this.createNotebookInstance(resource, identity, disableUI, notebookMetadata, cancelToken);
+        return this.createNotebookInstance(resource, identity, disableUI, kernelConnection, cancelToken);
     }
 
     public async getNotebook(identity: Uri): Promise<INotebook | undefined> {
@@ -141,7 +141,7 @@ export class RawNotebookProviderBase implements IRawNotebookProvider {
         _resource: Resource,
         _identity: Uri,
         _disableUI?: boolean,
-        _notebookMetadata?: INotebookMetadataLive,
+        _kernelConnection?: KernelConnectionMetadata,
         _cancelToken?: CancellationToken
     ): Promise<INotebook> {
         throw new Error('You forgot to override createNotebookInstance');

@@ -129,7 +129,7 @@ export interface INotebookServer extends IAsyncDisposable {
     createNotebook(
         resource: Resource,
         identity: Uri,
-        notebookMetadata?: INotebookMetadataLive,
+        kernelConnection?: KernelConnectionMetadata,
         cancelToken?: CancellationToken
     ): Promise<INotebook>;
     getNotebook(identity: Uri, cancelToken?: CancellationToken): Promise<INotebook | undefined>;
@@ -155,7 +155,7 @@ export interface IRawNotebookProvider extends IAsyncDisposable {
         identity: Uri,
         resource: Resource,
         disableUI?: boolean,
-        notebookMetadata?: nbformat.INotebookMetadata,
+        kernelConnection?: KernelConnectionMetadata,
         cancelToken?: CancellationToken
     ): Promise<INotebook>;
     getNotebook(identity: Uri, token?: CancellationToken): Promise<INotebook | undefined>;
@@ -1171,7 +1171,7 @@ export type GetNotebookOptions = {
     identity: Uri;
     getOnly?: boolean;
     disableUI?: boolean;
-    metadata?: nbformat.INotebookMetadata & { id?: string };
+    kernelConnection?: KernelConnectionMetadata;
     token?: CancellationToken;
 };
 

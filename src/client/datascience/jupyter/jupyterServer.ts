@@ -26,11 +26,11 @@ import {
     IJupyterSessionManager,
     IJupyterSessionManagerFactory,
     INotebook,
-    INotebookMetadataLive,
     INotebookServer,
     INotebookServerLaunchInfo
 } from '../types';
 import { getDisplayNameOrNameOfKernelConnection } from './kernels/helpers';
+import { KernelConnectionMetadata } from './kernels/types';
 
 // This code is based on the examples here:
 // https://www.npmjs.com/package/@jupyterlab/services
@@ -110,7 +110,7 @@ export class JupyterServerBase implements INotebookServer {
     public createNotebook(
         resource: Resource,
         identity: Uri,
-        notebookMetadata?: INotebookMetadataLive,
+        kernelConnection?: KernelConnectionMetadata,
         cancelToken?: CancellationToken
     ): Promise<INotebook> {
         if (!this.sessionManager || this.isDisposed) {
@@ -129,7 +129,7 @@ export class JupyterServerBase implements INotebookServer {
             this.disposableRegistry,
             this.configService,
             this.serviceContainer,
-            notebookMetadata,
+            kernelConnection,
             cancelToken
         ).then((r) => {
             const baseUrl = this.launchInfo?.connectionInfo.baseUrl || '';
@@ -257,7 +257,7 @@ export class JupyterServerBase implements INotebookServer {
         _disposableRegistry: IDisposableRegistry,
         _configService: IConfigurationService,
         _serviceContainer: IServiceContainer,
-        _notebookMetadata?: INotebookMetadataLive,
+        _kernelConnection?: KernelConnectionMetadata,
         _cancelToken?: CancellationToken
     ): Promise<INotebook> {
         throw new Error('You forgot to override createNotebookInstance');
