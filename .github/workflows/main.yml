@@ -1,5 +1,5 @@
 # This yml is used for PRs, insiders build, and release build. 
-# We use the github.event to determine what started the workflow to determine which
+# We use the github.event_name to determine what started the workflow to determine which
 # situation we are in.
 
 name: Main
@@ -47,19 +47,19 @@ jobs:
     steps:
       - name: dump_event
         run: |
-          echo "Event is ${{ github.event }}"
+          echo "Event is ${{ github.event_name }}"
           echo "Ref is ${{ github.ref }}"
 
       - name: pr
-        if: github.event == 'pull_request'
+        if: github.event_name == 'pull_request'
         run: echo "vsix_name=ms-toolsai-jupyter-insiders.vsix" >> $GITHUB_ENV
 
       - name: insiders
-        if: github.event == 'push' && github.ref == 'ref/heads/main'
+        if: github.event_name == 'push' && github.ref == 'ref/heads/main'
         run: echo "vsix_name=ms-toolsai-jupyter-insiders.vsix" >> $GITHUB_ENV
 
       - name: release
-        if: github.event == 'push' && github.ref != 'ref/heads/main'
+        if: github.event_name == 'push' && github.ref != 'ref/heads/main'
         run: echo "vsix_name=ms-toolsai-jupyter-release.vsix" >> $GITHUB_ENV
 
   build-vsix:
@@ -736,7 +736,7 @@ jobs:
     name: Upload VSIX to Azure Blob Storage
     runs-on: ubuntu-latest
     # This should happen in the release and insiders branch
-    if: github.repository == 'microsoft/vscode-jupyter' && github.event == 'push'
+    if: github.repository == 'microsoft/vscode-jupyter' && github.event_name == 'push'
     needs: [build-vsix, pick_vsix, lint, ts_tests, vscodeTests, smoke-tests]
     env:
       BLOB_CONTAINER_NAME: extension-builds-jupyter
