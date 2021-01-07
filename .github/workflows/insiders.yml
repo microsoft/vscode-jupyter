@@ -51,7 +51,7 @@ jobs:
       - name: Read json
         id: set-steps
         run: |
-          content='${{ toJson(fromJson(steps.yamlToJson.outputs.data).jobs.build-vsix.step[0]) }}'
+          content='${{ toJson(fromJson(steps.yamlToJson.outputs.data).jobs.build-vsix.steps[0]) }}'
           content=${content//$'\n'/''}
           content=${content//$'\t'/''}          
           echo "::set-output name=next-steps::$content"
