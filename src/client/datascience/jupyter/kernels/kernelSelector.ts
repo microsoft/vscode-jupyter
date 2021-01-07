@@ -33,7 +33,6 @@ import {
     IJupyterSessionManager,
     IJupyterSessionManagerFactory,
     IKernelDependencyService,
-    INotebookMetadataLive,
     INotebookProviderConnection,
     KernelInterpreterDependencyResponse
 } from '../../types';
@@ -250,7 +249,7 @@ export class KernelSelector implements IKernelSelectionUsage {
     public async getPreferredKernelForRemoteConnection(
         resource: Resource,
         sessionManager?: IJupyterSessionManager,
-        notebookMetadata?: INotebookMetadataLive,
+        notebookMetadata?: nbformat.INotebookMetadata,
         cancelToken?: CancellationToken
     ): Promise<KernelConnectionMetadata | undefined> {
         const [interpreter, specs, sessions] = await Promise.all([

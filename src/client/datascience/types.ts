@@ -120,8 +120,6 @@ export interface INotebookCompletion {
     metadata: {};
 }
 
-export type INotebookMetadataLive = nbformat.INotebookMetadata;
-
 // Talks to a jupyter ipython kernel to retrieve data for cells
 export const INotebookServer = Symbol('INotebookServer');
 export interface INotebookServer extends IAsyncDisposable {
@@ -256,7 +254,7 @@ export interface INotebookServerOptions {
     skipUsingDefaultConfig?: boolean;
     workingDir?: string;
     purpose: string;
-    metadata?: INotebookMetadataLive;
+    metadata?: nbformat.INotebookMetadata;
     skipSearchingForKernel?: boolean;
     allowUI(): boolean;
 }
@@ -1106,7 +1104,7 @@ export interface INotebookModel {
     readonly changed: Event<NotebookModelChange>;
     readonly onDidEdit: Event<NotebookModelChange>;
     readonly isDisposed: boolean;
-    readonly metadata: INotebookMetadataLive | undefined;
+    readonly metadata: nbformat.INotebookMetadata | undefined;
     readonly isTrusted: boolean;
     readonly cellCount: number;
     /**

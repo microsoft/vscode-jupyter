@@ -96,7 +96,6 @@ import {
     IMessageCell,
     INotebook,
     INotebookExporter,
-    INotebookMetadataLive,
     INotebookProvider,
     INotebookProviderConnection,
     InterruptResult,
@@ -127,7 +126,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
     }
 
     public abstract isInteractive: boolean;
-    protected abstract get notebookMetadata(): Readonly<INotebookMetadataLive> | undefined;
+    protected abstract get notebookMetadata(): Readonly<nbformat.INotebookMetadata> | undefined;
     protected abstract get kernelConnection(): KernelConnectionMetadata | undefined;
 
     protected abstract get notebookIdentity(): INotebookIdentity;

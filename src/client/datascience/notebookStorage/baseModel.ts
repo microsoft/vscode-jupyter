@@ -18,7 +18,7 @@ import {
     kernelConnectionMetadataHasKernelModel
 } from '../jupyter/kernels/helpers';
 import { KernelConnectionMetadata } from '../jupyter/kernels/types';
-import { CellState, INotebookMetadataLive, INotebookModel } from '../types';
+import { CellState, INotebookModel } from '../types';
 import { PreferredRemoteKernelIdProvider } from './preferredRemoteKernelIdProvider';
 
 export function getInterpreterInfoStoredInMetadata(
@@ -203,7 +203,7 @@ export abstract class BaseNotebookModel implements INotebookModel {
     public get onDidEdit(): Event<NotebookModelChange> {
         return this._editEventEmitter.event;
     }
-    public get metadata(): Readonly<INotebookMetadataLive> | undefined {
+    public get metadata(): Readonly<nbformat.INotebookMetadata> | undefined {
         return this.kernelId && this.notebookJson.metadata
             ? {
                   ...this.notebookJson.metadata,
