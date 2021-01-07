@@ -213,6 +213,24 @@ export class InstalledRawKernelSelectionListProvider
                 // other interpreters
                 const match = detectDefaultKernelName(item.name);
                 if (match) {
+                    // Check if this is a kernel we registerd in the old days.
+                    // If it is, then no need to display that (selecting kernels registered is done by selecting the corresponding interpreter).
+                    // Hence we can hide such kernels.
+                    // Kernels we create will end with a uuid (with - stripped), & will have interpreter info in the metadata.
+                    if (
+                        item.metadata?.interpreter &&
+                        item.name.length > 32 &&
+                        item.name.slice(-32).toLowerCase() === item.name
+                    ) {
+                        return false;
+                    }
+
+                    // If we have the interpreter information this kernel belongs to and the kernel has custom env
+                    // variables, then include it in the list.
+                    if (item.interpreterPath && item.env) {
+                        return true;
+                    }
+                    // Else include it only if the path is available for the kernel.
                     return path.isAbsolute(item.path);
                 }
                 return true;

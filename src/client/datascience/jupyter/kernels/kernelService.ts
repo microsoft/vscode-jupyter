@@ -305,7 +305,7 @@ export class KernelService {
         });
         // Swallow errors if we get out of here and not resolve this.
         execServicePromise.ignoreErrors();
-        const name = this.generateKernelNameForIntepreter(interpreter);
+        const name = this.generateKernelNameForInterpreter(interpreter);
         // If ipykernel is not installed, prompt to install it.
         if (!(await this.kernelDependencyService.areDependenciesInstalled(interpreter, cancelToken)) && !disableUI) {
             // If we wish to wait for installation to complete, we must provide a cancel token.
@@ -507,7 +507,8 @@ export class KernelService {
      * @param {PythonEnvironment} interpreter
      * @memberof KernelService
      */
-    private generateKernelNameForIntepreter(interpreter: PythonEnvironment): string {
+    private generateKernelNameForInterpreter(interpreter: PythonEnvironment): string {
+        // Never change this logic, this is used in other places to determine the format of names we have generated.
         return `${interpreter.displayName || ''}${uuid()}`.replace(/[^A-Za-z0-9]/g, '').toLowerCase();
     }
 
