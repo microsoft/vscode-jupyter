@@ -49,8 +49,8 @@ export class PreferredRemoteKernelIdProvider {
         }
 
         // Prune list if too big
+        sendTelemetryEvent(Telemetry.NumberOfSavedRemoteKernelIds, undefined, { count: list.length });
         while (list.length > MaximumKernelIdListSize) {
-            sendTelemetryEvent(Telemetry.TotalNumberOfSavedRemoteKernelIdsExceeded);
             list.shift();
         }
         await this.globalMemento.update(ActiveKernelIdList, list);

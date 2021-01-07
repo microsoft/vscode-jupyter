@@ -1032,6 +1032,6 @@ export interface IEventNamePropertyMapping {
 
     // When users connect to a remote kernel, we store the kernel id so we can re-connect to that
     // when user opens the same notebook. We only store the last 100.
-    // If user stores more than 100 (or what ever the number is), then we send this telemetry.
-    [Telemetry.TotalNumberOfSavedRemoteKernelIdsExceeded]: never | undefined;
+    // Count is the number of entries saved in the list.
+    [Telemetry.NumberOfSavedRemoteKernelIds]: { count: number };
 }
