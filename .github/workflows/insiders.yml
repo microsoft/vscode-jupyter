@@ -44,6 +44,6 @@ jobs:
         with: 
           token: ${{ secrets.GITHUB_TOKEN }}
           event-type: build-vsix
-          client-payload: '{ "payload": "Hello from insiders" }'
+          client-payload: '{ "payload": "Hello from insiders 2" }'
 
 
