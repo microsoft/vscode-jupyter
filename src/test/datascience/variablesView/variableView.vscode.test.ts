@@ -1,3 +1,5 @@
+// tslint:disable:no-console
+// IANHU: remove no-console
 import { assert, expect } from 'chai';
 import * as sinon from 'sinon';
 import { ICommandManager, IVSCodeNotebook } from '../../../client/common/application/types';
@@ -29,6 +31,7 @@ suite('DataScience - VariableView', () => {
     let editorProvider: INotebookEditorProvider;
     let vscodeNotebook: IVSCodeNotebook;
     suiteSetup(async function () {
+        console.log('**** Start variableView suiteSetup ****');
         api = await initialize();
 
         // Don't run if we can't use the native notebook interface
@@ -44,6 +47,7 @@ suite('DataScience - VariableView', () => {
         editorProvider = api.serviceContainer.get<INotebookEditorProvider>(VSCodeNotebookProvider);
     });
     setup(async function () {
+        console.log('**** Start variableView setup ****');
         sinon.restore();
 
         // Create an editor to use for our tests
@@ -62,12 +66,14 @@ suite('DataScience - VariableView', () => {
 
     // Test showing the variable view
     test('Can show variableView', async function () {
+        console.log('**** Start variableView test ****');
         // Add one simple cell and execute it
         await insertCodeCell('test = "MYTESTVALUE"', { index: 0 });
         const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
         await executeCell(cell);
         await waitForExecutionCompletedSuccessfully(cell);
         
+        console.log('**** Cell execution done ****');
         // Send the command to open the view
         commandManager.executeCommand(Commands.OpenVariableView);
         //commands.executeCommand("workbench.action.openView");
@@ -75,9 +81,13 @@ suite('DataScience - VariableView', () => {
         // IANHU: Remove, just for testing
         await sleep(5_000);
 
+        console.log('**** Sleep finished ****');
+
         // Now check to see if we can actually look at the variable view
         const variableView = variableViewProvider.variableView;
         const htmlResult = await variableView?.getElementByIdAsync('variable-view-main-panel');
+
+        console.log(`**** htmlResult ${htmlResult} ****`);
 
         expect(htmlResult).to.contain('MYTESTVALUE');
     });
