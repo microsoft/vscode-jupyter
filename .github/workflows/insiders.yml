@@ -44,6 +44,6 @@ jobs:
         with: 
           token: ${{ secrets.DISPATCH_TOKEN }}
           event-type: build-vsix
-          client-payload: '{ "payload": "Hello from insiders 2" }'
+          client-payload: '{ "payload": "Hello from insiders 3" }'
 
 
