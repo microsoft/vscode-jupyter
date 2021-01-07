@@ -72,7 +72,7 @@ jobs:
       - name: dump results
         run: | 
           echo "VSIX_NAME ${{ env.vsix_name }}"
-          echo "TEST_MATRIX_OS ${{ env.test_matrix_os }}"
+          echo "TEST_MATRIX_OS ${{ toJson(fromJson(env.test_matrix_os)) }}"
 
   build-vsix:
     needs: pick_environment
