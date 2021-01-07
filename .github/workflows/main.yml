@@ -109,13 +109,13 @@ jobs:
         id: build-vsix
 
       - name: Rename VSIX for release branch
-        if: steps.build-vsix.outputs.path != jobs.pick_vsix.outputs.vsix_name
-        run: mv ${{ steps.build-vsix.outputs.path }} ${{ jobs.pick_vsix.outputs.vsix_name }}
+        if: steps.build-vsix.outputs.path != needs.pick_vsix.outputs.vsix_name
+        run: mv ${{ steps.build-vsix.outputs.path }} ${{ needs.pick_vsix.outputs.vsix_name }}
 
       - uses: actions/upload-artifact@v2
         with:
-          name: ${{jobs.pick_vsix.outputs.vsix_name}}
-          path: ${{jobs.pick_vsix.outputs.vsix_name}}
+          name: ${{needs.pick_vsix.outputs.vsix_name}}
+          path: ${{needs.pick_vsix.outputs.vsix_name}}
 
   lint:
     name: Lint
@@ -683,7 +683,7 @@ jobs:
       - name: Download VSIX
         uses: actions/download-artifact@v2
         with:
-          name: ${{jobs.pick_vsix.outputs.vsix_name}}
+          name: ${{needs.pick_vsix.outputs.vsix_name}}
 
       - name: Install dependencies (npm ci)
         run: npm ci --prefer-offline
@@ -740,7 +740,7 @@ jobs:
       - name: Download VSIX
         uses: actions/download-artifact@v2
         with:
-          name: ${{ jobs.pick_vsix.outputs.vsix_name }}
+          name: ${{ needs.pick_vsix.outputs.vsix_name }}
 
       - name: Azure Login
         uses: azure/login@v1.1.1
@@ -748,7 +748,7 @@ jobs:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Upload to Blob Storage
-        run: az storage blob upload --file ${{ jobs.pick_vsix.outputs.vsix_name }} --account-name pvsc --container-name ${{ env.BLOB_CONTAINER_NAME }} --name ${{ jobs.pick_vsix.outputs.vsix_name }}
+        run: az storage blob upload --file ${{ needs.pick_vsix.outputs.vsix_name }} --account-name pvsc --container-name ${{ env.BLOB_CONTAINER_NAME }} --name ${{ needs.pick_vsix.outputs.vsix_name }}
 
   coverage:
     name: Coverage reports upload
