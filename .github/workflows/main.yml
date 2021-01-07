@@ -1,12 +1,22 @@
-name: Release VSIX
+# This yml is used for PRs, insiders build, and release build. 
+# We use the github.event to determine what started the workflow to determine which
+# situation we are in.
+
+name: Main
 
 on:
+  pull_request:
+    branches:
+      - main
+  check_run:
+    types: [rerequested, requested_action]
   push:
     branches:
+      - main
+      - rchiodo/test_from_json
       - 'release'
       - 'release/*'
       - 'release-*'
-  workflow_dispatch:
 
 env:
   NODE_VERSION: 12.14.1
@@ -20,16 +30,35 @@ env:
   VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 'true'
   # Key for the cache created at the end of the the 'Cache ./pythonFiles/lib/python' step.
   CACHE_PYTHONFILES: cache-pvsc-pythonFiles
-  VSIX_NAME: ms-toolsai-jupyter-release.vsix
-  VSIX_NAME_UPLOADED_TO_BLOB: ms-toolsai-jupyter-release.vsix
   COVERAGE_REPORTS: tests-coverage-reports
   TEST_RESULTS_DIRECTORY: .
   TEST_RESULTS_GLOB: '**/test-results*.xml'
   IPYWIDGET_SCREENSHOT_PATH: '*-screenshot.png'
   DISABLE_INSIDERS_EXTENSION: 1 # Disable prompts to install Insiders in tests (else it blocks activation of extension).
+  VSC_JUPYTER_INSTRUMENT_CODE_FOR_COVERAGE: true
 
 jobs:
+  pick_vsix:
+    name: set-env
+    runs-on: ubuntu-latest
+    outputs:
+      vsix_name: ${{ jobs.pick_vsix.env.vsix_name }}
+    if: github.repository == 'microsoft/vscode-jupyter'
+    steps:
+      - name: pr
+        if: github.event == 'pull_request'
+        run: echo "vsix_name=ms-toolsai-jupyter-insiders.vsix" >> $GITHUB_ENV
+
+      - name: insiders
+        if: github.event == 'push' && github.ref == 'ref/heads/main'
+        run: echo "vsix_name=ms-toolsai-jupyter-insiders.vsix" >> $GITHUB_ENV
+
+      - name: release
+        if: github.event == 'push' && github.ref != 'ref/heads/main'
+        run: echo "vsix_name=ms-toolsai-jupyter-release.vsix" >> $GITHUB_ENV
+
   build-vsix:
+    needs: pick_vsix
     name: Build VSIX
     runs-on: windows-latest
     if: github.repository == 'microsoft/vscode-jupyter'
@@ -79,14 +108,14 @@ jobs:
         uses: ./.github/actions/build-vsix
         id: build-vsix
 
-      - name: Rename VSIX
-        if: steps.build-vsix.outputs.path != env.VSIX_NAME
-        run: mv ${{ steps.build-vsix.outputs.path }} ${{ env.VSIX_NAME }}
+      - name: Rename VSIX for release branch
+        if: steps.build-vsix.outputs.path != jobs.pick_vsix.outputs.vsix_name
+        run: mv ${{ steps.build-vsix.outputs.path }} ${{ jobs.pick_vsix.outputs.vsix_name }}
 
       - uses: actions/upload-artifact@v2
         with:
-          name: ${{env.VSIX_NAME}}
-          path: ${{env.VSIX_NAME}}
+          name: ${{jobs.pick_vsix.outputs.vsix_name}}
+          path: ${{jobs.pick_vsix.outputs.vsix_name}}
 
   lint:
     name: Lint
@@ -200,6 +229,8 @@ jobs:
 
       - name: Compile if not cached
         run: npx gulp prePublishNonBundle
+        env:
+            CI_JUPYTER_FAST_COMPILATION: 'true'
 
         # if: steps.out-cache.outputs.cache-hit == false
       - name: Run TypeScript unit tests
@@ -213,6 +244,15 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           report_paths: ${{ env.TEST_RESULTS_GLOB }}
           check_name: Ts-Unit Test Report
+
+      # Upload unit test coverage reports for later use in the "reports" job.
+      - name: Upload unit test coverage reports
+        uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          name: ${{runner.os}}-${{env.COVERAGE_REPORTS}}
+          path: .nyc_output
+          retention-days: 1
 
   tests:
     name: Functional Jupyter Tests
@@ -331,12 +371,12 @@ jobs:
           python -m pip install --upgrade -r ./build/ipython-test-requirements.txt
           python -m pip install --upgrade -r ./build/conda-functional-requirements.txt
           python -m ipykernel install --user
-        # This step is slow.
 
+        # This step is slow.
       - name: Install dependencies (npm ci)
         run: npm ci --prefer-offline
-        # This step is slow.
 
+        # This step is slow.
       - name: Compile if not cached
         run: npx gulp prePublishNonBundle
 
@@ -361,13 +401,22 @@ jobs:
           check_name: Functional Test Report ${{matrix.test-suite}} ${{matrix.os}}
         if: steps.test_functional_group.outcome == 'failure' && failure()
 
+      # Upload unit test coverage reports for later use in the "reports" job.
+      - name: Upload unit test coverage reports
+        uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          name: ${{runner.os}}-${{env.COVERAGE_REPORTS}}
+          path: .nyc_output
+          retention-days: 1
+
   vscodeTests:
     name: VS Code Tests # These tests run with Python extension & real Jupyter
     runs-on: ${{ matrix.os }}
     if: github.repository == 'microsoft/vscode-jupyter'
     env:
-        VSC_FORCE_REAL_JUPYTER: 1
-        VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
+      VSC_FORCE_REAL_JUPYTER: 1
+      VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
     strategy:
       fail-fast: false
       matrix:
@@ -480,17 +529,34 @@ jobs:
           python -m pip install --upgrade -r ./build/ipython-test-requirements.txt
           python -m pip install --upgrade -r ./build/conda-functional-requirements.txt
           python -m ipykernel install --user
-        # This step is slow.
 
+        # This step is slow.
       - name: Install dependencies (npm ci)
         run: npm ci --prefer-offline
-        # This step is slow.
 
+        # This step is slow.
       - name: Compile if not cached
         run: npx gulp prePublishNonBundle
+        env:
+            VSC_CI_MATRIX_TEST_SUITE: ${{matrix.test-suite}}
+            CI_JUPYTER_FAST_COMPILATION: 'true'
 
       # Used by tests for non-python kernels.
       # Test are enabled via env variable `VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST`
+      - name: Install Dot.net
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: ${{env.DOTNET_VERSION}}
+        if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook' || matrix.test-suite == 'conda'
+
+      - name: Install .NET Interactive
+        run: dotnet tool install -g --add-source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json" Microsoft.dotnet-interactive
+        if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook' || matrix.test-suite == 'conda'
+
+      - name: Install .NET Kernel
+        run: dotnet interactive jupyter install
+        if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook' || matrix.test-suite == 'conda'
+
       - name: Install Julia
         uses: julia-actions/setup-julia@v1
         with:
@@ -504,6 +570,7 @@ jobs:
 
       - name: Create Virtual Env for Tests
         uses: ./.github/actions/create-venv-for-tests
+        if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook'
 
       - name: Run tests with VSCode & Jupyter
         uses: GabrielBB/xvfb-action@v1.4
@@ -525,16 +592,18 @@ jobs:
         if: (steps.test_vscode.outcome == 'failure' || steps.test_vscode.outcome == 'failure') && failure()
 
       - name: Run Native Notebook with VSCode & Jupyter
-        id: test_notebook_vscode
         uses: GabrielBB/xvfb-action@v1.4
         with:
           run: npm run testNativeNotebooksInVSCode
         env:
           VSC_FORCE_REAL_JUPYTER: 1
           VSC_JUPYTER_FORCE_LOGGING: 1
+          VSC_PYTHON_FORCE_LOGGING: 1
           VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
+          VSC_JUPYTER_CI_RUN_JAVA_NB_TEST: ${{ contains(matrix.test-suite, 'conda') }}
           VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
-        if: matrix.test-suite == 'notebook'
+        id: test_notebook_vscode
+        if: matrix.test-suite == 'notebook' || matrix.test-suite == 'conda'
 
       - name: Publish Notebook Test Report
         uses: scacap/action-surefire-report@v1
@@ -542,8 +611,37 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           report_paths: ${{ env.TEST_RESULTS_GLOB }}
           check_name: Notebook Test Report
-        if: (steps.test_notebook_vscode.outcome == 'failure' || steps.test_notebook_vscode.outcome == 'failure') && failure()
+        if: steps.test_notebook_vscode.outcome == 'failure' && failure()
 
+      - name: Run Native Notebook with VSCode & Jupyter (without Python)
+        uses: GabrielBB/xvfb-action@v1.4
+        with:
+          run: npm run testNativeNotebooksWithoutPythonInVSCode
+        env:
+          VSC_FORCE_REAL_JUPYTER: 1
+          VSC_JUPYTER_FORCE_LOGGING: 1
+          VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
+          VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
+        id: test_notebookWithoutPythonExt_vscode
+        if: matrix.test-suite == 'notebookWithoutPythonExt'
+
+      - name: Publish Notebook Test Report
+        uses: scacap/action-surefire-report@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          report_paths: ${{ env.TEST_RESULTS_GLOB }}
+          check_name: Notebook without Python Test Report
+        if: steps.test_notebookWithoutPythonExt_vscode.outcome == 'failure' && failure()
+
+      # Upload unit test coverage reports for later use in the "reports" job.
+      - name: Upload unit test coverage reports
+        uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          name: ${{runner.os}}-${{env.COVERAGE_REPORTS}}
+          path: .nyc_output
+          retention-days: 1
+          if: always()
 
   smoke-tests:
     timeout-minutes: 30
@@ -551,13 +649,13 @@ jobs:
     # The value of runs-on is the OS of the current job (specified in the strategy matrix below) instead of being hardcoded.
     runs-on: ${{ matrix.os }}
     if: github.repository == 'microsoft/vscode-jupyter'
-    needs: [build-vsix]
+    needs: [build-vsix, pick_vsix]
     strategy:
       fail-fast: false
       matrix:
         # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
         # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest, windows-latest, macos-latest]
         python: [3.8]
     steps:
       - name: Checkout
@@ -585,11 +683,11 @@ jobs:
       - name: Download VSIX
         uses: actions/download-artifact@v2
         with:
-          name: ${{env.VSIX_NAME}}
+          name: ${{jobs.pick_vsix.outputs.vsix_name}}
 
       - name: Install dependencies (npm ci)
         run: npm ci --prefer-offline
-      
+
       - name: pip install system test requirements
         run: |
           python -m pip install --upgrade -r build/test-requirements.txt
@@ -620,13 +718,21 @@ jobs:
           name: smoke-test-${{matrix.os}}.log
           path: './smoke-test.log'
 
-
+      # Upload unit test coverage reports for later use in the "reports" job.
+      - name: Upload unit test coverage reports
+        uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          name: ${{runner.os}}-${{env.COVERAGE_REPORTS}}
+          path: .nyc_output
+          retention-days: 1
 
   upload:
     name: Upload VSIX to Azure Blob Storage
     runs-on: ubuntu-latest
-    if: github.repository == 'microsoft/vscode-jupyter' && startsWith(github.ref, 'refs/heads/release')
-    needs: [build-vsix, lint, ts_tests, vscodeTests, smoke-tests]
+    # This should happen in the release and insiders branch
+    if: github.repository == 'microsoft/vscode-jupyter' && github.event == 'push'
+    needs: [build-vsix, pick_vsix, lint, ts_tests, vscodeTests, smoke-tests]
     env:
       BLOB_CONTAINER_NAME: extension-builds-jupyter
 
@@ -634,7 +740,7 @@ jobs:
       - name: Download VSIX
         uses: actions/download-artifact@v2
         with:
-          name: ${{ env.VSIX_NAME }}
+          name: ${{ jobs.pick_vsix.outputs.vsix_name }}
 
       - name: Azure Login
         uses: azure/login@v1.1.1
@@ -642,4 +748,73 @@ jobs:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Upload to Blob Storage
-        run: az storage blob upload --file ${{ env.VSIX_NAME }} --account-name pvsc --container-name ${{ env.BLOB_CONTAINER_NAME }} --name ${{ env.VSIX_NAME_UPLOADED_TO_BLOB }}
+        run: az storage blob upload --file ${{ jobs.pick_vsix.outputs.vsix_name }} --account-name pvsc --container-name ${{ env.BLOB_CONTAINER_NAME }} --name ${{ jobs.pick_vsix.outputs.vsix_name }}
+
+  coverage:
+    name: Coverage reports upload
+    runs-on: ubuntu-latest
+    if: always()
+    needs: [ts_tests, vscodeTests, smoke-tests, tests]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Install Node
+        uses: actions/setup-node@v2.1.2
+        with:
+          node-version: ${{env.NODE_VERSION}}
+
+      - name: Install dependencies (npm ci)
+        run: npm ci --prefer-offline
+
+      - name: Cache compiled TS files
+        id: out-cache
+        uses: actions/cache@v2
+        with:
+          path: ./out
+          key: ${{runner.os}}-${{env.CACHE_OUT_DIRECTORY}}-${{hashFiles('src/**')}}
+
+      - name: Compile if not cached
+        run: npx gulp prePublishNonBundle
+        env:
+            CI_JUPYTER_FAST_COMPILATION: 'true'
+
+      # It isn't possible to specify a regex for artifact names, so we have to download each artifact manually.
+      # The name pattern is ${{runner.os}}-${{env.COVERAGE_REPORTS}}, and possible values for runner.os are `Linux`, `Windows`, or `macOS`.
+      # See https://help.github.com/en/actions/reference/contexts-and-expression-syntax-for-github-actions#runner-context
+      - name: Download Ubuntu test coverage artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: ${{runner.os}}-${{ env.COVERAGE_REPORTS }}
+          path: ${{runner.os}}-${{ env.COVERAGE_REPORTS }}
+
+      - name: Extract Ubuntu coverage artifacts to ./nyc_output
+        run: |
+          pwd
+          mkdir .nyc_output
+          mv ${{runner.os}}-${{ env.COVERAGE_REPORTS }}/* .nyc_output
+          rm -r ${{runner.os}}-${{ env.COVERAGE_REPORTS }}
+
+      - name: Merge coverage reports
+        run: |
+          pwd
+          npx nyc merge ./.nyc_output
+          rm -r .nyc_output
+          mkdir .nyc_output
+          mv coverage.json ./.nyc_output
+        continue-on-error: true
+
+      - name: Generate coverage reports
+        run: npm run test:cover:report
+        continue-on-error: true
+
+      - name: Upload coverage to codecov
+        uses: codecov/codecov-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          file: ./coverage/cobertura-coverage.xml
+          path_to_write_report: ./coverage/codecov_report.txt
+
+      # Alternative method for uploading
+      # - name: Upload coverage to codecov
+      #  run: bash <(curl -s https://codecov.io/bash) -f ./coverage/cobertura-coverage.xml -v
