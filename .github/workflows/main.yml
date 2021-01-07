@@ -40,7 +40,7 @@ env:
 jobs:
   pick_environment:
     name: Pick Environment
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     outputs:
       vsix_name: ${{ env.vsix_name }}
       test_matrix_os: ${{ env.test_matrix_os }}
@@ -68,6 +68,11 @@ jobs:
         run: |
           echo "vsix_name=ms-toolsai-jupyter-insiders.vsix" >> $GITHUB_ENV
           echo "test_matrix_os=[\"ubuntu-latest\"]" >> $GITHUB_ENV
+
+      - name: dump results
+        run: | 
+          echo "VSIX_NAME ${{ env.vsix_name }}"
+          echo "TEST_MATRIX_OS ${{ env.test_matrix_os }}"
 
   build-vsix:
     needs: pick_environment
