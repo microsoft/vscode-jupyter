@@ -42,7 +42,7 @@ jobs:
     name: set-env
     runs-on: ubuntu-latest
     outputs:
-      vsix_name: ${{ jobs.pick_vsix.env.vsix_name }}
+      vsix_name: ${{ env.vsix_name }}
     if: github.repository == 'microsoft/vscode-jupyter'
     steps:
       - name: pr
