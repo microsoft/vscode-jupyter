@@ -55,19 +55,19 @@ jobs:
         if: github.event_name == 'pull_request'
         run: |
           echo "vsix_name=ms-toolsai-jupyter-insiders.vsix" >> $GITHUB_ENV
-          echo "test_matrix_os=[\"ubuntu-latest\"]" >> $GITHUB_ENV
+          echo "test_matrix_os=[\"\"ubuntu-latest\"\"]" >> $GITHUB_ENV
 
       - name: insiders
         if: github.event_name == 'push' && github.ref == 'ref/heads/main'
         run: |
           echo "vsix_name=ms-toolsai-jupyter-insiders.vsix" >> $GITHUB_ENV
-          echo "test_matrix_os=[\"ubuntu-latest\", \"windows-latest\"]" >> $GITHUB_ENV
+          echo "test_matrix_os=[\"\"ubuntu-latest\"\", \"\"windows-latest\"\"]" >> $GITHUB_ENV
 
       - name: release
         if: github.event_name == 'push' && github.ref != 'ref/heads/main'
         run: |
           echo "vsix_name=ms-toolsai-jupyter-insiders.vsix" >> $GITHUB_ENV
-          echo "test_matrix_os=[\"ubuntu-latest\"]" >> $GITHUB_ENV
+          echo "test_matrix_os=[\"\"ubuntu-latest\"\"]" >> $GITHUB_ENV
 
       - name: dump results
         run: | 
