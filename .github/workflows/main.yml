@@ -16,6 +16,7 @@ on:
       - 'release'
       - 'release/*'
       - 'release-*'
+  workflow_dispatch:
 
 env:
   NODE_VERSION: 12.14.1
@@ -422,7 +423,7 @@ jobs:
         python: [3.8] # Use flaky tests to run against more versions of Python.
         # integration: Tests with VS Code, Python extension & real Jupyter
         # notebook: Notebook Tests with VS Code, Python extension & real Jupyter
-        test-suite: [integration]
+        test-suite: [integration, notebook, notebookWithoutPythonExt, conda]
     steps:
       - name: Checkout
         uses: actions/checkout@v2
