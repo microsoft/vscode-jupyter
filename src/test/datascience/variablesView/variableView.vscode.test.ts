@@ -66,7 +66,7 @@ suite('DataScience - VariableView', () => {
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
 
     // Test showing the variable view
-    test('Can show variableView', async function () {
+    test('Can show VariableView', async function () {
         this.timeout(120_000); // IANHU: Just for testing
         console.log('**** Start variableView test ****');
         // Add one simple cell and execute it
