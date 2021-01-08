@@ -24,7 +24,7 @@ import { noop } from '../../../common/utils/misc';
 import { IServiceContainer } from '../../../ioc/types';
 import { Identifiers, LiveShare, LiveShareCommands, Settings } from '../../constants';
 import { computeWorkingDirectory } from '../../jupyter/jupyterUtils';
-import { getDisplayNameOrNameOfKernelConnection } from '../../jupyter/kernels/helpers';
+import { getDisplayNameOrNameOfKernelConnection, isPythonKernelConnection } from '../../jupyter/kernels/helpers';
 import { KernelSelector } from '../../jupyter/kernels/kernelSelector';
 import { KernelConnectionMetadata } from '../../jupyter/kernels/types';
 import { HostJupyterNotebook } from '../../jupyter/liveshare/hostJupyterNotebook';
@@ -33,15 +33,18 @@ import { IRoleBasedObject } from '../../jupyter/liveshare/roleBasedFactory';
 import { IKernelLauncher } from '../../kernel-launcher/types';
 import { ProgressReporter } from '../../progress/progressReporter';
 import {
+    IKernelDependencyService,
     INotebook,
     INotebookExecutionInfo,
     INotebookExecutionLogger,
     IRawNotebookProvider,
-    IRawNotebookSupportedService
+    IRawNotebookSupportedService,
+    KernelInterpreterDependencyResponse
 } from '../../types';
 import { calculateWorkingDirectory } from '../../utils';
 import { RawJupyterSession } from '../rawJupyterSession';
 import { RawNotebookProviderBase } from '../rawNotebookProvider';
+import { PythonEnvironment } from '../../../pythonEnvironments/info';
 
 // tslint:disable-next-line: no-require-imports
 // tslint:disable:no-any
@@ -64,7 +67,8 @@ export class HostRawNotebookProvider
         private kernelSelector: KernelSelector,
         private progressReporter: ProgressReporter,
         private outputChannel: IOutputChannel,
-        rawNotebookSupported: IRawNotebookSupportedService
+        rawNotebookSupported: IRawNotebookSupportedService,
+        private readonly kernelDependencyService: IKernelDependencyService
     ) {
         super(liveShare, asyncRegistry, rawNotebookSupported);
     }
@@ -144,6 +148,14 @@ export class HostRawNotebookProvider
 
         traceInfo(`Getting preferred kernel for ${identity.toString()}`);
         try {
+            if (
+                kernelConnection &&
+                kernelConnection.interpreter &&
+                isPythonKernelConnection(kernelConnection)
+            ) {
+                // Install missing dependencies only if we're dealing with a Python kernel.
+                await this.installDependenciesIntoInterpreter(kernelConnection.interpreter, false, cancelToken);
+            }
             // We need to locate kernelspec and possible interpreter for this launch based on resource and notebook metadata
             // Confirm this logic is valid.
             const kernelConnectionMetadata =
@@ -232,6 +244,27 @@ export class HostRawNotebookProvider
         }
 
         return notebookPromise.promise;
+    }
+
+    // If we need to install our dependencies now (for non-native scenarios)
+    // then install ipykernel into the interpreter or throw error
+    private async installDependenciesIntoInterpreter(
+        interpreter: PythonEnvironment,
+        ignoreDependencyCheck?: boolean,
+        cancelToken?: CancellationToken
+    ) {
+        if (!ignoreDependencyCheck) {
+            if (
+                (await this.kernelDependencyService.installMissingDependencies(interpreter, cancelToken)) !==
+                KernelInterpreterDependencyResponse.ok
+            ) {
+                throw new Error(
+                    localize.DataScience.ipykernelNotInstalled().format(
+                        `${interpreter.displayName || interpreter.path}:${interpreter.path}`
+                    )
+                );
+            }
+        }
     }
 
     // Get the notebook execution info for this raw session instance

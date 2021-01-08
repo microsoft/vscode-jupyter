@@ -26,6 +26,7 @@ import { IKernelLauncher } from '../kernel-launcher/types';
 import { ProgressReporter } from '../progress/progressReporter';
 import {
     ConnectNotebookProviderOptions,
+    IKernelDependencyService,
     INotebook,
     IRawConnection,
     IRawNotebookProvider,
@@ -52,7 +53,8 @@ type RawNotebookProviderClassType = {
         kernelSelector: KernelSelector,
         progressReporter: ProgressReporter,
         outputChannel: IOutputChannel,
-        rawKernelSupported: IRawNotebookSupportedService
+        rawKernelSupported: IRawNotebookSupportedService,
+        kernelDependencyService: IKernelDependencyService
     ): IRawNotebookProviderInterface;
 };
 // tslint:enable:callable-types
@@ -77,7 +79,8 @@ export class RawNotebookProviderWrapper implements IRawNotebookProvider, ILiveSh
         @inject(KernelSelector) kernelSelector: KernelSelector,
         @inject(ProgressReporter) progressReporter: ProgressReporter,
         @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) outputChannel: IOutputChannel,
-        @inject(IRawNotebookSupportedService) rawNotebookSupported: IRawNotebookSupportedService
+        @inject(IRawNotebookSupportedService) rawNotebookSupported: IRawNotebookSupportedService,
+        @inject(IKernelDependencyService) kernelDependencyService: IKernelDependencyService
     ) {
         // The server factory will create the appropriate HostRawNotebookProvider or GuestRawNotebookProvider based on
         // the liveshare state.
@@ -98,7 +101,8 @@ export class RawNotebookProviderWrapper implements IRawNotebookProvider, ILiveSh
             kernelSelector,
             progressReporter,
             outputChannel,
-            rawNotebookSupported
+            rawNotebookSupported,
+            kernelDependencyService
         );
     }
 

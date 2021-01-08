@@ -26,21 +26,15 @@ import {
     IJupyterSessionManagerFactory,
     IJupyterSubCommandExecutionService,
     IJupyterUriProviderRegistration,
-    IKernelDependencyService,
     INotebookServer,
     INotebookServerLaunchInfo,
     INotebookServerOptions,
-    JupyterServerUriHandle,
-    KernelInterpreterDependencyResponse
+    JupyterServerUriHandle
 } from '../types';
 import { JupyterSelfCertsError } from './jupyterSelfCertsError';
 import { createRemoteConnectionInfo, expandWorkingDir } from './jupyterUtils';
 import { JupyterWaitForIdleError } from './jupyterWaitForIdleError';
-import {
-    getDisplayNameOrNameOfKernelConnection,
-    isPythonKernelConnection,
-    kernelConnectionMetadataHasKernelSpec
-} from './kernels/helpers';
+import { getDisplayNameOrNameOfKernelConnection, kernelConnectionMetadataHasKernelSpec } from './kernels/helpers';
 import { KernelSelector } from './kernels/kernelSelector';
 import { KernelConnectionMetadata } from './kernels/types';
 import { NotebookStarter } from './notebookStarter';
@@ -55,7 +49,6 @@ export class JupyterExecutionBase implements IJupyterExecution {
     private readonly jupyterPickerRegistration: IJupyterUriProviderRegistration;
     private uriToJupyterServerUri = new Map<string, IJupyterServerUri>();
     private pendingTimeouts: (NodeJS.Timeout | number)[] = [];
-    private readonly kernelDependencyService: IKernelDependencyService;
     constructor(
         _liveShare: ILiveShareApi,
         private readonly interpreterService: IInterpreterService,
@@ -74,7 +67,6 @@ export class JupyterExecutionBase implements IJupyterExecution {
         this.jupyterPickerRegistration = serviceContainer.get<IJupyterUriProviderRegistration>(
             IJupyterUriProviderRegistration
         );
-        this.kernelDependencyService = serviceContainer.get<IKernelDependencyService>(IKernelDependencyService);
         this.disposableRegistry.push(this.interpreterService.onDidChangeInterpreter(() => this.onSettingsChanged()));
         this.disposableRegistry.push(this);
 
@@ -208,18 +200,6 @@ export class JupyterExecutionBase implements IJupyterExecution {
                             );
                         } finally {
                             await sessionManager.dispose();
-                        }
-                    } else if (
-                        kernelConnectionMetadata &&
-                        kernelConnectionMetadata.interpreter &&
-                        isPythonKernelConnection(kernelConnectionMetadata)
-                    ) {
-                        // Install missing dependencies only if we're dealing with a Python kernel.
-                        if (
-                            kernelConnectionMetadata.interpreter &&
-                            isPythonKernelConnection(kernelConnectionMetadata)
-                        ) {
-                            await this.installDependenciesIntoInterpreter(kernelConnectionMetadata.interpreter, false, cancelToken);
                         }
                     }
 
@@ -362,27 +342,6 @@ export class JupyterExecutionBase implements IJupyterExecution {
     public getServer(_options?: INotebookServerOptions): Promise<INotebookServer | undefined> {
         // This is cached at the host or guest level
         return Promise.resolve(undefined);
-    }
-
-    // If we need to install our dependencies now (for non-native scenarios)
-    // then install ipykernel into the interpreter or throw error
-    private async installDependenciesIntoInterpreter(
-        interpreter: PythonEnvironment,
-        ignoreDependencyCheck?: boolean,
-        cancelToken?: CancellationToken
-    ) {
-        if (!ignoreDependencyCheck) {
-            if (
-                (await this.kernelDependencyService.installMissingDependencies(interpreter, cancelToken)) !==
-                KernelInterpreterDependencyResponse.ok
-            ) {
-                throw new Error(
-                    localize.DataScience.ipykernelNotInstalled().format(
-                        `${interpreter.displayName || interpreter.path}:${interpreter.path}`
-                    )
-                );
-            }
-        }
     }
 
     private async startOrConnect(
