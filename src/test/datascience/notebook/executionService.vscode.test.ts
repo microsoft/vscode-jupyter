@@ -631,4 +631,26 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', () => {
         assert.equal(output1.data['text/plain'], '12');
         assert.equal(output2.data['text/plain'], 'ab');
     });
+
+    test('Execute all cells and run after error', async () => {
+        await insertCodeCell('raise Error("fail")', { index: 0 });
+        await insertCodeCell('print("after fail")', { index: 1 });
+
+        process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT = 'true';
+        const cells = vscodeNotebook.activeNotebookEditor!.document.cells;
+        await executeActiveDocument();
+
+        await waitForExecutionCompletedWithErrors(cells[0]);
+
+        // Second cell output should be empty
+        assert.equal(cells[1].outputs.length, 0, 'Second cell is not empty on run all');
+
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cells![1]!;
+        await executeCell(cell);
+
+        // Wait till execution count changes and status is success.
+        await waitForExecutionCompletedSuccessfully(cell);
+
+        assert.equal(cell.outputs.length, 1, 'Second cell is empty after running individually');
+    });
 });
