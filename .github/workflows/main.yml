@@ -16,6 +16,7 @@ on:
       - 'release'
       - 'release/*'
       - 'release-*'
+      - rchiodo/conda_kernel_for_test
   workflow_dispatch:
 
 env:
@@ -267,14 +268,35 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
+      - name: Use conda for group1 and group2
+        if: matrix.test-suite == 'group1' || matrix.test-suite == 'group2'
+        run: |
+          echo "conda_python=true" >> $GITHUB_ENV
+
       - name: Use Python ${{matrix.python}}
         uses: actions/setup-python@v2
         with:
           python-version: ${{matrix.python}}
 
+      - name: Use Conda Python ${{matrix.python}}
+        uses: conda-incubator/setup-miniconda@v2
+        if: env.conda_python
+        with:
+          auto-update-conda: true
+          activate-environment: functional_test_env
+          python-version: ${{matrix.python}}
+
       - name: Set CI Path
         uses: ./.github/actions/set-python
         id: set-python
+        if: !env.conda_python
+        with: 
+          PYTHON_VERSION: ${{matrix.python}}
+
+      - name: Set CI Path for Conda
+        uses: ./.github/actions/set-python-conda
+        id: set-python-conda
+        if: env.conda_python
         with: 
           PYTHON_VERSION: ${{matrix.python}}
 
