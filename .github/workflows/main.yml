@@ -289,7 +289,7 @@ jobs:
       - name: Set CI Path
         uses: ./.github/actions/set-python
         id: set-python
-        if: !env.conda_python
+        if: env.conda_python == ''
         with: 
           PYTHON_VERSION: ${{matrix.python}}
 
