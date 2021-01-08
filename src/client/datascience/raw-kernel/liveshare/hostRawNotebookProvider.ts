@@ -7,9 +7,9 @@ import * as vscode from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
 
+import { IPythonExtensionChecker } from '../../../api/types';
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../../common/application/types';
 import { traceError, traceInfo } from '../../../common/logger';
-
 import { IFileSystem } from '../../../common/platform/types';
 import {
     IAsyncDisposableRegistry,
@@ -23,10 +23,12 @@ import * as localize from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
 import { IServiceContainer } from '../../../ioc/types';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
+import { sendTelemetryEvent } from '../../../telemetry';
 import { Identifiers, LiveShare, LiveShareCommands, Settings, Telemetry } from '../../constants';
 import { computeWorkingDirectory } from '../../jupyter/jupyterUtils';
 import { getDisplayNameOrNameOfKernelConnection, isPythonKernelConnection } from '../../jupyter/kernels/helpers';
 import { KernelSelector } from '../../jupyter/kernels/kernelSelector';
+import { KernelService } from '../../jupyter/kernels/kernelService';
 import { KernelConnectionMetadata } from '../../jupyter/kernels/types';
 import { HostJupyterNotebook } from '../../jupyter/liveshare/hostJupyterNotebook';
 import { LiveShareParticipantHost } from '../../jupyter/liveshare/liveShareParticipantMixin';
@@ -45,9 +47,6 @@ import {
 import { calculateWorkingDirectory } from '../../utils';
 import { RawJupyterSession } from '../rawJupyterSession';
 import { RawNotebookProviderBase } from '../rawNotebookProvider';
-import { KernelService } from '../../jupyter/kernels/kernelService';
-import { sendTelemetryEvent } from '../../../telemetry';
-import { IPythonExtensionChecker } from '../../../api/types';
 
 // tslint:disable-next-line: no-require-imports
 // tslint:disable:no-any

@@ -241,12 +241,15 @@ export class InstalledRawKernelSelectionListProvider
                 })
                 .map((item) => getQuickPickItemForKernelSpec(item, this.pathUtils))
                 .map(async (item) => {
-                    // Ensure we have the associated interpreter information.   
+                    // Ensure we have the associated interpreter information.
                     const selection = item.selection as ReadWrite<KernelSpecConnectionMetadata>;
                     if (selection.interpreter || !isPythonKernelConnection(selection)) {
                         return item;
                     }
-                    selection.interpreter = await this.kernelService.findMatchingInterpreter(selection.kernelSpec, cancelToken)
+                    selection.interpreter = await this.kernelService.findMatchingInterpreter(
+                        selection.kernelSpec,
+                        cancelToken
+                    );
                     item.selection = selection;
                     return item;
                 })
