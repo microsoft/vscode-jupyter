@@ -67,7 +67,7 @@ jobs:
       - name: release
         if: github.event_name == 'push' && github.ref != 'ref/heads/main'
         run: |
-          echo "vsix_name=ms-toolsai-jupyter-insiders.vsix" >> $GITHUB_ENV
+          echo "vsix_name=ms-toolsai-jupyter-release.vsix" >> $GITHUB_ENV
           echo "test_matrix_os=[\"ubuntu-latest\"]" >> $GITHUB_ENV
 
   build-vsix:
