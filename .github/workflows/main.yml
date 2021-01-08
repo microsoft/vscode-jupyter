@@ -13,6 +13,7 @@ on:
   push:
     branches:
       - main
+      - rchiodo/test_from_json
       - 'release'
       - 'release/*'
       - 'release-*'
@@ -727,7 +728,7 @@ jobs:
     name: Upload VSIX to Azure Blob Storage
     runs-on: ubuntu-latest
     # This should happen in the release and insiders branch
-    if: github.repository == 'microsoft/vscode-jupyter' && github.event_name == 'push'
+    if: github.repository == 'microsoft/vscode-jupyter' && github.event_name == 'push' && (github.ref == 'ref/heads/main' || contains(github.ref, 'ref/heads/release'))
     needs: [build-vsix, pick_environment, lint, ts_tests, vscodeTests, smoke-tests]
     env:
       BLOB_CONTAINER_NAME: extension-builds-jupyter
