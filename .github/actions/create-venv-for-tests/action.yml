@@ -14,7 +14,7 @@ runs:
     # These tests are slow hence will only run on linux.
     # This env will be used to install ipykernel & test for prompts if ipykernel is missing & imilar tests.
     # Ensure this is registered as a kernel.
-    - name: Create virtual environment for Tests
+    - name: Create virtual environment without ipykernel
       run: |
         python -m venv .venvnokernel
         source .venvnokernel/bin/activate
