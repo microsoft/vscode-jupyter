@@ -141,7 +141,8 @@ suite('DataScience Native Editor', () => {
                     cleanupCallback: Function;
                 };
 
-                setup(async () => {
+                setup(async function () {
+                    console.log(`Start Test ${this.currentTest?.title}`);
                     ioc = new DataScienceIocContainer();
                     ioc.registerDataScienceTypes(useCustomEditorApi);
                     await ioc.activate();
@@ -183,9 +184,11 @@ suite('DataScience Native Editor', () => {
                         // tslint:disable-next-line: no-console
                         console.log(`Stub failure ${e}`);
                     }
+                    console.log(`Start Test completed ${this.currentTest?.title}`);
                 });
 
-                teardown(async () => {
+                teardown(async function () {
+                    console.log(`End Test ${this.currentTest?.title}`);
                     for (const disposable of disposables) {
                         if (!disposable) {
                             continue;
