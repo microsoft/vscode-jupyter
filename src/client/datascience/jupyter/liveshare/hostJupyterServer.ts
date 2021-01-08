@@ -315,11 +315,6 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
             !kernelConnection ||
             resourceInterpreter?.displayName !== launchInfo.kernelConnectionMetadata?.interpreter?.displayName
         ) {
-            // Need to read and ensure this logic is correct.
-            // Basically, if we have the connection information, then there's no need to perform any search.
-            // If we don't have the kernel connection information, then we haven't performed the search
-            // Is this assumption correct, do we not search for kernel information when starting a notebook without selecting a kernel.
-            // Doesn't extension today rely on this code to select a default kernel? (mayby not)..
             let kernelInfo: KernelConnectionMetadata | undefined;
             if (launchInfo.connectionInfo.localLaunch && kernelConnection?.kind !== 'connectToLiveKernel') {
                 kernelInfo = kernelConnection;
