@@ -78,9 +78,9 @@ export type PythonKernelConnectionMetadata = Readonly<{
     kind: 'startUsingPythonInterpreter';
 }>;
 /**
-* Readonly to ensure these are immutable, if we need to make changes then create a new one.
-* This ensure we don't update is somewhere unnecessarily (such updates would be unexpected).
-* Unexpected as connections are defined once & not changed, if we need to change then user needs to create a new connection.
+ * Readonly to ensure these are immutable, if we need to make changes then create a new one.
+ * This ensure we don't update is somewhere unnecessarily (such updates would be unexpected).
+ * Unexpected as connections are defined once & not changed, if we need to change then user needs to create a new connection.
  */
 export type KernelConnectionMetadata =
     | Readonly<LiveKernelConnectionMetadata>

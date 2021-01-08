@@ -230,7 +230,9 @@ export class KernelSelector implements IKernelSelectionUsage {
         telemetryProps.interpreterFound = !!selection?.interpreter;
         sendTelemetryEvent(Telemetry.FindKernelForLocalConnection, stopWatch.elapsedTime, telemetryProps);
         if (selection) {
-            const itemToReturn = cloneDeep(selection) as ReadWrite<KernelSpecConnectionMetadata | PythonKernelConnectionMetadata | DefaultKernelConnectionMetadata>;
+            const itemToReturn = cloneDeep(selection) as ReadWrite<
+                KernelSpecConnectionMetadata | PythonKernelConnectionMetadata | DefaultKernelConnectionMetadata
+            >;
             itemToReturn.interpreter =
                 itemToReturn.interpreter ||
                 (this.extensionChecker.isPythonExtensionInstalled
