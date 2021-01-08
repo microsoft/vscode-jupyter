@@ -1,4 +1,8 @@
-name: Pull Request
+# This yml is used for PRs, insiders build, and release build. 
+# We use the github.event_name to determine what started the workflow to determine which
+# situation we are in.
+
+name: Main
 
 on:
   pull_request:
@@ -6,13 +10,17 @@ on:
       - main
   check_run:
     types: [rerequested, requested_action]
-  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - 'release'
+      - 'release/*'
+      - 'release-*'
 
 env:
   NODE_VERSION: 12.14.1
   PYTHON_VERSION: 3.8
   JULIA_VERSION: 1.5.2
-  DOTNET_VERSION: '5.0'
   MOCHA_REPORTER_JUNIT: true # Use the mocha-multi-reporters and send output to both console (spec) and JUnit (mocha-junit-reporter). Also enables a reporter which exits the process running the tests if it haven't already.
   CACHE_NPM_DEPS: cache-npm
   CACHE_OUT_DIRECTORY: cache-out-directory
@@ -21,7 +29,6 @@ env:
   VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 'true'
   # Key for the cache created at the end of the the 'Cache ./pythonFiles/lib/python' step.
   CACHE_PYTHONFILES: cache-pvsc-pythonFiles
-  VSIX_NAME: ms-toolsai-jupyter-insiders.vsix
   COVERAGE_REPORTS: tests-coverage-reports
   TEST_RESULTS_DIRECTORY: .
   TEST_RESULTS_GLOB: '**/test-results*.xml'
@@ -30,9 +37,43 @@ env:
   VSC_JUPYTER_INSTRUMENT_CODE_FOR_COVERAGE: true
 
 jobs:
+  pick_environment:
+    name: Pick Environment
+    runs-on: ubuntu-latest
+    outputs:
+      vsix_name: ${{ env.vsix_name }}
+      test_matrix_os: ${{ env.test_matrix_os }}
+    if: github.repository == 'microsoft/vscode-jupyter'
+    steps:
+      - name: dump_event
+        run: |
+          echo "Event_name is ${{ github.event_name }}"
+          echo "Ref is ${{ github.ref }}"
+
+      - name: pr
+        if: github.event_name == 'pull_request'
+        run: |
+          echo "vsix_name=ms-toolsai-jupyter-insiders.vsix" >> $GITHUB_ENV
+          echo "test_matrix_os=[\"ubuntu-latest\"]" >> $GITHUB_ENV
+
+      - name: insiders
+        if: github.event_name == 'push' && github.ref == 'ref/heads/main'
+        # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
+        # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
+        run: |
+          echo "vsix_name=ms-toolsai-jupyter-insiders.vsix" >> $GITHUB_ENV
+          echo "test_matrix_os=[\"ubuntu-latest\", \"windows-latest\"]" >> $GITHUB_ENV
+
+      - name: release
+        if: github.event_name == 'push' && github.ref != 'ref/heads/main'
+        run: |
+          echo "vsix_name=ms-toolsai-jupyter-release.vsix" >> $GITHUB_ENV
+          echo "test_matrix_os=[\"ubuntu-latest\"]" >> $GITHUB_ENV
+
   build-vsix:
+    needs: pick_environment
     name: Build VSIX
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     if: github.repository == 'microsoft/vscode-jupyter'
     steps:
       - name: Checkout
@@ -51,23 +92,8 @@ jobs:
       # Caching of npm packages (https://github.com/actions/cache/blob/main/examples.md#node---npm)
       - name: Cache npm on linux/mac
         uses: actions/cache@v2
-        if: matrix.os != 'windows-latest'
         with:
           path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-
-      - name: Get npm cache directory
-        if: matrix.os == 'windows-latest'
-        id: npm-cache
-        run: |
-          echo "::set-output name=dir::$(npm config get cache)"
-      - name: Cache npm on windows
-        uses: actions/cache@v2
-        if: matrix.os == 'windows-latest'
-        with:
-          path: ${{ steps.npm-cache.outputs.dir }}
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-node-
@@ -80,14 +106,14 @@ jobs:
         uses: ./.github/actions/build-vsix
         id: build-vsix
 
-      - name: Rename VSIX
-        if: steps.build-vsix.outputs.path != env.VSIX_NAME
-        run: mv ${{ steps.build-vsix.outputs.path }} ${{ env.VSIX_NAME }}
+      - name: Rename VSIX for release branch
+        if: steps.build-vsix.outputs.path != needs.pick_environment.outputs.vsix_name
+        run: mv ${{ steps.build-vsix.outputs.path }} ${{ needs.pick_environment.outputs.vsix_name }}
 
       - uses: actions/upload-artifact@v2
         with:
-          name: ${{env.VSIX_NAME}}
-          path: ${{env.VSIX_NAME}}
+          name: ${{needs.pick_environment.outputs.vsix_name}}
+          path: ${{needs.pick_environment.outputs.vsix_name}}
 
   lint:
     name: Lint
@@ -145,15 +171,14 @@ jobs:
         run: npm run checkDependencies
 
   ts_tests:
+    needs: pick_environment
     name: Type Script Tests
     runs-on: ${{ matrix.os }}
     if: github.repository == 'microsoft/vscode-jupyter'
     strategy:
       fail-fast: false
       matrix:
-        # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
-        # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
-        os: [ubuntu-latest, windows-latest]
+        os: ${{fromJson(needs.pick_environment.outputs.test_matrix_os)}}
         test-suite: [ts-unit]
     steps:
       - name: Checkout
@@ -227,15 +252,14 @@ jobs:
           retention-days: 1
 
   tests:
+    needs: pick_environment
     name: Functional Jupyter Tests
     runs-on: ${{ matrix.os }}
     if: github.repository == 'microsoft/vscode-jupyter'
     strategy:
       fail-fast: false
       matrix:
-        # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
-        # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
-        os: [ubuntu-latest]
+        os: ${{fromJson(needs.pick_environment.outputs.test_matrix_os)}}
         python: [3.8]
         test-suite: [group1, group2, group3, group4]
     steps:
@@ -246,6 +270,173 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: ${{matrix.python}}
+
+      - name: Set CI Path
+        uses: ./.github/actions/set-python
+        id: set-python
+        with: 
+          PYTHON_VERSION: ${{matrix.python}}
+
+      - name: Upgrade pip
+        run: python -m pip install -U pip
+
+      - name: Show python version
+        run: python --version
+
+      - name: Use Node ${{env.NODE_VERSION}}
+        uses: actions/setup-node@v2.1.2
+        with:
+          node-version: ${{env.NODE_VERSION}}
+
+      # Start caching
+
+      # Cache Python Dependencies.
+      # Caching (https://github.com/actions/cache/blob/main/examples.md#python---pip
+      - name: Cache pip on linux
+        uses: actions/cache@v2
+        if: matrix.os == 'ubuntu-latest'
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-${{ hashFiles('requirements.txt') }}-${{hashFiles('build/debugger-install-requirements.txt')}}-${{hashFiles('test-requirements.txt')}}-${{hashFiles('ipython-test-requirements.txt')}}-${{hashFiles('functional-test-requirements.txt')}}-${{hashFiles('conda-functional-requirements.txt')}}
+          restore-keys: |
+            ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-
+
+      - name: Cache pip on mac
+        uses: actions/cache@v2
+        if: matrix.os == 'macos-latest'
+        with:
+          path: ~/Library/Caches/pip
+          key: ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-${{ hashFiles('requirements.txt') }}-${{hashFiles('build/debugger-install-requirements.txt')}}-${{hashFiles('test-requirements.txt')}}-${{hashFiles('ipython-test-requirements.txt')}}-${{hashFiles('functional-test-requirements.txt')}}-${{hashFiles('conda-functional-requirements.txt')}}
+          restore-keys: |
+            ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-
+
+      - name: Cache pip on windows
+        uses: actions/cache@v2
+        if: matrix.os == 'windows-latest'
+        with:
+          path: ~\AppData\Local\pip\Cache
+          key: ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-${{ hashFiles('requirements.txt') }}-${{hashFiles('build/debugger-install-requirements.txt')}}-${{hashFiles('test-requirements.txt')}}-${{hashFiles('ipython-test-requirements.txt')}}-${{hashFiles('functional-test-requirements.txt')}}-${{hashFiles('conda-functional-requirements.txt')}}
+          restore-keys: |
+            ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-
+
+      # Caching of npm packages (https://github.com/actions/cache/blob/main/examples.md#node---npm)
+      - name: Cache npm on linux/mac
+        uses: actions/cache@v2
+        if: matrix.os != 'windows-latest'
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Get npm cache directory
+        if: matrix.os == 'windows-latest'
+        id: npm-cache
+        run: |
+          echo "::set-output name=dir::$(npm config get cache)"
+      - name: Cache npm on windows
+        uses: actions/cache@v2
+        if: matrix.os == 'windows-latest'
+        with:
+          path: ${{ steps.npm-cache.outputs.dir }}
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Cache compiled TS files
+        id: out-cache
+        uses: actions/cache@v2
+        with:
+          path: ./out
+          key: ${{runner.os}}-${{env.CACHE_OUT_DIRECTORY}}-${{hashFiles('src/**')}}
+
+      # For faster/better builds of sdists.
+      - run: python -m pip install wheel
+        shell: bash
+
+      # debugpy is not shipped, only installed for local tests.
+      # In production, we get debugpy from python extension.
+      - name: Install Python Libs
+        run: |
+          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
+          python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
+          python ./pythonFiles/install_debugpy.py
+          python -m pip install numpy
+          python -m pip install --upgrade jupyter
+          python -m pip install --upgrade -r build/test-requirements.txt
+          python -m pip install --upgrade -r ./build/ipython-test-requirements.txt
+          python -m pip install --upgrade -r ./build/conda-functional-requirements.txt
+          python -m ipykernel install --user
+
+        # This step is slow.
+      - name: Install dependencies (npm ci)
+        run: npm ci --prefer-offline
+
+        # This step is slow.
+      - name: Compile if not cached
+        run: npx gulp prePublishNonBundle
+
+      - name: Run functional tests
+        run: npm run test:functional:parallel -- --${{matrix.test-suite}}
+        env:
+          VSC_FORCE_REAL_JUPYTER: 1
+          VSC_JUPYTER_FORCE_LOGGING: 1
+        id: test_functional_group
+
+      - name: Upload screenshots
+        uses: actions/upload-artifact@v2
+        if: steps.test_functional_group.outcome == 'failure' && failure()
+        with:
+          path: './${{env.IPYWIDGET_SCREENSHOT_PATH}}'
+
+      - name: Publish Test Report
+        uses: scacap/action-surefire-report@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          report_paths: ${{ env.TEST_RESULTS_GLOB }}
+          check_name: Functional Test Report ${{matrix.test-suite}} ${{matrix.os}}
+        if: steps.test_functional_group.outcome == 'failure' && failure()
+
+      # Upload unit test coverage reports for later use in the "reports" job.
+      - name: Upload unit test coverage reports
+        uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          name: ${{runner.os}}-${{env.COVERAGE_REPORTS}}
+          path: .nyc_output
+          retention-days: 1
+
+  vscodeTests:
+    name: VS Code Tests # These tests run with Python extension & real Jupyter
+    runs-on: ${{ matrix.os }}
+    if: github.repository == 'microsoft/vscode-jupyter'
+    env:
+      VSC_FORCE_REAL_JUPYTER: 1
+      VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
+    strategy:
+      fail-fast: false
+      matrix:
+        # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
+        # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
+        os: [ubuntu-latest]
+        python: [3.8] # Use flaky tests to run against more versions of Python.
+        # integration: Tests with VS Code, Python extension & real Jupyter
+        # notebook: Notebook Tests with VS Code, Python extension & real Jupyter
+        test-suite: [integration]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Use Python ${{matrix.python}}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{matrix.python}}
+
+      - name: Set CI Path
+        uses: ./.github/actions/set-python
+        id: set-python
+        with: 
+          PYTHON_VERSION: ${{matrix.python}}
 
       - name: Upgrade pip
         run: python -m pip install -U pip
@@ -329,260 +520,22 @@ jobs:
           python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
           python ./pythonFiles/install_debugpy.py
           python -m pip install numpy
-          python -m pip install jupyter
-          python -m pip install --upgrade -r build/test-requirements.txt
-          python -m pip install --upgrade -r ./build/ipython-test-requirements.txt
-          python -m pip install --upgrade -r ./build/conda-functional-requirements.txt
-          python -m ipykernel install --user
-        # This step is slow.
-
-      - name: Install dependencies (npm ci)
-        run: npm ci --prefer-offline
-
-        # This step is slow.
-      - name: Install Julia
-        uses: julia-actions/setup-julia@v1
-        with:
-          version: ${{env.JULIA_VERSION}}
-
-      - name: Install Julia Kernel
-        run: |
-          julia -e '
-            using Pkg
-            Pkg.add("IJulia")'
-
-      - name: Compile if not cached
-        run: npx gulp prePublishNonBundle
-        env:
-            CI_JUPYTER_FAST_COMPILATION: 'true'
-
-      - name: Print out notebook directory
-        run: |
-          ls ./out/datascience-ui/notebook
-
-      - name: Run functional tests
-        run: npm run test:functional:parallel -- --${{matrix.test-suite}}
-        env:
-          VSC_FORCE_REAL_JUPYTER: 1
-          VSC_JUPYTER_FORCE_LOGGING: 1
-        id: test_functional_group
-
-      - name: Upload screenshots
-        uses: actions/upload-artifact@v2
-        if: steps.test_functional_group.outcome == 'failure' && failure()
-        with:
-          path: './${{env.IPYWIDGET_SCREENSHOT_PATH}}'
-
-
-      - name: Publish Test Report
-        uses: scacap/action-surefire-report@v1
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          report_paths: ${{ env.TEST_RESULTS_GLOB }}
-          check_name: Functional Test Report ${{matrix.test-suite}}
-        if: steps.test_functional_group.outcome == 'failure' && failure()
-
-      # Upload unit test coverage reports for later use in the "reports" job.
-      - name: Upload unit test coverage reports
-        uses: actions/upload-artifact@v2
-        if: always()
-        with:
-          name: ${{runner.os}}-${{env.COVERAGE_REPORTS}}
-          path: .nyc_output
-          retention-days: 1
-
-  vscodeTests:
-    name: VS Code Tests # These tests run with Python extension & real Jupyter
-    runs-on: ${{ matrix.os }}
-    if: github.repository == 'microsoft/vscode-jupyter'
-    env:
-        VSC_FORCE_REAL_JUPYTER: 1
-        VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
-    strategy:
-      fail-fast: false
-      matrix:
-        # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
-        # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
-        os: [ubuntu-latest]
-        python: [3.8] # Use flaky tests to run against more versions of Python.
-        # integration: Tests with VS Code, Python extension & real Jupyter
-        # notebook: Notebook Tests with VS Code, Python extension & real Jupyter
-        test-suite: [integration, notebook, notebookWithoutPythonExt, conda]
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Use Python ${{matrix.python}}
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{matrix.python}}
-        if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook'
-
-      - uses: conda-incubator/setup-miniconda@v2
-        if: matrix.test-suite == 'conda'
-        with:
-          auto-update-conda: false
-          python-version: ${{ matrix.python }}
-          miniconda-version: "latest"
-          activate-environment: foo
-
-      - name: Conda info
-        if: matrix.test-suite == 'conda'
-        # Use `bash -l {0}` when using the conda actions.
-        shell: bash -l {0}
-        run: |
-          conda info
-          conda list
-
-      - name: Python Info
-        # Use `bash -l {0}` when using the conda actions.
-        shell: bash -l {0}
-        run: |
-          python --version
-          python -c 'import sys;print(sys.executable)'
-
-      - name: Set CI Path
-        if: matrix.test-suite != 'conda'
-        uses: ./.github/actions/set-python
-        id: set-python
-        with:
-          PYTHON_VERSION: ${{matrix.python}}
-
-      - name: Set CI Path (conda)
-        if: matrix.test-suite == 'conda'
-        uses: ./.github/actions/set-python-conda
-        with:
-          PYTHON_VERSION: ${{matrix.python}}
-
-      - name: Upgrade pip
-        # Use `bash -l {0}` when using the conda actions.
-        shell: bash -l {0}
-        run: python -m pip install -U pip
-        if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook' || matrix.test-suite == 'conda'
-
-      - name: Use Node ${{env.NODE_VERSION}}
-        uses: actions/setup-node@v2.1.2
-        with:
-          node-version: ${{env.NODE_VERSION}}
-
-      # Start caching
-
-      # Cache Python Dependencies.
-      # Caching (https://github.com/actions/cache/blob/main/examples.md#python---pip
-      - name: Cache pip on linux
-        uses: actions/cache@v2
-        if: matrix.os == 'ubuntu-latest' && (matrix.test-suite == 'integration' || matrix.test-suite == 'notebook')
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-${{ hashFiles('requirements.txt') }}-${{hashFiles('build/debugger-install-requirements.txt')}}-${{hashFiles('test-requirements.txt')}}-${{hashFiles('ipython-test-requirements.txt')}}-${{hashFiles('functional-test-requirements.txt')}}-${{hashFiles('conda-functional-requirements.txt')}}
-          restore-keys: |
-            ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-
-
-      - name: Cache pip on mac
-        uses: actions/cache@v2
-        if: matrix.os == 'macos-latest' && (matrix.test-suite == 'integration' || matrix.test-suite == 'notebook')
-        with:
-          path: ~/Library/Caches/pip
-          key: ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-${{ hashFiles('requirements.txt') }}-${{hashFiles('build/debugger-install-requirements.txt')}}-${{hashFiles('test-requirements.txt')}}-${{hashFiles('ipython-test-requirements.txt')}}-${{hashFiles('functional-test-requirements.txt')}}-${{hashFiles('conda-functional-requirements.txt')}}
-          restore-keys: |
-            ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-
-
-      - name: Cache pip on windows
-        uses: actions/cache@v2
-        if: matrix.os == 'windows-latest' && (matrix.test-suite == 'integration' || matrix.test-suite == 'notebook')
-        with:
-          path: ~\AppData\Local\pip\Cache
-          key: ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-${{ hashFiles('requirements.txt') }}-${{hashFiles('build/debugger-install-requirements.txt')}}-${{hashFiles('test-requirements.txt')}}-${{hashFiles('ipython-test-requirements.txt')}}-${{hashFiles('functional-test-requirements.txt')}}-${{hashFiles('conda-functional-requirements.txt')}}
-          restore-keys: |
-            ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-
-
-      # Caching of npm packages (https://github.com/actions/cache/blob/main/examples.md#node---npm)
-      - name: Cache npm on linux/mac
-        uses: actions/cache@v2
-        if: matrix.os != 'windows-latest'
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-
-      - name: Get npm cache directory
-        if: matrix.os == 'windows-latest'
-        id: npm-cache
-        run: |
-          echo "::set-output name=dir::$(npm config get cache)"
-      - name: Cache npm on windows
-        uses: actions/cache@v2
-        if: matrix.os == 'windows-latest'
-        with:
-          path: ${{ steps.npm-cache.outputs.dir }}
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-
-      - name: Cache compiled TS files
-        id: out-cache
-        uses: actions/cache@v2
-        with:
-          path: ./out
-          key: ${{runner.os}}-${{env.CACHE_OUT_DIRECTORY}}-${{hashFiles('src/**')}}
-
-      # For faster/better builds of sdists.
-      - run: python -m pip install wheel
-        # Use `bash -l {0}` when using the conda actions.
-        shell: bash -l {0}
-        if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook' || matrix.test-suite == 'conda'
-
-      - name: Install Python Libs (python)
-        # Use `bash -l {0}` when using the conda actions.
-        shell: bash -l {0}
-        run: |
-          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
-        if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook'
-
-      - name: Install Python Libs (conda)
-        # Use `bash -l {0}` when using the conda actions.
-        shell: bash -l {0}
-        run: |
-          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade python-jsonrpc-server==0.4.0
-          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade ujson
-        if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook' || matrix.test-suite == 'conda'
-
-      - name: Install BeakerX
-        if: matrix.test-suite == 'conda'
-        # Use `bash -l {0}` when using the conda actions.
-        shell: bash -l {0}
-        run: |
-          conda install -c conda-forge beakerx
-
-      # This step is slow.
-      # debugpy is not shipped, only installed for local tests.
-      # In production, we get debugpy from python extension.
-      - name: Install Python Libs
-        # Use `bash -l {0}` when using the conda actions.
-        shell: bash -l {0}
-        run: |
-          python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
-          python ./pythonFiles/install_debugpy.py
-          python -m pip install numpy
           python -m pip install --upgrade jupyter
           python -m pip install --upgrade -r build/test-requirements.txt
           python -m pip install --upgrade -r ./build/ipython-test-requirements.txt
           python -m pip install --upgrade -r ./build/conda-functional-requirements.txt
           python -m ipykernel install --user
-        if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook' || matrix.test-suite == 'conda'
-        # This step is slow.
 
+        # This step is slow.
       - name: Install dependencies (npm ci)
         run: npm ci --prefer-offline
-        # This step is slow.
 
+        # This step is slow.
       - name: Compile if not cached
         run: npx gulp prePublishNonBundle
         env:
             VSC_CI_MATRIX_TEST_SUITE: ${{matrix.test-suite}}
             CI_JUPYTER_FAST_COMPILATION: 'true'
-
 
       # Used by tests for non-python kernels.
       # Test are enabled via env variable `VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST`
@@ -632,7 +585,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           report_paths: ${{ env.TEST_RESULTS_GLOB }}
           check_name: VSCode Test Report
-        if: steps.test_vscode.outcome == 'failure' && failure()
+        if: (steps.test_vscode.outcome == 'failure' || steps.test_vscode.outcome == 'failure') && failure()
 
       - name: Run Native Notebook with VSCode & Jupyter
         uses: GabrielBB/xvfb-action@v1.4
@@ -687,25 +640,20 @@ jobs:
           if: always()
 
   smoke-tests:
+    timeout-minutes: 30
     name: Smoke tests
     # The value of runs-on is the OS of the current job (specified in the strategy matrix below) instead of being hardcoded.
     runs-on: ${{ matrix.os }}
     if: github.repository == 'microsoft/vscode-jupyter'
-    needs: [build-vsix]
+    needs: [build-vsix, pick_environment]
+    env: 
+      VSIX_NAME: ${{ needs.pick_environment.outputs.vsix_name }}
     strategy:
       fail-fast: false
       matrix:
-        # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
-        # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
-        # os: [ubuntu-latest, windows-latest]
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest, windows-latest, macos-latest]
         python: [3.8]
     steps:
-      - name: Use Python ${{matrix.python}}
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{matrix.python}}
-
       - name: Checkout
         uses: actions/checkout@v2
 
@@ -717,7 +665,7 @@ jobs:
       - name: Set CI Path
         uses: ./.github/actions/set-python
         id: set-python
-        with:
+        with: 
           PYTHON_VERSION: ${{matrix.python}}
 
       - name: Upgrade pip
@@ -731,7 +679,7 @@ jobs:
       - name: Download VSIX
         uses: actions/download-artifact@v2
         with:
-          name: ${{env.VSIX_NAME}}
+          name: ${{needs.pick_environment.outputs.vsix_name}}
 
       - name: Install dependencies (npm ci)
         run: npm ci --prefer-offline
@@ -774,6 +722,29 @@ jobs:
           name: ${{runner.os}}-${{env.COVERAGE_REPORTS}}
           path: .nyc_output
           retention-days: 1
+
+  upload:
+    name: Upload VSIX to Azure Blob Storage
+    runs-on: ubuntu-latest
+    # This should happen in the release and insiders branch
+    if: github.repository == 'microsoft/vscode-jupyter' && github.event_name == 'push' && (github.ref == 'ref/heads/main' || contains(github.ref, 'ref/heads/release'))
+    needs: [build-vsix, pick_environment, lint, ts_tests, vscodeTests, smoke-tests]
+    env:
+      BLOB_CONTAINER_NAME: extension-builds-jupyter
+
+    steps:
+      - name: Download VSIX
+        uses: actions/download-artifact@v2
+        with:
+          name: ${{ needs.pick_environment.outputs.vsix_name }}
+
+      - name: Azure Login
+        uses: azure/login@v1.1.1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Upload to Blob Storage
+        run: az storage blob upload --file ${{ needs.pick_environment.outputs.vsix_name }} --account-name pvsc --container-name ${{ env.BLOB_CONTAINER_NAME }} --name ${{ needs.pick_environment.outputs.vsix_name }}
 
   coverage:
     name: Coverage reports upload
@@ -836,7 +807,7 @@ jobs:
       - name: Upload coverage to codecov
         uses: codecov/codecov-action@v1
         with:
-          # token: ${{ secrets.CODECOV_TOKEN }}
+          token: ${{ secrets.CODECOV_TOKEN }}
           file: ./coverage/cobertura-coverage.xml
           path_to_write_report: ./coverage/codecov_report.txt
 
