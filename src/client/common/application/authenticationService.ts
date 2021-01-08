@@ -31,7 +31,7 @@ export class AuthenticationService implements IAuthenticationService {
     }
     public get onDidChangePassword(): vscode.Event<void> {
         if (this.useProposedApi && this.env.channel === 'insiders' && this.context.secrets?.onDidChange) {
-            return this.context.secrets.onDidChange
+            return this.context.secrets.onDidChange;
         } else {
             return this.unsupportedEvent.event;
         }
