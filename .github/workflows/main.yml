@@ -16,6 +16,7 @@ on:
       - 'release'
       - 'release/*'
       - 'release-*'
+  workflow_dispatch:
 
 env:
   NODE_VERSION: 12.14.1
