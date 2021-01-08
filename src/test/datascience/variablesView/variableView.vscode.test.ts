@@ -67,6 +67,7 @@ suite('DataScience - VariableView', () => {
 
     // Test showing the variable view
     test('Can show variableView', async function () {
+        this.timeout(120_000); // IANHU: Just for testing
         console.log('**** Start variableView test ****');
         // Add one simple cell and execute it
         await insertCodeCell('test = "MYTESTVALUE"', { index: 0 });
@@ -79,7 +80,7 @@ suite('DataScience - VariableView', () => {
         commandManager.executeCommand(Commands.OpenVariableView);
 
         // IANHU: Remove, just for testing
-        await sleep(10_000);
+        await sleep(15_000);
 
         console.log('**** Sleep finished ****');
 

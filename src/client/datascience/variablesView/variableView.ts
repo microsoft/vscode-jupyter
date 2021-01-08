@@ -76,6 +76,9 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
             [path.join(variableViewDir, 'commons.initial.bundle.js'), path.join(variableViewDir, 'variableView.js')]
         );
 
+        // tslint:disable-next-line:no-console
+        console.log('**** variableView constructor');
+
         // We need to know if kernel state changes or if the active notebook editor is changed
         this.notebookExtensibility.onKernelStateChange(this.kernelStateChanged, this, this.disposables);
         this.notebookEditorProvider.onDidChangeActiveNotebookEditor(this.activeEditorChanged, this, this.disposables);
@@ -84,6 +87,8 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
     }
 
     public async load(codeWebview: vscodeWebviewView) {
+        // tslint:disable-next-line:no-console
+        console.log('**** variableView load');
         await super.loadWebview(process.cwd(), codeWebview).catch(traceError);
     }
 
@@ -115,6 +120,8 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
     protected onMessage(message: string, payload: any) {
         switch (message) {
             case InteractiveWindowMessages.GetVariablesRequest:
+                // tslint:disable-next-line:no-console
+                console.log('**** variableView getVariablesRequest');
                 this.handleMessage(message, payload, this.requestVariables);
                 break;
             case InteractiveWindowMessages.ShowDataViewer:
