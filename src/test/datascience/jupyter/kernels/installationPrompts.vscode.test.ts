@@ -71,6 +71,7 @@ suite('DataScience Install IPyKernel (slow) (install)', () => {
         await proc.exec(venvPythonPath, ['-m', 'pip', 'uninstall', 'ipykernel', '--yes']);
         await closeActiveWindows();
         sinon.restore();
+        console.log(`Start Test completed ${this.currentTest?.title}`);
     });
     teardown(async function () {
         console.log(`End test ${this.currentTest?.title}`);
