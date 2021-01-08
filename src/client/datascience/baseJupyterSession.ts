@@ -19,7 +19,7 @@ import { JupyterInvalidKernelError } from './jupyter/jupyterInvalidKernelError';
 import { JupyterWaitForIdleError } from './jupyter/jupyterWaitForIdleError';
 import { kernelConnectionMetadataHasKernelSpec } from './jupyter/kernels/helpers';
 import { JupyterKernelPromiseFailedError } from './jupyter/kernels/jupyterKernelPromiseFailedError';
-import { KernelConnectionMetadata } from './jupyter/kernels/types';
+import { getKernelConnectionId, KernelConnectionMetadata } from './jupyter/kernels/types';
 import { suppressShutdownErrors } from './raw-kernel/rawKernel';
 import { IJupyterSession, ISessionWithSocket, KernelSocketInformation } from './types';
 
@@ -140,8 +140,11 @@ export abstract class BaseJupyterSession implements IJupyterSession {
             ? kernelConnection.kernelSpec
             : undefined;
         if (this.session && currentKernelSpec && kernelSpecToUse) {
-            // Name and id have to match (id is only for active sessions)
-            if (currentKernelSpec.name === kernelSpecToUse.name && currentKernelSpec.id === kernelSpecToUse.id) {
+            // If we have selected the same kernel connection, then nothing to do.
+            if (
+                this.kernelConnectionMetadata &&
+                getKernelConnectionId(this.kernelConnectionMetadata) === getKernelConnectionId(kernelConnection)
+            ) {
                 return;
             }
         }

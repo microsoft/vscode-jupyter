@@ -61,7 +61,8 @@ suite('DataScience Install IPyKernel (slow) (install)', () => {
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
     });
 
-    setup(async () => {
+    setup(async function () {
+        console.log(`Start test ${this.currentTest?.title}`);
         // Don't use same file (due to dirty handling, we might save in dirty.)
         // Coz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
         nbFile = await createTemporaryNotebook(templateIPynbFile, disposables);
@@ -71,7 +72,10 @@ suite('DataScience Install IPyKernel (slow) (install)', () => {
         await closeActiveWindows();
         sinon.restore();
     });
-    teardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
+    teardown(async function () {
+        console.log(`End test ${this.currentTest?.title}`);
+        await closeNotebooksAndCleanUpAfterTests(disposables);
+    });
 
     test('Test Install IPyKernel prompt message', async () => {
         // Confirm the message has not changed.
