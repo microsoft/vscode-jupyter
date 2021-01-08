@@ -60,10 +60,10 @@ export function getNativeCellResults(
 }
 
 // tslint:disable-next-line:no-any
-export function runMountedTest(name: string, testFunc: (context: Mocha.Context) => Promise<void>) {
+export function runMountedTest(name: string, testFunc: (this: Mocha.Context, context: Mocha.Context) => Promise<void>) {
     test(name, async function () {
         // tslint:disable-next-line: no-invalid-this
-        await testFunc(this);
+        await testFunc.bind(this)(this);
     });
 }
 
