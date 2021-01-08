@@ -139,12 +139,9 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         const kernelSpecToUse = kernelConnectionMetadataHasKernelSpec(kernelConnection)
             ? kernelConnection.kernelSpec
             : undefined;
-        if (this.session && currentKernelSpec && kernelSpecToUse) {
+        if (this.session && currentKernelSpec && kernelSpecToUse && this.kernelConnectionMetadata) {
             // If we have selected the same kernel connection, then nothing to do.
-            if (
-                this.kernelConnectionMetadata &&
-                getKernelConnectionId(this.kernelConnectionMetadata) === getKernelConnectionId(kernelConnection)
-            ) {
+            if (getKernelConnectionId(this.kernelConnectionMetadata) === getKernelConnectionId(kernelConnection)) {
                 return;
             }
         }

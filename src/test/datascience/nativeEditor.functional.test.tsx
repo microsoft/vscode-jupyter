@@ -489,7 +489,7 @@ suite('DataScience Native Editor', () => {
                     const pythonService = await createPythonService(ioc, 2);
 
                     // Skip test for older python and raw kernel
-                    if (!pythonService || ioc.mockJupyter){
+                    if (!pythonService || ioc.mockJupyter) {
                         return this.skip();
                     }
 
