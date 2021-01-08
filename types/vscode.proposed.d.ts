@@ -862,30 +862,41 @@ declare module 'vscode' {
          * provider
          */
         export function logout(providerId: string, sessionId: string): Thenable<void>;
+    }
 
+    /**
+     * Represents a storage utility for secrets, information that is
+     * sensitive.
+     */
+    export interface SecretStorage {
         /**
-         * Retrieve a password that was stored with key. Returns undefined if there
+         * Retrieve a secret that was stored with key. Returns undefined if there
          * is no password matching that key.
          * @param key The key the password was stored under.
+         * @returns The stored value or `undefined`.
          */
-        export function getPassword(key: string): Thenable<string | undefined>;
+        get(key: string): Thenable<string | undefined>;
 
         /**
-         * Store a password under a given key.
-         * @param key The key to store the password under
-         * @param value The password
+         * Store a secret under a given key.
+         * @param key The key to store the password under.
+         * @param value The password.
          */
-        export function setPassword(key: string, value: string): Thenable<void>;
+        set(key: string, value: string): Thenable<void>;
 
         /**
-         * Remove a password from storage.
+         * Remove a secret from storage.
          * @param key The key the password was stored under.
          */
-        export function deletePassword(key: string): Thenable<void>;
+        delete(key: string): Thenable<void>;
 
         /**
-         * Fires when a password is set or deleted.
+         * Fires when a secret is set or deleted.
          */
-        export const onDidChangePassword: Event<void>;
+        onDidChange: Event<void>;
+    }
+
+    export interface ExtensionContext {
+        secrets: SecretStorage;
     }
 }

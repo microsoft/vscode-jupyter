@@ -6,6 +6,7 @@
 import { inject, injectable } from 'inversify';
 import * as vscode from 'vscode';
 import { UseProposedApi } from '../constants';
+import { IExtensionContext } from '../types';
 import { IApplicationEnvironment, IAuthenticationService } from './types';
 
 /**
@@ -16,7 +17,8 @@ export class AuthenticationService implements IAuthenticationService {
     private unsupportedEvent = new vscode.EventEmitter<void>();
     constructor(
         @inject(UseProposedApi) private readonly useProposedApi: boolean,
-        @inject(IApplicationEnvironment) private env: IApplicationEnvironment
+        @inject(IApplicationEnvironment) private env: IApplicationEnvironment,
+        @inject(IExtensionContext) private context: IExtensionContext
     ) {}
     public get onDidChangeAuthenticationProviders(): vscode.Event<vscode.AuthenticationProvidersChangeEvent> {
         return vscode.authentication.onDidChangeAuthenticationProviders;
@@ -28,8 +30,8 @@ export class AuthenticationService implements IAuthenticationService {
         return vscode.authentication.providers;
     }
     public get onDidChangePassword(): vscode.Event<void> {
-        if (this.useProposedApi && this.env.channel === 'insiders') {
-            return vscode.authentication.onDidChangePassword;
+        if (this.useProposedApi && this.env.channel === 'insiders' && this.context.secrets?.onDidChange) {
+            return this.context.secrets.onDidChange;
         } else {
             return this.unsupportedEvent.event;
         }
@@ -44,20 +46,20 @@ export class AuthenticationService implements IAuthenticationService {
         return vscode.authentication.logout(providerId, sessionId);
     }
     public getPassword(key: string): Thenable<string | undefined> {
-        if (this.useProposedApi && this.env.channel === 'insiders') {
-            return vscode.authentication.getPassword(key);
+        if (this.useProposedApi && this.env.channel === 'insiders' && this.context.secrets?.get) {
+            return this.context.secrets.get(key);
         }
         return Promise.resolve(undefined);
     }
     public setPassword(key: string, value: string): Thenable<void> {
-        if (this.useProposedApi && this.env.channel === 'insiders') {
-            return vscode.authentication.setPassword(key, value);
+        if (this.useProposedApi && this.env.channel === 'insiders' && this.context.secrets?.set) {
+            return this.context.secrets.set(key, value);
         }
         return Promise.resolve();
     }
     public deletePassword(key: string): Thenable<void> {
-        if (this.useProposedApi && this.env.channel === 'insiders') {
-            return vscode.authentication.deletePassword(key);
+        if (this.useProposedApi && this.env.channel === 'insiders' && this.context.secrets?.delete) {
+            return this.context.secrets.delete(key);
         }
         return Promise.resolve();
     }
