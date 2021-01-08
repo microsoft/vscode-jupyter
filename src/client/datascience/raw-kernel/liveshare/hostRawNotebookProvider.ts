@@ -22,6 +22,7 @@ import { createDeferred } from '../../../common/utils/async';
 import * as localize from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
 import { IServiceContainer } from '../../../ioc/types';
+import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { Identifiers, LiveShare, LiveShareCommands, Settings } from '../../constants';
 import { computeWorkingDirectory } from '../../jupyter/jupyterUtils';
 import { getDisplayNameOrNameOfKernelConnection, isPythonKernelConnection } from '../../jupyter/kernels/helpers';
@@ -44,7 +45,6 @@ import {
 import { calculateWorkingDirectory } from '../../utils';
 import { RawJupyterSession } from '../rawJupyterSession';
 import { RawNotebookProviderBase } from '../rawNotebookProvider';
-import { PythonEnvironment } from '../../../pythonEnvironments/info';
 
 // tslint:disable-next-line: no-require-imports
 // tslint:disable:no-any
@@ -148,11 +148,7 @@ export class HostRawNotebookProvider
 
         traceInfo(`Getting preferred kernel for ${identity.toString()}`);
         try {
-            if (
-                kernelConnection &&
-                kernelConnection.interpreter &&
-                isPythonKernelConnection(kernelConnection)
-            ) {
+            if (kernelConnection && kernelConnection.interpreter && isPythonKernelConnection(kernelConnection)) {
                 // Install missing dependencies only if we're dealing with a Python kernel.
                 await this.installDependenciesIntoInterpreter(kernelConnection.interpreter, false, cancelToken);
             }
