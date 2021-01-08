@@ -7,7 +7,7 @@ import { IMainWithVariables, IStore } from '../interactive-common/redux/store';
 import { IVariablePanelProps, VariablePanel } from '../interactive-common/variablePanel';
 import { actionCreators } from './redux/actions';
 
-// tslint:disable: no-suspicious-comment
+// tslint:disable: no-suspicious-comment no-console
 export type IVariableViewPanelProps = IMainWithVariables & typeof actionCreators;
 
 function mapStateToProps(state: IStore): IMainWithVariables {
@@ -22,6 +22,9 @@ export class VariableViewPanel extends React.Component<IVariableViewPanelProps> 
 
     constructor(props: IVariableViewPanelProps) {
         super(props);
+
+        // IANHU: Remove
+        console.log('**** VariableViewPanel Constructor *');
 
         // For the variable view we want to start toggled open
         this.props.toggleVariableExplorer();
@@ -59,6 +62,9 @@ export class VariableViewPanel extends React.Component<IVariableViewPanelProps> 
     // Render function and variable props are the same as those from InterativePanel to allow us to reuse the same
     // control without alterations
     private renderVariablePanel(baseTheme: string) {
+        // IANHU: Remove
+        console.log('**** VariableViewPanel Render *');
+
         if (this.props.variableState.visible) {
             const variableProps = this.getVariableProps(baseTheme);
             return <VariablePanel {...variableProps} />;

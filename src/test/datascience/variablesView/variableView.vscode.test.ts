@@ -77,7 +77,6 @@ suite('DataScience - VariableView', () => {
         console.log('**** Cell execution done ****');
         // Send the command to open the view
         commandManager.executeCommand(Commands.OpenVariableView);
-        //commands.executeCommand("workbench.action.openView");
 
         // IANHU: Remove, just for testing
         await sleep(15_000);
