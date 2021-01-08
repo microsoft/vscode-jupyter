@@ -247,9 +247,10 @@ export class NativeEditorStorage implements INotebookStorage {
     private async loadFromFile(options: IModelLoadOptions): Promise<INotebookModel> {
         try {
             // Attempt to read the contents if a viable file
-            const contents = NativeEditorStorage.isUntitledFile(options.file)
-                ? options.possibleContents
-                : await this.fs.readFile(options.file);
+            const contents =
+                NativeEditorStorage.isUntitledFile(options.file) && this.isValidNotebookJson(options.possibleContents)
+                    ? options.possibleContents
+                    : await this.fs.readFile(options.file);
 
             // Get backup id from the options if available.
             const backupId = options.backupId ? options.backupId : this.getStaticStorageKey(options.file);
@@ -294,6 +295,20 @@ export class NativeEditorStorage implements INotebookStorage {
             state: CellState.finished,
             data: createCodeCell()
         };
+    }
+
+    private isValidNotebookJson(contents: string | undefined): boolean {
+        try {
+            const json = contents ? (JSON.parse(contents) as Partial<nbformat.INotebookContent>) : undefined;
+
+            // Double check json (if we have any)
+            if (json && !json.cells) {
+                return false;
+            }
+        } catch {
+            return false;
+        }
+        return true;
     }
 
     private async loadContents(
