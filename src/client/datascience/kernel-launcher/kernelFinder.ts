@@ -267,8 +267,7 @@ export class KernelFinder implements IKernelFinder {
     ): Promise<{ interpreter: PythonEnvironment; kernelSearchPath: string }[]> {
         if (this.extensionChecker.isPythonExtensionInstalled) {
             const interpreters = await this.interpreterService.getInterpreters(resource);
-            // tslint:disable-next-line: no-console
-            console.debug(`Search all interpreters ${interpreters.map((item) => item.path).join(', ')}`);
+            traceInfo(`Search all interpreters ${interpreters.map((item) => item.path).join(', ')}`);
             const interpreterPaths = new Set<string>();
             return interpreters
                 .filter((interpreter) => {
