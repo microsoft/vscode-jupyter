@@ -202,11 +202,11 @@ export class InstalledRawKernelSelectionListProvider
     constructor(
         private readonly kernelFinder: IKernelFinder,
         private readonly pathUtils: IPathUtils,
-        private readonly interpreterService: IInterpreterService
+        private readonly kernelService: KernelService
     ) {}
     public async getKernelSelections(
         resource: Resource,
-        _cancelToken?: CancellationToken
+        cancelToken?: CancellationToken
     ): Promise<IKernelSpecQuickPickItem<KernelSpecConnectionMetadata>[]> {
         const items = await this.kernelFinder.listKernelSpecs(resource);
         const selections = await Promise.all(
@@ -241,12 +241,12 @@ export class InstalledRawKernelSelectionListProvider
                 })
                 .map((item) => getQuickPickItemForKernelSpec(item, this.pathUtils))
                 .map(async (item) => {
+                    // Ensure we have the associated interpreter information.   
                     const selection = item.selection as ReadWrite<KernelSpecConnectionMetadata>;
-                    if (selection.kernelSpec.interpreterPath && !selection.interpreter) {
-                        selection.interpreter = await this.interpreterService.getInterpreterDetails(
-                            selection.kernelSpec.interpreterPath
-                        );
+                    if (selection.interpreter || !isPythonKernelConnection(selection)) {
+                        return item;
                     }
+                    selection.interpreter = await this.kernelService.findMatchingInterpreter(selection.kernelSpec, cancelToken)
                     item.selection = selection;
                     return item;
                 })
@@ -385,7 +385,7 @@ export class KernelSelectionProvider {
                     installedKernelsPromise = new InstalledRawKernelSelectionListProvider(
                         this.kernelFinder,
                         this.pathUtils,
-                        this.interpreterService
+                        this.kernelService
                     ).getKernelSelections(resource, cancelToken);
                     break;
                 case 'jupyter':

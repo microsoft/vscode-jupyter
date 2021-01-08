@@ -229,17 +229,23 @@ export class KernelSelector implements IKernelSelectionUsage {
         telemetryProps.kernelSpecFound = !!selection?.kernelSpec;
         telemetryProps.interpreterFound = !!selection?.interpreter;
         sendTelemetryEvent(Telemetry.FindKernelForLocalConnection, stopWatch.elapsedTime, telemetryProps);
-        if (selection) {
+        if (
+            selection &&
+            !selection.interpreter &&
+            isPythonKernelConnection(selection) &&
+            selection.kind === 'startUsingKernelSpec'
+        ) {
             const itemToReturn = cloneDeep(selection) as ReadWrite<
                 KernelSpecConnectionMetadata | PythonKernelConnectionMetadata | DefaultKernelConnectionMetadata
             >;
             itemToReturn.interpreter =
                 itemToReturn.interpreter ||
                 (this.extensionChecker.isPythonExtensionInstalled
-                    ? await this.interpreterService.getActiveInterpreter(resource)
+                    ? await this.kernelService.findMatchingInterpreter(selection.kernelSpec, cancelToken)
                     : undefined);
             return itemToReturn;
         }
+        return selection;
     }
 
     /**

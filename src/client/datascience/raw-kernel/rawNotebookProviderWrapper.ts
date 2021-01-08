@@ -5,6 +5,7 @@ import { inject, injectable, named } from 'inversify';
 import { Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
+import { IPythonExtensionChecker } from '../../api/types';
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../common/application/types';
 import '../../common/extensions';
 import { IFileSystem } from '../../common/platform/types';
@@ -19,6 +20,7 @@ import {
 import { IServiceContainer } from '../../ioc/types';
 import { DataScienceStartupTime, JUPYTER_OUTPUT_CHANNEL } from '../constants';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
+import { KernelService } from '../jupyter/kernels/kernelService';
 import { KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { IRoleBasedObject, RoleBasedFactory } from '../jupyter/liveshare/roleBasedFactory';
 import { ILiveShareHasRole } from '../jupyter/liveshare/types';
@@ -54,7 +56,9 @@ type RawNotebookProviderClassType = {
         progressReporter: ProgressReporter,
         outputChannel: IOutputChannel,
         rawKernelSupported: IRawNotebookSupportedService,
-        kernelDependencyService: IKernelDependencyService
+        kernelDependencyService: IKernelDependencyService,
+        kernelService: KernelService,
+        extensionChecker: IPythonExtensionChecker
     ): IRawNotebookProviderInterface;
 };
 // tslint:enable:callable-types
@@ -80,7 +84,9 @@ export class RawNotebookProviderWrapper implements IRawNotebookProvider, ILiveSh
         @inject(ProgressReporter) progressReporter: ProgressReporter,
         @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) outputChannel: IOutputChannel,
         @inject(IRawNotebookSupportedService) rawNotebookSupported: IRawNotebookSupportedService,
-        @inject(IKernelDependencyService) kernelDependencyService: IKernelDependencyService
+        @inject(IKernelDependencyService) kernelDependencyService: IKernelDependencyService,
+        @inject(KernelService) kernelService: KernelService,
+        @inject(IPythonExtensionChecker) extensionChecker: IPythonExtensionChecker
     ) {
         // The server factory will create the appropriate HostRawNotebookProvider or GuestRawNotebookProvider based on
         // the liveshare state.
@@ -102,7 +108,9 @@ export class RawNotebookProviderWrapper implements IRawNotebookProvider, ILiveSh
             progressReporter,
             outputChannel,
             rawNotebookSupported,
-            kernelDependencyService
+            kernelDependencyService,
+            kernelService,
+            extensionChecker
         );
     }
 

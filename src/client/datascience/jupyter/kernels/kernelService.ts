@@ -9,6 +9,7 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import { CancellationToken, CancellationTokenSource } from 'vscode';
+import { IPythonExtensionChecker } from '../../../api/types';
 import { Cancellation, wrapCancellationTokens } from '../../../common/cancellation';
 import { PYTHON_LANGUAGE, PYTHON_WARNINGS } from '../../../common/constants';
 import '../../../common/extensions';
@@ -69,7 +70,8 @@ export class KernelService {
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IKernelDependencyService) private readonly kernelDependencyService: IKernelDependencyService,
         @inject(IFileSystem) private readonly fs: IFileSystem,
-        @inject(IEnvironmentActivationService) private readonly activationHelper: IEnvironmentActivationService
+        @inject(IEnvironmentActivationService) private readonly activationHelper: IEnvironmentActivationService,
+        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker
     ) {}
     /**
      * Finds a kernel spec from a given session or jupyter process that matches a given spec.
@@ -138,7 +140,9 @@ export class KernelService {
         if (kernelSpec?.language && kernelSpec.language !== PYTHON_LANGUAGE) {
             return;
         }
-
+        if (!this.extensionChecker.isPythonExtensionInstalled) {
+            return;
+        }
         const activeInterpreterPromise = this.interpreterService.getActiveInterpreter(undefined);
         const allInterpretersPromise = this.interpreterService.getInterpreters(undefined);
         // Ensure we handle errors if any (this is required to ensure we do not exit this function without using this promise).

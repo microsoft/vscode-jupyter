@@ -23,7 +23,7 @@ import * as localize from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
 import { IServiceContainer } from '../../../ioc/types';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
-import { Identifiers, LiveShare, LiveShareCommands, Settings } from '../../constants';
+import { Identifiers, LiveShare, LiveShareCommands, Settings, Telemetry } from '../../constants';
 import { computeWorkingDirectory } from '../../jupyter/jupyterUtils';
 import { getDisplayNameOrNameOfKernelConnection, isPythonKernelConnection } from '../../jupyter/kernels/helpers';
 import { KernelSelector } from '../../jupyter/kernels/kernelSelector';
@@ -45,6 +45,9 @@ import {
 import { calculateWorkingDirectory } from '../../utils';
 import { RawJupyterSession } from '../rawJupyterSession';
 import { RawNotebookProviderBase } from '../rawNotebookProvider';
+import { KernelService } from '../../jupyter/kernels/kernelService';
+import { sendTelemetryEvent } from '../../../telemetry';
+import { IPythonExtensionChecker } from '../../../api/types';
 
 // tslint:disable-next-line: no-require-imports
 // tslint:disable:no-any
@@ -68,7 +71,9 @@ export class HostRawNotebookProvider
         private progressReporter: ProgressReporter,
         private outputChannel: IOutputChannel,
         rawNotebookSupported: IRawNotebookSupportedService,
-        private readonly kernelDependencyService: IKernelDependencyService
+        private readonly kernelDependencyService: IKernelDependencyService,
+        private readonly kernelService: KernelService,
+        private readonly extensionChecker: IPythonExtensionChecker
     ) {
         super(liveShare, asyncRegistry, rawNotebookSupported);
     }
@@ -148,9 +153,30 @@ export class HostRawNotebookProvider
 
         traceInfo(`Getting preferred kernel for ${identity.toString()}`);
         try {
-            if (kernelConnection && kernelConnection.interpreter && isPythonKernelConnection(kernelConnection)) {
-                // Install missing dependencies only if we're dealing with a Python kernel.
-                await this.installDependenciesIntoInterpreter(kernelConnection.interpreter, false, cancelToken);
+            if (
+                kernelConnection &&
+                isPythonKernelConnection(kernelConnection) &&
+                kernelConnection.kind === 'startUsingKernelSpec'
+            ) {
+                if (!kernelConnection.interpreter) {
+                    sendTelemetryEvent(Telemetry.AttemptedToLaunchRawKernelWithoutInterpreter, undefined, {
+                        pythonExtensionInstalled: this.extensionChecker.isPythonExtensionInstalled
+                    });
+                    // Temporary, if there's no telemetry for this, then its safe to remove
+                    // this code as well as the code where we initialize the interpreter via a hack.
+                    // This is used to check if there are situations under which this is possible & to safeguard against it.
+                    // The only real world scenario is when users do not install Python (which we cannot prevent).
+                    (kernelConnection as any).interpreter = this.kernelService.findMatchingInterpreter(
+                        kernelConnection.kernelSpec,
+                        cancelToken
+                    );
+                }
+                if (kernelConnection.interpreter) {
+                    // Install missing dependencies only if we're dealing with a Python kernel.
+                    await this.installDependenciesIntoInterpreter(kernelConnection.interpreter, false, cancelToken);
+                } else {
+                    traceError('No interpreter fetched to start a raw kernel');
+                }
             }
             // We need to locate kernelspec and possible interpreter for this launch based on resource and notebook metadata
             // Confirm this logic is valid.
