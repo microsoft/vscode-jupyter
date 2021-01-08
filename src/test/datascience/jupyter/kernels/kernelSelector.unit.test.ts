@@ -554,12 +554,11 @@ suite('DataScience - KernelSelector', () => {
             verify(appShell.showQuickPick(anything(), anything(), anything())).never();
             verify(kernelService.registerKernel(anything(), anything(), anything())).never();
         });
-        test('If metadata contains kernel information, then return a matching kernel (even if there is no matching interpreter)', async () => {
+        test('If metadata contains kernel information, then return a matching kernel', async () => {
             when(
                 kernelService.findMatchingKernelSpec(nbMetadataKernelSpec, instance(sessionManager), anything())
             ).thenResolve(kernelSpec);
-            when(kernelService.findMatchingInterpreter(kernelSpec, anything())).thenResolve();
-            when(interpreterService.getActiveInterpreter(undefined)).thenResolve(interpreter);
+            when(kernelService.findMatchingInterpreter(kernelSpec, anything())).thenResolve(interpreter);
             when(
                 kernelSelectionProvider.getKernelSelectionsForLocalSession(
                     anything(),

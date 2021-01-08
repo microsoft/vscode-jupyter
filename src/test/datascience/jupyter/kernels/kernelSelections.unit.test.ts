@@ -290,6 +290,10 @@ suite('DataScience - KernelSelections', () => {
             instance(sessionManager)
         );
 
+        // Ensure interpreter property is set when comparing.
+        items.map(item => {
+            (item.selection as any).interpreter = item.selection.interpreter || undefined;
+        })
         assert.deepEqual(items, expectedList);
     });
     test('Should return a list of Local Kernels + Interpreters for local jupyter connection', async () => {
