@@ -36,12 +36,10 @@ export class NotebookIPyWidgetCoordinator implements INotebookKernelResolver {
     ): Promise<void> {
         // Create a handler for this notebook if we don't already have one. Since there's one of the notebookMessageCoordinator's for the
         // entire VS code session, we have a map of notebook document to message coordinator
-        const promise = this.messageCoordinators.get(document.uri.toString());
-        if (!promise) {
-            this.messageCoordinators.set(
-                document.uri.toString(),
-                CommonMessageCoordinator.create(document.uri, this.serviceContainer)
-            );
+        let promise = this.messageCoordinators.get(document.uri.toString());
+        if (promise === undefined) {
+            promise = CommonMessageCoordinator.create(document.uri, this.serviceContainer);
+            this.messageCoordinators.set(document.uri.toString(), promise);
         }
         return Cancellation.race(() => promise!.then(this.attachCoordinator.bind(this, document, webview)), token);
     }
