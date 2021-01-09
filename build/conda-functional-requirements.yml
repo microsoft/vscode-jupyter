@@ -1,0 +1,14 @@
+# Functional requirements using a conda environment file
+dependencies:
+  - debugpy
+  - livelossplot
+  - versioneer
+  - nose
+  - jupyter
+  - pythreejs
+  - ipysheet
+  - ipyvolume
+  - beakerx
+  - py4j
+  - bqplot
+  - K3D
