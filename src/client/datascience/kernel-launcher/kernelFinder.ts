@@ -12,6 +12,7 @@ import { traceDecorators, traceError, traceInfo, traceInfoIf, traceWarning } fro
 import { IFileSystem, IPlatformService } from '../../common/platform/types';
 import { IPythonExecutionFactory } from '../../common/process/types';
 import { IExtensionContext, IPathUtils, Resource } from '../../common/types';
+import { noop } from '../../common/utils/misc';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
@@ -113,7 +114,7 @@ export class KernelFinder implements IKernelFinder {
                 !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
                 `Kernel specs for ${resource.toString()} are \n ${JSON.stringify(items)}`
             )
-        );
+        ).catch(noop);
         return promise;
     }
 
