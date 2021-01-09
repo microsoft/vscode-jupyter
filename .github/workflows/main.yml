@@ -393,6 +393,7 @@ jobs:
           python -m ipykernel install --user
 
       - name: Install Python Libs for conda
+        shell: bash -l {0}
         if: env.conda_python
         run: |
           conda activate functional_test_env
@@ -412,6 +413,7 @@ jobs:
         run: npx gulp prePublishNonBundle
 
       - name: Run functional tests
+        shell: bash -l {0}
         run: npm run test:functional:parallel -- --${{matrix.test-suite}}
         env:
           VSC_FORCE_REAL_JUPYTER: 1
