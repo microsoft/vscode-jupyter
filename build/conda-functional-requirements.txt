@@ -23,3 +23,4 @@ py4j
 bqplot
 K3D
 debugpy
+numpy
