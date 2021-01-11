@@ -468,11 +468,29 @@ jobs:
         with:
           python-version: ${{matrix.python}}
 
+      - name: Use Conda Python ${{matrix.python}}
+        uses: conda-incubator/setup-miniconda@v2
+        if: matrix.test-suite == 'conda'
+        with:
+          auto-update-conda: true
+          activate-environment: functional_test_env
+          python-version: ${{matrix.python}}
+
+
       - name: Set CI Path
         uses: ./.github/actions/set-python
         id: set-python
+        if: matrix.test-suite != 'conda'
         with: 
           PYTHON_VERSION: ${{matrix.python}}
+
+      - name: Set CI Path for Conda
+        uses: ./.github/actions/set-python-conda
+        id: set-python-conda
+        if: matrix.test-suite == 'conda'
+        with: 
+          PYTHON_VERSION: ${{matrix.python}}
+
 
       - name: Upgrade pip
         run: python -m pip install -U pip
@@ -551,6 +569,7 @@ jobs:
       # debugpy is not shipped, only installed for local tests.
       # In production, we get debugpy from python extension.
       - name: Install Python Libs
+        if: matrix.test-suite != 'conda'
         run: |
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
           python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
@@ -561,6 +580,18 @@ jobs:
           python -m pip install --upgrade -r ./build/ipython-test-requirements.txt
           python -m pip install --upgrade -r ./build/conda-functional-requirements.txt
           python -m ipykernel install --user
+
+      - name: Install Python Libs for conda
+        shell: bash -l {0}
+        if: matrix.test-suite == 'conda'
+        run: |
+          conda activate functional_test_env
+          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
+          python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
+          python ./pythonFiles/install_debugpy.py
+          conda env update --file ./build/conda-functional-requirements.yml
+          python -m pip install --upgrade -r ./build/conda-functional-requirements.txt
+
 
         # This step is slow.
       - name: Install dependencies (npm ci)
