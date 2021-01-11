@@ -873,7 +873,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<ILanguageServerProvider>(ILanguageServerProvider, MockLanguageServerProvider);
         this.serviceManager.addSingleton<IEncryptedStorage>(IEncryptedStorage, MockEncryptedStorage);
         this.serviceManager.addSingleton<IJupyterServerUriStorage>(IJupyterServerUriStorage, JupyterServerUriStorage);
-        this.serviceManager.addSingleton<IVariableViewNotebookWatcher>(IVariableViewNotebookWatcher, VariableViewNotebookWatcher);
+        this.serviceManager.addSingleton<IVariableViewNotebookWatcher>(
+            IVariableViewNotebookWatcher,
+            VariableViewNotebookWatcher
+        );
 
         when(this.applicationShell.showErrorMessage(anyString())).thenReturn(Promise.resolve(''));
         when(this.applicationShell.showErrorMessage(anyString(), anything())).thenReturn(Promise.resolve(''));
