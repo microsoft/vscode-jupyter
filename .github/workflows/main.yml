@@ -401,6 +401,7 @@ jobs:
           python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
           python ./pythonFiles/install_debugpy.py
           conda env update --file ./build/conda-functional-requirements.yml
+          python -m pip install --upgrade -r ./build/conda-functional-requirements.txt
 
         # This step is slow.
       - name: Install dependencies (npm ci)
