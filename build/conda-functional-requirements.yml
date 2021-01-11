@@ -1,13 +1,16 @@
 # Functional requirements using a conda environment file
+name: functional_test_env
 dependencies:
-- livelossplot
-- versioneer
-- nose
-- jupyter
-- pythreejs
-- ipysheet
-- ipyvolume
-- beakerx
-- py4j
-- bqplot
-- K3D
+  - pandas
+  - jupyter
+  - numpy
+  - matplotlib
+  - livelossplot
+  - versioneer
+  - nose
+  - pythreejs
+  - ipyvolume
+  - beakerx
+  - py4j
+  - bqplot
+  - k3d
