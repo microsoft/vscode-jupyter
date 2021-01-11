@@ -1,3 +1,4 @@
+import { Event } from 'vscode';
 import { IVariableExplorerHeight } from '../../../datascience-ui/interactive-common/redux/reducers/types';
 import {
     IFinishCell,
@@ -5,7 +6,7 @@ import {
     IShowDataViewer
 } from '../../datascience/interactive-common/interactiveWindowTypes';
 import { CssMessages, IGetCssRequest, IGetCssResponse, SharedMessages } from '../messages';
-import { IJupyterVariablesRequest, IJupyterVariablesResponse, IVSCWebviewViewProvider } from '../types';
+import { IJupyterVariablesRequest, IJupyterVariablesResponse, INotebook, IVSCWebviewViewProvider } from '../types';
 
 // Mapping of Message to payload that our VariableViewPanel needs to support
 export class IVariableViewPanelMapping {
@@ -26,6 +27,13 @@ export class IVariableViewPanelMapping {
     public [SharedMessages.LocInit]: string;
     public [InteractiveWindowMessages.FinishCell]: IFinishCell;
     public [InteractiveWindowMessages.UpdateVariableViewExecutionCount]: { executionCount: number };
+}
+
+export const IVariableViewNotebookWatcher = Symbol('IVariableViewNotebookWatcher');
+export interface IVariableViewNotebookWatcher {
+    readonly activeVariableViewNotebook?: INotebook;
+    readonly onDidChangeActiveVariableViewNotebook: Event<INotebook | undefined>;
+    readonly onDidExecuteActiveVariableViewNotebook: Event<{ executionCount: number }>;
 }
 
 export const IVariableViewProvider = Symbol('IVariableViewProvider');
