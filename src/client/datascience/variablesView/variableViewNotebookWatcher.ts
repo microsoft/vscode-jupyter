@@ -10,7 +10,9 @@ import { KernelState, KernelStateEventArgs } from '../notebookExtensibility';
 import { INotebook, INotebookEditor, INotebookEditorProvider, INotebookExtensibility } from '../types';
 import { IVariableViewNotebookWatcher } from './types';
 
-// IANHU: Class comment
+// For any class that is monitoring the variables of the active notebook document, this class will update you
+// when the active notebook changes or if the execution count is updated on the active notebook
+// NOTE: Currently this class is only looking at native notebook documents
 @injectable()
 export class VariableViewNotebookWatcher implements IVariableViewNotebookWatcher {
     public get onDidChangeActiveVariableViewNotebook(): Event<INotebook | undefined> {
