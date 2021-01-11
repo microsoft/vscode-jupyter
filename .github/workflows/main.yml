@@ -16,6 +16,7 @@ on:
       - 'release'
       - 'release/*'
       - 'release-*'
+      - rchiodo/conda_kernel_for_test
   workflow_dispatch:
 
 env:
