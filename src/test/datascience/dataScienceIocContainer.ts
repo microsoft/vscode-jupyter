@@ -256,7 +256,7 @@ import {
     ITrustService,
     IWebviewExtensibility
 } from '../../client/datascience/types';
-import { IVariableViewNotebookWatcher, IVariableViewProvider } from '../../client/datascience/variablesView/types';
+import { INotebookWatcher, IVariableViewProvider } from '../../client/datascience/variablesView/types';
 import { VariableViewActivationService } from '../../client/datascience/variablesView/variableViewActivationService';
 import { VariableViewProvider } from '../../client/datascience/variablesView/variableViewProvider';
 import { WebviewExtensibility } from '../../client/datascience/webviewExtensibility';
@@ -309,7 +309,7 @@ import { WebviewIPyWidgetCoordinator } from '../../client/datascience/ipywidgets
 import { WebviewViewProvider } from '../../client/common/application/webviewViews/webviewViewProvider';
 import { SystemPseudoRandomNumberGenerator } from '../../client/datascience/interactive-ipynb/randomBytes';
 import { KernelEnvironmentVariablesService } from '../../client/datascience/kernel-launcher/kernelEnvVarsService';
-import { VariableViewNotebookWatcher } from '../../client/datascience/variablesView/variableViewNotebookWatcher';
+import { NotebookWatcher } from '../../client/datascience/variablesView/notebookWatcher';
 
 export class DataScienceIocContainer extends UnitTestIocContainer {
     public get workingInterpreter() {
@@ -873,10 +873,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<ILanguageServerProvider>(ILanguageServerProvider, MockLanguageServerProvider);
         this.serviceManager.addSingleton<IEncryptedStorage>(IEncryptedStorage, MockEncryptedStorage);
         this.serviceManager.addSingleton<IJupyterServerUriStorage>(IJupyterServerUriStorage, JupyterServerUriStorage);
-        this.serviceManager.addSingleton<IVariableViewNotebookWatcher>(
-            IVariableViewNotebookWatcher,
-            VariableViewNotebookWatcher
-        );
+        this.serviceManager.addSingleton<INotebookWatcher>(INotebookWatcher, NotebookWatcher);
 
         when(this.applicationShell.showErrorMessage(anyString())).thenReturn(Promise.resolve(''));
         when(this.applicationShell.showErrorMessage(anyString(), anything())).thenReturn(Promise.resolve(''));

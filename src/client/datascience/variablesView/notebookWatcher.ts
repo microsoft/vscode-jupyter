@@ -8,13 +8,13 @@ import { IFileSystem } from '../../common/platform/types';
 import { IDisposableRegistry } from '../../common/types';
 import { KernelState, KernelStateEventArgs } from '../notebookExtensibility';
 import { INotebook, INotebookEditor, INotebookEditorProvider, INotebookExtensibility } from '../types';
-import { IVariableViewNotebookWatcher } from './types';
+import { INotebookWatcher } from './types';
 
-// For any class that is monitoring the variables of the active notebook document, this class will update you
+// For any class that is monitoring the active notebook document, this class will update you
 // when the active notebook changes or if the execution count is updated on the active notebook
 // NOTE: Currently this class is only looking at native notebook documents
 @injectable()
-export class VariableViewNotebookWatcher implements IVariableViewNotebookWatcher {
+export class NotebookWatcher implements INotebookWatcher {
     public get onDidChangeActiveVariableViewNotebook(): Event<INotebook | undefined> {
         return this._onDidChangeActiveVariableViewNotebook.event;
     }
@@ -47,7 +47,7 @@ export class VariableViewNotebookWatcher implements IVariableViewNotebookWatcher
             kernelStateEvent.state === KernelState.executed &&
             kernelStateEvent.cell &&
             kernelStateEvent.cell.metadata.executionOrder &&
-            kernelStateEvent.silent !== true
+            !kernelStateEvent.silent
         ) {
             // We only want to update the variable view execution count when it's the active document executing
             if (

@@ -29,8 +29,8 @@ export class IVariableViewPanelMapping {
     public [InteractiveWindowMessages.UpdateVariableViewExecutionCount]: { executionCount: number };
 }
 
-export const IVariableViewNotebookWatcher = Symbol('IVariableViewNotebookWatcher');
-export interface IVariableViewNotebookWatcher {
+export const INotebookWatcher = Symbol('INotebookWatcher');
+export interface INotebookWatcher {
     readonly activeVariableViewNotebook?: INotebook;
     readonly onDidChangeActiveVariableViewNotebook: Event<INotebook | undefined>;
     readonly onDidExecuteActiveVariableViewNotebook: Event<{ executionCount: number }>;

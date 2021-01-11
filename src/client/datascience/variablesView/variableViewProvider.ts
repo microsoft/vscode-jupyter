@@ -9,7 +9,7 @@ import { IConfigurationService, IDisposableRegistry } from '../../common/types';
 import { Identifiers } from '../constants';
 import { IDataViewerFactory } from '../data-viewing/types';
 import { ICodeCssGenerator, IJupyterVariableDataProviderFactory, IJupyterVariables, IThemeFinder } from '../types';
-import { IVariableViewNotebookWatcher, IVariableViewProvider } from './types';
+import { INotebookWatcher, IVariableViewProvider } from './types';
 import { VariableView } from './variableView';
 
 // This class creates our UI for our variable view and links it to the vs code webview view
@@ -31,7 +31,7 @@ export class VariableViewProvider implements IVariableViewProvider {
         @inject(IJupyterVariableDataProviderFactory)
         private readonly jupyterVariableDataProviderFactory: IJupyterVariableDataProviderFactory,
         @inject(IDataViewerFactory) private readonly dataViewerFactory: IDataViewerFactory,
-        @inject(IVariableViewNotebookWatcher) private readonly variableViewNotebookWatcher: IVariableViewNotebookWatcher
+        @inject(INotebookWatcher) private readonly notebookWatcher: INotebookWatcher
     ) {}
 
     public async resolveWebviewView(
@@ -53,7 +53,7 @@ export class VariableViewProvider implements IVariableViewProvider {
             this.appShell,
             this.jupyterVariableDataProviderFactory,
             this.dataViewerFactory,
-            this.variableViewNotebookWatcher
+            this.notebookWatcher
         );
 
         await this.variableView.load(webviewView);
