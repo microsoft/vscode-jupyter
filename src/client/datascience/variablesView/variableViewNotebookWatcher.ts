@@ -10,13 +10,9 @@ import { KernelState, KernelStateEventArgs } from '../notebookExtensibility';
 import { INotebook, INotebookEditor, INotebookEditorProvider, INotebookExtensibility } from '../types';
 import { IVariableViewNotebookWatcher } from './types';
 
+// IANHU: Class comment
 @injectable()
 export class VariableViewNotebookWatcher implements IVariableViewNotebookWatcher {
-    //public readonly activeVariableViewNotebook?: INotebook | undefined;
-    //public readonly onDidChangeActiveVariableViewNotebook: Event<INotebook>;
-    //public readonly onDidExecuteActiveVariableViewNotebook: Event<{ executionCount: number }>;
-    //protected readonly _onDidChangeActiveNotebookEditor = new EventEmitter<INotebookEditor | undefined>();
-    //protected readonly _onDidOpenNotebookEditor = new EventEmitter<INotebookEditor>();
     public get onDidChangeActiveVariableViewNotebook(): Event<INotebook | undefined> {
         return this._onDidChangeActiveVariableViewNotebook.event;
     }

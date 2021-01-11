@@ -17,7 +17,7 @@ import {
     INotebookExtensibility,
     IThemeFinder
 } from '../types';
-import { IVariableViewProvider } from './types';
+import { IVariableViewNotebookWatcher, IVariableViewProvider } from './types';
 import { VariableView } from './variableView';
 
 // This class creates our UI for our variable view and links it to the vs code webview view
@@ -41,7 +41,8 @@ export class VariableViewProvider implements IVariableViewProvider {
         @inject(IJupyterVariableDataProviderFactory)
         private readonly jupyterVariableDataProviderFactory: IJupyterVariableDataProviderFactory,
         @inject(IDataViewerFactory) private readonly dataViewerFactory: IDataViewerFactory,
-        @inject(IFileSystem) private readonly fileSystem: IFileSystem
+        @inject(IFileSystem) private readonly fileSystem: IFileSystem,
+        @inject(IVariableViewNotebookWatcher) private readonly variableViewNotebookWatcher: IVariableViewNotebookWatcher
     ) {}
 
     public async resolveWebviewView(
@@ -65,7 +66,8 @@ export class VariableViewProvider implements IVariableViewProvider {
             this.appShell,
             this.jupyterVariableDataProviderFactory,
             this.dataViewerFactory,
-            this.fileSystem
+            this.fileSystem,
+            this.variableViewNotebookWatcher
         );
 
         await this.variableView.load(webviewView);
