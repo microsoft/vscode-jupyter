@@ -215,6 +215,10 @@ suite('DataScience Native Editor', () => {
                 });
 
                 runMountedTest('Simple text with no python', async () => {
+                    // Disable python path, otherwise conda environments won't start 
+                    // (python by itself in a conda environment is not runnable without activation)
+                    process.env.CI_PYTHON_PATH = 'python'
+                    
                     ioc.forceDataScienceSettingsChanged({ disableJupyterAutoStart: true });
                     ioc.setPythonExtensionState(false);
 
