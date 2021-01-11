@@ -109,12 +109,14 @@ export class KernelFinder implements IKernelFinder {
 
         // ! as the has and set above verify that we have a return here
         const promise = this.workspaceToKernels.get(workspaceFolderId)!;
-        promise.then((items) =>
-            traceInfoIf(
-                !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
-                `Kernel specs for ${resource.toString()} are \n ${JSON.stringify(items)}`
+        promise
+            .then((items) =>
+                traceInfoIf(
+                    !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
+                    `Kernel specs for ${resource.toString()} are \n ${JSON.stringify(items)}`
+                )
             )
-        ).catch(noop);
+            .catch(noop);
         return promise;
     }
 
