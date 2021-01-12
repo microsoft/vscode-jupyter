@@ -186,7 +186,8 @@ import {
     ITrustService,
     IWebviewExtensibility
 } from './types';
-import { IVariableViewProvider } from './variablesView/types';
+import { NotebookWatcher } from './variablesView/notebookWatcher';
+import { INotebookWatcher, IVariableViewProvider } from './variablesView/types';
 import { VariableViewActivationService } from './variablesView/variableViewActivationService';
 import { VariableViewProvider } from './variablesView/variableViewProvider';
 import { WebviewExtensibility } from './webviewExtensibility';
@@ -332,6 +333,7 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     serviceManager.addBinding(INotebookExtensibility, INotebookExecutionLogger);
     serviceManager.addSingleton<IWebviewExtensibility>(IWebviewExtensibility, WebviewExtensibility);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, InsidersNativeNotebooksSurveyBanner);
+    serviceManager.addSingleton<INotebookWatcher>(INotebookWatcher, NotebookWatcher);
 
     registerNotebookTypes(serviceManager);
 }
