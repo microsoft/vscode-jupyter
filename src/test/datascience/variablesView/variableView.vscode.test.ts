@@ -2,7 +2,6 @@
 // IANHU: remove no-console
 import { assert, expect } from 'chai';
 import * as sinon from 'sinon';
-import { commands } from 'vscode';
 import { ICommandManager, IVSCodeNotebook } from '../../../client/common/application/types';
 import { IDisposable } from '../../../client/common/types';
 import { Commands, VSCodeNotebookProvider } from '../../../client/datascience/constants';
