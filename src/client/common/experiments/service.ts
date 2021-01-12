@@ -95,6 +95,15 @@ export class ExperimentService implements IExperimentService {
             return false;
         }
 
+        // If user is opted into NativeNotebook then also opt into the new variable view
+        if (
+            experiment === ExperimentGroups.NativeVariableView &&
+            this.getOptInOptOutStatus(ExperimentGroups.NativeNotebook) === 'optIn'
+        ) {
+            // IANHU: Doesn't let them opt out! Fix this
+            return true;
+        }
+
         // Currently the service doesn't support opting in and out of experiments,
         // so we need to perform these checks and send the corresponding telemetry manually.
         switch (this.getOptInOptOutStatus(experiment)) {

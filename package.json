@@ -1269,6 +1269,12 @@
                     "command": "jupyter.opennotebookInPreviewEditor",
                     "when": "false",
                     "category": "Jupyter"
+                },
+                {
+                    "command": "jupyter.openVariableView",
+                    "title": "%jupyter.command.jupyter.openVariableView.title%",
+                    "category": "Jupyter",
+                    "when": "jupyter.nativevariableview"
                 }
             ],
             "debug/variables/context": [
@@ -1300,7 +1306,7 @@
                         "debug"
                     ],
                     "description": "The logging level the extension logs at, defaults to 'error'",
-                    "scope": "machine"
+                    "scope": "resource"
                 },
                 "jupyter.experiments.optInto": {
                     "type": "array",
@@ -1314,7 +1320,7 @@
                         ]
                     },
                     "description": "List of experiment to opt into. If empty, user is assigned the default experiment groups. See https://github.com/microsoft/vscode-jupyter/wiki/Experiments for more details.",
-                    "scope": "machine"
+                    "scope": "resource"
                 },
                 "jupyter.experiments.optOutFrom": {
                     "type": "array",
@@ -1323,6 +1329,7 @@
                         "enum": [
                             "NativeNotebookEditor",
                             "CustomEditor",
+                            "NativeVariableView",
                             "All"
                         ]
                     },
@@ -1738,8 +1745,7 @@
                     {
                         "filenamePattern": "*.ipynb"
                     }
-                ],
-                "priority": "option"
+                ]
             }
         ],
         "notebookOutputRenderer": [
@@ -1834,7 +1840,7 @@
         "pretestVSCode": "cross-env VSC_JUPYTER_CI_TEST_VSC_CHANNEL=stable node ./out/test/datascience/dsTestSetup.js",
         "testVSCode": "cross-env CODE_TESTS_WORKSPACE=src/test/datascience VSC_JUPYTER_CI_TEST_VSC_CHANNEL=stable TEST_FILES_SUFFIX=vscode.test VSC_JUPYTER_FORCE_LOGGING=1 VSC_JUPYTER_LOAD_EXPERIMENTS_FROM_FILE=true node ./out/test/testBootstrap.js ./out/test/standardTest.js",
         "pretestNativeNotebooksInVSCode": "cross-env VSC_JUPYTER_CI_TEST_VSC_CHANNEL=insiders VSC_JUPYTER_RUN_NB_TEST=true node ./out/test/datascience/dsTestSetup.js",
-        "testNativeNotebooksInVSCode": "cross-env CODE_TESTS_WORKSPACE=src/test/datascience VSC_JUPYTER_CI_TEST_VSC_CHANNEL=insiders VSC_JUPYTER_RUN_NB_TEST=true TEST_FILES_SUFFIX=vscode.test VSC_JUPYTER_FORCE_LOGGING=1 VSC_JUPYTER_LOAD_EXPERIMENTS_FROM_FILE=true node ./out/test/testBootstrap.js ./out/test/standardTest.js",
+        "testNativeNotebooksInVSCode": "cross-env CODE_TESTS_WORKSPACE=src/test/datascience VSC_JUPYTER_CI_TEST_VSC_CHANNEL=insiders VSC_JUPYTER_RUN_NB_TEST=true TEST_FILES_SUFFIX=vscode.test VSC_JUPYTER_FORCE_LOGGING=1 VSC_JUPYTER_CI_TEST_GREP=IANHU VSC_JUPYTER_LOAD_EXPERIMENTS_FROM_FILE=true node ./out/test/testBootstrap.js ./out/test/standardTest.js",
         "pretestNativeNotebooksWithoutPythonInVSCode": "cross-env VSC_JUPYTER_CI_TEST_VSC_CHANNEL=insiders VSC_JUPYTER_RUN_NB_TEST=true node ./out/test/datascience/dsTestSetup.js",
         "testNativeNotebooksWithoutPythonInVSCode": "cross-env CODE_TESTS_WORKSPACE=src/test/datascience VSC_JUPYTER_CI_TEST_VSC_CHANNEL=insiders VSC_JUPYTER_RUN_NB_TEST=true TEST_FILES_SUFFIX=vscode.test VSC_JUPYTER_FORCE_LOGGING=1 VSC_JUPYTER_LOAD_EXPERIMENTS_FROM_FILE=true VSC_JUPYTER_CI_TEST_GREP=non-python-kernel VSC_JUPYTER_CI_TEST_DO_NOT_INSTALL_PYTHON_EXT=true node ./out/test/testBootstrap.js ./out/test/standardTest.js",
         "testPerformance": "node ./out/test/testBootstrap.js ./out/test/performanceTest.js",

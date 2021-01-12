@@ -2,6 +2,7 @@
 // IANHU: remove no-console
 import { assert, expect } from 'chai';
 import * as sinon from 'sinon';
+import { commands } from 'vscode';
 import { ICommandManager, IVSCodeNotebook } from '../../../client/common/application/types';
 import { IDisposable } from '../../../client/common/types';
 import { Commands, VSCodeNotebookProvider } from '../../../client/datascience/constants';
@@ -61,20 +62,21 @@ suite('DataScience - VariableView', () => {
         await closeNotebooks(disposables);
         await closeNotebooksAndCleanUpAfterTests(disposables);
     });
-    
+
     // Cleanup after suite is finished
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
 
     // Test showing the variable view
-    test('Can show VariableView', async function () {
+    test('IANHU Can show VariableView', async function () {
         this.timeout(120_000); // IANHU: Just for testing
+        //commands.executeCommand('workbench.action.togglePanel');
         console.log('**** Start variableView test ****');
         // Add one simple cell and execute it
         await insertCodeCell('test = "MYTESTVALUE"', { index: 0 });
         const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
         await executeCell(cell);
         await waitForExecutionCompletedSuccessfully(cell);
-        
+
         console.log('**** Cell execution done ****');
         // Send the command to open the view
         commandManager.executeCommand(Commands.OpenVariableView);
@@ -86,7 +88,7 @@ suite('DataScience - VariableView', () => {
 
         // Now check to see if we can actually look at the variable view
         const variableView = variableViewProvider.variableView;
-        
+
         if (variableView) {
             console.log('**** found variableView');
         }
