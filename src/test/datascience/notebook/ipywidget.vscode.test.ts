@@ -4,6 +4,8 @@
 'use strict';
 
 // tslint:disable:no-require-imports no-var-requires
+// import * as path from 'path';
+// import * as sinon from 'sinon';
 import { assert } from 'chai';
 import { Uri, NotebookContentProvider as VSCNotebookContentProvider } from 'vscode';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
@@ -54,7 +56,7 @@ suite('DataScience - VSCode Notebook - IPyWidget test', () => {
         // editorProvider = api.serviceContainer.get<INotebookEditorProvider>(VSCodeNotebookProvider);
         // languageService = api.serviceContainer.get<NotebookCellLanguageService>(NotebookCellLanguageService);
     });
-    setup(function () {
+    setup(async function () {
         // Skip for now. Have to wait for this commit to get into insiders
         // https://github.com/microsoft/vscode/commit/2b900dcf1184ab2424f21a860179f2d97c9928a7
         this.skip();
@@ -129,5 +131,33 @@ suite('DataScience - VSCode Notebook - IPyWidget test', () => {
         await waitForExecutionCompletedSuccessfully(cell);
 
         assert.ok(loaded, 'Widget did not load successfully on second execution');
+    });
+    test('Can run widget cells that need requireJS', async function () {
+        await openNotebook(api.serviceContainer, testWidgetNb.fsPath);
+        // 6th cell has code that needs requireJS
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cells![6]!;
+        const contentProvider = api.serviceContainer.get<VSCNotebookContentProvider>(
+            INotebookContentProvider
+        ) as NotebookContentProvider;
+
+        // Content provider should have a public member that maps webviews. Listen to messages on this webview
+        const webviews = contentProvider.webviews.get(cell.document.uri.toString());
+        assert.equal(webviews?.length, 1, 'No webviews found in content provider');
+        let loaded = false;
+        if (webviews) {
+            webviews[0].onDidReceiveMessage((e) => {
+                if (e.type === InteractiveWindowMessages.IPyWidgetLoadSuccess) {
+                    loaded = true;
+                }
+            });
+        }
+
+        // Execute cell. It should load and render the widget
+        await executeCell(cell);
+
+        // Wait till execution count changes and status is success.
+        await waitForExecutionCompletedSuccessfully(cell);
+
+        assert.ok(loaded, 'Widget did not load successfully during execution');
     });
 });
