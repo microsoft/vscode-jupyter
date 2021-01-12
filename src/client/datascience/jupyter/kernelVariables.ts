@@ -420,6 +420,7 @@ export class KernelVariables implements IJupyterVariables {
         return [];
     }
 
+    // tslint:disable-next-line: cyclomatic-complexity
     private async getVariableValueFromKernel(
         targetVariable: IJupyterVariable,
         notebook: INotebook,
@@ -462,10 +463,10 @@ export class KernelVariables implements IJupyterVariables {
             }
 
             // Otherwise look for the appropriate entries
-            if (output.type) {
+            if (output && output.type) {
                 result.type = output.type.toString();
             }
-            if (output.value) {
+            if (output && output.value) {
                 result.value = output.value.toString();
             }
 
