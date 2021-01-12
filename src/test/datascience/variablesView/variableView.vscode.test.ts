@@ -93,9 +93,9 @@ suite('DataScience - VariableView', () => {
         }
 
         const htmlResult = await variableView?.getElementByIdAsync('variable-view-main-panel');
-        const rootHtml = await variableView?.getElementByIdAsync('root');
+        //const rootHtml = await variableView?.getElementByIdAsync('root');
 
-        console.log(`**** rootHTML ${rootHtml}`);
+        //console.log(`**** rootHTML ${rootHtml}`);
         console.log(`**** htmlResult ${htmlResult} ****`);
 
         expect(htmlResult).to.contain('MYTESTVALUE');
