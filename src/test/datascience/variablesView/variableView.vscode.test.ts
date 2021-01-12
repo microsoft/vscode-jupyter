@@ -66,7 +66,7 @@ suite('DataScience - VariableView', () => {
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
 
     // Test showing the variable view
-    test('IANHU Can show VariableView', async function () {
+    test('Can show VariableView', async function () {
         this.timeout(120_000); // IANHU: Just for testing
         //commands.executeCommand('workbench.action.togglePanel');
         console.log('**** Start variableView test ****');
