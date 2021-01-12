@@ -129,13 +129,23 @@ export class KernelExecution implements IDisposable {
                     traceInfo(
                         `Cancel all remaining cells ${cancelTokenSource.token.isCancellationRequested} || ${executionResult}`
                     );
-                    await Promise.all(codeCellsToExecute.map((cell) => cell.cancel())); // Cancel pending cells.
+                    await Promise.all(
+                        codeCellsToExecute.map((cell) => {
+                            // Cancel and remove from map pending cells.
+                            return this.cancelCell(cell.cell);
+                        })
+                    );
                     break;
                 }
             }
         } finally {
             traceInfo(`Cancel all remaining cells after finally`);
-            await Promise.all(codeCellsToExecute.map((cell) => cell.cancel())); // Cancel pending cells.
+            await Promise.all(
+                codeCellsToExecute.map((cell) => {
+                    // Cancel and remove from map pending cells.
+                    return this.cancelCell(cell.cell);
+                })
+            );
             this.documentExecutions.delete(document);
             traceInfo('Restore notebook state to idle');
             await editor.edit((edit) =>
@@ -145,9 +155,11 @@ export class KernelExecution implements IDisposable {
     }
 
     public async cancelCell(cell: NotebookCell) {
-        if (this.cellExecutions.get(cell)) {
+        const execution = this.cellExecutions.get(cell);
+        if (execution) {
+            this.cellExecutions.delete(cell);
             traceCellMessage(cell, 'Cancel cell from Kernel Execution');
-            await this.cellExecutions.get(cell)!.cancel();
+            await execution.cancel();
         } else {
             traceCellMessage(cell, 'Cannot cancel cell execution from Kernel Execution');
         }

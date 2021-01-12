@@ -5,19 +5,11 @@
 import { inject, injectable, named } from 'inversify';
 import { CancellationToken, WebviewView, WebviewViewResolveContext } from 'vscode';
 import { IApplicationShell, IWebviewViewProvider, IWorkspaceService } from '../../common/application/types';
-import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
 import { Identifiers } from '../constants';
 import { IDataViewerFactory } from '../data-viewing/types';
-import {
-    ICodeCssGenerator,
-    IJupyterVariableDataProviderFactory,
-    IJupyterVariables,
-    INotebookEditorProvider,
-    INotebookExtensibility,
-    IThemeFinder
-} from '../types';
-import { IVariableViewProvider } from './types';
+import { ICodeCssGenerator, IJupyterVariableDataProviderFactory, IJupyterVariables, IThemeFinder } from '../types';
+import { INotebookWatcher, IVariableViewProvider } from './types';
 import { VariableView } from './variableView';
 
 // This class creates our UI for our variable view and links it to the vs code webview view
@@ -35,14 +27,12 @@ export class VariableViewProvider implements IVariableViewProvider {
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IWebviewViewProvider) private readonly webviewViewProvider: IWebviewViewProvider,
         @inject(IJupyterVariables) @named(Identifiers.ALL_VARIABLES) private variables: IJupyterVariables,
-        @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider,
-        @inject(INotebookExtensibility) private readonly notebookExtensibility: INotebookExtensibility,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IJupyterVariableDataProviderFactory)
         private readonly jupyterVariableDataProviderFactory: IJupyterVariableDataProviderFactory,
         @inject(IDataViewerFactory) private readonly dataViewerFactory: IDataViewerFactory,
-        @inject(IFileSystem) private readonly fileSystem: IFileSystem
+        @inject(INotebookWatcher) private readonly notebookWatcher: INotebookWatcher
     ) {}
 
     public async resolveWebviewView(
@@ -60,13 +50,11 @@ export class VariableViewProvider implements IVariableViewProvider {
             this.workspaceService,
             this.webviewViewProvider,
             this.variables,
-            this.notebookEditorProvider,
-            this.notebookExtensibility,
             this.disposables,
             this.appShell,
             this.jupyterVariableDataProviderFactory,
             this.dataViewerFactory,
-            this.fileSystem
+            this.notebookWatcher
         );
 
         await this.variableView.load(webviewView);

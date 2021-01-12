@@ -527,10 +527,19 @@ export class KernelSelector implements IKernelSelectionUsage {
             notebookMetadata
         );
         if (interpreterStoredInKernelSpec) {
-            return {
+            const connectionInfo: PythonKernelConnectionMetadata = {
                 kind: 'startUsingPythonInterpreter',
                 interpreter: interpreterStoredInKernelSpec
             };
+            // Install missing dependencies only if we're dealing with a Python kernel.
+            if (interpreterStoredInKernelSpec && isPythonKernelConnection(connectionInfo)) {
+                await this.installDependenciesIntoInterpreter(
+                    interpreterStoredInKernelSpec,
+                    ignoreDependencyCheck,
+                    cancelToken
+                );
+            }
+            return connectionInfo;
         }
 
         // First use our kernel finder to locate a kernelspec on disk

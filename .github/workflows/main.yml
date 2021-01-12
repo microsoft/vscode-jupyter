@@ -1,10 +1,21 @@
-name: Insiders VSIX
+# This yml is used for PRs, insiders build, and release build. 
+# We use the github.event_name to determine what started the workflow to determine which
+# situation we are in.
+
+name: Main
 
 on:
+  pull_request:
+    branches:
+      - main
+  check_run:
+    types: [rerequested, requested_action]
   push:
     branches:
       - main
-
+      - 'release'
+      - 'release/*'
+      - 'release-*'
   workflow_dispatch:
 
 env:
@@ -19,8 +30,6 @@ env:
   VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 'true'
   # Key for the cache created at the end of the the 'Cache ./pythonFiles/lib/python' step.
   CACHE_PYTHONFILES: cache-pvsc-pythonFiles
-  VSIX_NAME: ms-toolsai-jupyter-insiders.vsix
-  VSIX_NAME_UPLOADED_TO_BLOB: ms-toolsai-jupyter-insiders.vsix
   COVERAGE_REPORTS: tests-coverage-reports
   TEST_RESULTS_DIRECTORY: .
   TEST_RESULTS_GLOB: '**/test-results*.xml'
@@ -29,9 +38,43 @@ env:
   VSC_JUPYTER_INSTRUMENT_CODE_FOR_COVERAGE: true
 
 jobs:
+  pick_environment:
+    name: Pick Environment
+    runs-on: ubuntu-latest
+    outputs:
+      vsix_name: ${{ env.vsix_name }}
+      test_matrix_os: ${{ env.test_matrix_os }}
+    if: github.repository == 'microsoft/vscode-jupyter'
+    steps:
+      - name: dump_event
+        run: |
+          echo "Event_name is ${{ github.event_name }}"
+          echo "Ref is ${{ github.ref }}"
+
+      - name: pr
+        if: github.event_name == 'pull_request'
+        run: |
+          echo "vsix_name=ms-toolsai-jupyter-insiders.vsix" >> $GITHUB_ENV
+          echo "test_matrix_os=[\"ubuntu-latest\"]" >> $GITHUB_ENV
+
+      - name: insiders
+        if: github.event_name == 'push' && github.ref == 'ref/heads/main'
+        # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
+        # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
+        run: |
+          echo "vsix_name=ms-toolsai-jupyter-insiders.vsix" >> $GITHUB_ENV
+          echo "test_matrix_os=[\"ubuntu-latest\", \"windows-latest\"]" >> $GITHUB_ENV
+
+      - name: release
+        if: github.event_name == 'push' && github.ref != 'ref/heads/main'
+        run: |
+          echo "vsix_name=ms-toolsai-jupyter-release.vsix" >> $GITHUB_ENV
+          echo "test_matrix_os=[\"ubuntu-latest\"]" >> $GITHUB_ENV
+
   build-vsix:
+    needs: pick_environment
     name: Build VSIX
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     if: github.repository == 'microsoft/vscode-jupyter'
     steps:
       - name: Checkout
@@ -50,23 +93,8 @@ jobs:
       # Caching of npm packages (https://github.com/actions/cache/blob/main/examples.md#node---npm)
       - name: Cache npm on linux/mac
         uses: actions/cache@v2
-        if: matrix.os != 'windows-latest'
         with:
           path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-
-      - name: Get npm cache directory
-        if: matrix.os == 'windows-latest'
-        id: npm-cache
-        run: |
-          echo "::set-output name=dir::$(npm config get cache)"
-      - name: Cache npm on windows
-        uses: actions/cache@v2
-        if: matrix.os == 'windows-latest'
-        with:
-          path: ${{ steps.npm-cache.outputs.dir }}
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-node-
@@ -79,14 +107,14 @@ jobs:
         uses: ./.github/actions/build-vsix
         id: build-vsix
 
-      - name: Rename VSIX
-        if: steps.build-vsix.outputs.path != env.VSIX_NAME
-        run: mv ${{ steps.build-vsix.outputs.path }} ${{ env.VSIX_NAME }}
+      - name: Rename VSIX for release branch
+        if: steps.build-vsix.outputs.path != needs.pick_environment.outputs.vsix_name
+        run: mv ${{ steps.build-vsix.outputs.path }} ${{ needs.pick_environment.outputs.vsix_name }}
 
       - uses: actions/upload-artifact@v2
         with:
-          name: ${{env.VSIX_NAME}}
-          path: ${{env.VSIX_NAME}}
+          name: ${{needs.pick_environment.outputs.vsix_name}}
+          path: ${{needs.pick_environment.outputs.vsix_name}}
 
   lint:
     name: Lint
@@ -144,15 +172,14 @@ jobs:
         run: npm run checkDependencies
 
   ts_tests:
+    needs: pick_environment
     name: Type Script Tests
     runs-on: ${{ matrix.os }}
     if: github.repository == 'microsoft/vscode-jupyter'
     strategy:
       fail-fast: false
       matrix:
-        # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
-        # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
-        os: [ubuntu-latest, windows-latest]
+        os: ${{fromJson(needs.pick_environment.outputs.test_matrix_os)}}
         test-suite: [ts-unit]
     steps:
       - name: Checkout
@@ -200,6 +227,8 @@ jobs:
 
       - name: Compile if not cached
         run: npx gulp prePublishNonBundle
+        env:
+            CI_JUPYTER_FAST_COMPILATION: 'true'
 
         # if: steps.out-cache.outputs.cache-hit == false
       - name: Run TypeScript unit tests
@@ -224,15 +253,14 @@ jobs:
           retention-days: 1
 
   tests:
+    needs: pick_environment
     name: Functional Jupyter Tests
     runs-on: ${{ matrix.os }}
     if: github.repository == 'microsoft/vscode-jupyter'
     strategy:
       fail-fast: false
       matrix:
-        # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
-        # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
-        os: [ubuntu-latest, windows-latest]
+        os: ${{fromJson(needs.pick_environment.outputs.test_matrix_os)}}
         python: [3.8]
         test-suite: [group1, group2, group3, group4]
     steps:
@@ -395,7 +423,7 @@ jobs:
         python: [3.8] # Use flaky tests to run against more versions of Python.
         # integration: Tests with VS Code, Python extension & real Jupyter
         # notebook: Notebook Tests with VS Code, Python extension & real Jupyter
-        test-suite: [integration]
+        test-suite: [integration, notebook, notebookWithoutPythonExt, conda]
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -506,9 +534,26 @@ jobs:
         # This step is slow.
       - name: Compile if not cached
         run: npx gulp prePublishNonBundle
+        env:
+            VSC_CI_MATRIX_TEST_SUITE: ${{matrix.test-suite}}
+            CI_JUPYTER_FAST_COMPILATION: 'true'
 
       # Used by tests for non-python kernels.
       # Test are enabled via env variable `VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST`
+      - name: Install Dot.net
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: ${{env.DOTNET_VERSION}}
+        if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook' || matrix.test-suite == 'conda'
+
+      - name: Install .NET Interactive
+        run: dotnet tool install -g --add-source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json" Microsoft.dotnet-interactive
+        if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook' || matrix.test-suite == 'conda'
+
+      - name: Install .NET Kernel
+        run: dotnet interactive jupyter install
+        if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook' || matrix.test-suite == 'conda'
+
       - name: Install Julia
         uses: julia-actions/setup-julia@v1
         with:
@@ -522,6 +567,7 @@ jobs:
 
       - name: Create Virtual Env for Tests
         uses: ./.github/actions/create-venv-for-tests
+        if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook'
 
       - name: Run tests with VSCode & Jupyter
         uses: GabrielBB/xvfb-action@v1.4
@@ -543,7 +589,6 @@ jobs:
         if: (steps.test_vscode.outcome == 'failure' || steps.test_vscode.outcome == 'failure') && failure()
 
       - name: Run Native Notebook with VSCode & Jupyter
-        id: test_notebook_vscode
         uses: GabrielBB/xvfb-action@v1.4
         with:
           run: npm run testNativeNotebooksInVSCode
@@ -551,8 +596,11 @@ jobs:
           VSC_FORCE_REAL_JUPYTER: 1
           VSC_JUPYTER_FORCE_LOGGING: 1
           VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
+          VSC_JUPYTER_CI_RUN_JAVA_NB_TEST: ${{ contains(matrix.test-suite, 'conda') }}
           VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
-        if: matrix.test-suite == 'notebook'
+          VSC_JUPYTER_CI_TEST_GREP: 'IANHU'
+        id: test_notebook_vscode
+        if: matrix.test-suite == 'notebook' || matrix.test-suite == 'conda'
 
       - name: Publish Notebook Test Report
         uses: scacap/action-surefire-report@v1
@@ -560,7 +608,27 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           report_paths: ${{ env.TEST_RESULTS_GLOB }}
           check_name: Notebook Test Report
-        if: (steps.test_notebook_vscode.outcome == 'failure' || steps.test_notebook_vscode.outcome == 'failure') && failure()
+        if: steps.test_notebook_vscode.outcome == 'failure' && failure()
+
+      - name: Run Native Notebook with VSCode & Jupyter (without Python)
+        uses: GabrielBB/xvfb-action@v1.4
+        with:
+          run: npm run testNativeNotebooksWithoutPythonInVSCode
+        env:
+          VSC_FORCE_REAL_JUPYTER: 1
+          VSC_JUPYTER_FORCE_LOGGING: 1
+          VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
+          VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
+        id: test_notebookWithoutPythonExt_vscode
+        if: matrix.test-suite == 'notebookWithoutPythonExt'
+
+      - name: Publish Notebook Test Report
+        uses: scacap/action-surefire-report@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          report_paths: ${{ env.TEST_RESULTS_GLOB }}
+          check_name: Notebook without Python Test Report
+        if: steps.test_notebookWithoutPythonExt_vscode.outcome == 'failure' && failure()
 
       # Upload unit test coverage reports for later use in the "reports" job.
       - name: Upload unit test coverage reports
@@ -578,12 +646,12 @@ jobs:
     # The value of runs-on is the OS of the current job (specified in the strategy matrix below) instead of being hardcoded.
     runs-on: ${{ matrix.os }}
     if: github.repository == 'microsoft/vscode-jupyter'
-    needs: [build-vsix]
+    needs: [build-vsix, pick_environment]
+    env: 
+      VSIX_NAME: ${{ needs.pick_environment.outputs.vsix_name }}
     strategy:
       fail-fast: false
       matrix:
-        # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
-        # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
         os: [ubuntu-latest, windows-latest, macos-latest]
         python: [3.8]
     steps:
@@ -612,7 +680,7 @@ jobs:
       - name: Download VSIX
         uses: actions/download-artifact@v2
         with:
-          name: ${{env.VSIX_NAME}}
+          name: ${{needs.pick_environment.outputs.vsix_name}}
 
       - name: Install dependencies (npm ci)
         run: npm ci --prefer-offline
@@ -659,9 +727,9 @@ jobs:
   upload:
     name: Upload VSIX to Azure Blob Storage
     runs-on: ubuntu-latest
-    # Extra careful to ensure this happens only in main branch.
-    if: github.repository == 'microsoft/vscode-jupyter' && github.ref == 'refs/heads/main'
-    needs: [build-vsix, lint, ts_tests, vscodeTests, smoke-tests]
+    # This should happen in the release and insiders branch
+    if: github.repository == 'microsoft/vscode-jupyter' && github.event_name == 'push' && (github.ref == 'ref/heads/main' || contains(github.ref, 'ref/heads/release'))
+    needs: [build-vsix, pick_environment, lint, ts_tests, vscodeTests, smoke-tests]
     env:
       BLOB_CONTAINER_NAME: extension-builds-jupyter
 
@@ -669,7 +737,7 @@ jobs:
       - name: Download VSIX
         uses: actions/download-artifact@v2
         with:
-          name: ${{ env.VSIX_NAME }}
+          name: ${{ needs.pick_environment.outputs.vsix_name }}
 
       - name: Azure Login
         uses: azure/login@v1.1.1
@@ -677,7 +745,7 @@ jobs:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Upload to Blob Storage
-        run: az storage blob upload --file ${{ env.VSIX_NAME }} --account-name pvsc --container-name ${{ env.BLOB_CONTAINER_NAME }} --name ${{ env.VSIX_NAME_UPLOADED_TO_BLOB }}
+        run: az storage blob upload --file ${{ needs.pick_environment.outputs.vsix_name }} --account-name pvsc --container-name ${{ env.BLOB_CONTAINER_NAME }} --name ${{ needs.pick_environment.outputs.vsix_name }}
 
   coverage:
     name: Coverage reports upload
