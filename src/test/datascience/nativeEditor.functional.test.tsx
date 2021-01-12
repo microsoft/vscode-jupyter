@@ -221,12 +221,10 @@ suite('DataScience Native Editor', () => {
                     // Create an editor so something is listening to messages
                     const { mount } = await createNewEditor(ioc);
 
-                    // Add a cell into the UI and wait for it to render if running real tests
-                    await addCell(mount, 'a=1\na', ioc.isRawKernel);
+                    // Add a cell into the UI and don't execute. If conda installed,
+                    // without the python extension we cannot run a cell
+                    await addCell(mount, 'a=1\na', ioc.isRawKernel && !process.env.CI_PYTHON_PATH?.includes('conda'));
 
-                    if (ioc.isRawKernel) {
-                        verifyHtmlOnCell(mount.wrapper, 'NativeCell', '1', 1);
-                    }
                     assert.notOk(
                         ioc.attemptedPythonExtension,
                         'Python extension installation should not happen on simple open'

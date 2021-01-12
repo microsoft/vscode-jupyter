@@ -1,0 +1,7 @@
+# Functional requirements using a conda environment file
+name: functional_test_env
+dependencies:
+  - pandas
+  - jupyter
+  - numpy
+  - matplotlib

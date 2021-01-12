@@ -267,14 +267,35 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
+      - name: Use conda for group1 and group2
+        if: matrix.test-suite == 'group1' || matrix.test-suite == 'group2'
+        run: |
+          echo "conda_python=true" >> $GITHUB_ENV
+
       - name: Use Python ${{matrix.python}}
         uses: actions/setup-python@v2
         with:
           python-version: ${{matrix.python}}
 
+      - name: Use Conda Python ${{matrix.python}}
+        uses: conda-incubator/setup-miniconda@v2
+        if: env.conda_python
+        with:
+          auto-update-conda: true
+          activate-environment: functional_test_env
+          python-version: ${{matrix.python}}
+
       - name: Set CI Path
         uses: ./.github/actions/set-python
         id: set-python
+        if: env.conda_python == ''
+        with: 
+          PYTHON_VERSION: ${{matrix.python}}
+
+      - name: Set CI Path for Conda
+        uses: ./.github/actions/set-python-conda
+        id: set-python-conda
+        if: env.conda_python
         with: 
           PYTHON_VERSION: ${{matrix.python}}
 
@@ -358,6 +379,7 @@ jobs:
       # debugpy is not shipped, only installed for local tests.
       # In production, we get debugpy from python extension.
       - name: Install Python Libs
+        if: env.conda_python == ''
         run: |
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
           python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
@@ -369,6 +391,17 @@ jobs:
           python -m pip install --upgrade -r ./build/conda-functional-requirements.txt
           python -m ipykernel install --user
 
+      - name: Install Python Libs for conda
+        shell: bash -l {0}
+        if: env.conda_python
+        run: |
+          conda activate functional_test_env
+          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
+          python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
+          python ./pythonFiles/install_debugpy.py
+          conda env update --file ./build/conda-functional-requirements.yml
+          python -m pip install --upgrade -r ./build/conda-functional-requirements.txt
+
         # This step is slow.
       - name: Install dependencies (npm ci)
         run: npm ci --prefer-offline
@@ -378,6 +411,7 @@ jobs:
         run: npx gulp prePublishNonBundle
 
       - name: Run functional tests
+        shell: bash -l {0}
         run: npm run test:functional:parallel -- --${{matrix.test-suite}}
         env:
           VSC_FORCE_REAL_JUPYTER: 1
@@ -433,11 +467,29 @@ jobs:
         with:
           python-version: ${{matrix.python}}
 
+      - name: Use Conda Python ${{matrix.python}}
+        uses: conda-incubator/setup-miniconda@v2
+        if: matrix.test-suite == 'conda'
+        with:
+          auto-update-conda: true
+          activate-environment: functional_test_env
+          python-version: ${{matrix.python}}
+
+
       - name: Set CI Path
         uses: ./.github/actions/set-python
         id: set-python
+        if: matrix.test-suite != 'conda'
         with: 
           PYTHON_VERSION: ${{matrix.python}}
+
+      - name: Set CI Path for Conda
+        uses: ./.github/actions/set-python-conda
+        id: set-python-conda
+        if: matrix.test-suite == 'conda'
+        with: 
+          PYTHON_VERSION: ${{matrix.python}}
+
 
       - name: Upgrade pip
         run: python -m pip install -U pip
@@ -516,6 +568,7 @@ jobs:
       # debugpy is not shipped, only installed for local tests.
       # In production, we get debugpy from python extension.
       - name: Install Python Libs
+        if: matrix.test-suite != 'conda'
         run: |
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
           python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
@@ -526,6 +579,18 @@ jobs:
           python -m pip install --upgrade -r ./build/ipython-test-requirements.txt
           python -m pip install --upgrade -r ./build/conda-functional-requirements.txt
           python -m ipykernel install --user
+
+      - name: Install Python Libs for conda
+        shell: bash -l {0}
+        if: matrix.test-suite == 'conda'
+        run: |
+          conda activate functional_test_env
+          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
+          python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
+          python ./pythonFiles/install_debugpy.py
+          conda env update --file ./build/conda-functional-requirements.yml
+          python -m pip install --upgrade -r ./build/conda-functional-requirements.txt
+
 
         # This step is slow.
       - name: Install dependencies (npm ci)
@@ -547,10 +612,12 @@ jobs:
         if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook' || matrix.test-suite == 'conda'
 
       - name: Install .NET Interactive
+        shell: bash -l {0}
         run: dotnet tool install -g --add-source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json" Microsoft.dotnet-interactive
         if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook' || matrix.test-suite == 'conda'
 
       - name: Install .NET Kernel
+        shell: bash -l {0}
         run: dotnet interactive jupyter install
         if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook' || matrix.test-suite == 'conda'
 
