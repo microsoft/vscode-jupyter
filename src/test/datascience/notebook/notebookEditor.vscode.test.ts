@@ -13,7 +13,6 @@ import { IExtensionTestApi } from '../../common';
 import { initialize } from '../../initialize';
 import {
     canRunNotebookTests,
-    closeNotebooks,
     closeNotebooksAndCleanUpAfterTests,
     deleteAllCellsAndWait,
     insertCodeCell,
