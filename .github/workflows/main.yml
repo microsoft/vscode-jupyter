@@ -651,7 +651,9 @@ jobs:
       - name: Run tests with VSCode & Jupyter
         uses: GabrielBB/xvfb-action@v1.4
         with:
-          run: npm run testVSCode
+          run: --server-args="-screen 0 1024x768x24" npm run testVSCode
+          # VS Code specified screen settings, needed for webviews to load in .vscode tests
+          # https://code.visualstudio.com/api/working-with-extensions/continuous-integration
         env:
           VSC_FORCE_REAL_JUPYTER: 1
           VSC_JUPYTER_FORCE_LOGGING: 1
@@ -670,7 +672,9 @@ jobs:
       - name: Run Native Notebook with VSCode & Jupyter
         uses: GabrielBB/xvfb-action@v1.4
         with:
-          run: npm run testNativeNotebooksInVSCode
+          run: --server-args="-screen 0 1024x768x24" npm run testNativeNotebooksInVSCode
+          # VS Code specified screen settings, needed for webviews to load in .vscode tests
+          # https://code.visualstudio.com/api/working-with-extensions/continuous-integration
         env:
           VSC_FORCE_REAL_JUPYTER: 1
           VSC_JUPYTER_FORCE_LOGGING: 1
@@ -692,7 +696,9 @@ jobs:
       - name: Run Native Notebook with VSCode & Jupyter (without Python)
         uses: GabrielBB/xvfb-action@v1.4
         with:
-          run: npm run testNativeNotebooksWithoutPythonInVSCode
+          run: --server-args="-screen 0 1024x768x24" npm run testNativeNotebooksWithoutPythonInVSCode
+          # VS Code specified screen settings, needed for webviews to load in .vscode tests
+          # https://code.visualstudio.com/api/working-with-extensions/continuous-integration
         env:
           VSC_FORCE_REAL_JUPYTER: 1
           VSC_JUPYTER_FORCE_LOGGING: 1
@@ -785,7 +791,9 @@ jobs:
           DISPLAY: 10
         uses: GabrielBB/xvfb-action@v1.4
         with:
-          run: npm run testSmokeLogged
+          run: --server-args="-screen 0 1024x768x24" npm run testSmokeLogged
+          # VS Code specified screen settings, needed for webviews to load in .vscode tests
+          # https://code.visualstudio.com/api/working-with-extensions/continuous-integration
 
       - name: Upload smoke-test log
         uses: actions/upload-artifact@v2
