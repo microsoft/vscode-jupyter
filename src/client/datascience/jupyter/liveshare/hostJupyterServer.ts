@@ -127,6 +127,7 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
                             resource,
                             identity!,
                             undefined,
+                            undefined,
                             cancellation
                         )) as HostJupyterNotebook;
                         await notebook.onAttach(api);
