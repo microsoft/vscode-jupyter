@@ -7,14 +7,8 @@ import { Disposable } from 'vscode';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { takeSnapshot, writeDiffSnapshot } from './helpers';
-import {
-    addCode,
-    getOrCreateInteractiveWindow,
-    runTest
-} from './interactiveWindowTestHelpers';
-import {
-    CellPosition,
-    verifyHtmlOnCell} from './testHelpers';
+import { addCode, getOrCreateInteractiveWindow, runTest } from './interactiveWindowTestHelpers';
+import { CellPosition, verifyHtmlOnCell } from './testHelpers';
 // tslint:disable-next-line: no-require-imports no-var-requires
 
 // tslint:disable:max-func-body-length trailing-comma no-any no-multiline-string
@@ -49,8 +43,6 @@ suite('DataScience Interactive Window output tests', () => {
         }
         await ioc.dispose();
     });
-
-
 
     function verifyHtmlOnInteractiveCell(html: string | undefined | RegExp, cellIndex: number | CellPosition) {
         const iw = ioc.getInteractiveWebPanel(undefined).wrapper;
@@ -106,5 +98,4 @@ suite('DataScience Interactive Window output tests', () => {
             return ioc;
         }
     );
-
 });
