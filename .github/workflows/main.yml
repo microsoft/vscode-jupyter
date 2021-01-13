@@ -791,9 +791,7 @@ jobs:
           DISPLAY: 10
         uses: GabrielBB/xvfb-action@v1.4
         with:
-          run: --server-args="-screen 0 1024x768x24" npm run testSmokeLogged
-          # VS Code specified screen settings, needed for webviews to load in .vscode tests
-          # https://code.visualstudio.com/api/working-with-extensions/continuous-integration
+          run: npm run testSmokeLogged
 
       - name: Upload smoke-test log
         uses: actions/upload-artifact@v2
