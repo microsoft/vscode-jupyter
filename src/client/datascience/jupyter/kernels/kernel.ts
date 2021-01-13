@@ -136,6 +136,7 @@ export class Kernel implements IKernel {
                 resource: this.uri,
                 disableUI: options?.disableUI,
                 getOnly: false,
+                metadata: undefined, // No need to pass this, as we have a kernel connection (metadata is required in lower layers to determine the kernel connection).
                 kernelConnection: this.metadata,
                 token: options?.token
             });
