@@ -267,8 +267,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Use conda for group1 and group2
-        if: matrix.test-suite == 'group1' || matrix.test-suite == 'group2'
+      - name: Use conda for group1 and group3
+        if: matrix.test-suite == 'group1' || matrix.test-suite == 'group3'
         run: |
           echo "conda_python=true" >> $GITHUB_ENV
 
@@ -396,6 +396,18 @@ jobs:
         if: env.conda_python
         run: |
           conda activate functional_test_env
+          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
+          python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
+          python ./pythonFiles/install_debugpy.py
+          conda env update --file ./build/conda-functional-requirements.yml
+          python -m pip install --upgrade -r ./build/conda-functional-requirements.txt
+
+      - name: Install secondary conda environment
+        shell: bash -l {0}
+        if: env.conda_python
+        run: |
+          conda create --name functional_test_env_2
+          conda activate functional_test_env_2
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
           python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
           python ./pythonFiles/install_debugpy.py

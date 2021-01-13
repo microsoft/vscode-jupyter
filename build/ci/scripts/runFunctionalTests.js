@@ -57,8 +57,15 @@ async function generateGroups(files) {
     });
     var lowestBucket = buckets[0];
     sorted.forEach((fs) => {
-        buckets[lowestBucket.index].totalSize += fs.size;
-        buckets[lowestBucket.index].files.push(fs.file);
+        // Index may be different if forced.
+        if (fs.file.startsWith('group')) {
+            const index = parse(fs.file.substring(5, 6), 10);
+            buckets[index].totalSize += fs.size;
+            buckets[index].files.push(fs.file);
+        } else {
+            buckets[lowestBucket.index].totalSize += fs.size;
+            buckets[lowestBucket.index].files.push(fs.file);
+        }
         lowestBucket = buckets.find((b) => b.totalSize < lowestBucket.totalSize) || lowestBucket;
     });
 
