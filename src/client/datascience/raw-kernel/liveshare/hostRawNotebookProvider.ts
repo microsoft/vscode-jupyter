@@ -3,6 +3,7 @@
 'use strict';
 import '../../../common/extensions';
 
+import { nbformat } from '@jupyterlab/coreutils';
 import * as vscode from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
@@ -47,7 +48,6 @@ import {
 import { calculateWorkingDirectory } from '../../utils';
 import { RawJupyterSession } from '../rawJupyterSession';
 import { RawNotebookProviderBase } from '../rawNotebookProvider';
-import { nbformat } from '@jupyterlab/coreutils';
 
 // tslint:disable-next-line: no-require-imports
 // tslint:disable:no-any

@@ -3,6 +3,7 @@
 'use strict';
 import '../../../common/extensions';
 
+import { nbformat } from '@jupyterlab/coreutils';
 import { cloneDeep } from 'lodash';
 import * as os from 'os';
 import * as vscode from 'vscode';
@@ -44,7 +45,6 @@ import { KernelConnectionMetadata } from '../kernels/types';
 import { HostJupyterNotebook } from './hostJupyterNotebook';
 import { LiveShareParticipantHost } from './liveShareParticipantMixin';
 import { IRoleBasedObject } from './roleBasedFactory';
-import { nbformat } from '@jupyterlab/coreutils';
 // tslint:disable:no-any
 
 export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBase, LiveShare.JupyterServerSharedService)
