@@ -81,11 +81,11 @@ suite('DataScience - VariableView', () => {
         commandManager.executeCommand(Commands.OpenVariableView);
 
         // IANHU: Remove, just for testing
-        await sleep(10_000);
+        await sleep(5_000);
 
         // Another view open?
         commandManager.executeCommand(Commands.OpenVariableView);
-        await sleep(10_000);
+        await sleep(5_000);
 
         console.log('**** Sleep finished ****');
 
