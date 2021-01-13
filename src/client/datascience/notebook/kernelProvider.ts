@@ -257,7 +257,10 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
         }
 
         const existingKernel = this.kernelProvider.get(document.uri);
-        if (existingKernel && areKernelConnectionsEqual(existingKernel.metadata, selectedKernelConnectionMetadata)) {
+        if (
+            existingKernel &&
+            areKernelConnectionsEqual(existingKernel.kernelConnectionMetadata, selectedKernelConnectionMetadata)
+        ) {
             return;
         }
         switch (kernel.selection.kind) {

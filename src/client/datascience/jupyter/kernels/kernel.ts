@@ -78,7 +78,7 @@ export class Kernel implements IKernel {
     private startCancellation = new CancellationTokenSource();
     constructor(
         public readonly uri: Uri,
-        public readonly metadata: Readonly<KernelConnectionMetadata>,
+        public readonly kernelConnectionMetadata: Readonly<KernelConnectionMetadata>,
         private readonly notebookProvider: INotebookProvider,
         private readonly disposables: IDisposableRegistry,
         private readonly launchTimeout: number,
@@ -101,7 +101,7 @@ export class Kernel implements IKernel {
             kernelSelectionUsage,
             appShell,
             vscNotebook,
-            metadata,
+            kernelConnectionMetadata,
             rawNotebookSupported,
             context
         );
@@ -137,7 +137,7 @@ export class Kernel implements IKernel {
                 disableUI: options?.disableUI,
                 getOnly: false,
                 metadata: undefined, // No need to pass this, as we have a kernel connection (metadata is required in lower layers to determine the kernel connection).
-                kernelConnection: this.metadata,
+                kernelConnection: this.kernelConnectionMetadata,
                 token: options?.token
             });
 
@@ -201,7 +201,7 @@ export class Kernel implements IKernel {
         if (!this.kernelValidated.get(key)) {
             const promise = new Promise<void>((resolve) =>
                 this.kernelSelectionUsage
-                    .useSelectedKernel(kernel?.metadata, uri, 'raw')
+                    .useSelectedKernel(kernel?.kernelConnectionMetadata, uri, 'raw')
                     .finally(() => {
                         // If still using the same promise, then remove the exception information.
                         // Basically if there's an exception, then we cannot use the kernel and a message would have been displayed.
@@ -242,7 +242,7 @@ export class Kernel implements IKernel {
             });
             this.notebook.onSessionStatusChanged((e) => this._onStatusChanged.fire(e), this, this.disposables);
         }
-        if (isPythonKernelConnection(this.metadata)) {
+        if (isPythonKernelConnection(this.kernelConnectionMetadata)) {
             await this.notebook.setLaunchingFile(this.uri.fsPath);
         }
         await this.notebook
@@ -253,7 +253,7 @@ export class Kernel implements IKernel {
     }
 
     private disableJedi() {
-        if (isPythonKernelConnection(this.metadata) && this.notebook) {
+        if (isPythonKernelConnection(this.kernelConnectionMetadata) && this.notebook) {
             this.notebook.executeObservable(CodeSnippets.disableJedi, this.uri.fsPath, 0, uuid(), true);
         }
     }
