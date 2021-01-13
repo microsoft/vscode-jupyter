@@ -7,7 +7,6 @@ import { assert } from 'chai';
 import { ICommandManager, IVSCodeNotebook } from '../../../client/common/application/types';
 import { IDisposable } from '../../../client/common/types';
 import { Commands } from '../../../client/datascience/constants';
-import { INotebookKernelProvider } from '../../../client/datascience/notebook/types';
 import { INotebookEditorProvider } from '../../../client/datascience/types';
 import { IExtensionTestApi } from '../../common';
 import { initialize } from '../../initialize';
@@ -28,7 +27,6 @@ suite('Notebook Editor tests', () => {
     let vscodeNotebook: IVSCodeNotebook;
     let editorProvider: INotebookEditorProvider;
     let commandManager: ICommandManager;
-    let kernelProvider: INotebookKernelProvider;
     const disposables: IDisposable[] = [];
 
     suiteSetup(async function () {
@@ -39,7 +37,6 @@ suite('Notebook Editor tests', () => {
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
         commandManager = api.serviceContainer.get<ICommandManager>(ICommandManager);
-        kernelProvider = api.serviceContainer.get<INotebookKernelProvider>(INotebookKernelProvider);
     });
 
     setup(async function () {
