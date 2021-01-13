@@ -182,7 +182,6 @@ export class HostRawNotebookProvider
                 }
             }
             // We need to locate kernelspec and possible interpreter for this launch based on resource and notebook metadata
-            // Confirm this logic is valid.
             const kernelConnectionMetadata =
                 kernelConnection ||
                 (await this.kernelSelector.getPreferredKernelForLocalConnection(
