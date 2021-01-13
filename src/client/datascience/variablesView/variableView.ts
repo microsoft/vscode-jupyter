@@ -117,6 +117,8 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
 
     //tslint:disable-next-line:no-any
     protected onMessage(message: string, payload: any) {
+        // tslint:disable-next-line:no-console
+        console.log(`**** variableView onMessage ${message}`);
         switch (message) {
             case InteractiveWindowMessages.GetVariablesRequest:
                 // tslint:disable-next-line:no-console
