@@ -4,7 +4,6 @@
 'use strict';
 
 import { assert } from 'chai';
-import { CancellationToken } from 'vscode-languageclient';
 import { ICommandManager, IVSCodeNotebook } from '../../../client/common/application/types';
 import { IDisposable } from '../../../client/common/types';
 import { Commands } from '../../../client/datascience/constants';
@@ -17,7 +16,6 @@ import {
     closeNotebooks,
     closeNotebooksAndCleanUpAfterTests,
     deleteAllCellsAndWait,
-    executeCell,
     insertCodeCell,
     selectCell,
     waitForExecutionCompletedSuccessfully,
