@@ -127,7 +127,7 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
                 this.handleMessage(message, payload, this.showDataViewer);
                 break;
             case InteractiveWindowMessages.GetElementByIdResponse:
-                traceError(payload);
+                //traceError(payload);
                 if (this.activeElementRequest) {
                     this.activeElementRequest.resolve(payload);
                     this.activeElementRequest = undefined;
