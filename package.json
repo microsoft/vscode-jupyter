@@ -776,7 +776,7 @@
                     "command": "jupyter.notebookeditor.restartkernel",
                     "title": "%jupyter.command.jupyter.restartkernel.title%",
                     "group": "navigation",
-                    "when": "resourceLangId == jupyter && notebookViewType == 'jupyter-notebook'"
+                    "when": "resourceLangId == jupyter && notebookViewType == 'jupyter-notebook' && jupyter.notebookeditor.canrestartNotebookkernel"
                 },
                 {
                     "command": "jupyter.notebookeditor.trust",
@@ -1085,7 +1085,7 @@
                     "command": "jupyter.notebookeditor.restartkernel",
                     "title": "%jupyter.command.jupyter.restartkernel.title%",
                     "category": "Jupyter",
-                    "when": "jupyter.isnativeactive && jupyter.isnotebooktrusted"
+                    "when": "jupyter.isnativeactive && jupyter.isnotebooktrusted && jupyter.notebookeditor.canrestartNotebookkernel"
                 },
                 {
                     "command": "jupyter.notebookeditor.trust",
@@ -1097,7 +1097,7 @@
                     "command": "jupyter.notebookeditor.runallcells",
                     "title": "%jupyter.command.jupyter.notebookeditor.runallcells.title%",
                     "category": "Jupyter",
-                    "when": "jupyter.isnativeactive && jupyter.isnotebooktrusted"
+                    "when": "jupyter.isnativeactive && jupyter.isnotebooktrusted && jupyter.notebookeditor.canrestartNotebookkernel"
                 },
                 {
                     "command": "jupyter.notebookeditor.runselectedcell",

@@ -128,7 +128,11 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
                 .getOrCreateNotebook({ identity: activeEditor.file, getOnly: true })
                 .then((nb) => {
                     if (activeEditor === this.notebookEditorProvider.activeEditor) {
-                        const canStart = nb && nb.status !== ServerStatus.NotStarted && activeEditor.model?.isTrusted;
+                        const canStart =
+                            nb &&
+                            nb.status !== ServerStatus.NotStarted &&
+                            nb.status !== ServerStatus.Busy &&
+                            activeEditor.model?.isTrusted;
                         this.canRestartNotebookKernelContext.set(!!canStart).ignoreErrors();
                     }
                 })

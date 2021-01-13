@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { ConfigurationTarget, Event, EventEmitter, Uri, WebviewPanel } from 'vscode';
+import { ConfigurationTarget, Event, EventEmitter, ProgressLocation, Uri, WebviewPanel } from 'vscode';
 import { NotebookCell, NotebookDocument } from '../../../../types/vscode-proposed';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import { traceError } from '../../common/logger';
@@ -233,6 +233,8 @@ export class NotebookEditor implements INotebookEditor {
         const kernel = this.kernelProvider.get(this.file);
 
         if (kernel && !this.restartingKernel) {
+            const promise = this.restartKernelInternal(kernel);
+
             if (await this.shouldAskForRestart()) {
                 // Ask the user if they want us to restart or not.
                 const message = DataScience.restartKernelMessage();
@@ -243,12 +245,21 @@ export class NotebookEditor implements INotebookEditor {
                 const response = await this.applicationShell.showInformationMessage(message, yes, dontAskAgain, no);
                 if (response === dontAskAgain) {
                     await this.disableAskForRestart();
-                    await this.restartKernelInternal(kernel);
+                    this.applicationShell.withProgress(
+                        { location: ProgressLocation.Notification, title: DataScience.restartingKernelStatus() },
+                        () => promise
+                    );
                 } else if (response === yes) {
-                    await this.restartKernelInternal(kernel);
+                    this.applicationShell.withProgress(
+                        { location: ProgressLocation.Notification, title: DataScience.restartingKernelStatus() },
+                        () => promise
+                    );
                 }
             } else {
-                await this.restartKernelInternal(kernel);
+                this.applicationShell.withProgress(
+                    { location: ProgressLocation.Notification, title: DataScience.restartingKernelStatus() },
+                    () => promise
+                );
             }
         }
     }
