@@ -290,9 +290,6 @@ export abstract class BaseNotebookModel implements INotebookModel {
     private updateVersionInfo(kernelConnection: KernelConnectionMetadata | undefined): boolean {
         this._kernelConnection = kernelConnection;
         const { changed, kernelId } = updateNotebookMetadata(this.notebookJson.metadata, kernelConnection);
-        if (kernelId) {
-            this.kernelId = kernelId;
-        }
         // Update our kernel id in our global storage too
         this.setStoredKernelId(kernelId);
 
