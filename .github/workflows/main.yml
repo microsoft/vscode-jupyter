@@ -16,7 +16,6 @@ on:
       - 'release'
       - 'release/*'
       - 'release-*'
-      - rchiodo/switching_kernels
   workflow_dispatch:
 
 env:
