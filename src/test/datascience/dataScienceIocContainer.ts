@@ -631,6 +631,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         globalState.update(trustDirectoryMigrated, true);
         mockExtensionContext.setup((m) => m.globalState).returns(() => globalState);
         mockExtensionContext.setup((m) => m.extensionPath).returns(() => this.extensionRootPath || os.tmpdir());
+        mockExtensionContext.setup((m) => m.subscriptions).returns(() => []);
         this.serviceManager.addSingletonInstance<IExtensionContext>(IExtensionContext, mockExtensionContext.object);
 
         const mockServerSelector = mock(JupyterServerSelector);
