@@ -1264,6 +1264,12 @@
                     "command": "jupyter.opennotebookInPreviewEditor",
                     "when": "false",
                     "category": "Jupyter"
+                },
+                {
+                    "command": "jupyter.openVariableView",
+                    "title": "%jupyter.command.jupyter.openVariableView.title%",
+                    "category": "Jupyter",
+                    "when": "jupyter.isnativeactive"
                 }
             ],
             "debug/variables/context": [
@@ -1304,7 +1310,6 @@
                         "enum": [
                             "NativeNotebookEditor",
                             "CustomEditor",
-                            "NativeVariableView",
                             "All"
                         ]
                     },
@@ -1799,7 +1804,7 @@
                     "type": "webview",
                     "id": "jupyterViewVariables",
                     "name": "Variables",
-                    "when": "jupyter.nativevariableview"
+                    "when": "jupyter.isnativeactive"
                 }
             ]
         }
