@@ -17,7 +17,6 @@ process.env.VSC_JUPYTER_CI_TEST = '1';
 
 // Ability to use custom python environments for testing
 export async function initializePython() {
-    console.log(`**** initializePython ${PYTHON_PATH}`);
     await setPythonPathInWorkspaceRoot(PYTHON_PATH);
 }
 

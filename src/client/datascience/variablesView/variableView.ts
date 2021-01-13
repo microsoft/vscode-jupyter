@@ -89,6 +89,8 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
         // tslint:disable-next-line:no-console
         console.log('**** variableView load');
         await super.loadWebview(process.cwd(), codeWebview).catch(traceError);
+        // tslint:disable-next-line:no-console
+        console.log('**** variableView load complete');
     }
 
     // Used to identify this webview in telemetry, not shown to user so no localization
