@@ -20,7 +20,7 @@ suite('DataScience Interactive Window output tests', () => {
     suiteSetup(function () {
         snapshot = takeSnapshot();
         if (process.env.CI_PYTHON_PATH?.includes('conda')) {
-            console.log('This test should only run without conda installed')
+            console.log('This test should only run without conda installed');
             this.skip();
         }
     });
