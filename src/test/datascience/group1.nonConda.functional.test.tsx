@@ -17,8 +17,12 @@ suite('DataScience Interactive Window output tests', () => {
     let ioc: DataScienceIocContainer;
     let snapshot: any;
 
-    suiteSetup(() => {
+    suiteSetup(function () {
         snapshot = takeSnapshot();
+        if (process.env.CI_PYTHON_PATH?.includes('conda')) {
+            console.log('This test should only run without conda installed')
+            this.skip();
+        }
     });
     setup(async () => {
         ioc = new DataScienceIocContainer();
