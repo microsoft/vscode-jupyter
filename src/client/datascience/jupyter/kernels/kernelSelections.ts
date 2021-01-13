@@ -250,7 +250,6 @@ export class InstalledRawKernelSelectionListProvider
                         selection.kernelSpec,
                         cancelToken
                     );
-                    item.selection = selection;
                     return item;
                 })
         );
