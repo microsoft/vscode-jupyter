@@ -589,7 +589,6 @@ jobs:
         if: (steps.test_vscode.outcome == 'failure' || steps.test_vscode.outcome == 'failure') && failure()
 
       - name: Run Native Notebook with VSCode & Jupyter
-        uses: GabrielBB/xvfb-action@v1.4
         with:
           run: npm run testNativeNotebooksInVSCode
         env:
