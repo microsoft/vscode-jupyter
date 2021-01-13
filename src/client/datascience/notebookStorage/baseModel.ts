@@ -204,14 +204,9 @@ export abstract class BaseNotebookModel implements INotebookModel {
         return this._editEventEmitter.event;
     }
     public get metadata(): Readonly<nbformat.INotebookMetadata> | undefined {
-        return this.kernelId && this.notebookJson.metadata
-            ? {
-                  ...this.notebookJson.metadata,
-                  id: this.kernelId
-              }
-            : // Fix nyc compiler problem
-              // tslint:disable-next-line: no-any
-              (this.notebookJson.metadata as any);
+        // Fix nyc compiler problem
+        // tslint:disable-next-line: no-any
+        return this.notebookJson.metadata as any;
     }
     public get isTrusted() {
         return this._isTrusted;
@@ -224,7 +219,6 @@ export abstract class BaseNotebookModel implements INotebookModel {
     protected _changedEmitter = new EventEmitter<NotebookModelChange>();
     protected _editEventEmitter = new EventEmitter<NotebookModelChange>();
     protected _kernelConnection?: KernelConnectionMetadata;
-    private kernelId: string | undefined;
     private readonly preferredRemoteKernelIdStorage: PreferredRemoteKernelIdProvider;
     constructor(
         protected _isTrusted: boolean,
@@ -244,7 +238,6 @@ export abstract class BaseNotebookModel implements INotebookModel {
             this.ensureNotebookJson();
         }
         this.preferredRemoteKernelIdStorage = new PreferredRemoteKernelIdProvider(globalMemento, crypto);
-        this.kernelId = this.getStoredKernelId();
     }
     public dispose() {
         this._isDisposed = true;
@@ -309,9 +302,6 @@ export abstract class BaseNotebookModel implements INotebookModel {
     private generateNotebookContent(): string {
         const json = this.generateNotebookJson();
         return JSON.stringify(json, null, this.indentAmount);
-    }
-    private getStoredKernelId(): string | undefined {
-        return this.preferredRemoteKernelIdStorage.getPreferredRemoteKernelId(this._file);
     }
     private setStoredKernelId(id: string | undefined) {
         this.preferredRemoteKernelIdStorage.storePreferredRemoteKernelId(this._file, id).catch(noop);
