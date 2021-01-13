@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import { nbformat } from '@jupyterlab/coreutils';
 import { Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
@@ -58,6 +59,7 @@ export class GuestRawNotebookProvider
         identity: Uri,
         resource: Resource,
         _disableUI: boolean,
+        notebookMetadata: nbformat.INotebookMetadata,
         kernelConnection: KernelConnectionMetadata,
         _cancelToken: CancellationToken
     ): Promise<INotebook> {
@@ -73,11 +75,12 @@ export class GuestRawNotebookProvider
         if (service) {
             const resourceString = resource ? resource.toString() : undefined;
             const identityString = identity.toString();
-            const notebookMetadataString = JSON.stringify(kernelConnection);
+            const notebookMetadataString = JSON.stringify(notebookMetadata);
             await service.request(LiveShareCommands.createRawNotebook, [
                 resourceString,
                 identityString,
-                notebookMetadataString
+                notebookMetadataString,
+                JSON.stringify(kernelConnection)
             ]);
         }
 

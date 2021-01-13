@@ -44,6 +44,7 @@ import { KernelConnectionMetadata } from '../kernels/types';
 import { HostJupyterNotebook } from './hostJupyterNotebook';
 import { LiveShareParticipantHost } from './liveShareParticipantMixin';
 import { IRoleBasedObject } from './roleBasedFactory';
+import { nbformat } from '@jupyterlab/coreutils';
 // tslint:disable:no-any
 
 export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBase, LiveShare.JupyterServerSharedService)
@@ -184,6 +185,7 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
         disposableRegistry: IDisposableRegistry,
         configService: IConfigurationService,
         serviceContainer: IServiceContainer,
+        notebookMetadata?: nbformat.INotebookMetadata,
         kernelConnection?: KernelConnectionMetadata,
         cancelToken?: CancellationToken
     ): Promise<INotebook> {
@@ -210,6 +212,7 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
             const { info, changedKernel } = await this.computeLaunchInfo(
                 resource,
                 sessionManager,
+                notebookMetadata,
                 kernelConnection,
                 cancelToken
             );
@@ -288,6 +291,7 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
     private async computeLaunchInfo(
         resource: Resource,
         sessionManager: IJupyterSessionManager,
+        notebookMetadata?: nbformat.INotebookMetadata,
         kernelConnection?: KernelConnectionMetadata,
         cancelToken?: CancellationToken
     ): Promise<{ info: INotebookServerLaunchInfo; changedKernel: boolean }> {
@@ -313,6 +317,7 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
         let changedKernel = false;
         if (
             !kernelConnection ||
+            notebookMetadata?.kernelspec ||
             resourceInterpreter?.displayName !== launchInfo.kernelConnectionMetadata?.interpreter?.displayName
         ) {
             let kernelInfo: KernelConnectionMetadata | undefined;
@@ -326,14 +331,14 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
                           resource,
                           'jupyter',
                           sessionManager,
-                          undefined,
+                          notebookMetadata,
                           isTestExecution(),
                           cancelToken
                       )
                     : this.kernelSelector.getPreferredKernelForRemoteConnection(
                           resource,
                           sessionManager,
-                          undefined,
+                          notebookMetadata,
                           cancelToken
                       ));
             }

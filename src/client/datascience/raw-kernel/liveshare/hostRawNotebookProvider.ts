@@ -47,6 +47,7 @@ import {
 import { calculateWorkingDirectory } from '../../utils';
 import { RawJupyterSession } from '../rawJupyterSession';
 import { RawNotebookProviderBase } from '../rawNotebookProvider';
+import { nbformat } from '@jupyterlab/coreutils';
 
 // tslint:disable-next-line: no-require-imports
 // tslint:disable:no-any
@@ -102,12 +103,14 @@ export class HostRawNotebookProvider
                     async (args: any[], _cancellation: CancellationToken) => {
                         const resource = this.parseUri(args[0]);
                         const identity = this.parseUri(args[1]);
-                        const kernelConnection = JSON.parse(args[2]) as KernelConnectionMetadata;
+                        const notebookMetadata = JSON.parse(args[2]) as nbformat.INotebookMetadata;
+                        const kernelConnection = JSON.parse(args[3]) as KernelConnectionMetadata;
                         // Don't return the notebook. We don't want it to be serialized. We just want its live share server to be started.
                         const notebook = (await this.createNotebook(
                             identity!,
                             resource,
                             true, // Disable UI for this creation
+                            notebookMetadata,
                             kernelConnection,
                             undefined
                         )) as HostJupyterNotebook;
@@ -141,6 +144,7 @@ export class HostRawNotebookProvider
         resource: Resource,
         identity: vscode.Uri,
         disableUI?: boolean,
+        notebookMetadata?: nbformat.INotebookMetadata,
         kernelConnection?: KernelConnectionMetadata,
         cancelToken?: CancellationToken
     ): Promise<INotebook> {
@@ -185,7 +189,7 @@ export class HostRawNotebookProvider
                     resource,
                     'raw',
                     undefined,
-                    undefined,
+                    notebookMetadata,
                     disableUI,
                     cancelToken
                 ));

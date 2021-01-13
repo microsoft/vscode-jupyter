@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import { nbformat } from '@jupyterlab/coreutils';
 import * as uuid from 'uuid/v4';
 import { Event, EventEmitter, Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
@@ -82,10 +83,18 @@ export class RawNotebookProviderBase implements IRawNotebookProvider {
         identity: Uri,
         resource: Resource,
         disableUI: boolean,
+        notebookMetadata: nbformat.INotebookMetadata,
         kernelConnection: KernelConnectionMetadata,
         cancelToken?: CancellationToken
     ): Promise<INotebook> {
-        return this.createNotebookInstance(resource, identity, disableUI, kernelConnection, cancelToken);
+        return this.createNotebookInstance(
+            resource,
+            identity,
+            disableUI,
+            notebookMetadata,
+            kernelConnection,
+            cancelToken
+        );
     }
 
     public async getNotebook(identity: Uri): Promise<INotebook | undefined> {
@@ -141,6 +150,7 @@ export class RawNotebookProviderBase implements IRawNotebookProvider {
         _resource: Resource,
         _identity: Uri,
         _disableUI?: boolean,
+        _notebookMetadata?: nbformat.INotebookMetadata,
         _kernelConnection?: KernelConnectionMetadata,
         _cancelToken?: CancellationToken
     ): Promise<INotebook> {

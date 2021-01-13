@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import { nbformat } from '@jupyterlab/coreutils';
 import * as uuid from 'uuid/v4';
 import { Disposable, Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
@@ -110,6 +111,7 @@ export class JupyterServerBase implements INotebookServer {
     public createNotebook(
         resource: Resource,
         identity: Uri,
+        notebookMetadata?: nbformat.INotebookMetadata,
         kernelConnection?: KernelConnectionMetadata,
         cancelToken?: CancellationToken
     ): Promise<INotebook> {
@@ -129,6 +131,7 @@ export class JupyterServerBase implements INotebookServer {
             this.disposableRegistry,
             this.configService,
             this.serviceContainer,
+            notebookMetadata,
             kernelConnection,
             cancelToken
         ).then((r) => {
@@ -257,6 +260,7 @@ export class JupyterServerBase implements INotebookServer {
         _disposableRegistry: IDisposableRegistry,
         _configService: IConfigurationService,
         _serviceContainer: IServiceContainer,
+        _notebookMetadata?: nbformat.INotebookMetadata,
         _kernelConnection?: KernelConnectionMetadata,
         _cancelToken?: CancellationToken
     ): Promise<INotebook> {

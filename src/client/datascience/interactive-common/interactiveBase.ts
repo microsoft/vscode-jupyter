@@ -1182,6 +1182,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
                 notebook = await this.notebookProvider.getOrCreateNotebook({
                     identity: this.notebookIdentity.resource,
                     resource: this.owningResource,
+                    metadata: this.notebookMetadata,
                     kernelConnection: this.kernelConnection
                 });
                 if (notebook) {
