@@ -171,7 +171,7 @@ export class KernelDaemonPool implements IDisposable {
         });
 
         // Key = workspace identifier, and value is interpreter path.
-        const currentInterpreterInEachWorksapce = new Map<string, string>();
+        const currentInterpreterInEachWorkspace = new Map<string, string>();
         // Get interpreters for each workspace.
         await Promise.all(
             Array.from(uniqueResourcesWithKernels.entries()).map(async (item) => {
@@ -181,7 +181,7 @@ export class KernelDaemonPool implements IDisposable {
                     if (!interpreter) {
                         return;
                     }
-                    currentInterpreterInEachWorksapce.set(item[1].key, interpreter.path);
+                    currentInterpreterInEachWorkspace.set(item[1].key, interpreter.path);
                 } catch (ex) {
                     traceError(`Failed to get interpreter information for workspace ${resource?.fsPath}`);
                 }
@@ -192,7 +192,7 @@ export class KernelDaemonPool implements IDisposable {
         // If we have a daemon with an interpreter thats not the same as the current interpreter for that workspace
         // then kill that daemon, as its no longer valid.
         this.daemonPool = this.daemonPool.filter((item) => {
-            const interpreterForWorkspace = currentInterpreterInEachWorksapce.get(item.key);
+            const interpreterForWorkspace = currentInterpreterInEachWorkspace.get(item.key);
             if (!interpreterForWorkspace || !this.fs.areLocalPathsSame(interpreterForWorkspace, item.interpreterPath)) {
                 item.daemon
                     .then((d) => {
