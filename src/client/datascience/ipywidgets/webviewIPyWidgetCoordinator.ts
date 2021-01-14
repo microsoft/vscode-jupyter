@@ -64,7 +64,7 @@ export class WebviewIPyWidgetCoordinator implements IInteractiveWindowListener {
         this.notebookIdentity = args.resource;
         const emitter = new EventEmitter<{
             message: string;
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             payload: any;
         }>();
         this.messageCoordinatorEvent = emitter.event((e) => {
