@@ -176,7 +176,7 @@ export interface IKernel extends IAsyncDisposable {
 
 export type KernelOptions = { metadata: KernelConnectionMetadata };
 export const IKernelProvider = Symbol('IKernelProvider');
-export interface IKernelProvider {
+export interface IKernelProvider extends IAsyncDisposable {
     /**
      * Get hold of the active kernel for a given Uri (Notebook or other file).
      */

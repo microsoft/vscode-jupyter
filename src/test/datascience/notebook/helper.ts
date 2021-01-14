@@ -30,6 +30,7 @@ import {
 import { createDeferred } from '../../../client/common/utils/async';
 import { swallowExceptions } from '../../../client/common/utils/misc';
 import { CellExecution } from '../../../client/datascience/jupyter/kernels/cellExecution';
+import { IKernelProvider } from '../../../client/datascience/jupyter/kernels/types';
 import { JupyterNotebookView } from '../../../client/datascience/notebook/constants';
 import {
     LastSavedNotebookCellLanguage,
@@ -176,7 +177,11 @@ export async function canRunNotebookTests() {
 export async function shutdownAllNotebooks() {
     const api = await initialize();
     const notebookProvider = api.serviceContainer.get<INotebookProvider>(INotebookProvider);
-    await Promise.all(notebookProvider.activeNotebooks.map(async (item) => (await item).dispose()));
+    const kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
+    await Promise.all([
+        ...notebookProvider.activeNotebooks.map(async (item) => (await item).dispose()),
+        kernelProvider.dispose()
+    ]);
 }
 
 let oldValueFor_alwaysTrustNotebooks: undefined | boolean;
