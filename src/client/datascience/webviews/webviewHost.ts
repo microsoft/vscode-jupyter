@@ -88,9 +88,9 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
     // only to be use for testing
     public getHTMLById(id: string): Promise<string> {
         // Test only
-        if (!isTestExecution()) {
-            throw new Error('getHTMLById to be run only in test code');
-        }
+        //if (!isTestExecution()) {
+        //throw new Error('getHTMLById to be run only in test code');
+        //}
 
         if (!this.activeHTMLRequest) {
             this.activeHTMLRequest = createDeferred<string>();

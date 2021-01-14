@@ -20,9 +20,9 @@ export class VariableViewProvider implements IVariableViewProvider {
 
     // Just for test execution allow for accessing the VariableView off of the provider
     public get activeVariableView(): VariableView | undefined {
-        if (!isTestExecution()) {
-            throw new Error('activeVariableView only accessible from test code');
-        }
+        //if (!isTestExecution()) {
+        //throw new Error('activeVariableView only accessible from test code');
+        //}
 
         return this.variableView;
     }

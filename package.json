@@ -704,7 +704,12 @@
                 "command": "jupyter.openVariableView",
                 "title": "%jupyter.command.jupyter.openVariableView.title%",
                 "category": "Jupyter"
-            }
+            },
+            {
+                "command": "jupyter.TESTCOMMAND",
+                "title": "TESTCOMMAND",
+                "category": "Jupyter"
+            }	            
         ],
         "menus": {
             "editor/context": [

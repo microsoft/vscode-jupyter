@@ -30,6 +30,7 @@ import {
     IJupyterVariableDataProviderFactory,
     INotebookEditorProvider
 } from '../types';
+import { IVariableViewProvider } from '../variablesView/types';
 import { JupyterCommandLineSelectorCommand } from './commandLineSelector';
 import { ExportCommands } from './exportCommands';
 import { NotebookCommands } from './notebookCommands';
@@ -60,7 +61,8 @@ export class CommandRegistry implements IDisposable {
         @inject(IJupyterVariableDataProviderFactory)
         private readonly jupyterVariableDataProviderFactory: IJupyterVariableDataProviderFactory,
         @inject(IDataViewerFactory) private readonly dataViewerFactory: IDataViewerFactory,
-        @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage
+        @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
+        @inject(IVariableViewProvider) private readonly variableViewProvider: IVariableViewProvider
     ) {
         this.disposables.push(this.serverSelectedCommand);
         this.disposables.push(this.notebookCommands);
@@ -117,6 +119,7 @@ export class CommandRegistry implements IDisposable {
         );
         this.registerCommand(Commands.ClearSavedJupyterUris, this.clearJupyterUris);
         this.registerCommand(Commands.OpenVariableView, this.openVariableView);
+        this.registerCommand(Commands.TESTCOMMAND, this.handleTESTCOMMAND);
         if (this.commandListeners) {
             this.commandListeners.forEach((listener: IDataScienceCommandListener) => {
                 listener.register(this.commandManager);
@@ -126,6 +129,18 @@ export class CommandRegistry implements IDisposable {
     public dispose() {
         this.disposables.forEach((d) => d.dispose());
     }
+
+    // IANHU Just for testing, also remove injections required here
+    private async handleTESTCOMMAND(): Promise<void> {
+        const variableView = this.variableViewProvider.activeVariableView;
+
+        if (variableView) {
+            //variableView.getElementById('variable-view-main-panel');;
+            const result = await variableView.getHTMLById('variable-view-main-panel');
+            traceError(result);
+        }
+    }
+
     private registerCommand<
         E extends keyof ICommandNameArgumentTypeMapping,
         U extends ICommandNameArgumentTypeMapping[E]
