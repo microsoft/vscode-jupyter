@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { InterpreterStatusBarVisibility } from '../../test/interpreters/visibilityFilter';
+import { InterpreterStatusBarVisibility } from '../interpreter/display/visibilityFilter';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IEnvironmentActivationService } from '../interpreter/activation/types';
 import { IInterpreterSelector } from '../interpreter/configuration/types';

@@ -3,15 +3,11 @@
 
 import { inject, injectable } from 'inversify';
 import { Event, EventEmitter } from 'vscode';
-import { IExtensionSingleActivationService } from '../../client/activation/types';
-import {
-    IInterpreterStatusbarVisibilityFilter,
-    IPythonApiProvider,
-    IPythonExtensionChecker
-} from '../../client/api/types';
-import { IVSCodeNotebook } from '../../client/common/application/types';
-import { IDisposableRegistry, IExtensions } from '../../client/common/types';
-import { isJupyterNotebook } from '../../client/datascience/notebook/helpers/helpers';
+import { IExtensionSingleActivationService } from '../../activation/types';
+import { IInterpreterStatusbarVisibilityFilter, IPythonApiProvider, IPythonExtensionChecker } from '../../api/types';
+import { IVSCodeNotebook } from '../../common/application/types';
+import { IDisposableRegistry, IExtensions } from '../../common/types';
+import { isJupyterNotebook } from '../../datascience/notebook/helpers/helpers';
 
 @injectable()
 export class InterpreterStatusBarVisibility
