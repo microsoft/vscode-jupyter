@@ -159,7 +159,7 @@ export class KernelService {
             const interpreter = await this.interpreterService.getInterpreterDetails(interpreterPath);
             if (interpreter) {
                 traceInfo(
-                    `Found matching interpreter based on interpreter or interpreterPath in metadata, for the kernel ${kernelSpec.name}, ${kernelSpec.display_name}`
+                    `Found matching interpreter based on interpreter or interpreterPath in metadata, for the kernel ${kernelSpec.name}, ${kernelSpec.display_name}, ${interpreterPath}`
                 );
                 return interpreter;
             }
@@ -183,7 +183,7 @@ export class KernelService {
             });
             if (interpreter) {
                 traceInfo(
-                    `Found matching interpreter based on argv in metadata, for the kernel ${kernelSpec.name}, ${kernelSpec.display_name}`
+                    `Found matching interpreter based on argv in metadata, for the kernel ${kernelSpec.name}, ${kernelSpec.display_name}, ${pathInArgv}`
                 );
                 return interpreter;
             }
