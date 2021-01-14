@@ -222,7 +222,11 @@ export class HostRawNotebookProvider
             ) {
                 notebookPromise.reject('Failed to find a kernelspec to use for ipykernel launch');
             } else {
-                traceInfo(`Connecting to raw session for ${identity.toString()}`);
+                traceInfo(
+                    `Connecting to raw session for ${identity.toString()} with connection ${JSON.stringify(
+                        kernelConnectionMetadata
+                    )}`
+                );
                 await rawSession.connect(kernelConnectionMetadata, launchTimeout, cancelToken);
 
                 // Get the execution info for our notebook

@@ -32,7 +32,9 @@ export class KernelEnvironmentVariablesService {
         customEditVarsPromise.catch(noop); // If we return early, we don't want failing promise go unhandled.
         let kernelEnv = kernelSpec.env && Object.keys(kernelSpec.env).length > 0 ? kernelSpec.env : undefined;
         if (!kernelSpec.interpreterPath) {
-            traceInfo('No custom variables for Kernel as interpreter path is not defined for kernel');
+            traceInfo(
+                `No custom variables for Kernel as interpreter path is not defined for kernel ${kernelSpec.display_name}`
+            );
             return kernelEnv;
         }
         const interpreter = await this.interpreterService
