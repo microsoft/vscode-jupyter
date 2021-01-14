@@ -50,7 +50,6 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
     let dsSettings: ReadWrite<IJupyterSettings>;
     const suiteDisposables: IDisposable[] = [];
     suiteSetup(async function () {
-        this.timeout(60_000);
         api = await initialize();
         if (!(await canRunNotebookTests())) {
             return this.skip();

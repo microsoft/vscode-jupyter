@@ -54,7 +54,6 @@ suite('DataScience - VSCode Notebook - (Open)', function () {
     let vscodeNotebook: IVSCodeNotebook;
     const disposables: IDisposable[] = [];
     suiteSetup(async function () {
-        this.timeout(15_000);
         api = await initialize();
         if (!(await canRunNotebookTests())) {
             return this.skip();

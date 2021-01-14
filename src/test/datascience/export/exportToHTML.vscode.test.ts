@@ -12,10 +12,10 @@ import { IExtensionTestApi } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
 import { closeActiveWindows, initialize } from '../../initialize';
 
-suite('DataScience - Export HTML', () => {
+suite('DataScience - Export HTML', function () {
     let api: IExtensionTestApi;
+    this.timeout(10_000);
     suiteSetup(async function () {
-        this.timeout(10_000);
         api = await initialize();
         // Export to HTML tests require jupyter to run. Othewrise can't
         // run any of our variable execution code

@@ -27,7 +27,7 @@ import {
 } from '../../notebook/helper';
 
 // tslint:disable: no-invalid-this max-func-body-length no-function-expression no-any
-suite('DataScience Install IPyKernel (slow) (install)', () => {
+suite('DataScience Install IPyKernel (slow) (install)', function () {
     const disposables: IDisposable[] = [];
     let nbFile: string;
     const templateIPynbFile = path.join(
@@ -43,13 +43,12 @@ suite('DataScience Install IPyKernel (slow) (install)', () => {
     let installer: IInstaller;
     let vscodeNotebook: IVSCodeNotebook;
     const delayForUITest = 30_000;
+    this.timeout(60_000); // Slow test, we need to uninstall/install ipykernel.
     /*
     This test requires a virtual environment to be created & registered as a kernel.
     It also needs to have ipykernel installed in it.
     */
     suiteSetup(async function () {
-        this.timeout(60_000); // Slow test, we need to uninstall/install ipykernel.
-
         // These are slow tests, hence lets run only on linux on CI.
         if ((IS_CI_SERVER && getOSType() !== OSType.Linux) || !fs.pathExistsSync(venvPythonPath)) {
             // Virtual env does not exist.

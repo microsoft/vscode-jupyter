@@ -48,7 +48,6 @@ suite('DataScience - VSCode Notebook - (Saving) (slow)', function () {
     );
     let testEmptyIPynb: Uri;
     suiteSetup(async function () {
-        this.timeout(60_000);
         api = await initialize();
         if (!(await canRunNotebookTests())) {
             return this.skip();
