@@ -3,9 +3,11 @@
 
 'use strict';
 
+import { IExtensionSingleActivationService } from '../activation/types';
 import { IEnvironmentActivationService } from '../interpreter/activation/types';
 import { IInterpreterSelector } from '../interpreter/configuration/types';
 import { IInterpreterService } from '../interpreter/contracts';
+import { InterpreterStatusBarVisibility } from '../interpreter/display/visibilityFilter';
 import { IWindowsStoreInterpreter } from '../interpreter/locators/types';
 import { IServiceManager } from '../ioc/types';
 import {
@@ -32,6 +34,10 @@ export function registerTypes(serviceManager: IServiceManager): void {
     serviceManager.addSingleton<IPythonExtensionChecker>(IPythonExtensionChecker, PythonExtensionChecker);
     serviceManager.addSingleton<IInterpreterService>(IInterpreterService, InterpreterService);
     serviceManager.addSingleton<IInterpreterSelector>(IInterpreterSelector, InterpreterSelector);
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        InterpreterStatusBarVisibility
+    );
     serviceManager.addSingleton<IWindowsStoreInterpreter>(IWindowsStoreInterpreter, WindowsStoreInterpreter);
     serviceManager.addSingleton<IPythonDebuggerPathProvider>(IPythonDebuggerPathProvider, PythonDebuggerPathProvider);
     serviceManager.addSingleton<ILanguageServerProvider>(ILanguageServerProvider, LanguageServerProvider);
