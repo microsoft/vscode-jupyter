@@ -33,6 +33,7 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
     protected abstract get owningResource(): Resource;
 
     protected abstract get title(): string;
+
     protected webview?: IWebview;
 
     protected disposed = false;
@@ -48,7 +49,7 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
     private activeHTMLRequest?: Deferred<string>;
 
     // For testing, broadcast messages to the following listeners
-    private onMessageListeners: { onMessage(message: string, payload: any): void }[] = [];
+    private onMessageListeners: ((message: string, payload: any) => void)[] = [];
 
     constructor(
         @unmanaged() protected configService: IConfigurationService,
@@ -106,13 +107,24 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
         return this.activeHTMLRequest.promise;
     }
 
-    public addOnMessageListener(listener: { onMessage(message: string, payload: any): void }): void {
+    public addOnMessageListener(callback: (message: string, payload: any) => void) {
         // Test only
         //if (!isTestExecution()) {
         //throw new Error('getHTMLById to be run only in test code');
         //}
 
-        this.onMessageListeners.push(listener);
+        this.onMessageListeners.push(callback);
+    }
+
+    public removeOnMessageListener(callback: (message: string, payload: any) => void) {
+        // Test only
+        //if (!isTestExecution()) {
+        //throw new Error('getHTMLById to be run only in test code');
+        //}
+        const index = this.onMessageListeners.indexOf(callback);
+        if (index >= 0) {
+            this.onMessageListeners.splice(index, 1);
+        }
     }
 
     protected abstract provideWebview(
@@ -169,7 +181,7 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
 
         // Broadcast to onMessage listeners
         this.onMessageListeners.forEach((listener) => {
-            listener.onMessage(message, payload);
+            listener(message, payload);
         });
     }
 

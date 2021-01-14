@@ -23,6 +23,7 @@ import {
 } from '../notebook/helper';
 import { INotebookEditorProvider } from '../../../client/datascience/types';
 import { OnMessageListener, OnMessageWrapper } from '../vscodeTestHelpers';
+import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 
 suite('DataScience - VariableView', () => {
     let api: IExtensionTestApi;
@@ -101,14 +102,15 @@ suite('DataScience - VariableView', () => {
         //const variableMessageWrapper = new OnMessageWrapper(variableView as any);
 
         // Add our message listener
-        const onMessageListener = new OnMessageListener();
-        variableView.addOnMessageListener(onMessageListener);
+        const onMessageListener = new OnMessageListener(variableView);
 
         // Send a second cell
         await insertCodeCell('test2 = "MYTESTVALUE2"', { index: 1 });
         const cell2 = vscodeNotebook.activeNotebookEditor?.document.cells![1]!;
         await executeCell(cell2);
-        await waitForExecutionCompletedSuccessfully(cell2);
+        //await waitForExecutionCompletedSuccessfully(cell2);
+
+        await onMessageListener.waitForMessage(InteractiveWindowMessages.VariablesComplete);
 
         const htmlResult = await variableView?.getHTMLById('variable-view-main-panel');
         //const rootHtml = await variableView?.getElementByIdAsync('root');
