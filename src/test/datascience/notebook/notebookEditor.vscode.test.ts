@@ -22,7 +22,7 @@ import {
 } from './helper';
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
-suite('Notebook Editor tests', () => {
+suite('Notebook Editor testsxxx', () => {
     let api: IExtensionTestApi;
     let vscodeNotebook: IVSCodeNotebook;
     let editorProvider: INotebookEditorProvider;
