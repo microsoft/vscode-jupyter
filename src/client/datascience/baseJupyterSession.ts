@@ -86,7 +86,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         return this.shutdown();
     }
     // Abstracts for each Session type to implement
-    public abstract async waitForIdle(timeout: number): Promise<void>;
+    public abstract waitForIdle(timeout: number): Promise<void>;
 
     public async shutdown(): Promise<void> {
         if (this.session) {
