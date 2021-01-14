@@ -65,6 +65,7 @@ class PythonDaemon(JupyterDaemon):
         self.log.info("Kill kernel in DS Kernel Launcher Daemon")
         self.killing_kernel = True
         if self.kernel is not None:
+            self.log.info("Kill kernel in DS Kernel Launcher Daemon, pid %s", self.kernel.pid)
             # Signal the kernel to terminate (sends SIGKILL on Unix and calls
             # TerminateProcess() on Win32).
             try:
