@@ -211,7 +211,7 @@ export class KernelService {
             // If the major versions match, that's sufficient.
             if (!majorVersion || (activeInterpreter?.version && activeInterpreter.version.major === majorVersion)) {
                 traceInfo(
-                    `Using current interpreter for kernel ${kernelSpec.name}, ${kernelSpec.display_name}, ${activeInterpreter?.displayName} # ${activeInterpreter?.path}`
+                    `Using current interpreter for kernel ${kernelSpec.name}, ${kernelSpec.display_name}, (interpreter is ${activeInterpreter?.displayName} # ${activeInterpreter?.path})`
                 );
                 return activeInterpreter;
             }
@@ -229,7 +229,7 @@ export class KernelService {
             }
 
             traceWarning(
-                `Unable to find an interpreter that matches the kernel ${kernelSpec.name}, ${kernelSpec.display_name}, some features might not work.`
+                `Unable to find an interpreter that matches the kernel ${kernelSpec.name}, ${kernelSpec.display_name}, some features might not work , (interpreter is ${activeInterpreter?.displayName} # ${activeInterpreter?.path}).`
             );
             return activeInterpreter;
         } else {
@@ -246,12 +246,12 @@ export class KernelService {
 
             if (found) {
                 traceVerbose(
-                    `Found an interpreter that has the same display name as kernelspec ${kernelSpec.display_name}, matches ${found.path}`
+                    `Found an interpreter that has the same display name as kernelspec ${kernelSpec.display_name}, matches interpreter ${found.displayName} # ${found.path}`
                 );
                 return found;
             } else {
                 traceWarning(
-                    `Unable to determine version of Python interpreter to use for kernel ${kernelSpec.name}, ${kernelSpec.display_name}, some features might not work.`
+                    `Unable to determine version of Python interpreter to use for kernel ${kernelSpec.name}, ${kernelSpec.display_name}, some features might not work , (interpreter is ${activeInterpreter?.displayName} # ${activeInterpreter?.path}).`
                 );
                 return activeInterpreter;
             }
