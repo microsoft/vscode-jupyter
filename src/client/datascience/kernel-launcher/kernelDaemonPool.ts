@@ -41,7 +41,7 @@ export class KernelDaemonPool implements IDisposable {
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IEnvironmentVariablesProvider) private readonly envVars: IEnvironmentVariablesProvider,
         @inject(IFileSystem) private readonly fs: IFileSystem,
-        @inject(IInterpreterService) private readonly interrpeterService: IInterpreterService,
+        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IPythonExecutionFactory) private readonly pythonExecutionFactory: IPythonExecutionFactory,
         @inject(IKernelDependencyService) private readonly kernelDependencyService: IKernelDependencyService
     ) {}
@@ -51,7 +51,7 @@ export class KernelDaemonPool implements IDisposable {
         }
         this.initialized = true;
         this.envVars.onDidEnvironmentVariablesChange(this.onDidEnvironmentVariablesChange.bind(this));
-        this.interrpeterService.onDidChangeInterpreter(this.onDidChangeInterpreter.bind(this));
+        this.interpreterService.onDidChangeInterpreter(this.onDidChangeInterpreter.bind(this));
         const promises: Promise<void>[] = [];
         if (this.workspaceService.hasWorkspaceFolders) {
             promises.push(
@@ -131,7 +131,7 @@ export class KernelDaemonPool implements IDisposable {
         });
     }
     private async preWarmKernelDaemon(resource: Resource) {
-        const interpreter = await this.interrpeterService.getActiveInterpreter(resource);
+        const interpreter = await this.interpreterService.getActiveInterpreter(resource);
         if (!interpreter || !(await this.kernelDependencyService.areDependenciesInstalled(interpreter))) {
             return;
         }
@@ -177,7 +177,7 @@ export class KernelDaemonPool implements IDisposable {
             Array.from(uniqueResourcesWithKernels.entries()).map(async (item) => {
                 const resource = item[1].workspaceResource;
                 try {
-                    const interpreter = await this.interrpeterService.getActiveInterpreter(resource);
+                    const interpreter = await this.interpreterService.getActiveInterpreter(resource);
                     if (!interpreter) {
                         return;
                     }
