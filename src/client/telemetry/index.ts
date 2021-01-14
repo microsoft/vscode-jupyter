@@ -3,7 +3,7 @@
 
 import type { JSONObject } from '@phosphor/coreutils';
 import * as stackTrace from 'stack-trace';
-// eslint-disable-next-line 
+// eslint-disable-next-line
 import TelemetryReporter from 'vscode-extension-telemetry/lib/telemetryReporter';
 
 import { IWorkspaceService } from '../common/application/types';
@@ -182,7 +182,7 @@ type TypedMethodDescriptor<T> = (
  * @param lazyProperties A static function on the decorated class which returns extra properties to add to the event.
  * This can be used to provide properties which are only known at runtime (after the decorator has executed).
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any, 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any,
 export function captureTelemetry<This, P extends IEventNamePropertyMapping, E extends keyof P>(
     eventName: E,
     properties?: P[E],
@@ -216,13 +216,13 @@ export function captureTelemetry<This, P extends IEventNamePropertyMapping, E ex
 
             const stopWatch = captureDuration ? new StopWatch() : undefined;
 
-            // eslint-disable-next-line no-invalid-this, @typescript-eslint/no-use-before-define, 
+            // eslint-disable-next-line no-invalid-this, @typescript-eslint/no-use-before-define,
             const result = originalMethod.apply(this, args);
 
             // If method being wrapped returns a promise then wait for it.
-            // eslint-disable-next-line 
+            // eslint-disable-next-line
             if (result && typeof result.then === 'function' && typeof result.catch === 'function') {
-                // eslint-disable-next-line 
+                // eslint-disable-next-line
                 (result as Promise<void>)
                     .then((data) => {
                         sendTelemetryEvent(eventName, stopWatch?.elapsedTime, props());

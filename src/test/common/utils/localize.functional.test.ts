@@ -124,7 +124,7 @@ suite('Localization', () => {
     });
 
     test('all keys used', function (done) {
-        // eslint-disable-next-line 
+        // eslint-disable-next-line
         // TODO: Unused keys need to be cleaned up.
         // eslint-disable-next-line no-invalid-this
         this.skip();

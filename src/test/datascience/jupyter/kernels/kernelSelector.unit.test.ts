@@ -472,7 +472,7 @@ suite('DataScience - KernelSelector', () => {
             assert.deepEqual(kernel?.interpreter, interpreter);
         });
     });
-    // eslint-disable-next-line 
+    // eslint-disable-next-line
     suite('Get a kernel for local sessions', () => {
         let nbMetadataKernelSpec: nbformat.IKernelspecMetadata = {} as any;
         let nbMetadata: nbformat.INotebookMetadata = {} as any;

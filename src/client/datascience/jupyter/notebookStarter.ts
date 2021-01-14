@@ -55,7 +55,7 @@ export class NotebookStarter implements Disposable {
             }
         }
     }
-    // eslint-disable-next-line 
+    // eslint-disable-next-line
     @reportAction(ReportableAction.NotebookStart)
     public async start(
         useDefaultConfig: boolean,

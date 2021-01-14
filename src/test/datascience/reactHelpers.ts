@@ -292,7 +292,7 @@ class MockCanvas implements CanvasRenderingContext2D {
 const mockCanvas = new MockCanvas();
 
 export function setUpDomEnvironment() {
-    // eslint-disable-next-line 
+    // eslint-disable-next-line
     const dom = new JSDOM('<!doctype html><html><body><div id="root"></div></body></html>', {
         pretendToBeVisual: true,
         url: 'http://localhost'
@@ -315,7 +315,7 @@ export function setUpDomEnvironment() {
         noop();
     }
 
-    // eslint-disable-next-line 
+    // eslint-disable-next-line
     window.HTMLCanvasElement.prototype.toDataURL = function () {
         return '';
     };
@@ -407,7 +407,7 @@ export function setUpDomEnvironment() {
     // export the function we need to dispose of the timer it's set. So force it to.
     const configurationRegex = /.*(\\|\/)node_modules(\\|\/)monaco-editor(\\|\/)esm(\\|\/)vs(\\|\/)editor(\\|\/)browser(\\|\/)config(\\|\/)configuration\.js/g;
     const _oldLoader = require.extensions['.js'];
-    // eslint-disable-next-line 
+    // eslint-disable-next-line
     require.extensions['.js'] = function (mod: any, filename) {
         if (configurationRegex.test(filename)) {
             let content = require('fs').readFileSync(filename, 'utf8');

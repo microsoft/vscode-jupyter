@@ -36,7 +36,7 @@ function report(progress: Progress) {
 export function reportAction(action: ReportableAction) {
     return function (_target: Object, _propertyName: string, descriptor: TypedPropertyDescriptor<PromiseFunction>) {
         const originalMethod = descriptor.value!;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any, 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any,
         descriptor.value = async function (...args: any[]) {
             report({ action, phase: 'started' });
             // eslint-disable-next-line no-invalid-this

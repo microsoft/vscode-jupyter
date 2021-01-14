@@ -137,7 +137,7 @@ export class GuestJupyterServer
         if (!launchInfo) {
             return LiveShare.JupyterServerSharedService;
         }
-        // eslint-disable-next-line 
+        // eslint-disable-next-line
         // TODO: Should there be some separator in the name?
         return `${LiveShare.JupyterServerSharedService}${launchInfo.purpose}`;
     }

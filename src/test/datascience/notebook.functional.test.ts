@@ -66,7 +66,7 @@ suite('DataScience notebook tests', () => {
             let modifiedConfig = false;
             const baseUri = Uri.file('foo.py');
 
-            // eslint-disable-next-line 
+            // eslint-disable-next-line
             setup(async function () {
                 ioc = new DataScienceIocContainer();
                 if (ioc.shouldMockJupyter && useRawKernel) {

@@ -82,7 +82,7 @@ export interface IInstaller {
     translateProductToModuleName(product: Product, purpose: ModuleNamePurpose): string;
 }
 
-// eslint-disable-next-line 
+// eslint-disable-next-line
 // TODO: Drop IPathUtils in favor of IFileSystemPathUtils.
 // See https://github.com/microsoft/vscode-python/issues/8542.
 export const IPathUtils = Symbol('IPathUtils');

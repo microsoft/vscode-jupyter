@@ -32,7 +32,7 @@ import { IInterpreterService } from '../../../../client/interpreter/contracts';
 import { PythonEnvironment } from '../../../../client/pythonEnvironments/info';
 import { FakeClock } from '../../../common';
 
-// eslint-disable-next-line 
+// eslint-disable-next-line
 suite('DataScience - KernelService', () => {
     let kernelService: KernelService;
     let interperterService: IInterpreterService;
@@ -323,7 +323,7 @@ suite('DataScience - KernelService', () => {
         assert.equal(matchingKernel?.language, PYTHON_LANGUAGE);
         assert.deepEqual(matchingKernel?.metadata, kernelSpecs[1].metadata);
     });
-    // eslint-disable-next-line 
+    // eslint-disable-next-line
     suite('Registering Interpreters as Kernels', () => {
         let findMatchingKernelSpecStub: sinon.SinonStub<
             [PythonEnvironment, IJupyterSessionManager?, (CancellationToken | undefined)?],

@@ -211,7 +211,7 @@ export class CodeCssGenerator implements ICodeCssGenerator {
             : 'var(--override-foreground, var(--vscode-editor-foreground))';
     }
 
-    // eslint-disable-next-line 
+    // eslint-disable-next-line
     private generateCss(args: IApplyThemeArgs): string {
         // There's a set of values that need to be found
         const commentStyle = this.getScopeStyle(args.tokenColors, 'comment', 'comment', args.defaultStyle);
@@ -292,7 +292,7 @@ ${args.defaultStyle ? DefaultCssVars[args.defaultStyle] : ''}
 
                             // Special case some items. punctuation.definition.comment doesn't seem to
                             // be listed anywhere. Add it manually when we find a 'comment'
-                            // eslint-disable-next-line 
+                            // eslint-disable-next-line
                             if (token === 'comment') {
                                 result.rules.push({
                                     token: 'punctuation.definition.comment',

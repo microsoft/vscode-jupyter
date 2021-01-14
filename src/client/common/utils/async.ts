@@ -60,7 +60,7 @@ class DeferredImpl<T> implements Deferred<T> {
     private _promise: Promise<T>;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     constructor(private scope: any = null) {
-        // eslint-disable-next-line 
+        // eslint-disable-next-line
         this._promise = new Promise<T>((res, rej) => {
             this._resolve = res;
             this._reject = rej;

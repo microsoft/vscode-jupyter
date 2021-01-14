@@ -7,7 +7,7 @@
 
 import * as assert from 'assert';
 import { expect } from 'chai';
-// eslint-disable-next-line 
+// eslint-disable-next-line
 import rewiremock from 'rewiremock';
 import * as TypeMoq from 'typemoq';
 import { WorkspaceConfiguration } from 'vscode';
@@ -15,7 +15,7 @@ import { IWorkspaceService } from '../../../client/common/application/types';
 import { HttpClient } from '../../../client/common/net/httpClient';
 import { IServiceContainer } from '../../../client/ioc/types';
 
-// eslint-disable-next-line 
+// eslint-disable-next-line
 suite('Http Client', () => {
     const proxy = 'https://myproxy.net:4242';
     let config: TypeMoq.IMock<WorkspaceConfiguration>;

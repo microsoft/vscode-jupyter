@@ -29,7 +29,7 @@ import { isPythonVersion, PYTHON_PATH } from '../../common';
 import { createTemporaryFile } from '../../utils/fs';
 use(chaiPromised);
 
-// eslint-disable-next-line 
+// eslint-disable-next-line
 suite('Daemon', () => {
     // Set PYTHONPATH to pickup our module and the jsonrpc modules.
     const envPythonPath = `${path.join(EXTENSION_ROOT_DIR, 'pythonFiles')}${path.delimiter}${path.join(

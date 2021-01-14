@@ -233,7 +233,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         }, 0);
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any, no-empty,@typescript-eslint/no-empty-function, complexity, 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, no-empty,@typescript-eslint/no-empty-function, complexity,
     public onMessage(message: string, payload: any) {
         switch (message) {
             case InteractiveWindowMessages.ConvertUriForUseInWebViewRequest:
@@ -602,7 +602,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         return this._notebook;
     }
 
-    // eslint-disable-next-line 
+    // eslint-disable-next-line
     protected async submitCode(
         code: string,
         file: string,
@@ -1385,7 +1385,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         }
     }
 
-    // eslint-disable-next-line 
+    // eslint-disable-next-line
     // TODO: Allow other kernels to support this information. Right now it just skips this for other kernels.
     private generateSysInfoCell = async (reason: SysInfoReason): Promise<ICell | undefined> => {
         // Execute the code 'import sys\r\nsys.version' and 'import sys\r\nsys.executable' to get our

@@ -16,7 +16,7 @@ import { DataScienceCodeLensProvider } from '../../../client/datascience/editor-
 import { ICodeWatcher, IDataScienceCodeLensProvider, IDebugLocationTracker } from '../../../client/datascience/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 
-// eslint-disable-next-line 
+// eslint-disable-next-line
 suite('DataScienceCodeLensProvider Unit Tests', () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     let configurationService: TypeMoq.IMock<IConfigurationService>;

@@ -132,11 +132,11 @@ export class WebServer implements IWebServer {
         });
 
         // Display a message if this env variable is set (used when debugging).
-        // eslint-disable-next-line 
+        // eslint-disable-next-line
         const url = `http:///localhost:${port}/index.html`;
         if (process.env.VSC_JUPYTER_DS_UI_PROMPT) {
             window
-                // eslint-disable-next-line 
+                // eslint-disable-next-line
                 .showInformationMessage(`Open browser to '${url}'`, 'Copy')
                 .then((selection) => {
                     if (selection === 'Copy') {
@@ -281,13 +281,13 @@ export class WebBrowserPanel implements IWebviewPanel, IDisposable {
 
         const port = await this.server.launchServer(cwd, resourcesRoot, portToUse);
         if (this.panel?.webview) {
-            // eslint-disable-next-line 
+            // eslint-disable-next-line
             const url = `http:///localhost:${port}/index.html`;
             this.panel.webview.html = `<!DOCTYPE html><html><html><body><h1>${url}</h1></body>`;
         }
         await this.server.waitForConnection();
 
-        // eslint-disable-next-line 
+        // eslint-disable-next-line
         return `http://localhost:${port}`;
     }
 }

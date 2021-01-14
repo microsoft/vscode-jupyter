@@ -1,10 +1,10 @@
-// eslint-disable-next-line 
+// eslint-disable-next-line
 /* eslint-disable comma-dangle */
-// eslint-disable-next-line 
+// eslint-disable-next-line
 /* eslint-disable max-classes-per-file */
-// eslint-disable-next-line 
+// eslint-disable-next-line
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
-// eslint-disable-next-line 
+// eslint-disable-next-line
 /* eslint-disable class-methods-use-this */
 // eslint-disable-next-line
 /* eslint-disable consistent-return */

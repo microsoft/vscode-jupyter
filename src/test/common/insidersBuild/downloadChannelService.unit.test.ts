@@ -21,7 +21,7 @@ import { IConfigurationService } from '../../../client/common/types';
 import { createDeferred } from '../../../client/common/utils/async';
 import { sleep } from '../../../test/common';
 
-// eslint-disable-next-line 
+// eslint-disable-next-line
 suite('Download channel service', () => {
     let configService: IConfigurationService;
     let workspaceService: IWorkspaceService;

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-// eslint-disable-next-line 
+// eslint-disable-next-line
 // TODO : Drop all these in favor of IPlatformService.
 // See https://github.com/microsoft/vscode-python/issues/8542.
 

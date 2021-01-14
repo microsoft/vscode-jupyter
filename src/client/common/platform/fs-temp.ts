@@ -5,7 +5,7 @@ import * as tmp from 'tmp';
 import { ITempFileSystem, TemporaryFile } from './types';
 
 interface IRawTempFS {
-    // eslint-disable-next-line 
+    // eslint-disable-next-line
     // TODO (https://github.com/microsoft/vscode/issues/84517)
     //   This functionality has been requested for the
     //   VS Code FS API (vscode.workspace.fs.*).

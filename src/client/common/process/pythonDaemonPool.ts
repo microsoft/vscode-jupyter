@@ -46,7 +46,7 @@ export class PythonDaemonExecutionServicePool extends PythonDaemonFactory implem
         }
         const promises = Promise.all(
             [
-                // eslint-disable-next-line 
+                // eslint-disable-next-line
                 ...new Array(this.options.daemonCount ?? 2).keys()
             ].map(() => this.addDaemonService('StandardDaemon'))
         );

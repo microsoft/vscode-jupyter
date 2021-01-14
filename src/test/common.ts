@@ -258,7 +258,7 @@ function getPythonPath(): string {
     if (process.env.CI_PYTHON_PATH && fs.existsSync(process.env.CI_PYTHON_PATH)) {
         return process.env.CI_PYTHON_PATH;
     }
-    // eslint-disable-next-line 
+    // eslint-disable-next-line
     // TODO: Change this to python3.
     // See https://github.com/microsoft/vscode-python/issues/10910.
     return 'python';
@@ -536,7 +536,7 @@ export async function retryIfFail<T>(fn: () => Promise<T>, timeoutMs: number = 6
     const started = new Date().getTime();
     while (timeoutMs > new Date().getTime() - started) {
         try {
-            // eslint-disable-next-line 
+            // eslint-disable-next-line
             const result = await fn();
             // Capture result, if no exceptions return that.
             return result;

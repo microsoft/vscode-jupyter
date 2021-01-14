@@ -1,4 +1,4 @@
-// eslint-disable-next-line 
+// eslint-disable-next-line
 // TODO: Drop this file.
 // See https://github.com/microsoft/vscode-python/issues/8542.
 
@@ -40,7 +40,7 @@ export class PathUtils implements IPathUtils {
         return this.utils.paths.sep;
     }
 
-    // eslint-disable-next-line 
+    // eslint-disable-next-line
     // TODO: Deprecate in favor of IPlatformService?
     public getPathVariableName(): 'Path' | 'PATH' {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any

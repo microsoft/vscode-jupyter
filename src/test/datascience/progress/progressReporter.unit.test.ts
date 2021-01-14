@@ -17,7 +17,7 @@ type Task<R> = (
     token: CancellationToken
 ) => Promise<R>;
 
-// eslint-disable-next-line 
+// eslint-disable-next-line
 suite('DataScience - Progress Reporter', () => {
     let reporter: ProgressReporter;
     let vscodeProgressReporter: VSCProgress<{ message?: string | undefined; increment?: number | undefined }>;

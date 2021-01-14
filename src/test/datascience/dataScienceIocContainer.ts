@@ -1145,7 +1145,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         partial: Partial<IJupyterSettings>,
         notifyEvent: boolean = true
     ) {
-        // eslint-disable-next-line 
+        // eslint-disable-next-line
         // TODO: Python path will not be updated by this code so tests are unlikely to pass
         const settings = this.getSettings(resource) as MockJupyterSettings;
         if (partial) {

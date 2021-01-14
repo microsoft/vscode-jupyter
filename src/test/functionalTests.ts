@@ -34,7 +34,7 @@ import { initialize } from './vscode-mock';
 const Module = require('module');
 
 // Required for DS functional tests.
-// eslint-disable-next-line 
+// eslint-disable-next-line
 (function () {
     const origRequire = Module.prototype.require;
     const _require = (context: any, filepath: any) => {

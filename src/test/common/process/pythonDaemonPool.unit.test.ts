@@ -26,7 +26,7 @@ use(chaiPromised);
 /* eslint-disable @typescript-eslint/no-explicit-any,  */
 suite('Daemon - Python Daemon Pool', () => {
     class DaemonPool extends PythonDaemonExecutionServicePool {
-        // eslint-disable-next-line 
+        // eslint-disable-next-line
         public createConnection(proc: ChildProcess) {
             return super.createConnection(proc);
         }

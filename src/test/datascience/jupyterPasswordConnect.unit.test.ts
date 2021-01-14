@@ -148,7 +148,7 @@ suite('JupyterPasswordConnect', () => {
         );
         assert(result, 'Failed to get password');
         if (result) {
-            // eslint-disable-next-line 
+            // eslint-disable-next-line
             assert.ok((result.requestHeaders as any).Cookie, 'No cookie');
         }
 

@@ -31,7 +31,7 @@ class TestUriProvider implements IJupyterUriProvider {
         if (handle === TestUriHandle) {
             this.currentBearer += 1;
             return {
-                // eslint-disable-next-line 
+                // eslint-disable-next-line
                 baseUrl: 'http://foobar:3000',
                 displayName: 'test',
                 token: '',
@@ -119,7 +119,7 @@ suite(`DataScience JupyterServerUriProvider tests`, () => {
         });
 
         // Verify URI is our expected one
-        // eslint-disable-next-line 
+        // eslint-disable-next-line
         assert.equal(server?.getConnectionInfo()?.baseUrl, `http://foobar:3000`, 'Base URI is invalid');
         let authHeader = server?.getConnectionInfo()?.getAuthHeader?.call(undefined);
         assert.deepEqual(authHeader, { Bearer: '1' }, 'Bearer token invalid');

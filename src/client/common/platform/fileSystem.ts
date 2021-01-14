@@ -183,7 +183,7 @@ export class FileSystem implements IFileSystem {
     }
 
     private async lstat(filename: string): Promise<vscode.FileStat> {
-        // eslint-disable-next-line 
+        // eslint-disable-next-line
         // TODO https://github.com/microsoft/vscode/issues/71204 (84514)):
         //   This functionality has been requested for the VS Code API.
         const stat = await fs.lstat(filename);

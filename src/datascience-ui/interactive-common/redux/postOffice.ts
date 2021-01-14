@@ -15,7 +15,7 @@ import { CommonActionType } from './reducers/types';
 export const AllowedIPyWidgetMessages = [...Object.values(IPyWidgetMessages)];
 
 export function generatePostOfficeSendReducer(postOffice: PostOffice): Redux.Reducer<{}, Redux.AnyAction> {
-    // eslint-disable-next-line 
+    // eslint-disable-next-line
     return function (_state: {} | undefined, action: Redux.AnyAction): {} {
         if (isAllowedAction(action)) {
             // Make sure a valid message

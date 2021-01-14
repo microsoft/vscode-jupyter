@@ -20,7 +20,7 @@ import { PersistentStateFactory } from '../../../client/common/persistentState';
 import { IPersistentState, IPersistentStateFactory } from '../../../client/common/types';
 import { Common, DataScienceSurveyBanner, ExtensionChannels } from '../../../client/common/utils/localize';
 
-// eslint-disable-next-line 
+// eslint-disable-next-line
 suite('Insiders Extension prompt', () => {
     let appShell: IApplicationShell;
     let extensionChannelService: IExtensionChannelService;

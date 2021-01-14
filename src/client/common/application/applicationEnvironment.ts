@@ -67,7 +67,7 @@ export class ApplicationEnvironment implements IApplicationEnvironment {
         return vscode.env.uiKind;
     }
     public get extensionName(): string {
-        // eslint-disable-next-line 
+        // eslint-disable-next-line
         return this.packageJson.displayName;
     }
     /**

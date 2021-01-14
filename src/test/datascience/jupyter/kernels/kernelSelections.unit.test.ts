@@ -21,7 +21,7 @@ import { IJupyterKernel, IJupyterKernelSpec, IJupyterSessionManager } from '../.
 import { IInterpreterQuickPickItem, IInterpreterSelector } from '../../../../client/interpreter/configuration/types';
 import { IInterpreterService } from '../../../../client/interpreter/contracts';
 
-// eslint-disable-next-line 
+// eslint-disable-next-line
 suite('DataScience - KernelSelections', () => {
     let kernelSelectionProvider: KernelSelectionProvider;
     let kernelService: KernelService;

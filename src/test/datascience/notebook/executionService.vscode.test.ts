@@ -190,7 +190,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         assert.isNotEmpty(errorOutput.traceback, 'Incorrect traceback');
         expect(cell.metadata.executionOrder).to.be.greaterThan(0, 'Execution count should be > 0');
         expect(cell.metadata.runStartTime).to.be.greaterThan(0, 'Start time should be > 0');
-        // eslint-disable-next-line 
+        // eslint-disable-next-line
         // TODO: https://github.com/microsoft/vscode-jupyter/issues/204
         // expect(cell.metadata.lastRunDuration).to.be.greaterThan(0, 'Duration should be > 0');
         assert.equal(cell.metadata.runState, vscodeNotebookEnums.NotebookCellRunState.Error, 'Incorrect State');

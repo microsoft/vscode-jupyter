@@ -68,7 +68,7 @@ export type TraceInfo = {
 export function tracing<T>(log: (t: TraceInfo) => void, run: () => T): T {
     const timer = new StopWatch();
     try {
-        // eslint-disable-next-line no-invalid-this, @typescript-eslint/no-use-before-define, 
+        // eslint-disable-next-line no-invalid-this, @typescript-eslint/no-use-before-define,
         const result = run();
 
         // If method being wrapped returns a promise then wait for it.
@@ -81,7 +81,7 @@ export function tracing<T>(log: (t: TraceInfo) => void, run: () => T): T {
                 })
                 .catch((ex) => {
                     log({ elapsed: timer.elapsedTime, err: ex });
-                    // eslint-disable-next-line 
+                    // eslint-disable-next-line
                     // TODO(GH-11645) Re-throw the error like we do
                     // in the non-Promise case.
                 });

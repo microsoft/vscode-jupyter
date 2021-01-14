@@ -35,7 +35,7 @@ class MockSocket {
     }
 }
 // Defines a Mocha test suite to group tests of similar kind together
-// eslint-disable-next-line 
+// eslint-disable-next-line
 suite('SocketStream', () => {
     test('Read Byte', (done) => {
         const buffer = new Buffer('X');

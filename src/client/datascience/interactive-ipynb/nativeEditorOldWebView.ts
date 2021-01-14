@@ -235,7 +235,7 @@ export class NativeEditorOldWebView extends NativeEditor {
         const yes = localize.DataScience.dirtyNotebookYes();
         const no = localize.DataScience.dirtyNotebookNo();
         const result = await this.applicationShell.showInformationMessage(
-            // eslint-disable-next-line 
+            // eslint-disable-next-line
             `${message1}\n${message2}`,
             { modal: true },
             yes,

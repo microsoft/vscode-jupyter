@@ -55,7 +55,7 @@ export function debounceAsync(wait?: number) {
 }
 
 export function makeDebounceDecorator(wait?: number) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any, 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any,
     return function (_target: any, _propertyName: string, descriptor: TypedPropertyDescriptor<VoidFunction>) {
         // We could also make use of _debounce() options.  For instance,
         // the following causes the original method to be called
@@ -82,7 +82,7 @@ export function makeDebounceDecorator(wait?: number) {
 }
 
 export function makeDebounceAsyncDecorator(wait?: number) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any, 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any,
     return function (_target: any, _propertyName: string, descriptor: TypedPropertyDescriptor<AsyncVoidFunction>) {
         type StateInformation = {
             started: boolean;
@@ -163,14 +163,14 @@ export function cache(expiryDurationMs: number) {
  * @returns void
  */
 export function swallowExceptions(scopeName?: string) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any, 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any,
     return function (_target: any, propertyName: string, descriptor: TypedPropertyDescriptor<any>) {
         const originalMethod = descriptor.value!;
         const errorMessage = `Jupyter Extension (Error in ${scopeName || propertyName}, method:${propertyName}):`;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any, 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any,
         descriptor.value = function (...args: any[]) {
             try {
-                // eslint-disable-next-line no-invalid-this, @typescript-eslint/no-use-before-define, 
+                // eslint-disable-next-line no-invalid-this, @typescript-eslint/no-use-before-define,
                 const result = originalMethod.apply(this, args);
 
                 // If method being wrapped returns a promise then wait and swallow errors.
@@ -198,7 +198,7 @@ type PromiseFunction = (...any: any[]) => Promise<any>;
 export function displayProgress(title: string, location = ProgressLocation.Window) {
     return function (_target: Object, _propertyName: string, descriptor: TypedPropertyDescriptor<PromiseFunction>) {
         const originalMethod = descriptor.value!;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any, 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any,
         descriptor.value = async function (...args: any[]) {
             const progressOptions: ProgressOptions = { location, title };
             // eslint-disable-next-line no-invalid-this

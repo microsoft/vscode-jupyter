@@ -135,7 +135,7 @@ class TestRunner {
     }
 
     private async getDevVersion(): Promise<string> {
-        // eslint-disable-next-line 
+        // eslint-disable-next-line
         return require(path.join(EXTENSION_ROOT_DIR, 'package.json')).version;
     }
 

@@ -320,7 +320,7 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
         return fullCommandList;
     }
 
-    // eslint-disable-next-line 
+    // eslint-disable-next-line
     private createCodeLens(
         document: TextDocument,
         cellRange: { range: Range; cell_type: string },

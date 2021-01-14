@@ -6,7 +6,7 @@ import { IJupyterExtraSettings } from '../../client/datascience/types';
 
 export function getDefaultSettings(): IJupyterExtraSettings {
     // Default settings for tests
-    // eslint-disable-next-line 
+    // eslint-disable-next-line
     const result: Partial<IJupyterExtraSettings> = {
         insidersChannel: 'off',
         experiments: { enabled: true, optInto: [], optOutFrom: [] },

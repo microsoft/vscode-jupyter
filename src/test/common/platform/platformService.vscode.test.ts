@@ -12,7 +12,7 @@ import { OSType } from '../../../client/common/utils/platform';
 
 use(chaiAsPromised);
 
-// eslint-disable-next-line 
+// eslint-disable-next-line
 suite('PlatformService', () => {
     const osType = getOSType();
     test('pathVariableName', async () => {

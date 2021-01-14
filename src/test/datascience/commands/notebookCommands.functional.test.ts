@@ -92,7 +92,7 @@ suite('DataScience - Notebook Commands', () => {
     ];
 
     [true, false].forEach((isLocalConnection) => {
-        // eslint-disable-next-line 
+        // eslint-disable-next-line
         suite(isLocalConnection ? 'Local Connection' : 'Remote Connection', () => {
             setup(() => {
                 interactiveWindowProvider = mock(InteractiveWindowProvider);
@@ -134,7 +134,7 @@ suite('DataScience - Notebook Commands', () => {
                 );
 
                 const configService = mock(ConfigurationService);
-                // eslint-disable-next-line 
+                // eslint-disable-next-line
                 const settings = { jupyterServerType: isLocalConnection ? 'local' : 'remote' };
                 when(configService.getSettings(anything())).thenReturn(settings as any);
                 const extensionChecker = mock(PythonExtensionChecker);

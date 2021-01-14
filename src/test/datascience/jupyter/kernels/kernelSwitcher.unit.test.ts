@@ -78,7 +78,7 @@ suite('DataScience - Kernel Switcher', () => {
     });
 
     [true, false].forEach((isLocalConnection) => {
-        // eslint-disable-next-line 
+        // eslint-disable-next-line
         suite(isLocalConnection ? 'Local Connection' : 'Remote Connection', () => {
             setup(() => {
                 const jupyterConnection: IJupyterConnection = {

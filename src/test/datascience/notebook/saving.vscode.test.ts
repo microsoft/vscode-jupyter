@@ -133,7 +133,7 @@ suite('DataScience - VSCode Notebook - (Saving) (slow)', function () {
             assert.isEmpty(cell4.metadata.statusMessage || '', 'Cell 4 status should be empty'); // Not executed.
 
             // Persisting these require us to save custom metadata in ipynb. Not sure users would like this. We'll have more changes in ipynb files.
-            // eslint-disable-next-line 
+            // eslint-disable-next-line
             // TODO: Discuss whether we need to persist these.
             // assert.isOk(cell1.metadata.runStartTime, 'Start time should be > 0');
             // assert.isOk(cell1.metadata.lastRunDuration, 'Duration should be > 0');

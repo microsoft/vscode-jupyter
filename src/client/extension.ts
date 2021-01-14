@@ -84,7 +84,7 @@ export function deactivate(): Thenable<void> {
 /////////////////////////////
 // activation helpers
 
-// eslint-disable-next-line 
+// eslint-disable-next-line
 async function activateUnsafe(
     context: IExtensionContext,
     startupStopWatch: StopWatch,

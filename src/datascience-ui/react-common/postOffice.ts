@@ -74,10 +74,10 @@ export class PostOffice implements IDisposable {
 
     public acquireApi(): IVsCodeApi | undefined {
         // Only do this once as it crashes if we ask more than once
-        // eslint-disable-next-line 
+        // eslint-disable-next-line
         if (!this.vscodeApi && typeof acquireVsCodeApi !== 'undefined') {
             this.vscodeApi = acquireVsCodeApi(); // NOSONAR
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any, 
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any,
         } else if (!this.vscodeApi && typeof (window as any).acquireVsCodeApi !== 'undefined') {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             this.vscodeApi = (window as any).acquireVsCodeApi();

@@ -11,7 +11,7 @@ import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants';
 
 const RANDOM_WORDS = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'common', 'randomWords.txt');
 
-// eslint-disable-next-line 
+// eslint-disable-next-line
 suite('Crypto Utils', async () => {
     let crypto: CryptoUtils;
     let wordsText: string;

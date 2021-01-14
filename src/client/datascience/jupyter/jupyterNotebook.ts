@@ -1078,7 +1078,7 @@ export class JupyterNotebookBase implements INotebook {
         }
     }
 
-    // eslint-disable-next-line 
+    // eslint-disable-next-line
     private handleCodeRequest = (subscriber: CellSubscriber, silent?: boolean) => {
         // Generate a new request if we still can
         if (subscriber.isValid(this.sessionStartTime)) {

@@ -213,7 +213,7 @@ export function createJupyterCellFromVSCNotebookCell(
     if ('vscode' in cell.metadata) {
         const metadata = { ...cell.metadata };
         // Persisting these require us to save custom metadata in ipynb. Not sure users would like this. We'll have more changes in ipynb files.
-        // eslint-disable-next-line 
+        // eslint-disable-next-line
         // TODO: Discuss whether we need to persist these.
         delete metadata.vscode;
         // if (metadata.vscode && typeof metadata.vscode === 'object' && 'transient' in metadata.vscode) {
@@ -441,7 +441,7 @@ export async function updateCellExecutionTimes(
         return;
     }
     // Persisting these require us to save custom metadata in ipynb. Not sure users would like this. We'll have more changes in ipynb files.
-    // eslint-disable-next-line 
+    // eslint-disable-next-line
     // TODO: Discuss whether we need to persist these.
     // const startTimeISO = new Date(times.startTime).toISOString();
     // const endTimeISO = new Date(times.startTime + times.lastRunDuration).toISOString();

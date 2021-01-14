@@ -47,7 +47,7 @@ function monkeypatchConsole() {
         // We could use a closure but it's a bit trickier.
         const sym = Symbol.for(stream);
         consoleAny[sym] = consoleAny[stream];
-        // eslint-disable-next-line 
+        // eslint-disable-next-line
         consoleAny[stream] = function () {
             const args = Array.prototype.slice.call(arguments);
             const fn = consoleAny[sym];

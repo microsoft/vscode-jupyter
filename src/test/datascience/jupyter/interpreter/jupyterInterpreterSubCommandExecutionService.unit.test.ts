@@ -84,7 +84,7 @@ suite('DataScience - Jupyter InterpreterSubCommandExecutionService', () => {
         when(interperterService.getActiveInterpreter()).thenResolve(activePythonInterpreter);
         when(interperterService.getActiveInterpreter(undefined)).thenResolve(activePythonInterpreter);
     });
-    // eslint-disable-next-line 
+    // eslint-disable-next-line
     suite('Interpreter is not selected', () => {
         setup(() => {
             when(jupyterInterpreter.getSelectedInterpreter()).thenResolve(undefined);
@@ -184,7 +184,7 @@ suite('DataScience - Jupyter InterpreterSubCommandExecutionService', () => {
             );
         });
     });
-    // eslint-disable-next-line 
+    // eslint-disable-next-line
     suite('Interpreter is selected', () => {
         setup(() => {
             when(jupyterInterpreter.getSelectedInterpreter()).thenResolve(selectedJupyterInterpreter);

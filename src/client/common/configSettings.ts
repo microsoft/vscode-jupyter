@@ -106,7 +106,7 @@ export class JupyterSettings implements IWatchableJupyterSettings {
         this._workspaceRoot = workspaceFolder;
         this.initialize();
     }
-    // eslint-disable-next-line 
+    // eslint-disable-next-line
     public static getInstance(resource: Uri | undefined, workspace?: IWorkspaceService): JupyterSettings {
         workspace = workspace || new WorkspaceService();
         const workspaceFolderUri = JupyterSettings.getSettingsUriAndTarget(resource, workspace).uri;
@@ -162,7 +162,7 @@ export class JupyterSettings implements IWatchableJupyterSettings {
         allowedKeys.forEach((k) => (result[k] = (<any>this)[k]));
         return result;
     }
-    // eslint-disable-next-line complexity, 
+    // eslint-disable-next-line complexity,
     protected update(jupyterConfig: WorkspaceConfiguration) {
         const workspaceRoot = this._workspaceRoot?.fsPath;
         const systemVariables: SystemVariables = new SystemVariables(undefined, workspaceRoot, this._workspace);

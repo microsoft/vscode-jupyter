@@ -183,7 +183,7 @@ export class DebuggerVariables extends DebugLocationTracker
             this.debuggingStarted = true;
         } else if (message.type === 'response' && message.command === 'variables' && message.body) {
             // If using the interactive debugger, update our variables.
-            // eslint-disable-next-line 
+            // eslint-disable-next-line
             // TODO: Figure out what resource to use
             this.updateVariables(undefined, message as DebugProtocol.VariablesResponse);
             this.monkeyPatchDataViewableVariables(message);

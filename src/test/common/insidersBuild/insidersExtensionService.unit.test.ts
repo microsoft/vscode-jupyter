@@ -109,7 +109,7 @@ suite('Insiders Extension', () => {
         });
     });
 
-    // eslint-disable-next-line 
+    // eslint-disable-next-line
     suite('Insiders Extension Service - Activation', () => {
         let appEnvironment: IApplicationEnvironment;
         let serviceContainer: IServiceContainer;
@@ -226,7 +226,7 @@ suite('Insiders Extension', () => {
         });
     });
 
-    // eslint-disable-next-line 
+    // eslint-disable-next-line
     suite('Insiders Extension Service - Function handleEdgeCases()', () => {
         let appEnvironment: TypeMoq.IMock<IApplicationEnvironment>;
         let serviceContainer: TypeMoq.IMock<IServiceContainer>;
@@ -480,7 +480,7 @@ suite('Insiders Extension', () => {
         });
     });
 
-    // eslint-disable-next-line 
+    // eslint-disable-next-line
     suite('Insiders Extension Service - Function registerCommandsAndHandlers()', () => {
         let appEnvironment: IApplicationEnvironment;
         let serviceContainer: IServiceContainer;

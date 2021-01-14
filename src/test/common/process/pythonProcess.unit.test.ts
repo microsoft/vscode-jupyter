@@ -16,7 +16,7 @@ const isolated = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'pythonFiles', 'pyvsc-r
 
 use(chaiAsPromised);
 
-// eslint-disable-next-line 
+// eslint-disable-next-line
 suite('PythonProcessService', () => {
     let processService: TypeMoq.IMock<IProcessService>;
     let fileSystem: TypeMoq.IMock<IFileSystem>;

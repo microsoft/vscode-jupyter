@@ -56,9 +56,9 @@ export async function sendErrorTelemetry(
 }
 
 async function getActivationTelemetryProps(serviceContainer: IServiceContainer): Promise<EditorLoadTelemetry> {
-    // eslint-disable-next-line 
+    // eslint-disable-next-line
     // TODO: Not all of this data is showing up in the database...
-    // eslint-disable-next-line 
+    // eslint-disable-next-line
     // TODO: If any one of these parts fails we send no info.  We should
     // be able to partially populate as much as possible instead
     // (through granular try-catch statements).

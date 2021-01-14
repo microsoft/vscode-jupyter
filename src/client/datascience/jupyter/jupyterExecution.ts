@@ -130,7 +130,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
         cancelToken?: CancellationToken
     ): Promise<INotebookServer | undefined> {
         // Return nothing if we cancel
-        // eslint-disable-next-line 
+        // eslint-disable-next-line
         return Cancellation.race(async () => {
             let result: INotebookServer | undefined;
             let connection: IJupyterConnection | undefined;
@@ -385,7 +385,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
         }
     }
 
-    // eslint-disable-next-line 
+    // eslint-disable-next-line
     @captureTelemetry(Telemetry.StartJupyter)
     private async startNotebookServer(
         useDefaultConfig: boolean,

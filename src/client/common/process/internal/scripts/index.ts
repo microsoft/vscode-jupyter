@@ -197,11 +197,11 @@ export function refactor(root: string): [string[], (out: string) => object[]] {
     const script = path.join(SCRIPTS_DIR, 'refactor.py');
     const args = [ISOLATED, script, root];
 
-    // eslint-disable-next-line 
+    // eslint-disable-next-line
     // TODO: Make the return type more specific, like we did
     // with completion().
     function parse(out: string): object[] {
-        // eslint-disable-next-line 
+        // eslint-disable-next-line
         // TODO: Also handle "STARTED"?
         return out
             .split(/\r?\n/g)

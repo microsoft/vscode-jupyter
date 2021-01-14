@@ -587,7 +587,7 @@ export async function hijackPrompt(
         clickButton.resolve(buttonToClick.text);
     }
     let displayCount = 0;
-    // eslint-disable-next-line 
+    // eslint-disable-next-line
     const stub = sinon.stub(appShell, promptType).callsFake(function (msg: string) {
         traceInfo(`Message displayed to user '${msg}', condition ${JSON.stringify(message)}`);
         if (

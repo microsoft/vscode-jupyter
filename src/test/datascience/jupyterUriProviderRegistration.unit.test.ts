@@ -33,7 +33,7 @@ class MockProvider implements IJupyterUriProvider {
         if (handle === '1') {
             const currentDate = new Date();
             return {
-                // eslint-disable-next-line 
+                // eslint-disable-next-line
                 baseUrl: 'http://foobar:3000',
                 token: '',
                 displayName: 'dummy',
@@ -90,7 +90,7 @@ suite('DataScience URI Picker', () => {
         const handle = await pickers[0].handleQuickPick(quickPick[0], false);
         assert.ok(handle, 'Handle not set');
         const uri = await registration.getJupyterServerUri('1', handle!);
-        // eslint-disable-next-line 
+        // eslint-disable-next-line
         assert.equal(uri.baseUrl, 'http://foobar:3000', 'Base URL not found');
         assert.equal(uri.displayName, 'dummy', 'Display name not found');
     });
@@ -111,7 +111,7 @@ suite('DataScience URI Picker', () => {
         assert.equal(quickPick.length, 1, 'No quick pick items added');
         try {
             await registration.getJupyterServerUri('1', 'foobar');
-            // eslint-disable-next-line 
+            // eslint-disable-next-line
             assert.fail('Should not get here');
         } catch {
             // This means test passed.
@@ -120,23 +120,23 @@ suite('DataScience URI Picker', () => {
     test('No picker call', async () => {
         const registration = createRegistration(['1']);
         const uri = await registration.getJupyterServerUri('1', '1');
-        // eslint-disable-next-line 
+        // eslint-disable-next-line
         assert.equal(uri.baseUrl, 'http://foobar:3000', 'Base URL not found');
     });
     test('Two pickers', async () => {
         const registration = createRegistration(['1', '2']);
         let uri = await registration.getJupyterServerUri('1', '1');
-        // eslint-disable-next-line 
+        // eslint-disable-next-line
         assert.equal(uri.baseUrl, 'http://foobar:3000', 'Base URL not found');
         uri = await registration.getJupyterServerUri('2', '1');
-        // eslint-disable-next-line 
+        // eslint-disable-next-line
         assert.equal(uri.baseUrl, 'http://foobar:3000', 'Base URL not found');
     });
     test('Two pickers with same id', async () => {
         const registration = createRegistration(['1', '1']);
         try {
             await registration.getJupyterServerUri('1', '1');
-            // eslint-disable-next-line 
+            // eslint-disable-next-line
             assert.fail('Should have failed if calling with same picker');
         } catch {
             // This means it passed

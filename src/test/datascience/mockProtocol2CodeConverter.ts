@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import * as code from 'vscode';
-// eslint-disable-next-line 
+// eslint-disable-next-line
 import ProtocolCompletionItem from 'vscode-languageclient/lib/common/protocolCompletionItem';
 import { Protocol2CodeConverter } from 'vscode-languageclient/node';
 import * as proto from 'vscode-languageserver-protocol';

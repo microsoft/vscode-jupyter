@@ -44,7 +44,7 @@ function generateDefaultState(
         return generateTestState('', editable);
     } else {
         return {
-            // eslint-disable-next-line 
+            // eslint-disable-next-line
             skipDefault,
             testMode,
             baseTheme: baseTheme,

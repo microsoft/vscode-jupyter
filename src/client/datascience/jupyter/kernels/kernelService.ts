@@ -290,12 +290,12 @@ export class KernelService {
      * @returns {Promise<IJupyterKernelSpec>}
      * @memberof KernelService
      */
-    // eslint-disable-next-line 
+    // eslint-disable-next-line
     // eslint-disable-next-line complexity
     @captureTelemetry(Telemetry.RegisterInterpreterAsKernel, undefined, true)
     @traceDecorators.error('Failed to register an interpreter as a kernel')
     @reportAction(ReportableAction.KernelsRegisterKernel)
-    // eslint-disable-next-line 
+    // eslint-disable-next-line
     public async registerKernel(
         interpreter: PythonEnvironment,
         disableUI?: boolean,
