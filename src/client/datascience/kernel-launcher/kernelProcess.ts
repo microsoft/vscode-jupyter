@@ -197,6 +197,9 @@ export class KernelProcess implements IKernelProcess {
         let kernelSpec = this._kernelConnectionMetadata.kernelSpec;
         // If there is no kernelspec & when launching a Python process, generate a dummy `kernelSpec`
         if (!kernelSpec && this._kernelConnectionMetadata.kind === 'startUsingPythonInterpreter') {
+            traceInfo(
+                `Creating a default kernel spec for use with interpreter ${this._kernelConnectionMetadata.interpreter.displayName} # ${this._kernelConnectionMetadata.interpreter.path}`
+            );
             kernelSpec = createDefaultKernelSpec(this._kernelConnectionMetadata.interpreter);
         }
         // We always expect a kernel spec.
@@ -204,7 +207,7 @@ export class KernelProcess implements IKernelProcess {
             throw new Error('KernelSpec cannot be empty in KernelProcess.ts');
         }
         if (!Array.isArray(kernelSpec.argv)) {
-            traceError('KernelSpec.argv in KernelPrcess is undefined');
+            traceError('KernelSpec.argv in KernelProcess is undefined');
             // tslint:disable-next-line: no-any
             this._launchKernelSpec = undefined;
         } else {

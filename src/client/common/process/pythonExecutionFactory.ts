@@ -8,7 +8,7 @@ import { IWindowsStoreInterpreter } from '../../interpreter/locators/types';
 import { IServiceContainer } from '../../ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
-import { traceError } from '../logger';
+import { traceError, traceInfo } from '../logger';
 import { IFileSystem } from '../platform/types';
 import { IDisposable, IDisposableRegistry, Resource } from '../types';
 import { ProcessService } from './proc';
@@ -96,6 +96,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
             ]);
 
             if (isDaemonPoolCreationOption(options)) {
+                traceInfo(`Creating daemon pool for ${pythonPath} with env variables count ${Object.keys(activatedEnvVars || {}).length}`);
                 const daemon = new PythonDaemonExecutionServicePool(
                     this.logger,
                     this.disposables,
@@ -108,6 +109,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
                 this.disposables.push(daemon);
                 return (daemon as unknown) as T;
             } else {
+                traceInfo(`Creating daemon process for ${pythonPath} with env variables count ${Object.keys(activatedEnvVars || {}).length}`);
                 const factory = new PythonDaemonFactory(
                     this.disposables,
                     { ...options, pythonPath },
