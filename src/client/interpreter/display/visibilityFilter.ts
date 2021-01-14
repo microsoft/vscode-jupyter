@@ -35,12 +35,15 @@ export class InterpreterStatusBarVisibility
         // Tell the python extension about our filter
         if (this.extensionChecker.isPythonExtensionInstalled) {
             this._registered = true;
-            this.pythonApi.getApi().then((a) => {
-                // Python API may not have the register function yet.
-                if (a.registerInterpreterStatusFilter) {
-                    a.registerInterpreterStatusFilter(this);
-                }
-            });
+            this.pythonApi
+                .getApi()
+                .then((a) => {
+                    // Python API may not have the register function yet.
+                    if (a.registerInterpreterStatusFilter) {
+                        a.registerInterpreterStatusFilter(this);
+                    }
+                })
+                .ignoreErrors();
         }
     }
     public get changed(): Event<void> {
