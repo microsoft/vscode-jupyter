@@ -16,6 +16,7 @@ import {
     IDisposableRegistry,
     IExtensionContext
 } from '../../../common/types';
+import { noop } from '../../../common/utils/misc';
 import {
     IDataScienceErrorHandler,
     INotebookEditorProvider,
@@ -52,7 +53,9 @@ export class KernelProvider implements IKernelProvider {
         return this.kernelsByUri.get(uri.toString())?.kernel;
     }
     public async dispose() {
-        await Promise.all(Array.from(this.pendingDisposables.values()));
+        const items = Array.from(this.pendingDisposables.values());
+        this.pendingDisposables.clear();
+        await Promise.all(items);
     }
     public getOrCreate(uri: Uri, options: KernelOptions): IKernel | undefined {
         const existingKernelInfo = this.kernelsByUri.get(uri.toString());
@@ -121,7 +124,11 @@ export class KernelProvider implements IKernelProvider {
         const kernelToDispose = this.kernelsByUri.get(uri.toString());
         if (kernelToDispose) {
             this.pendingDisposables.add(kernelToDispose.kernel);
-            kernelToDispose.kernel.dispose().catch((ex) => traceWarning('Failed to dispose old kernel', ex)); // NOSONAR.
+            kernelToDispose.kernel
+                .dispose()
+                .catch((ex) => traceWarning('Failed to dispose old kernel', ex))
+                .finally(() => this.pendingDisposables.delete(kernelToDispose.kernel))
+                .catch(noop);
         }
         this.kernelsByUri.delete(uri.toString());
     }
