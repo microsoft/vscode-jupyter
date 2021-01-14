@@ -9,7 +9,7 @@ import * as tmp from 'tmp';
 import { CancellationTokenSource, Event, EventEmitter } from 'vscode';
 import { IPythonExtensionChecker } from '../../api/types';
 import { createPromiseFromCancellation } from '../../common/cancellation';
-import { traceError, traceInfo, traceWarning } from '../../common/logger';
+import { traceDecorators, traceError, traceInfo, traceWarning } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IProcessServiceFactory, ObservableExecutionResult } from '../../common/process/types';
 import { Resource } from '../../common/types';
@@ -288,6 +288,7 @@ export class KernelProcess implements IKernelProcess {
         return newConnectionArgs;
     }
 
+    @traceDecorators.verbose('Launching kernel in kernelProcess.ts')
     private async launchAsObservable(workingDirectory: string) {
         let exeObs: ObservableExecutionResult<string> | undefined;
 
@@ -309,6 +310,7 @@ export class KernelProcess implements IKernelProcess {
         if (!exeObs) {
             // First part of argument is always the executable.
             const executable = this.launchKernelSpec.argv[0];
+            traceInfo(`Launching Raw Kernel & not daemon ${this.launchKernelSpec.display_name} # ${executable}`);
             const [executionService, env] = await Promise.all([
                 this.processExecutionFactory.create(this.resource),
                 this.kernelEnvVarsService.getEnvironmentVariables(this.resource, this.launchKernelSpec)

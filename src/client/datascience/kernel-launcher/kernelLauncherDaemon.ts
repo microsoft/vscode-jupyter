@@ -10,6 +10,7 @@ import { IDisposable } from 'monaco-editor';
 import { ObservableExecutionResult } from '../../common/process/types';
 import { Resource } from '../../common/types';
 import { noop } from '../../common/utils/misc';
+import { traceDecorators } from '../../logging';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { IJupyterKernelSpec } from '../types';
 import { KernelDaemonPool } from './kernelDaemonPool';
@@ -29,6 +30,7 @@ export class PythonKernelLauncherDaemon implements IDisposable {
         @inject(KernelEnvironmentVariablesService)
         private readonly kernelEnvVarsService: KernelEnvironmentVariablesService
     ) {}
+    @traceDecorators.verbose('Launching kernel daemon')
     public async launch(
         resource: Resource,
         workingDirectory: string,
