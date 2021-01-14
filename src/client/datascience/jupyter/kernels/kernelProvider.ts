@@ -30,6 +30,7 @@ import { IKernel, IKernelProvider, IKernelSelectionUsage, KernelOptions } from '
 @injectable()
 export class KernelProvider implements IKernelProvider {
     private readonly kernelsByUri = new Map<string, { options: KernelOptions; kernel: IKernel }>();
+    private readonly pendingDisposables = new Set<IAsyncDisposable>();
     constructor(
         @inject(IAsyncDisposableRegistry) private asyncDisposables: IAsyncDisposableRegistry,
         @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
@@ -48,7 +49,6 @@ export class KernelProvider implements IKernelProvider {
         this.asyncDisposables.push(this);
     }
 
-    private pendingDisposables = new Set<IAsyncDisposable>();
     public get(uri: Uri): IKernel | undefined {
         return this.kernelsByUri.get(uri.toString())?.kernel;
     }
