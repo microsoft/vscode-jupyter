@@ -41,5 +41,7 @@ export interface INotebookWatcher {
 
 export const IVariableViewProvider = Symbol('IVariableViewProvider');
 export interface IVariableViewProvider extends IVSCWebviewViewProvider {
-    activeVariableView?: VariableView;
+    //activeVariableView?: VariableView;
+    //readonly onDidResolveWebview: Event<VariableView>;
+    readonly activeVariableView: Promise<VariableView>;
 }

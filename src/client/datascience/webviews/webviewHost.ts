@@ -47,6 +47,9 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
     // For testing, holds the current request for webview HTML
     private activeHTMLRequest?: Deferred<string>;
 
+    // For testing, broadcast messages to the following listeners
+    private onMessageListeners: { onMessage(message: string, payload: any): void }[] = [];
+
     constructor(
         @unmanaged() protected configService: IConfigurationService,
         @unmanaged() private cssGenerator: ICodeCssGenerator,
@@ -103,6 +106,15 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
         return this.activeHTMLRequest.promise;
     }
 
+    public addOnMessageListener(listener: { onMessage(message: string, payload: any): void }): void {
+        // Test only
+        //if (!isTestExecution()) {
+        //throw new Error('getHTMLById to be run only in test code');
+        //}
+
+        this.onMessageListeners.push(listener);
+    }
+
     protected abstract provideWebview(
         cwd: string,
         settings: IJupyterExtraSettings,
@@ -154,6 +166,11 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
             default:
                 break;
         }
+
+        // Broadcast to onMessage listeners
+        this.onMessageListeners.forEach((listener) => {
+            listener.onMessage(message, payload);
+        });
     }
 
     protected async loadWebview(cwd: string, webView?: vscodeWebviewPanel | vscodeWebviewView) {

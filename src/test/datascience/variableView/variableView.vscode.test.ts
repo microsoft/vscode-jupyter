@@ -22,6 +22,7 @@ import {
     waitForKernelToGetAutoSelected
 } from '../notebook/helper';
 import { INotebookEditorProvider } from '../../../client/datascience/types';
+import { OnMessageListener, OnMessageWrapper } from '../vscodeTestHelpers';
 
 suite('DataScience - VariableView', () => {
     let api: IExtensionTestApi;
@@ -81,20 +82,33 @@ suite('DataScience - VariableView', () => {
         commandManager.executeCommand(Commands.OpenVariableView);
 
         // IANHU: Remove, just for testing
-        await sleep(5_000);
+        await sleep(4_000);
 
         // Another view open?
         commandManager.executeCommand(Commands.OpenVariableView);
-        await sleep(5_000);
+        await sleep(4_000);
 
         console.log('**** Sleep finished ****');
 
         // Now check to see if we can actually look at the variable view
-        const variableView = variableViewProvider.activeVariableView;
+        const variableView = await variableViewProvider.activeVariableView;
 
         if (variableView) {
             console.log('**** found variableView');
         }
+
+        // Check our messages for variable view
+        //const variableMessageWrapper = new OnMessageWrapper(variableView as any);
+
+        // Add our message listener
+        const onMessageListener = new OnMessageListener();
+        variableView.addOnMessageListener(onMessageListener);
+
+        // Send a second cell
+        await insertCodeCell('test2 = "MYTESTVALUE2"', { index: 1 });
+        const cell2 = vscodeNotebook.activeNotebookEditor?.document.cells![1]!;
+        await executeCell(cell2);
+        await waitForExecutionCompletedSuccessfully(cell2);
 
         const htmlResult = await variableView?.getHTMLById('variable-view-main-panel');
         //const rootHtml = await variableView?.getElementByIdAsync('root');
@@ -103,5 +117,7 @@ suite('DataScience - VariableView', () => {
         console.log(`**** htmlResult ${htmlResult} ****`);
 
         expect(htmlResult).to.contain('MYTESTVALUE');
+
+        await sleep(5_000);
     });
 });

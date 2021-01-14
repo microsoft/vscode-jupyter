@@ -31,6 +31,7 @@
                 "XVSC_JUPYTER_LOG_TELEMETRY": "1",
                 // Enable this to log IPYWIDGET messages
                 "VSC_JUPYTER_LOG_IPYWIDGETS": "1",
+                "VSC_JUPYTER_WEBVIEW_TEST_MIDDLEWARE": "true", // Initialize to create the webview test middleware
                 // Enable this to log debugger output. Directory must exist ahead of time
                 "XDEBUGPY_LOG_DIR": "${workspaceRoot}/tmp/Debug_Output_Ex"
             },
@@ -208,6 +209,7 @@
                 "VSC_FORCE_REAL_JUPYTER": "true", // Enalbe tests that require Jupyter.
                 "VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST": "", // Initialize this to run tests again Julia & other kernels.
                 "VSC_JUPYTER_RUN_NB_TEST": "true", // Initialize this to run notebook tests (must be using VSC Insiders).
+                "VSC_JUPYTER_WEBVIEW_TEST_MIDDLEWARE": "true", // Initialize to create the webview test middleware
                 "VSC_JUPYTER_LOAD_EXPERIMENTS_FROM_FILE": "true",
                 "TEST_FILES_SUFFIX": "vscode.test",
                 "XVSC_JUPYTER_INSTRUMENT_CODE_FOR_COVERAGE": "1",

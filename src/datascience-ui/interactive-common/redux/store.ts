@@ -34,6 +34,9 @@ import { generateMonacoReducer, IMonacoState } from './reducers/monaco';
 import { CommonActionType } from './reducers/types';
 import { generateVariableReducer, IVariableState } from './reducers/variables';
 
+// Externally defined function to see if we need to force on test middleware
+export declare function forceTestMiddleware(): boolean;
+
 function generateDefaultState(
     skipDefault: boolean,
     testMode: boolean,
@@ -306,7 +309,7 @@ function createMiddleWare(testMode: boolean, postOffice: PostOffice): Redux.Midd
     // Or if testing in UI Test.
     // tslint:disable-next-line: no-any
     const isUITest = (postOffice.acquireApi() as any)?.handleMessage ? true : false;
-    const testMiddleware = testMode || isUITest ? createTestMiddleware() : undefined;
+    const testMiddleware = forceTestMiddleware() || testMode || isUITest ? createTestMiddleware() : undefined;
 
     // Create the logger if we're not in production mode or we're forcing logging
     const reduceLogMessage = '<payload too large to displayed in logs (at least on CI)>';

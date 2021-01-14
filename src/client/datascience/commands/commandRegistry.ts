@@ -132,7 +132,7 @@ export class CommandRegistry implements IDisposable {
 
     // IANHU Just for testing, also remove injections required here
     private async handleTESTCOMMAND(): Promise<void> {
-        const variableView = this.variableViewProvider.activeVariableView;
+        const variableView = await this.variableViewProvider.activeVariableView;
 
         if (variableView) {
             const result = await variableView.getHTMLById('variable-view-main-panel');
