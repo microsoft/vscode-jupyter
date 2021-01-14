@@ -4,7 +4,7 @@
 'use strict';
 
 import * as React from 'react';
-// eslint-disable-next-line , 
+// eslint-disable-next-line ,
 import InlineSVG from 'svg-inline-react';
 
 // This react component loads our svg files inline so that we can load them in vscode as it no longer
@@ -118,7 +118,7 @@ const images: { [key: string]: { light: string; dark: string } } = {
         light: require('./images/Prev/previous.svg'),
         dark: require('./images/Prev/previous-inverse.svg')
     },
-    // eslint-disable-next-line 
+    // eslint-disable-next-line
     // Todo: Get new images from a designer. These are all temporary.
     Pan: {
         light: require('./images/Pan/pan.svg'),

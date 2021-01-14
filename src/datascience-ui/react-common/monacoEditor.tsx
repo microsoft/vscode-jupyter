@@ -110,7 +110,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
         this.hideAllOtherHoverAndParameterWidgets = debounce(this.hideAllOtherHoverAndParameterWidgets.bind(this), 150);
     }
 
-    // eslint-disable-next-line 
+    // eslint-disable-next-line
     public componentDidMount = () => {
         if (window) {
             window.addEventListener('resize', this.windowResized);

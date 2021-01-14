@@ -713,7 +713,7 @@ for i in range(100):
                 const secondUri = Uri.file('bar.py');
                 ioc.addResourceToFolder(secondUri, path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience2'));
 
-                // eslint-disable-next-line 
+                // eslint-disable-next-line
                 ioc.get<InterpreterService>(IInterpreterService).updateInterpreter(
                     secondUri,
                     interpreters.filter((i) => i.path !== activeInterpreter?.path)[0].path

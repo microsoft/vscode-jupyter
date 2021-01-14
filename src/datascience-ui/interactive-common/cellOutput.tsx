@@ -153,7 +153,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
             return;
         }
     }
-    // eslint-disable-next-line 
+    // eslint-disable-next-line
     public componentDidUpdate(prevProps: ICellOutputProps) {
         if (!this.isCodeCell() || !this.hasOutput() || !this.getCodeCell().outputs || this.props.hideOutput) {
             return;
@@ -478,7 +478,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
         }
     }
 
-    // eslint-disable-next-line 
+    // eslint-disable-next-line
     private renderOutputs(outputs: nbformat.IOutput[], trim: string): JSX.Element[] {
         return [this.renderOutput(outputs, trim)];
     }

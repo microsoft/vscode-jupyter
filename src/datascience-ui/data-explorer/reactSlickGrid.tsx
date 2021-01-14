@@ -144,7 +144,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         this.props.rowsAdded.subscribe(this.addedRows);
     }
 
-    // eslint-disable-next-line 
+    // eslint-disable-next-line
     public componentDidMount = () => {
         window.addEventListener('resize', this.windowResized);
 

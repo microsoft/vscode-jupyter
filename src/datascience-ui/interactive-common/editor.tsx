@@ -24,7 +24,7 @@ const TOP_STACK_FRAME_DECORATION: monacoEditor.editor.IModelDecorationOptions = 
     stickiness
 };
 
-// eslint-disable-next-line 
+// eslint-disable-next-line
 export interface IEditorProps {
     content: string;
     version: number;

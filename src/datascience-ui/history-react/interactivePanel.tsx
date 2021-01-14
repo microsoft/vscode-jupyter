@@ -96,7 +96,7 @@ ${buildSettingsCss(this.props.settings)}`}</style>
         this.props.focusInput();
     };
 
-    // eslint-disable-next-line 
+    // eslint-disable-next-line
     private renderToolbarPanel() {
         const variableExplorerTooltip = this.props.variableState.visible
             ? getLocString('DataScience.collapseVariableExplorerTooltip', 'Hide variables active in jupyter kernel')

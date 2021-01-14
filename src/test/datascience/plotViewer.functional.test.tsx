@@ -67,7 +67,7 @@ suite('DataScience PlotViewer tests', () => {
     }
 
     function waitForRender<P, S, C>(component: React.Component<P, S, C>, numberOfRenders: number = 1): Promise<void> {
-        // eslint-disable-next-line 
+        // eslint-disable-next-line
         return new Promise((resolve, reject) => {
             if (component) {
                 let originalRenderFunc = component.render;

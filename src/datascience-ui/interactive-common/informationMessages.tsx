@@ -4,7 +4,7 @@
 
 import * as React from 'react';
 
-// eslint-disable-next-line 
+// eslint-disable-next-line
 interface IInformationMessagesProps {
     messages: string[];
 }

@@ -59,7 +59,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private grid: React.RefObject<ReactSlickGrid> = React.createRef<ReactSlickGrid>();
     private updateTimeout?: NodeJS.Timer | number;
 
-    // eslint-disable-next-line 
+    // eslint-disable-next-line
     constructor(props: IMainPanelProps, _state: IMainPanelState) {
         super(props);
 

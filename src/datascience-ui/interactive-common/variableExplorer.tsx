@@ -19,7 +19,7 @@ import * as AdazzleReactDataGrid from 'react-data-grid';
 import { VariableExplorerHeaderCellFormatter } from './variableExplorerHeaderCellFormatter';
 import { VariableExplorerRowRenderer } from './variableExplorerRowRenderer';
 
-// eslint-disable-next-line 
+// eslint-disable-next-line
 import Draggable from 'react-draggable';
 
 import { IVariableState } from './redux/reducers/variables';
@@ -244,7 +244,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
                     columns={this.gridColumns.map((c) => {
                         return { ...defaultColumnProperties, ...c };
                     })}
-                    // eslint-disable-next-line 
+                    // eslint-disable-next-line
                     rowGetter={this.getRow}
                     rowsCount={this.props.variables.length}
                     minHeight={this.state.gridHeight}

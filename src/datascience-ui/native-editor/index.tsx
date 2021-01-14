@@ -25,7 +25,7 @@ export declare function acquireVsCodeApi(): IVsCodeApi;
 const baseTheme = detectBaseTheme();
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const testMode = (window as any).inTestMode;
-// eslint-disable-next-line 
+// eslint-disable-next-line
 const skipDefault = testMode ? false : typeof acquireVsCodeApi !== 'undefined';
 
 // Create the redux store

@@ -69,7 +69,7 @@ export class Toolbar extends React.PureComponent<INativeEditorToolbarProps> {
     }
 
     /* eslint-disable  */
-    // eslint-disable-next-line 
+    // eslint-disable-next-line
     public render() {
         const selectedInfo = this.props.selectionFocusedInfo;
 
@@ -101,7 +101,7 @@ export class Toolbar extends React.PureComponent<INativeEditorToolbarProps> {
         };
         const runBelow = () => {
             if (selectedInfo.selectedCellId && typeof selectedInfo.selectedCellIndex === 'number') {
-                // eslint-disable-next-line 
+                // eslint-disable-next-line
                 // TODO: Is the source going to be up to date during run below?
                 this.props.executeCellAndBelow(
                     selectedInfo.selectedCellId,

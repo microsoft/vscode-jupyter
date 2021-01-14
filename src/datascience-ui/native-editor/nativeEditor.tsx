@@ -211,7 +211,7 @@ ${buildSettingsCss(this.props.settings)}`}</style>
         }
         // Handler for key down presses in the main panel
         switch (event.key) {
-            // eslint-disable-next-line 
+            // eslint-disable-next-line
             // TODO: How to have this work for when the keyboard shortcuts are changed?
             case 's': {
                 if (!this.props.settings?.extraSettings.useCustomEditorApi) {

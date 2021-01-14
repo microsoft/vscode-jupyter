@@ -54,7 +54,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private postOffice: PostOffice = new PostOffice();
     private currentValue: Value | undefined;
 
-    // eslint-disable-next-line 
+    // eslint-disable-next-line
     constructor(props: IMainPanelProps, _state: IMainPanelState) {
         super(props);
         const images = !props.skipDefault ? [TestSvg, TestSvg, TestSvg] : [];

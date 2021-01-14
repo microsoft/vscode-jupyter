@@ -275,7 +275,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
         return false;
     }
 
-    // eslint-disable-next-line complexity, 
+    // eslint-disable-next-line complexity,
     private keyDownInput = (cellId: string, e: IKeyboardEvent) => {
         if (!this.isNotebookTrusted() && !isCellNavigationKeyboardEvent(e)) {
             return;
