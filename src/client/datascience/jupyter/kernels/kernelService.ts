@@ -210,7 +210,9 @@ export class KernelService {
             const majorVersion = parseInt(match.groups()!.version, 10) || 0;
             // If the major versions match, that's sufficient.
             if (!majorVersion || (activeInterpreter?.version && activeInterpreter.version.major === majorVersion)) {
-                traceInfo(`Using current interpreter for kernel ${kernelSpec.name}, ${kernelSpec.display_name}`);
+                traceInfo(
+                    `Using current interpreter for kernel ${kernelSpec.name}, ${kernelSpec.display_name}, ${activeInterpreter?.displayName} # ${activeInterpreter?.path}`
+                );
                 return activeInterpreter;
             }
 
