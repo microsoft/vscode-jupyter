@@ -5,6 +5,7 @@
 import { inject, injectable, named } from 'inversify';
 import { CancellationToken, WebviewView, WebviewViewResolveContext } from 'vscode';
 import { IApplicationShell, IWebviewViewProvider, IWorkspaceService } from '../../common/application/types';
+import { isTestExecution } from '../../common/constants';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
 import { Identifiers } from '../constants';
 import { IDataViewerFactory } from '../data-viewing/types';
@@ -16,6 +17,15 @@ import { VariableView } from './variableView';
 @injectable()
 export class VariableViewProvider implements IVariableViewProvider {
     public readonly viewType = 'jupyterViewVariables';
+
+    // Just for test execution allow for accessing the VariableView off of the provider
+    public get activeVariableView(): VariableView | undefined {
+        if (!isTestExecution()) {
+            throw new Error('activeVariableView only accessible from test code');
+        }
+
+        return this.variableView;
+    }
 
     private variableView?: VariableView;
 

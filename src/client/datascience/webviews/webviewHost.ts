@@ -24,6 +24,7 @@ import * as localize from '../../common/utils/localize';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { DefaultTheme, PythonExtension, Telemetry } from '../constants';
+import { InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
 import { CssMessages, IGetCssRequest, IGetMonacoThemeRequest, SharedMessages } from '../messages';
 import { ICodeCssGenerator, IJupyterExtraSettings, IThemeFinder } from '../types';
 
@@ -42,6 +43,10 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
 
     protected readonly _disposables: IDisposable[] = [];
     private startupStopwatch = new StopWatch();
+
+    // For testing, holds the current request for webview HTML
+    private activeHTMLRequest?: Deferred<string>;
+
     constructor(
         @unmanaged() protected configService: IConfigurationService,
         @unmanaged() private cssGenerator: ICodeCssGenerator,
@@ -77,6 +82,25 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
             this.themeIsDarkPromise = createDeferred<boolean>();
             this.themeIsDarkPromise.resolve(isDark);
         }
+    }
+
+    // This function is used for testing webview by fetching HTML from the webview
+    // only to be use for testing
+    public getHTMLById(id: string): Promise<string> {
+        // Test only
+        if (!isTestExecution()) {
+            throw new Error('getHTMLById to be run only in test code');
+        }
+
+        if (!this.activeHTMLRequest) {
+            this.activeHTMLRequest = createDeferred<string>();
+            this.postMessageInternal(InteractiveWindowMessages.GetHTMLByIdRequest, id).ignoreErrors();
+        } else {
+            // No localization for test only fuction
+            throw new Error('getHTMLById request already in progress');
+        }
+
+        return this.activeHTMLRequest.promise;
     }
 
     protected abstract provideWebview(
@@ -118,6 +142,13 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
 
             case CssMessages.GetMonacoThemeRequest:
                 this.handleMonacoThemeRequest(payload as IGetMonacoThemeRequest).ignoreErrors();
+                break;
+
+            case InteractiveWindowMessages.GetHTMLByIdResponse:
+                if (this.activeHTMLRequest) {
+                    this.activeHTMLRequest.resolve(payload);
+                    this.activeHTMLRequest = undefined;
+                }
                 break;
 
             default:

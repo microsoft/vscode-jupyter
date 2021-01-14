@@ -318,4 +318,13 @@ export namespace CommonEffects {
             externalButtons: arg.payload.data
         };
     }
+
+    export function getHTMLByIdRequest(arg: CommonReducerArg<CommonActionType, string>): IMainState {
+        const element = document.getElementById(arg.payload.data);
+
+        if (element) {
+            postActionToExtension(arg, InteractiveWindowMessages.GetHTMLByIdResponse, element.innerHTML);
+        }
+        return arg.prevState;
+    }
 }

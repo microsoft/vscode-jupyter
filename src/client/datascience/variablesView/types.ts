@@ -7,6 +7,7 @@ import {
 } from '../../datascience/interactive-common/interactiveWindowTypes';
 import { CssMessages, IGetCssRequest, IGetCssResponse, SharedMessages } from '../messages';
 import { IJupyterVariablesRequest, IJupyterVariablesResponse, INotebook, IVSCWebviewViewProvider } from '../types';
+import { VariableView } from './variableView';
 
 // Mapping of Message to payload that our VariableViewPanel needs to support
 export class IVariableViewPanelMapping {
@@ -27,6 +28,8 @@ export class IVariableViewPanelMapping {
     public [SharedMessages.LocInit]: string;
     public [InteractiveWindowMessages.FinishCell]: IFinishCell;
     public [InteractiveWindowMessages.UpdateVariableViewExecutionCount]: { executionCount: number };
+    public [InteractiveWindowMessages.GetHTMLByIdRequest]: string;
+    public [InteractiveWindowMessages.GetHTMLByIdResponse]: string;
 }
 
 export const INotebookWatcher = Symbol('INotebookWatcher');
@@ -37,4 +40,6 @@ export interface INotebookWatcher {
 }
 
 export const IVariableViewProvider = Symbol('IVariableViewProvider');
-export interface IVariableViewProvider extends IVSCWebviewViewProvider {}
+export interface IVariableViewProvider extends IVSCWebviewViewProvider {
+    activeVariableView?: VariableView;
+}

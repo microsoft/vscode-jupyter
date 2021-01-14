@@ -225,6 +225,8 @@ const messageWithMessageTypes: MessageMapping<IInteractiveWindowMapping> & Messa
     [InteractiveWindowMessages.ConvertUriForUseInWebViewResponse]: MessageType.other,
     [InteractiveWindowMessages.UpdateExternalCellButtons]: MessageType.other,
     [InteractiveWindowMessages.ExecuteExternalCommand]: MessageType.other,
+    [InteractiveWindowMessages.GetHTMLByIdRequest]: MessageType.other,
+    [InteractiveWindowMessages.GetHTMLByIdResponse]: MessageType.other,
     // Types from CssMessages
     [CssMessages.GetCssRequest]: MessageType.other,
     [CssMessages.GetCssResponse]: MessageType.other,
