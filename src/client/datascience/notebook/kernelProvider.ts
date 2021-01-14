@@ -230,6 +230,10 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
             true
         );
     }
+    /**
+     * The new kernel is started only when the user attempts to do something with it (like run a cell)
+     * This is enforced by the current VS Code UX/workflow.
+     */
     private async onDidChangeActiveNotebookKernel({
         document,
         kernel
@@ -253,7 +257,10 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
         }
 
         const existingKernel = this.kernelProvider.get(document.uri);
-        if (existingKernel && areKernelConnectionsEqual(existingKernel.metadata, selectedKernelConnectionMetadata)) {
+        if (
+            existingKernel &&
+            areKernelConnectionsEqual(existingKernel.kernelConnectionMetadata, selectedKernelConnectionMetadata)
+        ) {
             return;
         }
         switch (kernel.selection.kind) {
@@ -278,12 +285,15 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
 
         // Make this the new kernel (calling this method will associate the new kernel with this Uri).
         // Calling `getOrCreate` will ensure a kernel is created and it is mapped to the Uri provided.
+        // This will dispose any existing (older kernels) associated with this notebook.
         // This way other parts of extension have access to this kernel immediately after event is handled.
+        // Unlike webview notebooks we cannot revert to old kernel if kernel switching fails.
         this.kernelProvider.getOrCreate(document.uri, {
             metadata: selectedKernelConnectionMetadata
         });
 
-        // Change kernel and update metadata.
+        // Change kernel and update metadata (this can return `undefined`).
+        // When calling `kernelProvider.getOrCreate` it will attempt to dispose the current kernel.
         const notebook = await this.notebookProvider.getOrCreateNotebook({
             resource: document.uri,
             identity: document.uri,

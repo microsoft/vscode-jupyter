@@ -10,6 +10,7 @@ import * as path from 'path';
 import * as sinon from 'sinon';
 import { anything, capture, instance, mock, verify, when } from 'ts-mockito';
 import { CancellationToken } from 'vscode';
+import { IPythonExtensionChecker } from '../../../../client/api/types';
 import { PYTHON_LANGUAGE } from '../../../../client/common/constants';
 import { FileSystem } from '../../../../client/common/platform/fileSystem';
 import { IFileSystem } from '../../../../client/common/platform/types';
@@ -51,6 +52,8 @@ suite('DataScience - KernelService', () => {
         execFactory = mock(PythonExecutionFactory);
         execService = mock<IPythonExecutionService>();
         dependencyService = mock(KernelDependencyService);
+        const extensionChecker = mock<IPythonExtensionChecker>();
+        when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
         jupyterInterpreterExecutionService = mock<IJupyterSubCommandExecutionService>();
         when(execFactory.createActivatedEnvironment(anything())).thenResolve(instance(execService));
         // tslint:disable-next-line: no-any
@@ -62,7 +65,8 @@ suite('DataScience - KernelService', () => {
             instance(interperterService),
             instance(dependencyService),
             instance(fs),
-            instance(activationHelper)
+            instance(activationHelper),
+            instance(extensionChecker)
         );
     }
     setup(initialize);

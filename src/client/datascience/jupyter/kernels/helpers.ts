@@ -166,7 +166,7 @@ export function createDefaultKernelSpec(interpreter?: PythonEnvironment): IJupyt
         resources: {}
     };
 
-    return new JupyterKernelSpec(defaultSpec);
+    return new JupyterKernelSpec(defaultSpec, undefined, interpreter?.path);
 }
 
 export function areKernelConnectionsEqual(

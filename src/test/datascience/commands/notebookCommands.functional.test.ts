@@ -28,6 +28,7 @@ import {
 } from '../../../client/datascience/jupyter/kernels/types';
 import { IKernelFinder } from '../../../client/datascience/kernel-launcher/types';
 import { NativeEditorProvider } from '../../../client/datascience/notebookStorage/nativeEditorProvider';
+import { PreferredRemoteKernelIdProvider } from '../../../client/datascience/notebookStorage/preferredRemoteKernelIdProvider';
 import { IInteractiveWindowProvider, INotebookEditorProvider } from '../../../client/datascience/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 
@@ -119,6 +120,7 @@ suite('DataScience - Notebook Commands', () => {
                 const kernelFinder = mock<IKernelFinder>();
                 const jupyterSessionManagerFactory = mock(JupyterSessionManagerFactory);
                 const dummySessionEvent = new EventEmitter<Kernel.IKernelConnection>();
+                const preferredKernelIdProvider = mock(PreferredRemoteKernelIdProvider);
                 when(jupyterSessionManagerFactory.onRestartSessionCreated).thenReturn(dummySessionEvent.event);
                 when(jupyterSessionManagerFactory.onRestartSessionUsed).thenReturn(dummySessionEvent.event);
                 when(appShell.showQuickPick(anything(), anything(), anything())).thenCall(() => {
@@ -137,7 +139,8 @@ suite('DataScience - Notebook Commands', () => {
                 when(configService.getSettings(anything())).thenReturn(settings as any);
                 const extensionChecker = mock(PythonExtensionChecker);
                 when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
-
+                when(preferredKernelIdProvider.getPreferredRemoteKernelId(anything())).thenResolve();
+                when(preferredKernelIdProvider.storePreferredRemoteKernelId(anything(), anything())).thenResolve();
                 const kernelSelector = new KernelSelector(
                     instance(kernelSelectionProvider),
                     instance(appShell),
@@ -148,7 +151,8 @@ suite('DataScience - Notebook Commands', () => {
                     instance(jupyterSessionManagerFactory),
                     instance(configService),
                     [],
-                    instance(extensionChecker)
+                    instance(extensionChecker),
+                    instance(preferredKernelIdProvider)
                 );
 
                 const kernelSwitcher = new KernelSwitcher(

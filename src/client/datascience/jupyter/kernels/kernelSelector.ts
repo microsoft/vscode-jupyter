@@ -12,7 +12,7 @@ import { IApplicationShell } from '../../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../../common/constants';
 import '../../../common/extensions';
 import { traceDecorators, traceError, traceInfo, traceInfoIf, traceVerbose } from '../../../common/logger';
-import { IConfigurationService, IDisposableRegistry, Resource } from '../../../common/types';
+import { IConfigurationService, IDisposableRegistry, ReadWrite, Resource } from '../../../common/types';
 import * as localize from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
 import { StopWatch } from '../../../common/utils/stopWatch';
@@ -24,6 +24,7 @@ import { Commands, Settings, Telemetry } from '../../constants';
 import { IKernelFinder } from '../../kernel-launcher/types';
 import { isPythonNotebook } from '../../notebook/helpers/helpers';
 import { getInterpreterInfoStoredInMetadata } from '../../notebookStorage/baseModel';
+import { PreferredRemoteKernelIdProvider } from '../../notebookStorage/preferredRemoteKernelIdProvider';
 import { reportAction } from '../../progress/decorator';
 import { ReportableAction } from '../../progress/types';
 import {
@@ -32,7 +33,6 @@ import {
     IJupyterSessionManager,
     IJupyterSessionManagerFactory,
     IKernelDependencyService,
-    INotebookMetadataLive,
     INotebookProviderConnection,
     KernelInterpreterDependencyResponse
 } from '../../types';
@@ -75,7 +75,9 @@ export class KernelSelector implements IKernelSelectionUsage {
         @inject(IJupyterSessionManagerFactory) private jupyterSessionManagerFactory: IJupyterSessionManagerFactory,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
-        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker
+        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
+        @inject(PreferredRemoteKernelIdProvider)
+        private readonly preferredRemoteKernelIdProvider: PreferredRemoteKernelIdProvider
     ) {
         disposableRegistry.push(
             this.jupyterSessionManagerFactory.onRestartSessionCreated(this.addKernelToIgnoreList.bind(this))
@@ -227,15 +229,23 @@ export class KernelSelector implements IKernelSelectionUsage {
         telemetryProps.kernelSpecFound = !!selection?.kernelSpec;
         telemetryProps.interpreterFound = !!selection?.interpreter;
         sendTelemetryEvent(Telemetry.FindKernelForLocalConnection, stopWatch.elapsedTime, telemetryProps);
-        const itemToReturn = cloneDeep(selection);
-        if (itemToReturn) {
+        if (
+            selection &&
+            !selection.interpreter &&
+            isPythonKernelConnection(selection) &&
+            selection.kind === 'startUsingKernelSpec'
+        ) {
+            const itemToReturn = cloneDeep(selection) as ReadWrite<
+                KernelSpecConnectionMetadata | PythonKernelConnectionMetadata | DefaultKernelConnectionMetadata
+            >;
             itemToReturn.interpreter =
                 itemToReturn.interpreter ||
                 (this.extensionChecker.isPythonExtensionInstalled
-                    ? await this.interpreterService.getActiveInterpreter(resource)
+                    ? await this.kernelService.findMatchingInterpreter(selection.kernelSpec, cancelToken)
                     : undefined);
+            return itemToReturn;
         }
-        return itemToReturn;
+        return selection;
     }
 
     /**
@@ -247,7 +257,7 @@ export class KernelSelector implements IKernelSelectionUsage {
     public async getPreferredKernelForRemoteConnection(
         resource: Resource,
         sessionManager?: IJupyterSessionManager,
-        notebookMetadata?: INotebookMetadataLive,
+        notebookMetadata?: nbformat.INotebookMetadata,
         cancelToken?: CancellationToken
     ): Promise<KernelConnectionMetadata | undefined> {
         const [interpreter, specs, sessions] = await Promise.all([
@@ -259,8 +269,11 @@ export class KernelSelector implements IKernelSelectionUsage {
         ]);
 
         // First check for a live active session.
-        if (notebookMetadata && notebookMetadata.id) {
-            const session = sessions?.find((s) => s.kernel.id === notebookMetadata?.id);
+        const preferredKernelId = resource
+            ? this.preferredRemoteKernelIdProvider.getPreferredRemoteKernelId(resource)
+            : undefined;
+        if (preferredKernelId) {
+            const session = sessions?.find((s) => s.kernel.id === preferredKernelId);
             if (session) {
                 // tslint:disable-next-line: no-any
                 const liveKernel = session.kernel as any;

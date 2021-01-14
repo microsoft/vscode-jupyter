@@ -109,8 +109,9 @@ suite('DataScience - JupyterSession', () => {
         when(contentsManager.delete(anything())).thenResolve();
         when(sessionManager.startNew(anything())).thenResolve(instance(session));
         const specOrModel = { name: 'some name', id: undefined } as any;
-        (mockKernelSpec as any).setup((k: any) => k.kernelModel).returns(() => specOrModel);
-        (mockKernelSpec as any).setup((k: any) => k.kernelSpec).returns(() => specOrModel);
+        mockKernelSpec.setup((k: any) => k.kernelModel).returns(() => specOrModel);
+        mockKernelSpec.setup((k: any) => k.kernelSpec).returns(() => specOrModel);
+        mockKernelSpec.setup((k) => k.kind).returns(() => 'startUsingKernelSpec');
 
         await jupyterSession.connect(100);
     }

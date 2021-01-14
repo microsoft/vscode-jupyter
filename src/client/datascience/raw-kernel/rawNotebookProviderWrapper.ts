@@ -1,11 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import type { nbformat } from '@jupyterlab/coreutils';
+import { nbformat } from '@jupyterlab/coreutils';
 import { inject, injectable, named } from 'inversify';
 import { Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
+import { IPythonExtensionChecker } from '../../api/types';
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../common/application/types';
 import '../../common/extensions';
 import { IFileSystem } from '../../common/platform/types';
@@ -20,12 +21,15 @@ import {
 import { IServiceContainer } from '../../ioc/types';
 import { DataScienceStartupTime, JUPYTER_OUTPUT_CHANNEL } from '../constants';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
+import { KernelService } from '../jupyter/kernels/kernelService';
+import { KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { IRoleBasedObject, RoleBasedFactory } from '../jupyter/liveshare/roleBasedFactory';
 import { ILiveShareHasRole } from '../jupyter/liveshare/types';
 import { IKernelLauncher } from '../kernel-launcher/types';
 import { ProgressReporter } from '../progress/progressReporter';
 import {
     ConnectNotebookProviderOptions,
+    IKernelDependencyService,
     INotebook,
     IRawConnection,
     IRawNotebookProvider,
@@ -52,7 +56,10 @@ type RawNotebookProviderClassType = {
         kernelSelector: KernelSelector,
         progressReporter: ProgressReporter,
         outputChannel: IOutputChannel,
-        rawKernelSupported: IRawNotebookSupportedService
+        rawKernelSupported: IRawNotebookSupportedService,
+        kernelDependencyService: IKernelDependencyService,
+        kernelService: KernelService,
+        extensionChecker: IPythonExtensionChecker
     ): IRawNotebookProviderInterface;
 };
 // tslint:enable:callable-types
@@ -77,7 +84,10 @@ export class RawNotebookProviderWrapper implements IRawNotebookProvider, ILiveSh
         @inject(KernelSelector) kernelSelector: KernelSelector,
         @inject(ProgressReporter) progressReporter: ProgressReporter,
         @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) outputChannel: IOutputChannel,
-        @inject(IRawNotebookSupportedService) rawNotebookSupported: IRawNotebookSupportedService
+        @inject(IRawNotebookSupportedService) rawNotebookSupported: IRawNotebookSupportedService,
+        @inject(IKernelDependencyService) kernelDependencyService: IKernelDependencyService,
+        @inject(KernelService) kernelService: KernelService,
+        @inject(IPythonExtensionChecker) extensionChecker: IPythonExtensionChecker
     ) {
         // The server factory will create the appropriate HostRawNotebookProvider or GuestRawNotebookProvider based on
         // the liveshare state.
@@ -98,7 +108,10 @@ export class RawNotebookProviderWrapper implements IRawNotebookProvider, ILiveSh
             kernelSelector,
             progressReporter,
             outputChannel,
-            rawNotebookSupported
+            rawNotebookSupported,
+            kernelDependencyService,
+            kernelService,
+            extensionChecker
         );
     }
 
@@ -121,10 +134,18 @@ export class RawNotebookProviderWrapper implements IRawNotebookProvider, ILiveSh
         resource: Resource,
         disableUI: boolean,
         notebookMetadata: nbformat.INotebookMetadata,
+        kernelConnection: KernelConnectionMetadata,
         cancelToken: CancellationToken
     ): Promise<INotebook> {
         const notebookProvider = await this.serverFactory.get();
-        return notebookProvider.createNotebook(identity, resource, disableUI, notebookMetadata, cancelToken);
+        return notebookProvider.createNotebook(
+            identity,
+            resource,
+            disableUI,
+            notebookMetadata,
+            kernelConnection,
+            cancelToken
+        );
     }
 
     public async getNotebook(identity: Uri): Promise<INotebook | undefined> {

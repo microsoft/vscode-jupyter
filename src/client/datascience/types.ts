@@ -120,8 +120,6 @@ export interface INotebookCompletion {
     metadata: {};
 }
 
-export type INotebookMetadataLive = nbformat.INotebookMetadata & { id?: string };
-
 // Talks to a jupyter ipython kernel to retrieve data for cells
 export const INotebookServer = Symbol('INotebookServer');
 export interface INotebookServer extends IAsyncDisposable {
@@ -129,7 +127,8 @@ export interface INotebookServer extends IAsyncDisposable {
     createNotebook(
         resource: Resource,
         identity: Uri,
-        notebookMetadata?: INotebookMetadataLive,
+        notebookMetadata?: nbformat.INotebookMetadata,
+        kernelConnection?: KernelConnectionMetadata,
         cancelToken?: CancellationToken
     ): Promise<INotebook>;
     getNotebook(identity: Uri, cancelToken?: CancellationToken): Promise<INotebook | undefined>;
@@ -156,6 +155,7 @@ export interface IRawNotebookProvider extends IAsyncDisposable {
         resource: Resource,
         disableUI?: boolean,
         notebookMetadata?: nbformat.INotebookMetadata,
+        kernelConnection?: KernelConnectionMetadata,
         cancelToken?: CancellationToken
     ): Promise<INotebook>;
     getNotebook(identity: Uri, token?: CancellationToken): Promise<INotebook | undefined>;
@@ -256,8 +256,7 @@ export interface INotebookServerOptions {
     skipUsingDefaultConfig?: boolean;
     workingDir?: string;
     purpose: string;
-    metadata?: INotebookMetadataLive;
-    disableUI?: boolean;
+    metadata?: nbformat.INotebookMetadata;
     skipSearchingForKernel?: boolean;
     allowUI(): boolean;
 }
@@ -1107,7 +1106,7 @@ export interface INotebookModel {
     readonly changed: Event<NotebookModelChange>;
     readonly onDidEdit: Event<NotebookModelChange>;
     readonly isDisposed: boolean;
-    readonly metadata: INotebookMetadataLive | undefined;
+    readonly metadata: nbformat.INotebookMetadata | undefined;
     readonly isTrusted: boolean;
     readonly cellCount: number;
     /**
@@ -1171,7 +1170,8 @@ export type GetNotebookOptions = {
     identity: Uri;
     getOnly?: boolean;
     disableUI?: boolean;
-    metadata?: nbformat.INotebookMetadata & { id?: string };
+    metadata?: nbformat.INotebookMetadata;
+    kernelConnection?: KernelConnectionMetadata;
     token?: CancellationToken;
 };
 

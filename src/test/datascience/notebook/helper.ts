@@ -30,6 +30,7 @@ import {
 import { createDeferred } from '../../../client/common/utils/async';
 import { swallowExceptions } from '../../../client/common/utils/misc';
 import { CellExecution } from '../../../client/datascience/jupyter/kernels/cellExecution';
+import { IKernelProvider } from '../../../client/datascience/jupyter/kernels/types';
 import { JupyterNotebookView } from '../../../client/datascience/notebook/constants';
 import {
     LastSavedNotebookCellLanguage,
@@ -43,6 +44,7 @@ import { VSCodeNotebookModel } from '../../../client/datascience/notebookStorage
 import { INotebookEditorProvider, INotebookProvider, ITrustService } from '../../../client/datascience/types';
 import { createEventHandler, sleep, waitForCondition } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_SMOKE_TEST } from '../../constants';
+import { noop } from '../../core';
 import { closeActiveWindows, initialize, isInsiders } from '../../initialize';
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
@@ -176,9 +178,23 @@ export async function canRunNotebookTests() {
 export async function shutdownAllNotebooks() {
     const api = await initialize();
     const notebookProvider = api.serviceContainer.get<INotebookProvider>(INotebookProvider);
-    await Promise.all(notebookProvider.activeNotebooks.map(async (item) => (await item).dispose()));
+    const kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
+    await Promise.all([
+        ...notebookProvider.activeNotebooks.map(async (item) => (await item).dispose()),
+        kernelProvider.dispose()
+    ]);
 }
 
+export async function ensureNewNotebooksHavePythonCells() {
+    const api = await initialize();
+    const globalMemento = api.serviceContainer.get<Memento>(IMemento, GLOBAL_MEMENTO);
+    const lastLanguage = (
+        globalMemento.get<string | undefined>(LastSavedNotebookCellLanguage) || PYTHON_LANGUAGE
+    ).toLowerCase();
+    if (lastLanguage !== PYTHON_LANGUAGE.toLowerCase()) {
+        await globalMemento.update(LastSavedNotebookCellLanguage, PYTHON_LANGUAGE).then(noop, noop);
+    }
+}
 let oldValueFor_alwaysTrustNotebooks: undefined | boolean;
 export async function closeNotebooksAndCleanUpAfterTests(disposables: IDisposable[] = []) {
     if (!IS_SMOKE_TEST) {
@@ -193,6 +209,7 @@ export async function closeNotebooksAndCleanUpAfterTests(disposables: IDisposabl
     await closeActiveWindows();
     disposeAllDisposables(disposables);
     await shutdownAllNotebooks();
+    await ensureNewNotebooksHavePythonCells();
     if (typeof oldValueFor_alwaysTrustNotebooks === 'boolean') {
         const api = await initialize();
         const dsSettings = api.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings();

@@ -9,6 +9,7 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import { CancellationToken, CancellationTokenSource } from 'vscode';
+import { IPythonExtensionChecker } from '../../../api/types';
 import { Cancellation, wrapCancellationTokens } from '../../../common/cancellation';
 import { PYTHON_LANGUAGE, PYTHON_WARNINGS } from '../../../common/constants';
 import '../../../common/extensions';
@@ -69,7 +70,8 @@ export class KernelService {
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IKernelDependencyService) private readonly kernelDependencyService: IKernelDependencyService,
         @inject(IFileSystem) private readonly fs: IFileSystem,
-        @inject(IEnvironmentActivationService) private readonly activationHelper: IEnvironmentActivationService
+        @inject(IEnvironmentActivationService) private readonly activationHelper: IEnvironmentActivationService,
+        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker
     ) {}
     /**
      * Finds a kernel spec from a given session or jupyter process that matches a given spec.
@@ -130,6 +132,7 @@ export class KernelService {
      * @memberof KernelService
      */
     // tslint:disable-next-line: cyclomatic-complexity
+    @traceDecorators.verbose('Find matching interpreter for a given kernel spec')
     public async findMatchingInterpreter(
         kernelSpec: IJupyterKernelSpec | LiveKernelModel,
         cancelToken?: CancellationToken
@@ -138,7 +141,9 @@ export class KernelService {
         if (kernelSpec?.language && kernelSpec.language !== PYTHON_LANGUAGE) {
             return;
         }
-
+        if (!this.extensionChecker.isPythonExtensionInstalled) {
+            return;
+        }
         const activeInterpreterPromise = this.interpreterService.getActiveInterpreter(undefined);
         const allInterpretersPromise = this.interpreterService.getInterpreters(undefined);
         // Ensure we handle errors if any (this is required to ensure we do not exit this function without using this promise).
@@ -154,7 +159,7 @@ export class KernelService {
             const interpreter = await this.interpreterService.getInterpreterDetails(interpreterPath);
             if (interpreter) {
                 traceInfo(
-                    `Found matching interpreter based on metadata, for the kernel ${kernelSpec.name}, ${kernelSpec.display_name}`
+                    `Found matching interpreter based on interpreter or interpreterPath in metadata, for the kernel ${kernelSpec.name}, ${kernelSpec.display_name}, ${interpreterPath}`
                 );
                 return interpreter;
             }
@@ -178,7 +183,7 @@ export class KernelService {
             });
             if (interpreter) {
                 traceInfo(
-                    `Found matching interpreter based on metadata, for the kernel ${kernelSpec.name}, ${kernelSpec.display_name}`
+                    `Found matching interpreter based on argv in metadata, for the kernel ${kernelSpec.name}, ${kernelSpec.display_name}, ${pathInArgv}`
                 );
                 return interpreter;
             }
@@ -205,7 +210,9 @@ export class KernelService {
             const majorVersion = parseInt(match.groups()!.version, 10) || 0;
             // If the major versions match, that's sufficient.
             if (!majorVersion || (activeInterpreter?.version && activeInterpreter.version.major === majorVersion)) {
-                traceInfo(`Using current interpreter for kernel ${kernelSpec.name}, ${kernelSpec.display_name}`);
+                traceInfo(
+                    `Using current interpreter for kernel ${kernelSpec.name}, ${kernelSpec.display_name}, (interpreter is ${activeInterpreter?.displayName} # ${activeInterpreter?.path})`
+                );
                 return activeInterpreter;
             }
 
@@ -222,7 +229,7 @@ export class KernelService {
             }
 
             traceWarning(
-                `Unable to find an interpreter that matches the kernel ${kernelSpec.name}, ${kernelSpec.display_name}, some features might not work.`
+                `Unable to find an interpreter that matches the kernel ${kernelSpec.name}, ${kernelSpec.display_name}, some features might not work , (interpreter is ${activeInterpreter?.displayName} # ${activeInterpreter?.path}).`
             );
             return activeInterpreter;
         } else {
@@ -239,12 +246,12 @@ export class KernelService {
 
             if (found) {
                 traceVerbose(
-                    `Found an interpreter that has the same display name as kernelspec ${kernelSpec.display_name}, matches ${found.path}`
+                    `Found an interpreter that has the same display name as kernelspec ${kernelSpec.display_name}, matches interpreter ${found.displayName} # ${found.path}`
                 );
                 return found;
             } else {
                 traceWarning(
-                    `Unable to determine version of Python interpreter to use for kernel ${kernelSpec.name}, ${kernelSpec.display_name}, some features might not work.`
+                    `Unable to determine version of Python interpreter to use for kernel ${kernelSpec.name}, ${kernelSpec.display_name}, some features might not work , (interpreter is ${activeInterpreter?.displayName} # ${activeInterpreter?.path}).`
                 );
                 return activeInterpreter;
             }
@@ -305,7 +312,7 @@ export class KernelService {
         });
         // Swallow errors if we get out of here and not resolve this.
         execServicePromise.ignoreErrors();
-        const name = this.generateKernelNameForIntepreter(interpreter);
+        const name = this.generateKernelNameForInterpreter(interpreter);
         // If ipykernel is not installed, prompt to install it.
         if (!(await this.kernelDependencyService.areDependenciesInstalled(interpreter, cancelToken)) && !disableUI) {
             // If we wish to wait for installation to complete, we must provide a cancel token.
@@ -507,7 +514,8 @@ export class KernelService {
      * @param {PythonEnvironment} interpreter
      * @memberof KernelService
      */
-    private generateKernelNameForIntepreter(interpreter: PythonEnvironment): string {
+    private generateKernelNameForInterpreter(interpreter: PythonEnvironment): string {
+        // Never change this logic, this is used in other places to determine the format of names we have generated.
         return `${interpreter.displayName || ''}${uuid()}`.replace(/[^A-Za-z0-9]/g, '').toLowerCase();
     }
 

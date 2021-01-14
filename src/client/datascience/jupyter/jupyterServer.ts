@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import { nbformat } from '@jupyterlab/coreutils';
 import * as uuid from 'uuid/v4';
 import { Disposable, Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
@@ -26,11 +27,11 @@ import {
     IJupyterSessionManager,
     IJupyterSessionManagerFactory,
     INotebook,
-    INotebookMetadataLive,
     INotebookServer,
     INotebookServerLaunchInfo
 } from '../types';
 import { getDisplayNameOrNameOfKernelConnection } from './kernels/helpers';
+import { KernelConnectionMetadata } from './kernels/types';
 
 // This code is based on the examples here:
 // https://www.npmjs.com/package/@jupyterlab/services
@@ -110,7 +111,8 @@ export class JupyterServerBase implements INotebookServer {
     public createNotebook(
         resource: Resource,
         identity: Uri,
-        notebookMetadata?: INotebookMetadataLive,
+        notebookMetadata?: nbformat.INotebookMetadata,
+        kernelConnection?: KernelConnectionMetadata,
         cancelToken?: CancellationToken
     ): Promise<INotebook> {
         if (!this.sessionManager || this.isDisposed) {
@@ -130,6 +132,7 @@ export class JupyterServerBase implements INotebookServer {
             this.configService,
             this.serviceContainer,
             notebookMetadata,
+            kernelConnection,
             cancelToken
         ).then((r) => {
             const baseUrl = this.launchInfo?.connectionInfo.baseUrl || '';
@@ -257,7 +260,8 @@ export class JupyterServerBase implements INotebookServer {
         _disposableRegistry: IDisposableRegistry,
         _configService: IConfigurationService,
         _serviceContainer: IServiceContainer,
-        _notebookMetadata?: INotebookMetadataLive,
+        _notebookMetadata?: nbformat.INotebookMetadata,
+        _kernelConnection?: KernelConnectionMetadata,
         _cancelToken?: CancellationToken
     ): Promise<INotebook> {
         throw new Error('You forgot to override createNotebookInstance');

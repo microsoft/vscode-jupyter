@@ -9,7 +9,7 @@ import * as tmp from 'tmp';
 import { CancellationTokenSource, Event, EventEmitter } from 'vscode';
 import { IPythonExtensionChecker } from '../../api/types';
 import { createPromiseFromCancellation } from '../../common/cancellation';
-import { traceError, traceInfo, traceWarning } from '../../common/logger';
+import { traceDecorators, traceError, traceInfo, traceWarning } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IProcessServiceFactory, ObservableExecutionResult } from '../../common/process/types';
 import { Resource } from '../../common/types';
@@ -197,6 +197,9 @@ export class KernelProcess implements IKernelProcess {
         let kernelSpec = this._kernelConnectionMetadata.kernelSpec;
         // If there is no kernelspec & when launching a Python process, generate a dummy `kernelSpec`
         if (!kernelSpec && this._kernelConnectionMetadata.kind === 'startUsingPythonInterpreter') {
+            traceInfo(
+                `Creating a default kernel spec for use with interpreter ${this._kernelConnectionMetadata.interpreter.displayName} # ${this._kernelConnectionMetadata.interpreter.path}`
+            );
             kernelSpec = createDefaultKernelSpec(this._kernelConnectionMetadata.interpreter);
         }
         // We always expect a kernel spec.
@@ -204,7 +207,7 @@ export class KernelProcess implements IKernelProcess {
             throw new Error('KernelSpec cannot be empty in KernelProcess.ts');
         }
         if (!Array.isArray(kernelSpec.argv)) {
-            traceError('KernelSpec.argv in KernelPrcess is undefined');
+            traceError('KernelSpec.argv in KernelProcess is undefined');
             // tslint:disable-next-line: no-any
             this._launchKernelSpec = undefined;
         } else {
@@ -288,6 +291,7 @@ export class KernelProcess implements IKernelProcess {
         return newConnectionArgs;
     }
 
+    @traceDecorators.verbose('Launching kernel in kernelProcess.ts')
     private async launchAsObservable(workingDirectory: string) {
         let exeObs: ObservableExecutionResult<string> | undefined;
 
@@ -309,6 +313,7 @@ export class KernelProcess implements IKernelProcess {
         if (!exeObs) {
             // First part of argument is always the executable.
             const executable = this.launchKernelSpec.argv[0];
+            traceInfo(`Launching Raw Kernel & not daemon ${this.launchKernelSpec.display_name} # ${executable}`);
             const [executionService, env] = await Promise.all([
                 this.processExecutionFactory.create(this.resource),
                 this.kernelEnvVarsService.getEnvironmentVariables(this.resource, this.launchKernelSpec)

@@ -1029,4 +1029,20 @@ export interface IEventNamePropertyMapping {
     // Sync events
     [Telemetry.SyncAllCells]: never | undefined;
     [Telemetry.SyncSingleCell]: never | undefined;
+
+    // When users connect to a remote kernel, we store the kernel id so we can re-connect to that
+    // when user opens the same notebook. We only store the last 100.
+    // Count is the number of entries saved in the list.
+    [Telemetry.NumberOfSavedRemoteKernelIds]: { count: number };
+
+    // Whether we've attempted to start a raw Python kernel without any interpreter information.
+    // If we don't detect such telemetry in a few months, then we can remove this along with the temporary code associated with this telemetry.
+    [Telemetry.AttemptedToLaunchRawKernelWithoutInterpreter]: {
+        /**
+         * Indicates whether the python extension is installed.
+         * If we send telemetry fro this & this is `true`, then we have a bug.
+         * If its `false`, then we can ignore this telemetry.
+         */
+        pythonExtensionInstalled: boolean;
+    };
 }

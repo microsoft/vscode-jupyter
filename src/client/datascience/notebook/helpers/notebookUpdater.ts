@@ -46,7 +46,7 @@ export function clearPendingChainedUpdatesForTests() {
     // tslint:disable-next-line: no-any no-require-imports
     const vsc = require('vscode') as any;
     const editor: NotebookEditor | undefined = vsc.notebook.activeNotebookEditor;
-    if (editor) {
+    if (editor?.document) {
         pendingCellUpdates.delete(editor.document);
     }
 }

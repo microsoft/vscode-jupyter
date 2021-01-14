@@ -10,6 +10,7 @@ import { createCodeCell } from '../../../datascience-ui/common/cellFactory';
 import { ICryptoUtils } from '../../common/types';
 import { Identifiers } from '../constants';
 import { IEditorContentChange, NotebookModelChange } from '../interactive-common/interactiveWindowTypes';
+import { KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { CellState, ICell } from '../types';
 import { BaseNotebookModel } from './baseModel';
 
@@ -22,6 +23,9 @@ export class NativeEditorNotebookModel extends BaseNotebookModel {
     }
     public get cells(): ICell[] {
         return this._cells;
+    }
+    public get kernelConnection(): KernelConnectionMetadata | undefined {
+        return this._kernelConnection;
     }
     private _id = uuid();
     private saveChangeCount: number = 0;

@@ -61,7 +61,6 @@ import {
     INotebookEditorProvider,
     INotebookExporter,
     INotebookImporter,
-    INotebookMetadataLive,
     INotebookProvider,
     IStatusProvider,
     IThemeFinder,
@@ -370,8 +369,12 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         }
     }
 
-    public get notebookMetadata(): INotebookMetadataLive | undefined {
+    public get notebookMetadata(): nbformat.INotebookMetadata | undefined {
         return this.model.metadata;
+    }
+
+    protected get kernelConnection(): Readonly<KernelConnectionMetadata> | undefined {
+        return this.model.kernelConnection;
     }
 
     public async updateNotebookOptions(kernelConnection: KernelConnectionMetadata): Promise<void> {

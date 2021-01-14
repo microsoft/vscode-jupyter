@@ -33,6 +33,7 @@ import { IKernelFinder } from '../../../../client/datascience/kernel-launcher/ty
 import { IJupyterSessionManager, KernelInterpreterDependencyResponse } from '../../../../client/datascience/types';
 import { IInterpreterService } from '../../../../client/interpreter/contracts';
 import { PythonEnvironment } from '../../../../client/pythonEnvironments/info';
+import { PreferredRemoteKernelIdProvider } from '../../../../client/datascience/notebookStorage/preferredRemoteKernelIdProvider';
 
 // tslint:disable: max-func-body-length no-unused-expression no-any
 
@@ -80,6 +81,9 @@ suite('DataScience - KernelSelector', () => {
         const configService = mock(ConfigurationService);
         const extensionChecker = mock(PythonExtensionChecker);
         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
+        const preferredKernelIdProvider = mock(PreferredRemoteKernelIdProvider);
+        when(preferredKernelIdProvider.getPreferredRemoteKernelId(anything())).thenResolve();
+        when(preferredKernelIdProvider.storePreferredRemoteKernelId(anything(), anything())).thenResolve();
         kernelSelector = new KernelSelector(
             instance(kernelSelectionProvider),
             instance(appShell),
@@ -90,7 +94,8 @@ suite('DataScience - KernelSelector', () => {
             instance(jupyterSessionManagerFactory),
             instance(configService),
             [],
-            instance(extensionChecker)
+            instance(extensionChecker),
+            instance(preferredKernelIdProvider)
         );
     });
     teardown(() => sinon.restore());
@@ -549,12 +554,11 @@ suite('DataScience - KernelSelector', () => {
             verify(appShell.showQuickPick(anything(), anything(), anything())).never();
             verify(kernelService.registerKernel(anything(), anything(), anything())).never();
         });
-        test('If metadata contains kernel information, then return a matching kernel (even if there is no matching interpreter)', async () => {
+        test('If metadata contains kernel information, then return a matching kernel', async () => {
             when(
                 kernelService.findMatchingKernelSpec(nbMetadataKernelSpec, instance(sessionManager), anything())
             ).thenResolve(kernelSpec);
-            when(kernelService.findMatchingInterpreter(kernelSpec, anything())).thenResolve();
-            when(interpreterService.getActiveInterpreter(undefined)).thenResolve(interpreter);
+            when(kernelService.findMatchingInterpreter(kernelSpec, anything())).thenResolve(interpreter);
             when(
                 kernelSelectionProvider.getKernelSelectionsForLocalSession(
                     anything(),

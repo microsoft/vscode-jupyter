@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import type { nbformat } from '@jupyterlab/coreutils';
+import { nbformat } from '@jupyterlab/coreutils';
 import { Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
@@ -13,6 +13,7 @@ import { createDeferred } from '../../../common/utils/async';
 import * as localize from '../../../common/utils/localize';
 import { IServiceContainer } from '../../../ioc/types';
 import { LiveShare, LiveShareCommands } from '../../constants';
+import { KernelConnectionMetadata } from '../../jupyter/kernels/types';
 import { GuestJupyterNotebook } from '../../jupyter/liveshare/guestJupyterNotebook';
 import {
     LiveShareParticipantDefault,
@@ -59,6 +60,7 @@ export class GuestRawNotebookProvider
         resource: Resource,
         _disableUI: boolean,
         notebookMetadata: nbformat.INotebookMetadata,
+        kernelConnection: KernelConnectionMetadata,
         _cancelToken: CancellationToken
     ): Promise<INotebook> {
         // Remember we can have multiple native editors opened against the same ipynb file.
@@ -77,7 +79,8 @@ export class GuestRawNotebookProvider
             await service.request(LiveShareCommands.createRawNotebook, [
                 resourceString,
                 identityString,
-                notebookMetadataString
+                notebookMetadataString,
+                JSON.stringify(kernelConnection)
             ]);
         }
 

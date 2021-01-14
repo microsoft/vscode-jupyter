@@ -60,8 +60,8 @@ suite('DataScience - VSCode Notebook - (Trust) (slow)', function () {
     let storageProvider: INotebookStorageProvider;
     let vscodeNotebook: IVSCodeNotebook;
     let trustService: ITrustService;
+    this.timeout(15_000);
     suiteSetup(async function () {
-        this.timeout(15_000);
         api = await initialize();
         if (!(await canRunNotebookTests())) {
             return this.skip();

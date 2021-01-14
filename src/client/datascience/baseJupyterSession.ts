@@ -19,7 +19,7 @@ import { JupyterInvalidKernelError } from './jupyter/jupyterInvalidKernelError';
 import { JupyterWaitForIdleError } from './jupyter/jupyterWaitForIdleError';
 import { kernelConnectionMetadataHasKernelSpec } from './jupyter/kernels/helpers';
 import { JupyterKernelPromiseFailedError } from './jupyter/kernels/jupyterKernelPromiseFailedError';
-import { KernelConnectionMetadata } from './jupyter/kernels/types';
+import { getKernelConnectionId, KernelConnectionMetadata } from './jupyter/kernels/types';
 import { suppressShutdownErrors } from './raw-kernel/rawKernel';
 import { IJupyterSession, ISessionWithSocket, KernelSocketInformation } from './types';
 
@@ -86,7 +86,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         return this.shutdown();
     }
     // Abstracts for each Session type to implement
-    public abstract async waitForIdle(timeout: number): Promise<void>;
+    public abstract waitForIdle(timeout: number): Promise<void>;
 
     public async shutdown(): Promise<void> {
         if (this.session) {
@@ -139,9 +139,9 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         const kernelSpecToUse = kernelConnectionMetadataHasKernelSpec(kernelConnection)
             ? kernelConnection.kernelSpec
             : undefined;
-        if (this.session && currentKernelSpec && kernelSpecToUse) {
-            // Name and id have to match (id is only for active sessions)
-            if (currentKernelSpec.name === kernelSpecToUse.name && currentKernelSpec.id === kernelSpecToUse.id) {
+        if (this.session && currentKernelSpec && kernelSpecToUse && this.kernelConnectionMetadata) {
+            // If we have selected the same kernel connection, then nothing to do.
+            if (getKernelConnectionId(this.kernelConnectionMetadata) === getKernelConnectionId(kernelConnection)) {
                 return;
             }
         }

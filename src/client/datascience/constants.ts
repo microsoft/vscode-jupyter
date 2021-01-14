@@ -315,6 +315,7 @@ export enum Telemetry {
      */
     SelectJupyterInterpreterCommand = 'DATASCIENCE.SELECT_JUPYTER_INTERPRETER_Command',
     StartJupyterProcess = 'DS_INTERNAL.START_JUPYTER_PROCESS',
+    NumberOfSavedRemoteKernelIds = 'DS_INTERNAL.NUMBER_OF_REMOTE_KERNEL_IDS_SAVED',
     WaitForIdleJupyter = 'DS_INTERNAL.WAIT_FOR_IDLE_JUPYTER',
     HiddenCellTime = 'DS_INTERNAL.HIDDEN_EXECUTION_TIME',
     RestartJupyterTime = 'DS_INTERNAL.RESTART_JUPYTER_TIME',
@@ -407,6 +408,7 @@ export enum Telemetry {
     RawKernelSessionStartTimeout = 'DS_INTERNAL.RAWKERNEL_SESSION_START_TIMEOUT',
     RawKernelSessionStartException = 'DS_INTERNAL.RAWKERNEL_SESSION_START_EXCEPTION',
     RawKernelProcessLaunch = 'DS_INTERNAL.RAWKERNEL_PROCESS_LAUNCH',
+    AttemptedToLaunchRawKernelWithoutInterpreter = 'DS_INTERNAL.ERROR_START_RAWKERNEL_WITHOUT_INTERPRETER',
     RunByLineStart = 'DATASCIENCE.RUN_BY_LINE',
     RunByLineStep = 'DATASCIENCE.RUN_BY_LINE_STEP',
     RunByLineStop = 'DATASCIENCE.RUN_BY_LINE_STOP',

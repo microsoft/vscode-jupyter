@@ -8,7 +8,7 @@ import { sha256 } from 'hash.js';
 import { cloneDeep } from 'lodash';
 import { Event, EventEmitter, Memento, Uri } from 'vscode';
 import { ICryptoUtils } from '../../common/types';
-import { isUntitledFile } from '../../common/utils/misc';
+import { isUntitledFile, noop } from '../../common/utils/misc';
 import { pruneCell } from '../common';
 import { NotebookModelChange } from '../interactive-common/interactiveWindowTypes';
 import {
@@ -18,15 +18,8 @@ import {
     kernelConnectionMetadataHasKernelModel
 } from '../jupyter/kernels/helpers';
 import { KernelConnectionMetadata } from '../jupyter/kernels/types';
-import { CellState, INotebookMetadataLive, INotebookModel } from '../types';
-
-export const ActiveKernelIdList = `Active_Kernel_Id_List`;
-// This is the number of kernel ids that will be remembered between opening and closing VS code
-export const MaximumKernelIdListSize = 40;
-type KernelIdListEntry = {
-    fileHash: string;
-    kernelId: string | undefined;
-};
+import { CellState, INotebookModel } from '../types';
+import { PreferredRemoteKernelIdProvider } from './preferredRemoteKernelIdProvider';
 
 export function getInterpreterInfoStoredInMetadata(
     metadata?: nbformat.INotebookMetadata
@@ -210,15 +203,10 @@ export abstract class BaseNotebookModel implements INotebookModel {
     public get onDidEdit(): Event<NotebookModelChange> {
         return this._editEventEmitter.event;
     }
-    public get metadata(): INotebookMetadataLive | undefined {
-        return this.kernelId && this.notebookJson.metadata
-            ? {
-                  ...this.notebookJson.metadata,
-                  id: this.kernelId
-              }
-            : // Fix nyc compiler problem
-              // tslint:disable-next-line: no-any
-              (this.notebookJson.metadata as any);
+    public get metadata(): Readonly<nbformat.INotebookMetadata> | undefined {
+        // Fix nyc compiler problem
+        // tslint:disable-next-line: no-any
+        return this.notebookJson.metadata as any;
     }
     public get isTrusted() {
         return this._isTrusted;
@@ -230,12 +218,13 @@ export abstract class BaseNotebookModel implements INotebookModel {
     protected _isDisposed?: boolean;
     protected _changedEmitter = new EventEmitter<NotebookModelChange>();
     protected _editEventEmitter = new EventEmitter<NotebookModelChange>();
-    private kernelId: string | undefined;
+    protected _kernelConnection?: KernelConnectionMetadata;
+    private readonly preferredRemoteKernelIdStorage: PreferredRemoteKernelIdProvider;
     constructor(
         protected _isTrusted: boolean,
         protected _file: Uri,
         protected globalMemento: Memento,
-        private crypto: ICryptoUtils,
+        crypto: ICryptoUtils,
         protected notebookJson: Partial<nbformat.INotebookContent> = {},
         public readonly indentAmount: string = ' ',
         private readonly pythonNumber: number = 3,
@@ -248,7 +237,7 @@ export abstract class BaseNotebookModel implements INotebookModel {
         if (initializeJsonIfRequired) {
             this.ensureNotebookJson();
         }
-        this.kernelId = this.getStoredKernelId();
+        this.preferredRemoteKernelIdStorage = new PreferredRemoteKernelIdProvider(globalMemento, crypto);
     }
     public dispose() {
         this._isDisposed = true;
@@ -299,10 +288,8 @@ export abstract class BaseNotebookModel implements INotebookModel {
 
     // tslint:disable-next-line: cyclomatic-complexity
     private updateVersionInfo(kernelConnection: KernelConnectionMetadata | undefined): boolean {
+        this._kernelConnection = kernelConnection;
         const { changed, kernelId } = updateNotebookMetadata(this.notebookJson.metadata, kernelConnection);
-        if (kernelId) {
-            this.kernelId = kernelId;
-        }
         // Update our kernel id in our global storage too
         this.setStoredKernelId(kernelId);
 
@@ -313,34 +300,7 @@ export abstract class BaseNotebookModel implements INotebookModel {
         const json = this.generateNotebookJson();
         return JSON.stringify(json, null, this.indentAmount);
     }
-    private getStoredKernelId(): string | undefined {
-        // Stored as a list so we don't take up too much space
-        const list: KernelIdListEntry[] = this.globalMemento.get<KernelIdListEntry[]>(ActiveKernelIdList, []);
-        if (list) {
-            // Not using a map as we're only going to store the last 40 items.
-            const fileHash = this.crypto.createHash(this._file.toString(), 'string');
-            const entry = list.find((l) => l.fileHash === fileHash);
-            return entry?.kernelId;
-        }
-    }
     private setStoredKernelId(id: string | undefined) {
-        const list: KernelIdListEntry[] = this.globalMemento.get<KernelIdListEntry[]>(ActiveKernelIdList, []);
-        const fileHash = this.crypto.createHash(this._file.toString(), 'string');
-        const index = list.findIndex((l) => l.fileHash === fileHash);
-        // Always remove old spot (we'll push on the back for new ones)
-        if (index >= 0) {
-            list.splice(index, 1);
-        }
-
-        // If adding a new one, push
-        if (id) {
-            list.push({ fileHash, kernelId: id });
-        }
-
-        // Prune list if too big
-        while (list.length > MaximumKernelIdListSize) {
-            list.shift();
-        }
-        return this.globalMemento.update(ActiveKernelIdList, list);
+        this.preferredRemoteKernelIdStorage.storePreferredRemoteKernelId(this._file, id).catch(noop);
     }
 }

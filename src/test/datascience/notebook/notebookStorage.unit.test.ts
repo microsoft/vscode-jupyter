@@ -10,12 +10,12 @@ import { Uri } from 'vscode';
 import { CryptoUtils } from '../../../client/common/crypto';
 import { sleep } from '../../../client/common/utils/async';
 import { NotebookModelChange } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
+import { BaseNotebookModel } from '../../../client/datascience/notebookStorage/baseModel';
+import { NativeEditorNotebookModel } from '../../../client/datascience/notebookStorage/notebookModel';
 import {
     ActiveKernelIdList,
-    BaseNotebookModel,
     MaximumKernelIdListSize
-} from '../../../client/datascience/notebookStorage/baseModel';
-import { NativeEditorNotebookModel } from '../../../client/datascience/notebookStorage/notebookModel';
+} from '../../../client/datascience/notebookStorage/preferredRemoteKernelIdProvider';
 import { MockMemento } from '../../mocks/mementos';
 
 suite('DataScience - Notebook Storage', () => {

@@ -96,7 +96,6 @@ import {
     IMessageCell,
     INotebook,
     INotebookExporter,
-    INotebookMetadataLive,
     INotebookProvider,
     INotebookProviderConnection,
     InterruptResult,
@@ -127,7 +126,8 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
     }
 
     public abstract isInteractive: boolean;
-    protected abstract get notebookMetadata(): INotebookMetadataLive | undefined;
+    protected abstract get notebookMetadata(): Readonly<nbformat.INotebookMetadata> | undefined;
+    protected abstract get kernelConnection(): Readonly<KernelConnectionMetadata> | undefined;
 
     protected abstract get notebookIdentity(): INotebookIdentity;
     protected fileInKernel: string | undefined;
@@ -1182,7 +1182,8 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
                 notebook = await this.notebookProvider.getOrCreateNotebook({
                     identity: this.notebookIdentity.resource,
                     resource: this.owningResource,
-                    metadata: this.notebookMetadata
+                    metadata: this.notebookMetadata,
+                    kernelConnection: this.kernelConnection
                 });
                 if (notebook) {
                     const executionActivation = { ...this.notebookIdentity, owningResource: this.owningResource };

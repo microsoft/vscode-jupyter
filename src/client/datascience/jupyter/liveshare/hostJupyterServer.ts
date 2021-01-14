@@ -3,6 +3,8 @@
 'use strict';
 import '../../../common/extensions';
 
+import { nbformat } from '@jupyterlab/coreutils';
+import { cloneDeep } from 'lodash';
 import * as os from 'os';
 import * as vscode from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
@@ -17,6 +19,7 @@ import {
     IConfigurationService,
     IDisposableRegistry,
     IOutputChannel,
+    ReadWrite,
     Resource
 } from '../../../common/types';
 import { createDeferred } from '../../../common/utils/async';
@@ -31,7 +34,6 @@ import {
     IJupyterSessionManagerFactory,
     INotebook,
     INotebookExecutionLogger,
-    INotebookMetadataLive,
     INotebookServer,
     INotebookServerLaunchInfo
 } from '../../types';
@@ -39,6 +41,7 @@ import { JupyterServerBase } from '../jupyterServer';
 import { computeWorkingDirectory } from '../jupyterUtils';
 import { getDisplayNameOrNameOfKernelConnection } from '../kernels/helpers';
 import { KernelSelector } from '../kernels/kernelSelector';
+import { KernelConnectionMetadata } from '../kernels/types';
 import { HostJupyterNotebook } from './hostJupyterNotebook';
 import { LiveShareParticipantHost } from './liveShareParticipantMixin';
 import { IRoleBasedObject } from './roleBasedFactory';
@@ -124,6 +127,7 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
                             resource,
                             identity!,
                             undefined,
+                            undefined,
                             cancellation
                         )) as HostJupyterNotebook;
                         await notebook.onAttach(api);
@@ -182,7 +186,8 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
         disposableRegistry: IDisposableRegistry,
         configService: IConfigurationService,
         serviceContainer: IServiceContainer,
-        notebookMetadata?: INotebookMetadataLive,
+        notebookMetadata?: nbformat.INotebookMetadata,
+        kernelConnection?: KernelConnectionMetadata,
         cancelToken?: CancellationToken
     ): Promise<INotebook> {
         // See if already exists.
@@ -209,6 +214,7 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
                 resource,
                 sessionManager,
                 notebookMetadata,
+                kernelConnection,
                 cancelToken
             );
 
@@ -286,7 +292,8 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
     private async computeLaunchInfo(
         resource: Resource,
         sessionManager: IJupyterSessionManager,
-        notebookMetadata?: INotebookMetadataLive,
+        notebookMetadata?: nbformat.INotebookMetadata,
+        kernelConnection?: KernelConnectionMetadata,
         cancelToken?: CancellationToken
     ): Promise<{ info: INotebookServerLaunchInfo; changedKernel: boolean }> {
         // First we need our launch information so we can start a new session (that's what our notebook is really)
@@ -307,35 +314,41 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
             : undefined;
 
         // Find a kernel that can be used.
-        // Do this only if kernel information has been provided in the metadata, or the resource's interpreter is different.
+        // Do this only if we don't have any kernel connection information, or the resource's interpreter is different.
         let changedKernel = false;
         if (
+            !kernelConnection ||
             notebookMetadata?.kernelspec ||
-            notebookMetadata?.id ||
             resourceInterpreter?.displayName !== launchInfo.kernelConnectionMetadata?.interpreter?.displayName
         ) {
-            const kernelInfo = await (launchInfo.connectionInfo.localLaunch
-                ? this.kernelSelector.getPreferredKernelForLocalConnection(
-                      resource,
-                      'jupyter',
-                      sessionManager,
-                      notebookMetadata,
-                      isTestExecution(),
-                      cancelToken
-                  )
-                : this.kernelSelector.getPreferredKernelForRemoteConnection(
-                      resource,
-                      sessionManager,
-                      notebookMetadata,
-                      cancelToken
-                  ));
-
+            let kernelInfo: KernelConnectionMetadata | undefined;
+            if (launchInfo.connectionInfo.localLaunch && kernelConnection?.kind !== 'connectToLiveKernel') {
+                kernelInfo = kernelConnection;
+            } else if (!launchInfo.connectionInfo.localLaunch && kernelConnection?.kind === 'connectToLiveKernel') {
+                kernelInfo = kernelConnection;
+            } else {
+                kernelInfo = await (launchInfo.connectionInfo.localLaunch
+                    ? this.kernelSelector.getPreferredKernelForLocalConnection(
+                          resource,
+                          'jupyter',
+                          sessionManager,
+                          notebookMetadata,
+                          isTestExecution(),
+                          cancelToken
+                      )
+                    : this.kernelSelector.getPreferredKernelForRemoteConnection(
+                          resource,
+                          sessionManager,
+                          notebookMetadata,
+                          cancelToken
+                      ));
+            }
             if (kernelInfo) {
-                launchInfo.kernelConnectionMetadata = kernelInfo;
-
                 // For the interpreter, make sure to select the one matching the kernel.
-                launchInfo.kernelConnectionMetadata.interpreter =
-                    launchInfo.kernelConnectionMetadata.interpreter || resourceInterpreter;
+                const interpreter = kernelInfo.interpreter || resourceInterpreter;
+                const readWriteKernelInfo = cloneDeep(kernelInfo) as ReadWrite<KernelConnectionMetadata>;
+                readWriteKernelInfo.interpreter = interpreter;
+                launchInfo.kernelConnectionMetadata = readWriteKernelInfo;
                 changedKernel = true;
             }
         }

@@ -223,7 +223,7 @@ export class KernelExecution implements IDisposable {
                     this.isRawNotebookSupported || this.rawNotebookSupported.isSupportedForLocalLaunch();
                 const rawSupported = await this.isRawNotebookSupported;
                 this.kernelSelectionUsage
-                    .useSelectedKernel(kernel?.metadata, document.uri, rawSupported ? 'raw' : 'jupyter')
+                    .useSelectedKernel(kernel?.kernelConnectionMetadata, document.uri, rawSupported ? 'raw' : 'jupyter')
                     .finally(() => {
                         // If there's an exception, then we cannot use the kernel and a message would have been displayed.
                         // We don't want to cache such a promise, as its possible the user later installs the dependencies.
