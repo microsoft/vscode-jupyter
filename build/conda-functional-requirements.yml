@@ -1,6 +1,7 @@
 # Functional requirements using a conda environment file
 dependencies:
   - pandas
+  - nbformat=5.0.8
   - jupyter
   - numpy
   - matplotlib
