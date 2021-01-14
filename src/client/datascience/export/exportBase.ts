@@ -25,7 +25,7 @@ export class ExportBase implements IExport {
         _target: Uri,
         _interpreter: PythonEnvironment,
         _token: CancellationToken
-        // tslint:disable-next-line: no-empty
+        // eslint-disable-next-line no-empty,@typescript-eslint/no-empty-function
     ): Promise<void> {}
 
     @reportAction(ReportableAction.PerformingExport)

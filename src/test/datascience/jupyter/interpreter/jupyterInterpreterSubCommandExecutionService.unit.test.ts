@@ -33,7 +33,7 @@ import { MockOutputChannel } from '../../../mockClasses';
 import { createPythonInterpreter } from '../../../utils/interpreters';
 use(chaiPromise);
 
-// tslint:disable: max-func-body-length
+/* eslint-disable  */
 
 suite('DataScience - Jupyter InterpreterSubCommandExecutionService', () => {
     let jupyterInterpreter: JupyterInterpreterService;
@@ -58,7 +58,7 @@ suite('DataScience - Jupyter InterpreterSubCommandExecutionService', () => {
             )
         ).thenResolve(instance(execService));
         when(execFactory.createActivatedEnvironment(anything())).thenResolve(instance(execService));
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (instance(execService) as any).then = undefined;
         const output = new MockOutputChannel('');
         const pathUtils = mock(PathUtils);
@@ -78,13 +78,13 @@ suite('DataScience - Jupyter InterpreterSubCommandExecutionService', () => {
         );
 
         when(execService.execModuleObservable('jupyter', anything(), anything())).thenResolve(
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             notebookStartResult as any
         );
         when(interperterService.getActiveInterpreter()).thenResolve(activePythonInterpreter);
         when(interperterService.getActiveInterpreter(undefined)).thenResolve(activePythonInterpreter);
     });
-    // tslint:disable-next-line: max-func-body-length
+    // eslint-disable-next-line 
     suite('Interpreter is not selected', () => {
         setup(() => {
             when(jupyterInterpreter.getSelectedInterpreter()).thenResolve(undefined);
@@ -184,7 +184,7 @@ suite('DataScience - Jupyter InterpreterSubCommandExecutionService', () => {
             );
         });
     });
-    // tslint:disable-next-line: max-func-body-length
+    // eslint-disable-next-line 
     suite('Interpreter is selected', () => {
         setup(() => {
             when(jupyterInterpreter.getSelectedInterpreter()).thenResolve(selectedJupyterInterpreter);

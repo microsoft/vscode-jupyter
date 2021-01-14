@@ -48,9 +48,9 @@ import { createEmptyCell } from '../../../datascience-ui/interactive-common/main
 import { MockMemento } from '../../mocks/mementos';
 import { MockWorkspaceConfiguration } from '../mockWorkspaceConfig';
 
-// tslint:disable: no-any chai-vague-errors no-unused-expression
+/* eslint-disable @typescript-eslint/no-explicit-any, , @typescript-eslint/no-unused-expressions */
 
-// tslint:disable: max-func-body-length
+/* eslint-disable  */
 suite('DataScience - Native Editor Storage', () => {
     let workspace: IWorkspaceService;
     let configService: IConfigurationService;

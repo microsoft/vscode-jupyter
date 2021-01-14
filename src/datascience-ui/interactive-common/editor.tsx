@@ -24,7 +24,7 @@ const TOP_STACK_FRAME_DECORATION: monacoEditor.editor.IModelDecorationOptions = 
     stickiness
 };
 
-// tslint:disable-next-line: import-name
+// eslint-disable-next-line 
 export interface IEditorProps {
     content: string;
     version: number;
@@ -189,7 +189,7 @@ export class Editor extends React.Component<IEditorProps> {
         this.modelRef = model;
 
         // Disable undo/redo on the model if asked
-        // tslint:disable: no-any
+        /* eslint-disable @typescript-eslint/no-explicit-any */
         if (this.props.disableUndoStack && (model as any).undo && (model as any).redo) {
             (model as any).undo = noop;
             (model as any).redo = noop;
@@ -209,7 +209,7 @@ export class Editor extends React.Component<IEditorProps> {
         this.subscriptions.push(editor.onDidBlurEditorWidget(this.props.unfocused ? this.props.unfocused : noop));
     };
 
-    // tslint:disable-next-line: cyclomatic-complexity
+    // eslint-disable-next-line complexity
     private onKeyDown = (e: monacoEditor.IKeyboardEvent) => {
         if (this.monacoRef.current) {
             const cursor = this.monacoRef.current.getPosition();

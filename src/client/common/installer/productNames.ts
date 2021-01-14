@@ -3,7 +3,7 @@
 
 import { Product } from '../types';
 
-// tslint:disable-next-line:variable-name
+// eslint-disable-next-line @typescript-eslint/naming-convention, no-underscore-dangle, id-blacklist, id-match
 export const ProductNames = new Map<Product, string>();
 ProductNames.set(Product.jupyter, 'jupyter');
 ProductNames.set(Product.notebook, 'notebook');

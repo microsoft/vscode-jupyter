@@ -4,7 +4,7 @@
 'use strict';
 
 import { nbformat } from '@jupyterlab/coreutils';
-// tslint:disable-next-line: no-require-imports no-var-requires
+// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
 const cloneDeep = require('lodash/cloneDeep');
 import '../../client/common/extensions';
 import { appendLineFeed, generateMarkdownFromCodeLines } from './index';
@@ -45,10 +45,10 @@ export function createErrorOutput(error: Partial<Error>): nbformat.IError {
     };
 }
 export function createCodeCell(): nbformat.ICodeCell;
-// tslint:disable-next-line: unified-signatures
+// eslint-disable-next-line @typescript-eslint/unified-signatures
 export function createCodeCell(code: string): nbformat.ICodeCell;
 export function createCodeCell(code: string[], outputs: nbformat.IOutput[]): nbformat.ICodeCell;
-// tslint:disable-next-line: unified-signatures
+// eslint-disable-next-line @typescript-eslint/unified-signatures
 export function createCodeCell(code: string[], magicCommandsAsComments: boolean): nbformat.ICodeCell;
 export function createCodeCell(code?: string | string[], options?: boolean | nbformat.IOutput[]): nbformat.ICodeCell {
     const magicCommandsAsComments = typeof options === 'boolean' ? options : false;
@@ -85,37 +85,37 @@ export function cloneCell<T extends nbformat.IBaseCell>(cell: T): T {
         case 'code': {
             const codeCell: nbformat.ICodeCell = {
                 cell_type: 'code',
-                // tslint:disable-next-line: no-any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 metadata: (clonedCell.metadata ?? {}) as any,
                 execution_count: typeof clonedCell.execution_count === 'number' ? clonedCell.execution_count : null,
                 outputs: Array.isArray(clonedCell.outputs) ? (clonedCell.outputs as nbformat.IOutput[]) : [],
                 source
             };
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             return (codeCell as any) as T;
         }
         case 'markdown': {
             const markdownCell: nbformat.IMarkdownCell = {
                 cell_type: 'markdown',
-                // tslint:disable-next-line: no-any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 metadata: (clonedCell.metadata ?? {}) as any,
                 source,
-                // tslint:disable-next-line: no-any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 attachments: clonedCell.attachments as any
             };
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             return (markdownCell as any) as T;
         }
         case 'raw': {
             const rawCell: nbformat.IRawCell = {
                 cell_type: 'raw',
-                // tslint:disable-next-line: no-any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 metadata: (clonedCell.metadata ?? {}) as any,
                 source,
-                // tslint:disable-next-line: no-any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 attachments: clonedCell.attachments as any
             };
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             return (rawCell as any) as T;
         }
         default: {
@@ -132,18 +132,18 @@ export function createCellFrom(
     // If we're creating a new cell from the same base type, then ensure we preserve the metadata.
     const baseCell: nbformat.IBaseCell =
         source.cell_type === target
-            ? // tslint:disable-next-line: no-any
+            ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
               (cloneCell(source) as any)
             : {
                   source: source.source,
                   cell_type: target,
-                  // tslint:disable-next-line: no-any
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   metadata: cloneDeep(source.metadata) as any
               };
 
     switch (target) {
         case 'code': {
-            // tslint:disable-next-line: no-unnecessary-local-variable no-any
+            // eslint-disable-next-line , @typescript-eslint/no-explicit-any
             const codeCell = (baseCell as any) as nbformat.ICodeCell;
             codeCell.execution_count = null;
             codeCell.outputs = [];

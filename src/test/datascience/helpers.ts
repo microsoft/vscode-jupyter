@@ -36,7 +36,7 @@ export function defaultDataScienceSettings(): IJupyterSettings {
         jupyterLaunchTimeout: 10,
         jupyterLaunchRetries: 3,
         jupyterServerType: 'local',
-        // tslint:disable-next-line: no-invalid-template-strings
+        // eslint-disable-next-line no-template-curly-in-string
         notebookFileRoot: '${fileDirname}',
         changeDirOnImportExport: false,
         useDefaultConfigForJupyter: true,
@@ -59,7 +59,7 @@ export function defaultDataScienceSettings(): IJupyterSettings {
         jupyterCommandLineArguments: [],
         widgetScriptSources: [],
         interactiveWindowMode: 'single'
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any;
 }
 
@@ -69,13 +69,13 @@ export function takeSnapshot() {
     // memory.
     // Alternatively, using the test:functional:memleak task and sticking breakpoints here and in
     // writeDiffSnapshot can be used as convenient locations to create heap snapshots and diff them.
-    // tslint:disable-next-line: no-require-imports
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     //const memwatch = require('@raghb1/node-memwatch');
     return {}; //new memwatch.HeapDiff();
 }
 
 //let snapshotCounter = 1;
-// tslint:disable-next-line: no-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function writeDiffSnapshot(_snapshot: any, _prefix: string) {
     noop(); // Stick breakpoint here when generating heap snapshots
     // const diff = snapshot.end();
@@ -113,7 +113,7 @@ export async function openNotebook(
         editorProvider.activeEditor instanceof NativeEditorOldWebView
     ) {
         // We don't care about changes, no need to save them.
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (editorProvider.activeEditor as any).askForSave = () => Promise.resolve(AskForSaveResult.No);
     }
     traceInfo(`Opened notebook ${ipynbFile}`);

@@ -3,11 +3,11 @@
 
 'use strict';
 
-// tslint:disable:no-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import * as assert from 'assert';
 import { expect } from 'chai';
-// tslint:disable-next-line: match-default-export-name
+// eslint-disable-next-line 
 import rewiremock from 'rewiremock';
 import * as TypeMoq from 'typemoq';
 import { WorkspaceConfiguration } from 'vscode';
@@ -15,7 +15,7 @@ import { IWorkspaceService } from '../../../client/common/application/types';
 import { HttpClient } from '../../../client/common/net/httpClient';
 import { IServiceContainer } from '../../../client/ioc/types';
 
-// tslint:disable-next-line: max-func-body-length
+// eslint-disable-next-line 
 suite('Http Client', () => {
     const proxy = 'https://myproxy.net:4242';
     let config: TypeMoq.IMock<WorkspaceConfiguration>;

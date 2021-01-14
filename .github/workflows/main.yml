@@ -139,8 +139,8 @@ jobs:
       - name: Install dependencies (npm ci)
         run: npm ci --prefer-offline
 
-      - name: Run linting on TypeScript code
-        run: npx tslint --project tsconfig.json
+      - name: Run linting on TypeScript code (eslint)
+        run: npm run lint
 
       - name: Run prettier on TypeScript code
         run: npx prettier 'src/**/*.ts*' --check

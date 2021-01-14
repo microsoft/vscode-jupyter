@@ -1,4 +1,4 @@
-// tslint:disable: no-multiline-string no-trailing-whitespace
+/* eslint-disable no-multi-str, no-trailing-spaces */
 export const TestSvg = `
 <svg height="574.678125pt" version="1.1" viewBox="0 0 331.045312 574.678125" width="331.045312pt" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
  <defs>

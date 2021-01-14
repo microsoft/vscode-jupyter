@@ -6,7 +6,7 @@
 import '../common/main';
 // This must be on top, do not change. Required by webpack.
 
-// tslint:disable-next-line: ordered-imports
+// eslint-disable-next-line import/order
 import '../common/index.css';
 
 import * as React from 'react';
@@ -23,9 +23,9 @@ import { createStore } from './redux/store';
 // This special function talks to vscode from a web panel
 export declare function acquireVsCodeApi(): IVsCodeApi;
 const baseTheme = detectBaseTheme();
-// tslint:disable-next-line: no-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const testMode = (window as any).inTestMode;
-// tslint:disable-next-line: no-typeof-undefined
+// eslint-disable-next-line 
 const skipDefault = testMode ? false : typeof acquireVsCodeApi !== 'undefined';
 
 // Create the redux store
@@ -36,7 +36,7 @@ const store = createStore(skipDefault, baseTheme, testMode, postOffice);
 const ConnectedInteractiveEditor = getConnectedInteractiveEditor();
 
 // Stick them all together
-// tslint:disable:no-typeof-undefined
+/* eslint-disable  */
 ReactDOM.render(
     <Provider store={store}>
         <TextAreaFocusTracker />

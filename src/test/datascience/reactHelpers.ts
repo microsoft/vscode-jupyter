@@ -6,7 +6,7 @@
 
 // Custom module loader so we can skip loading the 'canvas' module which won't load
 // inside of vscode
-// tslint:disable:no-var-requires no-require-imports no-any no-function-expression
+/* eslint-disable @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports, @typescript-eslint/no-explicit-any,  */
 const Module = require('module');
 
 (function () {
@@ -25,13 +25,13 @@ const Module = require('module');
                 // This should happen when not inside vscode.
             }
         }
-        // tslint:disable-next-line:no-invalid-this
+        // eslint-disable-next-line no-invalid-this
         return _require(this, filepath);
     };
 })();
 
-// tslint:disable:no-string-literal no-any object-literal-key-quotes max-func-body-length member-ordering
-// tslint:disable: no-require-imports no-var-requires
+/* eslint-disable @typescript-eslint/dot-notation, @typescript-eslint/no-explicit-any, quote-props, , @typescript-eslint/member-ordering */
+/* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 
 // Monkey patch the stylesheet impl from jsdom before loading jsdom.
 // This is necessary to get slickgrid to work.
@@ -149,7 +149,7 @@ class MockCanvas implements CanvasRenderingContext2D {
         throw new Error('Method not implemented.');
     }
     public stroke(): void;
-    // tslint:disable-next-line: unified-signatures
+    // eslint-disable-next-line @typescript-eslint/unified-signatures
     public stroke(path: Path2D): void;
     public stroke(_path?: any) {
         throw new Error('Method not implemented.');
@@ -160,7 +160,7 @@ class MockCanvas implements CanvasRenderingContext2D {
         throw new Error('Method not implemented.');
     }
     public scrollPathIntoView(): void;
-    // tslint:disable-next-line: unified-signatures
+    // eslint-disable-next-line @typescript-eslint/unified-signatures
     public scrollPathIntoView(path: Path2D): void;
     public scrollPathIntoView(_path?: any) {
         throw new Error('Method not implemented.');
@@ -292,14 +292,14 @@ class MockCanvas implements CanvasRenderingContext2D {
 const mockCanvas = new MockCanvas();
 
 export function setUpDomEnvironment() {
-    // tslint:disable-next-line:no-http-string
+    // eslint-disable-next-line 
     const dom = new JSDOM('<!doctype html><html><body><div id="root"></div></body></html>', {
         pretendToBeVisual: true,
         url: 'http://localhost'
     });
     const { window } = dom;
 
-    // tslint:disable: no-function-expression no-empty
+    /* eslint-disable , no-empty,@typescript-eslint/no-empty-function */
     try {
         // If running inside of vscode, we need to mock the canvas because the real canvas is not
         // returned.
@@ -315,7 +315,7 @@ export function setUpDomEnvironment() {
         noop();
     }
 
-    // tslint:disable-next-line: no-function-expression
+    // eslint-disable-next-line 
     window.HTMLCanvasElement.prototype.toDataURL = function () {
         return '';
     };
@@ -324,11 +324,11 @@ export function setUpDomEnvironment() {
     (global as any)['Element'] = window.Element;
     // tslist:disable-next-line:no-string-literal no-any
     (global as any)['location'] = window.location;
-    // tslint:disable-next-line:no-string-literal no-any
+    // eslint-disable-next-line @typescript-eslint/dot-notation, @typescript-eslint/no-explicit-any
     (global as any)['window'] = window;
-    // tslint:disable-next-line:no-string-literal no-any
+    // eslint-disable-next-line @typescript-eslint/dot-notation, @typescript-eslint/no-explicit-any
     (global as any)['document'] = window.document;
-    // tslint:disable-next-line:no-string-literal no-any
+    // eslint-disable-next-line @typescript-eslint/dot-notation, @typescript-eslint/no-explicit-any
     (global as any)['navigator'] = {
         userAgent: 'node.js',
         platform: 'node'
@@ -337,9 +337,9 @@ export function setUpDomEnvironment() {
     (global as any)['KeyboardEvent'] = window.KeyboardEvent;
     (global as any)['MouseEvent'] = window.MouseEvent;
     (global as any)['DocumentFragment'] = window.DocumentFragment;
-    // tslint:disable-next-line:no-string-literal no-any
+    // eslint-disable-next-line @typescript-eslint/dot-notation, @typescript-eslint/no-explicit-any
     (global as any)['getComputedStyle'] = window.getComputedStyle;
-    // tslint:disable-next-line:no-string-literal no-any
+    // eslint-disable-next-line @typescript-eslint/dot-notation, @typescript-eslint/no-explicit-any
     (global as any)['self'] = window;
     copyProps(window, global);
 
@@ -356,7 +356,7 @@ export function setUpDomEnvironment() {
     });
 
     // Another special case. CodeMirror needs selection
-    // tslint:disable-next-line:no-string-literal no-any
+    // eslint-disable-next-line @typescript-eslint/dot-notation, @typescript-eslint/no-explicit-any
     (global as any)['document'].selection = {
         anchorNode: null,
         anchorOffset: 0,
@@ -388,15 +388,15 @@ export function setUpDomEnvironment() {
     };
 
     // For Jupyter server to load correctly. It expects the window object to not be defined
-    // tslint:disable-next-line:no-eval no-any
+    // eslint-disable-next-line no-eval, @typescript-eslint/no-explicit-any
     const fetchMod = eval('require')('node-fetch');
-    // tslint:disable-next-line:no-string-literal no-any
+    // eslint-disable-next-line @typescript-eslint/dot-notation, @typescript-eslint/no-explicit-any
     (global as any)['fetch'] = fetchMod;
-    // tslint:disable-next-line:no-string-literal no-any
+    // eslint-disable-next-line @typescript-eslint/dot-notation, @typescript-eslint/no-explicit-any
     (global as any)['Request'] = fetchMod.Request;
-    // tslint:disable-next-line:no-string-literal no-any
+    // eslint-disable-next-line @typescript-eslint/dot-notation, @typescript-eslint/no-explicit-any
     (global as any)['Headers'] = fetchMod.Headers;
-    // tslint:disable-next-line:no-string-literal no-eval no-any
+    // eslint-disable-next-line @typescript-eslint/dot-notation, no-eval, @typescript-eslint/no-explicit-any
     (global as any)['WebSocket'] = eval('require')('ws');
     (global as any)['DOMParser'] = dom.window.DOMParser;
     (global as any)['Blob'] = dom.window.Blob;
@@ -407,7 +407,7 @@ export function setUpDomEnvironment() {
     // export the function we need to dispose of the timer it's set. So force it to.
     const configurationRegex = /.*(\\|\/)node_modules(\\|\/)monaco-editor(\\|\/)esm(\\|\/)vs(\\|\/)editor(\\|\/)browser(\\|\/)config(\\|\/)configuration\.js/g;
     const _oldLoader = require.extensions['.js'];
-    // tslint:disable-next-line:no-function-expression
+    // eslint-disable-next-line 
     require.extensions['.js'] = function (mod: any, filename) {
         if (configurationRegex.test(filename)) {
             let content = require('fs').readFileSync(filename, 'utf8');

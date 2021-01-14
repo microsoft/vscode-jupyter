@@ -27,12 +27,12 @@ export async function waitForPromise<T>(promise: Promise<T>, timeout: number): P
     });
 }
 
-// tslint:disable-next-line: no-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isThenable<T>(v: any): v is Thenable<T> {
     return typeof v?.then === 'function';
 }
 
-// tslint:disable-next-line: no-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isPromise<T>(v: any): v is Promise<T> {
     return typeof v?.then === 'function' && typeof v?.catch === 'function';
 }
@@ -40,40 +40,40 @@ export function isPromise<T>(v: any): v is Promise<T> {
 //======================
 // Deferred
 
-// tslint:disable-next-line:interface-name
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export interface Deferred<T> {
     readonly promise: Promise<T>;
     readonly resolved: boolean;
     readonly rejected: boolean;
     readonly completed: boolean;
     resolve(value?: T | PromiseLike<T>): void;
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     reject(reason?: any): void;
 }
 
 class DeferredImpl<T> implements Deferred<T> {
     private _resolve!: (value?: T | PromiseLike<T>) => void;
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private _reject!: (reason?: any) => void;
     private _resolved: boolean = false;
     private _rejected: boolean = false;
     private _promise: Promise<T>;
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     constructor(private scope: any = null) {
-        // tslint:disable-next-line:promise-must-complete
+        // eslint-disable-next-line 
         this._promise = new Promise<T>((res, rej) => {
             this._resolve = res;
             this._reject = rej;
         });
     }
     public resolve(_value?: T | PromiseLike<T>) {
-        // tslint:disable-next-line:no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         this._resolve.apply(this.scope ? this.scope : this, arguments as any);
         this._resolved = true;
     }
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public reject(_reason?: any) {
-        // tslint:disable-next-line:no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         this._reject.apply(this.scope ? this.scope : this, arguments as any);
         this._rejected = true;
     }
@@ -90,7 +90,7 @@ class DeferredImpl<T> implements Deferred<T> {
         return this._rejected || this._resolved;
     }
 }
-// tslint:disable-next-line:no-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function createDeferred<T>(scope: any = null): Deferred<T> {
     return new DeferredImpl<T>(scope);
 }
@@ -98,9 +98,9 @@ export function createDeferred<T>(scope: any = null): Deferred<T> {
 export function createDeferredFrom<T>(...promises: Promise<T>[]): Deferred<T> {
     const deferred = createDeferred<T>();
     Promise.all<T>(promises)
-        // tslint:disable-next-line:no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .then(deferred.resolve.bind(deferred) as any)
-        // tslint:disable-next-line:no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .catch(deferred.reject.bind(deferred) as any);
 
     return deferred;
@@ -118,7 +118,7 @@ export function createDeferredFromPromise<T>(promise: Promise<T>): Deferred<T> {
  * An iterator that yields nothing.
  */
 export function iterEmpty<T>(): AsyncIterator<T, void> {
-    // tslint:disable-next-line:no-empty
+    // eslint-disable-next-line no-empty,@typescript-eslint/no-empty-function
     return ((async function* () {})() as unknown) as AsyncIterator<T, void>;
 }
 
@@ -136,7 +136,7 @@ async function getNext<T>(it: AsyncIterator<T, T | void>, indexMaybe?: number): 
     }
 }
 
-// tslint:disable-next-line:promise-must-complete no-empty
+// eslint-disable-next-line no-empty,@typescript-eslint/no-empty-function
 export const NEVER: Promise<unknown> = new Promise(() => {});
 
 /**

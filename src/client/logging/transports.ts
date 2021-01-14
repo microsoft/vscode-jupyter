@@ -20,7 +20,7 @@ const EXTENSION_ROOT_DIR =
 const formattedMessage = Symbol.for('message');
 
 export function isConsoleTransport(transport: unknown): boolean {
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (transport as any).isConsole;
 }
 
@@ -28,7 +28,7 @@ export function isConsoleTransport(transport: unknown): boolean {
 // We do not use transports.ConsoleTransport because it cannot
 // adapt to our custom log levels very well.
 class ConsoleTransport extends Transport {
-    // tslint:disable:no-console
+    /* eslint-disable no-console */
     private static funcByLevel: { [K in LogLevel]: (...args: Arguments) => void } = {
         [LogLevel.Error]: console.error,
         [LogLevel.Warn]: console.warn,
@@ -37,20 +37,20 @@ class ConsoleTransport extends Transport {
         [LogLevel.Trace]: console.trace
     };
     private static defaultFunc = console.log;
-    // tslint:enable:no-console
+    /* eslint-enable no-console */
 
     // This is used to identify the type.
     public readonly isConsole = true;
 
     constructor(
-        // tslint:disable-next-line:no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         options?: any,
         private readonly levels?: winston.config.AbstractConfigSetLevels
     ) {
         super(options);
     }
 
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public log?(info: { level: string; message: string; [formattedMessage]: string }, next: () => void): any {
         setImmediate(() => this.emit('logged', info));
         const level = resolveLevel(info.level, this.levels);
@@ -79,11 +79,11 @@ export function getConsoleTransport(formatter: logform.Format): Transport {
 }
 
 class JupyterOutputChannelTransport extends Transport {
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     constructor(private readonly channel: OutputChannel, options?: any) {
         super(options);
     }
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public log?(info: { message: string; [formattedMessage]: string }, next: () => void): any {
         setImmediate(() => this.emit('logged', info));
         this.channel.appendLine(info[formattedMessage] || info.message);

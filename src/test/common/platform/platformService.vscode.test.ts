@@ -12,7 +12,7 @@ import { OSType } from '../../../client/common/utils/platform';
 
 use(chaiAsPromised);
 
-// tslint:disable-next-line:max-func-body-length
+// eslint-disable-next-line 
 suite('PlatformService', () => {
     const osType = getOSType();
     test('pathVariableName', async () => {
@@ -64,7 +64,7 @@ suite('PlatformService', () => {
     });
 
     test('is64bit', async () => {
-        // tslint:disable-next-line:no-require-imports
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
         const arch = require('arch');
 
         const hostReports64Bit = arch() === 'x64';
@@ -79,7 +79,7 @@ suite('PlatformService', () => {
 
     test('getVersion on Mac/Windows', async function () {
         if (osType === OSType.Linux) {
-            // tslint:disable-next-line:no-invalid-this
+            // eslint-disable-next-line no-invalid-this
             return this.skip();
         }
         const expectedVersion = parse(os.release())!;
@@ -90,7 +90,7 @@ suite('PlatformService', () => {
     });
     test('getVersion on Linux shoud throw an exception', async function () {
         if (osType !== OSType.Linux) {
-            // tslint:disable-next-line:no-invalid-this
+            // eslint-disable-next-line no-invalid-this
             return this.skip();
         }
         const svc = new PlatformService();

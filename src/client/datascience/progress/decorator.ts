@@ -36,10 +36,10 @@ function report(progress: Progress) {
 export function reportAction(action: ReportableAction) {
     return function (_target: Object, _propertyName: string, descriptor: TypedPropertyDescriptor<PromiseFunction>) {
         const originalMethod = descriptor.value!;
-        // tslint:disable-next-line:no-any no-function-expression
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any, 
         descriptor.value = async function (...args: any[]) {
             report({ action, phase: 'started' });
-            // tslint:disable-next-line:no-invalid-this
+            // eslint-disable-next-line no-invalid-this
             return originalMethod.apply(this, args).finally(() => {
                 report({ action, phase: 'completed' });
             });

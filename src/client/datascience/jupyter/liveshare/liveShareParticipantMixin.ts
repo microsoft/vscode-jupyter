@@ -11,7 +11,7 @@ import { ClassType } from '../../../ioc/types';
 import { ILiveShareParticipant } from './types';
 import { waitForGuestService, waitForHostService } from './utils';
 
-// tslint:disable:no-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 export class LiveShareParticipantDefault implements IAsyncDisposable {
     constructor(..._rest: any[]) {

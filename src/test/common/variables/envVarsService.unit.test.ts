@@ -3,7 +3,7 @@
 
 'use strict';
 
-// tslint:disable:max-func-body-length
+/* eslint-disable  */
 
 import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
@@ -134,13 +134,13 @@ Path=/usr/x:/usr/y
             // src/testMultiRootWkspc/workspace4/.env
             setFile(
                 filename,
-                // tslint:disable:no-invalid-template-strings
+                /* eslint-disable no-template-curly-in-string */
                 '\
 REPO=/home/user/git/foobar\n\
 PYTHONPATH=${REPO}/foo:${REPO}/bar\n\
 PYTHON=${BINDIR}/python3\n\
                 '
-                // tslint:enable:no-invalid-template-strings
+                /* eslint-enable no-template-curly-in-string */
             );
 
             const vars = await variablesService.parseFile(filename, { BINDIR: '/usr/bin' });
@@ -182,7 +182,7 @@ PYTHON=${BINDIR}/python3\n\
 
             test('Ensure path variables variables are not merged into target', async () => {
                 const vars1 = { ONE: '1', TWO: 'TWO', PYTHONPATH: 'PYTHONPATH' };
-                // tslint:disable-next-line:no-any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 (vars1 as any)[pathVariable] = 'PATH';
                 const vars2 = { ONE: 'ONE', THREE: '3' };
 
@@ -199,7 +199,7 @@ PYTHON=${BINDIR}/python3\n\
             test('Ensure path variables variables in target are left untouched', async () => {
                 const vars1 = { ONE: '1', TWO: 'TWO' };
                 const vars2 = { ONE: 'ONE', THREE: '3', PYTHONPATH: 'PYTHONPATH' };
-                // tslint:disable-next-line:no-any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 (vars2 as any)[pathVariable] = 'PATH';
 
                 variablesService.mergeVariables(vars1, vars2);
@@ -244,7 +244,7 @@ PYTHON=${BINDIR}/python3\n\
 
             test(`Ensure appending PATH has no effect if an empty string is provided and path does not exist in vars object (${pathVariable})`, async () => {
                 const vars = { ONE: '1' };
-                // tslint:disable-next-line:no-any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 (vars as any)[pathVariable] = 'PATH';
 
                 variablesService.appendPath(vars);
@@ -267,7 +267,7 @@ PYTHON=${BINDIR}/python3\n\
 
             test(`Ensure PATH is appeneded (${pathVariable})`, async () => {
                 const vars = { ONE: '1' };
-                // tslint:disable-next-line:no-any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 (vars as any)[pathVariable] = 'PATH';
                 const pathToAppend = `/usr/one${path.delimiter}/usr/three`;
 
@@ -342,7 +342,7 @@ PYTHON=${BINDIR}/python3\n\
 suite('Parsing Environment Variables Files', () => {
     suite('parseEnvFile()', () => {
         test('Custom variables should be parsed from env file', () => {
-            // tslint:disable-next-line:no-multiline-string
+            // eslint-disable-next-line no-multi-str
             const vars = parseEnvFile(`
 X1234PYEXTUNITTESTVAR=1234
 PYTHONPATH=../workspace5
@@ -355,7 +355,7 @@ PYTHONPATH=../workspace5
         });
 
         test('PATH and PYTHONPATH from env file should be returned as is', () => {
-            // tslint:disable-next-line:no-multiline-string
+            // eslint-disable-next-line no-multi-str
             const vars = parseEnvFile(`
 X=1
 Y=2
@@ -377,7 +377,7 @@ Path=/usr/x:/usr/y
         });
 
         test('Variable names must be alpha + alnum/underscore', () => {
-            // tslint:disable-next-line:no-multiline-string
+            // eslint-disable-next-line no-multi-str
             const vars = parseEnvFile(`
 SPAM=1234
 ham=5678
@@ -402,7 +402,7 @@ VAR_2=7890
         });
 
         test('Empty values become empty string', () => {
-            // tslint:disable-next-line:no-multiline-string
+            // eslint-disable-next-line no-multi-str
             const vars = parseEnvFile(`
 SPAM=
             `);
@@ -413,7 +413,7 @@ SPAM=
         });
 
         test('Outer quotation marks are removed', () => {
-            // tslint:disable-next-line:no-multiline-string
+            // eslint-disable-next-line no-multi-str
             const vars = parseEnvFile(`
 SPAM=1234
 HAM='5678'
@@ -437,15 +437,15 @@ VAR4="QR"ST"
             expect(vars).to.have.property('BAZ', '"ABCD', 'value is invalid');
             expect(vars).to.have.property('VAR1', '"EFGH', 'value is invalid');
             expect(vars).to.have.property('VAR2', 'IJKL"', 'value is invalid');
-            // tslint:disable-next-line:no-suspicious-comment
+            // eslint-disable-next-line 
             // TODO: Should the outer marks be left?
             expect(vars).to.have.property('VAR3', "MN'OP", 'value is invalid');
             expect(vars).to.have.property('VAR4', 'QR"ST', 'value is invalid');
         });
 
         test('Whitespace is ignored', () => {
-            // tslint:disable:no-trailing-whitespace
-            // tslint:disable-next-line:no-multiline-string
+            /* eslint-disable no-trailing-spaces */
+            // eslint-disable-next-line no-multi-str
             const vars = parseEnvFile(`
 SPAM=1234
 HAM =5678
@@ -457,7 +457,7 @@ VAR1=EFGH  ...
 VAR2=IJKL
 VAR3='  MNOP  '
             `);
-            // tslint:enable:no-trailing-whitespace
+            /* eslint-enable no-trailing-spaces */
 
             expect(vars).to.not.equal(undefined, 'Variables is undefiend');
             expect(Object.keys(vars!)).lengthOf(9, 'Incorrect number of variables');
@@ -473,8 +473,8 @@ VAR3='  MNOP  '
         });
 
         test('Blank lines are ignored', () => {
-            // tslint:disable:no-trailing-whitespace
-            // tslint:disable-next-line:no-multiline-string
+            /* eslint-disable no-trailing-spaces */
+            // eslint-disable-next-line no-multi-str
             const vars = parseEnvFile(`
 
 SPAM=1234
@@ -483,7 +483,7 @@ HAM=5678
 
 
             `);
-            // tslint:enable:no-trailing-whitespace
+            /* eslint-enable no-trailing-spaces */
 
             expect(vars).to.not.equal(undefined, 'Variables is undefiend');
             expect(Object.keys(vars!)).lengthOf(2, 'Incorrect number of variables');
@@ -492,7 +492,7 @@ HAM=5678
         });
 
         test('Comments are ignored', () => {
-            // tslint:disable-next-line:no-multiline-string
+            // eslint-disable-next-line no-multi-str
             const vars = parseEnvFile(`
 # step 1
 SPAM=1234
@@ -511,10 +511,10 @@ EGGS=9012  # ...
         });
 
         suite('variable substitution', () => {
-            // tslint:disable:no-invalid-template-strings
+            /* eslint-disable no-template-curly-in-string */
 
             test('Basic substitution syntax', () => {
-                // tslint:disable-next-line:no-multiline-string
+                // eslint-disable-next-line no-multi-str
                 const vars = parseEnvFile(
                     '\
 REPO=/home/user/git/foobar \n\
@@ -533,7 +533,7 @@ PYTHONPATH=${REPO}/foo:${REPO}/bar \n\
             });
 
             test('Curly braces are required for substitution', () => {
-                // tslint:disable-next-line:no-multiline-string
+                // eslint-disable-next-line no-multi-str
                 const vars = parseEnvFile('\
 SPAM=1234 \n\
 EGGS=$SPAM \n\
@@ -546,7 +546,7 @@ EGGS=$SPAM \n\
             });
 
             test('Nested substitution is not supported', () => {
-                // tslint:disable-next-line:no-multiline-string
+                // eslint-disable-next-line no-multi-str
                 const vars = parseEnvFile(
                     '\
 SPAM=EGGS \n\
@@ -571,7 +571,7 @@ HAM4="-- ${${SPAM}} ${EGGS} --"\n\
             });
 
             test('Other bad substitution syntax', () => {
-                // tslint:disable-next-line:no-multiline-string
+                // eslint-disable-next-line no-multi-str
                 const vars = parseEnvFile(
                     '\
 SPAM=EGGS \n\
@@ -594,7 +594,7 @@ HAM4=$SPAM \n\
             });
 
             test('Recursive substitution is allowed', () => {
-                // tslint:disable-next-line:no-multiline-string
+                // eslint-disable-next-line no-multi-str
                 const vars = parseEnvFile(
                     '\
 REPO=/home/user/git/foobar \n\
@@ -614,7 +614,7 @@ PYTHONPATH=${PYTHONPATH}:${REPO}/bar \n\
             });
 
             test('Substitution may be escaped', () => {
-                // tslint:disable-next-line:no-multiline-string
+                // eslint-disable-next-line no-multi-str
                 const vars = parseEnvFile(
                     '\
 SPAM=1234 \n\
@@ -631,7 +631,7 @@ HAM=$ ... $$ \n\
             });
 
             test('base substitution variables', () => {
-                // tslint:disable-next-line:no-multiline-string
+                // eslint-disable-next-line no-multi-str
                 const vars = parseEnvFile('\
 PYTHONPATH=${REPO}/foo:${REPO}/bar \n\
                 ', {
@@ -647,7 +647,7 @@ PYTHONPATH=${REPO}/foo:${REPO}/bar \n\
                 );
             });
 
-            // tslint:enable:no-invalid-template-strings
+            /* eslint-enable no-template-curly-in-string */
         });
     });
 });

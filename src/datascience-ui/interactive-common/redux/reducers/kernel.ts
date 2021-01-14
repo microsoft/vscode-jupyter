@@ -8,7 +8,7 @@ import { postActionToExtension } from '../helpers';
 import { CommonActionType, CommonReducerArg } from './types';
 
 export namespace Kernel {
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     export function selectKernel(
         arg: CommonReducerArg<CommonActionType | InteractiveWindowMessages, IServerState | undefined>
     ): IMainState {

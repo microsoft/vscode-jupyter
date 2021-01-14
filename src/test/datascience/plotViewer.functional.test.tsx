@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-// tslint:disable:max-func-body-length trailing-comma no-any no-multiline-string
+/* eslint-disable , comma-dangle, @typescript-eslint/no-explicit-any, no-multi-str */
 import '../../client/common/extensions';
 
 import * as assert from 'assert';
@@ -47,7 +47,7 @@ suite('DataScience PlotViewer tests', () => {
                     originalUpdateFunc = originalUpdateFunc.bind(component);
                 }
 
-                // tslint:disable-next-line:no-any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 component.componentDidUpdate = (prevProps: Readonly<P>, prevState: Readonly<S>, snapshot?: any) => {
                     // When the component updates, call the original function and resolve our promise
                     if (originalUpdateFunc) {
@@ -67,7 +67,7 @@ suite('DataScience PlotViewer tests', () => {
     }
 
     function waitForRender<P, S, C>(component: React.Component<P, S, C>, numberOfRenders: number = 1): Promise<void> {
-        // tslint:disable-next-line:promise-must-complete
+        // eslint-disable-next-line 
         return new Promise((resolve, reject) => {
             if (component) {
                 let originalRenderFunc = component.render;
@@ -127,7 +127,7 @@ suite('DataScience PlotViewer tests', () => {
             if (!disposable) {
                 continue;
             }
-            // tslint:disable-next-line:no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const promise = disposable.dispose() as Promise<any>;
             if (promise) {
                 await promise;
@@ -148,7 +148,7 @@ suite('DataScience PlotViewer tests', () => {
         await renderPromise;
     }
 
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     function runMountedTest(
         name: string,
         testFunc: (wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) => Promise<void>

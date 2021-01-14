@@ -43,7 +43,7 @@ export class WidgetManagerComponent extends React.Component<Props> {
         );
 
         props.postOffice.addHandler({
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             handleMessage: (type: string, payload?: any) => {
                 if (type === SharedMessages.UpdateSettings) {
                     const settings = JSON.parse(payload) as IJupyterExtraSettings;
@@ -75,7 +75,7 @@ export class WidgetManagerComponent extends React.Component<Props> {
         moduleName: string,
         moduleVersion: string,
         isOnline: boolean,
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         error: any,
         timedout: boolean
     ): CommonAction<ILoadIPyWidgetClassFailureAction> {
@@ -114,7 +114,7 @@ export class WidgetManagerComponent extends React.Component<Props> {
         className: string;
         moduleName: string;
         moduleVersion: string;
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         error: any;
         timedout?: boolean;
         isOnline: boolean;

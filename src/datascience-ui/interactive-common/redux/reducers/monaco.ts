@@ -95,7 +95,7 @@ function handleLoadOnigasmResponse(arg: MonacoReducerArg<Buffer>): IMonacoState 
         // Have to convert the buffer into an ArrayBuffer for the tokenizer to load it.
         let typedArray = new Uint8Array(arg.payload.data);
         if (typedArray.length <= 0 && arg.payload.data) {
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             typedArray = new Uint8Array((arg.payload.data as any).data);
         }
         Tokenizer.loadOnigasm(typedArray.buffer);

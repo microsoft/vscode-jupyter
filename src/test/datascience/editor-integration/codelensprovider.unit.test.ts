@@ -16,7 +16,7 @@ import { DataScienceCodeLensProvider } from '../../../client/datascience/editor-
 import { ICodeWatcher, IDataScienceCodeLensProvider, IDebugLocationTracker } from '../../../client/datascience/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 
-// tslint:disable-next-line: max-func-body-length
+// eslint-disable-next-line 
 suite('DataScienceCodeLensProvider Unit Tests', () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     let configurationService: TypeMoq.IMock<IConfigurationService>;
@@ -124,7 +124,7 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
         document.setup((d) => d.fileName).returns(() => 'test.py');
         document.setup((d) => d.version).returns(() => 1);
         vscodeNotebook.reset();
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         vscodeNotebook.setup((c) => c.activeNotebookEditor).returns(() => ({} as any));
 
         const targetCodeWatcher = TypeMoq.Mock.ofType<ICodeWatcher>();

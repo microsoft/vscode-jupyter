@@ -4,7 +4,7 @@ import * as nodeFetch from 'node-fetch';
 
 // Function for creating node Request object that prevents jupyterlab services from writing its own
 // authorization header.
-// tslint:disable: no-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export function createAuthorizingRequest(getAuthHeader: () => any) {
     class AuthorizingRequest extends nodeFetch.Request {
         constructor(input: nodeFetch.RequestInfo, init?: nodeFetch.RequestInit) {

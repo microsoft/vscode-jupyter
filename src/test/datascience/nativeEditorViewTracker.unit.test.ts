@@ -39,7 +39,7 @@ suite('DataScience - View tracker', () => {
         when(editorProvider.open(anything())).thenCall((f) => {
             const key = f.toString();
             openedList.push(f.toString());
-            // tslint:disable-next-line: no-unnecessary-initializer
+            // eslint-disable-next-line no-undef-init
             let editorInstance: INotebookEditor | undefined = undefined;
             if (key === file1.toString()) {
                 editorInstance = instance(editor1);

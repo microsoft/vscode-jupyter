@@ -12,7 +12,7 @@ import { noop } from '../../common/utils/misc';
 import { translateKernelLanguageToMonaco } from '../common';
 import { isJupyterKernel, isJupyterNotebook } from './helpers/helpers';
 import { chainWithPendingUpdates } from './helpers/notebookUpdater';
-// tslint:disable-next-line: no-var-requires no-require-imports
+// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
 /**

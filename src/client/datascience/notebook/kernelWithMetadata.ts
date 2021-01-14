@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-// tslint:disable-next-line: no-require-imports
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 import { join } from 'path';
 import { Uri } from 'vscode';
 import { NotebookCell, NotebookDocument, NotebookKernel as VSCNotebookKernel } from '../../../../types/vscode-proposed';

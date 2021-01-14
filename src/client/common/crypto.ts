@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 
-// tslint:disable: no-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { createHash } from 'crypto';
 import { injectable } from 'inversify';
@@ -21,7 +21,7 @@ export class CryptoUtils implements ICryptoUtils {
     ): IHashFormat[E] {
         let hash: string;
         if (algorithm === 'FNV') {
-            // tslint:disable-next-line:no-require-imports
+            // eslint-disable-next-line @typescript-eslint/no-require-imports
             const fnv = require('@enonic/fnv-plus');
             hash = fnv.fast1a32hex(data) as string;
         } else if (algorithm === 'SHA256') {

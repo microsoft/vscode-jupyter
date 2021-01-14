@@ -2,12 +2,12 @@
 // Licensed under the MIT License.
 'use strict';
 import * as code from 'vscode';
-// tslint:disable-next-line: import-name
+// eslint-disable-next-line 
 import ProtocolCompletionItem from 'vscode-languageclient/lib/common/protocolCompletionItem';
 import { Protocol2CodeConverter } from 'vscode-languageclient/node';
 import * as proto from 'vscode-languageserver-protocol';
 
-// tslint:disable:no-any unified-signatures
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/unified-signatures */
 export class MockProtocol2CodeConverter implements Protocol2CodeConverter {
     public asUri(_value: string): code.Uri {
         throw new Error('Method not implemented.');

@@ -18,12 +18,12 @@ import { ICellViewModel } from './mainState';
 import { fixMarkdown } from './markdownManipulation';
 import { getRichestMimetype, getTransform, isIPyWidgetOutput, isMimeTypeSupported } from './transforms';
 
-// tslint:disable-next-line: no-var-requires no-require-imports
+// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const ansiToHtml = require('ansi-to-html');
-// tslint:disable-next-line: no-var-requires no-require-imports
+// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const lodashEscape = require('lodash/escape');
 
-// tslint:disable-next-line: no-require-imports no-var-requires
+// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
 const cloneDeep = require('lodash/cloneDeep');
 import { Widget } from '@phosphor/widgets';
 import { noop } from '../../client/common/utils/misc';
@@ -58,9 +58,9 @@ interface ICellOutput {
     outputSpanClassName?: string; // Wrap this output in a span with the following className, undefined to not wrap
     doubleClick(): void; // Double click handler for plot viewing is stored here
 }
-// tslint:disable: react-this-binding-issue
+/* eslint-disable  */
 export class CellOutput extends React.Component<ICellOutputProps> {
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private static get ansiToHtmlClass(): ClassType<any> {
         if (!CellOutput.ansiToHtmlClass_ctor) {
             // ansiToHtml is different between the tests running and webpack. figure out which one
@@ -72,12 +72,12 @@ export class CellOutput extends React.Component<ICellOutputProps> {
         }
         return CellOutput.ansiToHtmlClass_ctor!;
     }
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private static ansiToHtmlClass_ctor: ClassType<any> | undefined;
     private ipyWidgetRef: React.RefObject<HTMLDivElement>;
     private renderedViews = new Map<string, Promise<Widget | undefined>>();
     private widgetManager: WidgetManager | undefined;
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     constructor(prop: ICellOutputProps) {
         super(prop);
         this.ipyWidgetRef = React.createRef<HTMLDivElement>();
@@ -153,7 +153,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
             return;
         }
     }
-    // tslint:disable-next-line: max-func-body-length
+    // eslint-disable-next-line 
     public componentDidUpdate(prevProps: ICellOutputProps) {
         if (!this.isCodeCell() || !this.hasOutput() || !this.getCodeCell().outputs || this.props.hideOutput) {
             return;
@@ -175,7 +175,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
     public shouldComponentUpdate(
         nextProps: Readonly<ICellOutputProps>,
         _nextState: Readonly<ICellOutputProps>,
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         _nextContext: any
     ): boolean {
         if (nextProps === this.props) {
@@ -258,7 +258,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
             return (
                 this.renderCodeOutputs()
                     .filter((item) => !!item)
-                    // tslint:disable-next-line: no-any
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     .map((item) => (item as any) as JSX.Element)
             );
         } else if (this.props.cellVM.cell.id !== Identifiers.EditCellId) {
@@ -276,7 +276,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
             const outputs = this.renderOutputs(this.getCodeCell().outputs, trim);
 
             // Render any UI side errors
-            // tslint:disable: react-no-dangerous-html
+            /* eslint-disable */
             if (this.props.cellVM.uiSideError) {
                 outputs.push(
                     <div key={'uiError'} className="cell-output-uiSideError">
@@ -478,7 +478,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
         }
     }
 
-    // tslint:disable-next-line: max-func-body-length
+    // eslint-disable-next-line 
     private renderOutputs(outputs: nbformat.IOutput[], trim: string): JSX.Element[] {
         return [this.renderOutput(outputs, trim)];
     }
@@ -559,7 +559,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
 
     private renderWidget(widgetOutput: ICellOutputData) {
         // Create a view for this widget if we haven't already
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const widgetData: any = widgetOutput.mimeBundle[WIDGET_MIMETYPE];
         if (widgetData.model_id) {
             if (!this.renderedViews.has(widgetData.model_id)) {

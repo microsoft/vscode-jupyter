@@ -15,14 +15,14 @@ import { CommonActionType } from './reducers/types';
 export const AllowedIPyWidgetMessages = [...Object.values(IPyWidgetMessages)];
 
 export function generatePostOfficeSendReducer(postOffice: PostOffice): Redux.Reducer<{}, Redux.AnyAction> {
-    // tslint:disable-next-line: no-function-expression
+    // eslint-disable-next-line 
     return function (_state: {} | undefined, action: Redux.AnyAction): {} {
         if (isAllowedAction(action)) {
             // Make sure a valid message
             if (action.type === CommonActionType.PostOutgoingMessage) {
                 const { type, payload } = unwrapPostableAction(action.payload);
                 // Just post this to the post office.
-                // tslint:disable-next-line: no-any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 postOffice.sendMessage<IInteractiveWindowMapping>(type, payload?.data as any);
             } else {
                 const payload: BaseReduxActionPayload<{}> | undefined = action.payload;

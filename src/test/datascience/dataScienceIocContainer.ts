@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-//tslint:disable:trailing-comma no-any
+/* eslint-disable comma-dangle, @typescript-eslint/no-explicit-any */
 import { ReactWrapper } from 'enzyme';
 import { interfaces } from 'inversify';
 import * as os from 'os';
@@ -338,7 +338,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     }
     private static jupyterInterpreters: PythonEnvironment[] = [];
     public applicationShell!: ApplicationShell;
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public datascience!: TypeMoq.IMock<IDataScience>;
     public shouldMockJupyter: boolean;
     public attemptedPythonExtension: boolean = false;
@@ -398,7 +398,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
         if (!this.uiTest) {
             // Blur window focus so we don't have editors polling
-            // tslint:disable-next-line: no-require-imports
+            // eslint-disable-next-line @typescript-eslint/no-require-imports
             const reactHelpers = require('./reactHelpers') as typeof import('./reactHelpers');
             reactHelpers.blurWindow();
         }
@@ -408,7 +408,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
         if (!this.uiTest) {
             // Clear out the monaco global services. Some of these services are preventing shutdown.
-            // tslint:disable: no-require-imports
+            /* eslint-disable @typescript-eslint/no-require-imports */
             const services = require('monaco-editor/esm/vs/editor/standalone/browser/standaloneServices') as any;
             if (services.StaticServices) {
                 const keys = Object.keys(services.StaticServices);
@@ -436,7 +436,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         reset(this.webPanelProvider);
     }
 
-    //tslint:disable:max-func-body-length
+    /* eslint-disable  */
     public registerDataScienceTypes(useCustomEditor: boolean = false) {
         this.serviceManager.addSingletonInstance<number>(DataScienceStartupTime, Date.now());
         this.serviceManager.addSingletonInstance<DataScienceIocContainer>(DataScienceIocContainer, this);
@@ -966,7 +966,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
                     // Log this all the time. Useful in determining why a test may not pass.
                     const message = `Setting interpreter to ${list[0].displayName || list[0].path} -> ${list[0].path}`;
                     traceInfo(message);
-                    // tslint:disable-next-line: no-console
+                    // eslint-disable-next-line no-console
                     console.log(message);
 
                     // Also set this as the interpreter to use for jupyter
@@ -982,7 +982,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         }
     }
 
-    // tslint:disable:any
+    /* eslint-disable */
     public createWebView(
         mount: () => ReactWrapper<any, Readonly<{}>, React.Component>,
         id: string,
@@ -1145,7 +1145,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         partial: Partial<IJupyterSettings>,
         notifyEvent: boolean = true
     ) {
-        // tslint:disable-next-line: no-suspicious-comment
+        // eslint-disable-next-line 
         // TODO: Python path will not be updated by this code so tests are unlikely to pass
         const settings = this.getSettings(resource) as MockJupyterSettings;
         if (partial) {
@@ -1182,7 +1182,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             jupyterLaunchTimeout: 120000,
             jupyterLaunchRetries: 3,
             jupyterServerType: 'local',
-            // tslint:disable-next-line: no-invalid-template-strings
+            // eslint-disable-next-line no-template-curly-in-string
             notebookFileRoot: '${fileDirname}',
             changeDirOnImportExport: false,
             useDefaultConfigForJupyter: true,
@@ -1227,15 +1227,15 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             public ignoreCreateEvents: boolean = false;
             public ignoreChangeEvents: boolean = false;
             public ignoreDeleteEvents: boolean = false;
-            //tslint:disable-next-line:no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             public onDidChange(_listener: (e: Uri) => any, _thisArgs?: any, _disposables?: Disposable[]): Disposable {
                 return { dispose: noop };
             }
-            //tslint:disable-next-line:no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             public onDidDelete(_listener: (e: Uri) => any, _thisArgs?: any, _disposables?: Disposable[]): Disposable {
                 return { dispose: noop };
             }
-            //tslint:disable-next-line:no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             public onDidCreate(_listener: (e: Uri) => any, _thisArgs?: any, _disposables?: Disposable[]): Disposable {
                 return { dispose: noop };
             }

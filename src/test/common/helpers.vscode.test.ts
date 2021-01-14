@@ -10,11 +10,11 @@ suite('helpers', () => {
         const error = new Error('something is not installed');
         assert.equal(isNotInstalledError(error), false, 'Standard error');
 
-        // tslint:disable-next-line:no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (error as any).code = 'ENOENT';
         assert.equal(isNotInstalledError(error), true, 'ENOENT error code not detected');
 
-        // tslint:disable-next-line:no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (error as any).code = 127;
         assert.equal(isNotInstalledError(error), true, '127 error code not detected');
 

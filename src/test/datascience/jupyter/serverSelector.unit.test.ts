@@ -26,7 +26,7 @@ import { CryptoUtils } from '../../../client/common/crypto';
 import { ApplicationEnvironment } from '../../../client/common/application/applicationEnvironment';
 import { MockEncryptedStorage } from '../mockEncryptedStorage';
 
-// tslint:disable: max-func-body-length no-any
+/* eslint-disable , @typescript-eslint/no-explicit-any */
 suite('DataScience - Jupyter Server URI Selector', () => {
     let quickPick: MockQuickPick | undefined;
     let cmdManager: ICommandManager;
@@ -41,7 +41,7 @@ suite('DataScience - Jupyter Server URI Selector', () => {
     ): { selector: JupyterServerSelector; storage: JupyterServerUriStorage } {
         dsSettings = {
             jupyterServerType: Settings.JupyterServerLocalLaunch
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any;
         clipboard = mock(ClipboardService);
         const configService = mock(ConfigurationService);
@@ -59,7 +59,7 @@ suite('DataScience - Jupyter Server URI Selector', () => {
         when(applicationShell.createInputBox()).thenReturn(input);
         when(applicationEnv.machineId).thenReturn(os.hostname());
         const multiStepFactory = new MultiStepInputFactory(instance(applicationShell));
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         when(configService.getSettings(anything())).thenReturn(dsSettings as any);
         when(configService.updateSetting(anything(), anything(), anything(), anything())).thenCall((_s, v) => {
             setting = v;

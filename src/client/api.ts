@@ -52,7 +52,7 @@ export interface IExtensionApi {
 }
 
 export function buildApi(
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ready: Promise<any>,
     serviceManager: IServiceManager,
     serviceContainer: IServiceContainer
@@ -88,10 +88,10 @@ export function buildApi(
 
     // In test environment return the DI Container.
     if (isTestExecution()) {
-        // tslint:disable:no-any
+        /* eslint-disable @typescript-eslint/no-explicit-any */
         (api as any).serviceContainer = serviceContainer;
         (api as any).serviceManager = serviceManager;
-        // tslint:enable:no-any
+        /* eslint-enable @typescript-eslint/no-explicit-any */
     }
     return api;
 }

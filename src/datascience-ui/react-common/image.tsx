@@ -4,7 +4,7 @@
 'use strict';
 
 import * as React from 'react';
-// tslint:disable-next-line:import-name match-default-export-name
+// eslint-disable-next-line , 
 import InlineSVG from 'svg-inline-react';
 
 // This react component loads our svg files inline so that we can load them in vscode as it no longer
@@ -56,7 +56,7 @@ export enum ImageName {
 }
 
 // All of the images must be 'require' so that webpack doesn't rewrite the import as requiring a .default.
-// tslint:disable:no-require-imports
+/* eslint-disable @typescript-eslint/no-require-imports */
 const images: { [key: string]: { light: string; dark: string } } = {
     Cancel: {
         light: require('./images/Cancel/Cancel_16xMD_vscode.svg'),
@@ -118,7 +118,7 @@ const images: { [key: string]: { light: string; dark: string } } = {
         light: require('./images/Prev/previous.svg'),
         dark: require('./images/Prev/previous-inverse.svg')
     },
-    // tslint:disable-next-line: no-suspicious-comment
+    // eslint-disable-next-line 
     // Todo: Get new images from a designer. These are all temporary.
     Pan: {
         light: require('./images/Pan/pan.svg'),

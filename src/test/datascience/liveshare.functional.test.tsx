@@ -32,9 +32,9 @@ import { MockFileSystem } from './mockFileSystem';
 import { addMockData, CellPosition, mountConnectedMainPanel, verifyHtmlOnCell } from './testHelpers';
 import { TestInteractiveWindowProvider } from './testInteractiveWindowProvider';
 //import { asyncDump } from '../common/asyncDump';
-//tslint:disable:trailing-comma no-any no-multiline-string
+/* eslint-disable comma-dangle, @typescript-eslint/no-explicit-any, no-multi-str */
 
-// tslint:disable-next-line:max-func-body-length no-any
+// eslint-disable-next-line , @typescript-eslint/no-explicit-any
 suite('DataScience LiveShare tests', () => {
     const disposables: Disposable[] = [];
     let hostContainer: DataScienceIocContainer;
@@ -52,7 +52,7 @@ suite('DataScience LiveShare tests', () => {
             if (!disposable) {
                 continue;
             }
-            // tslint:disable-next-line:no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const promise = disposable.dispose() as Promise<any>;
             if (promise) {
                 await promise;
@@ -216,7 +216,7 @@ suite('DataScience LiveShare tests', () => {
     });
 
     test('Host & Guest Simple', async function () {
-        // tslint:disable-next-line: no-invalid-this
+        // eslint-disable-next-line no-invalid-this
         return this.skip();
         // Should only need mock data in host
         addMockData(hostContainer!, 'a=1\na', 1);
@@ -242,7 +242,7 @@ suite('DataScience LiveShare tests', () => {
     });
 
     test('Host starts LiveShare after starting Jupyter', async function () {
-        // tslint:disable-next-line: no-invalid-this
+        // eslint-disable-next-line no-invalid-this
         return this.skip();
         addMockData(hostContainer!, 'a=1\na', 1);
         addMockData(hostContainer!, 'b=2\nb', 2);
@@ -286,7 +286,7 @@ suite('DataScience LiveShare tests', () => {
     });
 
     test('Host startup and guest restart', async function () {
-        // tslint:disable-next-line: no-invalid-this
+        // eslint-disable-next-line no-invalid-this
         return this.skip();
         // Should only need mock data in host
         addMockData(hostContainer!, 'a=1\na', 1);

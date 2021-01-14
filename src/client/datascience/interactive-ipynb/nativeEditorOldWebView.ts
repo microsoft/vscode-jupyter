@@ -158,7 +158,7 @@ export class NativeEditorOldWebView extends NativeEditor {
         });
     }
 
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public onMessage(message: string, payload: any) {
         super.onMessage(message, payload);
         switch (message) {
@@ -235,7 +235,7 @@ export class NativeEditorOldWebView extends NativeEditor {
         const yes = localize.DataScience.dirtyNotebookYes();
         const no = localize.DataScience.dirtyNotebookNo();
         const result = await this.applicationShell.showInformationMessage(
-            // tslint:disable-next-line: messages-must-be-localized
+            // eslint-disable-next-line 
             `${message1}\n${message2}`,
             { modal: true },
             yes,

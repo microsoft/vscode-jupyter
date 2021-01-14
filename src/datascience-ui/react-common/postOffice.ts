@@ -9,25 +9,25 @@ import { IDisposable } from '../../client/common/types';
 import { logMessage } from './logger';
 
 export interface IVsCodeApi {
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     postMessage(msg: any): void;
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     setState(state: any): void;
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     getState(): any;
 }
 
 export interface IMessageHandler {
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     handleMessage(type: string, payload?: any): boolean;
     dispose?(): void;
 }
 
 // This special function talks to vscode from a web panel
 export declare function acquireVsCodeApi(): IVsCodeApi;
-// tslint:disable-next-line: no-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type PostOfficeMessage = { type: string; payload?: any };
-// tslint:disable-next-line: no-unnecessary-class
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class PostOffice implements IDisposable {
     private registered: boolean = false;
     private vscodeApi: IVsCodeApi | undefined;
@@ -52,7 +52,7 @@ export class PostOffice implements IDisposable {
         return this.sendUnsafeMessage(type.toString(), payload);
     }
 
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public sendUnsafeMessage(type: string, payload?: any) {
         const api = this.acquireApi();
         if (api) {
@@ -74,12 +74,12 @@ export class PostOffice implements IDisposable {
 
     public acquireApi(): IVsCodeApi | undefined {
         // Only do this once as it crashes if we ask more than once
-        // tslint:disable-next-line:no-typeof-undefined
+        // eslint-disable-next-line 
         if (!this.vscodeApi && typeof acquireVsCodeApi !== 'undefined') {
             this.vscodeApi = acquireVsCodeApi(); // NOSONAR
-            // tslint:disable-next-line: no-any no-typeof-undefined
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any, 
         } else if (!this.vscodeApi && typeof (window as any).acquireVsCodeApi !== 'undefined') {
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             this.vscodeApi = (window as any).acquireVsCodeApi();
         }
         if (!this.registered) {
@@ -90,7 +90,7 @@ export class PostOffice implements IDisposable {
                 // For testing, we might use a  browser to load  the stuff.
                 // In such instances the `acquireVSCodeApi` will return the event handler to get messages from extension.
                 // See ./src/datascience-ui/native-editor/index.html
-                // tslint:disable-next-line: no-any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const api = (this.vscodeApi as any) as undefined | { handleMessage?: Function };
                 if (api && api.handleMessage) {
                     api.handleMessage(this.handleMessages.bind(this));

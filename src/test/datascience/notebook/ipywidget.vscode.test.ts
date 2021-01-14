@@ -3,7 +3,7 @@
 
 'use strict';
 
-// tslint:disable:no-require-imports no-var-requires
+/* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 // import * as path from 'path';
 // import * as sinon from 'sinon';
 import { assert } from 'chai';
@@ -24,7 +24,7 @@ import {
 } from './helper';
 import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 
-// tslint:disable: no-any no-invalid-this
+/* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - VSCode Notebook - IPyWidget test', () => {
     // const widgetsNB = path.join(
     //     EXTENSION_ROOT_DIR_FOR_TESTS,

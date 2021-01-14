@@ -43,7 +43,7 @@ function waitForMessage(ioc: DataScienceIocContainer, message: string, options?:
         .getMountedWebView(undefined)
         .waitForMessage(message, options);
 }
-// tslint:disable:no-any no-multiline-string
+/* eslint-disable @typescript-eslint/no-explicit-any, no-multi-str */
 suite('DataScience Notebook trust', () => {
     let wrapper: ReactWrapper<any, Readonly<{}>, React.Component>;
     let ne: { editor: INotebookEditor; mount: IMountedWebView };
@@ -251,7 +251,7 @@ suite('DataScience Notebook trust', () => {
             if (!disposable) {
                 continue;
             }
-            // tslint:disable-next-line:no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const promise = disposable.dispose() as Promise<any>;
             if (promise) {
                 await promise;
@@ -267,7 +267,7 @@ suite('DataScience Notebook trust', () => {
 
     setup(async function () {
         await initIoc();
-        // tslint:disable-next-line: no-invalid-this
+        // eslint-disable-next-line no-invalid-this
         await setupFunction.call(this);
     });
 

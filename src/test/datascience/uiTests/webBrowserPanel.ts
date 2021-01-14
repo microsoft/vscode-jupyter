@@ -15,7 +15,7 @@ import { createDeferred } from '../../../client/common/utils/async';
 import { noop } from '../../../client/common/utils/misc';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 
-// tslint:disable: no-any no-console no-require-imports no-var-requires
+/* eslint-disable @typescript-eslint/no-explicit-any, no-console, @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 const nocache = require('nocache');
 
 export interface IWebServer extends IDisposable {
@@ -132,11 +132,11 @@ export class WebServer implements IWebServer {
         });
 
         // Display a message if this env variable is set (used when debugging).
-        // tslint:disable-next-line: no-http-string
+        // eslint-disable-next-line 
         const url = `http:///localhost:${port}/index.html`;
         if (process.env.VSC_JUPYTER_DS_UI_PROMPT) {
             window
-                // tslint:disable-next-line: messages-must-be-localized
+                // eslint-disable-next-line 
                 .showInformationMessage(`Open browser to '${url}'`, 'Copy')
                 .then((selection) => {
                     if (selection === 'Copy') {
@@ -201,7 +201,7 @@ export class WebBrowserPanel implements IWebviewPanel, IDisposable {
                 this.serverUrl = p;
             })
             .catch((ex) =>
-                // tslint:disable-next-line: no-console
+                // eslint-disable-next-line no-console
                 console.error('Failed to start Web Browser Panel', ex)
             );
     }
@@ -281,13 +281,13 @@ export class WebBrowserPanel implements IWebviewPanel, IDisposable {
 
         const port = await this.server.launchServer(cwd, resourcesRoot, portToUse);
         if (this.panel?.webview) {
-            // tslint:disable-next-line: no-http-string
+            // eslint-disable-next-line 
             const url = `http:///localhost:${port}/index.html`;
             this.panel.webview.html = `<!DOCTYPE html><html><html><body><h1>${url}</h1></body>`;
         }
         await this.server.waitForConnection();
 
-        // tslint:disable-next-line: no-http-string
+        // eslint-disable-next-line 
         return `http://localhost:${port}`;
     }
 }

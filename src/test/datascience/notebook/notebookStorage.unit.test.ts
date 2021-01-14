@@ -3,7 +3,7 @@
 
 'use strict';
 
-// tslint:disable-next-line: no-var-requires no-require-imports
+// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 import { assert } from 'chai';
 import { anyString, instance, mock, when } from 'ts-mockito';
 import { Uri } from 'vscode';
@@ -38,7 +38,7 @@ suite('DataScience - Notebook Storage', () => {
         }
         const kernelModel = {
             name: 'foo',
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             session: {} as any,
             lastActivityTime: new Date(),
             numberOfConnections: 1,

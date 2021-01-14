@@ -1002,7 +1002,7 @@ export function getCollectionJSON(): string {
     return JSON.stringify({ ...defaultCollection, ...loadedCollection });
 }
 
-// tslint:disable-next-line:no-suspicious-comment
+// eslint-disable-next-line 
 export function localize(key: string, defValue?: string) {
     // Return a pointer to function so that we refetch it on each call.
     return () => {

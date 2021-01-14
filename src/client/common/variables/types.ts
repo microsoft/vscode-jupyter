@@ -36,7 +36,7 @@ export interface ISystemVariables {
     resolve(value: IStringDictionary<string[]>): IStringDictionary<string[]>;
     resolve(value: IStringDictionary<IStringDictionary<string>>): IStringDictionary<IStringDictionary<string>>;
     resolveAny<T>(value: T): T;
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [key: string]: any;
 }
 

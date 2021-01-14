@@ -49,8 +49,8 @@ import { calculateWorkingDirectory } from '../../utils';
 import { RawJupyterSession } from '../rawJupyterSession';
 import { RawNotebookProviderBase } from '../rawNotebookProvider';
 
-// tslint:disable-next-line: no-require-imports
-// tslint:disable:no-any
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 export class HostRawNotebookProvider
     extends LiveShareParticipantHost(RawNotebookProviderBase, LiveShare.RawNotebookProviderService)

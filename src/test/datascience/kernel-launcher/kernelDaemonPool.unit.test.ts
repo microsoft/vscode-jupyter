@@ -17,7 +17,7 @@ import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
 import { sleep } from '../../core';
 import { createPythonInterpreter } from '../../utils/interpreters';
 
-// tslint:disable: max-func-body-length no-any
+/* eslint-disable , @typescript-eslint/no-explicit-any */
 suite('DataScience - Kernel Daemon Pool', () => {
     const interpreter1 = createPythonInterpreter({ path: 'interpreter1' });
     const interpreter2 = createPythonInterpreter({ path: 'interpreter2' });

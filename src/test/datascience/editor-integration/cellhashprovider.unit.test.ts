@@ -20,7 +20,7 @@ class HashListener implements ICellHashListener {
     }
 }
 
-// tslint:disable-next-line: max-func-body-length
+// eslint-disable-next-line 
 suite('CellHashProvider Unit Tests', () => {
     let hashProvider: CellHashProvider;
     let documentManager: MockDocumentManager;

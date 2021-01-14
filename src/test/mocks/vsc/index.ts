@@ -3,7 +3,7 @@
 
 'use strict';
 
-// tslint:disable:no-invalid-this no-require-imports no-var-requires no-any max-classes-per-file
+/* eslint-disable no-invalid-this, @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires, @typescript-eslint/no-explicit-any, max-classes-per-file */
 
 import { EventEmitter as NodeEventEmitter } from 'events';
 import * as vscode from 'vscode';
@@ -275,7 +275,7 @@ export namespace vscMock {
         }
     }
 
-    // tslint:disable-next-line: interface-name
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     export interface DebugAdapterExecutableOptions {
         env?: { [key: string]: string };
         cwd?: string;

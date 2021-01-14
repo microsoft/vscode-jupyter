@@ -35,7 +35,7 @@ import { IInterpreterService } from '../../../../client/interpreter/contracts';
 import { PythonEnvironment } from '../../../../client/pythonEnvironments/info';
 import { PreferredRemoteKernelIdProvider } from '../../../../client/datascience/notebookStorage/preferredRemoteKernelIdProvider';
 
-// tslint:disable: max-func-body-length no-unused-expression no-any
+/* eslint-disable , @typescript-eslint/no-unused-expressions, @typescript-eslint/no-explicit-any */
 
 suite('DataScience - KernelSelector', () => {
     let kernelSelectionProvider: KernelSelectionProvider;
@@ -472,7 +472,7 @@ suite('DataScience - KernelSelector', () => {
             assert.deepEqual(kernel?.interpreter, interpreter);
         });
     });
-    // tslint:disable-next-line: max-func-body-length
+    // eslint-disable-next-line 
     suite('Get a kernel for local sessions', () => {
         let nbMetadataKernelSpec: nbformat.IKernelspecMetadata = {} as any;
         let nbMetadata: nbformat.INotebookMetadata = {} as any;

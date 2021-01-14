@@ -68,7 +68,7 @@ export abstract class Webview implements IWebview {
     // After load is finished allow derived classes to hook up class specific code
     protected abstract postLoad(webviewHost: vscodeWebviewView | vscodeWebviewPanel): void;
 
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     protected async generateLocalReactHtml() {
         if (!this.webviewHost?.webview) {
             throw new Error('WebView not initialized, too early to get a Uri');

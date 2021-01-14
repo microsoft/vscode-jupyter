@@ -31,7 +31,7 @@ import { KernelConnectionMetadata } from './kernels/types';
 // Key for our insecure connection global state
 const GlobalStateUserAllowsInsecureConnections = 'DataScienceAllowInsecureConnections';
 
-// tslint:disable: no-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 export class JupyterSessionManager implements IJupyterSessionManager {
     private static secureServers = new Map<string, Promise<boolean>>();
@@ -45,7 +45,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
     private restartSessionUsedEvent = new EventEmitter<Kernel.IKernelConnection>();
     private get jupyterlab(): typeof import('@jupyterlab/services') {
         if (!this._jupyterlab) {
-            // tslint:disable-next-line: no-require-imports
+            // eslint-disable-next-line @typescript-eslint/no-require-imports
             this._jupyterlab = require('@jupyterlab/services');
         }
         return this._jupyterlab!;
@@ -85,7 +85,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
                 // Make sure it finishes startup.
                 await Promise.race([sleep(10_000), this.sessionManager.ready]);
 
-                // tslint:disable-next-line: no-any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const sessionManager = this.sessionManager as any;
                 this.sessionManager.dispose(); // Note, shutting down all will kill all kernels on the same connection. We don't want that.
                 this.sessionManager = undefined;
@@ -237,7 +237,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         }
     }
 
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private clearPoll(poll: { _timeout: any }) {
         try {
             clearTimeout(poll._timeout);
@@ -258,10 +258,10 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         await this.secureConnectionCheck(connInfo);
 
         // Agent is allowed to be set on this object, but ts doesn't like it on RequestInit, so any
-        // tslint:disable-next-line:no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         let requestInit: any = { cache: 'no-store', credentials: 'same-origin' };
         let cookieString;
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         let requestCtor: any = nodeFetch.Request;
 
         // If authorization header is provided, then we need to prevent jupyterlab services from
@@ -317,15 +317,15 @@ export class JupyterSessionManager implements IJupyterSessionManager {
                 cookieString,
                 allowUnauthorized,
                 connInfo.getAuthHeader
-                // tslint:disable-next-line:no-any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
             ) as any,
             // Redefine fetch to our node-modules so it picks up the correct version.
             // Typecasting as any works fine as long as all 3 of these are the same version
-            // tslint:disable-next-line:no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             fetch: nodeFetch.default as any,
-            // tslint:disable-next-line:no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             Request: requestCtor,
-            // tslint:disable-next-line:no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             Headers: nodeFetch.Headers as any
         };
 

@@ -3,7 +3,7 @@
 
 'use strict';
 
-// tslint:disable:max-func-body-length
+/* eslint-disable  */
 
 import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';

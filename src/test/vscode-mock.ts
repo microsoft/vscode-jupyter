@@ -3,7 +3,7 @@
 
 'use strict';
 
-// tslint:disable:no-invalid-this no-require-imports no-var-requires no-any
+/* eslint-disable no-invalid-this, @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires, @typescript-eslint/no-explicit-any */
 
 import * as TypeMoq from 'typemoq';
 import * as vscode from 'vscode';

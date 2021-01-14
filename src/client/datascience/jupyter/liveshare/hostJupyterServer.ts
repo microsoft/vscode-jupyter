@@ -45,7 +45,7 @@ import { KernelConnectionMetadata } from '../kernels/types';
 import { HostJupyterNotebook } from './hostJupyterNotebook';
 import { LiveShareParticipantHost } from './liveShareParticipantMixin';
 import { IRoleBasedObject } from './roleBasedFactory';
-// tslint:disable:no-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBase, LiveShare.JupyterServerSharedService)
     implements IRoleBasedObject, INotebookServer {
@@ -169,7 +169,7 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
         if (!launchInfo) {
             return LiveShare.JupyterServerSharedService;
         }
-        // tslint:disable-next-line:no-suspicious-comment
+        // eslint-disable-next-line 
         // TODO: Should there be some separator in the name?
         return `${LiveShare.JupyterServerSharedService}${launchInfo.purpose}`;
     }

@@ -19,7 +19,7 @@ import { DataScience } from '../../client/datascience/datascience';
 import { DataScienceCodeLensProvider } from '../../client/datascience/editor-integration/codelensprovider';
 import { IDataScienceCodeLensProvider } from '../../client/datascience/types';
 
-// tslint:disable: max-func-body-length
+/* eslint-disable  */
 suite('DataScience Tests', () => {
     let dataScience: DataScience;
     let cmdManager: CommandManager;
@@ -42,9 +42,9 @@ suite('DataScience Tests', () => {
 
         dataScience = new DataScience(
             instance(cmdManager),
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             [] as any,
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             { subscriptions: [] } as any,
             instance(dataScienceCodeLensProvider),
             instance(configService),
@@ -57,7 +57,7 @@ suite('DataScience Tests', () => {
         onDidChangeActiveTextEditor = sinon.stub();
         when(configService.getSettings(anything())).thenReturn(instance(settings));
         when(settings.onDidChange).thenReturn(onDidChangeSettings);
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         when(docManager.onDidChangeActiveTextEditor).thenReturn(onDidChangeActiveTextEditor);
     });
 
@@ -104,7 +104,7 @@ suite('DataScience Tests', () => {
                 metadata: {}
             };
             const result = pruneCell(cell);
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             assert.equal((result.outputs as any).length, 1, 'Outputs were removed');
             assert.equal(result.execution_count, '23', 'Output execution count removed');
             const output = (result.outputs as nbformat.IOutput[])[0];
@@ -134,7 +134,7 @@ suite('DataScience Tests', () => {
             };
 
             const result = pruneCell(cell);
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             assert.equal((result.outputs as any).length, 1, 'Outputs were removed');
             assert.equal(result.execution_count, 2, 'Output execution count removed');
             assert.deepEqual(result.outputs, cell.outputs, 'Outputs were modified');
@@ -155,7 +155,7 @@ suite('DataScience Tests', () => {
             };
 
             const result = pruneCell(cell);
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             assert.equal((result.outputs as any).length, 1, 'Outputs were removed');
             assert.equal(result.execution_count, 2, 'Output execution count removed');
             assert.deepEqual(result.outputs, cell.outputs, 'Outputs were modified');
@@ -177,7 +177,7 @@ suite('DataScience Tests', () => {
             };
 
             const result = pruneCell(cell);
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             assert.equal((result.outputs as any).length, 1, 'Outputs were removed');
             assert.equal(result.execution_count, 2, 'Output execution count removed');
             assert.deepEqual(result.outputs, cell.outputs, 'Outputs were modified');
@@ -206,7 +206,7 @@ suite('DataScience Tests', () => {
             };
 
             const result = pruneCell(cell);
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             assert.equal((result.outputs as any).length, 1, 'Outputs were removed');
             assert.equal(result.execution_count, 2, 'Output execution count removed');
             assert.deepEqual(result.outputs, cell.outputs, 'Outputs were modified');
@@ -235,7 +235,7 @@ suite('DataScience Tests', () => {
             };
 
             const result = pruneCell(cell);
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             assert.equal((result.outputs as any).length, 1, 'Outputs were removed');
             assert.equal(result.execution_count, 2, 'Output execution count removed');
             assert.deepEqual(result.outputs, cell.outputs, 'Outputs were modified');
