@@ -83,11 +83,11 @@ suite('DataScience - VariableView', () => {
         commandManager.executeCommand(Commands.OpenVariableView);
 
         // IANHU: Remove, just for testing
-        await sleep(4_000);
+        //await sleep(4_000);
 
         // Another view open?
-        commandManager.executeCommand(Commands.OpenVariableView);
-        await sleep(4_000);
+        //commandManager.executeCommand(Commands.OpenVariableView);
+        //await sleep(4_000);
 
         console.log('**** Sleep finished ****');
 
@@ -119,7 +119,8 @@ suite('DataScience - VariableView', () => {
         console.log(`**** htmlResult ${htmlResult} ****`);
 
         expect(htmlResult).to.contain('MYTESTVALUE');
+        expect(htmlResult).to.contain('MYTESTVALUE2');
 
-        await sleep(5_000);
+        //await sleep(5_000);
     });
 });
