@@ -132,6 +132,7 @@ export class KernelService {
      * @memberof KernelService
      */
     // tslint:disable-next-line: cyclomatic-complexity
+    @traceDecorators.verbose('Find matching interpreter for a given kernel spec')
     public async findMatchingInterpreter(
         kernelSpec: IJupyterKernelSpec | LiveKernelModel,
         cancelToken?: CancellationToken
