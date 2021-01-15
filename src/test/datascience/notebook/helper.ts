@@ -298,12 +298,18 @@ export async function trustAllNotebooks() {
 }
 
 export async function startRemoteJupyterServer() {
+    traceInfo(`Start Setup.A1`);
     const { serviceContainer } = await getServices();
     const selector = serviceContainer.get<JupyterServerSelector>(JupyterServerSelector);
+    traceInfo(`Start Setup.A2`);
     if (IS_REMOTE_NATIVE_TEST) {
+        traceInfo(`Start Setup.A3`);
         const uri = await JupyterServer.instance.startJupyterWithToken();
+        traceInfo(`Start Setup.A4`);
         await selector.setJupyterURIToRemote(decodeURIComponent(uri.toString()));
+        traceInfo(`Start Setup.A5`);
     } else {
+        traceInfo(`Start Setup.A6`);
         await selector.setJupyterURIToLocal();
     }
 }
