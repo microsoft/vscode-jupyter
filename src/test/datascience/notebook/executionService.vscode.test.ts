@@ -29,14 +29,15 @@ import {
     waitForExecutionCompletedSuccessfully,
     waitForExecutionCompletedWithErrors,
     waitForKernelToGetAutoSelected,
-    stopRemoteJupyterServer
+    stopRemoteJupyterServer,
+    startJupyter
 } from './helper';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
+suite('DataScience - VSCode Notebook - (Execution) (slow)xxx', function () {
     let api: IExtensionTestApi;
     let editorProvider: INotebookEditorProvider;
     const disposables: IDisposable[] = [];
@@ -49,6 +50,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         }
         await trustAllNotebooks();
         await startRemoteJupyterServer();
+        await startJupyter();
         sinon.restore();
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
@@ -73,8 +75,8 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     suiteTeardown(async () => {
-        await stopRemoteJupyterServer();
         await closeNotebooksAndCleanUpAfterTests(disposables);
+        await stopRemoteJupyterServer();
     });
     test('Execute cell using VSCode Kernel', async () => {
         await insertCodeCell('print("123412341234")', { index: 0 });

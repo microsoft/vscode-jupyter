@@ -85,8 +85,8 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         if (dsSettings) {
             dsSettings.askForKernelRestart = oldAskForRestart === true;
         }
-        await stopRemoteJupyterServer();
         await closeNotebooksAndCleanUpAfterTests(disposables.concat(suiteDisposables));
+        await stopRemoteJupyterServer();
     });
 
     test('Interrupting kernel (Cancelling token) will cancel cell execution', async () => {

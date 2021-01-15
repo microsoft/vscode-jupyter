@@ -60,8 +60,8 @@ suite('Notebook Editor tests', () => {
         traceInfo(`End Test Completed ${this.currentTest?.title}`);
     });
     suiteTeardown(async () => {
-        await stopRemoteJupyterServer();
         await closeNotebooksAndCleanUpAfterTests(disposables);
+        await stopRemoteJupyterServer();
     });
 
     test('Run cells above', async function () {

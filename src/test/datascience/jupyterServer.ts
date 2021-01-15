@@ -11,6 +11,7 @@ import { PYTHON_PATH } from '../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants';
 import { initialize } from '../initialize';
 const testFolder = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience');
+
 export class JupyterServer implements IDisposable {
     public static get instance(): JupyterServer {
         if (!JupyterServer._instance) {
