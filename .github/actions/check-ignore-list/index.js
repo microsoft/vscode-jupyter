@@ -11,7 +11,8 @@ async function run() {
         const eslintjrc = require('../../../.eslintrc.js');
 
         // Get the list of changed files
-        if (github.context.eventName === 'pull_request') {
+        if (github.context.eventName) {
+            // === 'pull_request') {
             const payload = github.context.payload;
             const MyOctokit = octokit.Octokit.plugin(plugin.paginateRest);
             const caller = new MyOctokit();
