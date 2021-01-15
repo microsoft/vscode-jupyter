@@ -310,7 +310,7 @@ function createMiddleWare(testMode: boolean, postOffice: PostOffice): Redux.Midd
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const isUITest = (postOffice.acquireApi() as any)?.handleMessage ? true : false;
     let forceOnTestMiddleware = false;
-    if (typeof forceTestMiddleware !== undefined) {
+    if (typeof forceTestMiddleware !== 'undefined') {
         forceOnTestMiddleware = forceTestMiddleware();
     }
     const testMiddleware = forceOnTestMiddleware || testMode || isUITest ? createTestMiddleware() : undefined;
