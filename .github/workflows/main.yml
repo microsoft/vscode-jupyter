@@ -477,6 +477,7 @@ jobs:
           retention-days: 1
 
   vscodeTests:
+    timeout-minutes: 15
     name: VS Code Tests # These tests run with Python extension & real Jupyter
     runs-on: ${{ matrix.os }}
     if: github.repository == 'microsoft/vscode-jupyter'
