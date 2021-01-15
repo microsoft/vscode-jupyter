@@ -273,6 +273,7 @@ export async function waitForKernelToGetAutoSelected(expectedLanguage?: string) 
             kernelInfo = '<No specific kernel expected>. Non Jupyter Kernel';
             return true;
         }
+        console.log(kernelInfo);
         return false;
     };
 
