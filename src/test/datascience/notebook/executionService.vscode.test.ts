@@ -44,7 +44,6 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
     let editorProvider: INotebookEditorProvider;
     const disposables: IDisposable[] = [];
     let vscodeNotebook: IVSCodeNotebook;
-    let remoteJupyterServer: JupyterServer;
     this.timeout(120_000);
     suiteSetup(async function () {
         api = await initialize();
@@ -80,7 +79,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     suiteTeardown(async () => {
-        remoteJupyterServer.dispose();
+        JupyterServer.instance.dispose();
         await closeNotebooksAndCleanUpAfterTests(disposables);
     });
     test('Execute cell using VSCode Kernelxxx', async () => {
