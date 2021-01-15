@@ -232,7 +232,7 @@ jobs:
       - name: Compile if not cached
         run: npx gulp prePublishNonBundle
         env:
-            CI_JUPYTER_FAST_COMPILATION: 'true'
+          CI_JUPYTER_FAST_COMPILATION: 'true'
 
         # if: steps.out-cache.outputs.cache-hit == false
       - name: Run TypeScript unit tests
@@ -511,7 +511,6 @@ jobs:
           activate-environment: functional_test_env
           python-version: ${{matrix.python}}
 
-
       - name: Set CI Path
         uses: ./.github/actions/set-python
         id: set-python
@@ -525,7 +524,6 @@ jobs:
         if: matrix.test-suite == 'conda'
         with:
           PYTHON_VERSION: ${{matrix.python}}
-
 
       - name: Upgrade pip
         run: python -m pip install -U pip
@@ -628,7 +626,6 @@ jobs:
           conda env update --file ./build/conda-functional-requirements.yml
           python -m pip install --upgrade -r ./build/conda-functional-requirements.txt
 
-
         # This step is slow.
       - name: Install dependencies (npm ci)
         run: npm ci --prefer-offline
@@ -637,8 +634,8 @@ jobs:
       - name: Compile if not cached
         run: npx gulp prePublishNonBundle
         env:
-            VSC_CI_MATRIX_TEST_SUITE: ${{matrix.test-suite}}
-            CI_JUPYTER_FAST_COMPILATION: 'true'
+          VSC_CI_MATRIX_TEST_SUITE: ${{matrix.test-suite}}
+          CI_JUPYTER_FAST_COMPILATION: 'true'
 
       # Used by tests for non-python kernels.
       # Test are enabled via env variable `VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST`
@@ -887,7 +884,7 @@ jobs:
       - name: Compile if not cached
         run: npx gulp prePublishNonBundle
         env:
-            CI_JUPYTER_FAST_COMPILATION: 'true'
+          CI_JUPYTER_FAST_COMPILATION: 'true'
 
       # It isn't possible to specify a regex for artifact names, so we have to download each artifact manually.
       # The name pattern is ${{runner.os}}-${{env.COVERAGE_REPORTS}}, and possible values for runner.os are `Linux`, `Windows`, or `macOS`.
@@ -924,7 +921,6 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           file: ./coverage/cobertura-coverage.xml
           path_to_write_report: ./coverage/codecov_report.txt
-
       # Alternative method for uploading
       # - name: Upload coverage to codecov
       #  run: bash <(curl -s https://codecov.io/bash) -f ./coverage/cobertura-coverage.xml -v
