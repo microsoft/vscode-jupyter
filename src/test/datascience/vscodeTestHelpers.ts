@@ -1,5 +1,9 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+'use strict';
 import { createDeferred } from '../../client/common/utils/async';
 
+// Basic shape that something needs to support to hook up to this
 interface IOnMessageListener {
     addMessageListener(callback: (message: string, payload: any) => void): void;
     removeMessageListener(callback: (message: string, payload: any) => void): void;
@@ -33,6 +37,8 @@ export class OnMessageListener {
     constructor(target: IOnMessageListener) {
         this.target = target;
     }
+
+    // For our target object wait for a specific message to come in from onMessage function
     public async waitForMessage(message: string, options?: WaitForMessageOptions): Promise<void> {
         const timeoutMs = options && options.timeoutMs ? options.timeoutMs : undefined;
         const numberOfTimes = options && options.numberOfTimes ? options.numberOfTimes : 1;
@@ -49,6 +55,7 @@ export class OnMessageListener {
             : undefined;
         let timesMessageReceived = 0;
         const dispatchedAction = `DISPATCHED_ACTION_${message}`;
+        // Create the handler that we will hook up to the on message listener
         handler = (m: string, payload: any) => {
             if (m === message || m === dispatchedAction) {
                 // First verify the payload matches
@@ -85,10 +92,12 @@ export class OnMessageListener {
         return promise.promise;
     }
 
+    // Add the callback on the target
     public addMessageListener(callback: (m: string, p: any) => void) {
         this.target.addMessageListener(callback);
     }
 
+    // Remove the callback on the target
     public removeMessageListener(callback: (m: string, p: any) => void) {
         this.target.removeMessageListener(callback);
     }

@@ -1,5 +1,9 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+'use strict';
 import { expect } from 'chai';
 
+// Basic shape of a variable result
 export interface IVariableInfo {
     name: string;
     type: string;
@@ -20,7 +24,7 @@ export function verifyViewVariables(expected: IVariableInfo[], html: string) {
 }
 
 // Helper function to parse the view HTML
-export function parseVariableViewHTML(html: string): IVariableInfo[] {
+function parseVariableViewHTML(html: string): IVariableInfo[] {
     const parser = new DOMParser();
     const htmlDoc = parser.parseFromString(html, 'text/html');
     const variableRows = htmlDoc.getElementsByClassName('react-grid-Row');
@@ -34,6 +38,7 @@ export function parseVariableViewHTML(html: string): IVariableInfo[] {
     return variableInfos;
 }
 
+// From a single row pull out the values we care about
 function extractVariableFromRow(variableHTMLRow: Element): IVariableInfo {
     const cellElements = variableHTMLRow.querySelectorAll('[role=cell]');
     return {
@@ -44,7 +49,7 @@ function extractVariableFromRow(variableHTMLRow: Element): IVariableInfo {
     };
 }
 
+// Compare two variable infos
 function compareVariableInfos(expected: IVariableInfo, actual: IVariableInfo) {
-    //expect({ a: 1 }).to.deep.equal({ a: 1 });
     expect(expected).to.deep.equal(actual, 'Found Variable incorrect');
 }

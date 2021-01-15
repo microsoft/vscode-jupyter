@@ -126,7 +126,6 @@ export class CommandRegistry implements IDisposable {
     public dispose() {
         this.disposables.forEach((d) => d.dispose());
     }
-
     private registerCommand<
         E extends keyof ICommandNameArgumentTypeMapping,
         U extends ICommandNameArgumentTypeMapping[E]

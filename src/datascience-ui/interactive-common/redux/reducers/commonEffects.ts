@@ -319,6 +319,7 @@ export namespace CommonEffects {
         };
     }
 
+    // Extension has requested HTML for the webview, get it by ID and send it back as a message
     export function getHTMLByIdRequest(arg: CommonReducerArg<CommonActionType, string>): IMainState {
         const element = document.getElementById(arg.payload.data);
 

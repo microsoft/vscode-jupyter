@@ -19,6 +19,7 @@ import { VariableView } from './variableView';
 export class VariableViewProvider implements IVariableViewProvider {
     public readonly viewType = 'jupyterViewVariables';
 
+    // Either return the active variable view or wait until it's created and return it
     public get activeVariableView(): Promise<VariableView> {
         // For test execution only
         if (!isTestExecution()) {

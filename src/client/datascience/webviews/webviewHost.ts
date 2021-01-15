@@ -33,7 +33,6 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
     protected abstract get owningResource(): Resource;
 
     protected abstract get title(): string;
-
     protected webview?: IWebview;
 
     protected disposed = false;
@@ -172,6 +171,7 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
                 break;
 
             case InteractiveWindowMessages.GetHTMLByIdResponse:
+                // Webview has returned HTML, resolve the request and clear it
                 if (this.activeHTMLRequest) {
                     this.activeHTMLRequest.resolve(payload);
                     this.activeHTMLRequest = undefined;
@@ -182,7 +182,7 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
                 break;
         }
 
-        // Broadcast to onMessage listeners
+        // Broadcast to any onMessage listeners
         this.onMessageListeners.forEach((listener) => {
             listener(message, payload);
         });

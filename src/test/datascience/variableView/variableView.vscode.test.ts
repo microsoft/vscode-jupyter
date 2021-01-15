@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+'use strict';
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { ICommandManager, IVSCodeNotebook } from '../../../client/common/application/types';
@@ -47,7 +50,6 @@ suite('DataScience - VariableView', () => {
         editorProvider = api.serviceContainer.get<INotebookEditorProvider>(VSCodeNotebookProvider);
     });
     setup(async function () {
-        console.log('**** Start variableView setup ****');
         sinon.restore();
 
         // Create an editor to use for our tests
@@ -64,7 +66,7 @@ suite('DataScience - VariableView', () => {
     // Cleanup after suite is finished
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
 
-    // Test showing the variable view
+    // Test showing the basic variable view with a value or two
     test('Can show VariableView', async function () {
         // Add one simple cell and execute it
         await insertCodeCell('test = "MYTESTVALUE"', { index: 0 });
@@ -75,7 +77,7 @@ suite('DataScience - VariableView', () => {
         // Send the command to open the view
         commandManager.executeCommand(Commands.OpenVariableView);
 
-        // Now check to see if we can actually look at the variable view
+        // Aquire the variable view from the provider
         const variableView = await variableViewProvider.activeVariableView;
 
         // Add our message listener
@@ -86,10 +88,12 @@ suite('DataScience - VariableView', () => {
         const cell2 = vscodeNotebook.activeNotebookEditor?.document.cells![1]!;
         await executeCell(cell2);
 
+        // Wait until our VariablesComplete message to see that we have the new variables and have rendered them
         await onMessageListener.waitForMessage(InteractiveWindowMessages.VariablesComplete);
 
         const htmlResult = await variableView?.getHTMLById('variable-view-main-panel');
 
+        // Parse the HTML for our expected variables
         const expectedVariables = [
             { name: 'test', type: 'str', length: '11', value: ' MYTESTVALUE' },
             { name: 'test2', type: 'str', length: '12', value: ' MYTESTVALUE2' }
