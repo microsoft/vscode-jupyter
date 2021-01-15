@@ -203,7 +203,7 @@ export class NotebookEditor implements INotebookEditor {
         } catch (err) {
             status.dispose();
             traceError(err);
-            this.applicationShell.showErrorMessage(err);
+            void this.applicationShell.showErrorMessage(err);
         }
     }
 
@@ -317,7 +317,7 @@ export class NotebookEditor implements INotebookEditor {
                 await this.notebookProvider.connect({ getOnly: false, disableUI: false });
             } else {
                 // Show the error message
-                this.applicationShell.showErrorMessage(exc);
+                void this.applicationShell.showErrorMessage(exc);
                 traceError(exc);
             }
         } finally {
