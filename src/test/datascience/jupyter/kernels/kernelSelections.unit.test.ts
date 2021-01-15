@@ -21,7 +21,7 @@ import { IJupyterKernel, IJupyterKernelSpec, IJupyterSessionManager } from '../.
 import { IInterpreterQuickPickItem, IInterpreterSelector } from '../../../../client/interpreter/configuration/types';
 import { IInterpreterService } from '../../../../client/interpreter/contracts';
 
-// tslint:disable-next-line: max-func-body-length
+// eslint-disable-next-line
 suite('DataScience - KernelSelections', () => {
     let kernelSelectionProvider: KernelSelectionProvider;
     let kernelService: KernelService;
@@ -165,7 +165,7 @@ suite('DataScience - KernelSelections', () => {
             return {
                 id: `sessionId${index}`,
                 name: 'someSession',
-                // tslint:disable-next-line: no-any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 kernel: { id: `sessionId${index}`, ...(item as any) },
                 type: '',
                 path: ''
@@ -183,7 +183,7 @@ suite('DataScience - KernelSelections', () => {
         const expectedItems: IKernelSpecQuickPickItem[] = [
             {
                 label: python1KernelSpecModel.display_name,
-                // tslint:disable-next-line: no-any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 selection: {
                     interpreter: undefined,
                     kernelModel: {
@@ -193,11 +193,11 @@ suite('DataScience - KernelSelections', () => {
                         session: {
                             id: 'sessionId0',
                             name: 'someSession',
-                            // tslint:disable-next-line: no-any
+                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
                             kernel: { id: 'sessionId0', ...(activeKernels[0] as any) },
                             type: '',
                             path: ''
-                            // tslint:disable-next-line: no-any
+                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         } as any
                     },
                     kind: 'connectToLiveKernel'
@@ -210,7 +210,7 @@ suite('DataScience - KernelSelections', () => {
             },
             {
                 label: juliaKernelSpecModel.display_name,
-                // tslint:disable-next-line: no-any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 selection: {
                     interpreter: undefined,
                     kernelModel: {
@@ -220,11 +220,11 @@ suite('DataScience - KernelSelections', () => {
                         session: {
                             id: 'sessionId1',
                             name: 'someSession',
-                            // tslint:disable-next-line: no-any
+                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
                             kernel: { id: 'sessionId1', ...(activeKernels[1] as any) },
                             type: '',
                             path: ''
-                            // tslint:disable-next-line: no-any
+                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         } as any
                     },
                     kind: 'connectToLiveKernel'
@@ -290,6 +290,10 @@ suite('DataScience - KernelSelections', () => {
             instance(sessionManager)
         );
 
+        // Ensure interpreter property is set when comparing.
+        items.map((item) => {
+            (item.selection as any).interpreter = item.selection.interpreter || undefined;
+        });
         assert.deepEqual(items, expectedList);
     });
     test('Should return a list of Local Kernels + Interpreters for local jupyter connection', async () => {

@@ -46,7 +46,7 @@ function TestNativeEditorProviderMixin<T extends ClassType<NativeEditorProvider>
             deferred: Deferred<void>;
         }[] = [];
 
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         constructor(...rest: any[]) {
             super(...rest);
         }

@@ -21,7 +21,7 @@ import {
 import { CellExecution, CellExecutionFactory } from './cellExecution';
 import { isPythonKernelConnection } from './helpers';
 import type { IKernel, IKernelProvider, IKernelSelectionUsage, KernelConnectionMetadata } from './types';
-// tslint:disable-next-line: no-var-requires no-require-imports
+// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
 /**
@@ -223,7 +223,7 @@ export class KernelExecution implements IDisposable {
                     this.isRawNotebookSupported || this.rawNotebookSupported.isSupportedForLocalLaunch();
                 const rawSupported = await this.isRawNotebookSupported;
                 this.kernelSelectionUsage
-                    .useSelectedKernel(kernel?.metadata, document.uri, rawSupported ? 'raw' : 'jupyter')
+                    .useSelectedKernel(kernel?.kernelConnectionMetadata, document.uri, rawSupported ? 'raw' : 'jupyter')
                     .finally(() => {
                         // If there's an exception, then we cannot use the kernel and a message would have been displayed.
                         // We don't want to cache such a promise, as its possible the user later installs the dependencies.

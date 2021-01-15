@@ -15,7 +15,7 @@ import { JupyterPasswordConnect } from '../../client/datascience/jupyter/jupyter
 import { MockInputBox } from './mockInputBox';
 import { MockQuickPick } from './mockQuickPick';
 
-// tslint:disable:no-any max-func-body-length no-http-string
+/* eslint-disable @typescript-eslint/no-explicit-any, ,  */
 suite('JupyterPasswordConnect', () => {
     let jupyterPasswordConnect: JupyterPasswordConnect;
     let appShell: ApplicationShell;
@@ -43,7 +43,7 @@ suite('JupyterPasswordConnect', () => {
     function createMockSetup(secure: boolean, ok: boolean) {
         const dsSettings = {
             allowUnauthorizedRemoteConnection: secure
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any;
         when(configService.getSettings(anything())).thenReturn(dsSettings as any);
         when(configService.updateSetting('jupyterServerType', anything(), anything(), anything())).thenCall(
@@ -148,7 +148,7 @@ suite('JupyterPasswordConnect', () => {
         );
         assert(result, 'Failed to get password');
         if (result) {
-            // tslint:disable-next-line: no-cookies
+            // eslint-disable-next-line
             assert.ok((result.requestHeaders as any).Cookie, 'No cookie');
         }
 
@@ -199,7 +199,7 @@ suite('JupyterPasswordConnect', () => {
         );
         assert(result, 'Failed to get password');
         if (result) {
-            // tslint:disable-next-line: no-cookies
+            // eslint-disable-next-line
             assert.ok((result.requestHeaders as any).Cookie, 'No cookie');
         }
 
@@ -229,7 +229,7 @@ suite('JupyterPasswordConnect', () => {
     function createJupyterHubSetup() {
         const dsSettings = {
             allowUnauthorizedRemoteConnection: false
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any;
         when(configService.getSettings(anything())).thenReturn(dsSettings as any);
         when(configService.updateSetting('jupyterServerType', anything(), anything(), anything())).thenCall(

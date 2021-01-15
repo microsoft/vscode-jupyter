@@ -19,7 +19,7 @@ import {
     WebViewViewChangeEventArgs
 } from '../types';
 
-// tslint:disable: no-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 /**
  * Sends notifications to Notebooks to save the notebook.

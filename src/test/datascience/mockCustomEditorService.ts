@@ -64,9 +64,9 @@ export class MockCustomEditorService implements ICustomEditorService {
         this.provider = provider;
 
         // Sign up for close so we can clear our resolved map
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         ((this.provider as any) as INotebookEditorProvider).onDidCloseNotebookEditor(this.closedEditor.bind(this));
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         ((this.provider as any) as INotebookEditorProvider).onDidOpenNotebookEditor(this.openedEditor.bind(this));
 
         return { dispose: noop };
@@ -82,7 +82,7 @@ export class MockCustomEditorService implements ICustomEditorService {
             // Pass undefined as the webview panel. This will make the editor create a new one
             resolved = this.provider.resolveCustomEditor(
                 this.createDocument(file),
-                // tslint:disable-next-line: no-any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 (undefined as any) as WebviewPanel,
                 CancellationToken.None
             );

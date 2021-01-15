@@ -90,7 +90,7 @@ export class PlotViewer extends WebviewPanelHost<IPlotViewerMapping> implements 
         return undefined;
     }
 
-    //tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     protected onMessage(message: string, payload: any) {
         switch (message) {
             case PlotViewerMessages.CopyPlot:
@@ -141,10 +141,10 @@ export class PlotViewer extends WebviewPanelHost<IPlotViewerMapping> implements 
                     case '.pdf':
                         traceInfo('Attempting pdf write...');
                         // Import here since pdfkit is so huge.
-                        // tslint:disable-next-line: no-require-imports
+                        // eslint-disable-next-line @typescript-eslint/no-require-imports
                         const SVGtoPDF = require('svg-to-pdfkit');
                         const deferred = createDeferred<void>();
-                        // tslint:disable-next-line: no-require-imports
+                        // eslint-disable-next-line @typescript-eslint/no-require-imports
                         const pdfkit = require('pdfkit/js/pdfkit.standalone') as typeof import('pdfkit');
                         const doc = new pdfkit();
                         const ws = this.fs.createLocalWriteStream(file.fsPath);

@@ -3,7 +3,7 @@
 
 'use strict';
 
-// tslint:disable: no-var-requires no-require-imports no-invalid-this no-any no-invalid-this no-console
+/* eslint-disable @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports, no-invalid-this, @typescript-eslint/no-explicit-any, no-console */
 
 import { nbformat } from '@jupyterlab/coreutils';
 import { assert, use } from 'chai';
@@ -52,7 +52,7 @@ use(chaiAsPromised);
             ioc = new DataScienceIocContainer(true);
             ioc.setExtensionRootPath(EXTENSION_ROOT_DIR);
             if (ioc.mockJupyter && useRawKernel) {
-                // tslint:disable-next-line: no-invalid-this
+                // eslint-disable-next-line no-invalid-this
                 this.skip();
             }
 
@@ -75,7 +75,7 @@ use(chaiAsPromised);
                 if (!disposable) {
                     continue;
                 }
-                // tslint:disable-next-line:no-any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const promise = disposable.dispose() as Promise<any>;
                 if (promise) {
                     await promise;

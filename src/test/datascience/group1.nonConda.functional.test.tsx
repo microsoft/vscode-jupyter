@@ -9,9 +9,9 @@ import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { takeSnapshot, writeDiffSnapshot } from './helpers';
 import { addCode, getOrCreateInteractiveWindow, runTest } from './interactiveWindowTestHelpers';
 import { CellPosition, verifyHtmlOnCell } from './testHelpers';
-// tslint:disable-next-line: no-require-imports no-var-requires
+// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
 
-// tslint:disable:max-func-body-length trailing-comma no-any no-multiline-string
+/* eslint-disable , comma-dangle, @typescript-eslint/no-explicit-any, no-multi-str */
 suite('DataScience Interactive Window output tests', () => {
     const disposables: Disposable[] = [];
     let ioc: DataScienceIocContainer;
@@ -39,7 +39,7 @@ suite('DataScience Interactive Window output tests', () => {
             if (!disposable) {
                 continue;
             }
-            // tslint:disable-next-line:no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const promise = disposable.dispose() as Promise<any>;
             if (promise) {
                 await promise;

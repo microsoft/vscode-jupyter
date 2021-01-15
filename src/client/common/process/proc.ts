@@ -20,7 +20,7 @@ import {
     StdErrError
 } from './types';
 
-// tslint:disable:no-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export class ProcessService extends EventEmitter implements IProcessService {
     private processesToKill = new Set<IDisposable>();
     constructor(private readonly decoder: IBufferDecoder, private readonly env?: EnvironmentVariables) {
@@ -63,7 +63,7 @@ export class ProcessService extends EventEmitter implements IProcessService {
         const proc = spawn(file, args, spawnOptions);
         let procExited = false;
         const disposable: IDisposable = {
-            // tslint:disable-next-line: no-function-expression
+            // eslint-disable-next-line
             dispose: function () {
                 if (proc && !proc.killed && !procExited) {
                     ProcessService.kill(proc.pid);

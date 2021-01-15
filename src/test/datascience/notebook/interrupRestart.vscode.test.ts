@@ -31,7 +31,7 @@ import {
     waitForTextOutputInVSCode
 } from './helper';
 
-// tslint:disable: no-any no-invalid-this no-function-expression
+/* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this,  */
 /*
  * This test focuses on interrupting, restarting kernels.
  * We will not use actual kernels, just ensure the appropriate methods are invoked on the appropriate classes.
@@ -50,7 +50,6 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
     let dsSettings: ReadWrite<IJupyterSettings>;
     const suiteDisposables: IDisposable[] = [];
     suiteSetup(async function () {
-        this.timeout(60_000);
         api = await initialize();
         if (!(await canRunNotebookTests())) {
             return this.skip();

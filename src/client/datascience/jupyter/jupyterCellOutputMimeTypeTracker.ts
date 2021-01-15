@@ -9,7 +9,7 @@ import { IExtensionSingleActivationService } from '../../activation/types';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { CellState, ICell, INotebookEditor, INotebookEditorProvider, INotebookExecutionLogger } from '../types';
-// tslint:disable-next-line:no-require-imports no-var-requires
+// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
 const flatten = require('lodash/flatten') as typeof import('lodash/flatten');
 
 @injectable()
@@ -57,7 +57,7 @@ export class CellOutputMimeTypeTracker implements IExtensionSingleActivationServ
         if (cell.data.cell_type !== 'code') {
             return [];
         }
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const outputs: nbformat.IOutput[] = cell.data.outputs as any;
         if (!Array.isArray(outputs)) {
             return [];
@@ -73,7 +73,7 @@ export class CellOutputMimeTypeTracker implements IExtensionSingleActivationServ
         }
     }
     private getOutputMimeTypes(output: nbformat.IOutput): string[] {
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const outputType: nbformat.OutputType = output.output_type as any;
         switch (outputType) {
             case 'error':
@@ -83,7 +83,7 @@ export class CellOutputMimeTypeTracker implements IExtensionSingleActivationServ
             case 'display_data':
             case 'update_display_data':
             case 'execute_result':
-                // tslint:disable-next-line: no-any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const data = (output as any).data;
                 return data ? Object.keys(data) : [];
             default:
@@ -96,7 +96,7 @@ export class CellOutputMimeTypeTracker implements IExtensionSingleActivationServ
         // If already scheduled, cancel.
         const currentTimeout = this.pendingChecks.get(id);
         if (currentTimeout) {
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             clearTimeout(currentTimeout as any);
             this.pendingChecks.delete(id);
         }

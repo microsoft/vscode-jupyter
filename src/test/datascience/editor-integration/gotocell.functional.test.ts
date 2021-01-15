@@ -28,7 +28,7 @@ import {
 import { DataScienceIocContainer } from '../dataScienceIocContainer';
 import { MockDocumentManager } from '../mockDocumentManager';
 
-// tslint:disable:no-any no-multiline-string max-func-body-length no-console max-classes-per-file trailing-comma
+/* eslint-disable @typescript-eslint/no-explicit-any, no-multi-str, , no-console, max-classes-per-file, comma-dangle */
 suite('DataScience gotocell tests', () => {
     const disposables: Disposable[] = [];
     let codeLensProvider: IDataScienceCodeLensProvider;
@@ -50,7 +50,7 @@ suite('DataScience gotocell tests', () => {
 
     teardown(async () => {
         try {
-            // tslint:disable-next-line:prefer-for-of
+            // eslint-disable-next-line @typescript-eslint/prefer-for-of
             for (let i = 0; i < disposables.length; i += 1) {
                 const disposable = disposables[i];
                 if (disposable) {

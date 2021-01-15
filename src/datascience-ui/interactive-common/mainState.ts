@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { nbformat } from '@jupyterlab/coreutils';
-// tslint:disable-next-line: no-require-imports no-var-requires
+// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
 const cloneDeep = require('lodash/cloneDeep');
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as path from 'path';
@@ -154,7 +154,7 @@ export enum ServerStatus {
     Restarting = 'Restarting'
 }
 
-// tslint:disable-next-line: no-multiline-string
+// eslint-disable-next-line no-multi-str
 const darkStyle = `
         :root {
             --code-comment-color: #6A9955;
@@ -340,7 +340,7 @@ export function generateTestCells(filePath: string, repetitions: number): ICell[
     );
 }
 
-//tslint:disable:max-func-body-length
+/* eslint-disable  */
 function generateCellData(): (nbformat.ICodeCell | nbformat.IMarkdownCell | nbformat.IRawCell | IMessageCell)[] {
     // Hopefully new entries here can just be copied out of a jupyter notebook (ipynb)
     return [
@@ -355,7 +355,7 @@ function generateCellData(): (nbformat.ICodeCell | nbformat.IMarkdownCell | nbfo
             outputs: [
                 {
                     data: {
-                        // tslint:disable-next-line: no-multiline-string
+                        // eslint-disable-next-line no-multi-str
                         'text/html': [
                             `
                             <div style="

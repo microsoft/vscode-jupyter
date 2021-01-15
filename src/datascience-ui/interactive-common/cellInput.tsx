@@ -15,7 +15,7 @@ import { InputHistory } from './inputHistory';
 import { ICellViewModel, IFont } from './mainState';
 import { Markdown } from './markdown';
 
-// tslint:disable-next-line: no-require-importss
+// eslint-disable-next-line
 interface ICellInputProps {
     cellVM: ICellViewModel;
     language: string;
@@ -43,7 +43,7 @@ interface ICellInputProps {
     unfocused?(cellId: string): void;
 }
 
-// tslint:disable: react-this-binding-issue
+/* eslint-disable  */
 export class CellInput extends React.Component<ICellInputProps> {
     private codeRef: React.RefObject<Code> = React.createRef<Code>();
     private markdownRef: React.RefObject<Markdown> = React.createRef<Markdown>();

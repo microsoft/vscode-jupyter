@@ -3,7 +3,7 @@
 
 'use strict';
 
-// tslint:disable:max-func-body-length chai-vague-errors
+/* eslint-disable ,  */
 
 import { expect } from 'chai';
 import * as os from 'os';

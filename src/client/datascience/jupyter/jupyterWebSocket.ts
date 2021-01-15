@@ -7,7 +7,7 @@ import { noop } from '../../common/utils/misc';
 import { KernelSocketWrapper } from '../kernelSocketWrapper';
 import { IKernelSocket } from '../types';
 
-// tslint:disable: no-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export const JupyterWebSockets = new Map<string, WebSocketWS & IKernelSocket>(); // NOSONAR
 
 // We need to override the websocket that jupyter lab services uses to put in our cookie information

@@ -87,7 +87,7 @@ export class MigrateDataScienceSettingsService implements IExtensionActivationSe
             // Remove all data science keys from the original string
             fileContents = applyEdits(fileContents, modify(fileContents, [k], undefined, modificationOptions));
 
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             let val = (content as any)[k];
             const subkey = k.substr(19);
             let newKey = `jupyter.${subkey}`;

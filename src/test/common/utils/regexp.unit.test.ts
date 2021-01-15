@@ -3,7 +3,7 @@
 
 'use strict';
 
-// tslint:disable:no-multiline-string
+/* eslint-disable no-multi-str */
 
 import { expect } from 'chai';
 

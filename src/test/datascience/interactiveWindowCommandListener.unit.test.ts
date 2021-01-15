@@ -40,7 +40,7 @@ import { MockDocumentManager } from './mockDocumentManager';
 import { MockJupyterSettings } from './mockJupyterSettings';
 import { MockStatusProvider } from './mockStatusProvider';
 
-// tslint:disable:no-any no-http-string no-multiline-string max-func-body-length
+/* eslint-disable @typescript-eslint/no-explicit-any, , no-multi-str,  */
 
 function createTypeMoq<T>(tag: string): TypeMoq.IMock<T> {
     // Use typemoqs for those things that are resolved as promises. mockito doesn't allow nesting of mocks. ES6 Proxy class
@@ -51,7 +51,7 @@ function createTypeMoq<T>(tag: string): TypeMoq.IMock<T> {
     return result;
 }
 
-// tslint:disable:no-any no-http-string no-multiline-string max-func-body-length
+/* eslint-disable @typescript-eslint/no-explicit-any, , no-multi-str,  */
 suite('Interactive window command listener', async () => {
     const interpreterService = mock<IInterpreterService>();
     const configService = mock(ConfigurationService);
@@ -125,7 +125,7 @@ suite('Interactive window command listener', async () => {
             jupyterLaunchRetries: 3,
             jupyterServerType: 'local',
             changeDirOnImportExport: false,
-            // tslint:disable-next-line: no-invalid-template-strings
+            // eslint-disable-next-line no-template-curly-in-string
             notebookFileRoot: '${fileDirname}',
             useDefaultConfigForJupyter: true,
             jupyterInterruptTimeout: 10000,

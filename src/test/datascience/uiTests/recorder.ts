@@ -10,7 +10,7 @@ import { InteractiveWindowMessages } from '../../../client/datascience/interacti
 import { noop } from '../../core';
 import { IWebServer } from './webBrowserPanel';
 
-// tslint:disable: no-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 export type RequestFromUI = {
     type: 'fromUI';

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-// tslint:disable: no-var-requires no-require-imports no-invalid-this no-any
+/* eslint-disable @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports, no-invalid-this, @typescript-eslint/no-explicit-any */
 
 import { nbformat } from '@jupyterlab/coreutils';
 import { assert, expect } from 'chai';
@@ -30,6 +30,7 @@ import {
 import { createDeferred } from '../../../client/common/utils/async';
 import { swallowExceptions } from '../../../client/common/utils/misc';
 import { CellExecution } from '../../../client/datascience/jupyter/kernels/cellExecution';
+import { IKernelProvider } from '../../../client/datascience/jupyter/kernels/types';
 import { JupyterNotebookView } from '../../../client/datascience/notebook/constants';
 import {
     LastSavedNotebookCellLanguage,
@@ -43,6 +44,7 @@ import { VSCodeNotebookModel } from '../../../client/datascience/notebookStorage
 import { INotebookEditorProvider, INotebookProvider, ITrustService } from '../../../client/datascience/types';
 import { createEventHandler, sleep, waitForCondition } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_SMOKE_TEST } from '../../constants';
+import { noop } from '../../core';
 import { closeActiveWindows, initialize, isInsiders } from '../../initialize';
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
@@ -176,9 +178,23 @@ export async function canRunNotebookTests() {
 export async function shutdownAllNotebooks() {
     const api = await initialize();
     const notebookProvider = api.serviceContainer.get<INotebookProvider>(INotebookProvider);
-    await Promise.all(notebookProvider.activeNotebooks.map(async (item) => (await item).dispose()));
+    const kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
+    await Promise.all([
+        ...notebookProvider.activeNotebooks.map(async (item) => (await item).dispose()),
+        kernelProvider.dispose()
+    ]);
 }
 
+export async function ensureNewNotebooksHavePythonCells() {
+    const api = await initialize();
+    const globalMemento = api.serviceContainer.get<Memento>(IMemento, GLOBAL_MEMENTO);
+    const lastLanguage = (
+        globalMemento.get<string | undefined>(LastSavedNotebookCellLanguage) || PYTHON_LANGUAGE
+    ).toLowerCase();
+    if (lastLanguage !== PYTHON_LANGUAGE.toLowerCase()) {
+        await globalMemento.update(LastSavedNotebookCellLanguage, PYTHON_LANGUAGE).then(noop, noop);
+    }
+}
 let oldValueFor_alwaysTrustNotebooks: undefined | boolean;
 export async function closeNotebooksAndCleanUpAfterTests(disposables: IDisposable[] = []) {
     if (!IS_SMOKE_TEST) {
@@ -193,6 +209,7 @@ export async function closeNotebooksAndCleanUpAfterTests(disposables: IDisposabl
     await closeActiveWindows();
     disposeAllDisposables(disposables);
     await shutdownAllNotebooks();
+    await ensureNewNotebooksHavePythonCells();
     if (typeof oldValueFor_alwaysTrustNotebooks === 'boolean') {
         const api = await initialize();
         const dsSettings = api.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings();
@@ -246,7 +263,7 @@ export async function waitForKernelToGetAutoSelected(expectedLanguage?: string) 
                 return expectedLanguage.toLowerCase() === PYTHON_LANGUAGE.toLowerCase();
             }
             // We don't support testing other kernels, not required hence not added.
-            // tslint:disable-next-line: no-console
+            // eslint-disable-next-line no-console
             console.error('Testing other kernel connections not supported');
         }
         if (!expectedLanguage) {
@@ -570,7 +587,7 @@ export async function hijackPrompt(
         clickButton.resolve(buttonToClick.text);
     }
     let displayCount = 0;
-    // tslint:disable-next-line: no-function-expression
+    // eslint-disable-next-line
     const stub = sinon.stub(appShell, promptType).callsFake(function (msg: string) {
         traceInfo(`Message displayed to user '${msg}', condition ${JSON.stringify(message)}`);
         if (
@@ -584,7 +601,7 @@ export async function hijackPrompt(
                 return clickButton.promise;
             }
         }
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         return (appShell[promptType] as any).wrappedMethod.apply(appShell, arguments);
     });
     const disposable = { dispose: () => stub.restore() };

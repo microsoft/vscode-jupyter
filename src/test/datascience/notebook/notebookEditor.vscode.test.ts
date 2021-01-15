@@ -5,6 +5,7 @@
 
 import { assert } from 'chai';
 import { ICommandManager, IVSCodeNotebook } from '../../../client/common/application/types';
+import { traceInfo } from '../../../client/common/logger';
 import { IDisposable } from '../../../client/common/types';
 import { Commands } from '../../../client/datascience/constants';
 import { INotebookEditorProvider } from '../../../client/datascience/types';
@@ -12,7 +13,6 @@ import { IExtensionTestApi } from '../../common';
 import { initialize } from '../../initialize';
 import {
     canRunNotebookTests,
-    closeNotebooks,
     closeNotebooksAndCleanUpAfterTests,
     deleteAllCellsAndWait,
     insertCodeCell,
@@ -40,16 +40,19 @@ suite('Notebook Editor tests', () => {
     });
 
     setup(async function () {
+        traceInfo(`Start Test ${this.currentTest?.title}`);
         // Open a notebook and use this for all tests in this test suite.
         await editorProvider.createNew();
         await waitForKernelToGetAutoSelected();
         await deleteAllCellsAndWait();
         assert.isOk(vscodeNotebook.activeNotebookEditor, 'No active notebook');
+        traceInfo(`Start Test Completed ${this.currentTest?.title}`);
     });
 
     teardown(async function () {
-        await closeNotebooks(disposables);
+        traceInfo(`End Test ${this.currentTest?.title}`);
         await closeNotebooksAndCleanUpAfterTests(disposables);
+        traceInfo(`End Test Completed ${this.currentTest?.title}`);
     });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
 

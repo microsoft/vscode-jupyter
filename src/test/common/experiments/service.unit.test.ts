@@ -46,7 +46,7 @@ suite('Experimentation service', () => {
                 optInto,
                 optOutFrom
             }
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any);
     }
 
@@ -63,7 +63,7 @@ suite('Experimentation service', () => {
             configureSettings(true, [], []);
             configureApplicationEnvironment('stable', extensionVersion);
 
-            // tslint:disable-next-line: no-unused-expression
+            // eslint-disable-next-line @typescript-eslint/no-unused-expressions
             new ExperimentService(
                 instance(configurationService),
                 instance(appEnvironment),
@@ -87,7 +87,7 @@ suite('Experimentation service', () => {
             configureSettings(true, [], []);
             configureApplicationEnvironment('insiders', extensionVersion);
 
-            // tslint:disable-next-line: no-unused-expression
+            // eslint-disable-next-line @typescript-eslint/no-unused-expressions
             new ExperimentService(
                 instance(configurationService),
                 instance(appEnvironment),
@@ -141,10 +141,10 @@ suite('Experimentation service', () => {
             globalMemento = mock(MockMemento);
             configureSettings(true, [], []);
             configureApplicationEnvironment('stable', extensionVersion);
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             when(globalMemento.get(anything(), anything())).thenReturn({ features: experiments } as any);
 
-            // tslint:disable-next-line: no-unused-expression
+            // eslint-disable-next-line @typescript-eslint/no-unused-expressions
             new ExperimentService(
                 instance(configurationService),
                 instance(appEnvironment),
@@ -158,7 +158,7 @@ suite('Experimentation service', () => {
     });
 
     suite('In-experiment check', () => {
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const experiment: any = 'Test Experiment - experiment';
         let telemetryEvents: { eventName: string; properties: object }[] = [];
         let isCachedFlightEnabledStub: sinon.SinonStub;
@@ -175,7 +175,7 @@ suite('Experimentation service', () => {
             isCachedFlightEnabledStub = sinon.stub().returns(Promise.resolve(true));
             sinon.stub(tasClient, 'getExperimentationService').returns({
                 isCachedFlightEnabled: isCachedFlightEnabledStub
-                // tslint:disable-next-line: no-any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
             } as any);
 
             configureApplicationEnvironment('stable', extensionVersion);
@@ -306,7 +306,7 @@ suite('Experimentation service', () => {
             getTreatmentVariableAsyncStub = sinon.stub().returns(Promise.resolve('value'));
             sinon.stub(tasClient, 'getExperimentationService').returns({
                 getTreatmentVariableAsync: getTreatmentVariableAsyncStub
-                // tslint:disable-next-line: no-any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
             } as any);
 
             configureApplicationEnvironment('stable', extensionVersion);

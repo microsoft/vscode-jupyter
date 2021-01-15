@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-// tslint:disable:max-func-body-length
+/* eslint-disable  */
 
 import { expect } from 'chai';
 import * as path from 'path';

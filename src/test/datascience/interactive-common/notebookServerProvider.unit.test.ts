@@ -14,7 +14,7 @@ import { IJupyterExecution, INotebookServer } from '../../../client/datascience/
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
 
-// tslint:disable:no-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 function createTypeMoq<T>(tag: string): typemoq.IMock<T> {
     // Use typemoqs for those things that are resolved as promises. mockito doesn't allow nesting of mocks. ES6 Proxy class
     // is the problem. We still need to make it thenable though. See this issue: https://github.com/florinn/typemoq/issues/67
@@ -24,7 +24,7 @@ function createTypeMoq<T>(tag: string): typemoq.IMock<T> {
     return result;
 }
 
-// tslint:disable: max-func-body-length
+/* eslint-disable  */
 suite('DataScience - NotebookServerProvider', () => {
     let serverProvider: NotebookServerProvider;
     let progressReporter: ProgressReporter;

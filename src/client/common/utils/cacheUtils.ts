@@ -3,7 +3,7 @@
 
 'use strict';
 
-// tslint:disable:no-any no-require-imports
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-require-imports */
 
 import '../../common/extensions';
 

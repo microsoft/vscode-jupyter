@@ -4,7 +4,7 @@
 
 import * as React from 'react';
 
-// tslint:disable-next-line:match-default-export-name import-name
+// eslint-disable-next-line
 interface IInformationMessagesProps {
     messages: string[];
 }

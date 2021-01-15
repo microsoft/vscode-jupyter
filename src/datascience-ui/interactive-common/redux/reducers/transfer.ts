@@ -219,7 +219,7 @@ export namespace Transfer {
             kind: 'clear',
             oldDirty: arg.prevState.dirty,
             newDirty: true,
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             oldCells: arg.prevState.cellVMs.map((c) => c.cell as any) as ICell[]
         });
     }
@@ -245,7 +245,7 @@ export namespace Transfer {
             kind: 'remove_all',
             oldDirty: arg.prevState.dirty,
             newDirty: true,
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             oldCells: arg.prevState.cellVMs.map((c) => c.cell as any) as ICell[],
             newCellId
         });
@@ -300,7 +300,7 @@ export namespace Transfer {
                     codeVersion: arg.payload.data.version
                 };
 
-                // tslint:disable-next-line: no-any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 newVMs[index] = Helpers.asCellViewModel(newCell); // This is because IMessageCell doesn't fit in here
                 return {
                     ...arg.prevState,

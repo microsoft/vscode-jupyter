@@ -8,7 +8,7 @@ import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../commo
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
 import { LiveShareProxy } from './liveshareProxy';
 
-// tslint:disable:no-any unified-signatures
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/unified-signatures */
 
 @injectable()
 export class LiveShareApi implements ILiveShareApi {

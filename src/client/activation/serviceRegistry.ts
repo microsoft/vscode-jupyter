@@ -11,7 +11,7 @@ import { MigrateDataScienceSettingsService } from './migrateDataScienceSettingsS
 
 import { IExtensionActivationManager, IExtensionActivationService, IExtensionSingleActivationService } from './types';
 
-// tslint:disable-next-line: max-func-body-length
+// eslint-disable-next-line
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.add<IExtensionActivationManager>(IExtensionActivationManager, ExtensionActivationManager);
     serviceManager.addSingleton<IExtensionActivationService>(

@@ -13,7 +13,7 @@ import { JupyterNotebookBase } from '../../../client/datascience/jupyter/jupyter
 import { ILocalResourceUriConverter, INotebook } from '../../../client/datascience/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 
-// tslint:disable: max-func-body-length no-any
+/* eslint-disable , @typescript-eslint/no-explicit-any */
 suite('DataScience - ipywidget - Local Widget Script Source', () => {
     let scriptSourceProvider: IWidgetScriptSourceProvider;
     let notebook: INotebook;

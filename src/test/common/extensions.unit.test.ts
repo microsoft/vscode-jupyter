@@ -72,7 +72,7 @@ suite('String Extensions', () => {
         expect(formatString.format('one', 'two', 'three')).to.be.equal(expectedString);
     });
     test('String should remove quotes', () => {
-        //tslint:disable:no-multiline-string
+        /* eslint-disable no-multi-str */
         const quotedString = `'foo is "bar" is foo' is bar'`;
         const quotedString2 = `foo is "bar" is foo' is bar'`;
         const quotedString3 = `foo is "bar" is foo' is bar`;

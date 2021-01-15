@@ -55,7 +55,7 @@ import { SupportedCommands } from './mockJupyterManager';
 import { MockPythonService } from './mockPythonService';
 import { createPythonService, startRemoteServer } from './remoteTestHelpers';
 
-// tslint:disable:no-any no-multiline-string max-func-body-length no-console max-classes-per-file trailing-comma
+/* eslint-disable @typescript-eslint/no-explicit-any, no-multi-str, , no-console, max-classes-per-file, comma-dangle */
 suite('DataScience notebook tests', () => {
     [false, true].forEach((useRawKernel) => {
         suite(`${useRawKernel ? 'With Direct Kernel' : 'With Jupyter Server'}`, () => {
@@ -66,11 +66,11 @@ suite('DataScience notebook tests', () => {
             let modifiedConfig = false;
             const baseUri = Uri.file('foo.py');
 
-            // tslint:disable-next-line: no-function-expression
+            // eslint-disable-next-line
             setup(async function () {
                 ioc = new DataScienceIocContainer();
                 if (ioc.shouldMockJupyter && useRawKernel) {
-                    // tslint:disable-next-line: no-invalid-this
+                    // eslint-disable-next-line no-invalid-this
                     this.skip();
                     return;
                 }
@@ -90,7 +90,7 @@ suite('DataScience notebook tests', () => {
                         }
                     }
                     traceInfo('Shutting down after test.');
-                    // tslint:disable-next-line:prefer-for-of
+                    // eslint-disable-next-line @typescript-eslint/prefer-for-of
                     for (let i = 0; i < disposables.length; i += 1) {
                         const disposable = disposables[i];
                         if (disposable) {
@@ -266,7 +266,7 @@ suite('DataScience notebook tests', () => {
             ) {
                 test(name, async function () {
                     console.log(`Starting test ${name} ...`);
-                    // tslint:disable-next-line: no-invalid-this
+                    // eslint-disable-next-line no-invalid-this
                     return func(this);
                 });
             }
@@ -571,7 +571,7 @@ suite('DataScience notebook tests', () => {
                     ioc.serviceManager.rebind<IInterpreterService>(IInterpreterService, EmptyInterpreterService);
                     await createNotebook(undefined, undefined, true);
                 } else {
-                    // tslint:disable-next-line: no-invalid-this
+                    // eslint-disable-next-line no-invalid-this
                     this.skip();
                 }
             });
@@ -647,7 +647,7 @@ suite('DataScience notebook tests', () => {
                 }
             });
 
-            // tslint:disable-next-line:no-invalid-template-strings
+            // eslint-disable-next-line no-template-curly-in-string
             runTest('Verify ${fileDirname} working directory', async () => {
                 // Verify that the default ${fileDirname} setting sets the working directory to the file path
                 changeMockWorkingDirectory(`'${srcDirectory()}'`);
@@ -665,7 +665,7 @@ suite('DataScience notebook tests', () => {
 
                     // Create again, we should get the same server from the cache
                     const server2 = await createNotebook();
-                    // tslint:disable-next-line: triple-equals
+                    // eslint-disable-next-line eqeqeq
                     assert.ok(server == server2, 'With no settings changed we should return the cached server');
 
                     // Create a new mock interpreter with a different path
@@ -681,7 +681,7 @@ suite('DataScience notebook tests', () => {
 
                     // Create a new notebook, we should still be the same as interpreter is just saved for notebook creation
                     const server3 = await createNotebook();
-                    // tslint:disable-next-line: triple-equals
+                    // eslint-disable-next-line eqeqeq
                     assert.ok(server == server3, 'With interpreter changed we should not return a new server');
                 } else {
                     console.log(`Skipping Change Interpreter test in non-mocked Jupyter case`);
@@ -747,7 +747,7 @@ suite('DataScience notebook tests', () => {
                 );
 
                 try {
-                    // tslint:disable-next-line:no-string-literal
+                    // eslint-disable-next-line @typescript-eslint/dot-notation
                     (tokenSource.token as any)['tag'] = messageFormat.format(timeout.toString());
                     await method(tokenSource.token);
                 } catch (exc) {
@@ -767,7 +767,7 @@ suite('DataScience notebook tests', () => {
                 short?: boolean
             ): Promise<boolean> {
                 const timeouts = short ? [10, 20, 30, 100] : [300, 400, 500, 1000];
-                // tslint:disable-next-line:prefer-for-of
+                // eslint-disable-next-line @typescript-eslint/prefer-for-of
                 for (let i = 0; i < timeouts.length; i += 1) {
                     await testCancelableCall(method, messageFormat, timeouts[i]);
                 }
@@ -992,7 +992,7 @@ df.head()`,
                     mimeType: 'text/html',
                     result: `pd has no attribute 'read'`,
                     cellType: 'error',
-                    // tslint:disable-next-line:quotemark
+                    // eslint-disable-next-line @typescript-eslint/quotes
                     verifyValue: (d) =>
                         assert.ok((d as string).includes("has no attribute 'read'"), 'Unexpected error result')
                 },
@@ -1346,7 +1346,7 @@ plt.show()`,
 
             test('Notebook launch failure', async function () {
                 if (!ioc.mockJupyter || useRawKernel) {
-                    // tslint:disable-next-line: no-invalid-this
+                    // eslint-disable-next-line no-invalid-this
                     this.skip();
                 } else {
                     const application = mock(ApplicationShell);
@@ -1389,7 +1389,7 @@ plt.show()`,
 
             test('Notebook launch with PYTHONWARNINGS', async function () {
                 if (ioc.mockJupyter) {
-                    // tslint:disable-next-line: no-invalid-this
+                    // eslint-disable-next-line no-invalid-this
                     this.skip();
                 } else {
                     // Force python warnings to always

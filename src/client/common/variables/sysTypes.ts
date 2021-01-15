@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 'use strict';
 
-// tslint:disable:no-any no-increment-decrement
+/* eslint-disable @typescript-eslint/no-explicit-any,  */
 
 import { isFunction, isString } from '../utils/sysTypes';
 

@@ -4,7 +4,7 @@ import type { nbformat } from '@jupyterlab/coreutils';
 import type { Kernel } from '@jupyterlab/services';
 import { sha256 } from 'hash.js';
 import { inject, injectable } from 'inversify';
-// tslint:disable-next-line: no-require-imports
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
 import { CancellationToken } from 'vscode-jsonrpc';
 import { IPythonExtensionChecker } from '../../../api/types';
@@ -12,7 +12,7 @@ import { IApplicationShell } from '../../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../../common/constants';
 import '../../../common/extensions';
 import { traceDecorators, traceError, traceInfo, traceInfoIf, traceVerbose } from '../../../common/logger';
-import { IConfigurationService, IDisposableRegistry, Resource } from '../../../common/types';
+import { IConfigurationService, IDisposableRegistry, ReadWrite, Resource } from '../../../common/types';
 import * as localize from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
 import { StopWatch } from '../../../common/utils/stopWatch';
@@ -24,6 +24,7 @@ import { Commands, Settings, Telemetry } from '../../constants';
 import { IKernelFinder } from '../../kernel-launcher/types';
 import { isPythonNotebook } from '../../notebook/helpers/helpers';
 import { getInterpreterInfoStoredInMetadata } from '../../notebookStorage/baseModel';
+import { PreferredRemoteKernelIdProvider } from '../../notebookStorage/preferredRemoteKernelIdProvider';
 import { reportAction } from '../../progress/decorator';
 import { ReportableAction } from '../../progress/types';
 import {
@@ -32,7 +33,6 @@ import {
     IJupyterSessionManager,
     IJupyterSessionManagerFactory,
     IKernelDependencyService,
-    INotebookMetadataLive,
     INotebookProviderConnection,
     KernelInterpreterDependencyResponse
 } from '../../types';
@@ -75,7 +75,9 @@ export class KernelSelector implements IKernelSelectionUsage {
         @inject(IJupyterSessionManagerFactory) private jupyterSessionManagerFactory: IJupyterSessionManagerFactory,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
-        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker
+        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
+        @inject(PreferredRemoteKernelIdProvider)
+        private readonly preferredRemoteKernelIdProvider: PreferredRemoteKernelIdProvider
     ) {
         disposableRegistry.push(
             this.jupyterSessionManagerFactory.onRestartSessionCreated(this.addKernelToIgnoreList.bind(this))
@@ -227,27 +229,35 @@ export class KernelSelector implements IKernelSelectionUsage {
         telemetryProps.kernelSpecFound = !!selection?.kernelSpec;
         telemetryProps.interpreterFound = !!selection?.interpreter;
         sendTelemetryEvent(Telemetry.FindKernelForLocalConnection, stopWatch.elapsedTime, telemetryProps);
-        const itemToReturn = cloneDeep(selection);
-        if (itemToReturn) {
+        if (
+            selection &&
+            !selection.interpreter &&
+            isPythonKernelConnection(selection) &&
+            selection.kind === 'startUsingKernelSpec'
+        ) {
+            const itemToReturn = cloneDeep(selection) as ReadWrite<
+                KernelSpecConnectionMetadata | PythonKernelConnectionMetadata | DefaultKernelConnectionMetadata
+            >;
             itemToReturn.interpreter =
                 itemToReturn.interpreter ||
                 (this.extensionChecker.isPythonExtensionInstalled
-                    ? await this.interpreterService.getActiveInterpreter(resource)
+                    ? await this.kernelService.findMatchingInterpreter(selection.kernelSpec, cancelToken)
                     : undefined);
+            return itemToReturn;
         }
-        return itemToReturn;
+        return selection;
     }
 
     /**
      * Gets a kernel that needs to be used with a remote session.
      * (will attempt to find the best matching kernel, or prompt user to use current interpreter or select one).
      */
-    // tslint:disable-next-line: cyclomatic-complexity
+    // eslint-disable-next-line complexity
     @reportAction(ReportableAction.KernelsGetKernelForRemoteConnection)
     public async getPreferredKernelForRemoteConnection(
         resource: Resource,
         sessionManager?: IJupyterSessionManager,
-        notebookMetadata?: INotebookMetadataLive,
+        notebookMetadata?: nbformat.INotebookMetadata,
         cancelToken?: CancellationToken
     ): Promise<KernelConnectionMetadata | undefined> {
         const [interpreter, specs, sessions] = await Promise.all([
@@ -259,10 +269,13 @@ export class KernelSelector implements IKernelSelectionUsage {
         ]);
 
         // First check for a live active session.
-        if (notebookMetadata && notebookMetadata.id) {
-            const session = sessions?.find((s) => s.kernel.id === notebookMetadata?.id);
+        const preferredKernelId = resource
+            ? this.preferredRemoteKernelIdProvider.getPreferredRemoteKernelId(resource)
+            : undefined;
+        if (preferredKernelId) {
+            const session = sessions?.find((s) => s.kernel.id === preferredKernelId);
             if (session) {
-                // tslint:disable-next-line: no-any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const liveKernel = session.kernel as any;
                 const lastActivityTime = liveKernel.last_activity
                     ? new Date(Date.parse(liveKernel.last_activity.toString()))

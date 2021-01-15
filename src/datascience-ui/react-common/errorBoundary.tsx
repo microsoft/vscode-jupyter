@@ -26,7 +26,7 @@ export class ErrorBoundary extends React.Component<{}, IErrorState> {
         if (this.state.hasError) {
             // Render our error message;
             const style: React.CSSProperties = {};
-            // tslint:disable-next-line:no-string-literal
+            // eslint-disable-next-line @typescript-eslint/dot-notation
             style['whiteSpace'] = 'pre';
 
             return <h1 style={style}>{this.state.errorMessage}</h1>;

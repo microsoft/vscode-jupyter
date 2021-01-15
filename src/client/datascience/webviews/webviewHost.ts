@@ -155,7 +155,7 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
         return this.postMessageInternal(type.toString(), payload);
     }
 
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     protected onMessage(message: string, payload: any) {
         switch (message) {
             case SharedMessages.Started:
@@ -279,7 +279,7 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
         this.postMessageInternal(SharedMessages.LocInit, locStrings).ignoreErrors();
     }
 
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     protected async postMessageInternal(type: string, payload?: any): Promise<void> {
         if (this.webviewInit) {
             // Make sure the webpanel is up before we send it anything.
@@ -295,7 +295,7 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
     }
 
     // When the webview has been rendered send telemetry and initial strings + settings
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     protected webViewRendered() {
         if (this.webviewInit && !this.webviewInit.resolved) {
             // Send telemetry for startup

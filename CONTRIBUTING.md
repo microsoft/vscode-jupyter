@@ -2,8 +2,8 @@
 
 ---
 
-| `main` branch |
-| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `main` branch                                                                                                                                                                                                |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | [![Insiders VSIX](https://github.com/microsoft/vscode-jupyter/workflows/Insiders%20VSIX/badge.svg?branch=main)](https://github.com/microsoft/vscode-jupyter/workflows/Insiders%20VSIX/badge.svg?branch=main) |
 
 [[Development build](https://pvsc.blob.core.windows.net/extension-builds/ms-toolsai-jupyter-insiders.vsix)]
@@ -21,7 +21,7 @@
 1. Windows, macOS, or Linux
 1. [Visual Studio Code](https://code.visualstudio.com/)
 1. The following VS Code extensions:
-    - [TSLint](https://marketplace.visualstudio.com/items?itemName=ms-vscode.vscode-typescript-tslint-plugin)
+    - [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint)
     - [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)
     - [EditorConfig for VS Code](https://marketplace.visualstudio.com/items?itemName=EditorConfig.EditorConfig)
     - [Python Extension for VS Code](https://marketplace.visualstudio.com/items?itemName=ms-python.python)
@@ -295,4 +295,3 @@ Steps to build the extension on your machine once you've cloned the repo:
 Resulting in a `ms-toolsai-jupyter-insiders.vsix` file in your `vscode-jupyter` folder.
 
 ⚠️ If you made changes to `package.json`, run `npm install` (instead of `npm ci`) to update `package-lock.json` and install dependencies all at once.
-

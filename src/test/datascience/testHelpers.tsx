@@ -27,7 +27,7 @@ import { IMountedWebView } from './mountedWebView';
 import { createInputEvent, createKeyboardEvent } from './reactHelpers';
 export * from './testHelpersCore';
 
-//tslint:disable:trailing-comma no-any no-multiline-string
+/* eslint-disable comma-dangle, @typescript-eslint/no-explicit-any, no-multi-str */
 export enum CellInputState {
     Hidden,
     Visible,
@@ -52,7 +52,7 @@ async function testInnerLoop(
         addMockData(ioc, 'a=1\na', 1);
         await testFunc(type);
     } else {
-        // tslint:disable-next-line:no-console
+        // eslint-disable-next-line no-console
         console.log(`${name} skipped, no Jupyter installed.`);
     }
 }

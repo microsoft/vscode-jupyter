@@ -5,7 +5,7 @@ import * as code from 'vscode';
 import { Code2ProtocolConverter } from 'vscode-languageclient/node';
 import * as proto from 'vscode-languageserver-protocol';
 
-// tslint:disable:no-any unified-signatures
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/unified-signatures */
 export class MockCode2ProtocolConverter implements Code2ProtocolConverter {
     public asTextDocumentIdentifier(textDocument: code.TextDocument): proto.TextDocumentIdentifier {
         return { uri: textDocument.uri.toString() };
