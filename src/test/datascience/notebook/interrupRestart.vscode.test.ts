@@ -5,7 +5,8 @@
 
 import { assert } from 'chai';
 import * as sinon from 'sinon';
-import { commands, NotebookEditor as VSCNotebookEditor } from 'vscode';
+import { commands } from 'vscode';
+import { NotebookEditor as VSCNotebookEditor } from '../../../../typings/vscode-proposed';
 import { IApplicationShell, IVSCodeNotebook } from '../../../client/common/application/types';
 import { traceInfo } from '../../../client/common/logger';
 import { IConfigurationService, IDisposable, IJupyterSettings, ReadWrite } from '../../../client/common/types';
@@ -20,11 +21,11 @@ import {
     assertVSCCellIsNotRunning,
     assertVSCCellIsRunning,
     canRunNotebookTests,
-    closeNotebooks,
     closeNotebooksAndCleanUpAfterTests,
     executeActiveDocument,
     insertCodeCell,
-    startJupyter,
+    startRemoteJupyterServer,
+    stopRemoteJupyterServer,
     trustAllNotebooks,
     waitForExecutionCompletedWithErrors,
     waitForKernelToGetAutoSelected,
@@ -54,8 +55,8 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         if (!(await canRunNotebookTests())) {
             return this.skip();
         }
+        await startRemoteJupyterServer();
         await closeNotebooksAndCleanUpAfterTests();
-        await startJupyter();
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
         kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
@@ -77,7 +78,6 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
     });
     teardown(async function () {
         traceInfo(`End Test ${this.currentTest?.title}`);
-        await closeNotebooks(disposables);
         await closeNotebooksAndCleanUpAfterTests(disposables.concat(suiteDisposables));
         traceInfo(`End Test (completed) ${this.currentTest?.title}`);
     });
@@ -85,6 +85,7 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         if (dsSettings) {
             dsSettings.askForKernelRestart = oldAskForRestart === true;
         }
+        await stopRemoteJupyterServer();
         await closeNotebooksAndCleanUpAfterTests(disposables.concat(suiteDisposables));
     });
 

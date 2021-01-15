@@ -7,32 +7,29 @@
 import { assert, expect } from 'chai';
 import * as dedent from 'dedent';
 import * as sinon from 'sinon';
-import { CellDisplayOutput, commands } from 'vscode';
-import { CellErrorOutput } from '../../../../typings/vscode-proposed';
+import { commands } from 'vscode';
+import { CellDisplayOutput, CellErrorOutput } from '../../../../typings/vscode-proposed';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { traceInfo } from '../../../client/common/logger';
 import { IDisposable } from '../../../client/common/types';
 import { INotebookEditorProvider } from '../../../client/datascience/types';
 import { createEventHandler, IExtensionTestApi, sleep, waitForCondition } from '../../common';
 import { initialize } from '../../initialize';
-import { JupyterServer } from '../jupyterServer';
 import {
     assertHasTextOutputInVSCode,
     assertNotHasTextOutputInVSCode,
     canRunNotebookTests,
-    closeNotebooks,
     closeNotebooksAndCleanUpAfterTests,
     deleteAllCellsAndWait,
     executeActiveDocument,
     executeCell,
-    ignoreReloadingVSCode,
     insertCodeCell,
-    startJupyter,
     trustAllNotebooks,
-    useRemoteJupyterServer,
+    startRemoteJupyterServer,
     waitForExecutionCompletedSuccessfully,
     waitForExecutionCompletedWithErrors,
-    waitForKernelToGetAutoSelected
+    waitForKernelToGetAutoSelected,
+    stopRemoteJupyterServer
 } from './helper';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
@@ -50,9 +47,8 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         if (!(await canRunNotebookTests())) {
             return this.skip();
         }
-        await ignoreReloadingVSCode(disposables);
         await trustAllNotebooks();
-        await startJupyter();
+        await startRemoteJupyterServer();
         sinon.restore();
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
@@ -61,8 +57,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
     setup(async function () {
         traceInfo(`Start Test ${this.currentTest?.title}`);
         sinon.restore();
-        await ignoreReloadingVSCode(disposables);
-        await useRemoteJupyterServer();
+        await startRemoteJupyterServer();
         // Open a notebook and use this for all tests in this test suite.
         await editorProvider.createNew();
         await waitForKernelToGetAutoSelected();
@@ -74,15 +69,14 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         traceInfo(`Ended Test ${this.currentTest?.title}`);
         // Added temporarily to identify why tests are failing.
         process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT = undefined;
-        await closeNotebooks(disposables);
         await closeNotebooksAndCleanUpAfterTests(disposables);
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     suiteTeardown(async () => {
-        JupyterServer.instance.dispose();
+        await stopRemoteJupyterServer();
         await closeNotebooksAndCleanUpAfterTests(disposables);
     });
-    test('Execute cell using VSCode Kernelxxx', async () => {
+    test('Execute cell using VSCode Kernel', async () => {
         await insertCodeCell('print("123412341234")', { index: 0 });
         const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
 

@@ -61,7 +61,6 @@ suite('DataScience - VSCode Notebook - (Saving) (slow)', function () {
         // Coz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
         testEmptyIPynb = Uri.file(await createTemporaryNotebook(templateIPynbEmpty, disposables));
     });
-    // teardown(async () => closeNotebooksAndCleanUpAfterTests(disposables));
     teardown(() => closeNotebooks(disposables));
     suiteTeardown(closeNotebooksAndCleanUpAfterTests);
     test('Verify output & metadata when re-opening (slow)', async () => {

@@ -222,6 +222,7 @@ export async function closeNotebooksAndCleanUpAfterTests(disposables: IDisposabl
 
     sinon.restore();
 }
+
 export async function closeNotebooks(disposables: IDisposable[] = []) {
     if (!isInsiders()) {
         return false;
@@ -297,7 +298,7 @@ export async function trustAllNotebooks() {
     (<any>dsSettings).alwaysTrustNotebooks = true;
 }
 
-export async function useRemoteJupyterServer() {
+export async function startRemoteJupyterServer() {
     const { serviceContainer } = await getServices();
     const disposable = await ignoreReloadingVSCode();
     const selector = serviceContainer.get<JupyterServerSelector>(JupyterServerSelector);
@@ -310,8 +311,16 @@ export async function useRemoteJupyterServer() {
     disposable.dispose();
 }
 
+export async function stopRemoteJupyterServer() {
+    JupyterServer.instance.dispose();
+    const { serviceContainer } = await getServices();
+    const disposable = await ignoreReloadingVSCode();
+    const selector = serviceContainer.get<JupyterServerSelector>(JupyterServerSelector);
+    await selector.setJupyterURIToLocal();
+    disposable.dispose();
+}
+
 export async function startJupyter() {
-    await useRemoteJupyterServer();
     const { editorProvider, vscodeNotebook, serviceContainer } = await getServices();
     await closeActiveWindows();
 
