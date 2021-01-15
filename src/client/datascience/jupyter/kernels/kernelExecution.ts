@@ -62,6 +62,8 @@ export class KernelExecution implements IDisposable {
         }
         // Cannot execute empty cells.
         if (this.cellExecutions.has(cell) || cell.document.getText().trim().length === 0) {
+            // clear cell output
+            cell.outputs = [];
             return;
         }
         const cellExecution = this.executionFactory.create(cell, isPythonKernelConnection(this.metadata));
