@@ -297,7 +297,6 @@ module.exports = {
         'src/test/datascience/jupyterPasswordConnect.unit.test.ts',
         'src/test/datascience/commands/serverSelector.unit.test.ts',
         'src/test/datascience/commands/commandRegistry.unit.test.ts',
-        'src/test/datascience/commands/notebookCommands.functional.test.ts',
         'src/test/datascience/testHelpers.tsx',
         'src/test/datascience/notebook.functional.test.ts',
         'src/test/datascience/mockLanguageClient.ts',
