@@ -45,9 +45,14 @@ async function run() {
 
         // Get the list of changed files
         const changedFiles = await getChangedFiles();
-        // Make sure the changed files are not in the ignore list
-        core.debug('Changed Files:');
-        core.debug(changedFiles.join('\n'));
+
+        // Compare this against the ignored files
+        const ignoredFiles = eslintjrc.ignorePatterns;
+        const intersection = ignoredFiles.filter((v) => changedFiles.includes(v));
+
+        if (intersection && intersection.length > 0) {
+            core.setFailed(`Files are being ignored that should be linted: ${intersection.join('\n')}`);
+        }
     } catch (error) {
         core.setFailed(error.message);
     } finally {
