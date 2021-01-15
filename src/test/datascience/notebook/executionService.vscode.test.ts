@@ -51,7 +51,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         if (!(await canRunNotebookTests())) {
             return this.skip();
         }
-        ignoreReloadingVSCode(disposables);
+        await ignoreReloadingVSCode(disposables);
         await trustAllNotebooks();
         await startJupyter();
         sinon.restore();
@@ -62,8 +62,8 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
     setup(async function () {
         traceInfo(`Start Test ${this.currentTest?.title}`);
         sinon.restore();
-        ignoreReloadingVSCode(disposables);
-        useRemoteJupyterServer();
+        await ignoreReloadingVSCode(disposables);
+        await useRemoteJupyterServer();
         // Open a notebook and use this for all tests in this test suite.
         await editorProvider.createNew();
         await waitForKernelToGetAutoSelected();

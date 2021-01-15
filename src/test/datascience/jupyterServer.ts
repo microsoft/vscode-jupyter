@@ -21,7 +21,6 @@ export class JupyterServer implements IDisposable {
     private static _instance: JupyterServer;
     private _jupyterServerWithTokenABCDProc?: ChildProcess;
     private _jupyterServerWithTokenABCD?: Promise<Uri>;
-    private constructor() {}
     public dispose() {
         if (this._jupyterServerWithTokenABCDProc) {
             this._jupyterServerWithTokenABCDProc?.kill();
