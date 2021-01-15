@@ -17,8 +17,8 @@ import {
     deleteAllCellsAndWait,
     insertCodeCell,
     selectCell,
-    startRemoteJupyterServer,
-    stopRemoteJupyterServer,
+    startJupyterServer,
+    stopJupyterServer,
     trustAllNotebooks,
     waitForExecutionCompletedSuccessfully,
     waitForKernelToGetAutoSelected
@@ -37,7 +37,7 @@ suite('Notebook Editor tests', () => {
         if (!(await canRunNotebookTests())) {
             return this.skip();
         }
-        await startRemoteJupyterServer();
+        await startJupyterServer();
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
         commandManager = api.serviceContainer.get<ICommandManager>(ICommandManager);
@@ -61,7 +61,7 @@ suite('Notebook Editor tests', () => {
     });
     suiteTeardown(async () => {
         await closeNotebooksAndCleanUpAfterTests(disposables);
-        await stopRemoteJupyterServer();
+        await stopJupyterServer();
     });
 
     test('Run cells above', async function () {

@@ -297,7 +297,7 @@ export async function trustAllNotebooks() {
     (<any>dsSettings).alwaysTrustNotebooks = true;
 }
 
-export async function startRemoteJupyterServer() {
+export async function startJupyterServer() {
     traceInfo(`Start Setup.A1`);
     const { serviceContainer } = await getServices();
     const selector = serviceContainer.get<JupyterServerSelector>(JupyterServerSelector);
@@ -314,14 +314,14 @@ export async function startRemoteJupyterServer() {
     }
 }
 
-export async function stopRemoteJupyterServer() {
+export async function stopJupyterServer() {
     JupyterServer.instance.dispose();
     const { serviceContainer } = await getServices();
     const selector = serviceContainer.get<JupyterServerSelector>(JupyterServerSelector);
     await selector.setJupyterURIToLocal();
 }
 
-export async function startJupyter() {
+export async function prewarmNotebooks() {
     const { editorProvider, vscodeNotebook, serviceContainer } = await getServices();
     await closeActiveWindows();
 

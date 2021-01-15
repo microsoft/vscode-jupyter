@@ -24,8 +24,8 @@ import {
     closeNotebooksAndCleanUpAfterTests,
     executeActiveDocument,
     insertCodeCell,
-    startRemoteJupyterServer,
-    stopRemoteJupyterServer,
+    startJupyterServer,
+    stopJupyterServer,
     trustAllNotebooks,
     waitForExecutionCompletedWithErrors,
     waitForKernelToGetAutoSelected,
@@ -55,7 +55,7 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         if (!(await canRunNotebookTests())) {
             return this.skip();
         }
-        await startRemoteJupyterServer();
+        await startJupyterServer();
         await closeNotebooksAndCleanUpAfterTests();
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
@@ -79,6 +79,7 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
     teardown(async function () {
         traceInfo(`End Test ${this.currentTest?.title}`);
         await closeNotebooksAndCleanUpAfterTests(disposables.concat(suiteDisposables));
+        await stopJupyterServer();
         traceInfo(`End Test (completed) ${this.currentTest?.title}`);
     });
     suiteTeardown(async () => {
@@ -86,7 +87,7 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
             dsSettings.askForKernelRestart = oldAskForRestart === true;
         }
         await closeNotebooksAndCleanUpAfterTests(disposables.concat(suiteDisposables));
-        await stopRemoteJupyterServer();
+        await stopJupyterServer();
     });
 
     test('Interrupting kernel (Cancelling token) will cancel cell execution', async () => {

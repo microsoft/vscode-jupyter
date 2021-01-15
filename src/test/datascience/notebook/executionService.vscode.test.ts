@@ -25,12 +25,12 @@ import {
     executeCell,
     insertCodeCell,
     trustAllNotebooks,
-    startRemoteJupyterServer,
+    startJupyterServer,
     waitForExecutionCompletedSuccessfully,
     waitForExecutionCompletedWithErrors,
     waitForKernelToGetAutoSelected,
-    stopRemoteJupyterServer,
-    startJupyter
+    stopJupyterServer,
+    prewarmNotebooks
 } from './helper';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
@@ -53,9 +53,9 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)xxx', function () {
         traceInfo(`Start Setup.1`);
         await trustAllNotebooks();
         traceInfo(`Start Setup.2`);
-        await startRemoteJupyterServer();
+        await startJupyterServer();
         traceInfo(`Start Setup.3`);
-        await startJupyter();
+        await prewarmNotebooks();
         traceInfo(`Start Setup.4`);
         sinon.restore();
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
@@ -66,7 +66,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)xxx', function () {
     setup(async function () {
         traceInfo(`Start Test ${this.currentTest?.title}`);
         sinon.restore();
-        await startRemoteJupyterServer();
+        await startJupyterServer();
         // Open a notebook and use this for all tests in this test suite.
         await editorProvider.createNew();
         await waitForKernelToGetAutoSelected();
@@ -83,7 +83,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)xxx', function () {
     });
     suiteTeardown(async () => {
         await closeNotebooksAndCleanUpAfterTests(disposables);
-        await stopRemoteJupyterServer();
+        await stopJupyterServer();
     });
     test('Execute cell using VSCode Kernel', async () => {
         await insertCodeCell('print("123412341234")', { index: 0 });
