@@ -1130,7 +1130,6 @@ module.exports = {
         'src/client/datascience/jupyter/kernels/kernelSelections.ts',
         'src/client/datascience/jupyter/kernels/jupyterKernelSpec.ts',
         'src/client/datascience/jupyter/kernels/kernelDependencyService.ts',
-        'src/client/datascience/jupyter/kernels/kernel.ts',
         'src/client/datascience/jupyter/jupyterNotebook.ts',
         'src/client/datascience/jupyter/jupyterExecutionFactory.ts',
         'src/client/datascience/jupyter/jupyterSession.ts',
