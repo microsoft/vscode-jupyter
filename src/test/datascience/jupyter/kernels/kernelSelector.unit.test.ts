@@ -20,12 +20,7 @@ import { StopWatch } from '../../../../client/common/utils/stopWatch';
 import { JupyterSessionManager } from '../../../../client/datascience/jupyter/jupyterSessionManager';
 import { JupyterSessionManagerFactory } from '../../../../client/datascience/jupyter/jupyterSessionManagerFactory';
 import { KernelDependencyService } from '../../../../client/datascience/jupyter/kernels/kernelDependencyService';
-import {
-    ActiveJupyterSessionKernelSelectionListProvider,
-    getQuickPickItemForActiveKernel,
-    InstalledJupyterKernelSelectionListProvider,
-    KernelSelectionProvider
-} from '../../../../client/datascience/jupyter/kernels/kernelSelections';
+import { KernelSelectionProvider } from '../../../../client/datascience/jupyter/kernels/kernelSelections';
 import { KernelSelector } from '../../../../client/datascience/jupyter/kernels/kernelSelector';
 import { KernelService } from '../../../../client/datascience/jupyter/kernels/kernelService';
 import { LiveKernelModel } from '../../../../client/datascience/jupyter/kernels/types';
@@ -38,6 +33,11 @@ import { IInterpreterSelector } from '../../../../client/interpreter/configurati
 import { IFileSystem } from '../../../../client/common/platform/types';
 import { IPythonExtensionChecker } from '../../../../client/api/types';
 import { disposeAllDisposables } from '../../notebook/helper';
+import {
+    getQuickPickItemForActiveKernel,
+    ActiveJupyterSessionKernelSelectionListProvider
+} from '../../../../client/datascience/jupyter/kernels/providers/activeJupyterSessionKernelProvider';
+import { InstalledJupyterKernelSelectionListProvider } from '../../../../client/datascience/jupyter/kernels/providers/installJupyterKernelProvider';
 
 /* eslint-disable , @typescript-eslint/no-unused-expressions, @typescript-eslint/no-explicit-any */
 

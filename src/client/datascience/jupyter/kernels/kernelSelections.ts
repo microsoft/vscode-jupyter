@@ -5,295 +5,32 @@
 
 import { Kernel } from '@jupyterlab/services';
 import { inject, injectable } from 'inversify';
-import { cloneDeep } from 'lodash';
-import * as path from 'path';
 import { CancellationToken, EventEmitter } from 'vscode';
 import { IPythonExtensionChecker } from '../../../api/types';
-import { PYTHON_LANGUAGE } from '../../../common/constants';
 import { traceError, traceInfo } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
-import { IDisposableRegistry, IPathUtils, ReadWrite, Resource } from '../../../common/types';
+import { IDisposableRegistry, IPathUtils, Resource } from '../../../common/types';
 import { createDeferredFromPromise } from '../../../common/utils/async';
-import * as localize from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
 import { IInterpreterSelector } from '../../../interpreter/configuration/types';
 import { IInterpreterService } from '../../../interpreter/contracts';
-import { sendTelemetryEvent } from '../../../telemetry';
-import { Telemetry } from '../../constants';
 import { IKernelFinder } from '../../kernel-launcher/types';
-import { IJupyterKernelSpec, IJupyterSessionManager, IJupyterSessionManagerFactory } from '../../types';
-import { detectDefaultKernelName, isPythonKernelConnection } from './helpers';
+import { IJupyterSessionManager, IJupyterSessionManagerFactory } from '../../types';
+import { isPythonKernelConnection } from './helpers';
 import { KernelService } from './kernelService';
+import { ActiveJupyterSessionKernelSelectionListProvider } from './providers/activeJupyterSessionKernelProvider';
+import { InstalledRawKernelSelectionListProvider } from './providers/installedRawKernelProvider';
+import { InstalledJupyterKernelSelectionListProvider } from './providers/installJupyterKernelProvider';
+import { InterpreterKernelSelectionListProvider } from './providers/interpretersAsKernelProvider';
 import {
     getKernelConnectionId,
-    IKernelSelectionListProvider,
     IKernelSpecQuickPickItem,
     KernelSpecConnectionMetadata,
     LiveKernelConnectionMetadata,
-    LiveKernelModel,
     PythonKernelConnectionMetadata
 } from './types';
 
-// Small classes, hence all put into one file.
-/* eslint-disable max-classes-per-file */
-
 const isSimplePythonDisplayName = /python\s?\d?\.?\d?/;
-/**
- * Given a kernel spec, this will return a quick pick item with appropriate display names and the like.
- *
- * @param {IJupyterKernelSpec} kernelSpec
- * @param {IPathUtils} pathUtils
- * @returns {IKernelSpecQuickPickItem}
- */
-function getQuickPickItemForKernelSpec(
-    kernelSpec: IJupyterKernelSpec,
-    pathUtils: IPathUtils
-): IKernelSpecQuickPickItem<KernelSpecConnectionMetadata> {
-    // If we have a matching interpreter, then display that path in the dropdown else path of the kernelspec.
-    const pathToKernel = kernelSpec.metadata?.interpreter?.path || kernelSpec.path;
-
-    // Its possible we could have kernels with the same name.
-    // Include the path of the interpreter that owns this kernel or path of kernelspec.json file in description.
-    // If we only have name of executable like `dotnet` or `python`, then include path to kernel json.
-    // Similarly if this is a python kernel and pathTokernel is just `python`, look for corresponding interpreter that owns this and include its path.
-
-    // E.g.
-    // If its a python kernel with python path in kernel spec we display:
-    //  detail: ~/user friendly path to python interpreter
-    // If its a non-python kernel and we have the fully qualified path to executable:
-    //  detail: ~/user friendly path to executable
-    // If its a non-python kernel and we only have name of executable like `java/dotnet` & we we have the fully qualified path to interpreter that owns this kernel:
-    //  detail: ~/user friendly path to kenelspec.json file
-
-    let detail = pathUtils.getDisplayName(pathToKernel);
-    if (pathToKernel === path.basename(pathToKernel)) {
-        const pathToInterpreterOrKernelSpec =
-            kernelSpec.language?.toLowerCase() === PYTHON_LANGUAGE.toLocaleLowerCase()
-                ? kernelSpec.interpreterPath
-                : kernelSpec.specFile || '';
-        if (pathToInterpreterOrKernelSpec) {
-            detail = pathUtils.getDisplayName(pathToInterpreterOrKernelSpec);
-        }
-    }
-    return {
-        label: kernelSpec.display_name,
-        detail,
-        selection: {
-            kernelModel: undefined,
-            kernelSpec: kernelSpec,
-            interpreter: undefined,
-            kind: 'startUsingKernelSpec'
-        }
-    };
-}
-
-/**
- * Given an active kernel, this will return a quick pick item with appropriate display names and the like.
- *
- * @param {(LiveKernelModel)} kernel
- * @param {IPathUtils} pathUtils
- * @returns {IKernelSpecQuickPickItem}
- */
-export function getQuickPickItemForActiveKernel(
-    kernel: LiveKernelModel,
-    pathUtils: IPathUtils
-): IKernelSpecQuickPickItem<LiveKernelConnectionMetadata> {
-    const pickPath = kernel.metadata?.interpreter?.path || kernel.path;
-    return {
-        label: kernel.display_name || kernel.name || '',
-        // If we have a session, use that path
-        detail: kernel.session.path || !pickPath ? kernel.session.path : pathUtils.getDisplayName(pickPath),
-        description: localize.DataScience.jupyterSelectURIRunningDetailFormat().format(
-            kernel.lastActivityTime.toLocaleString(),
-            kernel.numberOfConnections.toString()
-        ),
-        selection: { kernelModel: kernel, interpreter: undefined, kind: 'connectToLiveKernel' }
-    };
-}
-
-/**
- * Provider for active kernel specs in a jupyter session.
- *
- * @export
- * @class ActiveJupyterSessionKernelSelectionListProvider
- * @implements {IKernelSelectionListProvider}
- */
-export class ActiveJupyterSessionKernelSelectionListProvider
-    implements IKernelSelectionListProvider<LiveKernelConnectionMetadata> {
-    constructor(private readonly sessionManager: IJupyterSessionManager, private readonly pathUtils: IPathUtils) {}
-    public async getKernelSelections(
-        _resource: Resource,
-        _cancelToken?: CancellationToken | undefined
-    ): Promise<IKernelSpecQuickPickItem<LiveKernelConnectionMetadata>[]> {
-        const [activeKernels, activeSessions, kernelSpecs] = await Promise.all([
-            this.sessionManager.getRunningKernels(),
-            this.sessionManager.getRunningSessions(),
-            this.sessionManager.getKernelSpecs()
-        ]);
-        const items = activeSessions.map((item) => {
-            const matchingSpec: Partial<IJupyterKernelSpec> =
-                kernelSpecs.find((spec) => spec.name === item.kernel.name) || {};
-            const activeKernel = activeKernels.find((active) => active.id === item.kernel.id) || {};
-            // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-            return {
-                ...item.kernel,
-                ...matchingSpec,
-                ...activeKernel,
-                session: item
-            } as LiveKernelModel;
-        });
-        return items
-            .filter((item) => item.display_name || item.name)
-            .filter((item) => 'lastActivityTime' in item && 'numberOfConnections' in item)
-            .map((item) => getQuickPickItemForActiveKernel(item, this.pathUtils));
-    }
-}
-
-/**
- * Provider for installed kernel specs (`python -m jupyter kernelspec list`).
- *
- * @export
- * @class InstalledJupyterKernelSelectionListProvider
- * @implements {IKernelSelectionListProvider}
- */
-export class InstalledJupyterKernelSelectionListProvider
-    implements IKernelSelectionListProvider<KernelSpecConnectionMetadata> {
-    constructor(
-        private readonly kernelService: KernelService,
-        private readonly pathUtils: IPathUtils,
-        private readonly extensionChecker: IPythonExtensionChecker,
-        private readonly interpreterService: IInterpreterService,
-        private readonly sessionManager?: IJupyterSessionManager
-    ) {}
-    public async getKernelSelections(
-        resource: Resource,
-        cancelToken?: CancellationToken | undefined
-    ): Promise<IKernelSpecQuickPickItem<KernelSpecConnectionMetadata>[]> {
-        const items = await this.kernelService.getKernelSpecs(this.sessionManager, cancelToken);
-        // Always clone, so we can make changes to this.
-        const selections = items.map((item) => getQuickPickItemForKernelSpec(cloneDeep(item), this.pathUtils));
-
-        // Default the interpreter to the local interpreter (if none is provided).
-        if (this.extensionChecker.isPythonExtensionInstalled) {
-            const activeInterpreter = this.interpreterService.getActiveInterpreter(resource);
-            // This process is slow, hence the need to cache this result set.
-            await Promise.all(
-                selections.map(async (item) => {
-                    const selection = item.selection as ReadWrite<KernelSpecConnectionMetadata>;
-                    // Find matching interpreter for Python kernels.
-                    if (!selection.interpreter && selection.kernelSpec && isPythonKernelConnection(selection)) {
-                        selection.interpreter = await this.kernelService.findMatchingInterpreter(selection.kernelSpec);
-                    }
-                    selection.interpreter = item.selection.interpreter || (await activeInterpreter);
-                    if (isPythonKernelConnection(selection)) {
-                        selection.kernelSpec.interpreterPath =
-                            selection.kernelSpec.interpreterPath || selection.interpreter?.path;
-                    }
-                })
-            );
-        }
-        sendTelemetryEvent(Telemetry.NumberOfRemoteKernelSpecs, { count: selections.length });
-        return selections;
-    }
-}
-
-// Provider for searching for installed kernelspecs on disk without using jupyter to search
-export class InstalledRawKernelSelectionListProvider
-    implements IKernelSelectionListProvider<KernelSpecConnectionMetadata> {
-    constructor(
-        private readonly kernelFinder: IKernelFinder,
-        private readonly pathUtils: IPathUtils,
-        private readonly kernelService: KernelService
-    ) {}
-    public async getKernelSelections(
-        resource: Resource,
-        cancelToken?: CancellationToken
-    ): Promise<IKernelSpecQuickPickItem<KernelSpecConnectionMetadata>[]> {
-        const items = await this.kernelFinder.listKernelSpecs(resource);
-        const selections = await Promise.all(
-            items
-                .filter((item) => {
-                    // If we have a default kernel name and a non-absolute path just hide the item
-                    // Otherwise we end up showing a bunch of "Python 3 - python" default items for
-                    // other interpreters
-                    const match = detectDefaultKernelName(item.name);
-                    if (match) {
-                        // Check if this is a kernel we registerd in the old days.
-                        // If it is, then no need to display that (selecting kernels registered is done by selecting the corresponding interpreter).
-                        // Hence we can hide such kernels.
-                        // Kernels we create will end with a uuid (with - stripped), & will have interpreter info in the metadata.
-                        if (
-                            item.metadata?.interpreter &&
-                            item.name.length > 32 &&
-                            item.name.slice(-32).toLowerCase() === item.name
-                        ) {
-                            return false;
-                        }
-
-                        // If we have the interpreter information this kernel belongs to and the kernel has custom env
-                        // variables, then include it in the list.
-                        if (item.interpreterPath && item.env) {
-                            return true;
-                        }
-                        // Else include it only if the path is available for the kernel.
-                        return path.isAbsolute(item.path);
-                    }
-                    return true;
-                })
-                .map((item) => getQuickPickItemForKernelSpec(item, this.pathUtils))
-                .map(async (item) => {
-                    // Ensure we have the associated interpreter information.
-                    const selection = item.selection as ReadWrite<KernelSpecConnectionMetadata>;
-                    if (selection.interpreter || !isPythonKernelConnection(selection)) {
-                        return item;
-                    }
-                    selection.interpreter = await this.kernelService.findMatchingInterpreter(
-                        selection.kernelSpec,
-                        cancelToken
-                    );
-                    selection.kernelSpec.interpreterPath =
-                        selection.kernelSpec.interpreterPath || selection.interpreter?.path;
-                    return item;
-                })
-        );
-        sendTelemetryEvent(Telemetry.NumberOfLocalKernelSpecs, { count: selections.length });
-        return selections;
-    }
-}
-
-/**
- * Provider for interpreters to be treated as kernel specs.
- * I.e. return interpreters that are to be treated as kernel specs, and not yet installed as kernels.
- *
- * @export
- * @class InterpreterKernelSelectionListProvider
- * @implements {IKernelSelectionListProvider}
- */
-export class InterpreterKernelSelectionListProvider
-    implements IKernelSelectionListProvider<PythonKernelConnectionMetadata> {
-    constructor(private readonly interpreterSelector: IInterpreterSelector) {}
-    public async getKernelSelections(
-        resource: Resource,
-        _cancelToken?: CancellationToken
-    ): Promise<IKernelSpecQuickPickItem<PythonKernelConnectionMetadata>[]> {
-        const items = await this.interpreterSelector.getSuggestions(resource);
-        return items
-            ? items.map((item) => {
-                  return {
-                      ...item,
-                      // We don't want descriptions.
-                      description: '',
-                      selection: {
-                          kernelModel: undefined,
-                          interpreter: item.interpreter,
-                          kernelSpec: undefined,
-                          kind: 'startUsingPythonInterpreter'
-                      }
-                  };
-              })
-            : [];
-    }
-}
 
 /**
  * Provides a list of kernel specs for selection, for both local and remote sessions.
