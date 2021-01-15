@@ -49,6 +49,7 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
     private activeHTMLRequest?: Deferred<string>;
 
     // For testing, broadcast messages to the following listeners
+    // tslint:disable-next-line:no-any
     private onMessageListeners: ((message: string, payload: any) => void)[] = [];
 
     constructor(
@@ -107,7 +108,8 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
         return this.activeHTMLRequest.promise;
     }
 
-    public addOnMessageListener(callback: (message: string, payload: any) => void) {
+    // tslint:disable-next-line:no-any
+    public addMessageListener(callback: (message: string, payload: any) => void) {
         // Test only
         //if (!isTestExecution()) {
         //throw new Error('getHTMLById to be run only in test code');
@@ -116,7 +118,8 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
         this.onMessageListeners.push(callback);
     }
 
-    public removeOnMessageListener(callback: (message: string, payload: any) => void) {
+    // tslint:disable-next-line:no-any
+    public removeMessageListener(callback: (message: string, payload: any) => void) {
         // Test only
         //if (!isTestExecution()) {
         //throw new Error('getHTMLById to be run only in test code');

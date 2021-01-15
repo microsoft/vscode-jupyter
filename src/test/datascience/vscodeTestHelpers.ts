@@ -1,8 +1,8 @@
 import { createDeferred } from '../../client/common/utils/async';
 
 interface IOnMessageListener {
-    addOnMessageListener(callback: (message: string, payload: any) => void): void;
-    removeOnMessageListener(callback: (message: string, payload: any) => void): void;
+    addMessageListener(callback: (message: string, payload: any) => void): void;
+    removeMessageListener(callback: (message: string, payload: any) => void): void;
 }
 
 export type WaitForMessageOptions = {
@@ -27,6 +27,7 @@ export type WaitForMessageOptions = {
     withPayload?(payload: any): boolean;
 };
 
+// This class is for usage in .vscode test to hook up to webviews which expose the addMessageListener and removeMessageListener functions
 export class OnMessageListener {
     private target: IOnMessageListener;
     constructor(target: IOnMessageListener) {
@@ -85,10 +86,10 @@ export class OnMessageListener {
     }
 
     public addMessageListener(callback: (m: string, p: any) => void) {
-        this.target.addOnMessageListener(callback);
+        this.target.addMessageListener(callback);
     }
 
     public removeMessageListener(callback: (m: string, p: any) => void) {
-        this.target.removeOnMessageListener(callback);
+        this.target.removeMessageListener(callback);
     }
 }
