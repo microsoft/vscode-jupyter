@@ -210,7 +210,7 @@
                 "VSC_JUPYTER_WEBVIEW_TEST_MIDDLEWARE": "true", // Initialize to create the webview test middleware
                 "VSC_JUPYTER_LOAD_EXPERIMENTS_FROM_FILE": "true",
                 "TEST_FILES_SUFFIX": "vscode.test",
-                "XVSC_JUPYTER_REMOTE_NATIVE_TEST": "1", // Remove 'X' prefix to run the Native Notebook tests with remote jupyter connections.
+                "XVSC_JUPYTER_REMOTE_NATIVE_TEST": "true", // Remove 'X' prefix to run the Native Notebook tests with remote jupyter connections.
                 "XVSC_JUPYTER_INSTRUMENT_CODE_FOR_COVERAGE": "1",
                 "XVSC_JUPYTER_INSTRUMENT_CODE_FOR_COVERAGE_HTML": "1" //Enable to get full coverage repor (in coverage folder).
             },
