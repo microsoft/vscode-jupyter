@@ -27,7 +27,7 @@ import { DefaultTheme, PythonExtension, Telemetry } from '../constants';
 import { InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
 import { CssMessages, IGetCssRequest, IGetMonacoThemeRequest, SharedMessages } from '../messages';
 import { ICodeCssGenerator, IJupyterExtraSettings, IThemeFinder } from '../types';
-import { testOnlyMethod } from '../../common/utils/testOnlyDecorator';
+import { testOnlyMethod } from '../../common/utils/decorators';
 
 @injectable() // For some reason this is necessary to get the class hierarchy to work.
 export abstract class WebviewHost<IMapping> implements IDisposable {
@@ -90,7 +90,8 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
     }
 
     // This function is used for testing webview by fetching HTML from the webview via a message
-    @testOnlyMethod
+    // @ts-ignore Property will be accessed in test code via casting to ITestWebviewHost
+    @testOnlyMethod()
     // @ts-ignore Property will be accessed in test code via casting to ITestWebviewHost
     private getHTMLById(id: string): Promise<string> {
         if (!this.activeHTMLRequest) {
@@ -105,7 +106,7 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
 
     // For testing add a callback listening to messages from the webview
     // tslint:disable-next-line:no-any
-    @testOnlyMethod
+    @testOnlyMethod()
     // @ts-ignore Property will be accessed in test code via casting to ITestWebviewHost
     private addMessageListener(callback: (message: string, payload: any) => void) {
         this.onMessageListeners.push(callback);
@@ -113,7 +114,7 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
 
     // For testing remove a callback listening to messages from the webview
     // tslint:disable-next-line:no-any
-    @testOnlyMethod
+    @testOnlyMethod()
     // @ts-ignore Property will be accessed in test code via casting to ITestWebviewHost
     private removeMessageListener(callback: (message: string, payload: any) => void) {
         const index = this.onMessageListeners.indexOf(callback);

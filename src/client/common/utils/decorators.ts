@@ -244,3 +244,20 @@ export function trace(log: (c: CallInfo, t: TraceInfo) => void) {
         return descriptor;
     };
 }
+
+// Mark a method to be used only in tests
+export function testOnlyMethod() {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return function (_target: Object, propertyKey: string, descriptor: TypedPropertyDescriptor<any>) {
+        const originalMethod = descriptor.value;
+        // eslint-disable-next-line , @typescript-eslint/no-explicit-any
+        descriptor.value = function (...args: any[]) {
+            if (!isTestExecution()) {
+                throw new Error(`Function: ${propertyKey} can only be called from test code`);
+            }
+            return originalMethod.apply(this, args);
+        };
+
+        return descriptor;
+    };
+}

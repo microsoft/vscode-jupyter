@@ -309,7 +309,11 @@ function createMiddleWare(testMode: boolean, postOffice: PostOffice): Redux.Midd
     // Or if testing in UI Test.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const isUITest = (postOffice.acquireApi() as any)?.handleMessage ? true : false;
-    const testMiddleware = forceTestMiddleware() || testMode || isUITest ? createTestMiddleware() : undefined;
+    let forceOnTestMiddleware = false;
+    if (typeof forceTestMiddleware !== undefined) {
+        forceOnTestMiddleware = forceTestMiddleware();
+    }
+    const testMiddleware = forceOnTestMiddleware || testMode || isUITest ? createTestMiddleware() : undefined;
 
     // Create the logger if we're not in production mode or we're forcing logging
     const reduceLogMessage = '<payload too large to displayed in logs (at least on CI)>';
