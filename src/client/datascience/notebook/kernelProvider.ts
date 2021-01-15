@@ -149,6 +149,8 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
                 const kernelSpecConnection = k.selection;
                 if (kernelSpecConnection.kind === 'startUsingKernelSpec') {
                     return languages.find((l) => l === kernelSpecConnection.kernelSpec.language);
+                } else if (kernelSpecConnection.kind === 'connectToLiveKernel') {
+                    return languages.find((l) => l === kernelSpecConnection.kernelModel.language);
                 } else {
                     return false;
                 }
