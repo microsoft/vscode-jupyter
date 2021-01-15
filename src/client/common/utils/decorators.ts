@@ -204,7 +204,7 @@ export function displayProgress(title: string, location = ProgressLocation.Windo
             // eslint-disable-next-line no-invalid-this
             const promise = originalMethod.apply(this, args);
             if (!isTestExecution()) {
-                window.withProgress(progressOptions, () => promise);
+                void window.withProgress(progressOptions, () => promise);
             }
             return promise;
         };
