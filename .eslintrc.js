@@ -307,7 +307,6 @@ module.exports = {
         'src/test/datascience/notebook/survey.unit.test.ts',
         'src/test/datascience/notebook/interrupRestart.native.vscode.test.ts',
         'src/test/datascience/notebook/contentProvider.native.vscode.test.ts',
-        'src/test/datascience/notebook/helper.ts',
         'src/test/datascience/notebook/contentProvider.unit.test.ts',
         'src/test/datascience/notebook/edit.native.vscode.test.ts',
         'src/test/datascience/notebook/rendererExension.unit.test.ts',
