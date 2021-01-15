@@ -7,8 +7,10 @@ import { Uri } from 'vscode';
 import { NotebookCell, NotebookDocument, NotebookKernel as VSCNotebookKernel } from '../../../../types/vscode-proposed';
 import { IVSCodeNotebook } from '../../common/application/types';
 import { traceInfo } from '../../common/logger';
-import { IExtensionContext } from '../../common/types';
+import { IDisposable, IExtensionContext } from '../../common/types';
+import { noop } from '../../common/utils/misc';
 import { getKernelConnectionId, IKernel, IKernelProvider, KernelConnectionMetadata } from '../jupyter/kernels/types';
+import { PreferredRemoteKernelIdProvider } from '../notebookStorage/preferredRemoteKernelIdProvider';
 import { updateKernelInfoInNotebookMetadata } from './helpers/helpers';
 
 export class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
@@ -32,7 +34,8 @@ export class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
         public readonly isPreferred: boolean,
         private readonly kernelProvider: IKernelProvider,
         private readonly notebook: IVSCodeNotebook,
-        private readonly context: IExtensionContext
+        private readonly context: IExtensionContext,
+        private readonly preferredRemoteKernelIdProvider: PreferredRemoteKernelIdProvider
     ) {}
     public executeCell(doc: NotebookDocument, cell: NotebookCell) {
         traceInfo(`Execute Cell ${cell.document.uri.toString()} in kernelWithMetadata.ts`);
@@ -56,8 +59,9 @@ export class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
         this.kernelProvider.get(document.uri)?.interruptAllCells(document).ignoreErrors(); // NOSONAR
     }
     private updateKernelInfoInNotebookWhenAvailable(kernel: IKernel, doc: NotebookDocument) {
+        let disposeHandler: IDisposable | undefined;
         const disposable = kernel.onStatusChanged(() => {
-            if (!kernel.info) {
+            if (kernel.disposed || !kernel.info) {
                 return;
             }
             const editor = this.notebook.notebookEditors.find((item) => item.document === doc);
@@ -65,7 +69,23 @@ export class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
                 return;
             }
             disposable.dispose();
+            if (disposeHandler) {
+                disposeHandler.dispose();
+            }
             updateKernelInfoInNotebookMetadata(doc, kernel.info);
+
+            if (kernel.info.status === 'ok' && this.selection.kind === 'connectToLiveKernel') {
+                traceInfo(`Updating preferred kernel for remote notebook`);
+                this.preferredRemoteKernelIdProvider
+                    .storePreferredRemoteKernelId(doc.uri, this.selection.kernelModel.id)
+                    .catch(noop);
+            }
+        });
+        disposeHandler = kernel.onDisposed(() => {
+            if (disposeHandler) {
+                disposeHandler.dispose();
+            }
+            disposable.dispose();
         });
     }
 

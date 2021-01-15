@@ -222,6 +222,11 @@ function areKernelSpecsEqual(kernelSpec1?: IJupyterKernelSpec, kernelSpec2?: IJu
 }
 function areKernelModelsEqual(kernelModel1?: LiveKernelModel, kernelModel2?: LiveKernelModel) {
     if (kernelModel1 && kernelModel2) {
+        // When comparing kernel models, just compare the id. nothing else matters.
+        if (typeof kernelModel1.id === 'string' || typeof kernelModel2.id === 'string') {
+            return kernelModel1.id === kernelModel2.id;
+        }
+        // If we don't have ids, then compare the rest of the data (backwards compatibility).
         const model1 = cloneDeep(kernelModel1) as ReadWrite<LiveKernelModel>;
         model1.env = model1.env || {};
         model1.metadata = model1.metadata || {};

@@ -10,7 +10,12 @@ import * as vscode from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
 import { IPythonExtensionChecker } from '../../../api/types';
-import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../../common/application/types';
+import {
+    IApplicationShell,
+    ILiveShareApi,
+    IVSCodeNotebook,
+    IWorkspaceService
+} from '../../../common/application/types';
 import { isTestExecution } from '../../../common/constants';
 import { traceInfo } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
@@ -27,6 +32,7 @@ import * as localize from '../../../common/utils/localize';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
 import { Identifiers, LiveShare, LiveShareCommands, RegExpValues } from '../../constants';
+import { isResourceNativeNotebook } from '../../notebook/helpers/helpers';
 import { ProgressReporter } from '../../progress/progressReporter';
 import {
     IJupyterSession,
@@ -67,7 +73,8 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
         private readonly interpreterService: IInterpreterService,
         outputChannel: IOutputChannel,
         private readonly progressReporter: ProgressReporter,
-        private readonly extensionChecker: IPythonExtensionChecker
+        private readonly extensionChecker: IPythonExtensionChecker,
+        private readonly vscodeNotebook: IVSCodeNotebook
     ) {
         super(
             liveShare,
@@ -317,6 +324,8 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
         // Do this only if we don't have any kernel connection information, or the resource's interpreter is different.
         let changedKernel = false;
         if (
+            // For local connections this code path is not executed for native notebooks (hence only for remote).
+            (isResourceNativeNotebook(resource, this.vscodeNotebook) && !launchInfo.connectionInfo.localLaunch) ||
             !kernelConnection ||
             notebookMetadata?.kernelspec ||
             resourceInterpreter?.displayName !== launchInfo.kernelConnectionMetadata?.interpreter?.displayName

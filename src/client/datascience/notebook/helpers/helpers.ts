@@ -18,6 +18,7 @@ import type {
     NotebookKernel as VSCNotebookKernel
 } from '../../../../../typings/vscode-proposed';
 import { concatMultilineString, splitMultilineString } from '../../../../datascience-ui/common';
+import { IVSCodeNotebook } from '../../../common/application/types';
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../common/constants';
 import '../../../common/extensions';
 import { traceError, traceInfo, traceWarning } from '../../../common/logger';
@@ -37,6 +38,7 @@ import cloneDeep = require('lodash/cloneDeep');
 import { Uri } from 'vscode';
 import { VSCodeNotebookKernelMetadata } from '../kernelWithMetadata';
 import { chainWithPendingUpdates } from './notebookUpdater';
+import { Resource } from '../../../common/types';
 
 // This is the custom type we are adding into nbformat.IBaseCellMetadata
 export interface IBaseCellVSCodeMetadata {
@@ -71,6 +73,14 @@ const kernelInformationForNotebooks = new WeakMap<
     { metadata?: KernelConnectionMetadata | undefined; kernelInfo?: KernelMessage.IInfoReplyMsg['content'] }
 >();
 
+export function isResourceNativeNotebook(resource: Resource, notebooks: IVSCodeNotebook) {
+    if (!resource) {
+        return false;
+    }
+    return notebooks.notebookDocuments.some(
+        (item) => item.uri.toString().toLowerCase() === resource.toString().toLowerCase()
+    );
+}
 export function getNotebookMetadata(document: NotebookDocument): nbformat.INotebookMetadata | undefined {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let notebookContent: Partial<nbformat.INotebookContent> = document.metadata.custom as any;

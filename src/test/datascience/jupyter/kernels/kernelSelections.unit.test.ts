@@ -4,15 +4,18 @@
 'use strict';
 
 import { assert } from 'chai';
+import { teardown } from 'mocha';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
+import { EventEmitter } from 'vscode';
 import { PythonExtensionChecker } from '../../../../client/api/pythonApi';
 import { PYTHON_LANGUAGE } from '../../../../client/common/constants';
 import { FileSystem } from '../../../../client/common/platform/fileSystem';
 import { PathUtils } from '../../../../client/common/platform/pathUtils';
 import { IFileSystem } from '../../../../client/common/platform/types';
-import { IPathUtils } from '../../../../client/common/types';
+import { IDisposable, IPathUtils } from '../../../../client/common/types';
 import * as localize from '../../../../client/common/utils/localize';
 import { JupyterSessionManager } from '../../../../client/datascience/jupyter/jupyterSessionManager';
+import { JupyterSessionManagerFactory } from '../../../../client/datascience/jupyter/jupyterSessionManagerFactory';
 import { KernelSelectionProvider } from '../../../../client/datascience/jupyter/kernels/kernelSelections';
 import { KernelService } from '../../../../client/datascience/jupyter/kernels/kernelService';
 import { IKernelSpecQuickPickItem } from '../../../../client/datascience/jupyter/kernels/types';
@@ -20,6 +23,7 @@ import { IKernelFinder } from '../../../../client/datascience/kernel-launcher/ty
 import { IJupyterKernel, IJupyterKernelSpec, IJupyterSessionManager } from '../../../../client/datascience/types';
 import { IInterpreterQuickPickItem, IInterpreterSelector } from '../../../../client/interpreter/configuration/types';
 import { IInterpreterService } from '../../../../client/interpreter/contracts';
+import { disposeAllDisposables } from '../../notebook/helper';
 
 // eslint-disable-next-line
 suite('DataScience - KernelSelections', () => {
@@ -122,10 +126,17 @@ suite('DataScience - KernelSelections', () => {
             description: ''
         }
     ];
-
+    const disposableRegistry: IDisposable[] = [];
     setup(() => {
         interpreterSelector = mock<IInterpreterSelector>();
         sessionManager = mock(JupyterSessionManager);
+        const jupyterSessionManagerFactory = mock(JupyterSessionManagerFactory);
+        when(jupyterSessionManagerFactory.create(anything())).thenResolve(instance(sessionManager));
+        when(jupyterSessionManagerFactory.create(anything(), anything())).thenResolve(instance(sessionManager));
+        const eventEmitter = new EventEmitter<any>();
+        disposableRegistry.push(eventEmitter);
+        when(jupyterSessionManagerFactory.onRestartSessionCreated).thenReturn(eventEmitter.event);
+        when(jupyterSessionManagerFactory.onRestartSessionUsed).thenReturn(eventEmitter.event);
         kernelService = mock(KernelService);
         kernelFinder = mock<IKernelFinder>();
         fs = mock(FileSystem);
@@ -143,9 +154,12 @@ suite('DataScience - KernelSelections', () => {
             instance(fs),
             instance(pathUtils),
             instance(kernelFinder),
-            instance(extensionChecker)
+            instance(extensionChecker),
+            disposableRegistry,
+            instance(jupyterSessionManagerFactory)
         );
     });
+    teardown(() => disposeAllDisposables(disposableRegistry));
 
     test('Should return an empty list for remote kernels if there are none', async () => {
         when(kernelService.getKernelSpecs(instance(sessionManager), anything())).thenResolve([]);

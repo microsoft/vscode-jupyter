@@ -3,6 +3,7 @@
 
 'use strict';
 
+import { Kernel } from '@jupyterlab/services';
 import { inject, injectable } from 'inversify';
 import { cloneDeep } from 'lodash';
 import * as path from 'path';
@@ -11,7 +12,7 @@ import { IPythonExtensionChecker } from '../../../api/types';
 import { PYTHON_LANGUAGE } from '../../../common/constants';
 import { traceError, traceInfo } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
-import { IPathUtils, ReadWrite, Resource } from '../../../common/types';
+import { IDisposableRegistry, IPathUtils, ReadWrite, Resource } from '../../../common/types';
 import { createDeferredFromPromise } from '../../../common/utils/async';
 import * as localize from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
@@ -20,7 +21,7 @@ import { IInterpreterService } from '../../../interpreter/contracts';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../constants';
 import { IKernelFinder } from '../../kernel-launcher/types';
-import { IJupyterKernelSpec, IJupyterSessionManager } from '../../types';
+import { IJupyterKernelSpec, IJupyterSessionManager, IJupyterSessionManagerFactory } from '../../types';
 import { detectDefaultKernelName, isPythonKernelConnection } from './helpers';
 import { KernelService } from './kernelService';
 import {
@@ -93,7 +94,7 @@ function getQuickPickItemForKernelSpec(
  * @param {IPathUtils} pathUtils
  * @returns {IKernelSpecQuickPickItem}
  */
-function getQuickPickItemForActiveKernel(
+export function getQuickPickItemForActiveKernel(
     kernel: LiveKernelModel,
     pathUtils: IPathUtils
 ): IKernelSpecQuickPickItem<LiveKernelConnectionMetadata> {
@@ -180,14 +181,14 @@ export class InstalledJupyterKernelSelectionListProvider
                 selections.map(async (item) => {
                     const selection = item.selection as ReadWrite<KernelSpecConnectionMetadata>;
                     // Find matching interpreter for Python kernels.
-                    if (
-                        !selection.interpreter &&
-                        selection.kernelSpec &&
-                        selection.kernelSpec?.language === PYTHON_LANGUAGE.toLocaleLowerCase()
-                    ) {
+                    if (!selection.interpreter && selection.kernelSpec && isPythonKernelConnection(selection)) {
                         selection.interpreter = await this.kernelService.findMatchingInterpreter(selection.kernelSpec);
                     }
                     selection.interpreter = item.selection.interpreter || (await activeInterpreter);
+                    if (isPythonKernelConnection(selection)) {
+                        selection.kernelSpec.interpreterPath =
+                            selection.kernelSpec.interpreterPath || selection.interpreter?.path;
+                    }
                 })
             );
         }
@@ -250,6 +251,8 @@ export class InstalledRawKernelSelectionListProvider
                         selection.kernelSpec,
                         cancelToken
                     );
+                    selection.kernelSpec.interpreterPath =
+                        selection.kernelSpec.interpreterPath || selection.interpreter?.path;
                     return item;
                 })
         );
@@ -307,6 +310,15 @@ export class KernelSelectionProvider {
         LiveKernelConnectionMetadata | KernelSpecConnectionMetadata
     >[] = [];
     private _listChanged = new EventEmitter<Resource>();
+    /**
+     * List of ids of kernels that should be hidden from the kernel picker.
+     *
+     * @private
+     * @type {new Set<string>}
+     * @memberof KernelSelector
+     */
+    private readonly kernelIdsToHide = new Set<string>();
+
     public get onDidChangeSelections() {
         return this._listChanged.event;
     }
@@ -317,8 +329,40 @@ export class KernelSelectionProvider {
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IPathUtils) private readonly pathUtils: IPathUtils,
         @inject(IKernelFinder) private readonly kernelFinder: IKernelFinder,
-        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker
-    ) {}
+        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
+        @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
+
+        @inject(IJupyterSessionManagerFactory) private jupyterSessionManagerFactory: IJupyterSessionManagerFactory
+    ) {
+        disposableRegistry.push(
+            this.jupyterSessionManagerFactory.onRestartSessionCreated(this.addKernelToIgnoreList.bind(this))
+        );
+        disposableRegistry.push(
+            this.jupyterSessionManagerFactory.onRestartSessionUsed(this.removeKernelFromIgnoreList.bind(this))
+        );
+    }
+
+    /**
+     * Ensure kernels such as those associated with the restart session are not displayed in the kernel picker.
+     *
+     * @param {Kernel.IKernelConnection} kernel
+     * @memberof KernelSelector
+     */
+    public addKernelToIgnoreList(kernel: Kernel.IKernelConnection): void {
+        this.kernelIdsToHide.add(kernel.id);
+        this.kernelIdsToHide.add(kernel.clientId);
+    }
+    /**
+     * Opposite of the add counterpart.
+     *
+     * @param {Kernel.IKernelConnection} kernel
+     * @memberof KernelSelector
+     */
+    public removeKernelFromIgnoreList(kernel: Kernel.IKernelConnection): void {
+        this.kernelIdsToHide.delete(kernel.id);
+        this.kernelIdsToHide.delete(kernel.clientId);
+    }
+
     /**
      * Gets a selection of kernel specs from a remote session.
      *
@@ -357,7 +401,8 @@ export class KernelSelectionProvider {
         // If we have something in cache, return that, while fetching in the background.
         const cachedItems =
             this.remoteSuggestionsCache.length > 0 ? Promise.resolve(this.remoteSuggestionsCache) : liveItems;
-        return Promise.race([cachedItems, liveItems]);
+        const selections = await Promise.race([cachedItems, liveItems]);
+        return selections.filter((item) => !this.kernelIdsToHide.has(item.selection.kernelModel?.id || ''));
     }
     /**
      * Gets a selection of kernel specs for a local session.

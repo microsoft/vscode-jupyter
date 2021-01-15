@@ -986,7 +986,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
             }
         } catch (exc) {
             traceError(`Exception attempting to start notebook: `, exc);
-            // We should dispose ourselves if the load fails. Othewise the user
+            // We should dispose ourselves if the load fails. Otherwise the user
             // updates their install and we just fail again because the load promise is the same.
             await this.closeBecauseOfFailure(exc);
 

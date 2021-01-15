@@ -8,7 +8,7 @@ import { Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
 import { IPythonExtensionChecker } from '../../api/types';
-import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../common/application/types';
+import { IApplicationShell, ILiveShareApi, IVSCodeNotebook, IWorkspaceService } from '../../common/application/types';
 import '../../common/extensions';
 import { IFileSystem } from '../../common/platform/types';
 
@@ -56,7 +56,8 @@ type JupyterServerClassType = {
         interpreterService: IInterpreterService,
         outputChannel: IOutputChannel,
         progressReporter: ProgressReporter,
-        extensionChecker: IPythonExtensionChecker
+        extensionChecker: IPythonExtensionChecker,
+        vscodeNotebook: IVSCodeNotebook
     ): IJupyterServerInterface;
 };
 /* eslint-enable @typescript-eslint/prefer-function-type */
@@ -85,7 +86,8 @@ export class JupyterServerWrapper implements INotebookServer, ILiveShareHasRole 
         @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) jupyterOutput: IOutputChannel,
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
         @inject(ProgressReporter) progressReporter: ProgressReporter,
-        @inject(IPythonExtensionChecker) extensionChecker: IPythonExtensionChecker
+        @inject(IPythonExtensionChecker) extensionChecker: IPythonExtensionChecker,
+        @inject(IVSCodeNotebook) vscodeNotebook: IVSCodeNotebook
     ) {
         // The server factory will create the appropriate HostJupyterServer or GuestJupyterServer based on
         // the liveshare state.
@@ -107,7 +109,8 @@ export class JupyterServerWrapper implements INotebookServer, ILiveShareHasRole 
             interpreterService,
             jupyterOutput,
             progressReporter,
-            extensionChecker
+            extensionChecker,
+            vscodeNotebook
         );
     }
 

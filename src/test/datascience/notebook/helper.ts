@@ -17,6 +17,7 @@ import {
     NotebookContentProvider as VSCNotebookContentProvider,
     NotebookDocument
 } from '../../../../typings/vscode-proposed';
+import { ReloadVSCodeCommandHandler } from '../../../client/common/application/commands/reloadCommand';
 import { IApplicationEnvironment, IApplicationShell, IVSCodeNotebook } from '../../../client/common/application/types';
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { traceInfo } from '../../../client/common/logger';
@@ -31,6 +32,7 @@ import { createDeferred } from '../../../client/common/utils/async';
 import { swallowExceptions } from '../../../client/common/utils/misc';
 import { CellExecution } from '../../../client/datascience/jupyter/kernels/cellExecution';
 import { IKernelProvider } from '../../../client/datascience/jupyter/kernels/types';
+import { JupyterServerSelector } from '../../../client/datascience/jupyter/serverSelector';
 import { JupyterNotebookView } from '../../../client/datascience/notebook/constants';
 import {
     LastSavedNotebookCellLanguage,
@@ -43,9 +45,10 @@ import { INotebookContentProvider } from '../../../client/datascience/notebook/t
 import { VSCodeNotebookModel } from '../../../client/datascience/notebookStorage/vscNotebookModel';
 import { INotebookEditorProvider, INotebookProvider, ITrustService } from '../../../client/datascience/types';
 import { createEventHandler, sleep, waitForCondition } from '../../common';
-import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_SMOKE_TEST } from '../../constants';
+import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST, IS_SMOKE_TEST } from '../../constants';
 import { noop } from '../../core';
 import { closeActiveWindows, initialize, isInsiders } from '../../initialize';
+import { JupyterServer } from '../jupyterServer';
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
 async function getServices() {
@@ -293,7 +296,22 @@ export async function trustAllNotebooks() {
     }
     (<any>dsSettings).alwaysTrustNotebooks = true;
 }
-export async function startJupyter(closeInitialEditor: boolean) {
+
+export async function useRemoteJupyterServer() {
+    const { serviceContainer } = await getServices();
+    const disposable = await ignoreReloadingVSCode();
+    const selector = serviceContainer.get<JupyterServerSelector>(JupyterServerSelector);
+    if (IS_REMOTE_NATIVE_TEST) {
+        const uri = await JupyterServer.instance.startJupyterWithToken();
+        await selector.setJupyterURIToRemote(decodeURIComponent(uri.toString()));
+    } else {
+        await selector.setJupyterURIToLocal();
+    }
+    disposable.dispose();
+}
+
+export async function startJupyter() {
+    await useRemoteJupyterServer();
     const { editorProvider, vscodeNotebook, serviceContainer } = await getServices();
     await closeActiveWindows();
 
@@ -311,12 +329,7 @@ export async function startJupyter(closeInitialEditor: boolean) {
         await executeActiveDocument();
         // Wait for Jupyter to start.
         await waitForExecutionCompletedSuccessfully(cell, 60_000);
-
-        if (closeInitialEditor) {
-            await closeActiveWindows();
-        } else {
-            await deleteCell(0);
-        }
+        await closeActiveWindows();
     } finally {
         disposables.forEach((d) => d.dispose());
     }
@@ -614,4 +627,29 @@ export async function hijackPrompt(
         displayed: displayed.promise,
         clickButton: (text?: string) => clickButton.resolve(text || buttonToClick?.text)
     };
+}
+
+/**
+ * Ability to stub prompts for VS Code tests.
+ * We can confirm prompt was displayed & invoke a button click.
+ */
+export async function ignoreReloadingVSCode(
+    disposables: IDisposable[] = []
+): Promise<{
+    dispose: Function;
+}> {
+    try {
+        // tslint:disable-next-line: no-function-expression
+        const stub = sinon.stub(ReloadVSCodeCommandHandler.prototype, 'onReloadVSCode').callsFake(noop as any);
+        const disposable = { dispose: () => stub.restore() };
+        if (disposables) {
+            disposables.push(disposable);
+        }
+        return disposable;
+    } catch {
+        // Possible we have already stubbed this.
+        // Don't care, we just don't want to reload VSC at all.
+        // Hence we can ignore the errors.
+        return { dispose: noop };
+    }
 }

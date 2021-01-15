@@ -1,4 +1,4 @@
-# This yml is used for PRs, insiders build, and release build. 
+# This yml is used for PRs, insiders build, and release build.
 # We use the github.event_name to determine what started the workflow to determine which
 # situation we are in.
 
@@ -293,14 +293,14 @@ jobs:
         uses: ./.github/actions/set-python
         id: set-python
         if: env.conda_python == ''
-        with: 
+        with:
           PYTHON_VERSION: ${{matrix.python}}
 
       - name: Set CI Path for Conda
         uses: ./.github/actions/set-python-conda
         id: set-python-conda
         if: env.conda_python
-        with: 
+        with:
           PYTHON_VERSION: ${{matrix.python}}
 
       - name: Upgrade pip
@@ -492,7 +492,7 @@ jobs:
         python: [3.8] # Use flaky tests to run against more versions of Python.
         # integration: Tests with VS Code, Python extension & real Jupyter
         # notebook: Notebook Tests with VS Code, Python extension & real Jupyter
-        test-suite: [integration, notebook, notebookWithoutPythonExt, conda]
+        test-suite: [integration, notebook, remoteNotebook, notebookWithoutPythonExt, conda]
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -515,14 +515,14 @@ jobs:
         uses: ./.github/actions/set-python
         id: set-python
         if: matrix.test-suite != 'conda'
-        with: 
+        with:
           PYTHON_VERSION: ${{matrix.python}}
 
       - name: Set CI Path for Conda
         uses: ./.github/actions/set-python-conda
         id: set-python-conda
         if: matrix.test-suite == 'conda'
-        with: 
+        with:
           PYTHON_VERSION: ${{matrix.python}}
 
 
@@ -645,17 +645,17 @@ jobs:
         uses: actions/setup-dotnet@v1
         with:
           dotnet-version: ${{env.DOTNET_VERSION}}
-        if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook' || matrix.test-suite == 'conda'
+        if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook' || matrix.test-suite == 'remoteNotebook' || matrix.test-suite == 'conda'
 
       - name: Install .NET Interactive
         shell: bash -l {0}
         run: dotnet tool install -g --add-source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json" Microsoft.dotnet-interactive
-        if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook' || matrix.test-suite == 'conda'
+        if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook' || matrix.test-suite == 'remoteNotebook' || matrix.test-suite == 'conda'
 
       - name: Install .NET Kernel
         shell: bash -l {0}
         run: dotnet interactive jupyter install
-        if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook' || matrix.test-suite == 'conda'
+        if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook' || matrix.test-suite == 'remoteNotebook' || matrix.test-suite == 'conda'
 
       - name: Install Julia
         uses: julia-actions/setup-julia@v1
@@ -670,7 +670,7 @@ jobs:
 
       - name: Create Virtual Env for Tests
         uses: ./.github/actions/create-venv-for-tests
-        if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook'
+        if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook' || matrix.test-suite == 'remoteNotebook'
 
       - name: Run tests with VSCode & Jupyter
         uses: GabrielBB/xvfb-action@v1.4
@@ -705,6 +705,21 @@ jobs:
         id: test_notebook_vscode
         if: matrix.test-suite == 'notebook' || matrix.test-suite == 'conda'
 
+      - name: Run Remote Native Notebook with VSCode & Jupyter
+        uses: GabrielBB/xvfb-action@v1.4
+        with:
+          run: npm run testNativeNotebooksInVSCode
+        env:
+          VSC_FORCE_REAL_JUPYTER: 1
+          VSC_JUPYTER_FORCE_LOGGING: 1
+          VSC_PYTHON_FORCE_LOGGING: 1
+          VSC_JUPYTER_REMOTE_NATIVE_TEST: 1
+          VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
+          VSC_JUPYTER_CI_RUN_JAVA_NB_TEST: ${{ contains(matrix.test-suite, 'conda') }}
+          VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
+        id: test_remote_notebook_vscode
+        if: matrix.test-suite == 'remoteNotebook' || matrix.test-suite == 'conda'
+
       - name: Publish Notebook Test Report
         uses: scacap/action-surefire-report@v1
         with:
@@ -712,6 +727,14 @@ jobs:
           report_paths: ${{ env.TEST_RESULTS_GLOB }}
           check_name: Notebook Test Report
         if: steps.test_notebook_vscode.outcome == 'failure' && failure()
+
+      - name: Publish Remote Notebook Test Report
+        uses: scacap/action-surefire-report@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          report_paths: ${{ env.TEST_RESULTS_GLOB }}
+          check_name: Remote Notebook Test Report
+        if: steps.test_remote_notebook_vscode.outcome == 'failure' && failure()
 
       - name: Run Native Notebook with VSCode & Jupyter (without Python)
         uses: GabrielBB/xvfb-action@v1.4
@@ -750,7 +773,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     if: github.repository == 'microsoft/vscode-jupyter'
     needs: [build-vsix, pick_environment]
-    env: 
+    env:
       VSIX_NAME: ${{ needs.pick_environment.outputs.vsix_name }}
     strategy:
       fail-fast: false
@@ -769,7 +792,7 @@ jobs:
       - name: Set CI Path
         uses: ./.github/actions/set-python
         id: set-python
-        with: 
+        with:
           PYTHON_VERSION: ${{matrix.python}}
 
       - name: Upgrade pip

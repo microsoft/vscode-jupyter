@@ -150,7 +150,6 @@ suite('DataScience - Notebook Commands', () => {
                     instance(kernelFinder),
                     instance(jupyterSessionManagerFactory),
                     instance(configService),
-                    [],
                     instance(extensionChecker),
                     instance(preferredKernelIdProvider)
                 );
