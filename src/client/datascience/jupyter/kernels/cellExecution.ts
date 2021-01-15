@@ -13,11 +13,12 @@ import type {
     NotebookEditor as VSCNotebookEditor
 } from '../../../../../types/vscode-proposed';
 import { concatMultilineString, formatStreamText } from '../../../../datascience-ui/common';
+import { ServerStatus } from '../../../../datascience-ui/interactive-common/mainState';
 import { IApplicationShell, IVSCodeNotebook } from '../../../common/application/types';
 import { traceError, traceErrorIf, traceInfoIf, traceWarning } from '../../../common/logger';
 import { RefBool } from '../../../common/refBool';
 import { IDisposable, IExtensionContext } from '../../../common/types';
-import { createDeferred, Deferred } from '../../../common/utils/async';
+import { createDeferred, Deferred, waitForPromise } from '../../../common/utils/async';
 import { swallowExceptions } from '../../../common/utils/decorators';
 import { noop } from '../../../common/utils/misc';
 import { StopWatch } from '../../../common/utils/stopWatch';
@@ -45,7 +46,8 @@ import {
     IJupyterSession,
     INotebook,
     INotebookEditorProvider,
-    INotebookExecutionLogger
+    INotebookExecutionLogger,
+    InterruptResult
 } from '../../types';
 import { translateCellFromNative } from '../../utils';
 import { IKernel } from './types';
@@ -118,6 +120,7 @@ export class CellExecution {
     private disposables: IDisposable[] = [];
     private cancelHandled = false;
     private requestHandlerChain = Promise.resolve();
+    private activeExecutions: { execution: Promise<void>; session: IJupyterSession }[] = [];
     private constructor(
         public readonly editor: VSCNotebookEditor,
         public readonly cell: NotebookCell,
@@ -163,6 +166,23 @@ export class CellExecution {
             isPythonKernelConnection,
             context
         );
+    }
+
+    public async interrupt(timeoutMs: number): Promise<InterruptResult> {
+        // Go through our active executions and interrupt each one.
+        const results = await Promise.all(
+            this.activeExecutions.map((a) => this.interruptExecution(a.session, a.execution, timeoutMs))
+        );
+
+        // Flatten the results
+        if (results.includes(InterruptResult.Restarted)) {
+            return InterruptResult.Restarted;
+        }
+        if (results.includes(InterruptResult.TimedOut)) {
+            return InterruptResult.TimedOut;
+        }
+
+        return InterruptResult.Success;
     }
 
     public async start(kernelPromise: Promise<IKernel>, notebook: INotebook) {
@@ -232,6 +252,62 @@ export class CellExecution {
         const deferred = CellExecution.cellsCompletedForTesting.get(this.cell);
         if (deferred) {
             deferred.resolve();
+        }
+    }
+
+    private async interruptExecution(
+        session: IJupyterSession,
+        execution: Promise<void>,
+        timeoutMS: number
+    ): Promise<InterruptResult> {
+        // Create a deferred promise that resolves if we have a failure
+        const restarted = createDeferred<boolean>();
+
+        // Listen to status change events so we can tell if we're restarting
+        const restartHandler = (e: ServerStatus) => {
+            if (e === ServerStatus.Restarting) {
+                // We restarted the kernel.
+                traceWarning('Kernel restarting during interrupt');
+
+                // Indicate we restarted the race below
+                restarted.resolve(true);
+            }
+        };
+        const restartHandlerToken = session.onSessionStatusChanged(restartHandler);
+
+        // Start our interrupt. If it fails, indicate a restart
+        session.interrupt(timeoutMS).catch((exc) => {
+            traceWarning(`Error during interrupt: ${exc}`);
+            restarted.resolve(true);
+        });
+
+        try {
+            // Wait for all of the pending cells to finish or the timeout to fire
+            const result = await waitForPromise(Promise.race([execution, restarted.promise]), timeoutMS);
+
+            // See if we restarted or not
+            if (restarted.completed) {
+                return InterruptResult.Restarted;
+            }
+
+            if (result === null) {
+                // We timed out. You might think we should stop our pending list, but that's not
+                // up to us. The cells are still executing. The user has to request a restart or try again
+                return InterruptResult.TimedOut;
+            }
+
+            // Indicate the interrupt worked.
+            return InterruptResult.Success;
+        } catch (exc) {
+            // Something failed. See if we restarted or not.
+            if (restarted.completed) {
+                return InterruptResult.Restarted;
+            }
+
+            // Otherwise a real error occurred.
+            throw exc;
+        } finally {
+            restartHandlerToken.dispose();
         }
     }
     private handleKernelRestart(kernel: IKernel) {
@@ -394,7 +470,9 @@ export class CellExecution {
     private async execute(session: IJupyterSession, loggers: INotebookExecutionLogger[]) {
         const code = this.cell.document.getText();
         traceCellMessage(this.cell, 'Send code for execution');
-        return this.executeCodeCell(code, session, loggers);
+        const execution = this.executeCodeCell(code, session, loggers);
+        this.activeExecutions.push({ execution, session });
+        await execution;
     }
 
     private async executeCodeCell(code: string, session: IJupyterSession, loggers: INotebookExecutionLogger[]) {

@@ -16,6 +16,7 @@ import {
     IDataScienceErrorHandler,
     INotebook,
     INotebookEditorProvider,
+    InterruptResult,
     IRawNotebookSupportedService
 } from '../../types';
 import { CellExecution, CellExecutionFactory } from './cellExecution';
@@ -171,6 +172,33 @@ export class KernelExecution implements IDisposable {
         }
         traceInfo('Cancel document execution');
         document.cells.forEach((cell) => this.cancelCell(cell));
+    }
+
+    public async interruptCell(cell: NotebookCell, timeoutMs: number): Promise<InterruptResult> {
+        const execution = this.cellExecutions.get(cell);
+        if (execution) {
+            this.cellExecutions.delete(cell);
+            traceCellMessage(cell, 'Cancel cell from Kernel Execution');
+            return execution.interrupt(timeoutMs);
+        } else {
+            traceCellMessage(cell, 'Cannot cancel cell execution from Kernel Execution');
+        }
+
+        return InterruptResult.Success;
+    }
+    public async interruptAllCells(document: NotebookDocument, timeoutMs: number): Promise<InterruptResult> {
+        traceInfo('Interrupt document execution');
+        const results = await Promise.all(document.cells.map((cell) => this.interruptCell(cell, timeoutMs)));
+
+        // Flatten the results
+        if (results.includes(InterruptResult.Restarted)) {
+            return InterruptResult.Restarted;
+        }
+        if (results.includes(InterruptResult.TimedOut)) {
+            return InterruptResult.TimedOut;
+        }
+
+        return InterruptResult.Success;
     }
     public dispose() {
         this.disposables.forEach((d) => d.dispose());
