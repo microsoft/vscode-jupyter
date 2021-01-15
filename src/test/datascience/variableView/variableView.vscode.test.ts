@@ -26,6 +26,7 @@ import { OnMessageListener } from '../vscodeTestHelpers';
 import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { verifyViewVariables } from './variableViewHelpers';
 import { ITestVariableViewProvider } from './variableViewTestInterfaces';
+import { ITestWebviewHost } from '../testInterfaces';
 
 suite('DataScience - VariableView', () => {
     let api: IExtensionTestApi;
@@ -81,7 +82,9 @@ suite('DataScience - VariableView', () => {
         await commandManager.executeCommand(Commands.OpenVariableView);
 
         // Aquire the variable view from the provider
-        const variableView = await variableViewProvider.activeVariableView;
+        const coreVariableView = await variableViewProvider.activeVariableView;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const variableView = (coreVariableView as any) as ITestWebviewHost;
 
         // Add our message listener
         const onMessageListener = new OnMessageListener(variableView);

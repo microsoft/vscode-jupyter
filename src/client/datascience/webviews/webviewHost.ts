@@ -91,7 +91,8 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
 
     // This function is used for testing webview by fetching HTML from the webview via a message
     @testOnlyMethod
-    public getHTMLById(id: string): Promise<string> {
+    // @ts-ignore Property will be accessed in test code via casting to ITestWebviewHost
+    private getHTMLById(id: string): Promise<string> {
         if (!this.activeHTMLRequest) {
             this.activeHTMLRequest = createDeferred<string>();
             this.postMessageInternal(InteractiveWindowMessages.GetHTMLByIdRequest, id).ignoreErrors();
@@ -105,14 +106,16 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
     // For testing add a callback listening to messages from the webview
     // tslint:disable-next-line:no-any
     @testOnlyMethod
-    public addMessageListener(callback: (message: string, payload: any) => void) {
+    // @ts-ignore Property will be accessed in test code via casting to ITestWebviewHost
+    private addMessageListener(callback: (message: string, payload: any) => void) {
         this.onMessageListeners.push(callback);
     }
 
     // For testing remove a callback listening to messages from the webview
     // tslint:disable-next-line:no-any
     @testOnlyMethod
-    public removeMessageListener(callback: (message: string, payload: any) => void) {
+    // @ts-ignore Property will be accessed in test code via casting to ITestWebviewHost
+    private removeMessageListener(callback: (message: string, payload: any) => void) {
         const index = this.onMessageListeners.indexOf(callback);
         if (index >= 0) {
             this.onMessageListeners.splice(index, 1);
