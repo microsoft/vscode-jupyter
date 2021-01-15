@@ -5,6 +5,7 @@ const plugin = require('@octokit/plugin-paginate-rest');
 const webhooks = require('@octokit/webhooks');
 
 async function run() {
+    core.debug('Running ignore checker ...');
     try {
         // Get the eslint configuration
         const eslintjrc = require('../../../.eslintrc.js');
@@ -30,6 +31,8 @@ async function run() {
         }
     } catch (error) {
         core.setFailed(error.message);
+    } finally {
+        core.debug('Finished.');
     }
 }
 
