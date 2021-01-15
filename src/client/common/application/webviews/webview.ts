@@ -93,7 +93,8 @@ export abstract class Webview implements IWebview {
             )
             .toString();
 
-        const forceTestMiddleware = process.env.VSC_JUPYTER_WEBVIEW_TEST_MIDDLEWARE;
+        // Check to see if we should force on Test middleware for our react code
+        const forceTestMiddleware = process.env.VSC_JUPYTER_WEBVIEW_TEST_MIDDLEWARE || 'false';
         return `<!doctype html>
         <html lang="en">
             <head>

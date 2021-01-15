@@ -89,41 +89,41 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
         }
     }
 
-    // This function is used for testing webview by fetching HTML from the webview
-    // only to be use for testing
+    // This function is used for testing webview by fetching HTML from the webview via a message
     public getHTMLById(id: string): Promise<string> {
         // Test only
-        //if (!isTestExecution()) {
-        //throw new Error('getHTMLById to be run only in test code');
-        //}
+        if (!isTestExecution()) {
+            throw new Error('getHTMLById to be run only in test code');
+        }
 
         if (!this.activeHTMLRequest) {
             this.activeHTMLRequest = createDeferred<string>();
             this.postMessageInternal(InteractiveWindowMessages.GetHTMLByIdRequest, id).ignoreErrors();
         } else {
-            // No localization for test only fuction
             throw new Error('getHTMLById request already in progress');
         }
 
         return this.activeHTMLRequest.promise;
     }
 
+    // For testing add a callback listening to messages from the webview
     // tslint:disable-next-line:no-any
     public addMessageListener(callback: (message: string, payload: any) => void) {
         // Test only
-        //if (!isTestExecution()) {
-        //throw new Error('getHTMLById to be run only in test code');
-        //}
+        if (!isTestExecution()) {
+            throw new Error('addMessageListener to be run only in test code');
+        }
 
         this.onMessageListeners.push(callback);
     }
 
+    // For testing remove a callback listening to messages from the webview
     // tslint:disable-next-line:no-any
     public removeMessageListener(callback: (message: string, payload: any) => void) {
         // Test only
-        //if (!isTestExecution()) {
-        //throw new Error('getHTMLById to be run only in test code');
-        //}
+        if (!isTestExecution()) {
+            throw new Error('removeMessageListener to be run only in test code');
+        }
         const index = this.onMessageListeners.indexOf(callback);
         if (index >= 0) {
             this.onMessageListeners.splice(index, 1);

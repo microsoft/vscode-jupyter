@@ -31,7 +31,6 @@
                 "XVSC_JUPYTER_LOG_TELEMETRY": "1",
                 // Enable this to log IPYWIDGET messages
                 "VSC_JUPYTER_LOG_IPYWIDGETS": "1",
-                "VSC_JUPYTER_WEBVIEW_TEST_MIDDLEWARE": "true", // Initialize to create the webview test middleware
                 // Enable this to log debugger output. Directory must exist ahead of time
                 "XDEBUGPY_LOG_DIR": "${workspaceRoot}/tmp/Debug_Output_Ex"
             },

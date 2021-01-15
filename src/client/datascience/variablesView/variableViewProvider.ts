@@ -5,6 +5,7 @@
 import { inject, injectable, named } from 'inversify';
 import { CancellationToken, WebviewView, WebviewViewResolveContext } from 'vscode';
 import { IApplicationShell, IWebviewViewProvider, IWorkspaceService } from '../../common/application/types';
+import { isTestExecution } from '../../common/constants';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { Identifiers } from '../constants';
@@ -20,9 +21,9 @@ export class VariableViewProvider implements IVariableViewProvider {
 
     public get activeVariableView(): Promise<VariableView> {
         // For test execution only
-        //if (!isTestExecution()) {
-        //throw new Error('activeVariableView only accessible from test code');
-        //}
+        if (!isTestExecution()) {
+            throw new Error('activeVariableView only accessible from test code');
+        }
 
         // If we have already created the view, then just return it
         if (this.variableView) {
@@ -33,38 +34,7 @@ export class VariableViewProvider implements IVariableViewProvider {
         this.activeVariableViewPromise = createDeferred<VariableView>();
         return this.activeVariableViewPromise.promise;
     }
-
     private activeVariableViewPromise?: Deferred<VariableView>;
-
-    // Just for test execution allow for accessing the VariableView off of the provider
-    //public get activeVariableView(): VariableView | undefined {
-    ////if (!isTestExecution()) {
-    ////throw new Error('activeVariableView only accessible from test code');
-    ////}
-
-    //return this.variableView;
-    //}
-
-    //public get onDidResolveWebview(): Event<VariableView> {
-    ////if (!isTestExecution()) {
-    ////throw new Error('Access only for tests');
-    ////}
-    //return this._onDidResolveWebview.event;
-    //}
-    //private readonly _onDidResolveWebview = new EventEmitter<VariableView>();
-
-    //public get onDidChangeActiveVariableViewNotebook(): Event<INotebook | undefined> {
-    //return this._onDidChangeActiveVariableViewNotebook.event;
-    //}
-    //public get onDidExecuteActiveVariableViewNotebook(): Event<{ executionCount: number }> {
-    //return this._onDidExecuteActiveVariableViewNotebook.event;
-    //}
-    //public get activeVariableViewNotebook(): INotebook | undefined {
-    //return this.notebookEditorProvider.activeEditor?.notebook;
-    //}
-
-    //private readonly _onDidExecuteActiveVariableViewNotebook = new EventEmitter<{ executionCount: number }>();
-    //private readonly _onDidChangeActiveVariableViewNotebook = new EventEmitter<INotebook | undefined>();
 
     private variableView?: VariableView;
 
@@ -105,6 +75,7 @@ export class VariableViewProvider implements IVariableViewProvider {
             this.notebookWatcher
         );
 
+        // If someone is waiting for the variable view resolve that here
         if (this.activeVariableViewPromise) {
             this.activeVariableViewPromise.resolve(this.variableView);
         }
