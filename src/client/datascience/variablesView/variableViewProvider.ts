@@ -3,9 +3,8 @@
 'use strict';
 
 import { inject, injectable, named } from 'inversify';
-import { CancellationToken, Event, EventEmitter, WebviewView, WebviewViewResolveContext } from 'vscode';
+import { CancellationToken, WebviewView, WebviewViewResolveContext } from 'vscode';
 import { IApplicationShell, IWebviewViewProvider, IWorkspaceService } from '../../common/application/types';
-import { isTestExecution } from '../../common/constants';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { Identifiers } from '../constants';

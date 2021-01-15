@@ -1,13 +1,10 @@
-// tslint:disable:no-console
-// IANHU: remove no-console
-import { assert, expect } from 'chai';
+import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { ICommandManager, IVSCodeNotebook } from '../../../client/common/application/types';
 import { IDisposable } from '../../../client/common/types';
 import { Commands, VSCodeNotebookProvider } from '../../../client/datascience/constants';
 import { IVariableViewProvider } from '../../../client/datascience/variablesView/types';
 import { IExtensionTestApi } from '../../common';
-import { sleep } from '../../core';
 import { initialize } from '../../initialize';
 import {
     canRunNotebookTests,
@@ -22,7 +19,7 @@ import {
     waitForKernelToGetAutoSelected
 } from '../notebook/helper';
 import { INotebookEditorProvider } from '../../../client/datascience/types';
-import { OnMessageListener, OnMessageWrapper } from '../vscodeTestHelpers';
+import { OnMessageListener } from '../vscodeTestHelpers';
 import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { verifyViewVariables } from './variableViewHelpers';
 
@@ -93,7 +90,6 @@ suite('DataScience - VariableView', () => {
 
         const htmlResult = await variableView?.getHTMLById('variable-view-main-panel');
 
-        //const viewVariables = parseVariableViewHTML(htmlResult);
         const expectedVariables = [
             { name: 'test', type: 'str', length: '11', value: ' MYTESTVALUE' },
             { name: 'test2', type: 'str', length: '12', value: ' MYTESTVALUE2' }
