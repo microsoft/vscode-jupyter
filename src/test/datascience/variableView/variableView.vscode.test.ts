@@ -75,7 +75,7 @@ suite('DataScience - VariableView', () => {
         await waitForExecutionCompletedSuccessfully(cell);
 
         // Send the command to open the view
-        commandManager.executeCommand(Commands.OpenVariableView);
+        await commandManager.executeCommand(Commands.OpenVariableView);
 
         // Aquire the variable view from the provider
         const variableView = await variableViewProvider.activeVariableView;

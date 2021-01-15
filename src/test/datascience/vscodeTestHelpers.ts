@@ -5,7 +5,9 @@ import { createDeferred } from '../../client/common/utils/async';
 
 // Basic shape that something needs to support to hook up to this
 interface IOnMessageListener {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     addMessageListener(callback: (message: string, payload: any) => void): void;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     removeMessageListener(callback: (message: string, payload: any) => void): void;
 }
 
@@ -27,7 +29,7 @@ export type WaitForMessageOptions = {
 
     // Optional check for the payload of the message
     // will only return (or count) message if this returns true
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     withPayload?(payload: any): boolean;
 };
 
@@ -45,6 +47,7 @@ export class OnMessageListener {
 
         const promise = createDeferred<void>();
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         let handler: (m: string, p: any) => void;
         const timer = timeoutMs
             ? setTimeout(() => {
@@ -56,6 +59,7 @@ export class OnMessageListener {
         let timesMessageReceived = 0;
         const dispatchedAction = `DISPATCHED_ACTION_${message}`;
         // Create the handler that we will hook up to the on message listener
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         handler = (m: string, payload: any) => {
             if (m === message || m === dispatchedAction) {
                 // First verify the payload matches
@@ -93,11 +97,13 @@ export class OnMessageListener {
     }
 
     // Add the callback on the target
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public addMessageListener(callback: (m: string, p: any) => void) {
         this.target.addMessageListener(callback);
     }
 
     // Remove the callback on the target
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public removeMessageListener(callback: (m: string, p: any) => void) {
         this.target.removeMessageListener(callback);
     }
