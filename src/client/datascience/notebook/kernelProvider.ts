@@ -407,9 +407,6 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
             getOnly: true
         });
 
-        //         if (!this.isLocalLaunch() && selectedKernelConnectionMetadata.kind === 'connectToLiveKernel'){
-        // this.preferredRemoteKernelIdProvider.storePreferredRemoteKernelId(document.uri, selectedKernelConnectionMetadata.kernelModel.)
-        //         }
         // If we have a notebook, change its kernel now
         if (notebook) {
             if (!this.notebookKernelChangeHandled.has(notebook)) {
