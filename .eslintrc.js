@@ -6,7 +6,7 @@ It represents the closest reasonable ESLint configuration to this
 project's original TSLint configuration.
 
 We recommend eventually switching this configuration to extend from
-the recommended rulesets in typescript-eslint. 
+the recommended rulesets in typescript-eslint.
 https://github.com/typescript-eslint/tslint-to-eslint-config/blob/master/docs/FAQs.md
 
 Happy linting! 💖
@@ -978,7 +978,6 @@ module.exports = {
         'src/client/datascience/progress/types.ts',
         'src/client/datascience/progress/decorator.ts',
         'src/client/datascience/codeCssGenerator.ts',
-        'src/client/datascience/kernel-launcher/helpers.ts',
         'src/client/datascience/kernel-launcher/kernelFinder.ts',
         'src/client/datascience/kernel-launcher/kernelProcess.ts',
         'src/client/datascience/kernel-launcher/types.ts',
