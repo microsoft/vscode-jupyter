@@ -81,7 +81,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 dataShape: data.dataShape,
                 shouldShowSliceDataButton: false
             };
-            
+
             // Fire off a timer to mimic dynamic loading
             setTimeout(() => this.handleGetAllRowsResponse(data.rows), 1000);
         } else {
@@ -220,7 +220,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 const totalRowCount = variable.rowCount ? variable.rowCount : 0;
                 const initialRows: ISlickRow[] = [];
                 const indexColumn = variable.indexColumn ? variable.indexColumn : 'index';
-
 
                 this.setState({
                     gridColumns: columns,

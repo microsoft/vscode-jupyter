@@ -293,8 +293,8 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
 
         return (
             <div className="outer-container">
-                <div style={{display: 'flex', justifyContent: 'start', flexDirection: 'row' }}>
-                    <div style={{display: 'flex', justifyContent: 'space-around'}}>
+                <div style={{ display: 'flex', justifyContent: 'start', flexDirection: 'row' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-around' }}>
                         <button
                             className="react-grid-filter-button"
                             tabIndex={0}
@@ -314,58 +314,73 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
     }
 
     public renderSliceDataButton = () => {
-        if (this.props.shouldShowSliceDataButton && this.props.dataDimensionionality===3) {
-            return (<button
-                className="react-grid-filter-button"
-                title={getLocString('DataScience.sliceDataTooltip', 'View and slice 3-dimensional data')} 
-                onClick={this.toggleSliceMenu}
-            >
-                <span>{getLocString('DataScience.sliceDataButton', 'Slice Data')}</span>
-            </button>);
+        if (this.props.shouldShowSliceDataButton && this.props.dataDimensionionality === 3) {
+            return (
+                <button
+                    className="react-grid-filter-button"
+                    title={getLocString('DataScience.sliceDataTooltip', 'View and slice 3-dimensional data')}
+                    onClick={this.toggleSliceMenu}
+                >
+                    <span>{getLocString('DataScience.sliceDataButton', 'Slice Data')}</span>
+                </button>
+            );
         }
-    }
+    };
 
     public renderSliceControls = () => {
         if (this.state.isSlicing) {
             const axisOptions = [];
             for (let i = 0; i < this.props.dataDimensionionality; i += 1) {
-                axisOptions.push({value: i, label: i.toString()});
+                axisOptions.push({ value: i, label: i.toString() });
             }
             const indexOptions = [];
             for (let i = 0; i < this.props.totalRowCount; i += 1) {
-                indexOptions.push({value: i, label: i.toString()});
+                indexOptions.push({ value: i, label: i.toString() });
             }
-    
+
             return (
-                <div style={{display: 'flex', justifyContent: 'space-around'}}>
-                    <div className="slice-data-control-container" style={{display: 'flex', justifyContent: 'space-around'}}>
-                        <span style={{alignSelf: "center"}}>Axis:</span>
+                <div style={{ display: 'flex', justifyContent: 'space-around' }}>
+                    <div
+                        className="slice-data-control-container"
+                        style={{ display: 'flex', justifyContent: 'space-around' }}
+                    >
+                        <span style={{ alignSelf: 'center' }}>Axis:</span>
                         <Select
                             className="slice-data-select"
-                            value={{value: this.state.selectedAxis, label: this.state.selectedAxis.toString()}}
+                            value={{ value: this.state.selectedAxis, label: this.state.selectedAxis.toString() }}
                             options={axisOptions}
                             width={'20px'}
                             isSearchable={false}
                         />
                     </div>
-                    <div className="slice-data-control-container" style={{display: 'flex', justifyContent: 'space-around'}}>
-                        <span style={{alignSelf: "center"}}>Shape:</span>
-                        <ShapeDetail highlightedIndex={this.state.selectedAxis} shapeComponents={this.props.dataShape}/>
+                    <div
+                        className="slice-data-control-container"
+                        style={{ display: 'flex', justifyContent: 'space-around' }}
+                    >
+                        <span style={{ alignSelf: 'center' }}>Shape:</span>
+                        <ShapeDetail
+                            highlightedIndex={this.state.selectedAxis}
+                            shapeComponents={this.props.dataShape}
+                        />
                     </div>
-                    <div className="slice-data-control-container" style={{display: 'flex', justifyContent: 'space-around'}}>
-                        <span style={{alignSelf: "center"}}>Index:</span>
-                        <Select 
+                    <div
+                        className="slice-data-control-container"
+                        style={{ display: 'flex', justifyContent: 'space-around' }}
+                    >
+                        <span style={{ alignSelf: 'center' }}>Index:</span>
+                        <Select
                             className="slice-data-select"
                             isSearchable={false}
                             width={'20px'}
                             options={indexOptions}
-                            value={{value: this.state.selectedIndex, label: this.state.selectedIndex.toString() }} />
+                            value={{ value: this.state.selectedIndex, label: this.state.selectedIndex.toString() }}
+                        />
                     </div>
                 </div>
             );
         }
         return null;
-    }
+    };
 
     // public for testing
     public sort = (_e: Slick.EventData, args: Slick.OnSortEventArgs<Slick.SlickData>) => {
@@ -608,6 +623,6 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
 
     private toggleSliceMenu = (e: React.SyntheticEvent) => {
         e.preventDefault();
-        this.setState({ isSlicing: !this.state.isSlicing });;
-    }
+        this.setState({ isSlicing: !this.state.isSlicing });
+    };
 }

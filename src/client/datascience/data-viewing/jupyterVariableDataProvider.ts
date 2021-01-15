@@ -58,7 +58,10 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
     private static parseShape(shape: string) {
         try {
             if (shape.startsWith('(') && shape.endsWith(')')) {
-                return shape.substring(1, shape.length - 1).split(',').map((shapeEl) => parseInt(shapeEl))
+                return shape
+                    .substring(1, shape.length - 1)
+                    .split(',')
+                    .map((shapeEl) => parseInt(shapeEl));
             }
         } catch (e) {
             traceError(`Could not parse IJupyterVariable with malformed shape: ${shape}`);
