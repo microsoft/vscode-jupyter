@@ -482,7 +482,7 @@ suite('DataScience Native Editor', () => {
                     }
                 });
 
-                runMountedTest('Remote kernel can be switched and rememberedxxx', async function () {
+                runMountedTest('Remote kernel can be switched and remembered', async function () {
                     // Turn off raw kernel for this test as it's testing remote
                     ioc.forceDataScienceSettingsChanged({ disableZMQSupport: true });
 

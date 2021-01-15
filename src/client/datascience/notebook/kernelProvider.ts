@@ -11,6 +11,7 @@ import {
 } from '../../../../types/vscode-proposed';
 import { IVSCodeNotebook } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
+import { traceInfo } from '../../common/logger';
 import { IConfigurationService, IDisposableRegistry, IExtensionContext } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { captureTelemetry } from '../../telemetry';
@@ -231,8 +232,10 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
         if (this.isLocalLaunch()) {
             return;
         }
+        traceInfo(`Start Setup.G1`);
         // Make sure we have a connection or we can't get remote kernels.
         const connection = await this.notebookProvider.connect({ getOnly: false, disableUI: false });
+        traceInfo(`Start Setup.G2 ${JSON.stringify(connection)}`);
         if (!connection) {
             throw new Error('Using remote connection but connection is undefined');
         } else if (connection?.type === 'raw') {

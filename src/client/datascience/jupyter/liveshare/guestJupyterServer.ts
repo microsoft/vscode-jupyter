@@ -6,6 +6,7 @@ import { Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
 import { ILiveShareApi, IWorkspaceService } from '../../../common/application/types';
+import { traceInfo } from '../../../common/logger';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, Resource } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
 import * as localize from '../../../common/utils/localize';
@@ -119,9 +120,10 @@ export class GuestJupyterServer
     // Return a copy of the connection information that this server used to connect with
     public getConnectionInfo(): IJupyterConnection | undefined {
         if (this.launchInfo) {
+            traceInfo(`Start Setup.M1`);
             return this.launchInfo.connectionInfo;
         }
-
+        traceInfo(`Start Setup.M2`);
         return undefined;
     }
 

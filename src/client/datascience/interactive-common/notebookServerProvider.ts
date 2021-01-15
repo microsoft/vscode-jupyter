@@ -54,14 +54,17 @@ export class NotebookServerProvider implements IJupyterServerProvider {
 
         // If we are just fetching or only want to create for local, see if exists
         if (options.getOnly || (options.localOnly && !serverOptions.uri)) {
+            traceInfo(`Start Setup.J1`);
             return this.jupyterExecution.getServer(serverOptions);
         } else {
+            traceInfo(`Start Setup.J2`);
             // Otherwise create a new server
             return this.createServer(options, token).then((val) => {
                 // If we created a new server notify of our first time provider connection
                 if (val && options.onConnectionMade) {
                     options.onConnectionMade();
                 }
+                traceInfo(`Start Setup.J3`);
 
                 return val;
             });

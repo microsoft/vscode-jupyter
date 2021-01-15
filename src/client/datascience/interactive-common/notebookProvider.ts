@@ -8,7 +8,7 @@ import { EventEmitter, Uri } from 'vscode';
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
 import { IPythonExtensionChecker } from '../../api/types';
 import { IWorkspaceService } from '../../common/application/types';
-import { traceWarning } from '../../common/logger';
+import { traceInfo, traceWarning } from '../../common/logger';
 import { IConfigurationService, IDisposableRegistry, Resource } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { Identifiers, Settings } from '../constants';
@@ -80,6 +80,7 @@ export class NotebookProvider implements INotebookProvider {
 
         // Connect to either a jupyter server or a stubbed out raw notebook "connection"
         if (await this.rawNotebookProvider.supported()) {
+            traceInfo(`Start Setup.H1`);
             return this.rawNotebookProvider.connect({
                 ...options,
                 onConnectionMade: this.fireConnectionMade.bind(this)
@@ -87,12 +88,14 @@ export class NotebookProvider implements INotebookProvider {
         } else if (
             this.extensionChecker.isPythonExtensionInstalled ||
             serverType === Settings.JupyterServerRemoteLaunch
-        ) {
+            ) {
+            traceInfo(`Start Setup.H2`);
             return this.jupyterNotebookProvider.connect({
                 ...options,
                 onConnectionMade: this.fireConnectionMade.bind(this)
             });
         } else if (!options.getOnly) {
+            traceInfo(`Start Setup.H3`);
             await this.extensionChecker.showPythonExtensionInstallRequiredPrompt();
         }
     }
