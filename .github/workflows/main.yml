@@ -712,14 +712,6 @@ jobs:
           check_name: Notebook Test Report
         if: steps.test_notebook_vscode.outcome == 'failure' && failure()
 
-      - name: Publish Remote Notebook Test Report
-        uses: scacap/action-surefire-report@v1
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          report_paths: ${{ env.TEST_RESULTS_GLOB }}
-          check_name: Remote Notebook Test Report
-        if: steps.test_remote_notebook_vscode.outcome == 'failure' && failure()
-
       - name: Run Native Notebook with VSCode & Jupyter (without Python)
         uses: GabrielBB/xvfb-action@v1.4
         with:
