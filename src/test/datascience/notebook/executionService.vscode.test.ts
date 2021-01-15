@@ -44,6 +44,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)xxx', function () {
     let vscodeNotebook: IVSCodeNotebook;
     this.timeout(120_000);
     suiteSetup(async function () {
+        this.timeout(120_000);
         api = await initialize();
         if (!(await canRunNotebookTests())) {
             return this.skip();
