@@ -19,7 +19,6 @@ module.exports = {
     },
     extends: ['prettier', 'prettier/@typescript-eslint'],
     ignorePatterns: [
-        '.github/actions/check-ignore-list/index.js',
         'build/constants.js',
         'build/util.js',
         'build/ci/postInstall.js',
