@@ -60,7 +60,6 @@ interface ICommandNameWithoutArgumentTypeMapping {
     [DSCommands.EnableDebugLogging]: [];
     [DSCommands.ResetLoggingLevel]: [];
     [DSCommands.OpenVariableView]: [];
-    [DSCommands.TESTCOMMAND]: [];
 }
 
 /**

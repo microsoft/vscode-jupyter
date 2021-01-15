@@ -132,7 +132,6 @@ export namespace Commands {
     export const ShowDataViewer = 'jupyter.showDataViewer';
     export const ClearSavedJupyterUris = 'jupyter.clearSavedJupyterUris';
     export const OpenVariableView = 'jupyter.openVariableView';
-    export const TESTCOMMAND = 'jupyter.TESTCOMMAND';
 }
 
 export namespace CodeLensCommands {
