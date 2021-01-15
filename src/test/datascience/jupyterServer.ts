@@ -26,6 +26,7 @@ export class JupyterServer implements IDisposable {
         if (this._jupyterServerWithTokenABCDProc) {
             this._jupyterServerWithTokenABCDProc?.kill();
         }
+        this._jupyterServerWithTokenABCDProc = undefined;
     }
     public async startJupyterWithToken(token = '7d25707a86975be50ee9757c929fef9012d27cf43153d1c1'): Promise<Uri> {
         if (!this._jupyterServerWithTokenABCD) {
