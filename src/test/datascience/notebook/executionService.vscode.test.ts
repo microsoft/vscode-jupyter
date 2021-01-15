@@ -44,6 +44,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)xxx', function () {
     let vscodeNotebook: IVSCodeNotebook;
     this.timeout(120_000);
     suiteSetup(async function () {
+        traceInfo(`Start Setup`);
         this.timeout(120_000);
         api = await initialize();
         if (!(await canRunNotebookTests())) {
@@ -55,6 +56,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)xxx', function () {
         sinon.restore();
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
+        traceInfo(`Start Setup complete`);
     });
     // Use same notebook without starting kernel in every single test (use one for whole suite).
     setup(async function () {
