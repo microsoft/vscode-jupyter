@@ -16,6 +16,7 @@ on:
       - 'release'
       - 'release/*'
       - 'release-*'
+      - rchiodo/force_ignore_change
   workflow_dispatch:
 
 env:
@@ -138,6 +139,10 @@ jobs:
 
       - name: Install dependencies (npm ci)
         run: npm ci --prefer-offline
+
+      - name: Verify linting is turned on for changed files
+        uses: ./.github/actions/check-ignore-list
+        id: check-ignore-list
 
       - name: Run linting on TypeScript code (eslint)
         run: npm run lint
