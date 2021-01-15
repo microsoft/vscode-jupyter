@@ -27,6 +27,7 @@ import { DefaultTheme, PythonExtension, Telemetry } from '../constants';
 import { InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
 import { CssMessages, IGetCssRequest, IGetMonacoThemeRequest, SharedMessages } from '../messages';
 import { ICodeCssGenerator, IJupyterExtraSettings, IThemeFinder } from '../types';
+import { testOnlyMethod } from '../../common/utils/testOnlyDecorator';
 
 @injectable() // For some reason this is necessary to get the class hierarchy to work.
 export abstract class WebviewHost<IMapping> implements IDisposable {
@@ -89,12 +90,8 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
     }
 
     // This function is used for testing webview by fetching HTML from the webview via a message
+    @testOnlyMethod
     public getHTMLById(id: string): Promise<string> {
-        // Test only
-        if (!isTestExecution()) {
-            throw new Error('getHTMLById to be run only in test code');
-        }
-
         if (!this.activeHTMLRequest) {
             this.activeHTMLRequest = createDeferred<string>();
             this.postMessageInternal(InteractiveWindowMessages.GetHTMLByIdRequest, id).ignoreErrors();
@@ -107,22 +104,15 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
 
     // For testing add a callback listening to messages from the webview
     // tslint:disable-next-line:no-any
+    @testOnlyMethod
     public addMessageListener(callback: (message: string, payload: any) => void) {
-        // Test only
-        if (!isTestExecution()) {
-            throw new Error('addMessageListener to be run only in test code');
-        }
-
         this.onMessageListeners.push(callback);
     }
 
     // For testing remove a callback listening to messages from the webview
     // tslint:disable-next-line:no-any
+    @testOnlyMethod
     public removeMessageListener(callback: (message: string, payload: any) => void) {
-        // Test only
-        if (!isTestExecution()) {
-            throw new Error('removeMessageListener to be run only in test code');
-        }
         const index = this.onMessageListeners.indexOf(callback);
         if (index >= 0) {
             this.onMessageListeners.splice(index, 1);

@@ -25,16 +25,17 @@ import { INotebookEditorProvider } from '../../../client/datascience/types';
 import { OnMessageListener } from '../vscodeTestHelpers';
 import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { verifyViewVariables } from './variableViewHelpers';
+import { ITestVariableViewProvider } from './variableViewTestInterfaces';
 
 suite('DataScience - VariableView', () => {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let commandManager: ICommandManager;
-    let variableViewProvider: IVariableViewProvider;
+    let variableViewProvider: ITestVariableViewProvider;
     let editorProvider: INotebookEditorProvider;
     let vscodeNotebook: IVSCodeNotebook;
     suiteSetup(async function () {
-        this.timeout(120_000); // IANHU: From other tests? Reduce this?
+        this.timeout(120_000);
         api = await initialize();
 
         // Don't run if we can't use the native notebook interface
@@ -45,7 +46,9 @@ suite('DataScience - VariableView', () => {
         await startJupyter(true);
         sinon.restore();
         commandManager = api.serviceContainer.get<ICommandManager>(ICommandManager);
-        variableViewProvider = api.serviceContainer.get<IVariableViewProvider>(IVariableViewProvider);
+        const coreVariableViewProvider = api.serviceContainer.get<IVariableViewProvider>(IVariableViewProvider);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        variableViewProvider = (coreVariableViewProvider as any) as ITestVariableViewProvider; // Cast to expose the test interfaces
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         editorProvider = api.serviceContainer.get<INotebookEditorProvider>(VSCodeNotebookProvider);
     });

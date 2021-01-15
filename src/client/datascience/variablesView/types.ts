@@ -7,7 +7,6 @@ import {
 } from '../../datascience/interactive-common/interactiveWindowTypes';
 import { CssMessages, IGetCssRequest, IGetCssResponse, SharedMessages } from '../messages';
 import { IJupyterVariablesRequest, IJupyterVariablesResponse, INotebook, IVSCWebviewViewProvider } from '../types';
-import { VariableView } from './variableView';
 
 // Mapping of Message to payload that our VariableViewPanel needs to support
 export class IVariableViewPanelMapping {
@@ -41,5 +40,5 @@ export interface INotebookWatcher {
 
 export const IVariableViewProvider = Symbol('IVariableViewProvider');
 export interface IVariableViewProvider extends IVSCWebviewViewProvider {
-    readonly activeVariableView: Promise<VariableView>;
+    //readonly activeVariableView: Promise<VariableView>;
 }

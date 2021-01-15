@@ -5,9 +5,9 @@
 import { inject, injectable, named } from 'inversify';
 import { CancellationToken, WebviewView, WebviewViewResolveContext } from 'vscode';
 import { IApplicationShell, IWebviewViewProvider, IWorkspaceService } from '../../common/application/types';
-import { isTestExecution } from '../../common/constants';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
+import { testOnlyMethod } from '../../common/utils/testOnlyDecorator';
 import { Identifiers } from '../constants';
 import { IDataViewerFactory } from '../data-viewing/types';
 import { ICodeCssGenerator, IJupyterVariableDataProviderFactory, IJupyterVariables, IThemeFinder } from '../types';
@@ -20,12 +20,10 @@ export class VariableViewProvider implements IVariableViewProvider {
     public readonly viewType = 'jupyterViewVariables';
 
     // Either return the active variable view or wait until it's created and return it
-    public get activeVariableView(): Promise<VariableView> {
-        // For test execution only
-        if (!isTestExecution()) {
-            throw new Error('activeVariableView only accessible from test code');
-        }
-
+    /* eslint-disable-next-line @typescript-eslint/no-unused-expressions */
+    @testOnlyMethod
+    // @ts-ignore Property will be accessed in test code via casting to ITestVariableViewProviderInterface
+    private get activeVariableView(): Promise<VariableView> {
         // If we have already created the view, then just return it
         if (this.variableView) {
             return Promise.resolve(this.variableView);
