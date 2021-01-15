@@ -1255,6 +1255,7 @@ module.exports = {
         'no-useless-constructor': 'off',
         '@typescript-eslint/no-useless-constructor': 'error',
         '@typescript-eslint/no-var-requires': 'off',
+        '@typescript-eslint/no-floating-promises': 'error',
 
         // Other rules
         'class-methods-use-this': 'off',

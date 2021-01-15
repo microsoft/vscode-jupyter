@@ -50,10 +50,10 @@ export class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
         }
     }
     public cancelCellExecution(_: NotebookDocument, cell: NotebookCell) {
-        this.kernelProvider.get(cell.notebook.uri)?.interrupt(); // NOSONAR
+        this.kernelProvider.get(cell.notebook.uri)?.interrupt().ignoreErrors(); // NOSONAR
     }
     public cancelAllCellsExecution(document: NotebookDocument) {
-        this.kernelProvider.get(document.uri)?.interrupt(); // NOSONAR
+        this.kernelProvider.get(document.uri)?.interrupt().ignoreErrors(); // NOSONAR
     }
     private updateKernelInfoInNotebookWhenAvailable(kernel: IKernel, doc: NotebookDocument) {
         const disposable = kernel.onStatusChanged(() => {

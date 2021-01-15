@@ -134,7 +134,7 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
         } catch (e) {
             traceError(e);
             sendTelemetryEvent(Telemetry.FailedShowDataViewer);
-            this.appShell.showErrorMessage(localize.DataScience.showDataViewerFail());
+            void this.appShell.showErrorMessage(localize.DataScience.showDataViewerFail());
         }
     }
 

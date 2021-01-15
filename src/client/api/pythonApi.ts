@@ -157,7 +157,7 @@ export class PythonExtensionChecker implements IPythonExtensionChecker {
 
             this.appShell
                 .showInformationMessage(localize.DataScience.pythonExtensionInstalled(), localize.Common.ok())
-                .then(noop);
+                .then(noop, noop);
         }
     }
 }

@@ -91,7 +91,7 @@ ${'```'}
             const edit = new WorkspaceEdit();
             edit.insert(this.issueFilePath, new Position(0, 0), formatted);
             await workspace.applyEdit(edit);
-            this.commandManager.executeCommand('vscode.open', this.issueFilePath);
+            void this.commandManager.executeCommand('vscode.open', this.issueFilePath);
         } catch (err) {
             traceError(err);
         }
@@ -167,7 +167,7 @@ ${'```'}
 
     private closeIssueEditorOnSuccess() {
         if (window.activeTextEditor?.document === this.issueTextDocument) {
-            this.commandManager.executeCommand('workbench.action.closeActiveEditor');
+            void this.commandManager.executeCommand('workbench.action.closeActiveEditor');
         }
     }
 

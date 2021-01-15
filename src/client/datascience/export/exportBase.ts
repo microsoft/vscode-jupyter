@@ -70,6 +70,7 @@ export class ExportBase implements IExport {
             tempTarget.dispose();
             return;
         }
+        this.callStat();
 
         try {
             if ((await this.fs.stat(Uri.file(tempTarget.filePath))).size > 1) {
@@ -94,5 +95,9 @@ export class ExportBase implements IExport {
             allowEnvironmentFetchExceptions: false,
             bypassCondaExecution: true
         });
+    }
+
+    private callStat() {
+        this.fs.copyLocal('foobar', 'foobaz');
     }
 }

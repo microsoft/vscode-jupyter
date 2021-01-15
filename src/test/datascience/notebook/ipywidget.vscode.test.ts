@@ -103,7 +103,7 @@ suite('DataScience - VSCode Notebook - IPyWidget test', () => {
         await waitForExecutionCompletedSuccessfully(cell);
 
         // Close notebook and open again
-        closeNotebooks();
+        await closeNotebooks();
 
         await openNotebook(api.serviceContainer, testWidgetNb.fsPath);
         cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;

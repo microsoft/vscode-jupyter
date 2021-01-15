@@ -58,7 +58,7 @@ export abstract class Webview implements IWebview {
 
     public postMessage(message: WebviewMessage) {
         if (this.webviewHost?.webview) {
-            this.webviewHost?.webview.postMessage(message);
+            void this.webviewHost?.webview.postMessage(message);
         }
     }
 
