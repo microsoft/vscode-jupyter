@@ -6,7 +6,7 @@ import { ILanguageServer, ILanguageServerProvider } from '../../client/api/types
 import { InterpreterUri } from '../../client/common/installer/types';
 import { MockLanguageServer } from './mockLanguageServer';
 
-// tslint:disable:no-any unified-signatures
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/unified-signatures */
 @injectable()
 export class MockLanguageServerProvider implements ILanguageServerProvider {
     private mockLanguageServer = new MockLanguageServer();

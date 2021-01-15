@@ -3,7 +3,7 @@
 import { assert } from 'chai';
 import { warnAboutWidgetVersionsThatAreNotSupported } from '../../../datascience-ui/ipywidgets/common/incompatibleWidgetHandler';
 
-// tslint:disable: max-func-body-length no-any
+/* eslint-disable , @typescript-eslint/no-explicit-any */
 suite('DataScience - Incompatible Widgets', () => {
     suite('Using qgrid widget with CDN turned on', () => {
         async function testLoadingQgrid(versionToLoad: string, warningExpectedToBeDisplayed: boolean) {

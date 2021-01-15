@@ -99,7 +99,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
         return undefined;
     }
 
-    //tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     protected onMessage(message: string, payload: any) {
         switch (message) {
             case DataViewerMessages.GetAllRowsRequest:

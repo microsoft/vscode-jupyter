@@ -37,9 +37,8 @@ export class NotebookIPyWidgetCoordinator implements INotebookKernelResolver {
         // Create a handler for this notebook if we don't already have one. Since there's one of the notebookMessageCoordinator's for the
         // entire VS code session, we have a map of notebook document to message coordinator
         let promise = this.messageCoordinators.get(document.uri.toString());
-        if (!promise) {
-            const coordinator = CommonMessageCoordinator.create(document.uri, this.serviceContainer);
-            promise = coordinator.initialize().then(() => coordinator);
+        if (promise === undefined) {
+            promise = CommonMessageCoordinator.create(document.uri, this.serviceContainer);
             this.messageCoordinators.set(document.uri.toString(), promise);
         }
         return Cancellation.race(() => promise!.then(this.attachCoordinator.bind(this, document, webview)), token);
@@ -49,7 +48,7 @@ export class NotebookIPyWidgetCoordinator implements INotebookKernelResolver {
         // See if this is the last copy of this document
         if (!this.notebookProvider.notebookDocuments.find((d) => d.uri === e.uri)) {
             const coordinator = this.messageCoordinators.get(e.uri.toString());
-            coordinator?.then((c) => c.dispose());
+            void coordinator?.then((c) => c.dispose());
             this.messageCoordinators.delete(e.uri.toString());
             const attachment = this.attachedWebViews.get(e.uri.toString());
             attachment?.disposables?.forEach((d) => d.dispose());
@@ -80,7 +79,7 @@ export class NotebookIPyWidgetCoordinator implements INotebookKernelResolver {
                             response: webview.asWebviewUri(e.payload)
                         });
                     } else {
-                        webview.postMessage({ type: e.message, payload: e.payload });
+                        void webview.postMessage({ type: e.message, payload: e.payload });
                     }
                 })
             );

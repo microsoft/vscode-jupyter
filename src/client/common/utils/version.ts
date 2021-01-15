@@ -9,7 +9,7 @@ export function parseVersion(raw: string): semver.SemVer {
     raw = raw.replace(/\.00*(?=[1-9]|0\.)/, '.');
     const ver = semver.coerce(raw);
     if (ver === null || !semver.valid(ver)) {
-        // tslint:disable-next-line: no-suspicious-comment
+        // eslint-disable-next-line
         // TODO: Raise an exception instead?
         return new semver.SemVer('0.0.0');
     }

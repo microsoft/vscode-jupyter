@@ -34,6 +34,7 @@ export interface IMainPanelProps {
     baseTheme: string;
     testMode?: boolean;
 }
+
 interface IMainPanelState {
     gridColumns: Slick.Column<Slick.SlickData>[];
     gridRows: ISlickRow[];
@@ -60,7 +61,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private grid: React.RefObject<ReactSlickGrid> = React.createRef<ReactSlickGrid>();
     private updateTimeout?: NodeJS.Timer | number;
 
-    // tslint:disable-next-line:max-func-body-length
+    // eslint-disable-next-line
     constructor(props: IMainPanelProps, _state: IMainPanelState) {
         super(props);
 
@@ -140,7 +141,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         );
     };
 
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public handleMessage = (msg: string, payload?: any) => {
         switch (msg) {
             case DataViewerMessages.InitializeData:
@@ -209,7 +210,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         );
     }
 
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private initializeData(payload: any) {
         // Payload should be an IJupyterVariable with the first 100 rows filled out
         if (payload) {

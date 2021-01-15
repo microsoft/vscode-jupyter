@@ -3,7 +3,7 @@
 
 'use strict';
 
-// tslint:disable:no-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
@@ -20,7 +20,7 @@ import { PersistentStateFactory } from '../../../client/common/persistentState';
 import { IPersistentState, IPersistentStateFactory } from '../../../client/common/types';
 import { Common, DataScienceSurveyBanner, ExtensionChannels } from '../../../client/common/utils/localize';
 
-// tslint:disable-next-line: max-func-body-length
+// eslint-disable-next-line
 suite('Insiders Extension prompt', () => {
     let appShell: IApplicationShell;
     let extensionChannelService: IExtensionChannelService;

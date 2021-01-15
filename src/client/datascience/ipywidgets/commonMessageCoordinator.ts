@@ -40,30 +40,45 @@ import { IIPyWidgetMessageDispatcher } from './types';
 @injectable()
 //
 export class CommonMessageCoordinator {
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public get postMessage(): Event<{ message: string; payload: any }> {
         return this.postEmitter.event;
     }
     private ipyWidgetMessageDispatcher?: IIPyWidgetMessageDispatcher;
     private ipyWidgetScriptSource?: IPyWidgetScriptSource;
-    // tslint:disable-next-line: no-any
-    private postEmitter: EventEmitter<{ message: string; payload: any }> = new EventEmitter<{
-        message: string;
-        // tslint:disable-next-line: no-any
-        payload: any;
-    }>();
-    // tslint:disable-next-line: no-require-imports
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    private postEmitter: EventEmitter<{ message: string; payload: any }>;
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     private hashFn = require('hash.js').sha256;
     private disposables: IDisposableRegistry;
     private jupyterOutput: IOutputChannel;
 
-    private constructor(private readonly identity: Uri, private readonly serviceContainer: IServiceContainer) {
+    private constructor(
+        private readonly identity: Uri,
+        private readonly serviceContainer: IServiceContainer,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        postEmitter?: EventEmitter<{ message: string; payload: any }>
+    ) {
+        this.postEmitter =
+            postEmitter ??
+            new EventEmitter<{
+                message: string;
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                payload: any;
+            }>();
         this.disposables = this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
         this.jupyterOutput = this.serviceContainer.get<IOutputChannel>(IOutputChannel, JUPYTER_OUTPUT_CHANNEL);
     }
 
-    public static create(identity: Uri, serviceContainer: IServiceContainer): CommonMessageCoordinator {
-        return new CommonMessageCoordinator(identity, serviceContainer);
+    public static async create(
+        identity: Uri,
+        serviceContainer: IServiceContainer,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        postEmitter?: EventEmitter<{ message: string; payload: any }>
+    ): Promise<CommonMessageCoordinator> {
+        const result = new CommonMessageCoordinator(identity, serviceContainer, postEmitter);
+        await result.initialize();
+        return result;
     }
 
     public dispose() {
@@ -71,7 +86,7 @@ export class CommonMessageCoordinator {
         this.ipyWidgetScriptSource?.dispose(); // NOSONAR
     }
 
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public onMessage(message: string, payload?: any): void {
         if (message === InteractiveWindowMessages.IPyWidgetLoadSuccess) {
             this.sendLoadSucceededTelemetry(payload);
@@ -87,22 +102,16 @@ export class CommonMessageCoordinator {
 
         // Pass onto our two objects that are listening to messages
 
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         this.getIPyWidgetMessageDispatcher()?.receiveMessage({ message: message as any, payload }); // NOSONAR
         this.getIPyWidgetScriptSource()?.onMessage(message, payload);
     }
 
-    public async initialize() {
-        const dispatcher = this.getIPyWidgetMessageDispatcher();
-        const promises = [];
-        if (dispatcher) {
-            promises.push(dispatcher.initialize());
-        }
-        const scriptSource = this.getIPyWidgetScriptSource();
-        if (scriptSource) {
-            promises.push(scriptSource.initialize());
-        }
-        return Promise.all(promises);
+    private initialize(): Promise<[void, void]> {
+        return Promise.all([
+            this.getIPyWidgetMessageDispatcher()?.initialize(),
+            this.getIPyWidgetScriptSource()?.initialize()
+        ]);
     }
 
     private hash(s: string): string {

@@ -14,7 +14,7 @@ import { ImageButton } from '../../datascience-ui/react-common/imageButton';
 import { noop } from '../core';
 import { mountComponent } from './testHelpers';
 
-// tslint:disable: no-any use-default-type-parameter
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unnecessary-type-arguments */
 
 enum Button {
     RunAll = 0,

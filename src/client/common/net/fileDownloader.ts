@@ -64,7 +64,7 @@ export class FileDownloader implements IFileDownloader {
                     );
                 }
             });
-            // tslint:disable-next-line: no-require-imports
+            // eslint-disable-next-line @typescript-eslint/no-require-imports
             const requestProgress = require('request-progress');
             requestProgress(request)
                 .on('progress', (state: RequestProgressState) => {

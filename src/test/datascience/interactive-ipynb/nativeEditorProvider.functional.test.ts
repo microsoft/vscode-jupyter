@@ -3,7 +3,7 @@
 
 'use strict';
 
-// tslint:disable: no-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { expect } from 'chai';
 import { Uri } from 'vscode';
@@ -16,7 +16,7 @@ import { createEmptyCell } from '../../../datascience-ui/interactive-common/main
 import { DataScienceIocContainer } from '../dataScienceIocContainer';
 import { TestNativeEditorProvider } from '../testNativeEditorProvider';
 
-// tslint:disable: max-func-body-length
+/* eslint-disable  */
 suite('DataScience - Native Editor Provider', () => {
     let ioc: DataScienceIocContainer;
     setup(async () => {

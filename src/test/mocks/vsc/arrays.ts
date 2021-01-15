@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 'use strict';
 
-// tslint:disable:all
+/* eslint-disable */
 
 export namespace vscMockArrays {
     /**

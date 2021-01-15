@@ -84,7 +84,7 @@ const GeneralCallableSignature = '(*args, **kwargs)';
 // Example string: ```python\n(variable) some_var: Any\n```
 const CallableRegex = /python\n\(.+?\) \S+?: (\([\s\S]+?\))/;
 
-// tslint:disable:no-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 @injectable()
 export class IntellisenseProvider implements IInteractiveWindowListener {
     public get postMessage(): Event<{ message: string; payload: any }> {

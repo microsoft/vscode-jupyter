@@ -26,7 +26,7 @@ export type ObservableExecutionResult<T extends string | Buffer> = {
     dispose(): void;
 };
 
-// tslint:disable-next-line:interface-name
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export type SpawnOptions = ChildProcessSpawnOptions & {
     encoding?: string;
     token?: CancellationToken;
@@ -35,7 +35,7 @@ export type SpawnOptions = ChildProcessSpawnOptions & {
     extraVariables?: NodeJS.ProcessEnv;
 };
 
-// tslint:disable-next-line:interface-name
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export type ShellOptions = ExecOptions & { throwOnStdErr?: boolean };
 
 export type ExecutionResult<T extends string | Buffer> = {

@@ -48,7 +48,7 @@ const testExecution = isTestExecution();
 export class ImportTracker implements IExtensionSingleActivationService, INotebookExecutionLogger {
     private pendingChecks = new Map<string, NodeJS.Timer | number>();
     private sentMatches: Set<string> = new Set<string>();
-    // tslint:disable-next-line:no-require-imports
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     private hashFn = require('hash.js').sha256;
 
     constructor(
@@ -143,7 +143,7 @@ export class ImportTracker implements IExtensionSingleActivationService, INotebo
         // If already scheduled, cancel.
         const currentTimeout = this.pendingChecks.get(file);
         if (currentTimeout) {
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             clearTimeout(currentTimeout as any);
             this.pendingChecks.delete(file);
         }

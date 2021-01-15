@@ -1,4 +1,4 @@
-// tslint:disable:max-classes-per-file max-classes-per-file
+/* eslint-disable max-classes-per-file */
 
 import { inject, injectable, named } from 'inversify';
 import * as os from 'os';
@@ -176,7 +176,7 @@ export class ProductInstaller implements IInstaller {
         this.interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
     }
 
-    // tslint:disable-next-line:no-empty
+    // eslint-disable-next-line no-empty,@typescript-eslint/no-empty-function
     public dispose() {}
     public async promptToInstall(
         product: Product,
@@ -209,7 +209,7 @@ export class ProductInstaller implements IInstaller {
     }
 }
 
-// tslint:disable-next-line: cyclomatic-complexity
+// eslint-disable-next-line complexity
 function translateProductToModule(product: Product): string {
     switch (product) {
         case Product.jupyter:

@@ -292,7 +292,7 @@ export class NativeEditorNotebookModel extends BaseNotebookModel {
         return true;
     }
 
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private asCell(cell: any): ICell {
         // Works around problems with setting a cell to another one in the nyc compiler.
         return cell as ICell;

@@ -20,7 +20,7 @@ import { noop } from '../../client/common/utils/misc';
 import { LiveShare } from '../../client/datascience/constants';
 import { LiveShareProxy } from '../../client/datascience/liveshare/liveshareProxy';
 
-// tslint:disable:no-any unified-signatures max-classes-per-file
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/unified-signatures, max-classes-per-file */
 
 class MockLiveService implements vsls.SharedService, vsls.SharedServiceProxy {
     public isServiceAvailable: boolean = true;

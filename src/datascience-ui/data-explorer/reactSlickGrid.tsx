@@ -15,26 +15,26 @@ import { ReactSlickGridFilterBox } from './reactSlickGridFilterBox';
 WARNING: Do not change the order of these imports.
 Slick grid MUST be imported after we load jQuery and other stuff from `./globalJQueryImports`
 */
-// tslint:disable-next-line: no-var-requires no-require-imports
+// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const slickgridJQ = require('slickgrid/lib/jquery-1.11.2.min');
 
 // Adding comments to ensure order of imports does not change due to auto formatters.
-// tslint:disable-next-line: ordered-imports
+// eslint-disable-next-line import/order
 import 'slickgrid/slick.core';
 // Adding comments to ensure order of imports does not change due to auto formatters.
-// tslint:disable-next-line: ordered-imports
+// eslint-disable-next-line import/order
 import 'slickgrid/slick.dataview';
 // Adding comments to ensure order of imports does not change due to auto formatters.
-// tslint:disable-next-line: ordered-imports
+// eslint-disable-next-line import/order
 import 'slickgrid/slick.grid';
 // Adding comments to ensure order of imports does not change due to auto formatters.
-// tslint:disable-next-line: ordered-imports
+// eslint-disable-next-line import/order
 import 'slickgrid/plugins/slick.autotooltips';
 // Adding comments to ensure order of imports does not change due to auto formatters.
-// tslint:disable-next-line: ordered-imports
+// eslint-disable-next-line import/order
 import 'slickgrid/slick.grid.css';
 // Make sure our css comes after the slick grid css. We override some of its styles.
-// tslint:disable-next-line: ordered-imports
+// eslint-disable-next-line import/order
 import './reactSlickGrid.css';
 import { getLocString } from '../react-common/locReactSide';
 import { ShapeDetail } from './shapeDetail';
@@ -54,7 +54,7 @@ export interface ISlickGridAdd {
     newRows: ISlickRow[];
 }
 
-// tslint:disable:no-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export interface ISlickGridProps {
     idProperty: string;
     columns: Slick.Column<ISlickRow>[];
@@ -154,7 +154,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         this.props.rowsAdded.subscribe(this.addedRows);
     }
 
-    // tslint:disable-next-line:max-func-body-length
+    // eslint-disable-next-line
     public componentDidMount = () => {
         window.addEventListener('resize', this.windowResized);
 
@@ -550,7 +550,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         // refresh the grid.
     };
 
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private filter(item: any, _args: any): boolean {
         const fields = Array.from(this.columnFilters.keys());
         for (const field of fields) {

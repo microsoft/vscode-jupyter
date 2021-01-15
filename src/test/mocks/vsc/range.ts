@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 'use strict';
-// tslint:disable:all
+/* eslint-disable  */
 import { vscMockPosition } from './position';
 
 export namespace vscMockRange {

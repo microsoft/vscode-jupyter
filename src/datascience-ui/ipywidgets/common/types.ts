@@ -18,7 +18,7 @@ export type CommTargetCallback = (comm: Kernel.IComm, msg: KernelMessage.ICommOp
 
 export type ScriptLoader = {
     readonly widgetsRegisteredInRequireJs: Readonly<Set<string>>;
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     errorHandler(className: string, moduleName: string, moduleVersion: string, error: any): void;
     loadWidgetScript(moduleName: string, moduleVersion: string): Promise<void>;
     successHandler(className: string, moduleName: string, moduleVersion: string): void;
@@ -53,7 +53,7 @@ export interface IJupyterLabWidgetManager {
      * Display a DOMWidget view.
      *
      */
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     display_view(msg: any, view: Backbone.View<Backbone.Model>, options: any): Promise<Widget>;
     /**
      * Creates a promise for a view of a given model
@@ -61,7 +61,7 @@ export interface IJupyterLabWidgetManager {
      * Make sure the view creation is not out of order with
      * any state updates.
      */
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     create_view(model: jupyterlab.DOMWidgetModel, options: any): Promise<jupyterlab.DOMWidgetView>;
 }
 

@@ -4,7 +4,7 @@
 import { Event } from 'vscode';
 import * as vsls from 'vsls/vscode';
 
-// tslint:disable:no-any unified-signatures
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/unified-signatures */
 export class ServiceProxy implements vsls.SharedService {
     constructor(
         private realService: vsls.SharedService,

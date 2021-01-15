@@ -4,7 +4,7 @@ import type { nbformat } from '@jupyterlab/coreutils';
 import type { Kernel } from '@jupyterlab/services';
 import { sha256 } from 'hash.js';
 import { inject, injectable } from 'inversify';
-// tslint:disable-next-line: no-require-imports
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
 import { CancellationToken } from 'vscode-jsonrpc';
 import { IPythonExtensionChecker } from '../../../api/types';
@@ -252,7 +252,7 @@ export class KernelSelector implements IKernelSelectionUsage {
      * Gets a kernel that needs to be used with a remote session.
      * (will attempt to find the best matching kernel, or prompt user to use current interpreter or select one).
      */
-    // tslint:disable-next-line: cyclomatic-complexity
+    // eslint-disable-next-line complexity
     @reportAction(ReportableAction.KernelsGetKernelForRemoteConnection)
     public async getPreferredKernelForRemoteConnection(
         resource: Resource,
@@ -275,7 +275,7 @@ export class KernelSelector implements IKernelSelectionUsage {
         if (preferredKernelId) {
             const session = sessions?.find((s) => s.kernel.id === preferredKernelId);
             if (session) {
-                // tslint:disable-next-line: no-any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const liveKernel = session.kernel as any;
                 const lastActivityTime = liveKernel.last_activity
                     ? new Date(Date.parse(liveKernel.last_activity.toString()))

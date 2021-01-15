@@ -10,7 +10,7 @@ export class ExperimentationTelemetry implements IExperimentationTelemetry {
     public setSharedProperty(name: string, value: string): void {
         // Add the shared property to all telemetry being sent, not just events being sent by the experimentation package.
         // We are not in control of these props, just cast to `any`, i.e. we cannot strongly type these external props.
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         setSharedProperty(name as any, value as any);
     }
 
@@ -20,7 +20,7 @@ export class ExperimentationTelemetry implements IExperimentationTelemetry {
             formattedProperties[key] = value;
         });
 
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         sendTelemetryEvent(eventName as any, undefined, formattedProperties);
     }
 }

@@ -13,7 +13,7 @@ import type { NotebookCell, NotebookCellRunState } from '../../../types/vscode-p
 import { concatMultilineString } from '../../datascience-ui/common';
 import { IConfigurationService } from '../common/types';
 import { CellState, ICell } from './types';
-// tslint:disable-next-line: no-var-requires no-require-imports
+// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
 export async function calculateWorkingDirectory(

@@ -1,4 +1,4 @@
-// tslint:disable:no-console
+/* eslint-disable no-console */
 
 import { spawnSync } from 'child_process';
 import * as path from 'path';

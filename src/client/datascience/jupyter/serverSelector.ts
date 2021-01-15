@@ -114,7 +114,7 @@ export class JupyterServerSelector {
     }
 
     private generateUriFromRemoteProvider(id: string, result: JupyterServerUriHandle) {
-        // tslint:disable-next-line: no-http-string
+        // eslint-disable-next-line
         return `${Identifiers.REMOTE_URI}?${Identifiers.REMOTE_URI_ID_PARAM}=${id}&${
             Identifiers.REMOTE_URI_HANDLE_PARAM
         }=${encodeURI(result)}`;
@@ -174,7 +174,7 @@ export class JupyterServerSelector {
     }
     private validateSelectJupyterURI = async (inputText: string): Promise<string | undefined> => {
         try {
-            // tslint:disable-next-line:no-unused-expression
+            // eslint-disable-next-line @typescript-eslint/no-unused-expressions
             new URL(inputText);
 
             // Double check http

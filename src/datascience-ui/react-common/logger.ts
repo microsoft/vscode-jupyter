@@ -9,7 +9,7 @@ const enableLogger = !isTestExecution() || process.env.VSC_JUPYTER_FORCE_LOGGING
 export function logMessage(message: string) {
     // put here to prevent having to disable the console log warning
     if (enableLogger) {
-        // tslint:disable-next-line: no-console
+        // eslint-disable-next-line no-console
         console.log(message);
     }
 }

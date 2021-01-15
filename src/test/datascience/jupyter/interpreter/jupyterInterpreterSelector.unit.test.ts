@@ -28,7 +28,7 @@ suite('DataScience - Jupyter Interpreter Picker', () => {
         appShell = mock(ApplicationShell);
         workspace = mock(WorkspaceService);
         pathUtils = mock(PathUtils);
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         picker = new JupyterInterpreterSelector(
             instance(interpreterSelector),
             instance(appShell),
@@ -39,7 +39,7 @@ suite('DataScience - Jupyter Interpreter Picker', () => {
     });
 
     test('Should display the list of interpreters', async () => {
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const interpreters = ['something'] as any[];
         when(interpreterSelector.getSuggestions(undefined)).thenResolve(interpreters);
         when(appShell.showQuickPick(anything(), anything())).thenResolve();
@@ -50,12 +50,12 @@ suite('DataScience - Jupyter Interpreter Picker', () => {
         verify(appShell.showQuickPick(anything(), anything())).once();
     });
     test('Selected interpreter must be returned', async () => {
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const interpreters = ['something'] as any[];
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const interpreter = {} as any;
         when(interpreterSelector.getSuggestions(undefined)).thenResolve(interpreters);
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         when(appShell.showQuickPick(anything(), anything())).thenResolve({ interpreter } as any);
 
         const selected = await picker.selectInterpreter();
@@ -63,7 +63,7 @@ suite('DataScience - Jupyter Interpreter Picker', () => {
         assert.isOk(selected === interpreter, 'Not the same instance');
     });
     test('Should display current interpreter path in the picker', async () => {
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const interpreters = ['something'] as any[];
         const displayPath = 'Display Path';
         when(interpreterSelectionState.selectedPythonPath).thenReturn('jupyter.exe');

@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-// tslint:disable: no-console
+/* eslint-disable no-console */
 import type { nbformat } from '@jupyterlab/coreutils';
 import { NotebookOutputEventParams } from 'vscode-notebook-renderer';
 import {
@@ -20,11 +20,11 @@ class WidgetManagerComponent {
         this.scriptManager.onWidgetLoadError(this.handleLoadError.bind(this));
         this.scriptManager.onWidgetLoadSuccess(this.handleLoadSuccess.bind(this));
         this.scriptManager.onWidgetVersionNotSupported(this.handleUnsupportedWidgetVersion.bind(this));
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         this.widgetManager = new WidgetManager(undefined as any, postOffice, this.scriptManager.getScriptLoader());
 
         postOffice.addHandler({
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             handleMessage: (type: string, payload?: any) => {
                 if (type === SharedMessages.UpdateSettings) {
                     const settings = JSON.parse(payload);
@@ -41,7 +41,7 @@ class WidgetManagerComponent {
         className: string;
         moduleName: string;
         moduleVersion: string;
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         error: any;
         timedout?: boolean;
         isOnline: boolean;
@@ -77,7 +77,7 @@ class WidgetManagerComponent {
     }
 }
 
-// tslint:disable-next-line no-empty
+// eslint-disable-next-line  no-empty,@typescript-eslint/no-empty-function
 const noop = () => {};
 
 const outputDisposables = new Map<string, { dispose(): void }>();
@@ -93,13 +93,13 @@ export function renderOutput(request: NotebookOutputEventParams) {
         stackOfWidgetsRenderStatusByOutputId.push({ outputId: request.outputId, container: request.element });
         const output = convertVSCodeOutputToExecutResultOrDisplayData(request);
 
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const model = output.data['application/vnd.jupyter.widget-view+json'] as any;
         if (!model) {
-            // tslint:disable-next-line: no-console
+            // eslint-disable-next-line no-console
             return console.error('Nothing to render');
         }
-        // tslint:disable: no-console
+        /* eslint-disable no-console */
         renderIPyWidget(request.outputId, model, request.element);
     } catch (ex) {
         console.error(`Failed to render ipywidget type`, ex);
@@ -160,7 +160,7 @@ function renderIPyWidget(
 let widgetManagerPromise: Promise<WidgetManager> | undefined;
 async function getWidgetManager(): Promise<WidgetManager> {
     if (!widgetManagerPromise) {
-        // tslint:disable-next-line: promise-must-complete no-any
+        // eslint-disable-next-line , @typescript-eslint/no-explicit-any
         widgetManagerPromise = new Promise((resolve) => WidgetManager.instance.subscribe(resolve as any));
         widgetManagerPromise
             .then((wm) => {
@@ -185,7 +185,7 @@ async function createWidgetView(
     try {
         return await wm?.renderWidget(widgetData, element);
     } catch (ex) {
-        // tslint:disable-next-line: no-console
+        // eslint-disable-next-line no-console
         console.error('Failed to render widget', ex);
     }
 }
@@ -195,10 +195,10 @@ function initialize() {
         // Setup the widget manager
         const postOffice = new PostOffice();
         const mgr = new WidgetManagerComponent(postOffice);
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (window as any)._mgr = mgr;
     } catch (ex) {
-        // tslint:disable-next-line: no-console
+        // eslint-disable-next-line no-console
         console.error('Exception initializing WidgetManager', ex);
     }
 }
@@ -206,7 +206,7 @@ function initialize() {
 function convertVSCodeOutputToExecutResultOrDisplayData(
     request: NotebookOutputEventParams
 ): nbformat.IExecuteResult | nbformat.IDisplayData {
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const metadata: Record<string, any> = {};
     // Send metadata only for the mimeType we are interested in.
     const customMetadata = request.output.metadata?.custom;
@@ -233,7 +233,7 @@ function convertVSCodeOutputToExecutResultOrDisplayData(
 }
 
 // Create our window exports
-// tslint:disable-next-line: no-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 (window as any).ipywidgetsKernel = {
     renderOutput,
     disposeOutput
@@ -241,7 +241,7 @@ function convertVSCodeOutputToExecutResultOrDisplayData(
 
 // To ensure we initialize after the other scripts, wait for them.
 function attemptInitialize() {
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if ((window as any).vscIPyWidgets) {
         console.log('IPyWidget kernel initializing...');
         initialize();

@@ -43,7 +43,7 @@ export class DebugLoggingManager implements IDebugLoggingManager {
     private async configureLoggingToFile() {
         await this.filesystem.writeLocalFile(this.logfilePath, ''); // Overwrite existing logfile if any
         addLogfile(this.logfilePath);
-        this.globalState.update(SEEN_DEBUG_LOG_LEVEL_ON_ACTIVATION_AT_LEAST_ONCE, true);
+        void this.globalState.update(SEEN_DEBUG_LOG_LEVEL_ON_ACTIVATION_AT_LEAST_ONCE, true);
     }
 
     private async warnUserAboutLoggingToFile() {
@@ -52,13 +52,13 @@ export class DebugLoggingManager implements IDebugLoggingManager {
             const prompt = Logging.bannerYesTurnOffDebugLogging();
             const no = Logging.NoResponse();
             const dontAskAgain = Logging.NoAndDontAskAgain();
-            this.appShell
+            void this.appShell
                 .showWarningMessage(Logging.warnUserAboutDebugLoggingSetting(), ...[prompt, no, dontAskAgain])
                 .then((selection) => {
                     if (selection === prompt) {
-                        this.commandManager.executeCommand(Commands.ResetLoggingLevel);
+                        void this.commandManager.executeCommand(Commands.ResetLoggingLevel);
                     } else if (selection === dontAskAgain) {
-                        this.globalState.update(ASKED_ALREADY_FOR_LOG_LEVEL, true);
+                        void this.globalState.update(ASKED_ALREADY_FOR_LOG_LEVEL, true);
                     }
                 });
         }

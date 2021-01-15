@@ -31,7 +31,7 @@ export enum MessageType {
     noIdea = 1 << 2
 }
 
-// tslint:disable-next-line: no-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type MessageAction = (payload: any) => boolean;
 
 type MessageMapping<T> = {
@@ -284,7 +284,7 @@ export function checkToPostBasedOnOriginalMessageType(messageType?: MessageType)
     return true;
 }
 
-// tslint:disable-next-line: no-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function shouldRebroadcast(message: keyof IInteractiveWindowMapping, payload: any): [boolean, MessageType] {
     // Get the configured type for this message (whether it should be re-broadcasted or not).
     const messageTypeOrFunc: MessageType | undefined | MessageAction = messageWithMessageTypes[message];

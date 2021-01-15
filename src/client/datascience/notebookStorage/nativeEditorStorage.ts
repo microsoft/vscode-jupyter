@@ -1,5 +1,5 @@
 import type { nbformat } from '@jupyterlab/coreutils';
-// tslint:disable-next-line:no-require-imports no-var-requires
+// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
 import detectIndent = require('detect-indent');
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
@@ -214,10 +214,10 @@ export class NativeEditorStorage implements INotebookStorage {
             notebookData.metadata &&
             notebookData.metadata.language_info &&
             notebookData.metadata.language_info.codemirror_mode &&
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             typeof (notebookData.metadata.language_info.codemirror_mode as any).version === 'number'
         ) {
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             return (notebookData.metadata.language_info.codemirror_mode as any).version;
         }
         // Use the active interpreter if allowed
@@ -317,7 +317,7 @@ export class NativeEditorStorage implements INotebookStorage {
         isInitiallyDirty = false,
         forVSCodeNotebook?: boolean
     ) {
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const json = contents ? (JSON.parse(contents) as Partial<nbformat.INotebookContent>) : undefined;
 
         // Double check json (if we have any)
@@ -479,9 +479,9 @@ export class NativeEditorStorage implements INotebookStorage {
         await this.globalStorage.update(NotebookTransferKey, true);
 
         try {
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             if ((this.globalStorage as any)._value) {
-                // tslint:disable-next-line: no-any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const keys = Object.keys((this.globalStorage as any)._value);
                 [...keys].forEach((k: string) => {
                     if (k.startsWith(KeyPrefix)) {

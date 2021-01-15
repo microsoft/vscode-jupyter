@@ -1,4 +1,4 @@
-// tslint:disable:quotemark ordered-imports member-ordering one-line prefer-const
+/* eslint-disable @typescript-eslint/quotes, import/order, @typescript-eslint/member-ordering, brace-style, prefer-const */
 
 'use strict';
 

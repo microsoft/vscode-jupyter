@@ -56,7 +56,7 @@ export class StyleInjector extends React.Component<IStyleInjectorProps, IStyleIn
         );
     }
 
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public handleMessage = (msg: string, payload?: any): boolean => {
         switch (msg) {
             case CssMessages.GetCssResponse:
@@ -74,7 +74,7 @@ export class StyleInjector extends React.Component<IStyleInjectorProps, IStyleIn
         return true;
     };
 
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private handleCssResponse(payload?: any) {
         const response = payload as IGetCssResponse;
         if (response && response.css) {
@@ -100,7 +100,7 @@ export class StyleInjector extends React.Component<IStyleInjectorProps, IStyleIn
         }
     }
 
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private updateSettings(payload: any) {
         if (payload) {
             const newSettings = JSON.parse(payload as string);

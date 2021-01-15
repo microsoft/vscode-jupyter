@@ -5,7 +5,7 @@ import '../../common/extensions';
 
 import { IWebviewViewMessageListener } from '../../common/application/types';
 
-// tslint:disable:no-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 // Message listening class for the native variable viewer
 export class VariableViewMessageListener implements IWebviewViewMessageListener {

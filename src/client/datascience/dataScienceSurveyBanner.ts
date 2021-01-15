@@ -36,7 +36,7 @@ const NotebookExecutionThreshold = 100;
 
 @injectable()
 export class DataScienceSurveyBannerLogger implements IInteractiveWindowListener {
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private postEmitter = new EventEmitter<{ message: string; payload: any }>();
     constructor(
         @inject(IPersistentStateFactory) private persistentState: IPersistentStateFactory,
@@ -44,11 +44,11 @@ export class DataScienceSurveyBannerLogger implements IInteractiveWindowListener
         @named(BANNER_NAME_DS_SURVEY)
         private readonly dataScienceSurveyBanner: IJupyterExtensionBanner
     ) {}
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public get postMessage(): Event<{ message: string; payload: any }> {
         return this.postEmitter.event;
     }
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public onMessage(message: string, payload?: any): void {
         if (message === InteractiveWindowMessages.ReExecuteCells) {
             const args = payload as IReExecuteCells;

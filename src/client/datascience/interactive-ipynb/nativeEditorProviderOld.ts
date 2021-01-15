@@ -60,7 +60,7 @@ import { NativeEditor } from './nativeEditor';
 import { NativeEditorOldWebView } from './nativeEditorOldWebView';
 import { NativeEditorSynchronizer } from './nativeEditorSynchronizer';
 
-// tslint:disable-next-line:no-require-imports no-var-requires
+// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
 const debounce = require('lodash/debounce') as typeof import('lodash/debounce');
 
 @injectable()

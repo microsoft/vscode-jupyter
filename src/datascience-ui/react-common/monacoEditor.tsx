@@ -9,12 +9,12 @@ import { isTestExecution } from '../../client/common/constants';
 import { IDisposable } from '../../client/common/types';
 import { logMessage } from './logger';
 
-// tslint:disable-next-line:no-require-imports no-var-requires
+// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
 const debounce = require('lodash/debounce') as typeof import('lodash/debounce');
 
 // See the discussion here: https://github.com/Microsoft/tslint-microsoft-contrib/issues/676
-// tslint:disable: react-this-binding-issue
-// tslint:disable-next-line:no-require-imports no-var-requires
+/* eslint-disable  */
+// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
 const throttle = require('lodash/throttle') as typeof import('lodash/throttle');
 
 import { noop } from '../../client/common/utils/misc';
@@ -110,7 +110,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
         this.hideAllOtherHoverAndParameterWidgets = debounce(this.hideAllOtherHoverAndParameterWidgets.bind(this), 150);
     }
 
-    // tslint:disable-next-line: max-func-body-length
+    // eslint-disable-next-line
     public componentDidMount = () => {
         if (window) {
             window.addEventListener('resize', this.windowResized);
@@ -139,7 +139,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
 
             // Listen for commands on the editor. This is to work around a problem
             // with double pasting
-            // tslint:disable: no-any
+            /* eslint-disable @typescript-eslint/no-explicit-any */
             if ((editor as any)._commandService) {
                 const commandService = (editor as any)._commandService as any;
                 if (commandService._onWillExecuteCommand) {
@@ -161,9 +161,9 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
 
             // When testing, eliminate the _assertNotDisposed call. It can break tests if autocomplete
             // is still open at the end of a test
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             if (isTestExecution() && model && (model as any)._assertNotDisposed) {
-                // tslint:disable-next-line: no-any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 (model as any)._assertNotDisposed = noop;
             }
 
@@ -171,7 +171,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
             this.subscriptions.push(editor.onKeyDown((_e) => (this.keyHasBeenPressed = true)));
 
             // Register a link opener so when a user clicks on a link we can navigate to it.
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const openerService = (editor.getContribution('editor.linkDetector') as any).openerService;
             if (openerService && openerService.open) {
                 openerService.open = this.props.openLink;
@@ -279,7 +279,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
             }
 
             // Eliminate the find action if possible
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const editorAny = editor as any;
             if (editorAny._standaloneKeybindingService) {
                 editorAny._standaloneKeybindingService.addDynamicKeybinding('-actions.find');
@@ -328,7 +328,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
         }
     };
 
-    // tslint:disable-next-line: cyclomatic-complexity
+    // eslint-disable-next-line complexity
     public componentDidUpdate(prevProps: IMonacoEditorProps, prevState: IMonacoEditorState) {
         if (this.state.editor) {
             if (prevProps.language !== this.props.language && this.state.model) {
@@ -380,7 +380,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
     public shouldComponentUpdate(
         nextProps: Readonly<IMonacoEditorProps>,
         nextState: Readonly<IMonacoEditorState>,
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         _nextContext: any
     ): boolean {
         if (!fastDeepEqual(nextProps, this.props)) {
@@ -476,7 +476,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
     }
 
     private closeSuggestWidget() {
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const suggest = this.state.editor?.getContribution('editor.contrib.suggestController') as any;
         if (suggest && suggest._widget) {
             suggest._widget.getValue().hideWidget();
@@ -754,7 +754,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
 
             // Hide only if not still inside the same editor. Monaco will handle closing otherwise
             if (!this.coordsInsideEditor(e.clientX, e.clientY)) {
-                // tslint:disable-next-line: no-any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const hover = this.state.editor.getContribution('editor.contrib.hover') as any;
                 if (hover._hideWidgets) {
                     hover._hideWidgets();
@@ -770,7 +770,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
         }
     };
 
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private outermostParentLeave = (e: any) => {
         // Have to bounce this because the leave for the cell is the
         // enter for the hover
@@ -780,7 +780,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
         this.leaveTimer = window.setTimeout(() => this.outermostParentLeaveBounced(e), 0);
     };
 
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private outermostParentLeaveBounced = (e: MouseEvent) => {
         if (this.state.editor && !this.enteredHover && !this.coordsInsideEditor(e.clientX, e.clientY)) {
             // If we haven't already entered hover, then act like it shuts down
@@ -1005,7 +1005,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
 
                                 // We also need to trick the editor into thinking mousing over the hover does not
                                 // mean the mouse has left the editor.
-                                // tslint:disable-next-line: no-any
+                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                                 const hover = editor.getContribution('editor.contrib.hover') as any;
                                 if (
                                     hover._toUnhook &&

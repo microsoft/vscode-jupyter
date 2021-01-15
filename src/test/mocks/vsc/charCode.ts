@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-/* tslint:disable */
+/* eslint-disable */
 
 // Names from https://blog.codinghorror.com/ascii-pronunciation-rules-for-programmers/
 

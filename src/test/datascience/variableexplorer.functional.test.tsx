@@ -14,10 +14,10 @@ import { addCell, createNewEditor } from './nativeEditorTestHelpers';
 import { openVariableExplorer, runDoubleTest, runInteractiveTest, waitForVariablesUpdated } from './testHelpers';
 import { verifyAfterStep, verifyCanFetchData, verifyVariables } from './variableTestHelpers';
 
-// tslint:disable: no-var-requires no-require-imports
+/* eslint-disable @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports */
 const rangeInclusive = require('range-inclusive');
 
-// tslint:disable:max-func-body-length trailing-comma no-any no-multiline-string
+/* eslint-disable , comma-dangle, @typescript-eslint/no-explicit-any, no-multi-str */
 [false, true].forEach((runByLine) => {
     suite(`DataScience Interactive Window variable explorer tests with RunByLine set to ${runByLine}`, () => {
         const disposables: Disposable[] = [];
@@ -28,9 +28,9 @@ const rangeInclusive = require('range-inclusive');
             // These test require python, so only run with a non-mocked jupyter
             const isRollingBuild = process.env ? process.env.VSC_FORCE_REAL_JUPYTER !== undefined : false;
             if (!isRollingBuild) {
-                // tslint:disable-next-line:no-console
+                // eslint-disable-next-line no-console
                 console.log('Skipping Variable Explorer tests. Requires python environment');
-                // tslint:disable-next-line:no-invalid-this
+                // eslint-disable-next-line no-invalid-this
                 this.skip();
             }
         });
@@ -46,7 +46,7 @@ const rangeInclusive = require('range-inclusive');
                 if (!disposable) {
                     continue;
                 }
-                // tslint:disable-next-line:no-any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const promise = disposable.dispose() as Promise<any>;
                 if (promise) {
                     await promise;
@@ -115,7 +115,7 @@ value = 'hello world'`;
                         count: 0,
                         truncated: false
                     },
-                    // tslint:disable-next-line:quotemark
+                    // eslint-disable-next-line @typescript-eslint/quotes
                     {
                         name: 'value',
                         value: 'hello world',
@@ -235,7 +235,7 @@ value = 'hello world'`;
                         count: 0,
                         truncated: false
                     },
-                    // tslint:disable-next-line:quotemark
+                    // eslint-disable-next-line @typescript-eslint/quotes
                     {
                         name: 'value2',
                         value: 'hello world 2',
@@ -282,7 +282,7 @@ myTuple = 1,2,3,4,5,6,7,8,9`;
                         count: 0,
                         truncated: false
                     },
-                    // tslint:disable-next-line:quotemark
+                    // eslint-disable-next-line @typescript-eslint/quotes
                     {
                         name: 'myDict',
                         value: "{'a': 1}",
@@ -435,7 +435,7 @@ mySeries = myDataframe[0]
                         count: 0,
                         truncated: false
                     },
-                    // tslint:disable:no-trailing-whitespace
+                    /* eslint-disable no-trailing-spaces */
                     {
                         name: 'mySeries',
                         value: `0 1.0
