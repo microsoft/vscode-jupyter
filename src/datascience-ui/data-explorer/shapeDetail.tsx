@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { Cell } from './cell';
 
 interface IShapeDetailProps {
     highlightedIndex: number;
@@ -27,25 +28,3 @@ export class ShapeDetail extends React.Component<IShapeDetailProps> {
     }
 }
 
-interface ICellProps {
-    data: string;
-    selected: boolean;
-    first: boolean;
-}
-
-class Cell extends React.PureComponent<ICellProps> {
-    public render() {
-        const style = {
-            color: this.props.selected ? 'green' : 'var(--vscode-editor-foreground)'
-        };
-        const comma = this.props.first ? undefined : (
-            <span style={{ color: 'var(--vscode-editor-foreground)' }}>{', '}</span>
-        );
-        return (
-            <div style={{ display: 'flex', justifyContent: 'center' }}>
-                {comma}
-                <span style={style}>{this.props.data}</span>
-            </div>
-        );
-    }
-}

@@ -16,6 +16,7 @@ import {
     IDataFrameInfo,
     IDataViewerMapping,
     IGetRowsResponse,
+    IGetSliceRequest,
     IRowsResponse
 } from '../../client/datascience/data-viewing/types';
 import { SharedMessages } from '../../client/datascience/messages';
@@ -206,6 +207,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 dataShape={this.state.dataShape}
                 totalRowCount={this.state.totalRowCount}
                 shouldShowSliceDataButton={this.state.shouldShowSliceDataButton}
+                handleSliceRequest={this.handleSliceRequest}
             />
         );
     }
@@ -348,5 +350,9 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         } else {
             this.gridAddEvent.notify({ newRows });
         }
+    }
+
+    private handleSliceRequest = (args: IGetSliceRequest) => {
+        this.sendMessage(DataViewerMessages.GetSliceRequest, args);
     }
 }

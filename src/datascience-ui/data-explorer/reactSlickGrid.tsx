@@ -5,7 +5,7 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import Select from 'react-select';
-import { ColumnType, MaxStringCompare } from '../../client/datascience/data-viewing/types';
+import { ColumnType, IGetSliceRequest, MaxStringCompare } from '../../client/datascience/data-viewing/types';
 import { KeyCodes } from '../react-common/constants';
 import { measureText } from '../react-common/textMeasure';
 import './globalJQueryImports';
@@ -38,6 +38,7 @@ import 'slickgrid/slick.grid.css';
 import './reactSlickGrid.css';
 import { getLocString } from '../react-common/locReactSide';
 import { ShapeDetail } from './shapeDetail';
+import { SliceDetail } from './sliceDetail';
 /*
 WARNING: Do not change the order of these imports.
 Slick grid MUST be imported after we load jQuery and other stuff from `./globalJQueryImports`
@@ -66,6 +67,7 @@ export interface ISlickGridProps {
     dataShape: number[] | undefined;
     totalRowCount: number;
     shouldShowSliceDataButton: boolean; // Feature flag. This should eventually be removed
+    handleSliceRequest(args: IGetSliceRequest): void;
 }
 
 interface ISlickGridState {
@@ -314,7 +316,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
     }
 
     public renderSliceDataButton = () => {
-        if (this.props.shouldShowSliceDataButton && this.props.dataDimensionionality === 3) {
+        if (true) {
             return (
                 <button
                     className="react-grid-filter-button"
@@ -351,6 +353,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
                             options={axisOptions}
                             width={'20px'}
                             isSearchable={false}
+                            onChange={this.handleAxisChange}
                         />
                     </div>
                     <div
@@ -373,7 +376,19 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
                             isSearchable={false}
                             width={'20px'}
                             options={indexOptions}
+                            onChange={this.handleIndexChange}
                             value={{ value: this.state.selectedIndex, label: this.state.selectedIndex.toString() }}
+                        />
+                    </div>
+                    <div
+                        className="slice-data-control-container"
+                        style={{ display: 'flex', justifyContent: 'space-around' }}
+                    >
+                        <span style={{ alignSelf: 'center' }}>Slicing:</span>
+                        <SliceDetail 
+                            highlightedAxis={this.state.selectedAxis}
+                            index={this.state.selectedIndex}
+                            shapeComponents={this.props.dataShape}
                         />
                     </div>
                 </div>
@@ -624,5 +639,17 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
     private toggleSliceMenu = (e: React.SyntheticEvent) => {
         e.preventDefault();
         this.setState({ isSlicing: !this.state.isSlicing });
+        // Request slice with default axis = 0, index = 0
+        this.props.handleSliceRequest({ axis: this.state.selectedAxis, index: this.state.selectedIndex });
     };
+
+    private handleAxisChange = (response: any) => {
+        this.setState({ selectedAxis: response.value });
+        this.props.handleSliceRequest({ axis: this.state.selectedAxis, index: this.state.selectedIndex });
+    }
+
+    private handleIndexChange = (response: any) => {
+        this.setState({ selectedIndex: response.value });
+        this.props.handleSliceRequest({ axis: this.state.selectedAxis, index: this.state.selectedIndex });
+    }
 }

@@ -25,6 +25,7 @@ export namespace DataViewerMessages {
     export const GetRowsRequest = 'get_rows_request';
     export const GetRowsResponse = 'get_rows_response';
     export const CompletedData = 'complete';
+    export const GetSliceRequest = 'get_slice_request';
 }
 
 export interface IGetRowsRequest {
@@ -38,6 +39,12 @@ export interface IGetRowsResponse {
     end: number;
 }
 
+// Note, this assumes we will only ever be slicing along one axis at a time
+export interface IGetSliceRequest {
+    axis: number;
+    index: number;
+}
+
 // Map all messages to specific payloads
 export type IDataViewerMapping = {
     [DataViewerMessages.Started]: never | undefined;
@@ -48,6 +55,7 @@ export type IDataViewerMapping = {
     [DataViewerMessages.GetRowsRequest]: IGetRowsRequest;
     [DataViewerMessages.GetRowsResponse]: IGetRowsResponse;
     [DataViewerMessages.CompletedData]: never | undefined;
+    [DataViewerMessages.GetSliceRequest]: IGetSliceRequest;
 };
 
 export interface IDataFrameInfo {
