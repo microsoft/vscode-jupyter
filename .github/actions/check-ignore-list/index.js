@@ -22,14 +22,14 @@ async function getChangedFiles() {
         return changedFiles;
     } else if (github.context.eventName === 'push') {
         const changedFiles = await caller.paginate(
-            'GET /repos/{owner}/{repo}/commits/{ref}/files',
+            'GET /repos/{owner}/{repo}/commits/{ref}',
             {
                 owner: payload.repository.owner.login,
                 repo: payload.repository.name,
                 ref: payload.after,
                 per_page: 100
             },
-            (response) => response.data.map((fileData) => fileData.filename)
+            (response) => response.data.files.map((fileData) => fileData.filename)
         );
         return changedFiles;
     } else {
