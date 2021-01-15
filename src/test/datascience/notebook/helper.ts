@@ -322,13 +322,17 @@ export async function startJupyter() {
     const disposables: IDisposable[] = [];
     try {
         // Ensure preferred language is always Python.
+        traceInfo(`Start Setup.A`);
         const memento = serviceContainer.get<Memento>(IMemento, GLOBAL_MEMENTO);
         if (memento.get(LastSavedNotebookCellLanguage) !== PYTHON_LANGUAGE) {
             await memento.update(LastSavedNotebookCellLanguage, PYTHON_LANGUAGE);
         }
+        traceInfo(`Start Setup.B`);
         await editorProvider.createNew();
         await insertCodeCell('print("Hello World1")', { index: 0 });
+        traceInfo(`Start Setup.C`);
         await waitForKernelToGetAutoSelected();
+        traceInfo(`Start Setup.D`);
         const cell = vscodeNotebook.activeNotebookEditor!.document.cells[0]!;
         await executeActiveDocument();
         // Wait for Jupyter to start.

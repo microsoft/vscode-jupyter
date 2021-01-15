@@ -45,14 +45,18 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)xxx', function () {
     this.timeout(120_000);
     suiteSetup(async function () {
         traceInfo(`Start Setup`);
-        this.timeout(120_000);
+        this.timeout(240_000);
         api = await initialize();
         if (!(await canRunNotebookTests())) {
             return this.skip();
         }
+        traceInfo(`Start Setup.1`);
         await trustAllNotebooks();
+        traceInfo(`Start Setup.2`);
         await startRemoteJupyterServer();
+        traceInfo(`Start Setup.3`);
         await startJupyter();
+        traceInfo(`Start Setup.4`);
         sinon.restore();
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
