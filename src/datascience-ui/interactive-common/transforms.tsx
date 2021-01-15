@@ -1,4 +1,4 @@
-/* tslint:disable */
+/* eslint-disable */
 import * as React from 'react';
 import Loadable, { LoadableComponent } from '@loadable/component';
 import { getLocString } from '../react-common/locReactSide';

@@ -39,9 +39,9 @@ export class CleanupFixture {
                         await res;
                     }
                 } catch (err) {
-                    // tslint:disable-next-line:no-console
+                    // eslint-disable-next-line no-console
                     console.error(`cleanup ${i + 1} failed: ${err}`);
-                    // tslint:disable-next-line:no-console
+                    // eslint-disable-next-line no-console
                     console.error('moving on...');
                 }
             })

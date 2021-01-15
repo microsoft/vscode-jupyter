@@ -6,7 +6,7 @@ import { IJupyterExtraSettings } from '../../client/datascience/types';
 
 export function getDefaultSettings(): IJupyterExtraSettings {
     // Default settings for tests
-    // tslint:disable-next-line: no-unnecessary-local-variable
+    // eslint-disable-next-line
     const result: Partial<IJupyterExtraSettings> = {
         insidersChannel: 'off',
         experiments: { enabled: true, optInto: [], optOutFrom: [] },
@@ -18,7 +18,7 @@ export function getDefaultSettings(): IJupyterExtraSettings {
         jupyterLaunchTimeout: 10,
         jupyterLaunchRetries: 3,
         jupyterServerType: 'local',
-        // tslint:disable-next-line: no-invalid-template-strings
+        // eslint-disable-next-line no-template-curly-in-string
         notebookFileRoot: '${fileDirname}',
         changeDirOnImportExport: false,
         useDefaultConfigForJupyter: true,
@@ -78,11 +78,11 @@ export function getDefaultSettings(): IJupyterExtraSettings {
         widgetScriptSources: []
     };
 
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return result as any;
 }
 
-//tslint:disable:no-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export function computeEditorOptions(settings: IJupyterExtraSettings): monacoEditor.editor.IEditorOptions {
     const intellisenseOptions = settings.intellisenseOptions;
     const extraSettings = settings.extraSettings;

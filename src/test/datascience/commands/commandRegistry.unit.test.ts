@@ -21,7 +21,7 @@ import { JupyterServerUriStorage } from '../../../client/datascience/jupyter/ser
 import { NativeEditorProvider } from '../../../client/datascience/notebookStorage/nativeEditorProvider';
 import { MockOutputChannel } from '../../mockClasses';
 
-// tslint:disable: max-func-body-length
+/* eslint-disable  */
 suite('DataScience - Commands', () => {
     let kernelSwitcherCommand: NotebookCommands;
     let serverSelectorCommand: JupyterServerSelectorCommand;
@@ -103,7 +103,7 @@ suite('DataScience - Commands', () => {
             Commands.ViewJupyterOutput
         ].forEach((command) => {
             test(`Should register Command ${command}`, () => {
-                // tslint:disable-next-line: no-any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 verify(commandManager.registerCommand(command as any, anything(), commandRegistry)).once();
             });
         });

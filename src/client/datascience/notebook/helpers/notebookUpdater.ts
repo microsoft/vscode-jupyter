@@ -43,7 +43,7 @@ export async function chainWithPendingUpdates(
 }
 
 export function clearPendingChainedUpdatesForTests() {
-    // tslint:disable-next-line: no-any no-require-imports
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-require-imports
     const vsc = require('vscode') as any;
     const editor: NotebookEditor | undefined = vsc.notebook.activeNotebookEditor;
     if (editor?.document) {

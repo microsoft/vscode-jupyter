@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { Kernel, KernelMessage, ServerConnection } from '@jupyterlab/services';
-// tslint:disable: no-any no-require-imports
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-require-imports */
 import cloneDeep = require('lodash/cloneDeep');
 import * as uuid from 'uuid/v4';
 import { isTestExecution } from '../../common/constants';
@@ -18,7 +18,7 @@ export function suppressShutdownErrors(realKernel: any) {
     // When running under a test, mark all futures as done so we
     // don't hit this problem:
     // https://github.com/jupyterlab/jupyterlab/issues/4252
-    // tslint:disable:no-any
+    /* eslint-disable @typescript-eslint/no-explicit-any */
     if (isTestExecution()) {
         const defaultKernel = realKernel as any; // NOSONAR
         if (defaultKernel && defaultKernel._futures) {
@@ -192,7 +192,7 @@ export class RawKernel implements Kernel.IKernel {
         return this.realKernel.requestExecute(content, disposeOnDone, metadata);
     }
     public requestDebug(
-        // tslint:disable-next-line: no-banned-terms
+        // eslint-disable-next-line no-caller,no-eval
         content: { seq: number; type: 'request'; command: string; arguments?: any },
         disposeOnDone?: boolean
     ): Kernel.IControlFuture<KernelMessage.IDebugRequestMsg, KernelMessage.IDebugReplyMsg> {

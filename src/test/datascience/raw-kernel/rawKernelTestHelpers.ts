@@ -6,7 +6,7 @@ import { JSONObject } from '@phosphor/coreutils';
 import { createDeferred, Deferred } from '../../../client/common/utils/async';
 import { RawKernel } from '../../../client/datascience/raw-kernel/rawKernel';
 
-// tslint:disable: no-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export async function requestExecute(
     rawKernel: RawKernel,
     code: string,

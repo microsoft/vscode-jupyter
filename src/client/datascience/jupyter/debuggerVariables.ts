@@ -111,7 +111,7 @@ export class DebuggerVariables extends DebugLocationTracker
         // Then eval calling the main function with our target variable
         const results = await this.evaluate(
             `${DataFrameLoading.DataFrameInfoImportFunc}(${targetVariable.name})`,
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (targetVariable as any).frameId
         );
 
@@ -146,7 +146,7 @@ export class DebuggerVariables extends DebugLocationTracker
         // Since the debugger splits up long requests, split this based on the number of items.
 
         // Maximum 100 cells at a time or one row
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         let output: any;
         const minnedEnd = Math.min(targetVariable.rowCount || 0, end);
         const totalRowCount = end - start;
@@ -156,7 +156,7 @@ export class DebuggerVariables extends DebugLocationTracker
             const chunkEnd = Math.min(pos + chunkSize, minnedEnd);
             const results = await this.evaluate(
                 `${DataFrameLoading.DataFrameRowImportFunc}(${targetVariable.name}, ${pos}, ${chunkEnd})`,
-                // tslint:disable-next-line: no-any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 (targetVariable as any).frameId
             );
             const chunkResults = JSON.parse(results.result);
@@ -175,7 +175,7 @@ export class DebuggerVariables extends DebugLocationTracker
     }
 
     // This special DebugAdapterTracker function listens to messages sent from the debug adapter to VS Code
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public onDidSendMessage(message: any) {
         super.onDidSendMessage(message);
         // When the initialize response comes back, indicate we have started.
@@ -183,7 +183,7 @@ export class DebuggerVariables extends DebugLocationTracker
             this.debuggingStarted = true;
         } else if (message.type === 'response' && message.command === 'variables' && message.body) {
             // If using the interactive debugger, update our variables.
-            // tslint:disable-next-line: no-suspicious-comment
+            // eslint-disable-next-line
             // TODO: Figure out what resource to use
             this.updateVariables(undefined, message as DebugProtocol.VariablesResponse);
             this.monkeyPatchDataViewableVariables(message);
@@ -223,7 +223,7 @@ export class DebuggerVariables extends DebugLocationTracker
         this.importedGetVariableInfoScriptsIntoKernel.delete(key);
     }
 
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private async evaluate(code: string, frameId?: number): Promise<any> {
         if (this.debugService.activeDebugSession) {
             const results = await this.debugService.activeDebugSession.customRequest('evaluate', {
@@ -277,7 +277,7 @@ export class DebuggerVariables extends DebugLocationTracker
         // Then eval calling the variable info function with our target variable
         const results = await this.evaluate(
             `${GetVariableInfo.VariableInfoImportFunc}(${variable.name})`,
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (variable as any).frameId
         );
         if (results && results.result) {
@@ -296,7 +296,7 @@ export class DebuggerVariables extends DebugLocationTracker
     private monkeyPatchDataViewableVariables(variablesResponse: DebugProtocol.VariablesResponse) {
         variablesResponse.body.variables.forEach((v) => {
             if (v.type && DataViewableTypes.has(v.type)) {
-                // tslint:disable-next-line: no-any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 (v as any).__vscodeVariableMenuContext = 'viewableInDataViewer';
             }
         });

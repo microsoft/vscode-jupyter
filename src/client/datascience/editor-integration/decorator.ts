@@ -42,7 +42,7 @@ export class Decorator implements IExtensionSingleActivationService, IDisposable
 
     public dispose() {
         if (this.timer) {
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             clearTimeout(this.timer as any);
         }
     }
@@ -71,7 +71,7 @@ export class Decorator implements IExtensionSingleActivationService, IDisposable
 
     private triggerUpdate(editor: vscode.TextEditor | undefined) {
         if (this.timer) {
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             clearTimeout(this.timer as any);
         }
         this.timer = setTimeout(() => this.update(editor), 100);

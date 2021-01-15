@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { min } from 'lodash';
-// tslint:disable-next-line: no-require-imports no-var-requires
+// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
 const cloneDeep = require('lodash/cloneDeep');
 
 import { CellState, ICell, IJupyterExtraSettings } from '../../../../client/datascience/types';
@@ -39,13 +39,13 @@ export namespace Helpers {
     }
 
     // This function is because the unit test typescript compiler can't handle ICell.metadata
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     export function asCellViewModel(cvm: any): ICellViewModel {
         return cvm as ICellViewModel;
     }
 
     // This function is because the unit test typescript compiler can't handle ICell.metadata
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     export function asCell(cell: any): ICell {
         return cell as ICell;
     }

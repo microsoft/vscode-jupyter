@@ -110,7 +110,7 @@ export class ServerCache implements IAsyncDisposable {
                         // This should be quick. The server is either already up or will never come back.
                         const server = await Promise.race([d.promise, sleep(1000)]);
                         if (typeof server !== 'number') {
-                            // tslint:disable-next-line: no-any
+                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
                             await (server as any).dispose();
                         } else {
                             traceInfo('ServerCache Dispose, no server');

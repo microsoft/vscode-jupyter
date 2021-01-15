@@ -24,7 +24,7 @@ import { IJupyterConnection, IJupyterKernelSpec, INotebook } from '../../../../c
 import { PythonEnvironment } from '../../../../client/pythonEnvironments/info';
 import { noop } from '../../../core';
 
-// tslint:disable: max-func-body-length no-any
+/* eslint-disable , @typescript-eslint/no-explicit-any */
 suite('DataScience - Kernel Switcher', () => {
     let kernelSwitcher: KernelSwitcher;
     let configService: IConfigurationService;
@@ -43,7 +43,7 @@ suite('DataScience - Kernel Switcher', () => {
             lastActivityTime: new Date(),
             name: 'CurrentKernel',
             numberOfConnections: 0,
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             session: {} as any
         };
         selectedInterpreter = {
@@ -63,7 +63,7 @@ suite('DataScience - Kernel Switcher', () => {
         const notebookProvider = mock(NotebookProvider);
         when(notebookProvider.type).thenReturn('jupyter');
 
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         when(notebook.connection).thenReturn(instance(connection));
         when(configService.getSettings(anything())).thenReturn(instance(settings));
         kernelSwitcher = new KernelSwitcher(
@@ -78,7 +78,7 @@ suite('DataScience - Kernel Switcher', () => {
     });
 
     [true, false].forEach((isLocalConnection) => {
-        // tslint:disable-next-line: max-func-body-length
+        // eslint-disable-next-line
         suite(isLocalConnection ? 'Local Connection' : 'Remote Connection', () => {
             setup(() => {
                 const jupyterConnection: IJupyterConnection = {
@@ -97,7 +97,7 @@ suite('DataScience - Kernel Switcher', () => {
                 when(notebook.connection).thenReturn(jupyterConnection);
             });
             teardown(function () {
-                // tslint:disable-next-line: no-invalid-this
+                // eslint-disable-next-line no-invalid-this
                 if (this.runnable().state) {
                     // We should have checked if it was a local connection.
                     verify(notebook.connection).atLeast(1);
@@ -124,7 +124,7 @@ suite('DataScience - Kernel Switcher', () => {
                         const ex = new JupyterSessionStartError(new Error('Kaboom'));
                         when(notebook.setKernelConnection(anything(), anything())).thenReject(ex);
                         when(appShell.showErrorMessage(anything(), anything(), anything())).thenResolve(
-                            // tslint:disable-next-line: no-any
+                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
                             Common.cancel() as any
                         );
 

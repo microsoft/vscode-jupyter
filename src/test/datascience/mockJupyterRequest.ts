@@ -10,7 +10,7 @@ import { noop } from '../../client/common/utils/misc';
 import { ICell } from '../../client/datascience/types';
 import { concatMultilineString } from '../../datascience-ui/common';
 
-//tslint:disable:no-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 interface IMessageResult {
     message: KernelMessage.IIOPubMessage | KernelMessage.IInputRequestMsg | KernelMessage.IMessage;
     haveMore: boolean;
@@ -202,7 +202,7 @@ class OutputMessageProducer extends SimpleMessageProducer {
     }
 }
 
-// tslint:disable:no-any no-http-string no-multiline-string max-func-body-length
+/* eslint-disable @typescript-eslint/no-explicit-any, , no-multi-str,  */
 export class MockJupyterRequest implements Kernel.IFuture<any, any> {
     public msg: KernelMessage.IShellMessage;
     public onReply: (msg: KernelMessage.IShellMessage) => void | PromiseLike<void>;

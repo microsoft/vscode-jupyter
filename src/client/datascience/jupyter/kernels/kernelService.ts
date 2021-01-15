@@ -39,7 +39,7 @@ import { cleanEnvironment, detectDefaultKernelName } from './helpers';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
 import { LiveKernelModel } from './types';
 
-// tslint:disable-next-line: no-var-requires no-require-imports
+// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const NamedRegexp = require('named-js-regexp') as typeof import('named-js-regexp');
 
 /**
@@ -131,7 +131,7 @@ export class KernelService {
      * @returns {(Promise<PythonEnvironment | undefined>)}
      * @memberof KernelService
      */
-    // tslint:disable-next-line: cyclomatic-complexity
+    // eslint-disable-next-line complexity
     @traceDecorators.verbose('Find matching interpreter for a given kernel spec')
     public async findMatchingInterpreter(
         kernelSpec: IJupyterKernelSpec | LiveKernelModel,
@@ -290,12 +290,12 @@ export class KernelService {
      * @returns {Promise<IJupyterKernelSpec>}
      * @memberof KernelService
      */
-    // tslint:disable-next-line: max-func-body-length
-    // tslint:disable-next-line: cyclomatic-complexity
+    // eslint-disable-next-line
+    // eslint-disable-next-line complexity
     @captureTelemetry(Telemetry.RegisterInterpreterAsKernel, undefined, true)
     @traceDecorators.error('Failed to register an interpreter as a kernel')
     @reportAction(ReportableAction.KernelsRegisterKernel)
-    // tslint:disable-next-line:max-func-body-length
+    // eslint-disable-next-line
     public async registerKernel(
         interpreter: PythonEnvironment,
         disableUI?: boolean,
@@ -430,7 +430,7 @@ export class KernelService {
                 specModel.env = await this.activationHelper
                     .getActivatedEnvironmentVariables(undefined, interpreter, true)
                     .catch(noop)
-                    // tslint:disable-next-line: no-any
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     .then((env) => (env || {}) as any);
                 if (Cancellation.isCanceled(cancelToken)) {
                     return;
@@ -439,7 +439,7 @@ export class KernelService {
                 // Special case, modify the PYTHONWARNINGS env to the global value.
                 // otherwise it's forced to 'ignore' because activated variables are cached.
                 if (specModel.env && process.env[PYTHON_WARNINGS]) {
-                    // tslint:disable-next-line:no-any
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     specModel.env[PYTHON_WARNINGS] = process.env[PYTHON_WARNINGS] as any;
                 } else if (specModel.env && specModel.env[PYTHON_WARNINGS]) {
                     delete specModel.env[PYTHON_WARNINGS];
@@ -448,7 +448,7 @@ export class KernelService {
                 // We'll need information such as interpreter type, display name, path, etc...
                 // Its just a JSON file, and the information is small, hence might as well store everything.
                 specModel.metadata = specModel.metadata || {};
-                // tslint:disable-next-line: no-any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 specModel.metadata.interpreter = interpreter as any;
 
                 // Indicate we need to write

@@ -26,7 +26,7 @@ import {
     waitForKernelToGetAutoSelected
 } from '../../notebook/helper';
 
-// tslint:disable: no-invalid-this max-func-body-length no-function-expression no-any
+/* eslint-disable no-invalid-this, , , @typescript-eslint/no-explicit-any */
 suite('DataScience Install IPyKernel (slow) (install)', function () {
     const disposables: IDisposable[] = [];
     let nbFile: string;

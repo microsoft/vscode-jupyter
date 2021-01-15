@@ -20,7 +20,7 @@ const LineQueryRegex = /line=(\d+)/;
 // in a markdown cell using the syntax: https://command:[my.vscode.command].
 const linkCommandAllowList = ['jupyter.latestExtension', 'jupyter.enableLoadingWidgetScriptsFromThirdPartySource'];
 
-// tslint:disable: no-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 @injectable()
 export class LinkProvider implements IInteractiveWindowListener {
     private postEmitter: EventEmitter<{ message: string; payload: any }> = new EventEmitter<{

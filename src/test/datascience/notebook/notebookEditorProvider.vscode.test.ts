@@ -24,7 +24,7 @@ import {
 } from './helper';
 
 suite('DataScience - VSCode Notebook (Editor Provider)', function () {
-    // tslint:disable: no-invalid-this no-any
+    /* eslint-disable no-invalid-this, @typescript-eslint/no-explicit-any */
     this.timeout(5_000);
 
     let api: IExtensionTestApi;

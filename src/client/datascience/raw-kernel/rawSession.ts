@@ -33,7 +33,7 @@ export class RawSession implements ISessionWithSocket {
 
     // RawSession owns the lifetime of the kernel process and will dispose it
     constructor(public kernelProcess: IKernelProcess) {
-        // tslint:disable-next-line: no-require-imports
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
         const signaling = require('@phosphor/signaling') as typeof import('@phosphor/signaling');
         this._statusChanged = new signaling.Signal<this, Kernel.Status>(this);
         this._kernelChanged = new signaling.Signal<this, Session.IKernelChangedArgs>(this);

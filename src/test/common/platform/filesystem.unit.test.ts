@@ -19,14 +19,14 @@ import {
     WriteStream
 } from '../../../client/common/platform/types';
 
-// tslint:disable:max-func-body-length chai-vague-errors
+/* eslint-disable  */
 
 function Uri(filename: string): vscode.Uri {
     return vscode.Uri.file(filename);
 }
 
 function createDummyStat(filetype: FileType): FileStat {
-    //tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return { type: filetype } as any;
 }
 
@@ -92,7 +92,7 @@ suite('Raw FileSystem', () => {
         const stat = TypeMoq.Mock.ofType<fsextra.Stats>(undefined, TypeMoq.MockBehavior.Strict);
         // This is necessary because passing "mock.object" to
         // Promise.resolve() triggers the lookup.
-        //tslint:disable-next-line:no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         stat.setup((s: any) => s.then)
             .returns(() => undefined)
             .verifiable(TypeMoq.Times.atLeast(0));
@@ -175,7 +175,7 @@ suite('Raw FileSystem', () => {
                     size: 10,
                     ctime: 101,
                     mtime: 102
-                    //tslint:disable-next-line:no-any
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 } as any;
                 const old = createMockLegacyStat();
                 setupStatFileType(old, testData.filetype);
@@ -688,7 +688,7 @@ suite('Raw FileSystem', () => {
                 size: 10,
                 ctime: 101,
                 mtime: 102
-                //tslint:disable-next-line:no-any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
             } as any;
             const lstat = createMockLegacyStat();
             setupStatFileType(lstat, FileType.Unknown);
@@ -713,7 +713,7 @@ suite('Raw FileSystem', () => {
                     size: 10,
                     ctime: 101,
                     mtime: 102
-                    //tslint:disable-next-line:no-any
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 } as any;
                 const lstat = createMockLegacyStat();
                 lstat
@@ -743,7 +743,7 @@ suite('Raw FileSystem', () => {
                     size: 10,
                     ctime: 101,
                     mtime: 102
-                    //tslint:disable-next-line:no-any
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 } as any;
                 const lstat = createMockLegacyStat();
                 lstat
@@ -801,7 +801,7 @@ suite('Raw FileSystem', () => {
     suite('createReadStream', () => {
         test('wraps the low-level function', () => {
             const filename = 'x/y/z/spam.py';
-            //tslint:disable-next-line:no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const expected = {} as any;
             raw.setup((r) => r.createReadStream(filename)) // expect the specific filename
                 .returns(() => expected);
@@ -825,7 +825,7 @@ suite('Raw FileSystem', () => {
     suite('createWriteStream', () => {
         test('wraps the low-level function', () => {
             const filename = 'x/y/z/spam.py';
-            //tslint:disable-next-line:no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const expected = {} as any;
             raw.setup((r) => r.createWriteStream(filename)) // expect the specific filename
                 .returns(() => expected);
@@ -881,7 +881,7 @@ suite('FileSystemUtils', () => {
         const stat = TypeMoq.Mock.ofType<FileStat>(undefined, TypeMoq.MockBehavior.Strict);
         // This is necessary because passing "mock.object" to
         // Promise.resolve() triggers the lookup.
-        //tslint:disable-next-line:no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         stat.setup((s: any) => s.then)
             .returns(() => undefined)
             .verifiable(TypeMoq.Times.atLeast(0));
@@ -1369,7 +1369,7 @@ suite('FileSystemUtils', () => {
             const dirname = 'x/y/z/spam';
             const filename = `${dirname}/___vscpTest___`;
             const err = new Error('not permitted');
-            // tslint:disable-next-line:no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (err as any).code = 'EACCES'; // errno
             deps.setup((d) => d.stat(dirname)) // Success!
                 .returns(() => Promise.resolve((undefined as unknown) as FileStat));
@@ -1385,7 +1385,7 @@ suite('FileSystemUtils', () => {
         test('fails if the directory does not exist', async () => {
             const dirname = 'x/y/z/spam';
             const err = new Error('not found');
-            // tslint:disable-next-line:no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (err as any).code = 'ENOENT'; // errno
             deps.setup((d) => d.stat(dirname)) // file-not-found
                 .returns(() => Promise.reject(err));

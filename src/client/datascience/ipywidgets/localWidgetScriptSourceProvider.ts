@@ -76,11 +76,11 @@ export class LocalWidgetScriptSourceProvider implements IWidgetScriptSourceProvi
 
             const fileUri = Uri.file(path.join(nbextensionsPath, file));
             const scriptUri = (await this.localResourceUriConverter.asWebviewUri(fileUri)).toString();
-            // tslint:disable-next-line: no-unnecessary-local-variable
+            // eslint-disable-next-line
             const widgetScriptSource: WidgetScriptSource = { moduleName, scriptUri, source: 'local' };
             return widgetScriptSource;
         });
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         return Promise.all(mappedFiles as any);
     }
     private async getSysPrefixOfKernel() {

@@ -27,7 +27,7 @@ export class SvgViewer extends React.Component<ISvgViewerProps, ISvgViewerState>
     private svgPanZoomRef: React.RefObject<ReactSVGPanZoom> = React.createRef<ReactSVGPanZoom>();
     constructor(props: ISvgViewerProps) {
         super(props);
-        // tslint:disable-next-line: no-object-literal-type-assertion
+        // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
         this.state = { value: props.defaultValue ? props.defaultValue : ({} as Value), tool: props.tool };
     }
 
@@ -35,7 +35,7 @@ export class SvgViewer extends React.Component<ISvgViewerProps, ISvgViewerState>
         // May need to update state if props changed
         if (prevProps.defaultValue !== this.props.defaultValue || this.props.id !== prevProps.id) {
             this.setState({
-                // tslint:disable-next-line: no-object-literal-type-assertion
+                // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
                 value: this.props.defaultValue ? this.props.defaultValue : ({} as Value),
                 tool: this.props.tool
             });

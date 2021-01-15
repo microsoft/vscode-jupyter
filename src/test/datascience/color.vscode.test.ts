@@ -14,7 +14,7 @@ import { ThemeFinder } from '../../client/datascience/themeFinder';
 import { IThemeFinder } from '../../client/datascience/types';
 import { MockJupyterSettings } from './mockJupyterSettings';
 
-// tslint:disable:max-func-body-length
+/* eslint-disable  */
 suite('Theme colors', () => {
     let themeFinder: ThemeFinder;
     let extensions: Extensions;
@@ -123,7 +123,7 @@ suite('Theme colors', () => {
                 // Make sure we have a string value that is not set to a variable
                 // (that would be the default and all themes have a string color)
                 assert.ok(theme.rules, 'No rules found in monaco theme');
-                // tslint:disable-next-line: no-any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const commentPunctuation = (theme.rules as any[]).findIndex(
                     (r) => r.token === 'punctuation.definition.comment'
                 );

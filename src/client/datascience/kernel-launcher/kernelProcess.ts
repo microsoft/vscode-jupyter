@@ -208,7 +208,7 @@ export class KernelProcess implements IKernelProcess {
         }
         if (!Array.isArray(kernelSpec.argv)) {
             traceError('KernelSpec.argv in KernelProcess is undefined');
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             this._launchKernelSpec = undefined;
         } else {
             // Copy our kernelspec and assign a new argv array

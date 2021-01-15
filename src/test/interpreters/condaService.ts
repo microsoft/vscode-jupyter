@@ -13,7 +13,7 @@ import { parseCondaEnvFileContents } from './condaHelper';
 import { isCondaEnvironment } from './condaLocator';
 
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
-// tslint:disable-next-line:no-require-imports no-var-requires
+// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
 const untildify: (value: string) => string = require('untildify');
 
 // This glob pattern will match all of the following:

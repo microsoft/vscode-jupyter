@@ -27,7 +27,7 @@ interface IChannels {
     iopub: Subscriber;
 }
 
-// tslint:disable: no-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * This class creates a WebSocket front end on a ZMQ set of connections. It is special in that
  * it does all serialization/deserialization itself.
@@ -139,7 +139,7 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
         channel: 'iopub' | 'shell' | 'control' | 'stdin',
         readable: Subscriber | Dealer
     ) {
-        // tslint:disable-next-line: await-promise
+        // eslint-disable-next-line @typescript-eslint/await-thenable
         for await (const msg of readable) {
             // Make sure to quit if we are disposed.
             if (this.closed) {
@@ -151,7 +151,7 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
     }
 
     private generateChannels(connection: IKernelConnection): IChannels {
-        // tslint:disable-next-line: no-require-imports
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
         const zmq = require('zeromq') as typeof import('zeromq');
 
         // Need a routing id for them to share.

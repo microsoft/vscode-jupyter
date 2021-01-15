@@ -8,7 +8,7 @@ import { assert } from 'chai';
 import { cloneDeep } from 'lodash';
 import { Uri } from 'vscode';
 import { CellOutput, NotebookCellData } from '../../../../types/vscode-proposed';
-// tslint:disable-next-line: no-var-requires no-require-imports
+// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { ReadWrite } from '../../../client/common/types';
@@ -31,7 +31,7 @@ suite('DataScience - NativeNotebook helpers', () => {
             }
         ];
 
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const notebook = notebookModelToVSCNotebookData(true, {}, Uri.file(''), cells as any, PYTHON_LANGUAGE);
 
         assert.isOk(notebook);
@@ -84,7 +84,7 @@ suite('DataScience - NativeNotebook helpers', () => {
                     metadata: {}
                 }
             ];
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const notebook = notebookModelToVSCNotebookData(true, {}, Uri.file(''), cells, PYTHON_LANGUAGE);
 
             assert.deepEqual(notebook.cells[0].outputs, expectedOutputs);

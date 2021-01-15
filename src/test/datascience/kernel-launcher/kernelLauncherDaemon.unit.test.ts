@@ -13,7 +13,7 @@ import { IJupyterKernelSpec } from '../../../client/datascience/types';
 import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
 import { createPythonInterpreter } from '../../utils/interpreters';
 
-// tslint:disable: max-func-body-length no-any
+/* eslint-disable , @typescript-eslint/no-explicit-any */
 suite('DataScience - Kernel Launcher Daemon', () => {
     let launcher: PythonKernelLauncherDaemon;
     let daemonPool: KernelDaemonPool;

@@ -4,7 +4,7 @@
 'use strict';
 
 import { assert } from 'chai';
-// tslint:disable:max-func-body-length no-invalid-this no-any
+/* eslint-disable , no-invalid-this, @typescript-eslint/no-explicit-any */
 
 import * as fs from 'fs-extra';
 import * as path from 'path';

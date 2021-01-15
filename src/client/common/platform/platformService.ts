@@ -72,7 +72,7 @@ export class PlatformService implements IPlatformService {
         return os.release();
     }
     public get is64bit(): boolean {
-        // tslint:disable-next-line:no-require-imports
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
         const arch = require('arch');
         return arch() === 'x64';
     }

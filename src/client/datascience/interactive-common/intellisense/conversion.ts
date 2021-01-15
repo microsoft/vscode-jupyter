@@ -178,7 +178,7 @@ export function convertToMonacoCompletionItem(
     requiresKindConversion: boolean
 ): monacoEditor.languages.CompletionItem {
     // They should be pretty much identical? Except for ranges.
-    // tslint:disable-next-line: no-object-literal-type-assertion no-any
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-explicit-any
     const result = ({ ...item } as any) as monacoEditor.languages.CompletionItem;
     if (requiresKindConversion) {
         result.kind = convertToMonacoCompletionItemKind(item.kind);
@@ -189,7 +189,7 @@ export function convertToMonacoCompletionItem(
         result.insertText = result.label;
     }
 
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const snippet = (result.insertText as any) as vscode.SnippetString;
     if (snippet.value) {
         result.insertTextRules = SnippetEscape;
@@ -198,7 +198,7 @@ export function convertToMonacoCompletionItem(
     }
 
     // Make sure we don't have _documentPosition. It holds onto a huge tree of information
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const resultAny = result as any;
     if (resultAny._documentPosition) {
         delete resultAny._documentPosition;
@@ -208,7 +208,7 @@ export function convertToMonacoCompletionItem(
 }
 
 export function convertToVSCodeCompletionItem(item: monacoEditor.languages.CompletionItem): vscode.CompletionItem {
-    // tslint:disable-next-line: no-object-literal-type-assertion no-any
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-explicit-any
     const result = ({ ...item } as any) as vscode.CompletionItem;
 
     if (item.kind && result.kind) {
@@ -262,7 +262,7 @@ function convertToMonacoMarkdown(
         | vscode.MarkedString
         | vscode.MarkedString[]
 ): monacoEditor.IMarkdownString[] {
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if ('kind' in (strings as any)) {
         const content = strings as vscodeLanguageClient.MarkupContent;
         return [
@@ -270,9 +270,9 @@ function convertToMonacoMarkdown(
                 value: content.value
             }
         ];
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } else if ('value' in (strings as any)) {
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const content = strings as any;
         return [
             {
@@ -311,13 +311,13 @@ export function convertToMonacoHover(
 export function convertStringsToSuggestions(
     strings: ReadonlyArray<string>,
     range: monacoEditor.IRange,
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     metadata: any
 ): monacoEditor.languages.CompletionItem[] {
     // Try to compute kind from the metadata.
     let kinds: number[];
     if (metadata && metadata._jupyter_types_experimental) {
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         kinds = metadata._jupyter_types_experimental.map((e: any) => {
             const result = mapJupyterKind.get(e.type);
             return result ? result : 3; // If not found use Field = 3

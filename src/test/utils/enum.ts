@@ -3,7 +3,7 @@
 
 'use strict';
 
-// tslint:disable:no-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 export function getNamesAndValues<T>(e: any): { name: string; value: T }[] {
     return getNames(e).map((n) => ({ name: n, value: e[n] }));

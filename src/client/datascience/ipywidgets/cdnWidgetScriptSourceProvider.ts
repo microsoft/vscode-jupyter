@@ -18,7 +18,7 @@ import { IWidgetScriptSourceProvider, WidgetScriptSource } from './types';
 const unpgkUrl = 'https://unpkg.com/';
 const jsdelivrUrl = 'https://cdn.jsdelivr.net/npm/';
 
-// tslint:disable: no-var-requires no-require-imports
+/* eslint-disable @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports */
 const sanitize = require('sanitize-filename');
 
 function moduleNameToCDNUrl(cdn: string, moduleName: string, moduleVersion: string) {
@@ -202,7 +202,7 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
 
     private handleResponse(req: request.Request, filePath: string): Promise<boolean> {
         const deferred = createDeferred<boolean>();
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const errorHandler = (e: any) => {
             traceError('Error downloading from CDN', e);
             deferred.resolve(false);

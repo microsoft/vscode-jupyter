@@ -40,7 +40,7 @@ import { HostRawNotebookProvider } from './liveshare/hostRawNotebookProvider';
 
 interface IRawNotebookProviderInterface extends IRoleBasedObject, IRawNotebookProvider {}
 
-// tslint:disable:callable-types
+/* eslint-disable @typescript-eslint/prefer-function-type */
 type RawNotebookProviderClassType = {
     new (
         liveShare: ILiveShareApi,
@@ -62,7 +62,7 @@ type RawNotebookProviderClassType = {
         extensionChecker: IPythonExtensionChecker
     ): IRawNotebookProviderInterface;
 };
-// tslint:enable:callable-types
+/* eslint-enable @typescript-eslint/prefer-function-type */
 
 // This class wraps either a HostRawNotebookProvider or a GuestRawNotebookProvider based on the liveshare state. It abstracts
 // out the live share specific parts.

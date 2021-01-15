@@ -23,7 +23,7 @@ import { JupyterNotebookBase } from '../../../client/datascience/jupyter/jupyter
 import { IJupyterConnection, ILocalResourceUriConverter, INotebook } from '../../../client/datascience/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 
-// tslint:disable: no-any no-invalid-this
+/* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 
 suite('DataScience - ipywidget - Widget Script Source Provider', () => {
     let scriptSourceProvider: IPyWidgetScriptSourceProvider;

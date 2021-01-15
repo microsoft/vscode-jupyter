@@ -41,7 +41,7 @@ import { JupyterKernelSpec } from './jupyter/kernels/jupyterKernelSpec';
 import { KernelConnectionMetadata } from './jupyter/kernels/types';
 import { KernelStateEventArgs } from './notebookExtensibility';
 
-// tslint:disable-next-line:no-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type PromiseFunction = (...any: any[]) => Promise<any>;
 
 // Main interface
@@ -77,7 +77,7 @@ export interface IJupyterConnection extends Disposable {
     localProcExitCode: number | undefined;
     readonly rootDirectory: string; // Directory where the notebook server was started.
     readonly url?: string;
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     getAuthHeader?(): any; // Snould be a json object
 }
 
@@ -225,9 +225,9 @@ export interface INotebook extends IAsyncDisposable {
     sendCommMessage(
         buffers: (ArrayBuffer | ArrayBufferView)[],
         content: { comm_id: string; data: JSONObject; target_name: string | undefined },
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         metadata: any,
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         msgId: any
     ): Kernel.IShellFuture<
         KernelMessage.IShellMessage<'comm_msg'>,
@@ -335,9 +335,9 @@ export interface IJupyterSession extends IAsyncDisposable {
     sendCommMessage(
         buffers: (ArrayBuffer | ArrayBufferView)[],
         content: { comm_id: string; data: JSONObject; target_name: string | undefined },
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         metadata: any,
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         msgId: any
     ): Kernel.IShellFuture<
         KernelMessage.IShellMessage<'comm_msg'>,
@@ -416,7 +416,7 @@ export interface IJupyterKernelSpec {
      * A dictionary of additional attributes about this kernel; used by clients to aid in kernel selection.
      * Optionally storing the interpreter information in the metadata (helping extension search for kernels that match an interpereter).
      */
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     readonly metadata?: Record<string, any> & { interpreter?: Partial<PythonEnvironment> };
     readonly argv: string[];
     /**
@@ -637,19 +637,19 @@ export interface IInteractiveWindowListener extends IDisposable {
     /**
      * Fires this event when posting a response message
      */
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     postMessage: Event<{ message: string; payload: any }>;
     /**
      * Fires this event when posting a message to the interactive base.
      */
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     postInternalMessage?: Event<{ message: string; payload: any }>;
     /**
      * Handles messages that the interactive window receives
      * @param message message type
      * @param payload message payload
      */
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onMessage(message: string, payload?: any): void;
     /**
      * Fired when the view state of the interactive window changes
@@ -661,9 +661,9 @@ export interface IInteractiveWindowListener extends IDisposable {
 // Wraps the vscode API in order to send messages back and forth from a webview
 export const IPostOffice = Symbol('IPostOffice');
 export interface IPostOffice {
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     post(message: string, params: any[] | undefined): void;
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     listen(message: string, listener: (args: any[] | undefined) => void): void;
 }
 
@@ -1232,7 +1232,7 @@ export interface IJupyterServerProvider {
 }
 
 export interface IKernelSocket {
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     sendToRealKernel(data: any, cb?: (err?: Error) => void): void;
     /**
      * Adds a listener to a socket that will be called before the socket's onMessage is called. This
@@ -1249,13 +1249,13 @@ export interface IKernelSocket {
      * Adds a hook to the sending of data from a websocket. Hooks can block sending so be careful.
      * @param patch
      */
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     addSendHook(hook: (data: any, cb?: (err?: Error) => void) => Promise<void>): void;
     /**
      * Removes a send hook from the socket.
      * @param hook
      */
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     removeSendHook(hook: (data: any, cb?: (err?: Error) => void) => Promise<void>): void;
 }
 
@@ -1356,7 +1356,7 @@ export interface IJupyterDebugService extends IDebugService {
 export interface IJupyterServerUri {
     baseUrl: string;
     token: string;
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     authorizationHeader: any; // JSON object for authorization header.
     expiration?: Date; // Date/time when header expires and should be refreshed.
     displayName: string;

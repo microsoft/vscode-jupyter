@@ -3,7 +3,7 @@
 
 'use strict';
 
-// tslint:disable: no-var-requires no-require-imports max-func-body-length no-any match-default-export-name
+/* eslint-disable @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports, , @typescript-eslint/no-explicit-any,  */
 import * as assert from 'assert';
 import { expect } from 'chai';
 import * as fsExtra from 'fs-extra';

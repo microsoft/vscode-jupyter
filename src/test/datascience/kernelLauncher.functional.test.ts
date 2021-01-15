@@ -34,7 +34,7 @@ suite('DataScience - Kernel Launcher', () => {
     let pythonInterpreter: PythonEnvironment | undefined;
     let kernelSpec: IJupyterKernelSpec;
     let kernelFinder: MockKernelFinder;
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let snapshot: any;
 
     suiteSetup(() => {
@@ -76,7 +76,7 @@ suite('DataScience - Kernel Launcher', () => {
 
     test('Launch from kernelspec', async function () {
         if (!process.env.VSC_FORCE_REAL_JUPYTER) {
-            // tslint:disable-next-line: no-invalid-this
+            // eslint-disable-next-line no-invalid-this
             this.skip();
         } else {
             let exitExpected = false;
@@ -112,7 +112,7 @@ suite('DataScience - Kernel Launcher', () => {
 
     test('Launch with environment', async function () {
         if (!process.env.VSC_FORCE_REAL_JUPYTER || !pythonInterpreter) {
-            // tslint:disable-next-line: no-invalid-this
+            // eslint-disable-next-line no-invalid-this
             this.skip();
         } else {
             const spec: IJupyterKernelSpec = {
@@ -158,7 +158,7 @@ suite('DataScience - Kernel Launcher', () => {
 
     test('Bind with ZMQ', async function () {
         if (!process.env.VSC_FORCE_REAL_JUPYTER) {
-            // tslint:disable-next-line: no-invalid-this
+            // eslint-disable-next-line no-invalid-this
             this.skip();
         } else {
             const kernel = await kernelLauncher.launch(

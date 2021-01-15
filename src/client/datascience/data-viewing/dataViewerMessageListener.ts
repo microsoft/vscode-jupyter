@@ -5,7 +5,7 @@ import '../../common/extensions';
 
 import { IWebviewPanel, IWebviewPanelMessageListener } from '../../common/application/types';
 
-// tslint:disable:no-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 // This class listens to messages that come from the local Data Explorer window
 export class DataViewerMessageListener implements IWebviewPanelMessageListener {

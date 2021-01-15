@@ -31,7 +31,7 @@ import {
     waitForTextOutputInVSCode
 } from './helper';
 
-// tslint:disable: no-any no-invalid-this no-function-expression
+/* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this,  */
 /*
  * This test focuses on interrupting, restarting kernels.
  * We will not use actual kernels, just ensure the appropriate methods are invoked on the appropriate classes.

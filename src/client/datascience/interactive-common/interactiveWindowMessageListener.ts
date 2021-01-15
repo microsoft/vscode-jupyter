@@ -11,7 +11,7 @@ import { Identifiers, LiveShare } from '../constants';
 import { PostOffice } from '../liveshare/postOffice';
 import { InteractiveWindowMessages, InteractiveWindowRemoteMessages } from './interactiveWindowTypes';
 
-// tslint:disable:no-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 // This class listens to messages that come from the local Interactive window
 export class InteractiveWindowMessageListener implements IWebviewPanelMessageListener {

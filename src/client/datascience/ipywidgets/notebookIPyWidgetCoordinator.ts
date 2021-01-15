@@ -48,7 +48,7 @@ export class NotebookIPyWidgetCoordinator implements INotebookKernelResolver {
         // See if this is the last copy of this document
         if (!this.notebookProvider.notebookDocuments.find((d) => d.uri === e.uri)) {
             const coordinator = this.messageCoordinators.get(e.uri.toString());
-            coordinator?.then((c) => c.dispose());
+            void coordinator?.then((c) => c.dispose());
             this.messageCoordinators.delete(e.uri.toString());
             const attachment = this.attachedWebViews.get(e.uri.toString());
             attachment?.disposables?.forEach((d) => d.dispose());
@@ -79,7 +79,7 @@ export class NotebookIPyWidgetCoordinator implements INotebookKernelResolver {
                             response: webview.asWebviewUri(e.payload)
                         });
                     } else {
-                        webview.postMessage({ type: e.message, payload: e.payload });
+                        void webview.postMessage({ type: e.message, payload: e.payload });
                     }
                 })
             );

@@ -23,7 +23,7 @@ import * as NativeHelpers from './nativeEditorTestHelpers';
 import { addMockData, enterEditorKey, getInteractiveEditor, getNativeEditor, typeCode } from './testHelpers';
 import { ITestNativeEditorProvider } from './testNativeEditorProvider';
 
-// tslint:disable:max-func-body-length trailing-comma no-any no-multiline-string
+/* eslint-disable , comma-dangle, @typescript-eslint/no-explicit-any, no-multi-str */
 suite(`DataScience Intellisense tests with LanguageServer mocked`, () => {
     const disposables: Disposable[] = [];
     let ioc: DataScienceIocContainer;
@@ -52,7 +52,7 @@ suite(`DataScience Intellisense tests with LanguageServer mocked`, () => {
             if (!disposable) {
                 continue;
             }
-            // tslint:disable-next-line:no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const promise = disposable.dispose() as Promise<any>;
             if (promise) {
                 await promise;
