@@ -4,6 +4,7 @@
 
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
+import Select from 'react-select';
 import { ColumnType, MaxStringCompare } from '../../client/datascience/data-viewing/types';
 import { KeyCodes } from '../react-common/constants';
 import { measureText } from '../react-common/textMeasure';
@@ -35,6 +36,8 @@ import 'slickgrid/slick.grid.css';
 // Make sure our css comes after the slick grid css. We override some of its styles.
 // tslint:disable-next-line: ordered-imports
 import './reactSlickGrid.css';
+import { getLocString } from '../react-common/locReactSide';
+import { ShapeDetail } from './shapeDetail';
 /*
 WARNING: Do not change the order of these imports.
 Slick grid MUST be imported after we load jQuery and other stuff from `./globalJQueryImports`
@@ -59,12 +62,19 @@ export interface ISlickGridProps {
     filterRowsText: string;
     filterRowsTooltip: string;
     forceHeight?: number;
+    dataDimensionionality: number;
+    dataShape: number[] | undefined;
+    totalRowCount: number;
+    shouldShowSliceDataButton: boolean; // Feature flag. This should eventually be removed
 }
 
 interface ISlickGridState {
     grid?: Slick.Grid<ISlickRow>;
     showingFilters?: boolean;
     fontSize: number;
+    isSlicing: boolean;
+    selectedIndex: number;
+    selectedAxis: number;
 }
 
 class ColumnFilter {
@@ -138,7 +148,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
 
     constructor(props: ISlickGridProps) {
         super(props);
-        this.state = { fontSize: 15 };
+        this.state = { fontSize: 15, isSlicing: false, selectedIndex: 0, selectedAxis: 0 };
         this.containerRef = React.createRef<HTMLDivElement>();
         this.measureRef = React.createRef<HTMLDivElement>();
         this.props.rowsAdded.subscribe(this.addedRows);
@@ -283,18 +293,78 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
 
         return (
             <div className="outer-container">
-                <button
-                    className="react-grid-filter-button"
-                    tabIndex={0}
-                    title={this.props.filterRowsTooltip}
-                    onClick={this.clickFilterButton}
-                >
-                    <span>{this.props.filterRowsText}</span>
-                </button>
+                <div style={{display: 'flex', justifyContent: 'start', flexDirection: 'row' }}>
+                    <div style={{display: 'flex', justifyContent: 'space-around'}}>
+                        <button
+                            className="react-grid-filter-button"
+                            tabIndex={0}
+                            title={this.props.filterRowsTooltip}
+                            onClick={this.clickFilterButton}
+                        >
+                            <span>{this.props.filterRowsText}</span>
+                        </button>
+                        {this.renderSliceDataButton()}
+                        {this.renderSliceControls()}
+                    </div>
+                </div>
                 <div className="react-grid-container" style={style} ref={this.containerRef}></div>
                 <div className="react-grid-measure" ref={this.measureRef} />
             </div>
         );
+    }
+
+    public renderSliceDataButton = () => {
+        if (this.props.shouldShowSliceDataButton && this.props.dataDimensionionality===3) {
+            return (<button
+                className="react-grid-filter-button"
+                title={getLocString('DataScience.sliceDataTooltip', 'View and slice 3-dimensional data')} 
+                onClick={this.toggleSliceMenu}
+            >
+                <span>{getLocString('DataScience.sliceDataButton', 'Slice Data')}</span>
+            </button>);
+        }
+    }
+
+    public renderSliceControls = () => {
+        if (this.state.isSlicing) {
+            const axisOptions = [];
+            for (let i = 0; i < this.props.dataDimensionionality; i += 1) {
+                axisOptions.push({value: i, label: i.toString()});
+            }
+            const indexOptions = [];
+            for (let i = 0; i < this.props.totalRowCount; i += 1) {
+                indexOptions.push({value: i, label: i.toString()});
+            }
+    
+            return (
+                <div style={{display: 'flex', justifyContent: 'space-around'}}>
+                    <div className="slice-data-control-container" style={{display: 'flex', justifyContent: 'space-around'}}>
+                        <span style={{alignSelf: "center"}}>Axis:</span>
+                        <Select
+                            className="slice-data-select"
+                            value={{value: this.state.selectedAxis, label: this.state.selectedAxis.toString()}}
+                            options={axisOptions}
+                            width={'20px'}
+                            isSearchable={false}
+                        />
+                    </div>
+                    <div className="slice-data-control-container" style={{display: 'flex', justifyContent: 'space-around'}}>
+                        <span style={{alignSelf: "center"}}>Shape:</span>
+                        <ShapeDetail highlightedIndex={this.state.selectedAxis} shapeComponents={this.props.dataShape}/>
+                    </div>
+                    <div className="slice-data-control-container" style={{display: 'flex', justifyContent: 'space-around'}}>
+                        <span style={{alignSelf: "center"}}>Index:</span>
+                        <Select 
+                            className="slice-data-select"
+                            isSearchable={false}
+                            width={'20px'}
+                            options={indexOptions}
+                            value={{value: this.state.selectedIndex, label: this.state.selectedIndex.toString() }} />
+                    </div>
+                </div>
+            );
+        }
+        return null;
     }
 
     // public for testing
@@ -534,5 +604,10 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         }
 
         return -1;
+    }
+
+    private toggleSliceMenu = (e: React.SyntheticEvent) => {
+        e.preventDefault();
+        this.setState({ isSlicing: !this.state.isSlicing });;
     }
 }

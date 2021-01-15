@@ -34,8 +34,6 @@ export interface IMainPanelProps {
     baseTheme: string;
     testMode?: boolean;
 }
-
-//tslint:disable:no-any
 interface IMainPanelState {
     gridColumns: Slick.Column<Slick.SlickData>[];
     gridRows: ISlickRow[];
@@ -45,6 +43,9 @@ interface IMainPanelState {
     indexColumn: string;
     styleReady: boolean;
     settings?: IJupyterExtraSettings;
+    dataDimensionality: number;
+    dataShape?: number[];
+    shouldShowSliceDataButton: boolean;
 }
 
 export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState> implements IMessageHandler {
@@ -74,9 +75,12 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 fetchedRowCount: -1,
                 filters: {},
                 indexColumn: data.primaryKeys[0],
-                styleReady: false
+                styleReady: false,
+                dataDimensionality: data.dataDimensionality ?? 2,
+                dataShape: data.dataShape,
+                shouldShowSliceDataButton: false
             };
-
+            
             // Fire off a timer to mimic dynamic loading
             setTimeout(() => this.handleGetAllRowsResponse(data.rows), 1000);
         } else {
@@ -87,7 +91,10 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 fetchedRowCount: -1,
                 filters: {},
                 indexColumn: 'index',
-                styleReady: false
+                styleReady: false,
+                dataDimensionality: 2,
+                dataShape: undefined,
+                shouldShowSliceDataButton: false
             };
         }
     }
@@ -182,8 +189,9 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     private renderGrid() {
         const filterRowsText = getLocString('DataScience.filterRowsButton', 'Filter Rows');
-        const filterRowsTooltip = getLocString('DataScience.filterRowsTooltip', 'Click to filter.');
-
+        const filterRowsTooltip = getLocString('DataScience.filterRowsTooltip', 'Click to filter');
+        console.log(`data dimensionality is ${this.state.dataDimensionality}`);
+        console.log(`Total row count is ${this.state.totalRowCount}`);
         return (
             <ReactSlickGrid
                 ref={this.grid}
@@ -193,6 +201,10 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 filterRowsText={filterRowsText}
                 filterRowsTooltip={filterRowsTooltip}
                 forceHeight={this.props.testMode ? 200 : undefined}
+                dataDimensionionality={this.state.dataDimensionality}
+                dataShape={this.state.dataShape}
+                totalRowCount={this.state.totalRowCount}
+                shouldShowSliceDataButton={this.state.shouldShowSliceDataButton}
             />
         );
     }
@@ -201,19 +213,23 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private initializeData(payload: any) {
         // Payload should be an IJupyterVariable with the first 100 rows filled out
         if (payload) {
-            const variable = payload as IDataFrameInfo;
+            const variable = payload as IDataFrameInfo & { inExperiment: boolean };
             if (variable) {
                 const columns = this.generateColumns(variable);
                 const totalRowCount = variable.rowCount ? variable.rowCount : 0;
                 const initialRows: ISlickRow[] = [];
                 const indexColumn = variable.indexColumn ? variable.indexColumn : 'index';
 
+
                 this.setState({
                     gridColumns: columns,
                     gridRows: initialRows,
                     totalRowCount,
                     fetchedRowCount: initialRows.length,
-                    indexColumn: indexColumn
+                    indexColumn: indexColumn,
+                    dataShape: variable.shape,
+                    dataDimensionality: variable.dataDimensionality ?? 2,
+                    shouldShowSliceDataButton: variable.inExperiment
                 });
 
                 // Compute our row fetch sizes based on the number of columns

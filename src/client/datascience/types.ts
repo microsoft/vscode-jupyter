@@ -871,6 +871,7 @@ export interface IJupyterVariable {
     type: string;
     size: number;
     shape: string;
+    dataDimensionality?: number;
     count: number;
     truncated: boolean;
     columns?: { key: string; type: string }[];

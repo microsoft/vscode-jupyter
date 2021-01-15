@@ -42,7 +42,7 @@ export interface IGetRowsResponse {
 export type IDataViewerMapping = {
     [DataViewerMessages.Started]: never | undefined;
     [DataViewerMessages.UpdateSettings]: string;
-    [DataViewerMessages.InitializeData]: IDataFrameInfo;
+    [DataViewerMessages.InitializeData]: IDataFrameInfo & { inExperiment: boolean };
     [DataViewerMessages.GetAllRowsRequest]: never | undefined;
     [DataViewerMessages.GetAllRowsResponse]: IRowsResponse;
     [DataViewerMessages.GetRowsRequest]: IGetRowsRequest;
@@ -54,6 +54,8 @@ export interface IDataFrameInfo {
     columns?: { key: string; type: ColumnType }[];
     indexColumn?: string;
     rowCount?: number;
+    shape?: number[];
+    dataDimensionality?: number;
 }
 
 export interface IDataViewerDataProvider {

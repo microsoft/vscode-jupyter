@@ -9,6 +9,7 @@ import { Identifiers } from '../constants';
 import { IJupyterVariable, IJupyterVariableDataProvider, IJupyterVariables, INotebook } from '../types';
 import { DataViewerDependencyService } from './dataViewerDependencyService';
 import { ColumnType, IDataFrameInfo, IRowsResponse } from './types';
+import { traceError } from '../../common/logger';
 
 @injectable()
 export class JupyterVariableDataProvider implements IJupyterVariableDataProvider {
@@ -53,6 +54,18 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
         });
     }
 
+    // Parse a string of the form (1, 2, 3)
+    private static parseShape(shape: string) {
+        try {
+            if (shape.startsWith('(') && shape.endsWith(')')) {
+                return shape.substring(1, shape.length - 1).split(',').map((shapeEl) => parseInt(shapeEl))
+            }
+        } catch (e) {
+            traceError(`Could not parse IJupyterVariable with malformed shape: ${shape}`);
+        }
+        return undefined;
+    }
+
     public dispose(): void {
         return;
     }
@@ -71,7 +84,9 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
                     ? JupyterVariableDataProvider.getNormalizedColumns(this.variable.columns)
                     : this.variable.columns,
                 indexColumn: this.variable.indexColumn,
-                rowCount: this.variable.rowCount
+                rowCount: this.variable.rowCount,
+                dataDimensionality: this.variable.dataDimensionality,
+                shape: JupyterVariableDataProvider.parseShape(this.variable.shape)
             };
         }
         return dataFrameInfo;

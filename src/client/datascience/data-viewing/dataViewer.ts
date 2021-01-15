@@ -10,7 +10,7 @@ import { ViewColumn } from 'vscode';
 import { IApplicationShell, IWebviewPanelProvider, IWorkspaceService } from '../../common/application/types';
 import { EXTENSION_ROOT_DIR, UseCustomEditorApi } from '../../common/constants';
 import { traceError } from '../../common/logger';
-import { IConfigurationService, IDisposable, Resource } from '../../common/types';
+import { IConfigurationService, IDisposable, IExperimentService, Resource } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
@@ -28,6 +28,7 @@ import {
     IDataViewerMapping,
     IGetRowsRequest
 } from './types';
+import { Experiments } from '../../common/experiments/groups';
 
 const dataExplorerDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'viewers');
 @injectable()
@@ -44,7 +45,8 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
         @inject(IThemeFinder) themeFinder: IThemeFinder,
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
-        @inject(UseCustomEditorApi) useCustomEditorApi: boolean
+        @inject(UseCustomEditorApi) useCustomEditorApi: boolean,
+        @inject(IExperimentService) private experimentService: IExperimentService
     ) {
         super(
             configuration,
@@ -76,8 +78,10 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
 
             const dataFrameInfo = await this.prepDataFrameInfo();
 
+            const inExperiment = await this.experimentService.inExperiment(Experiments.EnhancedDataViewer);
+
             // Send a message with our data
-            this.postMessage(DataViewerMessages.InitializeData, dataFrameInfo).ignoreErrors();
+            this.postMessage(DataViewerMessages.InitializeData, { ...dataFrameInfo, inExperiment }).ignoreErrors();
         }
     }
 
