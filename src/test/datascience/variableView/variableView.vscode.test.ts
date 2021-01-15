@@ -24,6 +24,7 @@ import {
 import { INotebookEditorProvider } from '../../../client/datascience/types';
 import { OnMessageListener, OnMessageWrapper } from '../vscodeTestHelpers';
 import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
+import { verifyViewVariables } from './variableViewHelpers';
 
 suite('DataScience - VariableView', () => {
     let api: IExtensionTestApi;
@@ -92,7 +93,11 @@ suite('DataScience - VariableView', () => {
 
         const htmlResult = await variableView?.getHTMLById('variable-view-main-panel');
 
-        expect(htmlResult).to.contain('MYTESTVALUE');
-        expect(htmlResult).to.contain('MYTESTVALUE2');
+        //const viewVariables = parseVariableViewHTML(htmlResult);
+        const expectedVariables = [
+            { name: 'test', type: 'str', length: '11', value: ' MYTESTVALUE' },
+            { name: 'test2', type: 'str', length: '12', value: ' MYTESTVALUE2' }
+        ];
+        verifyViewVariables(expectedVariables, htmlResult);
     });
 });
