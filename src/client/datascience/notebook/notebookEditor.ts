@@ -233,8 +233,6 @@ export class NotebookEditor implements INotebookEditor {
         const kernel = this.kernelProvider.get(this.file);
 
         if (kernel && !this.restartingKernel) {
-            const promise = this.restartKernelInternal(kernel);
-
             if (await this.shouldAskForRestart()) {
                 // Ask the user if they want us to restart or not.
                 const message = DataScience.restartKernelMessage();
@@ -247,18 +245,18 @@ export class NotebookEditor implements INotebookEditor {
                     await this.disableAskForRestart();
                     this.applicationShell.withProgress(
                         { location: ProgressLocation.Notification, title: DataScience.restartingKernelStatus() },
-                        () => promise
+                        () => this.restartKernelInternal(kernel)
                     );
                 } else if (response === yes) {
                     this.applicationShell.withProgress(
                         { location: ProgressLocation.Notification, title: DataScience.restartingKernelStatus() },
-                        () => promise
+                        () => this.restartKernelInternal(kernel)
                     );
                 }
             } else {
                 this.applicationShell.withProgress(
                     { location: ProgressLocation.Notification, title: DataScience.restartingKernelStatus() },
-                    () => promise
+                    () => this.restartKernelInternal(kernel)
                 );
             }
         }
