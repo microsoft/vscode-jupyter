@@ -27,6 +27,8 @@ export class IVariableViewPanelMapping {
     public [SharedMessages.LocInit]: string;
     public [InteractiveWindowMessages.FinishCell]: IFinishCell;
     public [InteractiveWindowMessages.UpdateVariableViewExecutionCount]: { executionCount: number };
+    public [InteractiveWindowMessages.GetHTMLByIdRequest]: string;
+    public [InteractiveWindowMessages.GetHTMLByIdResponse]: string;
 }
 
 export const INotebookWatcher = Symbol('INotebookWatcher');
@@ -37,4 +39,6 @@ export interface INotebookWatcher {
 }
 
 export const IVariableViewProvider = Symbol('IVariableViewProvider');
-export interface IVariableViewProvider extends IVSCWebviewViewProvider {}
+export interface IVariableViewProvider extends IVSCWebviewViewProvider {
+    //readonly activeVariableView: Promise<VariableView>;
+}
