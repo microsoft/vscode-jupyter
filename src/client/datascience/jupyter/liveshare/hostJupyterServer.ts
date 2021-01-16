@@ -325,7 +325,8 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
         let changedKernel = false;
         if (
             // For local connections this code path is not executed for native notebooks (hence only for remote).
-            (isResourceNativeNotebook(resource, this.vscodeNotebook) && !launchInfo.connectionInfo.localLaunch) ||
+            (isResourceNativeNotebook(resource, this.vscodeNotebook, this.fs) &&
+                !launchInfo.connectionInfo.localLaunch) ||
             !kernelConnection ||
             notebookMetadata?.kernelspec ||
             resourceInterpreter?.displayName !== launchInfo.kernelConnectionMetadata?.interpreter?.displayName
