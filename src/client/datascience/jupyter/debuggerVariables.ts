@@ -20,7 +20,15 @@ import {
     INotebook
 } from '../types';
 
-const DataViewableTypes: Set<string> = new Set<string>(['DataFrame', 'list', 'dict', 'ndarray', 'Series']);
+const DataViewableTypes: Set<string> = new Set<string>([
+    'DataFrame',
+    'list',
+    'dict',
+    'ndarray',
+    'Series',
+    'Tensor',
+    'EagerTensor'
+]);
 const KnownExcludedVariables = new Set<string>(['In', 'Out', 'exit', 'quit']);
 
 @injectable()

@@ -3,8 +3,35 @@ import builtins as _VSCODE_builtins
 import json as _VSCODE_json
 import pandas.io.json as _VSCODE_pd_json
 
+# PyTorch and TensorFlow tensors which can be converted to numpy arrays
+_VSCODE_allowedTensorTypes = ["Tensor", "EagerTensor"]
+
+# Function that converts tensors to DataFrames
+def _VSCODE_convertTensorToDataFrame(tensor):
+    try:
+        temp = tensor
+        # Can't directly convert sparse tensors to numpy arrays
+        # so first convert them to dense tensors
+        if hasattr(temp, "is_sparse") and temp.is_sparse:
+            # This guard is needed because to_dense exists on all PyTorch
+            # tensors and throws an error if the tensor is already strided
+            temp = temp.to_dense()
+        # Two step conversion process required to convert tensors to DataFrames
+        # tensor --> numpy array --> dataframe
+        temp = temp.numpy()
+        temp = _VSCODE_pd.DataFrame(temp)
+        tensor = temp
+        del temp
+    except AttributeError:
+        # TensorFlow EagerTensors and PyTorch Tensors support numpy()
+        # but avoid a crash just in case the current variable doesn't
+        pass
+    return tensor
+
+
 # Function that converts the var passed in into a pandas data frame if possible
 def _VSCODE_convertToDataFrame(df):
+    vartype = type(df)
     if isinstance(df, list):
         df = _VSCODE_pd.DataFrame(df)
     elif isinstance(df, _VSCODE_pd.Series):
@@ -14,6 +41,10 @@ def _VSCODE_convertToDataFrame(df):
         df = _VSCODE_pd.Series.to_frame(df)
     elif hasattr(df, "toPandas"):
         df = df.toPandas()
+    elif (
+        hasattr(vartype, "__name__") and vartype.__name__ in _VSCODE_allowedTensorTypes
+    ):
+        df = _VSCODE_convertTensorToDataFrame(df)
     else:
         """Disabling bandit warning for try, except, pass. We want to swallow all exceptions here to not crash on
         variable fetching"""
@@ -22,6 +53,7 @@ def _VSCODE_convertToDataFrame(df):
             df = temp
         except:  # nosec
             pass
+    del vartype
     return df
 
 

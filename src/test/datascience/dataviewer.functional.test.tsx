@@ -305,4 +305,22 @@ suite('DataScience DataViewer tests', () => {
         await filterRows(wrapper.wrapper, '0', '0');
         verifyRows(wrapper.wrapper, [0, 0]);
     });
+
+    runMountedTest('2D PyTorch tensors', async (wrapper) => {
+        await injectCode('import torch\r\nfoo = torch.LongTensor([0, 1])');
+        const gotAllRows = getCompletedPromise(wrapper);
+        const dv = await createJupyterVariableDataViewer('foo', 'Tensor');
+        assert.ok(dv, 'DataViewer not created');
+        await gotAllRows;
+        verifyRows(wrapper.wrapper, [0, 0, 1, 1]);
+    });
+
+    runMountedTest('2D TensorFlow tensors', async (wrapper) => {
+        await injectCode('import tensorflow as tf\r\nbar = tf.constant([0, 1])');
+        const gotAllRows = getCompletedPromise(wrapper);
+        const dv = await createJupyterVariableDataViewer('bar', 'EagerTensor');
+        assert.ok(dv, 'DataViewer not created');
+        await gotAllRows;
+        verifyRows(wrapper.wrapper, [0, 0, 1, 1]);
+    });
 });
