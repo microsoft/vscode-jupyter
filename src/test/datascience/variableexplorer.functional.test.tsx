@@ -589,5 +589,80 @@ mySeries = myDataframe[0]
                 return Promise.resolve(ioc);
             }
         );
+
+        runInteractiveTest(
+            '2D tensor shapes are correctly reported',
+            async () => {
+                const basicCode: string = `
+# PyTorch Tensors
+import torch
+a = torch.LongTensor([[2, 4]])
+b = torch.FloatTensor([[1, 3], [5, 7]])
+c = torch.sparse.FloatTensor(a, b)  # sparse tensor
+
+# TensorFlow EagerTensors
+import tensorflow as tf
+d = tf.constant([[1.0, 2.0], [3.0, 4.0]])
+                `;
+                const { mount } = await getOrCreateInteractiveWindow(ioc);
+                const wrapper = mount.wrapper;
+
+                openVariableExplorer(wrapper);
+
+                await addCodeImpartial(wrapper, basicCode, true);
+
+                const targetVariables = [
+                    {
+                        name: 'a',
+                        type: 'Tensor',
+                        shape: '(1, 2)',
+                        supportsDataExplorer: true,
+                        value: 'tensor([[2, 4]])',
+                        size: 42,
+                        count: 0,
+                        truncated: false
+                    },
+                    {
+                        name: 'b',
+                        type: 'Tensor',
+                        shape: '(2, 2)',
+                        supportsDataExplorer: true,
+                        value: `tensor([[1., 3.],
+        [5., 7.]])`,
+                        size: 42,
+                        count: 0,
+                        truncated: false
+                    },
+                    {
+                        name: 'c',
+                        type: 'Tensor',
+                        shape: '(5, 2)',
+                        supportsDataExplorer: true,
+                        value: `tensor(indices=tensor([[2, 4]]),
+        values=tensor([[1., 3.],
+                      [5., 7.]]),
+        size=(5, 2), nnz=2, layout=torch.sparse_coo)`,
+                        size: 42,
+                        count: 0,
+                        truncated: false
+                    },
+                    {
+                        name: 'd',
+                        type: 'EagerTensor',
+                        shape: '(2, 2)',
+                        supportsDataExplorer: true,
+                        value: `tf.Tensor(
+[[1. 2.] [3. 4.]], shape=(2, 2), dtype=float32)`,
+                        size: 42,
+                        count: 0,
+                        truncated: false
+                    }
+                ];
+                verifyVariables(wrapper, targetVariables);
+            },
+            () => {
+                return Promise.resolve(ioc);
+            }
+        );
     });
 });
