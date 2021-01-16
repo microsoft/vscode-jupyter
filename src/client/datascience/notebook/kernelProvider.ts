@@ -144,7 +144,7 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
 
         // If no preferred kernel set but we have a language, use that to set preferred instead.
         if (!mapped.find((v) => v.isPreferred)) {
-            const languages = Array.from(new Set<string>(document.cells.map((c) => c.language)).values());
+            const languages = Array.from(new Set<string>(document.cells.map((c) => c.language)));
             // Find the first that matches on language
             const indexOfKernelMatchingDocumentLanguage = kernels.findIndex((k) => {
                 const kernelSpecConnection = k.selection;
