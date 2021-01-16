@@ -394,6 +394,7 @@ jobs:
           python -m pip install --upgrade -r ./build/ipython-test-requirements.txt
           python -m pip install --upgrade -r ./build/conda-functional-requirements.txt
           python -m ipykernel install --user
+          python -m pip install tensorflow
 
       - name: Install Python Libs for conda
         shell: bash -l {0}
@@ -405,6 +406,24 @@ jobs:
           python ./pythonFiles/install_debugpy.py
           conda env update --file ./build/conda-functional-requirements.yml
           python -m pip install --upgrade -r ./build/conda-functional-requirements.txt
+
+      # Install PyTorch with pip
+      - name: Install PyTorch on Windows and Linux
+        if: matrix.test-suite != 'conda' && (matrix.os == 'windows-latest' || matrix.os == 'ubuntu-latest')
+        run: pip install torch==1.7.1+cpu torchvision==0.8.2+cpu torchaudio===0.7.2 -f https://download.pytorch.org/whl/torch_stable.html
+
+      - name: Install PyTorch on Mac
+        if: matrix.test-suite != 'conda' && matrix.os == 'macos-latest'
+        run: pip install torch torchvision torchaudio
+
+      # Install PyTorch with conda. FIXME: If we upgrade to Python 3.9, must add '-c=conda-forge' for installation
+      - name: Install PyTorch on Windows and Linux
+        if: matrix.test-suite == 'conda' && (matrix.os == 'windows-latest' || matrix.os == 'ubuntu-latest')
+        run: conda install pytorch torchvision torchaudio cpuonly -c pytorch
+
+      - name: Install PyTorch on Mac
+        if: matrix.test-suite == 'conda' && matrix.os == 'macos-latest'
+        run: conda install pytorch torchvision torchaudio -c pytorch
 
       - name: Install secondary conda environment
         shell: bash -l {0}
@@ -596,25 +615,6 @@ jobs:
           python -m pip install --upgrade -r ./build/ipython-test-requirements.txt
           python -m pip install --upgrade -r ./build/conda-functional-requirements.txt
           python -m ipykernel install --user
-          python -m pip install tensorflow
-
-      # Install PyTorch with pip
-      - name: Install PyTorch on Windows and Linux
-        if: matrix.test-suite != 'conda' && (matrix.os == 'windows-latest' || matrix.os == 'ubuntu-latest')
-        run: pip install torch==1.7.1+cpu torchvision==0.8.2+cpu torchaudio===0.7.2 -f https://download.pytorch.org/whl/torch_stable.html
-
-      - name: Install PyTorch on Mac
-        if: matrix.test-suite != 'conda' && matrix.os == 'macos-latest'
-        run: pip install torch torchvision torchaudio
-
-      # Install PyTorch with conda. FIXME: If we upgrade to Python 3.9, must add '-c=conda-forge' for installation
-      - name: Install PyTorch on Windows and Linux
-        if: matrix.test-suite == 'conda' && (matrix.os == 'windows-latest' || matrix.os == 'ubuntu-latest')
-        run: conda install pytorch torchvision torchaudio cpuonly -c pytorch
-
-      - name: Install PyTorch on Mac
-        if: matrix.test-suite == 'conda' && matrix.os == 'macos-latest'
-        run: conda install pytorch torchvision torchaudio -c pytorch
 
       - name: Install Python Libs for conda
         shell: bash -l {0}
