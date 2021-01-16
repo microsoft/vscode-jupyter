@@ -35,8 +35,15 @@ const DocStringRegex = /.*?\[.*?;31mDocstring:.*?\[0m\s+(.*)/;
 const CountRegex = /.*?\[.*?;31mLength:.*?\[0m\s+(.*)/;
 const ShapeRegex = /^\s+\[(\d+) rows x (\d+) columns\]/m;
 
-const DataViewableTypes: Set<string> = new Set<string>(['DataFrame', 'list', 'dict', 'ndarray', 'Series', 'Tensor']);
-
+const DataViewableTypes: Set<string> = new Set<string>([
+    'DataFrame',
+    'list',
+    'dict',
+    'ndarray',
+    'Series',
+    'Tensor',
+    'EagerTensor'
+]);
 interface INotebookState {
     currentExecutionCount: number;
     variables: IJupyterVariable[];
