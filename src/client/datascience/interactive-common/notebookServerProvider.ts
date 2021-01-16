@@ -64,7 +64,10 @@ export class NotebookServerProvider implements IJupyterServerProvider {
                 if (val && options.onConnectionMade) {
                     options.onConnectionMade();
                 }
-                traceInfo(`Start Setup.J3`);
+                traceInfo(`Start Setup.J3 ${val}`);
+                if (val) {
+                    traceInfo(`Start Setup.J3 ${(val as Object).constructor.name}`);
+                }
 
                 return val;
             });
