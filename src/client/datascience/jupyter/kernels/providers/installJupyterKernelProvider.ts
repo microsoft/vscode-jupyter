@@ -17,9 +17,6 @@ import { isPythonKernelConnection } from './../helpers';
 import { KernelService } from './../kernelService';
 import { IKernelSelectionListProvider, IKernelSpecQuickPickItem, KernelSpecConnectionMetadata } from './../types';
 
-// Small classes, hence all put into one file.
-/* eslint-disable max-classes-per-file */
-
 /**
  * Given a kernel spec, this will return a quick pick item with appropriate display names and the like.
  *

@@ -14,9 +14,6 @@ import {
     LiveKernelModel
 } from '../types';
 
-// Small classes, hence all put into one file.
-/* eslint-disable max-classes-per-file */
-
 /**
  * Given an active kernel, this will return a quick pick item with appropriate display names and the like.
  *

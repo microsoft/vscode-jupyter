@@ -14,9 +14,6 @@ import { KernelService } from '../kernelService';
 import { IKernelSelectionListProvider, KernelSpecConnectionMetadata, IKernelSpecQuickPickItem } from '../types';
 import { getQuickPickItemForKernelSpec } from './installJupyterKernelProvider';
 
-// Small classes, hence all put into one file.
-/* eslint-disable max-classes-per-file */
-
 // Provider for searching for installed kernelspecs on disk without using jupyter to search
 export class InstalledRawKernelSelectionListProvider
     implements IKernelSelectionListProvider<KernelSpecConnectionMetadata> {

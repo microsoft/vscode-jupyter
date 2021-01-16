@@ -49,10 +49,6 @@ export class KernelSelectionProvider {
     private _listChanged = new EventEmitter<Resource>();
     /**
      * List of ids of kernels that should be hidden from the kernel picker.
-     *
-     * @private
-     * @type {new Set<string>}
-     * @memberof KernelSelector
      */
     private readonly kernelIdsToHide = new Set<string>();
 
@@ -81,9 +77,6 @@ export class KernelSelectionProvider {
 
     /**
      * Ensure kernels such as those associated with the restart session are not displayed in the kernel picker.
-     *
-     * @param {Kernel.IKernelConnection} kernel
-     * @memberof KernelSelector
      */
     public addKernelToIgnoreList(kernel: Kernel.IKernelConnection): void {
         this.kernelIdsToHide.add(kernel.id);
@@ -91,9 +84,6 @@ export class KernelSelectionProvider {
     }
     /**
      * Opposite of the add counterpart.
-     *
-     * @param {Kernel.IKernelConnection} kernel
-     * @memberof KernelSelector
      */
     public removeKernelFromIgnoreList(kernel: Kernel.IKernelConnection): void {
         this.kernelIdsToHide.delete(kernel.id);
@@ -102,12 +92,6 @@ export class KernelSelectionProvider {
 
     /**
      * Gets a selection of kernel specs from a remote session.
-     *
-     * @param {Resource} resource
-     * @param {IJupyterSessionManager} sessionManager
-     * @param {CancellationToken} [cancelToken]
-     * @returns {Promise<IKernelSpecQuickPickItem[]>}
-     * @memberof KernelSelectionProvider
      */
     public async getKernelSelectionsForRemoteSession(
         resource: Resource,
@@ -143,13 +127,6 @@ export class KernelSelectionProvider {
     }
     /**
      * Gets a selection of kernel specs for a local session.
-     *
-     * @param {Resource} resource
-     * @param type
-     * @param {IJupyterSessionManager} [sessionManager]
-     * @param {CancellationToken} [cancelToken]
-     * @returns {Promise<IKernelSelectionListProvider>}
-     * @memberof KernelSelectionProvider
      */
     public async getKernelSelectionsForLocalSession(
         resource: Resource,
