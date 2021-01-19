@@ -5,6 +5,7 @@ import { ChildProcess } from 'child_process';
 import * as getFreePort from 'get-port';
 import * as path from 'path';
 import { Uri } from 'vscode';
+import { disposeAllDisposables } from '../../client/common/helpers';
 import { traceError, traceInfo } from '../../client/common/logger';
 import { IPythonExecutionFactory } from '../../client/common/process/types';
 import { IDisposable, IDisposableRegistry } from '../../client/common/types';
@@ -21,6 +22,7 @@ export class JupyterServer implements IDisposable {
         return JupyterServer._instance;
     }
     private static _instance: JupyterServer;
+    private _disposables: IDisposable[] = [];
     private _jupyterServerWithTokenABCDProc?: ChildProcess;
     private _jupyterServerWithTokenABCD?: Promise<Uri>;
     public dispose() {
@@ -28,6 +30,7 @@ export class JupyterServer implements IDisposable {
             this._jupyterServerWithTokenABCDProc?.kill();
         }
         this._jupyterServerWithTokenABCDProc = undefined;
+        disposeAllDisposables(this._disposables);
         traceInfo('Shutting Jupyter server used for remote tests');
     }
     public async startJupyterWithToken(token = '7d25707a86975be50ee9757c929fef9012d27cf43153d1c1'): Promise<Uri> {
@@ -64,9 +67,11 @@ export class JupyterServer implements IDisposable {
                 if (!result.proc) {
                     throw new Error('Starting Jupyter failed, no process');
                 }
-                result.proc.once('close', () => traceInfo('Shutting Jupyter server used for remote tests (closed)'))
-                result.proc.once('disconnect', () => traceInfo('Shutting Jupyter server used for remote tests (disconnected)'))
-                result.proc.once('exit', () => traceInfo('Shutting Jupyter server used for remote tests (exited)'))
+                result.proc.once('close', () => traceInfo('Shutting Jupyter server used for remote tests (closed)'));
+                result.proc.once('disconnect', () =>
+                    traceInfo('Shutting Jupyter server used for remote tests (disconnected)')
+                );
+                result.proc.once('exit', () => traceInfo('Shutting Jupyter server used for remote tests (exited)'));
                 api.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry).push({
                     dispose: () => {
                         if (!result.proc) {
@@ -83,10 +88,10 @@ export class JupyterServer implements IDisposable {
                 const subscription = result.out.subscribe((output) => {
                     traceInfo(`Test Remote Jupyter Server Output: ${output.out}`);
                     if (output.out.indexOf('Use Control-C to stop this server and shut down all kernels')) {
-                        subscription.unsubscribe();
                         resolve(result.proc!);
                     }
                 });
+                this._disposables.push({ dispose: () => subscription.unsubscribe() });
             } catch (ex) {
                 traceError('Starting remote jupyter server failed', ex);
                 reject(ex);
