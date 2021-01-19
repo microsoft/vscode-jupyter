@@ -87,7 +87,7 @@ export class NotebookProvider implements INotebookProvider {
         } else if (
             this.extensionChecker.isPythonExtensionInstalled ||
             serverType === Settings.JupyterServerRemoteLaunch
-            ) {
+        ) {
             return this.jupyterNotebookProvider.connect({
                 ...options,
                 onConnectionMade: this.fireConnectionMade.bind(this)
