@@ -23,22 +23,18 @@ export class JupyterServer implements IDisposable {
     }
     private static _instance: JupyterServer;
     private _disposables: IDisposable[] = [];
-    private _jupyterServerWithTokenABCDProc?: ChildProcess;
-    private _jupyterServerWithTokenABCD?: Promise<Uri>;
+    private _jupyterServerWithToken?: Promise<Uri>;
     public dispose() {
-        if (this._jupyterServerWithTokenABCDProc) {
-            this._jupyterServerWithTokenABCDProc?.kill();
-        }
-        this._jupyterServerWithTokenABCDProc = undefined;
+        this._jupyterServerWithToken = undefined;
         disposeAllDisposables(this._disposables);
         traceInfo('Shutting Jupyter server used for remote tests');
     }
     public async startJupyterWithToken(token = '7d25707a86975be50ee9757c929fef9012d27cf43153d1c1'): Promise<Uri> {
-        if (!this._jupyterServerWithTokenABCD) {
-            this._jupyterServerWithTokenABCD = new Promise<Uri>(async (resolve, reject) => {
+        if (!this._jupyterServerWithToken) {
+            this._jupyterServerWithToken = new Promise<Uri>(async (resolve, reject) => {
                 const port = await getFreePort({ host: 'localhost' });
                 try {
-                    this._jupyterServerWithTokenABCDProc = await this.startJupyterServer({
+                    await this.startJupyterServer({
                         port,
                         token
                     });
@@ -48,11 +44,11 @@ export class JupyterServer implements IDisposable {
                 }
             });
         }
-        return this._jupyterServerWithTokenABCD;
+        return this._jupyterServerWithToken;
     }
 
-    private startJupyterServer({ token, port }: { token: string; port: number }): Promise<ChildProcess> {
-        return new Promise<ChildProcess>(async (resolve, reject) => {
+    private startJupyterServer({ token, port }: { token: string; port: number }): Promise<void> {
+        return new Promise<void>(async (resolve, reject) => {
             try {
                 const api = await initialize();
                 const pythonExecFactory = api.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
@@ -72,7 +68,7 @@ export class JupyterServer implements IDisposable {
                     traceInfo('Shutting Jupyter server used for remote tests (disconnected)')
                 );
                 result.proc.once('exit', () => traceInfo('Shutting Jupyter server used for remote tests (exited)'));
-                api.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry).push({
+                const procDisposable = {
                     dispose: () => {
                         if (!result.proc) {
                             return;
@@ -83,14 +79,16 @@ export class JupyterServer implements IDisposable {
                             //
                         }
                     }
-                });
+                };
+                api.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry).push(procDisposable);
 
                 const subscription = result.out.subscribe((output) => {
                     traceInfo(`Test Remote Jupyter Server Output: ${output.out}`);
                     if (output.out.indexOf('Use Control-C to stop this server and shut down all kernels')) {
-                        resolve(result.proc!);
+                        resolve();
                     }
                 });
+                this._disposables.push(procDisposable);
                 this._disposables.push({ dispose: () => subscription.unsubscribe() });
             } catch (ex) {
                 traceError('Starting remote jupyter server failed', ex);
