@@ -225,18 +225,18 @@ export class NotebookEditor implements INotebookEditor {
                 const response = await this.applicationShell.showInformationMessage(message, yes, dontAskAgain, no);
                 if (response === dontAskAgain) {
                     await this.disableAskForRestart();
-                    this.applicationShell.withProgress(
+                    void this.applicationShell.withProgress(
                         { location: ProgressLocation.Notification, title: DataScience.restartingKernelStatus() },
                         () => this.restartKernelInternal(kernel)
                     );
                 } else if (response === yes) {
-                    this.applicationShell.withProgress(
+                    void this.applicationShell.withProgress(
                         { location: ProgressLocation.Notification, title: DataScience.restartingKernelStatus() },
                         () => this.restartKernelInternal(kernel)
                     );
                 }
             } else {
-                this.applicationShell.withProgress(
+                void this.applicationShell.withProgress(
                     { location: ProgressLocation.Notification, title: DataScience.restartingKernelStatus() },
                     () => this.restartKernelInternal(kernel)
                 );
