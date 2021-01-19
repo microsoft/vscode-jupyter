@@ -307,7 +307,8 @@ suite('DataScience - KernelSelections', () => {
 
         // Ensure interpreter property is set when comparing.
         items.map((item) => {
-            (item.selection as any).interpreter = item.selection.interpreter || undefined;
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            ((item.selection as unknown) as any).interpreter = item.selection.interpreter || undefined;
         });
         assert.deepEqual(items, expectedList);
     });
