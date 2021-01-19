@@ -240,6 +240,9 @@ export class KernelSelector implements IKernelSelectionUsage {
         if (preferredKernelId) {
             const session = sessions?.find((s) => s.kernel.id === preferredKernelId);
             if (session) {
+                traceInfo(
+                    `Got Preferred kernel for ${resource?.toString()} & it is ${preferredKernelId} & found a matching session`
+                );
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const liveKernel = session.kernel as any;
                 const lastActivityTime = liveKernel.last_activity
@@ -253,6 +256,10 @@ export class KernelSelector implements IKernelSelectionUsage {
                     interpreter: interpreter,
                     kind: 'connectToLiveKernel'
                 });
+            } else {
+                traceInfo(
+                    `Got Preferred kernel for ${resource?.toString()} & it is ${preferredKernelId}, but without a matching session`
+                );
             }
         }
 

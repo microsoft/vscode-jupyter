@@ -22,8 +22,8 @@ export class JupyterServer implements IDisposable {
     }
     private static _instance: JupyterServer;
     private _disposables: IDisposable[] = [];
-    private availablePort?: number;
     private _jupyterServerWithToken?: Promise<Uri>;
+    private availablePort?: number;
     public dispose() {
         this._jupyterServerWithToken = undefined;
         disposeAllDisposables(this._disposables);
