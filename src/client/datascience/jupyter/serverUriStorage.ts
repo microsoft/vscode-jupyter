@@ -3,7 +3,6 @@
 import { inject, injectable, named } from 'inversify';
 import { ConfigurationTarget, Memento } from 'vscode';
 import { IApplicationEnvironment, IEncryptedStorage, IWorkspaceService } from '../../common/application/types';
-import { traceInfo } from '../../common/logger';
 import { GLOBAL_MEMENTO, IConfigurationService, ICryptoUtils, IMemento } from '../../common/types';
 import { Settings } from '../constants';
 import { IJupyterServerUriStorage } from '../types';
@@ -122,16 +121,12 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
     public async setUri(uri: string) {
         // Set the URI as our current state
         this.currentUriPromise = Promise.resolve(uri);
-        traceInfo(`Start Setup.E1`);
         if (uri === Settings.JupyterServerLocalLaunch) {
-            traceInfo(`Start Setup.E2`);
             // Just save directly into the settings
             await this.updateServerType(Settings.JupyterServerLocalLaunch);
         } else {
-            traceInfo(`Start Setup.E3`);
             // This is a remote setting. Save in the settings as remote
             await this.updateServerType(Settings.JupyterServerRemoteLaunch);
-            traceInfo(`Start Setup.E4`);
 
             // Save in the storage (unique account per workspace)
             const key = this.getUriAccountKey();

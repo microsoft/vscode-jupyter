@@ -39,6 +39,7 @@ import { Uri } from 'vscode';
 import { VSCodeNotebookKernelMetadata } from '../kernelWithMetadata';
 import { chainWithPendingUpdates } from './notebookUpdater';
 import { Resource } from '../../../common/types';
+import { IFileSystem } from '../../../common/platform/types';
 
 // This is the custom type we are adding into nbformat.IBaseCellMetadata
 export interface IBaseCellVSCodeMetadata {
@@ -73,13 +74,11 @@ const kernelInformationForNotebooks = new WeakMap<
     { metadata?: KernelConnectionMetadata | undefined; kernelInfo?: KernelMessage.IInfoReplyMsg['content'] }
 >();
 
-export function isResourceNativeNotebook(resource: Resource, notebooks: IVSCodeNotebook) {
+export function isResourceNativeNotebook(resource: Resource, notebooks: IVSCodeNotebook, fs: IFileSystem) {
     if (!resource) {
         return false;
     }
-    return notebooks.notebookDocuments.some(
-        (item) => item.uri.toString().toLowerCase() === resource.toString().toLowerCase()
-    );
+    return notebooks.notebookDocuments.some((item) => fs.arePathsSame(item.uri, resource));
 }
 export function getNotebookMetadata(document: NotebookDocument): nbformat.INotebookMetadata | undefined {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

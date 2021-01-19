@@ -32,12 +32,12 @@ import { PreferredRemoteKernelIdProvider } from '../../../../client/datascience/
 import { IInterpreterSelector } from '../../../../client/interpreter/configuration/types';
 import { IFileSystem } from '../../../../client/common/platform/types';
 import { IPythonExtensionChecker } from '../../../../client/api/types';
-import { disposeAllDisposables } from '../../notebook/helper';
 import {
     getQuickPickItemForActiveKernel,
     ActiveJupyterSessionKernelSelectionListProvider
 } from '../../../../client/datascience/jupyter/kernels/providers/activeJupyterSessionKernelProvider';
 import { InstalledJupyterKernelSelectionListProvider } from '../../../../client/datascience/jupyter/kernels/providers/installJupyterKernelProvider';
+import { disposeAllDisposables } from '../../../../client/common/helpers';
 
 /* eslint-disable , @typescript-eslint/no-unused-expressions, @typescript-eslint/no-explicit-any */
 

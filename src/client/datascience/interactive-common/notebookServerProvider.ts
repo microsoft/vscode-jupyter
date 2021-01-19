@@ -55,19 +55,13 @@ export class NotebookServerProvider implements IJupyterServerProvider {
 
         // If we are just fetching or only want to create for local, see if exists
         if (options.getOnly || (options.localOnly && !serverOptions.uri)) {
-            traceInfo(`Start Setup.J1`);
             return this.jupyterExecution.getServer(serverOptions);
         } else {
-            traceInfo(`Start Setup.J2`);
             // Otherwise create a new server
             return this.createServer(options, token).then((val) => {
                 // If we created a new server notify of our first time provider connection
                 if (val && options.onConnectionMade) {
                     options.onConnectionMade();
-                }
-                traceInfo(`Start Setup.J3 ${val}`);
-                if (val) {
-                    traceInfo(`Start Setup.J3 ${(val as Object).constructor.name}`);
                 }
 
                 return val;
@@ -88,9 +82,7 @@ export class NotebookServerProvider implements IJupyterServerProvider {
             this.serverPromise = this.startServer(token);
         }
         try {
-            traceInfo(`Start Setup.J4`);
             const value = await this.serverPromise;
-            traceInfo(`Start Setup.J5 ${value}`);
             return value;
         } catch (e) {
             // Don't cache the error
@@ -100,38 +92,29 @@ export class NotebookServerProvider implements IJupyterServerProvider {
     }
 
     private async startServer(token?: CancellationToken): Promise<INotebookServer | undefined> {
-        traceInfo(`Start Setup.J6`);
         const serverOptions = await this.getNotebookServerOptions();
-        traceInfo(`Start Setup.J7`);
         traceInfo(`Checking for server existence.`);
 
         // If the URI is 'remote' then the encrypted storage is not working. Ask user again for server URI
         if (serverOptions.uri === Settings.JupyterServerRemoteLaunch) {
-            traceInfo(`Start Setup.J8`);
             await this.serverSelector.selectJupyterURI(true);
-            traceInfo(`Start Setup.J9`);
             // Should have been saved
             serverOptions.uri = await this.serverUriStorage.getUri();
-            traceInfo(`Start Setup.J10`);
         }
 
         // Status depends upon if we're about to connect to existing server or not.
-        traceInfo(`Start Setup.J11`);
         const progressReporter = this.allowingUI
             ? (await this.jupyterExecution.getServer(serverOptions))
                 ? this.progressReporter.createProgressIndicator(localize.DataScience.connectingToJupyter())
                 : this.progressReporter.createProgressIndicator(localize.DataScience.startingJupyter())
             : undefined;
-        traceInfo(`Start Setup.J12`);
 
         // Check to see if we support ipykernel or not
         try {
             traceInfo(`Checking for server usability.`);
 
             const usable = await this.checkUsable(serverOptions);
-            traceInfo(`Start Setup.J13`);
             if (!usable) {
-                traceInfo(`Start Setup.J14`);
                 traceInfo('Server not usable (should ask for install now)');
                 // Indicate failing.
                 throw new JupyterInstallError(
@@ -139,29 +122,23 @@ export class NotebookServerProvider implements IJupyterServerProvider {
                     localize.DataScience.pythonInteractiveHelpLink()
                 );
             }
-            traceInfo(`Start Setup.J15`);
             // Then actually start the server
             traceInfo(`Starting notebook server.`);
             const result = await this.jupyterExecution.connectToNotebookServer(
                 serverOptions,
                 wrapCancellationTokens(progressReporter?.token, token)
             );
-            traceInfo(`Start Setup.J16`);
-            traceInfo(`Start Setup.J17 ${result} from ${(this.jupyterExecution as Object).constructor.name}`);
             traceInfo(`Server started.`);
             return result;
         } catch (e) {
-            traceInfo(`Start Setup.J18`, e);
             progressReporter?.dispose(); // NOSONAR
             // If user cancelled, then do nothing.
             if (progressReporter && progressReporter.token.isCancellationRequested && e instanceof CancellationError) {
-                traceInfo(`Start Setup.J19`);
                 return;
             }
 
             // Also tell jupyter execution to reset its search. Otherwise we've just cached
             // the failure there
-            traceInfo(`Start Setup.J20`);
             await this.jupyterExecution.refreshCommands();
 
             if (e instanceof JupyterSelfCertsError) {

@@ -203,7 +203,6 @@ export class JupyterServerBase implements INotebookServer {
     // Return a copy of the connection information that this server used to connect with
     public getConnectionInfo(): IJupyterConnection | undefined {
         if (!this.launchInfo) {
-            traceInfo(`Start Setup.K1`);
             return undefined;
         }
 

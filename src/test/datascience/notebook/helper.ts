@@ -19,6 +19,7 @@ import {
 } from '../../../../typings/vscode-proposed';
 import { IApplicationEnvironment, IApplicationShell, IVSCodeNotebook } from '../../../client/common/application/types';
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
+import { disposeAllDisposables } from '../../../client/common/helpers';
 import { traceInfo } from '../../../client/common/logger';
 import {
     GLOBAL_MEMENTO,
@@ -43,7 +44,7 @@ import { NotebookEditor } from '../../../client/datascience/notebook/notebookEdi
 import { INotebookContentProvider } from '../../../client/datascience/notebook/types';
 import { VSCodeNotebookModel } from '../../../client/datascience/notebookStorage/vscNotebookModel';
 import { INotebookEditorProvider, INotebookProvider, ITrustService } from '../../../client/datascience/types';
-import { createEventHandler, sleep, waitForCondition } from '../../common';
+import { createEventHandler, IExtensionTestApi, sleep, waitForCondition } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST, IS_SMOKE_TEST } from '../../constants';
 import { noop } from '../../core';
 import { closeActiveWindows, initialize, isInsiders } from '../../initialize';
@@ -153,12 +154,6 @@ export async function createTemporaryNotebook(templateFile: string, disposables:
     return tempFile;
 }
 
-export function disposeAllDisposables(disposables: IDisposable[]) {
-    while (disposables.length) {
-        disposables.pop()?.dispose(); // NOSONAR;
-    }
-}
-
 export async function canRunNotebookTests() {
     if (!isInsiders() || !process.env.VSC_JUPYTER_RUN_NB_TEST) {
         console.log(
@@ -230,15 +225,11 @@ export async function closeNotebooks(disposables: IDisposable[] = []) {
     disposeAllDisposables(disposables);
 }
 
-export async function waitForKernelToGetAutoSelected(expectedLanguage?: string) {
+export async function waitForKernelToGetAutoSelected(expectedLanguage?: string, time = 100_000) {
     const { vscodeNotebook } = await getServices();
 
     // Wait for the active kernel to be a julia kernel.
-    await waitForCondition(
-        async () => !!vscodeNotebook.activeNotebookEditor?.kernel,
-        10_000,
-        'Kernel not auto selected'
-    );
+    await waitForCondition(async () => !!vscodeNotebook.activeNotebookEditor?.kernel, time, 'Kernel not auto selected');
     let kernelInfo = '';
     const isRightKernel = () => {
         if (!vscodeNotebook.activeNotebookEditor) {
@@ -254,20 +245,24 @@ export async function waitForKernelToGetAutoSelected(expectedLanguage?: string) 
                 )}`;
                 return true;
             }
-            if (vscodeNotebook.activeNotebookEditor.kernel.selection.kind === 'startUsingKernelSpec') {
-                kernelInfo = JSON.stringify(vscodeNotebook.activeNotebookEditor.kernel.selection.kernelSpec || {});
-                return (
-                    vscodeNotebook.activeNotebookEditor.kernel.selection.kernelSpec.language?.toLowerCase() ===
-                    expectedLanguage.toLowerCase()
-                );
+            switch (vscodeNotebook.activeNotebookEditor.kernel.selection.kind) {
+                case 'startUsingKernelSpec':
+                    kernelInfo = JSON.stringify(vscodeNotebook.activeNotebookEditor.kernel.selection.kernelSpec || {});
+                    return (
+                        vscodeNotebook.activeNotebookEditor.kernel.selection.kernelSpec.language?.toLowerCase() ===
+                        expectedLanguage.toLowerCase()
+                    );
+                case 'startUsingPythonInterpreter':
+                    kernelInfo = `<startUsingPythonInterpreter ${vscodeNotebook.activeNotebookEditor.kernel.selection.interpreter.path}>`;
+                    return expectedLanguage.toLowerCase() === PYTHON_LANGUAGE.toLowerCase();
+                case 'connectToLiveKernel':
+                    kernelInfo = `<connectToLiveKernel id: ${vscodeNotebook.activeNotebookEditor.kernel.selection.kernelModel.id}, name: ${vscodeNotebook.activeNotebookEditor.kernel.selection.kernelModel.id}>`;
+                    return true;
+                default:
+                    // We don't support testing other kernels, not required hence not added.
+                    // eslint-disable-next-line no-console
+                    throw new Error('Testing other kernel connections not supported');
             }
-            if (vscodeNotebook.activeNotebookEditor.kernel.selection.kind === 'startUsingPythonInterpreter') {
-                kernelInfo = `<startUsingPythonInterpreter ${vscodeNotebook.activeNotebookEditor.kernel.selection.interpreter.path}>`;
-                return expectedLanguage.toLowerCase() === PYTHON_LANGUAGE.toLowerCase();
-            }
-            // We don't support testing other kernels, not required hence not added.
-            // eslint-disable-next-line no-console
-            console.error('Testing other kernel connections not supported');
         }
         if (!expectedLanguage) {
             kernelInfo = '<No specific kernel expected>. Non Jupyter Kernel';
@@ -297,19 +292,15 @@ export async function trustAllNotebooks() {
     (<any>dsSettings).alwaysTrustNotebooks = true;
 }
 
-export async function startJupyterServer() {
-    traceInfo(`Start Setup.A1`);
-    const { serviceContainer } = await getServices();
+export async function startJupyterServer(api?: IExtensionTestApi) {
+    const { serviceContainer } = api ? { serviceContainer: api.serviceContainer } : await getServices();
     const selector = serviceContainer.get<JupyterServerSelector>(JupyterServerSelector);
-    traceInfo(`Start Setup.A2`);
+    // const storage = serviceContainer.get<IJupyterServerUriStorage>(IJupyterServerUriStorage);
     if (IS_REMOTE_NATIVE_TEST) {
-        traceInfo(`Start Setup.A3`);
         const uri = await JupyterServer.instance.startJupyterWithToken();
-        traceInfo(`Start Setup.A4`);
-        await selector.setJupyterURIToRemote(decodeURIComponent(uri.toString()));
-        traceInfo(`Start Setup.A5`);
+        const uriString = decodeURIComponent(uri.toString());
+        await selector.setJupyterURIToRemote(uriString);
     } else {
-        traceInfo(`Start Setup.A6`);
         await selector.setJupyterURIToLocal();
     }
 }
@@ -317,8 +308,10 @@ export async function startJupyterServer() {
 export async function stopJupyterServer() {
     JupyterServer.instance.dispose();
     const { serviceContainer } = await getServices();
-    const selector = serviceContainer.get<JupyterServerSelector>(JupyterServerSelector);
-    await selector.setJupyterURIToLocal();
+    if (!IS_REMOTE_NATIVE_TEST) {
+        const selector = serviceContainer.get<JupyterServerSelector>(JupyterServerSelector);
+        await selector.setJupyterURIToLocal();
+    }
 }
 
 export async function prewarmNotebooks() {
@@ -328,17 +321,13 @@ export async function prewarmNotebooks() {
     const disposables: IDisposable[] = [];
     try {
         // Ensure preferred language is always Python.
-        traceInfo(`Start Setup.A`);
         const memento = serviceContainer.get<Memento>(IMemento, GLOBAL_MEMENTO);
         if (memento.get(LastSavedNotebookCellLanguage) !== PYTHON_LANGUAGE) {
             await memento.update(LastSavedNotebookCellLanguage, PYTHON_LANGUAGE);
         }
-        traceInfo(`Start Setup.B`);
         await editorProvider.createNew();
         await insertCodeCell('print("Hello World1")', { index: 0 });
-        traceInfo(`Start Setup.C`);
         await waitForKernelToGetAutoSelected();
-        traceInfo(`Start Setup.D`);
         const cell = vscodeNotebook.activeNotebookEditor!.document.cells[0]!;
         await executeActiveDocument();
         // Wait for Jupyter to start.

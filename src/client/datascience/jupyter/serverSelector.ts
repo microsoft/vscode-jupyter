@@ -7,7 +7,6 @@ import { inject, injectable } from 'inversify';
 import { isNil } from 'lodash';
 import { QuickPickItem, Uri } from 'vscode';
 import { IClipboard, ICommandManager } from '../../common/application/types';
-import { traceInfo } from '../../common/logger';
 import { DataScience } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import {
@@ -67,26 +66,20 @@ export class JupyterServerSelector {
     }
 
     public async setJupyterURIToRemote(userURI: string): Promise<void> {
-        traceInfo(`Start Setup.D1`);
         const previousValue = await this.serverUriStorage.getUri();
-        traceInfo(`Start Setup.D2`);
         await this.serverUriStorage.setUri(userURI);
-        traceInfo(`Start Setup.D3`);
 
         // Indicate setting a jupyter URI to a remote setting. Check if an azure remote or not
         sendTelemetryEvent(Telemetry.SetJupyterURIToUserSpecified, undefined, {
             azure: userURI.toLowerCase().includes('azure')
         });
 
-        traceInfo(`Start Setup.D4`);
         // Reload if there's a change
         if (previousValue !== userURI) {
-            traceInfo(`Start Setup.D5`);
             this.cmdManager
-            .executeCommand('jupyter.reloadVSCode', DataScience.reloadAfterChangingJupyterServerConnection())
-            .then(noop, noop);
+                .executeCommand('jupyter.reloadVSCode', DataScience.reloadAfterChangingJupyterServerConnection())
+                .then(noop, noop);
         }
-        traceInfo(`Start Setup.D6`);
     }
 
     private async startSelectingURI(

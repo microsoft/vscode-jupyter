@@ -37,30 +37,24 @@ import {
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite('DataScience - VSCode Notebook - (Execution) (slow)xxx', function () {
+suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
     let api: IExtensionTestApi;
     let editorProvider: INotebookEditorProvider;
     const disposables: IDisposable[] = [];
     let vscodeNotebook: IVSCodeNotebook;
     this.timeout(120_000);
     suiteSetup(async function () {
-        traceInfo(`Start Setup`);
-        this.timeout(240_000);
+        this.timeout(120_000);
         api = await initialize();
         if (!(await canRunNotebookTests())) {
             return this.skip();
         }
-        traceInfo(`Start Setup.1`);
         await trustAllNotebooks();
-        traceInfo(`Start Setup.2`);
         await startJupyterServer();
-        traceInfo(`Start Setup.3`);
         await prewarmNotebooks();
-        traceInfo(`Start Setup.4`);
         sinon.restore();
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
-        traceInfo(`Start Setup complete`);
     });
     // Use same notebook without starting kernel in every single test (use one for whole suite).
     setup(async function () {
@@ -69,7 +63,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)xxx', function () {
         await startJupyterServer();
         // Open a notebook and use this for all tests in this test suite.
         await editorProvider.createNew();
-        await waitForKernelToGetAutoSelected();
+        await waitForKernelToGetAutoSelected(undefined);
         await deleteAllCellsAndWait();
         assert.isOk(vscodeNotebook.activeNotebookEditor, 'No active notebook');
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);

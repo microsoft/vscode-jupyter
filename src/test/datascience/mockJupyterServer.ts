@@ -47,7 +47,6 @@ export class MockJupyterServer implements INotebookServer {
         noop();
     }
     public getConnectionInfo(): IJupyterConnection | undefined {
-        traceInfo(`Start Setup.N1`);
         return this.launchInfo ? this.launchInfo.connectionInfo : undefined;
     }
     public waitForConnect(): Promise<INotebookServerLaunchInfo | undefined> {

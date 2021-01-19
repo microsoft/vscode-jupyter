@@ -8,12 +8,13 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import { Uri } from 'vscode';
+import { disposeAllDisposables } from '../../../client/common/helpers';
 import { IConfigurationService, IDisposable, IJupyterSettings, ReadWrite } from '../../../client/common/types';
 import { ITrustService } from '../../../client/datascience/types';
 import { IExtensionTestApi } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
 import { initialize } from '../../initialize';
-import { createTemporaryNotebook, disposeAllDisposables } from '../notebook/helper';
+import { createTemporaryNotebook } from '../notebook/helper';
 
 suite('DataScience - TrustService', () => {
     let api: IExtensionTestApi;

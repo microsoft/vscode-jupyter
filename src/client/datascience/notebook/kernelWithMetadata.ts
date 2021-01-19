@@ -6,11 +6,13 @@ import { join } from 'path';
 import { Uri } from 'vscode';
 import { NotebookCell, NotebookDocument, NotebookKernel as VSCNotebookKernel } from '../../../../types/vscode-proposed';
 import { IVSCodeNotebook } from '../../common/application/types';
+import { disposeAllDisposables } from '../../common/helpers';
 import { traceInfo } from '../../common/logger';
 import { IDisposable, IExtensionContext } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { getKernelConnectionId, IKernel, IKernelProvider, KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { PreferredRemoteKernelIdProvider } from '../notebookStorage/preferredRemoteKernelIdProvider';
+import { KernelSocketInformation } from '../types';
 import { updateKernelInfoInNotebookMetadata } from './helpers/helpers';
 
 export class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
@@ -59,8 +61,26 @@ export class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
         this.kernelProvider.get(document.uri)?.interruptAllCells(document).ignoreErrors(); // NOSONAR
     }
     private updateKernelInfoInNotebookWhenAvailable(kernel: IKernel, doc: NotebookDocument) {
-        let disposeHandler: IDisposable | undefined;
-        const disposable = kernel.onStatusChanged(() => {
+        let kernelSocket: KernelSocketInformation | undefined;
+        const handlerDisposables: IDisposable[] = [];
+
+        const saveKernelInfo = () => {
+            const kernelId = kernelSocket?.options.id;
+            if (!kernelId) {
+                return;
+            }
+            traceInfo(`Updating preferred kernel for remote notebook ${kernelId}`);
+            this.preferredRemoteKernelIdProvider.storePreferredRemoteKernelId(doc.uri, kernelId).catch(noop);
+
+            disposeAllDisposables(handlerDisposables);
+        };
+
+        const kernelDisposedDisposable = kernel.onDisposed(() => disposeAllDisposables(handlerDisposables));
+        const subscriptionDisposables = kernel.kernelSocket.subscribe((item) => {
+            kernelSocket = item;
+            saveKernelInfo();
+        });
+        const statusChangeDisposable = kernel.onStatusChanged(() => {
             if (kernel.disposed || !kernel.info) {
                 return;
             }
@@ -68,25 +88,15 @@ export class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
             if (!editor || editor.kernel?.id !== this.id) {
                 return;
             }
-            disposable.dispose();
-            if (disposeHandler) {
-                disposeHandler.dispose();
-            }
             updateKernelInfoInNotebookMetadata(doc, kernel.info);
+            if (kernel.info.status === 'ok' && this.selection.kind === 'startUsingKernelSpec') {
+                saveKernelInfo();
+            }
+        });
 
-            if (kernel.info.status === 'ok' && this.selection.kind === 'connectToLiveKernel') {
-                traceInfo(`Updating preferred kernel for remote notebook`);
-                this.preferredRemoteKernelIdProvider
-                    .storePreferredRemoteKernelId(doc.uri, this.selection.kernelModel.id)
-                    .catch(noop);
-            }
-        });
-        disposeHandler = kernel.onDisposed(() => {
-            if (disposeHandler) {
-                disposeHandler.dispose();
-            }
-            disposable.dispose();
-        });
+        handlerDisposables.push({ dispose: () => subscriptionDisposables.unsubscribe() });
+        handlerDisposables.push({ dispose: () => statusChangeDisposable.dispose() });
+        handlerDisposables.push({ dispose: () => kernelDisposedDisposable?.dispose() });
     }
 
     private chainExecution(next: () => Promise<void>): Promise<void> {

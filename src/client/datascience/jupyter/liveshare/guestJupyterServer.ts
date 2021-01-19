@@ -120,10 +120,8 @@ export class GuestJupyterServer
     // Return a copy of the connection information that this server used to connect with
     public getConnectionInfo(): IJupyterConnection | undefined {
         if (this.launchInfo) {
-            traceInfo(`Start Setup.M1`);
             return this.launchInfo.connectionInfo;
         }
-        traceInfo(`Start Setup.M2`);
         return undefined;
     }
 

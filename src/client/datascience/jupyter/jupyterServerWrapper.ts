@@ -10,7 +10,6 @@ import * as vsls from 'vsls/vscode';
 import { IPythonExtensionChecker } from '../../api/types';
 import { IApplicationShell, ILiveShareApi, IVSCodeNotebook, IWorkspaceService } from '../../common/application/types';
 import '../../common/extensions';
-import { traceInfo } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 
 import {
@@ -153,10 +152,8 @@ export class JupyterServerWrapper implements INotebookServer, ILiveShareHasRole 
     // Return a copy of the connection information that this server used to connect with
     public getConnectionInfo(): IJupyterConnection | undefined {
         if (this.launchInfo) {
-            traceInfo(`Start Setup.L1`);
             return this.launchInfo.connectionInfo;
         }
-        traceInfo(`Start Setup.L2`);
         return undefined;
     }
 

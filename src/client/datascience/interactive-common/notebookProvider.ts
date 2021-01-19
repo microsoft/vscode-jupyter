@@ -80,7 +80,6 @@ export class NotebookProvider implements INotebookProvider {
 
         // Connect to either a jupyter server or a stubbed out raw notebook "connection"
         if (await this.rawNotebookProvider.supported()) {
-            traceInfo(`Start Setup.H1`);
             return this.rawNotebookProvider.connect({
                 ...options,
                 onConnectionMade: this.fireConnectionMade.bind(this)
@@ -89,13 +88,11 @@ export class NotebookProvider implements INotebookProvider {
             this.extensionChecker.isPythonExtensionInstalled ||
             serverType === Settings.JupyterServerRemoteLaunch
             ) {
-            traceInfo(`Start Setup.H2`);
             return this.jupyterNotebookProvider.connect({
                 ...options,
                 onConnectionMade: this.fireConnectionMade.bind(this)
             });
         } else if (!options.getOnly) {
-            traceInfo(`Start Setup.H3`);
             await this.extensionChecker.showPythonExtensionInstallRequiredPrompt();
         }
     }
