@@ -3,6 +3,7 @@
 
 'use strict';
 
+import type { Kernel } from '@jupyterlab/services';
 import { assert } from 'chai';
 import { teardown } from 'mocha';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
@@ -133,7 +134,7 @@ suite('DataScience - KernelSelections', () => {
         const jupyterSessionManagerFactory = mock(JupyterSessionManagerFactory);
         when(jupyterSessionManagerFactory.create(anything())).thenResolve(instance(sessionManager));
         when(jupyterSessionManagerFactory.create(anything(), anything())).thenResolve(instance(sessionManager));
-        const eventEmitter = new EventEmitter<any>();
+        const eventEmitter = new EventEmitter<Kernel.IKernelConnection>();
         disposableRegistry.push(eventEmitter);
         when(jupyterSessionManagerFactory.onRestartSessionCreated).thenReturn(eventEmitter.event);
         when(jupyterSessionManagerFactory.onRestartSessionUsed).thenReturn(eventEmitter.event);

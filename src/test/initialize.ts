@@ -33,7 +33,7 @@ export async function initialize(): Promise<IExtensionTestApi> {
     // Ensure we start jupyter server before opening any notebooks or the like.
     if (!jupyterServerStarted) {
         jupyterServerStarted = true;
-        await startJupyterServer((api as any) as IExtensionTestApi);
+        await startJupyterServer((api as unknown) as IExtensionTestApi);
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (api as any) as IExtensionTestApi;
@@ -115,7 +115,7 @@ async function closeWindowsInternal() {
     } catch (ex) {
         if (ex instanceof CloseEditorsTimeoutError) {
             // Try again with a smaller timeout (no idea why VSCode is timeout out here).
-            sleep(500); // Possible VSC is busy & wasn't able to handle previous command.
+            await sleep(500); // Possible VSC is busy & wasn't able to handle previous command.
             await closeWindowsImplementation(5_000);
         } else {
             throw ex;
