@@ -112,6 +112,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     }
     public async interrupt(timeout: number): Promise<void> {
         if (this.session && this.session.kernel) {
+            traceInfo(`Interrupting kernel: ${this.session.kernel.name}`);
             // Listen for session status changes
             this.session.statusChanged.connect(this.statusHandler);
 
@@ -323,7 +324,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
 
     // Sub classes need to implement their own restarting specific code
     protected abstract startRestartSession(): void;
-    protected abstract async createRestartSession(
+    protected abstract createRestartSession(
         kernelConnection: KernelConnectionMetadata | undefined,
         session: ISessionWithSocket,
         cancelToken?: CancellationToken
@@ -362,17 +363,17 @@ export abstract class BaseJupyterSession implements IJupyterSession {
             };
 
             let statusChangeHandler: Slot<ISessionWithSocket, Kernel.Status> | undefined;
-            const kernelStatusChangedPromise = new Promise((resolve, reject) => {
+            const kernelStatusChangedPromise = new Promise<void>((resolve, reject) => {
                 statusChangeHandler = (_: ISessionWithSocket, e: Kernel.Status) => statusHandler(resolve, reject, e);
                 session.statusChanged.connect(statusChangeHandler);
             });
             let kernelChangedHandler: Slot<ISessionWithSocket, Session.IKernelChangedArgs> | undefined;
-            const statusChangedPromise = new Promise((resolve, reject) => {
+            const statusChangedPromise = new Promise<void>((resolve, reject) => {
                 kernelChangedHandler = (_: ISessionWithSocket, e: Session.IKernelChangedArgs) =>
                     statusHandler(resolve, reject, e.newValue?.status);
                 session.kernelChanged.connect(kernelChangedHandler);
             });
-            const checkStatusPromise = new Promise(async (resolve) => {
+            const checkStatusPromise = new Promise<void>(async (resolve) => {
                 // This function seems to cause CI builds to timeout randomly on
                 // different tests. Waiting for status to go idle doesn't seem to work and
                 // in the past, waiting on the ready promise doesn't work either. Check status with a maximum of 5 seconds
