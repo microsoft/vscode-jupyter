@@ -16,7 +16,7 @@ import { noop } from '../../../client/common/utils/misc';
 import { IKernelProvider } from '../../../client/datascience/jupyter/kernels/types';
 import { INotebookEditorProvider } from '../../../client/datascience/types';
 import { IExtensionTestApi, waitForCondition } from '../../common';
-import { initialize, IS_REMOTE_NATIVE_TEST } from '../../initialize';
+import { initialize } from '../../initialize';
 import {
     assertVSCCellIsNotRunning,
     assertVSCCellIsRunning,
@@ -53,7 +53,7 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
     suiteSetup(async function () {
         traceInfo(`Start Suite Test`);
         api = await initialize();
-        if (IS_REMOTE_NATIVE_TEST || !(await canRunNotebookTests())) {
+        if (!(await canRunNotebookTests())) {
             return this.skip();
         }
         await startJupyterServer();
