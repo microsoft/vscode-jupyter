@@ -3,17 +3,18 @@
 
 import * as getFreePort from 'get-port';
 import * as path from 'path';
+import * as tcpPortUsed from 'tcp-port-used';
 import { Uri } from 'vscode';
 import { disposeAllDisposables } from '../../client/common/helpers';
 import { traceError, traceInfo } from '../../client/common/logger';
 import { IPythonExecutionFactory } from '../../client/common/process/types';
-import { IDisposable, IDisposableRegistry } from '../../client/common/types';
+import { IAsyncDisposable, IDisposable, IDisposableRegistry } from '../../client/common/types';
 import { PYTHON_PATH, sleep } from '../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants';
 import { initialize } from '../initialize';
 const testFolder = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience');
 
-export class JupyterServer implements IDisposable {
+export class JupyterServer implements IAsyncDisposable {
     public static get instance(): JupyterServer {
         if (!JupyterServer._instance) {
             JupyterServer._instance = new JupyterServer();
@@ -24,15 +25,21 @@ export class JupyterServer implements IDisposable {
     private _disposables: IDisposable[] = [];
     private _jupyterServerWithToken?: Promise<Uri>;
     private availablePort?: number;
-    public dispose() {
+    public async dispose() {
         this._jupyterServerWithToken = undefined;
         disposeAllDisposables(this._disposables);
         traceInfo('Shutting Jupyter server used for remote tests');
+        if (this.availablePort) {
+            await tcpPortUsed.waitUntilFree(this.availablePort, 200, 5_000);
+        }
     }
     public async startJupyterWithToken(token = '7d25707a86975be50ee9757c929fef9012d27cf43153d1c1'): Promise<Uri> {
         if (!this._jupyterServerWithToken) {
             this._jupyterServerWithToken = new Promise<Uri>(async (resolve, reject) => {
                 const port = await this.getFreePort();
+                // Possible previous instance of jupyter has not completely shutdown.
+                // Wait for it to shutdown fully so that we can re-use the same port.
+                await tcpPortUsed.waitUntilUsed(port, 200, 10_000);
                 try {
                     await this.startJupyterServer({
                         port,
