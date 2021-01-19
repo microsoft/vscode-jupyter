@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { ChildProcess } from 'child_process';
 import * as getFreePort from 'get-port';
 import * as path from 'path';
 import { Uri } from 'vscode';
