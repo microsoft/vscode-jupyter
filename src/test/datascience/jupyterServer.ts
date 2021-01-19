@@ -8,7 +8,7 @@ import { disposeAllDisposables } from '../../client/common/helpers';
 import { traceError, traceInfo } from '../../client/common/logger';
 import { IPythonExecutionFactory } from '../../client/common/process/types';
 import { IDisposable, IDisposableRegistry } from '../../client/common/types';
-import { PYTHON_PATH } from '../common';
+import { PYTHON_PATH, sleep } from '../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants';
 import { initialize } from '../initialize';
 const testFolder = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience');
@@ -37,6 +37,7 @@ export class JupyterServer implements IDisposable {
                         port,
                         token
                     });
+                    await sleep(5_000); // Wait for some time for Jupyter to warm up & be ready to accept connections.
                     resolve(Uri.parse(`http://localhost:${port}/?token=${token}`));
                 } catch (ex) {
                     reject(ex);

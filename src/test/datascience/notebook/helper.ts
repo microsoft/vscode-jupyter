@@ -295,7 +295,6 @@ export async function trustAllNotebooks() {
 export async function startJupyterServer(api?: IExtensionTestApi) {
     const { serviceContainer } = api ? { serviceContainer: api.serviceContainer } : await getServices();
     const selector = serviceContainer.get<JupyterServerSelector>(JupyterServerSelector);
-    // const storage = serviceContainer.get<IJupyterServerUriStorage>(IJupyterServerUriStorage);
     if (IS_REMOTE_NATIVE_TEST) {
         const uri = await JupyterServer.instance.startJupyterWithToken();
         const uriString = decodeURIComponent(uri.toString());
