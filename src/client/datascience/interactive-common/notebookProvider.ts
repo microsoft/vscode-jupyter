@@ -169,6 +169,14 @@ export class NotebookProvider implements INotebookProvider {
         this._potentialKernelChanged.fire({ identity, kernelConnection: kernel });
     }
 
+    public fireStatusChanged(restartingKernel: boolean, notebook: INotebook | undefined) {
+        if (notebook) {
+            notebook.setIsRestarting(restartingKernel);
+            const status = restartingKernel ? ServerStatus.Restarting : ServerStatus.Idle;
+            this._onSessionStatusChanged.fire({ status, notebook });
+        }
+    }
+
     private fireConnectionMade() {
         this._connectionMade.fire();
     }

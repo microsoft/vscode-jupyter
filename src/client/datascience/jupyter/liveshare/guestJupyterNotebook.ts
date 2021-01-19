@@ -44,6 +44,10 @@ export class GuestJupyterNotebook
         return this._jupyterLab!;
     }
 
+    public get isRestarting() {
+        return false;
+    }
+
     public get identity(): Uri {
         return this._identity;
     }
@@ -271,6 +275,10 @@ export class GuestJupyterNotebook
         _targetName: string,
         _callback: (comm: Kernel.IComm, msg: KernelMessage.ICommOpenMsg) => void | PromiseLike<void>
     ) {
+        noop();
+    }
+
+    public setIsRestarting(_isRestarting: boolean) {
         noop();
     }
 

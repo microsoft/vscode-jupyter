@@ -313,6 +313,14 @@ export class NotebookEditor implements INotebookEditor {
     private async restartKernelInternal(kernel: IKernel): Promise<void> {
         this.restartingKernel = true;
 
+        // Old approach (INotebook is not exposed in IKernel, and INotebook will eventually go away).
+        const notebook = await this.notebookProvider.getOrCreateNotebook({
+            resource: this.file,
+            identity: this.file,
+            getOnly: true
+        });
+        this.notebookProvider.fireStatusChanged(this.restartingKernel, notebook);
+
         // Set our status
         const status = this.statusProvider.set(DataScience.restartingKernelStatus(), true, undefined, undefined);
 
@@ -322,12 +330,6 @@ export class NotebookEditor implements INotebookEditor {
             // If we get a kernel promise failure, then restarting timed out. Just shutdown and restart the entire server.
             // Note, this code might not be necessary, as such an error is thrown only when interrupting a kernel times out.
             if (exc instanceof JupyterKernelPromiseFailedError && kernel) {
-                // Old approach (INotebook is not exposed in IKernel, and INotebook will eventually go away).
-                const notebook = await this.notebookProvider.getOrCreateNotebook({
-                    resource: this.file,
-                    identity: this.file,
-                    getOnly: true
-                });
                 if (notebook) {
                     await notebook.dispose();
                 }
@@ -340,6 +342,7 @@ export class NotebookEditor implements INotebookEditor {
         } finally {
             status.dispose();
             this.restartingKernel = false;
+            this.notebookProvider.fireStatusChanged(this.restartingKernel, notebook);
         }
     }
     private async shouldAskForRestart(): Promise<boolean> {

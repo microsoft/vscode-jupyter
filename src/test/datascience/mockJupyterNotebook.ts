@@ -29,6 +29,9 @@ export class MockJupyterNotebook implements INotebook {
     public get connection(): INotebookProviderConnection | undefined {
         return this.providerConnection;
     }
+    public get isRestarting() {
+        return false;
+    }
     public get identity(): Uri {
         return getDefaultInteractiveIdentity();
     }
@@ -91,6 +94,9 @@ export class MockJupyterNotebook implements INotebook {
     }
 
     public clear(_id: string): void {
+        noop();
+    }
+    public setIsRestarting(_isRestarting: boolean) {
         noop();
     }
     public executeObservable(_code: string, _f: string, _line: number): Observable<ICell[]> {
