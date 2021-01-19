@@ -116,11 +116,12 @@ export class CellExecution {
     private started?: boolean;
 
     private _completed?: boolean;
+    private _interruptPromise?: Promise<InterruptResult>;
     private readonly initPromise: Promise<void>;
     private disposables: IDisposable[] = [];
     private cancelHandled = false;
     private requestHandlerChain = Promise.resolve();
-    private activeExecutions: { execution: Promise<void>; session: IJupyterSession }[] = [];
+    private activeExecution: { execution: Promise<void>; session: IJupyterSession } | undefined = undefined;
     private constructor(
         public readonly editor: VSCNotebookEditor,
         public readonly cell: NotebookCell,
@@ -169,20 +170,23 @@ export class CellExecution {
     }
 
     public async interrupt(timeoutMs: number): Promise<InterruptResult> {
-        // Go through our active executions and interrupt each one.
-        const results = await Promise.all(
-            this.activeExecutions.map((a) => this.interruptExecution(a.session, a.execution, timeoutMs))
-        );
-
-        // Flatten the results
-        if (results.includes(InterruptResult.Restarted)) {
-            return InterruptResult.Restarted;
+        // Skip if already interrupted
+        if (this._completed || !this.activeExecution) {
+            return InterruptResult.Success;
         }
-        if (results.includes(InterruptResult.TimedOut)) {
-            return InterruptResult.TimedOut;
-        }
+        // Interrupt the active execution
+        const result = this._interruptPromise
+            ? await this._interruptPromise
+            : await (this._interruptPromise = this.interruptExecution(
+                  this.activeExecution.session,
+                  this.activeExecution.execution,
+                  timeoutMs
+              ));
 
-        return InterruptResult.Success;
+        // Done interrrupting, clear interrupt promise
+        this._interruptPromise = undefined;
+
+        return result;
     }
 
     public async start(kernelPromise: Promise<IKernel>, notebook: INotebook) {
@@ -248,6 +252,7 @@ export class CellExecution {
      */
     private dispose() {
         traceCellMessage(this.cell, 'Execution disposed');
+        this.activeExecution = undefined;
         this.disposables.forEach((d) => d.dispose());
         const deferred = CellExecution.cellsCompletedForTesting.get(this.cell);
         if (deferred) {
@@ -471,7 +476,7 @@ export class CellExecution {
         const code = this.cell.document.getText();
         traceCellMessage(this.cell, 'Send code for execution');
         const execution = this.executeCodeCell(code, session, loggers);
-        this.activeExecutions.push({ execution, session });
+        this.activeExecution = { execution, session };
         await execution;
     }
 
