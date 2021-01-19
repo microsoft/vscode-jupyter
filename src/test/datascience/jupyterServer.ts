@@ -22,6 +22,7 @@ export class JupyterServer implements IDisposable {
     }
     private static _instance: JupyterServer;
     private _disposables: IDisposable[] = [];
+    private availablePort?: number;
     private _jupyterServerWithToken?: Promise<Uri>;
     public dispose() {
         this._jupyterServerWithToken = undefined;
@@ -31,7 +32,7 @@ export class JupyterServer implements IDisposable {
     public async startJupyterWithToken(token = '7d25707a86975be50ee9757c929fef9012d27cf43153d1c1'): Promise<Uri> {
         if (!this._jupyterServerWithToken) {
             this._jupyterServerWithToken = new Promise<Uri>(async (resolve, reject) => {
-                const port = await getFreePort({ host: 'localhost' });
+                const port = await this.getFreePort();
                 try {
                     await this.startJupyterServer({
                         port,
@@ -45,6 +46,14 @@ export class JupyterServer implements IDisposable {
             });
         }
         return this._jupyterServerWithToken;
+    }
+    private async getFreePort() {
+        // Always use the same port (when using different ports, our code doesn't work as we need to re-load VSC).
+        // The remote uri is cached in a few places (known issue).
+        if (!this.availablePort) {
+            this.availablePort = await getFreePort({ host: 'localhost' }).then((p) => p);
+        }
+        return this.availablePort!;
     }
 
     private startJupyterServer({ token, port }: { token: string; port: number }): Promise<void> {
