@@ -19,7 +19,7 @@ import * as AdazzleReactDataGrid from 'react-data-grid';
 import { VariableExplorerHeaderCellFormatter } from './variableExplorerHeaderCellFormatter';
 import { VariableExplorerRowRenderer } from './variableExplorerRowRenderer';
 
-// tslint:disable-next-line: import-name
+// eslint-disable-next-line
 import Draggable from 'react-draggable';
 
 import { IVariableState } from './redux/reducers/variables';
@@ -55,7 +55,7 @@ interface IFormatterArgs {
 }
 
 interface IGridRow {
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     name: string;
     type: string;
     size: string;
@@ -69,7 +69,7 @@ interface IVariableExplorerState {
     gridHeight: number;
 }
 
-// tslint:disable:no-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export class VariableExplorer extends React.Component<IVariableExplorerProps, IVariableExplorerState> {
     private variableExplorerRef: React.RefObject<HTMLDivElement>;
     private variableExplorerMenuBarRef: React.RefObject<HTMLDivElement>;
@@ -244,7 +244,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
                     columns={this.gridColumns.map((c) => {
                         return { ...defaultColumnProperties, ...c };
                     })}
-                    // tslint:disable-next-line: react-this-binding-issue
+                    // eslint-disable-next-line
                     rowGetter={this.getRow}
                     rowsCount={this.props.variables.length}
                     minHeight={this.state.gridHeight}
@@ -389,7 +389,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
         const newExecution =
             this.props.executionCount !== this.requestedPagesExecutionCount ||
             this.props.refreshCount !== this.requestedRefreshCount;
-        // tslint:disable-next-line: restrict-plus-operands
+        // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
         const notRequested = !this.requestedPages.find((n) => n <= index && index < n + pageSize);
         if (!haveValue && (newExecution || notRequested)) {
             // Try to find a page of data around this index.

@@ -17,7 +17,7 @@ import { translateKernelLanguageToMonaco } from '../common';
 import { getLanguageInNotebookMetadata } from '../jupyter/kernels/helpers';
 import { IJupyterKernelSpec } from '../types';
 import { getNotebookMetadata } from './helpers/helpers';
-// tslint:disable-next-line: no-var-requires no-require-imports
+// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
 export const LastSavedNotebookCellLanguage = 'DATASCIENCE.LAST_SAVED_CELL_LANGUAGE';

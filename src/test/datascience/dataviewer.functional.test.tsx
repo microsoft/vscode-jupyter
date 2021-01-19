@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-// tslint:disable:max-func-body-length trailing-comma no-any no-multiline-string
+/* eslint-disable , comma-dangle, @typescript-eslint/no-explicit-any, no-multi-str */
 import '../../client/common/extensions';
 
 import { nbformat } from '@jupyterlab/coreutils';
@@ -47,9 +47,9 @@ suite('DataScience DataViewer tests', () => {
         // run any of our variable execution code
         const isRollingBuild = process.env ? process.env.VSC_FORCE_REAL_JUPYTER !== undefined : false;
         if (!isRollingBuild) {
-            // tslint:disable-next-line:no-console
+            // eslint-disable-next-line no-console
             console.log('Skipping DataViewer tests. Requires python environment');
-            // tslint:disable-next-line:no-invalid-this
+            // eslint-disable-next-line no-invalid-this
             this.skip();
         }
     });
@@ -85,7 +85,7 @@ suite('DataScience DataViewer tests', () => {
             if (!disposable) {
                 continue;
             }
-            // tslint:disable-next-line:no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const promise = disposable.dispose() as Promise<any>;
             if (promise) {
                 await promise;
@@ -149,7 +149,7 @@ suite('DataScience DataViewer tests', () => {
         return mountedWebView.waitForMessage(DataViewerMessages.CompletedData);
     }
 
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     function runMountedTest(name: string, testFunc: (mount: IMountedWebView) => Promise<void>) {
         test(name, async () => {
             const wrapper = mountWebView();
@@ -304,5 +304,23 @@ suite('DataScience DataViewer tests', () => {
         verifyRows(wrapper.wrapper, [2, 2, 3, 3]);
         await filterRows(wrapper.wrapper, '0', '0');
         verifyRows(wrapper.wrapper, [0, 0]);
+    });
+
+    runMountedTest('2D PyTorch tensors', async (wrapper) => {
+        await injectCode('import torch\r\nfoo = torch.LongTensor([0, 1])');
+        const gotAllRows = getCompletedPromise(wrapper);
+        const dv = await createJupyterVariableDataViewer('foo', 'Tensor');
+        assert.ok(dv, 'DataViewer not created');
+        await gotAllRows;
+        verifyRows(wrapper.wrapper, [0, 0, 1, 1]);
+    });
+
+    runMountedTest('2D TensorFlow tensors', async (wrapper) => {
+        await injectCode('import tensorflow as tf\r\nbar = tf.constant([0, 1])');
+        const gotAllRows = getCompletedPromise(wrapper);
+        const dv = await createJupyterVariableDataViewer('bar', 'EagerTensor');
+        assert.ok(dv, 'DataViewer not created');
+        await gotAllRows;
+        verifyRows(wrapper.wrapper, [0, 0, 1, 1]);
     });
 });

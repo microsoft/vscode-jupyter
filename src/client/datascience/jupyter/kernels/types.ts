@@ -25,20 +25,20 @@ export type LiveKernelModel = IJupyterKernel & Partial<IJupyterKernelSpec> & { s
  * Connection metadata for Live Kernels.
  * With this we are able connect to an existing kernel (instead of starting a new session).
  */
-export type LiveKernelConnectionMetadata = {
+export type LiveKernelConnectionMetadata = Readonly<{
     kernelModel: LiveKernelModel;
     /**
      * Python interpreter will be used for intellisense & the like.
      */
     interpreter?: PythonEnvironment;
     kind: 'connectToLiveKernel';
-};
+}>;
 /**
  * Connection metadata for Kernels started using kernelspec (JSON).
  * This could be a raw kernel (spec might have path to executable for .NET or the like).
  * If the executable is not defined in kernelspec json, & it is a Python kernel, then we'll use the provided python interpreter.
  */
-export type KernelSpecConnectionMetadata = {
+export type KernelSpecConnectionMetadata = Readonly<{
     kernelModel?: undefined;
     kernelSpec: IJupyterKernelSpec;
     /**
@@ -48,13 +48,13 @@ export type KernelSpecConnectionMetadata = {
      */
     interpreter?: PythonEnvironment;
     kind: 'startUsingKernelSpec';
-};
+}>;
 /**
  * Connection metadata for Kernels started using default kernel.
  * Here we tell Jupyter to start a session and let it decide what kernel is to be started.
  * (could apply to either local or remote sessions when dealing with Jupyter Servers).
  */
-export type DefaultKernelConnectionMetadata = {
+export type DefaultKernelConnectionMetadata = Readonly<{
     /**
      * This will be empty as we do not have a kernel spec.
      * Left for type compatibility with other types that have kernel spec property.
@@ -65,23 +65,28 @@ export type DefaultKernelConnectionMetadata = {
      */
     interpreter?: PythonEnvironment;
     kind: 'startUsingDefaultKernel';
-};
+}>;
 /**
  * Connection metadata for Kernels started using Python interpreter.
  * These are not necessarily raw (it could be plain old Jupyter Kernels, where we register Python interpreter as a kernel).
  * We can have KernelSpec information here as well, however that is totally optional.
  * We will always start this kernel using old Jupyter style (provided we first register this intrepreter as a kernel) or raw.
  */
-export type PythonKernelConnectionMetadata = {
+export type PythonKernelConnectionMetadata = Readonly<{
     kernelSpec?: IJupyterKernelSpec;
     interpreter: PythonEnvironment;
     kind: 'startUsingPythonInterpreter';
-};
+}>;
+/**
+ * Readonly to ensure these are immutable, if we need to make changes then create a new one.
+ * This ensure we don't update is somewhere unnecessarily (such updates would be unexpected).
+ * Unexpected as connections are defined once & not changed, if we need to change then user needs to create a new connection.
+ */
 export type KernelConnectionMetadata =
-    | LiveKernelConnectionMetadata
-    | KernelSpecConnectionMetadata
-    | PythonKernelConnectionMetadata
-    | DefaultKernelConnectionMetadata;
+    | Readonly<LiveKernelConnectionMetadata>
+    | Readonly<KernelSpecConnectionMetadata>
+    | Readonly<PythonKernelConnectionMetadata>
+    | Readonly<DefaultKernelConnectionMetadata>;
 
 /**
  * Returns a string that can be used to uniquely identify a Kernel Connection.
@@ -150,10 +155,11 @@ export interface IKernelSelectionUsage {
 
 export interface IKernel extends IAsyncDisposable {
     readonly uri: Uri;
-    readonly metadata: Readonly<KernelConnectionMetadata>;
+    readonly kernelConnectionMetadata: Readonly<KernelConnectionMetadata>;
     readonly onStatusChanged: Event<ServerStatus>;
     readonly onDisposed: Event<void>;
     readonly onRestarted: Event<void>;
+    readonly onInterruptTimedOut: Event<void>;
     readonly status: ServerStatus;
     readonly disposed: boolean;
     /**
@@ -163,7 +169,8 @@ export interface IKernel extends IAsyncDisposable {
     readonly info?: KernelMessage.IInfoReplyMsg['content'];
     readonly kernelSocket: Observable<KernelSocketInformation | undefined>;
     start(): Promise<void>;
-    interrupt(): Promise<InterruptResult>;
+    interruptCell(cell: NotebookCell): Promise<InterruptResult>;
+    interruptAllCells(document: NotebookDocument): Promise<InterruptResult>;
     restart(): Promise<void>;
     executeCell(cell: NotebookCell): Promise<void>;
     executeAllCells(document: NotebookDocument): Promise<void>;
@@ -171,7 +178,11 @@ export interface IKernel extends IAsyncDisposable {
 
 export type KernelOptions = { metadata: KernelConnectionMetadata };
 export const IKernelProvider = Symbol('IKernelProvider');
-export interface IKernelProvider {
+export interface IKernelProvider extends IAsyncDisposable {
+    /**
+     * Event fired when an interrupt event times out for any kernel
+     */
+    readonly onInterruptTimedOut: Event<IKernel>;
     /**
      * Get hold of the active kernel for a given Uri (Notebook or other file).
      */

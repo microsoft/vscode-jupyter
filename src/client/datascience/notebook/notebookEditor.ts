@@ -14,17 +14,10 @@ import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { JupyterKernelPromiseFailedError } from '../jupyter/kernels/jupyterKernelPromiseFailedError';
 import { IKernel, IKernelProvider } from '../jupyter/kernels/types';
-import {
-    INotebook,
-    INotebookEditor,
-    INotebookModel,
-    INotebookProvider,
-    InterruptResult,
-    IStatusProvider
-} from '../types';
+import { INotebook, INotebookEditor, INotebookModel, INotebookProvider, IStatusProvider } from '../types';
 import { NotebookCellLanguageService } from './defaultCellLanguageService';
 import { chainWithPendingUpdates } from './helpers/notebookUpdater';
-// tslint:disable-next-line: no-var-requires no-require-imports
+// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
 export class NotebookEditor implements INotebookEditor {
@@ -94,6 +87,7 @@ export class NotebookEditor implements INotebookEditor {
             })
         );
         disposables.push(model.onDidDispose(this._closed.fire.bind(this._closed, this)));
+        kernelProvider.onInterruptTimedOut(this.onInterruptTimedOut, this, disposables);
     }
     @captureTelemetry(Telemetry.SyncAllCells)
     public async syncAllCells(): Promise<void> {
@@ -204,24 +198,12 @@ export class NotebookEditor implements INotebookEditor {
         const status = this.statusProvider.set(DataScience.interruptKernelStatus(), true, undefined, undefined);
 
         try {
-            const result = await kernel.interrupt();
+            await kernel.interruptAllCells(this.document);
             status.dispose();
-
-            // We timed out, ask the user if they want to restart instead.
-            if (result === InterruptResult.TimedOut) {
-                const message = DataScience.restartKernelAfterInterruptMessage();
-                const yes = DataScience.restartKernelMessageYes();
-                const no = DataScience.restartKernelMessageNo();
-                const v = await this.applicationShell.showInformationMessage(message, yes, no);
-                if (v === yes) {
-                    this.restartingKernel = false;
-                    await this.restartKernel();
-                }
-            }
         } catch (err) {
             status.dispose();
             traceError(err);
-            this.applicationShell.showErrorMessage(err);
+            void this.applicationShell.showErrorMessage(err);
         }
     }
 
@@ -286,6 +268,16 @@ export class NotebookEditor implements INotebookEditor {
         }
     }
 
+    private async onInterruptTimedOut(_: IKernel) {
+        const message = DataScience.restartKernelAfterInterruptMessage();
+        const yes = DataScience.restartKernelMessageYes();
+        const no = DataScience.restartKernelMessageNo();
+        const v = await this.applicationShell.showInformationMessage(message, yes, no);
+        if (v === yes) {
+            this.restartingKernel = false;
+            await this.restartKernel();
+        }
+    }
     private getSelectedCellId(uri: Uri): string | undefined {
         const editor = this.vscodeNotebook.notebookEditors.find((nb) => nb.document.uri.toString() === uri.toString());
 
@@ -336,7 +328,7 @@ export class NotebookEditor implements INotebookEditor {
                 await this.notebookProvider.connect({ getOnly: false, disableUI: false });
             } else {
                 // Show the error message
-                this.applicationShell.showErrorMessage(exc);
+                void this.applicationShell.showErrorMessage(exc);
                 traceError(exc);
             }
         } finally {

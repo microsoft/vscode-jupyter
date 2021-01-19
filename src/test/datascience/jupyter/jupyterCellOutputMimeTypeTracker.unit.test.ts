@@ -5,7 +5,7 @@ import { nbformat } from '@jupyterlab/coreutils';
 import * as fakeTimers from '@sinonjs/fake-timers';
 import { expect } from 'chai';
 import { sha256 } from 'hash.js';
-// tslint:disable-next-line: match-default-export-name
+// eslint-disable-next-line
 import rewiremock from 'rewiremock';
 import { instance, mock, when } from 'ts-mockito';
 import { EventEmitter, Uri } from 'vscode';

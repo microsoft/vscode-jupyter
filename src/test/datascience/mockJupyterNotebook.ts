@@ -23,7 +23,7 @@ import { PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { ServerStatus } from '../../datascience-ui/interactive-common/mainState';
 import { noop } from '../core';
 
-// tslint:disable: no-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 export class MockJupyterNotebook implements INotebook {
     public get connection(): INotebookProviderConnection | undefined {
@@ -183,16 +183,16 @@ export class MockJupyterNotebook implements INotebook {
     public sendCommMessage(
         buffers: (ArrayBuffer | ArrayBufferView)[],
         content: { comm_id: string; data: JSONObject; target_name: string | undefined },
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         metadata: any,
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         msgId: any
     ): Kernel.IShellFuture<
         KernelMessage.IShellMessage<'comm_msg'>,
         KernelMessage.IShellMessage<KernelMessage.ShellMessageType>
     > {
         const shellMessage = KernelMessage.createMessage<KernelMessage.ICommMsgMsg<'shell'>>({
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             msgType: 'comm_msg',
             channel: 'shell',
             buffers,
@@ -225,7 +225,7 @@ export class MockJupyterNotebook implements INotebook {
             channel: 'shell',
             content: {
                 status: 'ok'
-                // tslint:disable-next-line: no-any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
             } as any,
             metadata: {},
             session: '1',

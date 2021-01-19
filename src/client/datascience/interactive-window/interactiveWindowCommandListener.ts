@@ -146,7 +146,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
         );
     }
 
-    // tslint:disable:no-any
+    /* eslint-disable @typescript-eslint/no-explicit-any */
     private async listenForErrors(promise: () => Promise<any>): Promise<any> {
         let result: any;
         try {
@@ -470,7 +470,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
 
             // Scroll to cell in the one that has the cell. We need this so
             // we don't activate all of them.
-            // tslint:disable-next-line: prefer-for-of
+            // eslint-disable-next-line @typescript-eslint/prefer-for-of
             for (let i = 0; i < possibles.length; i += 1) {
                 if (await possibles[i].hasCell(id)) {
                     possibles[i].scrollToCell(id);

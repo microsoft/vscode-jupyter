@@ -1264,6 +1264,12 @@
                     "command": "jupyter.opennotebookInPreviewEditor",
                     "when": "false",
                     "category": "Jupyter"
+                },
+                {
+                    "command": "jupyter.openVariableView",
+                    "title": "%jupyter.command.jupyter.openVariableView.title%",
+                    "category": "Jupyter",
+                    "when": "jupyter.isnativeactive"
                 }
             ],
             "debug/variables/context": [
@@ -1304,7 +1310,6 @@
                         "enum": [
                             "NativeNotebookEditor",
                             "CustomEditor",
-                            "NativeVariableView",
                             "All"
                         ]
                     },
@@ -1799,7 +1804,7 @@
                     "type": "webview",
                     "id": "jupyterViewVariables",
                     "name": "Variables",
-                    "when": "jupyter.nativevariableview"
+                    "when": "jupyter.isnativeactive"
                 }
             ]
         }
@@ -1835,8 +1840,7 @@
         "testPerformance": "node ./out/test/testBootstrap.js ./out/test/performanceTest.js",
         "testSmoke": "node ./out/test/testBootstrap.js ./out/test/smokeTest.js",
         "testSmokeLogged": "cross-env VSC_JUPYTER_FORCE_LOGGING=true VSC_JUPYTER_LOG_FILE=smoke-test.log node --no-force-async-hooks-checks ./out/test/testBootstrap.js ./out/test/smokeTest.js",
-        "lint-staged": "node gulpfile.js",
-        "lint": "tslint src/**/*.ts -t verbose",
+        "lint": "eslint -c .eslintrc.js --ext .ts src",
         "prettier-fix": "prettier 'src/**/*.ts*' --write && prettier 'build/**/*.js' --write",
         "clean": "gulp clean",
         "updateBuildNumber": "gulp updateBuildNumber",
@@ -1934,6 +1938,8 @@
         "zeromq": "^6.0.0-beta.6"
     },
     "devDependencies": {
+        "@actions/core": "^1.2.6",
+        "@actions/github": "^4.0.0",
         "@babel/cli": "^7.8.4",
         "@babel/core": "^7.4.4",
         "@babel/plugin-transform-runtime": "^7.4.4",
@@ -1942,6 +1948,9 @@
         "@babel/preset-react": "^7.0.0",
         "@babel/register": "^7.9.0",
         "@istanbuljs/nyc-config-typescript": "^0.1.3",
+        "@octokit/core": "^3.2.4",
+        "@octokit/plugin-paginate-rest": "^2.7.0",
+        "@octokit/webhooks": "^7.21.0",
         "@sinonjs/fake-timers": "^6.0.1",
         "@testing-library/react": "^9.4.0",
         "@types/ansi-regex": "^4.0.0",
@@ -1999,8 +2008,9 @@
         "@types/winreg": "^1.2.30",
         "@types/ws": "^6.0.1",
         "@types/xml2js": "^0.4.2",
-        "@typescript-eslint/eslint-plugin": "^3.7.0",
-        "@typescript-eslint/parser": "^3.7.0",
+        "@typescript-eslint/eslint-plugin": "^3.10.1",
+        "@typescript-eslint/eslint-plugin-tslint": "^4.13.0",
+        "@typescript-eslint/parser": "^3.10.1",
         "acorn": "^6.4.1",
         "babel-polyfill": "^6.26.0",
         "cache-loader": "^4.1.0",
@@ -2021,13 +2031,16 @@
         "download": "^7.0.0",
         "enzyme": "^3.7.0",
         "enzyme-adapter-react-16": "^1.6.0",
-        "eslint": "^7.2.0",
+        "eslint": "^7.17.0",
         "eslint-config-airbnb": "^18.2.0",
-        "eslint-config-prettier": "^6.9.0",
-        "eslint-plugin-import": "^2.22.0",
+        "eslint-config-prettier": "^6.15.0",
+        "eslint-plugin-import": "^2.22.1",
+        "eslint-plugin-jsdoc": "^31.0.4",
         "eslint-plugin-jsx-a11y": "^6.3.1",
+        "eslint-plugin-no-null": "^1.0.2",
+        "eslint-plugin-prefer-arrow": "^1.2.2",
         "eslint-plugin-prettier": "^3.1.2",
-        "eslint-plugin-react": "^7.20.3",
+        "eslint-plugin-react": "^7.22.0",
         "eslint-plugin-react-hooks": "^4.0.0",
         "expose-loader": "^0.7.5",
         "express": "^4.17.1",
@@ -2083,7 +2096,7 @@
         "ts-mockito": "^2.5.0",
         "ts-node": "^8.3.0",
         "tsconfig-paths-webpack-plugin": "^3.2.0",
-        "tslint": "^5.20.1",
+        "tslint": "^6.1.3",
         "tslint-config-prettier": "^1.18.0",
         "tslint-eslint-rules": "^5.1.0",
         "tslint-microsoft-contrib": "^5.0.3",

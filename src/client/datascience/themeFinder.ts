@@ -13,7 +13,7 @@ import { IExtensions } from '../common/types';
 import { getLanguageConfiguration } from '../language/languageConfiguration';
 import { IThemeFinder } from './types';
 
-// tslint:disable:no-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 interface IThemeData {
     rootFile: string;

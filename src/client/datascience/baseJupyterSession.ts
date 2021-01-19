@@ -19,7 +19,7 @@ import { JupyterInvalidKernelError } from './jupyter/jupyterInvalidKernelError';
 import { JupyterWaitForIdleError } from './jupyter/jupyterWaitForIdleError';
 import { kernelConnectionMetadataHasKernelSpec } from './jupyter/kernels/helpers';
 import { JupyterKernelPromiseFailedError } from './jupyter/kernels/jupyterKernelPromiseFailedError';
-import { KernelConnectionMetadata } from './jupyter/kernels/types';
+import { getKernelConnectionId, KernelConnectionMetadata } from './jupyter/kernels/types';
 import { suppressShutdownErrors } from './raw-kernel/rawKernel';
 import { IJupyterSession, ISessionWithSocket, KernelSocketInformation } from './types';
 
@@ -48,7 +48,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     }
     private get jupyterLab(): undefined | typeof import('@jupyterlab/services') {
         if (!this._jupyterLab) {
-            // tslint:disable-next-line:no-require-imports
+            // eslint-disable-next-line @typescript-eslint/no-require-imports
             this._jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services'); // NOSONAR
         }
         return this._jupyterLab;
@@ -86,7 +86,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         return this.shutdown();
     }
     // Abstracts for each Session type to implement
-    public abstract async waitForIdle(timeout: number): Promise<void>;
+    public abstract waitForIdle(timeout: number): Promise<void>;
 
     public async shutdown(): Promise<void> {
         if (this.session) {
@@ -112,6 +112,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     }
     public async interrupt(timeout: number): Promise<void> {
         if (this.session && this.session.kernel) {
+            traceInfo(`Interrupting kernel: ${this.session.kernel.name}`);
             // Listen for session status changes
             this.session.statusChanged.connect(this.statusHandler);
 
@@ -139,9 +140,9 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         const kernelSpecToUse = kernelConnectionMetadataHasKernelSpec(kernelConnection)
             ? kernelConnection.kernelSpec
             : undefined;
-        if (this.session && currentKernelSpec && kernelSpecToUse) {
-            // Name and id have to match (id is only for active sessions)
-            if (currentKernelSpec.name === kernelSpecToUse.name && currentKernelSpec.id === kernelSpecToUse.id) {
+        if (this.session && currentKernelSpec && kernelSpecToUse && this.kernelConnectionMetadata) {
+            // If we have selected the same kernel connection, then nothing to do.
+            if (getKernelConnectionId(this.kernelConnectionMetadata) === getKernelConnectionId(kernelConnection)) {
                 return;
             }
         }
@@ -245,7 +246,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
 
     public sendInputReply(content: string) {
         if (this.session && this.session.kernel) {
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             this.session.kernel.sendInputReply({ value: content, status: 'ok' });
         }
     }
@@ -264,9 +265,9 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     public sendCommMessage(
         buffers: (ArrayBuffer | ArrayBufferView)[],
         content: { comm_id: string; data: JSONObject; target_name: string | undefined },
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         metadata: any,
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         msgId: any
     ): Kernel.IShellFuture<
         KernelMessage.IShellMessage<'comm_msg'>,
@@ -274,7 +275,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     > {
         if (this.session && this.session.kernel && this.jupyterLab) {
             const shellMessage = this.jupyterLab.KernelMessage.createMessage<KernelMessage.ICommMsgMsg<'shell'>>({
-                // tslint:disable-next-line: no-any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 msgType: 'comm_msg',
                 channel: 'shell',
                 buffers,
@@ -323,7 +324,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
 
     // Sub classes need to implement their own restarting specific code
     protected abstract startRestartSession(): void;
-    protected abstract async createRestartSession(
+    protected abstract createRestartSession(
         kernelConnection: KernelConnectionMetadata | undefined,
         session: ISessionWithSocket,
         cancelToken?: CancellationToken
@@ -338,7 +339,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     protected async waitForIdleOnSession(session: ISessionWithSocket | undefined, timeout: number): Promise<void> {
         if (session && session.kernel) {
             traceInfo(`Waiting for idle on (kernel): ${session.kernel.id} -> ${session.kernel.status}`);
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const statusHandler = (resolve: () => void, reject: (exc: any) => void, e: Kernel.Status | undefined) => {
                 if (e === 'idle') {
                     resolve();
@@ -362,17 +363,17 @@ export abstract class BaseJupyterSession implements IJupyterSession {
             };
 
             let statusChangeHandler: Slot<ISessionWithSocket, Kernel.Status> | undefined;
-            const kernelStatusChangedPromise = new Promise((resolve, reject) => {
+            const kernelStatusChangedPromise = new Promise<void>((resolve, reject) => {
                 statusChangeHandler = (_: ISessionWithSocket, e: Kernel.Status) => statusHandler(resolve, reject, e);
                 session.statusChanged.connect(statusChangeHandler);
             });
             let kernelChangedHandler: Slot<ISessionWithSocket, Session.IKernelChangedArgs> | undefined;
-            const statusChangedPromise = new Promise((resolve, reject) => {
+            const statusChangedPromise = new Promise<void>((resolve, reject) => {
                 kernelChangedHandler = (_: ISessionWithSocket, e: Session.IKernelChangedArgs) =>
                     statusHandler(resolve, reject, e.newValue?.status);
                 session.kernelChanged.connect(kernelChangedHandler);
             });
-            const checkStatusPromise = new Promise(async (resolve) => {
+            const checkStatusPromise = new Promise<void>(async (resolve) => {
                 // This function seems to cause CI builds to timeout randomly on
                 // different tests. Waiting for status to go idle doesn't seem to work and
                 // in the past, waiting on the ready promise doesn't work either. Check status with a maximum of 5 seconds

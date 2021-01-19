@@ -3,7 +3,6 @@
 
 'use strict';
 
-import { nbformat } from '@jupyterlab/coreutils';
 import { KernelMessage } from '@jupyterlab/services';
 import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
@@ -25,7 +24,6 @@ import { IDisposableRegistry, IExtensionContext } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
 import { noop } from '../../../common/utils/misc';
 import { CodeSnippets } from '../../constants';
-import { getDefaultNotebookContent, updateNotebookMetadata } from '../../notebookStorage/baseModel';
 import {
     IDataScienceErrorHandler,
     INotebook,
@@ -53,6 +51,9 @@ export class Kernel implements IKernel {
     get onDisposed(): Event<void> {
         return this._onDisposed.event;
     }
+    get onInterruptTimedOut(): Event<void> {
+        return this._onInterruptTimedOut.event;
+    }
     private _info?: KernelMessage.IInfoReplyMsg['content'];
     get info(): KernelMessage.IInfoReplyMsg['content'] | undefined {
         return this._info;
@@ -72,6 +73,7 @@ export class Kernel implements IKernel {
     private readonly _onStatusChanged = new EventEmitter<ServerStatus>();
     private readonly _onRestarted = new EventEmitter<void>();
     private readonly _onDisposed = new EventEmitter<void>();
+    private readonly _onInterruptTimedOut = new EventEmitter<void>();
     private _notebookPromise?: Promise<INotebook | undefined>;
     private readonly hookedNotebookForEvents = new WeakSet<INotebook>();
     private restarting?: Deferred<void>;
@@ -80,10 +82,11 @@ export class Kernel implements IKernel {
     private startCancellation = new CancellationTokenSource();
     constructor(
         public readonly uri: Uri,
-        public readonly metadata: Readonly<KernelConnectionMetadata>,
+        public readonly kernelConnectionMetadata: Readonly<KernelConnectionMetadata>,
         private readonly notebookProvider: INotebookProvider,
         private readonly disposables: IDisposableRegistry,
         private readonly launchTimeout: number,
+        private readonly interruptTimeout: number,
         commandManager: ICommandManager,
         private readonly errorHandler: IDataScienceErrorHandler,
         private readonly editorProvider: INotebookEditorProvider,
@@ -103,7 +106,7 @@ export class Kernel implements IKernel {
             kernelSelectionUsage,
             appShell,
             vscNotebook,
-            metadata,
+            kernelConnectionMetadata,
             rawNotebookSupported,
             context
         );
@@ -133,16 +136,13 @@ export class Kernel implements IKernel {
             return;
         } else {
             await this.validate(this.uri);
-            const metadata = ((getDefaultNotebookContent().metadata || {}) as unknown) as nbformat.INotebookMetadata;
-            // Create a dummy notebook metadata & update the metadata before starting the notebook (required to ensure we fetch & start the right kernel).
-            // Lower layers of code below getOrCreateNotebook searches for kernels again using the metadata.
-            updateNotebookMetadata(metadata, this.metadata);
             this._notebookPromise = this.notebookProvider.getOrCreateNotebook({
                 identity: this.uri,
                 resource: this.uri,
                 disableUI: options?.disableUI,
                 getOnly: false,
-                metadata,
+                metadata: undefined, // No need to pass this, as we have a kernel connection (metadata is required in lower layers to determine the kernel connection).
+                kernelConnection: this.kernelConnectionMetadata,
                 token: options?.token
             });
 
@@ -158,14 +158,32 @@ export class Kernel implements IKernel {
             await this.initializeAfterStart();
         }
     }
-    public async interrupt(): Promise<InterruptResult> {
+
+    public async interruptCell(cell: NotebookCell): Promise<InterruptResult> {
         if (this.restarting) {
             await this.restarting.promise;
         }
         if (!this.notebook) {
             throw new Error('No notebook to interrupt');
         }
-        return this.notebook.interruptKernel(this.launchTimeout);
+        const result = await this.kernelExecution.interruptCell(cell, this.interruptTimeout);
+        if (result === InterruptResult.TimedOut) {
+            this._onInterruptTimedOut.fire();
+        }
+        return result;
+    }
+    public async interruptAllCells(document: NotebookDocument): Promise<InterruptResult> {
+        if (this.restarting) {
+            await this.restarting.promise;
+        }
+        if (!this.notebook) {
+            throw new Error('No notebook to interrupt');
+        }
+        const result = await this.kernelExecution.interruptAllCells(document, this.interruptTimeout);
+        if (result === InterruptResult.TimedOut) {
+            this._onInterruptTimedOut.fire();
+        }
+        return result;
     }
     public async dispose(): Promise<void> {
         this.restarting = undefined;
@@ -206,7 +224,7 @@ export class Kernel implements IKernel {
         if (!this.kernelValidated.get(key)) {
             const promise = new Promise<void>((resolve) =>
                 this.kernelSelectionUsage
-                    .useSelectedKernel(kernel?.metadata, uri, 'raw')
+                    .useSelectedKernel(kernel?.kernelConnectionMetadata, uri, 'raw')
                     .finally(() => {
                         // If still using the same promise, then remove the exception information.
                         // Basically if there's an exception, then we cannot use the kernel and a message would have been displayed.
@@ -247,7 +265,7 @@ export class Kernel implements IKernel {
             });
             this.notebook.onSessionStatusChanged((e) => this._onStatusChanged.fire(e), this, this.disposables);
         }
-        if (isPythonKernelConnection(this.metadata)) {
+        if (isPythonKernelConnection(this.kernelConnectionMetadata)) {
             await this.notebook.setLaunchingFile(this.uri.fsPath);
         }
         await this.notebook
@@ -258,7 +276,7 @@ export class Kernel implements IKernel {
     }
 
     private disableJedi() {
-        if (isPythonKernelConnection(this.metadata) && this.notebook) {
+        if (isPythonKernelConnection(this.kernelConnectionMetadata) && this.notebook) {
             this.notebook.executeObservable(CodeSnippets.disableJedi, this.uri.fsPath, 0, uuid(), true);
         }
     }

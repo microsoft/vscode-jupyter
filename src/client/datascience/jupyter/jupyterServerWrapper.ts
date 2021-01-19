@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import type { nbformat } from '@jupyterlab/coreutils';
+import { nbformat } from '@jupyterlab/coreutils';
 import { inject, injectable, named } from 'inversify';
 import * as uuid from 'uuid/v4';
 import { Uri } from 'vscode';
@@ -31,6 +31,7 @@ import {
     INotebookServerLaunchInfo
 } from '../types';
 import { KernelSelector } from './kernels/kernelSelector';
+import { KernelConnectionMetadata } from './kernels/types';
 import { GuestJupyterServer } from './liveshare/guestJupyterServer';
 import { HostJupyterServer } from './liveshare/hostJupyterServer';
 import { IRoleBasedObject, RoleBasedFactory } from './liveshare/roleBasedFactory';
@@ -38,7 +39,7 @@ import { ILiveShareHasRole } from './liveshare/types';
 
 interface IJupyterServerInterface extends IRoleBasedObject, INotebookServer {}
 
-// tslint:disable:callable-types
+/* eslint-disable @typescript-eslint/prefer-function-type */
 type JupyterServerClassType = {
     new (
         liveShare: ILiveShareApi,
@@ -58,7 +59,7 @@ type JupyterServerClassType = {
         extensionChecker: IPythonExtensionChecker
     ): IJupyterServerInterface;
 };
-// tslint:enable:callable-types
+/* eslint-enable @typescript-eslint/prefer-function-type */
 
 // This class wraps either a HostJupyterServer or a GuestJupyterServer based on the liveshare state. It abstracts
 // out the live share specific parts.
@@ -128,10 +129,11 @@ export class JupyterServerWrapper implements INotebookServer, ILiveShareHasRole 
         resource: Resource,
         identity: Uri,
         notebookMetadata?: nbformat.INotebookMetadata,
+        kernelConnection?: KernelConnectionMetadata,
         cancelToken?: CancellationToken
     ): Promise<INotebook> {
         const server = await this.serverFactory.get();
-        return server.createNotebook(resource, identity, notebookMetadata, cancelToken);
+        return server.createNotebook(resource, identity, notebookMetadata, kernelConnection, cancelToken);
     }
 
     public async shutdown(): Promise<void> {

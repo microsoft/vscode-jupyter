@@ -5,6 +5,7 @@
 
 import { assert } from 'chai';
 import { ICommandManager, IVSCodeNotebook } from '../../../client/common/application/types';
+import { traceInfo } from '../../../client/common/logger';
 import { IDisposable } from '../../../client/common/types';
 import { Commands } from '../../../client/datascience/constants';
 import { INotebookEditorProvider } from '../../../client/datascience/types';
@@ -12,7 +13,6 @@ import { IExtensionTestApi } from '../../common';
 import { initialize } from '../../initialize';
 import {
     canRunNotebookTests,
-    closeNotebooks,
     closeNotebooksAndCleanUpAfterTests,
     deleteAllCellsAndWait,
     insertCodeCell,
@@ -40,16 +40,19 @@ suite('Notebook Editor tests', () => {
     });
 
     setup(async function () {
+        traceInfo(`Start Test ${this.currentTest?.title}`);
         // Open a notebook and use this for all tests in this test suite.
         await editorProvider.createNew();
         await waitForKernelToGetAutoSelected();
         await deleteAllCellsAndWait();
         assert.isOk(vscodeNotebook.activeNotebookEditor, 'No active notebook');
+        traceInfo(`Start Test Completed ${this.currentTest?.title}`);
     });
 
     teardown(async function () {
-        await closeNotebooks(disposables);
+        traceInfo(`End Test ${this.currentTest?.title}`);
         await closeNotebooksAndCleanUpAfterTests(disposables);
+        traceInfo(`End Test Completed ${this.currentTest?.title}`);
     });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
 
@@ -103,5 +106,30 @@ suite('Notebook Editor tests', () => {
 
         // The third cell should have a runState of Success
         assert.strictEqual(thirdCell?.metadata.runState, vscodeNotebookEnums.NotebookCellRunState.Success);
+    });
+    test('Switch kernels', async function () {
+        this.skip();
+        // Do this after talking with VS code team
+        // // add a cell
+        // await insertCodeCell('print("0")', { index: 0 });
+
+        // const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
+
+        // await executeCell(cell);
+
+        // // Wait till execution count changes and status is success.
+        // await waitForExecutionCompletedSuccessfully(cell);
+
+        // // Switch kernels to the other kernel
+        // const kernels = await kernelProvider.provideKernels(
+        //     vscodeNotebook.activeNotebookEditor!.document,
+        //     CancellationToken.None
+        // );
+        // if (kernels?.length && kernels?.length > 0) {
+        //     // We have multiple kernels. Try switching
+        //     await commandManager.executeCommand(
+        //         'notebook.selectKernel',
+        //     );
+        // }
     });
 });

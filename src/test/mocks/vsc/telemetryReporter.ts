@@ -3,7 +3,7 @@
 
 'use strict';
 
-// tslint:disable:all
+/* eslint-disable  */
 export class vscMockTelemetryReporter {
     constructor() {
         //

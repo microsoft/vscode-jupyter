@@ -69,10 +69,10 @@ import {
 import { ITestInteractiveWindowProvider } from './testInteractiveWindowProvider';
 import { InteractiveWindowMessageListener } from '../../client/datascience/interactive-common/interactiveWindowMessageListener';
 import { IExportDialog } from '../../client/datascience/export/types';
-// tslint:disable-next-line: no-require-imports no-var-requires
+// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
 const _escape = require('lodash/escape') as typeof import('lodash/escape'); // NOSONAR
 
-// tslint:disable:max-func-body-length trailing-comma no-any no-multiline-string
+/* eslint-disable , comma-dangle, @typescript-eslint/no-explicit-any, no-multi-str */
 suite('DataScience Interactive Window output tests', () => {
     const disposables: Disposable[] = [];
     let ioc: DataScienceIocContainer;
@@ -97,7 +97,7 @@ suite('DataScience Interactive Window output tests', () => {
             if (!disposable) {
                 continue;
             }
-            // tslint:disable-next-line:no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const promise = disposable.dispose() as Promise<any>;
             if (promise) {
                 await promise;
@@ -132,55 +132,6 @@ suite('DataScience Interactive Window output tests', () => {
             await addCode(ioc, 'a=1\na');
 
             verifyHtmlOnInteractiveCell('1', CellPosition.Last);
-        },
-        () => {
-            return ioc;
-        }
-    );
-
-    runTest(
-        'Simple text with no python extension',
-        async (c) => {
-            // Interactive window will attempt to connect so we can only
-            // run this test with raw kernel
-            if (ioc.isRawKernel) {
-                ioc.setPythonExtensionState(false);
-                await getOrCreateInteractiveWindow(ioc);
-
-                await addCode(ioc, 'a=1\na');
-                verifyHtmlOnInteractiveCell('1', CellPosition.Last);
-
-                assert.ok(
-                    !ioc.attemptedPythonExtension,
-                    'Python extension installation should not happen on simple open'
-                );
-            } else {
-                c.skip();
-            }
-        },
-        () => {
-            return ioc;
-        }
-    );
-
-    runTest(
-        'Saving without python extension',
-        async (c) => {
-            if (ioc.isRawKernel) {
-                ioc.setPythonExtensionState(false);
-
-                await addCode(ioc, 'a=1\na');
-
-                const { window, mount } = await getOrCreateInteractiveWindow(ioc);
-
-                const exportPromise = mount.waitForMessage(InteractiveWindowMessages.ReturnAllCells);
-                window.exportCells();
-                await exportPromise;
-
-                assert.ok(ioc.attemptedPythonExtension, 'Export should warn user about installing');
-            } else {
-                c.skip();
-            }
         },
         () => {
             return ioc;
@@ -740,7 +691,7 @@ for i in range(100):
                 const interpreterService = ioc.get<IInterpreterService>(IInterpreterService);
                 const interpreters = await ioc.getFunctionalTestInterpreters();
                 if (interpreters.length < 2) {
-                    // tslint:disable-next-line: no-console
+                    // eslint-disable-next-line no-console
                     console.log(
                         'Multiple interpreters skipped because local machine does not have more than one jupyter environment'
                     );
@@ -762,7 +713,7 @@ for i in range(100):
                 const secondUri = Uri.file('bar.py');
                 ioc.addResourceToFolder(secondUri, path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience2'));
 
-                // tslint:disable-next-line: no-suspicious-comment
+                // eslint-disable-next-line
                 ioc.get<InterpreterService>(IInterpreterService).updateInterpreter(
                     secondUri,
                     interpreters.filter((i) => i.path !== activeInterpreter?.path)[0].path
@@ -791,10 +742,10 @@ for i in range(100):
     runTest(
         'Dispose test',
         async () => {
-            // tslint:disable-next-line:no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const { window } = await getOrCreateInteractiveWindow(ioc);
             await window.dispose();
-            // tslint:disable-next-line:no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const h2 = await getOrCreateInteractiveWindow(ioc);
             // Check equal and then dispose so the test goes away
             const equal = Object.is(window, h2.window);
@@ -1302,9 +1253,9 @@ for i in range(100):
         const { mount, window } = await getOrCreateInteractiveWindow(ioc);
 
         // We need to update the view state to get the external buttons
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const listener = (window as any).messageListener as InteractiveWindowMessageListener;
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         listener.onChangeViewState((window as any).webPanel);
 
         // Then enter some code.

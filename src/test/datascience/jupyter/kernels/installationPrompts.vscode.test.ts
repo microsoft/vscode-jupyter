@@ -26,8 +26,8 @@ import {
     waitForKernelToGetAutoSelected
 } from '../../notebook/helper';
 
-// tslint:disable: no-invalid-this max-func-body-length no-function-expression no-any
-suite('DataScience Install IPyKernel (slow) (install)', () => {
+/* eslint-disable no-invalid-this, , , @typescript-eslint/no-explicit-any */
+suite('DataScience Install IPyKernel (slow) (install)', function () {
     const disposables: IDisposable[] = [];
     let nbFile: string;
     const templateIPynbFile = path.join(
@@ -43,13 +43,12 @@ suite('DataScience Install IPyKernel (slow) (install)', () => {
     let installer: IInstaller;
     let vscodeNotebook: IVSCodeNotebook;
     const delayForUITest = 30_000;
+    this.timeout(60_000); // Slow test, we need to uninstall/install ipykernel.
     /*
     This test requires a virtual environment to be created & registered as a kernel.
     It also needs to have ipykernel installed in it.
     */
     suiteSetup(async function () {
-        this.timeout(60_000); // Slow test, we need to uninstall/install ipykernel.
-
         // These are slow tests, hence lets run only on linux on CI.
         if ((IS_CI_SERVER && getOSType() !== OSType.Linux) || !fs.pathExistsSync(venvPythonPath)) {
             // Virtual env does not exist.
@@ -61,7 +60,8 @@ suite('DataScience Install IPyKernel (slow) (install)', () => {
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
     });
 
-    setup(async () => {
+    setup(async function () {
+        console.log(`Start test ${this.currentTest?.title}`);
         // Don't use same file (due to dirty handling, we might save in dirty.)
         // Coz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
         nbFile = await createTemporaryNotebook(templateIPynbFile, disposables);
@@ -70,8 +70,12 @@ suite('DataScience Install IPyKernel (slow) (install)', () => {
         await proc.exec(venvPythonPath, ['-m', 'pip', 'uninstall', 'ipykernel', '--yes']);
         await closeActiveWindows();
         sinon.restore();
+        console.log(`Start Test completed ${this.currentTest?.title}`);
     });
-    teardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
+    teardown(async function () {
+        console.log(`End test ${this.currentTest?.title}`);
+        await closeNotebooksAndCleanUpAfterTests(disposables);
+    });
 
     test('Test Install IPyKernel prompt message', async () => {
         // Confirm the message has not changed.

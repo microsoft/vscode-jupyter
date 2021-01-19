@@ -41,7 +41,7 @@ gulp.task('output:clean', () => del(['coverage']));
 
 gulp.task('clean:cleanExceptTests', () => del(['clean:vsix', 'out/client', 'out/datascience-ui', 'out/server']));
 gulp.task('clean:vsix', () => del(['*.vsix']));
-gulp.task('clean:out', () => del(['out']));
+gulp.task('clean:out', () => del(['out/**', '!out', '!out/BCryptGenRandom/**', '!out/client_renderer/**']));
 gulp.task('clean:ipywidgets', () => spawnAsync('npm', ['run', 'build-ipywidgets-clean'], webpackEnv));
 
 gulp.task('clean', gulp.parallel('output:clean', 'clean:vsix', 'clean:out'));
@@ -254,11 +254,19 @@ gulp.task('checkDependencies', gulp.series('checkNativeDependencies'));
 // On CI, when running Notebook tests, we don't need old webviews.
 // Simple & temporary optimization for the Notebook Test Job.
 if (isCI && process.env.VSC_CI_MATRIX_TEST_SUITE === 'notebook') {
-    gulp.task('prePublishNonBundle', gulp.parallel('compile', 'includeBCryptGenRandomExe', 'downloadRendererExtension'));
+    gulp.task(
+        'prePublishNonBundle',
+        gulp.parallel('compile', 'includeBCryptGenRandomExe', 'downloadRendererExtension')
+    );
 } else {
     gulp.task(
         'prePublishNonBundle',
-        gulp.parallel('compile', 'includeBCryptGenRandomExe', 'downloadRendererExtension', gulp.series('compile-webviews'))
+        gulp.parallel(
+            'compile',
+            'includeBCryptGenRandomExe',
+            'downloadRendererExtension',
+            gulp.series('compile-webviews')
+        )
     );
 }
 

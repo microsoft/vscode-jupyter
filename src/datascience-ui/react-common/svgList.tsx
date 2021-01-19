@@ -47,10 +47,10 @@ export class SvgList extends React.Component<ISvgListProps> {
                     aria-label={ariaLabel}
                     aria-pressed={ariaPressed}
                     // See the comments here: https://github.com/Microsoft/tslint-microsoft-contrib/issues/676
-                    // tslint:disable-next-line: react-this-binding-issue
+                    // eslint-disable-next-line
                     onClick={clickHandler}
                     // See the comments here: https://github.com/Microsoft/tslint-microsoft-contrib/issues/676
-                    // tslint:disable-next-line: react-this-binding-issue
+                    // eslint-disable-next-line
                     onKeyDown={keyDownHandler}
                     key={index}
                 >

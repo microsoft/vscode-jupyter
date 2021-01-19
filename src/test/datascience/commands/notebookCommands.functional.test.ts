@@ -28,10 +28,11 @@ import {
 } from '../../../client/datascience/jupyter/kernels/types';
 import { IKernelFinder } from '../../../client/datascience/kernel-launcher/types';
 import { NativeEditorProvider } from '../../../client/datascience/notebookStorage/nativeEditorProvider';
+import { PreferredRemoteKernelIdProvider } from '../../../client/datascience/notebookStorage/preferredRemoteKernelIdProvider';
 import { IInteractiveWindowProvider, INotebookEditorProvider } from '../../../client/datascience/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 
-// tslint:disable: max-func-body-length no-any
+/* eslint-disable , @typescript-eslint/no-explicit-any */
 suite('DataScience - Notebook Commands', () => {
     let notebookCommands: NotebookCommands;
     let commandManager: ICommandManager;
@@ -44,7 +45,7 @@ suite('DataScience - Notebook Commands', () => {
         name: 'CurrentKernel',
         numberOfConnections: 0,
         id: '2232',
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         session: {} as any
     };
     const localKernel = {
@@ -91,7 +92,7 @@ suite('DataScience - Notebook Commands', () => {
     ];
 
     [true, false].forEach((isLocalConnection) => {
-        // tslint:disable-next-line: max-func-body-length
+        // eslint-disable-next-line
         suite(isLocalConnection ? 'Local Connection' : 'Remote Connection', () => {
             setup(() => {
                 interactiveWindowProvider = mock(InteractiveWindowProvider);
@@ -119,6 +120,7 @@ suite('DataScience - Notebook Commands', () => {
                 const kernelFinder = mock<IKernelFinder>();
                 const jupyterSessionManagerFactory = mock(JupyterSessionManagerFactory);
                 const dummySessionEvent = new EventEmitter<Kernel.IKernelConnection>();
+                const preferredKernelIdProvider = mock(PreferredRemoteKernelIdProvider);
                 when(jupyterSessionManagerFactory.onRestartSessionCreated).thenReturn(dummySessionEvent.event);
                 when(jupyterSessionManagerFactory.onRestartSessionUsed).thenReturn(dummySessionEvent.event);
                 when(appShell.showQuickPick(anything(), anything(), anything())).thenCall(() => {
@@ -132,12 +134,13 @@ suite('DataScience - Notebook Commands', () => {
                 );
 
                 const configService = mock(ConfigurationService);
-                // tslint:disable-next-line: no-http-string
+                // eslint-disable-next-line
                 const settings = { jupyterServerType: isLocalConnection ? 'local' : 'remote' };
                 when(configService.getSettings(anything())).thenReturn(settings as any);
                 const extensionChecker = mock(PythonExtensionChecker);
                 when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
-
+                when(preferredKernelIdProvider.getPreferredRemoteKernelId(anything())).thenResolve();
+                when(preferredKernelIdProvider.storePreferredRemoteKernelId(anything(), anything())).thenResolve();
                 const kernelSelector = new KernelSelector(
                     instance(kernelSelectionProvider),
                     instance(appShell),
@@ -148,7 +151,8 @@ suite('DataScience - Notebook Commands', () => {
                     instance(jupyterSessionManagerFactory),
                     instance(configService),
                     [],
-                    instance(extensionChecker)
+                    instance(extensionChecker),
+                    instance(preferredKernelIdProvider)
                 );
 
                 const kernelSwitcher = new KernelSwitcher(
@@ -198,11 +202,11 @@ suite('DataScience - Notebook Commands', () => {
                 ).once();
             });
             suite('Command Handler', () => {
-                // tslint:disable-next-line: no-any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 let commandHandler: Function;
                 setup(() => {
                     notebookCommands.register();
-                    // tslint:disable-next-line: no-any
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     commandHandler = capture(commandManager.registerCommand as any).first()[1] as Function;
                     commandHandler = commandHandler.bind(notebookCommands);
                 });
@@ -232,7 +236,7 @@ suite('DataScience - Notebook Commands', () => {
                 test('Should switch kernel using the active Native Editor', async () => {
                     const nativeEditor = createNotebookMock();
                     const uri = Uri.file('test.ipynb');
-                    // tslint:disable-next-line: no-any
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     when(notebookEditorProvider.activeEditor).thenReturn({
                         file: uri,
                         model: { metadata: undefined }
@@ -246,7 +250,7 @@ suite('DataScience - Notebook Commands', () => {
                 test('Should switch kernel using the active Interactive Window', async () => {
                     const interactiveWindow = createNotebookMock();
                     const uri = Uri.parse('history://foobar');
-                    // tslint:disable-next-line: no-any
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     when(interactiveWindowProvider.activeWindow).thenReturn({
                         identity: uri
                     } as any);

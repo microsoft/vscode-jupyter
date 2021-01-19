@@ -4,7 +4,7 @@
 import { NotebookOutputEventParams, NotebookRendererApi } from 'vscode-notebook-renderer';
 const JupyterIPyWidgetNotebookRenderer = 'jupyter-ipywidget-renderer';
 
-// tslint:disable: no-any no-console
+/* eslint-disable @typescript-eslint/no-explicit-any, no-console */
 function renderOutput(e: NotebookOutputEventParams) {
     const renderOutputFunc =
         (window as any).ipywidgetsKernel?.renderOutput || (global as any).ipywidgetsKernel?.renderOutput;
@@ -22,7 +22,7 @@ function disposeOutput(e: { outputId: string } | undefined) {
     }
 }
 
-// tslint:disable: no-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 function initialize(api: NotebookRendererApi<any>) {
     api.onDidCreateOutput(renderOutput);
     api.onWillDestroyOutput(disposeOutput);

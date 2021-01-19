@@ -8,7 +8,6 @@ import * as dedent from 'dedent';
 import { ReactWrapper } from 'enzyme';
 import * as fs from 'fs-extra';
 import { IDisposable } from 'monaco-editor';
-import * as os from 'os';
 import * as path from 'path';
 import * as sinon from 'sinon';
 import { anything, objectContaining, when } from 'ts-mockito';
@@ -90,7 +89,7 @@ import { ITestNativeEditorProvider } from './testNativeEditorProvider';
 
 use(chaiAsPromised);
 
-// tslint:disable:max-func-body-length trailing-comma no-any no-multiline-string
+/* eslint-disable , comma-dangle, @typescript-eslint/no-explicit-any, no-multi-str, no-invalid-this */
 async function updateFileConfig(ioc: DataScienceIocContainer, key: string, value: any) {
     return ioc.get<IWorkspaceService>(IWorkspaceService).getConfiguration('file').update(key, value);
 }
@@ -141,7 +140,8 @@ suite('DataScience Native Editor', () => {
                     cleanupCallback: Function;
                 };
 
-                setup(async () => {
+                setup(async function () {
+                    console.log(`Start Test ${this.currentTest?.title}`);
                     ioc = new DataScienceIocContainer();
                     ioc.registerDataScienceTypes(useCustomEditorApi);
                     await ioc.activate();
@@ -180,17 +180,19 @@ suite('DataScience Native Editor', () => {
                             .stub(ioc.serviceContainer.get<ITrustService>(ITrustService), 'isNotebookTrusted')
                             .resolves(true);
                     } catch (e) {
-                        // tslint:disable-next-line: no-console
+                        // eslint-disable-next-line no-console
                         console.log(`Stub failure ${e}`);
                     }
+                    console.log(`Start Test completed ${this.currentTest?.title}`);
                 });
 
-                teardown(async () => {
+                teardown(async function () {
+                    console.log(`End Test ${this.currentTest?.title}`);
                     for (const disposable of disposables) {
                         if (!disposable) {
                             continue;
                         }
-                        // tslint:disable-next-line:no-any
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         const promise = disposable.dispose() as Promise<any>;
                         if (promise) {
                             await promise;
@@ -480,77 +482,79 @@ suite('DataScience Native Editor', () => {
                     }
                 });
 
-                runMountedTest('Remote kernel can be switched and remembered', async () => {
+                runMountedTest('Remote kernel can be switched and remembered', async function () {
                     // Turn off raw kernel for this test as it's testing remote
                     ioc.forceDataScienceSettingsChanged({ disableZMQSupport: true });
 
                     const pythonService = await createPythonService(ioc, 2);
 
-                    // Skip test for older python and raw kernel and mac
-                    if (pythonService && os.platform() !== 'darwin' && !ioc.mockJupyter) {
-                        const uri = await startRemoteServer(ioc, pythonService, [
-                            '-m',
-                            'jupyter',
-                            'notebook',
-                            '--NotebookApp.open_browser=False',
-                            '--NotebookApp.ip=*',
-                            '--NotebookApp.port=9999'
-                        ]);
-
-                        // Set this as the URI to use when connecting
-                        await ioc.setServerUri(uri);
-
-                        // Create a notebook and run a cell.
-                        const notebook = await createNewEditor(ioc);
-                        await addCell(notebook.mount, 'a=12\na', true);
-                        verifyHtmlOnCell(notebook.mount.wrapper, 'NativeCell', '12', CellPosition.Last);
-
-                        // Create another notebook and connect it to the already running kernel of the other one
-                        when(ioc.applicationShell.showQuickPick(anything(), anything(), anything())).thenCall(
-                            async (o: IKernelSpecQuickPickItem[]) => {
-                                const existing = o.filter(
-                                    (s) =>
-                                        s.selection.kind === 'connectToLiveKernel' &&
-                                        s.selection.kernelModel.numberOfConnections
-                                );
-
-                                // Might be more than one. Get the oldest one. It has the actual activity.
-                                const sorted = existing.sort((a, b) => {
-                                    if (
-                                        a.selection.kind !== 'connectToLiveKernel' ||
-                                        b.selection.kind !== 'connectToLiveKernel'
-                                    ) {
-                                        return 0;
-                                    }
-                                    return (
-                                        b.selection.kernelModel.lastActivityTime.getTime() -
-                                        a.selection.kernelModel.lastActivityTime.getTime()
-                                    );
-                                });
-                                if (sorted && sorted.length) {
-                                    return sorted[0];
-                                }
-                            }
-                        );
-                        const n2 = await openEditor(ioc, '', 'kernel_share.ipynb');
-
-                        // Have to do this by sending the switch kernel command
-                        await ioc.get<ICommandManager>(ICommandManager).executeCommand(Commands.SwitchJupyterKernel, {
-                            identity: n2.editor.file,
-                            resource: n2.editor.file,
-                            currentKernelDisplayName: undefined
-                        });
-
-                        // Execute a cell that should indicate using the same kernel as the first notebook
-                        await addCell(n2.mount, 'a', true);
-                        verifyHtmlOnCell(n2.mount.wrapper, 'NativeCell', '12', CellPosition.Last);
-
-                        // Now close the notebook and reopen. Should still be using the same kernel
-                        await closeNotebook(ioc, n2.editor);
-                        const n3 = await openEditor(ioc, '', 'kernel_share.ipynb');
-                        await addCell(n3.mount, 'a', true);
-                        verifyHtmlOnCell(n3.mount.wrapper, 'NativeCell', '12', CellPosition.Last);
+                    // Skip test for older python and raw kernel
+                    if (!pythonService || ioc.mockJupyter) {
+                        return this.skip();
                     }
+
+                    const uri = await startRemoteServer(ioc, pythonService, [
+                        '-m',
+                        'jupyter',
+                        'notebook',
+                        '--NotebookApp.open_browser=False',
+                        '--NotebookApp.ip=*',
+                        '--NotebookApp.port=9999'
+                    ]);
+
+                    // Set this as the URI to use when connecting
+                    await ioc.setServerUri(uri);
+
+                    // Create a notebook and run a cell.
+                    const notebook = await createNewEditor(ioc);
+                    await addCell(notebook.mount, 'a=12\na', true);
+                    verifyHtmlOnCell(notebook.mount.wrapper, 'NativeCell', '12', CellPosition.Last);
+
+                    // Create another notebook and connect it to the already running kernel of the other one
+                    when(ioc.applicationShell.showQuickPick(anything(), anything(), anything())).thenCall(
+                        async (o: IKernelSpecQuickPickItem[]) => {
+                            const existing = o.filter(
+                                (s) =>
+                                    s.selection.kind === 'connectToLiveKernel' &&
+                                    s.selection.kernelModel.numberOfConnections
+                            );
+
+                            // Might be more than one. Get the oldest one. It has the actual activity.
+                            const sorted = existing.sort((a, b) => {
+                                if (
+                                    a.selection.kind !== 'connectToLiveKernel' ||
+                                    b.selection.kind !== 'connectToLiveKernel'
+                                ) {
+                                    return 0;
+                                }
+                                return (
+                                    b.selection.kernelModel.lastActivityTime.getTime() -
+                                    a.selection.kernelModel.lastActivityTime.getTime()
+                                );
+                            });
+                            if (sorted && sorted.length) {
+                                return sorted[0];
+                            }
+                        }
+                    );
+                    const n2 = await openEditor(ioc, '', 'kernel_share.ipynb');
+
+                    // Have to do this by sending the switch kernel command
+                    await ioc.get<ICommandManager>(ICommandManager).executeCommand(Commands.SwitchJupyterKernel, {
+                        identity: n2.editor.file,
+                        resource: n2.editor.file,
+                        currentKernelDisplayName: undefined
+                    });
+
+                    // Execute a cell that should indicate using the same kernel as the first notebook
+                    await addCell(n2.mount, 'a', true);
+                    verifyHtmlOnCell(n2.mount.wrapper, 'NativeCell', '12', CellPosition.Last);
+
+                    // Now close the notebook and reopen. Should still be using the same kernel
+                    await closeNotebook(ioc, n2.editor);
+                    const n3 = await openEditor(ioc, '', 'kernel_share.ipynb');
+                    await addCell(n3.mount, 'a', true);
+                    verifyHtmlOnCell(n3.mount.wrapper, 'NativeCell', '12', CellPosition.Last);
                 });
 
                 runMountedTest('Mime Types', async () => {
@@ -681,7 +685,7 @@ df.head()`;
                 });
 
                 runMountedTest('Select Jupyter Server', async () => {
-                    // tslint:disable-next-line: no-console
+                    // eslint-disable-next-line no-console
                     console.log('Test skipped until user can change jupyter server selection again');
                     // let selectorCalled = false;
 
@@ -700,7 +704,7 @@ df.head()`;
                 });
 
                 runMountedTest('Select Jupyter Kernel', async (_wrapper) => {
-                    // tslint:disable-next-line: no-console
+                    // eslint-disable-next-line no-console
                     console.log('Tests skipped, as we need better tests');
                     // let selectorCalled = false;
 
@@ -1296,7 +1300,7 @@ df.head()`;
                         if (!disposable) {
                             continue;
                         }
-                        // tslint:disable-next-line:no-any
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         const promise = disposable.dispose() as Promise<any>;
                         if (promise) {
                             await promise;
@@ -1408,7 +1412,7 @@ df.head()`;
                 suite('Selection/Focus', () => {
                     setup(async function () {
                         await initIoc();
-                        // tslint:disable-next-line: no-invalid-this
+                        // eslint-disable-next-line no-invalid-this
                         await setupFunction.call(this);
                     });
                     test('None of the cells are selected by default', async () => {
@@ -1499,7 +1503,7 @@ df.head()`;
                 suite('Model updates', () => {
                     setup(async function () {
                         await initIoc();
-                        // tslint:disable-next-line: no-invalid-this
+                        // eslint-disable-next-line no-invalid-this
                         await setupFunction.call(this);
                     });
                     async function undo(): Promise<void> {
@@ -1815,7 +1819,7 @@ df.head()`;
                     setup(async function () {
                         (window.navigator as any).platform = originalPlatform;
                         await initIoc();
-                        // tslint:disable-next-line: no-invalid-this
+                        // eslint-disable-next-line no-invalid-this
                         await setupFunction.call(this);
                     });
                     teardown(() => ((window.navigator as any).platform = originalPlatform));
@@ -2311,7 +2315,7 @@ df.head()`;
 
                     test("Test undo using the key 'z'", async function () {
                         if (useCustomEditorApi) {
-                            // tslint:disable-next-line: no-invalid-this
+                            // eslint-disable-next-line no-invalid-this
                             return this.skip();
                         }
                         clickCell(0);
@@ -2418,7 +2422,7 @@ df.head()`;
 
                     test("Test save using the key 'ctrl+s' on Windows", async function () {
                         if (useCustomEditorApi) {
-                            // tslint:disable-next-line: no-invalid-this
+                            // eslint-disable-next-line no-invalid-this
                             return this.skip();
                         }
                         (window.navigator as any).platform = 'Win';
@@ -2447,7 +2451,7 @@ df.head()`;
 
                     test("Test save using the key 'ctrl+s' on Mac", async function () {
                         if (useCustomEditorApi) {
-                            // tslint:disable-next-line: no-invalid-this
+                            // eslint-disable-next-line no-invalid-this
                             return this.skip();
                         }
                         (window.navigator as any).platform = 'Mac';
@@ -2478,7 +2482,7 @@ df.head()`;
 
                     test("Test save using the key 'cmd+s' on a Mac", async function () {
                         if (useCustomEditorApi) {
-                            // tslint:disable-next-line: no-invalid-this
+                            // eslint-disable-next-line no-invalid-this
                             return this.skip();
                         }
                         (window.navigator as any).platform = 'Mac';
@@ -2509,7 +2513,7 @@ df.head()`;
                     });
                     test("Test save using the key 'cmd+s' on a Windows", async function () {
                         if (useCustomEditorApi) {
-                            // tslint:disable-next-line: no-invalid-this
+                            // eslint-disable-next-line no-invalid-this
                             return this.skip();
                         }
                         (window.navigator as any).platform = 'Win';
@@ -2543,7 +2547,7 @@ df.head()`;
                     let windowStateChangeHandlers: ((e: WindowState) => any)[] = [];
                     setup(async function () {
                         if (useCustomEditorApi) {
-                            // tslint:disable-next-line: no-invalid-this
+                            // eslint-disable-next-line no-invalid-this
                             return this.skip();
                         }
                         await initIoc();
@@ -2562,7 +2566,7 @@ df.head()`;
                         // Keep track of all handlers for the onDidChangeWindowState event.
                         when(ioc.applicationShell.onDidChangeWindowState).thenReturn(eventCallback);
 
-                        // tslint:disable-next-line: no-invalid-this
+                        // eslint-disable-next-line no-invalid-this
                         await setupFunction.call(this);
                     });
                     teardown(() => sinon.restore());
@@ -2914,7 +2918,7 @@ df.head()`;
                 suite('Update Metadata', () => {
                     setup(async function () {
                         await initIoc();
-                        // tslint:disable-next-line: no-invalid-this
+                        // eslint-disable-next-line no-invalid-this
                         await setupFunction.call(this, JSON.stringify(oldJson));
                     });
 
@@ -2964,7 +2968,7 @@ df.head()`;
                 suite('Clear Outputs', () => {
                     setup(async function () {
                         await initIoc();
-                        // tslint:disable-next-line: no-invalid-this
+                        // eslint-disable-next-line no-invalid-this
                         await setupFunction.call(this, JSON.stringify(oldJson));
                     });
 

@@ -301,7 +301,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
         }
     }
 
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private async onRemoteCreate(...args: any[]) {
         // Should be 3 args, the originator of the create, the key, and the owner. Key isn't used here
         // but it is passed through to the response.
@@ -319,7 +319,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
         }
     }
 
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private onRemoteSync(...args: any[]) {
         // Should be 3 args, the originator of the create, the key, and the owner (owner used on other call)
         if (args.length > 1 && args[0].toString() === this.id) {

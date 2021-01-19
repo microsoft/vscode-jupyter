@@ -36,14 +36,14 @@ import { traceInfoIf } from '../../client/common/logger';
 //import { verifyVariables } from './variableTestHelpers';
 
 //import { asyncDump } from '../common/asyncDump';
-// tslint:disable-next-line:max-func-body-length no-any
+// eslint-disable-next-line , @typescript-eslint/no-explicit-any
 suite('DataScience Debugger tests', () => {
     const disposables: Disposable[] = [];
     const postDisposables: Disposable[] = [];
     let ioc: DataScienceIocContainer;
     let lastErrorMessage: string | undefined;
     let jupyterDebuggerService: IJupyterDebugService | undefined;
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let snapshot: any;
 
     suiteSetup(function () {
@@ -53,9 +53,9 @@ suite('DataScience Debugger tests', () => {
         const isRollingBuild = process.env ? process.env.VSC_FORCE_REAL_JUPYTER !== undefined : false;
 
         if (!isRollingBuild) {
-            // tslint:disable-next-line:no-console
+            // eslint-disable-next-line no-console
             console.log('Skipping Debugger tests. Requires python environment');
-            // tslint:disable-next-line:no-invalid-this
+            // eslint-disable-next-line no-invalid-this
             this.skip();
         }
     });
@@ -111,7 +111,7 @@ suite('DataScience Debugger tests', () => {
             if (!disposable) {
                 continue;
             }
-            // tslint:disable-next-line:no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const promise = disposable.dispose() as Promise<any>;
             if (promise) {
                 await promise;
@@ -123,7 +123,7 @@ suite('DataScience Debugger tests', () => {
             if (!disposable) {
                 continue;
             }
-            // tslint:disable-next-line:no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const promise = disposable.dispose() as Promise<any>;
             if (promise) {
                 await promise;
@@ -288,7 +288,7 @@ suite('DataScience Debugger tests', () => {
         const codeLensProvider = ioc.serviceManager.get<IDataScienceCodeLensProvider>(IDataScienceCodeLensProvider);
         const doc = documentManager.textDocuments[0];
         const result = codeLensProvider.provideCodeLenses(doc, CancellationToken.None);
-        // tslint:disable-next-line:no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         if ((result as any).length) {
             return result as CodeLens[];
         }
@@ -385,7 +385,7 @@ suite('DataScience Debugger tests', () => {
             let ImageButtons = cell.find(ImageButton);
             assert.equal(ImageButtons.length, 6, 'Cell buttons not found');
             const runByLineButton = ImageButtons.at(3);
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             assert.equal((runByLineButton.instance().props as any).tooltip, 'Run by line');
 
             const promise = ne.mount.waitForMessage(InteractiveWindowMessages.ShowingIp);
@@ -416,7 +416,7 @@ suite('DataScience Debugger tests', () => {
             let ImageButtons = cell.find(ImageButton);
             assert.equal(ImageButtons.length, 6, 'Cell buttons not found');
             const runByLineButton = ImageButtons.at(3);
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             assert.equal((runByLineButton.instance().props as any).tooltip, 'Run by line');
 
             const promise = ne.mount.waitForMessage(InteractiveWindowMessages.DebugStateChange, {
@@ -430,7 +430,7 @@ suite('DataScience Debugger tests', () => {
             // We should be running, is the run by line button disabled?
             cell = getLastOutputCell(wrapper, 'NativeCell');
             ImageButtons = cell.find(ImageButton);
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             let runByLineButtonProps = ImageButtons.at(3).instance().props as any;
             expect(runByLineButtonProps.disabled).to.equal(true, 'Run by line button not disabled when running');
 
@@ -444,7 +444,7 @@ suite('DataScience Debugger tests', () => {
 
             cell = getLastOutputCell(wrapper, 'NativeCell');
             ImageButtons = cell.find(ImageButton);
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             runByLineButtonProps = ImageButtons.at(3).instance().props as any;
             expect(runByLineButtonProps.disabled).to.equal(false, 'Run by line button not active in break mode');
         },

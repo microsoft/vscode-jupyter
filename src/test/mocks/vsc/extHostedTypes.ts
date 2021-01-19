@@ -6,7 +6,7 @@
 
 // import * as crypto from 'crypto';
 
-// tslint:disable:all
+/* eslint-disable  */
 
 import { relative } from 'path';
 import * as vscode from 'vscode';
@@ -39,7 +39,7 @@ export namespace vscMockExtHostedTypes {
         pathToRelative(from: string, to: string): string;
     }
 
-    // tslint:disable:all
+    /* eslint-disable  */
     const illegalArgument = (msg = 'Illegal Argument') => new Error(msg);
 
     export class Disposable {

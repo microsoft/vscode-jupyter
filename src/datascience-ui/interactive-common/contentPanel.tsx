@@ -9,8 +9,8 @@ import { InputHistory } from './inputHistory';
 import { ICellViewModel } from './mainState';
 
 // See the discussion here: https://github.com/Microsoft/tslint-microsoft-contrib/issues/676
-// tslint:disable: react-this-binding-issue
-// tslint:disable-next-line:no-require-imports no-var-requires
+/* eslint-disable  */
+// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
 const throttle = require('lodash/throttle') as typeof import('lodash/throttle');
 
 export interface IContentPanelProps {

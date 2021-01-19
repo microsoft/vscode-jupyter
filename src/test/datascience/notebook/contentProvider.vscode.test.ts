@@ -3,7 +3,7 @@
 
 'use strict';
 
-// tslint:disable:no-require-imports no-var-requires
+/* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 import { nbformat } from '@jupyterlab/coreutils';
 import { assert } from 'chai';
 import * as fs from 'fs-extra';
@@ -26,10 +26,10 @@ import {
     saveActiveNotebook,
     trustAllNotebooks
 } from './helper';
-// tslint:disable-next-line: no-var-requires no-require-imports
+// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
-// tslint:disable: no-any no-invalid-this
+/* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - VSCode Notebook - (Open)', function () {
     this.timeout(15_000);
     const templateIPynbWithOutput = path.join(
@@ -54,7 +54,6 @@ suite('DataScience - VSCode Notebook - (Open)', function () {
     let vscodeNotebook: IVSCodeNotebook;
     const disposables: IDisposable[] = [];
     suiteSetup(async function () {
-        this.timeout(15_000);
         api = await initialize();
         if (!(await canRunNotebookTests())) {
             return this.skip();

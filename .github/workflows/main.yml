@@ -139,8 +139,12 @@ jobs:
       - name: Install dependencies (npm ci)
         run: npm ci --prefer-offline
 
-      - name: Run linting on TypeScript code
-        run: npx tslint --project tsconfig.json
+      - name: Verify linting is turned on for changed files
+        uses: ./.github/actions/check-ignore-list
+        id: check-ignore-list
+
+      - name: Run linting on TypeScript code (eslint)
+        run: npm run lint
 
       - name: Run prettier on TypeScript code
         run: npx prettier 'src/**/*.ts*' --check
@@ -267,8 +271,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Use conda for group1 and group2
-        if: matrix.test-suite == 'group1' || matrix.test-suite == 'group2'
+      - name: Use conda for group1 and group3
+        if: matrix.test-suite == 'group1' || matrix.test-suite == 'group3'
         run: |
           echo "conda_python=true" >> $GITHUB_ENV
 
@@ -390,12 +394,43 @@ jobs:
           python -m pip install --upgrade -r ./build/ipython-test-requirements.txt
           python -m pip install --upgrade -r ./build/conda-functional-requirements.txt
           python -m ipykernel install --user
+          python -m pip install tensorflow
 
       - name: Install Python Libs for conda
         shell: bash -l {0}
         if: env.conda_python
         run: |
           conda activate functional_test_env
+          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
+          python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
+          python ./pythonFiles/install_debugpy.py
+          conda env update --file ./build/conda-functional-requirements.yml
+          python -m pip install --upgrade -r ./build/conda-functional-requirements.txt
+
+      # Install PyTorch with pip
+      - name: Install PyTorch on Windows and Linux
+        if: matrix.test-suite != 'conda' && (matrix.os == 'windows-latest' || matrix.os == 'ubuntu-latest')
+        run: pip install torch==1.7.1+cpu torchvision==0.8.2+cpu torchaudio===0.7.2 -f https://download.pytorch.org/whl/torch_stable.html
+
+      - name: Install PyTorch on Mac
+        if: matrix.test-suite != 'conda' && matrix.os == 'macos-latest'
+        run: pip install torch torchvision torchaudio
+
+      # Install PyTorch with conda. FIXME: If we upgrade to Python 3.9, must add '-c=conda-forge' for installation
+      - name: Install PyTorch on Windows and Linux
+        if: matrix.test-suite == 'conda' && (matrix.os == 'windows-latest' || matrix.os == 'ubuntu-latest')
+        run: conda install pytorch torchvision torchaudio cpuonly -c pytorch
+
+      - name: Install PyTorch on Mac
+        if: matrix.test-suite == 'conda' && matrix.os == 'macos-latest'
+        run: conda install pytorch torchvision torchaudio -c pytorch
+
+      - name: Install secondary conda environment
+        shell: bash -l {0}
+        if: env.conda_python
+        run: |
+          conda create --name functional_test_env_2
+          conda activate functional_test_env_2
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
           python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
           python ./pythonFiles/install_debugpy.py
@@ -574,6 +609,7 @@ jobs:
           python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
           python ./pythonFiles/install_debugpy.py
           python -m pip install numpy
+          python -m pip install nbformat==5.0.8
           python -m pip install --upgrade jupyter
           python -m pip install --upgrade -r build/test-requirements.txt
           python -m pip install --upgrade -r ./build/ipython-test-requirements.txt

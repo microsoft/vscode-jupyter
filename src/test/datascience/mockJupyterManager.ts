@@ -48,7 +48,7 @@ import { MockJupyterSession } from './mockJupyterSession';
 import { MockProcessService } from './mockProcessService';
 import { MockPythonService } from './mockPythonService';
 
-// tslint:disable:no-any no-http-string no-multiline-string max-func-body-length
+/* eslint-disable @typescript-eslint/no-explicit-any, , no-multi-str,  */
 
 const MockJupyterTimeDelay = 10;
 const LineFeedRegEx = /(\r\n|\n)/g;
@@ -145,7 +145,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
         serviceManager.addSingletonInstance<IInstaller>(IInstaller, instance(this.productInstaller));
 
         // Setup our default kernel spec (this is just a dummy value)
-        // tslint:disable-next-line:no-octal-literal
+        // eslint-disable-next-line no-octal, no-octal-escape
         this.kernelSpecs.push({
             name: '0e8519db-0895-416c-96df-fa80131ecea0',
             dir: 'C:\\Users\\rchiodo\\AppData\\Roaming\\jupyter\\kernels\\0e8519db-0895-416c-96df-fa80131ecea0'

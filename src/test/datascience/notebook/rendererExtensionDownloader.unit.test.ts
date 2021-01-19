@@ -11,7 +11,7 @@ import { RendererExtensionDownloadUri } from '../../../client/datascience/notebo
 import { RendererExtensionDownloader } from '../../../client/datascience/notebook/rendererExtensionDownloader';
 import { noop } from '../../core';
 
-// tslint:disable: no-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 suite('DataScience - NativeNotebook Download Renderer Extension', () => {
     let downloader: RendererExtensionDownloader;
     let appShell: IApplicationShell;

@@ -31,7 +31,7 @@ import {
     waitForTextOutputInVSCode
 } from './helper';
 
-// tslint:disable: no-any no-invalid-this no-function-expression
+/* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this,  */
 /*
  * This test focuses on interrupting, restarting kernels.
  * We will not use actual kernels, just ensure the appropriate methods are invoked on the appropriate classes.
@@ -50,7 +50,6 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
     let dsSettings: ReadWrite<IJupyterSettings>;
     const suiteDisposables: IDisposable[] = [];
     suiteSetup(async function () {
-        this.timeout(60_000);
         api = await initialize();
         if (!(await canRunNotebookTests())) {
             return this.skip();
@@ -110,7 +109,7 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         await waitForTextOutputInVSCode(cell, '1', 0, false, 15_000); // Wait for 15 seconds for it to start (possibly kernel is still starting).
 
         // Interrupt the kernel.
-        kernelProvider.get(cell.notebook.uri)!.interrupt().catch(noop);
+        kernelProvider.get(cell.notebook.uri)!.interruptAllCells(vscEditor.document).catch(noop);
 
         // Wait for interruption or message prompting to restart kernel to be displayed.
         // Interrupt can fail sometimes and then we display message prompting user to restart kernel.

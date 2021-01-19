@@ -3,7 +3,7 @@
 
 'use strict';
 
-// tslint:disable:no-require-imports no-var-requires
+/* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 import * as path from 'path';
 import * as sinon from 'sinon';
 import { Uri } from 'vscode';
@@ -33,7 +33,7 @@ import {
     waitForKernelToGetAutoSelected
 } from './helper';
 
-// tslint:disable: no-any no-invalid-this
+/* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () => {
     const juliaNb = path.join(
         EXTENSION_ROOT_DIR_FOR_TESTS,
@@ -106,6 +106,7 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         await closeNotebooksAndCleanUpAfterTests(disposables);
     });
     test('Automatically pick java kernel when opening a Java Notebook', async function () {
+        return this.skip(); // Remove this when https://github.com/microsoft/vscode-jupyter/issues/4372 is fixed
         if (!testJavaKernels) {
             return this.skip();
         }

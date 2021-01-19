@@ -15,7 +15,7 @@ import {
     IRawNotebookSupportedService
 } from '../../../client/datascience/types';
 
-// tslint:disable: max-func-body-length no-any
+/* eslint-disable , @typescript-eslint/no-explicit-any */
 suite('DataScience - Kernel Daemon Pool PreWarmer', () => {
     let prewarmer: KernelDaemonPreWarmer;
     let notebookEditorProvider: INotebookEditorProvider;
@@ -43,7 +43,7 @@ suite('DataScience - Kernel Daemon Pool PreWarmer', () => {
         // Set up our config settings
         settings = mock(JupyterSettings);
         when(configService.getSettings()).thenReturn(instance(settings));
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
 
         prewarmer = new KernelDaemonPreWarmer(
             instance(notebookEditorProvider),

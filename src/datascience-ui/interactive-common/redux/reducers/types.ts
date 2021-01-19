@@ -164,7 +164,7 @@ export interface IScrollAction {
     isAtBottom: boolean;
 }
 
-// tslint:disable-next-line: no-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type CommonReducerArg<AT = CommonActionType | InteractiveWindowMessages, T = never | undefined> = ReducerArg<
     IMainState,
     AT,
@@ -234,7 +234,7 @@ export interface ILoadIPyWidgetClassFailureAction {
     moduleVersion: string;
     cdnsUsed: boolean;
     isOnline: boolean;
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error: any;
     timedout: boolean;
 }

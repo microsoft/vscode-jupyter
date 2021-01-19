@@ -8,7 +8,7 @@ import { cloneDeep } from 'lodash';
 import { IDisposable } from 'monaco-editor';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { EventEmitter, Memento, Uri } from 'vscode';
-// tslint:disable-next-line: no-var-requires no-require-imports
+// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 import type {
     NotebookContentProvider as VSCodeNotebookContentProvider,
@@ -21,7 +21,7 @@ import { NotebookContentProvider } from '../../../client/datascience/notebook/co
 import { NotebookEditorCompatibilitySupport } from '../../../client/datascience/notebook/notebookEditorCompatibilitySupport';
 import { INotebookStorageProvider } from '../../../client/datascience/notebookStorage/notebookStorageProvider';
 import { createNotebookModel, disposeAllDisposables } from './helper';
-// tslint:disable: no-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 suite('DataScience - NativeNotebook ContentProvider', () => {
     let storageProvider: INotebookStorageProvider;
     let contentProvider: VSCodeNotebookContentProvider;

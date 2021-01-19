@@ -162,7 +162,7 @@ export namespace CommonEffects {
                     if (
                         (o.output_type === 'display_data' || o.output_type === 'execute_result') &&
                         o.transient &&
-                        // tslint:disable-next-line: no-any
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         (o.transient as any).display_id === arg.payload.data.content.transient.display_id
                     ) {
                         // Remember this as a match
@@ -317,5 +317,15 @@ export namespace CommonEffects {
             ...arg.prevState,
             externalButtons: arg.payload.data
         };
+    }
+
+    // Extension has requested HTML for the webview, get it by ID and send it back as a message
+    export function getHTMLByIdRequest(arg: CommonReducerArg<CommonActionType, string>): IMainState {
+        const element = document.getElementById(arg.payload.data);
+
+        if (element) {
+            postActionToExtension(arg, InteractiveWindowMessages.GetHTMLByIdResponse, element.innerHTML);
+        }
+        return arg.prevState;
     }
 }

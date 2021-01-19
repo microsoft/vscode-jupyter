@@ -6,7 +6,7 @@
 'use strict';
 
 import { vscMockArrays } from './arrays';
-// tslint:disable:all
+/* eslint-disable  */
 
 export namespace vscMockHtmlContent {
     export interface IMarkdownString {

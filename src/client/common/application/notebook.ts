@@ -75,14 +75,14 @@ export class VSCodeNotebook implements IVSCodeNotebook {
     }
     private get notebook() {
         if (!this._notebook) {
-            // tslint:disable-next-line: no-require-imports
+            // eslint-disable-next-line @typescript-eslint/no-require-imports
             this._notebook = require('vscode').notebook;
         }
         return this._notebook!;
     }
     private get window() {
         if (!this._window) {
-            // tslint:disable-next-line: no-require-imports
+            // eslint-disable-next-line @typescript-eslint/no-require-imports
             this._window = require('vscode').window;
         }
         return this._window!;

@@ -14,7 +14,7 @@ import { CommonActionType } from '../../../datascience-ui/interactive-common/red
 import { noop } from '../../core';
 import { IWebServer } from './webBrowserPanel';
 
-// tslint:disable:max-func-body-length trailing-comma no-any no-multiline-string
+/* eslint-disable , comma-dangle, @typescript-eslint/no-explicit-any, no-multi-str */
 export type WaitForMessageOptions = {
     /**
      * Timeout for waiting for message.
@@ -163,7 +163,7 @@ export class BaseWebUI implements IAsyncDisposable {
             await fs.ensureDir(path.basename(filePath));
         }
         await this.page?.screenshot({ path: filePath });
-        // tslint:disable-next-line: no-console
+        // eslint-disable-next-line no-console
         console.info(`Screenshot captured in ${filePath}`);
     }
 }

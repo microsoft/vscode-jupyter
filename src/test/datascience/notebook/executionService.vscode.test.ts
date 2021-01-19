@@ -3,7 +3,7 @@
 
 'use strict';
 
-// tslint:disable:no-require-imports no-var-requires
+/* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 import { assert, expect } from 'chai';
 import * as dedent from 'dedent';
 import * as sinon from 'sinon';
@@ -32,17 +32,17 @@ import {
     waitForKernelToGetAutoSelected
 } from './helper';
 
-// tslint:disable-next-line: no-var-requires no-require-imports
+// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
-// tslint:disable: no-any no-invalid-this
-suite('DataScience - VSCode Notebook - (Execution) (slow)', () => {
+/* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
+suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
     let api: IExtensionTestApi;
     let editorProvider: INotebookEditorProvider;
     const disposables: IDisposable[] = [];
     let vscodeNotebook: IVSCodeNotebook;
+    this.timeout(120_000);
     suiteSetup(async function () {
-        this.timeout(120_000);
         api = await initialize();
         if (!(await canRunNotebookTests())) {
             return this.skip();
@@ -190,7 +190,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', () => {
         assert.isNotEmpty(errorOutput.traceback, 'Incorrect traceback');
         expect(cell.metadata.executionOrder).to.be.greaterThan(0, 'Execution count should be > 0');
         expect(cell.metadata.runStartTime).to.be.greaterThan(0, 'Start time should be > 0');
-        // tslint:disable-next-line: no-suspicious-comment
+        // eslint-disable-next-line
         // TODO: https://github.com/microsoft/vscode-jupyter/issues/204
         // expect(cell.metadata.lastRunDuration).to.be.greaterThan(0, 'Duration should be > 0');
         assert.equal(cell.metadata.runState, vscodeNotebookEnums.NotebookCellRunState.Error, 'Incorrect State');

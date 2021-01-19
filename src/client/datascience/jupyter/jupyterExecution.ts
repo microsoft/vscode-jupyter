@@ -49,7 +49,6 @@ export class JupyterExecutionBase implements IJupyterExecution {
     private readonly jupyterPickerRegistration: IJupyterUriProviderRegistration;
     private uriToJupyterServerUri = new Map<string, IJupyterServerUri>();
     private pendingTimeouts: (NodeJS.Timeout | number)[] = [];
-
     constructor(
         _liveShare: ILiveShareApi,
         private readonly interpreterService: IInterpreterService,
@@ -125,13 +124,13 @@ export class JupyterExecutionBase implements IJupyterExecution {
         return this.isNotebookSupported(cancelToken);
     }
 
-    //tslint:disable:cyclomatic-complexity max-func-body-length
+    /* eslint-disable complexity,  */
     public connectToNotebookServer(
         options?: INotebookServerOptions,
         cancelToken?: CancellationToken
     ): Promise<INotebookServer | undefined> {
         // Return nothing if we cancel
-        // tslint:disable-next-line: max-func-body-length
+        // eslint-disable-next-line
         return Cancellation.race(async () => {
             let result: INotebookServer | undefined;
             let connection: IJupyterConnection | undefined;
@@ -181,7 +180,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                     // Create a server tha  t we will then attempt to connect to.
                     result = this.serviceContainer.get<INotebookServer>(INotebookServer);
 
-                    // In a remote non quest situation, figure out a kernel spec too.
+                    // In a remote non guest situation, figure out a kernel spec too.
                     if (
                         (!kernelConnectionMetadata ||
                             !kernelConnectionMetadataHasKernelSpec(kernelConnectionMetadata)) &&
@@ -192,13 +191,16 @@ export class JupyterExecutionBase implements IJupyterExecution {
                             IJupyterSessionManagerFactory
                         );
                         const sessionManager = await sessionManagerFactory.create(connection);
-                        kernelConnectionMetadata = await this.kernelSelector.getPreferredKernelForRemoteConnection(
-                            undefined,
-                            sessionManager,
-                            options?.metadata,
-                            cancelToken
-                        );
-                        await sessionManager.dispose();
+                        try {
+                            kernelConnectionMetadata = await this.kernelSelector.getPreferredKernelForRemoteConnection(
+                                undefined,
+                                sessionManager,
+                                options?.metadata,
+                                cancelToken
+                            );
+                        } finally {
+                            await sessionManager.dispose();
+                        }
                     }
 
                     // Populate the launch info that we are starting our server with
@@ -210,7 +212,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                         purpose: options ? options.purpose : uuid()
                     };
 
-                    // tslint:disable-next-line: no-constant-condition
+                    // eslint-disable-next-line no-constant-condition
                     while (true) {
                         try {
                             traceInfo(
@@ -383,7 +385,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
         }
     }
 
-    // tslint:disable-next-line: max-func-body-length
+    // eslint-disable-next-line
     @captureTelemetry(Telemetry.StartJupyter)
     private async startNotebookServer(
         useDefaultConfig: boolean,
@@ -408,7 +410,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
     }
 
     private clearTimeouts() {
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         this.pendingTimeouts.forEach((t) => clearTimeout(t as any));
         this.pendingTimeouts = [];
     }

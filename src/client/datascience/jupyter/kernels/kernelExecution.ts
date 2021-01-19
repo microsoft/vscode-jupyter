@@ -16,12 +16,13 @@ import {
     IDataScienceErrorHandler,
     INotebook,
     INotebookEditorProvider,
+    InterruptResult,
     IRawNotebookSupportedService
 } from '../../types';
 import { CellExecution, CellExecutionFactory } from './cellExecution';
 import { isPythonKernelConnection } from './helpers';
 import type { IKernel, IKernelProvider, IKernelSelectionUsage, KernelConnectionMetadata } from './types';
-// tslint:disable-next-line: no-var-requires no-require-imports
+// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
 /**
@@ -62,6 +63,8 @@ export class KernelExecution implements IDisposable {
         }
         // Cannot execute empty cells.
         if (this.cellExecutions.has(cell) || cell.document.getText().trim().length === 0) {
+            // clear cell output
+            cell.outputs = [];
             return;
         }
         const cellExecution = this.executionFactory.create(cell, isPythonKernelConnection(this.metadata));
@@ -172,6 +175,33 @@ export class KernelExecution implements IDisposable {
         traceInfo('Cancel document execution');
         document.cells.forEach((cell) => this.cancelCell(cell));
     }
+
+    public async interruptCell(cell: NotebookCell, timeoutMs: number): Promise<InterruptResult> {
+        const execution = this.cellExecutions.get(cell);
+        if (execution) {
+            this.cellExecutions.delete(cell);
+            traceCellMessage(cell, 'Cancel cell from Kernel Execution');
+            return execution.interrupt(timeoutMs);
+        } else {
+            traceCellMessage(cell, 'Cannot cancel cell execution from Kernel Execution');
+        }
+
+        return InterruptResult.Success;
+    }
+    public async interruptAllCells(document: NotebookDocument, timeoutMs: number): Promise<InterruptResult> {
+        traceInfo('Interrupt document execution');
+        const results = await Promise.all(document.cells.map((cell) => this.interruptCell(cell, timeoutMs)));
+
+        // Flatten the results
+        if (results.includes(InterruptResult.Restarted)) {
+            return InterruptResult.Restarted;
+        }
+        if (results.includes(InterruptResult.TimedOut)) {
+            return InterruptResult.TimedOut;
+        }
+
+        return InterruptResult.Success;
+    }
     public dispose() {
         this.disposables.forEach((d) => d.dispose());
     }
@@ -223,7 +253,7 @@ export class KernelExecution implements IDisposable {
                     this.isRawNotebookSupported || this.rawNotebookSupported.isSupportedForLocalLaunch();
                 const rawSupported = await this.isRawNotebookSupported;
                 this.kernelSelectionUsage
-                    .useSelectedKernel(kernel?.metadata, document.uri, rawSupported ? 'raw' : 'jupyter')
+                    .useSelectedKernel(kernel?.kernelConnectionMetadata, document.uri, rawSupported ? 'raw' : 'jupyter')
                     .finally(() => {
                         // If there's an exception, then we cannot use the kernel and a message would have been displayed.
                         // We don't want to cache such a promise, as its possible the user later installs the dependencies.

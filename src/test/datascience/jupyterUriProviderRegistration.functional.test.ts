@@ -31,7 +31,7 @@ class TestUriProvider implements IJupyterUriProvider {
         if (handle === TestUriHandle) {
             this.currentBearer += 1;
             return {
-                // tslint:disable-next-line: no-http-string
+                // eslint-disable-next-line
                 baseUrl: 'http://foobar:3000',
                 displayName: 'test',
                 token: '',
@@ -44,7 +44,7 @@ class TestUriProvider implements IJupyterUriProvider {
     }
 }
 
-// tslint:disable: no-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 class TestUriProviderExtension implements Extension<any> {
     public id: string = '1';
     public extensionUri: Uri = Uri.parse('foo');
@@ -82,7 +82,7 @@ class UriMockExtensions implements IExtensions {
     }
 }
 
-// tslint:disable:max-func-body-length trailing-comma no-any no-multiline-string
+/* eslint-disable , comma-dangle, @typescript-eslint/no-explicit-any, no-multi-str */
 suite(`DataScience JupyterServerUriProvider tests`, () => {
     let ioc: DataScienceIocContainer;
 
@@ -102,7 +102,7 @@ suite(`DataScience JupyterServerUriProvider tests`, () => {
     test('Expiration', async function () {
         // Only run with mock so we don't try to really start a remote server
         if (!ioc.mockJupyter) {
-            // tslint:disable-next-line: no-invalid-this
+            // eslint-disable-next-line no-invalid-this
             return this.skip();
         }
 
@@ -119,7 +119,7 @@ suite(`DataScience JupyterServerUriProvider tests`, () => {
         });
 
         // Verify URI is our expected one
-        // tslint:disable-next-line: no-http-string
+        // eslint-disable-next-line
         assert.equal(server?.getConnectionInfo()?.baseUrl, `http://foobar:3000`, 'Base URI is invalid');
         let authHeader = server?.getConnectionInfo()?.getAuthHeader?.call(undefined);
         assert.deepEqual(authHeader, { Bearer: '1' }, 'Bearer token invalid');

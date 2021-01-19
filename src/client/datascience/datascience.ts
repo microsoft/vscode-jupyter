@@ -92,7 +92,7 @@ export class DataScience implements IDataScience {
     @swallowExceptions('Sending DataScience Settings Telemetry failed')
     private async sendSettingsTelemetry(): Promise<void> {
         // Get our current settings. This is what we want to send.
-        // tslint:disable-next-line:no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const settings = this.configuration.getSettings() as any;
 
         // Translate all of the 'string' based settings into known values or not.

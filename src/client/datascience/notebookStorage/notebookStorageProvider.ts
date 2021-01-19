@@ -14,7 +14,7 @@ import { IModelLoadOptions, INotebookModel, INotebookModelSynchronization, INote
 import { getNextUntitledCounter } from './nativeEditorStorage';
 import { VSCodeNotebookModel } from './vscNotebookModel';
 
-// tslint:disable-next-line:no-require-imports no-var-requires
+// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
 
 export const INotebookStorageProvider = Symbol.for('INotebookStorageProvider');
 export interface INotebookStorageProvider extends INotebookStorage {

@@ -24,8 +24,10 @@ import * as localize from '../../common/utils/localize';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { DefaultTheme, PythonExtension, Telemetry } from '../constants';
+import { InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
 import { CssMessages, IGetCssRequest, IGetMonacoThemeRequest, SharedMessages } from '../messages';
 import { ICodeCssGenerator, IJupyterExtraSettings, IThemeFinder } from '../types';
+import { testOnlyMethod } from '../../common/utils/decorators';
 
 @injectable() // For some reason this is necessary to get the class hierarchy to work.
 export abstract class WebviewHost<IMapping> implements IDisposable {
@@ -42,6 +44,14 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
 
     protected readonly _disposables: IDisposable[] = [];
     private startupStopwatch = new StopWatch();
+
+    // For testing, holds the current request for webview HTML
+    private activeHTMLRequest?: Deferred<string>;
+
+    // For testing, broadcast messages to the following listeners
+    // tslint:disable-next-line:no-any
+    private onMessageListeners: ((message: string, payload: any) => void)[] = [];
+
     constructor(
         @unmanaged() protected configService: IConfigurationService,
         @unmanaged() private cssGenerator: ICodeCssGenerator,
@@ -79,6 +89,40 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
         }
     }
 
+    // This function is used for testing webview by fetching HTML from the webview via a message
+    // @ts-ignore Property will be accessed in test code via casting to ITestWebviewHost
+    @testOnlyMethod()
+    // @ts-ignore Property will be accessed in test code via casting to ITestWebviewHost
+    private getHTMLById(id: string): Promise<string> {
+        if (!this.activeHTMLRequest) {
+            this.activeHTMLRequest = createDeferred<string>();
+            this.postMessageInternal(InteractiveWindowMessages.GetHTMLByIdRequest, id).ignoreErrors();
+        } else {
+            throw new Error('getHTMLById request already in progress');
+        }
+
+        return this.activeHTMLRequest.promise;
+    }
+
+    // For testing add a callback listening to messages from the webview
+    // tslint:disable-next-line:no-any
+    @testOnlyMethod()
+    // @ts-ignore Property will be accessed in test code via casting to ITestWebviewHost
+    private addMessageListener(callback: (message: string, payload: any) => void) {
+        this.onMessageListeners.push(callback);
+    }
+
+    // For testing remove a callback listening to messages from the webview
+    // tslint:disable-next-line:no-any
+    @testOnlyMethod()
+    // @ts-ignore Property will be accessed in test code via casting to ITestWebviewHost
+    private removeMessageListener(callback: (message: string, payload: any) => void) {
+        const index = this.onMessageListeners.indexOf(callback);
+        if (index >= 0) {
+            this.onMessageListeners.splice(index, 1);
+        }
+    }
+
     protected abstract provideWebview(
         cwd: string,
         settings: IJupyterExtraSettings,
@@ -105,7 +149,7 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
         return this.postMessageInternal(type.toString(), payload);
     }
 
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     protected onMessage(message: string, payload: any) {
         switch (message) {
             case SharedMessages.Started:
@@ -120,9 +164,22 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
                 this.handleMonacoThemeRequest(payload as IGetMonacoThemeRequest).ignoreErrors();
                 break;
 
+            case InteractiveWindowMessages.GetHTMLByIdResponse:
+                // Webview has returned HTML, resolve the request and clear it
+                if (this.activeHTMLRequest) {
+                    this.activeHTMLRequest.resolve(payload);
+                    this.activeHTMLRequest = undefined;
+                }
+                break;
+
             default:
                 break;
         }
+
+        // Broadcast to any onMessage listeners
+        this.onMessageListeners.forEach((listener) => {
+            listener(message, payload);
+        });
     }
 
     protected async loadWebview(cwd: string, webView?: vscodeWebviewPanel | vscodeWebviewView) {
@@ -216,7 +273,7 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
         this.postMessageInternal(SharedMessages.LocInit, locStrings).ignoreErrors();
     }
 
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     protected async postMessageInternal(type: string, payload?: any): Promise<void> {
         if (this.webviewInit) {
             // Make sure the webpanel is up before we send it anything.
@@ -232,7 +289,7 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
     }
 
     // When the webview has been rendered send telemetry and initial strings + settings
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     protected webViewRendered() {
         if (this.webviewInit && !this.webviewInit.resolved) {
             // Send telemetry for startup

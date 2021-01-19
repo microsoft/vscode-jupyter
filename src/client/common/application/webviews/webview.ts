@@ -58,7 +58,7 @@ export abstract class Webview implements IWebview {
 
     public postMessage(message: WebviewMessage) {
         if (this.webviewHost?.webview) {
-            this.webviewHost?.webview.postMessage(message);
+            void this.webviewHost?.webview.postMessage(message);
         }
     }
 
@@ -68,7 +68,7 @@ export abstract class Webview implements IWebview {
     // After load is finished allow derived classes to hook up class specific code
     protected abstract postLoad(webviewHost: vscodeWebviewView | vscodeWebviewPanel): void;
 
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     protected async generateLocalReactHtml() {
         if (!this.webviewHost?.webview) {
             throw new Error('WebView not initialized, too early to get a Uri');
@@ -92,6 +92,9 @@ export abstract class Webview implements IWebview {
                 )
             )
             .toString();
+
+        // Check to see if we should force on Test middleware for our react code
+        const forceTestMiddleware = process.env.VSC_JUPYTER_WEBVIEW_TEST_MIDDLEWARE || 'false';
         return `<!doctype html>
         <html lang="en">
             <head>
@@ -120,6 +123,9 @@ export abstract class Webview implements IWebview {
                         }
 
                         return "${uriBase}" + relativePath;
+                    }
+                    function forceTestMiddleware() {
+                        return ${forceTestMiddleware};
                     }
                 </script>
                 ${uris.map((uri) => `<script type="text/javascript" src="${uri}"></script>`).join('\n')}

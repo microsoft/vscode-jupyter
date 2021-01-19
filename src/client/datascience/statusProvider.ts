@@ -28,7 +28,7 @@ class StatusItem implements Disposable {
         if (!this.disposed) {
             this.disposed = true;
             if (this.timeout) {
-                // tslint:disable-next-line: no-any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 clearTimeout(this.timeout as any);
                 this.timeout = undefined;
             }

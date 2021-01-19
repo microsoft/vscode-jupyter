@@ -100,6 +100,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     private pendingHasCell = new Map<string, Deferred<boolean>>();
     private mode: InteractiveWindowMode = 'multiple';
     private loadPromise: Promise<void>;
+    private _kernelConnection?: KernelConnectionMetadata;
 
     constructor(
         listeners: IInteractiveWindowListener[],
@@ -243,7 +244,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         this.postMessage(InteractiveWindowMessages.GetAllCells).ignoreErrors();
     }
 
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public onMessage(message: string, payload: any) {
         super.onMessage(message, payload);
 
@@ -361,7 +362,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     }
 
     @captureTelemetry(Telemetry.SubmitCellThroughInput, undefined, false)
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     protected submitNewCell(info: ISubmitNewCell) {
         // If there's any payload, it has the code and the id
         if (info && info.code && info.id) {
@@ -385,12 +386,15 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         }
     }
 
-    protected get notebookMetadata(): nbformat.INotebookMetadata | undefined {
+    protected get notebookMetadata(): Readonly<nbformat.INotebookMetadata> | undefined {
         return undefined;
     }
+    protected get kernelConnection(): Readonly<KernelConnectionMetadata> | undefined {
+        return this._kernelConnection;
+    }
 
-    protected async updateNotebookOptions(_kernelConnection: KernelConnectionMetadata): Promise<void> {
-        // Do nothing as this data isn't stored in our options.
+    protected async updateNotebookOptions(kernelConnection: KernelConnectionMetadata): Promise<void> {
+        this._kernelConnection = kernelConnection;
     }
 
     protected get notebookIdentity(): INotebookIdentity {
@@ -499,7 +503,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     }
 
     @captureTelemetry(Telemetry.ExportNotebookInteractive, undefined, false)
-    // tslint:disable-next-line: no-any no-empty
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, no-empty,@typescript-eslint/no-empty-function
     private async export(cells: ICell[]) {
         // Export requires the python extension
         if (!this.extensionChecker.isPythonExtensionInstalled) {
@@ -567,7 +571,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         }
     }
 
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private handleReturnAllCells(cells: ICell[]) {
         // See what we're waiting for.
         if (this.waitingForExportCells) {

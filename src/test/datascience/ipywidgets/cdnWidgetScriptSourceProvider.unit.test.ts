@@ -23,14 +23,14 @@ import { IWidgetScriptSourceProvider } from '../../../client/datascience/ipywidg
 import { JupyterNotebookBase } from '../../../client/datascience/jupyter/jupyterNotebook';
 import { IJupyterConnection, ILocalResourceUriConverter, INotebook } from '../../../client/datascience/types';
 
-// tslint:disable: no-var-requires no-require-imports max-func-body-length no-any match-default-export-name no-console
+/* eslint-disable @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports, , @typescript-eslint/no-explicit-any, , no-console */
 const request = require('request');
 const sanitize = require('sanitize-filename');
 
 const unpgkUrl = 'https://unpkg.com/';
 const jsdelivrUrl = 'https://cdn.jsdelivr.net/npm/';
 
-// tslint:disable: max-func-body-length no-any
+/* eslint-disable , @typescript-eslint/no-explicit-any */
 suite('DataScience - ipywidget - CDN', () => {
     let scriptSourceProvider: IWidgetScriptSourceProvider;
     let notebook: INotebook;
@@ -43,7 +43,7 @@ suite('DataScience - ipywidget - CDN', () => {
     suiteSetup(function () {
         // Nock seems to fail randomly on CI builds. See bug
         // https://github.com/microsoft/vscode-python/issues/11442
-        // tslint:disable-next-line: no-invalid-this
+        // eslint-disable-next-line no-invalid-this
         return this.skip();
     });
     setup(() => {
