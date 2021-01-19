@@ -32,7 +32,12 @@ interface ISelectUriQuickPickItem extends QuickPickItem {
     provider?: IJupyterUriProvider;
     url?: string;
 }
-
+export type SelectJupyterUriCommandSource =
+    | 'nonUser'
+    | 'toolbar'
+    | 'commandPalette'
+    | 'nativeNotebookStatusBar'
+    | 'nativeNotebookToolbar';
 @injectable()
 export class JupyterServerSelector {
     private readonly localLabel = `$(zap) ${DataScience.jupyterSelectURILocalLabel()}`;
@@ -48,7 +53,13 @@ export class JupyterServerSelector {
     ) {}
 
     @captureTelemetry(Telemetry.SelectJupyterURI)
-    public selectJupyterURI(allowLocal: boolean): Promise<void> {
+    public selectJupyterURI(
+        allowLocal: boolean,
+        commandSource: SelectJupyterUriCommandSource = 'nonUser'
+    ): Promise<void> {
+        sendTelemetryEvent(Telemetry.SetJupyterURIUIDisplayed, undefined, {
+            commandSource
+        });
         const multiStep = this.multiStepFactory.create<{}>();
         return multiStep.run(this.startSelectingURI.bind(this, allowLocal), {});
     }

@@ -91,7 +91,7 @@ suite('DataScience - Jupyter Server URI Selector', () => {
 
     test('Local pick server uri', async () => {
         const { selector, storage } = createDataScienceObject('$(zap) Default', '', true);
-        await selector.selectJupyterURI(true);
+        await selector.selectJupyterURI(true,);
         let value = await storage.getUri();
         assert.equal(value, Settings.JupyterServerLocalLaunch, 'Default should pick local launch');
 

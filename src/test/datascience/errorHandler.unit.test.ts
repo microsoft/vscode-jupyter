@@ -102,10 +102,10 @@ suite('DataScience Error Handler Unit Tests', () => {
             )
             .returns(() => Promise.resolve(localize.DataScience.selectNewServer()))
             .verifiable(typemoq.Times.once());
-        when(serverSelector.selectJupyterURI(anything())).thenCall(() => Promise.resolve());
+        when(serverSelector.selectJupyterURI(anything(), anything())).thenCall(() => Promise.resolve());
         const err = new JupyterZMQBinariesNotFoundError('Not found');
         await dataScienceErrorHandler.handleError(err);
-        verify(serverSelector.selectJupyterURI(anything())).once();
+        verify(serverSelector.selectJupyterURI(anything(), anything())).once();
         applicationShell.verifyAll();
     });
 });

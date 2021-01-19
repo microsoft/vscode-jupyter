@@ -1552,7 +1552,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
     }
 
     private async selectServer() {
-        await this.commandManager.executeCommand(Commands.SelectJupyterURI);
+        await this.commandManager.executeCommand(Commands.SelectJupyterURI, undefined, 'toolbar');
     }
     private async kernelChangeHandler(kernelConnection: KernelConnectionMetadata) {
         // Check if we are changing to LiveKernelModel
