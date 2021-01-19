@@ -16,7 +16,7 @@ import { noop } from '../../../client/common/utils/misc';
 import { IKernelProvider } from '../../../client/datascience/jupyter/kernels/types';
 import { INotebookEditorProvider } from '../../../client/datascience/types';
 import { IExtensionTestApi, waitForCondition } from '../../common';
-import { initialize } from '../../initialize';
+import { initialize, IS_REMOTE_NATIVE_TEST } from '../../initialize';
 import {
     assertVSCCellIsNotRunning,
     assertVSCCellIsRunning,
@@ -51,8 +51,9 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
     let dsSettings: ReadWrite<IJupyterSettings>;
     const suiteDisposables: IDisposable[] = [];
     suiteSetup(async function () {
+        traceInfo(`Start Suite Test`);
         api = await initialize();
-        if (!(await canRunNotebookTests())) {
+        if (IS_REMOTE_NATIVE_TEST || !(await canRunNotebookTests())) {
             return this.skip();
         }
         await startJupyterServer();
@@ -62,10 +63,12 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
         dsSettings = api.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(undefined);
         oldAskForRestart = dsSettings.askForKernelRestart;
+        traceInfo(`Start Suite Test Complete`);
     });
     setup(async function () {
         traceInfo(`Start Test ${this.currentTest?.title}`);
         sinon.restore();
+        await startJupyterServer();
         await trustAllNotebooks();
         // Open a notebook and use this for all tests in this test suite.
         await editorProvider.createNew();

@@ -45,6 +45,7 @@ suite('Notebook Editor tests', () => {
 
     setup(async function () {
         traceInfo(`Start Test ${this.currentTest?.title}`);
+        await startJupyterServer();
         await trustAllNotebooks();
         // Open a notebook and use this for all tests in this test suite.
         await editorProvider.createNew();
@@ -57,6 +58,7 @@ suite('Notebook Editor tests', () => {
     teardown(async function () {
         traceInfo(`End Test ${this.currentTest?.title}`);
         await closeNotebooksAndCleanUpAfterTests(disposables);
+        await stopJupyterServer();
         traceInfo(`End Test Completed ${this.currentTest?.title}`);
     });
     suiteTeardown(async () => {

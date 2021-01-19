@@ -299,8 +299,10 @@ export async function startJupyterServer(api?: IExtensionTestApi) {
     if (IS_REMOTE_NATIVE_TEST) {
         const uri = await JupyterServer.instance.startJupyterWithToken();
         const uriString = decodeURIComponent(uri.toString());
+        traceInfo(`Jupyter started and listening at ${uriString}`);
         await selector.setJupyterURIToRemote(uriString);
     } else {
+        traceInfo(`Jupyter not started and set to local`);
         await selector.setJupyterURIToLocal();
     }
 }
