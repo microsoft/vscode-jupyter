@@ -86,6 +86,9 @@ export class JupyterSession extends BaseJupyterSession {
                 newSession.isRemoteSession = true;
             } else {
                 newSession = await this.createSession(this.serverSettings, kernelConnection, cancelToken);
+                if (!this.connInfo.localLaunch) {
+                    newSession.isRemoteSession = true;
+                }
             }
 
             // Make sure it is idle before we return
