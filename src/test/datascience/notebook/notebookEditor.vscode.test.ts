@@ -10,6 +10,7 @@ import { IDisposable } from '../../../client/common/types';
 import { Commands } from '../../../client/datascience/constants';
 import { INotebookEditorProvider } from '../../../client/datascience/types';
 import { IExtensionTestApi } from '../../common';
+import { IS_REMOTE_NATIVE_TEST } from '../../constants';
 import { initialize } from '../../initialize';
 import {
     canRunNotebookTests,
@@ -34,7 +35,7 @@ suite('Notebook Editor tests', () => {
 
     suiteSetup(async function () {
         api = await initialize();
-        if (!(await canRunNotebookTests())) {
+        if (IS_REMOTE_NATIVE_TEST || !(await canRunNotebookTests())) {
             return this.skip();
         }
         await startJupyterServer();
@@ -58,7 +59,6 @@ suite('Notebook Editor tests', () => {
     teardown(async function () {
         traceInfo(`End Test ${this.currentTest?.title}`);
         await closeNotebooksAndCleanUpAfterTests(disposables);
-        await stopJupyterServer();
         traceInfo(`End Test Completed ${this.currentTest?.title}`);
     });
     suiteTeardown(async () => {

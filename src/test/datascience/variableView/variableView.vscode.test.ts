@@ -8,7 +8,7 @@ import { IDisposable } from '../../../client/common/types';
 import { Commands, VSCodeNotebookProvider } from '../../../client/datascience/constants';
 import { IVariableViewProvider } from '../../../client/datascience/variablesView/types';
 import { IExtensionTestApi } from '../../common';
-import { initialize } from '../../initialize';
+import { initialize, IS_REMOTE_NATIVE_TEST } from '../../initialize';
 import {
     canRunNotebookTests,
     closeNotebooks,
@@ -40,7 +40,7 @@ suite('DataScience - VariableView', () => {
         api = await initialize();
 
         // Don't run if we can't use the native notebook interface
-        if (!(await canRunNotebookTests())) {
+        if (IS_REMOTE_NATIVE_TEST || !(await canRunNotebookTests())) {
             return this.skip();
         }
         await trustAllNotebooks();

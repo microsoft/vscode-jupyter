@@ -28,6 +28,7 @@ export class JupyterServer implements IDisposable {
             this._jupyterServerWithTokenABCDProc?.kill();
         }
         this._jupyterServerWithTokenABCDProc = undefined;
+        traceInfo('Shutting Jupyter server used for remote tests');
     }
     public async startJupyterWithToken(token = '7d25707a86975be50ee9757c929fef9012d27cf43153d1c1'): Promise<Uri> {
         if (!this._jupyterServerWithTokenABCD) {
@@ -63,6 +64,9 @@ export class JupyterServer implements IDisposable {
                 if (!result.proc) {
                     throw new Error('Starting Jupyter failed, no process');
                 }
+                result.proc.once('close', () => traceInfo('Shutting Jupyter server used for remote tests (closed)'))
+                result.proc.once('disconnect', () => traceInfo('Shutting Jupyter server used for remote tests (disconnected)'))
+                result.proc.once('exit', () => traceInfo('Shutting Jupyter server used for remote tests (exited)'))
                 api.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry).push({
                     dispose: () => {
                         if (!result.proc) {
