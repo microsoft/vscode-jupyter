@@ -105,7 +105,7 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)xxx', function
         // Optionally we could wait for 100ms.
         await waitForCondition(
             async () => !!remoteKernelIdProvider.getPreferredRemoteKernelId(nbEditor.document.uri),
-            50_000,
+            5_000,
             'Remote Kernel id not saved'
         );
 
