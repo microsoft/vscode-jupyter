@@ -16,7 +16,7 @@ import {
     deleteAllCellsAndWait,
     executeCell,
     insertCodeCell,
-    startJupyter,
+    prewarmNotebooks,
     trustAllNotebooks,
     waitForExecutionCompletedSuccessfully,
     waitForKernelToGetAutoSelected
@@ -44,7 +44,7 @@ suite('DataScience - VariableView', () => {
             return this.skip();
         }
         await trustAllNotebooks();
-        await startJupyter(true);
+        await prewarmNotebooks();
         sinon.restore();
         commandManager = api.serviceContainer.get<ICommandManager>(ICommandManager);
         const coreVariableViewProvider = api.serviceContainer.get<IVariableViewProvider>(IVariableViewProvider);
