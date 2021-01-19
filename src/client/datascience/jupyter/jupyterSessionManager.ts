@@ -225,7 +225,9 @@ export class JupyterSessionManager implements IJupyterSessionManager {
                     return new JupyterKernelSpec(spec) as IJupyterKernelSpec;
                 });
             } else {
-                traceError(`SessionManager cannot enumerate kernelspecs. Returning default ${JSON.stringify(kernelspecs)}.`);
+                traceError(
+                    `SessionManager cannot enumerate kernelspecs. Returning default ${JSON.stringify(kernelspecs)}.`
+                );
                 // If for some reason the session manager refuses to communicate, fall
                 // back to a default. This may not exist, but it's likely.
                 return [createDefaultKernelSpec()];

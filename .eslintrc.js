@@ -1139,7 +1139,6 @@ module.exports = {
         'src/client/datascience/jupyter/notebookStarter.ts',
         'src/client/datascience/jupyter/jupyterZMQBinariesNotFoundError.ts',
         'src/client/datascience/jupyter/jupyterUtils.ts',
-        'src/client/datascience/jupyter/jupyterSessionManager.ts',
         'src/client/datascience/jupyter/jupyterDataRateLimitError.ts',
         'src/client/datascience/jupyter/variableScriptLoader.ts',
         'src/client/datascience/jupyter/jupyterImporter.ts',
