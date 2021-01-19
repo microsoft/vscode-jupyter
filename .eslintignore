@@ -268,7 +268,6 @@ src/test/datascience/dataScienceIocContainer.ts
 src/test/datascience/dataviewer.functional.test.tsx
 src/test/datascience/jupyterUtils.unit.test.ts
 src/test/datascience/preWarmVariables.unit.test.ts
-src/test/datascience/mockJupyterNotebook.ts
 src/test/datascience/remoteTestHelpers.ts
 src/test/datascience/mockWorkspaceFolder.ts
 src/test/datascience/variableexplorer.functional.test.tsx
@@ -988,7 +987,6 @@ src/client/datascience/shiftEnterBanner.ts
 src/client/datascience/dataScienceSurveyBanner.ts
 src/client/datascience/serviceRegistry.ts
 src/client/datascience/webviews/webViewHost.ts
-src/client/datascience/context/activeEditorContext.ts
 src/client/datascience/progress/progressReporter.ts
 src/client/datascience/progress/messages.ts
 src/client/datascience/progress/types.ts
@@ -1051,7 +1049,6 @@ src/client/datascience/interactive-common/linkProvider.ts
 src/client/datascience/interactive-common/notebookUsageTracker.ts
 src/client/datascience/interactive-common/interactiveWindowTypes.ts
 src/client/datascience/interactive-common/synchronization.ts
-src/client/datascience/interactive-common/notebookProvider.ts
 src/client/datascience/interactive-common/interactiveWindowMessageListener.ts
 src/client/datascience/interactive-common/intellisense/wordHelper.ts
 src/client/datascience/interactive-common/intellisense/intellisenseDocument.ts
@@ -1061,7 +1058,6 @@ src/client/datascience/interactive-common/intellisense/intellisenseProvider.ts
 src/client/datascience/interactive-common/notebookServerProvider.ts
 src/client/datascience/activation.ts
 src/client/datascience/jupyterUriProviderWrapper.ts
-src/client/datascience/types.ts
 src/client/datascience/errorHandler/errorHandler.ts
 src/client/datascience/cellMatcher.ts
 src/client/datascience/notebookStorage/notebookModel.ts
@@ -1153,7 +1149,6 @@ src/client/datascience/jupyter/kernels/jupyterKernelSpec.ts
 src/client/datascience/jupyter/kernels/kernelDependencyService.ts
 src/client/datascience/jupyter/kernels/kernel.ts
 src/client/datascience/jupyter/kernels/cellExecution.ts
-src/client/datascience/jupyter/jupyterNotebook.ts
 src/client/datascience/jupyter/jupyterExecutionFactory.ts
 src/client/datascience/jupyter/jupyterSession.ts
 src/client/datascience/jupyter/serverPreload.ts
@@ -1164,7 +1159,6 @@ src/client/datascience/jupyter/jupyterVariables.ts
 src/client/datascience/jupyter/jupyterDebugger.ts
 src/client/datascience/jupyter/liveshare/hostJupyterServer.ts
 src/client/datascience/jupyter/liveshare/roleBasedFactory.ts
-src/client/datascience/jupyter/liveshare/guestJupyterNotebook.ts
 src/client/datascience/jupyter/liveshare/hostJupyterNotebook.ts
 src/client/datascience/jupyter/liveshare/responseQueue.ts
 src/client/datascience/jupyter/liveshare/hostJupyterExecution.ts
