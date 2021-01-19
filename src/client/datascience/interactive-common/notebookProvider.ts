@@ -8,7 +8,7 @@ import { EventEmitter, Uri } from 'vscode';
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
 import { IPythonExtensionChecker } from '../../api/types';
 import { IWorkspaceService } from '../../common/application/types';
-import { traceInfo, traceWarning } from '../../common/logger';
+import { traceWarning } from '../../common/logger';
 import { IConfigurationService, IDisposableRegistry, Resource } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { Identifiers, Settings } from '../constants';

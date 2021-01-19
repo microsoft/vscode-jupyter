@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 import * as uuid from 'uuid/v4';
 import { Uri } from 'vscode';
-import { traceInfo } from '../../client/common/logger';
 import { TemporaryFile } from '../../client/common/platform/types';
 import { noop } from '../../client/common/utils/misc';
 import { getNameOfKernelConnection } from '../../client/datascience/jupyter/kernels/helpers';
