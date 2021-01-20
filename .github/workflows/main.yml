@@ -693,7 +693,7 @@ jobs:
 
       - name: Run Native Notebook with VSCode & Jupyter with xvfb on Linux
         uses: GabrielBB/xvfb-action@v1.4
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.os == 'ubuntu-latest' && (matrix.test-suite == 'notebook' || matrix.test-suite == 'conda')
         with:
           run: --server-args="-screen 0 1024x768x24" npm run testNativeNotebooksInVSCode
         env:
@@ -704,10 +704,9 @@ jobs:
           VSC_JUPYTER_CI_RUN_JAVA_NB_TEST: ${{ contains(matrix.test-suite, 'conda') }}
           VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
         id: test_notebook_vscode
-        if: matrix.test-suite == 'notebook' || matrix.test-suite == 'conda'
 
       - name: Run Native Notebook with VSCode & Jupyter without xvfb on Windows / Mac
-        if: matrix.os != 'ubuntu-latest'
+        if: matrix.os != 'ubuntu-latest' && (matrix.test-suite == 'notebook' || matrix.test-suite == 'conda')
         run: npm run testNativeNotebooksInVSCode
         env:
           VSC_FORCE_REAL_JUPYTER: 1
@@ -717,7 +716,6 @@ jobs:
           VSC_JUPYTER_CI_RUN_JAVA_NB_TEST: ${{ contains(matrix.test-suite, 'conda') }}
           VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
         id: test_notebook_vscode
-        if: matrix.test-suite == 'notebook' || matrix.test-suite == 'conda'
 
       - name: Publish Notebook Test Report
         uses: scacap/action-surefire-report@v1
