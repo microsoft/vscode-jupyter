@@ -104,24 +104,24 @@ suite('DataScience - VSCode Notebook - (Saving) (slow)', function () {
                 reOpened
                     ? vscodeNotebookEnums.NotebookCellRunState.Idle
                     : vscodeNotebookEnums.NotebookCellRunState.Success,
-                'Incorrect state 1'
+                'Incorrect state in cell 1'
             );
             assert.equal(
                 cell2.metadata.runState,
                 reOpened
                     ? vscodeNotebookEnums.NotebookCellRunState.Idle
                     : vscodeNotebookEnums.NotebookCellRunState.Error,
-                'Incorrect state 2'
+                'Incorrect state in cell 2'
             );
             assert.equal(
                 cell3.metadata.runState || vscodeNotebookEnums.NotebookCellRunState.Idle,
                 vscodeNotebookEnums.NotebookCellRunState.Idle,
-                'Incorrect state 3'
+                'Incorrect state in cell 3'
             );
             assert.equal(
                 cell4.metadata.runState || vscodeNotebookEnums.NotebookCellRunState.Idle,
                 vscodeNotebookEnums.NotebookCellRunState.Idle,
-                'Incorrect state 4'
+                'Incorrect state in cell 4'
             );
 
             assertHasTextOutputInVSCode(cell1, '1', 0);
@@ -162,6 +162,6 @@ suite('DataScience - VSCode Notebook - (Saving) (slow)', function () {
         // Reopen the notebook & validate the metadata.
         await openNotebook(api.serviceContainer, testEmptyIPynb.fsPath);
         initializeCells();
-        verifyCelMetadata();
+        verifyCelMetadata(true);
     });
 });
