@@ -695,7 +695,7 @@ jobs:
         uses: GabrielBB/xvfb-action@v1.4
         if: matrix.os == 'ubuntu-latest'
         with:
-          run: npm run testNativeNotebooksInVSCode
+          run: --server-args="-screen 0 1024x768x24" npm run testNativeNotebooksInVSCode
         env:
           VSC_FORCE_REAL_JUPYTER: 1
           VSC_JUPYTER_FORCE_LOGGING: 1
