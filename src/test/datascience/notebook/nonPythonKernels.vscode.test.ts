@@ -15,7 +15,7 @@ import { VSCodeNotebookProvider } from '../../../client/datascience/constants';
 import { NotebookCellLanguageService } from '../../../client/datascience/notebook/defaultCellLanguageService';
 import { INotebookEditorProvider } from '../../../client/datascience/types';
 import { IExtensionTestApi, waitForCondition } from '../../common';
-import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST } from '../../constants';
+import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST, IS_NON_RAW_NATIVE_TEST } from '../../constants';
 import { initialize } from '../../initialize';
 import { openNotebook } from '../helpers';
 import {
@@ -84,7 +84,8 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         if (
             !process.env.VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST ||
             !(await canRunNotebookTests()) ||
-            IS_REMOTE_NATIVE_TEST
+            IS_REMOTE_NATIVE_TEST ||
+            IS_NON_RAW_NATIVE_TEST
         ) {
             return this.skip();
         }
