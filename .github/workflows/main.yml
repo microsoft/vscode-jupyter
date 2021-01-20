@@ -669,10 +669,18 @@ jobs:
         uses: ./.github/actions/create-venv-for-tests
         if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook' || matrix.test-suite == 'nonRawNotebook' || matrix.test-suite == 'remoteNotebook'
 
+      # Set the correct xvfb commands to run vscode tests
+      # https://code.visualstudio.com/api/working-with-extensions/continuous-integration
+      # Note that xvfb github action only runs through xvfb on linux, so only set the commands there
+      # as on windows / mac they would get directly passed to run, not xvfb-run
+      - name: Set xvfb parameters linux
+        if: matrix.os == 'ubuntu-latest'
+        run: echo "xvfbCommand=--server-args=\"-screen 0 1024x768x24\"" >> $GITHUB_ENV
+
       - name: Run tests with VSCode & Jupyter
         uses: GabrielBB/xvfb-action@v1.4
         with:
-          run: npm run testVSCode
+          run: ${{ env.xvfbCommand }} npm run testVSCode
         env:
           VSC_FORCE_REAL_JUPYTER: 1
           VSC_JUPYTER_FORCE_LOGGING: 1
@@ -688,14 +696,9 @@ jobs:
           check_name: VSCode Test Report
         if: (steps.test_vscode.outcome == 'failure' || steps.test_vscode.outcome == 'failure') && failure()
 
-      - name: Set xvfb command linux
-        if: matrix.os == 'ubuntu-latest'
-        run: echo "xvfbCommand=--server-args=\"-screen 0 1024x768x24\"" >> $GITHUB_ENV
-
       - name: Run Native Notebook with VSCode & Jupyter
         uses: GabrielBB/xvfb-action@v1.4
         with:
-          # run: --server-args="-screen 0 1024x768x24" npm run testNativeNotebooksInVSCode
           run: ${{ env.xvfbCommand }} npm run testNativeNotebooksInVSCode
         env:
           VSC_FORCE_REAL_JUPYTER: 1
@@ -721,7 +724,7 @@ jobs:
       - name: Run Native Notebook with VSCode & Jupyter (without Python)
         uses: GabrielBB/xvfb-action@v1.4
         with:
-          run: npm run testNativeNotebooksWithoutPythonInVSCode
+          run: ${{ env.xvfbCommand }} npm run testNativeNotebooksWithoutPythonInVSCode
         env:
           VSC_FORCE_REAL_JUPYTER: 1
           VSC_JUPYTER_FORCE_LOGGING: 1

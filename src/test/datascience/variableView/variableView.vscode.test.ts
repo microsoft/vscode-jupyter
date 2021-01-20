@@ -73,16 +73,11 @@ suite('DataScience - VariableView', () => {
 
     // Test showing the basic variable view with a value or two
     test('Can show VariableView', async function () {
-        //this.skip(); // Re-enable in CI when #4412 is fixed
-        console.log('IANHU Test Started');
-        this.timeout(60_000);
         // Add one simple cell and execute it
         await insertCodeCell('test = "MYTESTVALUE"', { index: 0 });
         const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
         await executeCell(cell);
         await waitForExecutionCompletedSuccessfully(cell);
-
-        console.log('IANHU First Cell Executed');
 
         // Send the command to open the view
         await commandManager.executeCommand(Commands.OpenVariableView);
@@ -92,12 +87,6 @@ suite('DataScience - VariableView', () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const variableView = (coreVariableView as any) as ITestWebviewHost;
 
-        if (variableView) {
-            console.log('IANHU Got VariableView');
-        } else {
-            console.log('IANHU Did Not Get VariableView');
-        }
-
         // Add our message listener
         const onMessageListener = new OnMessageListener(variableView);
 
@@ -106,24 +95,16 @@ suite('DataScience - VariableView', () => {
         const cell2 = vscodeNotebook.activeNotebookEditor?.document.cells![1]!;
         await executeCell(cell2);
 
-        console.log('IANHU Second Cell Executed');
-
         // Wait until our VariablesComplete message to see that we have the new variables and have rendered them
         await onMessageListener.waitForMessage(InteractiveWindowMessages.VariablesComplete);
 
         const htmlResult = await variableView?.getHTMLById('variable-view-main-panel');
 
-        if (htmlResult) {
-            console.log(`IANHU Got HTML Result ${htmlResult}`);
-        } else {
-            console.log('IANHU Did Not Get HTML Result');
-        }
         // Parse the HTML for our expected variables
         const expectedVariables = [
             { name: 'test', type: 'str', length: '11', value: ' MYTESTVALUE' },
             { name: 'test2', type: 'str', length: '12', value: ' MYTESTVALUE2' }
         ];
         verifyViewVariables(expectedVariables, htmlResult);
-        console.log('IANHU End Of Test');
     });
 });
