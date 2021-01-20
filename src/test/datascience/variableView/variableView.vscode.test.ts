@@ -8,7 +8,7 @@ import { IDisposable } from '../../../client/common/types';
 import { Commands, VSCodeNotebookProvider } from '../../../client/datascience/constants';
 import { IVariableViewProvider } from '../../../client/datascience/variablesView/types';
 import { IExtensionTestApi } from '../../common';
-import { initialize } from '../../initialize';
+import { initialize, IS_REMOTE_NATIVE_TEST } from '../../initialize';
 import {
     canRunNotebookTests,
     closeNotebooks,
@@ -16,7 +16,7 @@ import {
     deleteAllCellsAndWait,
     executeCell,
     insertCodeCell,
-    startJupyter,
+    prewarmNotebooks,
     trustAllNotebooks,
     waitForExecutionCompletedSuccessfully,
     waitForKernelToGetAutoSelected
@@ -40,11 +40,11 @@ suite('DataScience - VariableView', () => {
         api = await initialize();
 
         // Don't run if we can't use the native notebook interface
-        if (!(await canRunNotebookTests())) {
+        if (IS_REMOTE_NATIVE_TEST || !(await canRunNotebookTests())) {
             return this.skip();
         }
         await trustAllNotebooks();
-        await startJupyter(true);
+        await prewarmNotebooks();
         sinon.restore();
         commandManager = api.serviceContainer.get<ICommandManager>(ICommandManager);
         const coreVariableViewProvider = api.serviceContainer.get<IVariableViewProvider>(IVariableViewProvider);

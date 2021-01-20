@@ -5,7 +5,8 @@
 
 import { assert } from 'chai';
 import * as sinon from 'sinon';
-import { commands, NotebookEditor as VSCNotebookEditor } from 'vscode';
+import { commands } from 'vscode';
+import { NotebookEditor as VSCNotebookEditor } from '../../../../typings/vscode-proposed';
 import { IApplicationShell, IVSCodeNotebook } from '../../../client/common/application/types';
 import { traceInfo } from '../../../client/common/logger';
 import { IConfigurationService, IDisposable, IJupyterSettings, ReadWrite } from '../../../client/common/types';
@@ -20,11 +21,10 @@ import {
     assertVSCCellIsNotRunning,
     assertVSCCellIsRunning,
     canRunNotebookTests,
-    closeNotebooks,
     closeNotebooksAndCleanUpAfterTests,
     executeActiveDocument,
     insertCodeCell,
-    startJupyter,
+    startJupyterServer,
     trustAllNotebooks,
     waitForExecutionCompletedWithErrors,
     waitForKernelToGetAutoSelected,
@@ -50,21 +50,24 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
     let dsSettings: ReadWrite<IJupyterSettings>;
     const suiteDisposables: IDisposable[] = [];
     suiteSetup(async function () {
+        traceInfo(`Start Suite Test`);
         api = await initialize();
         if (!(await canRunNotebookTests())) {
             return this.skip();
         }
+        await startJupyterServer();
         await closeNotebooksAndCleanUpAfterTests();
-        await startJupyter(true);
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
         kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
         dsSettings = api.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(undefined);
         oldAskForRestart = dsSettings.askForKernelRestart;
+        traceInfo(`Start Suite Test Complete`);
     });
     setup(async function () {
         traceInfo(`Start Test ${this.currentTest?.title}`);
         sinon.restore();
+        await startJupyterServer();
         await trustAllNotebooks();
         // Open a notebook and use this for all tests in this test suite.
         await editorProvider.createNew();
@@ -77,7 +80,6 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
     });
     teardown(async function () {
         traceInfo(`End Test ${this.currentTest?.title}`);
-        await closeNotebooks(disposables);
         await closeNotebooksAndCleanUpAfterTests(disposables.concat(suiteDisposables));
         traceInfo(`End Test (completed) ${this.currentTest?.title}`);
     });

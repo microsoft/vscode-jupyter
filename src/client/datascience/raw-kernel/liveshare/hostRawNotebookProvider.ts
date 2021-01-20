@@ -17,6 +17,7 @@ import {
     IConfigurationService,
     IDisposableRegistry,
     IOutputChannel,
+    ReadWrite,
     Resource
 } from '../../../common/types';
 import { createDeferred } from '../../../common/utils/async';
@@ -169,10 +170,15 @@ export class HostRawNotebookProvider
                     // this code as well as the code where we initialize the interpreter via a hack.
                     // This is used to check if there are situations under which this is possible & to safeguard against it.
                     // The only real world scenario is when users do not install Python (which we cannot prevent).
-                    (kernelConnection as any).interpreter = this.kernelService.findMatchingInterpreter(
+                    const readWriteConnection = kernelConnection as ReadWrite<KernelConnectionMetadata>;
+                    readWriteConnection.interpreter = await this.kernelService.findMatchingInterpreter(
                         kernelConnection.kernelSpec,
                         cancelToken
                     );
+                    if (readWriteConnection.kind === 'startUsingKernelSpec') {
+                        readWriteConnection.kernelSpec.interpreterPath =
+                            readWriteConnection.kernelSpec.interpreterPath || readWriteConnection.interpreter?.path;
+                    }
                 }
                 if (kernelConnection.interpreter) {
                     // Install missing dependencies only if we're dealing with a Python kernel.

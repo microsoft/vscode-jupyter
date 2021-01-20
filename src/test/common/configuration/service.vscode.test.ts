@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 import { expect } from 'chai';
 import { workspace } from 'vscode';
+import { AsyncDisposableRegistry } from '../../../client/common/asyncDisposableRegistry';
 import { IAsyncDisposableRegistry, IConfigurationService } from '../../../client/common/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { getExtensionSettings } from '../../common';
@@ -21,8 +22,15 @@ suite('Configuration Service', () => {
         expect(instanceIsSame).to.be.equal(true, 'Incorrect settings');
     });
 
-    test('Ensure async registry works', async () => {
+    test('Ensure async registry returns expected class', async () => {
         const asyncRegistry = serviceContainer.get<IAsyncDisposableRegistry>(IAsyncDisposableRegistry);
+        expect(asyncRegistry).to.be.instanceOf(AsyncDisposableRegistry);
+    });
+
+    test('Ensure async registry works', async () => {
+        // Do not retrieve AsyncDisposableRegistry from IOC container, as this will dispose all of the
+        // classes that we use in tests (basically all singletons are destroyed and tests break).
+        const asyncRegistry = new AsyncDisposableRegistry();
         let disposed = false;
         const disposable = {
             dispose(): Promise<void> {

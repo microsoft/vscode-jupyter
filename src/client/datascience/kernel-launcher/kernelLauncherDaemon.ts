@@ -7,6 +7,7 @@ import { ChildProcess } from 'child_process';
 import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import { IDisposable } from 'monaco-editor';
+import { traceInfo } from '../../common/logger';
 import { ObservableExecutionResult } from '../../common/process/types';
 import { Resource } from '../../common/types';
 import { noop } from '../../common/utils/misc';
@@ -37,6 +38,7 @@ export class PythonKernelLauncherDaemon implements IDisposable {
         kernelSpec: IJupyterKernelSpec,
         interpreter?: PythonEnvironment
     ): Promise<{ observableOutput: ObservableExecutionResult<string>; daemon: IPythonKernelDaemon | undefined }> {
+        traceInfo(`Launching kernel daemon for ${kernelSpec.display_name} # ${interpreter?.path}`);
         const [daemon, wdExists, env] = await Promise.all([
             this.daemonPool.get(resource, kernelSpec, interpreter),
             fs.pathExists(workingDirectory),

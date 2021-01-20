@@ -121,7 +121,6 @@ export class GuestJupyterServer
         if (this.launchInfo) {
             return this.launchInfo.connectionInfo;
         }
-
         return undefined;
     }
 

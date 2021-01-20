@@ -1,4 +1,4 @@
-# This yml is used for PRs, insiders build, and release build. 
+# This yml is used for PRs, insiders build, and release build.
 # We use the github.event_name to determine what started the workflow to determine which
 # situation we are in.
 
@@ -232,7 +232,7 @@ jobs:
       - name: Compile if not cached
         run: npx gulp prePublishNonBundle
         env:
-            CI_JUPYTER_FAST_COMPILATION: 'true'
+          CI_JUPYTER_FAST_COMPILATION: 'true'
 
         # if: steps.out-cache.outputs.cache-hit == false
       - name: Run TypeScript unit tests
@@ -293,14 +293,14 @@ jobs:
         uses: ./.github/actions/set-python
         id: set-python
         if: env.conda_python == ''
-        with: 
+        with:
           PYTHON_VERSION: ${{matrix.python}}
 
       - name: Set CI Path for Conda
         uses: ./.github/actions/set-python-conda
         id: set-python-conda
         if: env.conda_python
-        with: 
+        with:
           PYTHON_VERSION: ${{matrix.python}}
 
       - name: Upgrade pip
@@ -492,7 +492,7 @@ jobs:
         python: [3.8] # Use flaky tests to run against more versions of Python.
         # integration: Tests with VS Code, Python extension & real Jupyter
         # notebook: Notebook Tests with VS Code, Python extension & real Jupyter
-        test-suite: [integration, notebook, notebookWithoutPythonExt, conda]
+        test-suite: [integration, notebook, remoteNotebook, notebookWithoutPythonExt, conda]
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -510,21 +510,19 @@ jobs:
           activate-environment: functional_test_env
           python-version: ${{matrix.python}}
 
-
       - name: Set CI Path
         uses: ./.github/actions/set-python
         id: set-python
         if: matrix.test-suite != 'conda'
-        with: 
+        with:
           PYTHON_VERSION: ${{matrix.python}}
 
       - name: Set CI Path for Conda
         uses: ./.github/actions/set-python-conda
         id: set-python-conda
         if: matrix.test-suite == 'conda'
-        with: 
+        with:
           PYTHON_VERSION: ${{matrix.python}}
-
 
       - name: Upgrade pip
         run: python -m pip install -U pip
@@ -627,7 +625,6 @@ jobs:
           conda env update --file ./build/conda-functional-requirements.yml
           python -m pip install --upgrade -r ./build/conda-functional-requirements.txt
 
-
         # This step is slow.
       - name: Install dependencies (npm ci)
         run: npm ci --prefer-offline
@@ -636,8 +633,8 @@ jobs:
       - name: Compile if not cached
         run: npx gulp prePublishNonBundle
         env:
-            VSC_CI_MATRIX_TEST_SUITE: ${{matrix.test-suite}}
-            CI_JUPYTER_FAST_COMPILATION: 'true'
+          VSC_CI_MATRIX_TEST_SUITE: ${{matrix.test-suite}}
+          CI_JUPYTER_FAST_COMPILATION: 'true'
 
       # Used by tests for non-python kernels.
       # Test are enabled via env variable `VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST`
@@ -645,17 +642,17 @@ jobs:
         uses: actions/setup-dotnet@v1
         with:
           dotnet-version: ${{env.DOTNET_VERSION}}
-        if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook' || matrix.test-suite == 'conda'
+        if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook' || matrix.test-suite == 'remoteNotebook' || matrix.test-suite == 'conda'
 
       - name: Install .NET Interactive
         shell: bash -l {0}
         run: dotnet tool install -g --add-source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json" Microsoft.dotnet-interactive
-        if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook' || matrix.test-suite == 'conda'
+        if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook' || matrix.test-suite == 'remoteNotebook' || matrix.test-suite == 'conda'
 
       - name: Install .NET Kernel
         shell: bash -l {0}
         run: dotnet interactive jupyter install
-        if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook' || matrix.test-suite == 'conda'
+        if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook' || matrix.test-suite == 'remoteNotebook' || matrix.test-suite == 'conda'
 
       - name: Install Julia
         uses: julia-actions/setup-julia@v1
@@ -670,7 +667,7 @@ jobs:
 
       - name: Create Virtual Env for Tests
         uses: ./.github/actions/create-venv-for-tests
-        if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook'
+        if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook' || matrix.test-suite == 'remoteNotebook'
 
       - name: Run tests with VSCode & Jupyter
         uses: GabrielBB/xvfb-action@v1.4
@@ -700,17 +697,18 @@ jobs:
           VSC_JUPYTER_FORCE_LOGGING: 1
           VSC_PYTHON_FORCE_LOGGING: 1
           VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
+          VSC_JUPYTER_REMOTE_NATIVE_TEST: ${{ contains(matrix.test-suite, 'remote') }}
           VSC_JUPYTER_CI_RUN_JAVA_NB_TEST: ${{ contains(matrix.test-suite, 'conda') }}
           VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
         id: test_notebook_vscode
-        if: matrix.test-suite == 'notebook' || matrix.test-suite == 'conda'
+        if: matrix.test-suite == 'notebook' || matrix.test-suite == 'remoteNotebook' || matrix.test-suite == 'conda'
 
       - name: Publish Notebook Test Report
         uses: scacap/action-surefire-report@v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           report_paths: ${{ env.TEST_RESULTS_GLOB }}
-          check_name: Notebook Test Report
+          check_name: Notebook Test Report ${{matrix.test-suite}} ${{matrix.os}}
         if: steps.test_notebook_vscode.outcome == 'failure' && failure()
 
       - name: Run Native Notebook with VSCode & Jupyter (without Python)
@@ -750,7 +748,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     if: github.repository == 'microsoft/vscode-jupyter'
     needs: [build-vsix, pick_environment]
-    env: 
+    env:
       VSIX_NAME: ${{ needs.pick_environment.outputs.vsix_name }}
     strategy:
       fail-fast: false
@@ -769,7 +767,7 @@ jobs:
       - name: Set CI Path
         uses: ./.github/actions/set-python
         id: set-python
-        with: 
+        with:
           PYTHON_VERSION: ${{matrix.python}}
 
       - name: Upgrade pip
@@ -877,7 +875,7 @@ jobs:
       - name: Compile if not cached
         run: npx gulp prePublishNonBundle
         env:
-            CI_JUPYTER_FAST_COMPILATION: 'true'
+          CI_JUPYTER_FAST_COMPILATION: 'true'
 
       # It isn't possible to specify a regex for artifact names, so we have to download each artifact manually.
       # The name pattern is ${{runner.os}}-${{env.COVERAGE_REPORTS}}, and possible values for runner.os are `Linux`, `Windows`, or `macOS`.
@@ -914,7 +912,6 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           file: ./coverage/cobertura-coverage.xml
           path_to_write_report: ./coverage/codecov_report.txt
-
       # Alternative method for uploading
       # - name: Upload coverage to codecov
       #  run: bash <(curl -s https://codecov.io/bash) -f ./coverage/cobertura-coverage.xml -v

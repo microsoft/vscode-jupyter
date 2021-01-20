@@ -10,6 +10,7 @@ import { CancellationError, wrapCancellationTokens } from '../../common/cancella
 import { traceInfo } from '../../common/logger';
 import { IConfigurationService } from '../../common/types';
 import * as localize from '../../common/utils/localize';
+import { noop } from '../../common/utils/misc';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Identifiers, Settings, Telemetry } from '../constants';
@@ -81,7 +82,8 @@ export class NotebookServerProvider implements IJupyterServerProvider {
             this.serverPromise = this.startServer(token);
         }
         try {
-            return await this.serverPromise;
+            const value = await this.serverPromise;
+            return value;
         } catch (e) {
             // Don't cache the error
             this.serverPromise = undefined;
@@ -91,13 +93,11 @@ export class NotebookServerProvider implements IJupyterServerProvider {
 
     private async startServer(token?: CancellationToken): Promise<INotebookServer | undefined> {
         const serverOptions = await this.getNotebookServerOptions();
-
         traceInfo(`Checking for server existence.`);
 
         // If the URI is 'remote' then the encrypted storage is not working. Ask user again for server URI
         if (serverOptions.uri === Settings.JupyterServerRemoteLaunch) {
             await this.serverSelector.selectJupyterURI(true);
-
             // Should have been saved
             serverOptions.uri = await this.serverUriStorage.getUri();
         }
@@ -165,7 +165,8 @@ export class NotebookServerProvider implements IJupyterServerProvider {
                         } else if (value === closeOption) {
                             sendTelemetryEvent(Telemetry.SelfCertsMessageClose);
                         }
-                    });
+                    })
+                    .then(noop, noop);
                 throw e;
             } else {
                 throw e;

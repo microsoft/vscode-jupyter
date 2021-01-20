@@ -17,6 +17,8 @@ import {
     deleteAllCellsAndWait,
     insertCodeCell,
     selectCell,
+    startJupyterServer,
+    trustAllNotebooks,
     waitForExecutionCompletedSuccessfully,
     waitForKernelToGetAutoSelected
 } from './helper';
@@ -34,6 +36,7 @@ suite('Notebook Editor tests', () => {
         if (!(await canRunNotebookTests())) {
             return this.skip();
         }
+        await startJupyterServer();
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
         commandManager = api.serviceContainer.get<ICommandManager>(ICommandManager);
@@ -41,6 +44,8 @@ suite('Notebook Editor tests', () => {
 
     setup(async function () {
         traceInfo(`Start Test ${this.currentTest?.title}`);
+        await startJupyterServer();
+        await trustAllNotebooks();
         // Open a notebook and use this for all tests in this test suite.
         await editorProvider.createNew();
         await waitForKernelToGetAutoSelected();
