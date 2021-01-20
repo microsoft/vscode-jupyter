@@ -65,7 +65,7 @@ export class TrustCommandHandler implements IExtensionSingleActivationService {
         traceInfo(`Displayed prompt to trust notebook & selected ${selection}`);
         switch (selection) {
             case DataScience.trustAllNotebooks():
-                commands.executeCommand('workbench.action.openSettings', 'jupyter.alwaysTrustNotebooks');
+                void commands.executeCommand('workbench.action.openSettings', 'jupyter.alwaysTrustNotebooks');
                 sendTelemetryEvent(Telemetry.TrustAllNotebooks);
                 break;
             case DataScience.trustNotebook():
