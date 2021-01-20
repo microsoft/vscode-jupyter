@@ -610,7 +610,7 @@
                     "light": "resources/light/trusted.svg",
                     "dark": "resources/dark/trusted.svg"
                 },
-                "enablement": "notebookViewType == jupyter-notebook && jupyter.isnotebooktrusted && jupyter.trustfeatureenabled"
+                "enablement": "false"
             },
             {
                 "command": "jupyter.notebookeditor.runallcells",
