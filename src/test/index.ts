@@ -26,6 +26,8 @@ import {
     TEST_RETRYCOUNT,
     TEST_TIMEOUT
 } from './constants';
+import { noop } from './core';
+import { stopJupyterServer } from './datascience/notebook/helper';
 import { initialize } from './initialize';
 import { initializeLogger } from './testLogger';
 
@@ -201,6 +203,7 @@ export async function run(): Promise<void> {
             });
         });
     } finally {
+        stopJupyterServer().catch(noop);
         if (nyc) {
             nyc.writeCoverageFile();
             await nyc.report(); // This is async.

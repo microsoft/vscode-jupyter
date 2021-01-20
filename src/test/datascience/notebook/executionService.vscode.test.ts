@@ -7,8 +7,8 @@
 import { assert, expect } from 'chai';
 import * as dedent from 'dedent';
 import * as sinon from 'sinon';
-import { CellDisplayOutput, commands } from 'vscode';
-import { CellErrorOutput } from '../../../../typings/vscode-proposed';
+import { commands } from 'vscode';
+import { CellDisplayOutput, CellErrorOutput } from '../../../../typings/vscode-proposed';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { traceInfo } from '../../../client/common/logger';
 import { IDisposable } from '../../../client/common/types';
@@ -19,17 +19,17 @@ import {
     assertHasTextOutputInVSCode,
     assertNotHasTextOutputInVSCode,
     canRunNotebookTests,
-    closeNotebooks,
     closeNotebooksAndCleanUpAfterTests,
     deleteAllCellsAndWait,
     executeActiveDocument,
     executeCell,
     insertCodeCell,
-    startJupyter,
     trustAllNotebooks,
+    startJupyterServer,
     waitForExecutionCompletedSuccessfully,
     waitForExecutionCompletedWithErrors,
-    waitForKernelToGetAutoSelected
+    waitForKernelToGetAutoSelected,
+    prewarmNotebooks
 } from './helper';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
@@ -43,12 +43,14 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
     let vscodeNotebook: IVSCodeNotebook;
     this.timeout(120_000);
     suiteSetup(async function () {
+        this.timeout(120_000);
         api = await initialize();
         if (!(await canRunNotebookTests())) {
             return this.skip();
         }
         await trustAllNotebooks();
-        await startJupyter(true);
+        await startJupyterServer();
+        await prewarmNotebooks();
         sinon.restore();
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
@@ -57,9 +59,10 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
     setup(async function () {
         traceInfo(`Start Test ${this.currentTest?.title}`);
         sinon.restore();
+        await startJupyterServer();
         // Open a notebook and use this for all tests in this test suite.
         await editorProvider.createNew();
-        await waitForKernelToGetAutoSelected();
+        await waitForKernelToGetAutoSelected(undefined);
         await deleteAllCellsAndWait();
         assert.isOk(vscodeNotebook.activeNotebookEditor, 'No active notebook');
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
@@ -68,7 +71,6 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         traceInfo(`Ended Test ${this.currentTest?.title}`);
         // Added temporarily to identify why tests are failing.
         process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT = undefined;
-        await closeNotebooks(disposables);
         await closeNotebooksAndCleanUpAfterTests(disposables);
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });

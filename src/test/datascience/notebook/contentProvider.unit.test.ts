@@ -16,11 +16,12 @@ import type {
 } from '../../../../types/vscode-proposed';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
+import { disposeAllDisposables } from '../../../client/common/helpers';
 import { ICryptoUtils } from '../../../client/common/types';
 import { NotebookContentProvider } from '../../../client/datascience/notebook/contentProvider';
 import { NotebookEditorCompatibilitySupport } from '../../../client/datascience/notebook/notebookEditorCompatibilitySupport';
 import { INotebookStorageProvider } from '../../../client/datascience/notebookStorage/notebookStorageProvider';
-import { createNotebookModel, disposeAllDisposables } from './helper';
+import { createNotebookModel } from './helper';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 suite('DataScience - NativeNotebook ContentProvider', () => {
     let storageProvider: INotebookStorageProvider;

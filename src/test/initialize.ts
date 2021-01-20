@@ -1,12 +1,13 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 import type { IExtensionApi } from '../client/api';
+import { disposeAllDisposables } from '../client/common/helpers';
 import type { IDisposable } from '../client/common/types';
 import { clearPendingChainedUpdatesForTests } from '../client/datascience/notebook/helpers/notebookUpdater';
 import { clearPendingTimers, IExtensionTestApi, PYTHON_PATH, setPythonPathInWorkspaceRoot } from './common';
 import { IS_SMOKE_TEST, JVSC_EXTENSION_ID_FOR_TESTS } from './constants';
 import { sleep } from './core';
-import { disposeAllDisposables } from './datascience/notebook/helper';
+import { startJupyterServer } from './datascience/notebook/helper';
 
 export * from './constants';
 export * from './ciConstants';
@@ -23,10 +24,17 @@ export async function initializePython() {
 export function isInsiders() {
     return vscode.env.appName.indexOf('Insider') > 0;
 }
+
+let jupyterServerStarted = false;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function initialize(): Promise<IExtensionTestApi> {
     await initializePython();
     const api = await activateExtension();
+    // Ensure we start jupyter server before opening any notebooks or the like.
+    if (!jupyterServerStarted) {
+        jupyterServerStarted = true;
+        await startJupyterServer((api as unknown) as IExtensionTestApi);
+    }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (api as any) as IExtensionTestApi;
 }
@@ -107,7 +115,7 @@ async function closeWindowsInternal() {
     } catch (ex) {
         if (ex instanceof CloseEditorsTimeoutError) {
             // Try again with a smaller timeout (no idea why VSCode is timeout out here).
-            sleep(500); // Possible VSC is busy & wasn't able to handle previous command.
+            await sleep(500); // Possible VSC is busy & wasn't able to handle previous command.
             await closeWindowsImplementation(5_000);
         } else {
             throw ex;

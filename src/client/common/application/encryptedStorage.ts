@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { inject, injectable } from 'inversify';
-import { env } from 'vscode';
+import { env, ExtensionMode } from 'vscode';
+import { IS_REMOTE_NATIVE_TEST } from '../../../test/constants';
+import { IExtensionContext } from '../types';
 import { IApplicationEnvironment, IAuthenticationService, IEncryptedStorage } from './types';
 
 declare const __webpack_require__: typeof require;
@@ -38,10 +40,18 @@ const keytar = getNodeModule<KeyTar>('keytar');
 export class EncryptedStorage implements IEncryptedStorage {
     constructor(
         @inject(IApplicationEnvironment) private readonly appEnv: IApplicationEnvironment,
-        @inject(IAuthenticationService) private readonly authenService: IAuthenticationService
+        @inject(IAuthenticationService) private readonly authenService: IAuthenticationService,
+        @inject(IExtensionContext) private readonly extensionContext: IExtensionContext
     ) {}
 
+    private readonly testingState = new Map<string, string>();
+
     public async store(service: string, key: string, value: string | undefined): Promise<void> {
+        // On CI we don't need to use keytar for testing (else it hangs).
+        if (IS_REMOTE_NATIVE_TEST && this.extensionContext.extensionMode !== ExtensionMode.Production) {
+            this.testingState.set(`${service}#${key}`, value || '');
+            return;
+        }
         // When not in insiders, use keytar
         if (this.appEnv.channel !== 'insiders') {
             if (!value) {
@@ -58,6 +68,10 @@ export class EncryptedStorage implements IEncryptedStorage {
         }
     }
     public async retrieve(service: string, key: string): Promise<string | undefined> {
+        // On CI we don't need to use keytar for testing (else it hangs).
+        if (IS_REMOTE_NATIVE_TEST && this.extensionContext.extensionMode !== ExtensionMode.Production) {
+            return this.testingState.get(`${service}#${key}`);
+        }
         // When not in insiders, use keytar
         if (this.appEnv.channel !== 'insiders') {
             const val = await keytar?.getPassword(service, key);

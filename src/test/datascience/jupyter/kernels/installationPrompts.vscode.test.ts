@@ -15,7 +15,7 @@ import { Common, DataScience } from '../../../../client/common/utils/localize';
 import { INotebookEditorProvider } from '../../../../client/datascience/types';
 import { IS_CI_SERVER } from '../../../ciConstants';
 import { getOSType, IExtensionTestApi, OSType, waitForCondition } from '../../../common';
-import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../../constants';
+import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST } from '../../../constants';
 import { closeActiveWindows, initialize } from '../../../initialize';
 import { openNotebook } from '../../helpers';
 import {
@@ -50,6 +50,9 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
     */
     suiteSetup(async function () {
         // These are slow tests, hence lets run only on linux on CI.
+        if (IS_REMOTE_NATIVE_TEST) {
+            return this.skip();
+        }
         if ((IS_CI_SERVER && getOSType() !== OSType.Linux) || !fs.pathExistsSync(venvPythonPath)) {
             // Virtual env does not exist.
             return this.skip();

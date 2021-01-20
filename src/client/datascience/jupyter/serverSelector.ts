@@ -52,6 +52,35 @@ export class JupyterServerSelector {
         const multiStep = this.multiStepFactory.create<{}>();
         return multiStep.run(this.startSelectingURI.bind(this, allowLocal), {});
     }
+    @captureTelemetry(Telemetry.SetJupyterURIToLocal)
+    public async setJupyterURIToLocal(): Promise<void> {
+        const previousValue = await this.serverUriStorage.getUri();
+        await this.serverUriStorage.setUri(Settings.JupyterServerLocalLaunch);
+
+        // Reload if there's a change
+        if (previousValue !== Settings.JupyterServerLocalLaunch) {
+            this.cmdManager
+                .executeCommand('jupyter.reloadVSCode', DataScience.reloadAfterChangingJupyterServerConnection())
+                .then(noop, noop);
+        }
+    }
+
+    public async setJupyterURIToRemote(userURI: string): Promise<void> {
+        const previousValue = await this.serverUriStorage.getUri();
+        await this.serverUriStorage.setUri(userURI);
+
+        // Indicate setting a jupyter URI to a remote setting. Check if an azure remote or not
+        sendTelemetryEvent(Telemetry.SetJupyterURIToUserSpecified, undefined, {
+            azure: userURI.toLowerCase().includes('azure')
+        });
+
+        // Reload if there's a change
+        if (previousValue !== userURI) {
+            this.cmdManager
+                .executeCommand('jupyter.reloadVSCode', DataScience.reloadAfterChangingJupyterServerConnection())
+                .then(noop, noop);
+        }
+    }
 
     private async startSelectingURI(
         allowLocal: boolean,
@@ -143,35 +172,6 @@ export class JupyterServerSelector {
         }
     }
 
-    @captureTelemetry(Telemetry.SetJupyterURIToLocal)
-    private async setJupyterURIToLocal(): Promise<void> {
-        const previousValue = await this.serverUriStorage.getUri();
-        await this.serverUriStorage.setUri(Settings.JupyterServerLocalLaunch);
-
-        // Reload if there's a change
-        if (previousValue !== Settings.JupyterServerLocalLaunch) {
-            this.cmdManager
-                .executeCommand('jupyter.reloadVSCode', DataScience.reloadAfterChangingJupyterServerConnection())
-                .then(noop, noop);
-        }
-    }
-
-    private async setJupyterURIToRemote(userURI: string): Promise<void> {
-        const previousValue = await this.serverUriStorage.getUri();
-        await this.serverUriStorage.setUri(userURI);
-
-        // Indicate setting a jupyter URI to a remote setting. Check if an azure remote or not
-        sendTelemetryEvent(Telemetry.SetJupyterURIToUserSpecified, undefined, {
-            azure: userURI.toLowerCase().includes('azure')
-        });
-
-        // Reload if there's a change
-        if (previousValue !== userURI) {
-            this.cmdManager
-                .executeCommand('jupyter.reloadVSCode', DataScience.reloadAfterChangingJupyterServerConnection())
-                .then(noop, noop);
-        }
-    }
     private validateSelectJupyterURI = async (inputText: string): Promise<string | undefined> => {
         try {
             // eslint-disable-next-line @typescript-eslint/no-unused-expressions
@@ -192,10 +192,10 @@ export class JupyterServerSelector {
         const providers = await this.extraUriProviders.getProviders();
         if (providers) {
             providers.forEach((p) => {
-                const newproviderItems = p.getQuickPickEntryItems().map((i) => {
+                const newProviderItems = p.getQuickPickEntryItems().map((i) => {
                     return { ...i, newChoice: false, provider: p };
                 });
-                providerItems = providerItems.concat(newproviderItems);
+                providerItems = providerItems.concat(newProviderItems);
             });
         }
 

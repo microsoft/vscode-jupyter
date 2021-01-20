@@ -12,6 +12,7 @@ import { NotebookCell } from '../../../../typings/vscode-proposed';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { IDisposable } from '../../../client/common/types';
 import { IExtensionTestApi, waitForCondition } from '../../common';
+import { IS_REMOTE_NATIVE_TEST } from '../../constants';
 import { closeActiveWindows, EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../initialize';
 import { openNotebook } from '../helpers';
 import {
@@ -49,7 +50,7 @@ suite('DataScience - VSCode Notebook - (Saving) (slow)', function () {
     let testEmptyIPynb: Uri;
     suiteSetup(async function () {
         api = await initialize();
-        if (!(await canRunNotebookTests())) {
+        if (IS_REMOTE_NATIVE_TEST || !(await canRunNotebookTests())) {
             return this.skip();
         }
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
@@ -61,7 +62,6 @@ suite('DataScience - VSCode Notebook - (Saving) (slow)', function () {
         // Coz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
         testEmptyIPynb = Uri.file(await createTemporaryNotebook(templateIPynbEmpty, disposables));
     });
-    // teardown(async () => closeNotebooksAndCleanUpAfterTests(disposables));
     teardown(() => closeNotebooks(disposables));
     suiteTeardown(closeNotebooksAndCleanUpAfterTests);
     test('Verify output & metadata when re-opening (slow)', async () => {

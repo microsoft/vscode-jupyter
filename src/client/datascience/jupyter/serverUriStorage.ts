@@ -121,7 +121,6 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
     public async setUri(uri: string) {
         // Set the URI as our current state
         this.currentUriPromise = Promise.resolve(uri);
-
         if (uri === Settings.JupyterServerLocalLaunch) {
             // Just save directly into the settings
             await this.updateServerType(Settings.JupyterServerLocalLaunch);
