@@ -156,7 +156,6 @@ export class JupyterNotebookBase implements INotebook {
     private _resource: Resource;
     private _identity: Uri;
     private _disposed: boolean = false;
-    private _isRestarting: boolean = false;
     private _workingDirectory: string | undefined;
     private _executionInfo: INotebookExecutionInfo;
     private onStatusChangedEvent: EventEmitter<ServerStatus> | undefined;
@@ -168,9 +167,6 @@ export class JupyterNotebookBase implements INotebook {
     }
     public get disposed() {
         return this._disposed;
-    }
-    public get isRestarting() {
-        return this._isRestarting;
     }
     private kernelChanged = new EventEmitter<KernelConnectionMetadata>();
     public get onKernelRestarted(): Event<void> {
@@ -751,10 +747,6 @@ export class JupyterNotebookBase implements INotebook {
         } else {
             throw new Error(localize.DataScience.sessionDisposed());
         }
-    }
-
-    public setIsRestarting(isRestarting: boolean) {
-        this._isRestarting = isRestarting;
     }
 
     private async logKernelStarted() {

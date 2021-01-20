@@ -178,7 +178,6 @@ export interface INotebook extends IAsyncDisposable {
     readonly status: ServerStatus;
     readonly disposed: boolean;
     readonly session: IJupyterSession; // Temporary. This just makes it easier to write a notebook that works with VS code types.
-    readonly isRestarting: boolean;
     onSessionStatusChanged: Event<ServerStatus>;
     onDisposed: Event<void>;
     onKernelChanged: Event<KernelConnectionMetadata>;
@@ -240,7 +239,6 @@ export interface INotebook extends IAsyncDisposable {
         hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>
     ): void;
     removeMessageHook(msgId: string, hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>): void;
-    setIsRestarting(isRestarting: boolean): void;
 }
 
 // Options for connecting to a notebook provider
@@ -1223,7 +1221,6 @@ export interface INotebookProvider {
      * @param kernel kernel that it was changed to.
      */
     firePotentialKernelChanged(identity: Uri, kernel: KernelConnectionMetadata): void;
-    fireStatusChanged(restartingKernel: boolean, notebook: INotebook | undefined): void;
 }
 
 export const IJupyterServerProvider = Symbol('IJupyterServerProvider');
