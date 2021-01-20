@@ -107,11 +107,11 @@ export class Kernel implements IKernel {
         );
     }
     public async executeCell(cell: NotebookCell): Promise<void> {
-        await this.start({ disableUI: false, token: this.startCancellation.token });
+        await this.start({ disableUI: false });
         await this.kernelExecution.executeCell(cell);
     }
     public async executeAllCells(document: NotebookDocument): Promise<void> {
-        await this.start({ disableUI: false, token: this.startCancellation.token });
+        await this.start({ disableUI: false });
         await this.kernelExecution.executeAllCells(document);
     }
     public async cancelCell(cell: NotebookCell) {
@@ -122,7 +122,7 @@ export class Kernel implements IKernel {
         this.startCancellation.cancel();
         this.kernelExecution.cancelAllCells(document);
     }
-    public async start(options?: { disableUI?: boolean; token?: CancellationToken }): Promise<void> {
+    public async start(options?: { disableUI?: boolean }): Promise<void> {
         if (this.restarting) {
             await this.restarting.promise;
         }
@@ -130,6 +130,7 @@ export class Kernel implements IKernel {
             await this._notebookPromise;
             return;
         } else {
+            this.startCancellation = new CancellationTokenSource();
             await this.validate(this.uri);
             this._notebookPromise = this.notebookProvider.getOrCreateNotebook({
                 identity: this.uri,
@@ -138,7 +139,7 @@ export class Kernel implements IKernel {
                 getOnly: false,
                 metadata: undefined, // No need to pass this, as we have a kernel connection (metadata is required in lower layers to determine the kernel connection).
                 kernelConnection: this.kernelConnectionMetadata,
-                token: options?.token
+                token: this.startCancellation.token
             });
 
             this._notebookPromise

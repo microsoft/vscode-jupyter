@@ -13,7 +13,7 @@ import { KernelDaemonPool } from '../../client/datascience/kernel-launcher/kerne
 import { KernelLauncher } from '../../client/datascience/kernel-launcher/kernelLauncher';
 import { IKernelConnection, IKernelFinder } from '../../client/datascience/kernel-launcher/types';
 import { createRawKernel } from '../../client/datascience/raw-kernel/rawKernel';
-import { IJupyterKernelSpec } from '../../client/datascience/types';
+import { IJupyterKernelSpec, IKernelDependencyService } from '../../client/datascience/types';
 import { PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { sleep, waitForCondition } from '../common';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
@@ -54,8 +54,10 @@ suite('DataScience - Kernel Launcher', () => {
             fileSystem,
             daemonPool,
             extensionChecker,
-            ioc.get<KernelEnvironmentVariablesService>(KernelEnvironmentVariablesService)
+            ioc.get<KernelEnvironmentVariablesService>(KernelEnvironmentVariablesService),
+            ioc.get<IKernelDependencyService>(IKernelDependencyService)
         );
+
         await ioc.activate();
         if (!ioc.mockJupyter) {
             pythonInterpreter = await ioc.getJupyterCapableInterpreter();
@@ -83,6 +85,7 @@ suite('DataScience - Kernel Launcher', () => {
             const deferred = createDeferred<boolean>();
             const kernel = await kernelLauncher.launch(
                 { kernelSpec, kind: 'startUsingKernelSpec' },
+                -1,
                 undefined,
                 process.cwd()
             );
@@ -129,6 +132,7 @@ suite('DataScience - Kernel Launcher', () => {
 
             const kernel = await kernelLauncher.launch(
                 { kernelSpec: spec, kind: 'startUsingKernelSpec' },
+                -1,
                 undefined,
                 process.cwd()
             );
@@ -163,6 +167,7 @@ suite('DataScience - Kernel Launcher', () => {
         } else {
             const kernel = await kernelLauncher.launch(
                 { kernelSpec, kind: 'startUsingKernelSpec' },
+                -1,
                 undefined,
                 process.cwd()
             );

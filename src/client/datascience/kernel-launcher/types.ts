@@ -15,8 +15,10 @@ export const IKernelLauncher = Symbol('IKernelLauncher');
 export interface IKernelLauncher {
     launch(
         kernelConnectionMetadata: KernelSpecConnectionMetadata | PythonKernelConnectionMetadata,
+        timeout: number,
         resource: Resource,
-        workingDirectory: string
+        workingDirectory: string,
+        cancelToken?: CancellationToken
     ): Promise<IKernelProcess>;
 }
 
