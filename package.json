@@ -603,6 +603,16 @@
                 "enablement": "notebookViewType == jupyter-notebook && !jupyter.isnotebooktrusted && jupyter.trustfeatureenabled"
             },
             {
+                "command": "jupyter.notebookeditor.trusted",
+                "title": "%DataScience.notebookIsTrusted%",
+                "category": "Jupyter",
+                "icon": {
+                    "light": "resources/light/trusted.svg",
+                    "dark": "resources/dark/trusted.svg"
+                },
+                "enablement": "notebookViewType == jupyter-notebook && jupyter.isnotebooktrusted && jupyter.trustfeatureenabled"
+            },
+            {
                 "command": "jupyter.notebookeditor.runallcells",
                 "title": "%jupyter.command.jupyter.notebookeditor.runallcells.title%",
                 "category": "Jupyter"
@@ -783,6 +793,12 @@
                     "title": "%DataScience.trustNotebookCommandTitle%",
                     "group": "navigation@1",
                     "when": "resourceLangId == jupyter && notebookViewType == 'jupyter-notebook' && !jupyter.isnotebooktrusted && jupyter.trustfeatureenabled"
+                },
+                {
+                    "command": "jupyter.notebookeditor.trusted",
+                    "title": "%DataScience.notebookIsTrusted%",
+                    "group": "navigation@1",
+                    "when": "resourceLangId == jupyter && notebookViewType == 'jupyter-notebook' && jupyter.isnotebooktrusted && jupyter.trustfeatureenabled"
                 },
                 {
                     "command": "jupyter.notebookeditor.export",

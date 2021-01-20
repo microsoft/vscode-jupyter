@@ -122,6 +122,7 @@ export namespace Commands {
     export const OpenNotebookNonCustomEditor = 'jupyter.notebookeditor.open';
     export const LatestExtension = 'jupyter.latestExtension';
     export const TrustNotebook = 'jupyter.notebookeditor.trust';
+    export const NotebookTrusted = 'jupyter.notebookeditor.trusted';
     export const EnableLoadingWidgetsFrom3rdPartySource = 'jupyter.enableLoadingWidgetScriptsFromThirdPartySource';
     export const NotebookEditorExpandAllCells = 'jupyter.notebookeditor.expandallcells';
     export const NotebookEditorCollapseAllCells = 'jupyter.notebookeditor.collapseallcells';
