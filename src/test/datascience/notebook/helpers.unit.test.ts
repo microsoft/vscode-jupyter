@@ -52,11 +52,9 @@ suite('DataScience - NativeNotebook helpers', () => {
                     editable: true,
                     executionOrder: 10,
                     hasExecutionOrder: true,
-                    runState: vscodeNotebookEnums.NotebookCellRunState.Success,
+                    runState: vscodeNotebookEnums.NotebookCellRunState.Idle,
                     runnable: true,
-                    statusMessage: undefined,
-                    runStartTime: undefined,
-                    lastRunDuration: undefined
+                    statusMessage: undefined
                 }
             },
             {
