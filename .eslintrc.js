@@ -71,7 +71,6 @@ module.exports = {
         'src/test/standardTest.ts',
         'src/test/testBootstrap.ts',
         'src/test/testLogger.ts',
-        'src/test/testRunner.ts',
         'src/test/textUtils.ts',
         'src/test/unittests.ts',
         'src/test/vscode-mock.ts',
