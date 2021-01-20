@@ -7,7 +7,7 @@ import { Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
 import { IPythonExtensionChecker } from '../../api/types';
-import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../common/application/types';
+import { IApplicationShell, ILiveShareApi, IVSCodeNotebook, IWorkspaceService } from '../../common/application/types';
 import '../../common/extensions';
 import { IFileSystem } from '../../common/platform/types';
 
@@ -59,7 +59,8 @@ type RawNotebookProviderClassType = {
         rawKernelSupported: IRawNotebookSupportedService,
         kernelDependencyService: IKernelDependencyService,
         kernelService: KernelService,
-        extensionChecker: IPythonExtensionChecker
+        extensionChecker: IPythonExtensionChecker,
+        vscNotebook: IVSCodeNotebook
     ): IRawNotebookProviderInterface;
 };
 /* eslint-enable @typescript-eslint/prefer-function-type */
@@ -87,7 +88,8 @@ export class RawNotebookProviderWrapper implements IRawNotebookProvider, ILiveSh
         @inject(IRawNotebookSupportedService) rawNotebookSupported: IRawNotebookSupportedService,
         @inject(IKernelDependencyService) kernelDependencyService: IKernelDependencyService,
         @inject(KernelService) kernelService: KernelService,
-        @inject(IPythonExtensionChecker) extensionChecker: IPythonExtensionChecker
+        @inject(IPythonExtensionChecker) extensionChecker: IPythonExtensionChecker,
+        @inject(IVSCodeNotebook) vscNotebook: IVSCodeNotebook
     ) {
         // The server factory will create the appropriate HostRawNotebookProvider or GuestRawNotebookProvider based on
         // the liveshare state.
@@ -111,7 +113,8 @@ export class RawNotebookProviderWrapper implements IRawNotebookProvider, ILiveSh
             rawNotebookSupported,
             kernelDependencyService,
             kernelService,
-            extensionChecker
+            extensionChecker,
+            vscNotebook
         );
     }
 

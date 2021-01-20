@@ -268,7 +268,8 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
                     this.getDisposedError.bind(this),
                     this.workspaceService,
                     this.appService,
-                    this.fs
+                    this.fs,
+                    this.vscodeNotebook
                 );
 
                 // Wait for it to be ready
