@@ -12,6 +12,7 @@ import {
 } from 'vscode';
 import { IVSCodeNotebook } from '../../../common/application/types';
 import { traceError } from '../../../common/logger';
+import { IFileSystem } from '../../../common/platform/types';
 import { sleep } from '../../../common/utils/async';
 import { isNotebookCell } from '../../../common/utils/misc';
 import { Settings } from '../../constants';
@@ -22,7 +23,8 @@ import { findAssociatedNotebookDocument } from '../helpers/helpers';
 export class NotebookCompletionProvider implements CompletionItemProvider {
     constructor(
         @inject(IVSCodeNotebook) private readonly vscodeNotebook: IVSCodeNotebook,
-        @inject(INotebookProvider) private readonly notebookProvider: INotebookProvider
+        @inject(INotebookProvider) private readonly notebookProvider: INotebookProvider,
+        @inject(IFileSystem) private readonly fs: IFileSystem
     ) {}
     public async provideCompletionItems(
         document: TextDocument,
@@ -34,7 +36,7 @@ export class NotebookCompletionProvider implements CompletionItemProvider {
             return [];
         }
 
-        const notebookDocument = findAssociatedNotebookDocument(document.uri, this.vscodeNotebook);
+        const notebookDocument = findAssociatedNotebookDocument(document.uri, this.vscodeNotebook, this.fs);
         if (!notebookDocument) {
             traceError(`Notebook not found for Cell ${document.uri.toString()}`);
             return [];
