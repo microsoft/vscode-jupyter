@@ -4,7 +4,6 @@
 import { inject, injectable } from 'inversify';
 import { ConfigurationTarget, languages } from 'vscode';
 import { NotebookContentProvider as VSCNotebookContentProvider } from '../../../../types/vscode-proposed';
-import { completionTriggerCharacters } from '../../../datascience-ui/interactive-common/intellisenseProvider';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import {
     IApplicationEnvironment,
@@ -106,7 +105,7 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
         const disposable = languages.registerCompletionItemProvider(
             { language: PYTHON_LANGUAGE, scheme: NotebookCellScheme },
             this.completionProvider,
-            ...completionTriggerCharacters
+            '.'
         );
         this.disposables.push(disposable);
     }
