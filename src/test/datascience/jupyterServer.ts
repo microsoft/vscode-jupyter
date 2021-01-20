@@ -39,7 +39,7 @@ export class JupyterServer implements IAsyncDisposable {
                 const port = await this.getFreePort();
                 // Possible previous instance of jupyter has not completely shutdown.
                 // Wait for it to shutdown fully so that we can re-use the same port.
-                await tcpPortUsed.waitUntilUsed(port, 200, 10_000);
+                await tcpPortUsed.waitUntilFree(port, 200, 10_000);
                 try {
                     await this.startJupyterServer({
                         port,
