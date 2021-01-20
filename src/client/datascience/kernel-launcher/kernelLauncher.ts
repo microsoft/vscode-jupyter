@@ -26,8 +26,8 @@ import { KernelEnvironmentVariablesService } from './kernelEnvVarsService';
 import { KernelProcess } from './kernelProcess';
 import { IKernelConnection, IKernelLauncher, IKernelProcess, IpyKernelNotInstalledError } from './types';
 import * as localize from '../../common/utils/localize';
-import { createDeferredFromPromise, Deferred, waitForPromise } from '../../common/utils/async';
-import { CancellationError, createPromiseFromCancellation, TimedOutError } from '../../common/cancellation';
+import { createDeferredFromPromise, Deferred } from '../../common/utils/async';
+import { CancellationError } from '../../common/cancellation';
 
 const PortFormatString = `kernelLauncherPortStart_{0}.tmp`;
 
@@ -104,37 +104,15 @@ export class KernelLauncher implements IKernelLauncher {
         }
 
         // Should be available now, wait with a timeout
-        const result = await waitForPromise(
-            Promise.race([
-                this.launchProcess(kernelConnectionMetadata, resource, workingDirectory),
-                createPromiseFromCancellation({
-                    cancelAction: 'reject',
-                    defaultValue: new CancellationError(),
-                    token: cancelToken
-                })
-            ]),
-            timeout
-        );
-
-        // The race will return this if a cancellation occurs
-        if (result instanceof CancellationError) {
-            throw result;
-        }
-
-        // waitForPromise will return null if a timeout occurs
-        if (!result) {
-            throw new TimedOutError(localize.DataScience.rawKernelProcessNotStarted());
-        }
-
-        // Otherwise launchProcess returns our IKernelProcess. It will throw
-        // if the kernel fails to start.
-        return result;
+        return await this.launchProcess(kernelConnectionMetadata, resource, workingDirectory, timeout, cancelToken);
     }
 
     private async launchProcess(
         kernelConnectionMetadata: KernelSpecConnectionMetadata | PythonKernelConnectionMetadata,
         resource: Resource,
-        workingDirectory: string
+        workingDirectory: string,
+        timeout: number,
+        cancelToken?: CancellationToken
     ): Promise<IKernelProcess> {
         const connection = await this.getKernelConnection(kernelConnectionMetadata);
         const kernelProcess = new KernelProcess(
@@ -147,7 +125,13 @@ export class KernelLauncher implements IKernelLauncher {
             this.extensionChecker,
             this.kernelEnvVarsService
         );
-        await kernelProcess.launch(workingDirectory);
+        await kernelProcess.launch(workingDirectory, timeout, cancelToken);
+
+        // Double check for cancel
+        if (cancelToken?.isCancellationRequested) {
+            await kernelProcess.dispose();
+            throw new CancellationError();
+        }
         return kernelProcess;
     }
 

@@ -6,9 +6,9 @@ import { ChildProcess } from 'child_process';
 import * as fs from 'fs-extra';
 import * as tcpPortUsed from 'tcp-port-used';
 import * as tmp from 'tmp';
-import { CancellationTokenSource, Event, EventEmitter } from 'vscode';
+import { CancellationToken, CancellationTokenSource, Event, EventEmitter } from 'vscode';
 import { IPythonExtensionChecker } from '../../api/types';
-import { createPromiseFromCancellation } from '../../common/cancellation';
+import { createPromiseFromCancellation, TimedOutError, wrapCancellationTokens } from '../../common/cancellation';
 import { traceDecorators, traceError, traceInfo, traceWarning } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IProcessServiceFactory, ObservableExecutionResult } from '../../common/process/types';
@@ -72,7 +72,7 @@ export class KernelProcess implements IKernelProcess {
     }
 
     @captureTelemetry(Telemetry.RawKernelProcessLaunch, undefined, true)
-    public async launch(workingDirectory: string): Promise<void> {
+    public async launch(workingDirectory: string, timeout: number, cancelToken?: CancellationToken): Promise<void> {
         if (this.launchedOnce) {
             throw new Error('Kernel has already been launched.');
         }
@@ -88,6 +88,7 @@ export class KernelProcess implements IKernelProcess {
         let stderrProc = '';
         let exitEventFired = false;
         const cancelWaiting = new CancellationTokenSource();
+        const combinedToken = wrapCancellationTokens(cancelWaiting.token, cancelToken);
 
         exeObs.proc!.on('exit', (exitCode) => {
             traceInfo('KernelProcess Exit', `Exit - ${exitCode}`, stderrProc);
@@ -143,12 +144,12 @@ export class KernelProcess implements IKernelProcess {
             }
         );
 
-        // Don't return until our heartbeat channel is open for connections or the kernel died
+        // Don't return until our heartbeat channel is open for connections or the kernel died or we timed out
         try {
             await Promise.race([
-                tcpPortUsed.waitUntilUsed(this.connection.hb_port, 200, 30_000),
+                tcpPortUsed.waitUntilUsed(this.connection.hb_port, 200, timeout),
                 createPromiseFromCancellation({
-                    token: cancelWaiting.token,
+                    token: combinedToken,
                     cancelAction: 'reject',
                     defaultValue: undefined
                 })
@@ -167,7 +168,7 @@ export class KernelProcess implements IKernelProcess {
                 );
             } else {
                 traceError('Timed out waiting to get a heartbeat from kernel process.');
-                throw new Error(localize.DataScience.kernelTimeout().format(Commands.ViewJupyterOutput));
+                throw new TimedOutError(localize.DataScience.kernelTimeout().format(Commands.ViewJupyterOutput));
             }
         }
     }
