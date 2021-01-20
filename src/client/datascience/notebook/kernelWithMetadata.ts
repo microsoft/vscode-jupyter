@@ -69,9 +69,16 @@ export class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
         });
     }
 
-    private chainExecution(next: () => Promise<void>): Promise<void> {
-        const prev = this.pendingExecution ?? Promise.resolve();
-        this.pendingExecution = prev.then(next);
+    private async chainExecution(next: () => Promise<void>): Promise<void> {
+        if (this.pendingExecution) {
+            try {
+                await this.pendingExecution;
+            } catch (e) {
+                // Errors are handled elsewhere
+                traceInfo(`Kernel execution previous failure: ${e}`);
+            }
+        }
+        this.pendingExecution = next();
         return this.pendingExecution;
     }
 }
