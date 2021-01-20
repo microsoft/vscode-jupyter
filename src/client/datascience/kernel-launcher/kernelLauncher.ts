@@ -116,14 +116,18 @@ export class KernelLauncher implements IKernelLauncher {
             timeout
         );
 
+        // The race will return this if a cancellation occurs
         if (result instanceof CancellationError) {
             throw result;
         }
 
+        // waitForPromise will return null if a timeout occurs
         if (!result) {
             throw new TimedOutError(localize.DataScience.rawKernelProcessNotStarted());
         }
 
+        // Otherwise launchProcess returns our IKernelProcess. It will throw
+        // if the kernel fails to start.
         return result;
     }
 
