@@ -1110,6 +1110,12 @@
                     "when": "notebookEditorFocused && !jupyter.isnotebooktrusted && jupyter.trustfeatureenabled"
                 },
                 {
+                    "command": "jupyter.notebookeditor.trusted",
+                    "title": "%DataScience.notebookIsTrusted%",
+                    "category": "Jupyter",
+                    "when": "false"
+                },
+                {
                     "command": "jupyter.notebookeditor.runallcells",
                     "title": "%jupyter.command.jupyter.notebookeditor.runallcells.title%",
                     "category": "Jupyter",

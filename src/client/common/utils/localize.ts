@@ -934,6 +934,10 @@ export namespace DataScience {
     );
     export const trustNotebook = localize('DataScience.launchNotebookTrustPrompt.yes', 'Trust');
     export const doNotTrustNotebook = localize('DataScience.launchNotebookTrustPrompt.no', 'Do not trust');
+    export const notebookIsAlreadyTrusted = localize(
+        'DataScience.notebookIsAlreadyTrusted',
+        'This notebook is already trusted.'
+    );
     export const trustAllNotebooks = localize(
         'DataScience.launchNotebookTrustPrompt.trustAllNotebooks',
         'Trust all notebooks'
