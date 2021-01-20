@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable } from 'inversify';
+import { IS_NON_RAW_NATIVE_TEST } from '../../../test/constants';
 import { traceError, traceInfo } from '../../common/logger';
 import { IConfigurationService } from '../../common/types';
 import { sendTelemetryEvent } from '../../telemetry';
@@ -53,6 +54,9 @@ export class RawNotebookSupportedService implements IRawNotebookSupportedService
     }
 
     private async zmqSupportedImpl(): Promise<boolean> {
+        if (IS_NON_RAW_NATIVE_TEST) {
+            return false;
+        }
         try {
             await import('zeromq');
             traceInfo(`ZMQ install verified.`);

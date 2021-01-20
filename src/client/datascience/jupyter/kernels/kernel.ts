@@ -43,6 +43,9 @@ export class Kernel implements IKernel {
     get onDisposed(): Event<void> {
         return this._onDisposed.event;
     }
+    get onInterruptTimedOut(): Event<void> {
+        return this._onInterruptTimedOut.event;
+    }
     private _info?: KernelMessage.IInfoReplyMsg['content'];
     get info(): KernelMessage.IInfoReplyMsg['content'] | undefined {
         return this._info;
@@ -58,10 +61,12 @@ export class Kernel implements IKernel {
     }
     private notebook?: INotebook;
     private _disposed?: boolean;
+    private isRawNotebookSupported?: Promise<boolean>;
     private readonly _kernelSocket = new Subject<KernelSocketInformation | undefined>();
     private readonly _onStatusChanged = new EventEmitter<ServerStatus>();
     private readonly _onRestarted = new EventEmitter<void>();
     private readonly _onDisposed = new EventEmitter<void>();
+    private readonly _onInterruptTimedOut = new EventEmitter<void>();
     private _notebookPromise?: Promise<INotebook | undefined>;
     private readonly hookedNotebookForEvents = new WeakSet<INotebook>();
     private restarting?: Deferred<void>;
@@ -74,6 +79,7 @@ export class Kernel implements IKernel {
         private readonly notebookProvider: INotebookProvider,
         private readonly disposables: IDisposableRegistry,
         private readonly launchTimeout: number,
+        private readonly interruptTimeout: number,
         commandManager: ICommandManager,
         private readonly errorHandler: IDataScienceErrorHandler,
         private readonly editorProvider: INotebookEditorProvider,
@@ -81,7 +87,7 @@ export class Kernel implements IKernel {
         private readonly kernelSelectionUsage: IKernelSelectionUsage,
         appShell: IApplicationShell,
         vscNotebook: IVSCodeNotebook,
-        rawNotebookSupported: IRawNotebookSupportedService,
+        private readonly rawNotebookSupported: IRawNotebookSupportedService,
         private readonly fs: IFileSystem,
         context: IExtensionContext
     ) {
@@ -146,14 +152,32 @@ export class Kernel implements IKernel {
             await this.initializeAfterStart();
         }
     }
-    public async interrupt(): Promise<InterruptResult> {
+
+    public async interruptCell(cell: NotebookCell): Promise<InterruptResult> {
         if (this.restarting) {
             await this.restarting.promise;
         }
         if (!this.notebook) {
             throw new Error('No notebook to interrupt');
         }
-        return this.notebook.interruptKernel(this.launchTimeout);
+        const result = await this.kernelExecution.interruptCell(cell, this.interruptTimeout);
+        if (result === InterruptResult.TimedOut) {
+            this._onInterruptTimedOut.fire();
+        }
+        return result;
+    }
+    public async interruptAllCells(document: NotebookDocument): Promise<InterruptResult> {
+        if (this.restarting) {
+            await this.restarting.promise;
+        }
+        if (!this.notebook) {
+            throw new Error('No notebook to interrupt');
+        }
+        const result = await this.kernelExecution.interruptAllCells(document, this.interruptTimeout);
+        if (result === InterruptResult.TimedOut) {
+            this._onInterruptTimedOut.fire();
+        }
+        return result;
     }
     public async dispose(): Promise<void> {
         this.restarting = undefined;
@@ -192,19 +216,28 @@ export class Kernel implements IKernel {
         }
         const key = uri.toString();
         if (!this.kernelValidated.get(key)) {
+            this.isRawNotebookSupported =
+                this.isRawNotebookSupported || this.rawNotebookSupported.isSupportedForLocalLaunch();
+
             const promise = new Promise<void>((resolve) =>
-                this.kernelSelectionUsage
-                    .useSelectedKernel(kernel?.kernelConnectionMetadata, uri, 'raw')
-                    .finally(() => {
-                        // If still using the same promise, then remove the exception information.
-                        // Basically if there's an exception, then we cannot use the kernel and a message would have been displayed.
-                        // We don't want to cache such a promise, as its possible the user later installs the dependencies.
-                        if (this.kernelValidated.get(key)?.kernel === kernel) {
-                            this.kernelValidated.delete(key);
-                        }
-                    })
-                    .finally(resolve)
-                    .catch(noop)
+                this.isRawNotebookSupported!.then((isRawNotebookSupported) =>
+                    this.kernelSelectionUsage
+                        .useSelectedKernel(
+                            kernel?.kernelConnectionMetadata,
+                            uri,
+                            isRawNotebookSupported ? 'raw' : 'jupyter'
+                        )
+                        .finally(() => {
+                            // If still using the same promise, then remove the exception information.
+                            // Basically if there's an exception, then we cannot use the kernel and a message would have been displayed.
+                            // We don't want to cache such a promise, as its possible the user later installs the dependencies.
+                            if (this.kernelValidated.get(key)?.kernel === kernel) {
+                                this.kernelValidated.delete(key);
+                            }
+                        })
+                        .finally(resolve)
+                        .catch(noop)
+                )
             );
 
             this.kernelValidated.set(key, { kernel, promise });

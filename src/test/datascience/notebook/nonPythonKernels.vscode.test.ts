@@ -15,7 +15,7 @@ import { VSCodeNotebookProvider } from '../../../client/datascience/constants';
 import { NotebookCellLanguageService } from '../../../client/datascience/notebook/defaultCellLanguageService';
 import { INotebookEditorProvider } from '../../../client/datascience/types';
 import { IExtensionTestApi, waitForCondition } from '../../common';
-import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
+import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST, IS_NON_RAW_NATIVE_TEST } from '../../constants';
 import { initialize } from '../../initialize';
 import { openNotebook } from '../helpers';
 import {
@@ -81,7 +81,12 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
     const testJavaKernels = (process.env.VSC_JUPYTER_CI_RUN_JAVA_NB_TEST || '').toLowerCase() === 'true';
     suiteSetup(async function () {
         api = await initialize();
-        if (!process.env.VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST || !(await canRunNotebookTests())) {
+        if (
+            !process.env.VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST ||
+            !(await canRunNotebookTests()) ||
+            IS_REMOTE_NATIVE_TEST ||
+            IS_NON_RAW_NATIVE_TEST
+        ) {
             return this.skip();
         }
         await trustAllNotebooks();
@@ -102,9 +107,7 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         testEmptyPythonNb = Uri.file(await createTemporaryNotebook(emptyPythonNb, disposables));
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
     });
-    teardown(async () => {
-        await closeNotebooksAndCleanUpAfterTests(disposables);
-    });
+    teardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
     test('Automatically pick java kernel when opening a Java Notebook', async function () {
         return this.skip(); // Remove this when https://github.com/microsoft/vscode-jupyter/issues/4372 is fixed
         if (!testJavaKernels) {

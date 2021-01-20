@@ -2,7 +2,9 @@
 // Licensed under the MIT License.
 
 import { inject, injectable, named } from 'inversify';
+import { cloneDeep } from 'lodash';
 import { Memento, Uri } from 'vscode';
+import { traceInfo } from '../../common/logger';
 import { GLOBAL_MEMENTO, ICryptoUtils, IMemento } from '../../common/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
@@ -30,12 +32,16 @@ export class PreferredRemoteKernelIdProvider {
             // Not using a map as we're only going to store the last 40 items.
             const fileHash = this.crypto.createHash(uri.toString(), 'string');
             const entry = list.find((l) => l.fileHash === fileHash);
+            traceInfo(`Preferred kernel for ${uri.toString()} is ${entry?.kernelId}`);
             return entry?.kernelId;
         }
     }
 
     public async storePreferredRemoteKernelId(uri: Uri, id: string | undefined): Promise<void> {
-        const list: KernelIdListEntry[] = this.globalMemento.get<KernelIdListEntry[]>(ActiveKernelIdList, []);
+        // Don't update in memory representation.
+        const list: KernelIdListEntry[] = cloneDeep(
+            this.globalMemento.get<KernelIdListEntry[]>(ActiveKernelIdList, [])
+        );
         const fileHash = this.crypto.createHash(uri.toString(), 'string');
         const index = list.findIndex((l) => l.fileHash === fileHash);
         // Always remove old spot (we'll push on the back for new ones)
@@ -53,6 +59,7 @@ export class PreferredRemoteKernelIdProvider {
         while (list.length > MaximumKernelIdListSize) {
             list.shift();
         }
+        traceInfo(`Preferred kernel for ${uri.toString()} is ${id}`);
         await this.globalMemento.update(ActiveKernelIdList, list);
     }
 }

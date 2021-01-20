@@ -201,6 +201,9 @@ export class KernelProcess implements IKernelProcess {
                 `Creating a default kernel spec for use with interpreter ${this._kernelConnectionMetadata.interpreter.displayName} # ${this._kernelConnectionMetadata.interpreter.path}`
             );
             kernelSpec = createDefaultKernelSpec(this._kernelConnectionMetadata.interpreter);
+            traceInfo(
+                `Created a default kernel spec for use with interpreter ${kernelSpec.display_name} # ${kernelSpec.interpreterPath}`
+            );
         }
         // We always expect a kernel spec.
         if (!kernelSpec) {

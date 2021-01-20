@@ -18,6 +18,7 @@ import type {
     NotebookKernel as VSCNotebookKernel
 } from '../../../../../typings/vscode-proposed';
 import { concatMultilineString, splitMultilineString } from '../../../../datascience-ui/common';
+import { IVSCodeNotebook } from '../../../common/application/types';
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../common/constants';
 import '../../../common/extensions';
 import { traceError, traceInfo, traceWarning } from '../../../common/logger';
@@ -37,6 +38,8 @@ import cloneDeep = require('lodash/cloneDeep');
 import { Uri } from 'vscode';
 import { VSCodeNotebookKernelMetadata } from '../kernelWithMetadata';
 import { chainWithPendingUpdates } from './notebookUpdater';
+import { Resource } from '../../../common/types';
+import { IFileSystem } from '../../../common/platform/types';
 
 // This is the custom type we are adding into nbformat.IBaseCellMetadata
 export interface IBaseCellVSCodeMetadata {
@@ -71,6 +74,12 @@ const kernelInformationForNotebooks = new WeakMap<
     { metadata?: KernelConnectionMetadata | undefined; kernelInfo?: KernelMessage.IInfoReplyMsg['content'] }
 >();
 
+export function isResourceNativeNotebook(resource: Resource, notebooks: IVSCodeNotebook, fs: IFileSystem) {
+    if (!resource) {
+        return false;
+    }
+    return notebooks.notebookDocuments.some((item) => fs.arePathsSame(item.uri, resource));
+}
 export function getNotebookMetadata(document: NotebookDocument): nbformat.INotebookMetadata | undefined {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let notebookContent: Partial<nbformat.INotebookContent> = document.metadata.custom as any;
@@ -307,37 +316,14 @@ function createNotebookCellDataFromCodeCell(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const cellOutputs: nbformat.IOutput[] = Array.isArray(cell.outputs) ? cell.outputs : [];
     const outputs = createVSCCellOutputsFromOutputs(cellOutputs);
-    // If we have an execution count & no errors, then success state.
-    // If we have an execution count &  errors, then error state.
-    // Else idle state.
+    const runState = vscodeNotebookEnums.NotebookCellRunState.Idle;
     const hasErrors = outputs.some((output) => output.outputKind === vscodeNotebookEnums.CellOutputKind.Error);
     const hasExecutionCount = typeof cell.execution_count === 'number' && cell.execution_count > 0;
-    let runState: NotebookCellRunState;
     let statusMessage: string | undefined;
-    if (!hasExecutionCount) {
-        runState = vscodeNotebookEnums.NotebookCellRunState.Idle;
-    } else if (hasErrors) {
-        runState = vscodeNotebookEnums.NotebookCellRunState.Error;
+    if (hasExecutionCount && hasErrors) {
         // Error details are stripped from the output, get raw output.
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         statusMessage = getCellStatusMessageBasedOnFirstErrorOutput(cellOutputs);
-    } else {
-        runState = vscodeNotebookEnums.NotebookCellRunState.Success;
-    }
-
-    const vscodeMetadata = (cell.metadata.vscode as unknown) as IBaseCellVSCodeMetadata | undefined;
-    const startExecutionTime = vscodeMetadata?.start_execution_time
-        ? new Date(Date.parse(vscodeMetadata.start_execution_time)).getTime()
-        : undefined;
-    const endExecutionTime = vscodeMetadata?.end_execution_time
-        ? new Date(Date.parse(vscodeMetadata.end_execution_time)).getTime()
-        : undefined;
-
-    let runStartTime: undefined | number;
-    let lastRunDuration: undefined | number;
-    if (startExecutionTime && typeof endExecutionTime === 'number') {
-        runStartTime = startExecutionTime;
-        lastRunDuration = endExecutionTime - startExecutionTime;
     }
 
     const notebookCellMetadata: NotebookCellMetadata = {
@@ -347,8 +333,6 @@ function createNotebookCellDataFromCodeCell(
         runState,
         runnable: isNbTrusted,
         statusMessage,
-        runStartTime,
-        lastRunDuration,
         custom: getCustomNotebookCellMetadata(cell)
     };
 
