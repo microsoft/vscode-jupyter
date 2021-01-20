@@ -12,8 +12,10 @@ import {
 } from 'vscode';
 import { IVSCodeNotebook } from '../../../common/application/types';
 import { traceError } from '../../../common/logger';
+import { sleep } from '../../../common/utils/async';
 import { isNotebookCell } from '../../../common/utils/misc';
-import { INotebookProvider } from '../../types';
+import { Settings } from '../../constants';
+import { INotebookCompletion, INotebookProvider } from '../../types';
 import { findAssociatedNotebookDocument } from '../helpers/helpers';
 
 @injectable()
@@ -52,7 +54,11 @@ export class NotebookCompletionProvider implements CompletionItemProvider {
             traceError(`Live Notebook not available for ${notebookDocument.uri.toString()}`);
             return [];
         }
-        const result = await notebook.getCompletion(document.getText(), document.offsetAt(position), token);
+        const emptyResult: INotebookCompletion = { cursor: { end: 0, start: 0 }, matches: [], metadata: {} };
+        const result = await Promise.race([
+            notebook.getCompletion(document.getText(), document.offsetAt(position), token),
+            sleep(Settings.IntellisenseTimeout).then(() => emptyResult)
+        ]);
         return result.matches.map((item) => {
             const completion: CompletionItem = {
                 label: item
