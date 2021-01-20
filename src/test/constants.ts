@@ -11,6 +11,7 @@ export const TEST_RETRYCOUNT = 3;
 export const IS_SMOKE_TEST = process.env.VSC_JUPYTER_SMOKE_TEST === '1';
 export const IS_PERF_TEST = process.env.VSC_JUPYTER_PERF_TEST === '1';
 export const IS_REMOTE_NATIVE_TEST = (process.env.VSC_JUPYTER_REMOTE_NATIVE_TEST || '').toLowerCase() === 'true';
+export const IS_NON_RAW_NATIVE_TEST = (process.env.VSC_JUPYTER_NON_RAW_NATIVE_TEST || '').toLowerCase() === 'true';
 export const IS_MULTI_ROOT_TEST = isMultirootTest();
 
 // If running on CI server, then run debugger tests ONLY if the corresponding flag is enabled.
