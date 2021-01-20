@@ -94,7 +94,9 @@ export async function run(): Promise<void> {
                                 failures > 0 ? reject(new Error(`${failures} total failures`)) : resolve()
                             )
                         )
-                        .finally(() => stopJupyterServer().catch(noop))
+                        .finally(() => {
+                            stopJupyterServer().catch(noop);
+                        })
                         .catch(reject);
                 } catch (error) {
                     return reject(error);
