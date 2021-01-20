@@ -59,7 +59,7 @@ export class IntellisenseProvider
         readonly language: string
     ) {
         // Register a completion provider
-        // this.registerDisposables.push(monacoEditor.languages.registerCompletionItemProvider(language, this));
+        this.registerDisposables.push(monacoEditor.languages.registerCompletionItemProvider(language, this));
         this.registerDisposables.push(monacoEditor.languages.registerHoverProvider(language, this));
         this.registerDisposables.push(monacoEditor.languages.registerSignatureHelpProvider(language, this));
     }
