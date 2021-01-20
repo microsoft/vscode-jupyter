@@ -153,7 +153,7 @@ suite('DataScience - Kernel Launcher', () => {
             // Upon disposing, we should get an exit event within 100ms or less.
             // If this happens, then we know a process existed.
             await kernel.dispose();
-            assert.isRejected(
+            await assert.isRejected(
                 waitForCondition(() => exited, 100, 'Timeout'),
                 'Timeout'
             );
