@@ -69,6 +69,7 @@ export class Kernel implements IKernel {
     }
     private notebook?: INotebook;
     private _disposed?: boolean;
+    private isRawNotebookSupported?: Promise<boolean>;
     private readonly _kernelSocket = new Subject<KernelSocketInformation | undefined>();
     private readonly _onStatusChanged = new EventEmitter<ServerStatus>();
     private readonly _onRestarted = new EventEmitter<void>();
@@ -94,7 +95,7 @@ export class Kernel implements IKernel {
         private readonly kernelSelectionUsage: IKernelSelectionUsage,
         appShell: IApplicationShell,
         vscNotebook: IVSCodeNotebook,
-        rawNotebookSupported: IRawNotebookSupportedService,
+        private readonly rawNotebookSupported: IRawNotebookSupportedService,
         private readonly fs: IFileSystem,
         context: IExtensionContext
     ) {
@@ -222,19 +223,28 @@ export class Kernel implements IKernel {
         }
         const key = uri.toString();
         if (!this.kernelValidated.get(key)) {
+            this.isRawNotebookSupported =
+                this.isRawNotebookSupported || this.rawNotebookSupported.isSupportedForLocalLaunch();
+
             const promise = new Promise<void>((resolve) =>
-                this.kernelSelectionUsage
-                    .useSelectedKernel(kernel?.kernelConnectionMetadata, uri, 'raw')
-                    .finally(() => {
-                        // If still using the same promise, then remove the exception information.
-                        // Basically if there's an exception, then we cannot use the kernel and a message would have been displayed.
-                        // We don't want to cache such a promise, as its possible the user later installs the dependencies.
-                        if (this.kernelValidated.get(key)?.kernel === kernel) {
-                            this.kernelValidated.delete(key);
-                        }
-                    })
-                    .finally(resolve)
-                    .catch(noop)
+                this.isRawNotebookSupported!.then((isRawNotebookSupported) =>
+                    this.kernelSelectionUsage
+                        .useSelectedKernel(
+                            kernel?.kernelConnectionMetadata,
+                            uri,
+                            isRawNotebookSupported ? 'raw' : 'jupyter'
+                        )
+                        .finally(() => {
+                            // If still using the same promise, then remove the exception information.
+                            // Basically if there's an exception, then we cannot use the kernel and a message would have been displayed.
+                            // We don't want to cache such a promise, as its possible the user later installs the dependencies.
+                            if (this.kernelValidated.get(key)?.kernel === kernel) {
+                                this.kernelValidated.delete(key);
+                            }
+                        })
+                        .finally(resolve)
+                        .catch(noop)
+                )
             );
 
             this.kernelValidated.set(key, { kernel, promise });

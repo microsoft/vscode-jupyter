@@ -492,7 +492,7 @@ jobs:
         python: [3.8] # Use flaky tests to run against more versions of Python.
         # integration: Tests with VS Code, Python extension & real Jupyter
         # notebook: Notebook Tests with VS Code, Python extension & real Jupyter
-        test-suite: [integration, notebook, remoteNotebook, notebookWithoutPythonExt, conda]
+        test-suite: [integration, notebook, remoteNotebook, nonRawNotebook, notebookWithoutPythonExt, conda]
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -642,17 +642,17 @@ jobs:
         uses: actions/setup-dotnet@v1
         with:
           dotnet-version: ${{env.DOTNET_VERSION}}
-        if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook' || matrix.test-suite == 'remoteNotebook' || matrix.test-suite == 'conda'
+        if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook' || matrix.test-suite == 'nonRawNotebook' || matrix.test-suite == 'remoteNotebook' || matrix.test-suite == 'conda'
 
       - name: Install .NET Interactive
         shell: bash -l {0}
         run: dotnet tool install -g --add-source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json" Microsoft.dotnet-interactive
-        if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook' || matrix.test-suite == 'remoteNotebook' || matrix.test-suite == 'conda'
+        if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook' || matrix.test-suite == 'nonRawNotebook' || matrix.test-suite == 'remoteNotebook' || matrix.test-suite == 'conda'
 
       - name: Install .NET Kernel
         shell: bash -l {0}
         run: dotnet interactive jupyter install
-        if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook' || matrix.test-suite == 'remoteNotebook' || matrix.test-suite == 'conda'
+        if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook' || matrix.test-suite == 'nonRawNotebook' || matrix.test-suite == 'remoteNotebook' || matrix.test-suite == 'conda'
 
       - name: Install Julia
         uses: julia-actions/setup-julia@v1
@@ -667,7 +667,7 @@ jobs:
 
       - name: Create Virtual Env for Tests
         uses: ./.github/actions/create-venv-for-tests
-        if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook' || matrix.test-suite == 'remoteNotebook'
+        if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook' || matrix.test-suite == 'nonRawNotebook' || matrix.test-suite == 'remoteNotebook'
 
       - name: Run tests with VSCode & Jupyter
         uses: GabrielBB/xvfb-action@v1.4
@@ -698,10 +698,11 @@ jobs:
           VSC_PYTHON_FORCE_LOGGING: 1
           VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
           VSC_JUPYTER_REMOTE_NATIVE_TEST: ${{ contains(matrix.test-suite, 'remote') }}
+          VSC_JUPYTER_NON_RAW_NATIVE_TEST: ${{ contains(matrix.test-suite, 'nonRawNotebook') }}
           VSC_JUPYTER_CI_RUN_JAVA_NB_TEST: ${{ contains(matrix.test-suite, 'conda') }}
           VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
         id: test_notebook_vscode
-        if: matrix.test-suite == 'notebook' || matrix.test-suite == 'remoteNotebook' || matrix.test-suite == 'conda'
+        if: matrix.test-suite == 'notebook' || matrix.test-suite == 'nonRawNotebook' || matrix.test-suite == 'remoteNotebook' || matrix.test-suite == 'conda'
 
       - name: Publish Notebook Test Report
         uses: scacap/action-surefire-report@v1

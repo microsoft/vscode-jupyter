@@ -265,7 +265,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         );
 
         // Interrupt the kernel).
-        await commands.executeCommand('notebook.cancelExecution');
+        await commands.executeCommand('jupyter.notebookeditor.interruptkernel');
         await waitForExecutionCompletedWithErrors(cell);
 
         // Verify that it hasn't got added (even after interrupting).

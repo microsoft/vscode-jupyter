@@ -17,6 +17,7 @@ import { INotebookStorageProvider } from '../../../client/datascience/notebookSt
 import { VSCodeNotebookModel } from '../../../client/datascience/notebookStorage/vscNotebookModel';
 import { INotebookEditorProvider } from '../../../client/datascience/types';
 import { IExtensionTestApi, waitForCondition } from '../../common';
+import { IS_NON_RAW_NATIVE_TEST } from '../../constants';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, initialize, IS_REMOTE_NATIVE_TEST } from '../../initialize';
 import { openNotebook } from '../helpers';
 import {
@@ -55,7 +56,7 @@ suite('DataScience - VSCode Notebook - (Open)', function () {
     const disposables: IDisposable[] = [];
     suiteSetup(async function () {
         api = await initialize();
-        if (IS_REMOTE_NATIVE_TEST || !(await canRunNotebookTests())) {
+        if (IS_REMOTE_NATIVE_TEST || IS_NON_RAW_NATIVE_TEST || !(await canRunNotebookTests())) {
             return this.skip();
         }
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
