@@ -203,7 +203,7 @@ export async function run(): Promise<void> {
             });
         });
     } finally {
-        await stopJupyterServer().catch(noop);
+        stopJupyterServer().catch(noop);
         if (nyc) {
             nyc.writeCoverageFile();
             await nyc.report(); // This is async.
