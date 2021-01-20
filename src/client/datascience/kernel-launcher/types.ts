@@ -85,3 +85,5 @@ export class PythonKernelDiedError extends Error {
         }
     }
 }
+
+export class IpyKernelNotInstalledError extends Error {}

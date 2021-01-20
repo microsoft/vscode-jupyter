@@ -24,7 +24,7 @@ import { IKernelDependencyService, KernelInterpreterDependencyResponse } from '.
 import { KernelDaemonPool } from './kernelDaemonPool';
 import { KernelEnvironmentVariablesService } from './kernelEnvVarsService';
 import { KernelProcess } from './kernelProcess';
-import { IKernelConnection, IKernelLauncher, IKernelProcess } from './types';
+import { IKernelConnection, IKernelLauncher, IKernelProcess, IpyKernelNotInstalledError } from './types';
 import * as localize from '../../common/utils/localize';
 import { createDeferredFromPromise, Deferred, waitForPromise } from '../../common/utils/async';
 import { CancellationError, createPromiseFromCancellation, TimedOutError } from '../../common/cancellation';
@@ -201,7 +201,7 @@ export class KernelLauncher implements IKernelLauncher {
         try {
             const result = await deferred.promise;
             if (result !== KernelInterpreterDependencyResponse.ok) {
-                throw new Error(
+                throw new IpyKernelNotInstalledError(
                     localize.DataScience.ipykernelNotInstalled().format(
                         `${interpreter.displayName || interpreter.path}:${interpreter.path}`
                     )
