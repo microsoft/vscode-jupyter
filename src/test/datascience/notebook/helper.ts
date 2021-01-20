@@ -11,6 +11,7 @@ import * as sinon from 'sinon';
 import * as tmp from 'tmp';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { commands, Memento, TextDocument, Uri, window } from 'vscode';
+import { CancellationToken } from 'vscode-jsonrpc';
 import {
     CellDisplayOutput,
     NotebookCell,
@@ -39,7 +40,7 @@ import {
 import { isJupyterKernel } from '../../../client/datascience/notebook/helpers/helpers';
 import { chainWithPendingUpdates } from '../../../client/datascience/notebook/helpers/notebookUpdater';
 import { NotebookEditor } from '../../../client/datascience/notebook/notebookEditor';
-import { INotebookContentProvider } from '../../../client/datascience/notebook/types';
+import { INotebookContentProvider, INotebookKernelProvider } from '../../../client/datascience/notebook/types';
 import { VSCodeNotebookModel } from '../../../client/datascience/notebookStorage/vscNotebookModel';
 import { INotebookEditorProvider, INotebookProvider, ITrustService } from '../../../client/datascience/types';
 import { createEventHandler, sleep, waitForCondition } from '../../common';
@@ -54,7 +55,8 @@ async function getServices() {
         contentProvider: api.serviceContainer.get<VSCNotebookContentProvider>(INotebookContentProvider),
         vscodeNotebook: api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook),
         editorProvider: api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider),
-        serviceContainer: api.serviceContainer
+        serviceContainer: api.serviceContainer,
+        kernelProvider: api.serviceContainer.get<INotebookKernelProvider>(INotebookKernelProvider)
     };
 }
 
@@ -225,6 +227,38 @@ export async function closeNotebooks(disposables: IDisposable[] = []) {
     }
     await closeActiveWindows();
     disposeAllDisposables(disposables);
+}
+
+export async function waitForKernelToGetSelected(kernelNameSearch: string) {
+    const { vscodeNotebook, kernelProvider } = await getServices();
+
+    // Wait for the active editor to come up
+    await waitForCondition(async () => !!vscodeNotebook.activeNotebookEditor, 10_000, 'Active editor not a notebook');
+
+    // Get the list of kernels possible
+    const kernels = await kernelProvider.provideKernels(
+        vscodeNotebook.activeNotebookEditor!.document,
+        CancellationToken.None
+    );
+
+    // Find the kernel id that matches the name we want
+    const id = kernels?.find((k) => k.label.includes(kernelNameSearch))?.id;
+
+    // Send a select kernel on the active notebook editor
+    commands.executeCommand('notebook.selectKernel', { id });
+    const isRightKernel = () => {
+        if (!vscodeNotebook.activeNotebookEditor) {
+            return false;
+        }
+        if (!vscodeNotebook.activeNotebookEditor.kernel) {
+            return false;
+        }
+        if (vscodeNotebook.activeNotebookEditor.kernel.id === id) {
+            return true;
+        }
+        return false;
+    };
+    await waitForCondition(async () => isRightKernel(), 15_000, `Kernel with name ${kernelNameSearch} not selected`);
 }
 
 export async function waitForKernelToGetAutoSelected(expectedLanguage?: string) {

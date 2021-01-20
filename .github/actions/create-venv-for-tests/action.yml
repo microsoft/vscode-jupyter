@@ -21,5 +21,6 @@ runs:
         python -m pip install ipykernel
         python -m ipykernel install --user --name .venvnokernel --display-name .venvnokernel
         python -m pip uninstall ipykernel --yes
+        python -m venv .venvnoreg
       working-directory: src/test/datascience
       shell: bash

@@ -7,15 +7,7 @@ import { KernelMessage } from '@jupyterlab/services';
 import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
 import * as uuid from 'uuid/v4';
-import {
-    CancellationToken,
-    CancellationTokenSource,
-    Event,
-    EventEmitter,
-    NotebookCell,
-    NotebookDocument,
-    Uri
-} from 'vscode';
+import { CancellationTokenSource, Event, EventEmitter, NotebookCell, NotebookDocument, Uri } from 'vscode';
 import { ServerStatus } from '../../../../datascience-ui/interactive-common/mainState';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../../common/application/types';
 import { traceError, traceWarning } from '../../../common/logger';
