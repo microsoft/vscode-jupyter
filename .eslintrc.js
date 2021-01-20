@@ -64,7 +64,6 @@ module.exports = {
         'src/test/smoke/datascience.smoke.test.ts',
         'src/test/smoke/runInTerminal.smoke.test.ts',
         'src/test/smoke/languageServer.smoke.test.ts',
-        'src/test/index.ts',
         'src/test/mockClasses.ts',
         'src/test/performanceTest.ts',
         'src/test/serviceRegistry.ts',
