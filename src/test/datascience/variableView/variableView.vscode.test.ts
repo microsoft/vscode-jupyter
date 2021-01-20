@@ -37,7 +37,6 @@ suite('DataScience - VariableView', () => {
     let vscodeNotebook: IVSCodeNotebook;
     suiteSetup(async function () {
         this.timeout(120_000);
-        console.log('IANHU Suite Started');
         api = await initialize();
 
         // Don't run if we can't use the native notebook interface
