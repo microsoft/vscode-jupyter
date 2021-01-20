@@ -22,13 +22,14 @@ interface IRequestData<T> {
     cancelDisposable: monacoEditor.IDisposable;
 }
 
+export const completionTriggerCharacters = ['.'];
 export class IntellisenseProvider
     implements
         monacoEditor.languages.CompletionItemProvider,
         monacoEditor.languages.HoverProvider,
         monacoEditor.languages.SignatureHelpProvider,
         IDisposable {
-    public triggerCharacters?: string[] | undefined = ['.'];
+    public triggerCharacters?: string[] | undefined = completionTriggerCharacters;
     public readonly signatureHelpTriggerCharacters?: ReadonlyArray<string> = ['(', ',', '<'];
     public readonly signatureHelpRetriggerCharacters?: ReadonlyArray<string> = [')'];
     private completionRequests: Map<string, IRequestData<monacoEditor.languages.CompletionList>> = new Map<
@@ -59,7 +60,7 @@ export class IntellisenseProvider
         readonly language: string
     ) {
         // Register a completion provider
-        this.registerDisposables.push(monacoEditor.languages.registerCompletionItemProvider(language, this));
+        // this.registerDisposables.push(monacoEditor.languages.registerCompletionItemProvider(language, this));
         this.registerDisposables.push(monacoEditor.languages.registerHoverProvider(language, this));
         this.registerDisposables.push(monacoEditor.languages.registerSignatureHelpProvider(language, this));
     }

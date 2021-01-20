@@ -75,8 +75,6 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)xxx', function
     });
     teardown(async function () {
         traceInfo(`Ended Test ${this.currentTest?.title}`);
-        // Added temporarily to identify why tests are failing.
-        process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT = undefined;
         await closeNotebooksAndCleanUpAfterTests(disposables);
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
