@@ -700,7 +700,7 @@ jobs:
           VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
           VSC_JUPYTER_CI_RUN_JAVA_NB_TEST: ${{ contains(matrix.test-suite, 'conda') }}
           VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
-        id: test_notebook_vscode
+        id: test_notebook_vscode_xvfb
 
       - name: Run Native Notebook with VSCode & Jupyter without xvfb on Windows / Mac
         if: matrix.os != 'ubuntu-latest' && (matrix.test-suite == 'notebook' || matrix.test-suite == 'remoteNotebook' || matrix.test-suite == 'conda')
@@ -713,7 +713,7 @@ jobs:
           VSC_JUPYTER_REMOTE_NATIVE_TEST: ${{ contains(matrix.test-suite, 'remote') }}
           VSC_JUPYTER_CI_RUN_JAVA_NB_TEST: ${{ contains(matrix.test-suite, 'conda') }}
           VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
-        id: test_notebook_vscode
+        id: test_notebook_vscode_no_xvfb
 
       - name: Publish Notebook Test Report
         uses: scacap/action-surefire-report@v1
@@ -721,7 +721,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           report_paths: ${{ env.TEST_RESULTS_GLOB }}
           check_name: Notebook Test Report ${{matrix.test-suite}} ${{matrix.os}}
-        if: steps.test_notebook_vscode.outcome == 'failure' && failure()
+        if: (steps.test_notebook_vscode_xvfb.outcome == 'failure' || steps.test_notebook_vscode_no_xvfb.outcome == 'failure') && failure()
 
       - name: Run Native Notebook with VSCode & Jupyter (without Python)
         uses: GabrielBB/xvfb-action@v1.4
