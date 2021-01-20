@@ -749,7 +749,6 @@ module.exports = {
         'src/client/common/utils/enum.ts',
         'src/client/common/utils/async.ts',
         'src/client/common/utils/text.ts',
-        'src/client/common/utils/localize.ts',
         'src/client/common/utils/regexp.ts',
         'src/client/common/utils/platform.ts',
         'src/client/common/utils/multiStepInput.ts',
