@@ -962,7 +962,7 @@ export interface IEventNamePropertyMapping {
      */
     [Telemetry.IPyWidgetPromptToUseCDN]: never | undefined;
     /**
-     * Telemetry sent when user does somethign with the prompt displsyed to user about using CDN for IPyWidget scripts.
+     * Telemetry sent when user does something with the prompt displayed to user about using CDN for IPyWidget scripts.
      */
     [Telemetry.IPyWidgetPromptToUseCDNSelection]: {
         selection: 'ok' | 'cancel' | 'dismissed' | 'doNotShowAgain';
