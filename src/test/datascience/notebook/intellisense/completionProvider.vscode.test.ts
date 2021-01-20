@@ -88,7 +88,7 @@ suite('DataScience - VSCode Notebook - (Code Completion via Jupyter) (slow)', fu
         const completions = await completionProvider.provideCompletionItems(cell2.document, position, token, context);
 
         const items = completions.map((item) => item.label);
-        assert.containing(items, 'bit_length');
-        assert.containing(items, 'to_bytes');
+        assert.include(items, 'bit_length');
+        assert.include(items, 'to_bytes');
     });
 });
