@@ -307,13 +307,10 @@ export async function startJupyterServer(api?: IExtensionTestApi) {
 }
 
 export async function stopJupyterServer() {
-    const promise = JupyterServer.instance.dispose().catch(noop);
-    const { serviceContainer } = await getServices();
     if (!IS_REMOTE_NATIVE_TEST) {
-        const selector = serviceContainer.get<JupyterServerSelector>(JupyterServerSelector);
-        await selector.setJupyterURIToLocal();
+        return;
     }
-    await promise;
+    await JupyterServer.instance.dispose().catch(noop);
 }
 
 export async function prewarmNotebooks() {

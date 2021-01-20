@@ -22,7 +22,6 @@ import {
     startJupyterServer,
     waitForExecutionCompletedSuccessfully,
     waitForKernelToGetAutoSelected,
-    stopJupyterServer,
     createTemporaryNotebook,
     saveActiveNotebook,
     executeCell
@@ -81,10 +80,7 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)xxx', function
         await closeNotebooksAndCleanUpAfterTests(disposables);
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
-    suiteTeardown(async () => {
-        await closeNotebooksAndCleanUpAfterTests(disposables);
-        await stopJupyterServer();
-    });
+    suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
     test('Use same kernel when re-opening notebook', async () => {
         await openNotebook(api.serviceContainer, ipynbFile.fsPath, { isNotTrusted: true });
         await waitForKernelToGetAutoSelected(PYTHON_LANGUAGE);

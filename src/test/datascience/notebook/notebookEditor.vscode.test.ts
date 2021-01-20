@@ -18,7 +18,6 @@ import {
     insertCodeCell,
     selectCell,
     startJupyterServer,
-    stopJupyterServer,
     trustAllNotebooks,
     waitForExecutionCompletedSuccessfully,
     waitForKernelToGetAutoSelected
@@ -60,10 +59,7 @@ suite('Notebook Editor tests', () => {
         await closeNotebooksAndCleanUpAfterTests(disposables);
         traceInfo(`End Test Completed ${this.currentTest?.title}`);
     });
-    suiteTeardown(async () => {
-        await closeNotebooksAndCleanUpAfterTests(disposables);
-        await stopJupyterServer();
-    });
+    suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
 
     test('Run cells above', async function () {
         // add some cells

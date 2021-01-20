@@ -29,7 +29,6 @@ import {
     waitForExecutionCompletedSuccessfully,
     waitForExecutionCompletedWithErrors,
     waitForKernelToGetAutoSelected,
-    stopJupyterServer,
     prewarmNotebooks
 } from './helper';
 
@@ -75,10 +74,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         await closeNotebooksAndCleanUpAfterTests(disposables);
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
-    suiteTeardown(async () => {
-        await closeNotebooksAndCleanUpAfterTests(disposables);
-        await stopJupyterServer();
-    });
+    suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
     test('Execute cell using VSCode Kernel', async () => {
         await insertCodeCell('print("123412341234")', { index: 0 });
         const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
