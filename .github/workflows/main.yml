@@ -689,12 +689,8 @@ jobs:
         if: (steps.test_vscode.outcome == 'failure' || steps.test_vscode.outcome == 'failure') && failure()
 
       - name: Set xvfb command linux
-        if: matrix-os == 'ubuntu-latest'
+        if: matrix.os == 'ubuntu-latest'
         run: echo "xvfbCommand=--server-args=""-screen 0 1024x768x24"""" >> $GITHUB_ENV
-
-      - name: Set xvfb command non-linux
-        if: matrix-os != 'ubuntu-latest'
-        run: echo "xvfbCommand=""""" >> $GITHUB_ENV
 
       - name: Run Native Notebook with VSCode & Jupyter
         uses: GabrielBB/xvfb-action@v1.4
