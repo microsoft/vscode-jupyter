@@ -698,7 +698,6 @@ jobs:
 
       - name: Run Native Notebook with VSCode & Jupyter
         uses: GabrielBB/xvfb-action@v1.4
-        if: matrix.os == 'ubuntu-latest' && (matrix.test-suite == 'notebook' || matrix.test-suite == 'remoteNotebook' || matrix.test-suite == 'conda')
         with:
           # run: --server-args="-screen 0 1024x768x24" npm run testNativeNotebooksInVSCode
           run: ${{ env.xvfbCommand }} npm run testNativeNotebooksInVSCode
