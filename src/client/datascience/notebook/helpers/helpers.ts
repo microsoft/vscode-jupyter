@@ -331,22 +331,7 @@ function createNotebookCellDataFromCodeCell(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         statusMessage = getCellStatusMessageBasedOnFirstErrorOutput(cellOutputs);
     } else {
-        runState = vscodeNotebookEnums.NotebookCellRunState.Success;
-    }
-
-    const vscodeMetadata = (cell.metadata.vscode as unknown) as IBaseCellVSCodeMetadata | undefined;
-    const startExecutionTime = vscodeMetadata?.start_execution_time
-        ? new Date(Date.parse(vscodeMetadata.start_execution_time)).getTime()
-        : undefined;
-    const endExecutionTime = vscodeMetadata?.end_execution_time
-        ? new Date(Date.parse(vscodeMetadata.end_execution_time)).getTime()
-        : undefined;
-
-    let runStartTime: undefined | number;
-    let lastRunDuration: undefined | number;
-    if (startExecutionTime && typeof endExecutionTime === 'number') {
-        runStartTime = startExecutionTime;
-        lastRunDuration = endExecutionTime - startExecutionTime;
+        runState = vscodeNotebookEnums.NotebookCellRunState.Idle;
     }
 
     const notebookCellMetadata: NotebookCellMetadata = {
@@ -356,8 +341,6 @@ function createNotebookCellDataFromCodeCell(
         runState,
         runnable: isNbTrusted,
         statusMessage,
-        runStartTime,
-        lastRunDuration,
         custom: getCustomNotebookCellMetadata(cell)
     };
 

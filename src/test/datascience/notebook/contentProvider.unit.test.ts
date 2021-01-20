@@ -91,7 +91,7 @@ suite('DataScience - NativeNotebook ContentProvider', () => {
 
                 assert.deepEqual(cellsWithoutCustomMetadata, [
                     {
-                        cellKind: (vscodeNotebookEnums as any).CellKind.Code,
+                        cellKind: vscodeNotebookEnums.CellKind.Code,
                         language: PYTHON_LANGUAGE,
                         outputs: [],
                         source: 'print(1)',
@@ -99,15 +99,13 @@ suite('DataScience - NativeNotebook ContentProvider', () => {
                             editable: isNotebookTrusted,
                             executionOrder: 10,
                             hasExecutionOrder: true,
-                            lastRunDuration: undefined,
-                            runStartTime: undefined,
-                            runState: (vscodeNotebookEnums as any).NotebookCellRunState.Success,
+                            runState: vscodeNotebookEnums.NotebookCellRunState.Idle,
                             runnable: isNotebookTrusted,
                             statusMessage: undefined
                         }
                     },
                     {
-                        cellKind: (vscodeNotebookEnums as any).CellKind.Markdown,
+                        cellKind: vscodeNotebookEnums.CellKind.Markdown,
                         language: MARKDOWN_LANGUAGE,
                         outputs: [],
                         source: '# HEAD',
@@ -173,7 +171,7 @@ suite('DataScience - NativeNotebook ContentProvider', () => {
 
                 assert.deepEqual(cellsWithoutCustomMetadata, [
                     {
-                        cellKind: (vscodeNotebookEnums as any).CellKind.Code,
+                        cellKind: vscodeNotebookEnums.CellKind.Code,
                         language: 'csharp',
                         outputs: [],
                         source: 'Console.WriteLine("1")',
@@ -181,15 +179,13 @@ suite('DataScience - NativeNotebook ContentProvider', () => {
                             editable: isNotebookTrusted,
                             executionOrder: 10,
                             hasExecutionOrder: true,
-                            runState: (vscodeNotebookEnums as any).NotebookCellRunState.Success,
+                            runState: vscodeNotebookEnums.NotebookCellRunState.Idle,
                             runnable: isNotebookTrusted,
-                            statusMessage: undefined,
-                            runStartTime: undefined,
-                            lastRunDuration: undefined
+                            statusMessage: undefined
                         }
                     },
                     {
-                        cellKind: (vscodeNotebookEnums as any).CellKind.Markdown,
+                        cellKind: vscodeNotebookEnums.CellKind.Markdown,
                         language: MARKDOWN_LANGUAGE,
                         outputs: [],
                         source: '# HEAD',
