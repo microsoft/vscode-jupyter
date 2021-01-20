@@ -93,7 +93,7 @@ suite('DataScience - VSCode Notebook - (Saving) (slow)', function () {
             'Cells did not finish executing'
         );
 
-        function verifyCelMetadata() {
+        function verifyCelMetadata(reOpened = false) {
             assert.lengthOf(cell1.outputs, 1, 'Incorrect output for cell 1');
             assert.lengthOf(cell2.outputs, 1, 'Incorrect output for cell 2');
             assert.lengthOf(cell3.outputs, 0, 'Incorrect output for cell 3'); // stream and interrupt error.
@@ -101,10 +101,18 @@ suite('DataScience - VSCode Notebook - (Saving) (slow)', function () {
 
             assert.equal(
                 cell1.metadata.runState,
-                vscodeNotebookEnums.NotebookCellRunState.Success,
+                reOpened
+                    ? vscodeNotebookEnums.NotebookCellRunState.Idle
+                    : vscodeNotebookEnums.NotebookCellRunState.Success,
                 'Incorrect state 1'
             );
-            assert.equal(cell2.metadata.runState, vscodeNotebookEnums.NotebookCellRunState.Error, 'Incorrect state 2');
+            assert.equal(
+                cell2.metadata.runState,
+                reOpened
+                    ? vscodeNotebookEnums.NotebookCellRunState.Idle
+                    : vscodeNotebookEnums.NotebookCellRunState.Error,
+                'Incorrect state 2'
+            );
             assert.equal(
                 cell3.metadata.runState || vscodeNotebookEnums.NotebookCellRunState.Idle,
                 vscodeNotebookEnums.NotebookCellRunState.Idle,
