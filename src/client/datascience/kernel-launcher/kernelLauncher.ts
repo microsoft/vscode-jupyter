@@ -39,6 +39,7 @@ export class KernelLauncher implements IKernelLauncher {
     private static startPortPromise = KernelLauncher.computeStartPort();
     private static nextFreePortToTryAndUsePromise = KernelLauncher.startPortPromise;
     private dependencyPromises = new Map<string, Deferred<KernelInterpreterDependencyResponse>>();
+    private portChain: Promise<number[]> | undefined;
     constructor(
         @inject(IProcessServiceFactory) private processExecutionFactory: IProcessServiceFactory,
         @inject(IFileSystem) private readonly fs: IFileSystem,
@@ -135,12 +136,23 @@ export class KernelLauncher implements IKernelLauncher {
         return kernelProcess;
     }
 
+    private async chainGetConnectionPorts(): Promise<number[]> {
+        if (this.portChain) {
+            await this.portChain;
+        }
+        this.portChain = this.getConnectionPorts();
+        return this.portChain;
+    }
+
     private async getConnectionPorts(): Promise<number[]> {
         const getPorts = promisify(portfinder.getPorts);
 
         // Have to wait for static port lookup (it handles case where two VS code instances are running)
         const nextFreePort = await KernelLauncher.nextFreePortToTryAndUsePromise;
         const startPort = await KernelLauncher.startPortPromise;
+
+        // Start the port promise over again
+        KernelLauncher.startPortPromise = Promise.resolve(startPort + 6);
 
         // Ports may have been freed, hence start from begining.
         const port = nextFreePort > startPort + 1_000 ? startPort : nextFreePort;
@@ -158,7 +170,7 @@ export class KernelLauncher implements IKernelLauncher {
     private async getKernelConnection(
         kernelConnectionMetadata: KernelSpecConnectionMetadata | PythonKernelConnectionMetadata
     ): Promise<IKernelConnection> {
-        const ports = await this.getConnectionPorts();
+        const ports = await this.chainGetConnectionPorts();
         return {
             key: uuid(),
             signature_scheme: 'hmac-sha256',

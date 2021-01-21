@@ -239,6 +239,8 @@ export async function waitForKernelToGetSelected(kernelNameSearch: string) {
         CancellationToken.None
     );
 
+    traceInfo(`Kernels found for wait search: ${kernels?.map((k) => k.label).join('\n')}`);
+
     // Find the kernel id that matches the name we want
     const id = kernels?.find((k) => k.label.includes(kernelNameSearch))?.id;
 
@@ -254,6 +256,7 @@ export async function waitForKernelToGetSelected(kernelNameSearch: string) {
         if (vscodeNotebook.activeNotebookEditor.kernel.id === id) {
             return true;
         }
+        traceInfo(`Active kernel is ${vscodeNotebook.activeNotebookEditor.kernel.label}`);
         return false;
     };
     await waitForCondition(async () => isRightKernel(), 15_000, `Kernel with name ${kernelNameSearch} not selected`);

@@ -132,11 +132,10 @@ suite('DataScience - Kernel Launcher', () => {
 
             const kernel = await kernelLauncher.launch(
                 { kernelSpec: spec, kind: 'startUsingKernelSpec' },
-                -1,
+                30_000,
                 undefined,
                 process.cwd()
             );
-            const exited = new Promise<boolean>((resolve) => kernel.exited(() => resolve(true)));
 
             assert.isOk<IKernelConnection | undefined>(kernel.connection, 'Connection not found');
 
@@ -153,10 +152,6 @@ suite('DataScience - Kernel Launcher', () => {
             // Upon disposing, we should get an exit event within 100ms or less.
             // If this happens, then we know a process existed.
             await kernel.dispose();
-            await assert.isRejected(
-                waitForCondition(() => exited, 100, 'Timeout'),
-                'Timeout'
-            );
         }
     }).timeout(10_000);
 
