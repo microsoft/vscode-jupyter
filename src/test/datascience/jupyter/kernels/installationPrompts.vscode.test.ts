@@ -95,69 +95,66 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         );
     });
 
-    test('Ensure prompt is displayed when ipykernel module is not found and it gets installed', async () => {
-        // Do this for both kernels
-        await Promise.all(
-            ['.venvnokernel', '.venvnoreg'].map(async (kName) => {
-                // Confirm message is displayed & we click 'Install` button.
-                const prompt = await hijackPrompt(
-                    'showErrorMessage',
-                    { endsWith: expectedPromptMessageSuffix },
-                    { text: Common.install(), clickImmediately: true },
-                    disposables
-                );
-                const installed = createDeferred();
+    ['.venvnokernel', '.venvnoreg'].forEach((kName) =>
+        test('Ensure prompt is displayed when ipykernel module is not found and it gets installed', async () => {
+            // Confirm message is displayed & we click 'Install` button.
+            const prompt = await hijackPrompt(
+                'showErrorMessage',
+                { endsWith: expectedPromptMessageSuffix },
+                { text: Common.install(), clickImmediately: true },
+                disposables
+            );
+            const installed = createDeferred();
 
-                // Confirm it is installed.
-                const showInformationMessage = sinon
-                    .stub(installer, 'install')
-                    .callsFake(async function (product: Product) {
-                        // Call original method
-                        const result: InstallerResponse = await ((installer.install as any).wrappedMethod.apply(
-                            installer,
-                            arguments
-                        ) as Promise<InstallerResponse>);
-                        if (product === Product.ipykernel && result === InstallerResponse.Installed) {
-                            installed.resolve();
-                        }
-                        return result;
-                    });
-
-                try {
-                    await openNotebook(api.serviceContainer, nbFile);
-                    // If this is a native notebook, then wait for kernel to get selected.
-                    if (editorProvider.activeEditor?.type === 'native') {
-                        await waitForKernelToGetSelected(kName);
+            // Confirm it is installed.
+            const showInformationMessage = sinon
+                .stub(installer, 'install')
+                .callsFake(async function (product: Product) {
+                    // Call original method
+                    const result: InstallerResponse = await ((installer.install as any).wrappedMethod.apply(
+                        installer,
+                        arguments
+                    ) as Promise<InstallerResponse>);
+                    if (product === Product.ipykernel && result === InstallerResponse.Installed) {
+                        installed.resolve();
                     }
+                    return result;
+                });
 
-                    // Run all cells
-                    editorProvider.activeEditor!.runAllCells();
-
-                    // The prompt should be displayed.
-                    await waitForCondition(
-                        async () => prompt.displayed.then(() => true),
-                        delayForUITest,
-                        'Prompt not displayed'
-                    );
-
-                    // ipykernel should get installed.
-                    await waitForCondition(
-                        async () => installed.promise.then(() => true),
-                        delayForUITest,
-                        'Prompt not displayed or not installed successfully'
-                    );
-
-                    // If this is a native notebook, then wait for cell to get executed completely (else VSC can hang).
-                    // This is because extension will attempt to update cells, while tests may have deleted/closed notebooks.
-                    if (editorProvider.activeEditor?.type === 'native') {
-                        const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
-                        await waitForExecutionCompletedSuccessfully(cell);
-                    }
-                } finally {
-                    prompt.dispose();
-                    showInformationMessage.restore();
+            try {
+                await openNotebook(api.serviceContainer, nbFile);
+                // If this is a native notebook, then wait for kernel to get selected.
+                if (editorProvider.activeEditor?.type === 'native') {
+                    await waitForKernelToGetSelected(kName);
                 }
-            })
-        );
-    });
+
+                // Run all cells
+                editorProvider.activeEditor!.runAllCells();
+
+                // The prompt should be displayed.
+                await waitForCondition(
+                    async () => prompt.displayed.then(() => true),
+                    delayForUITest,
+                    'Prompt not displayed'
+                );
+
+                // ipykernel should get installed.
+                await waitForCondition(
+                    async () => installed.promise.then(() => true),
+                    delayForUITest,
+                    'Prompt not displayed or not installed successfully'
+                );
+
+                // If this is a native notebook, then wait for cell to get executed completely (else VSC can hang).
+                // This is because extension will attempt to update cells, while tests may have deleted/closed notebooks.
+                if (editorProvider.activeEditor?.type === 'native') {
+                    const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
+                    await waitForExecutionCompletedSuccessfully(cell);
+                }
+            } finally {
+                prompt.dispose();
+                showInformationMessage.restore();
+            }
+        })
+    );
 });
