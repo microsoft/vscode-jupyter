@@ -79,6 +79,8 @@ suite('DataScience - VariableView', () => {
         await executeCell(cell);
         await waitForExecutionCompletedSuccessfully(cell);
 
+        console.log('IANHU Executed Cell 1');
+
         // Send the command to open the view
         await commandManager.executeCommand(Commands.OpenVariableView);
 
@@ -86,6 +88,12 @@ suite('DataScience - VariableView', () => {
         const coreVariableView = await variableViewProvider.activeVariableView;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const variableView = (coreVariableView as any) as ITestWebviewHost;
+
+        if (variableView) {
+            console.log('IANHU Got Variable View');
+        } else {
+            console.log('IANHU Failed Variable View');
+        }
 
         // Add our message listener
         const onMessageListener = new OnMessageListener(variableView);
@@ -95,10 +103,18 @@ suite('DataScience - VariableView', () => {
         const cell2 = vscodeNotebook.activeNotebookEditor?.document.cells![1]!;
         await executeCell(cell2);
 
+        console.log('IANHU Executed Cell 2');
+
         // Wait until our VariablesComplete message to see that we have the new variables and have rendered them
         await onMessageListener.waitForMessage(InteractiveWindowMessages.VariablesComplete);
 
         const htmlResult = await variableView?.getHTMLById('variable-view-main-panel');
+
+        if (htmlResult) {
+            console.log(`IANHU Got html ${htmlResult}`);
+        } else {
+            console.log('IANHU Failed html result');
+        }
 
         // Parse the HTML for our expected variables
         const expectedVariables = [
