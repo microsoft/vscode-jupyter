@@ -690,6 +690,7 @@ jobs:
           VSC_FORCE_REAL_JUPYTER: 1
           VSC_JUPYTER_FORCE_LOGGING: 1
           VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
+          VSC_JUPYTER_CI_TEST_VSC_CHANNEL: ${{ matrix.vscode-channel }}
         id: test_vscode
         if: matrix.test-suite == 'integration'
 
