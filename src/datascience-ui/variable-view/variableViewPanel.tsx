@@ -4,6 +4,7 @@ import * as React from 'react';
 import { connect } from 'react-redux';
 import { handleLinkClick } from '../interactive-common/handlers';
 import { IMainWithVariables, IStore } from '../interactive-common/redux/store';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { IVariablePanelProps, VariablePanel } from '../interactive-common/variablePanel';
 import { actionCreators } from './redux/actions';
 
@@ -53,7 +54,7 @@ export class VariableViewPanel extends React.Component<IVariableViewPanelProps> 
             <div id="variable-view-main-panel" role="Main" style={dynamicFont}>
                 {this.renderVariablePanel(this.props.baseTheme)}
             </div>
-        ); // NOTE: Currently the OPEN, button just exists to mimic the toggling of the variable view, make it easier to test when working
+        );
     }
 
     // Render function and variable props are the same as those from InterativePanel to allow us to reuse the same
@@ -84,7 +85,8 @@ export class VariableViewPanel extends React.Component<IVariableViewPanelProps> 
             fontSize: this.props.font.size,
             executionCount: this.props.currentExecutionCount,
             refreshCount: this.props.variableState.refreshCount,
-            offsetHeight: 0 // No toolbar in variable view panel
+            offsetHeight: 0, // No toolbar in variable view panel
+            viewMode: true // Set that we are in variable view mode
         };
     };
 

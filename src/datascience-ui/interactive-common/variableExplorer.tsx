@@ -40,6 +40,7 @@ interface IVariableExplorerProps {
     closeVariableExplorer(): void;
     setVariableExplorerHeight(containerHeight: number, gridHeight: number): void;
     pageIn(startIndex: number, pageSize: number): void;
+    viewMode?: boolean;
 }
 
 const defaultColumnProperties = {
@@ -196,41 +197,64 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
             variableExplorerStyles = { ...variableExplorerStyles, height: containerHeight };
         }
 
-        return (
-            <Draggable handle=".handle-resize" onDrag={this.handleResizeMouseMove} onStop={this.saveCurrentSize}>
-                <span>
-                    <div id="variable-panel" ref={this.variablePanelRef}>
-                        <div id="variable-panel-padding">
-                            <div
-                                className="variable-explorer"
-                                ref={this.variableExplorerRef}
-                                style={variableExplorerStyles}
-                            >
-                                <div className="variable-explorer-menu-bar" ref={this.variableExplorerMenuBarRef}>
-                                    <label className="inputLabel variable-explorer-label">
-                                        {getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}
-                                    </label>
-                                    <ImageButton
-                                        baseTheme={this.props.baseTheme}
-                                        onClick={this.props.closeVariableExplorer}
-                                        className="variable-explorer-close-button"
-                                        tooltip={getLocString('DataScience.close', 'Close')}
-                                    >
-                                        <Image
-                                            baseTheme={this.props.baseTheme}
-                                            class="image-button-image"
-                                            image={ImageName.Cancel}
-                                        />
-                                    </ImageButton>
-                                </div>
-                                <div className={contentClassName}>{this.renderGrid()}</div>
+        if (this.props.viewMode) {
+            console.log('IANHU **** Control in view mode');
+            return (
+                <div id="variable-panel" ref={this.variablePanelRef}>
+                    <div id="variable-panel-padding">
+                        <div
+                            className="variable-explorer"
+                            ref={this.variableExplorerRef}
+                            style={variableExplorerStyles}
+                        >
+                            <div className="variable-explorer-menu-bar" ref={this.variableExplorerMenuBarRef}>
+                                <label className="inputLabel variable-explorer-label">
+                                    {getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}
+                                </label>
                             </div>
+                            <div className={contentClassName}>{this.renderGrid()}</div>
                         </div>
-                        <div id="variable-divider" className="handle-resize" />
                     </div>
-                </span>
-            </Draggable>
-        );
+                    <div id="variable-divider" className="handle-resize" />
+                </div>
+            );
+        } else {
+            return (
+                <Draggable handle=".handle-resize" onDrag={this.handleResizeMouseMove} onStop={this.saveCurrentSize}>
+                    <span>
+                        <div id="variable-panel" ref={this.variablePanelRef}>
+                            <div id="variable-panel-padding">
+                                <div
+                                    className="variable-explorer"
+                                    ref={this.variableExplorerRef}
+                                    style={variableExplorerStyles}
+                                >
+                                    <div className="variable-explorer-menu-bar" ref={this.variableExplorerMenuBarRef}>
+                                        <label className="inputLabel variable-explorer-label">
+                                            {getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}
+                                        </label>
+                                        <ImageButton
+                                            baseTheme={this.props.baseTheme}
+                                            onClick={this.props.closeVariableExplorer}
+                                            className="variable-explorer-close-button"
+                                            tooltip={getLocString('DataScience.close', 'Close')}
+                                        >
+                                            <Image
+                                                baseTheme={this.props.baseTheme}
+                                                class="image-button-image"
+                                                image={ImageName.Cancel}
+                                            />
+                                        </ImageButton>
+                                    </div>
+                                    <div className={contentClassName}>{this.renderGrid()}</div>
+                                </div>
+                            </div>
+                            <div id="variable-divider" className="handle-resize" />
+                        </div>
+                    </span>
+                </Draggable>
+            );
+        }
     }
 
     private renderGrid() {

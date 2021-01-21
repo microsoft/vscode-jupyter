@@ -25,6 +25,7 @@ export interface IVariablePanelProps {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     setVariableExplorerHeight(containerHeight: number, gridHeight: number): any;
     pageIn(startIndex: number, pageSize: number): void;
+    viewMode?: boolean;
 }
 
 export class VariablePanel extends React.Component<IVariablePanelProps> {
@@ -49,6 +50,7 @@ export class VariablePanel extends React.Component<IVariablePanelProps> {
                 pageIn={this.props.pageIn}
                 executionCount={this.props.executionCount}
                 refreshCount={this.props.refreshCount}
+                viewMode={this.props.viewMode}
             />
         );
     }
