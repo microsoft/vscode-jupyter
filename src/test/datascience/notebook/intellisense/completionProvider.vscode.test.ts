@@ -57,10 +57,12 @@ suite('DataScience - VSCode Notebook - (Code Completion via Jupyter) (slow)', fu
         await waitForKernelToGetAutoSelected(undefined);
         await deleteAllCellsAndWait();
         assert.isOk(vscodeNotebook.activeNotebookEditor, 'No active notebook');
+        process.env.VSC_JUPYTER_IntellisenseTimeout = '10_000';
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
     });
     teardown(async function () {
         traceInfo(`Ended Test ${this.currentTest?.title}`);
+        delete process.env.VSC_JUPYTER_IntellisenseTimeout;
         await closeNotebooksAndCleanUpAfterTests(disposables);
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
@@ -83,9 +85,11 @@ suite('DataScience - VSCode Notebook - (Code Completion via Jupyter) (slow)', fu
             triggerKind: CompletionTriggerKind.TriggerCharacter,
             triggerCharacter: '.'
         };
+        traceInfo('Get completions in test');
         const completions = await completionProvider.provideCompletionItems(cell2.document, position, token, context);
-
+        console.log(JSON.stringify(completions));
         const items = completions.map((item) => item.label);
+        assert.isOk(items.length);
         assert.include(items, 'bit_length');
         assert.include(items, 'to_bytes');
     });
