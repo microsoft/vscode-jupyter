@@ -9,7 +9,12 @@ import { CancellationToken } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
 
 import { IPythonExtensionChecker } from '../../../api/types';
-import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../../common/application/types';
+import {
+    IApplicationShell,
+    ILiveShareApi,
+    IVSCodeNotebook,
+    IWorkspaceService
+} from '../../../common/application/types';
 import { traceError, traceInfo } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 import {
@@ -74,7 +79,8 @@ export class HostRawNotebookProvider
         rawNotebookSupported: IRawNotebookSupportedService,
         private readonly kernelDependencyService: IKernelDependencyService,
         private readonly kernelService: KernelService,
-        private readonly extensionChecker: IPythonExtensionChecker
+        private readonly extensionChecker: IPythonExtensionChecker,
+        private readonly vscodeNotebook: IVSCodeNotebook
     ) {
         super(liveShare, asyncRegistry, rawNotebookSupported);
     }
@@ -252,7 +258,8 @@ export class HostRawNotebookProvider
                         this.getDisposedError.bind(this),
                         this.workspaceService,
                         this.appShell,
-                        this.fs
+                        this.fs,
+                        this.vscodeNotebook
                     );
 
                     // Run initial setup

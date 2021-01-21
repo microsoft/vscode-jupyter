@@ -9,7 +9,7 @@ import * as uuid from 'uuid/v4';
 import { Disposable, Event, EventEmitter, Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
-import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../common/application/types';
+import { IApplicationShell, ILiveShareApi, IVSCodeNotebook, IWorkspaceService } from '../../common/application/types';
 import { CancellationError, createPromiseFromCancellation } from '../../common/cancellation';
 import '../../common/extensions';
 import { traceError, traceInfo, traceWarning } from '../../common/logger';
@@ -50,6 +50,7 @@ import {
     getKernelConnectionLanguage,
     isPythonKernelConnection
 } from './kernels/helpers';
+import { isResourceNativeNotebook } from '../notebook/helpers/helpers';
 
 class CellSubscriber {
     public get startTime(): number {
@@ -200,7 +201,8 @@ export class JupyterNotebookBase implements INotebook {
         private getDisposedError: () => Error,
         private workspace: IWorkspaceService,
         private applicationService: IApplicationShell,
-        private fs: IFileSystem
+        private fs: IFileSystem,
+        private readonly vscNotebook: IVSCodeNotebook
     ) {
         this.sessionStartTime = Date.now();
 
@@ -318,7 +320,10 @@ export class JupyterNotebookBase implements INotebook {
             } else {
                 this.initializedMatplotlib = false;
                 const configInit =
-                    !settings || settings.enablePlotViewer ? CodeSnippets.ConfigSvg : CodeSnippets.ConfigPng;
+                    (!settings || settings.enablePlotViewer) &&
+                    !isResourceNativeNotebook(this._resource, this.vscNotebook, this.fs)
+                        ? CodeSnippets.ConfigSvg
+                        : CodeSnippets.ConfigPng;
                 traceInfo(`Initialize config for plots for ${this.identity.toString()}`);
                 if (!isDefinitelyNotAPythonKernel) {
                     await this.executeSilently(configInit, cancelToken);
@@ -757,7 +762,8 @@ export class JupyterNotebookBase implements INotebook {
         const settings = this.configService.getSettings(this.resource);
         if (settings && settings.themeMatplotlibPlots) {
             const matplobInit =
-                !settings || settings.enablePlotViewer
+                (!settings || settings.enablePlotViewer) &&
+                !isResourceNativeNotebook(this._resource, this.vscNotebook, this.fs)
                     ? CodeSnippets.MatplotLibInitSvg
                     : CodeSnippets.MatplotLibInitPng;
 
@@ -1049,7 +1055,7 @@ export class JupyterNotebookBase implements INotebook {
                 })
                 .then((v) => {
                     this.session.sendInputReply(v || '');
-                });
+                }, noop);
         }
     }
 
