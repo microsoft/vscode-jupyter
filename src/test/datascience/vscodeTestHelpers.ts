@@ -61,6 +61,7 @@ export class OnMessageListener {
         // Create the handler that we will hook up to the on message listener
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         handler = (m: string, payload: any) => {
+            console.log(`IANHU message ${m}`);
             if (m === message || m === dispatchedAction) {
                 // First verify the payload matches
                 if (options?.withPayload) {
