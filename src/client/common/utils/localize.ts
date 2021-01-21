@@ -875,12 +875,12 @@ export namespace DataScience {
         'jupyter.command.jupyter.selectjupyteruri.title',
         'Specify local or remote Jupyter server for connections'
     );
-    export const jupyterNativeNotebookUriStatusLableForLocal = localize(
-        'DataScience.jupyterNativeNotebookUriStatusLableForLocal',
+    export const jupyterNativeNotebookUriStatusLabelForLocal = localize(
+        'DataScience.jupyterNativeNotebookUriStatusLabelForLocal',
         'Jupyter Server: local'
     );
-    export const jupyterNativeNotebookUriStatusLableForRemote = localize(
-        'DataScience.jupyterNativeNotebookUriStatusLableForRemote',
+    export const jupyterNativeNotebookUriStatusLabelForRemote = localize(
+        'DataScience.jupyterNativeNotebookUriStatusLabelForRemote',
         'Jupyter Server: remote'
     );
 

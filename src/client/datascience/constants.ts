@@ -66,7 +66,6 @@ export namespace Commands {
     export const OpenNotebook = 'jupyter.opennotebook';
     export const OpenNotebookInPreviewEditor = 'jupyter.opennotebookInPreviewEditor';
     export const SelectJupyterURI = 'jupyter.selectjupyteruri';
-    export const SelectNativeJupyterUriFromStatusBar = 'jupyter.selectNativeJupyterUriFromStatusBar';
     export const SelectNativeJupyterUriFromToolBar = 'jupyter.selectNativeJupyterUriFromToolBar';
     export const SelectJupyterCommandLine = 'jupyter.selectjupytercommandline';
     export const ExportFileAsNotebook = 'jupyter.exportfileasnotebook';

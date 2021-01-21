@@ -66,7 +66,6 @@
         "onCommand:jupyter.selectJupyterInterpreter",
         "onCommand:jupyter.selectjupytercommandline",
         "onCommand:jupyter.openVariableView",
-        "onCommand:jupyter.selectNativeJupyterUriFromStatusBar",
         "onCommand:jupyter.selectNativeJupyterUriFromToolBar",
         "onNotebook:jupyter-notebook",
         "onCustomEditor:jupyter.notebook.ipynb"
@@ -496,11 +495,6 @@
             {
                 "command": "jupyter.selectjupyteruri",
                 "title": "%jupyter.command.jupyter.selectjupyteruri.title%",
-                "category": "Jupyter"
-            },
-            {
-                "command": "jupyter.selectNativeJupyterUriFromStatusBar",
-                "title": "jupyter.command.jupyter.selectjupyteruri.title",
                 "category": "Jupyter"
             },
             {
@@ -1297,11 +1291,6 @@
                     "title": "%jupyter.command.jupyter.openVariableView.title%",
                     "category": "Jupyter",
                     "when": "jupyter.isnativeactive"
-                },
-                {
-                    "command": "jupyter.selectNativeJupyterUriFromStatusBar",
-                    "title": "jupyter.command.jupyter.selectjupyteruri.title",
-                    "when": "false"
                 },
                 {
                     "command": "jupyter.selectNativeJupyterUriFromToolBar",

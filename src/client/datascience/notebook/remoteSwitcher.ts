@@ -28,16 +28,9 @@ export class RemoteSwitcher implements IExtensionSingleActivationService {
     }
     private statusBarItem!: StatusBarItem;
     public dispose() {
-        this.disposables.forEach(item => item.dispose());
+        this.disposables.forEach((item) => item.dispose());
     }
     public async activate(): Promise<void> {
-        this.disposables.push(
-            this.commandManager.registerCommand(
-                Commands.SelectNativeJupyterUriFromStatusBar,
-                this.onStatusBarCommand,
-                this
-            )
-        );
         this.disposables.push(
             this.commandManager.registerCommand(Commands.SelectNativeJupyterUriFromToolBar, this.onToolBarCommand, this)
         );
@@ -48,9 +41,6 @@ export class RemoteSwitcher implements IExtensionSingleActivationService {
         this.serverUriStorage.onDidChangeUri(this.updateStatusBar.bind(this), this.disposables);
         this.disposables.push(this.statusBarItem);
         this.updateStatusBar().catch(noop);
-    }
-    private async onStatusBarCommand() {
-        await this.serverSelector.selectJupyterURI(true, 'nativeNotebookStatusBar');
     }
     private async onToolBarCommand() {
         await this.serverSelector.selectJupyterURI(true, 'nativeNotebookToolbar');
@@ -64,10 +54,18 @@ export class RemoteSwitcher implements IExtensionSingleActivationService {
         const uri = await this.serverUriStorage.getUri();
         const label =
             uri === Settings.JupyterServerLocalLaunch
-                ? DataScience.jupyterNativeNotebookUriStatusLableForLocal()
-                : DataScience.jupyterNativeNotebookUriStatusLableForRemote();
+                ? DataScience.jupyterNativeNotebookUriStatusLabelForLocal()
+                : DataScience.jupyterNativeNotebookUriStatusLabelForRemote();
+        const tooltipSuffix = uri === Settings.JupyterServerLocalLaunch ? '' : uri;
+        const tooltip = `${DataScience.specifyLocalOrRemoteJupyterServerForConnections()} ${tooltipSuffix}`;
         this.statusBarItem.text = label;
-        this.statusBarItem.tooltip = DataScience.specifyLocalOrRemoteJupyterServerForConnections();
-        this.statusBarItem.command = Commands.SelectNativeJupyterUriFromStatusBar;
+        this.statusBarItem.tooltip = tooltip;
+        this.statusBarItem.command = {
+            command: Commands.SelectJupyterURI,
+            title: label,
+            tooltip,
+            arguments: [undefined, 'nativeNotebookStatusBar']
+        };
+        this.statusBarItem.command;
     }
 }
