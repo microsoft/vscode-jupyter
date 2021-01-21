@@ -499,6 +499,7 @@ jobs:
         # integration: Tests with VS Code, Python extension & real Jupyter
         # notebook: Notebook Tests with VS Code, Python extension & real Jupyter
         test-suite: [integration, notebook, remoteNotebook, nonRawNotebook, notebookWithoutPythonExt, conda]
+        # Run in stable & insiders.
         vscode-channel: [stable, insiders]
     steps:
       - name: Checkout
