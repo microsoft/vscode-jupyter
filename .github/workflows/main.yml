@@ -396,7 +396,7 @@ jobs:
           python -m pip install --upgrade -r ./build/conda-functional-requirements.txt
           python -m ipykernel install --user
           python -m pip install tensorflow
-          python -m pip uninstall jedi==0.17.2
+          python -m pip uninstall jedi -Y
           python -m pip install jedi==0.17.2
 
       # Use specific version of Jedi https://github.com/ipython/ipython/issues/12740
@@ -410,7 +410,7 @@ jobs:
           python ./pythonFiles/install_debugpy.py
           conda env update --file ./build/conda-functional-requirements.yml
           python -m pip install --upgrade -r ./build/conda-functional-requirements.txt
-          python -m pip uninstall jedi==0.17.2
+          python -m pip uninstall jedi -Y
           python -m pip install jedi==0.17.2
 
       # Install PyTorch with pip
@@ -620,7 +620,7 @@ jobs:
           python -m pip install --upgrade -r ./build/ipython-test-requirements.txt
           python -m pip install --upgrade -r ./build/conda-functional-requirements.txt
           python -m ipykernel install --user
-          python -m pip uninstall jedi==0.17.2
+          python -m pip uninstall jedi -Y
           python -m pip install jedi==0.17.2
 
       # Use specific version of Jedi https://github.com/ipython/ipython/issues/12740
@@ -634,7 +634,7 @@ jobs:
           python ./pythonFiles/install_debugpy.py
           conda env update --file ./build/conda-functional-requirements.yml
           python -m pip install --upgrade -r ./build/conda-functional-requirements.txt
-          python -m pip uninstall jedi==0.17.2
+          python -m pip uninstall jedi -Y
           python -m pip install jedi==0.17.2
 
         # This step is slow.
