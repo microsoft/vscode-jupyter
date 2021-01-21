@@ -11,7 +11,7 @@ import {
     TextDocument
 } from 'vscode';
 import { IVSCodeNotebook } from '../../../common/application/types';
-import { traceError, traceInfo } from '../../../common/logger';
+import { traceError } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 import { sleep } from '../../../common/utils/async';
 import { isNotebookCell } from '../../../common/utils/misc';
@@ -60,9 +60,6 @@ export class NotebookCompletionProvider implements CompletionItemProvider {
         // Allow slower timeouts for CI (testing).
         const timeout =
             parseInt(process.env.VSC_JUPYTER_IntellisenseTimeout || '0', 10) || Settings.IntellisenseTimeout;
-        traceInfo(
-            `process.env.VSC_JUPYTER_IntellisenseTimeout = ${process.env.VSC_JUPYTER_IntellisenseTimeout} & timeout = ${timeout}`
-        );
         const result = await Promise.race([
             notebook.getCompletion(document.getText(), document.offsetAt(position), token),
             sleep(timeout).then(() => emptyResult)
