@@ -9,7 +9,12 @@ import { CancellationToken } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
 
 import { IPythonExtensionChecker } from '../../../api/types';
-import { IApplicationShell, ILiveShareApi, IVSCodeNotebook, IWorkspaceService } from '../../../common/application/types';
+import {
+    IApplicationShell,
+    ILiveShareApi,
+    IVSCodeNotebook,
+    IWorkspaceService
+} from '../../../common/application/types';
 import { traceError, traceInfo } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 import {
