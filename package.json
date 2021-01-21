@@ -97,7 +97,7 @@
                 "win": "F",
                 "linux": "F",
                 "key": "F",
-                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook",
+                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook && jupyter.enableKeyboardShortcuts",
                 "command": "notebook.find"
             },
             {
@@ -105,7 +105,7 @@
                 "win": "K",
                 "linux": "K",
                 "key": "K",
-                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook",
+                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook && jupyter.enableKeyboardShortcuts",
                 "command": "list.focusUp"
             },
             {
@@ -113,7 +113,7 @@
                 "win": "J",
                 "linux": "J",
                 "key": "J",
-                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook",
+                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook && jupyter.enableKeyboardShortcuts",
                 "command": "list.focusDown"
             },
             {
@@ -121,7 +121,7 @@
                 "win": "A",
                 "linux": "A",
                 "key": "A",
-                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook",
+                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook && jupyter.enableKeyboardShortcuts",
                 "command": "notebook.cell.insertCodeCellAbove"
             },
             {
@@ -129,7 +129,7 @@
                 "win": "B",
                 "linux": "B",
                 "key": "B",
-                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook",
+                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook && jupyter.enableKeyboardShortcuts",
                 "command": "notebook.cell.insertCodeCellBelow"
             },
             {
@@ -137,7 +137,7 @@
                 "win": "D D",
                 "linux": "D D",
                 "key": "D D",
-                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook",
+                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook && jupyter.enableKeyboardShortcuts",
                 "command": "notebook.cell.delete"
             },
             {
@@ -145,15 +145,23 @@
                 "win": "Z",
                 "linux": "Z",
                 "key": "Z",
-                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook",
-                "command": "notebook.undo"
+                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook && jupyter.enableKeyboardShortcuts",
+                "command": "undo"
+            },
+            {
+                "mac": "S",
+                "win": "S",
+                "linux": "S",
+                "key": "S",
+                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook && jupyter.enableKeyboardShortcuts",
+                "command": "workbench.action.files.save"
             },
             {
                 "mac": "C",
                 "win": "C",
                 "linux": "C",
                 "key": "C",
-                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook",
+                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook && jupyter.enableKeyboardShortcuts",
                 "command": "notebook.cell.copy"
             },
             {
@@ -161,7 +169,7 @@
                 "win": "X",
                 "linux": "X",
                 "key": "X",
-                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook",
+                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook && jupyter.enableKeyboardShortcuts",
                 "command": "notebook.cell.cut"
             },
             {
@@ -169,14 +177,14 @@
                 "win": "V",
                 "linux": "V",
                 "key": "V",
-                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook",
+                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook && jupyter.enableKeyboardShortcuts",
                 "command": "notebook.cell.paste"
             },
             {
                 "mac": "ctrl+shift+-",
                 "win": "ctrl+shift+-",
                 "linux": "ctrl+shift+-",
-                "when": "editorTextFocus && inputFocus && notebookEditorFocused && notebookViewType == jupyter-notebook",
+                "when": "editorTextFocus && inputFocus && notebookEditorFocused && notebookViewType == jupyter-notebook && jupyter.enableKeyboardShortcuts",
                 "command": "notebook.cell.split"
             },
             {
@@ -1350,6 +1358,12 @@
                     },
                     "description": "List of experiment to opt out of. If empty, user is assigned the default experiment groups. See https://github.com/microsoft/vscode-jupyter/wiki/Experiments for more details.",
                     "scope": "machine"
+                },
+                "jupyter.enableKeyboardShortcuts": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enables Jupyter style keyboard shortcuts for Notebooks.",
+                    "scope": "application"
                 },
                 "jupyter.allowImportFromNotebook": {
                     "type": "boolean",
