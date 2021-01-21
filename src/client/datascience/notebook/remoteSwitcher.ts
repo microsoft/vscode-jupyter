@@ -58,7 +58,7 @@ export class RemoteSwitcher implements IExtensionSingleActivationService {
                 : DataScience.jupyterNativeNotebookUriStatusLabelForRemote();
         const tooltipSuffix = uri === Settings.JupyterServerLocalLaunch ? '' : ` (${uri})`;
         const tooltip = `${DataScience.specifyLocalOrRemoteJupyterServerForConnections()}${tooltipSuffix}`;
-        this.statusBarItem.text = label;
+        this.statusBarItem.text = `$(debug-disconnect) ${label}`;
         this.statusBarItem.tooltip = tooltip;
         this.statusBarItem.command = {
             command: Commands.SelectJupyterURI,

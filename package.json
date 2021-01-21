@@ -499,7 +499,7 @@
             },
             {
                 "command": "jupyter.selectNativeJupyterUriFromToolBar",
-                "title": "jupyter.command.jupyter.selectjupyteruri.title",
+                "title": "%jupyter.command.jupyter.selectjupyteruri.title%",
                 "category": "Jupyter"
             },
             {
@@ -602,10 +602,7 @@
                 "command": "jupyter.selectNativeJupyterUriFromToolBar",
                 "title": "%jupyter.command.jupyter.selectjupyteruri.title%",
                 "category": "Jupyter",
-                "icon": {
-                    "light": "resources/light/restart-kernel.svg",
-                    "dark": "resources/dark/restart-kernel.svg"
-                }
+                "icon": "$(debug-disconnect)"
             },
             {
                 "command": "jupyter.notebookeditor.trust",
@@ -808,7 +805,7 @@
                 {
                     "command": "jupyter.selectNativeJupyterUriFromToolBar",
                     "title": "%jupyter.command.jupyter.selectjupyteruri.title%",
-                    "group": "navigation",
+                    "group": "navigation@1000",
                     "when": "resourceLangId == jupyter && notebookViewType == 'jupyter-notebook'"
                 }
             ],
@@ -1294,7 +1291,7 @@
                 },
                 {
                     "command": "jupyter.selectNativeJupyterUriFromToolBar",
-                    "title": "jupyter.command.jupyter.selectjupyteruri.title",
+                    "title": "%jupyter.command.jupyter.selectjupyteruri.title%",
                     "when": "false"
                 }
             ],

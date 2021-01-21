@@ -881,7 +881,7 @@ export namespace DataScience {
     );
     export const jupyterNativeNotebookUriStatusLabelForRemote = localize(
         'DataScience.jupyterNativeNotebookUriStatusLabelForRemote',
-        'Jupyter Server: remote'
+        'Jupyter Server: Remote'
     );
 
     export const loadClassFailedWithNoInternet = localize(
