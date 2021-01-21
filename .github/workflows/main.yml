@@ -382,6 +382,7 @@ jobs:
 
       # debugpy is not shipped, only installed for local tests.
       # In production, we get debugpy from python extension.
+      # Use specific version of Jedi https://github.com/ipython/ipython/issues/12740
       - name: Install Python Libs
         if: env.conda_python == ''
         run: |
@@ -395,7 +396,10 @@ jobs:
           python -m pip install --upgrade -r ./build/conda-functional-requirements.txt
           python -m ipykernel install --user
           python -m pip install tensorflow
+          python -m pip uninstall jedi --yes
+          python -m pip install jedi==0.17.2
 
+      # Use specific version of Jedi https://github.com/ipython/ipython/issues/12740
       - name: Install Python Libs for conda
         shell: bash -l {0}
         if: env.conda_python
@@ -406,6 +410,8 @@ jobs:
           python ./pythonFiles/install_debugpy.py
           conda env update --file ./build/conda-functional-requirements.yml
           python -m pip install --upgrade -r ./build/conda-functional-requirements.txt
+          python -m pip uninstall jedi --yes
+          python -m pip install jedi==0.17.2
 
       # Install PyTorch with pip
       - name: Install PyTorch on Windows and Linux
@@ -600,6 +606,7 @@ jobs:
 
       # debugpy is not shipped, only installed for local tests.
       # In production, we get debugpy from python extension.
+      # Use specific version of Jedi https://github.com/ipython/ipython/issues/12740
       - name: Install Python Libs
         if: matrix.test-suite != 'conda'
         run: |
@@ -613,7 +620,10 @@ jobs:
           python -m pip install --upgrade -r ./build/ipython-test-requirements.txt
           python -m pip install --upgrade -r ./build/conda-functional-requirements.txt
           python -m ipykernel install --user
+          python -m pip uninstall jedi --yes
+          python -m pip install jedi==0.17.2
 
+      # Use specific version of Jedi https://github.com/ipython/ipython/issues/12740
       - name: Install Python Libs for conda
         shell: bash -l {0}
         if: matrix.test-suite == 'conda'
@@ -624,6 +634,8 @@ jobs:
           python ./pythonFiles/install_debugpy.py
           conda env update --file ./build/conda-functional-requirements.yml
           python -m pip install --upgrade -r ./build/conda-functional-requirements.txt
+          python -m pip uninstall jedi --yes
+          python -m pip install jedi==0.17.2
 
         # This step is slow.
       - name: Install dependencies (npm ci)

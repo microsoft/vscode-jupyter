@@ -789,3 +789,9 @@ export async function updateVSCNotebookAfterTrustingNotebook(
         });
     });
 }
+
+export function findAssociatedNotebookDocument(cellUri: Uri, vscodeNotebook: IVSCodeNotebook, fs: IFileSystem) {
+    return vscodeNotebook.notebookDocuments.find((item) =>
+        item.cells.some((cell) => fs.arePathsSame(cell.uri, cellUri))
+    );
+}

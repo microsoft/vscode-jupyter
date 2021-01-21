@@ -156,6 +156,7 @@ export class KernelProcess implements IKernelProcess {
                 })
             ]);
         } catch (e) {
+            traceError('Disposing kernel process due to an error', e);
             // Make sure to dispose if we never get a heartbeat
             this.dispose().ignoreErrors();
 
@@ -175,6 +176,7 @@ export class KernelProcess implements IKernelProcess {
     }
 
     public async dispose(): Promise<void> {
+        traceInfo('Dispose Kernel process');
         if (this.disposed) {
             return;
         }

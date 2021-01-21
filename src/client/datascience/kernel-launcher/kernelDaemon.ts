@@ -6,6 +6,7 @@
 import { ChildProcess } from 'child_process';
 import { Subject } from 'rxjs/Subject';
 import { MessageConnection, NotificationType, RequestType, RequestType0 } from 'vscode-jsonrpc';
+import { traceInfo } from '../../common/logger';
 import { IPlatformService } from '../../common/platform/types';
 import { BasePythonDaemon, ExecResponse } from '../../common/process/baseDaemon';
 import {
@@ -23,6 +24,7 @@ export class PythonKernelDaemon extends BasePythonDaemon implements IPythonKerne
     private preWarmed?: boolean;
     private outputHooked?: boolean;
     private readonly subject = new Subject<Output<string>>();
+    // eslint-disable-next-line @typescript-eslint/no-useless-constructor
     constructor(
         pythonExecutionService: IPythonExecutionService,
         platformService: IPlatformService,
@@ -37,6 +39,7 @@ export class PythonKernelDaemon extends BasePythonDaemon implements IPythonKerne
         await this.sendRequestWithoutArgs(request);
     }
     public async kill() {
+        traceInfo('kill daemon');
         if (this.killed) {
             return;
         }

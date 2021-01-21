@@ -14,6 +14,7 @@ import { NotebookContentProvider } from './contentProvider';
 import { NotebookCellLanguageService } from './defaultCellLanguageService';
 import { EmptyNotebookCellLanguageService } from './emptyNotebookCellLanguageService';
 import { NotebookIntegration } from './integration';
+import { NotebookCompletionProvider } from './intellisense/completionProvider';
 import { VSCodeKernelPickerProvider } from './kernelProvider';
 import { NotebookDisposeService } from './notebookDisposeService';
 import { RemoteSwitcher } from './remoteSwitcher';
@@ -49,4 +50,5 @@ export function registerTypes(serviceManager: IServiceManager) {
     );
     serviceManager.addSingleton<INotebookKernelResolver>(INotebookKernelResolver, NotebookIPyWidgetCoordinator);
     serviceManager.addSingleton<NotebookCellLanguageService>(NotebookCellLanguageService, NotebookCellLanguageService);
+    serviceManager.addSingleton<NotebookCompletionProvider>(NotebookCompletionProvider, NotebookCompletionProvider);
 }
