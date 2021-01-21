@@ -16,11 +16,12 @@ suite('DataScience Error Handler Unit Tests', () => {
     let applicationShell: typemoq.IMock<IApplicationShell>;
     let dataScienceErrorHandler: DataScienceErrorHandler;
     let dependencyManager: IJupyterInterpreterDependencyManager;
-    const serverSelector = mock(JupyterServerSelector);
+    let serverSelector: JupyterServerSelector;
 
     setup(() => {
         applicationShell = typemoq.Mock.ofType<IApplicationShell>();
         dependencyManager = mock<IJupyterInterpreterDependencyManager>();
+        serverSelector = mock(JupyterServerSelector);
         when(dependencyManager.installMissingDependencies(anything())).thenResolve();
         dataScienceErrorHandler = new DataScienceErrorHandler(
             applicationShell.object,
@@ -102,10 +103,11 @@ suite('DataScience Error Handler Unit Tests', () => {
             )
             .returns(() => Promise.resolve(localize.DataScience.selectNewServer()))
             .verifiable(typemoq.Times.once());
-        when(serverSelector.selectJupyterURI(anything(), anything())).thenCall(() => Promise.resolve());
+        when(serverSelector.selectJupyterURI(anything())).thenResolve();
+        when(serverSelector.selectJupyterURI(anything(), anything())).thenResolve();
         const err = new JupyterZMQBinariesNotFoundError('Not found');
         await dataScienceErrorHandler.handleError(err);
-        verify(serverSelector.selectJupyterURI(anything(), anything())).once();
+        verify(serverSelector.selectJupyterURI(anything())).once();
         applicationShell.verifyAll();
     });
 });
