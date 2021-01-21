@@ -197,6 +197,40 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
     }
 
     public render() {
+        // This control renders differently when hosted in a versus a document
+        if (this.props.viewMode) {
+            return this.renderInViewMode();
+        } else {
+            return this.renderInDocumentMode();
+        }
+    }
+
+    private renderInViewMode() {
+        const contentClassName = `variable-explorer-content`;
+        let variableExplorerStyles: React.CSSProperties = { fontSize: `${this.props.fontSize.toString()}px` };
+        if (this.props.viewHeight !== 0) {
+            variableExplorerStyles = { ...variableExplorerStyles, height: this.props.viewHeight };
+        }
+        return (
+            <div id="variable-panel" ref={this.variablePanelRef}>
+                <div id="variable-panel-padding">
+                    <div
+                        className="variable-explorer"
+                        ref={this.variableExplorerRef}
+                    >
+                        <div className="variable-explorer-menu-bar" ref={this.variableExplorerMenuBarRef}>
+                            <label className="inputLabel variable-explorer-label">
+                                {getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}
+                            </label>
+                        </div>
+                        <div className={contentClassName}>{this.renderGrid()}</div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    private renderInDocumentMode() {
         const contentClassName = `variable-explorer-content`;
         const containerHeight = this.state.containerHeight;
         let variableExplorerStyles: React.CSSProperties = { fontSize: `${this.props.fontSize.toString()}px` };
@@ -206,115 +240,73 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
             variableExplorerStyles = { ...variableExplorerStyles, height: containerHeight };
         }
 
-        if (this.props.viewMode) {
-            if (this.props.viewHeight !== 0) {
-                variableExplorerStyles = { ...variableExplorerStyles, height: this.props.viewHeight };
-            }
-            return (
-                <div id="variable-panel" ref={this.variablePanelRef}>
-                    <div id="variable-panel-padding">
-                        <div
-                            className="variable-explorer"
-                            ref={this.variableExplorerRef}
-                        >
-                            <div className="variable-explorer-menu-bar" ref={this.variableExplorerMenuBarRef}>
-                                <label className="inputLabel variable-explorer-label">
-                                    {getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}
-                                </label>
-                            </div>
-                            <div className={contentClassName}>{this.renderGrid()}</div>
-                        </div>
-                    </div>
-                </div>
-            );
-        } else {
-            return (
-                <Draggable handle=".handle-resize" onDrag={this.handleResizeMouseMove} onStop={this.saveCurrentSize}>
-                    <span>
-                        <div id="variable-panel" ref={this.variablePanelRef}>
-                            <div id="variable-panel-padding">
-                                <div
-                                    className="variable-explorer"
-                                    ref={this.variableExplorerRef}
-                                    style={variableExplorerStyles}
-                                >
-                                    <div className="variable-explorer-menu-bar" ref={this.variableExplorerMenuBarRef}>
-                                        <label className="inputLabel variable-explorer-label">
-                                            {getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}
-                                        </label>
-                                        <ImageButton
+        return (
+            <Draggable handle=".handle-resize" onDrag={this.handleResizeMouseMove} onStop={this.saveCurrentSize}>
+                <span>
+                    <div id="variable-panel" ref={this.variablePanelRef}>
+                        <div id="variable-panel-padding">
+                            <div
+                                className="variable-explorer"
+                                ref={this.variableExplorerRef}
+                                style={variableExplorerStyles}
+                            >
+                                <div className="variable-explorer-menu-bar" ref={this.variableExplorerMenuBarRef}>
+                                    <label className="inputLabel variable-explorer-label">
+                                        {getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}
+                                    </label>
+                                    <ImageButton
+                                        baseTheme={this.props.baseTheme}
+                                        onClick={this.props.closeVariableExplorer}
+                                        className="variable-explorer-close-button"
+                                        tooltip={getLocString('DataScience.close', 'Close')}
+                                    >
+                                        <Image
                                             baseTheme={this.props.baseTheme}
-                                            onClick={this.props.closeVariableExplorer}
-                                            className="variable-explorer-close-button"
-                                            tooltip={getLocString('DataScience.close', 'Close')}
-                                        >
-                                            <Image
-                                                baseTheme={this.props.baseTheme}
-                                                class="image-button-image"
-                                                image={ImageName.Cancel}
-                                            />
-                                        </ImageButton>
-                                    </div>
-                                    <div className={contentClassName}>{this.renderGrid()}</div>
+                                            class="image-button-image"
+                                            image={ImageName.Cancel}
+                                        />
+                                    </ImageButton>
                                 </div>
+                                <div className={contentClassName}>{this.renderGrid()}</div>
                             </div>
-                            <div id="variable-divider" className="handle-resize" />
                         </div>
-                    </span>
-                </Draggable>
-            );
-        }
+                        <div id="variable-divider" className="handle-resize" />
+                    </div>
+                </span>
+            </Draggable>
+        );
     }
 
     private renderGrid() {
-        if (this.props.viewMode) {
-            const newGridHeight = this.calculateGridHeight(this.props.viewHeight);
-            return (
-                <div
-                    id="variable-explorer-data-grid"
-                    role="table"
-                    aria-label={getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}
-                >
-                    <AdazzleReactDataGrid
-                        columns={this.gridColumns.map((c) => {
-                            return { ...defaultColumnProperties, ...c };
-                        })}
-                        // eslint-disable-next-line
-                        rowGetter={this.getRow}
-                        rowsCount={this.props.variables.length}
-                        minHeight={newGridHeight}
-                        headerRowHeight={this.getRowHeight()}
-                        rowHeight={this.getRowHeight()}
-                        onRowDoubleClick={this.rowDoubleClick}
-                        emptyRowsView={VariableExplorerEmptyRowsView}
-                        rowRenderer={VariableExplorerRowRenderer}
-                    />
-                </div>
-            );
-        } else {
-            return (
-                <div
-                    id="variable-explorer-data-grid"
-                    role="table"
-                    aria-label={getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}
-                >
-                    <AdazzleReactDataGrid
-                        columns={this.gridColumns.map((c) => {
-                            return { ...defaultColumnProperties, ...c };
-                        })}
-                        // eslint-disable-next-line
-                        rowGetter={this.getRow}
-                        rowsCount={this.props.variables.length}
-                        minHeight={this.state.gridHeight}
-                        headerRowHeight={this.getRowHeight()}
-                        rowHeight={this.getRowHeight()}
-                        onRowDoubleClick={this.rowDoubleClick}
-                        emptyRowsView={VariableExplorerEmptyRowsView}
-                        rowRenderer={VariableExplorerRowRenderer}
-                    />
-                </div>
-            );
+        let newGridHeight: number | undefined;
+
+        // In in view mode, just use the viewHeight prop for calculating size
+        if(this.props.viewMode) {
+            newGridHeight = this.calculateGridHeight(this.props.viewHeight);
         }
+
+        return (
+            <div
+                id="variable-explorer-data-grid"
+                role="table"
+                aria-label={getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}
+            >
+                <AdazzleReactDataGrid
+                    columns={this.gridColumns.map((c) => {
+                        return { ...defaultColumnProperties, ...c };
+                    })}
+                    // eslint-disable-next-line
+                    rowGetter={this.getRow}
+                    rowsCount={this.props.variables.length}
+                    minHeight={newGridHeight || this.state.gridHeight}
+                    headerRowHeight={this.getRowHeight()}
+                    rowHeight={this.getRowHeight()}
+                    onRowDoubleClick={this.rowDoubleClick}
+                    emptyRowsView={VariableExplorerEmptyRowsView}
+                    rowRenderer={VariableExplorerRowRenderer}
+                />
+            </div>
+        );
     }
 
     private saveCurrentSize() {

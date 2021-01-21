@@ -1,3 +1,4 @@
+/* For the variable view panel, we just want to dock it cleanly in the view with no overflowing */
 body,
 html {
     height: 100%;

@@ -37,7 +37,7 @@ export class VariableViewPanel extends React.Component<IVariableViewPanelProps> 
         window.addEventListener('resize', this.windowResized);
         document.addEventListener('click', this.linkClick, true);
         this.props.variableViewLoaded();
-        this.updateSize(); // Update our initial size
+        this.updateSize(); // Update our initial size after mount
     }
 
     public componentWillUnmount() {
