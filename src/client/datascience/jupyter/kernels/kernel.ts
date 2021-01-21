@@ -67,7 +67,7 @@ export class Kernel implements IKernel {
     private readonly _onRestarted = new EventEmitter<void>();
     private readonly _onDisposed = new EventEmitter<void>();
     private readonly _onInterruptTimedOut = new EventEmitter<void>();
-    private _notebookPromise?: Promise<INotebook | undefined>;
+    private _notebookPromise?: Promise<INotebook>;
     private readonly hookedNotebookForEvents = new WeakSet<INotebook>();
     private restarting?: Deferred<void>;
     private readonly kernelValidated = new Map<string, { kernel: IKernel; promise: Promise<void> }>();
@@ -105,12 +105,12 @@ export class Kernel implements IKernel {
         );
     }
     public async executeCell(cell: NotebookCell): Promise<void> {
-        await this.start({ disableUI: false });
-        await this.kernelExecution.executeCell(cell);
+        const notebookPromise = this.startInternal({ disableUI: false });
+        await this.kernelExecution.executeCell(notebookPromise, cell);
     }
     public async executeAllCells(document: NotebookDocument): Promise<void> {
-        await this.start({ disableUI: false });
-        await this.kernelExecution.executeAllCells(document);
+        const notebookPromise = this.startInternal({ disableUI: false });
+        await this.kernelExecution.executeAllCells(notebookPromise, document);
     }
     public async cancelCell(cell: NotebookCell) {
         this.startCancellation.cancel();
@@ -118,41 +118,11 @@ export class Kernel implements IKernel {
     }
     public async cancelAllCells(document: NotebookDocument) {
         this.startCancellation.cancel();
-        this.kernelExecution.cancelAllCells(document);
+        await this.kernelExecution.cancelAllCells(document);
     }
     public async start(options?: { disableUI?: boolean }): Promise<void> {
-        if (this.restarting) {
-            await this.restarting.promise;
-        }
-        if (this._notebookPromise) {
-            await this._notebookPromise;
-            return;
-        } else {
-            this.startCancellation = new CancellationTokenSource();
-            await this.validate(this.uri);
-            this._notebookPromise = this.notebookProvider.getOrCreateNotebook({
-                identity: this.uri,
-                resource: this.uri,
-                disableUI: options?.disableUI,
-                getOnly: false,
-                metadata: undefined, // No need to pass this, as we have a kernel connection (metadata is required in lower layers to determine the kernel connection).
-                kernelConnection: this.kernelConnectionMetadata,
-                token: this.startCancellation.token
-            });
-
-            this._notebookPromise
-                .then((nb) => (this.kernelExecution.notebook = this.notebook = nb))
-                .catch((ex) => {
-                    traceError('failed to create INotebook in kernel', ex);
-                    this._notebookPromise = undefined;
-                    this.startCancellation.cancel();
-                    this.errorHandler.handleError(ex).ignoreErrors(); // Just a notification, so don't await this
-                });
-            await this._notebookPromise;
-            await this.initializeAfterStart();
-        }
+        await this.startInternal(options);
     }
-
     public async interruptCell(cell: NotebookCell): Promise<InterruptResult> {
         if (this.restarting) {
             await this.restarting.promise;
@@ -188,7 +158,6 @@ export class Kernel implements IKernel {
             this._onDisposed.fire();
             this._onStatusChanged.fire(ServerStatus.Dead);
             this.notebook = undefined;
-            this.kernelExecution.notebook = undefined;
         }
         this.kernelExecution.dispose();
     }
@@ -209,6 +178,51 @@ export class Kernel implements IKernel {
             }
         }
     }
+    private async startInternal(options?: { disableUI?: boolean }): Promise<INotebook> {
+        if (this.restarting) {
+            await this.restarting.promise;
+        }
+        if (!this._notebookPromise) {
+            this.startCancellation = new CancellationTokenSource();
+            this._notebookPromise = new Promise(async (resolve, reject) => {
+                try {
+                    await this.validate(this.uri);
+                    const notebookPromise = this.notebookProvider.getOrCreateNotebook({
+                        identity: this.uri,
+                        resource: this.uri,
+                        disableUI: options?.disableUI,
+                        getOnly: false,
+                        metadata: undefined, // No need to pass this, as we have a kernel connection (metadata is required in lower layers to determine the kernel connection).
+                        kernelConnection: this.kernelConnectionMetadata,
+                        token: this.startCancellation.token
+                    });
+
+                    try {
+                        this.notebook = await notebookPromise;
+                    } catch (ex) {
+                        traceError('failed to create INotebook in kernel', ex);
+                        this._notebookPromise = undefined;
+                        this.startCancellation.cancel();
+                        this.errorHandler.handleError(ex).ignoreErrors(); // Just a notification, so don't await this
+                    }
+                    if (this.notebook) {
+                        await this.initializeAfterStart();
+                        resolve(this.notebook);
+                    } else {
+                        this._notebookPromise = undefined;
+                        // This is an unlikely case (we'd only return a kernel or fail).
+                        // This is due to the type definition (if getOnly = true, then it can be undefined, else not).
+                        reject(new Error('Kernel has not been started'));
+                    }
+                } catch (ex) {
+                    this._notebookPromise = undefined;
+                    reject(ex);
+                }
+            });
+        }
+        return this._notebookPromise;
+    }
+
     private async validate(uri: Uri): Promise<void> {
         const kernel = this.kernelProvider.get(uri);
         if (!kernel) {
