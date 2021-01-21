@@ -24,6 +24,7 @@ export class PythonKernelDaemon extends BasePythonDaemon implements IPythonKerne
     private preWarmed?: boolean;
     private outputHooked?: boolean;
     private readonly subject = new Subject<Output<string>>();
+    // eslint-disable-next-line @typescript-eslint/no-useless-constructor
     constructor(
         pythonExecutionService: IPythonExecutionService,
         platformService: IPlatformService,
