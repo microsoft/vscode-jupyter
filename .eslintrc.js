@@ -177,7 +177,6 @@ module.exports = {
         'src/test/format/extension.format.test.ts',
         'src/test/format/format.helper.test.ts',
         'src/test/format/formatter.unit.test.ts',
-        'src/test/debugger/common/constants.ts',
         'src/test/debugger/common/protocolparser.test.ts',
         'src/test/debugger/envVars.test.ts',
         'src/test/startPage/startPage.unit.test.ts',
