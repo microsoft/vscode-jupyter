@@ -1041,7 +1041,7 @@ export class JupyterNotebookBase implements INotebook {
         // Ask the user for input
         if (msg.content && 'prompt' in msg.content) {
             const hasPassword = msg.content.password !== null && (msg.content.password as boolean);
-            this.applicationService
+            void this.applicationService
                 .showInputBox({
                     prompt: msg.content.prompt ? msg.content.prompt.toString() : '',
                     ignoreFocusOut: true,
