@@ -268,7 +268,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
 
     private renderGrid() {
         if (this.props.viewMode) {
-            const newGridHeight = this.calculateViewGridHeight(this.props.viewHeight);
+            const newGridHeight = this.calculateGridHeight(this.props.viewHeight);
             return (
                 <div
                     id="variable-explorer-data-grid"
@@ -364,8 +364,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
         }
     }
 
-    // IANHU: Combine with below
-    private calculateViewGridHeight(baseHeight: number): number {
+    private calculateGridHeight(baseHeight: number): number {
         const variableExplorerMenuBar = this.variableExplorerMenuBarRef.current;
 
         if (!variableExplorerMenuBar) {
@@ -376,16 +375,12 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
     }
 
     private setVariableGridHeight() {
-        const variableExplorerMenuBar = this.variableExplorerMenuBarRef.current;
-
-        if (!variableExplorerMenuBar) {
+        if (!this.variableExplorerMenuBarRef.current) {
             return;
         }
 
-        const updatedHeight = this.state.containerHeight - variableExplorerMenuBar.clientHeight;
-
         this.setState({
-            gridHeight: updatedHeight
+            gridHeight: this.calculateGridHeight(this.state.containerHeight)
         });
     }
 

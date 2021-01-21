@@ -35,7 +35,6 @@ export const actionCreators = {
     linkClick: (href: string): CommonAction<ILinkClickAction> =>
         createIncomingActionWithPayload(CommonActionType.LINK_CLICK, { href }),
     toggleVariableExplorer: (): CommonAction => createIncomingAction(CommonActionType.TOGGLE_VARIABLE_EXPLORER),
-    // IANHU: Remove from this view?
     setVariableExplorerHeight: (containerHeight: number, gridHeight: number): CommonAction<IVariableExplorerHeight> =>
         createIncomingActionWithPayload(CommonActionType.SET_VARIABLE_EXPLORER_HEIGHT, { containerHeight, gridHeight }),
     setVariableViewHeight: (viewHeight: number): CommonAction<IVariableViewHeight> =>

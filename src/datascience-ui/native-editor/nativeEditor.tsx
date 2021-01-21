@@ -188,7 +188,7 @@ ${buildSettingsCss(this.props.settings)}`}</style>
             executionCount: this.props.currentExecutionCount,
             refreshCount: this.props.variableState.refreshCount,
             offsetHeight: toolbarHeight,
-            viewHeight: 0 // IANHU: Optional?
+            viewHeight: 0
         };
     };
 
