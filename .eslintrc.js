@@ -771,7 +771,6 @@ module.exports = {
         'src/client/common/types.ts',
         'src/client/common/logger.ts',
         'src/client/common/configSettings.ts',
-        'src/client/common/constants.ts',
         'src/client/common/variables/serviceRegistry.ts',
         'src/client/common/variables/environment.ts',
         'src/client/common/variables/types.ts',
