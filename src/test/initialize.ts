@@ -87,7 +87,7 @@ async function closeWindowsInternal() {
     // If there are no editors, we can skip. This seems to time out if no editors visible.
     if (
         !vscode.window.visibleTextEditors ||
-        (!vscode.env.appName.toLowerCase().includes('insiders') && !vscode.window.visibleNotebookEditors)
+        (vscode.env.appName.toLowerCase().includes('insiders') && !vscode.window.visibleNotebookEditors)
     ) {
         // Instead just post the command
         void vscode.commands.executeCommand('workbench.action.closeAllEditors');
