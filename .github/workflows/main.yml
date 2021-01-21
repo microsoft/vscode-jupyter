@@ -499,6 +499,7 @@ jobs:
         # integration: Tests with VS Code, Python extension & real Jupyter
         # notebook: Notebook Tests with VS Code, Python extension & real Jupyter
         test-suite: [integration, notebook, remoteNotebook, nonRawNotebook, notebookWithoutPythonExt, conda]
+        vscode-channel: [stable, insiders]
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -712,7 +713,7 @@ jobs:
           VSC_JUPYTER_REMOTE_NATIVE_TEST: ${{ contains(matrix.test-suite, 'remote') }}
           VSC_JUPYTER_NON_RAW_NATIVE_TEST: ${{ contains(matrix.test-suite, 'nonRawNotebook') }}
           VSC_JUPYTER_CI_RUN_JAVA_NB_TEST: ${{ contains(matrix.test-suite, 'conda') }}
-          VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
+          VSC_JUPYTER_CI_TEST_VSC_CHANNEL: ${{ matrix.vscode-channel }}
         id: test_notebook_vscode
         if: matrix.test-suite == 'notebook' || matrix.test-suite == 'nonRawNotebook' || matrix.test-suite == 'remoteNotebook' || matrix.test-suite == 'conda'
 
@@ -732,7 +733,7 @@ jobs:
           VSC_FORCE_REAL_JUPYTER: 1
           VSC_JUPYTER_FORCE_LOGGING: 1
           VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
-          VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
+          VSC_JUPYTER_CI_TEST_VSC_CHANNEL: ${{ matrix.vscode-channel }}
         id: test_notebookWithoutPythonExt_vscode
         if: matrix.test-suite == 'notebookWithoutPythonExt'
 
