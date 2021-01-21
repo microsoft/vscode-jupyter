@@ -71,6 +71,8 @@ export class KernelDependencyService implements IKernelDependencyService {
             ]);
             if (response === InstallerResponse.Installed) {
                 return KernelInterpreterDependencyResponse.ok;
+            } else if (response === InstallerResponse.Ignore) {
+                return KernelInterpreterDependencyResponse.failed; // This happens when pip or conda can't be started
             }
         }
         return KernelInterpreterDependencyResponse.cancel;

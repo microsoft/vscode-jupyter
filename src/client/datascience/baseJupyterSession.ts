@@ -78,7 +78,11 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     private ioPubEventEmitter = new EventEmitter<KernelMessage.IIOPubMessage>();
     private ioPubHandler: Slot<ISessionWithSocket, KernelMessage.IIOPubMessage>;
 
-    constructor(private restartSessionUsed: (id: Kernel.IKernelConnection) => void, public workingDirectory: string) {
+    constructor(
+        private restartSessionUsed: (id: Kernel.IKernelConnection) => void,
+        public workingDirectory: string,
+        private sessionTimeout: number
+    ) {
         this.statusHandler = this.onStatusChanged.bind(this);
         this.ioPubHandler = (_s, m) => this.ioPubEventEmitter.fire(m);
     }
@@ -165,10 +169,10 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         this.session?.statusChanged.connect(this.statusHandler); // NOSONAR
 
         // Start the restart session promise too.
-        this.restartSessionPromise = this.createRestartSession(kernelConnection, newSession);
+        this.restartSessionPromise = this.createRestartSession(kernelConnection, newSession, timeoutMS);
     }
 
-    public async restart(_timeout: number): Promise<void> {
+    public async restart(timeout: number): Promise<void> {
         if (this.session?.isRemoteSession) {
             await this.session.kernel.restart();
             return;
@@ -176,7 +180,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
 
         // Start the restart session now in case it wasn't started
         if (!this.restartSessionPromise) {
-            this.startRestartSession();
+            this.startRestartSession(timeout);
         }
 
         // Just kill the current session and switch to the other
@@ -199,7 +203,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
             this.session.statusChanged.connect(this.statusHandler);
 
             // After switching, start another in case we restart again.
-            this.restartSessionPromise = this.createRestartSession(this.kernelConnectionMetadata, oldSession);
+            this.restartSessionPromise = this.createRestartSession(this.kernelConnectionMetadata, oldSession, timeout);
             traceInfo('Started new restart session');
             if (oldStatusHandler) {
                 oldSession.statusChanged.disconnect(oldStatusHandler);
@@ -223,7 +227,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         // It has been observed that starting the restart session slows down first time to execute a cell.
         // Solution is to start the restart session after the first execution of user code.
         if (promise) {
-            promise.done.finally(() => this.startRestartSession()).catch(noop);
+            promise.done.finally(() => this.startRestartSession(this.sessionTimeout)).catch(noop);
         }
         return promise;
     }
@@ -323,10 +327,11 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     }
 
     // Sub classes need to implement their own restarting specific code
-    protected abstract startRestartSession(): void;
+    protected abstract startRestartSession(timeout: number): void;
     protected abstract createRestartSession(
         kernelConnection: KernelConnectionMetadata | undefined,
         session: ISessionWithSocket,
+        timeout: number,
         cancelToken?: CancellationToken
     ): Promise<ISessionWithSocket>;
 

@@ -23,7 +23,7 @@ import {
     createTemporaryNotebook,
     hijackPrompt,
     waitForExecutionCompletedSuccessfully,
-    waitForKernelToGetAutoSelected
+    waitForKernelToGetSelected
 } from '../../notebook/helper';
 
 /* eslint-disable no-invalid-this, , , @typescript-eslint/no-explicit-any */
@@ -36,6 +36,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
     );
     const executable = getOSType() === OSType.Windows ? 'Scripts/python.exe' : 'bin/python'; // If running locally on Windows box.
     const venvPythonPath = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src/test/datascience/.venvnokernel', executable);
+    const venvNoRegPath = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src/test/datascience/.venvnoreg', executable);
     const expectedPromptMessageSuffix = `requires ${ProductNames.get(Product.ipykernel)!} to be installed.`;
 
     let api: IExtensionTestApi;
@@ -53,7 +54,11 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         if (IS_REMOTE_NATIVE_TEST) {
             return this.skip();
         }
-        if ((IS_CI_SERVER && getOSType() !== OSType.Linux) || !fs.pathExistsSync(venvPythonPath)) {
+        if (
+            (IS_CI_SERVER && getOSType() !== OSType.Linux) ||
+            !fs.pathExistsSync(venvPythonPath) ||
+            !fs.pathExistsSync(venvNoRegPath)
+        ) {
             // Virtual env does not exist.
             return this.skip();
         }
@@ -90,55 +95,69 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         );
     });
 
-    test('Ensure prompt is displayed when ipykernel module is not found and it gets installed', async () => {
-        const installed = createDeferred();
+    ['.venvnokernel', '.venvnoreg'].forEach((kName) =>
+        test('Ensure prompt is displayed when ipykernel module is not found and it gets installed', async function () {
+            // This is pending waiting for the 'notebook.selectKernel' command to accept an id
+            this.skip();
 
-        // Confirm it is installed.
-        const showInformationMessage = sinon.stub(installer, 'install').callsFake(async function (product: Product) {
-            // Call original method
-            const result: InstallerResponse = await ((installer.install as any).wrappedMethod.apply(
-                installer,
-                arguments
-            ) as Promise<InstallerResponse>);
-            if (product === Product.ipykernel && result === InstallerResponse.Installed) {
-                installed.resolve();
+            // Confirm message is displayed & we click 'Install` button.
+            const prompt = await hijackPrompt(
+                'showErrorMessage',
+                { endsWith: expectedPromptMessageSuffix },
+                { text: Common.install(), clickImmediately: true },
+                disposables
+            );
+            const installed = createDeferred();
+
+            // Confirm it is installed.
+            const showInformationMessage = sinon
+                .stub(installer, 'install')
+                .callsFake(async function (product: Product) {
+                    // Call original method
+                    const result: InstallerResponse = await ((installer.install as any).wrappedMethod.apply(
+                        installer,
+                        arguments
+                    ) as Promise<InstallerResponse>);
+                    if (product === Product.ipykernel && result === InstallerResponse.Installed) {
+                        installed.resolve();
+                    }
+                    return result;
+                });
+
+            try {
+                await openNotebook(api.serviceContainer, nbFile);
+                // If this is a native notebook, then wait for kernel to get selected.
+                if (editorProvider.activeEditor?.type === 'native') {
+                    await waitForKernelToGetSelected(kName);
+                }
+
+                // Run all cells
+                editorProvider.activeEditor!.runAllCells();
+
+                // The prompt should be displayed.
+                await waitForCondition(
+                    async () => prompt.displayed.then(() => true),
+                    delayForUITest,
+                    'Prompt not displayed'
+                );
+
+                // ipykernel should get installed.
+                await waitForCondition(
+                    async () => installed.promise.then(() => true),
+                    delayForUITest,
+                    'Prompt not displayed or not installed successfully'
+                );
+
+                // If this is a native notebook, then wait for cell to get executed completely (else VSC can hang).
+                // This is because extension will attempt to update cells, while tests may have deleted/closed notebooks.
+                if (editorProvider.activeEditor?.type === 'native') {
+                    const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
+                    await waitForExecutionCompletedSuccessfully(cell);
+                }
+            } finally {
+                prompt.dispose();
+                showInformationMessage.restore();
             }
-            return result;
-        });
-        disposables.push({ dispose: () => showInformationMessage.restore() });
-
-        // Confirm message is displayed & we click 'Install` button.
-        const prompt = await hijackPrompt(
-            'showErrorMessage',
-            { endsWith: expectedPromptMessageSuffix },
-            { text: Common.install(), clickImmediately: true },
-            disposables
-        );
-
-        await openNotebook(api.serviceContainer, nbFile);
-        // If this is a native notebook, then wait for kernel to get selected.
-        if (editorProvider.activeEditor?.type === 'native') {
-            await waitForKernelToGetAutoSelected();
-        }
-
-        // Run all cells
-        editorProvider.activeEditor!.runAllCells();
-
-        // The prompt should be displayed.
-        await waitForCondition(async () => prompt.displayed.then(() => true), delayForUITest, 'Prompt not displayed');
-
-        // ipykernel should get installed.
-        await waitForCondition(
-            async () => installed.promise.then(() => true),
-            delayForUITest,
-            'Prompt not displayed or not installed successfully'
-        );
-
-        // If this is a native notebook, then wait for cell to get executed completely (else VSC can hang).
-        // This is because extension will attempt to update cells, while tests may have deleted/closed notebooks.
-        if (editorProvider.activeEditor?.type === 'native') {
-            const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
-            await waitForExecutionCompletedSuccessfully(cell);
-        }
-    });
+        })
+    );
 });

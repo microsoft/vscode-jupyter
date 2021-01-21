@@ -16,6 +16,7 @@ runs:
     # Ensure this is registered as a kernel.
     - name: Create virtual environment without ipykernel
       run: |
+        python -m venv .venvnoreg
         python -m venv .venvnokernel
         source .venvnokernel/bin/activate
         python -m pip install ipykernel

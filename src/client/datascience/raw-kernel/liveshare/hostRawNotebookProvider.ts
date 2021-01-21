@@ -215,6 +215,7 @@ export class HostRawNotebookProvider
 
             traceInfo(`Computing working directory ${identity.toString()}`);
             const workingDirectory = await computeWorkingDirectory(resource, this.workspaceService);
+            const launchTimeout = this.configService.getSettings().jupyterLaunchTimeout;
 
             rawSession = new RawJupyterSession(
                 this.kernelLauncher,
@@ -222,10 +223,9 @@ export class HostRawNotebookProvider
                 this.outputChannel,
                 noop,
                 noop,
-                workingDirectory
+                workingDirectory,
+                launchTimeout
             );
-
-            const launchTimeout = this.configService.getSettings().jupyterLaunchTimeout;
 
             // Interpreter is optional, but we must have a kernel spec for a raw launch if using a kernelspec
             if (

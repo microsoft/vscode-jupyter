@@ -9,14 +9,16 @@ import { InterpreterUri } from '../../common/installer/types';
 import { ObservableExecutionResult } from '../../common/process/types';
 import { IAsyncDisposable, IDisposable, Resource } from '../../common/types';
 import { KernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../jupyter/kernels/types';
-import { IJupyterKernelSpec } from '../types';
+import { IJupyterKernelSpec, KernelInterpreterDependencyResponse } from '../types';
 
 export const IKernelLauncher = Symbol('IKernelLauncher');
 export interface IKernelLauncher {
     launch(
         kernelConnectionMetadata: KernelSpecConnectionMetadata | PythonKernelConnectionMetadata,
+        timeout: number,
         resource: Resource,
-        workingDirectory: string
+        workingDirectory: string,
+        cancelToken?: CancellationToken
     ): Promise<IKernelProcess>;
 }
 
@@ -81,5 +83,11 @@ export class PythonKernelDiedError extends Error {
             this.stack = options.error.stack;
             this.name = options.error.name;
         }
+    }
+}
+
+export class IpyKernelNotInstalledError extends Error {
+    constructor(message: string, public reason: KernelInterpreterDependencyResponse) {
+        super(message);
     }
 }

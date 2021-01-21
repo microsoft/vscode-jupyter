@@ -41,7 +41,7 @@ export class JupyterSession extends BaseJupyterSession {
         readonly workingDirectory: string,
         private readonly idleTimeout: number
     ) {
-        super(restartSessionUsed, workingDirectory);
+        super(restartSessionUsed, workingDirectory, idleTimeout);
         this.kernelConnectionMetadata = kernelSpec;
     }
 
@@ -109,6 +109,7 @@ export class JupyterSession extends BaseJupyterSession {
     protected async createRestartSession(
         kernelConnection: KernelConnectionMetadata | undefined,
         session: ISessionWithSocket,
+        _timeout: number,
         cancelToken?: CancellationToken
     ): Promise<ISessionWithSocket> {
         // We need all of the above to create a restart session
@@ -138,9 +139,13 @@ export class JupyterSession extends BaseJupyterSession {
         throw exception;
     }
 
-    protected startRestartSession() {
+    protected startRestartSession(timeout: number) {
         if (!this.restartSessionPromise && this.session && this.contentsManager) {
-            this.restartSessionPromise = this.createRestartSession(this.kernelConnectionMetadata, this.session);
+            this.restartSessionPromise = this.createRestartSession(
+                this.kernelConnectionMetadata,
+                this.session,
+                timeout
+            );
         }
     }
 
