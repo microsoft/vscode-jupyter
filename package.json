@@ -66,6 +66,7 @@
         "onCommand:jupyter.selectJupyterInterpreter",
         "onCommand:jupyter.selectjupytercommandline",
         "onCommand:jupyter.openVariableView",
+        "onCommand:jupyter.selectNativeJupyterUriFromToolBar",
         "onNotebook:jupyter-notebook",
         "onCustomEditor:jupyter.notebook.ipynb"
     ],
@@ -505,6 +506,11 @@
                 "category": "Jupyter"
             },
             {
+                "command": "jupyter.selectNativeJupyterUriFromToolBar",
+                "title": "%jupyter.command.jupyter.selectjupyteruri.title%",
+                "category": "Jupyter"
+            },
+            {
                 "command": "jupyter.selectjupytercommandline",
                 "title": "%jupyter.command.jupyter.selectjupytercommandline.title%",
                 "category": "Jupyter"
@@ -599,6 +605,12 @@
                     "dark": "resources/dark/restart-kernel.svg"
                 },
                 "enablement": "jupyter.notebookeditor.canrestartNotebookkernel"
+            },
+            {
+                "command": "jupyter.selectNativeJupyterUriFromToolBar",
+                "title": "%jupyter.command.jupyter.selectjupyteruri.title%",
+                "category": "Jupyter",
+                "icon": "$(debug-disconnect)"
             },
             {
                 "command": "jupyter.notebookeditor.trust",
@@ -813,6 +825,12 @@
                     "title": "%DataScience.notebookExportAs%",
                     "group": "navigation",
                     "when": "resourceLangId == jupyter && notebookViewType == 'jupyter-notebook' && jupyter.isnotebooktrusted"
+                },
+                {
+                    "command": "jupyter.selectNativeJupyterUriFromToolBar",
+                    "title": "%jupyter.command.jupyter.selectjupyteruri.title%",
+                    "group": "navigation@1000",
+                    "when": "resourceLangId == jupyter && notebookViewType == 'jupyter-notebook'"
                 }
             ],
             "explorer/context": [
@@ -1300,6 +1318,11 @@
                     "title": "%jupyter.command.jupyter.openVariableView.title%",
                     "category": "Jupyter",
                     "when": "jupyter.isnativeactive"
+                },
+                {
+                    "command": "jupyter.selectNativeJupyterUriFromToolBar",
+                    "title": "%jupyter.command.jupyter.selectjupyteruri.title%",
+                    "when": "false"
                 }
             ],
             "debug/variables/context": [

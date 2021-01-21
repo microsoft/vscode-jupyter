@@ -20,7 +20,8 @@ export class JupyterServerSelectorCommand implements IDisposable {
         this.disposables.push(
             this.commandManager.registerCommand(
                 Commands.SelectJupyterURI,
-                () => this.serverSelector.selectJupyterURI(true),
+                (_, source: 'nativeNotebookStatusBar' | 'commandPalette' | 'toolbar' = 'commandPalette') =>
+                    this.serverSelector.selectJupyterURI(true, source),
                 this.serverSelector
             )
         );

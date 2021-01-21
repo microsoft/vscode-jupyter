@@ -37,7 +37,6 @@ interface ICommandNameWithoutArgumentTypeMapping {
     [DSCommands.RunCurrentCell]: [];
     [DSCommands.RunCurrentCellAdvance]: [];
     [DSCommands.ExecSelectionInInteractiveWindow]: [];
-    [DSCommands.SelectJupyterURI]: [];
     [DSCommands.CreateNewInteractive]: [];
     [DSCommands.UndoCells]: [];
     [DSCommands.RedoCells]: [];
@@ -150,4 +149,6 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.SubmitGitHubIssue]: [];
     [DSCommands.ShowDataViewer]: [IShowDataViewerFromVariablePanel];
     [DSCommands.ClearSavedJupyterUris]: [];
+    [DSCommands.SelectJupyterURI]: [undefined, 'toolbar' | 'nativeNotebookStatusBar' | undefined];
+    [DSCommands.SelectNativeJupyterUriFromToolBar]: [];
 }
