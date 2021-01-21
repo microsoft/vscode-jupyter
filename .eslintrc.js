@@ -959,7 +959,6 @@ module.exports = {
         'src/client/datascience/kernel-launcher/kernelFinder.ts',
         'src/client/datascience/kernel-launcher/types.ts',
         'src/client/datascience/kernel-launcher/kernelDaemonPool.ts',
-        'src/client/datascience/kernel-launcher/kernelDaemon.ts',
         'src/client/datascience/kernel-launcher/kernelDaemonPreWarmer.ts',
         'src/client/datascience/kernel-launcher/kernelLauncher.ts',
         'src/client/datascience/ipywidgets/localWidgetScriptSourceProvider.ts',
