@@ -58,7 +58,7 @@ jobs:
           echo "test_matrix_os=[\"ubuntu-latest\"]" >> $GITHUB_ENV
 
       - name: insiders
-        if: github.event_name == 'push' && github.ref == 'ref/heads/main'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
         # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
         run: |
@@ -66,7 +66,7 @@ jobs:
           echo "test_matrix_os=[\"ubuntu-latest\", \"windows-latest\"]" >> $GITHUB_ENV
 
       - name: release
-        if: github.event_name == 'push' && github.ref != 'ref/heads/main'
+        if: github.event_name == 'push' && github.ref != 'refs/heads/main'
         run: |
           echo "vsix_name=ms-toolsai-jupyter-release.vsix" >> $GITHUB_ENV
           echo "test_matrix_os=[\"ubuntu-latest\"]" >> $GITHUB_ENV
@@ -830,7 +830,7 @@ jobs:
     name: Upload VSIX to Azure Blob Storage
     runs-on: ubuntu-latest
     # This should happen in the release and insiders branch
-    if: github.repository == 'microsoft/vscode-jupyter' && github.event_name == 'push' && (github.ref == 'ref/heads/main' || contains(github.ref, 'ref/heads/release'))
+    if: github.repository == 'microsoft/vscode-jupyter' && github.event_name == 'push' && (github.ref == 'refs/heads/main' || contains(github.ref, 'refs/heads/release'))
     needs: [build-vsix, pick_environment, lint, ts_tests, vscodeTests, smoke-tests]
     env:
       BLOB_CONTAINER_NAME: extension-builds-jupyter
