@@ -10,7 +10,6 @@ import {
     Position,
     TextDocument
 } from 'vscode';
-import { CI_IntellisenseTimeout } from '../../../../test/constants';
 import { IVSCodeNotebook } from '../../../common/application/types';
 import { traceError } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
@@ -58,10 +57,12 @@ export class NotebookCompletionProvider implements CompletionItemProvider {
             return [];
         }
         const emptyResult: INotebookCompletion = { cursor: { end: 0, start: 0 }, matches: [], metadata: {} };
+        // Allow slower timeouts for CI (testing).
+        const timeout =
+            parseInt(process.env.VSC_JUPYTER_IntellisenseTimeout || '0', 10) || Settings.IntellisenseTimeout;
         const result = await Promise.race([
             notebook.getCompletion(document.getText(), document.offsetAt(position), token),
-            // Allow slower timeouts for CI (testing).
-            sleep(CI_IntellisenseTimeout || Settings.IntellisenseTimeout).then(() => emptyResult)
+            sleep(timeout).then(() => emptyResult)
         ]);
         return result.matches.map((item) => {
             const completion: CompletionItem = {
