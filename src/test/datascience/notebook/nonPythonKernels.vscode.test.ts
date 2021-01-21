@@ -25,7 +25,7 @@ import {
     closeNotebooksAndCleanUpAfterTests,
     createTemporaryNotebook,
     executeActiveDocument,
-    insertCodeCell,
+    //insertCodeCell,
     insertMarkdownCell,
     saveActiveNotebook,
     trustAllNotebooks,
