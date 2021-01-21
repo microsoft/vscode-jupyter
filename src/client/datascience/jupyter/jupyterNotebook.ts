@@ -1055,7 +1055,7 @@ export class JupyterNotebookBase implements INotebook {
                 })
                 .then((v) => {
                     this.session.sendInputReply(v || '');
-                });
+                }, noop);
         }
     }
 
