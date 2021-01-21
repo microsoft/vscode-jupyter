@@ -120,7 +120,6 @@ function setVariableViewHeight(arg: VariableReducerArg<IVariableViewHeight>): IV
     const viewHeight = arg.payload.data.viewHeight;
 
     if (viewHeight) {
-        console.log(`IANHU setVariableViewHeight action run ${viewHeight}`);
         return {
             ...arg.prevState,
             viewHeight: viewHeight
@@ -140,7 +139,6 @@ function setVariableExplorerHeight(arg: VariableReducerArg<IVariableExplorerHeig
             containerHeight,
             gridHeight
         });
-        console.log(`IANHU setVariableExplorerHeight action run ${gridHeight}`);
         return {
             ...arg.prevState,
             containerHeight: containerHeight,

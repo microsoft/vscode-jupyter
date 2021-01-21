@@ -72,27 +72,17 @@ export class VariableViewPanel extends React.Component<IVariableViewPanelProps> 
         this.resizeTimer = window.setTimeout(this.updateSize, 50);
     };
 
+    // When the variable view panel updates size, inform the variable view
     private updateSize = () => {
         if (this.panelRef.current) {
             const newHeight = this.panelRef.current.clientHeight;
-            console.log(`IANHU updateSize variableViewPanel newHeight: ${newHeight}`);
-            this.props.setVariableViewHeight(Math.max(newHeight - 0, 0)); // IANHU: Constant? Was too big
-            //this.props.setVariableExplorerHeight(newHeight, newHeight);
+            this.props.setVariableViewHeight(newHeight);
         }
-        //if (this.state.grid && this.containerRef.current && this.measureRef.current) {
-            //// We use a div at the bottom to figure out our expected height. Slickgrid isn't
-            //// so good without a specific height set in the style.
-            //const height = this.measureRef.current.offsetTop - this.containerRef.current.offsetTop;
-            //this.containerRef.current.style.height = `${this.props.forceHeight ? this.props.forceHeight : height}px`;
-            //this.state.grid.resizeCanvas();
-        //}
     };
 
     // Render function and variable props are the same as those from InterativePanel to allow us to reuse the same
     // control without alterations
     private renderVariablePanel(baseTheme: string) {
-        //console.log(`IANHU render variable panel gridHeight: ${this.props.variableState.gridHeight}`);
-        //console.log(`IANHU render variable panel containerHeight: ${this.props.variableState.containerHeight}`);
         if (this.props.variableState.visible) {
             const variableProps = this.getVariableProps(baseTheme);
             return <VariablePanel {...variableProps} />;
@@ -102,12 +92,9 @@ export class VariableViewPanel extends React.Component<IVariableViewPanelProps> 
     }
 
     private getVariableProps = (baseTheme: string): IVariablePanelProps => {
-        console.log(`IANHU getVariableProps in variableViewPanel height: ${this.props.variableState.viewHeight}`);
         return {
             gridHeight: this.props.variableState.gridHeight,
             containerHeight: this.props.variableState.containerHeight,
-            //gridHeight: 300,
-            //containerHeight: 300,
             variables: this.props.variableState.variables,
             debugging: this.props.debugging,
             busy: this.props.busy,

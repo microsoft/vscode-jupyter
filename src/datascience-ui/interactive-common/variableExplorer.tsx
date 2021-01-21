@@ -182,31 +182,16 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
             prevState.containerHeight !== this.state.containerHeight ||
             prevState.gridHeight !== this.state.gridHeight && !this.props.viewMode
         ) {
-            console.log(`IANHU variableExplorer shouldComponentUpdate ${this.state.containerHeight}`);
-            console.log(`IANHU variableExplorer shouldComponentUpdate ${this.state.gridHeight}`);
             return true;
         }
 
+        // In view mode, we need to update when our height changes
         if (
             this.props.viewMode &&
             (prevState.viewHeight !== nextProps.viewHeight)
         ){
-            console.log(`IANHU variableExplorer shouldComponentUpdate ${nextProps.viewHeight}`);
             return true;
         }
-
-        //if (
-            //prevState.containerHeight !== nextProps.containerHeight ||
-            //prevState.gridHeight !== nextProps.gridHeight && this.props.viewMode
-        //) {
-            //console.log(`IANHU variableExplorer shouldComponentUpdate ${this.state.containerHeight}`);
-            //console.log(`IANHU variableExplorer shouldComponentUpdate ${this.state.gridHeight}`);
-            ////this.setState({
-                ////containerHeight: nextProps.containerHeight,
-                ////gridHeight: nextProps.containerHeight
-            ////});
-            //return true;
-        //}
 
         return false;
     }
@@ -222,7 +207,6 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
         }
 
         if (this.props.viewMode) {
-            console.log(`IANHU viewHeight: ${this.props.viewHeight}`);
             if (this.props.viewHeight !== 0) {
                 variableExplorerStyles = { ...variableExplorerStyles, height: this.props.viewHeight };
             }
@@ -285,8 +269,6 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
     private renderGrid() {
         if (this.props.viewMode) {
             const newGridHeight = this.calculateViewGridHeight(this.props.viewHeight);
-            console.log(`IANHU renderGrid newGridHeight: ${newGridHeight}`);
-            console.log(`IANHU renderGrid viewHeight: ${this.props.viewHeight}`);
             return (
                 <div
                     id="variable-explorer-data-grid"
@@ -300,8 +282,6 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
                         // eslint-disable-next-line
                         rowGetter={this.getRow}
                         rowsCount={this.props.variables.length}
-                        //minHeight={this.state.gridHeight}
-                        //minHeight={150}
                         minHeight={newGridHeight}
                         headerRowHeight={this.getRowHeight()}
                         rowHeight={this.getRowHeight()}
