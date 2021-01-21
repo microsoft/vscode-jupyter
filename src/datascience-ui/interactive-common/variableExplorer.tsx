@@ -41,6 +41,7 @@ interface IVariableExplorerProps {
     setVariableExplorerHeight(containerHeight: number, gridHeight: number): void;
     pageIn(startIndex: number, pageSize: number): void;
     viewMode?: boolean;
+    viewHeight: number;
 }
 
 const defaultColumnProperties = {
@@ -187,16 +188,25 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
         }
 
         if (
-            prevState.containerHeight !== nextProps.containerHeight ||
-            prevState.gridHeight !== nextProps.gridHeight && this.props.viewMode
-        ) {
-            console.log(`IANHU variableExplorer shouldComponentUpdate ${this.state.containerHeight}`);
-            console.log(`IANHU variableExplorer shouldComponentUpdate ${this.state.gridHeight}`);
-            this.setState({
-                containerHeight: nextProps.containerHeight
-            });
+            this.props.viewMode &&
+            (prevState.viewHeight !== nextProps.viewHeight)
+        ){
+            console.log(`IANHU variableExplorer shouldComponentUpdate ${nextProps.viewHeight}`);
             return true;
         }
+
+        //if (
+            //prevState.containerHeight !== nextProps.containerHeight ||
+            //prevState.gridHeight !== nextProps.gridHeight && this.props.viewMode
+        //) {
+            //console.log(`IANHU variableExplorer shouldComponentUpdate ${this.state.containerHeight}`);
+            //console.log(`IANHU variableExplorer shouldComponentUpdate ${this.state.gridHeight}`);
+            ////this.setState({
+                ////containerHeight: nextProps.containerHeight,
+                ////gridHeight: nextProps.containerHeight
+            ////});
+            //return true;
+        //}
 
         return false;
     }
@@ -212,7 +222,10 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
         }
 
         if (this.props.viewMode) {
-            console.log('IANHU **** Control in view mode');
+            console.log(`IANHU viewHeight: ${this.props.viewHeight}`);
+            if (this.props.viewHeight !== 0) {
+                variableExplorerStyles = { ...variableExplorerStyles, height: this.props.viewHeight };
+            }
             return (
                 <div id="variable-panel" ref={this.variablePanelRef}>
                     <div id="variable-panel-padding">
@@ -270,28 +283,55 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
     }
 
     private renderGrid() {
-        return (
-            <div
-                id="variable-explorer-data-grid"
-                role="table"
-                aria-label={getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}
-            >
-                <AdazzleReactDataGrid
-                    columns={this.gridColumns.map((c) => {
-                        return { ...defaultColumnProperties, ...c };
-                    })}
-                    // eslint-disable-next-line
-                    rowGetter={this.getRow}
-                    rowsCount={this.props.variables.length}
-                    minHeight={this.state.gridHeight}
-                    headerRowHeight={this.getRowHeight()}
-                    rowHeight={this.getRowHeight()}
-                    onRowDoubleClick={this.rowDoubleClick}
-                    emptyRowsView={VariableExplorerEmptyRowsView}
-                    rowRenderer={VariableExplorerRowRenderer}
-                />
-            </div>
-        );
+        if (this.props.viewMode) {
+            return (
+                <div
+                    id="variable-explorer-data-grid"
+                    role="table"
+                    aria-label={getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}
+                >
+                    <AdazzleReactDataGrid
+                        columns={this.gridColumns.map((c) => {
+                            return { ...defaultColumnProperties, ...c };
+                        })}
+                        // eslint-disable-next-line
+                        rowGetter={this.getRow}
+                        rowsCount={this.props.variables.length}
+                        //minHeight={this.state.gridHeight}
+                        //minHeight={150}
+                        minHeight={Math.max(this.props.viewHeight - 20, 0)}
+                        headerRowHeight={this.getRowHeight()}
+                        rowHeight={this.getRowHeight()}
+                        onRowDoubleClick={this.rowDoubleClick}
+                        emptyRowsView={VariableExplorerEmptyRowsView}
+                        rowRenderer={VariableExplorerRowRenderer}
+                    />
+                </div>
+            );
+        } else {
+            return (
+                <div
+                    id="variable-explorer-data-grid"
+                    role="table"
+                    aria-label={getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}
+                >
+                    <AdazzleReactDataGrid
+                        columns={this.gridColumns.map((c) => {
+                            return { ...defaultColumnProperties, ...c };
+                        })}
+                        // eslint-disable-next-line
+                        rowGetter={this.getRow}
+                        rowsCount={this.props.variables.length}
+                        minHeight={this.state.gridHeight}
+                        headerRowHeight={this.getRowHeight()}
+                        rowHeight={this.getRowHeight()}
+                        onRowDoubleClick={this.rowDoubleClick}
+                        emptyRowsView={VariableExplorerEmptyRowsView}
+                        rowRenderer={VariableExplorerRowRenderer}
+                    />
+                </div>
+            );
+        }
     }
 
     private saveCurrentSize() {

@@ -37,6 +37,7 @@ export class VariableViewPanel extends React.Component<IVariableViewPanelProps> 
         window.addEventListener('resize', this.windowResized);
         document.addEventListener('click', this.linkClick, true);
         this.props.variableViewLoaded();
+        this.updateSize(); // Update our initial size
     }
 
     public componentWillUnmount() {
@@ -75,7 +76,8 @@ export class VariableViewPanel extends React.Component<IVariableViewPanelProps> 
         if (this.panelRef.current) {
             const newHeight = this.panelRef.current.clientHeight;
             console.log(`IANHU updateSize variableViewPanel newHeight: ${newHeight}`);
-            this.props.setVariableExplorerHeight(newHeight, newHeight);
+            this.props.setVariableViewHeight(newHeight);
+            //this.props.setVariableExplorerHeight(newHeight, newHeight);
         }
         //if (this.state.grid && this.containerRef.current && this.measureRef.current) {
             //// We use a div at the bottom to figure out our expected height. Slickgrid isn't
@@ -100,7 +102,7 @@ export class VariableViewPanel extends React.Component<IVariableViewPanelProps> 
     }
 
     private getVariableProps = (baseTheme: string): IVariablePanelProps => {
-        console.log(`IANHU getVariableProps in variableViewPanel height: ${this.props.variableState.containerHeight}`);
+        console.log(`IANHU getVariableProps in variableViewPanel height: ${this.props.variableState.viewHeight}`);
         return {
             gridHeight: this.props.variableState.gridHeight,
             containerHeight: this.props.variableState.containerHeight,
@@ -120,7 +122,8 @@ export class VariableViewPanel extends React.Component<IVariableViewPanelProps> 
             executionCount: this.props.currentExecutionCount,
             refreshCount: this.props.variableState.refreshCount,
             offsetHeight: 0, // No toolbar in variable view panel
-            viewMode: true // Set that we are in variable view mode
+            viewMode: true, // Set that we are in variable view mode
+            viewHeight: this.props.variableState.viewHeight // Height to use for variable view mode
         };
     };
 

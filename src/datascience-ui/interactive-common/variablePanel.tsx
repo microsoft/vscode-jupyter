@@ -26,6 +26,7 @@ export interface IVariablePanelProps {
     setVariableExplorerHeight(containerHeight: number, gridHeight: number): any;
     pageIn(startIndex: number, pageSize: number): void;
     viewMode?: boolean;
+    viewHeight: number;
 }
 
 export class VariablePanel extends React.Component<IVariablePanelProps> {
@@ -51,6 +52,7 @@ export class VariablePanel extends React.Component<IVariablePanelProps> {
                 executionCount={this.props.executionCount}
                 refreshCount={this.props.refreshCount}
                 viewMode={this.props.viewMode}
+                viewHeight={this.props.viewHeight}
             />
         );
     }

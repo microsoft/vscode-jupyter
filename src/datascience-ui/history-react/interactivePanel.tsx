@@ -341,7 +341,8 @@ ${buildSettingsCss(this.props.settings)}`}</style>
             fontSize: this.props.font.size,
             executionCount: this.props.currentExecutionCount,
             refreshCount: this.props.variableState.refreshCount,
-            offsetHeight: toolbarHeight
+            offsetHeight: toolbarHeight,
+            viewHeight: 0 // IANHU: Make optional?
         };
     };
 

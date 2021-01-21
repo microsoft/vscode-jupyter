@@ -13,7 +13,8 @@ import {
     CommonActionTypeMapping,
     ILinkClickAction,
     IShowDataViewerAction,
-    IVariableExplorerHeight
+    IVariableExplorerHeight,
+    IVariableViewHeight
 } from '../../interactive-common/redux/reducers/types';
 
 // This function isn't made common and not exported, to ensure it isn't used elsewhere.
@@ -34,8 +35,11 @@ export const actionCreators = {
     linkClick: (href: string): CommonAction<ILinkClickAction> =>
         createIncomingActionWithPayload(CommonActionType.LINK_CLICK, { href }),
     toggleVariableExplorer: (): CommonAction => createIncomingAction(CommonActionType.TOGGLE_VARIABLE_EXPLORER),
+    // IANHU: Remove from this view?
     setVariableExplorerHeight: (containerHeight: number, gridHeight: number): CommonAction<IVariableExplorerHeight> =>
         createIncomingActionWithPayload(CommonActionType.SET_VARIABLE_EXPLORER_HEIGHT, { containerHeight, gridHeight }),
+    setVariableViewHeight: (viewHeight: number): CommonAction<IVariableViewHeight> =>
+        createIncomingActionWithPayload(CommonActionType.SET_VARIABLE_VIEW_HEIGHT, { viewHeight }),
     showDataViewer: (variable: IJupyterVariable, columnSize: number): CommonAction<IShowDataViewerAction> =>
         createIncomingActionWithPayload(CommonActionType.SHOW_DATA_VIEWER, { variable, columnSize }),
     variableViewLoaded: (): CommonAction => createIncomingAction(CommonActionType.VARIABLE_VIEW_LOADED),

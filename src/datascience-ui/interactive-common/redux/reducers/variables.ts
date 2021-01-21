@@ -15,7 +15,13 @@ import {
 } from '../../../../client/datascience/types';
 import { combineReducers, QueuableAction, ReducerArg, ReducerFunc } from '../../../react-common/reduxUtils';
 import { postActionToExtension } from '../helpers';
-import { CommonActionType, CommonActionTypeMapping, ICellAction, IVariableExplorerHeight } from './types';
+import {
+    CommonActionType,
+    CommonActionTypeMapping,
+    ICellAction,
+    IVariableExplorerHeight,
+    IVariableViewHeight
+} from './types';
 
 export type IVariableState = {
     currentExecutionCount: number;
@@ -28,6 +34,7 @@ export type IVariableState = {
     gridHeight: number;
     refreshCount: number;
     showVariablesOnDebug: boolean;
+    viewHeight: number;
 };
 
 type VariableReducerFunc<T = never | undefined> = ReducerFunc<
@@ -102,6 +109,22 @@ function handleVariableExplorerHeightResponse(arg: VariableReducerArg<IVariableE
                 gridHeight: gridHeight
             };
         }
+    }
+    return {
+        ...arg.prevState
+    };
+}
+
+// When in view mode, set the new height of the variable view
+function setVariableViewHeight(arg: VariableReducerArg<IVariableViewHeight>): IVariableState {
+    const viewHeight = arg.payload.data.viewHeight;
+
+    if (viewHeight) {
+        console.log(`IANHU setVariableViewHeight action run ${viewHeight}`);
+        return {
+            ...arg.prevState,
+            viewHeight: viewHeight
+        };
     }
     return {
         ...arg.prevState
@@ -310,6 +333,7 @@ const reducerMap: Partial<VariableActionMapping> = {
     [InteractiveWindowMessages.ForceVariableRefresh]: handleRefresh,
     [CommonActionType.TOGGLE_VARIABLE_EXPLORER]: toggleVariableExplorer,
     [CommonActionType.SET_VARIABLE_EXPLORER_HEIGHT]: setVariableExplorerHeight,
+    [CommonActionType.SET_VARIABLE_VIEW_HEIGHT]: setVariableViewHeight,
     [InteractiveWindowMessages.VariableExplorerHeightResponse]: handleVariableExplorerHeightResponse,
     [CommonActionType.GET_VARIABLE_DATA]: handleRequest,
     [InteractiveWindowMessages.GetVariablesResponse]: handleResponse,
@@ -331,7 +355,8 @@ export function generateVariableReducer(
         containerHeight: 0,
         gridHeight: 200,
         refreshCount: 0,
-        showVariablesOnDebug
+        showVariablesOnDebug,
+        viewHeight: 0
     };
 
     // Then combine that with our map of state change message to reducer
