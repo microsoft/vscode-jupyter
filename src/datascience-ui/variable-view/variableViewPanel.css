@@ -1,0 +1,15 @@
+body,
+html {
+    height: 100%;
+    margin: 0;
+}
+
+#root {
+    height: 100%;
+    margin: 0;
+}
+
+#variable-view-main-panel {
+    height: 100%;
+    margin: 0;
+}

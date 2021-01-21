@@ -117,6 +117,7 @@ function setVariableExplorerHeight(arg: VariableReducerArg<IVariableExplorerHeig
             containerHeight,
             gridHeight
         });
+        console.log(`IANHU setVariableExplorerHeight action run ${gridHeight}`);
         return {
             ...arg.prevState,
             containerHeight: containerHeight,

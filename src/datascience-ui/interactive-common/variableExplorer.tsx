@@ -179,8 +179,22 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
         }
         if (
             prevState.containerHeight !== this.state.containerHeight ||
-            prevState.gridHeight !== this.state.gridHeight
+            prevState.gridHeight !== this.state.gridHeight && !this.props.viewMode
         ) {
+            console.log(`IANHU variableExplorer shouldComponentUpdate ${this.state.containerHeight}`);
+            console.log(`IANHU variableExplorer shouldComponentUpdate ${this.state.gridHeight}`);
+            return true;
+        }
+
+        if (
+            prevState.containerHeight !== nextProps.containerHeight ||
+            prevState.gridHeight !== nextProps.gridHeight && this.props.viewMode
+        ) {
+            console.log(`IANHU variableExplorer shouldComponentUpdate ${this.state.containerHeight}`);
+            console.log(`IANHU variableExplorer shouldComponentUpdate ${this.state.gridHeight}`);
+            this.setState({
+                containerHeight: nextProps.containerHeight
+            });
             return true;
         }
 
@@ -205,7 +219,6 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
                         <div
                             className="variable-explorer"
                             ref={this.variableExplorerRef}
-                            style={variableExplorerStyles}
                         >
                             <div className="variable-explorer-menu-bar" ref={this.variableExplorerMenuBarRef}>
                                 <label className="inputLabel variable-explorer-label">
@@ -215,7 +228,6 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
                             <div className={contentClassName}>{this.renderGrid()}</div>
                         </div>
                     </div>
-                    <div id="variable-divider" className="handle-resize" />
                 </div>
             );
         } else {
