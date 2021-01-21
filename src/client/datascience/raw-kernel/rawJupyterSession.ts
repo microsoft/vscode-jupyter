@@ -4,9 +4,10 @@
 import type { Kernel } from '@jupyterlab/services';
 import type { Slot } from '@phosphor/signaling';
 import { CancellationToken } from 'vscode-jsonrpc';
-import { CancellationError, TimedOutError } from '../../common/cancellation';
+import { CancellationError } from '../../common/cancellation';
 import { traceError, traceInfo } from '../../common/logger';
 import { IDisposable, IOutputChannel, Resource } from '../../common/types';
+import { TimedOutError } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
@@ -14,7 +15,7 @@ import { BaseJupyterSession } from '../baseJupyterSession';
 import { Identifiers, Telemetry } from '../constants';
 import { getDisplayNameOrNameOfKernelConnection } from '../jupyter/kernels/helpers';
 import { KernelConnectionMetadata } from '../jupyter/kernels/types';
-import { IKernelLauncher } from '../kernel-launcher/types';
+import { IKernelLauncher, IpyKernelNotInstalledError } from '../kernel-launcher/types';
 import { reportAction } from '../progress/decorator';
 import { ReportableAction } from '../progress/types';
 import { RawSession } from '../raw-kernel/rawSession';
@@ -115,6 +116,10 @@ export class RawJupyterSession extends BaseJupyterSession {
                 traceError('Raw session failed to start in given timeout');
                 // Translate into original error
                 throw new RawKernelSessionStartError(kernelConnection);
+            } else if (error instanceof IpyKernelNotInstalledError) {
+                sendTelemetryEvent(Telemetry.RawKernelSessionStartNoIpykernel, { reason: error.reason });
+                traceError('Raw session failed to start because dependencies not installed');
+                throw error;
             } else {
                 // Send our telemetry event with the error included
                 sendTelemetryEvent(Telemetry.RawKernelSessionStartException, undefined, undefined, error);

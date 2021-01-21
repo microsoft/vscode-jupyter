@@ -1300,7 +1300,8 @@ export type KernelSocketInformation = {
 
 export enum KernelInterpreterDependencyResponse {
     ok,
-    cancel
+    cancel,
+    failed
 }
 
 export const IKernelDependencyService = Symbol('IKernelDependencyService');

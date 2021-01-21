@@ -1001,6 +1001,9 @@ export interface IEventNamePropertyMapping {
     [Telemetry.RawKernelSessionStartException]: never | undefined;
     [Telemetry.RawKernelSessionStartTimeout]: never | undefined;
     [Telemetry.RawKernelSessionStartUserCancel]: never | undefined;
+    [Telemetry.RawKernelSessionStartNoIpykernel]: {
+        reason: number;
+    };
 
     // Run by line events
     [Telemetry.RunByLineStart]: never | undefined;

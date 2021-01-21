@@ -9,7 +9,7 @@ import { InterpreterUri } from '../../common/installer/types';
 import { ObservableExecutionResult } from '../../common/process/types';
 import { IAsyncDisposable, IDisposable, Resource } from '../../common/types';
 import { KernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../jupyter/kernels/types';
-import { IJupyterKernelSpec } from '../types';
+import { IJupyterKernelSpec, KernelInterpreterDependencyResponse } from '../types';
 
 export const IKernelLauncher = Symbol('IKernelLauncher');
 export interface IKernelLauncher {
@@ -86,4 +86,8 @@ export class PythonKernelDiedError extends Error {
     }
 }
 
-export class IpyKernelNotInstalledError extends Error {}
+export class IpyKernelNotInstalledError extends Error {
+    constructor(message: string, public reason: KernelInterpreterDependencyResponse) {
+        super(message);
+    }
+}

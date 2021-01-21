@@ -192,7 +192,8 @@ export class KernelLauncher implements IKernelLauncher {
                 throw new IpyKernelNotInstalledError(
                     localize.DataScience.ipykernelNotInstalled().format(
                         `${interpreter.displayName || interpreter.path}:${interpreter.path}`
-                    )
+                    ),
+                    result
                 );
             }
         } finally {
