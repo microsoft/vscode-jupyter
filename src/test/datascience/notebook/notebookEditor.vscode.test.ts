@@ -40,6 +40,9 @@ suite('Notebook Editor tests', () => {
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
         commandManager = api.serviceContainer.get<ICommandManager>(ICommandManager);
+
+        // On conda these take longer for some reason.
+        this.timeout(30_000);
     });
 
     setup(async function () {
