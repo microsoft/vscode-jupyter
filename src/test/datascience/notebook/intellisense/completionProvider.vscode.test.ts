@@ -57,7 +57,7 @@ suite('DataScience - VSCode Notebook - (Code Completion via Jupyter) (slow)', fu
         await waitForKernelToGetAutoSelected(undefined);
         await deleteAllCellsAndWait();
         assert.isOk(vscodeNotebook.activeNotebookEditor, 'No active notebook');
-        process.env.VSC_JUPYTER_IntellisenseTimeout = '10_000';
+        process.env.VSC_JUPYTER_IntellisenseTimeout = '10000';
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
     });
     teardown(async function () {
