@@ -76,7 +76,7 @@ export class VariableViewPanel extends React.Component<IVariableViewPanelProps> 
         if (this.panelRef.current) {
             const newHeight = this.panelRef.current.clientHeight;
             console.log(`IANHU updateSize variableViewPanel newHeight: ${newHeight}`);
-            this.props.setVariableViewHeight(newHeight);
+            this.props.setVariableViewHeight(Math.max(newHeight - 0, 0)); // IANHU: Constant? Was too big
             //this.props.setVariableExplorerHeight(newHeight, newHeight);
         }
         //if (this.state.grid && this.containerRef.current && this.measureRef.current) {

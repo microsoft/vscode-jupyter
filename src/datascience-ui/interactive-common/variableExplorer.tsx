@@ -284,6 +284,9 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
 
     private renderGrid() {
         if (this.props.viewMode) {
+            const newGridHeight = this.calculateViewGridHeight(this.props.viewHeight);
+            console.log(`IANHU renderGrid newGridHeight: ${newGridHeight}`);
+            console.log(`IANHU renderGrid viewHeight: ${this.props.viewHeight}`);
             return (
                 <div
                     id="variable-explorer-data-grid"
@@ -299,7 +302,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
                         rowsCount={this.props.variables.length}
                         //minHeight={this.state.gridHeight}
                         //minHeight={150}
-                        minHeight={Math.max(this.props.viewHeight - 20, 0)}
+                        minHeight={newGridHeight}
                         headerRowHeight={this.getRowHeight()}
                         rowHeight={this.getRowHeight()}
                         onRowDoubleClick={this.rowDoubleClick}
@@ -379,6 +382,17 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
                 containerHeight: updatedHeight
             });
         }
+    }
+
+    // IANHU: Combine with below
+    private calculateViewGridHeight(baseHeight: number): number {
+        const variableExplorerMenuBar = this.variableExplorerMenuBarRef.current;
+
+        if (!variableExplorerMenuBar) {
+            return baseHeight;
+        }
+
+        return baseHeight - variableExplorerMenuBar.clientHeight;
     }
 
     private setVariableGridHeight() {
