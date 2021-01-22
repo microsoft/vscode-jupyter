@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
@@ -212,7 +211,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
         return (
             <div id="variable-panel" ref={this.variablePanelRef}>
                 <div id="variable-panel-padding">
-                    <div className="variable-explorer" ref={this.variableExplorerRef}>
+                    <div className="variable-explorer" ref={this.variableExplorerRef} style={variableExplorerStyles}>
                         <div className="variable-explorer-menu-bar" ref={this.variableExplorerMenuBarRef}>
                             <label className="inputLabel variable-explorer-label">
                                 {getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}

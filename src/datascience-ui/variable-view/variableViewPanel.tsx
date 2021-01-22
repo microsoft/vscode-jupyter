@@ -4,7 +4,6 @@ import * as React from 'react';
 import { connect } from 'react-redux';
 import { handleLinkClick } from '../interactive-common/handlers';
 import { IMainWithVariables, IStore } from '../interactive-common/redux/store';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { IVariablePanelProps, VariablePanel } from '../interactive-common/variablePanel';
 import { actionCreators } from './redux/actions';
 
