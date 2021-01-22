@@ -1225,6 +1225,7 @@ module.exports = {
                 extensions: ['.tsx']
             }
         ],
+        'react/jsx-uses-vars': 'error',
         strict: 'off'
     },
     settings: {
