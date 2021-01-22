@@ -112,7 +112,7 @@ export class VariableViewPanel extends React.Component<IVariableViewPanelProps> 
             executionCount: this.props.currentExecutionCount,
             refreshCount: this.props.variableState.refreshCount,
             offsetHeight: 0, // No toolbar in variable view panel
-            viewMode: true, // Set that we are in variable view mode
+            standaloneMode: true, // Set that we are in standalone variable view mode
             viewHeight: this.props.variableState.viewHeight // Height to use for variable view mode
         };
     };

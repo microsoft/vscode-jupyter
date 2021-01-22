@@ -41,7 +41,7 @@ interface IVariableExplorerProps {
     closeVariableExplorer(): void;
     setVariableExplorerHeight(containerHeight: number, gridHeight: number): void;
     pageIn(startIndex: number, pageSize: number): void;
-    viewMode?: boolean;
+    standaloneMode?: boolean;
     viewHeight: number;
 }
 
@@ -181,13 +181,13 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
         }
         if (
             prevState.containerHeight !== this.state.containerHeight ||
-            (prevState.gridHeight !== this.state.gridHeight && !this.props.viewMode)
+            (prevState.gridHeight !== this.state.gridHeight && !this.props.standaloneMode)
         ) {
             return true;
         }
 
-        // In view mode, we need to update when our height changes
-        if (this.props.viewMode && prevState.viewHeight !== nextProps.viewHeight) {
+        // In standalone mode, we need to update when our height changes
+        if (this.props.standaloneMode && prevState.viewHeight !== nextProps.viewHeight) {
             return true;
         }
 
@@ -195,8 +195,8 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
     }
 
     public render() {
-        // This control renders differently when hosted in a versus a document
-        if (this.props.viewMode) {
+        // This control renders differently when hosted standalone versus a document
+        if (this.props.standaloneMode) {
             return this.renderInViewMode();
         } else {
             return this.renderInDocumentMode();
@@ -275,8 +275,8 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
     private renderGrid() {
         let newGridHeight: number | undefined;
 
-        // In in view mode, just use the viewHeight prop for calculating size
-        if (this.props.viewMode) {
+        // In in standalone mode, just use the viewHeight prop for calculating size
+        if (this.props.standaloneMode) {
             newGridHeight = this.calculateGridHeight(this.props.viewHeight);
         }
 
