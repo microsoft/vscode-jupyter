@@ -41,6 +41,9 @@ export class VariableViewPanel extends React.Component<IVariableViewPanelProps> 
     }
 
     public componentWillUnmount() {
+        if (this.resizeTimer) {
+            window.clearTimeout(this.resizeTimer);
+        }
         window.removeEventListener('resize', this.windowResized);
         document.removeEventListener('click', this.linkClick);
     }
