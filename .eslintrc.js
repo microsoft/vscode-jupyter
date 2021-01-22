@@ -61,7 +61,6 @@ module.exports = {
         'src/test/mocks/vsc/index.ts',
         'src/test/mocks/vsc/arrays.ts',
         'src/test/smoke/common.ts',
-        'src/test/smoke/datascience.smoke.test.ts',
         'src/test/smoke/runInTerminal.smoke.test.ts',
         'src/test/smoke/languageServer.smoke.test.ts',
         'src/test/mockClasses.ts',
