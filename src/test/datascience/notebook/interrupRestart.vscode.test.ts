@@ -15,7 +15,7 @@ import { DataScience } from '../../../client/common/utils/localize';
 import { noop } from '../../../client/common/utils/misc';
 import { IKernelProvider } from '../../../client/datascience/jupyter/kernels/types';
 import { INotebookEditorProvider } from '../../../client/datascience/types';
-import { IExtensionTestApi, waitForCondition } from '../../common';
+import { IExtensionTestApi, sleep, waitForCondition } from '../../common';
 import { initialize } from '../../initialize';
 import {
     assertVSCCellIsNotRunning,
@@ -37,7 +37,7 @@ import {
  * We will not use actual kernels, just ensure the appropriate methods are invoked on the appropriate classes.
  * This is done by stubbing out some methods.
  */
-suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', function () {
+suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)xxx', function () {
     this.timeout(60_000);
 
     let api: IExtensionTestApi;
@@ -173,7 +173,13 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         // Wait before we execute cells again.
         traceInfo('Step 9 Wait for restart');
         await restartPromise;
-        traceInfo('Step 10 Restarted');
+        traceInfo('Step 9.1 Restarted');
+
+        // Unfortunately the code is still busy restarting a few things like restart session etc.
+        // Hence add a slight delay for tests to pass (else its flaky).
+        await sleep(3_000);
+
+        traceInfo('Step 10 Before execute document');
 
         // Confirm we can execute a cell (using the new kernel session).
         await executeActiveDocument();
