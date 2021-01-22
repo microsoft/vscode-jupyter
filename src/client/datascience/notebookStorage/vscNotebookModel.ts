@@ -76,13 +76,13 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
         file: Uri,
         globalMemento: Memento,
         crypto: ICryptoUtils,
-        json: Partial<nbformat.INotebookContent> = {},
+        private readonly originalJson: Partial<nbformat.INotebookContent> = {},
         indentAmount: string = ' ',
         pythonNumber: number = 3,
         private readonly vscodeNotebook: IVSCodeNotebook,
         private readonly cellLanguageService: NotebookCellLanguageService
     ) {
-        super(isTrusted, file, globalMemento, crypto, json, indentAmount, pythonNumber, false);
+        super(isTrusted, file, globalMemento, crypto, originalJson, indentAmount, pythonNumber, false);
         // Do not change this code without changing code in base class.
         // We cannot invoke this in base class as `cellLanguageService` is not available in base class.
         this.ensureNotebookJson();
@@ -101,7 +101,8 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
             this.notebookContentWithoutCells,
             this.file,
             this.notebookJson.cells || [],
-            this._preferredLanguage
+            this._preferredLanguage,
+            this.originalJson
         );
     }
     public markAsReloadedAfterTrusting() {
