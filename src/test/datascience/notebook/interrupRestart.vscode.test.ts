@@ -173,13 +173,7 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)xxx
         // Wait before we execute cells again.
         traceInfo('Step 9 Wait for restart');
         await restartPromise;
-        traceInfo('Step 9.1 Restarted');
-
-        // Unfortunately the code is still busy restarting a few things like restart session etc.
-        // Hence add a slight delay for tests to pass (else its flaky).
-        await sleep(3_000);
-
-        traceInfo('Step 10 Before execute document');
+        traceInfo('Step 10 Restarted');
 
         // Confirm we can execute a cell (using the new kernel session).
         await executeActiveDocument();
