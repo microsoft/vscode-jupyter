@@ -91,6 +91,7 @@ suite('Notebook Editor tests', () => {
     });
 
     test('Run cells below', async function () {
+        return this.skip(); // Disabled for flake. tracking with 4445
         // add some cells
         await insertCodeCell('print("0")', { index: 0 });
         await insertCodeCell('print("1")', { index: 1 });
