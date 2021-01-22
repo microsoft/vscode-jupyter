@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
@@ -30,9 +31,9 @@ export interface IVariablePanelProps {
 }
 
 export class VariablePanel extends React.Component<IVariablePanelProps> {
-    constructor(prop: IVariablePanelProps) {
-        super(prop);
-    }
+    //constructor(prop: IVariablePanelProps) {
+        //super(prop);
+    //}
 
     public render() {
         return (
