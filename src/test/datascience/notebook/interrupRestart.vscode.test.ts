@@ -196,7 +196,10 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)xxx
         const interruptPromise = commands.executeCommand('jupyter.notebookeditor.interruptkernel');
         traceInfo('Step 14 Executed interrupt');
         await waitForCondition(
-            async () => assertVSCCellIsNotRunning(cell),
+            async () => {
+                traceInfo(`Step 14.1 Cell Status = ${cell.metadata.runState}`);
+                return assertVSCCellIsNotRunning(cell);
+            },
             15_000,
             'Execution not cancelled second time.'
         );
