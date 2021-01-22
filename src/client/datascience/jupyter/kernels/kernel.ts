@@ -10,6 +10,7 @@ import * as uuid from 'uuid/v4';
 import { CancellationTokenSource, Event, EventEmitter, NotebookCell, NotebookDocument, Uri } from 'vscode';
 import { ServerStatus } from '../../../../datascience-ui/interactive-common/mainState';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../../common/application/types';
+import { WrappedError } from '../../../common/errors/errorUtils';
 import { traceError, traceWarning } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 import { IDisposableRegistry, IExtensionContext } from '../../../common/types';
@@ -105,11 +106,11 @@ export class Kernel implements IKernel {
         );
     }
     public async executeCell(cell: NotebookCell): Promise<void> {
-        const notebookPromise = this.startInternal({ disableUI: false });
+        const notebookPromise = this.startNotebook({ disableUI: false });
         await this.kernelExecution.executeCell(notebookPromise, cell);
     }
     public async executeAllCells(document: NotebookDocument): Promise<void> {
-        const notebookPromise = this.startInternal({ disableUI: false });
+        const notebookPromise = this.startNotebook({ disableUI: false });
         await this.kernelExecution.executeAllCells(notebookPromise, document);
     }
     public async cancelCell(cell: NotebookCell) {
@@ -121,7 +122,7 @@ export class Kernel implements IKernel {
         await this.kernelExecution.cancelAllCells(document);
     }
     public async start(options?: { disableUI?: boolean }): Promise<void> {
-        await this.startInternal(options);
+        await this.startNotebook(options);
     }
     public async interruptCell(cell: NotebookCell): Promise<InterruptResult> {
         if (this.restarting) {
@@ -178,43 +179,40 @@ export class Kernel implements IKernel {
             }
         }
     }
-    private async startInternal(options?: { disableUI?: boolean }): Promise<INotebook> {
+    private async startNotebook(options?: { disableUI?: boolean }): Promise<INotebook> {
         if (this.restarting) {
             await this.restarting.promise;
         }
         if (!this._notebookPromise) {
             this.startCancellation = new CancellationTokenSource();
-            this._notebookPromise = new Promise(async (resolve, reject) => {
+            this._notebookPromise = new Promise<INotebook>(async (resolve, reject) => {
                 try {
                     await this.validate(this.uri);
-                    const notebookPromise = this.notebookProvider.getOrCreateNotebook({
-                        identity: this.uri,
-                        resource: this.uri,
-                        disableUI: options?.disableUI,
-                        getOnly: false,
-                        metadata: undefined, // No need to pass this, as we have a kernel connection (metadata is required in lower layers to determine the kernel connection).
-                        kernelConnection: this.kernelConnectionMetadata,
-                        token: this.startCancellation.token
-                    });
-
                     try {
-                        this.notebook = await notebookPromise;
+                        this.notebook = await this.notebookProvider.getOrCreateNotebook({
+                            identity: this.uri,
+                            resource: this.uri,
+                            disableUI: options?.disableUI,
+                            getOnly: false,
+                            metadata: undefined, // No need to pass this, as we have a kernel connection (metadata is required in lower layers to determine the kernel connection).
+                            kernelConnection: this.kernelConnectionMetadata,
+                            token: this.startCancellation.token
+                        });
+                        if (!this.notebook) {
+                            // This is an unlikely case.
+                            // getOrCreateNotebook would return undefined only if getOnly = true (an issue with typings).
+                            throw new Error('Kernel has not been started');
+                        }
                     } catch (ex) {
                         traceError('failed to create INotebook in kernel', ex);
-                        this._notebookPromise = undefined;
-                        this.startCancellation.cancel();
                         this.errorHandler.handleError(ex).ignoreErrors(); // Just a notification, so don't await this
+                        throw new WrappedError('Kernel has not been started', ex);
                     }
-                    if (this.notebook) {
-                        await this.initializeAfterStart();
-                        resolve(this.notebook);
-                    } else {
-                        this._notebookPromise = undefined;
-                        // This is an unlikely case (we'd only return a kernel or fail).
-                        // This is due to the type definition (if getOnly = true, then it can be undefined, else not).
-                        reject(new Error('Kernel has not been started'));
-                    }
+                    await this.initializeAfterStart();
+                    resolve(this.notebook);
                 } catch (ex) {
+                    traceError('failed to start INotebook in kernel', ex);
+                    this.startCancellation.cancel();
                     this._notebookPromise = undefined;
                     reject(ex);
                 }
