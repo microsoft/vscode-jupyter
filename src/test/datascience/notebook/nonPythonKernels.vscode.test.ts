@@ -170,7 +170,7 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         }
     });
     test('Can run a Julia notebook', async function () {
-        this.skip(); // Flakey, tracked by issue 4453
+        return this.skip(); // Flakey, tracked by issue 4453
         this.timeout(30_000); // Can be slow to start Julia kernel on CI.
         await openNotebook(api.serviceContainer, testJuliaNb.fsPath);
         await insertCodeCell('123456', { language: 'julia', index: 0 });
