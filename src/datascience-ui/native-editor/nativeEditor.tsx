@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
@@ -187,7 +188,8 @@ ${buildSettingsCss(this.props.settings)}`}</style>
             fontSize: this.props.font.size,
             executionCount: this.props.currentExecutionCount,
             refreshCount: this.props.variableState.refreshCount,
-            offsetHeight: toolbarHeight
+            offsetHeight: toolbarHeight,
+            viewHeight: 0
         };
     };
 

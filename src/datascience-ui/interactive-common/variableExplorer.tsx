@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
@@ -40,6 +41,8 @@ interface IVariableExplorerProps {
     closeVariableExplorer(): void;
     setVariableExplorerHeight(containerHeight: number, gridHeight: number): void;
     pageIn(startIndex: number, pageSize: number): void;
+    standaloneMode?: boolean;
+    viewHeight: number;
 }
 
 const defaultColumnProperties = {
@@ -178,8 +181,13 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
         }
         if (
             prevState.containerHeight !== this.state.containerHeight ||
-            prevState.gridHeight !== this.state.gridHeight
+            (prevState.gridHeight !== this.state.gridHeight && !this.props.standaloneMode)
         ) {
+            return true;
+        }
+
+        // In standalone mode, we need to update when our height changes
+        if (this.props.standaloneMode && prevState.viewHeight !== nextProps.viewHeight) {
             return true;
         }
 
@@ -187,6 +195,37 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
     }
 
     public render() {
+        // This control renders differently when hosted standalone versus a document
+        if (this.props.standaloneMode) {
+            return this.renderInViewMode();
+        } else {
+            return this.renderInDocumentMode();
+        }
+    }
+
+    private renderInViewMode() {
+        const contentClassName = `variable-explorer-content`;
+        let variableExplorerStyles: React.CSSProperties = { fontSize: `${this.props.fontSize.toString()}px` };
+        if (this.props.viewHeight !== 0) {
+            variableExplorerStyles = { ...variableExplorerStyles, height: this.props.viewHeight };
+        }
+        return (
+            <div id="variable-panel" ref={this.variablePanelRef}>
+                <div id="variable-panel-padding">
+                    <div className="variable-explorer" ref={this.variableExplorerRef}>
+                        <div className="variable-explorer-menu-bar" ref={this.variableExplorerMenuBarRef}>
+                            <label className="inputLabel variable-explorer-label">
+                                {getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}
+                            </label>
+                        </div>
+                        <div className={contentClassName}>{this.renderGrid()}</div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    private renderInDocumentMode() {
         const contentClassName = `variable-explorer-content`;
         const containerHeight = this.state.containerHeight;
         let variableExplorerStyles: React.CSSProperties = { fontSize: `${this.props.fontSize.toString()}px` };
@@ -234,6 +273,13 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
     }
 
     private renderGrid() {
+        let newGridHeight: number | undefined;
+
+        // In in standalone mode, just use the viewHeight prop for calculating size
+        if (this.props.standaloneMode) {
+            newGridHeight = this.calculateGridHeight(this.props.viewHeight);
+        }
+
         return (
             <div
                 id="variable-explorer-data-grid"
@@ -247,7 +293,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
                     // eslint-disable-next-line
                     rowGetter={this.getRow}
                     rowsCount={this.props.variables.length}
-                    minHeight={this.state.gridHeight}
+                    minHeight={newGridHeight || this.state.gridHeight}
                     headerRowHeight={this.getRowHeight()}
                     rowHeight={this.getRowHeight()}
                     onRowDoubleClick={this.rowDoubleClick}
@@ -305,17 +351,23 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
         }
     }
 
-    private setVariableGridHeight() {
+    private calculateGridHeight(baseHeight: number): number {
         const variableExplorerMenuBar = this.variableExplorerMenuBarRef.current;
 
         if (!variableExplorerMenuBar) {
+            return baseHeight;
+        }
+
+        return baseHeight - variableExplorerMenuBar.clientHeight;
+    }
+
+    private setVariableGridHeight() {
+        if (!this.variableExplorerMenuBarRef.current) {
             return;
         }
 
-        const updatedHeight = this.state.containerHeight - variableExplorerMenuBar.clientHeight;
-
         this.setState({
-            gridHeight: updatedHeight
+            gridHeight: this.calculateGridHeight(this.state.containerHeight)
         });
     }
 

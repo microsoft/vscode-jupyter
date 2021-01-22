@@ -1,0 +1,20 @@
+/* For the variable view panel, we just want to dock it cleanly in the view with no overflowing */
+body,
+html {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+#root {
+    height: 100%;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+}
+
+#variable-view-main-panel {
+    height: 100%;
+    margin: 0;
+}
