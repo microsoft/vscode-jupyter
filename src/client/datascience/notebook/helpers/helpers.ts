@@ -152,14 +152,15 @@ export function notebookModelToVSCNotebookData(
     notebookContentWithoutCells: Exclude<Partial<nbformat.INotebookContent>, 'cells'>,
     notebookUri: Uri,
     nbCells: nbformat.IBaseCell[],
-    preferredLanguage: string
+    preferredLanguage: string,
+    originalJson: Partial<nbformat.INotebookContent>
 ): NotebookData {
     const cells = nbCells
         .map((cell) => createVSCNotebookCellDataFromCell(isNotebookTrusted, preferredLanguage, cell))
         .filter((item) => !!item)
         .map((item) => item!);
 
-    if (cells.length === 0 && isUntitledFile(notebookUri)) {
+    if (cells.length === 0 && (isUntitledFile(notebookUri) || Object.keys(originalJson).length === 0)) {
         cells.push({
             cellKind: vscodeNotebookEnums.CellKind.Code,
             language: preferredLanguage,

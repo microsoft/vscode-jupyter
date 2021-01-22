@@ -10,15 +10,17 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as sinon from 'sinon';
 import { CellErrorOutput, commands, Uri } from 'vscode';
-import { CellDisplayOutput } from '../../../../types/vscode-proposed';
+import { CellDisplayOutput, NotebookContentProvider } from '../../../../types/vscode-proposed';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { IDisposable } from '../../../client/common/types';
+import { INotebookContentProvider } from '../../../client/datascience/notebook/types';
 import { INotebookStorageProvider } from '../../../client/datascience/notebookStorage/notebookStorageProvider';
 import { VSCodeNotebookModel } from '../../../client/datascience/notebookStorage/vscNotebookModel';
 import { INotebookEditorProvider } from '../../../client/datascience/types';
 import { IExtensionTestApi, waitForCondition } from '../../common';
 import { IS_NON_RAW_NATIVE_TEST } from '../../constants';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, initialize, IS_REMOTE_NATIVE_TEST } from '../../initialize';
+import { createTemporaryFile } from '../../utils/fs';
 import { openNotebook } from '../helpers';
 import {
     canRunNotebookTests,
@@ -53,6 +55,7 @@ suite('DataScience - VSCode Notebook - (Open)', function () {
     let testIPynb: Uri;
     let testIPynbWithOutput: Uri;
     let vscodeNotebook: IVSCodeNotebook;
+    let contentProvider: NotebookContentProvider;
     const disposables: IDisposable[] = [];
     suiteSetup(async function () {
         api = await initialize();
@@ -60,6 +63,7 @@ suite('DataScience - VSCode Notebook - (Open)', function () {
             return this.skip();
         }
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
+        contentProvider = api.serviceContainer.get<NotebookContentProvider>(INotebookContentProvider);
     });
     setup(async () => {
         sinon.restore();
@@ -70,6 +74,16 @@ suite('DataScience - VSCode Notebook - (Open)', function () {
         await trustAllNotebooks();
     });
     teardown(async () => closeNotebooksAndCleanUpAfterTests(disposables));
+    test('Opening a 0 byte ipynb file will have an empty cell', async () => {
+        const tmpFile = await createTemporaryFile('.ipynb');
+        disposables.push({ dispose: () => tmpFile.cleanupCallback() });
+
+        const notebookData = await contentProvider.openNotebook(Uri.file(tmpFile.filePath), {});
+
+        // We must have a default empty cell
+        assert.equal(notebookData.cells.length, 1);
+        assert.isEmpty(notebookData.cells[0].source);
+    });
     test('Verify Notebook Json', async () => {
         const storageProvider = api.serviceContainer.get<INotebookStorageProvider>(INotebookStorageProvider);
         const file = path.join(

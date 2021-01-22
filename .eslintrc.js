@@ -1001,8 +1001,6 @@ module.exports = {
         'src/client/datascience/notebookStorage/factory.ts',
         'src/client/datascience/notebookStorage/types.ts',
         'src/client/datascience/notebookStorage/nativeEditorProvider.ts',
-        'src/client/datascience/notebookStorage/vscNotebookModel.ts',
-        'src/client/datascience/notebookStorage/baseModel.ts',
         'src/client/datascience/debugLocationTracker.ts',
         'src/client/datascience/plotting/plotViewerMessageListener.ts',
         'src/client/datascience/plotting/types.ts',

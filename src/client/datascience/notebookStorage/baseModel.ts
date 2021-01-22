@@ -7,6 +7,7 @@ import * as fastDeepEqual from 'fast-deep-equal';
 import { sha256 } from 'hash.js';
 import { cloneDeep } from 'lodash';
 import { Event, EventEmitter, Memento, Uri } from 'vscode';
+import { PYTHON_LANGUAGE } from '../../common/constants';
 import { ICryptoUtils } from '../../common/types';
 import { isUntitledFile, noop } from '../../common/utils/misc';
 import { pruneCell } from '../common';
@@ -163,16 +164,28 @@ export function getDefaultNotebookContent(pythonNumber: number = 3): Partial<nbf
  * If a preferred language is provided we use that.
  * We do not default to Python, as selecting a kernel will update the language_info in the ipynb file (after a kernel is successfully started).
  */
-export function getDefaultNotebookContentForNativeNotebooks(language?: string): Partial<nbformat.INotebookContent> {
-    const metadata: undefined | nbformat.INotebookMetadata = language
-        ? {
-              language_info: {
-                  name: language,
-                  nbconvert_exporter: 'python'
-              },
-              orig_nbformat: 2
-          }
-        : undefined;
+export function getDefaultNotebookContentForNativeNotebooks(language: string = ''): Partial<nbformat.INotebookContent> {
+    let metadata: undefined | nbformat.INotebookMetadata;
+    switch (language.toLowerCase()) {
+        case '':
+            break;
+        case PYTHON_LANGUAGE.toLowerCase():
+            metadata = {
+                language_info: {
+                    name: language,
+                    nbconvert_exporter: 'python'
+                },
+                orig_nbformat: 2
+            };
+            break;
+        default:
+            metadata = {
+                language_info: {
+                    name: language
+                },
+                orig_nbformat: 2
+            };
+    }
 
     return {
         metadata,
