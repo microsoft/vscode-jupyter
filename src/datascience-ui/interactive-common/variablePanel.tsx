@@ -31,10 +31,6 @@ export interface IVariablePanelProps {
 }
 
 export class VariablePanel extends React.Component<IVariablePanelProps> {
-    //constructor(prop: IVariablePanelProps) {
-        //super(prop);
-    //}
-
     public render() {
         return (
             <VariableExplorer

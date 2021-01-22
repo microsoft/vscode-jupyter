@@ -181,16 +181,13 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
         }
         if (
             prevState.containerHeight !== this.state.containerHeight ||
-            prevState.gridHeight !== this.state.gridHeight && !this.props.viewMode
+            (prevState.gridHeight !== this.state.gridHeight && !this.props.viewMode)
         ) {
             return true;
         }
 
         // In view mode, we need to update when our height changes
-        if (
-            this.props.viewMode &&
-            (prevState.viewHeight !== nextProps.viewHeight)
-        ){
+        if (this.props.viewMode && prevState.viewHeight !== nextProps.viewHeight) {
             return true;
         }
 
@@ -215,10 +212,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
         return (
             <div id="variable-panel" ref={this.variablePanelRef}>
                 <div id="variable-panel-padding">
-                    <div
-                        className="variable-explorer"
-                        ref={this.variableExplorerRef}
-                    >
+                    <div className="variable-explorer" ref={this.variableExplorerRef}>
                         <div className="variable-explorer-menu-bar" ref={this.variableExplorerMenuBarRef}>
                             <label className="inputLabel variable-explorer-label">
                                 {getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}
@@ -282,7 +276,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
         let newGridHeight: number | undefined;
 
         // In in view mode, just use the viewHeight prop for calculating size
-        if(this.props.viewMode) {
+        if (this.props.viewMode) {
             newGridHeight = this.calculateGridHeight(this.props.viewHeight);
         }
 
