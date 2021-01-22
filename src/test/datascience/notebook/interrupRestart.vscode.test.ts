@@ -37,7 +37,7 @@ import {
  * We will not use actual kernels, just ensure the appropriate methods are invoked on the appropriate classes.
  * This is done by stubbing out some methods.
  */
-suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)xxx', function () {
+suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', function () {
     this.timeout(60_000);
 
     let api: IExtensionTestApi;
