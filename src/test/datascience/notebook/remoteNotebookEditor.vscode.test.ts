@@ -31,7 +31,7 @@ import { PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { PreferredRemoteKernelIdProvider } from '../../../client/datascience/notebookStorage/preferredRemoteKernelIdProvider';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)xxx', function () {
+suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function () {
     this.timeout(920_000);
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
