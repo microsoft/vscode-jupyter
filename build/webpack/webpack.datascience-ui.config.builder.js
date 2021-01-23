@@ -159,7 +159,10 @@ function buildConfiguration(bundle) {
     }
     let outputProps = {};
     if (bundle === 'ipywidgetsRenderer' || bundle === 'ipywidgetsKernel') {
-        // Nothing.
+        filesToCopy.push({
+            from: path.join(constants.ExtensionRootDir, 'build', 'webpack', 'font-awesome.js'),
+            to: path.join(constants.ExtensionRootDir, 'out', 'datascience-ui', bundleFolder)
+        });
     } else {
         filesToCopy.push({
             from: path.join(constants.ExtensionRootDir, 'node_modules/requirejs/require.js'),

@@ -22,7 +22,8 @@ export class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
             Uri.file(join(this.context.extensionPath, 'out', 'ipywidgets', 'dist', 'ipywidgets.js')),
             Uri.file(
                 join(this.context.extensionPath, 'out', 'datascience-ui', 'ipywidgetsKernel', 'ipywidgetsKernel.js')
-            )
+            ),
+            Uri.file(join(this.context.extensionPath, 'out', 'datascience-ui', 'ipywidgetsKernel', 'font-awesome.js'))
         ];
     }
     get id() {
