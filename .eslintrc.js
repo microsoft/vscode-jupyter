@@ -30,7 +30,6 @@ module.exports = {
         'build/webpack/webpack.extension.config.js',
         'build/webpack/webpack.datascience-ui-notebooks.config.js',
         'build/webpack/plugins/less-plugin-base64.js',
-        'build/webpack/webpack.datascience-ui.config.builder.js',
         'build/webpack/pdfkit.js',
         'build/webpack/webpack.extension.dependencies.config.js',
         'build/webpack/common.js',
