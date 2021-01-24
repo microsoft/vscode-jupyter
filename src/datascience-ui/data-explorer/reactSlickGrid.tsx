@@ -26,6 +26,7 @@ import 'slickgrid/slick.dataview';
 // Adding comments to ensure order of imports does not change due to auto formatters.
 // eslint-disable-next-line import/order
 import 'slickgrid/slick.grid';
+import 'slickgrid/slick.editors';
 // Adding comments to ensure order of imports does not change due to auto formatters.
 // eslint-disable-next-line import/order
 import 'slickgrid/plugins/slick.autotooltips';
@@ -40,8 +41,6 @@ WARNING: Do not change the order of these imports.
 Slick grid MUST be imported after we load jQuery and other stuff from `./globalJQueryImports`
 */
 
-const MinColumnWidth = 70;
-const MaxColumnWidth = 500;
 
 export interface ISlickRow extends Slick.SlickData {
     id: string;
@@ -161,8 +160,10 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
             // Setup options for the grid
             const options: Slick.GridOptions<Slick.SlickData> = {
                 asyncEditorLoading: true,
-                editable: false,
+                editable: true,
+                enableTextSelectionOnCells: true,
                 enableCellNavigation: true,
+                editorCellNavOnLRKeys: true,
                 showHeaderRow: true,
                 enableColumnReorder: false,
                 explicitInitialization: false,
@@ -173,6 +174,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
             // Transform columns so they are sortable and stylable
             const columns = this.props.columns.map((c) => {
                 c.sortable = true;
+                c.editor = Slick.Editors.Text;
                 c.headerCssClass = 'react-grid-header-cell';
                 c.cssClass = 'react-grid-cell';
                 return c;
@@ -427,18 +429,14 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         }
     };
 
-    private autoResizeColumns(rows: ISlickRow[]) {
+    private autoResizeColumns() {
         if (this.state.grid) {
             const fontString = this.computeFont();
             const columns = this.state.grid.getColumns();
+            const placeholder = "99999999999";
+            const maxFieldWidth = measureText(placeholder, fontString);
             columns.forEach((c) => {
-                let colWidth = MinColumnWidth;
-                rows.forEach((r: any) => {
-                    const field = c.field ? r[c.field] : '';
-                    const fieldWidth = field ? measureText(field.toString(), fontString) : 0;
-                    colWidth = Math.min(MaxColumnWidth, Math.max(colWidth, fieldWidth));
-                });
-                c.width = colWidth;
+                c.width = maxFieldWidth;
             });
             this.state.grid.setColumns(columns);
 
@@ -471,7 +469,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         // Update columns if we haven't already
         if (!this.autoResizedColumns) {
             this.autoResizedColumns = true;
-            this.autoResizeColumns(data.newRows);
+            this.autoResizeColumns();
         }
 
         this.dataView.endUpdate();
