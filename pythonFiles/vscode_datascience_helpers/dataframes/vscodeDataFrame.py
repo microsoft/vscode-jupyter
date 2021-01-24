@@ -1,10 +1,34 @@
 import pandas as _VSCODE_pd
 import builtins as _VSCODE_builtins
 import json as _VSCODE_json
+import numpy as _VSCODE_np
 import pandas.io.json as _VSCODE_pd_json
 
 # PyTorch and TensorFlow tensors which can be converted to numpy arrays
 _VSCODE_allowedTensorTypes = ["Tensor", "EagerTensor"]
+
+_VSCODE_maxCharacters = 10
+
+# Convert numpy array to DataFrame
+def _VSCODE_convertNumpyArrayToDataFrame(ndarray):
+    # Ask for the full string. Without this numpy truncates to 3 leading and 3 trailing by default
+    _VSCODE_np.set_printoptions(threshold=99999) # CHANGEME: ensure this doesn't propagate into users' code
+    temp = ndarray
+    if hasattr(temp, "ndim"):
+        if temp.ndim > 2:
+            # Flatten
+            x_len = temp.shape[0]
+            y_len = temp.shape[1] # CHANGEME: assumes homogenous data
+            flattened = _VSCODE_np.empty((x_len, y_len), dtype="object")
+            for i in range(x_len):
+                for j in range(y_len):
+                    stringified = _VSCODE_np.array2string(temp[i][j], separator=", ")
+                    flattened[i][j] = stringified
+            temp = flattened
+        temp = _VSCODE_pd.DataFrame(temp)
+    ndarray = temp
+    del temp
+    return ndarray
 
 # Function that converts tensors to DataFrames
 def _VSCODE_convertTensorToDataFrame(tensor):
@@ -19,7 +43,7 @@ def _VSCODE_convertTensorToDataFrame(tensor):
         # Two step conversion process required to convert tensors to DataFrames
         # tensor --> numpy array --> dataframe
         temp = temp.numpy()
-        temp = _VSCODE_pd.DataFrame(temp)
+        temp = _VSCODE_convertNumpyArrayToDataFrame(temp)
         tensor = temp
         del temp
     except AttributeError:
@@ -45,6 +69,8 @@ def _VSCODE_convertToDataFrame(df):
         hasattr(vartype, "__name__") and vartype.__name__ in _VSCODE_allowedTensorTypes
     ):
         df = _VSCODE_convertTensorToDataFrame(df)
+    elif hasattr(vartype, "__name__") and vartype.__name__ == "ndarray":
+        df = _VSCODE_convertNumpyArrayToDataFrame(df)
     else:
         """Disabling bandit warning for try, except, pass. We want to swallow all exceptions here to not crash on
         variable fetching"""
@@ -76,7 +102,6 @@ def _VSCODE_getRowCount(var):
 # Function to retrieve a set of rows for a data frame
 def _VSCODE_getDataFrameRows(df, start, end):
     df = _VSCODE_convertToDataFrame(df)
-
     # Turn into JSON using pandas. We use pandas because it's about 3 orders of magnitude faster to turn into JSON
     rows = df.iloc[start:end]
     return _VSCODE_pd_json.to_json(None, rows, orient="table", date_format="iso")
