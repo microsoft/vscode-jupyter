@@ -188,7 +188,7 @@ export class HostRawNotebookProvider
                 }
                 if (kernelConnection.interpreter) {
                     // Install missing dependencies only if we're dealing with a Python kernel.
-                    await this.installDependenciesIntoInterpreter(kernelConnection.interpreter, cancelToken);
+                    await this.installDependenciesIntoInterpreter(kernelConnection.interpreter, cancelToken, disableUI);
                 } else {
                     traceError('No interpreter fetched to start a raw kernel');
                 }
@@ -289,9 +289,13 @@ export class HostRawNotebookProvider
 
     // If we need to install our dependencies now (for non-native scenarios)
     // then install ipykernel into the interpreter or throw error
-    private async installDependenciesIntoInterpreter(interpreter: PythonEnvironment, cancelToken?: CancellationToken) {
+    private async installDependenciesIntoInterpreter(
+        interpreter: PythonEnvironment,
+        cancelToken?: CancellationToken,
+        disableUI?: boolean
+    ) {
         if (
-            (await this.kernelDependencyService.installMissingDependencies(interpreter, cancelToken)) !==
+            (await this.kernelDependencyService.installMissingDependencies(interpreter, cancelToken, disableUI)) !==
             KernelInterpreterDependencyResponse.ok
         ) {
             throw new Error(

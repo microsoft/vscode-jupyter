@@ -16,7 +16,8 @@ import { IFileSystem } from '../../../common/platform/types';
 import { IDisposableRegistry, IExtensionContext } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
 import { noop } from '../../../common/utils/misc';
-import { CodeSnippets } from '../../constants';
+import { sendTelemetryEvent } from '../../../telemetry';
+import { CodeSnippets, Telemetry } from '../../constants';
 import {
     IDataScienceErrorHandler,
     INotebook,
@@ -179,7 +180,7 @@ export class Kernel implements IKernel {
             }
         }
     }
-    private async startNotebook(options?: { disableUI?: boolean }): Promise<INotebook> {
+    private async startNotebook(options: { disableUI?: boolean } = {}): Promise<INotebook> {
         if (this.restarting) {
             await this.restarting.promise;
         }
@@ -205,12 +206,17 @@ export class Kernel implements IKernel {
                         }
                     } catch (ex) {
                         traceError('failed to create INotebook in kernel', ex);
-                        this.errorHandler.handleError(ex).ignoreErrors(); // Just a notification, so don't await this
+                        if (!options.disableUI) {
+                            this.errorHandler.handleError(ex).ignoreErrors(); // Just a notification, so don't await this
+                        }
                         throw new WrappedError('Kernel has not been started', ex);
                     }
                     await this.initializeAfterStart();
                     resolve(this.notebook);
                 } catch (ex) {
+                    if (options.disableUI) {
+                        sendTelemetryEvent(Telemetry.KernelStartFailedAndUIDisabled);
+                    }
                     traceError('failed to start INotebook in kernel', ex);
                     this.startCancellation.cancel();
                     this._notebookPromise = undefined;
