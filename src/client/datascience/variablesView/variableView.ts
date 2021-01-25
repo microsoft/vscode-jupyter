@@ -10,7 +10,6 @@ import { WebviewView as vscodeWebviewView } from 'vscode';
 import {
     IApplicationShell,
     ICommandManager,
-    IWebviewView,
     IWebviewViewProvider,
     IWorkspaceService
 } from '../../common/application/types';
@@ -91,9 +90,9 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
         await super.loadWebview(process.cwd(), codeWebview).catch(traceError);
 
         // After loading, hook up our visibility watch and check the initial visibility
-        if (this.webview) {
+        if (this.webviewView) {
             this.disposables.push(
-                (this.webview as IWebviewView).onDidChangeVisiblity(() => {
+                this.webviewView.onDidChangeVisiblity(() => {
                     this.handleVisibilityChanged();
                 })
             );
@@ -138,8 +137,8 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
     private handleVisibilityChanged() {
         const context = new ContextKey('jupyter.variableViewVisible', this.commandManager);
         let visible = false;
-        if (this.webview) {
-            visible = (this.webview as IWebviewView).visible;
+        if (this.webviewView) {
+            visible = this.webviewView.visible;
         }
         context.set(visible).ignoreErrors();
     }
