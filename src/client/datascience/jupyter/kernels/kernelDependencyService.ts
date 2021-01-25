@@ -32,7 +32,8 @@ export class KernelDependencyService implements IKernelDependencyService {
     @traceDecorators.verbose('Install Missing Dependencies', TraceOptions.ReturnValue)
     public async installMissingDependencies(
         interpreter: PythonEnvironment,
-        token?: CancellationToken
+        token?: CancellationToken,
+        disableUI?: boolean
     ): Promise<KernelInterpreterDependencyResponse> {
         traceInfo(`installMissingDependencies ${interpreter.path}`);
         if (await this.areDependenciesInstalled(interpreter, token)) {
@@ -49,7 +50,10 @@ export class KernelDependencyService implements IKernelDependencyService {
             ProductNames.get(Product.ipykernel)!
         );
         const installerToken = wrapCancellationTokens(token);
-
+        // If there's no UI, then cancel installation.
+        if (disableUI) {
+            return KernelInterpreterDependencyResponse.cancel;
+        }
         const selection = await Promise.race([
             this.appShell.showErrorMessage(message, Common.install()),
             promptCancellationPromise

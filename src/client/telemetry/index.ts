@@ -1004,6 +1004,8 @@ export interface IEventNamePropertyMapping {
     // Telemetry send when we create a notebook for a raw kernel or jupyter
     [Telemetry.RawKernelCreatingNotebook]: never | undefined;
     [Telemetry.JupyterCreatingNotebook]: never | undefined;
+    // Telemetry sent when starting auto starting Native Notebook kernel fails silently.
+    [Telemetry.KernelStartFailedAndUIDisabled]: never | undefined;
 
     // Raw kernel timing events
     [Telemetry.RawKernelSessionConnect]: never | undefined;

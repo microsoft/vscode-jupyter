@@ -1308,7 +1308,8 @@ export const IKernelDependencyService = Symbol('IKernelDependencyService');
 export interface IKernelDependencyService {
     installMissingDependencies(
         interpreter: PythonEnvironment,
-        token?: CancellationToken
+        token?: CancellationToken,
+        disableUI?: boolean
     ): Promise<KernelInterpreterDependencyResponse>;
     areDependenciesInstalled(interpreter: PythonEnvironment, _token?: CancellationToken): Promise<boolean>;
 }
