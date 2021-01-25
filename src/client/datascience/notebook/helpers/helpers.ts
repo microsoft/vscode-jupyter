@@ -156,7 +156,7 @@ export function notebookModelToVSCNotebookData(
     originalJson: Partial<nbformat.INotebookContent>
 ): NotebookData {
     const cells = nbCells
-        .map((cell) => createVSCNotebookCellDataFromCell(isNotebookTrusted, preferredLanguage, cell))
+        .map((cell) => createVSCNotebookCellDataFromCell(preferredLanguage, cell))
         .filter((item) => !!item)
         .map((item) => item!);
 
@@ -267,7 +267,7 @@ function createRawCellFromNotebookCell(cell: NotebookCell): nbformat.IRawCell {
     return rawCell;
 }
 
-function createNotebookCellDataFromRawCell(_isNbTrusted: boolean, cell: nbformat.IRawCell): NotebookCellData {
+function createNotebookCellDataFromRawCell(cell: nbformat.IRawCell): NotebookCellData {
     const notebookCellMetadata: NotebookCellMetadata = {
         executionOrder: undefined,
         hasExecutionOrder: false,
@@ -293,7 +293,7 @@ function createMarkdownCellFromNotebookCell(cell: NotebookCell): nbformat.IMarkd
     }
     return markdownCell;
 }
-function createNotebookCellDataFromMarkdownCell(_isNbTrusted: boolean, cell: nbformat.IMarkdownCell): NotebookCellData {
+function createNotebookCellDataFromMarkdownCell(cell: nbformat.IMarkdownCell): NotebookCellData {
     const notebookCellMetadata: NotebookCellMetadata = {
         executionOrder: undefined,
         hasExecutionOrder: false,
@@ -308,11 +308,7 @@ function createNotebookCellDataFromMarkdownCell(_isNbTrusted: boolean, cell: nbf
         outputs: []
     };
 }
-function createNotebookCellDataFromCodeCell(
-    _isNbTrusted: boolean,
-    cell: nbformat.ICodeCell,
-    cellLanguage: string
-): NotebookCellData {
+function createNotebookCellDataFromCodeCell(cell: nbformat.ICodeCell, cellLanguage: string): NotebookCellData {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const cellOutputs: nbformat.IOutput[] = Array.isArray(cell.outputs) ? cell.outputs : [];
     const outputs = createVSCCellOutputsFromOutputs(cellOutputs);
@@ -449,19 +445,18 @@ function createCodeCellFromNotebookCell(cell: NotebookCell): nbformat.ICodeCell 
     };
 }
 export function createVSCNotebookCellDataFromCell(
-    isNbTrusted: boolean,
     cellLanguage: string,
     cell: nbformat.IBaseCell
 ): NotebookCellData | undefined {
     switch (cell.cell_type) {
         case 'raw': {
-            return createNotebookCellDataFromRawCell(isNbTrusted, cell as nbformat.IRawCell);
+            return createNotebookCellDataFromRawCell(cell as nbformat.IRawCell);
         }
         case 'markdown': {
-            return createNotebookCellDataFromMarkdownCell(isNbTrusted, cell as nbformat.IMarkdownCell);
+            return createNotebookCellDataFromMarkdownCell(cell as nbformat.IMarkdownCell);
         }
         case 'code': {
-            return createNotebookCellDataFromCodeCell(isNbTrusted, cell as nbformat.ICodeCell, cellLanguage);
+            return createNotebookCellDataFromCodeCell(cell as nbformat.ICodeCell, cellLanguage);
         }
         default: {
             traceError(`Conversion of Cell into VS Code NotebookCell not supported ${cell.cell_type}`);
