@@ -1028,7 +1028,6 @@ module.exports = {
         'src/client/datascience/commands/exportCommands.ts',
         'src/client/datascience/commands/commandRegistry.ts',
         'src/client/datascience/cellFactory.ts',
-        'src/client/datascience/notebook/contentProvider.ts',
         'src/client/datascience/notebook/notebookDisposeService.ts',
         'src/client/datascience/notebook/notebookEditorCompatibilitySupport.ts',
         'src/client/datascience/notebook/types.ts',
