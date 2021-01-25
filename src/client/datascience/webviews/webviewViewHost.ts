@@ -57,15 +57,27 @@ export abstract class WebviewViewHost<IMapping> extends WebviewHost<IMapping> im
         if (!vscodeWebview) {
             throw new Error('WebviewViews must be passed an initial VS Code Webview');
         }
-
-        return this.provider.create({
-            additionalPaths: workspaceFolder ? [workspaceFolder.fsPath] : [],
-            rootPath: this.rootPath,
-            cwd,
-            listener: this.messageListener,
-            scripts: this.scripts,
-            settings,
-            webviewHost: vscodeWebview
-        });
+        return this.provider
+            .create({
+                additionalPaths: workspaceFolder ? [workspaceFolder.fsPath] : [],
+                rootPath: this.rootPath,
+                cwd,
+                listener: this.messageListener,
+                scripts: this.scripts,
+                settings,
+                webviewHost: vscodeWebview
+            })
+            .then((webviewView) => {
+                return webviewView;
+            });
+        //return this.provider.create({
+        //additionalPaths: workspaceFolder ? [workspaceFolder.fsPath] : [],
+        //rootPath: this.rootPath,
+        //cwd,
+        //listener: this.messageListener,
+        //scripts: this.scripts,
+        //settings,
+        //webviewHost: vscodeWebview
+        //});
     }
 }

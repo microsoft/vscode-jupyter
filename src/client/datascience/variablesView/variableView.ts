@@ -7,7 +7,13 @@ import { injectable, unmanaged } from 'inversify';
 import * as path from 'path';
 import { WebviewView as vscodeWebviewView } from 'vscode';
 
-import { IApplicationShell, IWebviewViewProvider, IWorkspaceService } from '../../common/application/types';
+import {
+    IApplicationShell,
+    ICommandManager,
+    IWebviewView,
+    IWebviewViewProvider,
+    IWorkspaceService
+} from '../../common/application/types';
 import { EXTENSION_ROOT_DIR } from '../../common/constants';
 import { traceError } from '../../common/logger';
 import { IConfigurationService, IDisposable, IDisposableRegistry, Resource } from '../../common/types';
@@ -31,6 +37,7 @@ import {
 import { WebviewViewHost } from '../webviews/webviewViewHost';
 import { INotebookWatcher, IVariableViewPanelMapping } from './types';
 import { VariableViewMessageListener } from './variableViewMessageListener';
+import { ContextKey } from '../../common/contextKey';
 
 const variableViewDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'viewers');
 
@@ -54,7 +61,8 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
         @unmanaged() private readonly appShell: IApplicationShell,
         @unmanaged() private readonly jupyterVariableDataProviderFactory: IJupyterVariableDataProviderFactory,
         @unmanaged() private readonly dataViewerFactory: IDataViewerFactory,
-        @unmanaged() private readonly notebookWatcher: INotebookWatcher
+        @unmanaged() private readonly notebookWatcher: INotebookWatcher,
+        @unmanaged() private readonly commandManager: ICommandManager
     ) {
         super(
             configuration,
@@ -81,6 +89,16 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
 
     public async load(codeWebview: vscodeWebviewView) {
         await super.loadWebview(process.cwd(), codeWebview).catch(traceError);
+
+        // After loading, hook up our visibility watch and check the initial visibility
+        if (this.webview) {
+            this.disposables.push(
+                (this.webview as IWebviewView).onDidChangeVisiblity(() => {
+                    this.handleVisibilityChanged();
+                })
+            );
+        }
+        this.handleVisibilityChanged();
     }
 
     // Used to identify this webview in telemetry, not shown to user so no localization
@@ -114,6 +132,16 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
     ) {
         const args = payload as M[T];
         handler.bind(this)(args);
+    }
+
+    // Variable view visibility has changed. Update our context key for command enable / disable
+    private handleVisibilityChanged() {
+        const context = new ContextKey('jupyter.variableViewVisible', this.commandManager);
+        let visible = false;
+        if (this.webview) {
+            visible = (this.webview as IWebviewView).visible;
+        }
+        context.set(visible).ignoreErrors();
     }
 
     // Handle a request from the react UI to show our data viewer

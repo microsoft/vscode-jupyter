@@ -3,13 +3,24 @@
 'use strict';
 import '../../extensions';
 
-import { Uri, WebviewOptions, WebviewView as vscodeWebviewView } from 'vscode';
+import { Event, EventEmitter, Uri, WebviewOptions, WebviewView as vscodeWebviewView } from 'vscode';
 import { IFileSystem } from '../../platform/types';
 import { IDisposableRegistry } from '../../types';
 import { IWebviewView, IWebviewViewOptions } from '../types';
 import { Webview } from '../webviews/webview';
 
 export class WebviewView extends Webview implements IWebviewView {
+    public get visible(): boolean {
+        if (!this.webviewHost) {
+            return false;
+        } else {
+            return this.webviewHost.visible;
+        }
+    }
+    public get onDidChangeVisiblity(): Event<void> {
+        return this._onDidChangeVisibility.event;
+    }
+    private readonly _onDidChangeVisibility = new EventEmitter<void>();
     constructor(
         fs: IFileSystem,
         disposableRegistry: IDisposableRegistry,
@@ -36,6 +47,12 @@ export class WebviewView extends Webview implements IWebviewView {
             webviewHost.webview.onDidReceiveMessage((message) => {
                 // Pass the message onto our listener
                 this.panelOptions.listener.onMessage(message.type, message.payload);
+            })
+        );
+
+        this.disposableRegistry.push(
+            webviewHost.onDidChangeVisibility(() => {
+                this._onDidChangeVisibility.fire();
             })
         );
     }
