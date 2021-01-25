@@ -91,25 +91,6 @@ export class TrustCommandHandler implements IExtensionSingleActivationService {
     }
     private async trustNativeNotebook(model: VSCodeNotebookModel) {
         const trustedNotebookInTrustService = createDeferred<void>();
-        const doc = this.vscNotebook.notebookDocuments.find((item) => this.fs.arePathsSame(item.uri, model.file));
-        let fileReverted = false;
-        const disposable = this.vscNotebook.onDidChangeNotebookDocument((e) => {
-            if (e.document !== doc) {
-                return;
-            }
-            trustedNotebookInTrustService.promise
-                .then(() => {
-                    // Notebook has been trusted, revert the changes in the document so that we re-load the cells.
-                    // This is a hacky solution for trusting native notebooks.
-                    if (!fileReverted) {
-                        fileReverted = true;
-                        return commands.executeCommand('workbench.action.files.revert');
-                    }
-                })
-                .catch(noop);
-            disposable.dispose();
-        });
-        this.disposables.push(disposable);
 
         try {
             // Update model trust
@@ -124,6 +105,13 @@ export class TrustCommandHandler implements IExtensionSingleActivationService {
                 this.trustService.trustNotebook(model.file, originalContents)
             ]);
             sendTelemetryEvent(Telemetry.TrustNotebook);
+
+            const nb = this.vscNotebook.notebookEditors.find((item) =>
+                this.fs.arePathsSame(item.document.uri, model.file)
+            );
+            if (nb && model.isTrusted && !nb.document.metadata.trusted) {
+                await nb.edit((edit) => edit.replaceMetadata({ ...nb.document.metadata, trusted: true }));
+            }
         } finally {
             trustedNotebookInTrustService.resolve();
         }

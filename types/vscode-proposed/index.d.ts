@@ -236,6 +236,17 @@ export interface NotebookDocumentMetadata {
      * The document's current run state
      */
     runState?: NotebookRunState;
+
+    /**
+     * Whether the document is trusted, default to true
+     * When false, insecure outputs like HTML, JavaScript, SVG will not be rendered.
+     */
+    trusted?: boolean;
+
+    /**
+     * Languages the document supports
+     */
+    languages?: string[];
 }
 
 export interface NotebookDocumentContentOptions {

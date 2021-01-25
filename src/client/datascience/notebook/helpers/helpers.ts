@@ -179,6 +179,7 @@ export function notebookModelToVSCNotebookData(
             editable: isNotebookTrusted,
             cellHasExecutionOrder: true,
             runnable: isNotebookTrusted,
+            trusted: isNotebookTrusted,
             displayOrder: [
                 'application/vnd.*',
                 'application/vdom.*',
@@ -266,9 +267,8 @@ function createRawCellFromNotebookCell(cell: NotebookCell): nbformat.IRawCell {
     return rawCell;
 }
 
-function createNotebookCellDataFromRawCell(isNbTrusted: boolean, cell: nbformat.IRawCell): NotebookCellData {
+function createNotebookCellDataFromRawCell(_isNbTrusted: boolean, cell: nbformat.IRawCell): NotebookCellData {
     const notebookCellMetadata: NotebookCellMetadata = {
-        editable: isNbTrusted,
         executionOrder: undefined,
         hasExecutionOrder: false,
         runnable: false,
@@ -293,9 +293,8 @@ function createMarkdownCellFromNotebookCell(cell: NotebookCell): nbformat.IMarkd
     }
     return markdownCell;
 }
-function createNotebookCellDataFromMarkdownCell(isNbTrusted: boolean, cell: nbformat.IMarkdownCell): NotebookCellData {
+function createNotebookCellDataFromMarkdownCell(_isNbTrusted: boolean, cell: nbformat.IMarkdownCell): NotebookCellData {
     const notebookCellMetadata: NotebookCellMetadata = {
-        editable: isNbTrusted,
         executionOrder: undefined,
         hasExecutionOrder: false,
         runnable: false,
@@ -310,7 +309,7 @@ function createNotebookCellDataFromMarkdownCell(isNbTrusted: boolean, cell: nbfo
     };
 }
 function createNotebookCellDataFromCodeCell(
-    isNbTrusted: boolean,
+    _isNbTrusted: boolean,
     cell: nbformat.ICodeCell,
     cellLanguage: string
 ): NotebookCellData {
@@ -328,22 +327,12 @@ function createNotebookCellDataFromCodeCell(
     }
 
     const notebookCellMetadata: NotebookCellMetadata = {
-        editable: isNbTrusted,
         executionOrder: typeof cell.execution_count === 'number' ? cell.execution_count : undefined,
         hasExecutionOrder: true,
         runState,
-        runnable: isNbTrusted,
         statusMessage,
         custom: getCustomNotebookCellMetadata(cell)
     };
-
-    // If not trusted, then clear the output in VSC Cell (for untrusted notebooks we do not display output).
-    // At this point we have the original output in the ICell.
-    if (!isNbTrusted) {
-        while (outputs.length) {
-            outputs.shift();
-        }
-    }
 
     const source = concatMultilineString(cell.source);
 
@@ -740,11 +729,7 @@ export function getCellStatusMessageBasedOnFirstCellErrorOutput(outputs?: CellOu
 /**
  * Updates a notebook document as a result of trusting it.
  */
-export async function updateVSCNotebookAfterTrustingNotebook(
-    editor: NotebookEditor,
-    document: NotebookDocument,
-    originalCells: nbformat.IBaseCell[]
-) {
+export async function updateVSCNotebookAfterTrustingNotebook(editor: NotebookEditor, document: NotebookDocument) {
     const areAllCellsEditableAndRunnable = document.cells.every((cell) => {
         if (cell.cellKind === vscodeNotebookEnums.CellKind.Markdown) {
             return cell.metadata.editable;
@@ -769,24 +754,8 @@ export async function updateVSCNotebookAfterTrustingNotebook(
             cellEditable: true,
             cellRunnable: true,
             editable: true,
-            runnable: true
-        });
-        document.cells.forEach((cell, index) => {
-            if (cell.cellKind === vscodeNotebookEnums.CellKind.Markdown) {
-                edit.replaceCellMetadata(index, { ...cell.metadata, editable: true });
-            } else {
-                edit.replaceCellMetadata(index, {
-                    ...cell.metadata,
-                    editable: true,
-                    runnable: true
-                });
-                // Restore the output once we trust the notebook.
-                edit.replaceCellOutput(
-                    index,
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    createVSCCellOutputsFromOutputs(originalCells[index].outputs as any)
-                );
-            }
+            runnable: true,
+            trusted: true
         });
     });
 }
