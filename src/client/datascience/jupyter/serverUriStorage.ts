@@ -106,13 +106,24 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
         return [];
     }
     public async clearUriList(): Promise<void> {
-        // Clear out memento and encrypted storage
-        await this.globalMemento.update(Settings.JupyterServerUriList, []);
-        await this.encryptedStorage.store(
-            Settings.JupyterServerRemoteLaunchService,
-            Settings.JupyterServerRemoteLaunchUriListKey,
-            undefined
+        const uris = await this.getSavedUriList();
+        const promises: (Promise<void> | Thenable<void>)[] = [];
+        const key = this.getUriAccountKey();
+        // Clear all the tokens stored in the Uri as well.
+        promises.push(
+            ...uris.map((item) => this.encryptedStorage.store(Settings.JupyterServerRemoteLaunchService, key, item.uri))
         );
+        // Clear out memento and encrypted storage
+        promises.push(this.globalMemento.update(Settings.JupyterServerUriList, []));
+        promises.push(
+            this.encryptedStorage.store(
+                Settings.JupyterServerRemoteLaunchService,
+                Settings.JupyterServerRemoteLaunchUriListKey,
+                undefined
+            )
+        );
+
+        await Promise.all(promises);
     }
     public getUri(): Promise<string> {
         if (!this.currentUriPromise) {
