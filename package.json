@@ -733,7 +733,12 @@
             {
                 "command": "jupyter.openVariableView",
                 "title": "%jupyter.command.jupyter.openVariableView.title%",
-                "category": "Jupyter"
+                "icon": {
+                    "light": "resources/light/variable_explorer.svg",
+                    "dark": "resources/dark/variable_explorer.svg"
+                },
+                "category": "Jupyter",
+                "enablement": "!jupyter.variableViewVisible"
             }
         ],
         "menus": {
@@ -813,6 +818,12 @@
                     "title": "%DataScience.notebookExportAs%",
                     "group": "navigation",
                     "when": "notebookViewType == 'jupyter-notebook' && jupyter.isnotebooktrusted"
+                },
+                {
+                    "command": "jupyter.openVariableView",
+                    "title": "%jupyter.command.jupyter.openVariableView.title%",
+                    "group": "navigation",
+                    "when": "resourceLangId == jupyter && notebookViewType == 'jupyter-notebook'"
                 },
                 {
                     "command": "jupyter.notebookeditor.trust",

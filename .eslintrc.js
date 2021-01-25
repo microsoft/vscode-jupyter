@@ -781,7 +781,6 @@ module.exports = {
         'src/client/common/application/workspace.ts',
         'src/client/common/application/debugSessionTelemetry.ts',
         'src/client/common/application/extensions.ts',
-        'src/client/common/application/types.ts',
         'src/client/common/application/activeResource.ts',
         'src/client/common/application/commandManager.ts',
         'src/client/common/application/documentManager.ts',
