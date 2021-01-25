@@ -6,11 +6,10 @@
 import { inject, injectable } from 'inversify';
 import { commands, Uri } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
-import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../common/application/types';
+import { IApplicationShell, ICommandManager } from '../../common/application/types';
 import { ContextKey } from '../../common/contextKey';
 import '../../common/extensions';
 import { traceInfo } from '../../common/logger';
-import { IFileSystem } from '../../common/platform/types';
 import { IDisposableRegistry } from '../../common/types';
 import { createDeferred } from '../../common/utils/async';
 import { swallowExceptions } from '../../common/utils/decorators';
@@ -30,9 +29,7 @@ export class TrustCommandHandler implements IExtensionSingleActivationService {
         @inject(INotebookStorageProvider) private readonly storageProvider: INotebookStorageProvider,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
-        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
-        @inject(IFileSystem) private readonly fs: IFileSystem
+        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
     ) {}
     public async activate(): Promise<void> {
         this.activateInBackground().ignoreErrors();
@@ -105,13 +102,6 @@ export class TrustCommandHandler implements IExtensionSingleActivationService {
                 this.trustService.trustNotebook(model.file, originalContents)
             ]);
             sendTelemetryEvent(Telemetry.TrustNotebook);
-
-            const nb = this.vscNotebook.notebookEditors.find((item) =>
-                this.fs.arePathsSame(item.document.uri, model.file)
-            );
-            if (nb && model.isTrusted && !nb.document.metadata.trusted) {
-                await nb.edit((edit) => edit.replaceMetadata({ ...nb.document.metadata, trusted: true }));
-            }
         } finally {
             trustedNotebookInTrustService.resolve();
         }

@@ -40,9 +40,6 @@ export function sortObjectPropertiesRecursively(obj: any): any {
 
 // Exported for test mocks
 export class VSCodeNotebookModel extends BaseNotebookModel {
-    public get trustedAfterOpeningNotebook() {
-        return this._trustedAfterOpeningNotebook === true;
-    }
     public get isDirty(): boolean {
         return this.document?.isDirty === true;
     }
@@ -66,8 +63,7 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
     public get isUntitled(): boolean {
         return this.document ? this.document.isUntitled : super.isUntitled;
     }
-    private _cells: nbformat.IBaseCell[] = [];
-    private _trustedAfterOpeningNotebook? = false;
+    private readonly _initialCellCount: number;
     private document?: NotebookDocument;
     private readonly _preferredLanguage?: string;
 
@@ -86,11 +82,11 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
         // Do not change this code without changing code in base class.
         // We cannot invoke this in base class as `cellLanguageService` is not available in base class.
         this.ensureNotebookJson();
-        this._cells = this.notebookJson.cells || [];
+        this._initialCellCount = (this.notebookJson.cells || []).length;
         this._preferredLanguage = cellLanguageService.getPreferredLanguage(this.metadata);
     }
     public getCellCount() {
-        return this.document ? this.document.cells.length : this._cells.length;
+        return this.document ? this.document.cells.length : this._initialCellCount;
     }
     public getNotebookData() {
         if (!this._preferredLanguage) {
@@ -104,9 +100,6 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
             this._preferredLanguage,
             this.originalJson
         );
-    }
-    public markAsReloadedAfterTrusting() {
-        this._trustedAfterOpeningNotebook = false;
     }
     public getCellsWithId() {
         if (!this.document) {
@@ -127,21 +120,13 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
     public associateNotebookDocument(document: NotebookDocument) {
         this.document = document;
     }
-    public trust() {
-        // this._doNotUseOldCells = true;
-        super.trust();
-        this._cells = [];
-    }
     public async trustNotebook() {
         super.trust();
         if (this.document) {
             const editor = this.vscodeNotebook?.notebookEditors.find((item) => item.document === this.document);
             if (editor) {
-                await updateVSCNotebookAfterTrustingNotebook(editor, this.document, this._cells);
+                await updateVSCNotebookAfterTrustingNotebook(editor, this.document);
             }
-            // We don't need old cells.
-            this._cells = [];
-            this._trustedAfterOpeningNotebook = true;
         }
     }
     public getOriginalContentOnDisc(): string {
