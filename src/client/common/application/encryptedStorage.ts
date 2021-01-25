@@ -3,8 +3,9 @@
 import { inject, injectable } from 'inversify';
 import { env, ExtensionMode } from 'vscode';
 import { IS_REMOTE_NATIVE_TEST } from '../../../test/constants';
+import { UseVSCodeNotebookEditorApi } from '../constants';
 import { IExtensionContext } from '../types';
-import { IApplicationEnvironment, IAuthenticationService, IEncryptedStorage } from './types';
+import { IAuthenticationService, IEncryptedStorage } from './types';
 
 declare const __webpack_require__: typeof require;
 declare const __non_webpack_require__: typeof require;
@@ -39,7 +40,7 @@ const keytar = getNodeModule<KeyTar>('keytar');
 @injectable()
 export class EncryptedStorage implements IEncryptedStorage {
     constructor(
-        @inject(IApplicationEnvironment) private readonly appEnv: IApplicationEnvironment,
+        @inject(UseVSCodeNotebookEditorApi) private readonly useNativeNb: boolean,
         @inject(IAuthenticationService) private readonly authenService: IAuthenticationService,
         @inject(IExtensionContext) private readonly extensionContext: IExtensionContext
     ) {}
@@ -53,7 +54,7 @@ export class EncryptedStorage implements IEncryptedStorage {
             return;
         }
         // When not in insiders, use keytar
-        if (this.appEnv.channel !== 'insiders') {
+        if (!this.useNativeNb) {
             if (!value) {
                 await keytar?.deletePassword(service, key);
             } else {
@@ -73,7 +74,7 @@ export class EncryptedStorage implements IEncryptedStorage {
             return this.testingState.get(`${service}#${key}`);
         }
         // When not in insiders, use keytar
-        if (this.appEnv.channel !== 'insiders') {
+        if (!this.useNativeNb) {
             const val = await keytar?.getPassword(service, key);
             return val ? val : undefined;
         } else {
