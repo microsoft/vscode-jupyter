@@ -395,9 +395,17 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
         // This will dispose any existing (older kernels) associated with this notebook.
         // This way other parts of extension have access to this kernel immediately after event is handled.
         // Unlike webview notebooks we cannot revert to old kernel if kernel switching fails.
-        this.kernelProvider.getOrCreate(document.uri, {
+        const newKernel = this.kernelProvider.getOrCreate(document.uri, {
             metadata: selectedKernelConnectionMetadata
         });
+
+        if (
+            newKernel &&
+            !this.configuration.getSettings(undefined).disableJupyterAutoStart &&
+            newKernel.kernelConnectionMetadata.kind !== 'connectToLiveKernel'
+        ) {
+            newKernel.start().catch(noop);
+        }
 
         // Change kernel and update metadata (this can return `undefined`).
         // When calling `kernelProvider.getOrCreate` it will attempt to dispose the current kernel.
