@@ -7,28 +7,49 @@ import pandas.io.json as _VSCODE_pd_json
 # PyTorch and TensorFlow tensors which can be converted to numpy arrays
 _VSCODE_allowedTensorTypes = ["Tensor", "EagerTensor"]
 
-_VSCODE_maxCharacters = 10
-
 # Convert numpy array to DataFrame
 def _VSCODE_convertNumpyArrayToDataFrame(ndarray):
+    # Save the user's current setting
+    current_options = _VSCODE_np.get_printoptions()
     # Ask for the full string. Without this numpy truncates to 3 leading and 3 trailing by default
-    _VSCODE_np.set_printoptions(threshold=99999) # CHANGEME: ensure this doesn't propagate into users' code
+    _VSCODE_np.set_printoptions(threshold=99999)
+
     temp = ndarray
-    if hasattr(temp, "ndim"):
-        if temp.ndim > 2:
-            # Flatten
-            x_len = temp.shape[0]
-            y_len = temp.shape[1] # CHANGEME: assumes homogenous data
-            flattened = _VSCODE_np.empty((x_len, y_len), dtype="object")
-            for i in range(x_len):
-                for j in range(y_len):
-                    stringified = _VSCODE_np.array2string(temp[i][j], separator=", ")
-                    flattened[i][j] = stringified
-            temp = flattened
-        temp = _VSCODE_pd.DataFrame(temp)
+    x_len = temp.shape[0]
+    # Figure out if we're dealing with ragged data
+    try:
+        # Handle ragged arrays by making a container where the number of
+        # columns is the max length of all rows. Missing elements are
+        # represented as empty strings.
+        y_len = max([len(temp[i]) for i in range(x_len)])
+    except TypeError:
+        # 1D ndarray, nothing to do here
+        pass
+
+    if y_len:
+        # Figure out what kind of object the rows are
+        flattened = _VSCODE_np.full((x_len, y_len), "", dtype="object")
+        for i in range(x_len):
+            for j in range(len(temp[i])):
+                element = temp[i][j]
+                if isinstance(element, _VSCODE_np.ndarray):
+                    stringified = _VSCODE_np.array2string(element, separator=", ")
+                elif isinstance(element, (list, tuple)):
+                    # We can't pass lists and tuples to array2string because it expects
+                    # the size attribute to be defined
+                    stringified = str(element)
+                else:
+                    stringified = element
+                flattened[i][j] = stringified
+        temp = flattened
+    temp = _VSCODE_pd.DataFrame(temp)
     ndarray = temp
     del temp
+
+    # Restore the user's printoptions
+    _VSCODE_np.set_printoptions(threshold=current_options["threshold"])
     return ndarray
+
 
 # Function that converts tensors to DataFrames
 def _VSCODE_convertTensorToDataFrame(tensor):
