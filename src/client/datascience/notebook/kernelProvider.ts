@@ -399,6 +399,7 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
             metadata: selectedKernelConnectionMetadata
         });
 
+        // Auto start the local kernels.
         if (
             newKernel &&
             !this.configuration.getSettings(undefined).disableJupyterAutoStart &&
