@@ -99,7 +99,7 @@ async function closeWindowsInternal() {
             super("Command 'workbench.action.closeAllEditors' timed out");
         }
     }
-    const closeWindowsImplementation = (timeout = 15_000) => {
+    const closeWindowsImplementation = (timeout = 2_000) => {
         return new Promise<void>((resolve, reject) => {
             // Attempt to fix #1301.
             // Lets not waste too much time.
@@ -124,9 +124,7 @@ async function closeWindowsInternal() {
         await closeWindowsImplementation();
     } catch (ex) {
         if (ex instanceof CloseEditorsTimeoutError) {
-            // Try again with a smaller timeout (no idea why VSCode is timeout out here).
-            await sleep(500); // Possible VSC is busy & wasn't able to handle previous command.
-            await closeWindowsImplementation(5_000);
+            // Do nothing. Just stop waiting.
         } else {
             throw ex;
         }

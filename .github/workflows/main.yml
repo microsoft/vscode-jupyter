@@ -16,6 +16,7 @@ on:
       - 'release'
       - 'release/*'
       - 'release-*'
+      - rchiodo/run_cells_below_test
   workflow_dispatch:
 
 env:
