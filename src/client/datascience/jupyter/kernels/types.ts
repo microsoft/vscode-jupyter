@@ -149,7 +149,8 @@ export interface IKernelSelectionUsage {
         resource: Resource,
         type: 'raw' | 'jupyter' | 'noConnection',
         session?: IJupyterSessionManager,
-        cancelToken?: CancellationToken
+        cancelToken?: CancellationToken,
+        disableUI?: boolean
     ): Promise<KernelConnectionMetadata | undefined>;
 }
 
