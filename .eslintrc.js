@@ -1224,6 +1224,7 @@ module.exports = {
             }
         ],
         'react/jsx-uses-vars': 'error',
+        'react/jsx-uses-react': 'error',
         strict: 'off'
     },
     settings: {

@@ -29,6 +29,7 @@ export class IVariableViewPanelMapping {
     public [InteractiveWindowMessages.UpdateVariableViewExecutionCount]: { executionCount: number };
     public [InteractiveWindowMessages.GetHTMLByIdRequest]: string;
     public [InteractiveWindowMessages.GetHTMLByIdResponse]: string;
+    public [InteractiveWindowMessages.RestartKernel]: never | undefined;
 }
 
 export const INotebookWatcher = Symbol('INotebookWatcher');
@@ -36,6 +37,7 @@ export interface INotebookWatcher {
     readonly activeVariableViewNotebook?: INotebook;
     readonly onDidChangeActiveVariableViewNotebook: Event<INotebook | undefined>;
     readonly onDidExecuteActiveVariableViewNotebook: Event<{ executionCount: number }>;
+    readonly onDidRestartActiveVariableViewNotebook: Event<void>;
 }
 
 export const IVariableViewProvider = Symbol('IVariableViewProvider');

@@ -30,6 +30,7 @@ import {
     IJupyterVariableDataProviderFactory,
     IJupyterVariables,
     IJupyterVariablesRequest,
+    //IJupyterVariablesResponse,
     INotebook,
     IThemeFinder
 } from '../types';
@@ -74,14 +75,18 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
             [path.join(variableViewDir, 'commons.initial.bundle.js'), path.join(variableViewDir, 'variableView.js')]
         );
 
-        // Sign up if the active variable view notebook is changed or updated
+        // Sign up if the active variable view notebook is changed, restarted or updated
         this.notebookWatcher.onDidExecuteActiveVariableViewNotebook(
             this.activeNotebookExecuted,
             this,
             this.disposables
         );
-
         this.notebookWatcher.onDidChangeActiveVariableViewNotebook(this.activeNotebookChanged, this, this.disposables);
+        this.notebookWatcher.onDidRestartActiveVariableViewNotebook(
+            this.activeNotebookRestarted,
+            this,
+            this.disposables
+        );
 
         this.dataViewerChecker = new DataViewerChecker(configuration, appShell);
     }
@@ -184,6 +189,11 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
 
     // The active variable new notebook has changed, so force a refresh on the view to pick up the new info
     private async activeNotebookChanged(_notebook: INotebook | undefined) {
-        this.postMessage(InteractiveWindowMessages.ForceVariableRefresh).ignoreErrors();
+        //this.postMessage(InteractiveWindowMessages.ForceVariableRefresh).ignoreErrors();
+        this.postMessage(InteractiveWindowMessages.RestartKernel).ignoreErrors();
+    }
+
+    private async activeNotebookRestarted() {
+        this.postMessage(InteractiveWindowMessages.RestartKernel).ignoreErrors();
     }
 }
