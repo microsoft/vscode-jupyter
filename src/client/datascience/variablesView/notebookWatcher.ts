@@ -53,6 +53,7 @@ export class NotebookWatcher implements INotebookWatcher {
         // We need to know if kernel state changes or if the active notebook editor is changed
         this.notebookExtensibility.onKernelStateChange(this.kernelStateChanged, this, this.disposables);
         this.notebookEditorProvider.onDidChangeActiveNotebookEditor(this.activeEditorChanged, this, this.disposables);
+        this.notebookEditorProvider.onDidCloseNotebookEditor(this.notebookEditorClosed, this, this.disposables);
         this._activeEditor = this.notebookEditorProvider.activeEditor; // Make sure that we assign an initial editor
     }
 
@@ -90,6 +91,14 @@ export class NotebookWatcher implements INotebookWatcher {
         }
     }
 
+    // When an editor is closed, remove it from our execution count map
+    private notebookEditorClosed(editor: INotebookEditor) {
+        if (this._executionCountMap.has(editor.file.toString())) {
+            this._executionCountMap.delete(editor.file.toString());
+        }
+    }
+
+    // IANHU: Not Async?
     private async activeEditorChanged(editor: INotebookEditor | undefined) {
         // When the active editor changes we want to force a refresh of variables
         //this._activeEditor = editor;
