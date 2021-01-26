@@ -216,8 +216,8 @@ export class JupyterSession extends BaseJupyterSession {
         // Create our backing file for the notebook
         const backingFile = await this.createBackingFile();
 
-        // Make sure the kernel has ipykernel installed.
-        if (kernelConnection?.interpreter) {
+        // Make sure the kernel has ipykernel installed if on a local machine.
+        if (kernelConnection?.interpreter && this.connInfo.localLaunch) {
             await this.installDependenciesIntoInterpreter(kernelConnection.interpreter, cancelToken, disableUI);
         }
 
