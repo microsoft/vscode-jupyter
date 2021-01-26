@@ -242,6 +242,7 @@ export class KernelExecution implements IDisposable {
             const kernel = this.getKernel(document);
             stackOfCellsToExecute.forEach((exec) => traceCellMessage(exec.cell, 'Ready to execute'));
             while (stackOfCellsToExecute.length) {
+                // Stack of cells to be executed, this way we maintain order of cell executions.
                 const cellToExecute = stackOfCellsToExecute[0];
                 if (!cellToExecute) {
                     continue;
