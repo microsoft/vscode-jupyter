@@ -160,7 +160,6 @@ export interface IKernel extends IAsyncDisposable {
     readonly onStatusChanged: Event<ServerStatus>;
     readonly onDisposed: Event<void>;
     readonly onRestarted: Event<void>;
-    readonly onInterruptTimedOut: Event<void>;
     readonly status: ServerStatus;
     readonly disposed: boolean;
     /**
@@ -170,8 +169,7 @@ export interface IKernel extends IAsyncDisposable {
     readonly info?: KernelMessage.IInfoReplyMsg['content'];
     readonly kernelSocket: Observable<KernelSocketInformation | undefined>;
     start(options?: { disableUI?: boolean }): Promise<void>;
-    interruptCell(cell: NotebookCell): Promise<InterruptResult>;
-    interruptAllCells(document: NotebookDocument): Promise<InterruptResult>;
+    interrupt(document: NotebookDocument): Promise<InterruptResult>;
     restart(): Promise<void>;
     executeCell(cell: NotebookCell): Promise<void>;
     executeAllCells(document: NotebookDocument): Promise<void>;
@@ -180,10 +178,6 @@ export interface IKernel extends IAsyncDisposable {
 export type KernelOptions = { metadata: KernelConnectionMetadata };
 export const IKernelProvider = Symbol('IKernelProvider');
 export interface IKernelProvider extends IAsyncDisposable {
-    /**
-     * Event fired when an interrupt event times out for any kernel
-     */
-    readonly onInterruptTimedOut: Event<IKernel>;
     /**
      * Get hold of the active kernel for a given Uri (Notebook or other file).
      */

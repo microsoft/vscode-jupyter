@@ -3,6 +3,8 @@
 
 'use strict';
 
+import { traceError } from '../logger';
+
 /**
  * Error type thrown when a timeout occurs
  */
@@ -236,4 +238,23 @@ export async function flattenIterator<T>(iterator: AsyncIterator<T, void>): Prom
         result = await iterator.next();
     }
     return results;
+}
+
+export class ChainedExecutions<T> {
+    private pendingCellExecution?: Promise<T> | undefined;
+    constructor(private readonly messageForErrorTracing: string) {}
+    public async chainExecution(next: () => Promise<T>): Promise<T> {
+        if (this.pendingCellExecution) {
+            try {
+                await this.pendingCellExecution;
+            } catch (ex) {
+                traceError(this.messageForErrorTracing, ex);
+                throw ex;
+            }
+        }
+        const promise = next();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        this.pendingCellExecution = promise;
+        return promise;
+    }
 }
