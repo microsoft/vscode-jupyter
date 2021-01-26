@@ -10,7 +10,6 @@ import * as uuid from 'uuid/v4';
 import { CancellationTokenSource, Event, EventEmitter, NotebookCell, NotebookDocument, Uri } from 'vscode';
 import { ServerStatus } from '../../../../datascience-ui/interactive-common/mainState';
 import { IApplicationShell, IVSCodeNotebook } from '../../../common/application/types';
-import { WrappedError } from '../../../common/errors/errorUtils';
 import { traceError, traceInfo, traceWarning } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 import { IDisposableRegistry, IExtensionContext } from '../../../common/types';
@@ -119,11 +118,7 @@ export class Kernel implements IKernel {
         }
         traceInfo(`Interrupt requested ${document.uri}`);
         this.startCancellation.cancel();
-        if (!this._notebookPromise) {
-            traceInfo('Interrupt requested even before a notebook has been created');
-            return InterruptResult.Success;
-        }
-        return this.kernelExecution.interrupt(this._notebookPromise, document);
+        return this.kernelExecution.interrupt(document, this._notebookPromise);
     }
     public async dispose(): Promise<void> {
         this.restarting = undefined;
@@ -183,7 +178,7 @@ export class Kernel implements IKernel {
                         if (!options.disableUI) {
                             this.errorHandler.handleError(ex).ignoreErrors(); // Just a notification, so don't await this
                         }
-                        throw new WrappedError('Kernel has not been started', ex);
+                        throw ex;
                     }
                     await this.initializeAfterStart();
                     resolve(this.notebook);

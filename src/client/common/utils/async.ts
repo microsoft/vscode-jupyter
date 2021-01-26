@@ -240,15 +240,29 @@ export async function flattenIterator<T>(iterator: AsyncIterator<T, void>): Prom
 
 export class ChainedExecutions<T> {
     private pendingCellExecution?: Promise<T> | undefined;
+    public clear() {
+        this.pendingCellExecution = undefined;
+    }
     public async chainExecution(next: () => Promise<T>): Promise<T> {
         if (this.pendingCellExecution) {
             const previous = this.pendingCellExecution;
+            // Clear in case this promise fails.
             this.pendingCellExecution = undefined;
             await previous;
         }
         const promise = next();
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         this.pendingCellExecution = promise;
+        promise
+            .finally(() => {
+                // Clear in case this next promise fails.
+                if (this.pendingCellExecution === promise) {
+                    this.pendingCellExecution = undefined;
+                }
+            })
+            .catch(() => {
+                //
+            });
         return promise;
     }
 }

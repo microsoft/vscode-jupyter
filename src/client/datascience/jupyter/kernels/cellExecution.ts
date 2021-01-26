@@ -155,23 +155,6 @@ export class CellExecution {
         );
     }
 
-    /**
-     * If a cell has not yet started, then de-queue the cell from execution.
-     * If it has started, then wait for it to complete.
-     */
-    public async interrupt(): Promise<void> {
-        if (this.started) {
-            // At this point the cell execution can only be stopped from kernel & we should not
-            // stop handling execution results & the like from the kernel.
-            // The result will resolve when execution completes or kernel is restarted.
-            await this.result;
-            return;
-        }
-        // If we haven't even started this cell, then cancel it.
-        traceCellMessage(this.cell, 'Cell cancelled as a result of interrupt');
-        await this.cancel();
-    }
-
     public async start(kernelPromise: Promise<IKernel>, notebook: INotebook) {
         if (this.cancelHandled) {
             traceCellMessage(this.cell, 'Not starting as it was cancelled');
@@ -210,9 +193,20 @@ export class CellExecution {
     }
     /**
      * Cancel execution.
-     * If execution has commenced, then interrupt (via cancellation token) else dequeue from execution.
+     * If execution has commenced, then wait for execution to complete or kernel to start.
      */
     public async cancel() {
+        await this.cancelInternal(false);
+    }
+    public async cancelInternal(forced = false) {
+        if (this.started && !forced) {
+            // At this point the cell execution can only be stopped from kernel & we should not
+            // stop handling execution results & the like from the kernel.
+            // The result will resolve when execution completes or kernel is restarted.
+            traceCellMessage(this.cell, 'Cell is already running, waiting for it to finish or kernel to start');
+            await this.result;
+            return;
+        }
         if (this.cancelHandled || this._completed) {
             return;
         }
@@ -240,7 +234,7 @@ export class CellExecution {
         kernel.onRestarted(
             () => {
                 traceCellMessage(this.cell, 'Kernel restart handled in CellExecution, cancelling cell');
-                this.cancel().catch(noop);
+                this.cancelInternal(true).catch(noop);
             },
             this,
             this.disposables
