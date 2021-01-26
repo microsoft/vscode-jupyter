@@ -41,10 +41,8 @@ export class KernelExecution implements IDisposable {
 
     private readonly executionFactory: CellExecutionFactory;
     private readonly disposables: IDisposable[] = [];
-    private readonly pendingExecution = new ChainedExecutions<void>('Kernel execution failure');
-    private readonly pendingCellExecution = new ChainedExecutions<NotebookCellRunState | undefined>(
-        'Kernel execution previous cell failure'
-    );
+    private readonly pendingExecution = new ChainedExecutions<void>();
+    private readonly pendingCellExecution = new ChainedExecutions<NotebookCellRunState | undefined>();
     private isRawNotebookSupported?: Promise<boolean>;
     private _interruptPromise?: Promise<InterruptResult>;
     constructor(
