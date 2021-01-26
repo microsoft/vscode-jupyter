@@ -41,7 +41,6 @@ WARNING: Do not change the order of these imports.
 Slick grid MUST be imported after we load jQuery and other stuff from `./globalJQueryImports`
 */
 
-
 export interface ISlickRow extends Slick.SlickData {
     id: string;
 }
@@ -433,7 +432,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         if (this.state.grid) {
             const fontString = this.computeFont();
             const columns = this.state.grid.getColumns();
-            const placeholder = "99999999999";
+            const placeholder = '99999999999';
             const maxFieldWidth = measureText(placeholder, fontString);
             columns.forEach((c) => {
                 c.width = maxFieldWidth;

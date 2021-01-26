@@ -242,9 +242,7 @@ suite('DataScience DataViewer tests', () => {
         wrapper.update();
     }
 
-    function cancelEdits(
-        wrapper: ReactWrapper<any, Readonly<{}>, React.Component>,
-    ) {
+    function cancelEdits(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) {
         const reactGrid = findGrid(wrapper);
         reactGrid.state.grid?.getEditorLock().cancelCurrentEdit();
         wrapper.update();
@@ -386,11 +384,7 @@ suite('DataScience DataViewer tests', () => {
         await gotAllRows;
 
         // Confirm that values are initially truncated
-        verifyRows(wrapper.wrapper, [
-            0,
-            `[[ 0,  ...`,
-            `[[12, 1...`
-        ]);
+        verifyRows(wrapper.wrapper, [0, `[[ 0,  ...`, `[[12, 1...`]);
 
         // Put cell into edit mode and verify that input value is updated to be the non-truncated, stringified value
         editCell(wrapper.wrapper, 0, 1);
@@ -398,15 +392,11 @@ suite('DataScience DataViewer tests', () => {
 
         // Now cancel edit and verify the value is truncated again
         cancelEdits(wrapper.wrapper);
-        verifyRows(wrapper.wrapper, [
-            0,
-            `[[ 0,  ...`,
-            `[[12, 1...`
-        ]);
+        verifyRows(wrapper.wrapper, [0, `[[ 0,  ...`, `[[12, 1...`]);
     });
 
     runMountedTest('Ragged 2D numpy array', async (wrapper) => {
-        await injectCode('import numpy as np\r\nfoo = np.array([[1, 2, 3], [4, 5]])')
+        await injectCode('import numpy as np\r\nfoo = np.array([[1, 2, 3], [4, 5]])');
         const gotAllRows = getCompletedPromise(wrapper);
         const dv = await createJupyterVariableDataViewer('foo', 'ndarray');
         assert.ok(dv, 'DataViewer not created');
@@ -421,13 +411,6 @@ suite('DataScience DataViewer tests', () => {
         const dv = await createJupyterVariableDataViewer('foo', 'ndarray');
         assert.ok(dv, 'DataViewer not created');
         await gotAllRows;
-        verifyRows(wrapper.wrapper, [
-            0,
-            `[1, 2, 3]`,
-            `[4, 5]`,
-            1,
-            `[6, 7, ...`,
-            ''
-        ]);
+        verifyRows(wrapper.wrapper, [0, `[1, 2, 3]`, `[4, 5]`, 1, `[6, 7, ...`, '']);
     });
 });
