@@ -322,10 +322,11 @@ export class KernelSelector implements IKernelSelectionUsage {
         resource: Resource,
         type: 'raw' | 'jupyter' | 'noConnection',
         session?: IJupyterSessionManager,
-        cancelToken?: CancellationToken
+        cancelToken?: CancellationToken,
+        disableUI?: boolean
     ): Promise<KernelConnectionMetadata | undefined> {
         // Check if ipykernel is installed in this kernel.
-        if (selection.interpreter && type === 'jupyter') {
+        if (selection.interpreter && type === 'jupyter' && !disableUI) {
             sendTelemetryEvent(Telemetry.SwitchToInterpreterAsKernel);
             const item = await this.useInterpreterAsKernel(
                 resource,
@@ -452,7 +453,7 @@ export class KernelSelector implements IKernelSelectionUsage {
             } else if (!cancelToken?.isCancellationRequested) {
                 // No kernel info, hence prompt to use current interpreter as a kernel.
                 const activeInterpreter = await this.interpreterService.getActiveInterpreter(resource);
-                if (activeInterpreter) {
+                if (activeInterpreter && !disableUI) {
                     return this.useInterpreterAsKernel(
                         resource,
                         activeInterpreter,
@@ -462,6 +463,9 @@ export class KernelSelector implements IKernelSelectionUsage {
                         disableUI,
                         cancelToken
                     );
+                } else if (activeInterpreter) {
+                    // No UI allowed, just use the default kernel
+                    return { kind: 'startUsingDefaultKernel', interpreter: activeInterpreter };
                 } else {
                     telemetryProps.promptedToSelect = true;
                     return this.selectLocalKernel(resource, 'jupyter', stopWatch, sessionManager, cancelToken);
@@ -470,7 +474,7 @@ export class KernelSelector implements IKernelSelectionUsage {
         } else if (!cancelToken?.isCancellationRequested) {
             // No kernel info, hence use current interpreter as a kernel.
             const activeInterpreter = await this.interpreterService.getActiveInterpreter(resource);
-            if (activeInterpreter) {
+            if (activeInterpreter && !disableUI) {
                 const kernelSpec = await this.kernelService.searchAndRegisterKernel(
                     activeInterpreter,
                     disableUI,

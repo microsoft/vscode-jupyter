@@ -243,7 +243,10 @@ export class Kernel implements IKernel {
                         .useSelectedKernel(
                             kernel?.kernelConnectionMetadata,
                             uri,
-                            isRawNotebookSupported ? 'raw' : 'jupyter'
+                            isRawNotebookSupported ? 'raw' : 'jupyter',
+                            undefined,
+                            undefined,
+                            true // Disable UI when validating.
                         )
                         .finally(() => {
                             // If still using the same promise, then remove the exception information.

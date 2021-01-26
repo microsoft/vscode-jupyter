@@ -109,6 +109,7 @@ export interface INotebookServerLaunchInfo {
     kernelConnectionMetadata?: KernelConnectionMetadata;
     workingDir: string | undefined;
     purpose: string | undefined; // Purpose this server is for
+    disableUI?: boolean; // True if no UI should be brought up during the launch
 }
 
 export interface INotebookCompletion {
@@ -372,7 +373,8 @@ export interface IJupyterSessionManager extends IAsyncDisposable {
     startNew(
         kernelConnection: KernelConnectionMetadata | undefined,
         workingDirectory: string,
-        cancelToken?: CancellationToken
+        cancelToken?: CancellationToken,
+        disableUI?: boolean
     ): Promise<IJupyterSession>;
     getKernelSpecs(): Promise<IJupyterKernelSpec[]>;
     getConnInfo(): IJupyterConnection;

@@ -8,10 +8,11 @@ import { assert, expect } from 'chai';
 import * as dedent from 'dedent';
 import * as sinon from 'sinon';
 import { commands } from 'vscode';
+import { Common } from '../../../client/common/utils/localize';
 import { CellDisplayOutput, CellErrorOutput } from '../../../../typings/vscode-proposed';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { traceInfo } from '../../../client/common/logger';
-import { IDisposable } from '../../../client/common/types';
+import { IDisposable, Product } from '../../../client/common/types';
 import { INotebookEditorProvider } from '../../../client/datascience/types';
 import { createEventHandler, IExtensionTestApi, sleep, waitForCondition } from '../../common';
 import { initialize } from '../../initialize';
@@ -29,11 +30,14 @@ import {
     waitForExecutionCompletedSuccessfully,
     waitForExecutionCompletedWithErrors,
     waitForKernelToGetAutoSelected,
-    prewarmNotebooks
+    prewarmNotebooks,
+    hijackPrompt
 } from './helper';
+import { ProductNames } from '../../../client/common/installer/productNames';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
+const expectedPromptMessageSuffix = `requires ${ProductNames.get(Product.ipykernel)!} to be installed.`;
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
@@ -48,6 +52,13 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         if (!(await canRunNotebookTests())) {
             return this.skip();
         }
+        await hijackPrompt(
+            'showErrorMessage',
+            { endsWith: expectedPromptMessageSuffix },
+            { text: Common.install(), clickImmediately: true },
+            disposables
+        );
+
         await trustAllNotebooks();
         await startJupyterServer();
         await prewarmNotebooks();

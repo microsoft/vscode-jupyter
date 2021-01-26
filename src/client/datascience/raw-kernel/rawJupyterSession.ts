@@ -80,14 +80,15 @@ export class RawJupyterSession extends BaseJupyterSession {
     public async connect(
         kernelConnection: KernelConnectionMetadata,
         timeout: number,
-        cancelToken?: CancellationToken
+        cancelToken?: CancellationToken,
+        disableUI?: boolean
     ): Promise<KernelConnectionMetadata | undefined> {
         // Save the resource that we connect with
         let newSession: RawSession | null | CancellationError = null;
         try {
             // Try to start up our raw session, allow for cancellation or timeout
             // Notebook Provider level will handle the thrown error
-            newSession = await this.startRawSession(kernelConnection, timeout, cancelToken);
+            newSession = await this.startRawSession(kernelConnection, timeout, cancelToken, disableUI);
 
             // Only connect our session if we didn't cancel or timeout
             sendTelemetryEvent(Telemetry.RawKernelSessionStartSuccess);
@@ -135,7 +136,8 @@ export class RawJupyterSession extends BaseJupyterSession {
     public async createNewKernelSession(
         kernelConnection: KernelConnectionMetadata,
         timeoutMS: number,
-        _cancelToken?: CancellationToken
+        cancelToken?: CancellationToken,
+        disableUI?: boolean
     ): Promise<ISessionWithSocket> {
         if (!kernelConnection || 'session' in kernelConnection) {
             // Don't allow for connecting to a LiveKernelModel
@@ -145,7 +147,7 @@ export class RawJupyterSession extends BaseJupyterSession {
         const displayName = getDisplayNameOrNameOfKernelConnection(kernelConnection);
         this.outputChannel.appendLine(localize.DataScience.kernelStarted().format(displayName));
 
-        const newSession = await this.startRawSession(kernelConnection, timeoutMS);
+        const newSession = await this.startRawSession(kernelConnection, timeoutMS, cancelToken, disableUI);
 
         // Make sure it is idle before we return
         await this.waitForIdleOnSession(newSession, timeoutMS);
@@ -220,7 +222,8 @@ export class RawJupyterSession extends BaseJupyterSession {
     private async startRawSession(
         kernelConnection: KernelConnectionMetadata,
         timeout: number,
-        cancelToken?: CancellationToken
+        cancelToken?: CancellationToken,
+        disableUI?: boolean
     ): Promise<RawSession> {
         if (
             kernelConnection.kind !== 'startUsingKernelSpec' &&
@@ -233,7 +236,8 @@ export class RawJupyterSession extends BaseJupyterSession {
             timeout,
             this.resource,
             this.workingDirectory,
-            cancelToken
+            cancelToken,
+            disableUI
         );
 
         // Create our raw session, it will own the process lifetime
