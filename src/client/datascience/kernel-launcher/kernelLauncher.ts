@@ -97,11 +97,12 @@ export class KernelLauncher implements IKernelLauncher {
         timeout: number,
         resource: Resource,
         workingDirectory: string,
-        cancelToken?: CancellationToken
+        cancelToken?: CancellationToken,
+        disableUI?: boolean
     ): Promise<IKernelProcess> {
         // If this is a python interpreter, make sure it has ipykernel
         if (kernelConnectionMetadata.interpreter) {
-            await this.installDependenciesIntoInterpreter(kernelConnectionMetadata.interpreter, cancelToken);
+            await this.installDependenciesIntoInterpreter(kernelConnectionMetadata.interpreter, cancelToken, disableUI);
         }
 
         // Should be available now, wait with a timeout
@@ -187,12 +188,16 @@ export class KernelLauncher implements IKernelLauncher {
 
     // If we need to install our dependencies now
     // then install ipykernel into the interpreter or throw error
-    private async installDependenciesIntoInterpreter(interpreter: PythonEnvironment, cancelToken?: CancellationToken) {
+    private async installDependenciesIntoInterpreter(
+        interpreter: PythonEnvironment,
+        cancelToken?: CancellationToken,
+        disableUI?: boolean
+    ) {
         // Cache the install question so when two kernels start at the same time for the same interpreter we don't ask twice
         let deferred = this.dependencyPromises.get(interpreter.path);
         if (!deferred) {
             deferred = createDeferredFromPromise(
-                this.kernelDependencyService.installMissingDependencies(interpreter, cancelToken)
+                this.kernelDependencyService.installMissingDependencies(interpreter, cancelToken, disableUI)
             );
             this.dependencyPromises.set(interpreter.path, deferred);
         }

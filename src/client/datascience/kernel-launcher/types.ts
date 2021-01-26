@@ -18,7 +18,8 @@ export interface IKernelLauncher {
         timeout: number,
         resource: Resource,
         workingDirectory: string,
-        cancelToken?: CancellationToken
+        cancelToken?: CancellationToken,
+        disableUI?: boolean
     ): Promise<IKernelProcess>;
 }
 
