@@ -196,11 +196,11 @@ export class KernelExecution implements IDisposable {
         const restartHandlerToken = session.onSessionStatusChanged(restartHandler);
 
         // Start our interrupt. If it fails, indicate a restart
-        // session.interrupt(this.interruptTimeout).catch((exc) => {
-        //     traceWarning(`Error during interrupt: ${exc}`);
-        //     restarted.resolve(true);
-        // });
-        setTimeout(() => restarted.resolve(true), 5_000);
+        session.interrupt(this.interruptTimeout).catch((exc) => {
+            traceWarning(`Error during interrupt: ${exc}`);
+            restarted.resolve(true);
+        });
+
         try {
             // Wait for all of the pending cells to finish or the timeout to fire
             const result = await waitForPromise(Promise.race([pendingCells, restarted.promise]), this.interruptTimeout);
