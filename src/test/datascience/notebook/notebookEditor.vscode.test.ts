@@ -4,10 +4,12 @@
 'use strict';
 
 import { assert } from 'chai';
+import { CancellationToken } from 'vscode-jsonrpc';
 import { ICommandManager, IVSCodeNotebook } from '../../../client/common/application/types';
 import { traceInfo } from '../../../client/common/logger';
 import { IDisposable } from '../../../client/common/types';
 import { Commands } from '../../../client/datascience/constants';
+import { INotebookKernelProvider } from '../../../client/datascience/notebook/types';
 import { INotebookEditorProvider } from '../../../client/datascience/types';
 import { IExtensionTestApi } from '../../common';
 import { initialize } from '../../initialize';
@@ -15,12 +17,14 @@ import {
     canRunNotebookTests,
     closeNotebooksAndCleanUpAfterTests,
     deleteAllCellsAndWait,
+    executeCell,
     insertCodeCell,
     selectCell,
     startJupyterServer,
     trustAllNotebooks,
     waitForExecutionCompletedSuccessfully,
-    waitForKernelToGetAutoSelected
+    waitForKernelToGetAutoSelected,
+    waitForKernelToGetSelected
 } from './helper';
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
@@ -29,6 +33,7 @@ suite('Notebook Editor tests', () => {
     let vscodeNotebook: IVSCodeNotebook;
     let editorProvider: INotebookEditorProvider;
     let commandManager: ICommandManager;
+    let kernelProvider: INotebookKernelProvider;
     const disposables: IDisposable[] = [];
 
     suiteSetup(async function () {
@@ -40,6 +45,7 @@ suite('Notebook Editor tests', () => {
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
         commandManager = api.serviceContainer.get<ICommandManager>(ICommandManager);
+        kernelProvider = api.serviceContainer.get<INotebookKernelProvider>(INotebookKernelProvider);
 
         // On conda these take longer for some reason.
         this.timeout(30_000);
@@ -114,5 +120,32 @@ suite('Notebook Editor tests', () => {
 
         // The third cell should have a runState of Success
         assert.strictEqual(thirdCell?.metadata.runState, vscodeNotebookEnums.NotebookCellRunState.Success);
+    });
+
+    test('Switch kernels', async function () {
+        // add a cell
+        await insertCodeCell('print("0")', { index: 0 });
+
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
+
+        await executeCell(cell);
+
+        // Wait till execution count changes and status is success.
+        await waitForExecutionCompletedSuccessfully(cell);
+
+        // Switch kernels to the other kernel
+        const kernels = await kernelProvider.provideKernels(
+            vscodeNotebook.activeNotebookEditor!.document,
+            CancellationToken.None
+        );
+        if (kernels?.length && kernels?.length > 0) {
+            // We have multiple kernels. Try switching
+            await waitForKernelToGetSelected(kernels[0].label);
+        }
+
+        // Execute cell and verify output
+        await executeCell(cell);
+        assert.strictEqual(cell?.outputs.length, 1);
+        assert.strictEqual(cell?.metadata.runState, vscodeNotebookEnums.NotebookCellRunState.Success);
     });
 });

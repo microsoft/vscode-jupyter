@@ -19,7 +19,7 @@ import {
     NotebookDocument
 } from '../../../../typings/vscode-proposed';
 import { IApplicationEnvironment, IApplicationShell, IVSCodeNotebook } from '../../../client/common/application/types';
-import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
+import { JVSC_EXTENSION_ID, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { disposeAllDisposables } from '../../../client/common/helpers';
 import { traceInfo } from '../../../client/common/logger';
 import {
@@ -245,7 +245,7 @@ export async function waitForKernelToGetSelected(kernelNameSearch: string) {
     const id = kernels?.find((k) => k.label.includes(kernelNameSearch))?.id;
 
     // Send a select kernel on the active notebook editor
-    void commands.executeCommand('notebook.selectKernel', { id });
+    void commands.executeCommand('notebook.selectKernel', { id, extension: JVSC_EXTENSION_ID });
     const isRightKernel = () => {
         if (!vscodeNotebook.activeNotebookEditor) {
             return false;

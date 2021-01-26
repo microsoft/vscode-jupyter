@@ -97,9 +97,6 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
 
     ['.venvnokernel', '.venvnoreg'].forEach((kName) =>
         test('Ensure prompt is displayed when ipykernel module is not found and it gets installed', async function () {
-            // This is pending waiting for the 'notebook.selectKernel' command to accept an id
-            this.skip();
-
             // Confirm message is displayed & we click 'Install` button.
             const prompt = await hijackPrompt(
                 'showErrorMessage',
