@@ -13,43 +13,44 @@ def _VSCODE_convertNumpyArrayToDataFrame(ndarray):
     current_options = _VSCODE_np.get_printoptions()
     # Ask for the full string. Without this numpy truncates to 3 leading and 3 trailing by default
     _VSCODE_np.set_printoptions(threshold=99999)
-
     temp = ndarray
-    x_len = temp.shape[0]
-    y_len = None
-    # Figure out if we're dealing with ragged data
+
     try:
+        x_len = temp.shape[0]
+        y_len = None
+        # Figure out if we're dealing with ragged data
         # Handle ragged arrays by making a container where the number of
         # columns is the max length of all rows. Missing elements are
         # represented as empty strings.
         y_len = max([len(temp[i]) for i in range(x_len)])
+
+        if y_len:
+            # Figure out what kind of object the rows are
+            flattened = _VSCODE_np.full((x_len, y_len), "", dtype="object")
+            for i in range(x_len):
+                for j in range(len(temp[i])):
+                    element = temp[i][j]
+                    if isinstance(element, _VSCODE_np.ndarray):
+                        stringified = _VSCODE_np.array2string(element, separator=", ")
+                    elif isinstance(element, (list, tuple)):
+                        # We can't pass lists and tuples to array2string because it expects
+                        # the size attribute to be defined
+                        stringified = str(element)
+                    else:
+                        stringified = element
+                    flattened[i][j] = stringified
+            temp = flattened
     except TypeError:
-        # 1D ndarray, nothing to do here
-        pass
-
-    if y_len:
-        # Figure out what kind of object the rows are
-        flattened = _VSCODE_np.full((x_len, y_len), "", dtype="object")
-        for i in range(x_len):
-            for j in range(len(temp[i])):
-                element = temp[i][j]
-                if isinstance(element, _VSCODE_np.ndarray):
-                    stringified = _VSCODE_np.array2string(element, separator=", ")
-                elif isinstance(element, (list, tuple)):
-                    # We can't pass lists and tuples to array2string because it expects
-                    # the size attribute to be defined
-                    stringified = str(element)
-                else:
-                    stringified = element
-                flattened[i][j] = stringified
-        temp = flattened
-    temp = _VSCODE_pd.DataFrame(temp)
-    ndarray = temp
-    del temp
-
-    # Restore the user's printoptions
-    _VSCODE_np.set_printoptions(threshold=current_options["threshold"])
-    return ndarray
+        # Ragged as well as 1D ndarrays both have ndim==1, but computing
+        # y_len for 1D ndarray will raise a TypeError
+        pass  # nosec
+    finally:
+        # Restore the user's printoptions
+        _VSCODE_np.set_printoptions(threshold=current_options["threshold"])
+        temp = _VSCODE_pd.DataFrame(temp)
+        ndarray = temp
+        del temp
+        return ndarray
 
 
 # Function that converts tensors to DataFrames
