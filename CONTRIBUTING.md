@@ -241,7 +241,7 @@ than the next sprint from when it was submitted (see
 
 ### Release cycle
 
-Planning is done as one week sprints. We start a sprint every Thursday.
+Planning is done as monthly releases. 
 
 The extension aims to do a new release once a month. A
 [release plan](https://github.com/Microsoft/vscode-jupyter/labels/release%20plan)
