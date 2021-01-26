@@ -242,7 +242,9 @@ export class ChainedExecutions<T> {
     private pendingCellExecution?: Promise<T> | undefined;
     public async chainExecution(next: () => Promise<T>): Promise<T> {
         if (this.pendingCellExecution) {
-            await this.pendingCellExecution;
+            const previous = this.pendingCellExecution;
+            this.pendingCellExecution = undefined;
+            await previous;
         }
         const promise = next();
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
