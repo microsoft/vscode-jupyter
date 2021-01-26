@@ -350,6 +350,7 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
     }) {
         // We're only interested in our Jupyter Notebooks & our kernels.
         if (!isJupyterKernel(kernel) || !isJupyterNotebook(document)) {
+            updateKernelInNotebookMetadata(document, undefined);
             return;
         }
         const selectedKernelConnectionMetadata = kernel.selection;
