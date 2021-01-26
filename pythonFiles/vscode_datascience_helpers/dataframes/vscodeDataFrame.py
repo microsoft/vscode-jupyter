@@ -16,6 +16,7 @@ def _VSCODE_convertNumpyArrayToDataFrame(ndarray):
 
     temp = ndarray
     x_len = temp.shape[0]
+    y_len = None
     # Figure out if we're dealing with ragged data
     try:
         # Handle ragged arrays by making a container where the number of
