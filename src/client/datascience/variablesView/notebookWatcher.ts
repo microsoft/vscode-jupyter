@@ -15,7 +15,6 @@ import { INotebookWatcher } from './types';
 // NOTE: Currently this class is only looking at native notebook documents
 @injectable()
 export class NotebookWatcher implements INotebookWatcher {
-    //public get onDidChangeActiveVariableViewNotebook(): Event<INotebook | undefined> {
     public get onDidChangeActiveVariableViewNotebook(): Event<{ notebook?: INotebook; executionCount?: number }> {
         return this._onDidChangeActiveVariableViewNotebook.event;
     }
@@ -26,13 +25,10 @@ export class NotebookWatcher implements INotebookWatcher {
         return this._onDidRestartActiveVariableViewNotebook.event;
     }
     public get activeVariableViewNotebook(): INotebook | undefined {
-        return this._activeEditor?.notebook;
-        //return this.notebookEditorProvider.activeEditor?.notebook; // IANHU: Maybe can restore this?
+        return this.notebookEditorProvider.activeEditor?.notebook; // IANHU: Maybe can restore this?
     }
 
-    private _activeEditor: INotebookEditor | undefined;
     private readonly _onDidExecuteActiveVariableViewNotebook = new EventEmitter<{ executionCount: number }>();
-    //private readonly _onDidChangeActiveVariableViewNotebook = new EventEmitter<INotebook | undefined>();
     private readonly _onDidChangeActiveVariableViewNotebook = new EventEmitter<{
         notebook?: INotebook;
         executionCount?: number;
@@ -41,7 +37,6 @@ export class NotebookWatcher implements INotebookWatcher {
 
     // Keep track of the execution count for any editors
     // IANHU: This uses ToString on the URIs. Convert to a list that we add and replace into?
-    //private readonly _executionCountMap: Map<Uri, number> = new Map<Uri, number>();
     private readonly _executionCountMap: Map<string, number> = new Map<string, number>();
 
     constructor(
@@ -54,7 +49,6 @@ export class NotebookWatcher implements INotebookWatcher {
         this.notebookExtensibility.onKernelStateChange(this.kernelStateChanged, this, this.disposables);
         this.notebookEditorProvider.onDidChangeActiveNotebookEditor(this.activeEditorChanged, this, this.disposables);
         this.notebookEditorProvider.onDidCloseNotebookEditor(this.notebookEditorClosed, this, this.disposables);
-        this._activeEditor = this.notebookEditorProvider.activeEditor; // Make sure that we assign an initial editor
     }
 
     // When the kernel state is changed we need to see if it's a cell from the active document that finished execution
@@ -100,15 +94,7 @@ export class NotebookWatcher implements INotebookWatcher {
 
     // IANHU: Not Async?
     private async activeEditorChanged(editor: INotebookEditor | undefined) {
-        // When the active editor changes we want to force a refresh of variables
-        //this._activeEditor = editor;
-        //this._onDidChangeActiveVariableViewNotebook.fire(this._activeEditor?.notebook);
-        //this._onDidChangeActiveVariableViewNotebook.fire(editor?.notebook);
-
         const changeEvent: { notebook?: INotebook; executionCount?: number } = {};
-
-        // First save our active editor
-        this._activeEditor = editor;
 
         if (editor) {
             changeEvent.notebook = editor.notebook;
@@ -159,10 +145,8 @@ export class NotebookWatcher implements INotebookWatcher {
         ) {
             // We only want to update the variable view execution count when it's the active document executing
             if (
-                //this.notebookEditorProvider.activeEditor &&
-                //this.fileSystem.arePathsSame(this.notebookEditorProvider.activeEditor.file, kernelStateEvent.resource)
-                this._activeEditor &&
-                this.fileSystem.arePathsSame(this._activeEditor.file, kernelStateEvent.resource)
+                this.notebookEditorProvider.activeEditor &&
+                this.fileSystem.arePathsSame(this.notebookEditorProvider.activeEditor.file, kernelStateEvent.resource)
             ) {
                 return true;
             }
@@ -174,10 +158,8 @@ export class NotebookWatcher implements INotebookWatcher {
     private isActiveNotebookRestart(kernelStateEvent: KernelStateEventArgs): boolean {
         if (
             kernelStateEvent.state == KernelState.restarted &&
-            //this.notebookEditorProvider.activeEditor &&
-            //this.fileSystem.arePathsSame(this.notebookEditorProvider.activeEditor.file, kernelStateEvent.resource)
-            this._activeEditor &&
-            this.fileSystem.arePathsSame(this._activeEditor.file, kernelStateEvent.resource)
+            this.notebookEditorProvider.activeEditor &&
+            this.fileSystem.arePathsSame(this.notebookEditorProvider.activeEditor.file, kernelStateEvent.resource)
         ) {
             return true;
         }
