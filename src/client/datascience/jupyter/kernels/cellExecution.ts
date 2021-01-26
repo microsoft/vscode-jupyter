@@ -198,7 +198,7 @@ export class CellExecution {
     public async cancel() {
         await this.cancelInternal(false);
     }
-    public async cancelInternal(forced = false) {
+    private async cancelInternal(forced = false) {
         if (this.started && !forced) {
             // At this point the cell execution can only be stopped from kernel & we should not
             // stop handling execution results & the like from the kernel.
