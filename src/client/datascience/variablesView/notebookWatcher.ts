@@ -8,14 +8,14 @@ import { IFileSystem } from '../../common/platform/types';
 import { IDisposableRegistry } from '../../common/types';
 import { KernelState, KernelStateEventArgs } from '../notebookExtensibility';
 import { INotebook, INotebookEditor, INotebookEditorProvider, INotebookExtensibility } from '../types';
-import { INotebookWatcher } from './types';
+import { IActiveNotebookChangedEvent, INotebookWatcher } from './types';
 
 // For any class that is monitoring the active notebook document, this class will update you
 // when the active notebook changes or if the execution count is updated on the active notebook
 // NOTE: Currently this class is only looking at native notebook documents
 @injectable()
 export class NotebookWatcher implements INotebookWatcher {
-    public get onDidChangeActiveVariableViewNotebook(): Event<{ notebook?: INotebook; executionCount?: number }> {
+    public get onDidChangeActiveVariableViewNotebook(): Event<IActiveNotebookChangedEvent> {
         return this._onDidChangeActiveVariableViewNotebook.event;
     }
     public get onDidExecuteActiveVariableViewNotebook(): Event<{ executionCount: number }> {
@@ -94,7 +94,7 @@ export class NotebookWatcher implements INotebookWatcher {
 
     // IANHU: Not Async?
     private async activeEditorChanged(editor: INotebookEditor | undefined) {
-        const changeEvent: { notebook?: INotebook; executionCount?: number } = {};
+        const changeEvent: IActiveNotebookChangedEvent = {};
 
         if (editor) {
             changeEvent.notebook = editor.notebook;

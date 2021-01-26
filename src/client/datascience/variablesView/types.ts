@@ -32,11 +32,15 @@ export class IVariableViewPanelMapping {
     public [InteractiveWindowMessages.RestartKernel]: never | undefined;
 }
 
+export interface IActiveNotebookChangedEvent {
+    notebook?: INotebook;
+    executionCount?: number;
+}
+
 export const INotebookWatcher = Symbol('INotebookWatcher');
 export interface INotebookWatcher {
     readonly activeVariableViewNotebook?: INotebook;
-    //readonly onDidChangeActiveVariableViewNotebook: Event<INotebook | undefined>;
-    readonly onDidChangeActiveVariableViewNotebook: Event<{ notebook?: INotebook; executionCount?: number }>;
+    readonly onDidChangeActiveVariableViewNotebook: Event<IActiveNotebookChangedEvent>;
     readonly onDidExecuteActiveVariableViewNotebook: Event<{ executionCount: number }>;
     readonly onDidRestartActiveVariableViewNotebook: Event<void>;
 }
