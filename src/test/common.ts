@@ -11,7 +11,6 @@ import * as path from 'path';
 import { coerce, SemVer } from 'semver';
 import { ConfigurationTarget, Event, TextDocument, Uri } from 'vscode';
 import { IExtensionApi } from '../client/api';
-import { traceInfo } from '../client/common/logger';
 import { IProcessService } from '../client/common/process/types';
 import { IDisposable, IJupyterSettings } from '../client/common/types';
 import { IServiceContainer, IServiceManager } from '../client/ioc/types';
@@ -514,7 +513,7 @@ export async function waitForCondition(
             clearTimeout(timeout);
             // eslint-disable-next-line @typescript-eslint/no-use-before-define
             clearInterval(timer);
-            traceInfo(`Test failing --- ${errorMessage}`);
+            console.log(`Test failing --- ${errorMessage}`);
             reject(new Error(errorMessage));
         }, timeoutMs);
         const timer = setInterval(async () => {
