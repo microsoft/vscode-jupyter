@@ -41,7 +41,7 @@ import {
     getNotebookMetadata,
     isJupyterKernel,
     isJupyterNotebook,
-    updateKernelInNotebookMetadata
+    trackKernelInNotebookMetadata
 } from './helpers/helpers';
 import { VSCodeNotebookKernelMetadata } from './kernelWithMetadata';
 import { INotebookKernelProvider, INotebookKernelResolver } from './types';
@@ -350,7 +350,7 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
     }) {
         // We're only interested in our Jupyter Notebooks & our kernels.
         if (!isJupyterKernel(kernel) || !isJupyterNotebook(document)) {
-            updateKernelInNotebookMetadata(document, undefined);
+            trackKernelInNotebookMetadata(document, undefined);
             return;
         }
         const selectedKernelConnectionMetadata = kernel.selection;
@@ -422,7 +422,7 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
                         if (notebook.disposed) {
                             return;
                         }
-                        updateKernelInNotebookMetadata(document, e);
+                        trackKernelInNotebookMetadata(document, e);
                     },
                     this,
                     this.disposables
@@ -435,7 +435,7 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
             // Adding comment here, so we have context for the requirement.
             this.kernelSwitcher.switchKernelWithRetry(notebook, selectedKernelConnectionMetadata).catch(noop);
         } else {
-            updateKernelInNotebookMetadata(document, selectedKernelConnectionMetadata);
+            trackKernelInNotebookMetadata(document, selectedKernelConnectionMetadata);
         }
     }
 }

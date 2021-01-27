@@ -13,7 +13,7 @@ import { noop } from '../../common/utils/misc';
 import { getKernelConnectionId, IKernel, IKernelProvider, KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { PreferredRemoteKernelIdProvider } from '../notebookStorage/preferredRemoteKernelIdProvider';
 import { KernelSocketInformation } from '../types';
-import { updateKernelInfoInNotebookMetadata } from './helpers/helpers';
+import { trackKernelInfoInNotebookMetadata } from './helpers/helpers';
 
 export class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
     private pendingExecution: Promise<void> | undefined;
@@ -88,7 +88,7 @@ export class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
             if (!editor || editor.kernel?.id !== this.id) {
                 return;
             }
-            updateKernelInfoInNotebookMetadata(doc, kernel.info);
+            trackKernelInfoInNotebookMetadata(doc, kernel.info);
             if (kernel.info.status === 'ok' && this.selection.kind === 'startUsingKernelSpec') {
                 saveKernelInfo();
             }
