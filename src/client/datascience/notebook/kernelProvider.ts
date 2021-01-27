@@ -51,10 +51,12 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
     public get onDidChangeKernels(): Event<NotebookDocument | undefined> {
         return this._onDidChangeKernels.event;
     }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public get onDidGetFontAwesomeMessage(): Event<{ webview: NotebookCommunication; message: any }> {
         return this._onDidGetFontAwesomeMessage.event;
     }
     private readonly _onDidChangeKernels = new EventEmitter<NotebookDocument | undefined>();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private readonly _onDidGetFontAwesomeMessage = new EventEmitter<{ webview: NotebookCommunication; message: any }>();
     private notebookKernelChangeHandled = new WeakSet<INotebook>();
     private isRawNotebookSupported?: Promise<boolean>;

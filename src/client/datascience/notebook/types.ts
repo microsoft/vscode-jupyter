@@ -13,6 +13,7 @@ export const INotebookContentProvider = Symbol('INotebookContentProvider');
 
 export const INotebookKernelProvider = Symbol('INotebookKernelProvider');
 export interface INotebookKernelProvider extends NotebookKernelProvider {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onDidGetFontAwesomeMessage: vscode.Event<{ webview: NotebookCommunication; message: any }>;
 }
 

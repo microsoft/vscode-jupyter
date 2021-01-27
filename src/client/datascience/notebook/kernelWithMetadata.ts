@@ -47,7 +47,7 @@ export class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
     ) {
         this.notebookKernelProvider.onDidGetFontAwesomeMessage((e) => {
             if (e.message.type === InteractiveWindowMessages.GetFontAwesomeUriRequest) {
-                e.webview.postMessage({
+                void e.webview.postMessage({
                     type: InteractiveWindowMessages.GetFontAwesomeUriResponse,
                     payload: e.webview.asWebviewUri(
                         Uri.file(
