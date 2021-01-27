@@ -127,13 +127,12 @@ suite('Notebook Editor tests', () => {
         // add a cell
         await insertCodeCell('import sys\nprint(sys.executable)', { index: 0 });
 
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
-
+        let cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
         await executeCell(cell);
-        const originalSysPath = (cell.outputs[0] as CellDisplayOutput).data['text/plain'].toString();
 
         // Wait till execution count changes and status is success.
         await waitForExecutionCompletedSuccessfully(cell);
+        const originalSysPath = (cell.outputs[0] as CellDisplayOutput).data['text/plain'].toString();
 
         // Switch kernels to the other kernel
         const kernels = await kernelProvider.provideKernels(
@@ -141,22 +140,28 @@ suite('Notebook Editor tests', () => {
             CancellationToken.None
         );
         traceInfo(`Kernels found for switch kernel: ${kernels?.map((k) => k.label).join('\n')}`);
-        if (kernels?.length && kernels?.length > 1) {
+        // Find another kernel other than the preferred kernel that is also python based
+        const preferredKernel = kernels?.find((k) => k.isPreferred && k.label.toLowerCase().includes('python 3'));
+        const anotherKernel = kernels?.find((k) => !k.isPreferred && k.label.toLowerCase().includes('python 3'));
+        if (anotherKernel) {
             // We have multiple kernels. Try switching
-            await waitForKernelToChange(kernels[1].label);
+            await waitForKernelToChange(anotherKernel.id);
         }
 
         // Execute cell and verify output
         await executeCell(cell);
+        await waitForExecutionCompletedSuccessfully(cell);
+        cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
+
         assert.strictEqual(cell?.outputs.length, 1);
         assert.strictEqual(cell?.metadata.runState, vscodeNotebookEnums.NotebookCellRunState.Success);
 
-        if (kernels?.length && kernels?.length > 1) {
+        if (anotherKernel && preferredKernel) {
             const newSysPath = (cell.outputs[0] as CellDisplayOutput).data['text/plain'].toString();
             assert.notEqual(
                 newSysPath,
                 originalSysPath,
-                `Kernel did not switch. New sys path is same as old ${newSysPath} for kernels ${kernels[0].label} && ${kernels[1].label}`
+                `Kernel did not switch. New sys path is same as old ${newSysPath} for kernels ${preferredKernel.label} && ${anotherKernel.label}`
             );
         }
     });
