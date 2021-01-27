@@ -7,8 +7,10 @@ import { assert } from 'chai';
 import { CellDisplayOutput } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { ICommandManager, IVSCodeNotebook } from '../../../client/common/application/types';
+import { ProductNames } from '../../../client/common/installer/productNames';
 import { traceInfo } from '../../../client/common/logger';
-import { IDisposable } from '../../../client/common/types';
+import { IDisposable, Product } from '../../../client/common/types';
+import { Common } from '../../../client/common/utils/localize';
 import { Commands } from '../../../client/datascience/constants';
 import { INotebookKernelProvider } from '../../../client/datascience/notebook/types';
 import { INotebookEditorProvider } from '../../../client/datascience/types';
@@ -25,9 +27,11 @@ import {
     trustAllNotebooks,
     waitForExecutionCompletedSuccessfully,
     waitForKernelToGetAutoSelected,
-    waitForKernelToChange
+    waitForKernelToChange,
+    hijackPrompt
 } from './helper';
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
+const expectedPromptMessageSuffix = `requires ${ProductNames.get(Product.ipykernel)!} to be installed.`;
 
 suite('Notebook Editor tests', () => {
     let api: IExtensionTestApi;
@@ -124,6 +128,13 @@ suite('Notebook Editor tests', () => {
     });
 
     test('Switch kernels', async function () {
+        await hijackPrompt(
+            'showErrorMessage',
+            { endsWith: expectedPromptMessageSuffix },
+            { text: Common.install(), clickImmediately: true },
+            disposables
+        );
+
         // add a cell
         await insertCodeCell('import sys\nprint(sys.executable)', { index: 0 });
 
@@ -143,7 +154,11 @@ suite('Notebook Editor tests', () => {
         // Find another kernel other than the preferred kernel that is also python based
         const preferredKernel = kernels?.find((k) => k.isPreferred && k.label.toLowerCase().includes('python 3'));
         const anotherKernel = kernels?.find(
-            (k) => !k.isPreferred && k.label.toLowerCase().includes('python 3') && k.label !== preferredKernel?.label
+            (k) =>
+                !k.isPreferred &&
+                k.label.toLowerCase().includes('python 3') &&
+                k.label !== preferredKernel?.label &&
+                k.label !== 'Python 3'
         );
         if (anotherKernel) {
             // We have multiple kernels. Try switching
