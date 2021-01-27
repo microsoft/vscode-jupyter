@@ -887,7 +887,6 @@ module.exports = {
         'src/client/linters/linterCommands.ts',
         'src/client/linters/flake8.ts',
         'src/client/linters/errorHandlers/baseErrorHandler.ts',
-        'src/client/linters/errorHandlers/errorHandler.ts',
         'src/client/linters/errorHandlers/notInstalled.ts',
         'src/client/linters/errorHandlers/standard.ts',
         'src/client/linters/types.ts',
