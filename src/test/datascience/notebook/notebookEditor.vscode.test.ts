@@ -142,7 +142,9 @@ suite('Notebook Editor tests', () => {
         traceInfo(`Kernels found for switch kernel: ${kernels?.map((k) => k.label).join('\n')}`);
         // Find another kernel other than the preferred kernel that is also python based
         const preferredKernel = kernels?.find((k) => k.isPreferred && k.label.toLowerCase().includes('python 3'));
-        const anotherKernel = kernels?.find((k) => !k.isPreferred && k.label.toLowerCase().includes('python 3'));
+        const anotherKernel = kernels?.find(
+            (k) => !k.isPreferred && k.label.toLowerCase().includes('python 3') && k.label !== preferredKernel?.label
+        );
         if (anotherKernel) {
             // We have multiple kernels. Try switching
             await waitForKernelToChange(anotherKernel.id);
