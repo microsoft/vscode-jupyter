@@ -240,9 +240,6 @@ export async function flattenIterator<T>(iterator: AsyncIterator<T, void>): Prom
 
 export class ChainedExecutions<T> {
     private pendingCellExecution?: Promise<T> | undefined;
-    public clear() {
-        this.pendingCellExecution = undefined;
-    }
     public async chainExecution(next: () => Promise<T>): Promise<T> {
         if (this.pendingCellExecution) {
             const previous = this.pendingCellExecution;
