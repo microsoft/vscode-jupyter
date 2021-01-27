@@ -49,7 +49,7 @@ suite('Notebook Editor tests', () => {
         kernelProvider = api.serviceContainer.get<INotebookKernelProvider>(INotebookKernelProvider);
 
         // On conda these take longer for some reason.
-        this.timeout(30_000);
+        this.timeout(60_000);
     });
 
     setup(async function () {
