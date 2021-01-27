@@ -513,6 +513,7 @@ export async function waitForCondition(
             clearTimeout(timeout);
             // eslint-disable-next-line @typescript-eslint/no-use-before-define
             clearInterval(timer);
+            console.log(`Test failing --- ${errorMessage}`);
             reject(new Error(errorMessage));
         }, timeoutMs);
         const timer = setInterval(async () => {

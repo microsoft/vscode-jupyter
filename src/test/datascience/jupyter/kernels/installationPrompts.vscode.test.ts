@@ -23,7 +23,7 @@ import {
     createTemporaryNotebook,
     hijackPrompt,
     waitForExecutionCompletedSuccessfully,
-    waitForKernelToGetSelected
+    waitForKernelToChange
 } from '../../notebook/helper';
 
 /* eslint-disable no-invalid-this, , , @typescript-eslint/no-explicit-any */
@@ -97,9 +97,6 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
 
     ['.venvnokernel', '.venvnoreg'].forEach((kName) =>
         test('Ensure prompt is displayed when ipykernel module is not found and it gets installed', async function () {
-            // This is pending waiting for the 'notebook.selectKernel' command to accept an id
-            this.skip();
-
             // Confirm message is displayed & we click 'Install` button.
             const prompt = await hijackPrompt(
                 'showErrorMessage',
@@ -128,7 +125,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
                 await openNotebook(api.serviceContainer, nbFile);
                 // If this is a native notebook, then wait for kernel to get selected.
                 if (editorProvider.activeEditor?.type === 'native') {
-                    await waitForKernelToGetSelected(kName);
+                    await waitForKernelToChange(kName);
                 }
 
                 // Run all cells
