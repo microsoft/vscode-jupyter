@@ -227,7 +227,7 @@ export async function closeNotebooks(disposables: IDisposable[] = []) {
     disposeAllDisposables(disposables);
 }
 
-export async function waitForKernelToGetSelected(kernelNameSearch: string) {
+export async function waitForKernelToChange(kernelNameSearch: string) {
     const { vscodeNotebook, kernelProvider } = await getServices();
 
     // Wait for the active editor to come up

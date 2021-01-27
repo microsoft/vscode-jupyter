@@ -4,6 +4,7 @@
 'use strict';
 
 import { assert } from 'chai';
+import { CellDisplayOutput } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { ICommandManager, IVSCodeNotebook } from '../../../client/common/application/types';
 import { traceInfo } from '../../../client/common/logger';
@@ -124,11 +125,12 @@ suite('Notebook Editor tests', () => {
 
     test('Switch kernels', async function () {
         // add a cell
-        await insertCodeCell('print("0")', { index: 0 });
+        await insertCodeCell('import sys\nprint(sys.executable)', { index: 0 });
 
         const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
 
         await executeCell(cell);
+        const originalSysPath = (cell.outputs[0] as CellDisplayOutput).data['text/plain'].toString();
 
         // Wait till execution count changes and status is success.
         await waitForExecutionCompletedSuccessfully(cell);
@@ -148,5 +150,14 @@ suite('Notebook Editor tests', () => {
         await executeCell(cell);
         assert.strictEqual(cell?.outputs.length, 1);
         assert.strictEqual(cell?.metadata.runState, vscodeNotebookEnums.NotebookCellRunState.Success);
+
+        if (kernels?.length && kernels?.length > 1) {
+            const newSysPath = (cell.outputs[0] as CellDisplayOutput).data['text/plain'].toString();
+            assert.notEqual(
+                newSysPath,
+                originalSysPath,
+                `Kernel did not switch. New sys path is same as old ${newSysPath}`
+            );
+        }
     });
 });
