@@ -2,13 +2,18 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable } from 'inversify';
-import { Event, EventEmitter } from 'vscode';
+import { Event, EventEmitter, Uri } from 'vscode';
 import '../../common/extensions';
 import { IFileSystem } from '../../common/platform/types';
 import { IDisposableRegistry } from '../../common/types';
 import { KernelState, KernelStateEventArgs } from '../notebookExtensibility';
 import { INotebook, INotebookEditor, INotebookEditorProvider, INotebookExtensibility } from '../types';
 import { IActiveNotebookChangedEvent, INotebookWatcher } from './types';
+
+interface IExecutionCountEntry {
+    uri: Uri;
+    executionCount: number;
+}
 
 // For any class that is monitoring the active notebook document, this class will update you
 // when the active notebook changes or if the execution count is updated on the active notebook
@@ -25,7 +30,7 @@ export class NotebookWatcher implements INotebookWatcher {
         return this._onDidRestartActiveVariableViewNotebook.event;
     }
     public get activeVariableViewNotebook(): INotebook | undefined {
-        return this.notebookEditorProvider.activeEditor?.notebook; // IANHU: Maybe can restore this?
+        return this.notebookEditorProvider.activeEditor?.notebook;
     }
 
     private readonly _onDidExecuteActiveVariableViewNotebook = new EventEmitter<{ executionCount: number }>();
@@ -36,8 +41,7 @@ export class NotebookWatcher implements INotebookWatcher {
     private readonly _onDidRestartActiveVariableViewNotebook = new EventEmitter<void>();
 
     // Keep track of the execution count for any editors
-    // IANHU: This uses ToString on the URIs. Convert to a list that we add and replace into?
-    private readonly _executionCountMap: Map<string, number> = new Map<string, number>();
+    private _executionCountTracker: IExecutionCountEntry[] = [];
 
     constructor(
         @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider,
@@ -61,9 +65,7 @@ export class NotebookWatcher implements INotebookWatcher {
 
         // Update our execution counts for restarts
         if (this.isRestart(kernelStateEvent)) {
-            if (this._executionCountMap.has(kernelStateEvent.resource.toString())) {
-                this._executionCountMap.delete(kernelStateEvent.resource.toString());
-            }
+            this.deleteExecutionCount(kernelStateEvent.resource);
         }
 
         // Check to see if we need to notify for the active editor document being executed or restarted
@@ -77,19 +79,13 @@ export class NotebookWatcher implements INotebookWatcher {
                 executionCount: kernelStateEvent.cell.metadata.executionOrder
             });
         } else if (this.isActiveNotebookRestart(kernelStateEvent)) {
-            // Clear our execution count tracking on restart
-            if (this._executionCountMap.has(kernelStateEvent.resource.toString())) {
-                this._executionCountMap.delete(kernelStateEvent.resource.toString());
-            }
             this._onDidRestartActiveVariableViewNotebook.fire();
         }
     }
 
     // When an editor is closed, remove it from our execution count map
     private notebookEditorClosed(editor: INotebookEditor) {
-        if (this._executionCountMap.has(editor.file.toString())) {
-            this._executionCountMap.delete(editor.file.toString());
-        }
+        this.deleteExecutionCount(editor.file);
     }
 
     // IANHU: Not Async?
@@ -98,9 +94,8 @@ export class NotebookWatcher implements INotebookWatcher {
 
         if (editor) {
             changeEvent.notebook = editor.notebook;
-            if (this._executionCountMap.has(editor.file.toString())) {
-                changeEvent.executionCount = this._executionCountMap.get(editor.file.toString());
-            }
+            const executionCount = this.getExecutionCount(editor.file);
+            executionCount && (changeEvent.executionCount = executionCount.executionCount);
         }
 
         this._onDidChangeActiveVariableViewNotebook.fire(changeEvent);
@@ -129,10 +124,7 @@ export class NotebookWatcher implements INotebookWatcher {
 
     private updateExecutionCounts(kernelStateEvent: KernelStateEventArgs) {
         if (kernelStateEvent.cell?.metadata.executionOrder) {
-            this._executionCountMap.set(
-                kernelStateEvent.resource.toString(),
-                kernelStateEvent.cell?.metadata.executionOrder
-            );
+            this.updateExecutionCount(kernelStateEvent.resource, kernelStateEvent.cell.metadata.executionOrder);
         }
     }
 
@@ -164,5 +156,30 @@ export class NotebookWatcher implements INotebookWatcher {
             return true;
         }
         return false;
+    }
+
+    // If the Uri is in the execution count tracker, return it, if not return undefined
+    private getExecutionCount(uri: Uri): IExecutionCountEntry | undefined {
+        return this._executionCountTracker.find((value) => {
+            return this.fileSystem.arePathsSame(uri, value.uri);
+        });
+    }
+
+    // Update the execution count value for the given Uri
+    private updateExecutionCount(uri: Uri, newValue: number) {
+        const executionCount = this.getExecutionCount(uri);
+        if (!executionCount) {
+            // If we don't have one yet, add one
+            this._executionCountTracker.push({ uri, executionCount: newValue });
+        } else {
+            executionCount.executionCount = newValue;
+        }
+    }
+
+    // Delete the given Uri from our execution count list
+    private deleteExecutionCount(uri: Uri) {
+        this._executionCountTracker = this._executionCountTracker.filter((value) => {
+            return !this.fileSystem.arePathsSame(uri, value.uri);
+        });
     }
 }
