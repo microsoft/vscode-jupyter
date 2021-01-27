@@ -3,7 +3,7 @@
 const getPublicPath = () => {
     return new URL(scriptUrl.replace(/[^/]+$/, '')).toString();
 };
-const uri = getPublicPath() + '../notebook/node_modules/font-awesome/css/font-awesome.min.css';
+const uri = getPublicPath() + 'node_modules/font-awesome/css/font-awesome.min.css';
 addCSS(uri);
 
 function addCSS(filename) {
