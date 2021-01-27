@@ -342,7 +342,12 @@ export class KernelVariables implements IJupyterVariables {
     ): Promise<IJupyterVariablesResponse> {
         // See if we already have the name list
         let list = this.notebookState.get(notebook.identity);
-        if (!list || list.currentExecutionCount !== request.executionCount) {
+        if (
+            !list ||
+            list.currentExecutionCount !== request.executionCount ||
+            // Special case for restart. If we have a zero execution count we should have zero variables.
+            (request.executionCount === 0 && list.variables.length > 0)
+        ) {
             // Refetch the list of names from the notebook. They might have changed.
             list = {
                 currentExecutionCount: request.executionCount,

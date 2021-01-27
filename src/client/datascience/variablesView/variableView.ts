@@ -138,6 +138,9 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
             visible = this.webviewView.visible;
         }
         context.set(visible).ignoreErrors();
+
+        // Also force a refresh of the variables
+        this.postMessage(InteractiveWindowMessages.ForceVariableRefresh).ignoreErrors();
     }
 
     // Handle a request from the react UI to show our data viewer
