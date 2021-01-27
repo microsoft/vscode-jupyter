@@ -323,6 +323,7 @@ export class KernelExecution implements IDisposable {
                 if (kernel !== this.kernelProvider.get(document.uri)) {
                     return;
                 }
+                this.documentExecutions.get(document)?.cancel(); // NOSONAR
                 traceInfo('Cancel all executions as Kernel was restarted');
                 return this.cancelAllPendingCells(document, true);
             },
