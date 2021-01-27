@@ -240,21 +240,21 @@ export async function flattenIterator<T>(iterator: AsyncIterator<T, void>): Prom
 
 export class ChainedExecutions<T> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private pendingCellExecution: Promise<any> = Promise.resolve();
+    private pendingExecution: Promise<any> = Promise.resolve();
     /**
      * Clears the chained promises.
      */
     public clear() {
-        this.pendingCellExecution = Promise.resolve();
+        this.pendingExecution = Promise.resolve();
     }
     public async chainExecution(next: () => Promise<T>): Promise<T> {
         const deferred = createDeferred<T>();
-        const chainedPromise = this.pendingCellExecution.then(() => {
+        const chainedPromise = this.pendingExecution.then(() => {
             const nextPromise = next();
             nextPromise.then((result) => deferred.resolve(result)).catch((ex) => deferred.reject(ex));
             return nextPromise;
         });
-        this.pendingCellExecution = chainedPromise;
+        this.pendingExecution = chainedPromise;
 
         return Promise.race([deferred.promise, chainedPromise]);
     }

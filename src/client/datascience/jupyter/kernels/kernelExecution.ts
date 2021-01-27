@@ -66,6 +66,8 @@ export class KernelExecution implements IDisposable {
     public async executeCell(notebookPromise: Promise<INotebook>, cell: NotebookCell): Promise<void> {
         // Return current execution.
         if (this.cellExecutions.get(cell)) {
+            // It is impossible for a cell to be re-executed multiple times.
+            // Hence log this error.
             traceError(`Cell already executing/queued for execution, requested re-execution of ${cell.index}`);
             await this.cellExecutions.get(cell)!.result;
             return;
