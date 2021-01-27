@@ -1030,7 +1030,6 @@ module.exports = {
         'src/client/datascience/notebook/contentProvider.ts',
         'src/client/datascience/notebook/notebookDisposeService.ts',
         'src/client/datascience/notebook/notebookEditorCompatibilitySupport.ts',
-        'src/client/datascience/notebook/types.ts',
         'src/client/datascience/notebook/notebookEditorProvider.ts',
         'src/client/datascience/notebook/constants.ts',
         'src/client/datascience/notebook/notebookEditorProviderWrapper.ts',
