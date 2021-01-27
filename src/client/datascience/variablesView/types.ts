@@ -40,12 +40,10 @@ export interface IActiveNotebookChangedEvent {
 export const INotebookWatcher = Symbol('INotebookWatcher');
 export interface INotebookWatcher {
     readonly activeVariableViewNotebook?: INotebook;
-    readonly onDidChangeActiveVariableViewNotebook: Event<IActiveNotebookChangedEvent>;
-    readonly onDidExecuteActiveVariableViewNotebook: Event<{ executionCount: number }>;
-    readonly onDidRestartActiveVariableViewNotebook: Event<void>;
+    readonly onDidChangeActiveNotebook: Event<IActiveNotebookChangedEvent>;
+    readonly onDidExecuteActiveNotebook: Event<{ executionCount: number }>;
+    readonly onDidRestartActiveNotebook: Event<void>;
 }
 
 export const IVariableViewProvider = Symbol('IVariableViewProvider');
-export interface IVariableViewProvider extends IVSCWebviewViewProvider {
-    //readonly activeVariableView: Promise<VariableView>;
-}
+export interface IVariableViewProvider extends IVSCWebviewViewProvider {}

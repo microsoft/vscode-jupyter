@@ -229,10 +229,7 @@ function handleRestarted(arg: VariableReducerArg): IVariableState {
 function updateExecutionCount(arg: VariableReducerArg<{ executionCount: number }>): IVariableState {
     const executionCount = arg.payload.data.executionCount;
 
-    //return {
-    //...arg.prevState,
-    //currentExecutionCount: executionCount
-    //};
+    // Create a new state with currentExecutionCount updated to the new value
     const newState: IVariableState = {
         ...arg.prevState,
         currentExecutionCount: executionCount
@@ -249,33 +246,10 @@ function updateExecutionCount(arg: VariableReducerArg<{ executionCount: number }
                 sortAscending: true,
                 startIndex: 0,
                 pageSize: arg.prevState.pageSize,
-                refreshCount: arg.prevState.refreshCount + 1
+                refreshCount: arg.prevState.refreshCount + 1 // Also trigger a refresh
             }
         }
     });
-
-    // If the variables are visible, refresh them
-    //if (arg.prevState.visible && executionCount && executionCount > arg.prevState.currentExecutionCount) {
-    //if (executionCount) {
-    //return handleRequest({
-    //...arg,
-    //payload: {
-    //...arg.payload,
-    //data: {
-    //executionCount,
-    //sortColumn: 'name',
-    //sortAscending: true,
-    //startIndex: 0,
-    //pageSize: arg.prevState.pageSize,
-    //refreshCount: arg.prevState.refreshCount
-    //}
-    //}
-    //});
-    //}
-    //return {
-    //...arg.prevState,
-    //currentExecutionCount: executionCount ? executionCount : arg.prevState.currentExecutionCount
-    //};
 }
 
 function handleFinishCell(arg: VariableReducerArg<IFinishCell>): IVariableState {

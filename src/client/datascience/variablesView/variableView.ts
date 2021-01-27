@@ -30,7 +30,6 @@ import {
     IJupyterVariableDataProviderFactory,
     IJupyterVariables,
     IJupyterVariablesRequest,
-    //IJupyterVariablesResponse,
     INotebook,
     IThemeFinder
 } from '../types';
@@ -189,8 +188,6 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
 
     // The active variable new notebook has changed, so force a refresh on the view to pick up the new info
     private async activeNotebookChanged(arg: { notebook?: INotebook; executionCount?: number }) {
-        //this.postMessage(InteractiveWindowMessages.ForceVariableRefresh).ignoreErrors();
-        //this.postMessage(InteractiveWindowMessages.RestartKernel).ignoreErrors();
         if (arg.executionCount) {
             this.postMessage(InteractiveWindowMessages.UpdateVariableViewExecutionCount, {
                 executionCount: arg.executionCount

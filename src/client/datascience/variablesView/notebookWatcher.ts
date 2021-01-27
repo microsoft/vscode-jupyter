@@ -20,25 +20,25 @@ interface IExecutionCountEntry {
 // NOTE: Currently this class is only looking at native notebook documents
 @injectable()
 export class NotebookWatcher implements INotebookWatcher {
-    public get onDidChangeActiveVariableViewNotebook(): Event<IActiveNotebookChangedEvent> {
-        return this._onDidChangeActiveVariableViewNotebook.event;
+    public get onDidChangeActiveNotebook(): Event<IActiveNotebookChangedEvent> {
+        return this._onDidChangeActiveNotebook.event;
     }
-    public get onDidExecuteActiveVariableViewNotebook(): Event<{ executionCount: number }> {
-        return this._onDidExecuteActiveVariableViewNotebook.event;
+    public get onDidExecuteActiveNotebook(): Event<{ executionCount: number }> {
+        return this._onDidExecuteActiveNotebook.event;
     }
-    public get onDidRestartActiveVariableViewNotebook(): Event<void> {
-        return this._onDidRestartActiveVariableViewNotebook.event;
+    public get onDidRestartActiveNotebook(): Event<void> {
+        return this._onDidRestartActiveNotebook.event;
     }
     public get activeVariableViewNotebook(): INotebook | undefined {
         return this.notebookEditorProvider.activeEditor?.notebook;
     }
 
-    private readonly _onDidExecuteActiveVariableViewNotebook = new EventEmitter<{ executionCount: number }>();
-    private readonly _onDidChangeActiveVariableViewNotebook = new EventEmitter<{
+    private readonly _onDidExecuteActiveNotebook = new EventEmitter<{ executionCount: number }>();
+    private readonly _onDidChangeActiveNotebook = new EventEmitter<{
         notebook?: INotebook;
         executionCount?: number;
     }>();
-    private readonly _onDidRestartActiveVariableViewNotebook = new EventEmitter<void>();
+    private readonly _onDidRestartActiveNotebook = new EventEmitter<void>();
 
     // Keep track of the execution count for any editors
     private _executionCountTracker: IExecutionCountEntry[] = [];
@@ -84,7 +84,7 @@ export class NotebookWatcher implements INotebookWatcher {
                 this.isActiveNotebookEvent(kernelStateEvent) &&
                 kernelStateEvent.cell?.metadata.executionOrder !== undefined
             ) {
-                this._onDidExecuteActiveVariableViewNotebook.fire({
+                this._onDidExecuteActiveNotebook.fire({
                     executionCount: kernelStateEvent.cell.metadata.executionOrder
                 });
             }
@@ -99,7 +99,7 @@ export class NotebookWatcher implements INotebookWatcher {
         // If this is the active notebook, send our restart message
         //if (this.isActiveNotebookRestart(kernelStateEvent)) {
         if (this.isActiveNotebookEvent(kernelStateEvent)) {
-            this._onDidRestartActiveVariableViewNotebook.fire();
+            this._onDidRestartActiveNotebook.fire();
         }
     }
 
@@ -118,7 +118,7 @@ export class NotebookWatcher implements INotebookWatcher {
             executionCount && (changeEvent.executionCount = executionCount.executionCount);
         }
 
-        this._onDidChangeActiveVariableViewNotebook.fire(changeEvent);
+        this._onDidChangeActiveNotebook.fire(changeEvent);
     }
 
     // Check to see if this is a non-silent execution that we want to update on
