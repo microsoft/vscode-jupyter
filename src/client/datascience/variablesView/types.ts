@@ -11,6 +11,7 @@ import { IJupyterVariablesRequest, IJupyterVariablesResponse, INotebook, IVSCWeb
 // Mapping of Message to payload that our VariableViewPanel needs to support
 export class IVariableViewPanelMapping {
     public [InteractiveWindowMessages.ForceVariableRefresh]: never | undefined;
+    public [InteractiveWindowMessages.RestartKernel]: never | undefined;
     public [InteractiveWindowMessages.SettingsUpdated]: string;
     public [InteractiveWindowMessages.Activate]: never | undefined;
     public [InteractiveWindowMessages.ShowDataViewer]: IShowDataViewer;

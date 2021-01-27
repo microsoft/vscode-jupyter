@@ -186,6 +186,6 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
 
     // The active notebook's kernel restarted. Force a refresh
     private async activeNotebookRestarted() {
-        this.postMessage(InteractiveWindowMessages.ForceVariableRefresh).ignoreErrors();
+        this.postMessage(InteractiveWindowMessages.RestartKernel).ignoreErrors();
     }
 }
