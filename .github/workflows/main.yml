@@ -16,7 +16,6 @@ on:
       - 'release'
       - 'release/*'
       - 'release-*'
-      - rchiodo/more_test_fixes
   workflow_dispatch:
 
 env:
