@@ -16,7 +16,7 @@ import { noop } from '../../../client/common/utils/misc';
 import { Commands } from '../../../client/datascience/constants';
 import { IKernelProvider } from '../../../client/datascience/jupyter/kernels/types';
 import { INotebookEditorProvider } from '../../../client/datascience/types';
-import { IExtensionTestApi, waitForCondition } from '../../common';
+import { createEventHandler, IExtensionTestApi, waitForCondition } from '../../common';
 import { initialize } from '../../initialize';
 import {
     assertVSCCellIsNotRunning,
@@ -161,21 +161,26 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         await waitForTextOutputInVSCode(cell, '1', 0, false, 15_000); // Wait for 15 seconds for it to start (possibly kernel is still starting).
         traceInfo(`Step 7. Cell output`);
 
-        // Restart the kernel.
-        const restartPromise = commands.executeCommand('jupyter.notebookeditor.restartkernel');
+        // Restart the kernel & use event handler to check if it was restarted successfully.
+        const kernel = api.serviceContainer.get<IKernelProvider>(IKernelProvider).get(cell.notebook.uri);
+        if (!kernel) {
+            throw new Error('Kernel not available');
+        }
+        const waitForKernelToRestart = createEventHandler(kernel, 'onRestarted', disposables);
+        commands.executeCommand('jupyter.notebookeditor.restartkernel').then(noop, noop);
 
         await waitForCondition(
             async () => {
                 traceInfo(`Step 8 Cell Status = ${cell.metadata.runState}`);
                 return assertVSCCellIsNotRunning(cell);
             },
-            30_000, // Could be slow with remote jupyter (on CI).
+            15_000,
             'Execution not cancelled first time.'
         );
 
-        // Wait before we execute cells again.
+        // Wait for kernel to restart before we execute cells again.
         traceInfo('Step 9 Wait for restart');
-        await restartPromise;
+        await waitForKernelToRestart.assertFired(15_000);
         traceInfo('Step 10 Restarted');
 
         // Confirm we can execute a cell (using the new kernel session).
