@@ -9,6 +9,7 @@ import { JupyterInstallError } from '../jupyter/jupyterInstallError';
 import { JupyterSelfCertsError } from '../jupyter/jupyterSelfCertsError';
 import { JupyterZMQBinariesNotFoundError } from '../jupyter/jupyterZMQBinariesNotFoundError';
 import { JupyterServerSelector } from '../jupyter/serverSelector';
+import { IpyKernelNotInstalledError } from '../kernel-launcher/types';
 import { IDataScienceErrorHandler, IJupyterInterpreterDependencyManager } from '../types';
 @injectable()
 export class DataScienceErrorHandler implements IDataScienceErrorHandler {
@@ -25,6 +26,9 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
             await this.showZMQError(err);
         } else if (err instanceof JupyterSelfCertsError) {
             // Don't show the message for self cert errors
+            noop();
+        } else if (err instanceof IpyKernelNotInstalledError) {
+            // Don't show the message, as user decided not to install IPyKernel.
             noop();
         } else if (err.message) {
             this.applicationShell.showErrorMessage(err.message).then(noop, noop);

@@ -14,7 +14,14 @@ import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { JupyterKernelPromiseFailedError } from '../jupyter/kernels/jupyterKernelPromiseFailedError';
 import { IKernel, IKernelProvider } from '../jupyter/kernels/types';
-import { INotebook, INotebookEditor, INotebookModel, INotebookProvider, IStatusProvider } from '../types';
+import {
+    INotebook,
+    INotebookEditor,
+    INotebookModel,
+    INotebookProvider,
+    InterruptResult,
+    IStatusProvider
+} from '../types';
 import { NotebookCellLanguageService } from './defaultCellLanguageService';
 import { chainWithPendingUpdates } from './helpers/notebookUpdater';
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
@@ -87,7 +94,6 @@ export class NotebookEditor implements INotebookEditor {
             })
         );
         disposables.push(model.onDidDispose(this._closed.fire.bind(this._closed, this)));
-        kernelProvider.onInterruptTimedOut(this.onInterruptTimedOut, this, disposables);
     }
     @captureTelemetry(Telemetry.SyncAllCells)
     public async syncAllCells(): Promise<void> {
@@ -198,12 +204,22 @@ export class NotebookEditor implements INotebookEditor {
         const status = this.statusProvider.set(DataScience.interruptKernelStatus(), true, undefined, undefined);
 
         try {
-            await kernel.interruptAllCells(this.document);
-            status.dispose();
+            const result = await kernel.interrupt(this.document);
+            if (result === InterruptResult.TimedOut) {
+                const message = DataScience.restartKernelAfterInterruptMessage();
+                const yes = DataScience.restartKernelMessageYes();
+                const no = DataScience.restartKernelMessageNo();
+                const v = await this.applicationShell.showInformationMessage(message, yes, no);
+                if (v === yes) {
+                    this.restartingKernel = false;
+                    await this.restartKernel();
+                }
+            }
         } catch (err) {
-            status.dispose();
-            traceError(err);
+            traceError('Failed to interrupt kernel', err);
             void this.applicationShell.showErrorMessage(err);
+        } finally {
+            status.dispose();
         }
     }
 
@@ -268,16 +284,6 @@ export class NotebookEditor implements INotebookEditor {
         }
     }
 
-    private async onInterruptTimedOut(_: IKernel) {
-        const message = DataScience.restartKernelAfterInterruptMessage();
-        const yes = DataScience.restartKernelMessageYes();
-        const no = DataScience.restartKernelMessageNo();
-        const v = await this.applicationShell.showInformationMessage(message, yes, no);
-        if (v === yes) {
-            this.restartingKernel = false;
-            await this.restartKernel();
-        }
-    }
     private getSelectedCellId(uri: Uri): string | undefined {
         const editor = this.vscodeNotebook.notebookEditors.find((nb) => nb.document.uri.toString() === uri.toString());
 

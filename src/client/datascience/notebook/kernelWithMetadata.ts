@@ -5,18 +5,18 @@
 import { join } from 'path';
 import { Uri } from 'vscode';
 import { NotebookCell, NotebookDocument, NotebookKernel as VSCNotebookKernel } from '../../../../types/vscode-proposed';
-import { IVSCodeNotebook } from '../../common/application/types';
+import { ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import { disposeAllDisposables } from '../../common/helpers';
 import { traceInfo } from '../../common/logger';
 import { IDisposable, IExtensionContext } from '../../common/types';
 import { noop } from '../../common/utils/misc';
+import { Commands } from '../constants';
 import { getKernelConnectionId, IKernel, IKernelProvider, KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { PreferredRemoteKernelIdProvider } from '../notebookStorage/preferredRemoteKernelIdProvider';
 import { KernelSocketInformation } from '../types';
-import { trackKernelInfoInNotebookMetadata } from './helpers/helpers';
+import { traceCellMessage, trackKernelInfoInNotebookMetadata } from './helpers/helpers';
 
 export class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
-    private pendingExecution: Promise<void> | undefined;
     get preloads(): Uri[] {
         return [
             Uri.file(join(this.context.extensionPath, 'out', 'ipywidgets', 'dist', 'ipywidgets.js')),
@@ -37,28 +37,31 @@ export class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
         private readonly kernelProvider: IKernelProvider,
         private readonly notebook: IVSCodeNotebook,
         private readonly context: IExtensionContext,
-        private readonly preferredRemoteKernelIdProvider: PreferredRemoteKernelIdProvider
+        private readonly preferredRemoteKernelIdProvider: PreferredRemoteKernelIdProvider,
+        private readonly commandManager: ICommandManager
     ) {}
     public executeCell(doc: NotebookDocument, cell: NotebookCell) {
-        traceInfo(`Execute Cell ${cell.document.uri.toString()} in kernelWithMetadata.ts`);
+        traceInfo(`Execute Cell ${cell.index} ${cell.document.uri.toString()} in kernelWithMetadata.ts`);
         const kernel = this.kernelProvider.getOrCreate(cell.notebook.uri, { metadata: this.selection });
         if (kernel) {
             this.updateKernelInfoInNotebookWhenAvailable(kernel, doc);
-            return this.chainExecution(() => kernel.executeCell(cell));
+            return kernel.executeCell(cell);
         }
     }
     public executeAllCells(document: NotebookDocument) {
         const kernel = this.kernelProvider.getOrCreate(document.uri, { metadata: this.selection });
         if (kernel) {
             this.updateKernelInfoInNotebookWhenAvailable(kernel, document);
-            return this.chainExecution(() => kernel.executeAllCells(document));
+            return kernel.executeAllCells(document);
         }
     }
     public cancelCellExecution(_: NotebookDocument, cell: NotebookCell) {
-        this.kernelProvider.get(cell.notebook.uri)?.interruptCell(cell).ignoreErrors(); // NOSONAR
+        traceCellMessage(cell, 'Cell cancellation requested');
+        this.commandManager.executeCommand(Commands.NotebookEditorInterruptKernel).then(noop, noop);
     }
     public cancelAllCellsExecution(document: NotebookDocument) {
-        this.kernelProvider.get(document.uri)?.interruptAllCells(document).ignoreErrors(); // NOSONAR
+        traceInfo(`Document cancellation requested ${document.uri}`);
+        this.commandManager.executeCommand(Commands.NotebookEditorInterruptKernel).then(noop, noop);
     }
     private updateKernelInfoInNotebookWhenAvailable(kernel: IKernel, doc: NotebookDocument) {
         let kernelSocket: KernelSocketInformation | undefined;
@@ -97,18 +100,5 @@ export class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
         handlerDisposables.push({ dispose: () => subscriptionDisposables.unsubscribe() });
         handlerDisposables.push({ dispose: () => statusChangeDisposable.dispose() });
         handlerDisposables.push({ dispose: () => kernelDisposedDisposable?.dispose() });
-    }
-
-    private async chainExecution(next: () => Promise<void>): Promise<void> {
-        if (this.pendingExecution) {
-            try {
-                await this.pendingExecution;
-            } catch (e) {
-                // Errors are handled elsewhere
-                traceInfo(`Kernel execution previous failure: ${e}`);
-            }
-        }
-        this.pendingExecution = next();
-        return this.pendingExecution;
     }
 }

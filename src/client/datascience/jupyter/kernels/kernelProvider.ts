@@ -5,8 +5,8 @@
 
 import * as fastDeepEqual from 'fast-deep-equal';
 import { inject, injectable } from 'inversify';
-import { Disposable, Event, EventEmitter, Uri } from 'vscode';
-import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../../common/application/types';
+import { Uri } from 'vscode';
+import { IApplicationShell, IVSCodeNotebook } from '../../../common/application/types';
 import { traceInfo, traceWarning } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 import {
@@ -29,21 +29,13 @@ import { IKernel, IKernelProvider, IKernelSelectionUsage, KernelOptions } from '
 
 @injectable()
 export class KernelProvider implements IKernelProvider {
-    get onInterruptTimedOut(): Event<IKernel> {
-        return this._interruptTimedOut.event;
-    }
-    private readonly kernelsByUri = new Map<
-        string,
-        { options: KernelOptions; kernel: IKernel; disposables: Disposable[] }
-    >();
+    private readonly kernelsByUri = new Map<string, { options: KernelOptions; kernel: IKernel }>();
     private readonly pendingDisposables = new Set<IAsyncDisposable>();
-    private _interruptTimedOut = new EventEmitter<IKernel>();
     constructor(
         @inject(IAsyncDisposableRegistry) private asyncDisposables: IAsyncDisposableRegistry,
         @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
         @inject(INotebookProvider) private notebookProvider: INotebookProvider,
         @inject(IConfigurationService) private configService: IConfigurationService,
-        @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IDataScienceErrorHandler) private readonly errorHandler: IDataScienceErrorHandler,
         @inject(INotebookEditorProvider) private readonly editorProvider: INotebookEditorProvider,
         @inject(KernelSelector) private readonly kernelSelectionUsage: IKernelSelectionUsage,
@@ -94,7 +86,6 @@ export class KernelProvider implements IKernelProvider {
             this.disposables,
             waitForIdleTimeout,
             interruptTimeout,
-            this.commandManager,
             this.errorHandler,
             this.editorProvider,
             this,
@@ -106,8 +97,7 @@ export class KernelProvider implements IKernelProvider {
             this.context
         );
         this.asyncDisposables.push(kernel);
-        const interruptTimedOutDisposable = kernel.onInterruptTimedOut(() => this._interruptTimedOut.fire(kernel));
-        this.kernelsByUri.set(uri.toString(), { options, kernel, disposables: [interruptTimedOutDisposable] });
+        this.kernelsByUri.set(uri.toString(), { options, kernel });
         this.deleteMappingIfKernelIsDisposed(uri, kernel);
         return kernel;
     }
@@ -134,7 +124,6 @@ export class KernelProvider implements IKernelProvider {
         const kernelToDispose = this.kernelsByUri.get(uri.toString());
         if (kernelToDispose) {
             this.pendingDisposables.add(kernelToDispose.kernel);
-            kernelToDispose.disposables.forEach((d) => d.dispose());
             kernelToDispose.kernel
                 .dispose()
                 .catch((ex) => traceWarning('Failed to dispose old kernel', ex))

@@ -9,9 +9,8 @@ import { Subject } from 'rxjs/Subject';
 import * as uuid from 'uuid/v4';
 import { CancellationTokenSource, Event, EventEmitter, NotebookCell, NotebookDocument, Uri } from 'vscode';
 import { ServerStatus } from '../../../../datascience-ui/interactive-common/mainState';
-import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../../common/application/types';
-import { WrappedError } from '../../../common/errors/errorUtils';
-import { traceError, traceWarning } from '../../../common/logger';
+import { IApplicationShell, IVSCodeNotebook } from '../../../common/application/types';
+import { traceError, traceInfo, traceWarning } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 import { IDisposableRegistry, IExtensionContext } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
@@ -45,9 +44,6 @@ export class Kernel implements IKernel {
     get onDisposed(): Event<void> {
         return this._onDisposed.event;
     }
-    get onInterruptTimedOut(): Event<void> {
-        return this._onInterruptTimedOut.event;
-    }
     private _info?: KernelMessage.IInfoReplyMsg['content'];
     get info(): KernelMessage.IInfoReplyMsg['content'] | undefined {
         return this._info;
@@ -68,7 +64,6 @@ export class Kernel implements IKernel {
     private readonly _onStatusChanged = new EventEmitter<ServerStatus>();
     private readonly _onRestarted = new EventEmitter<void>();
     private readonly _onDisposed = new EventEmitter<void>();
-    private readonly _onInterruptTimedOut = new EventEmitter<void>();
     private _notebookPromise?: Promise<INotebook>;
     private readonly hookedNotebookForEvents = new WeakSet<INotebook>();
     private restarting?: Deferred<void>;
@@ -81,8 +76,7 @@ export class Kernel implements IKernel {
         private readonly notebookProvider: INotebookProvider,
         private readonly disposables: IDisposableRegistry,
         private readonly launchTimeout: number,
-        private readonly interruptTimeout: number,
-        commandManager: ICommandManager,
+        interruptTimeout: number,
         private readonly errorHandler: IDataScienceErrorHandler,
         private readonly editorProvider: INotebookEditorProvider,
         private readonly kernelProvider: IKernelProvider,
@@ -95,7 +89,6 @@ export class Kernel implements IKernel {
     ) {
         this.kernelExecution = new KernelExecution(
             kernelProvider,
-            commandManager,
             errorHandler,
             editorProvider,
             kernelSelectionUsage,
@@ -103,7 +96,8 @@ export class Kernel implements IKernel {
             vscNotebook,
             kernelConnectionMetadata,
             rawNotebookSupported,
-            context
+            context,
+            interruptTimeout
         );
     }
     public async executeCell(cell: NotebookCell): Promise<void> {
@@ -114,42 +108,17 @@ export class Kernel implements IKernel {
         const notebookPromise = this.startNotebook({ disableUI: false });
         await this.kernelExecution.executeAllCells(notebookPromise, document);
     }
-    public async cancelCell(cell: NotebookCell) {
-        this.startCancellation.cancel();
-        await this.kernelExecution.cancelCell(cell);
-    }
-    public async cancelAllCells(document: NotebookDocument) {
-        this.startCancellation.cancel();
-        await this.kernelExecution.cancelAllCells(document);
-    }
     public async start(options?: { disableUI?: boolean }): Promise<void> {
         await this.startNotebook(options);
     }
-    public async interruptCell(cell: NotebookCell): Promise<InterruptResult> {
+    public async interrupt(document: NotebookDocument): Promise<InterruptResult> {
         if (this.restarting) {
+            traceInfo(`Interrupt requested & currently restarting ${document.uri}`);
             await this.restarting.promise;
         }
-        if (!this.notebook) {
-            throw new Error('No notebook to interrupt');
-        }
-        const result = await this.kernelExecution.interruptCell(cell, this.interruptTimeout);
-        if (result === InterruptResult.TimedOut) {
-            this._onInterruptTimedOut.fire();
-        }
-        return result;
-    }
-    public async interruptAllCells(document: NotebookDocument): Promise<InterruptResult> {
-        if (this.restarting) {
-            await this.restarting.promise;
-        }
-        if (!this.notebook) {
-            throw new Error('No notebook to interrupt');
-        }
-        const result = await this.kernelExecution.interruptAllCells(document, this.interruptTimeout);
-        if (result === InterruptResult.TimedOut) {
-            this._onInterruptTimedOut.fire();
-        }
-        return result;
+        traceInfo(`Interrupt requested ${document.uri}`);
+        this.startCancellation.cancel();
+        return this.kernelExecution.interrupt(document, this._notebookPromise);
     }
     public async dispose(): Promise<void> {
         this.restarting = undefined;
@@ -209,7 +178,7 @@ export class Kernel implements IKernel {
                         if (!options.disableUI) {
                             this.errorHandler.handleError(ex).ignoreErrors(); // Just a notification, so don't await this
                         }
-                        throw new WrappedError('Kernel has not been started', ex);
+                        throw ex;
                     }
                     await this.initializeAfterStart();
                     resolve(this.notebook);
@@ -285,9 +254,17 @@ export class Kernel implements IKernel {
                 this._onDisposed.fire();
             });
             this.notebook.onKernelRestarted(() => {
+                traceInfo(`Notebook Kernel restarted ${this.notebook?.identity}`);
                 this._onRestarted.fire();
             });
-            this.notebook.onSessionStatusChanged((e) => this._onStatusChanged.fire(e), this, this.disposables);
+            this.notebook.onSessionStatusChanged(
+                (e) => {
+                    traceInfo(`Notebook Session status ${this.notebook?.identity} # ${e}`);
+                    this._onStatusChanged.fire(e);
+                },
+                this,
+                this.disposables
+            );
         }
         if (isPythonKernelConnection(this.kernelConnectionMetadata)) {
             await this.notebook.setLaunchingFile(this.uri.fsPath);

@@ -9,7 +9,7 @@ import {
     NotebookDocument,
     NotebookKernel as VSCNotebookKernel
 } from '../../../../types/vscode-proposed';
-import { IVSCodeNotebook } from '../../common/application/types';
+import { ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { IConfigurationService, IDisposableRegistry, IExtensionContext } from '../../common/types';
 import { noop } from '../../common/utils/misc';
@@ -70,7 +70,8 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
         @inject(IJupyterSessionManagerFactory)
         private readonly jupyterSessionManagerFactory: IJupyterSessionManagerFactory,
         @inject(PreferredRemoteKernelIdProvider)
-        private readonly preferredRemoteKernelIdProvider: PreferredRemoteKernelIdProvider
+        private readonly preferredRemoteKernelIdProvider: PreferredRemoteKernelIdProvider,
+        @inject(ICommandManager) private readonly commandManager: ICommandManager
     ) {
         this.kernelSelectionProvider.onDidChangeSelections(
             (e) => {
@@ -130,7 +131,8 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
                     this.kernelProvider,
                     this.notebook,
                     this.context,
-                    this.preferredRemoteKernelIdProvider
+                    this.preferredRemoteKernelIdProvider,
+                    this.commandManager
                 );
             })
             .filter((item) => {
@@ -173,7 +175,8 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
                         this.kernelProvider,
                         this.notebook,
                         this.context,
-                        this.preferredRemoteKernelIdProvider
+                        this.preferredRemoteKernelIdProvider,
+                        this.commandManager
                     )
                 );
             }
@@ -268,7 +271,8 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
                 this.kernelProvider,
                 this.notebook,
                 this.context,
-                this.preferredRemoteKernelIdProvider
+                this.preferredRemoteKernelIdProvider,
+                this.commandManager
             );
         } else if (preferredKernel.kind === 'connectToLiveKernel') {
             return new VSCodeNotebookKernelMetadata(
@@ -280,7 +284,8 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
                 this.kernelProvider,
                 this.notebook,
                 this.context,
-                this.preferredRemoteKernelIdProvider
+                this.preferredRemoteKernelIdProvider,
+                this.commandManager
             );
         } else {
             return new VSCodeNotebookKernelMetadata(
@@ -292,7 +297,8 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
                 this.kernelProvider,
                 this.notebook,
                 this.context,
-                this.preferredRemoteKernelIdProvider
+                this.preferredRemoteKernelIdProvider,
+                this.commandManager
             );
         }
     }

@@ -5,7 +5,7 @@
 
 import { nbformat } from '@jupyterlab/coreutils';
 import type { KernelMessage } from '@jupyterlab/services/lib/kernel/messages';
-import { CancellationToken, ExtensionMode } from 'vscode';
+import { ExtensionMode } from 'vscode';
 import type {
     CellDisplayOutput,
     NotebookCell,
@@ -13,12 +13,11 @@ import type {
     NotebookEditor as VSCNotebookEditor
 } from '../../../../../types/vscode-proposed';
 import { concatMultilineString, formatStreamText } from '../../../../datascience-ui/common';
-import { ServerStatus } from '../../../../datascience-ui/interactive-common/mainState';
 import { IApplicationShell, IVSCodeNotebook } from '../../../common/application/types';
 import { traceError, traceErrorIf, traceInfoIf, traceWarning } from '../../../common/logger';
 import { RefBool } from '../../../common/refBool';
 import { IDisposable, IExtensionContext } from '../../../common/types';
-import { createDeferred, Deferred, waitForPromise } from '../../../common/utils/async';
+import { createDeferred, Deferred } from '../../../common/utils/async';
 import { swallowExceptions } from '../../../common/utils/decorators';
 import { noop } from '../../../common/utils/misc';
 import { StopWatch } from '../../../common/utils/stopWatch';
@@ -38,7 +37,6 @@ import {
     traceCellMessage,
     updateCellExecutionTimes
 } from '../../notebook/helpers/helpers';
-import { MultiCancellationTokenSource } from '../../notebook/helpers/multiCancellationToken';
 import { chainWithPendingUpdates } from '../../notebook/helpers/notebookUpdater';
 import { NotebookEditor } from '../../notebook/notebookEditor';
 import {
@@ -46,11 +44,9 @@ import {
     IJupyterSession,
     INotebook,
     INotebookEditorProvider,
-    INotebookExecutionLogger,
-    InterruptResult
+    INotebookExecutionLogger
 } from '../../types';
 import { translateCellFromNative } from '../../utils';
-import { IKernel } from './types';
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
@@ -90,14 +86,6 @@ export class CellExecution {
     public get result(): Promise<NotebookCellRunState | undefined> {
         return this._result.promise;
     }
-
-    public get token(): CancellationToken {
-        return this.source.token;
-    }
-
-    public get completed() {
-        return this._completed;
-    }
     /**
      * To be used only in tests.
      */
@@ -105,23 +93,17 @@ export class CellExecution {
 
     private static sentExecuteCellTelemetry?: boolean;
 
-    private readonly oldCellRunState?: NotebookCellRunState;
-
     private stopWatch = new StopWatch();
-
-    private readonly source = new MultiCancellationTokenSource();
 
     private readonly _result = createDeferred<NotebookCellRunState | undefined>();
 
     private started?: boolean;
 
     private _completed?: boolean;
-    private _interruptPromise?: Promise<InterruptResult>;
     private readonly initPromise: Promise<void>;
     private disposables: IDisposable[] = [];
     private cancelHandled = false;
     private requestHandlerChain = Promise.resolve();
-    private activeExecution: { execution: Promise<void>; session: IJupyterSession } | undefined = undefined;
     private constructor(
         public readonly editor: VSCNotebookEditor,
         public readonly cell: NotebookCell,
@@ -145,7 +127,6 @@ export class CellExecution {
             );
         }
 
-        this.oldCellRunState = cell.metadata.runState;
         this.initPromise = this.enqueue();
     }
 
@@ -168,28 +149,7 @@ export class CellExecution {
             context
         );
     }
-
-    public async interrupt(timeoutMs: number): Promise<InterruptResult> {
-        // Skip if already interrupted
-        if (this._completed || !this.activeExecution) {
-            return InterruptResult.Success;
-        }
-        // Interrupt the active execution
-        const result = this._interruptPromise
-            ? await this._interruptPromise
-            : await (this._interruptPromise = this.interruptExecution(
-                  this.activeExecution.session,
-                  this.activeExecution.execution,
-                  timeoutMs
-              ));
-
-        // Done interrrupting, clear interrupt promise
-        this._interruptPromise = undefined;
-
-        return result;
-    }
-
-    public async start(kernelPromise: Promise<IKernel>, notebook: INotebook) {
+    public async start(notebook: INotebook) {
         if (this.cancelHandled) {
             traceCellMessage(this.cell, 'Not starting as it was cancelled');
             return;
@@ -202,47 +162,60 @@ export class CellExecution {
         if (!this.canExecuteCell()) {
             return;
         }
-        await this.initPromise;
+        if (this.started) {
+            traceCellMessage(this.cell, 'Cell has already been started yet CellExecution.Start invoked again');
+            traceError(`Cell has already been started yet CellExecution.Start invoked again ${this.cell.index}`);
+            // TODO: Send telemetry this should never happen, if it does we have problems.
+            return this.result;
+        }
         this.started = true;
+
+        await this.initPromise;
         // Ensure we clear the cell state and trigger a change.
         await clearCellForExecution(this.editor, this.cell);
-        await chainWithPendingUpdates(this.editor, (edit) => {
-            edit.replaceCellMetadata(this.cell.index, {
-                ...this.cell.metadata,
-                runStartTime: new Date().getTime()
+        if (!this.isEmptyCodeCell) {
+            await chainWithPendingUpdates(this.editor, (edit) => {
+                edit.replaceCellMetadata(this.cell.index, {
+                    ...this.cell.metadata,
+                    runStartTime: new Date().getTime()
+                });
             });
-        });
+        }
         this.stopWatch.reset();
         this.notifyCellExecution();
 
         // Begin the request that will modify our cell.
-        kernelPromise
-            .then((kernel) => this.handleKernelRestart(kernel))
-            .then(() => this.execute(notebook.session, notebook.getLoggers()))
+        this.execute(notebook.session, notebook.getLoggers())
             .catch((e) => this.completedWithErrors(e))
             .finally(() => this.dispose())
             .catch(noop);
     }
     /**
      * Cancel execution.
-     * If execution has commenced, then interrupt (via cancellation token) else dequeue from execution.
+     * If execution has commenced, then wait for execution to complete or kernel to start.
+     * If execution has not commenced, then ensure dequeue it & revert the status to not-queued (remove spinner, etc).
+     * @param {boolean} [forced=false]
+     * If `true`, then do not wait for cell execution to complete gracefully (just kill it).
+     * This is used when we restart the kernel (either as a result of kernel interrupt or user initiated).
+     * When restarted, the execution needs to stop as jupyter will not send more messages.
+     * Hence `forced=true` is more like a hard kill.
      */
-    public async cancel() {
+    public async cancel(forced = false) {
+        if (this.started && !forced) {
+            // At this point the cell execution can only be stopped from kernel & we should not
+            // stop handling execution results & the like from the kernel.
+            // The result will resolve when execution completes or kernel is restarted.
+            traceCellMessage(this.cell, 'Cell is already running, waiting for it to finish or kernel to start');
+            await this.result;
+            return;
+        }
         if (this.cancelHandled || this._completed) {
             return;
         }
         traceCellMessage(this.cell, 'Execution cancelled');
         this.cancelHandled = true;
         await this.initPromise;
-        // We need to notify cancellation only if execution is in progress,
-        // coz if not, we can safely reset the states.
-        if (this.started) {
-            this.source.cancel();
-        }
 
-        if (!this.started) {
-            await this.dequeue();
-        }
         await this.completedDueToCancellation();
         this.dispose();
     }
@@ -252,7 +225,6 @@ export class CellExecution {
      */
     private dispose() {
         traceCellMessage(this.cell, 'Execution disposed');
-        this.activeExecution = undefined;
         this.disposables.forEach((d) => d.dispose());
         const deferred = CellExecution.cellsCompletedForTesting.get(this.cell);
         if (deferred) {
@@ -260,82 +232,18 @@ export class CellExecution {
         }
     }
 
-    private async interruptExecution(
-        session: IJupyterSession,
-        execution: Promise<void>,
-        timeoutMS: number
-    ): Promise<InterruptResult> {
-        // Create a deferred promise that resolves if we have a failure
-        const restarted = createDeferred<boolean>();
-
-        // Listen to status change events so we can tell if we're restarting
-        const restartHandler = (e: ServerStatus) => {
-            if (e === ServerStatus.Restarting) {
-                // We restarted the kernel.
-                traceWarning('Kernel restarting during interrupt');
-
-                // Indicate we restarted the race below
-                restarted.resolve(true);
-            }
-        };
-        const restartHandlerToken = session.onSessionStatusChanged(restartHandler);
-
-        // Start our interrupt. If it fails, indicate a restart
-        session.interrupt(timeoutMS).catch((exc) => {
-            traceWarning(`Error during interrupt: ${exc}`);
-            restarted.resolve(true);
-        });
-
-        try {
-            // Wait for all of the pending cells to finish or the timeout to fire
-            const result = await waitForPromise(Promise.race([execution, restarted.promise]), timeoutMS);
-
-            // See if we restarted or not
-            if (restarted.completed) {
-                return InterruptResult.Restarted;
-            }
-
-            if (result === null) {
-                // We timed out. You might think we should stop our pending list, but that's not
-                // up to us. The cells are still executing. The user has to request a restart or try again
-                return InterruptResult.TimedOut;
-            }
-
-            // Indicate the interrupt worked.
-            return InterruptResult.Success;
-        } catch (exc) {
-            // Something failed. See if we restarted or not.
-            if (restarted.completed) {
-                return InterruptResult.Restarted;
-            }
-
-            // Otherwise a real error occurred.
-            throw exc;
-        } finally {
-            restartHandlerToken.dispose();
-        }
-    }
-    private handleKernelRestart(kernel: IKernel) {
-        kernel.onRestarted(
-            async () => {
-                traceCellMessage(this.cell, 'Kernel restart handled in CellExecution, cancelling cell');
-                this.cancel().catch(noop);
-            },
-            this,
-            this.disposables
-        );
-    }
-
     private async completedWithErrors(error: Partial<Error>) {
         traceCellMessage(this.cell, 'Completed with errors');
         this.sendPerceivedCellExecute();
-        await chainWithPendingUpdates(this.editor, (edit) => {
-            traceCellMessage(this.cell, 'Update run run duration');
-            edit.replaceCellMetadata(this.cell.index, {
-                ...this.cell.metadata,
-                lastRunDuration: this.stopWatch.elapsedTime
+        if (!this.isEmptyCodeCell) {
+            await chainWithPendingUpdates(this.editor, (edit) => {
+                traceCellMessage(this.cell, 'Update run run duration');
+                edit.replaceCellMetadata(this.cell.index, {
+                    ...this.cell.metadata,
+                    lastRunDuration: this.stopWatch.elapsedTime
+                });
             });
-        });
+        }
         await updateCellWithErrorStatus(this.editor, this.cell, error);
         this.errorHandler.handleError((error as unknown) as Error).ignoreErrors();
 
@@ -343,21 +251,25 @@ export class CellExecution {
         traceCellMessage(this.cell, 'Completed with errors, & resolving');
         this._result.resolve(this.cell.metadata.runState);
     }
-
+    private get isEmptyCodeCell(): boolean {
+        return this.cell.document.getText().trim().length === 0;
+    }
     private async completedSuccessfully() {
         traceCellMessage(this.cell, 'Completed successfully');
         this.sendPerceivedCellExecute();
         let statusMessage = '';
         // If we requested a cancellation, then assume it did not even run.
         // If it did, then we'd get an interrupt error in the output.
-        let runState = this.token.isCancellationRequested
+        let runState = this.isEmptyCodeCell
             ? vscodeNotebookEnums.NotebookCellRunState.Idle
             : vscodeNotebookEnums.NotebookCellRunState.Success;
 
-        await updateCellExecutionTimes(this.editor, this.cell, {
-            startTime: this.cell.metadata.runStartTime,
-            lastRunDuration: this.stopWatch.elapsedTime
-        });
+        if (!this.isEmptyCodeCell) {
+            await updateCellExecutionTimes(this.editor, this.cell, {
+                startTime: this.cell.metadata.runStartTime,
+                lastRunDuration: this.stopWatch.elapsedTime
+            });
+        }
 
         // If there are any errors in the cell, then change status to error.
         if (this.cell.outputs.some((output) => output.outputKind === vscodeNotebookEnums.CellOutputKind.Error)) {
@@ -381,15 +293,12 @@ export class CellExecution {
 
     private async completedDueToCancellation() {
         traceCellMessage(this.cell, 'Completed due to cancellation');
-        await updateCellExecutionTimes(this.editor, this.cell, {
-            startTime: this.cell.metadata.runStartTime,
-            lastRunDuration: this.stopWatch.elapsedTime
-        });
-
         await chainWithPendingUpdates(this.editor, (edit) => {
             traceCellMessage(this.cell, 'Update cell statue as idle and message as empty');
             edit.replaceCellMetadata(this.cell.index, {
                 ...this.cell.metadata,
+                runStartTime: undefined,
+                lastRunDuration: undefined,
                 runState: vscodeNotebookEnums.NotebookCellRunState.Idle,
                 statusMessage: ''
             });
@@ -412,28 +321,6 @@ export class CellExecution {
             throw new Error('Executing Notebook with another Editor');
         }
         editor.notifyExecution(this.cell);
-    }
-
-    /**
-     * This cell will no longer be processed for execution (even though it was meant to be).
-     * At this point we revert cell state & indicate that it has nto started & it is not busy.
-     */
-    private async dequeue() {
-        const runState =
-            this.oldCellRunState === vscodeNotebookEnums.NotebookCellRunState.Running
-                ? vscodeNotebookEnums.NotebookCellRunState.Idle
-                : this.oldCellRunState;
-        await chainWithPendingUpdates(this.editor, (edit) => {
-            traceCellMessage(this.cell, 'Update cell state as it was dequeued');
-
-            edit.replaceCellMetadata(this.cell.index, {
-                ...this.cell.metadata,
-                runStartTime: undefined,
-                runState
-            });
-        });
-        this._completed = true;
-        this._result.resolve(this.cell.metadata.runState);
     }
 
     /**
@@ -468,31 +355,28 @@ export class CellExecution {
             return false;
         }
 
-        const code = this.cell.document.getText();
-        return code.trim().length > 0;
+        return true;
     }
 
     private async execute(session: IJupyterSession, loggers: INotebookExecutionLogger[]) {
         const code = this.cell.document.getText();
         traceCellMessage(this.cell, 'Send code for execution');
-        const execution = this.executeCodeCell(code, session, loggers);
-        this.activeExecution = { execution, session };
-        await execution;
+        await this.executeCodeCell(code, session, loggers);
     }
 
     private async executeCodeCell(code: string, session: IJupyterSession, loggers: INotebookExecutionLogger[]) {
+        // Skip if no code to execute
+        if (code.trim().length === 0) {
+            traceCellMessage(this.cell, 'Empty cell execution');
+            return this.completedSuccessfully();
+        }
+
         // Generate metadata from our cell (some kernels expect this.)
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const metadata: any = {
             ...(this.cell.metadata?.custom?.metadata || {}), // Send the Cell Metadata
             ...{ cellId: this.cell.uri.toString() }
         };
-
-        // Skip if no code to execute
-        if (code.trim().length === 0) {
-            traceCellMessage(this.cell, 'Empty cell execution');
-            return this.completedSuccessfully().then(noop, noop);
-        }
 
         // For Jupyter requests, silent === don't output, while store_history === don't update execution count
         // https://jupyter-client.readthedocs.io/en/stable/api/client.html#jupyter_client.KernelClient.execute
@@ -518,13 +402,6 @@ export class CellExecution {
             traceError(`Cell execution failed without request, for cell Index ${this.cell.index}`);
             return this.completedWithErrors(new Error('Session cannot generate requests')).then(noop, noop);
         }
-
-        // Stop handling the request if the subscriber is canceled.
-        const cancelDisposable = this.token.onCancellationRequested(() => {
-            request.onIOPub = noop;
-            request.onStdin = noop;
-            request.onReply = noop;
-        });
 
         // Listen to messages & chain each (to process them in the order we get them).
         request.onIOPub = (msg) =>
@@ -570,7 +447,6 @@ export class CellExecution {
             loggers.forEach((l) =>
                 l.postExecute(translateCellFromNative(this.cell), wasSilent, this.cell.language, this.cell.notebook.uri)
             );
-            cancelDisposable.dispose();
         }
     }
     @swallowExceptions()
