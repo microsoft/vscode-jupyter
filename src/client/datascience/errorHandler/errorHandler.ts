@@ -27,9 +27,9 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
             // Don't show the message for self cert errors
             noop();
         } else if (err.message) {
-            this.applicationShell.showErrorMessage(err.message);
+            this.applicationShell.showErrorMessage(err.message).then(noop, noop);
         } else {
-            this.applicationShell.showErrorMessage(err.toString());
+            this.applicationShell.showErrorMessage(err.toString()).then(noop, noop);
         }
         traceError('DataScience Error', err);
     }
@@ -43,6 +43,6 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                 if (selection === selectNewServer) {
                     this.serverSelector.selectJupyterURI(false).ignoreErrors();
                 }
-            });
+            }, noop);
     }
 }
