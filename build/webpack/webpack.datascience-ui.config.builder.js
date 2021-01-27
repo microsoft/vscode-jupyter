@@ -153,13 +153,24 @@ function buildConfiguration(bundle) {
                 {
                     from: 'node_modules/font-awesome/**/*',
                     context: './'
+                },
+                {
+                    from: path.join(
+                        constants.ExtensionRootDir,
+                        'src',
+                        'client',
+                        'datascience',
+                        'notebook',
+                        'fontAwesomeLoader.js'
+                    ),
+                    to: path.join(constants.ExtensionRootDir, 'out', 'datascience-ui', bundleFolder)
                 }
             ]
         );
     }
     let outputProps = {};
     if (bundle === 'ipywidgetsRenderer' || bundle === 'ipywidgetsKernel') {
-        // Nothing.
+        // Nothing
     } else {
         filesToCopy.push({
             from: path.join(constants.ExtensionRootDir, 'node_modules/requirejs/require.js'),
