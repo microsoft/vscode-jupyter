@@ -30,8 +30,6 @@ const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed'
  * Else the `Kernel` class gets very big.
  */
 export class KernelExecution implements IDisposable {
-    public notebook?: INotebook;
-
     private readonly cellExecutions = new WeakMap<NotebookCell, CellExecution>();
 
     private readonly documentExecutions = new WeakMap<NotebookDocument, MultiCancellationTokenSource>();
@@ -57,36 +55,35 @@ export class KernelExecution implements IDisposable {
     }
 
     @captureTelemetry(Telemetry.ExecuteNativeCell, undefined, true)
-    public async executeCell(cell: NotebookCell): Promise<void> {
-        if (!this.notebook) {
-            throw new Error('executeObservable cannot be called if kernel has not been started!');
-        }
+    public async executeCell(notebookPromise: Promise<INotebook>, cell: NotebookCell): Promise<void> {
         // Cannot execute empty cells.
         if (this.cellExecutions.has(cell) || cell.document.getText().trim().length === 0) {
             // clear cell output
             cell.outputs = [];
             return;
         }
+        const editor = this.vscNotebook.notebookEditors.find((item) => item.document === cell.notebook);
+        if (!editor) {
+            return;
+        }
         const cellExecution = this.executionFactory.create(cell, isPythonKernelConnection(this.metadata));
         this.cellExecutions.set(cell, cellExecution);
 
-        const kernel = this.getKernel(cell.notebook);
-
         try {
+            const notebook = await notebookPromise;
+            const kernel = this.getKernel(cell.notebook);
             traceCellMessage(cell, 'executeCell started in KernelExecution');
-            await this.executeIndividualCell(kernel, cellExecution);
+            await this.executeIndividualCell(kernel, cellExecution, notebook);
         } finally {
             traceCellMessage(cell, 'executeCell completed in KernelExecution');
             this.cellExecutions.delete(cell);
+            await cellExecution.cancel();
         }
     }
 
     @captureTelemetry(Telemetry.ExecuteNativeCell, undefined, true)
     @captureTelemetry(VSCodeNativeTelemetry.RunAllCells, undefined, true)
-    public async executeAllCells(document: NotebookDocument): Promise<void> {
-        if (!this.notebook) {
-            throw new Error('executeObservable cannot be called if kernel has not been started!');
-        }
+    public async executeAllCells(notebookPromise: Promise<INotebook>, document: NotebookDocument): Promise<void> {
         if (this.documentExecutions.has(document)) {
             return;
         }
@@ -96,7 +93,6 @@ export class KernelExecution implements IDisposable {
         }
         const cancelTokenSource = new MultiCancellationTokenSource();
         this.documentExecutions.set(document, cancelTokenSource);
-        const kernel = this.getKernel(document);
 
         traceInfo('Update notebook execution state as running');
         await editor.edit((edit) =>
@@ -117,10 +113,12 @@ export class KernelExecution implements IDisposable {
         );
 
         try {
+            const notebook = await notebookPromise;
+            const kernel = this.getKernel(document);
             codeCellsToExecute.forEach((exec) => traceCellMessage(exec.cell, 'Ready to execute'));
             for (const cellToExecute of codeCellsToExecute) {
                 traceCellMessage(cellToExecute.cell, 'Before Execute individual cell');
-                const result = this.executeIndividualCell(kernel, cellToExecute);
+                const result = this.executeIndividualCell(kernel, cellToExecute, notebook);
                 result.finally(() => this.cellExecutions.delete(cellToExecute.cell)).catch(noop);
                 const executionResult = await result;
                 traceCellMessage(cellToExecute.cell, `After Execute individual cell ${executionResult}`);
@@ -168,12 +166,12 @@ export class KernelExecution implements IDisposable {
         }
     }
 
-    public cancelAllCells(document: NotebookDocument): void {
+    public async cancelAllCells(document: NotebookDocument): Promise<void> {
         if (this.documentExecutions.get(document)) {
             this.documentExecutions.get(document)!.cancel();
         }
         traceInfo('Cancel document execution');
-        document.cells.forEach((cell) => this.cancelCell(cell));
+        await Promise.all(document.cells.map((cell) => this.cancelCell(cell)));
     }
 
     public async interruptCell(cell: NotebookCell, timeoutMs: number): Promise<InterruptResult> {
@@ -220,12 +218,9 @@ export class KernelExecution implements IDisposable {
 
     private async executeIndividualCell(
         kernelPromise: Promise<IKernel>,
-        cellExecution: CellExecution
+        cellExecution: CellExecution,
+        notebook: INotebook
     ): Promise<NotebookCellRunState | undefined> {
-        if (!this.notebook) {
-            throw new Error('No notebook object');
-        }
-
         cellExecution.token.onCancellationRequested(
             // Interrupt kernel only if we need to cancel a cell execution.
             () => {
@@ -237,7 +232,7 @@ export class KernelExecution implements IDisposable {
         );
 
         // Start execution
-        await cellExecution.start(kernelPromise, this.notebook);
+        await cellExecution.start(kernelPromise, notebook);
 
         // The result promise will resolve when complete.
         return cellExecution.result;

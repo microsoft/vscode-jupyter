@@ -1,6 +1,6 @@
 .outer-container {
-    width:auto;
-    height:100%;
+    width: auto;
+    height: 100%;
 }
 
 .react-grid-container {
@@ -21,7 +21,7 @@
     border: none;
     border-radius: 5px;
     cursor: pointer;
-    margin:8px 4px;
+    margin: 8px 4px;
 }
 
 .react-grid-header-cell {
@@ -41,7 +41,7 @@
     border-right-color: var(--vscode-editor-inactiveSelectionBackground);
     border-right-style: solid;
     box-sizing: border-box;
-} 
+}
 
 .react-grid-cell.active {
     background-color: var(--vscode-button-background);
@@ -55,7 +55,8 @@
     border-right-style: solid;
 }
 
-.slick-header-column.ui-state-default, .slick-group-header-column.ui-state-default {
+.slick-header-column.ui-state-default,
+.slick-group-header-column.ui-state-default {
     border-right-color: var(--vscode-editor-inactiveSelectionBackground);
 }
 
@@ -84,4 +85,29 @@
 
 .slick-row:hover > .react-grid-cell {
     background-color: var(--override-selection-background, var(--vscode-editor-selectionBackground));
+}
+
+/* Slick.Editors.Text */
+input.editor-text {
+    width: 100%;
+    height: 100%;
+    border: 0 none;
+    margin: 0;
+    outline: 0 none;
+    padding: 0;
+    border-bottom-color: var(--vscode-editor-inactiveSelectionBackground);
+    border-right-color: var(--vscode-editor-inactiveSelectionBackground);
+    border-right-style: solid;
+    background-color: var(--vscode-button-background);
+    color: var(--vscode-button-foreground);
+    text-align: right;
+    /* input does not inherit font from body */
+    font-family: var(--vscode-editor-font-family);
+    font-weight: var(--vscode-editor-font-weight);
+    font-size: var(--vscode-editor-font-size);
+}
+
+.slick-cell.editable {
+    border-color: none;
+    border-style: none;
 }

@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { ConfigurationTarget, Event, EventEmitter, Uri, WebviewPanel } from 'vscode';
+import { ConfigurationTarget, Event, EventEmitter, ProgressLocation, Uri, WebviewPanel } from 'vscode';
 import { NotebookCell, NotebookDocument } from '../../../../types/vscode-proposed';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import { traceError } from '../../common/logger';
@@ -225,12 +225,21 @@ export class NotebookEditor implements INotebookEditor {
                 const response = await this.applicationShell.showInformationMessage(message, yes, dontAskAgain, no);
                 if (response === dontAskAgain) {
                     await this.disableAskForRestart();
-                    await this.restartKernelInternal(kernel);
+                    void this.applicationShell.withProgress(
+                        { location: ProgressLocation.Notification, title: DataScience.restartingKernelStatus() },
+                        () => this.restartKernelInternal(kernel)
+                    );
                 } else if (response === yes) {
-                    await this.restartKernelInternal(kernel);
+                    void this.applicationShell.withProgress(
+                        { location: ProgressLocation.Notification, title: DataScience.restartingKernelStatus() },
+                        () => this.restartKernelInternal(kernel)
+                    );
                 }
             } else {
-                await this.restartKernelInternal(kernel);
+                void this.applicationShell.withProgress(
+                    { location: ProgressLocation.Notification, title: DataScience.restartingKernelStatus() },
+                    () => this.restartKernelInternal(kernel)
+                );
             }
         }
     }

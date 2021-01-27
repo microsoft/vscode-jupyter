@@ -19,7 +19,8 @@ import {
     IJupyterKernelSpec,
     IJupyterPasswordConnect,
     IJupyterSession,
-    IJupyterSessionManager
+    IJupyterSessionManager,
+    IKernelDependencyService
 } from '../types';
 import { createAuthorizingRequest } from './jupyterRequest';
 import { JupyterSession } from './jupyterSession';
@@ -57,7 +58,8 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         private outputChannel: IOutputChannel,
         private configService: IConfigurationService,
         private readonly appShell: IApplicationShell,
-        private readonly stateFactory: IPersistentStateFactory
+        private readonly stateFactory: IPersistentStateFactory,
+        private readonly kernelDependencyService: IKernelDependencyService
     ) {
         this.userAllowsInsecureConnections = this.stateFactory.createGlobalPersistentState<boolean>(
             GlobalStateUserAllowsInsecureConnections,
@@ -167,7 +169,8 @@ export class JupyterSessionManager implements IJupyterSessionManager {
     public async startNew(
         kernelConnection: KernelConnectionMetadata | undefined,
         workingDirectory: string,
-        cancelToken?: CancellationToken
+        cancelToken?: CancellationToken,
+        disableUI?: boolean
     ): Promise<IJupyterSession> {
         if (!this.connInfo || !this.sessionManager || !this.contentsManager || !this.serverSettings) {
             throw new Error(localize.DataScience.sessionDisposed());
@@ -183,10 +186,11 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             this.restartSessionCreatedEvent.fire.bind(this.restartSessionCreatedEvent),
             this.restartSessionUsedEvent.fire.bind(this.restartSessionUsedEvent),
             workingDirectory,
-            this.configService.getSettings().jupyterLaunchTimeout
+            this.configService.getSettings().jupyterLaunchTimeout,
+            this.kernelDependencyService
         );
         try {
-            await session.connect(this.configService.getSettings().jupyterLaunchTimeout, cancelToken);
+            await session.connect(this.configService.getSettings().jupyterLaunchTimeout, cancelToken, disableUI);
         } finally {
             if (!session.isConnected) {
                 await session.dispose();

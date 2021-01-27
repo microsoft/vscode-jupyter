@@ -98,7 +98,8 @@ export class JupyterServerBase implements INotebookServer {
         session = await this.sessionManager.startNew(
             launchInfo.kernelConnectionMetadata,
             launchInfo.connectionInfo.rootDirectory,
-            cancelToken
+            cancelToken,
+            launchInfo.disableUI
         );
         const idleTimeout = this.configService.getSettings().jupyterLaunchTimeout;
         // The wait for idle should throw if we can't connect.

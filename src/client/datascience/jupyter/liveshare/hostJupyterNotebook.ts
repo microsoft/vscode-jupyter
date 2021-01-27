@@ -5,7 +5,12 @@ import { Observable } from 'rxjs/Observable';
 import * as vscode from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
-import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../../common/application/types';
+import {
+    IApplicationShell,
+    ILiveShareApi,
+    IVSCodeNotebook,
+    IWorkspaceService
+} from '../../../common/application/types';
 import '../../../common/extensions';
 import { traceError } from '../../../common/logger';
 
@@ -41,6 +46,7 @@ export class HostJupyterNotebook
     private requestLog: Map<string, number> = new Map<string, number>();
     private catchupPendingCount: number = 0;
     private isDisposed = false;
+    // eslint-disable-next-line @typescript-eslint/no-useless-constructor
     constructor(
         liveShare: ILiveShareApi,
         session: IJupyterSession,
@@ -53,7 +59,8 @@ export class HostJupyterNotebook
         getDisposedError: () => Error,
         workspace: IWorkspaceService,
         appService: IApplicationShell,
-        fs: IFileSystem
+        fs: IFileSystem,
+        vscNotebook: IVSCodeNotebook
     ) {
         super(
             liveShare,
@@ -67,7 +74,8 @@ export class HostJupyterNotebook
             getDisposedError,
             workspace,
             appService,
-            fs
+            fs,
+            vscNotebook
         );
     }
 

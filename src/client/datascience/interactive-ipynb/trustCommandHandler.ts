@@ -41,6 +41,7 @@ export class TrustCommandHandler implements IExtensionSingleActivationService {
         const context = new ContextKey('jupyter.trustfeatureenabled', this.commandManager);
         context.set(true).ignoreErrors();
         this.disposables.push(this.commandManager.registerCommand(Commands.TrustNotebook, this.onTrustNotebook, this));
+        this.disposables.push(this.commandManager.registerCommand(Commands.NotebookTrusted, () => noop(), this));
     }
     @swallowExceptions('Trusting notebook')
     private async onTrustNotebook(uri?: Uri) {
@@ -64,7 +65,7 @@ export class TrustCommandHandler implements IExtensionSingleActivationService {
         traceInfo(`Displayed prompt to trust notebook & selected ${selection}`);
         switch (selection) {
             case DataScience.trustAllNotebooks():
-                commands.executeCommand('workbench.action.openSettings', 'jupyter.alwaysTrustNotebooks');
+                void commands.executeCommand('workbench.action.openSettings', 'jupyter.alwaysTrustNotebooks');
                 sendTelemetryEvent(Telemetry.TrustAllNotebooks);
                 break;
             case DataScience.trustNotebook():

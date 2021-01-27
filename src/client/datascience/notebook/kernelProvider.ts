@@ -41,7 +41,7 @@ import {
     getNotebookMetadata,
     isJupyterKernel,
     isJupyterNotebook,
-    updateKernelInNotebookMetadata
+    trackKernelInNotebookMetadata
 } from './helpers/helpers';
 import { VSCodeNotebookKernelMetadata } from './kernelWithMetadata';
 import { INotebookKernelProvider, INotebookKernelResolver } from './types';
@@ -350,6 +350,7 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
     }) {
         // We're only interested in our Jupyter Notebooks & our kernels.
         if (!isJupyterKernel(kernel) || !isJupyterNotebook(document)) {
+            trackKernelInNotebookMetadata(document, undefined);
             return;
         }
         const selectedKernelConnectionMetadata = kernel.selection;
@@ -395,9 +396,14 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
         // This will dispose any existing (older kernels) associated with this notebook.
         // This way other parts of extension have access to this kernel immediately after event is handled.
         // Unlike webview notebooks we cannot revert to old kernel if kernel switching fails.
-        this.kernelProvider.getOrCreate(document.uri, {
+        const newKernel = this.kernelProvider.getOrCreate(document.uri, {
             metadata: selectedKernelConnectionMetadata
         });
+
+        // Auto start the local kernels.
+        if (newKernel && !this.configuration.getSettings(undefined).disableJupyterAutoStart && this.isLocalLaunch()) {
+            newKernel.start({ disableUI: true }).catch(noop);
+        }
 
         // Change kernel and update metadata (this can return `undefined`).
         // When calling `kernelProvider.getOrCreate` it will attempt to dispose the current kernel.
@@ -416,7 +422,7 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
                         if (notebook.disposed) {
                             return;
                         }
-                        updateKernelInNotebookMetadata(document, e);
+                        trackKernelInNotebookMetadata(document, e);
                     },
                     this,
                     this.disposables
@@ -429,7 +435,7 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
             // Adding comment here, so we have context for the requirement.
             this.kernelSwitcher.switchKernelWithRetry(notebook, selectedKernelConnectionMetadata).catch(noop);
         } else {
-            updateKernelInNotebookMetadata(document, selectedKernelConnectionMetadata);
+            trackKernelInNotebookMetadata(document, selectedKernelConnectionMetadata);
         }
     }
 }

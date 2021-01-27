@@ -871,6 +871,18 @@ export namespace DataScience {
         'DataScience.jupyterSelectURIRemoteDetail',
         'Specify the URI of an existing server'
     );
+    export const specifyLocalOrRemoteJupyterServerForConnections = localize(
+        'jupyter.command.jupyter.selectjupyteruri.title',
+        'Specify local or remote Jupyter server for connections'
+    );
+    export const jupyterNativeNotebookUriStatusLabelForLocal = localize(
+        'DataScience.jupyterNativeNotebookUriStatusLabelForLocal',
+        'Jupyter Server: local'
+    );
+    export const jupyterNativeNotebookUriStatusLabelForRemote = localize(
+        'DataScience.jupyterNativeNotebookUriStatusLabelForRemote',
+        'Jupyter Server: Remote'
+    );
 
     export const loadClassFailedWithNoInternet = localize(
         'DataScience.loadClassFailedWithNoInternet',

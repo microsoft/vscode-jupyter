@@ -27,7 +27,7 @@ suite('DataScience - TrustService', () => {
         'src/test/datascience/interactive-common/nbToTrust.ipynb'
     );
     const disposables: IDisposable[] = [];
-    suiteSetup(async () => {
+    suiteSetup(async function () {
         api = await initialize();
         trustService = api.serviceContainer.get<ITrustService>(ITrustService);
         const configService = api.serviceContainer.get<IConfigurationService>(IConfigurationService);

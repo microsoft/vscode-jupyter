@@ -87,7 +87,7 @@ suite('DataScience raw kernel tests', () => {
             ioc.get<IPythonExtensionChecker>(IPythonExtensionChecker),
             ioc.get<KernelEnvironmentVariablesService>(KernelEnvironmentVariablesService)
         );
-        await kernelProcess.launch(process.cwd());
+        await kernelProcess.launch(process.cwd(), 60_000);
         return createRawKernel(kernelProcess, uuid());
     }
 

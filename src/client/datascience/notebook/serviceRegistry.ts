@@ -14,8 +14,10 @@ import { NotebookContentProvider } from './contentProvider';
 import { NotebookCellLanguageService } from './defaultCellLanguageService';
 import { EmptyNotebookCellLanguageService } from './emptyNotebookCellLanguageService';
 import { NotebookIntegration } from './integration';
+import { NotebookCompletionProvider } from './intellisense/completionProvider';
 import { VSCodeKernelPickerProvider } from './kernelProvider';
 import { NotebookDisposeService } from './notebookDisposeService';
+import { RemoteSwitcher } from './remoteSwitcher';
 import { RendererExtensionDownloader } from './rendererExtensionDownloader';
 import { INotebookContentProvider, INotebookKernelProvider, INotebookKernelResolver } from './types';
 
@@ -29,11 +31,7 @@ export function registerTypes(serviceManager: IServiceManager) {
         IExtensionSingleActivationService,
         NotebookDisposeService
     );
-    // Do not install renderer extension.
-    // serviceManager.addSingleton<IExtensionSingleActivationService>(
-    //     IExtensionSingleActivationService,
-    //     RendererExtension
-    // );
+    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, RemoteSwitcher);
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         EmptyNotebookCellLanguageService
@@ -52,4 +50,5 @@ export function registerTypes(serviceManager: IServiceManager) {
     );
     serviceManager.addSingleton<INotebookKernelResolver>(INotebookKernelResolver, NotebookIPyWidgetCoordinator);
     serviceManager.addSingleton<NotebookCellLanguageService>(NotebookCellLanguageService, NotebookCellLanguageService);
+    serviceManager.addSingleton<NotebookCompletionProvider>(NotebookCompletionProvider, NotebookCompletionProvider);
 }

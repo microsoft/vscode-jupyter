@@ -66,6 +66,7 @@
         "onCommand:jupyter.selectJupyterInterpreter",
         "onCommand:jupyter.selectjupytercommandline",
         "onCommand:jupyter.openVariableView",
+        "onCommand:jupyter.selectNativeJupyterUriFromToolBar",
         "onNotebook:jupyter-notebook",
         "onCustomEditor:jupyter.notebook.ipynb"
     ],
@@ -97,7 +98,7 @@
                 "win": "F",
                 "linux": "F",
                 "key": "F",
-                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook",
+                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts",
                 "command": "notebook.find"
             },
             {
@@ -105,7 +106,7 @@
                 "win": "K",
                 "linux": "K",
                 "key": "K",
-                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook",
+                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts",
                 "command": "list.focusUp"
             },
             {
@@ -113,7 +114,7 @@
                 "win": "J",
                 "linux": "J",
                 "key": "J",
-                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook",
+                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts",
                 "command": "list.focusDown"
             },
             {
@@ -121,7 +122,7 @@
                 "win": "A",
                 "linux": "A",
                 "key": "A",
-                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook",
+                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts",
                 "command": "notebook.cell.insertCodeCellAbove"
             },
             {
@@ -129,7 +130,7 @@
                 "win": "B",
                 "linux": "B",
                 "key": "B",
-                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook",
+                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts",
                 "command": "notebook.cell.insertCodeCellBelow"
             },
             {
@@ -137,7 +138,7 @@
                 "win": "D D",
                 "linux": "D D",
                 "key": "D D",
-                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook",
+                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts",
                 "command": "notebook.cell.delete"
             },
             {
@@ -145,15 +146,23 @@
                 "win": "Z",
                 "linux": "Z",
                 "key": "Z",
-                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook",
-                "command": "notebook.undo"
+                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts",
+                "command": "undo"
+            },
+            {
+                "mac": "S",
+                "win": "S",
+                "linux": "S",
+                "key": "S",
+                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts",
+                "command": "workbench.action.files.save"
             },
             {
                 "mac": "C",
                 "win": "C",
                 "linux": "C",
                 "key": "C",
-                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook",
+                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts",
                 "command": "notebook.cell.copy"
             },
             {
@@ -161,7 +170,7 @@
                 "win": "X",
                 "linux": "X",
                 "key": "X",
-                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook",
+                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts",
                 "command": "notebook.cell.cut"
             },
             {
@@ -169,14 +178,14 @@
                 "win": "V",
                 "linux": "V",
                 "key": "V",
-                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook",
+                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts",
                 "command": "notebook.cell.paste"
             },
             {
                 "mac": "ctrl+shift+-",
                 "win": "ctrl+shift+-",
                 "linux": "ctrl+shift+-",
-                "when": "editorTextFocus && inputFocus && notebookEditorFocused && notebookViewType == jupyter-notebook",
+                "when": "editorTextFocus && inputFocus && notebookEditorFocused && notebookViewType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts",
                 "command": "notebook.cell.split"
             },
             {
@@ -497,6 +506,11 @@
                 "category": "Jupyter"
             },
             {
+                "command": "jupyter.selectNativeJupyterUriFromToolBar",
+                "title": "%jupyter.command.jupyter.selectjupyteruri.title%",
+                "category": "Jupyter"
+            },
+            {
                 "command": "jupyter.selectjupytercommandline",
                 "title": "%jupyter.command.jupyter.selectjupytercommandline.title%",
                 "category": "Jupyter"
@@ -593,6 +607,12 @@
                 "enablement": "jupyter.notebookeditor.canrestartNotebookkernel"
             },
             {
+                "command": "jupyter.selectNativeJupyterUriFromToolBar",
+                "title": "%jupyter.command.jupyter.selectjupyteruri.title%",
+                "category": "Jupyter",
+                "icon": "$(debug-disconnect)"
+            },
+            {
                 "command": "jupyter.notebookeditor.trust",
                 "title": "%DataScience.trustNotebookCommandTitle%",
                 "category": "Jupyter",
@@ -601,6 +621,16 @@
                     "dark": "resources/dark/un-trusted.svg"
                 },
                 "enablement": "notebookViewType == jupyter-notebook && !jupyter.isnotebooktrusted && jupyter.trustfeatureenabled"
+            },
+            {
+                "command": "jupyter.notebookeditor.trusted",
+                "title": "%DataScience.notebookIsTrusted%",
+                "category": "Jupyter",
+                "icon": {
+                    "light": "resources/light/trusted.svg",
+                    "dark": "resources/dark/trusted.svg"
+                },
+                "enablement": "false"
             },
             {
                 "command": "jupyter.notebookeditor.runallcells",
@@ -703,7 +733,12 @@
             {
                 "command": "jupyter.openVariableView",
                 "title": "%jupyter.command.jupyter.openVariableView.title%",
-                "category": "Jupyter"
+                "icon": {
+                    "light": "resources/light/variable_explorer.svg",
+                    "dark": "resources/dark/variable_explorer.svg"
+                },
+                "category": "Jupyter",
+                "enablement": "!jupyter.variableViewVisible"
             }
         ],
         "menus": {
@@ -764,31 +799,49 @@
                     "command": "jupyter.notebookeditor.runallcellsabove",
                     "title": "%DataScience.runAbove%",
                     "group": "navigation",
-                    "when": "resourceLangId == jupyter && notebookViewType == 'jupyter-notebook' && jupyter.isnotebooktrusted && jupyter.havenativecells"
+                    "when": "notebookViewType == 'jupyter-notebook' && jupyter.isnotebooktrusted && jupyter.havenativecells"
                 },
                 {
                     "command": "jupyter.notebookeditor.runcellandallbelow",
                     "title": "%DataScience.runBelow%",
                     "group": "navigation",
-                    "when": "resourceLangId == jupyter && notebookViewType == 'jupyter-notebook' && jupyter.isnotebooktrusted && jupyter.havenativecells"
+                    "when": "notebookViewType == 'jupyter-notebook' && jupyter.isnotebooktrusted && jupyter.havenativecells"
                 },
                 {
                     "command": "jupyter.notebookeditor.restartkernel",
                     "title": "%jupyter.command.jupyter.restartkernel.title%",
+                    "group": "navigation",
+                    "when": "notebookViewType == 'jupyter-notebook'"
+                },
+                {
+                    "command": "jupyter.notebookeditor.export",
+                    "title": "%DataScience.notebookExportAs%",
+                    "group": "navigation",
+                    "when": "notebookViewType == 'jupyter-notebook' && jupyter.isnotebooktrusted"
+                },
+                {
+                    "command": "jupyter.openVariableView",
+                    "title": "%jupyter.command.jupyter.openVariableView.title%",
                     "group": "navigation",
                     "when": "resourceLangId == jupyter && notebookViewType == 'jupyter-notebook'"
                 },
                 {
                     "command": "jupyter.notebookeditor.trust",
                     "title": "%DataScience.trustNotebookCommandTitle%",
-                    "group": "navigation@1",
-                    "when": "resourceLangId == jupyter && notebookViewType == 'jupyter-notebook' && !jupyter.isnotebooktrusted && jupyter.trustfeatureenabled"
+                    "group": "navigation@999",
+                    "when": "notebookViewType == 'jupyter-notebook' && !jupyter.isnotebooktrusted && jupyter.trustfeatureenabled"
                 },
                 {
-                    "command": "jupyter.notebookeditor.export",
-                    "title": "%DataScience.notebookExportAs%",
-                    "group": "navigation",
-                    "when": "resourceLangId == jupyter && notebookViewType == 'jupyter-notebook' && jupyter.isnotebooktrusted"
+                    "command": "jupyter.notebookeditor.trusted",
+                    "title": "%DataScience.notebookIsTrusted%",
+                    "group": "navigation@999",
+                    "when": "notebookViewType == 'jupyter-notebook' && jupyter.isnotebooktrusted && jupyter.trustfeatureenabled"
+                },
+                {
+                    "command": "jupyter.selectNativeJupyterUriFromToolBar",
+                    "title": "%jupyter.command.jupyter.selectjupyteruri.title%",
+                    "group": "navigation@1000",
+                    "when": "notebookViewType == 'jupyter-notebook'"
                 }
             ],
             "explorer/context": [
@@ -1094,6 +1147,12 @@
                     "when": "notebookEditorFocused && !jupyter.isnotebooktrusted && jupyter.trustfeatureenabled"
                 },
                 {
+                    "command": "jupyter.notebookeditor.trusted",
+                    "title": "%DataScience.notebookIsTrusted%",
+                    "category": "Jupyter",
+                    "when": "false"
+                },
+                {
                     "command": "jupyter.notebookeditor.runallcells",
                     "title": "%jupyter.command.jupyter.notebookeditor.runallcells.title%",
                     "category": "Jupyter",
@@ -1270,6 +1329,11 @@
                     "title": "%jupyter.command.jupyter.openVariableView.title%",
                     "category": "Jupyter",
                     "when": "jupyter.isnativeactive"
+                },
+                {
+                    "command": "jupyter.selectNativeJupyterUriFromToolBar",
+                    "title": "%jupyter.command.jupyter.selectjupyteruri.title%",
+                    "when": "false"
                 }
             ],
             "debug/variables/context": [
@@ -1328,6 +1392,12 @@
                     },
                     "description": "List of experiment to opt out of. If empty, user is assigned the default experiment groups. See https://github.com/microsoft/vscode-jupyter/wiki/Experiments for more details.",
                     "scope": "machine"
+                },
+                "jupyter.enableKeyboardShortcuts": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enables Jupyter style keyboard shortcuts for Notebooks.",
+                    "scope": "application"
                 },
                 "jupyter.allowImportFromNotebook": {
                     "type": "boolean",

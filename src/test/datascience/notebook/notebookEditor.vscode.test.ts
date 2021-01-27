@@ -40,6 +40,9 @@ suite('Notebook Editor tests', () => {
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
         commandManager = api.serviceContainer.get<ICommandManager>(ICommandManager);
+
+        // On conda these take longer for some reason.
+        this.timeout(30_000);
     });
 
     setup(async function () {
@@ -111,30 +114,5 @@ suite('Notebook Editor tests', () => {
 
         // The third cell should have a runState of Success
         assert.strictEqual(thirdCell?.metadata.runState, vscodeNotebookEnums.NotebookCellRunState.Success);
-    });
-    test('Switch kernels', async function () {
-        this.skip();
-        // Do this after talking with VS code team
-        // // add a cell
-        // await insertCodeCell('print("0")', { index: 0 });
-
-        // const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
-
-        // await executeCell(cell);
-
-        // // Wait till execution count changes and status is success.
-        // await waitForExecutionCompletedSuccessfully(cell);
-
-        // // Switch kernels to the other kernel
-        // const kernels = await kernelProvider.provideKernels(
-        //     vscodeNotebook.activeNotebookEditor!.document,
-        //     CancellationToken.None
-        // );
-        // if (kernels?.length && kernels?.length > 0) {
-        //     // We have multiple kernels. Try switching
-        //     await commandManager.executeCommand(
-        //         'notebook.selectKernel',
-        //     );
-        // }
     });
 });

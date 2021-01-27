@@ -84,12 +84,22 @@ export async function closeActiveNotebooks(): Promise<void> {
 }
 
 async function closeWindowsInternal() {
+    // If there are no editors, we can skip. This seems to time out if no editors visible.
+    if (
+        !vscode.window.visibleTextEditors ||
+        (vscode.env.appName.toLowerCase().includes('insiders') && !vscode.window.visibleNotebookEditors)
+    ) {
+        // Instead just post the command
+        void vscode.commands.executeCommand('workbench.action.closeAllEditors');
+        return;
+    }
+
     class CloseEditorsTimeoutError extends Error {
         constructor() {
             super("Command 'workbench.action.closeAllEditors' timed out");
         }
     }
-    const closeWindowsImplementation = (timeout = 15_000) => {
+    const closeWindowsImplementation = (timeout = 2_000) => {
         return new Promise<void>((resolve, reject) => {
             // Attempt to fix #1301.
             // Lets not waste too much time.
@@ -114,9 +124,7 @@ async function closeWindowsInternal() {
         await closeWindowsImplementation();
     } catch (ex) {
         if (ex instanceof CloseEditorsTimeoutError) {
-            // Try again with a smaller timeout (no idea why VSCode is timeout out here).
-            await sleep(500); // Possible VSC is busy & wasn't able to handle previous command.
-            await closeWindowsImplementation(5_000);
+            // Do nothing. Just stop waiting.
         } else {
             throw ex;
         }

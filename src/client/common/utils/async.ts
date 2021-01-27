@@ -3,6 +3,11 @@
 
 'use strict';
 
+/**
+ * Error type thrown when a timeout occurs
+ */
+export class TimedOutError extends Error {}
+
 export async function sleep(timeout: number): Promise<number> {
     return new Promise<number>((resolve) => {
         setTimeout(() => resolve(timeout), timeout);
@@ -52,7 +57,7 @@ export interface Deferred<T> {
 }
 
 class DeferredImpl<T> implements Deferred<T> {
-    private _resolve!: (value?: T | PromiseLike<T>) => void;
+    private _resolve!: (value: T | PromiseLike<T>) => void;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private _reject!: (reason?: any) => void;
     private _resolved: boolean = false;

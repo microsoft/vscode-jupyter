@@ -25,7 +25,7 @@ import {
     closeNotebooksAndCleanUpAfterTests,
     createTemporaryNotebook,
     executeActiveDocument,
-    //insertCodeCell,
+    insertCodeCell,
     insertMarkdownCell,
     saveActiveNotebook,
     trustAllNotebooks,
@@ -169,48 +169,49 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
             await waitForKernelToGetAutoSelected('python');
         }
     });
-    //test('Can run a Julia notebook', async function () {
-    //this.timeout(30_000); // Can be slow to start Julia kernel on CI.
-    //await openNotebook(api.serviceContainer, testJuliaNb.fsPath);
-    //await insertCodeCell('123456', { language: 'julia', index: 0 });
-    //await waitForKernelToGetAutoSelected('julia');
-    //await executeActiveDocument();
+    test('Can run a Julia notebook', async function () {
+        return this.skip(); // Flakey, tracked by issue 4453
+        this.timeout(30_000); // Can be slow to start Julia kernel on CI.
+        await openNotebook(api.serviceContainer, testJuliaNb.fsPath);
+        await insertCodeCell('123456', { language: 'julia', index: 0 });
+        await waitForKernelToGetAutoSelected('julia');
+        await executeActiveDocument();
 
-    //const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
-    //// Wait till execution count changes and status is success.
-    //await waitForExecutionCompletedSuccessfully(cell);
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
+        // Wait till execution count changes and status is success.
+        await waitForExecutionCompletedSuccessfully(cell);
 
-    //assertHasTextOutputInVSCode(cell, '123456', 0, false);
-    //});
-    //test('Can run a CSharp notebook', async function () {
-    //// C# Kernels can only be installed when you have Jupyter
-    //// On CI we install Jupyter only when testing with Python extension.
-    //const pythonChecker = api.serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker);
-    //if (!pythonChecker.isPythonExtensionInstalled) {
-    //return this.skip();
-    //}
-    //this.timeout(30_000); // Can be slow to start csharp kernel on CI.
-    //await openNotebook(api.serviceContainer, testCSharpNb.fsPath);
-    //await waitForKernelToGetAutoSelected('c#');
-    //await executeActiveDocument();
+        assertHasTextOutputInVSCode(cell, '123456', 0, false);
+    });
+    test('Can run a CSharp notebook', async function () {
+        // C# Kernels can only be installed when you have Jupyter
+        // On CI we install Jupyter only when testing with Python extension.
+        const pythonChecker = api.serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker);
+        if (!pythonChecker.isPythonExtensionInstalled) {
+            return this.skip();
+        }
+        this.timeout(30_000); // Can be slow to start csharp kernel on CI.
+        await openNotebook(api.serviceContainer, testCSharpNb.fsPath);
+        await waitForKernelToGetAutoSelected('c#');
+        await executeActiveDocument();
 
-    //const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
-    //// Wait till execution count changes and status is success.
-    //await waitForExecutionCompletedSuccessfully(cell);
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
+        // Wait till execution count changes and status is success.
+        await waitForExecutionCompletedSuccessfully(cell);
 
-    //// For some reason C# kernel sends multiple outputs.
-    //// First output can contain `text/html` with some Jupyter UI specific stuff.
-    //try {
-    //traceInfo(`Cell output length ${cell.outputs.length}`);
-    //assertHasTextOutputInVSCode(cell, 'Hello', 0, false);
-    //} catch (ex) {
-    //if (cell.outputs.length > 1) {
-    //assertHasTextOutputInVSCode(cell, 'Hello', 1, false);
-    //} else {
-    //throw ex;
-    //}
-    //}
-    //});
+        // For some reason C# kernel sends multiple outputs.
+        // First output can contain `text/html` with some Jupyter UI specific stuff.
+        try {
+            traceInfo(`Cell output length ${cell.outputs.length}`);
+            assertHasTextOutputInVSCode(cell, 'Hello', 0, false);
+        } catch (ex) {
+            if (cell.outputs.length > 1) {
+                assertHasTextOutputInVSCode(cell, 'Hello', 1, false);
+            } else {
+                throw ex;
+            }
+        }
+    });
     test('Can run a Java notebook', async function () {
         // Disabled, as activation of conda environments doesn't work on CI in Python extension.
         // As a result we cannot get env variables of conda environments.

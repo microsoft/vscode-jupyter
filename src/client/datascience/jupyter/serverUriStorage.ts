@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { inject, injectable, named } from 'inversify';
-import { ConfigurationTarget, Memento } from 'vscode';
+import { ConfigurationTarget, EventEmitter, Memento } from 'vscode';
 import { IApplicationEnvironment, IEncryptedStorage, IWorkspaceService } from '../../common/application/types';
 import { GLOBAL_MEMENTO, IConfigurationService, ICryptoUtils, IMemento } from '../../common/types';
 import { Settings } from '../constants';
@@ -13,6 +13,10 @@ import { IJupyterServerUriStorage } from '../types';
 @injectable()
 export class JupyterServerUriStorage implements IJupyterServerUriStorage {
     private currentUriPromise: Promise<string> | undefined;
+    private _onDidChangeUri = new EventEmitter<void>();
+    public get onDidChangeUri() {
+        return this._onDidChangeUri.event;
+    }
     constructor(
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
@@ -132,6 +136,7 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
             const key = this.getUriAccountKey();
             await this.encryptedStorage.store(Settings.JupyterServerRemoteLaunchService, key, uri);
         }
+        this._onDidChangeUri.fire();
     }
 
     private async updateServerType(val: string): Promise<void> {

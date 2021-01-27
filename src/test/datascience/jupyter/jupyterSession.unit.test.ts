@@ -21,8 +21,13 @@ import { createDeferred, Deferred } from '../../../client/common/utils/async';
 import { DataScience } from '../../../client/common/utils/localize';
 import { noop } from '../../../client/common/utils/misc';
 import { JupyterSession } from '../../../client/datascience/jupyter/jupyterSession';
+import { KernelDependencyService } from '../../../client/datascience/jupyter/kernels/kernelDependencyService';
 import { KernelConnectionMetadata, LiveKernelModel } from '../../../client/datascience/jupyter/kernels/types';
-import { IJupyterConnection, IJupyterKernelSpec } from '../../../client/datascience/types';
+import {
+    IJupyterConnection,
+    IJupyterKernelSpec,
+    KernelInterpreterDependencyResponse
+} from '../../../client/datascience/types';
 import { MockOutputChannel } from '../../mockClasses';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
@@ -78,6 +83,11 @@ suite('DataScience - JupyterSession', () => {
         when(kernel.status).thenReturn('idle');
         when(connection.rootDirectory).thenReturn('');
         const channel = new MockOutputChannel('JUPYTER');
+        const kernelDependencyService = mock(KernelDependencyService);
+        when(kernelDependencyService.areDependenciesInstalled(anything(), anything())).thenResolve(true);
+        when(kernelDependencyService.installMissingDependencies(anything(), anything(), anything())).thenResolve(
+            KernelInterpreterDependencyResponse.ok
+        );
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (instance(session) as any).then = undefined;
         sessionManager = mock(SessionManager);
@@ -96,7 +106,8 @@ suite('DataScience - JupyterSession', () => {
                 restartSessionUsedEvent.resolve();
             },
             '',
-            60_000
+            60_000,
+            instance(kernelDependencyService)
         );
     });
 

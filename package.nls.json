@@ -78,6 +78,8 @@
     "jupyter.command.jupyter.showhistorypane.title": "Show Interactive Window",
     "jupyter.command.jupyter.createnewinteractive.title": "Create Interactive Window",
     "jupyter.command.jupyter.selectjupyteruri.title": "Specify local or remote Jupyter server for connections",
+    "DataScience.jupyterNativeNotebookUriStatusLabelForLocal": "Jupyter Server: local",
+    "DataScience.jupyterNativeNotebookUriStatusLabelForRemote": "Jupyter Server: Remote",
     "jupyter.command.jupyter.selectjupytercommandline.title": "Specify Jupyter command line arguments",
     "jupyter.command.jupyter.importnotebook.title": "Import Jupyter Notebook",
     "jupyter.command.jupyter.opennotebook.title": "Open in Notebook Editor",
