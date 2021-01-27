@@ -132,20 +132,25 @@ export class KernelExecution implements IDisposable {
         // Possible we don't have a notebook.
         const notebook = notebookPromise ? await notebookPromise.catch(() => undefined) : undefined;
         traceInfo('Interrupt kernel execution');
-        // Interrupt all the cells, & wait for all to complete.
-        const cellExecutionPromises = this.waitForAllQueuedCells(document, true);
+        // First cancel all the cells & then wait for them to complete.
+        // Both must happen together, we cannot just wait for cells to complete, as its possible
+        // that cell1 has started & cell2 has been queued. If Cell1 completes, then Cell2 will start.
+        // What we want is, if Cell1 completes then Cell2 should not start (it must be cancelled before hand).
+        const pendingCells = this.cancelAllPendingCells(document).then(() =>
+            this.waitForPendingCellsToComplete(document)
+        );
 
         if (!notebook) {
             traceInfo('No notebook to interrupt');
             this._interruptPromise = undefined;
-            await cellExecutionPromises;
+            await pendingCells;
             return InterruptResult.Success;
         }
 
         // Interrupt the active execution
         const result = this._interruptPromise
             ? await this._interruptPromise
-            : await (this._interruptPromise = this.interruptExecution(notebook.session, cellExecutionPromises));
+            : await (this._interruptPromise = this.interruptExecution(notebook.session, pendingCells));
 
         // Done interrupting, clear interrupt promise
         this._interruptPromise = undefined;
@@ -156,47 +161,45 @@ export class KernelExecution implements IDisposable {
         this.disposables.forEach((d) => d.dispose());
     }
     private async cancelAllCells(notebookPromise: Promise<INotebook>, document: NotebookDocument): Promise<void> {
+        await this.cancelAllPendingCells(document);
         await this.interrupt(document, notebookPromise);
-        await this.waitForAllQueuedCells(document);
+        await this.waitForPendingCellsToComplete(document);
+    }
+    /**
+     * Cancel all cells that have been queued & wait for them to complete.
+     */
+    private async cancelAllPendingCells(document: NotebookDocument) {
+        traceInfo('Cancel pending cells');
+        // Check all cells
+        const pendingCellExecutions = this.getPendingNotebookCellExecutions(document);
+        await Promise.all(pendingCellExecutions.map((item) => item.cancel()));
     }
 
     /**
-     * Wait for all cells to complete.
+     * Cancel all cells that have been queued, and if a cell has already started then wait for it to complete.
+     * Basically cancel what ever hasn't started & wait for cells that have started to finish.
      * @param {boolean} [cancelPendingExecutions=false]
      * If true, then attempt to cancel all cell executions.
      */
-    private async waitForAllQueuedCells(document: NotebookDocument, cancelPendingExecutions = false) {
-        traceInfo('Wait for cell execution to complete');
+    private async waitForPendingCellsToComplete(document: NotebookDocument) {
+        traceInfo('Cancel pending cells');
+        // Check all cells
+        const pendingCellExecutions = this.getPendingNotebookCellExecutions(document);
+        await Promise.all(pendingCellExecutions.map((item) => item.result));
+    }
+    private getPendingNotebookCellExecutions(document: NotebookDocument) {
         const stackOfCellsToExecute = this.stackOfCellsToExecuteByDocument.get(document);
         if (!Array.isArray(stackOfCellsToExecute) || stackOfCellsToExecute.length === 0) {
             this.stackOfCellsToExecuteByDocument.delete(document);
-            // No pending cells.
-            return;
+            return [];
         }
 
-        traceInfo('Cancel document execution');
         // Check all cells
         const cellsToCancel = new Set([...document.cells, ...stackOfCellsToExecute.map((item) => item.cell)]);
-        const cellExecutions = Array.from(cellsToCancel)
+        return Array.from(cellsToCancel)
             .map((cell) => this.cellExecutions.get(cell))
             .filter((item) => item !== undefined)
             .map((item) => item!);
-
-        // Wait for all to complete.
-        await Promise.all(
-            cellExecutions.map(async (item) => {
-                if (cancelPendingExecutions) {
-                    await item.cancel();
-                } else {
-                    await item.result;
-                }
-                // Once completed, remove the cell from the list of executions.
-                const index = stackOfCellsToExecute.indexOf(item);
-                if (index >= 0) {
-                    stackOfCellsToExecute.splice(index, 1);
-                }
-            })
-        );
     }
     private async interruptExecution(
         session: IJupyterSession,
@@ -280,7 +283,9 @@ export class KernelExecution implements IDisposable {
                 break;
             }
             // Remove the item that was processed.
-            stackOfCellsToExecute.shift();
+            if (stackOfCellsToExecute[0] === cellToExecute) {
+                stackOfCellsToExecute.shift();
+            }
         }
     }
     private createCellExecution(cell: NotebookCell) {
@@ -291,6 +296,13 @@ export class KernelExecution implements IDisposable {
         const cellExecution = this.executionFactory.create(cell, isPythonKernelConnection(this.metadata));
         this.cellExecutions.set(cellExecution.cell, cellExecution);
         stackOfCellsToExecute.push(cellExecution);
+        cellExecution.result.finally(() => {
+            // Once the cell has completed execution, remote it from the stack.
+            const index = stackOfCellsToExecute.indexOf(cellExecution);
+            if (index >= 0) {
+                stackOfCellsToExecute.splice(index, 1);
+            }
+        });
         return cellExecution;
     }
     private async getKernel(document: NotebookDocument): Promise<IKernel> {

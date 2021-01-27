@@ -87,10 +87,6 @@ export class CellExecution {
     public get result(): Promise<NotebookCellRunState | undefined> {
         return this._result.promise;
     }
-
-    public get completed() {
-        return this._completed;
-    }
     /**
      * To be used only in tests.
      */
