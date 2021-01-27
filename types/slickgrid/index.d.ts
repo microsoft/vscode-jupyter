@@ -1022,7 +1022,7 @@ declare namespace Slick {
 		* Attempts to switch the active cell into edit mode. Will throw an error if the cell is set to be not editable. Uses the specified editor, otherwise defaults to any default editor for that given cell.
 		* @param editor A SlickGrid editor (see examples in slick.editors.js).
 		**/
-		public editActiveCell(editor: Editors.Editor<T>): void;
+		public editActiveCell(editor?: Editors.Editor<T>): void;
 
 		/**
 		* Flashes the cell twice by toggling the CSS class 4 times.

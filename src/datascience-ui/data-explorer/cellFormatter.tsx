@@ -26,11 +26,9 @@ class CellFormatter extends React.Component<ICellFormatterProps> {
             switch (columnType) {
                 case ColumnType.Bool:
                     return this.renderBool(this.props.value as boolean);
-                    break;
 
                 case ColumnType.Number:
                     return this.renderNumber(this.props.value as number);
-                    break;
 
                 default:
                     break;
@@ -41,7 +39,7 @@ class CellFormatter extends React.Component<ICellFormatterProps> {
         const val = this.props.value !== null ? this.props.value.toString() : '';
         return (
             <div className="cell-formatter" role="gridcell" title={val}>
-                <span>{val}</span>
+                <span>{truncate(val)}</span>
             </div>
         );
     }
@@ -58,7 +56,7 @@ class CellFormatter extends React.Component<ICellFormatterProps> {
         const val = value.toString();
         return (
             <div className="number-formatter cell-formatter" role="gridcell" title={val}>
-                <span>{val}</span>
+                <span>{truncate(val)}</span>
             </div>
         );
     }
@@ -73,4 +71,13 @@ export function cellFormatterFunc(
     _dataContext: Slick.SlickData
 ): string {
     return ReactDOMServer.renderToString(<CellFormatter value={value} columnDef={columnDef} />);
+}
+
+function truncate(value: string) {
+    // This should be based on font size and type
+    if (value.length <= 10) {
+        return value;
+    } else {
+        return value.slice(0, 7).concat('...');
+    }
 }
