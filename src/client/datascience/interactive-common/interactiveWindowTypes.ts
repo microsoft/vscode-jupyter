@@ -152,9 +152,7 @@ export enum InteractiveWindowMessages {
     GetAllCellCode = 'get_all_cell_code',
     ReturnAllCellCode = 'return_all_cell_code',
     GetHTMLByIdRequest = 'get_html_by_id_request',
-    GetHTMLByIdResponse = 'get_html_by_id_response',
-    GetFontAwesomeUriRequest = 'GetFontAwesomeUriRequest',
-    GetFontAwesomeUriResponse = 'GetFontAwesomeUriResponse'
+    GetHTMLByIdResponse = 'get_html_by_id_response'
 }
 
 export enum IPyWidgetMessages {
@@ -721,6 +719,4 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.ExecuteExternalCommand]: IExternalCommandFromWebview;
     public [InteractiveWindowMessages.GetHTMLByIdRequest]: string;
     public [InteractiveWindowMessages.GetHTMLByIdResponse]: string;
-    public [InteractiveWindowMessages.GetFontAwesomeUriRequest]: never | undefined;
-    public [InteractiveWindowMessages.GetFontAwesomeUriResponse]: Uri;
 }

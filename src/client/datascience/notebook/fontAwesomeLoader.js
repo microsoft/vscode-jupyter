@@ -1,28 +1,13 @@
-var vscodeApi = acquireApi();
-vscodeApi.postMessage({ type: 'GetFontAwesomeUriRequest' });
-
-function acquireApi() {
-    if (!vscodeApi && typeof acquireVsCodeApi !== 'undefined') {
-        vscodeApi = acquireVsCodeApi();
-    } else if (!vscodeApi && typeof window.acquireVsCodeApi !== 'undefined') {
-        vscodeApi = window.acquireVsCodeApi();
-    }
-
-    window.addEventListener('message', baseHandler);
-
-    return vscodeApi;
-}
-
-function baseHandler(e) {
-    if (e.data.type === 'GetFontAwesomeUriResponse' && e.data.payload) {
-        addCSS(e.data.payload.path);
-    }
-}
+const getPublicPath = () => {
+    return new URL(scriptUrl.replace(/[^/]+$/, '')).toString();
+};
+const uri = getPublicPath() + '../notebook/node_modules/font-awesome/css/font-awesome.min.css';
+addCSS(uri);
 
 function addCSS(filename) {
-    var head = document.head;
+    const head = document.head;
 
-    var style = document.createElement('link');
+    const style = document.createElement('link');
     style.href = filename;
     style.type = 'text/css';
     style.rel = 'stylesheet';
