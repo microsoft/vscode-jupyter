@@ -12,7 +12,9 @@ import {
 export const INotebookContentProvider = Symbol('INotebookContentProvider');
 
 export const INotebookKernelProvider = Symbol('INotebookKernelProvider');
-export interface INotebookKernelProvider extends NotebookKernelProvider {}
+export interface INotebookKernelProvider extends NotebookKernelProvider {
+    onDidGetFontAwesomeMessage: vscode.Event<{ webview: NotebookCommunication; message: any }>;
+}
 
 export const INotebookKernelResolver = Symbol('INotebookKernelResolver');
 

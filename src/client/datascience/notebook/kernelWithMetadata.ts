@@ -10,10 +10,12 @@ import { disposeAllDisposables } from '../../common/helpers';
 import { traceInfo } from '../../common/logger';
 import { IDisposable, IExtensionContext } from '../../common/types';
 import { noop } from '../../common/utils/misc';
+import { InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
 import { getKernelConnectionId, IKernel, IKernelProvider, KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { PreferredRemoteKernelIdProvider } from '../notebookStorage/preferredRemoteKernelIdProvider';
 import { KernelSocketInformation } from '../types';
 import { updateKernelInfoInNotebookMetadata } from './helpers/helpers';
+import { INotebookKernelProvider } from './types';
 
 export class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
     private pendingExecution: Promise<void> | undefined;
@@ -23,7 +25,9 @@ export class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
             Uri.file(
                 join(this.context.extensionPath, 'out', 'datascience-ui', 'ipywidgetsKernel', 'ipywidgetsKernel.js')
             ),
-            Uri.file(join(this.context.extensionPath, 'out', 'datascience-ui', 'ipywidgetsKernel', 'font-awesome.js'))
+            Uri.file(
+                join(this.context.extensionPath, 'out', 'datascience-ui', 'ipywidgetsKernel', 'fontAwesomeLoader.js')
+            )
         ];
     }
     get id() {
@@ -38,8 +42,31 @@ export class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
         private readonly kernelProvider: IKernelProvider,
         private readonly notebook: IVSCodeNotebook,
         private readonly context: IExtensionContext,
-        private readonly preferredRemoteKernelIdProvider: PreferredRemoteKernelIdProvider
-    ) {}
+        private readonly preferredRemoteKernelIdProvider: PreferredRemoteKernelIdProvider,
+        private readonly notebookKernelProvider: INotebookKernelProvider
+    ) {
+        this.notebookKernelProvider.onDidGetFontAwesomeMessage((e) => {
+            if (e.message.type === InteractiveWindowMessages.GetFontAwesomeUriRequest) {
+                e.webview.postMessage({
+                    type: InteractiveWindowMessages.GetFontAwesomeUriResponse,
+                    payload: e.webview.asWebviewUri(
+                        Uri.file(
+                            join(
+                                this.context.extensionPath,
+                                'out',
+                                'datascience-ui',
+                                'notebook',
+                                'node_modules',
+                                'font-awesome',
+                                'css',
+                                'font-awesome.min.css'
+                            )
+                        )
+                    )
+                });
+            }
+        });
+    }
     public executeCell(doc: NotebookDocument, cell: NotebookCell) {
         traceInfo(`Execute Cell ${cell.document.uri.toString()} in kernelWithMetadata.ts`);
         const kernel = this.kernelProvider.getOrCreate(cell.notebook.uri, { metadata: this.selection });

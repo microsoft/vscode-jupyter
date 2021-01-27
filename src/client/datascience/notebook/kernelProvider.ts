@@ -51,7 +51,11 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
     public get onDidChangeKernels(): Event<NotebookDocument | undefined> {
         return this._onDidChangeKernels.event;
     }
+    public get onDidGetFontAwesomeMessage(): Event<{ webview: NotebookCommunication; message: any }> {
+        return this._onDidGetFontAwesomeMessage.event;
+    }
     private readonly _onDidChangeKernels = new EventEmitter<NotebookDocument | undefined>();
+    private readonly _onDidGetFontAwesomeMessage = new EventEmitter<{ webview: NotebookCommunication; message: any }>();
     private notebookKernelChangeHandled = new WeakSet<INotebook>();
     private isRawNotebookSupported?: Promise<boolean>;
     constructor(
@@ -94,6 +98,7 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
         webview: NotebookCommunication,
         token: CancellationToken
     ): Promise<void> {
+        webview.onDidReceiveMessage((m) => this._onDidGetFontAwesomeMessage.fire({ webview, message: m }));
         return this.kernelResolver.resolveKernel(kernel, document, webview, token);
     }
     @captureTelemetry(Telemetry.NativeNotebookKernelSelectionPerf)
@@ -130,7 +135,8 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
                     this.kernelProvider,
                     this.notebook,
                     this.context,
-                    this.preferredRemoteKernelIdProvider
+                    this.preferredRemoteKernelIdProvider,
+                    this
                 );
             })
             .filter((item) => {
@@ -173,7 +179,8 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
                         this.kernelProvider,
                         this.notebook,
                         this.context,
-                        this.preferredRemoteKernelIdProvider
+                        this.preferredRemoteKernelIdProvider,
+                        this
                     )
                 );
             }
@@ -268,7 +275,8 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
                 this.kernelProvider,
                 this.notebook,
                 this.context,
-                this.preferredRemoteKernelIdProvider
+                this.preferredRemoteKernelIdProvider,
+                this
             );
         } else if (preferredKernel.kind === 'connectToLiveKernel') {
             return new VSCodeNotebookKernelMetadata(
@@ -280,7 +288,8 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
                 this.kernelProvider,
                 this.notebook,
                 this.context,
-                this.preferredRemoteKernelIdProvider
+                this.preferredRemoteKernelIdProvider,
+                this
             );
         } else {
             return new VSCodeNotebookKernelMetadata(
@@ -292,7 +301,8 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
                 this.kernelProvider,
                 this.notebook,
                 this.context,
-                this.preferredRemoteKernelIdProvider
+                this.preferredRemoteKernelIdProvider,
+                this
             );
         }
     }
