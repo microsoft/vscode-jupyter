@@ -270,9 +270,7 @@ export class KernelExecution implements IDisposable {
                 continue;
             }
             traceCellMessage(cellToExecute.cell, 'Before Execute individual cell');
-            const result = this.executeIndividualCell(kernel, cellToExecute, notebook);
-            result.finally(() => this.cellExecutions.delete(cellToExecute.cell)).catch(noop);
-            const executionResult = await result;
+            const executionResult = await this.executeIndividualCell(kernel, cellToExecute, notebook);
             traceCellMessage(cellToExecute.cell, `After Execute individual cell ${executionResult}`);
             // If a cell has failed or execution cancelled, the get out.
             if (token?.isCancellationRequested || executionResult === vscodeNotebookEnums.NotebookCellRunState.Error) {
@@ -300,6 +298,7 @@ export class KernelExecution implements IDisposable {
             if (index >= 0) {
                 stackOfCellsToExecute.splice(index, 1);
             }
+            this.cellExecutions.delete(cellExecution.cell);
         });
         return cellExecution;
     }
