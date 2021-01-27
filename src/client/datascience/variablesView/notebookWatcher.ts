@@ -29,7 +29,7 @@ export class NotebookWatcher implements INotebookWatcher {
     public get onDidRestartActiveNotebook(): Event<void> {
         return this._onDidRestartActiveNotebook.event;
     }
-    public get activeVariableViewNotebook(): INotebook | undefined {
+    public get activeNotebook(): INotebook | undefined {
         return this.notebookEditorProvider.activeEditor?.notebook;
     }
 

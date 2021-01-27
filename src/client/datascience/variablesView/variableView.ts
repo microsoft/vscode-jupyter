@@ -137,19 +137,22 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
             visible = this.webviewView.visible;
         }
         context.set(visible).ignoreErrors();
+
+        // Also perform a refresh on a visibily change
+        this.postMessage(InteractiveWindowMessages.ForceVariableRefresh).ignoreErrors();
     }
 
     // Handle a request from the react UI to show our data viewer
     private async showDataViewer(request: IShowDataViewer): Promise<void> {
         try {
             if (
-                this.notebookWatcher.activeVariableViewNotebook &&
+                this.notebookWatcher.activeNotebook &&
                 (await this.dataViewerChecker.isRequestedColumnSizeAllowed(request.columnSize, this.owningResource))
             ) {
                 // Create a variable data provider and pass it to the data viewer factory to create the data viewer
                 const jupyterVariableDataProvider = await this.jupyterVariableDataProviderFactory.create(
                     request.variable,
-                    this.notebookWatcher.activeVariableViewNotebook
+                    this.notebookWatcher.activeNotebook
                 );
                 const title: string = `${localize.DataScience.dataExplorerTitle()} - ${request.variable.name}`;
                 await this.dataViewerFactory.create(jupyterVariableDataProvider, title);
@@ -164,8 +167,8 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
     // Variables for the current active editor are being requested, check that we have a valid active notebook
     // and use the variables interface to fetch them and pass them to the variable view UI
     private async requestVariables(args: IJupyterVariablesRequest): Promise<void> {
-        if (this.notebookWatcher.activeVariableViewNotebook) {
-            const response = await this.variables.getVariables(args, this.notebookWatcher.activeVariableViewNotebook);
+        if (this.notebookWatcher.activeNotebook) {
+            const response = await this.variables.getVariables(args, this.notebookWatcher.activeNotebook);
 
             this.postMessage(InteractiveWindowMessages.GetVariablesResponse, response).ignoreErrors();
         }
