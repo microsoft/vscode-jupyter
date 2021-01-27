@@ -190,6 +190,7 @@ export class CellExecution {
     /**
      * Cancel execution.
      * If execution has commenced, then wait for execution to complete or kernel to start.
+     * If execution has not commenced, then ensure dequeue it & revert the status to not-queued (remove spinner, etc).
      */
     public async cancel() {
         await this.cancelInternal(false);
