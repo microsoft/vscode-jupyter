@@ -120,8 +120,17 @@ export function isPythonNotebook(metadata?: nbformat.INotebookMetadata) {
  * Similarly, if you open an existing notebook, it is marked as dirty.
  *
  * Solution: Store the metadata in some place, when saving, take the metadata & store in the file.
+ * Thus this method doesn't update it, we merely keep track of the kernel information, and when saving we retrieve the information from the tracked location (map).
+ *
+ * If `kernelConnection` is empty, then when saving the notebook we will not update the
+ * metadata in the notebook with any kernel information (we can't as its empty).
+ *
+ * @param {(KernelConnectionMetadata | undefined)} kernelConnection
+ * This can be undefined when a kernels contributed by other VSC extensions is selected.
+ * E.g. .NET extension can contribute their own extension. At this point they could
+ * end up updating the notebook metadata themselves. We should not blow this metadata away. The way we achieve that is by clearing this stored kernel information & not updating the metadata.
  */
-export function updateKernelInNotebookMetadata(
+export function trackKernelInNotebookMetadata(
     document: NotebookDocument,
     kernelConnection: KernelConnectionMetadata | undefined
 ) {
@@ -129,7 +138,12 @@ export function updateKernelInNotebookMetadata(
     data.metadata = kernelConnection;
     kernelInformationForNotebooks.set(document, data);
 }
-export function updateKernelInfoInNotebookMetadata(
+/**
+ * Thus this method doesn't update it the notebook metadata, we merely keep track of the information.
+ * When saving we retrieve the information from the tracked location (map).
+ * @see {trackKernelInNotebookMetadata} That function does something similar.
+ */
+export function trackKernelInfoInNotebookMetadata(
     document: NotebookDocument,
     kernelInfo: KernelMessage.IInfoReplyMsg['content']
 ) {

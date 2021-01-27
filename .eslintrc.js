@@ -990,7 +990,6 @@ module.exports = {
         'src/client/datascience/interactive-common/intellisense/conversion.ts',
         'src/client/datascience/activation.ts',
         'src/client/datascience/jupyterUriProviderWrapper.ts',
-        'src/client/datascience/errorHandler/errorHandler.ts',
         'src/client/datascience/cellMatcher.ts',
         'src/client/datascience/notebookStorage/notebookModel.ts',
         'src/client/datascience/notebookStorage/notebookModelEditEvent.ts',
