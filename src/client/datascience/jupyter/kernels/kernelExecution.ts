@@ -280,7 +280,7 @@ export class KernelExecution implements IDisposable {
                 await this.cancelAllCells(notebookPromise, document);
                 break;
             }
-            // Remove the item that was processed.
+            // Remove the item that was processed, possible it got automatically removed (see `createCellExecution`)
             if (stackOfCellsToExecute[0] === cellToExecute) {
                 stackOfCellsToExecute.shift();
             }
