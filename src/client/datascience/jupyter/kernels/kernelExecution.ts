@@ -162,6 +162,7 @@ export class KernelExecution implements IDisposable {
         return result;
     }
     public dispose() {
+        this.clearChainedExecutions();
         this.disposables.forEach((d) => d.dispose());
     }
     private async cancelAllCells(notebookPromise: Promise<INotebook>, document: NotebookDocument): Promise<void> {
@@ -281,8 +282,13 @@ export class KernelExecution implements IDisposable {
         if (!editor || !stackOfCellsToExecute) {
             return;
         }
-        const notebook = await notebookPromise;
-        this.addKernelRestartHandler(document);
+        const kernelPromise = this.getKernel(document);
+        // Ensure we wait for kernel before we continue. Possible we have errors in kernel & that rejects first.
+        // We need to validate the kernel is usable.
+        // Also ensure we add the handler to kernel immediate (before we resolve the notebook).
+        // This is required to add handler for kernel restarts.
+        const notebook = await kernelPromise.then(() => notebookPromise);
+        kernelPromise.then((kernel) => this.addKernelRestartHandler(kernel, document)).catch(noop);
         stackOfCellsToExecute.forEach((exec) => traceCellMessage(exec.cell, 'Ready to execute'));
         while (stackOfCellsToExecute.length) {
             // Stack of cells to be executed, this way we maintain order of cell executions.
@@ -305,17 +311,24 @@ export class KernelExecution implements IDisposable {
             }
         }
     }
-    private addKernelRestartHandler(document: NotebookDocument) {
-        this.getKernel(document)
-            .then((kernel) => {
-                if (this.kernelRestartHandlerAdded.has(kernel)) {
+    private addKernelRestartHandler(kernel: IKernel, document: NotebookDocument) {
+        if (this.kernelRestartHandlerAdded.has(kernel)) {
+            return;
+        }
+        this.kernelRestartHandlerAdded.add(kernel);
+        traceInfo('Hooked up kernel restart handler');
+        kernel.onRestarted(
+            () => {
+                // We're only interested in restarts of the kernel associated with this document.
+                if (kernel !== this.kernelProvider.get(document.uri)) {
                     return;
                 }
                 traceInfo('Cancel all executions as Kernel was restarted');
-                this.kernelRestartHandlerAdded.add(kernel);
-                kernel.onRestarted(() => this.cancelAllPendingCells(document, true), this, this.disposables);
-            })
-            .catch(noop);
+                return this.cancelAllPendingCells(document, true);
+            },
+            this,
+            this.disposables
+        );
     }
     private createQueuedCellExecution(cell: NotebookCell) {
         if (!this.stackOfCellsToExecuteByDocument.has(cell.notebook)) {

@@ -254,9 +254,17 @@ export class Kernel implements IKernel {
                 this._onDisposed.fire();
             });
             this.notebook.onKernelRestarted(() => {
+                traceInfo(`Notebook Kernel restarted ${this.notebook?.identity}`);
                 this._onRestarted.fire();
             });
-            this.notebook.onSessionStatusChanged((e) => this._onStatusChanged.fire(e), this, this.disposables);
+            this.notebook.onSessionStatusChanged(
+                (e) => {
+                    traceInfo(`Notebook Session status ${this.notebook?.identity} # ${e}`);
+                    this._onStatusChanged.fire(e);
+                },
+                this,
+                this.disposables
+            );
         }
         if (isPythonKernelConnection(this.kernelConnectionMetadata)) {
             await this.notebook.setLaunchingFile(this.uri.fsPath);

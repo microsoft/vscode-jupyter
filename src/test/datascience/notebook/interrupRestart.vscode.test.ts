@@ -169,7 +169,7 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
                 traceInfo(`Step 8 Cell Status = ${cell.metadata.runState}`);
                 return assertVSCCellIsNotRunning(cell);
             },
-            15_000,
+            30_000, // Could be slow with remote jupyter (on CI).
             'Execution not cancelled first time.'
         );
 
