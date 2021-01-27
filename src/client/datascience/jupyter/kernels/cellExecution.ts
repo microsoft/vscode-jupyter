@@ -195,6 +195,13 @@ export class CellExecution {
     public async cancel() {
         await this.cancelInternal(false);
     }
+    /**
+     * @param {boolean} [forced=false]
+     * If `true`, then dequeue this & do not wait for execution to complete (basically kill it).
+     * This is used when we restart the kernel (either as a result of kernel interrupt or user initiated).
+     * When restarted, the execution needs to stop as jupyter will not send more messages.
+     * Thus `forced=true` is more like a hard kill.
+     */
     private async cancelInternal(forced = false) {
         if (this.started && !forced) {
             // At this point the cell execution can only be stopped from kernel & we should not
