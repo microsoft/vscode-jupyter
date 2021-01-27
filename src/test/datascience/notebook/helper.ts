@@ -379,6 +379,12 @@ function assertHasExecutionCompletedSuccessfully(cell: NotebookCell) {
         cell.metadata.runState === vscodeNotebookEnums.NotebookCellRunState.Success
     );
 }
+function assertHasEmptyCellExecutionCompleted(cell: NotebookCell) {
+    return (
+        (cell.metadata.executionOrder ?? 0) === 0 &&
+        cell.metadata.runState === vscodeNotebookEnums.NotebookCellRunState.Idle
+    );
+}
 /**
  *  Wait for VSC to perform some last minute clean up of cells.
  * In tests we can end up deleting cells. However if extension is still dealing with the cells, we need to give it some time to finish.
@@ -401,6 +407,14 @@ export async function waitForExecutionCompletedSuccessfully(cell: NotebookCell, 
         async () => assertHasExecutionCompletedSuccessfully(cell),
         timeout,
         `Cell ${cell.index + 1} did not complete successfully`
+    );
+    await waitForCellExecutionToComplete(cell);
+}
+export async function waitForEmptyCellExecutionCompleted(cell: NotebookCell, timeout: number = 15_000) {
+    await waitForCondition(
+        async () => assertHasEmptyCellExecutionCompleted(cell),
+        timeout,
+        `Cell ${cell.index + 1} did not complete (this is an empty cell)`
     );
     await waitForCellExecutionToComplete(cell);
 }

@@ -5,17 +5,18 @@
 
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 import { assert, expect } from 'chai';
+import * as path from 'path';
 import * as dedent from 'dedent';
 import * as sinon from 'sinon';
-import { commands } from 'vscode';
+import { commands, Uri } from 'vscode';
 import { Common } from '../../../client/common/utils/localize';
 import { CellDisplayOutput, CellErrorOutput } from '../../../../typings/vscode-proposed';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { traceInfo } from '../../../client/common/logger';
 import { IDisposable, Product } from '../../../client/common/types';
 import { INotebookEditorProvider } from '../../../client/datascience/types';
-import { createEventHandler, IExtensionTestApi, sleep, waitForCondition } from '../../common';
-import { initialize } from '../../initialize';
+import { createEventHandler, IExtensionTestApi, waitForCondition } from '../../common';
+import { EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../initialize';
 import {
     assertHasTextOutputInVSCode,
     assertNotHasTextOutputInVSCode,
@@ -31,9 +32,13 @@ import {
     waitForExecutionCompletedWithErrors,
     waitForKernelToGetAutoSelected,
     prewarmNotebooks,
-    hijackPrompt
+    hijackPrompt,
+    waitForEmptyCellExecutionCompleted,
+    createTemporaryNotebook,
+    closeNotebooks
 } from './helper';
 import { ProductNames } from '../../../client/common/installer/productNames';
+import { openNotebook } from '../helpers';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
@@ -119,25 +124,45 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         await executed.assertFired(1_000);
         await codeExecuted.assertFired(1_000);
     });
-    test('Empty cell will not get executed', async () => {
-        await insertCodeCell('');
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
-        await executeCell(cell);
-
-        // After 2s, confirm status has remained unchanged.
-        await sleep(2_000);
-        assert.isUndefined(cell?.metadata.runState);
-    });
-    test('Empty cells will not get executed when running whole document', async () => {
+    test('Empty cells will not have an execution order nor have a status of success', async () => {
         await insertCodeCell('');
         await insertCodeCell('print("Hello World")');
         const cells = vscodeNotebook.activeNotebookEditor?.document.cells!;
 
         await executeActiveDocument();
 
-        // Wait till execution count changes and status is success.
+        // Wait till execution count changes and status is success for second cell.
         await waitForExecutionCompletedSuccessfully(cells[1]);
-        assert.isUndefined(cells[0].metadata.runState);
+
+        // Verify empty cell has cell status of idle
+        assert.equal(cells[0].metadata.runState, vscodeNotebookEnums.NotebookCellRunState.Idle);
+    });
+    test('Clear output in empty cells', async () => {
+        await closeNotebooks();
+        const templateNbPath = path.join(
+            EXTENSION_ROOT_DIR_FOR_TESTS,
+            'src',
+            'test',
+            'datascience',
+            'notebook',
+            'emptyCellWithOutput.ipynb'
+        );
+
+        const nbUri = Uri.file(await createTemporaryNotebook(templateNbPath, disposables));
+        await openNotebook(api.serviceContainer, nbUri.fsPath);
+        await waitForKernelToGetAutoSelected();
+
+        // Confirm we have execution order and output.
+        const cells = vscodeNotebook.activeNotebookEditor?.document.cells!;
+        assert.equal(cells[0].metadata.executionOrder, 1);
+        assertHasTextOutputInVSCode(cells[0], 'Hello World');
+
+        await executeActiveDocument();
+        await waitForEmptyCellExecutionCompleted(cells[0]);
+
+        // Clear the cell and run the empty cell again & the status should change the idle & output cleared.
+        assert.equal(cells[0].metadata.runState, vscodeNotebookEnums.NotebookCellRunState.Idle);
+        assert.equal(cells[0].outputs.length, 0, 'Cell output is not empty');
     });
     test('Verify Cell output, execution count and status', async () => {
         await insertCodeCell('print("Hello World")');
