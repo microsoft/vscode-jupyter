@@ -75,17 +75,9 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
         );
 
         // Sign up if the active variable view notebook is changed, restarted or updated
-        this.notebookWatcher.onDidExecuteActiveVariableViewNotebook(
-            this.activeNotebookExecuted,
-            this,
-            this.disposables
-        );
-        this.notebookWatcher.onDidChangeActiveVariableViewNotebook(this.activeNotebookChanged, this, this.disposables);
-        this.notebookWatcher.onDidRestartActiveVariableViewNotebook(
-            this.activeNotebookRestarted,
-            this,
-            this.disposables
-        );
+        this.notebookWatcher.onDidExecuteActiveNotebook(this.activeNotebookExecuted, this, this.disposables);
+        this.notebookWatcher.onDidChangeActiveNotebook(this.activeNotebookChanged, this, this.disposables);
+        this.notebookWatcher.onDidRestartActiveNotebook(this.activeNotebookRestarted, this, this.disposables);
 
         this.dataViewerChecker = new DataViewerChecker(configuration, appShell);
     }
