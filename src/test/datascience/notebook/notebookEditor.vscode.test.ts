@@ -25,7 +25,7 @@ import {
     trustAllNotebooks,
     waitForExecutionCompletedSuccessfully,
     waitForKernelToGetAutoSelected,
-    waitForKernelToGetSelected
+    waitForKernelToChange
 } from './helper';
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
@@ -143,7 +143,7 @@ suite('Notebook Editor tests', () => {
         traceInfo(`Kernels found for switch kernel: ${kernels?.map((k) => k.label).join('\n')}`);
         if (kernels?.length && kernels?.length > 1) {
             // We have multiple kernels. Try switching
-            await waitForKernelToGetSelected(kernels[1].label);
+            await waitForKernelToChange(kernels[1].label);
         }
 
         // Execute cell and verify output
