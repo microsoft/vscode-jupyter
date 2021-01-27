@@ -117,9 +117,7 @@ export class VariableViewPanel extends React.Component<IVariableViewPanelProps> 
     };
 
     private pageInVariableData = (startIndex: number, pageSize: number) => {
-        // IANHU: Also incorrect in main panel? Check this
         this.props.getVariableData(
-            //this.props.currentExecutionCount,
             this.props.variableState.currentExecutionCount,
             this.props.variableState.refreshCount,
             startIndex,

@@ -57,7 +57,7 @@ export class NotebookWatcher implements INotebookWatcher {
 
     // When the kernel state is changed we need to see if it's a cell from the active document that finished execution
     // If so update the execution count on the variable view to refresh variables
-    private async kernelStateChanged(kernelStateEvent: KernelStateEventArgs) {
+    private kernelStateChanged(kernelStateEvent: KernelStateEventArgs) {
         // Update execution counts for any non-silent executions that we get
         if (this.isNonSilentExecution(kernelStateEvent)) {
             this.updateExecutionCounts(kernelStateEvent);
@@ -88,8 +88,7 @@ export class NotebookWatcher implements INotebookWatcher {
         this.deleteExecutionCount(editor.file);
     }
 
-    // IANHU: Not Async?
-    private async activeEditorChanged(editor: INotebookEditor | undefined) {
+    private activeEditorChanged(editor: INotebookEditor | undefined) {
         const changeEvent: IActiveNotebookChangedEvent = {};
 
         if (editor) {
