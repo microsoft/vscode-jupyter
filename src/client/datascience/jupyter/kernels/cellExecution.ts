@@ -47,7 +47,6 @@ import {
     INotebookExecutionLogger
 } from '../../types';
 import { translateCellFromNative } from '../../utils';
-import { IKernel } from './types';
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
@@ -150,8 +149,7 @@ export class CellExecution {
             context
         );
     }
-
-    public async start(kernelPromise: Promise<IKernel>, notebook: INotebook) {
+    public async start(notebook: INotebook) {
         if (this.cancelHandled) {
             traceCellMessage(this.cell, 'Not starting as it was cancelled');
             return;
@@ -164,8 +162,15 @@ export class CellExecution {
         if (!this.canExecuteCell()) {
             return;
         }
-        await this.initPromise;
+        if (this.started) {
+            traceCellMessage(this.cell, 'Cell has already been started yet CellExecution.Start invoked again');
+            traceError(`Cell has already been started yet CellExecution.Start invoked again ${this.cell.index}`);
+            // TODO: Send telemetry this should never happen, if it does we have problems.
+            return this.result;
+        }
         this.started = true;
+
+        await this.initPromise;
         // Ensure we clear the cell state and trigger a change.
         await clearCellForExecution(this.editor, this.cell);
         if (!this.isEmptyCodeCell) {
@@ -180,9 +185,7 @@ export class CellExecution {
         this.notifyCellExecution();
 
         // Begin the request that will modify our cell.
-        kernelPromise
-            .then((kernel) => this.handleKernelRestart(kernel))
-            .then(() => this.execute(notebook.session, notebook.getLoggers()))
+        this.execute(notebook.session, notebook.getLoggers())
             .catch((e) => this.completedWithErrors(e))
             .finally(() => this.dispose())
             .catch(noop);
@@ -191,18 +194,13 @@ export class CellExecution {
      * Cancel execution.
      * If execution has commenced, then wait for execution to complete or kernel to start.
      * If execution has not commenced, then ensure dequeue it & revert the status to not-queued (remove spinner, etc).
-     */
-    public async cancel() {
-        await this.cancelInternal(false);
-    }
-    /**
      * @param {boolean} [forced=false]
-     * If `true`, then dequeue this & do not wait for execution to complete (basically kill it).
+     * If `true`, then do not wait for cell execution to complete gracefully (just kill it).
      * This is used when we restart the kernel (either as a result of kernel interrupt or user initiated).
      * When restarted, the execution needs to stop as jupyter will not send more messages.
-     * Thus `forced=true` is more like a hard kill.
+     * Hence `forced=true` is more like a hard kill.
      */
-    private async cancelInternal(forced = false) {
+    public async cancel(forced = false) {
         if (this.started && !forced) {
             // At this point the cell execution can only be stopped from kernel & we should not
             // stop handling execution results & the like from the kernel.
@@ -232,17 +230,6 @@ export class CellExecution {
         if (deferred) {
             deferred.resolve();
         }
-    }
-
-    private handleKernelRestart(kernel: IKernel) {
-        kernel.onRestarted(
-            () => {
-                traceCellMessage(this.cell, 'Kernel restart handled in CellExecution, cancelling cell');
-                this.cancelInternal(true).catch(noop);
-            },
-            this,
-            this.disposables
-        );
     }
 
     private async completedWithErrors(error: Partial<Error>) {
