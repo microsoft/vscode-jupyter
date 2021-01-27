@@ -33,9 +33,10 @@ export class IVariableViewPanelMapping {
 
 export const INotebookWatcher = Symbol('INotebookWatcher');
 export interface INotebookWatcher {
-    readonly activeVariableViewNotebook?: INotebook;
-    readonly onDidChangeActiveVariableViewNotebook: Event<INotebook | undefined>;
-    readonly onDidExecuteActiveVariableViewNotebook: Event<{ executionCount: number }>;
+    readonly activeNotebook?: INotebook;
+    readonly onDidChangeActiveNotebook: Event<INotebook | undefined>;
+    readonly onDidExecuteActiveNotebook: Event<{ executionCount: number }>;
+    readonly onDidRestartActiveNotebook: Event<void>;
 }
 
 export const IVariableViewProvider = Symbol('IVariableViewProvider');

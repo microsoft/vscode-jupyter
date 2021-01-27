@@ -15,18 +15,22 @@ import { INotebookWatcher } from './types';
 // NOTE: Currently this class is only looking at native notebook documents
 @injectable()
 export class NotebookWatcher implements INotebookWatcher {
-    public get onDidChangeActiveVariableViewNotebook(): Event<INotebook | undefined> {
-        return this._onDidChangeActiveVariableViewNotebook.event;
+    public get onDidChangeActiveNotebook(): Event<INotebook | undefined> {
+        return this._onDidChangeActiveNotebook.event;
     }
-    public get onDidExecuteActiveVariableViewNotebook(): Event<{ executionCount: number }> {
-        return this._onDidExecuteActiveVariableViewNotebook.event;
+    public get onDidExecuteActiveNotebook(): Event<{ executionCount: number }> {
+        return this._onDidExecuteActiveNotebook.event;
     }
-    public get activeVariableViewNotebook(): INotebook | undefined {
+    public get onDidRestartActiveNotebook(): Event<void> {
+        return this._onDidRestart.event;
+    }
+    public get activeNotebook(): INotebook | undefined {
         return this.notebookEditorProvider.activeEditor?.notebook;
     }
 
-    private readonly _onDidExecuteActiveVariableViewNotebook = new EventEmitter<{ executionCount: number }>();
-    private readonly _onDidChangeActiveVariableViewNotebook = new EventEmitter<INotebook | undefined>();
+    private readonly _onDidExecuteActiveNotebook = new EventEmitter<{ executionCount: number }>();
+    private readonly _onDidChangeActiveNotebook = new EventEmitter<INotebook | undefined>();
+    private readonly _onDidRestart = new EventEmitter<void>();
 
     constructor(
         @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider,
@@ -55,15 +59,17 @@ export class NotebookWatcher implements INotebookWatcher {
                 this.fileSystem.arePathsSame(this.notebookEditorProvider.activeEditor.file, kernelStateEvent.resource)
             ) {
                 // Notify any listeners that the active notebook has updated execution order
-                this._onDidExecuteActiveVariableViewNotebook.fire({
+                this._onDidExecuteActiveNotebook.fire({
                     executionCount: kernelStateEvent.cell.metadata.executionOrder
                 });
             }
+        } else if (kernelStateEvent.state === KernelState.restarted) {
+            this._onDidRestart.fire();
         }
     }
 
     private async activeEditorChanged(editor: INotebookEditor | undefined) {
         // When the active editor changes we want to force a refresh of variables
-        this._onDidChangeActiveVariableViewNotebook.fire(editor?.notebook);
+        this._onDidChangeActiveNotebook.fire(editor?.notebook);
     }
 }
