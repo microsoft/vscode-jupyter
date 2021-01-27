@@ -138,9 +138,10 @@ suite('Notebook Editor tests', () => {
             vscodeNotebook.activeNotebookEditor!.document,
             CancellationToken.None
         );
-        if (kernels?.length && kernels?.length > 0) {
+        traceInfo(`Kernels found for switch kernel: ${kernels?.map((k) => k.label).join('\n')}`);
+        if (kernels?.length && kernels?.length > 1) {
             // We have multiple kernels. Try switching
-            await waitForKernelToGetSelected(kernels[0].label);
+            await waitForKernelToGetSelected(kernels[1].label);
         }
 
         // Execute cell and verify output
