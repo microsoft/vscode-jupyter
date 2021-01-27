@@ -254,9 +254,10 @@ export async function waitForKernelToChange(labelOrId: string | undefined) {
             return false;
         }
         if (vscodeNotebook.activeNotebookEditor.kernel.id === id) {
+            traceInfo(`Found selected kernel ${vscodeNotebook.activeNotebookEditor.kernel.id}`);
             return true;
         }
-        traceInfo(`Active kernel is ${vscodeNotebook.activeNotebookEditor.kernel.label}`);
+        traceInfo(`Active kernel is ${vscodeNotebook.activeNotebookEditor.kernel.id}`);
         return false;
     };
     await waitForCondition(async () => isRightKernel(), 15_000, `Kernel with label/id ${labelOrId} not selected`);
