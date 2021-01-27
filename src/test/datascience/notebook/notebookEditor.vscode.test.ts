@@ -156,7 +156,7 @@ suite('Notebook Editor tests', () => {
             assert.notEqual(
                 newSysPath,
                 originalSysPath,
-                `Kernel did not switch. New sys path is same as old ${newSysPath}`
+                `Kernel did not switch. New sys path is same as old ${newSysPath} for kernels ${kernels[0].label} && ${kernels[1].label}`
             );
         }
     });
