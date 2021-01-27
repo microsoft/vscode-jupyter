@@ -124,6 +124,11 @@ export function isPythonNotebook(metadata?: nbformat.INotebookMetadata) {
  *
  * If `kernelConnection` is empty, then when saving the notebook we will not update the
  * metadata in the notebook with any kernel information (we can't as its empty).
+ *
+ * @param {(KernelConnectionMetadata | undefined)} kernelConnection
+ * This can be undefined when a kernels contributed by other VSC extensions is selected.
+ * E.g. .NET extension can contribute their own extension. At this point they could
+ * end up updating the notebook metadata themselves. We should not blow this metadata away. The way we achieve that is by clearing this stored kernel information & not updating the metadata.
  */
 export function trackKernelInNotebookMetadata(
     document: NotebookDocument,
