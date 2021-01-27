@@ -74,9 +74,7 @@ export class KernelExecution implements IDisposable {
         }
         const cellExecution = this.createCellExecution(cell);
         try {
-            await this.pendingExecution.chainExecution(async () =>
-                this.executeQueuedCells(notebookPromise, cell.notebook)
-            );
+            await this.pendingExecution.chainExecution(() => this.executeQueuedCells(notebookPromise, cell.notebook));
         } catch (ex) {
             // Possible one cell failed, we need to stop everything else.
             traceError(`Failed to execute a cell ${cell.index}, hence cancelling all`, ex);
