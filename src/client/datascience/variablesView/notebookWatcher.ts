@@ -55,30 +55,50 @@ export class NotebookWatcher implements INotebookWatcher {
         this.notebookEditorProvider.onDidCloseNotebookEditor(this.notebookEditorClosed, this, this.disposables);
     }
 
-    // When the kernel state is changed we need to see if it's a cell from the active document that finished execution
-    // If so update the execution count on the variable view to refresh variables
+    // Handle kernel state changes
     private kernelStateChanged(kernelStateEvent: KernelStateEventArgs) {
-        // Update execution counts for any non-silent executions that we get
+        switch (kernelStateEvent.state) {
+            case KernelState.executed:
+                this.handleExecute(kernelStateEvent);
+                break;
+            case KernelState.restarted:
+                this.handleRestart(kernelStateEvent);
+                break;
+            default:
+                break;
+        }
+    }
+
+    // Handle a kernel execution event
+    private handleExecute(kernelStateEvent: KernelStateEventArgs) {
+        // We are not interested in silent executions
         if (this.isNonSilentExecution(kernelStateEvent)) {
-            this.updateExecutionCounts(kernelStateEvent);
-        }
+            // First, update our execution counts, regardless of if this is the active document
+            if (kernelStateEvent.cell?.metadata.executionOrder !== undefined) {
+                this.updateExecutionCount(kernelStateEvent.resource, kernelStateEvent.cell.metadata.executionOrder);
+            }
 
-        // Update our execution counts for restarts
-        if (this.isRestart(kernelStateEvent)) {
-            this.deleteExecutionCount(kernelStateEvent.resource);
+            // Next, if this is the active document, send out our notifications
+            if (
+                //this.isActiveNotebookExecution(kernelStateEvent) &&
+                this.isActiveNotebookEvent(kernelStateEvent) &&
+                kernelStateEvent.cell?.metadata.executionOrder !== undefined
+            ) {
+                this._onDidExecuteActiveVariableViewNotebook.fire({
+                    executionCount: kernelStateEvent.cell.metadata.executionOrder
+                });
+            }
         }
+    }
 
-        // Check to see if we need to notify for the active editor document being executed or restarted
-        if (
-            this.isActiveNotebookExecution(kernelStateEvent) &&
-            kernelStateEvent.cell &&
-            kernelStateEvent.cell.metadata.executionOrder
-        ) {
-            // Notify any listeners that the active notebook has updated execution order
-            this._onDidExecuteActiveVariableViewNotebook.fire({
-                executionCount: kernelStateEvent.cell.metadata.executionOrder
-            });
-        } else if (this.isActiveNotebookRestart(kernelStateEvent)) {
+    // Handle a kernel restart event
+    private handleRestart(kernelStateEvent: KernelStateEventArgs) {
+        // First delete any execution counts that we are holding for this
+        this.deleteExecutionCount(kernelStateEvent.resource);
+
+        // If this is the active notebook, send our restart message
+        //if (this.isActiveNotebookRestart(kernelStateEvent)) {
+        if (this.isActiveNotebookEvent(kernelStateEvent)) {
             this._onDidRestartActiveVariableViewNotebook.fire();
         }
     }
@@ -88,6 +108,7 @@ export class NotebookWatcher implements INotebookWatcher {
         this.deleteExecutionCount(editor.file);
     }
 
+    // When the active editor is changed, update our execution count and notify
     private activeEditorChanged(editor: INotebookEditor | undefined) {
         const changeEvent: IActiveNotebookChangedEvent = {};
 
@@ -100,14 +121,7 @@ export class NotebookWatcher implements INotebookWatcher {
         this._onDidChangeActiveVariableViewNotebook.fire(changeEvent);
     }
 
-    private isRestart(kernelStateEvent: KernelStateEventArgs): boolean {
-        if (kernelStateEvent.state === KernelState.restarted) {
-            return true;
-        }
-
-        return false;
-    }
-
+    // Check to see if this is a non-silent execution that we want to update on
     private isNonSilentExecution(kernelStateEvent: KernelStateEventArgs): boolean {
         if (
             kernelStateEvent.state === KernelState.executed &&
@@ -121,34 +135,9 @@ export class NotebookWatcher implements INotebookWatcher {
         return false;
     }
 
-    private updateExecutionCounts(kernelStateEvent: KernelStateEventArgs) {
-        if (kernelStateEvent.cell?.metadata.executionOrder) {
-            this.updateExecutionCount(kernelStateEvent.resource, kernelStateEvent.cell.metadata.executionOrder);
-        }
-    }
-
-    private isActiveNotebookExecution(kernelStateEvent: KernelStateEventArgs): boolean {
+    // Check to see if this event was on the active notebook
+    private isActiveNotebookEvent(kernelStateEvent: KernelStateEventArgs): boolean {
         if (
-            kernelStateEvent.state === KernelState.executed &&
-            kernelStateEvent.cell &&
-            kernelStateEvent.cell.metadata.executionOrder &&
-            !kernelStateEvent.silent
-        ) {
-            // We only want to update the variable view execution count when it's the active document executing
-            if (
-                this.notebookEditorProvider.activeEditor &&
-                this.fileSystem.arePathsSame(this.notebookEditorProvider.activeEditor.file, kernelStateEvent.resource)
-            ) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private isActiveNotebookRestart(kernelStateEvent: KernelStateEventArgs): boolean {
-        if (
-            kernelStateEvent.state == KernelState.restarted &&
             this.notebookEditorProvider.activeEditor &&
             this.fileSystem.arePathsSame(this.notebookEditorProvider.activeEditor.file, kernelStateEvent.resource)
         ) {
