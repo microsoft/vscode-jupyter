@@ -746,6 +746,7 @@ jobs:
 
       - name: Upload Screenshots 
         uses: actions/upload-artifact@v2
+        if: always()
         with:
           name: screenshots
           path: './*.jpg'
