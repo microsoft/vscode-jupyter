@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { NotebookCell, NotebookDocument } from 'vscode';
+import { NotebookCell, NotebookDocument, NotebookEditor } from 'vscode';
 import { ServerStatus } from '../../../../datascience-ui/interactive-common/mainState';
 import { IApplicationShell, IVSCodeNotebook } from '../../../common/application/types';
 import { traceInfo, traceWarning } from '../../../common/logger';
@@ -56,36 +56,14 @@ export class KernelExecution implements IDisposable {
         this.executionFactory = new CellExecutionFactory(errorHandler, editorProvider, appShell, vscNotebook, context);
     }
 
-    private getCellExecutionStack(document: NotebookDocument, notebookPromise: Promise<INotebook>) {
-        if (!this.documentExecutions.get(document)) {
-            const editor = this.vscNotebook.notebookEditors.find((item) => item.document === document);
-            if (!editor) {
-                // No editor, possible it was closed.
-                return;
-            }
-
-            const wrappedNotebookPromise = this.getKernel(document)
-                .then((kernel) => this.addKernelRestartHandler(kernel, document))
-                .then(() => notebookPromise);
-
-            this.documentExecutions.set(
-                document,
-                new CellExecutionStack(
-                    editor,
-                    wrappedNotebookPromise,
-                    this.executionFactory,
-                    isPythonKernelConnection(this.metadata)
-                )
-            );
-        }
-        return this.documentExecutions.get(document);
-    }
     @captureTelemetry(Telemetry.ExecuteNativeCell, undefined, true)
     public async executeCell(notebookPromise: Promise<INotebook>, cell: NotebookCell): Promise<void> {
-        const executionStack = this.getCellExecutionStack(cell.notebook, notebookPromise);
-        if (!executionStack) {
+        const editor = this.vscNotebook.notebookEditors.find((item) => item.document === cell.notebook);
+        if (!editor) {
+            // No editor, possible it was closed.
             return;
         }
+        const executionStack = this.getOrCreateCellExecutionStack(editor, notebookPromise);
         executionStack.queueCell(cell);
         await executionStack.waitForCompletion(cell);
     }
@@ -93,18 +71,20 @@ export class KernelExecution implements IDisposable {
     @captureTelemetry(Telemetry.ExecuteNativeCell, undefined, true)
     @captureTelemetry(VSCodeNativeTelemetry.RunAllCells, undefined, true)
     public async executeAllCells(notebookPromise: Promise<INotebook>, document: NotebookDocument): Promise<void> {
-        const executionStack = this.getCellExecutionStack(document, notebookPromise);
-        if (!executionStack) {
+        const editor = this.vscNotebook.notebookEditors.find((item) => item.document === document);
+        if (!editor) {
+            // No editor, possible it was closed.
             return;
         }
-
-        traceInfo('Update notebook execution state as running');
-        await chainWithPendingUpdates(executionStack.editor, (edit) =>
-            edit.replaceMetadata({ ...document.metadata, runState: vscodeNotebookEnums.NotebookRunState.Running })
-        );
+        const executionStack = this.getOrCreateCellExecutionStack(editor, notebookPromise);
         executionStack.queueAllCells();
 
         try {
+            traceInfo('Update notebook execution state as running');
+            await chainWithPendingUpdates(executionStack.editor, (edit) =>
+                edit.replaceMetadata({ ...document.metadata, runState: vscodeNotebookEnums.NotebookRunState.Running })
+            );
+
             await executionStack.waitForCompletion();
         } finally {
             traceInfo('Restore notebook state to idle');
@@ -150,6 +130,45 @@ export class KernelExecution implements IDisposable {
     }
     public dispose() {
         this.disposables.forEach((d) => d.dispose());
+    }
+    private getOrCreateCellExecutionStack(editor: NotebookEditor, notebookPromise: Promise<INotebook>) {
+        const existingExecutionStack = this.documentExecutions.get(editor.document);
+        // If it has not yet completed, re-use the existing stack.
+        if (existingExecutionStack && !existingExecutionStack.completed) {
+            existingExecutionStack;
+        }
+
+        // If it has not completed then wait for it to complete & create a new execution stack.
+        let waitUntilPreviousExecutionCompletes = Promise.resolve();
+        if (existingExecutionStack && existingExecutionStack.completed) {
+            // This is required, so that the new stack is read & we start queueing the cells into that.
+            // Else if user runs another cell, then we get into this method yet again & both of the cells
+            // are now waiting for previous execution to complete & its possible
+            // we end up with those two cells creating their own execution stacks.
+            // This way, we create a new execution stack & the queue the two new cells in the order the user ran.
+
+            // One way this happens is,
+            // User hits cancel, and then user runs another cell.
+            // If the previous cancellation completes & `completed = true`, then
+            // we need to wait for it to finish everything before we start the other execution.
+            // Else we could have cell states being updated by the two stacks in correctly.
+            waitUntilPreviousExecutionCompletes = existingExecutionStack.waitForCompletion().catch(noop);
+        }
+
+        const wrappedNotebookPromise = this.getKernel(editor.document)
+            .then((kernel) => this.addKernelRestartHandler(kernel, editor.document))
+            .then(() => notebookPromise);
+
+        const newCellExecutionStack = new CellExecutionStack(
+            waitUntilPreviousExecutionCompletes,
+            editor,
+            wrappedNotebookPromise,
+            this.executionFactory,
+            isPythonKernelConnection(this.metadata)
+        );
+
+        this.documentExecutions.set(editor.document, newCellExecutionStack);
+        return newCellExecutionStack;
     }
     private async interruptExecution(
         session: IJupyterSession,

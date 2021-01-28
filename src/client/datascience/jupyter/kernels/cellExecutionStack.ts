@@ -26,6 +26,7 @@ export class CellExecutionStack {
     private startedRunningCells = false;
     private chainedCellExecutionPromise: Promise<NotebookCellRunState | undefined> = Promise.resolve(undefined);
     constructor(
+        private readonly waitUntilPreviousExecutionCompletes: Promise<void>,
         public readonly editor: NotebookEditor,
         private readonly notebookPromise: Promise<INotebook>,
         private readonly executionFactory: CellExecutionFactory,
@@ -99,6 +100,8 @@ export class CellExecutionStack {
     }
     private async start() {
         try {
+            // Ensure we start this new stack, only after previous stacks have completed.
+            await this.waitUntilPreviousExecutionCompletes;
             await this.executeQueuedCells();
             this.completion.resolve();
         } catch (ex) {
