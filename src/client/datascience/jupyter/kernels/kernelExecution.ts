@@ -156,7 +156,7 @@ export class KernelExecution implements IDisposable {
         const existingExecutionJob = this.documentExecutions.get(editor.document);
         // If it has not yet completed, re-use the existing job.
         if (existingExecutionJob && !existingExecutionJob.completed) {
-            existingExecutionJob;
+            return existingExecutionJob;
         }
 
         // We need to validate the kernel is usable.
