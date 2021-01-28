@@ -79,7 +79,7 @@ suite('DataScience - VariableView', () => {
         console.log(`IANHU displays ${displays.length}`);
         for (const display of displays) {
             console.log(`IANHU display ${display.toString()}`);
-            const fileName = `screenshots/TestStart${display.id}.jpg`;
+            const fileName = `./screenshots/TestStart${display.id}.jpg`;
             console.log(`IANHU screenshot file name ${fileName}`);
             const result = await screenshot({ filename: fileName, screen: display.id });
             console.log(`IANHU result ${result}`);
@@ -122,7 +122,7 @@ suite('DataScience - VariableView', () => {
         console.log(`IANHU displays ${displays.length}`);
         for (const display of displays) {
             console.log(`IANHU display ${display.toString()}`);
-            const fileName = `screenshots/Cell2Execute${display.id}.jpg`;
+            const fileName = `./screenshots/Cell2Execute${display.id}.jpg`;
             console.log(`IANHU screenshot file name ${fileName}`);
             const result = await screenshot({ filename: fileName, screen: display.id });
             console.log(`IANHU result ${result}`);
