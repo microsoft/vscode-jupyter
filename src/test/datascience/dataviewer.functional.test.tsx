@@ -382,11 +382,15 @@ suite('DataScience DataViewer tests', () => {
         assert.ok(dv, 'DataViewer not created');
         await gotAllRows;
 
-        verifyRows(wrapper.wrapper, [0, `[[ 0,  1,  2,  3],
+        verifyRows(wrapper.wrapper, [
+            0,
+            `[[ 0,  1,  2,  3],
  [ 4,  5,  6,  7],
- [ 8,  9, 10, 11]]`, `[[12, 13, 14, 15],
+ [ 8,  9, 10, 11]]`,
+            `[[12, 13, 14, 15],
  [16, 17, 18, 19],
- [20, 21, 22, 23]]`]);
+ [20, 21, 22, 23]]`
+        ]);
 
         // Put cell into edit mode and verify that input value is updated to be the non-truncated, stringified value
         editCell(wrapper.wrapper, 0, 1);
@@ -394,11 +398,15 @@ suite('DataScience DataViewer tests', () => {
 
         // Data should still be there after exiting edit mode
         cancelEdits(wrapper.wrapper);
-        verifyRows(wrapper.wrapper, [0, `[[ 0,  1,  2,  3],
+        verifyRows(wrapper.wrapper, [
+            0,
+            `[[ 0,  1,  2,  3],
  [ 4,  5,  6,  7],
- [ 8,  9, 10, 11]]`, `[[12, 13, 14, 15],
+ [ 8,  9, 10, 11]]`,
+            `[[12, 13, 14, 15],
  [16, 17, 18, 19],
- [20, 21, 22, 23]]`]);
+ [20, 21, 22, 23]]`
+        ]);
     });
 
     runMountedTest('Ragged 2D numpy array', async (wrapper) => {
