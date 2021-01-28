@@ -92,6 +92,9 @@ export abstract class Webview implements IWebview {
                 )
             )
             .toString();
+
+        // Check to see if we should force on Test middleware for our react code
+        const forceTestMiddleware = process.env.VSC_JUPYTER_WEBVIEW_TEST_MIDDLEWARE || 'false';
         return `<!doctype html>
         <html lang="en">
             <head>
@@ -120,6 +123,9 @@ export abstract class Webview implements IWebview {
                         }
 
                         return "${uriBase}" + relativePath;
+                    }
+                    function forceTestMiddleware() {
+                        return ${forceTestMiddleware};
                     }
                 </script>
                 ${uris.map((uri) => `<script type="text/javascript" src="${uri}"></script>`).join('\n')}

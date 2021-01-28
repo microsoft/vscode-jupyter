@@ -6,7 +6,7 @@
 import * as fastDeepEqual from 'fast-deep-equal';
 import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
-import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../../common/application/types';
+import { IApplicationShell, IVSCodeNotebook } from '../../../common/application/types';
 import { traceInfo, traceWarning } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 import {
@@ -36,7 +36,6 @@ export class KernelProvider implements IKernelProvider {
         @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
         @inject(INotebookProvider) private notebookProvider: INotebookProvider,
         @inject(IConfigurationService) private configService: IConfigurationService,
-        @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IDataScienceErrorHandler) private readonly errorHandler: IDataScienceErrorHandler,
         @inject(INotebookEditorProvider) private readonly editorProvider: INotebookEditorProvider,
         @inject(KernelSelector) private readonly kernelSelectionUsage: IKernelSelectionUsage,
@@ -79,13 +78,14 @@ export class KernelProvider implements IKernelProvider {
         this.disposeOldKernel(uri);
 
         const waitForIdleTimeout = this.configService.getSettings(uri).jupyterLaunchTimeout;
+        const interruptTimeout = this.configService.getSettings(uri).jupyterInterruptTimeout;
         const kernel = new Kernel(
             uri,
             options.metadata,
             this.notebookProvider,
             this.disposables,
             waitForIdleTimeout,
-            this.commandManager,
+            interruptTimeout,
             this.errorHandler,
             this.editorProvider,
             this,

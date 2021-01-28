@@ -9,6 +9,8 @@ import * as glob from 'glob';
 import * as Mocha from 'mocha';
 import * as path from 'path';
 import { IS_SMOKE_TEST, MAX_EXTENSION_ACTIVATION_TIME } from './constants';
+import { noop } from './core';
+import { stopJupyterServer } from './datascience/notebook/helper';
 import { initialize } from './initialize';
 
 // Linux: prevent a weird NPE when mocha on Linux requires the window size from the TTY.
@@ -92,6 +94,9 @@ export async function run(): Promise<void> {
                                 failures > 0 ? reject(new Error(`${failures} total failures`)) : resolve()
                             )
                         )
+                        .finally(() => {
+                            stopJupyterServer().catch(noop);
+                        })
                         .catch(reject);
                 } catch (error) {
                     return reject(error);

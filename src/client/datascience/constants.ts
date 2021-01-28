@@ -66,6 +66,7 @@ export namespace Commands {
     export const OpenNotebook = 'jupyter.opennotebook';
     export const OpenNotebookInPreviewEditor = 'jupyter.opennotebookInPreviewEditor';
     export const SelectJupyterURI = 'jupyter.selectjupyteruri';
+    export const SelectNativeJupyterUriFromToolBar = 'jupyter.selectNativeJupyterUriFromToolBar';
     export const SelectJupyterCommandLine = 'jupyter.selectjupytercommandline';
     export const ExportFileAsNotebook = 'jupyter.exportfileasnotebook';
     export const ExportFileAndOutputAsNotebook = 'jupyter.exportfileandoutputasnotebook';
@@ -122,6 +123,7 @@ export namespace Commands {
     export const OpenNotebookNonCustomEditor = 'jupyter.notebookeditor.open';
     export const LatestExtension = 'jupyter.latestExtension';
     export const TrustNotebook = 'jupyter.notebookeditor.trust';
+    export const NotebookTrusted = 'jupyter.notebookeditor.trusted';
     export const EnableLoadingWidgetsFrom3rdPartySource = 'jupyter.enableLoadingWidgetScriptsFromThirdPartySource';
     export const NotebookEditorExpandAllCells = 'jupyter.notebookeditor.expandallcells';
     export const NotebookEditorCollapseAllCells = 'jupyter.notebookeditor.collapseallcells';
@@ -244,6 +246,7 @@ export enum Telemetry {
     SelectRemoteJupyterKernel = 'DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL',
     SetJupyterURIToLocal = 'DATASCIENCE.SET_JUPYTER_URI_LOCAL',
     SetJupyterURIToUserSpecified = 'DATASCIENCE.SET_JUPYTER_URI_USER_SPECIFIED',
+    SetJupyterURIUIDisplayed = 'DATASCIENCE.SET_JUPYTER_URI_UI_DISPLAYED',
     Interrupt = 'DATASCIENCE.INTERRUPT',
     /**
      * Exporting from the interactive window
@@ -401,12 +404,14 @@ export enum Telemetry {
     IPyWidgetUnhandledMessage = 'DS_INTERNAL.IPYWIDGET_UNHANDLED_MESSAGE',
     RawKernelCreatingNotebook = 'DS_INTERNAL.RAWKERNEL_CREATING_NOTEBOOK',
     JupyterCreatingNotebook = 'DS_INTERNAL.JUPYTER_CREATING_NOTEBOOK',
+    KernelStartFailedAndUIDisabled = 'DS_INTERNAL.START_RAW_FAILED_UI_DISABLED',
     RawKernelSessionConnect = 'DS_INTERNAL.RAWKERNEL_SESSION_CONNECT',
     RawKernelStartRawSession = 'DS_INTERNAL.RAWKERNEL_START_RAW_SESSION',
     RawKernelSessionStartSuccess = 'DS_INTERNAL.RAWKERNEL_SESSION_START_SUCCESS',
     RawKernelSessionStartUserCancel = 'DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL',
     RawKernelSessionStartTimeout = 'DS_INTERNAL.RAWKERNEL_SESSION_START_TIMEOUT',
     RawKernelSessionStartException = 'DS_INTERNAL.RAWKERNEL_SESSION_START_EXCEPTION',
+    RawKernelSessionStartNoIpykernel = 'DS_INTERNAL.RAWKERNEL_SESSION_NO_IPYKERNEL',
     RawKernelProcessLaunch = 'DS_INTERNAL.RAWKERNEL_PROCESS_LAUNCH',
     AttemptedToLaunchRawKernelWithoutInterpreter = 'DS_INTERNAL.ERROR_START_RAWKERNEL_WITHOUT_INTERPRETER',
     RunByLineStart = 'DATASCIENCE.RUN_BY_LINE',

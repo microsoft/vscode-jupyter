@@ -27,6 +27,7 @@ import 'slickgrid/slick.dataview';
 // Adding comments to ensure order of imports does not change due to auto formatters.
 // eslint-disable-next-line import/order
 import 'slickgrid/slick.grid';
+import 'slickgrid/slick.editors';
 // Adding comments to ensure order of imports does not change due to auto formatters.
 // eslint-disable-next-line import/order
 import 'slickgrid/plugins/slick.autotooltips';
@@ -43,9 +44,6 @@ import { SliceDetail } from './sliceDetail';
 WARNING: Do not change the order of these imports.
 Slick grid MUST be imported after we load jQuery and other stuff from `./globalJQueryImports`
 */
-
-const MinColumnWidth = 70;
-const MaxColumnWidth = 500;
 
 export interface ISlickRow extends Slick.SlickData {
     id: string;
@@ -173,8 +171,10 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
             // Setup options for the grid
             const options: Slick.GridOptions<Slick.SlickData> = {
                 asyncEditorLoading: true,
-                editable: false,
+                editable: true,
+                enableTextSelectionOnCells: true,
                 enableCellNavigation: true,
+                editorCellNavOnLRKeys: true,
                 showHeaderRow: true,
                 enableColumnReorder: false,
                 explicitInitialization: false,
@@ -185,6 +185,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
             // Transform columns so they are sortable and stylable
             const columns = this.props.columns.map((c) => {
                 c.sortable = true;
+                c.editor = readonlyCellEditor;
                 c.headerCssClass = 'react-grid-header-cell';
                 c.cssClass = 'react-grid-cell';
                 return c;
@@ -527,18 +528,14 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         }
     };
 
-    private autoResizeColumns(rows: ISlickRow[]) {
+    private autoResizeColumns() {
         if (this.state.grid) {
             const fontString = this.computeFont();
             const columns = this.state.grid.getColumns();
+            const placeholder = '99999999999';
+            const maxFieldWidth = measureText(placeholder, fontString);
             columns.forEach((c) => {
-                let colWidth = MinColumnWidth;
-                rows.forEach((r: any) => {
-                    const field = c.field ? r[c.field] : '';
-                    const fieldWidth = field ? measureText(field.toString(), fontString) : 0;
-                    colWidth = Math.min(MaxColumnWidth, Math.max(colWidth, fieldWidth));
-                });
-                c.width = colWidth;
+                c.width = maxFieldWidth;
             });
             this.state.grid.setColumns(columns);
 
@@ -571,7 +568,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         // Update columns if we haven't already
         if (!this.autoResizedColumns) {
             this.autoResizedColumns = true;
-            this.autoResizeColumns(data.newRows);
+            this.autoResizeColumns();
         }
 
         this.dataView.endUpdate();
@@ -652,4 +649,86 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         this.setState({ selectedIndex: response.value });
         this.props.handleSliceRequest({ axis: this.state.selectedAxis, index: this.state.selectedIndex });
     }
+}
+
+// Modified version of https://github.com/6pac/SlickGrid/blob/master/slick.editors.js#L24
+// with some fixes to get things working in our context
+function readonlyCellEditor(this: any, args: any) {
+    var $input: any;
+    var defaultValue: any;
+
+    this.init = function init() {
+        $input = slickgridJQ("<input type=text class='editor-text'/>")
+            .appendTo(args.container)
+            .on('keydown.nav', handleKeyDown)
+            .focus()
+            .select();
+    };
+
+    this.destroy = function destroy() {
+        $input.remove();
+    };
+
+    this.focus = function focus() {
+        $input.focus();
+    };
+
+    this.isValueChanged = function isValueChanged() {
+        return false;
+    };
+
+    this.loadValue = function loadValue(item: any) {
+        // In the original SlickGrid TextEditor this is || instead of ??
+        // which causes problems when the value in the item is the number 0
+        defaultValue = item[args.column.field] ?? '';
+        $input.val(defaultValue);
+        $input[0].defaultValue = defaultValue;
+        $input.select();
+    };
+
+    this.applyValue = function applyValue() {
+        // Noop as we never want to overwrite the cell's value.
+        // Defined to avoid polluting the console with typeerrors
+    };
+
+    this.validate = function validate() {
+        return {
+            valid: true,
+            msg: null
+        };
+    };
+
+    this.serializeValue = function serializeValue() {
+        // Defined to avoid polluting the console with typeerrors
+        return $input.val();
+    };
+
+    function handleKeyDown(this: any, e: JQueryKeyEventObject) {
+        var cursorPosition = this.selectionStart;
+        var textLength = this.value.length;
+        // In the original SlickGrid TextEditor this references
+        // $.ui.keyDown.LEFT which is undefined, so couldn't use
+        // that out of the box if we wanted to allow the user
+        // to move their cursor within the focused input element
+        if (
+            (e.keyCode === KeyCodes.LeftArrow && cursorPosition > 0) ||
+            (e.keyCode === KeyCodes.RightArrow && cursorPosition < textLength - 1)
+        ) {
+            e.stopImmediatePropagation();
+        }
+        // Readonly input elements do not have a cursor, but we want the user to be able
+        // to navigate the cell via cursor and left/right arrows. Solution is to make
+        // the input editable, but suppress printable keys or keys which would modify
+        // the input
+        if (
+            e.key.length === 1 ||
+            e.keyCode === KeyCodes.Backspace ||
+            e.keyCode === KeyCodes.Delete ||
+            e.keyCode === KeyCodes.Insert
+        ) {
+            e.preventDefault();
+        }
+    }
+
+    this.init();
 }

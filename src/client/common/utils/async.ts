@@ -3,6 +3,11 @@
 
 'use strict';
 
+/**
+ * Error type thrown when a timeout occurs
+ */
+export class TimedOutError extends Error {}
+
 export async function sleep(timeout: number): Promise<number> {
     return new Promise<number>((resolve) => {
         setTimeout(() => resolve(timeout), timeout);
@@ -52,7 +57,7 @@ export interface Deferred<T> {
 }
 
 class DeferredImpl<T> implements Deferred<T> {
-    private _resolve!: (value?: T | PromiseLike<T>) => void;
+    private _resolve!: (value: T | PromiseLike<T>) => void;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private _reject!: (reason?: any) => void;
     private _resolved: boolean = false;
@@ -231,4 +236,26 @@ export async function flattenIterator<T>(iterator: AsyncIterator<T, void>): Prom
         result = await iterator.next();
     }
     return results;
+}
+
+export class ChainedExecutions<T> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    private pendingExecution: Promise<any> = Promise.resolve();
+    /**
+     * Clears the chained promises.
+     */
+    public clear() {
+        this.pendingExecution = Promise.resolve();
+    }
+    public async chainExecution(next: () => Promise<T>): Promise<T> {
+        const deferred = createDeferred<T>();
+        const chainedPromise = this.pendingExecution.then(() => {
+            const nextPromise = next();
+            nextPromise.then((result) => deferred.resolve(result)).catch((ex) => deferred.reject(ex));
+            return nextPromise;
+        });
+        this.pendingExecution = chainedPromise;
+
+        return Promise.race([deferred.promise, chainedPromise]);
+    }
 }

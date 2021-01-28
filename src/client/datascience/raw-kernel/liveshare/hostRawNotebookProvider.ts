@@ -9,7 +9,12 @@ import { CancellationToken } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
 
 import { IPythonExtensionChecker } from '../../../api/types';
-import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../../common/application/types';
+import {
+    IApplicationShell,
+    ILiveShareApi,
+    IVSCodeNotebook,
+    IWorkspaceService
+} from '../../../common/application/types';
 import { traceError, traceInfo } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 import {
@@ -17,6 +22,7 @@ import {
     IConfigurationService,
     IDisposableRegistry,
     IOutputChannel,
+    ReadWrite,
     Resource
 } from '../../../common/types';
 import { createDeferred } from '../../../common/utils/async';
@@ -73,7 +79,8 @@ export class HostRawNotebookProvider
         rawNotebookSupported: IRawNotebookSupportedService,
         private readonly kernelDependencyService: IKernelDependencyService,
         private readonly kernelService: KernelService,
-        private readonly extensionChecker: IPythonExtensionChecker
+        private readonly extensionChecker: IPythonExtensionChecker,
+        private readonly vscodeNotebook: IVSCodeNotebook
     ) {
         super(liveShare, asyncRegistry, rawNotebookSupported);
     }
@@ -169,14 +176,19 @@ export class HostRawNotebookProvider
                     // this code as well as the code where we initialize the interpreter via a hack.
                     // This is used to check if there are situations under which this is possible & to safeguard against it.
                     // The only real world scenario is when users do not install Python (which we cannot prevent).
-                    (kernelConnection as any).interpreter = this.kernelService.findMatchingInterpreter(
+                    const readWriteConnection = kernelConnection as ReadWrite<KernelConnectionMetadata>;
+                    readWriteConnection.interpreter = await this.kernelService.findMatchingInterpreter(
                         kernelConnection.kernelSpec,
                         cancelToken
                     );
+                    if (readWriteConnection.kind === 'startUsingKernelSpec') {
+                        readWriteConnection.kernelSpec.interpreterPath =
+                            readWriteConnection.kernelSpec.interpreterPath || readWriteConnection.interpreter?.path;
+                    }
                 }
                 if (kernelConnection.interpreter) {
                     // Install missing dependencies only if we're dealing with a Python kernel.
-                    await this.installDependenciesIntoInterpreter(kernelConnection.interpreter, cancelToken);
+                    await this.installDependenciesIntoInterpreter(kernelConnection.interpreter, cancelToken, disableUI);
                 } else {
                     traceError('No interpreter fetched to start a raw kernel');
                 }
@@ -203,6 +215,7 @@ export class HostRawNotebookProvider
 
             traceInfo(`Computing working directory ${identity.toString()}`);
             const workingDirectory = await computeWorkingDirectory(resource, this.workspaceService);
+            const launchTimeout = this.configService.getSettings().jupyterLaunchTimeout;
 
             rawSession = new RawJupyterSession(
                 this.kernelLauncher,
@@ -210,10 +223,9 @@ export class HostRawNotebookProvider
                 this.outputChannel,
                 noop,
                 noop,
-                workingDirectory
+                workingDirectory,
+                launchTimeout
             );
-
-            const launchTimeout = this.configService.getSettings().jupyterLaunchTimeout;
 
             // Interpreter is optional, but we must have a kernel spec for a raw launch if using a kernelspec
             if (
@@ -227,7 +239,7 @@ export class HostRawNotebookProvider
                         kernelConnectionMetadata
                     )}`
                 );
-                await rawSession.connect(kernelConnectionMetadata, launchTimeout, cancelToken);
+                await rawSession.connect(kernelConnectionMetadata, launchTimeout, cancelToken, disableUI);
 
                 // Get the execution info for our notebook
                 const info = await this.getExecutionInfo(kernelConnectionMetadata);
@@ -246,7 +258,8 @@ export class HostRawNotebookProvider
                         this.getDisposedError.bind(this),
                         this.workspaceService,
                         this.appShell,
-                        this.fs
+                        this.fs,
+                        this.vscodeNotebook
                     );
 
                     // Run initial setup
@@ -276,9 +289,13 @@ export class HostRawNotebookProvider
 
     // If we need to install our dependencies now (for non-native scenarios)
     // then install ipykernel into the interpreter or throw error
-    private async installDependenciesIntoInterpreter(interpreter: PythonEnvironment, cancelToken?: CancellationToken) {
+    private async installDependenciesIntoInterpreter(
+        interpreter: PythonEnvironment,
+        cancelToken?: CancellationToken,
+        disableUI?: boolean
+    ) {
         if (
-            (await this.kernelDependencyService.installMissingDependencies(interpreter, cancelToken)) !==
+            (await this.kernelDependencyService.installMissingDependencies(interpreter, cancelToken, disableUI)) !==
             KernelInterpreterDependencyResponse.ok
         ) {
             throw new Error(

@@ -32,7 +32,7 @@ suite('DataScience - NativeNotebook helpers', () => {
         ];
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const notebook = notebookModelToVSCNotebookData(true, {}, Uri.file(''), cells as any, PYTHON_LANGUAGE);
+        const notebook = notebookModelToVSCNotebookData(true, {}, Uri.file(''), cells as any, PYTHON_LANGUAGE, {});
 
         assert.isOk(notebook);
         assert.deepEqual(notebook.languages, ['*']);
@@ -52,11 +52,9 @@ suite('DataScience - NativeNotebook helpers', () => {
                     editable: true,
                     executionOrder: 10,
                     hasExecutionOrder: true,
-                    runState: vscodeNotebookEnums.NotebookCellRunState.Success,
+                    runState: vscodeNotebookEnums.NotebookCellRunState.Idle,
                     runnable: true,
-                    statusMessage: undefined,
-                    runStartTime: undefined,
-                    lastRunDuration: undefined
+                    statusMessage: undefined
                 }
             },
             {
@@ -85,7 +83,7 @@ suite('DataScience - NativeNotebook helpers', () => {
                 }
             ];
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const notebook = notebookModelToVSCNotebookData(true, {}, Uri.file(''), cells, PYTHON_LANGUAGE);
+            const notebook = notebookModelToVSCNotebookData(true, {}, Uri.file(''), cells, PYTHON_LANGUAGE, {});
 
             assert.deepEqual(notebook.cells[0].outputs, expectedOutputs);
         }

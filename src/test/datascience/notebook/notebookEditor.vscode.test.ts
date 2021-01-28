@@ -4,10 +4,15 @@
 'use strict';
 
 import { assert } from 'chai';
+import { CellDisplayOutput } from 'vscode';
+import { CancellationToken } from 'vscode-jsonrpc';
 import { ICommandManager, IVSCodeNotebook } from '../../../client/common/application/types';
+import { ProductNames } from '../../../client/common/installer/productNames';
 import { traceInfo } from '../../../client/common/logger';
-import { IDisposable } from '../../../client/common/types';
+import { IDisposable, Product } from '../../../client/common/types';
+import { Common } from '../../../client/common/utils/localize';
 import { Commands } from '../../../client/datascience/constants';
+import { INotebookKernelProvider } from '../../../client/datascience/notebook/types';
 import { INotebookEditorProvider } from '../../../client/datascience/types';
 import { IExtensionTestApi } from '../../common';
 import { initialize } from '../../initialize';
@@ -15,18 +20,25 @@ import {
     canRunNotebookTests,
     closeNotebooksAndCleanUpAfterTests,
     deleteAllCellsAndWait,
+    executeCell,
     insertCodeCell,
     selectCell,
+    startJupyterServer,
+    trustAllNotebooks,
     waitForExecutionCompletedSuccessfully,
-    waitForKernelToGetAutoSelected
+    waitForKernelToGetAutoSelected,
+    waitForKernelToChange,
+    hijackPrompt
 } from './helper';
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
+const expectedPromptMessageSuffix = `requires ${ProductNames.get(Product.ipykernel)!} to be installed.`;
 
 suite('Notebook Editor tests', () => {
     let api: IExtensionTestApi;
     let vscodeNotebook: IVSCodeNotebook;
     let editorProvider: INotebookEditorProvider;
     let commandManager: ICommandManager;
+    let kernelProvider: INotebookKernelProvider;
     const disposables: IDisposable[] = [];
 
     suiteSetup(async function () {
@@ -34,13 +46,20 @@ suite('Notebook Editor tests', () => {
         if (!(await canRunNotebookTests())) {
             return this.skip();
         }
+        await startJupyterServer();
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
         commandManager = api.serviceContainer.get<ICommandManager>(ICommandManager);
+        kernelProvider = api.serviceContainer.get<INotebookKernelProvider>(INotebookKernelProvider);
+
+        // On conda these take longer for some reason.
+        this.timeout(60_000);
     });
 
     setup(async function () {
         traceInfo(`Start Test ${this.currentTest?.title}`);
+        await startJupyterServer();
+        await trustAllNotebooks();
         // Open a notebook and use this for all tests in this test suite.
         await editorProvider.createNew();
         await waitForKernelToGetAutoSelected();
@@ -107,29 +126,60 @@ suite('Notebook Editor tests', () => {
         // The third cell should have a runState of Success
         assert.strictEqual(thirdCell?.metadata.runState, vscodeNotebookEnums.NotebookCellRunState.Success);
     });
+
     test('Switch kernels', async function () {
-        this.skip();
-        // Do this after talking with VS code team
-        // // add a cell
-        // await insertCodeCell('print("0")', { index: 0 });
+        await hijackPrompt(
+            'showErrorMessage',
+            { endsWith: expectedPromptMessageSuffix },
+            { text: Common.install(), clickImmediately: true },
+            disposables
+        );
 
-        // const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
+        // add a cell
+        await insertCodeCell('import sys\nprint(sys.executable)', { index: 0 });
 
-        // await executeCell(cell);
+        let cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
+        await executeCell(cell);
 
-        // // Wait till execution count changes and status is success.
-        // await waitForExecutionCompletedSuccessfully(cell);
+        // Wait till execution count changes and status is success.
+        await waitForExecutionCompletedSuccessfully(cell);
+        const originalSysPath = (cell.outputs[0] as CellDisplayOutput).data['text/plain'].toString();
 
-        // // Switch kernels to the other kernel
-        // const kernels = await kernelProvider.provideKernels(
-        //     vscodeNotebook.activeNotebookEditor!.document,
-        //     CancellationToken.None
-        // );
-        // if (kernels?.length && kernels?.length > 0) {
-        //     // We have multiple kernels. Try switching
-        //     await commandManager.executeCommand(
-        //         'notebook.selectKernel',
-        //     );
-        // }
+        // Switch kernels to the other kernel
+        const kernels = await kernelProvider.provideKernels(
+            vscodeNotebook.activeNotebookEditor!.document,
+            CancellationToken.None
+        );
+        traceInfo(`Kernels found for switch kernel: ${kernels?.map((k) => k.label).join('\n')}`);
+        // Find another kernel other than the preferred kernel that is also python based
+        const preferredKernel = kernels?.find((k) => k.isPreferred && k.label.toLowerCase().includes('python 3'));
+        const anotherKernel = kernels?.find(
+            (k) =>
+                !k.isPreferred &&
+                k.label.toLowerCase().includes('python 3') &&
+                k.label !== preferredKernel?.label &&
+                k.label !== 'Python 3'
+        );
+        if (anotherKernel) {
+            // We have multiple kernels. Try switching
+            await waitForKernelToChange(anotherKernel.id);
+        }
+
+        // Execute cell and verify output
+        await executeCell(cell);
+        await waitForExecutionCompletedSuccessfully(cell);
+        cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
+
+        assert.strictEqual(cell?.outputs.length, 1);
+        assert.strictEqual(cell?.metadata.runState, vscodeNotebookEnums.NotebookCellRunState.Success);
+
+        if (anotherKernel && preferredKernel) {
+            const newSysPath = (cell.outputs[0] as CellDisplayOutput).data['text/plain'].toString();
+            assert.notEqual(
+                newSysPath,
+                originalSysPath,
+                `Kernel did not switch. New sys path is same as old ${newSysPath} for kernels ${preferredKernel.label} && ${anotherKernel.label}`
+            );
+        }
     });
 });

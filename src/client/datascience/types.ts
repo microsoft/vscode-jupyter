@@ -109,6 +109,7 @@ export interface INotebookServerLaunchInfo {
     kernelConnectionMetadata?: KernelConnectionMetadata;
     workingDir: string | undefined;
     purpose: string | undefined; // Purpose this server is for
+    disableUI?: boolean; // True if no UI should be brought up during the launch
 }
 
 export interface INotebookCompletion {
@@ -372,7 +373,8 @@ export interface IJupyterSessionManager extends IAsyncDisposable {
     startNew(
         kernelConnection: KernelConnectionMetadata | undefined,
         workingDirectory: string,
-        cancelToken?: CancellationToken
+        cancelToken?: CancellationToken,
+        disableUI?: boolean
     ): Promise<IJupyterSession>;
     getKernelSpecs(): Promise<IJupyterKernelSpec[]>;
     getConnInfo(): IJupyterConnection;
@@ -1301,14 +1303,16 @@ export type KernelSocketInformation = {
 
 export enum KernelInterpreterDependencyResponse {
     ok,
-    cancel
+    cancel,
+    failed
 }
 
 export const IKernelDependencyService = Symbol('IKernelDependencyService');
 export interface IKernelDependencyService {
     installMissingDependencies(
         interpreter: PythonEnvironment,
-        token?: CancellationToken
+        token?: CancellationToken,
+        disableUI?: boolean
     ): Promise<KernelInterpreterDependencyResponse>;
     areDependenciesInstalled(interpreter: PythonEnvironment, _token?: CancellationToken): Promise<boolean>;
 }
@@ -1411,6 +1415,7 @@ export interface IVSCWebviewViewProvider extends WebviewViewProvider {
 
 export const IJupyterServerUriStorage = Symbol('IJupyterServerUriStorage');
 export interface IJupyterServerUriStorage {
+    readonly onDidChangeUri: Event<void>;
     addToUriList(uri: string, time: number, displayName: string): Promise<void>;
     getSavedUriList(): Promise<{ uri: string; time: number; displayName?: string }[]>;
     clearUriList(): Promise<void>;

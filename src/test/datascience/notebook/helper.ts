@@ -11,6 +11,7 @@ import * as sinon from 'sinon';
 import * as tmp from 'tmp';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { commands, Memento, TextDocument, Uri, window } from 'vscode';
+import { CancellationToken } from 'vscode-jsonrpc';
 import {
     CellDisplayOutput,
     NotebookCell,
@@ -18,7 +19,8 @@ import {
     NotebookDocument
 } from '../../../../typings/vscode-proposed';
 import { IApplicationEnvironment, IApplicationShell, IVSCodeNotebook } from '../../../client/common/application/types';
-import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
+import { JVSC_EXTENSION_ID, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
+import { disposeAllDisposables } from '../../../client/common/helpers';
 import { traceInfo } from '../../../client/common/logger';
 import {
     GLOBAL_MEMENTO,
@@ -31,6 +33,7 @@ import { createDeferred } from '../../../client/common/utils/async';
 import { swallowExceptions } from '../../../client/common/utils/misc';
 import { CellExecution } from '../../../client/datascience/jupyter/kernels/cellExecution';
 import { IKernelProvider } from '../../../client/datascience/jupyter/kernels/types';
+import { JupyterServerSelector } from '../../../client/datascience/jupyter/serverSelector';
 import { JupyterNotebookView } from '../../../client/datascience/notebook/constants';
 import {
     LastSavedNotebookCellLanguage,
@@ -39,13 +42,14 @@ import {
 import { isJupyterKernel } from '../../../client/datascience/notebook/helpers/helpers';
 import { chainWithPendingUpdates } from '../../../client/datascience/notebook/helpers/notebookUpdater';
 import { NotebookEditor } from '../../../client/datascience/notebook/notebookEditor';
-import { INotebookContentProvider } from '../../../client/datascience/notebook/types';
+import { INotebookContentProvider, INotebookKernelProvider } from '../../../client/datascience/notebook/types';
 import { VSCodeNotebookModel } from '../../../client/datascience/notebookStorage/vscNotebookModel';
 import { INotebookEditorProvider, INotebookProvider, ITrustService } from '../../../client/datascience/types';
-import { createEventHandler, sleep, waitForCondition } from '../../common';
-import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_SMOKE_TEST } from '../../constants';
+import { createEventHandler, IExtensionTestApi, sleep, waitForCondition } from '../../common';
+import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST, IS_SMOKE_TEST } from '../../constants';
 import { noop } from '../../core';
 import { closeActiveWindows, initialize, isInsiders } from '../../initialize';
+import { JupyterServer } from '../jupyterServer';
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
 async function getServices() {
@@ -54,7 +58,8 @@ async function getServices() {
         contentProvider: api.serviceContainer.get<VSCNotebookContentProvider>(INotebookContentProvider),
         vscodeNotebook: api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook),
         editorProvider: api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider),
-        serviceContainer: api.serviceContainer
+        serviceContainer: api.serviceContainer,
+        kernelProvider: api.serviceContainer.get<INotebookKernelProvider>(INotebookKernelProvider)
     };
 }
 
@@ -151,12 +156,6 @@ export async function createTemporaryNotebook(templateFile: string, disposables:
     return tempFile;
 }
 
-export function disposeAllDisposables(disposables: IDisposable[]) {
-    while (disposables.length) {
-        disposables.pop()?.dispose(); // NOSONAR;
-    }
-}
-
 export async function canRunNotebookTests() {
     if (!isInsiders() || !process.env.VSC_JUPYTER_RUN_NB_TEST) {
         console.log(
@@ -219,6 +218,7 @@ export async function closeNotebooksAndCleanUpAfterTests(disposables: IDisposabl
 
     sinon.restore();
 }
+
 export async function closeNotebooks(disposables: IDisposable[] = []) {
     if (!isInsiders()) {
         return false;
@@ -227,15 +227,47 @@ export async function closeNotebooks(disposables: IDisposable[] = []) {
     disposeAllDisposables(disposables);
 }
 
-export async function waitForKernelToGetAutoSelected(expectedLanguage?: string) {
+export async function waitForKernelToChange(labelOrId: string | undefined) {
+    const { vscodeNotebook, kernelProvider } = await getServices();
+
+    // Wait for the active editor to come up
+    await waitForCondition(async () => !!vscodeNotebook.activeNotebookEditor, 10_000, 'Active editor not a notebook');
+
+    // Get the list of kernels possible
+    const kernels = await kernelProvider.provideKernels(
+        vscodeNotebook.activeNotebookEditor!.document,
+        CancellationToken.None
+    );
+
+    traceInfo(`Kernels found for wait search: ${kernels?.map((k) => k.label).join('\n')}`);
+
+    // Find the kernel id that matches the name we want
+    const id = kernels?.find((k) => (labelOrId && k.label.includes(labelOrId)) || (k.id && k.id == labelOrId))?.id;
+
+    // Send a select kernel on the active notebook editor
+    void commands.executeCommand('notebook.selectKernel', { id, extension: JVSC_EXTENSION_ID });
+    const isRightKernel = () => {
+        if (!vscodeNotebook.activeNotebookEditor) {
+            return false;
+        }
+        if (!vscodeNotebook.activeNotebookEditor.kernel) {
+            return false;
+        }
+        if (vscodeNotebook.activeNotebookEditor.kernel.id === id) {
+            traceInfo(`Found selected kernel ${vscodeNotebook.activeNotebookEditor.kernel.id}`);
+            return true;
+        }
+        traceInfo(`Active kernel is ${vscodeNotebook.activeNotebookEditor.kernel.id}`);
+        return false;
+    };
+    await waitForCondition(async () => isRightKernel(), 15_000, `Kernel with label/id ${labelOrId} not selected`);
+}
+
+export async function waitForKernelToGetAutoSelected(expectedLanguage?: string, time = 100_000) {
     const { vscodeNotebook } = await getServices();
 
     // Wait for the active kernel to be a julia kernel.
-    await waitForCondition(
-        async () => !!vscodeNotebook.activeNotebookEditor?.kernel,
-        10_000,
-        'Kernel not auto selected'
-    );
+    await waitForCondition(async () => !!vscodeNotebook.activeNotebookEditor?.kernel, time, 'Kernel not auto selected');
     let kernelInfo = '';
     const isRightKernel = () => {
         if (!vscodeNotebook.activeNotebookEditor) {
@@ -251,20 +283,24 @@ export async function waitForKernelToGetAutoSelected(expectedLanguage?: string) 
                 )}`;
                 return true;
             }
-            if (vscodeNotebook.activeNotebookEditor.kernel.selection.kind === 'startUsingKernelSpec') {
-                kernelInfo = JSON.stringify(vscodeNotebook.activeNotebookEditor.kernel.selection.kernelSpec || {});
-                return (
-                    vscodeNotebook.activeNotebookEditor.kernel.selection.kernelSpec.language?.toLowerCase() ===
-                    expectedLanguage.toLowerCase()
-                );
+            switch (vscodeNotebook.activeNotebookEditor.kernel.selection.kind) {
+                case 'startUsingKernelSpec':
+                    kernelInfo = JSON.stringify(vscodeNotebook.activeNotebookEditor.kernel.selection.kernelSpec || {});
+                    return (
+                        vscodeNotebook.activeNotebookEditor.kernel.selection.kernelSpec.language?.toLowerCase() ===
+                        expectedLanguage.toLowerCase()
+                    );
+                case 'startUsingPythonInterpreter':
+                    kernelInfo = `<startUsingPythonInterpreter ${vscodeNotebook.activeNotebookEditor.kernel.selection.interpreter.path}>`;
+                    return expectedLanguage.toLowerCase() === PYTHON_LANGUAGE.toLowerCase();
+                case 'connectToLiveKernel':
+                    kernelInfo = `<connectToLiveKernel id: ${vscodeNotebook.activeNotebookEditor.kernel.selection.kernelModel.id}, name: ${vscodeNotebook.activeNotebookEditor.kernel.selection.kernelModel.id}>`;
+                    return true;
+                default:
+                    // We don't support testing other kernels, not required hence not added.
+                    // eslint-disable-next-line no-console
+                    throw new Error('Testing other kernel connections not supported');
             }
-            if (vscodeNotebook.activeNotebookEditor.kernel.selection.kind === 'startUsingPythonInterpreter') {
-                kernelInfo = `<startUsingPythonInterpreter ${vscodeNotebook.activeNotebookEditor.kernel.selection.interpreter.path}>`;
-                return expectedLanguage.toLowerCase() === PYTHON_LANGUAGE.toLowerCase();
-            }
-            // We don't support testing other kernels, not required hence not added.
-            // eslint-disable-next-line no-console
-            console.error('Testing other kernel connections not supported');
         }
         if (!expectedLanguage) {
             kernelInfo = '<No specific kernel expected>. Non Jupyter Kernel';
@@ -293,7 +329,28 @@ export async function trustAllNotebooks() {
     }
     (<any>dsSettings).alwaysTrustNotebooks = true;
 }
-export async function startJupyter(closeInitialEditor: boolean) {
+
+export async function startJupyterServer(api?: IExtensionTestApi) {
+    const { serviceContainer } = api ? { serviceContainer: api.serviceContainer } : await getServices();
+    if (IS_REMOTE_NATIVE_TEST) {
+        const selector = serviceContainer.get<JupyterServerSelector>(JupyterServerSelector);
+        const uri = await JupyterServer.instance.startJupyterWithToken();
+        const uriString = decodeURIComponent(uri.toString());
+        traceInfo(`Jupyter started and listening at ${uriString}`);
+        await selector.setJupyterURIToRemote(uriString);
+    } else {
+        traceInfo(`Jupyter not started and set to local`); // This is the default
+    }
+}
+
+export async function stopJupyterServer() {
+    if (!IS_REMOTE_NATIVE_TEST) {
+        return;
+    }
+    await JupyterServer.instance.dispose().catch(noop);
+}
+
+export async function prewarmNotebooks() {
     const { editorProvider, vscodeNotebook, serviceContainer } = await getServices();
     await closeActiveWindows();
 
@@ -311,12 +368,7 @@ export async function startJupyter(closeInitialEditor: boolean) {
         await executeActiveDocument();
         // Wait for Jupyter to start.
         await waitForExecutionCompletedSuccessfully(cell, 60_000);
-
-        if (closeInitialEditor) {
-            await closeActiveWindows();
-        } else {
-            await deleteCell(0);
-        }
+        await closeActiveWindows();
     } finally {
         disposables.forEach((d) => d.dispose());
     }
@@ -326,6 +378,12 @@ function assertHasExecutionCompletedSuccessfully(cell: NotebookCell) {
     return (
         (cell.metadata.executionOrder ?? 0) > 0 &&
         cell.metadata.runState === vscodeNotebookEnums.NotebookCellRunState.Success
+    );
+}
+function assertHasEmptyCellExecutionCompleted(cell: NotebookCell) {
+    return (
+        (cell.metadata.executionOrder ?? 0) === 0 &&
+        cell.metadata.runState === vscodeNotebookEnums.NotebookCellRunState.Idle
     );
 }
 /**
@@ -350,6 +408,14 @@ export async function waitForExecutionCompletedSuccessfully(cell: NotebookCell, 
         async () => assertHasExecutionCompletedSuccessfully(cell),
         timeout,
         `Cell ${cell.index + 1} did not complete successfully`
+    );
+    await waitForCellExecutionToComplete(cell);
+}
+export async function waitForEmptyCellExecutionCompleted(cell: NotebookCell, timeout: number = 15_000) {
+    await waitForCondition(
+        async () => assertHasEmptyCellExecutionCompleted(cell),
+        timeout,
+        `Cell ${cell.index + 1} did not complete (this is an empty cell)`
     );
     await waitForCellExecutionToComplete(cell);
 }

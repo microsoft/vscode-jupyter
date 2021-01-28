@@ -14,6 +14,7 @@ export class CancellationError extends Error {
         super(localize.Common.canceled());
     }
 }
+
 /**
  * Create a promise that will either resolve with a default value or reject when the token is cancelled.
  *

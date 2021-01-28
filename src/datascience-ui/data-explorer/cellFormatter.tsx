@@ -26,11 +26,9 @@ class CellFormatter extends React.Component<ICellFormatterProps> {
             switch (columnType) {
                 case ColumnType.Bool:
                     return this.renderBool(this.props.value as boolean);
-                    break;
 
                 case ColumnType.Number:
                     return this.renderNumber(this.props.value as number);
-                    break;
 
                 default:
                     break;

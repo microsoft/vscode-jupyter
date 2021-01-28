@@ -31,7 +31,8 @@ export async function chainWithPendingUpdates(
     const aggregatedPromise = pendingUpdates
         // We need to ensure the update operation gets invoked after previous updates have been completed.
         // This way, the callback making references to cell metadata will have the latest information.
-        .then(async () =>
+        // Even if previous update fails, we should not fail this current update.
+        .finally(async () =>
             editor.edit(update).then(
                 (result) => deferred.resolve(result),
                 (ex) => deferred.reject(ex)

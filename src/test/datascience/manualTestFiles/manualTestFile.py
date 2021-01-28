@@ -4,6 +4,7 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import torch 
 
 # %% Matplotlib Plot
 x = np.linspace(0, 20, 100)
@@ -51,6 +52,7 @@ myDataFrame = pd.DataFrame(myNparray, columns=['name', 'b', 'c', 'd'])
 mySeries = myDataFrame['name']
 myList = [x ** 2 for x in range(0, 100000)]
 myString = 'testing testing testing'
+myTensor = torch.LongTensor([[[1, 2, 3], [4, 5, 6]]])
 
 # %% Latex
 %%latex

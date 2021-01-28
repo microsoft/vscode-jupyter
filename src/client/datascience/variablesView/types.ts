@@ -27,13 +27,22 @@ export class IVariableViewPanelMapping {
     public [SharedMessages.LocInit]: string;
     public [InteractiveWindowMessages.FinishCell]: IFinishCell;
     public [InteractiveWindowMessages.UpdateVariableViewExecutionCount]: { executionCount: number };
+    public [InteractiveWindowMessages.GetHTMLByIdRequest]: string;
+    public [InteractiveWindowMessages.GetHTMLByIdResponse]: string;
+    public [InteractiveWindowMessages.RestartKernel]: never | undefined;
+}
+
+export interface IActiveNotebookChangedEvent {
+    notebook?: INotebook;
+    executionCount?: number;
 }
 
 export const INotebookWatcher = Symbol('INotebookWatcher');
 export interface INotebookWatcher {
-    readonly activeVariableViewNotebook?: INotebook;
-    readonly onDidChangeActiveVariableViewNotebook: Event<INotebook | undefined>;
-    readonly onDidExecuteActiveVariableViewNotebook: Event<{ executionCount: number }>;
+    readonly activeNotebook?: INotebook;
+    readonly onDidChangeActiveNotebook: Event<IActiveNotebookChangedEvent>;
+    readonly onDidExecuteActiveNotebook: Event<{ executionCount: number }>;
+    readonly onDidRestartActiveNotebook: Event<void>;
 }
 
 export const IVariableViewProvider = Symbol('IVariableViewProvider');

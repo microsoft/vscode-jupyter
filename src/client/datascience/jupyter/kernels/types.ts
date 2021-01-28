@@ -149,7 +149,8 @@ export interface IKernelSelectionUsage {
         resource: Resource,
         type: 'raw' | 'jupyter' | 'noConnection',
         session?: IJupyterSessionManager,
-        cancelToken?: CancellationToken
+        cancelToken?: CancellationToken,
+        disableUI?: boolean
     ): Promise<KernelConnectionMetadata | undefined>;
 }
 
@@ -167,8 +168,8 @@ export interface IKernel extends IAsyncDisposable {
      */
     readonly info?: KernelMessage.IInfoReplyMsg['content'];
     readonly kernelSocket: Observable<KernelSocketInformation | undefined>;
-    start(): Promise<void>;
-    interrupt(): Promise<InterruptResult>;
+    start(options?: { disableUI?: boolean }): Promise<void>;
+    interrupt(document: NotebookDocument): Promise<InterruptResult>;
     restart(): Promise<void>;
     executeCell(cell: NotebookCell): Promise<void>;
     executeAllCells(document: NotebookDocument): Promise<void>;

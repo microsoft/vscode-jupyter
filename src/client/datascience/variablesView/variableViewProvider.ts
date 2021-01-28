@@ -4,8 +4,15 @@
 
 import { inject, injectable, named } from 'inversify';
 import { CancellationToken, WebviewView, WebviewViewResolveContext } from 'vscode';
-import { IApplicationShell, IWebviewViewProvider, IWorkspaceService } from '../../common/application/types';
+import {
+    IApplicationShell,
+    ICommandManager,
+    IWebviewViewProvider,
+    IWorkspaceService
+} from '../../common/application/types';
+import { isTestExecution } from '../../common/constants';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
+import { createDeferred, Deferred } from '../../common/utils/async';
 import { Identifiers } from '../constants';
 import { IDataViewerFactory } from '../data-viewing/types';
 import { ICodeCssGenerator, IJupyterVariableDataProviderFactory, IJupyterVariables, IThemeFinder } from '../types';
@@ -16,6 +23,23 @@ import { VariableView } from './variableView';
 @injectable()
 export class VariableViewProvider implements IVariableViewProvider {
     public readonly viewType = 'jupyterViewVariables';
+
+    // Either return the active variable view or wait until it's created and return it
+    // @ts-ignore Property will be accessed in test code via casting to ITestVariableViewProviderInterface
+    private get activeVariableView(): Promise<VariableView> {
+        if (!isTestExecution()) {
+            throw new Error('activeVariableView only for test code');
+        }
+        // If we have already created the view, then just return it
+        if (this.variableView) {
+            return Promise.resolve(this.variableView);
+        }
+
+        // If not wait until created and then return
+        this.activeVariableViewPromise = createDeferred<VariableView>();
+        return this.activeVariableViewPromise.promise;
+    }
+    private activeVariableViewPromise?: Deferred<VariableView>;
 
     private variableView?: VariableView;
 
@@ -31,7 +55,8 @@ export class VariableViewProvider implements IVariableViewProvider {
         @inject(IJupyterVariableDataProviderFactory)
         private readonly jupyterVariableDataProviderFactory: IJupyterVariableDataProviderFactory,
         @inject(IDataViewerFactory) private readonly dataViewerFactory: IDataViewerFactory,
-        @inject(INotebookWatcher) private readonly notebookWatcher: INotebookWatcher
+        @inject(INotebookWatcher) private readonly notebookWatcher: INotebookWatcher,
+        @inject(ICommandManager) private readonly commandManager: ICommandManager
     ) {}
 
     public async resolveWebviewView(
@@ -53,8 +78,14 @@ export class VariableViewProvider implements IVariableViewProvider {
             this.appShell,
             this.jupyterVariableDataProviderFactory,
             this.dataViewerFactory,
-            this.notebookWatcher
+            this.notebookWatcher,
+            this.commandManager
         );
+
+        // If someone is waiting for the variable view resolve that here
+        if (this.activeVariableViewPromise) {
+            this.activeVariableViewPromise.resolve(this.variableView);
+        }
 
         await this.variableView.load(webviewView);
     }

@@ -12,6 +12,7 @@ import { NotebookCell } from '../../../../typings/vscode-proposed';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { IDisposable } from '../../../client/common/types';
 import { IExtensionTestApi, waitForCondition } from '../../common';
+import { IS_REMOTE_NATIVE_TEST } from '../../constants';
 import { closeActiveWindows, EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../initialize';
 import { openNotebook } from '../helpers';
 import {
@@ -49,7 +50,7 @@ suite('DataScience - VSCode Notebook - (Saving) (slow)', function () {
     let testEmptyIPynb: Uri;
     suiteSetup(async function () {
         api = await initialize();
-        if (!(await canRunNotebookTests())) {
+        if (IS_REMOTE_NATIVE_TEST || !(await canRunNotebookTests())) {
             return this.skip();
         }
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
@@ -61,7 +62,6 @@ suite('DataScience - VSCode Notebook - (Saving) (slow)', function () {
         // Coz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
         testEmptyIPynb = Uri.file(await createTemporaryNotebook(templateIPynbEmpty, disposables));
     });
-    // teardown(async () => closeNotebooksAndCleanUpAfterTests(disposables));
     teardown(() => closeNotebooks(disposables));
     suiteTeardown(closeNotebooksAndCleanUpAfterTests);
     test('Verify output & metadata when re-opening (slow)', async () => {
@@ -93,7 +93,7 @@ suite('DataScience - VSCode Notebook - (Saving) (slow)', function () {
             'Cells did not finish executing'
         );
 
-        function verifyCelMetadata() {
+        function verifyCelMetadata(reOpened = false) {
             assert.lengthOf(cell1.outputs, 1, 'Incorrect output for cell 1');
             assert.lengthOf(cell2.outputs, 1, 'Incorrect output for cell 2');
             assert.lengthOf(cell3.outputs, 0, 'Incorrect output for cell 3'); // stream and interrupt error.
@@ -101,19 +101,27 @@ suite('DataScience - VSCode Notebook - (Saving) (slow)', function () {
 
             assert.equal(
                 cell1.metadata.runState,
-                vscodeNotebookEnums.NotebookCellRunState.Success,
-                'Incorrect state 1'
+                reOpened
+                    ? vscodeNotebookEnums.NotebookCellRunState.Idle
+                    : vscodeNotebookEnums.NotebookCellRunState.Success,
+                'Incorrect state in cell 1'
             );
-            assert.equal(cell2.metadata.runState, vscodeNotebookEnums.NotebookCellRunState.Error, 'Incorrect state 2');
+            assert.equal(
+                cell2.metadata.runState,
+                reOpened
+                    ? vscodeNotebookEnums.NotebookCellRunState.Idle
+                    : vscodeNotebookEnums.NotebookCellRunState.Error,
+                'Incorrect state in cell 2'
+            );
             assert.equal(
                 cell3.metadata.runState || vscodeNotebookEnums.NotebookCellRunState.Idle,
                 vscodeNotebookEnums.NotebookCellRunState.Idle,
-                'Incorrect state 3'
+                'Incorrect state in cell 3'
             );
             assert.equal(
                 cell4.metadata.runState || vscodeNotebookEnums.NotebookCellRunState.Idle,
                 vscodeNotebookEnums.NotebookCellRunState.Idle,
-                'Incorrect state 4'
+                'Incorrect state in cell 4'
             );
 
             assertHasTextOutputInVSCode(cell1, '1', 0);
@@ -154,6 +162,6 @@ suite('DataScience - VSCode Notebook - (Saving) (slow)', function () {
         // Reopen the notebook & validate the metadata.
         await openNotebook(api.serviceContainer, testEmptyIPynb.fsPath);
         initializeCells();
-        verifyCelMetadata();
+        verifyCelMetadata(true);
     });
 });

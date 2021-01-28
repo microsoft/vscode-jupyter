@@ -638,6 +638,20 @@ export interface IEventNamePropertyMapping {
     [Telemetry.UserInstalledPandas]: never | undefined;
     [Telemetry.UserDidNotInstallJupyter]: never | undefined;
     [Telemetry.UserDidNotInstallPandas]: never | undefined;
+    /**
+     * This telemetry tracks the display of the Picker for Jupyter Remote servers.
+     */
+    [Telemetry.SetJupyterURIUIDisplayed]: {
+        /**
+         * This telemetry tracks the source of this UI.
+         * nonUser - Invoked internally by our code.
+         * toolbar - Invoked by user from Native or Interactive window toolbar.
+         * commandPalette - Invoked from command palette by the user.
+         * nativeNotebookStatusBar - Invoked from Native notebook statusbar.
+         * nativeNotebookToolbar - Invoked from Native notebook toolbar.
+         */
+        commandSource: 'nonUser' | 'commandPalette' | 'toolbar' | 'nativeNotebookStatusBar' | 'nativeNotebookToolbar';
+    };
     [Telemetry.SetJupyterURIToLocal]: never | undefined;
     [Telemetry.SetJupyterURIToUserSpecified]: {
         azure: boolean;
@@ -962,7 +976,7 @@ export interface IEventNamePropertyMapping {
      */
     [Telemetry.IPyWidgetPromptToUseCDN]: never | undefined;
     /**
-     * Telemetry sent when user does somethign with the prompt displsyed to user about using CDN for IPyWidget scripts.
+     * Telemetry sent when user does something with the prompt displayed to user about using CDN for IPyWidget scripts.
      */
     [Telemetry.IPyWidgetPromptToUseCDNSelection]: {
         selection: 'ok' | 'cancel' | 'dismissed' | 'doNotShowAgain';
@@ -990,6 +1004,8 @@ export interface IEventNamePropertyMapping {
     // Telemetry send when we create a notebook for a raw kernel or jupyter
     [Telemetry.RawKernelCreatingNotebook]: never | undefined;
     [Telemetry.JupyterCreatingNotebook]: never | undefined;
+    // Telemetry sent when starting auto starting Native Notebook kernel fails silently.
+    [Telemetry.KernelStartFailedAndUIDisabled]: never | undefined;
 
     // Raw kernel timing events
     [Telemetry.RawKernelSessionConnect]: never | undefined;
@@ -1001,6 +1017,9 @@ export interface IEventNamePropertyMapping {
     [Telemetry.RawKernelSessionStartException]: never | undefined;
     [Telemetry.RawKernelSessionStartTimeout]: never | undefined;
     [Telemetry.RawKernelSessionStartUserCancel]: never | undefined;
+    [Telemetry.RawKernelSessionStartNoIpykernel]: {
+        reason: number;
+    };
 
     // Run by line events
     [Telemetry.RunByLineStart]: never | undefined;

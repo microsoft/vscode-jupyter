@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable } from 'inversify';
-import { ConfigurationTarget } from 'vscode';
+import { ConfigurationTarget, languages } from 'vscode';
 import { NotebookContentProvider as VSCNotebookContentProvider } from '../../../../types/vscode-proposed';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import {
@@ -12,13 +12,14 @@ import {
     IVSCodeNotebook,
     IWorkspaceService
 } from '../../common/application/types';
-import { UseVSCodeNotebookEditorApi } from '../../common/constants';
+import { NotebookCellScheme, PYTHON_LANGUAGE, UseVSCodeNotebookEditorApi } from '../../common/constants';
 import { traceError } from '../../common/logger';
 import { IDisposableRegistry } from '../../common/types';
 import { DataScience } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { JupyterNotebookView } from './constants';
 import { isJupyterNotebook } from './helpers/helpers';
+import { NotebookCompletionProvider } from './intellisense/completionProvider';
 import { VSCodeKernelPickerProvider } from './kernelProvider';
 import { INotebookContentProvider, INotebookKernelProvider } from './types';
 
@@ -38,13 +39,15 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
         @inject(IApplicationEnvironment) private readonly env: IApplicationEnvironment,
         @inject(IApplicationShell) private readonly shell: IApplicationShell,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
-        @inject(ICommandManager) private readonly commandManager: ICommandManager
+        @inject(ICommandManager) private readonly commandManager: ICommandManager,
+        @inject(NotebookCompletionProvider) private readonly completionProvider: NotebookCompletionProvider
     ) {}
     public async activate(): Promise<void> {
         // This condition is temporary.
         // If user belongs to the experiment, then make the necessary changes to package.json.
         // Once the API is final, we won't need to modify the package.json.
         if (this.useNativeNb) {
+            this.registerCompletionItemProvider();
             await this.enableNotebooks();
         } else {
             // Enable command to open in preview notebook (only for insiders).
@@ -96,6 +99,15 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
                 }
             }
         }
+    }
+
+    private registerCompletionItemProvider() {
+        const disposable = languages.registerCompletionItemProvider(
+            { language: PYTHON_LANGUAGE, scheme: NotebookCellScheme },
+            this.completionProvider,
+            '.'
+        );
+        this.disposables.push(disposable);
     }
     private async enableNotebooks() {
         if (this.env.channel === 'stable') {

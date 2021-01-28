@@ -209,7 +209,8 @@ export class JupyterExecutionBase implements IJupyterExecution {
                         kernelConnectionMetadata,
                         workingDir: options ? options.workingDir : undefined,
                         uri: options ? options.uri : undefined,
-                        purpose: options ? options.purpose : uuid()
+                        purpose: options ? options.purpose : uuid(),
+                        disableUI: !allowUI
                     };
 
                     // eslint-disable-next-line no-constant-condition

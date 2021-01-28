@@ -78,7 +78,11 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     private ioPubEventEmitter = new EventEmitter<KernelMessage.IIOPubMessage>();
     private ioPubHandler: Slot<ISessionWithSocket, KernelMessage.IIOPubMessage>;
 
-    constructor(private restartSessionUsed: (id: Kernel.IKernelConnection) => void, public workingDirectory: string) {
+    constructor(
+        private restartSessionUsed: (id: Kernel.IKernelConnection) => void,
+        public workingDirectory: string,
+        private sessionTimeout: number
+    ) {
         this.statusHandler = this.onStatusChanged.bind(this);
         this.ioPubHandler = (_s, m) => this.ioPubEventEmitter.fire(m);
     }
@@ -112,6 +116,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     }
     public async interrupt(timeout: number): Promise<void> {
         if (this.session && this.session.kernel) {
+            traceInfo(`Interrupting kernel: ${this.session.kernel.name}`);
             // Listen for session status changes
             this.session.statusChanged.connect(this.statusHandler);
 
@@ -164,10 +169,10 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         this.session?.statusChanged.connect(this.statusHandler); // NOSONAR
 
         // Start the restart session promise too.
-        this.restartSessionPromise = this.createRestartSession(kernelConnection, newSession);
+        this.restartSessionPromise = this.createRestartSession(kernelConnection, newSession, timeoutMS);
     }
 
-    public async restart(_timeout: number): Promise<void> {
+    public async restart(timeout: number): Promise<void> {
         if (this.session?.isRemoteSession) {
             await this.session.kernel.restart();
             return;
@@ -175,7 +180,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
 
         // Start the restart session now in case it wasn't started
         if (!this.restartSessionPromise) {
-            this.startRestartSession();
+            this.startRestartSession(timeout);
         }
 
         // Just kill the current session and switch to the other
@@ -198,7 +203,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
             this.session.statusChanged.connect(this.statusHandler);
 
             // After switching, start another in case we restart again.
-            this.restartSessionPromise = this.createRestartSession(this.kernelConnectionMetadata, oldSession);
+            this.restartSessionPromise = this.createRestartSession(this.kernelConnectionMetadata, oldSession, timeout);
             traceInfo('Started new restart session');
             if (oldStatusHandler) {
                 oldSession.statusChanged.disconnect(oldStatusHandler);
@@ -222,7 +227,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         // It has been observed that starting the restart session slows down first time to execute a cell.
         // Solution is to start the restart session after the first execution of user code.
         if (promise) {
-            promise.done.finally(() => this.startRestartSession()).catch(noop);
+            promise.done.finally(() => this.startRestartSession(this.sessionTimeout)).catch(noop);
         }
         return promise;
     }
@@ -322,10 +327,11 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     }
 
     // Sub classes need to implement their own restarting specific code
-    protected abstract startRestartSession(): void;
-    protected abstract async createRestartSession(
+    protected abstract startRestartSession(timeout: number): void;
+    protected abstract createRestartSession(
         kernelConnection: KernelConnectionMetadata | undefined,
         session: ISessionWithSocket,
+        timeout: number,
         cancelToken?: CancellationToken
     ): Promise<ISessionWithSocket>;
 
@@ -362,17 +368,17 @@ export abstract class BaseJupyterSession implements IJupyterSession {
             };
 
             let statusChangeHandler: Slot<ISessionWithSocket, Kernel.Status> | undefined;
-            const kernelStatusChangedPromise = new Promise((resolve, reject) => {
+            const kernelStatusChangedPromise = new Promise<void>((resolve, reject) => {
                 statusChangeHandler = (_: ISessionWithSocket, e: Kernel.Status) => statusHandler(resolve, reject, e);
                 session.statusChanged.connect(statusChangeHandler);
             });
             let kernelChangedHandler: Slot<ISessionWithSocket, Session.IKernelChangedArgs> | undefined;
-            const statusChangedPromise = new Promise((resolve, reject) => {
+            const statusChangedPromise = new Promise<void>((resolve, reject) => {
                 kernelChangedHandler = (_: ISessionWithSocket, e: Session.IKernelChangedArgs) =>
                     statusHandler(resolve, reject, e.newValue?.status);
                 session.kernelChanged.connect(kernelChangedHandler);
             });
-            const checkStatusPromise = new Promise(async (resolve) => {
+            const checkStatusPromise = new Promise<void>(async (resolve) => {
                 // This function seems to cause CI builds to timeout randomly on
                 // different tests. Waiting for status to go idle doesn't seem to work and
                 // in the past, waiting on the ready promise doesn't work either. Check status with a maximum of 5 seconds

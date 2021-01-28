@@ -256,7 +256,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
                             data
                         ).ignoreErrors()
                     )
-                    .catch(); // do nothing
+                    .catch(noop); // do nothing
                 break;
 
             case InteractiveWindowMessages.GotoCodeCell:
@@ -489,7 +489,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
             } catch (err) {
                 status.dispose();
                 traceError(err);
-                this.applicationShell.showErrorMessage(err);
+                this.applicationShell.showErrorMessage(err).then(noop, noop);
             }
         }
     }
@@ -497,7 +497,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
     @captureTelemetry(Telemetry.CopySourceCode, undefined, false)
     public copyCode(args: ICopyCode) {
         return this.copyCodeInternal(args.source).catch((err) => {
-            this.applicationShell.showErrorMessage(err);
+            this.applicationShell.showErrorMessage(err).then(noop, noop);
         });
     }
 
@@ -715,7 +715,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
                         traceError(`Error executing a cell: `, error);
                         status.dispose();
                         if (!(error instanceof CancellationError)) {
-                            this.applicationShell.showErrorMessage(error.toString());
+                            this.applicationShell.showErrorMessage(error.toString()).then(noop, noop);
                         }
                     },
                     () => {
@@ -986,7 +986,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
             }
         } catch (exc) {
             traceError(`Exception attempting to start notebook: `, exc);
-            // We should dispose ourselves if the load fails. Othewise the user
+            // We should dispose ourselves if the load fails. Otherwise the user
             // updates their install and we just fail again because the load promise is the same.
             await this.closeBecauseOfFailure(exc);
 
@@ -1029,7 +1029,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         } catch (e) {
             traceError(e);
             sendTelemetryEvent(Telemetry.FailedShowDataViewer);
-            this.applicationShell.showErrorMessage(localize.DataScience.showDataViewerFail());
+            this.applicationShell.showErrorMessage(localize.DataScience.showDataViewerFail()).then(noop, noop);
         }
     }
 
@@ -1150,7 +1150,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
                 await this.addSysInfo(SysInfoReason.Restart);
             } else {
                 // Show the error message
-                this.applicationShell.showErrorMessage(exc);
+                this.applicationShell.showErrorMessage(exc).then(noop, noop);
                 traceError(exc);
             }
         } finally {
@@ -1165,14 +1165,16 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
 
     private selectNewKernel() {
         // This is handled by a command.
-        this.commandManager.executeCommand(Commands.SwitchJupyterKernel, {
-            identity: this.notebookIdentity.resource,
-            resource: this.owningResource,
-            currentKernelDisplayName:
-                this.notebookMetadata?.kernelspec?.display_name ||
-                this.notebookMetadata?.kernelspec?.name ||
-                getDisplayNameOrNameOfKernelConnection(this._notebook?.getKernelConnection())
-        });
+        this.commandManager
+            .executeCommand(Commands.SwitchJupyterKernel, {
+                identity: this.notebookIdentity.resource,
+                resource: this.owningResource,
+                currentKernelDisplayName:
+                    this.notebookMetadata?.kernelspec?.display_name ||
+                    this.notebookMetadata?.kernelspec?.name ||
+                    getDisplayNameOrNameOfKernelConnection(this._notebook?.getKernelConnection())
+            })
+            .then(noop, noop);
     }
 
     private async createNotebook(serverConnection: INotebookProviderConnection): Promise<INotebook> {
@@ -1202,12 +1204,14 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
                         e.kernelConnectionMetadata
                     );
                     if (newKernel && kernelConnectionMetadataHasKernelSpec(newKernel) && newKernel.kernelSpec) {
-                        this.commandManager.executeCommand(
-                            Commands.SetJupyterKernel,
-                            newKernel,
-                            this.notebookIdentity.resource,
-                            this.owningResource
-                        );
+                        this.commandManager
+                            .executeCommand(
+                                Commands.SetJupyterKernel,
+                                newKernel,
+                                this.notebookIdentity.resource,
+                                this.owningResource
+                            )
+                            .then(noop, noop);
                     }
                 } else {
                     throw e;
@@ -1291,7 +1295,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
     @captureTelemetry(Telemetry.GotoSourceCode, undefined, false)
     private gotoCode(args: IGotoCode) {
         this.gotoCodeInternal(args.file, args.line).catch((err) => {
-            this.applicationShell.showErrorMessage(err);
+            this.applicationShell.showErrorMessage(err).then(noop, noop);
         });
     }
 
@@ -1491,7 +1495,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const value = this.workspaceStorage.get(VariableExplorerStateKeys.height, {} as any);
             value[uri.toString()] = updatedHeights;
-            this.workspaceStorage.update(VariableExplorerStateKeys.height, value);
+            this.workspaceStorage.update(VariableExplorerStateKeys.height, value).then(noop, noop);
         }
     }
 
@@ -1552,7 +1556,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
     }
 
     private async selectServer() {
-        await this.commandManager.executeCommand(Commands.SelectJupyterURI);
+        await this.commandManager.executeCommand(Commands.SelectJupyterURI, undefined, 'toolbar');
     }
     private async kernelChangeHandler(kernelConnection: KernelConnectionMetadata) {
         // Check if we are changing to LiveKernelModel
@@ -1572,9 +1576,9 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
 
     private openSettings(setting: string | undefined) {
         if (setting) {
-            commands.executeCommand('workbench.action.openSettings', setting);
+            commands.executeCommand('workbench.action.openSettings', setting).then(noop, noop);
         } else {
-            commands.executeCommand('workbench.action.openSettings');
+            commands.executeCommand('workbench.action.openSettings').then(noop, noop);
         }
     }
 

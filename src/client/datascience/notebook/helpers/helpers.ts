@@ -18,6 +18,7 @@ import type {
     NotebookKernel as VSCNotebookKernel
 } from '../../../../../typings/vscode-proposed';
 import { concatMultilineString, splitMultilineString } from '../../../../datascience-ui/common';
+import { IVSCodeNotebook } from '../../../common/application/types';
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../common/constants';
 import '../../../common/extensions';
 import { traceError, traceInfo, traceWarning } from '../../../common/logger';
@@ -37,6 +38,8 @@ import cloneDeep = require('lodash/cloneDeep');
 import { Uri } from 'vscode';
 import { VSCodeNotebookKernelMetadata } from '../kernelWithMetadata';
 import { chainWithPendingUpdates } from './notebookUpdater';
+import { Resource } from '../../../common/types';
+import { IFileSystem } from '../../../common/platform/types';
 
 // This is the custom type we are adding into nbformat.IBaseCellMetadata
 export interface IBaseCellVSCodeMetadata {
@@ -71,6 +74,12 @@ const kernelInformationForNotebooks = new WeakMap<
     { metadata?: KernelConnectionMetadata | undefined; kernelInfo?: KernelMessage.IInfoReplyMsg['content'] }
 >();
 
+export function isResourceNativeNotebook(resource: Resource, notebooks: IVSCodeNotebook, fs: IFileSystem) {
+    if (!resource) {
+        return false;
+    }
+    return notebooks.notebookDocuments.some((item) => fs.arePathsSame(item.uri, resource));
+}
 export function getNotebookMetadata(document: NotebookDocument): nbformat.INotebookMetadata | undefined {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let notebookContent: Partial<nbformat.INotebookContent> = document.metadata.custom as any;
@@ -111,8 +120,17 @@ export function isPythonNotebook(metadata?: nbformat.INotebookMetadata) {
  * Similarly, if you open an existing notebook, it is marked as dirty.
  *
  * Solution: Store the metadata in some place, when saving, take the metadata & store in the file.
+ * Thus this method doesn't update it, we merely keep track of the kernel information, and when saving we retrieve the information from the tracked location (map).
+ *
+ * If `kernelConnection` is empty, then when saving the notebook we will not update the
+ * metadata in the notebook with any kernel information (we can't as its empty).
+ *
+ * @param {(KernelConnectionMetadata | undefined)} kernelConnection
+ * This can be undefined when a kernels contributed by other VSC extensions is selected.
+ * E.g. .NET extension can contribute their own extension. At this point they could
+ * end up updating the notebook metadata themselves. We should not blow this metadata away. The way we achieve that is by clearing this stored kernel information & not updating the metadata.
  */
-export function updateKernelInNotebookMetadata(
+export function trackKernelInNotebookMetadata(
     document: NotebookDocument,
     kernelConnection: KernelConnectionMetadata | undefined
 ) {
@@ -120,7 +138,12 @@ export function updateKernelInNotebookMetadata(
     data.metadata = kernelConnection;
     kernelInformationForNotebooks.set(document, data);
 }
-export function updateKernelInfoInNotebookMetadata(
+/**
+ * Thus this method doesn't update it the notebook metadata, we merely keep track of the information.
+ * When saving we retrieve the information from the tracked location (map).
+ * @see {trackKernelInNotebookMetadata} That function does something similar.
+ */
+export function trackKernelInfoInNotebookMetadata(
     document: NotebookDocument,
     kernelInfo: KernelMessage.IInfoReplyMsg['content']
 ) {
@@ -143,14 +166,15 @@ export function notebookModelToVSCNotebookData(
     notebookContentWithoutCells: Exclude<Partial<nbformat.INotebookContent>, 'cells'>,
     notebookUri: Uri,
     nbCells: nbformat.IBaseCell[],
-    preferredLanguage: string
+    preferredLanguage: string,
+    originalJson: Partial<nbformat.INotebookContent>
 ): NotebookData {
     const cells = nbCells
         .map((cell) => createVSCNotebookCellDataFromCell(isNotebookTrusted, preferredLanguage, cell))
         .filter((item) => !!item)
         .map((item) => item!);
 
-    if (cells.length === 0 && isUntitledFile(notebookUri)) {
+    if (cells.length === 0 && (isUntitledFile(notebookUri) || Object.keys(originalJson).length === 0)) {
         cells.push({
             cellKind: vscodeNotebookEnums.CellKind.Code,
             language: preferredLanguage,
@@ -307,37 +331,14 @@ function createNotebookCellDataFromCodeCell(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const cellOutputs: nbformat.IOutput[] = Array.isArray(cell.outputs) ? cell.outputs : [];
     const outputs = createVSCCellOutputsFromOutputs(cellOutputs);
-    // If we have an execution count & no errors, then success state.
-    // If we have an execution count &  errors, then error state.
-    // Else idle state.
+    const runState = vscodeNotebookEnums.NotebookCellRunState.Idle;
     const hasErrors = outputs.some((output) => output.outputKind === vscodeNotebookEnums.CellOutputKind.Error);
     const hasExecutionCount = typeof cell.execution_count === 'number' && cell.execution_count > 0;
-    let runState: NotebookCellRunState;
     let statusMessage: string | undefined;
-    if (!hasExecutionCount) {
-        runState = vscodeNotebookEnums.NotebookCellRunState.Idle;
-    } else if (hasErrors) {
-        runState = vscodeNotebookEnums.NotebookCellRunState.Error;
+    if (hasExecutionCount && hasErrors) {
         // Error details are stripped from the output, get raw output.
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         statusMessage = getCellStatusMessageBasedOnFirstErrorOutput(cellOutputs);
-    } else {
-        runState = vscodeNotebookEnums.NotebookCellRunState.Success;
-    }
-
-    const vscodeMetadata = (cell.metadata.vscode as unknown) as IBaseCellVSCodeMetadata | undefined;
-    const startExecutionTime = vscodeMetadata?.start_execution_time
-        ? new Date(Date.parse(vscodeMetadata.start_execution_time)).getTime()
-        : undefined;
-    const endExecutionTime = vscodeMetadata?.end_execution_time
-        ? new Date(Date.parse(vscodeMetadata.end_execution_time)).getTime()
-        : undefined;
-
-    let runStartTime: undefined | number;
-    let lastRunDuration: undefined | number;
-    if (startExecutionTime && typeof endExecutionTime === 'number') {
-        runStartTime = startExecutionTime;
-        lastRunDuration = endExecutionTime - startExecutionTime;
     }
 
     const notebookCellMetadata: NotebookCellMetadata = {
@@ -347,8 +348,6 @@ function createNotebookCellDataFromCodeCell(
         runState,
         runnable: isNbTrusted,
         statusMessage,
-        runStartTime,
-        lastRunDuration,
         custom: getCustomNotebookCellMetadata(cell)
     };
 
@@ -804,4 +803,10 @@ export async function updateVSCNotebookAfterTrustingNotebook(
             }
         });
     });
+}
+
+export function findAssociatedNotebookDocument(cellUri: Uri, vscodeNotebook: IVSCodeNotebook, fs: IFileSystem) {
+    return vscodeNotebook.notebookDocuments.find((item) =>
+        item.cells.some((cell) => fs.arePathsSame(cell.uri, cellUri))
+    );
 }

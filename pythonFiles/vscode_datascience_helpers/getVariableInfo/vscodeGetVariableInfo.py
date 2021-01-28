@@ -2,21 +2,6 @@
 import json as _VSCODE_json
 import builtins as _VSCODE_builtins
 
-
-def _VSCODE_maybeParseTensorShape(var, result):
-    try:
-        vartype = type(var)
-        if (hasattr(vartype, "__name__")) and vartype.__name__ == "Tensor":
-            varshape = str(var.shape)
-            start = varshape.index("[")
-            end = varshape.index("]")
-            if start > 0 and end > 0:
-                res = "(" + varshape[start + 1 : end] + ")"
-                result["shape"] = res
-    except TypeError:
-        pass
-
-
 # Function to do our work. It will return the object
 def _VSCODE_getVariableInfo(var):
     # Start out without the information
@@ -27,8 +12,13 @@ def _VSCODE_getVariableInfo(var):
     # Find shape and count if available
     if hasattr(var, "shape"):
         try:
+            vartype = type(var)
             # Get a bit more restrictive with exactly what we want to count as a shape, since anything can define it
-            if isinstance(var.shape, tuple):
+            if (
+                isinstance(var.shape, tuple)
+                or hasattr(vartype, "__name__")
+                and vartype.__name__ == "EagerTensor"
+            ):
                 _VSCODE_shapeStr = str(var.shape)
                 if (
                     len(_VSCODE_shapeStr) >= 3
@@ -37,8 +27,9 @@ def _VSCODE_getVariableInfo(var):
                     and "," in _VSCODE_shapeStr
                 ):
                     result["shape"] = _VSCODE_shapeStr
+                elif _VSCODE_shapeStr.startswith("torch.Size(["):
+                    result["shape"] = "(" + _VSCODE_shapeStr[12:-2] + ")"
                 del _VSCODE_shapeStr
-            _VSCODE_maybeParseTensorShape(var, result)
         except TypeError:
             pass
 

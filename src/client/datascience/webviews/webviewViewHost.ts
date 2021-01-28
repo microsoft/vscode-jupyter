@@ -8,6 +8,7 @@ import { WebviewView as vscodeWebviewView } from 'vscode';
 
 import {
     IWebview,
+    IWebviewView,
     IWebviewViewMessageListener,
     IWebviewViewProvider,
     IWorkspaceService
@@ -21,6 +22,12 @@ export abstract class WebviewViewHost<IMapping> extends WebviewHost<IMapping> im
     protected get isDisposed(): boolean {
         return this.disposed;
     }
+
+    // Just a small helper for derived classes to access the webviewView instead of having to cast the base webview property
+    protected get webviewView(): IWebviewView | undefined {
+        return this.webview && (this.webview as IWebviewView);
+    }
+
     private messageListener: IWebviewViewMessageListener;
 
     constructor(
@@ -57,7 +64,6 @@ export abstract class WebviewViewHost<IMapping> extends WebviewHost<IMapping> im
         if (!vscodeWebview) {
             throw new Error('WebviewViews must be passed an initial VS Code Webview');
         }
-
         return this.provider.create({
             additionalPaths: workspaceFolder ? [workspaceFolder.fsPath] : [],
             rootPath: this.rootPath,
