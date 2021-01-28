@@ -76,11 +76,13 @@ export class CellExecutionJob {
         if (cells.length === 0) {
             return this.completion.promise;
         }
-        const executions = cells
-            .map((cell) => this.cellExecutions.get(cell))
-            .filter((cell) => !!cell)
-            .map((cell) => cell!)
-            .map((cell) => cell.result);
+        const executions = Promise.all(
+            cells
+                .map((cell) => this.cellExecutions.get(cell))
+                .filter((cell) => !!cell)
+                .map((cell) => cell!)
+                .map((cell) => cell.result)
+        );
         await Promise.race([executions, this.completion.promise]);
     }
     private dispose() {
