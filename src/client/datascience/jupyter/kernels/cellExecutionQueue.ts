@@ -33,7 +33,7 @@ export class CellExecutionQueue {
         return this.cancelledOrCompletedWithErrors || this.completion.completed;
     }
     constructor(
-        public readonly editor: NotebookEditor,
+        private readonly editor: NotebookEditor,
         private readonly notebookPromise: Promise<INotebook>,
         private readonly executionFactory: CellExecutionFactory,
         private readonly isPythonKernelConnection: boolean
@@ -43,7 +43,7 @@ export class CellExecutionQueue {
         this.completion.promise.finally(() => this.dispose()).catch(noop);
     }
     /**
-     * Queue the cells.
+     * Queue the cell for execution & start processing it immediately.
      */
     public queueCell(cell: NotebookCell) {
         const existingCellExecution = this.queueOfCellsToExecute.find((item) => item.cell === cell);
@@ -70,7 +70,6 @@ export class CellExecutionQueue {
     public async cancel(forced?: boolean): Promise<void> {
         this.cancelledOrCompletedWithErrors = true;
         traceInfo('Cancel pending cells');
-        // Check all cells
         await Promise.all(this.queueOfCellsToExecute.map((item) => item.cancel(forced)));
     }
     /**
@@ -133,7 +132,6 @@ export class CellExecutionQueue {
                 await this.cancel();
                 break;
             }
-            this.onCellExecutionCompleted(cellToExecute);
         }
     }
     private async executeIndividualCell(
@@ -146,7 +144,7 @@ export class CellExecutionQueue {
             // Start execution
             await cellExecution.start(notebook);
 
-            // The result promise will resolve when it completes.
+            // The `result` promise will resolve when it completes.
             return cellExecution.result.finally(() =>
                 traceCellMessage(cellExecution.cell, 'Cell from queue completed execution')
             );

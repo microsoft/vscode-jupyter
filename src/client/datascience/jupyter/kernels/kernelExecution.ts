@@ -100,7 +100,7 @@ export class KernelExecution implements IDisposable {
         try {
             traceInfo('Update notebook execution state as running');
 
-            const updateNotebookStatus = chainWithPendingUpdates(executionQueue.editor, (edit) =>
+            const updateNotebookStatus = chainWithPendingUpdates(editor, (edit) =>
                 edit.replaceMetadata({
                     ...document.metadata,
                     runState: vscodeNotebookEnums.NotebookRunState.Running
@@ -112,7 +112,7 @@ export class KernelExecution implements IDisposable {
             await Promise.all([updateNotebookStatus, runAllCells]);
         } finally {
             traceInfo('Restore notebook state to idle after completion');
-            await chainWithPendingUpdates(executionQueue.editor, (edit) =>
+            await chainWithPendingUpdates(editor, (edit) =>
                 edit.replaceMetadata({ ...document.metadata, runState: vscodeNotebookEnums.NotebookRunState.Idle })
             );
         }
