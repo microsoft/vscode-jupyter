@@ -9,7 +9,6 @@ import { IApplicationShell, IVSCodeNotebook } from '../../../common/application/
 import { traceInfo, traceWarning } from '../../../common/logger';
 import { IDisposable, IExtensionContext } from '../../../common/types';
 import { createDeferred, waitForPromise } from '../../../common/utils/async';
-import { noop } from '../../../common/utils/misc';
 import { captureTelemetry } from '../../../telemetry';
 import { Telemetry, VSCodeNativeTelemetry } from '../../constants';
 import { traceCellMessage } from '../../notebook/helpers/helpers';
@@ -19,8 +18,7 @@ import {
     IJupyterSession,
     INotebook,
     INotebookEditorProvider,
-    InterruptResult,
-    IRawNotebookSupportedService
+    InterruptResult
 } from '../../types';
 import { CellExecutionFactory } from './cellExecution';
 import { CellExecutionQueue } from './cellExecutionQueue';
@@ -35,12 +33,9 @@ const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed'
  */
 export class KernelExecution implements IDisposable {
     private readonly documentExecutions = new WeakMap<NotebookDocument, CellExecutionQueue>();
-    private readonly kernelValidated = new WeakMap<NotebookDocument, { kernel: IKernel; promise: Promise<void> }>();
-
     private readonly executionFactory: CellExecutionFactory;
     private readonly disposables: IDisposable[] = [];
     private readonly kernelRestartHandlerAdded = new WeakSet<IKernel>();
-    private isRawNotebookSupported?: Promise<boolean>;
     private _interruptPromise?: Promise<InterruptResult>;
     constructor(
         private readonly kernelProvider: IKernelProvider,
@@ -50,7 +45,6 @@ export class KernelExecution implements IDisposable {
         appShell: IApplicationShell,
         readonly vscNotebook: IVSCodeNotebook,
         readonly metadata: Readonly<KernelConnectionMetadata>,
-        private readonly rawNotebookSupported: IRawNotebookSupportedService,
         context: IExtensionContext,
         private readonly interruptTimeout: number
     ) {

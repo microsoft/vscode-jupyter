@@ -86,9 +86,6 @@ export class CellExecutionQueue {
      * If cells are cancelled, they are not processed, & that too counts as completion.
      */
     public async waitForCompletion(cells: NotebookCell[] = []): Promise<void> {
-        if (cells.length === 0) {
-            return;
-        }
         await Promise.all(
             this.queueOfCellsToExecute.filter((item) => cells.includes(item.cell)).map((cell) => cell.result)
         );
