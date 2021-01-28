@@ -14,11 +14,11 @@ import { CellExecution, CellExecutionFactory } from './cellExecution';
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
 /**
- * A job responsible for execution of cells.
+ * A queue responsible for execution of cells.
  * If this has not completed execution of the cells queued, we can continue to add more cells to this job.
  * All cells queued using `runCells` are added to the queue and processed in order they were added/queued.
  */
-export class CellExecutionJob {
+export class CellExecutionQueue {
     private readonly cellExecutions = new WeakMap<NotebookCell, CellExecution>();
     private readonly queueOfCellsToExecute: CellExecution[] = [];
     private readonly disposables: IDisposable[] = [];
