@@ -162,8 +162,7 @@ export class KernelExecution implements IDisposable {
             return existingExecutionQueue;
         }
 
-        // We need to validate the kernel is usable.
-        // Also ensure we add the handler to kernel immediate (before we resolve the notebook, else its possible user hits restart or the like and we miss that event).
+        // Ensure we add the handler to kernel immediate (before we resolve the notebook, else its possible user hits restart or the like and we miss that event).
         const wrappedNotebookPromise = this.getKernel(editor.document)
             .then((kernel) => this.addKernelRestartHandler(kernel, editor.document))
             .then(() => notebookPromise);
@@ -254,7 +253,6 @@ export class KernelExecution implements IDisposable {
         );
     }
     private async getKernel(document: NotebookDocument): Promise<IKernel> {
-        await this.validateKernel(document);
         let kernel = this.kernelProvider.get(document.uri);
         if (!kernel) {
             kernel = this.kernelProvider.getOrCreate(document.uri, { metadata: this.metadata });
@@ -264,33 +262,5 @@ export class KernelExecution implements IDisposable {
         }
         await kernel.start();
         return kernel;
-    }
-
-    private async validateKernel(document: NotebookDocument): Promise<void> {
-        const kernel = this.kernelProvider.get(document.uri);
-        if (!kernel) {
-            return;
-        }
-        if (!this.kernelValidated.get(document)) {
-            const promise = new Promise<void>(async (resolve) => {
-                this.isRawNotebookSupported =
-                    this.isRawNotebookSupported || this.rawNotebookSupported.isSupportedForLocalLaunch();
-                const rawSupported = await this.isRawNotebookSupported;
-                this.kernelSelectionUsage
-                    .useSelectedKernel(kernel?.kernelConnectionMetadata, document.uri, rawSupported ? 'raw' : 'jupyter')
-                    .finally(() => {
-                        // If there's an exception, then we cannot use the kernel and a message would have been displayed.
-                        // We don't want to cache such a promise (with old kernel), as its possible the user later installs the dependencies.
-                        if (this.kernelValidated.get(document)?.kernel === kernel) {
-                            this.kernelValidated.delete(document);
-                        }
-                    })
-                    .finally(resolve)
-                    .catch(noop);
-            });
-
-            this.kernelValidated.set(document, { kernel, promise });
-        }
-        await this.kernelValidated.get(document)!.promise;
     }
 }

@@ -5,7 +5,6 @@ import { IDisposable } from 'monaco-editor';
 import { NotebookCell, NotebookCellRunState, NotebookEditor } from '../../../../../types/vscode-proposed';
 import { disposeAllDisposables } from '../../../common/helpers';
 import { traceError, traceInfo } from '../../../common/logger';
-import { createDeferred } from '../../../common/utils/async';
 import { noop } from '../../../common/utils/misc';
 import { traceCellMessage } from '../../notebook/helpers/helpers';
 import { INotebook } from '../../types';
@@ -21,14 +20,13 @@ const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed'
 export class CellExecutionQueue {
     private readonly queueOfCellsToExecute: CellExecution[] = [];
     private readonly disposables: IDisposable[] = [];
-    private readonly completion = createDeferred<void>();
     private cancelledOrCompletedWithErrors = false;
     private startedRunningCells = false;
     /**
      * Whether all cells have completed processing or cancelled, or some completed & others cancelled.
      */
     public get isEmpty(): boolean {
-        return this.completion.completed;
+        return this.queueOfCellsToExecute.length === 0;
     }
     /**
      * Whether cells have been cancelled (as a result of interrupt or some have failed).
@@ -44,8 +42,14 @@ export class CellExecutionQueue {
         private readonly isPythonKernelConnection: boolean
     ) {
         // If the editor is closed, then just stop handling the UI updates.
-        this.editor.onDidDispose(() => this.cancel(true), this, this.disposables);
-        this.completion.promise.finally(() => this.dispose()).catch(noop);
+        this.editor.onDidDispose(
+            async () => {
+                await this.cancel(true);
+                this.dispose();
+            },
+            this,
+            this.disposables
+        );
     }
     /**
      * Queue the cell for execution & start processing it immediately.
@@ -83,12 +87,11 @@ export class CellExecutionQueue {
      */
     public async waitForCompletion(cells: NotebookCell[] = []): Promise<void> {
         if (cells.length === 0) {
-            return this.completion.promise;
+            return;
         }
-        const executions = Promise.all(
+        await Promise.all(
             this.queueOfCellsToExecute.filter((item) => cells.includes(item.cell)).map((cell) => cell.result)
         );
-        await Promise.race([executions, this.completion.promise]);
     }
     private dispose() {
         disposeAllDisposables(this.disposables);
@@ -102,7 +105,7 @@ export class CellExecutionQueue {
     private async start() {
         try {
             await this.executeQueuedCells();
-            this.completion.resolve();
+            this.dispose();
         } catch (ex) {
             traceError('Failed to execute cells in CellExecutionQueue', ex);
             // Initialize this property first, so that external users of this class know whether it has completed.
@@ -113,7 +116,7 @@ export class CellExecutionQueue {
             this.cancelledOrCompletedWithErrors = true;
             // If something goes wrong in execution of cells or one cell, then cancel the remaining cells.
             await this.cancel();
-            this.completion.reject(ex);
+            this.dispose();
         }
     }
     private async executeQueuedCells() {
