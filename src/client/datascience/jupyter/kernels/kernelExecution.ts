@@ -64,8 +64,7 @@ export class KernelExecution implements IDisposable {
             return;
         }
         const executionStack = this.getOrCreateCellExecutionStack(editor, notebookPromise);
-        executionStack.queueCell(cell);
-        await executionStack.waitForCompletion(cell);
+        await executionStack.runCell(cell);
     }
 
     @captureTelemetry(Telemetry.ExecuteNativeCell, undefined, true)
@@ -77,15 +76,19 @@ export class KernelExecution implements IDisposable {
             return;
         }
         const executionStack = this.getOrCreateCellExecutionStack(editor, notebookPromise);
-        executionStack.queueAllCells();
 
         try {
             traceInfo('Update notebook execution state as running');
-            await chainWithPendingUpdates(executionStack.editor, (edit) =>
-                edit.replaceMetadata({ ...document.metadata, runState: vscodeNotebookEnums.NotebookRunState.Running })
-            );
 
-            await executionStack.waitForCompletion();
+            const updateNotebookStatus = chainWithPendingUpdates(executionStack.editor, (edit) =>
+                edit.replaceMetadata({
+                    ...document.metadata,
+                    runState: vscodeNotebookEnums.NotebookRunState.Running
+                })
+            );
+            const runAllCells = executionStack.runAllCells();
+
+            await Promise.all([updateNotebookStatus, runAllCells]);
         } finally {
             traceInfo('Restore notebook state to idle');
             await chainWithPendingUpdates(executionStack.editor, (edit) =>

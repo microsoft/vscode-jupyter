@@ -36,15 +36,17 @@ export class CellExecutionStack {
         this.editor.onDidDispose(() => this.cancel(true), this, this.disposables);
         this.completion.promise.finally(() => this.dispose()).catch(noop);
     }
-    public queueCell(cell: NotebookCell) {
+    public async runCell(cell: NotebookCell) {
         this.queueCellForExecution(cell);
+        await this.waitForCompletion(cell);
     }
-    public queueAllCells() {
+    public async runAllCells() {
         this.editor.document.cells
             .filter((cell) => cell.cellKind === vscodeNotebookEnums.CellKind.Code)
             .forEach((cell) => this.queueCellForExecution(cell));
 
         this.startExecutingCells();
+        await this.waitForCompletion();
     }
     public async cancel(forced?: boolean): Promise<void> {
         this.cancelledOrCompletedWithErrors = true;
@@ -60,6 +62,10 @@ export class CellExecutionStack {
         }
         await Promise.race([execution.result, this.completion.promise]);
     }
+    /**
+     * Whether this class has completed processing.
+     * Possible there is still some cleanup remaining (or some promises waiting to complete).
+     */
     public get completed(): boolean {
         return this.cancelledOrCompletedWithErrors || this.completion.completed;
     }
