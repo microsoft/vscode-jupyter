@@ -84,11 +84,15 @@ export class CellExecutionQueue {
     /**
      * Wait for cells to complete (for for the queue of cells to be processed)
      * If cells are cancelled, they are not processed, & that too counts as completion.
+     * If no cells are provided, then wait on all cells in the current queue.
      */
-    public async waitForCompletion(cells: NotebookCell[] = []): Promise<void> {
-        await Promise.all(
-            this.queueOfCellsToExecute.filter((item) => cells.includes(item.cell)).map((cell) => cell.result)
-        );
+    public async waitForCompletion(cells?: NotebookCell[]): Promise<void> {
+        const cellsToCheck =
+            Array.isArray(cells) && cells.length > 0
+                ? this.queueOfCellsToExecute.filter((item) => cells.includes(item.cell))
+                : this.queueOfCellsToExecute;
+
+        await Promise.all(cellsToCheck.map((cell) => cell.result));
     }
     private dispose() {
         disposeAllDisposables(this.disposables);
