@@ -685,7 +685,8 @@ jobs:
       # as on windows / mac they would get directly passed to run, not xvfb-run
       - name: Set xvfb parameters linux
         if: matrix.os == 'ubuntu-latest'
-        run: echo "xvfbCommand=--server-args=\"-screen 0 1024x768x24\"" >> $GITHUB_ENV
+        run: echo "xvfbCommand=--server-args=\"-screen 0 1920x1080x24\"" >> $GITHUB_ENV
+        # run: echo "xvfbCommand=--server-args=\"-screen 0 1024x768x24\"" >> $GITHUB_ENV
 
       - name: Run tests with VSCode & Jupyter
         uses: GabrielBB/xvfb-action@v1.4
