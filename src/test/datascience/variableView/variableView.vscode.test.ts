@@ -107,14 +107,6 @@ suite('DataScience - VariableView', () => {
 
         console.log('IANHU Executed Cell 2');
 
-        // Wait until our VariablesComplete message to see that we have the new variables and have rendered them
-        await onMessageListener.waitForMessage(InteractiveWindowMessages.VariablesComplete);
-
-        // Trying a screenshot here
-        //const imagePath = await screenshot({ filename: 'testShot.jpg' });
-        //if (imagePath) {
-        //console.log(`IANHU imagePath ${imagePath}`);
-        //}
         const displays = await screenshot.listDisplays();
         for (const display of displays) {
             const fileName = `shot${display.id}.jpg`;
@@ -122,11 +114,9 @@ suite('DataScience - VariableView', () => {
             const result = await screenshot({ filename: fileName, screen: display.id });
             console.log(`IANHU result ${result}`);
         }
-        //displays.forEach((display) => {
-        //const fileName = `shot${display.id}`;
-        //console.log(`IANHU screenshot file name ${fileName}`);
-        //await screenshot({ filename: fileName, screen: display.id });
-        //});
+
+        // Wait until our VariablesComplete message to see that we have the new variables and have rendered them
+        await onMessageListener.waitForMessage(InteractiveWindowMessages.VariablesComplete);
 
         const htmlResult = await variableView?.getHTMLById('variable-view-main-panel');
 
