@@ -95,7 +95,6 @@ export class Kernel implements IKernel {
             appShell,
             vscNotebook,
             kernelConnectionMetadata,
-            rawNotebookSupported,
             context,
             interruptTimeout
         );
