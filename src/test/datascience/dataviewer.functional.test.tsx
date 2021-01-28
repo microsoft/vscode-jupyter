@@ -226,7 +226,7 @@ suite('DataScience DataViewer tests', () => {
             const span = cells[i].querySelector('div.cell-formatter span') as HTMLSpanElement;
             assert.ok(span, `Span ${i} not found`);
             const val = rows[i].toString();
-            assert.equal(val, span.innerHTML, `Row ${i} not matching. ${span.innerHTML} !== ${val}`);
+            assert.equal(span.innerHTML, val, `Row ${i} not matching. ${span.innerHTML} !== ${val}`);
         }
     }
 
@@ -362,17 +362,16 @@ suite('DataScience DataViewer tests', () => {
         assert.ok(dv, 'DataViewer not created');
         await gotAllRows;
 
-        // Confirm that values are initially truncated
-        verifyRows(wrapper.wrapper, [0, '[1, 2, ...', '[ 7,  8...']);
+        verifyRows(wrapper.wrapper, [0, '[1, 2, 3, 4, 5, 6]', '[ 7,  8,  9, 10, 11, 12]']);
         wrapper.wrapper.update();
 
         // Put cell into edit mode and verify that input value is updated to be the non-truncated, stringified value
         editCell(wrapper.wrapper, 0, 1);
         verifyInputIncludes(wrapper.wrapper, 'value="[1, 2, 3, 4, 5, 6]"');
 
-        // Now cancel edit and verify the value is truncated again
+        // Data should still be there after exiting edit mode
         cancelEdits(wrapper.wrapper);
-        verifyRows(wrapper.wrapper, [0, '[1, 2, ...', '[ 7,  8...']);
+        verifyRows(wrapper.wrapper, [0, '[1, 2, 3, 4, 5, 6]', '[ 7,  8,  9, 10, 11, 12]']);
     });
 
     runMountedTest('4D numpy ndarrays', async (wrapper) => {
@@ -383,16 +382,31 @@ suite('DataScience DataViewer tests', () => {
         assert.ok(dv, 'DataViewer not created');
         await gotAllRows;
 
-        // Confirm that values are initially truncated
-        verifyRows(wrapper.wrapper, [0, `[[ 0,  ...`, `[[12, 1...`]);
+        verifyRows(wrapper.wrapper, [
+            0,
+            `[[ 0,  1,  2,  3],
+ [ 4,  5,  6,  7],
+ [ 8,  9, 10, 11]]`,
+            `[[12, 13, 14, 15],
+ [16, 17, 18, 19],
+ [20, 21, 22, 23]]`
+        ]);
 
         // Put cell into edit mode and verify that input value is updated to be the non-truncated, stringified value
         editCell(wrapper.wrapper, 0, 1);
         verifyInputIncludes(wrapper.wrapper, `value="[[ 0,  1,  2,  3],\n [ 4,  5,  6,  7],\n [ 8,  9, 10, 11]]"`);
 
-        // Now cancel edit and verify the value is truncated again
+        // Data should still be there after exiting edit mode
         cancelEdits(wrapper.wrapper);
-        verifyRows(wrapper.wrapper, [0, `[[ 0,  ...`, `[[12, 1...`]);
+        verifyRows(wrapper.wrapper, [
+            0,
+            `[[ 0,  1,  2,  3],
+ [ 4,  5,  6,  7],
+ [ 8,  9, 10, 11]]`,
+            `[[12, 13, 14, 15],
+ [16, 17, 18, 19],
+ [20, 21, 22, 23]]`
+        ]);
     });
 
     runMountedTest('Ragged 2D numpy array', async (wrapper) => {
@@ -411,6 +425,6 @@ suite('DataScience DataViewer tests', () => {
         const dv = await createJupyterVariableDataViewer('foo', 'ndarray');
         assert.ok(dv, 'DataViewer not created');
         await gotAllRows;
-        verifyRows(wrapper.wrapper, [0, `[1, 2, 3]`, `[4, 5]`, 1, `[6, 7, ...`, '']);
+        verifyRows(wrapper.wrapper, [0, `[1, 2, 3]`, `[4, 5]`, 1, `[6, 7, 8, 9]`, '']);
     });
 });
