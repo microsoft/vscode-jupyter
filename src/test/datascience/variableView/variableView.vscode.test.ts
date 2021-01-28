@@ -28,6 +28,8 @@ import { verifyViewVariables } from './variableViewHelpers';
 import { ITestVariableViewProvider } from './variableViewTestInterfaces';
 import { ITestWebviewHost } from '../testInterfaces';
 
+const screenshot = require('screenshot-desktop');
+
 suite('DataScience - VariableView', () => {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
@@ -107,6 +109,24 @@ suite('DataScience - VariableView', () => {
 
         // Wait until our VariablesComplete message to see that we have the new variables and have rendered them
         await onMessageListener.waitForMessage(InteractiveWindowMessages.VariablesComplete);
+
+        // Trying a screenshot here
+        //const imagePath = await screenshot({ filename: 'testShot.jpg' });
+        //if (imagePath) {
+        //console.log(`IANHU imagePath ${imagePath}`);
+        //}
+        const displays = await screenshot.listDisplays();
+        for (const display of displays) {
+            const fileName = `shot${display.id}.jpg`;
+            console.log(`IANHU screenshot file name ${fileName}`);
+            const result = await screenshot({ filename: fileName, screen: display.id });
+            console.log(`IANHU result ${result}`);
+        }
+        //displays.forEach((display) => {
+        //const fileName = `shot${display.id}`;
+        //console.log(`IANHU screenshot file name ${fileName}`);
+        //await screenshot({ filename: fileName, screen: display.id });
+        //});
 
         const htmlResult = await variableView?.getHTMLById('variable-view-main-panel');
 

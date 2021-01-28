@@ -674,6 +674,11 @@ jobs:
         uses: ./.github/actions/create-venv-for-tests
         if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook' || matrix.test-suite == 'nonRawNotebook' || matrix.test-suite == 'remoteNotebook'
 
+      - name: install imagemagick on linux
+        if: matrix.os == 'ubuntu-latest'
+        shell: bash
+        run: sudo apt-get install imagemagick
+
       # Set the correct xvfb commands to run vscode tests
       # https://code.visualstudio.com/api/working-with-extensions/continuous-integration
       # Note that xvfb github action only runs through xvfb on linux, so only set the commands there
