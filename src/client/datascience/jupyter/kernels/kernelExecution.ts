@@ -12,6 +12,7 @@ import { createDeferred, waitForPromise } from '../../../common/utils/async';
 import { noop } from '../../../common/utils/misc';
 import { captureTelemetry } from '../../../telemetry';
 import { Telemetry, VSCodeNativeTelemetry } from '../../constants';
+import { traceCellMessage } from '../../notebook/helpers/helpers';
 import { chainWithPendingUpdates } from '../../notebook/helpers/notebookUpdater';
 import {
     IDataScienceErrorHandler,
@@ -22,7 +23,7 @@ import {
     IRawNotebookSupportedService
 } from '../../types';
 import { CellExecutionFactory } from './cellExecution';
-import { CellExecutionStack } from './cellExecutionStack';
+import { CellExecutionJob } from './cellExecutionJob';
 import { isPythonKernelConnection } from './helpers';
 import type { IKernel, IKernelProvider, IKernelSelectionUsage, KernelConnectionMetadata } from './types';
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
@@ -33,20 +34,20 @@ const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed'
  * Else the `Kernel` class gets very big.
  */
 export class KernelExecution implements IDisposable {
-    private readonly documentExecutions = new WeakMap<NotebookDocument, CellExecutionStack>();
+    private readonly documentExecutions = new WeakMap<NotebookDocument, CellExecutionJob>();
     private readonly kernelValidated = new WeakMap<NotebookDocument, { kernel: IKernel; promise: Promise<void> }>();
 
     private readonly executionFactory: CellExecutionFactory;
     private readonly disposables: IDisposable[] = [];
-    private isRawNotebookSupported?: Promise<boolean>;
     private readonly kernelRestartHandlerAdded = new WeakSet<IKernel>();
+    private isRawNotebookSupported?: Promise<boolean>;
     private _interruptPromise?: Promise<InterruptResult>;
     constructor(
         private readonly kernelProvider: IKernelProvider,
         errorHandler: IDataScienceErrorHandler,
         editorProvider: INotebookEditorProvider,
         readonly kernelSelectionUsage: IKernelSelectionUsage,
-        readonly appShell: IApplicationShell,
+        appShell: IApplicationShell,
         readonly vscNotebook: IVSCodeNotebook,
         readonly metadata: Readonly<KernelConnectionMetadata>,
         private readonly rawNotebookSupported: IRawNotebookSupportedService,
@@ -63,8 +64,14 @@ export class KernelExecution implements IDisposable {
             // No editor, possible it was closed.
             return;
         }
-        const executionStack = this.getOrCreateCellExecutionStack(editor, notebookPromise);
-        await executionStack.runCell(cell);
+        if (cell.metadata.runState === vscodeNotebookEnums.NotebookCellRunState.Running) {
+            // This is an unlikely scenario (UI doesn't allow this).
+            // Seen something similar in CI tests when we manually run whole document using the commands.
+            traceCellMessage(cell, 'Cell is already running, somehow executeCell called again');
+            return;
+        }
+
+        await this.getOrCreateCellExecutionJob(editor, notebookPromise).runCells([cell]);
     }
 
     @captureTelemetry(Telemetry.ExecuteNativeCell, undefined, true)
@@ -75,23 +82,34 @@ export class KernelExecution implements IDisposable {
             // No editor, possible it was closed.
             return;
         }
-        const executionStack = this.getOrCreateCellExecutionStack(editor, notebookPromise);
+
+        // Only run code cells that are not already running.
+        const cellsThatWeCanRun = editor.document.cells
+            .filter((cell) => cell.cellKind === vscodeNotebookEnums.CellKind.Code)
+            .filter((cell) => cell.metadata.runState !== vscodeNotebookEnums.NotebookCellRunState.Running);
+        if (cellsThatWeCanRun.length === 0) {
+            // This is an unlikely scenario (UI doesn't allow this).
+            // Seen this in CI tests when we manually run whole document using the commands.
+            return;
+        }
+
+        const executionJob = this.getOrCreateCellExecutionJob(editor, notebookPromise);
 
         try {
             traceInfo('Update notebook execution state as running');
 
-            const updateNotebookStatus = chainWithPendingUpdates(executionStack.editor, (edit) =>
+            const updateNotebookStatus = chainWithPendingUpdates(executionJob.editor, (edit) =>
                 edit.replaceMetadata({
                     ...document.metadata,
                     runState: vscodeNotebookEnums.NotebookRunState.Running
                 })
             );
-            const runAllCells = executionStack.runAllCells();
+            const runAllCells = executionJob.runCells(cellsThatWeCanRun);
 
             await Promise.all([updateNotebookStatus, runAllCells]);
         } finally {
-            traceInfo('Restore notebook state to idle');
-            await chainWithPendingUpdates(executionStack.editor, (edit) =>
+            traceInfo('Restore notebook state to idle after completion');
+            await chainWithPendingUpdates(executionJob.editor, (edit) =>
                 edit.replaceMetadata({ ...document.metadata, runState: vscodeNotebookEnums.NotebookRunState.Idle })
             );
         }
@@ -101,8 +119,8 @@ export class KernelExecution implements IDisposable {
      * If we don't have a kernel (Jupyter Session) available, then just abort all of the cell executions.
      */
     public async interrupt(document: NotebookDocument, notebookPromise?: Promise<INotebook>): Promise<InterruptResult> {
-        const executionStack = this.documentExecutions.get(document);
-        if (!executionStack) {
+        const executionJob = this.documentExecutions.get(document);
+        if (!executionJob) {
             return InterruptResult.Success;
         }
         // Possible we don't have a notebook.
@@ -112,7 +130,7 @@ export class KernelExecution implements IDisposable {
         // Both must happen together, we cannot just wait for cells to complete, as its possible
         // that cell1 has started & cell2 has been queued. If Cell1 completes, then Cell2 will start.
         // What we want is, if Cell1 completes then Cell2 should not start (it must be cancelled before hand).
-        const pendingCells = executionStack.cancel().then(() => executionStack.waitForCompletion());
+        const pendingCells = executionJob.cancel().then(() => executionJob.waitForCompletion());
 
         if (!notebook) {
             traceInfo('No notebook to interrupt');
@@ -134,44 +152,28 @@ export class KernelExecution implements IDisposable {
     public dispose() {
         this.disposables.forEach((d) => d.dispose());
     }
-    private getOrCreateCellExecutionStack(editor: NotebookEditor, notebookPromise: Promise<INotebook>) {
-        const existingExecutionStack = this.documentExecutions.get(editor.document);
-        // If it has not yet completed, re-use the existing stack.
-        if (existingExecutionStack && !existingExecutionStack.completed) {
-            existingExecutionStack;
+    private getOrCreateCellExecutionJob(editor: NotebookEditor, notebookPromise: Promise<INotebook>) {
+        const existingExecutionJob = this.documentExecutions.get(editor.document);
+        // If it has not yet completed, re-use the existing job.
+        if (existingExecutionJob && !existingExecutionJob.completed) {
+            existingExecutionJob;
         }
 
-        // If it has not completed then wait for it to complete & create a new execution stack.
-        let waitUntilPreviousExecutionCompletes = Promise.resolve();
-        if (existingExecutionStack && existingExecutionStack.completed) {
-            // This is required, so that the new stack is read & we start queueing the cells into that.
-            // Else if user runs another cell, then we get into this method yet again & both of the cells
-            // are now waiting for previous execution to complete & its possible
-            // we end up with those two cells creating their own execution stacks.
-            // This way, we create a new execution stack & the queue the two new cells in the order the user ran.
-
-            // One way this happens is,
-            // User hits cancel, and then user runs another cell.
-            // If the previous cancellation completes & `completed = true`, then
-            // we need to wait for it to finish everything before we start the other execution.
-            // Else we could have cell states being updated by the two stacks in correctly.
-            waitUntilPreviousExecutionCompletes = existingExecutionStack.waitForCompletion().catch(noop);
-        }
-
+        // We need to validate the kernel is usable.
+        // Also ensure we add the handler to kernel immediate (before we resolve the notebook, else its possible user hits restart or the like and we miss that event).
         const wrappedNotebookPromise = this.getKernel(editor.document)
             .then((kernel) => this.addKernelRestartHandler(kernel, editor.document))
             .then(() => notebookPromise);
 
-        const newCellExecutionStack = new CellExecutionStack(
-            waitUntilPreviousExecutionCompletes,
+        const newCellExecutionJob = new CellExecutionJob(
             editor,
             wrappedNotebookPromise,
             this.executionFactory,
             isPythonKernelConnection(this.metadata)
         );
 
-        this.documentExecutions.set(editor.document, newCellExecutionStack);
-        return newCellExecutionStack;
+        this.documentExecutions.set(editor.document, newCellExecutionJob);
+        return newCellExecutionJob;
     }
     private async interruptExecution(
         session: IJupyterSession,
@@ -236,13 +238,13 @@ export class KernelExecution implements IDisposable {
         kernel.onRestarted(
             () => {
                 // We're only interested in restarts of the kernel associated with this document.
-                const executionStack = this.documentExecutions.get(document);
-                if (kernel !== this.kernelProvider.get(document.uri) || !executionStack) {
+                const executionJob = this.documentExecutions.get(document);
+                if (kernel !== this.kernelProvider.get(document.uri) || !executionJob) {
                     return;
                 }
 
                 traceInfo('Cancel all executions as Kernel was restarted');
-                return executionStack.cancel(true);
+                return executionJob.cancel(true);
             },
             this,
             this.disposables
@@ -275,7 +277,7 @@ export class KernelExecution implements IDisposable {
                     .useSelectedKernel(kernel?.kernelConnectionMetadata, document.uri, rawSupported ? 'raw' : 'jupyter')
                     .finally(() => {
                         // If there's an exception, then we cannot use the kernel and a message would have been displayed.
-                        // We don't want to cache such a promise, as its possible the user later installs the dependencies.
+                        // We don't want to cache such a promise (with old kernel), as its possible the user later installs the dependencies.
                         if (this.kernelValidated.get(document)?.kernel === kernel) {
                             this.kernelValidated.delete(document);
                         }

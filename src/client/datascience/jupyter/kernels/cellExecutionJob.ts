@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import { IDisposable } from 'monaco-editor';
-import { CancellationTokenSource } from 'vscode';
 import { NotebookCell, NotebookCellRunState, NotebookEditor } from '../../../../../types/vscode-proposed';
 import { disposeAllDisposables } from '../../../common/helpers';
 import { traceInfo } from '../../../common/logger';
@@ -14,19 +13,27 @@ import { CellExecution, CellExecutionFactory } from './cellExecution';
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
-export class CellExecutionStack {
+/**
+ * A job responsible for execution of cells.
+ * If this has not completed execution of the cells queued, we can continue to add more cells to this job.
+ * All cells queued using `runCells` are added to the queue and processed in order they were added/queued.
+ */
+export class CellExecutionJob {
     private readonly cellExecutions = new WeakMap<NotebookCell, CellExecution>();
-
-    private readonly cancellation = new CancellationTokenSource();
-    private readonly stackOfCellsToExecuteByDocument: CellExecution[] = [];
-
+    private readonly queueOfCellsToExecute: CellExecution[] = [];
     private readonly disposables: IDisposable[] = [];
     private readonly completion = createDeferred<void>();
     private cancelledOrCompletedWithErrors = false;
     private startedRunningCells = false;
     private chainedCellExecutionPromise: Promise<NotebookCellRunState | undefined> = Promise.resolve(undefined);
+    /**
+     * Whether all cells have completed processing or cancelled, or some completed & others cancelled.
+     * Even if this property is true, its possible there is still some cleanup remaining (or some promises waiting to be completed).
+     */
+    public get completed(): boolean {
+        return this.cancelledOrCompletedWithErrors || this.completion.completed;
+    }
     constructor(
-        private readonly waitUntilPreviousExecutionCompletes: Promise<void>,
         public readonly editor: NotebookEditor,
         private readonly notebookPromise: Promise<INotebook>,
         private readonly executionFactory: CellExecutionFactory,
@@ -36,41 +43,12 @@ export class CellExecutionStack {
         this.editor.onDidDispose(() => this.cancel(true), this, this.disposables);
         this.completion.promise.finally(() => this.dispose()).catch(noop);
     }
-    public async runCell(cell: NotebookCell) {
-        this.queueCellForExecution(cell);
-        await this.waitForCompletion(cell);
-    }
-    public async runAllCells() {
-        this.editor.document.cells
-            .filter((cell) => cell.cellKind === vscodeNotebookEnums.CellKind.Code)
-            .forEach((cell) => this.queueCellForExecution(cell));
-
-        this.startExecutingCells();
-        await this.waitForCompletion();
-    }
-    public async cancel(forced?: boolean): Promise<void> {
-        this.cancelledOrCompletedWithErrors = true;
-        await this.cancelAllPendingCells(forced);
-    }
-    public async waitForCompletion(cell?: NotebookCell): Promise<void> {
-        if (!cell) {
-            return this.completion.promise;
-        }
-        const execution = this.cellExecutions.get(cell);
-        if (!execution) {
-            throw new Error('Cell not queued for execution');
-        }
-        await Promise.race([execution.result, this.completion.promise]);
-    }
     /**
-     * Whether this class has completed processing.
-     * Possible there is still some cleanup remaining (or some promises waiting to complete).
+     * Run cells and wait for completion.
      */
-    public get completed(): boolean {
-        return this.cancelledOrCompletedWithErrors || this.completion.completed;
-    }
-    private dispose() {
-        disposeAllDisposables(this.disposables);
+    public async runCells(cells: NotebookCell[]) {
+        cells.forEach((cell) => this.queueCellForExecution(cell));
+        await this.waitForCompletionOfCells(cells);
     }
     /**
      * Cancel all cells that have been queued & wait for them to complete.
@@ -80,19 +58,36 @@ export class CellExecutionStack {
      * When restarted, the execution needs to stop as jupyter will not send more messages.
      * Hence `forced=true` is more like a hard kill.
      */
-    private async cancelAllPendingCells(forced = false) {
+    public async cancel(forced?: boolean): Promise<void> {
+        this.cancelledOrCompletedWithErrors = true;
         traceInfo('Cancel pending cells');
         // Check all cells
         const pendingCellExecutions = this.getPendingNotebookCellExecutions();
         await Promise.all(pendingCellExecutions.map((item) => item.cancel(forced)));
     }
-    private getPendingNotebookCellExecutions() {
-        const stackOfCellsToExecute = this.stackOfCellsToExecuteByDocument;
-        if (!Array.isArray(stackOfCellsToExecute) || stackOfCellsToExecute.length === 0) {
-            return [];
+    /**
+     * Wait for cells to complete (for for the queue of cells to be processed)
+     * If cells are cancelled, they are not processed, & that too counts as completion.
+     */
+    public async waitForCompletion(): Promise<void> {
+        await this.waitForCompletionOfCells();
+    }
+    private async waitForCompletionOfCells(cells: NotebookCell[] = []): Promise<void> {
+        if (cells.length === 0) {
+            return this.completion.promise;
         }
-
-        return stackOfCellsToExecute
+        const executions = cells
+            .map((cell) => this.cellExecutions.get(cell))
+            .filter((cell) => !!cell)
+            .map((cell) => cell!)
+            .map((cell) => cell.result);
+        await Promise.race([executions, this.completion.promise]);
+    }
+    private dispose() {
+        disposeAllDisposables(this.disposables);
+    }
+    private getPendingNotebookCellExecutions() {
+        return this.queueOfCellsToExecute
             .map((cell) => this.cellExecutions.get(cell.cell))
             .filter((item) => item !== undefined)
             .map((item) => item!);
@@ -106,8 +101,6 @@ export class CellExecutionStack {
     }
     private async start() {
         try {
-            // Ensure we start this new stack, only after previous stacks have completed.
-            await this.waitUntilPreviousExecutionCompletes;
             await this.executeQueuedCells();
             this.completion.resolve();
         } catch (ex) {
@@ -117,20 +110,17 @@ export class CellExecutionStack {
             // but its too late.
             // Also we in `waitForCompletion` we wait on the `this.completion` promise.
             this.cancelledOrCompletedWithErrors = true;
-            // Something went wrong.
-            // Stop and cancel all of the remaining cells.
+            // If something goes wrong in execution of cells or one cell, then cancel the remaining cells.
             await this.cancel();
             this.completion.reject(ex);
         }
     }
     private async executeQueuedCells() {
-        const token = this.cancellation.token;
-        const stackOfCellsToExecute = this.stackOfCellsToExecuteByDocument;
         const notebook = await this.notebookPromise;
-        stackOfCellsToExecute.forEach((exec) => traceCellMessage(exec.cell, 'Ready to execute'));
-        while (stackOfCellsToExecute.length) {
-            // Stack of cells to be executed, this way we maintain order of cell executions.
-            const cellToExecute = stackOfCellsToExecute[0];
+        this.queueOfCellsToExecute.forEach((exec) => traceCellMessage(exec.cell, 'Ready to execute'));
+        while (this.queueOfCellsToExecute.length) {
+            // Take the first item from the queue, this way we maintain order of cell executions.
+            const cellToExecute = this.queueOfCellsToExecute[0];
             if (!cellToExecute) {
                 continue;
             }
@@ -143,7 +133,7 @@ export class CellExecutionStack {
                 executionResult === vscodeNotebookEnums.NotebookCellRunState.Error
             ) {
                 this.cancelledOrCompletedWithErrors = true;
-                traceInfo(`Cancel all remaining cells ${token?.isCancellationRequested} || ${executionResult}`);
+                traceInfo(`Cancel all remaining cells ${this.cancelledOrCompletedWithErrors} || ${executionResult}`);
                 await this.cancel();
                 break;
             }
@@ -174,12 +164,12 @@ export class CellExecutionStack {
     private queueCellForExecution(cell: NotebookCell) {
         const existingCellExecution = this.cellExecutions.get(cell);
         if (existingCellExecution) {
+            traceCellMessage(cell, 'Use existing cell execution');
             return existingCellExecution;
         }
-        const stackOfCellsToExecute = this.stackOfCellsToExecuteByDocument;
         const cellExecution = this.executionFactory.create(cell, this.isPythonKernelConnection);
-        this.cellExecutions.set(cellExecution.cell, cellExecution);
-        stackOfCellsToExecute.push(cellExecution);
+        this.cellExecutions.set(cell, cellExecution);
+        this.queueOfCellsToExecute.push(cellExecution);
         cellExecution.result.finally(() => this.onCellExecutionCompleted(cellExecution));
         traceCellMessage(cell, 'User queued cell for execution');
 
@@ -187,10 +177,11 @@ export class CellExecutionStack {
         this.startExecutingCells();
     }
     private onCellExecutionCompleted(cellExecution: CellExecution) {
-        // Once the cell has completed execution, remote it from the stack.
-        const index = this.stackOfCellsToExecuteByDocument.indexOf(cellExecution);
+        traceCellMessage(cellExecution.cell, 'Completed execution of cell');
+        // Once the cell has completed execution, remove it from the queue.
+        const index = this.queueOfCellsToExecute.indexOf(cellExecution);
         if (index >= 0) {
-            this.stackOfCellsToExecuteByDocument.splice(index, 1);
+            this.queueOfCellsToExecute.splice(index, 1);
         }
     }
 }
