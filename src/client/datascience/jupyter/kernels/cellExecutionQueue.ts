@@ -19,7 +19,6 @@ const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed'
  * All cells queued using `runCells` are added to the queue and processed in order they were added/queued.
  */
 export class CellExecutionQueue {
-    private readonly cellExecutions = new WeakMap<NotebookCell, CellExecution>();
     private readonly queueOfCellsToExecute: CellExecution[] = [];
     private readonly disposables: IDisposable[] = [];
     private readonly completion = createDeferred<void>();
@@ -47,7 +46,18 @@ export class CellExecutionQueue {
      * Queue the cells.
      */
     public queueCell(cell: NotebookCell) {
-        this.queueCellForExecution(cell);
+        const existingCellExecution = this.queueOfCellsToExecute.find((item) => item.cell === cell);
+        if (existingCellExecution) {
+            traceCellMessage(cell, 'Use existing cell execution');
+            return existingCellExecution;
+        }
+        const cellExecution = this.executionFactory.create(cell, this.isPythonKernelConnection);
+        this.queueOfCellsToExecute.push(cellExecution);
+        cellExecution.result.finally(() => this.onCellExecutionCompleted(cellExecution));
+        traceCellMessage(cell, 'User queued cell for execution');
+
+        // Start executing the cells.
+        this.startExecutingCells();
     }
     /**
      * Cancel all cells that have been queued & wait for them to complete.
@@ -61,8 +71,7 @@ export class CellExecutionQueue {
         this.cancelledOrCompletedWithErrors = true;
         traceInfo('Cancel pending cells');
         // Check all cells
-        const pendingCellExecutions = this.getPendingNotebookCellExecutions();
-        await Promise.all(pendingCellExecutions.map((item) => item.cancel(forced)));
+        await Promise.all(this.queueOfCellsToExecute.map((item) => item.cancel(forced)));
     }
     /**
      * Wait for cells to complete (for for the queue of cells to be processed)
@@ -73,24 +82,13 @@ export class CellExecutionQueue {
             return this.completion.promise;
         }
         const executions = Promise.all(
-            cells
-                .map((cell) => this.cellExecutions.get(cell))
-                .filter((cell) => !!cell)
-                .map((cell) => cell!)
-                .map((cell) => cell.result)
+            this.queueOfCellsToExecute.filter((item) => cells.includes(item.cell)).map((cell) => cell.result)
         );
         await Promise.race([executions, this.completion.promise]);
     }
     private dispose() {
         disposeAllDisposables(this.disposables);
     }
-    private getPendingNotebookCellExecutions() {
-        return this.queueOfCellsToExecute
-            .map((cell) => this.cellExecutions.get(cell.cell))
-            .filter((item) => item !== undefined)
-            .map((item) => item!);
-    }
-
     private startExecutingCells() {
         if (!this.startedRunningCells) {
             this.start().catch(noop);
@@ -155,22 +153,6 @@ export class CellExecutionQueue {
         });
         this.chainedCellExecutionPromise = chainedExecution;
         return chainedExecution;
-    }
-
-    private queueCellForExecution(cell: NotebookCell) {
-        const existingCellExecution = this.cellExecutions.get(cell);
-        if (existingCellExecution) {
-            traceCellMessage(cell, 'Use existing cell execution');
-            return existingCellExecution;
-        }
-        const cellExecution = this.executionFactory.create(cell, this.isPythonKernelConnection);
-        this.cellExecutions.set(cell, cellExecution);
-        this.queueOfCellsToExecute.push(cellExecution);
-        cellExecution.result.finally(() => this.onCellExecutionCompleted(cellExecution));
-        traceCellMessage(cell, 'User queued cell for execution');
-
-        // Start executing the cells.
-        this.startExecutingCells();
     }
     private onCellExecutionCompleted(cellExecution: CellExecution) {
         traceCellMessage(cellExecution.cell, 'Completed execution of cell');
