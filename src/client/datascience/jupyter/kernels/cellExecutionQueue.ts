@@ -106,7 +106,6 @@ export class CellExecutionQueue {
     private async start() {
         try {
             await this.executeQueuedCells();
-            this.dispose();
         } catch (ex) {
             traceError('Failed to execute cells in CellExecutionQueue', ex);
             // Initialize this property first, so that external users of this class know whether it has completed.
@@ -117,6 +116,7 @@ export class CellExecutionQueue {
             this.cancelledOrCompletedWithErrors = true;
             // If something goes wrong in execution of cells or one cell, then cancel the remaining cells.
             await this.cancel();
+        } finally {
             this.dispose();
         }
     }
