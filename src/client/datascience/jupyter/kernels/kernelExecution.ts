@@ -71,7 +71,9 @@ export class KernelExecution implements IDisposable {
             return;
         }
 
-        await this.getOrCreateCellExecutionJob(editor, notebookPromise).runCells([cell]);
+        const executionJob = this.getOrCreateCellExecutionJob(editor, notebookPromise);
+        executionJob.queueCell(cell);
+        await executionJob.waitForCompletion([cell]);
     }
 
     @captureTelemetry(Telemetry.ExecuteNativeCell, undefined, true)
@@ -104,7 +106,8 @@ export class KernelExecution implements IDisposable {
                     runState: vscodeNotebookEnums.NotebookRunState.Running
                 })
             );
-            const runAllCells = executionJob.runCells(cellsThatWeCanRun);
+            cellsThatWeCanRun.forEach((cell) => executionJob.queueCell(cell));
+            const runAllCells = executionJob.waitForCompletion(cellsThatWeCanRun);
 
             await Promise.all([updateNotebookStatus, runAllCells]);
         } finally {

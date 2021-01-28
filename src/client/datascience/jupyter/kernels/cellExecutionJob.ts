@@ -44,11 +44,10 @@ export class CellExecutionJob {
         this.completion.promise.finally(() => this.dispose()).catch(noop);
     }
     /**
-     * Run cells and wait for completion.
+     * Queue the cells.
      */
-    public async runCells(cells: NotebookCell[]) {
-        cells.forEach((cell) => this.queueCellForExecution(cell));
-        await this.waitForCompletionOfCells(cells);
+    public queueCell(cell: NotebookCell) {
+        this.queueCellForExecution(cell);
     }
     /**
      * Cancel all cells that have been queued & wait for them to complete.
@@ -69,10 +68,7 @@ export class CellExecutionJob {
      * Wait for cells to complete (for for the queue of cells to be processed)
      * If cells are cancelled, they are not processed, & that too counts as completion.
      */
-    public async waitForCompletion(): Promise<void> {
-        await this.waitForCompletionOfCells();
-    }
-    private async waitForCompletionOfCells(cells: NotebookCell[] = []): Promise<void> {
+    public async waitForCompletion(cells: NotebookCell[] = []): Promise<void> {
         if (cells.length === 0) {
             return this.completion.promise;
         }
@@ -152,12 +148,10 @@ export class CellExecutionJob {
             // Start execution
             await cellExecution.start(notebook);
 
-            // The result promise will resolve when complete.
-            const promise = cellExecution.result;
-            promise
-                .finally(() => traceCellMessage(cellExecution.cell, 'Cell from queue completed execution'))
-                .catch(noop);
-            return promise;
+            // The result promise will resolve when it completes.
+            return cellExecution.result.finally(() =>
+                traceCellMessage(cellExecution.cell, 'Cell from queue completed execution')
+            );
         });
         this.chainedCellExecutionPromise = chainedExecution;
         return chainedExecution;
