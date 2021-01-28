@@ -1,9 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { IDisposable } from 'monaco-editor';
-import { NotebookCell, NotebookCellRunState, NotebookEditor } from '../../../../../types/vscode-proposed';
-import { disposeAllDisposables } from '../../../common/helpers';
+import { NotebookCell, NotebookCellRunState } from '../../../../../types/vscode-proposed';
 import { traceError, traceInfo } from '../../../common/logger';
 import { noop } from '../../../common/utils/misc';
 import { traceCellMessage } from '../../notebook/helpers/helpers';
@@ -19,7 +17,6 @@ const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed'
  */
 export class CellExecutionQueue {
     private readonly queueOfCellsToExecute: CellExecution[] = [];
-    private readonly disposables: IDisposable[] = [];
     private cancelledOrCompletedWithErrors = false;
     private startedRunningCells = false;
     /**
@@ -36,21 +33,10 @@ export class CellExecutionQueue {
         return this.cancelledOrCompletedWithErrors;
     }
     constructor(
-        private readonly editor: NotebookEditor,
         private readonly notebookPromise: Promise<INotebook>,
         private readonly executionFactory: CellExecutionFactory,
         private readonly isPythonKernelConnection: boolean
-    ) {
-        // If the editor is closed, then just stop handling the UI updates.
-        this.editor.onDidDispose(
-            async () => {
-                await this.cancel(true);
-                this.dispose();
-            },
-            this,
-            this.disposables
-        );
-    }
+    ) {}
     /**
      * Queue the cell for execution & start processing it immediately.
      */
@@ -94,9 +80,6 @@ export class CellExecutionQueue {
 
         await Promise.all(cellsToCheck.map((cell) => cell.result));
     }
-    private dispose() {
-        disposeAllDisposables(this.disposables);
-    }
     private startExecutingCells() {
         if (!this.startedRunningCells) {
             this.start().catch(noop);
@@ -116,8 +99,6 @@ export class CellExecutionQueue {
             this.cancelledOrCompletedWithErrors = true;
             // If something goes wrong in execution of cells or one cell, then cancel the remaining cells.
             await this.cancel();
-        } finally {
-            this.dispose();
         }
     }
     private async executeQueuedCells() {

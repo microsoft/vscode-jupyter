@@ -162,10 +162,20 @@ export class KernelExecution implements IDisposable {
             .then(() => notebookPromise);
 
         const newCellExecutionQueue = new CellExecutionQueue(
-            editor,
             wrappedNotebookPromise,
             this.executionFactory,
             isPythonKernelConnection(this.metadata)
+        );
+
+        // If the editor is closed (user or on CI), then just stop handling the UI updates.
+        editor.onDidDispose(
+            async () => {
+                if (!newCellExecutionQueue.failed || !newCellExecutionQueue.isEmpty) {
+                    await newCellExecutionQueue.cancel(true);
+                }
+            },
+            this,
+            this.disposables
         );
 
         this.documentExecutions.set(editor.document, newCellExecutionQueue);
