@@ -4,7 +4,7 @@
 import { IDisposable } from 'monaco-editor';
 import { NotebookCell, NotebookCellRunState, NotebookEditor } from '../../../../../types/vscode-proposed';
 import { disposeAllDisposables } from '../../../common/helpers';
-import { traceInfo } from '../../../common/logger';
+import { traceError, traceInfo } from '../../../common/logger';
 import { createDeferred } from '../../../common/utils/async';
 import { noop } from '../../../common/utils/misc';
 import { traceCellMessage } from '../../notebook/helpers/helpers';
@@ -24,7 +24,6 @@ export class CellExecutionQueue {
     private readonly completion = createDeferred<void>();
     private cancelledOrCompletedWithErrors = false;
     private startedRunningCells = false;
-    private chainedCellExecutionPromise: Promise<NotebookCellRunState | undefined> = Promise.resolve(undefined);
     /**
      * Whether all cells have completed processing or cancelled, or some completed & others cancelled.
      * Even if this property is true, its possible there is still some cleanup remaining (or some promises waiting to be completed).
@@ -53,7 +52,7 @@ export class CellExecutionQueue {
         }
         const cellExecution = this.executionFactory.create(cell, this.isPythonKernelConnection);
         this.queueOfCellsToExecute.push(cellExecution);
-        cellExecution.result.finally(() => this.onCellExecutionCompleted(cellExecution));
+
         traceCellMessage(cell, 'User queued cell for execution');
 
         // Start executing the cells.
@@ -99,6 +98,7 @@ export class CellExecutionQueue {
             await this.executeQueuedCells();
             this.completion.resolve();
         } catch (ex) {
+            traceError('Failed to execute cells in CellExecutionQueue', ex);
             // Initialize this property first, so that external users of this class know whether it has completed.
             // Else its possible there was an error & then we wait (see next line) & in the mean time
             // user attempts to run another cell, then `this.completion` has not completed and we end up queuing a cell
@@ -115,13 +115,24 @@ export class CellExecutionQueue {
         this.queueOfCellsToExecute.forEach((exec) => traceCellMessage(exec.cell, 'Ready to execute'));
         while (this.queueOfCellsToExecute.length) {
             // Take the first item from the queue, this way we maintain order of cell executions.
+            // Remove from the queue only after we process it
+            // This way we don't accidentally end up queueing the same cell again (we know its in the queue).
             const cellToExecute = this.queueOfCellsToExecute[0];
-            if (!cellToExecute) {
-                continue;
-            }
             traceCellMessage(cellToExecute.cell, 'Before Execute individual cell');
-            const executionResult = await this.executeIndividualCell(cellToExecute, notebook);
-            traceCellMessage(cellToExecute.cell, `After Execute individual cell ${executionResult}`);
+
+            let executionResult: NotebookCellRunState | undefined;
+            try {
+                await cellToExecute.start(notebook);
+                executionResult = await cellToExecute.result;
+            } finally {
+                // Once the cell has completed execution, remove it from the queue.
+                traceCellMessage(cellToExecute.cell, `After Execute individual cell ${executionResult}`);
+                const index = this.queueOfCellsToExecute.indexOf(cellToExecute);
+                if (index >= 0) {
+                    this.queueOfCellsToExecute.splice(index, 1);
+                }
+            }
+
             // If a cell has failed the get out.
             if (
                 this.cancelledOrCompletedWithErrors ||
@@ -132,32 +143,6 @@ export class CellExecutionQueue {
                 await this.cancel();
                 break;
             }
-        }
-    }
-    private async executeIndividualCell(
-        cellExecution: CellExecution,
-        notebook: INotebook
-    ): Promise<NotebookCellRunState | undefined> {
-        traceCellMessage(cellExecution.cell, 'Push cell into queue for execution');
-        const chainedExecution = this.chainedCellExecutionPromise.then(async () => {
-            traceCellMessage(cellExecution.cell, 'Get cell from queue for execution');
-            // Start execution
-            await cellExecution.start(notebook);
-
-            // The `result` promise will resolve when it completes.
-            return cellExecution.result.finally(() =>
-                traceCellMessage(cellExecution.cell, 'Cell from queue completed execution')
-            );
-        });
-        this.chainedCellExecutionPromise = chainedExecution;
-        return chainedExecution;
-    }
-    private onCellExecutionCompleted(cellExecution: CellExecution) {
-        traceCellMessage(cellExecution.cell, 'Completed execution of cell');
-        // Once the cell has completed execution, remove it from the queue.
-        const index = this.queueOfCellsToExecute.indexOf(cellExecution);
-        if (index >= 0) {
-            this.queueOfCellsToExecute.splice(index, 1);
         }
     }
 }
