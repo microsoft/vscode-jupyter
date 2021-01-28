@@ -15,7 +15,7 @@ const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed'
 /**
  * A queue responsible for execution of cells.
  * If this has not completed execution of the cells queued, we can continue to add more cells to this job.
- * All cells queued using `runCells` are added to the queue and processed in order they were added/queued.
+ * All cells queued using `queueCell` are added to the queue and processed in order they were added/queued.
  */
 export class CellExecutionQueue {
     private readonly queueOfCellsToExecute: CellExecution[] = [];
