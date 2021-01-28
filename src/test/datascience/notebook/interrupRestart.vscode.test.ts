@@ -188,7 +188,11 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         traceInfo('Step 11 Executed');
 
         // Wait for cell to get busy.
-        await waitForCondition(async () => assertVSCCellIsRunning(cell), 15_000, 'Cell not being executed after restart');
+        await waitForCondition(
+            async () => assertVSCCellIsRunning(cell),
+            15_000,
+            'Cell not being executed after restart'
+        );
         traceInfo('Step 12 Cells executed after restart');
         // Wait for some output.
         await waitForTextOutputInVSCode(cell, '1', 0, false, 15_000); // Wait for 15 seconds for it to start (possibly kernel is still starting).
