@@ -332,6 +332,10 @@ export class KernelExecution implements IDisposable {
         );
     }
     private createQueuedCellExecution(cell: NotebookCell) {
+        const existingCellExecution = this.cellExecutions.get(cell);
+        if (existingCellExecution) {
+            return existingCellExecution;
+        }
         if (!this.stackOfCellsToExecuteByDocument.has(cell.notebook)) {
             this.stackOfCellsToExecuteByDocument.set(cell.notebook, []);
         }
