@@ -16,7 +16,6 @@ on:
       - 'release'
       - 'release/*'
       - 'release-*'
-      - rchiodo/fix_julia_test
   workflow_dispatch:
 
 env:
