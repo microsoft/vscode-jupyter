@@ -108,7 +108,9 @@ suite('DataScience - VariableView', () => {
         console.log('IANHU Executed Cell 2');
 
         const displays = await screenshot.listDisplays();
+        console.log(`IANHU displays ${displays.length}`);
         for (const display of displays) {
+            console.log(`IANHU display ${display.toString()}`);
             const fileName = `shot${display.id}.jpg`;
             console.log(`IANHU screenshot file name ${fileName}`);
             const result = await screenshot({ filename: fileName, screen: display.id });

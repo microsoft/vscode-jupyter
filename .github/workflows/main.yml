@@ -744,6 +744,12 @@ jobs:
         id: test_notebookWithoutPythonExt_vscode
         if: matrix.test-suite == 'notebookWithoutPythonExt'
 
+      - name: Upload Screenshots 
+        uses: actions/upload-artifact@v2
+        with:
+          name: screenshots
+          path: './*.jpg'
+
       - name: Publish Notebook Test Report
         uses: scacap/action-surefire-report@v1
         with:
