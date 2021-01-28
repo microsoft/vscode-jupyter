@@ -26,10 +26,16 @@ export class CellExecutionQueue {
     private startedRunningCells = false;
     /**
      * Whether all cells have completed processing or cancelled, or some completed & others cancelled.
-     * Even if this property is true, its possible there is still some cleanup remaining (or some promises waiting to be completed).
      */
-    public get completed(): boolean {
-        return this.cancelledOrCompletedWithErrors || this.completion.completed;
+    public get isEmpty(): boolean {
+        return this.completion.completed;
+    }
+    /**
+     * Whether cells have been cancelled (as a result of interrupt or some have failed).
+     * Even if this property is true, its possible there is still some async operation pending (updating states of cells).
+     */
+    public get failed(): boolean {
+        return this.cancelledOrCompletedWithErrors;
     }
     constructor(
         private readonly editor: NotebookEditor,

@@ -157,8 +157,8 @@ export class KernelExecution implements IDisposable {
     }
     private getOrCreateCellExecutionQueue(editor: NotebookEditor, notebookPromise: Promise<INotebook>) {
         const existingExecutionQueue = this.documentExecutions.get(editor.document);
-        // If it has not yet completed, re-use the existing Queue.
-        if (existingExecutionQueue && !existingExecutionQueue.completed) {
+        // Re-use the existing Queue if it can be used.
+        if (existingExecutionQueue && !existingExecutionQueue.isEmpty && !existingExecutionQueue.failed) {
             return existingExecutionQueue;
         }
 
