@@ -746,9 +746,9 @@ jobs:
 
       - name: Upload Screenshots 
         uses: actions/upload-artifact@v2
-        if: always()
+        if: always() && matrix.test-suite == 'notebook'
         with:
-          name: screenshots
+          name: ${{matrix.test-suite}}-screenshots
           path: './*.jpg'
 
       - name: Publish Notebook Test Report
@@ -767,7 +767,6 @@ jobs:
           name: ${{runner.os}}-${{env.COVERAGE_REPORTS}}
           path: .nyc_output
           retention-days: 1
-          if: always()
 
   smoke-tests:
     timeout-minutes: 30

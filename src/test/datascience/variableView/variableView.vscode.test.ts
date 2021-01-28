@@ -74,6 +74,17 @@ suite('DataScience - VariableView', () => {
 
     // Test showing the basic variable view with a value or two
     test('Can show VariableView', async function () {
+        // Take an initial screen shot at the start of the test
+        const displays = await screenshot.listDisplays();
+        console.log(`IANHU displays ${displays.length}`);
+        for (const display of displays) {
+            console.log(`IANHU display ${display.toString()}`);
+            const fileName = `screenshots/TestStart${display.id}.jpg`;
+            console.log(`IANHU screenshot file name ${fileName}`);
+            const result = await screenshot({ filename: fileName, screen: display.id });
+            console.log(`IANHU result ${result}`);
+        }
+
         this.timeout(60_000);
         // Add one simple cell and execute it
         await insertCodeCell('test = "MYTESTVALUE"', { index: 0 });
@@ -107,11 +118,11 @@ suite('DataScience - VariableView', () => {
 
         console.log('IANHU Executed Cell 2');
 
-        const displays = await screenshot.listDisplays();
+        // Take a screenshot after we have executed cell 2
         console.log(`IANHU displays ${displays.length}`);
         for (const display of displays) {
             console.log(`IANHU display ${display.toString()}`);
-            const fileName = `shot${display.id}.jpg`;
+            const fileName = `screenshots/Cell2Execute${display.id}.jpg`;
             console.log(`IANHU screenshot file name ${fileName}`);
             const result = await screenshot({ filename: fileName, screen: display.id });
             console.log(`IANHU result ${result}`);
