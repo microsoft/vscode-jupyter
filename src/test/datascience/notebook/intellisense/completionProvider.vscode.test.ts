@@ -6,7 +6,6 @@ import { assert } from 'chai';
 import * as path from 'path';
 import * as sinon from 'sinon';
 import { CancellationTokenSource, CompletionContext, CompletionTriggerKind, Position, Uri } from 'vscode';
-import { CellDisplayOutput } from '../../../../../types/vscode-proposed';
 import { IVSCodeNotebook } from '../../../../client/common/application/types';
 import { traceInfo } from '../../../../client/common/logger';
 import { IDisposable } from '../../../../client/common/types';
