@@ -68,7 +68,7 @@ suite('DataScience - VSCode Notebook - (Code Completion via Jupyter) (slow)', fu
         await waitForKernelToGetAutoSelected(undefined);
         await deleteAllCellsAndWait();
         assert.isOk(vscodeNotebook.activeNotebookEditor, 'No active notebook');
-        process.env.VSC_JUPYTER_IntellisenseTimeout = '30000';
+        process.env.VSC_JUPYTER_IntellisenseTimeout = '10000';
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
     });
     teardown(async function () {
@@ -79,8 +79,7 @@ suite('DataScience - VSCode Notebook - (Code Completion via Jupyter) (slow)', fu
     });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
     test('Execute cell and get completions for variable', async () => {
-        // Print sys.executable for debugging purposes (some times on CI we weren't using the right kernel).
-        await insertCodeCell('import sys\nprint(sys.executable)\na = 1', { index: 0 });
+        await insertCodeCell('na = 1', { index: 0 });
         const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
 
         await executeCell(cell);
