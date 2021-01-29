@@ -295,12 +295,11 @@ export class KernelSelector implements IKernelSelectionUsage {
                     score += 16;
                 }
 
-                if (
-                    score === 0 &&
-                    isPythonNotebook(notebookMetadata) &&
-                    spec.language?.toLowerCase() === PYTHON_LANGUAGE.toLowerCase()
-                ) {
-                    // Find a kernel spec that matches the language.
+                // Find a kernel spec that matches the language in the notebook metadata.
+                const nbMetadataLanguage = isPythonNotebook(notebookMetadata)
+                    ? PYTHON_LANGUAGE
+                    : (notebookMetadata?.kernelspec?.language as string) || notebookMetadata?.language_info?.name;
+                if (score === 0 && spec.language?.toLowerCase() === (nbMetadataLanguage || '').toLowerCase()) {
                     score = 1;
                 }
             }
