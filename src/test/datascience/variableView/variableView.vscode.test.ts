@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { assert } from 'chai';
+import { commands } from 'vscode';
 import * as sinon from 'sinon';
 import { ICommandManager, IVSCodeNotebook } from '../../../client/common/application/types';
 import { IDisposable } from '../../../client/common/types';
@@ -40,6 +41,9 @@ suite('DataScience - VariableView', () => {
     suiteSetup(async function () {
         this.timeout(120_000);
         api = await initialize();
+
+        await commands.executeCommand('notifications.hideList');
+        await commands.executeCommand('notifications.hideToasts');
 
         // Don't run if we can't use the native notebook interface
         if (IS_REMOTE_NATIVE_TEST || !(await canRunNotebookTests())) {
