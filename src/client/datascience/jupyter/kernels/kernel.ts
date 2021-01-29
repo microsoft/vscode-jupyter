@@ -17,6 +17,7 @@ import { createDeferred, Deferred } from '../../../common/utils/async';
 import { noop } from '../../../common/utils/misc';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { CodeSnippets, Telemetry } from '../../constants';
+import { getNotebookMetadata } from '../../notebook/helpers/helpers';
 import {
     IDataScienceErrorHandler,
     INotebook,
@@ -96,19 +97,18 @@ export class Kernel implements IKernel {
             vscNotebook,
             kernelConnectionMetadata,
             context,
-            interruptTimeout,
-            rawNotebookSupported
+            interruptTimeout
         );
     }
     public async executeCell(cell: NotebookCell): Promise<void> {
-        const notebookPromise = this.startNotebook({ disableUI: false });
+        const notebookPromise = this.startNotebook({ disableUI: false, document: cell.notebook });
         await this.kernelExecution.executeCell(notebookPromise, cell);
     }
     public async executeAllCells(document: NotebookDocument): Promise<void> {
-        const notebookPromise = this.startNotebook({ disableUI: false });
+        const notebookPromise = this.startNotebook({ disableUI: false, document });
         await this.kernelExecution.executeAllCells(notebookPromise, document);
     }
-    public async start(options?: { disableUI?: boolean }): Promise<void> {
+    public async start(options: { disableUI?: boolean; document: NotebookDocument }): Promise<void> {
         await this.startNotebook(options);
     }
     public async interrupt(document: NotebookDocument): Promise<InterruptResult> {
@@ -149,7 +149,7 @@ export class Kernel implements IKernel {
             }
         }
     }
-    private async startNotebook(options: { disableUI?: boolean } = {}): Promise<INotebook> {
+    private async startNotebook(options: { disableUI?: boolean; document: NotebookDocument }): Promise<INotebook> {
         if (this.restarting) {
             await this.restarting.promise;
         }
@@ -164,7 +164,7 @@ export class Kernel implements IKernel {
                             resource: this.uri,
                             disableUI: options?.disableUI,
                             getOnly: false,
-                            metadata: undefined, // No need to pass this, as we have a kernel connection (metadata is required in lower layers to determine the kernel connection).
+                            metadata: getNotebookMetadata(options.document), // No need to pass this, as we have a kernel connection (metadata is required in lower layers to determine the kernel connection).
                             kernelConnection: this.kernelConnectionMetadata,
                             token: this.startCancellation.token
                         });
