@@ -18,10 +18,6 @@ export class VariableViewActivationService implements IExtensionSingleActivation
         // Only activate this when in the NativeNotebook experiment
         if (await this.experimentService.inExperiment(Experiments.NativeNotebook)) {
             this.extensionContext.subscriptions.push(
-                // Consider not using retainContext here? This will save the context of our view, but take more memory in VS Code.
-                //window.registerWebviewViewProvider(this.variableViewProvider.viewType, this.variableViewProvider, {
-                //webviewOptions: { retainContextWhenHidden: true }
-                //})
                 window.registerWebviewViewProvider(this.variableViewProvider.viewType, this.variableViewProvider, {
                     webviewOptions: { retainContextWhenHidden: false }
                 })

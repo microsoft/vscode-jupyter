@@ -138,14 +138,16 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
         }
         context.set(visible).ignoreErrors();
 
-        // Also perform a refresh on a visibily change
+        // I've we've been made visible, make sure that we are updated
         if (visible) {
-            //this.postMessage(InteractiveWindowMessages.ForceVariableRefresh).ignoreErrors();
+            // If there is an active execution count, update the view with that info
+            // Keep the variables up to date if document has run cells while the view was not visible
             if (this.notebookWatcher.activeNotebookExecutionCount !== undefined) {
                 this.postMessage(InteractiveWindowMessages.UpdateVariableViewExecutionCount, {
                     executionCount: this.notebookWatcher.activeNotebookExecutionCount
                 }).ignoreErrors();
             } else {
+                // No active view, so just trigger refresh to clear
                 this.postMessage(InteractiveWindowMessages.ForceVariableRefresh).ignoreErrors();
             }
         }

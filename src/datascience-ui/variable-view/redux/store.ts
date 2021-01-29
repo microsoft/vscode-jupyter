@@ -8,5 +8,14 @@ import { reducerMap } from './reducers';
 
 // Create a redux store using the reducerMap from VariableViewPanel
 export function createStore(skipDefault: boolean, baseTheme: string, testMode: boolean, postOffice: PostOffice) {
-    return ReduxCommon.createStore(skipDefault, baseTheme, testMode, false, false, true, reducerMap, postOffice);
+    return ReduxCommon.createStore(
+        skipDefault,
+        baseTheme,
+        testMode,
+        false,
+        false,
+        true /* Start with variable view open */,
+        reducerMap,
+        postOffice
+    );
 }
