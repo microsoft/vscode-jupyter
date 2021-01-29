@@ -32,7 +32,9 @@ def _VSCODE_convertNumpyArrayToDataFrame(ndarray):
                     element = temp[i][j]
                     if isinstance(element, _VSCODE_np.ndarray):
                         # Ensure no rjust or ljust padding is applied to stringified elements
-                        stringified = _VSCODE_np.array2string(element, separator=", ", formatter={'all':lambda x: str(x)})
+                        stringified = _VSCODE_np.array2string(
+                            element, separator=", ", formatter={"all": lambda x: str(x)}
+                        )
                     elif isinstance(element, (list, tuple)):
                         # We can't pass lists and tuples to array2string because it expects
                         # the size attribute to be defined
