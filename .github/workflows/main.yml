@@ -674,10 +674,24 @@ jobs:
         uses: ./.github/actions/create-venv-for-tests
         if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook' || matrix.test-suite == 'nonRawNotebook' || matrix.test-suite == 'remoteNotebook'
 
+      - name: install imagemagick on linux
+        if: matrix.os == 'ubuntu-latest'
+        shell: bash
+        run: sudo apt-get install imagemagick
+
+      # Set the correct xvfb commands to run vscode tests
+      # https://code.visualstudio.com/api/working-with-extensions/continuous-integration
+      # Note that xvfb github action only runs through xvfb on linux, so only set the commands there
+      # as on windows / mac they would get directly passed to run, not xvfb-run
+      - name: Set xvfb parameters linux
+        if: matrix.os == 'ubuntu-latest'
+        run: echo "xvfbCommand=--server-args=\"-screen 0 1920x1080x24\"" >> $GITHUB_ENV
+        # run: echo "xvfbCommand=--server-args=\"-screen 0 1024x768x24\"" >> $GITHUB_ENV
+
       - name: Run tests with VSCode & Jupyter
         uses: GabrielBB/xvfb-action@v1.4
         with:
-          run: npm run testVSCode
+          run: ${{ env.xvfbCommand }} npm run testVSCode
         env:
           VSC_FORCE_REAL_JUPYTER: 1
           VSC_JUPYTER_FORCE_LOGGING: 1
@@ -696,11 +710,13 @@ jobs:
       - name: Run Native Notebook with VSCode & Jupyter
         uses: GabrielBB/xvfb-action@v1.4
         with:
-          run: npm run testNativeNotebooksInVSCode
+          # run: ${{ env.xvfbCommand }} npm run testNativeNotebooksInVSCode
+          run: --server-args="-screen 0 1024x768x24" npm run testNativeNotebooksInVSCode
         env:
           VSC_FORCE_REAL_JUPYTER: 1
           VSC_JUPYTER_FORCE_LOGGING: 1
           VSC_PYTHON_FORCE_LOGGING: 1
+          VSC_JUPYTER_WEBVIEW_TEST_MIDDLEWARE: 'true'
           VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
           VSC_JUPYTER_REMOTE_NATIVE_TEST: ${{ contains(matrix.test-suite, 'remote') }}
           VSC_JUPYTER_NON_RAW_NATIVE_TEST: ${{ contains(matrix.test-suite, 'nonRawNotebook') }}
@@ -720,7 +736,7 @@ jobs:
       - name: Run Native Notebook with VSCode & Jupyter (without Python)
         uses: GabrielBB/xvfb-action@v1.4
         with:
-          run: npm run testNativeNotebooksWithoutPythonInVSCode
+          run: ${{ env.xvfbCommand }} npm run testNativeNotebooksWithoutPythonInVSCode
         env:
           VSC_FORCE_REAL_JUPYTER: 1
           VSC_JUPYTER_FORCE_LOGGING: 1
@@ -728,6 +744,13 @@ jobs:
           VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
         id: test_notebookWithoutPythonExt_vscode
         if: matrix.test-suite == 'notebookWithoutPythonExt'
+
+      - name: Upload Screenshots 
+        uses: actions/upload-artifact@v2
+        if: always() && matrix.test-suite == 'notebook'
+        with:
+          name: ${{matrix.test-suite}}-screenshots
+          path: './*.jpg'
 
       - name: Publish Notebook Test Report
         uses: scacap/action-surefire-report@v1
@@ -745,7 +768,6 @@ jobs:
           name: ${{runner.os}}-${{env.COVERAGE_REPORTS}}
           path: .nyc_output
           retention-days: 1
-          if: always()
 
   smoke-tests:
     timeout-minutes: 30

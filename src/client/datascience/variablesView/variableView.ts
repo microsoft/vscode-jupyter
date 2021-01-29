@@ -94,6 +94,7 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
             );
         }
         this.handleVisibilityChanged();
+        console.log('IANHU variableView load');
     }
 
     // Used to identify this webview in telemetry, not shown to user so no localization
@@ -104,6 +105,7 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     protected onMessage(message: string, payload: any) {
+        console.log(`IANHU variableView message: ${message}`);
         switch (message) {
             case InteractiveWindowMessages.GetVariablesRequest:
                 this.handleMessage(message, payload, this.requestVariables);

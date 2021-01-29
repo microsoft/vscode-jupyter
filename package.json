@@ -2153,6 +2153,7 @@
         "remove-files-webpack-plugin": "^1.4.0",
         "rewiremock": "^3.13.0",
         "rimraf": "^3.0.2",
+        "screenshot-desktop": "^1.12.3",
         "sinon": "^8.0.1",
         "socket.io": "^2.3.0",
         "source-map-support": "^0.5.12",
