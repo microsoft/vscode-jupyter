@@ -340,13 +340,14 @@ const reducerMap: Partial<VariableActionMapping> = {
 };
 
 export function generateVariableReducer(
-    showVariablesOnDebug: boolean
+    showVariablesOnDebug: boolean,
+    startOpen: boolean
 ): Reducer<IVariableState, QueuableAction<Partial<VariableActionMapping>>> {
     // First create our default state.
     const defaultState: IVariableState = {
         currentExecutionCount: 0,
         variables: [],
-        visible: false,
+        visible: startOpen,
         sortAscending: true,
         sortColumn: 'name',
         pageSize: 5,

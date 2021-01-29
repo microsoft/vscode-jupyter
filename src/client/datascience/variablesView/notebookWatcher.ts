@@ -32,6 +32,15 @@ export class NotebookWatcher implements INotebookWatcher {
     public get activeNotebook(): INotebook | undefined {
         return this.notebookEditorProvider.activeEditor?.notebook;
     }
+    public get activeNotebookExecutionCount(): number | undefined {
+        if (this.notebookEditorProvider.activeEditor) {
+            const executionCount = this.getExecutionCount(this.notebookEditorProvider.activeEditor.file);
+
+            return executionCount?.executionCount;
+        }
+
+        return undefined;
+    }
 
     private readonly _onDidExecuteActiveNotebook = new EventEmitter<{ executionCount: number }>();
     private readonly _onDidChangeActiveNotebook = new EventEmitter<{

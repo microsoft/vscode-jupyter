@@ -139,7 +139,16 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
         context.set(visible).ignoreErrors();
 
         // Also perform a refresh on a visibily change
-        this.postMessage(InteractiveWindowMessages.ForceVariableRefresh).ignoreErrors();
+        if (visible) {
+            //this.postMessage(InteractiveWindowMessages.ForceVariableRefresh).ignoreErrors();
+            if (this.notebookWatcher.activeNotebookExecutionCount !== undefined) {
+                this.postMessage(InteractiveWindowMessages.UpdateVariableViewExecutionCount, {
+                    executionCount: this.notebookWatcher.activeNotebookExecutionCount
+                }).ignoreErrors();
+            } else {
+                this.postMessage(InteractiveWindowMessages.ForceVariableRefresh).ignoreErrors();
+            }
+        }
     }
 
     // Handle a request from the react UI to show our data viewer
