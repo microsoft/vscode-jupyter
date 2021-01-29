@@ -52,8 +52,8 @@ export class AuthenticationService implements IAuthenticationService {
         return Promise.resolve(undefined);
     }
     public setPassword(key: string, value: string): Thenable<void> {
-        if (this.useProposedApi && this.env.channel === 'insiders' && this.context.secrets?.set) {
-            return this.context.secrets.set(key, value);
+        if (this.useProposedApi && this.env.channel === 'insiders' && this.context.secrets?.store) {
+            return this.context.secrets.store(key, value);
         }
         return Promise.resolve();
     }

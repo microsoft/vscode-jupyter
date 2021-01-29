@@ -134,10 +134,10 @@ export class JupyterExecutionBase implements IJupyterExecution {
         return Cancellation.race(async () => {
             let result: INotebookServer | undefined;
             let connection: IJupyterConnection | undefined;
-            let kernelConnectionMetadata: KernelConnectionMetadata | undefined;
+            let kernelConnectionMetadata = options?.kernelConnection;
             let kernelConnectionMetadataPromise: Promise<KernelConnectionMetadata | undefined> = Promise.resolve<
                 KernelConnectionMetadata | undefined
-            >(undefined);
+            >(kernelConnectionMetadata);
             traceInfo(`Connecting to ${options ? options.purpose : 'unknown type of'} server`);
             const allowUI = !options || options.allowUI();
             const kernelSpecCancelSource = new CancellationTokenSource();
@@ -148,7 +148,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
             }
             const isLocalConnection = !options || !options.uri;
 
-            if (isLocalConnection) {
+            if (isLocalConnection && !options?.kernelConnection) {
                 // Get hold of the kernelspec and corresponding (matching) interpreter that'll be used as the spec.
                 // We can do this in parallel, while starting the server (faster).
                 traceInfo(`Getting kernel specs for ${options ? options.purpose : 'unknown type of'} server`);

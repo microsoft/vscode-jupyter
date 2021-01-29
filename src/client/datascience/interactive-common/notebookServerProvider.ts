@@ -3,6 +3,7 @@
 
 'use strict';
 
+import { nbformat } from '@jupyterlab/coreutils';
 import { inject, injectable } from 'inversify';
 import { CancellationToken, ConfigurationTarget, EventEmitter, Uri } from 'vscode';
 import { IApplicationShell } from '../../common/application/types';
@@ -17,6 +18,7 @@ import { Identifiers, Settings, Telemetry } from '../constants';
 import { JupyterInstallError } from '../jupyter/jupyterInstallError';
 import { JupyterSelfCertsError } from '../jupyter/jupyterSelfCertsError';
 import { JupyterZMQBinariesNotFoundError } from '../jupyter/jupyterZMQBinariesNotFoundError';
+import { KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { JupyterServerSelector } from '../jupyter/serverSelector';
 import { ProgressReporter } from '../progress/progressReporter';
 import {
@@ -51,7 +53,7 @@ export class NotebookServerProvider implements IJupyterServerProvider {
         options: GetServerOptions,
         token?: CancellationToken
     ): Promise<INotebookServer | undefined> {
-        const serverOptions = await this.getNotebookServerOptions();
+        const serverOptions = await this.getNotebookServerOptions(options);
 
         // If we are just fetching or only want to create for local, see if exists
         if (options.getOnly || (options.localOnly && !serverOptions.uri)) {
@@ -79,7 +81,7 @@ export class NotebookServerProvider implements IJupyterServerProvider {
 
         if (!this.serverPromise) {
             // Start a server
-            this.serverPromise = this.startServer(token);
+            this.serverPromise = this.startServer(options, token);
         }
         try {
             const value = await this.serverPromise;
@@ -91,8 +93,14 @@ export class NotebookServerProvider implements IJupyterServerProvider {
         }
     }
 
-    private async startServer(token?: CancellationToken): Promise<INotebookServer | undefined> {
-        const serverOptions = await this.getNotebookServerOptions();
+    private async startServer(
+        options: {
+            metadata?: nbformat.INotebookMetadata;
+            kernelConnection?: KernelConnectionMetadata;
+        },
+        token?: CancellationToken
+    ): Promise<INotebookServer | undefined> {
+        const serverOptions = await this.getNotebookServerOptions(options);
         traceInfo(`Checking for server existence.`);
 
         // If the URI is 'remote' then the encrypted storage is not working. Ask user again for server URI
@@ -206,7 +214,10 @@ export class NotebookServerProvider implements IJupyterServerProvider {
         }
     }
 
-    private async getNotebookServerOptions(): Promise<INotebookServerOptions> {
+    private async getNotebookServerOptions(options: {
+        metadata?: nbformat.INotebookMetadata;
+        kernelConnection?: KernelConnectionMetadata;
+    }): Promise<INotebookServerOptions> {
         // Since there's one server per session, don't use a resource to figure out these settings
         let serverURI: string | undefined = await this.serverUriStorage.getUri();
         const useDefaultConfig: boolean | undefined = this.configuration.getSettings(undefined)
@@ -221,6 +232,8 @@ export class NotebookServerProvider implements IJupyterServerProvider {
             uri: serverURI,
             skipUsingDefaultConfig: !useDefaultConfig,
             purpose: Identifiers.HistoryPurpose,
+            kernelConnection: options.kernelConnection,
+            metadata: options.metadata,
             allowUI: this.allowUI.bind(this)
         };
     }

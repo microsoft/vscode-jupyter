@@ -408,7 +408,7 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
 
         // Auto start the local kernels.
         if (newKernel && !this.configuration.getSettings(undefined).disableJupyterAutoStart && this.isLocalLaunch()) {
-            newKernel.start({ disableUI: true }).catch(noop);
+            newKernel.start({ disableUI: true, document }).catch(noop);
         }
 
         // Change kernel and update metadata (this can return `undefined`).
