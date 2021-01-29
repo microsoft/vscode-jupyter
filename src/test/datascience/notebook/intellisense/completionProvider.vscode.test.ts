@@ -86,8 +86,6 @@ suite('DataScience - VSCode Notebook - (Code Completion via Jupyter) (slow)', fu
 
         // Wait till execution count changes and status is success.
         await waitForExecutionCompletedSuccessfully(cell);
-        const outputText: string = (cell.outputs[0] as CellDisplayOutput).data['text/plain'].trim();
-        traceInfo(`Cell Output ${outputText}`);
 
         await insertCodeCell('a.', { index: 1 });
         const cell2 = vscodeNotebook.activeNotebookEditor!.document.cells[1];
