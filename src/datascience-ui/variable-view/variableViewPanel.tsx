@@ -28,8 +28,6 @@ export class VariableViewPanel extends React.Component<IVariableViewPanelProps> 
         super(props);
 
         this.panelRef = React.createRef<HTMLDivElement>();
-        // For the variable view we want to start toggled open
-        this.props.toggleVariableExplorer();
     }
 
     public componentDidMount() {

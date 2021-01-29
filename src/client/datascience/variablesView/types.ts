@@ -40,6 +40,7 @@ export interface IActiveNotebookChangedEvent {
 export const INotebookWatcher = Symbol('INotebookWatcher');
 export interface INotebookWatcher {
     readonly activeNotebook?: INotebook;
+    readonly activeNotebookExecutionCount?: number;
     readonly onDidChangeActiveNotebook: Event<IActiveNotebookChangedEvent>;
     readonly onDidExecuteActiveNotebook: Event<{ executionCount: number }>;
     readonly onDidRestartActiveNotebook: Event<void>;
