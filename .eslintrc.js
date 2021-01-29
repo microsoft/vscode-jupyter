@@ -1054,7 +1054,6 @@ module.exports = {
         'src/client/datascience/jupyter/jupyterExecutionFactory.ts',
         'src/client/datascience/jupyter/serverPreload.ts',
         'src/client/datascience/jupyter/jupyterRequest.ts',
-        'src/client/datascience/jupyter/jupyterNotebookProvider.ts',
         'src/client/datascience/jupyter/commandLineSelector.ts',
         'src/client/datascience/jupyter/jupyterVariables.ts',
         'src/client/datascience/jupyter/jupyterDebugger.ts',

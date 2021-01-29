@@ -125,7 +125,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
                 await openNotebook(api.serviceContainer, nbFile);
                 // If this is a native notebook, then wait for kernel to get selected.
                 if (editorProvider.activeEditor?.type === 'native') {
-                    await waitForKernelToChange(kName);
+                    await waitForKernelToChange({ labelOrId: kName });
                 }
 
                 // Run all cells
