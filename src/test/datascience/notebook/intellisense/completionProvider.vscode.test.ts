@@ -6,6 +6,7 @@ import { assert } from 'chai';
 import * as path from 'path';
 import * as sinon from 'sinon';
 import { CancellationTokenSource, CompletionContext, CompletionTriggerKind, Position, Uri } from 'vscode';
+import { CellDisplayOutput } from '../../../../../types/vscode-proposed';
 import { IVSCodeNotebook } from '../../../../client/common/application/types';
 import { traceInfo } from '../../../../client/common/logger';
 import { IDisposable } from '../../../../client/common/types';
@@ -78,13 +79,16 @@ suite('DataScience - VSCode Notebook - (Code Completion via Jupyter) (slow)', fu
     });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
     test('Execute cell and get completions for variable', async () => {
-        await insertCodeCell('a = 1', { index: 0 });
+        // Print sys.executable for debugging purposes (some times on CI we weren't using the right kernel).
+        await insertCodeCell('import sys\nprint(sys.executable)\na = 1', { index: 0 });
         const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
 
         await executeCell(cell);
 
         // Wait till execution count changes and status is success.
         await waitForExecutionCompletedSuccessfully(cell);
+        const outputText: string = (cell.outputs[0] as CellDisplayOutput).data['text/plain'].trim();
+        traceInfo(`Cell Output ${outputText}`);
 
         await insertCodeCell('a.', { index: 1 });
         const cell2 = vscodeNotebook.activeNotebookEditor!.document.cells[1];
