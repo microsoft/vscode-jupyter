@@ -366,7 +366,6 @@ module.exports = {
         'src/datascience-ui/native-editor/redux/reducers/creation.ts',
         'src/datascience-ui/native-editor/redux/reducers/execution.ts',
         'src/datascience-ui/native-editor/redux/reducers/effects.ts',
-        'src/datascience-ui/native-editor/redux/store.ts',
         'src/datascience-ui/renderers/index.tsx',
         'src/datascience-ui/renderers/webviewApi.d.ts',
         'src/datascience-ui/renderers/constants.ts',
