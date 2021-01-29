@@ -164,6 +164,23 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         // Confirm the executable printed as a result of code in cell `import sys;sys.executable`
         assertHasTextOutputInVSCode(cell, venvNoKernelPythonPath, 0, false);
     });
+    test('Ensure we select a Python kernel for a nb with python language information', async function () {
+        await editorProvider.open(Uri.file(emptyPythonNb));
+        await waitForKernelToGetAutoSelected(undefined);
+
+        // Run all cells
+        await deleteAllCellsAndWait();
+        await insertCodeCell('import sys\nsys.executable', { index: 0 });
+        await insertCodeCell('print("Hello World")', { index: 1 });
+        await executeActiveDocument();
+
+        const cell1 = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
+        const cell2 = vscodeNotebook.activeNotebookEditor?.document.cells![1]!;
+
+        // If it was successfully selected, then we know a Python kernel was correctly selected & managed to run the code.
+        await Promise.all([waitForExecutionCompletedSuccessfully(cell1), waitForExecutionCompletedSuccessfully(cell2)]);
+        assertHasTextOutputInVSCode(cell2, 'Hello World', 0, false);
+    });
     test('User kernelspec in notebook metadata', async function () {
         await openNotebook(api.serviceContainer, nbFile1);
         await waitForKernelToGetAutoSelected(undefined);
