@@ -78,6 +78,7 @@ suite('DataScience - VariableView', () => {
 
     // Test showing the basic variable view with a value or two
     test('Can show VariableView', async function () {
+        this.timeout(60_000);
         // Take an initial screen shot at the start of the test
         const displays = await screenshot.listDisplays();
         console.log(`IANHU displays ${displays.length}`);
@@ -89,7 +90,6 @@ suite('DataScience - VariableView', () => {
             console.log(`IANHU result ${result}`);
         }
 
-        this.timeout(60_000);
         // Add one simple cell and execute it
         await insertCodeCell('test = "MYTESTVALUE"', { index: 0 });
         const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
