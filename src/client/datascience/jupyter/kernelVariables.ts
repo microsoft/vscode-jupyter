@@ -134,6 +134,22 @@ export class KernelVariables implements IJupyterVariables {
         };
     }
 
+    public async getSlice(targetVariable: IJupyterVariable, slice: string, notebook: INotebook): Promise<{}> {
+        // Import the data frame script directory if we haven't already
+        await this.importDataFrameScripts(notebook);
+
+        // Then execute a call to get the rows and turn it into JSON
+        const results = await notebook.execute(
+            `print(${DataFrameLoading.GetSliceFunc}(${targetVariable.name}${slice}))`,
+            Identifiers.EmptyFileName,
+            0,
+            uuid(),
+            undefined,
+            true
+        );
+        return this.deserializeJupyterResult(results);
+    }
+
     public async getDataFrameRows(
         targetVariable: IJupyterVariable,
         start: number,

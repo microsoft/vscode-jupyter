@@ -40,6 +40,7 @@ import './reactSlickGrid.css';
 import { getLocString } from '../react-common/locReactSide';
 import { ShapeDetail } from './shapeDetail';
 import { SliceDetail } from './sliceDetail';
+import { SliceControl } from './sliceControl';
 /*
 WARNING: Do not change the order of these imports.
 Slick grid MUST be imported after we load jQuery and other stuff from `./globalJQueryImports`
@@ -58,13 +59,14 @@ export interface ISlickGridProps {
     idProperty: string;
     columns: Slick.Column<ISlickRow>[];
     rowsAdded: Slick.Event<ISlickGridAdd>;
+    setDataEvent: Slick.Event<ISlickRow[]>
     filterRowsText: string;
     filterRowsTooltip: string;
     forceHeight?: number;
     dataDimensionionality: number;
     dataShape: number[] | undefined;
     totalRowCount: number;
-    shouldShowSliceDataButton: boolean; // Feature flag. This should eventually be removed
+    isSliceDataSupported: boolean; // Feature flag. This should eventually be removed
     handleSliceRequest(args: IGetSliceRequest): void;
 }
 
@@ -152,6 +154,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         this.containerRef = React.createRef<HTMLDivElement>();
         this.measureRef = React.createRef<HTMLDivElement>();
         this.props.rowsAdded.subscribe(this.addedRows);
+        this.props.setDataEvent.subscribe(this.setData);
     }
 
     // eslint-disable-next-line
@@ -306,6 +309,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
                         >
                             <span>{this.props.filterRowsText}</span>
                         </button>
+                        {this.renderTemporarySliceIndicator()}
                         {this.renderSliceDataButton()}
                         {this.renderSliceControls()}
                     </div>
@@ -317,7 +321,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
     }
 
     public renderSliceDataButton = () => {
-        if (true) {
+        if (false) {
             return (
                 <button
                     className="react-grid-filter-button"
@@ -329,6 +333,14 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
             );
         }
     };
+
+    public renderTemporarySliceIndicator = () => {
+        if (this.props.isSliceDataSupported && this.props.dataShape) {
+            return (
+                <SliceControl dataShapeAsArray={this.props.dataShape} handleSliceRequest={this.props.handleSliceRequest}/>
+            );
+        }
+    }
 
     public renderSliceControls = () => {
         if (this.state.isSlicing) {
@@ -558,6 +570,12 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         return null;
     }
 
+    private setData = (_e: Slick.EventData, data: ISlickRow[]) => {
+        this.state.grid?.invalidateAllRows();
+        this.dataView.setItems(data);
+        this.state.grid?.render();
+    }
+
     private addedRows = (_e: Slick.EventData, data: ISlickGridAdd) => {
         // Add all of these new rows into our data.
         this.dataView.beginUpdate();
@@ -637,17 +655,17 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         e.preventDefault();
         this.setState({ isSlicing: !this.state.isSlicing });
         // Request slice with default axis = 0, index = 0
-        this.props.handleSliceRequest({ axis: this.state.selectedAxis, index: this.state.selectedIndex });
+        // this.props.handleSliceRequest({ axis: this.state.selectedAxis, index: this.state.selectedIndex });
     };
 
     private handleAxisChange = (response: any) => {
         this.setState({ selectedAxis: response.value });
-        this.props.handleSliceRequest({ axis: this.state.selectedAxis, index: this.state.selectedIndex });
+        // this.props.handleSliceRequest({ axis: this.state.selectedAxis, index: this.state.selectedIndex });
     }
 
     private handleIndexChange = (response: any) => {
         this.setState({ selectedIndex: response.value });
-        this.props.handleSliceRequest({ axis: this.state.selectedAxis, index: this.state.selectedIndex });
+        // this.props.handleSliceRequest({ axis: this.state.selectedAxis, index: this.state.selectedIndex });
     }
 }
 

@@ -907,6 +907,11 @@ export interface IJupyterVariables {
         notebook?: INotebook,
         cancelToken?: CancellationToken
     ): Promise<IJupyterVariable | undefined>;
+    getSlice(
+        targetVariable: IJupyterVariable,
+        slice: string,
+        notebook?: INotebook
+    ): Promise<JSONObject>;
 }
 
 export interface IConditionalJupyterVariables extends IJupyterVariables {

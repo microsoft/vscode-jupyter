@@ -67,6 +67,15 @@ export class JupyterVariables implements IJupyterVariables {
         return (await this.getVariableHandler(notebook)).getDataFrameRows(targetVariable, start, end, notebook);
     }
 
+    public async getSlice(
+        targetVariable: IJupyterVariable,
+        slice: string,
+        notebook: INotebook
+    ): Promise<JSONObject> {
+        const variableHandler = await this.getVariableHandler(notebook);
+        return variableHandler.getSlice(targetVariable, slice, notebook);
+    }
+
     private async getVariableHandler(notebook?: INotebook): Promise<IJupyterVariables> {
         if (this.debuggerVariables.active && (!notebook || notebook.status === ServerStatus.Busy)) {
             return this.debuggerVariables;

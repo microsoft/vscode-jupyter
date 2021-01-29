@@ -26,7 +26,8 @@ import {
     IDataViewer,
     IDataViewerDataProvider,
     IDataViewerMapping,
-    IGetRowsRequest
+    IGetRowsRequest,
+    IGetSliceRequest
 } from './types';
 import { Experiments } from '../../common/experiments/groups';
 
@@ -78,10 +79,10 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
 
             const dataFrameInfo = await this.prepDataFrameInfo();
 
-            const inExperiment = await this.experimentService.inExperiment(Experiments.EnhancedDataViewer);
+            const isSliceDataSupported = (await this.experimentService.inExperiment(Experiments.SliceDataViewer)) && (!!this.dataProvider.getSlice);
 
             // Send a message with our data
-            this.postMessage(DataViewerMessages.InitializeData, { ...dataFrameInfo, inExperiment }).ignoreErrors();
+            this.postMessage(DataViewerMessages.InitializeData, { ...dataFrameInfo, isSliceDataSupported }).ignoreErrors();
         }
     }
 
@@ -108,6 +109,10 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
 
             case DataViewerMessages.GetRowsRequest:
                 this.getRowChunk(payload as IGetRowsRequest).ignoreErrors();
+                break;
+
+            case DataViewerMessages.GetSliceRequest:
+                this.getSlice(payload as IGetSliceRequest).ignoreErrors();
                 break;
 
             default:
@@ -150,6 +155,15 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
                 const allRows = await this.dataProvider.getAllRows();
                 this.pendingRowsCount = 0;
                 return this.postMessage(DataViewerMessages.GetAllRowsResponse, allRows);
+            }
+        });
+    }
+
+    private getSlice(request: IGetSliceRequest) {
+        return this.wrapRequest(async () => {
+            if (this.dataProvider && this.dataProvider.getSlice) {
+                const rows = await this.dataProvider.getSlice(request.slice);
+                return this.postMessage(DataViewerMessages.GetSliceResponse, rows);
             }
         });
     }

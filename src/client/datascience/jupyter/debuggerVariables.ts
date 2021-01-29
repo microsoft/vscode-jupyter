@@ -132,6 +132,14 @@ export class DebuggerVariables extends DebugLocationTracker
             : targetVariable;
     }
 
+    public async getSlice(
+        _targetVariable: IJupyterVariable,
+        _slice: string,
+        _notebook?: INotebook
+    ) {
+        return {};
+    }
+
     public async getDataFrameRows(
         targetVariable: IJupyterVariable,
         start: number,

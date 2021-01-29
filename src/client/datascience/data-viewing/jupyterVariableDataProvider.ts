@@ -120,6 +120,16 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
         return rows;
     }
 
+    public async getSlice(slice: string) {
+        let rows: IRowsResponse = [];
+        await this.ensureInitialized();
+        if (this.variable && this.variableManager.getSlice) {
+            const dataFrameRows = await this.variableManager.getSlice(this.variable, slice, this.notebook);
+            rows = dataFrameRows && dataFrameRows.data ? (dataFrameRows.data as IRowsResponse) : [];
+        }
+        return rows;
+    }
+
     private async ensureInitialized(): Promise<void> {
         // Postpone pre-req and variable initialization until data is requested.
         if (!this.initialized && this.variable) {

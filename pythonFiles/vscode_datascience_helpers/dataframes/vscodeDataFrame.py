@@ -31,7 +31,8 @@ def _VSCODE_convertNumpyArrayToDataFrame(ndarray):
                 for j in range(len(temp[i])):
                     element = temp[i][j]
                     if isinstance(element, _VSCODE_np.ndarray):
-                        stringified = _VSCODE_np.array2string(element, separator=", ")
+                        # This formatter ensures no rjust or ljust padding is applied to stringified elements
+                        stringified = _VSCODE_np.array2string(element, separator=", ", formatter={'all':lambda x: str(x)})
                     elif isinstance(element, (list, tuple)):
                         # We can't pass lists and tuples to array2string because it expects
                         # the size attribute to be defined
@@ -120,6 +121,10 @@ def _VSCODE_getRowCount(var):
             return _VSCODE_builtins.len(var)
         except TypeError:
             return 0
+
+def _VSCODE_getSlice(expr):
+    df = _VSCODE_convertToDataFrame(expr)
+    return _VSCODE_pd_json.to_json(None, df, orient="table", date_format="iso")
 
 
 # Function to retrieve a set of rows for a data frame

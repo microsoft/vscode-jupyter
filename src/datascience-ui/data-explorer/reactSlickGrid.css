@@ -122,3 +122,12 @@ input.editor-text {
     border-color: none;
     border-style: none;
 }
+
+input.slice-data {
+    background-color: var(--vscode-editor-background);
+    color: var(--vscode-editor-foreground);
+    border-style: solid;
+    border-radius: 1pt;
+    border-color: var(--vscode-editor-inactiveSelectionBackground);
+    outline: 0 none;
+}

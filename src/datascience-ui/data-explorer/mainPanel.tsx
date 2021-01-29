@@ -47,13 +47,14 @@ interface IMainPanelState {
     settings?: IJupyterExtraSettings;
     dataDimensionality: number;
     dataShape?: number[];
-    shouldShowSliceDataButton: boolean;
+    isSliceDataSupported: boolean;
 }
 
 export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState> implements IMessageHandler {
     private container: React.Ref<HTMLDivElement> = React.createRef<HTMLDivElement>();
     private sentDone = false;
     private postOffice: PostOffice = new PostOffice();
+    private gridSetDataEvent: Slick.Event<ISlickRow[]> = new Slick.Event<ISlickRow[]>();
     private gridAddEvent: Slick.Event<ISlickGridAdd> = new Slick.Event<ISlickGridAdd>();
     private rowFetchSizeFirst: number = 0;
     private rowFetchSizeSubsequent: number = 0;
@@ -80,7 +81,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 styleReady: false,
                 dataDimensionality: data.dataDimensionality ?? 2,
                 dataShape: data.dataShape,
-                shouldShowSliceDataButton: false
+                isSliceDataSupported: false
             };
 
             // Fire off a timer to mimic dynamic loading
@@ -96,7 +97,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 styleReady: false,
                 dataDimensionality: 2,
                 dataShape: undefined,
-                shouldShowSliceDataButton: false
+                isSliceDataSupported: false
             };
         }
     }
@@ -157,6 +158,10 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 this.handleGetRowChunkResponse(payload as IGetRowsResponse);
                 break;
 
+            case DataViewerMessages.GetSliceResponse:
+                this.handleSliceResponse(payload as IRowsResponse);
+                break;
+
             case SharedMessages.UpdateSettings:
                 this.updateSettings(payload);
                 break;
@@ -200,13 +205,14 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 columns={this.state.gridColumns}
                 idProperty={this.state.indexColumn}
                 rowsAdded={this.gridAddEvent}
+                setDataEvent={this.gridSetDataEvent}
                 filterRowsText={filterRowsText}
                 filterRowsTooltip={filterRowsTooltip}
                 forceHeight={this.props.testMode ? 200 : undefined}
                 dataDimensionionality={this.state.dataDimensionality}
                 dataShape={this.state.dataShape}
                 totalRowCount={this.state.totalRowCount}
-                shouldShowSliceDataButton={this.state.shouldShowSliceDataButton}
+                isSliceDataSupported={this.state.isSliceDataSupported}
                 handleSliceRequest={this.handleSliceRequest}
             />
         );
@@ -216,7 +222,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private initializeData(payload: any) {
         // Payload should be an IJupyterVariable with the first 100 rows filled out
         if (payload) {
-            const variable = payload as IDataFrameInfo & { inExperiment: boolean };
+            const variable = payload as IDataFrameInfo & { isSliceDataSupported: boolean };
             if (variable) {
                 const columns = this.generateColumns(variable);
                 const totalRowCount = variable.rowCount ? variable.rowCount : 0;
@@ -231,7 +237,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                     indexColumn: indexColumn,
                     dataShape: variable.shape,
                     dataDimensionality: variable.dataDimensionality ?? 2,
-                    shouldShowSliceDataButton: variable.inExperiment
+                    isSliceDataSupported: variable.isSliceDataSupported
                 });
 
                 // Compute our row fetch sizes based on the number of columns
@@ -276,6 +282,17 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
         // Add all of these rows to the grid
         this.updateRows(normalized);
+    }
+
+    private handleSliceResponse(response: IRowsResponse) {
+        console.log('Got slice response', response);
+        const rows = response ? (response as JSONArray) : [];
+        const normalized = this.normalizeRows(rows);
+
+        // Update our fetched count and actual rows
+        this.setState({ gridRows: normalized });
+
+        this.gridSetDataEvent.notify(normalized);
     }
 
     private handleGetRowChunkResponse(response: IGetRowsResponse) {
