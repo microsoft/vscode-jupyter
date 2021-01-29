@@ -96,7 +96,8 @@ export class Kernel implements IKernel {
             vscNotebook,
             kernelConnectionMetadata,
             context,
-            interruptTimeout
+            interruptTimeout,
+            rawNotebookSupported
         );
     }
     public async executeCell(cell: NotebookCell): Promise<void> {
