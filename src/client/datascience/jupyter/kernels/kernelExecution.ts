@@ -161,7 +161,9 @@ export class KernelExecution implements IDisposable {
             return existingExecutionQueue;
         }
 
-        // Ensure we add the handler to kernel immediate (before we resolve the notebook, else its possible user hits restart or the like and we miss that event).
+        // Ensure we wait for kernel before we continue. Possible we have errors in kernel & that rejects first.
+        // We need to validate the kernel is usable.
+        // Also we need to add the handler to kernel immediately (before we resolve the notebook, else its possible user hits restart or the like and we miss that event).
         const wrappedNotebookPromise = this.getKernel(editor.document)
             .then((kernel) => this.addKernelRestartHandler(kernel, editor.document))
             .then(() => notebookPromise);
