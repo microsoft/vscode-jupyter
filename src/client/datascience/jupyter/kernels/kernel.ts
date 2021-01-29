@@ -20,6 +20,7 @@ import { CodeSnippets, Telemetry } from '../../constants';
 import { getNotebookMetadata } from '../../notebook/helpers/helpers';
 import {
     IDataScienceErrorHandler,
+    IJupyterServerUriStorage,
     INotebook,
     INotebookEditorProvider,
     INotebookProvider,
@@ -86,7 +87,8 @@ export class Kernel implements IKernel {
         vscNotebook: IVSCodeNotebook,
         private readonly rawNotebookSupported: IRawNotebookSupportedService,
         private readonly fs: IFileSystem,
-        context: IExtensionContext
+        context: IExtensionContext,
+        private readonly serverStorage: IJupyterServerUriStorage
     ) {
         this.kernelExecution = new KernelExecution(
             kernelProvider,
@@ -181,6 +183,9 @@ export class Kernel implements IKernel {
                         throw ex;
                     }
                     await this.initializeAfterStart();
+                    if (this.notebook?.connection) {
+                        this.updateRemoteUriList(this.notebook.connection).catch(noop);
+                    }
                     resolve(this.notebook);
                 } catch (ex) {
                     if (options.disableUI) {
@@ -194,6 +199,17 @@ export class Kernel implements IKernel {
             });
         }
         return this._notebookPromise;
+    }
+    private async updateRemoteUriList(serverConnection: INotebookProviderConnection) {
+        if (serverConnection.localLaunch) {
+            return;
+        }
+        // Log this remote URI into our MRU list
+        await this.serverStorage.addToUriList(
+            serverConnection.url || serverConnection.displayName,
+            Date.now(),
+            serverConnection.displayName
+        );
     }
 
     private async validate(uri: Uri): Promise<void> {
