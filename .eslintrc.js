@@ -1027,7 +1027,6 @@ module.exports = {
         'src/client/datascience/notebook/notebookEditorProviderWrapper.ts',
         'src/client/datascience/notebook/renderer.ts',
         'src/client/datascience/notebook/rendererExtensionDownloader.ts',
-        'src/client/datascience/notebook/helpers/multiCancellationToken.ts',
         'src/client/datascience/notebook/helpers/executionHelpers.ts',
         'src/client/datascience/notebook/survey.ts',
         'src/client/datascience/notebook/rendererExtension.ts',
