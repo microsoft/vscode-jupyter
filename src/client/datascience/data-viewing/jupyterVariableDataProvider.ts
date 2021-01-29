@@ -8,7 +8,7 @@ import { inject, injectable, named } from 'inversify';
 import { Identifiers } from '../constants';
 import { IJupyterVariable, IJupyterVariableDataProvider, IJupyterVariables, INotebook } from '../types';
 import { DataViewerDependencyService } from './dataViewerDependencyService';
-import { ColumnType, IDataFrameInfo, IRowsResponse } from './types';
+import { ColumnType, IDataFrameInfo, IRowsResponse, ISliceResponse } from './types';
 import { traceError } from '../../common/logger';
 
 @injectable()
@@ -121,13 +121,12 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
     }
 
     public async getSlice(slice: string) {
-        let rows: IRowsResponse = [];
+        let data: ISliceResponse = { rows: [] };
         await this.ensureInitialized();
         if (this.variable && this.variableManager.getSlice) {
-            const dataFrameRows = await this.variableManager.getSlice(this.variable, slice, this.notebook);
-            rows = dataFrameRows && dataFrameRows.data ? (dataFrameRows.data as IRowsResponse) : [];
+            data = await this.variableManager.getSlice(this.variable, slice, this.notebook);
         }
-        return rows;
+        return data;
     }
 
     private async ensureInitialized(): Promise<void> {

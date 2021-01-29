@@ -55,7 +55,7 @@ export type IDataViewerMapping = {
     [DataViewerMessages.GetRowsResponse]: IGetRowsResponse;
     [DataViewerMessages.CompletedData]: never | undefined;
     [DataViewerMessages.GetSliceRequest]: IGetSliceRequest;
-    [DataViewerMessages.GetSliceResponse]: IRowsResponse;
+    [DataViewerMessages.GetSliceResponse]: ISliceResponse;
 };
 
 export interface IDataFrameInfo {
@@ -71,7 +71,7 @@ export interface IDataViewerDataProvider {
     getDataFrameInfo(): Promise<IDataFrameInfo>;
     getAllRows(): Promise<IRowsResponse>;
     getRows(start: number, end: number): Promise<IRowsResponse>;
-    getSlice?(slice: string): Promise<IRowsResponse | undefined>;
+    getSlice?(slice: string): Promise<ISliceResponse>;
 }
 
 export enum ColumnType {
@@ -82,6 +82,10 @@ export enum ColumnType {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type IRowsResponse = any[];
+
+export interface ISliceResponse extends IDataFrameInfo {
+    rows: IRowsResponse
+};
 
 export const IDataViewerFactory = Symbol('IDataViewerFactory');
 export interface IDataViewerFactory {

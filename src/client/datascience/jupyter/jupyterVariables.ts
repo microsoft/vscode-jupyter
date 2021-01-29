@@ -9,6 +9,7 @@ import { ServerStatus } from '../../../datascience-ui/interactive-common/mainSta
 import { IDisposableRegistry } from '../../common/types';
 import { captureTelemetry } from '../../telemetry';
 import { Identifiers, Telemetry } from '../constants';
+import { ISliceResponse } from '../data-viewing/types';
 import {
     IConditionalJupyterVariables,
     IJupyterVariable,
@@ -71,7 +72,7 @@ export class JupyterVariables implements IJupyterVariables {
         targetVariable: IJupyterVariable,
         slice: string,
         notebook: INotebook
-    ): Promise<JSONObject> {
+    ): Promise<ISliceResponse> {
         const variableHandler = await this.getVariableHandler(notebook);
         return variableHandler.getSlice(targetVariable, slice, notebook);
     }

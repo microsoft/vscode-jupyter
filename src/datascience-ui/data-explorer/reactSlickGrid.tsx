@@ -54,12 +54,14 @@ export interface ISlickGridAdd {
     newRows: ISlickRow[];
 }
 
+export interface ISlickGridSlice { rows: ISlickRow[], columns: Slick.Column<Slick.SlickData>[]};
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export interface ISlickGridProps {
     idProperty: string;
     columns: Slick.Column<ISlickRow>[];
     rowsAdded: Slick.Event<ISlickGridAdd>;
-    setDataEvent: Slick.Event<ISlickRow[]>
+    setDataEvent: Slick.Event<ISlickGridSlice>
     filterRowsText: string;
     filterRowsTooltip: string;
     forceHeight?: number;
@@ -161,8 +163,14 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
     public componentDidMount = () => {
         window.addEventListener('resize', this.windowResized);
 
+        this.createSlickGrid();
+        // Act like a resize happened to refresh the layout.
+        this.windowResized();
+    };
+
+    private createSlickGrid() {
         if (this.containerRef.current) {
-            // Compute font size. Default to 15 if not found.
+                // Compute font size. Default to 15 if not found.
             let fontSize = parseInt(
                 getComputedStyle(this.containerRef.current).getPropertyValue('--code-font-size'),
                 10
@@ -260,10 +268,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
             // Save in our state
             this.setState({ grid, fontSize });
         }
-
-        // Act like a resize happened to refresh the layout.
-        this.windowResized();
-    };
+    }
 
     public componentWillUnmount = () => {
         if (this.resizeTimer) {
@@ -570,10 +575,11 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         return null;
     }
 
-    private setData = (_e: Slick.EventData, data: ISlickRow[]) => {
+    private setData = (_e: Slick.EventData, data: ISlickGridSlice) => {
         this.state.grid?.invalidateAllRows();
-        this.dataView.setItems(data);
-        this.state.grid?.render();
+        this.createSlickGrid();
+        this.dataView.setItems(data.rows);
+        this.autoResizeColumns();
     }
 
     private addedRows = (_e: Slick.EventData, data: ISlickGridAdd) => {

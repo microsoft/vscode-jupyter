@@ -33,7 +33,7 @@ import { IAsyncDisposable, IDisposable, IJupyterSettings, InteractiveWindowMode,
 import { StopWatch } from '../common/utils/stopWatch';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import { JupyterCommands } from './constants';
-import { IDataViewerDataProvider } from './data-viewing/types';
+import { IDataViewerDataProvider, ISliceResponse } from './data-viewing/types';
 import { NotebookModelChange } from './interactive-common/interactiveWindowTypes';
 import { JupyterServerInfo } from './jupyter/jupyterConnection';
 import { JupyterInstallError } from './jupyter/jupyterInstallError';
@@ -911,7 +911,7 @@ export interface IJupyterVariables {
         targetVariable: IJupyterVariable,
         slice: string,
         notebook?: INotebook
-    ): Promise<JSONObject>;
+    ): Promise<ISliceResponse>;
 }
 
 export interface IConditionalJupyterVariables extends IJupyterVariables {

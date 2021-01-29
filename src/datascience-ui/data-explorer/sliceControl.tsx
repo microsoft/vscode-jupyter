@@ -13,7 +13,7 @@ interface ISliceFormState {
 export class SliceControl extends React.Component<ISliceFormProps, ISliceFormState> {
     constructor(props: ISliceFormProps) {
       super(props);
-      this.state = {value: "[" + this.props.dataShapeAsArray.map((_, index) => {if (index === 0 || index === 1) { return ':'; } else { return '0';}}).join(', ') + "]"};
+      this.state = {value: "[" + this.props.dataShapeAsArray.map(() => ':').join(', ') + "]"};
   
       this.handleChange = this.handleChange.bind(this);
       this.handleSubmit = this.handleSubmit.bind(this);
@@ -24,7 +24,6 @@ export class SliceControl extends React.Component<ISliceFormProps, ISliceFormSta
     }
   
     public handleSubmit(event: React.SyntheticEvent) {
-      console.log('A slice was submitted: ' + this.state.value);
       event.preventDefault();
       this.props.handleSliceRequest({ slice: this.state.value});
     }

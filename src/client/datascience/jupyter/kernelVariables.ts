@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import type { nbformat } from '@jupyterlab/coreutils';
+import { JSONObject } from '@phosphor/coreutils';
 import { inject, injectable } from 'inversify';
 import stripAnsi from 'strip-ansi';
 import * as uuid from 'uuid/v4';
@@ -13,6 +14,7 @@ import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, IDisposable } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { DataFrameLoading, GetVariableInfo, Identifiers, Settings } from '../constants';
+import { IDataFrameInfo, ISliceResponse } from '../data-viewing/types';
 import {
     ICell,
     IJupyterVariable,
@@ -134,7 +136,7 @@ export class KernelVariables implements IJupyterVariables {
         };
     }
 
-    public async getSlice(targetVariable: IJupyterVariable, slice: string, notebook: INotebook): Promise<{}> {
+    public async getSlice(targetVariable: IJupyterVariable, slice: string, notebook: INotebook): Promise<ISliceResponse> {
         // Import the data frame script directory if we haven't already
         await this.importDataFrameScripts(notebook);
 
@@ -147,7 +149,16 @@ export class KernelVariables implements IJupyterVariables {
             undefined,
             true
         );
-        return this.deserializeJupyterResult(results);
+        const rows = this.deserializeJupyterResult(results) as JSONObject;
+        const sliceInfo: IDataFrameInfo = this.deserializeJupyterResult(await notebook.execute(
+            `print(${DataFrameLoading.DataFrameInfoFunc}(${targetVariable.name}${slice}))`,
+            Identifiers.EmptyFileName,
+            0,
+            uuid(),
+            undefined,
+            true
+        ));
+        return { rows: rows.data as any[], ...sliceInfo };
     }
 
     public async getDataFrameRows(

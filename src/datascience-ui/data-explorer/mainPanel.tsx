@@ -17,7 +17,8 @@ import {
     IDataViewerMapping,
     IGetRowsResponse,
     IGetSliceRequest,
-    IRowsResponse
+    IRowsResponse,
+    ISliceResponse
 } from '../../client/datascience/data-viewing/types';
 import { SharedMessages } from '../../client/datascience/messages';
 import { IJupyterExtraSettings } from '../../client/datascience/types';
@@ -26,7 +27,7 @@ import { IMessageHandler, PostOffice } from '../react-common/postOffice';
 import { Progress } from '../react-common/progress';
 import { StyleInjector } from '../react-common/styleInjector';
 import { cellFormatterFunc } from './cellFormatter';
-import { ISlickGridAdd, ISlickRow, ReactSlickGrid } from './reactSlickGrid';
+import { ISlickGridAdd, ISlickGridSlice, ISlickRow, ReactSlickGrid } from './reactSlickGrid';
 import { generateTestData } from './testData';
 
 // Our css has to come after in order to override body styles
@@ -54,7 +55,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private container: React.Ref<HTMLDivElement> = React.createRef<HTMLDivElement>();
     private sentDone = false;
     private postOffice: PostOffice = new PostOffice();
-    private gridSetDataEvent: Slick.Event<ISlickRow[]> = new Slick.Event<ISlickRow[]>();
+    private gridSetDataEvent: Slick.Event<ISlickGridSlice> = new Slick.Event<ISlickGridSlice>();
     private gridAddEvent: Slick.Event<ISlickGridAdd> = new Slick.Event<ISlickGridAdd>();
     private rowFetchSizeFirst: number = 0;
     private rowFetchSizeSubsequent: number = 0;
@@ -159,7 +160,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 break;
 
             case DataViewerMessages.GetSliceResponse:
-                this.handleSliceResponse(payload as IRowsResponse);
+                this.handleSliceResponse(payload as ISliceResponse);
                 break;
 
             case SharedMessages.UpdateSettings:
@@ -284,15 +285,23 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         this.updateRows(normalized);
     }
 
-    private handleSliceResponse(response: IRowsResponse) {
+    private handleSliceResponse(response: ISliceResponse) {
         console.log('Got slice response', response);
-        const rows = response ? (response as JSONArray) : [];
+        const rows = response ? (response.rows as JSONArray) : [];
         const normalized = this.normalizeRows(rows);
+        const columns = this.generateColumns(response);
+        const totalRowCount = response.rowCount ? response.rowCount : 0;
+        const indexColumn = response.indexColumn ? response.indexColumn : 'index';
 
         // Update our fetched count and actual rows
-        this.setState({ gridRows: normalized });
+        this.setState({
+            gridColumns: columns,
+            gridRows: normalized,
+            totalRowCount,
+            indexColumn: indexColumn,
+        });
 
-        this.gridSetDataEvent.notify(normalized);
+        this.gridSetDataEvent.notify({ rows: normalized, columns });
     }
 
     private handleGetRowChunkResponse(response: IGetRowsResponse) {

@@ -137,7 +137,7 @@ export class DebuggerVariables extends DebugLocationTracker
         _slice: string,
         _notebook?: INotebook
     ) {
-        return {};
+        return { rows: [] };
     }
 
     public async getDataFrameRows(

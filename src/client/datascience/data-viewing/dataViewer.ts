@@ -162,8 +162,8 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
     private getSlice(request: IGetSliceRequest) {
         return this.wrapRequest(async () => {
             if (this.dataProvider && this.dataProvider.getSlice) {
-                const rows = await this.dataProvider.getSlice(request.slice);
-                return this.postMessage(DataViewerMessages.GetSliceResponse, rows);
+                const data = await this.dataProvider.getSlice(request.slice);
+                return this.postMessage(DataViewerMessages.GetSliceResponse, data);
             }
         });
     }
