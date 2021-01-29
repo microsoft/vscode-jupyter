@@ -35,7 +35,7 @@ import { JupyterWaitForIdleError } from './jupyterWaitForIdleError';
 import { JupyterWebSockets } from './jupyterWebSocket';
 import { getNameOfKernelConnection } from './kernels/helpers';
 import { KernelConnectionMetadata } from './kernels/types';
-
+//
 export class JupyterSession extends BaseJupyterSession {
     private dependencyPromises = new Map<string, Deferred<KernelInterpreterDependencyResponse>>();
 
