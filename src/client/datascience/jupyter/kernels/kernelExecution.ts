@@ -275,6 +275,11 @@ export class KernelExecution implements IDisposable {
         await kernel.start();
         return kernel;
     }
+    /**
+     * Note: This seems to be required ONLY in Jupyter (non-raw scenarios).
+     * Upon removing this everything seems to be fine, except in non-raw scenarios
+     * if IPyKernel is not installed, we do not get the prompt to install it (tests fail for nonraw).
+     */
     private async validateKernel(document: NotebookDocument): Promise<void> {
         const kernel = this.kernelProvider.get(document.uri);
         if (!kernel) {
