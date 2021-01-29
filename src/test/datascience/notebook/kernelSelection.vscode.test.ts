@@ -164,7 +164,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         // Confirm the executable printed as a result of code in cell `import sys;sys.executable`
         assertHasTextOutputInVSCode(cell, venvNoKernelPythonPath, 0, false);
     });
-    test('Switch kernel to a registered kernelspec', async function () {
+    test('User kernelspec in notebook metadata', async function () {
         await openNotebook(api.serviceContainer, nbFile1);
         await waitForKernelToGetAutoSelected(undefined);
 
@@ -189,8 +189,8 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         assertHasTextOutputInVSCode(cell, venvKernelPythonPath, 0, false);
     });
     test('Switch kernel to an interpreter that is registered as a kernel', async function () {
-        // Test only applies for Raw & Jupyter notebooks.
-        if (IS_REMOTE_NATIVE_TEST) {
+        // Test only applies for Raw notebooks.
+        if (IS_REMOTE_NATIVE_TEST || IS_NON_RAW_NATIVE_TEST) {
             return this.skip();
         }
         await editorProvider.open(Uri.file(emptyPythonNb));
