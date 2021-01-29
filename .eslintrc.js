@@ -422,7 +422,6 @@ module.exports = {
         'src/datascience-ui/history-react/redux/reducers/creation.ts',
         'src/datascience-ui/history-react/redux/reducers/execution.ts',
         'src/datascience-ui/history-react/redux/reducers/effects.ts',
-        'src/datascience-ui/history-react/redux/store.ts',
         'src/datascience-ui/react-common/arePathsSame.ts',
         'src/datascience-ui/react-common/imageButton.tsx',
         'src/datascience-ui/react-common/monacoHelpers.ts',
