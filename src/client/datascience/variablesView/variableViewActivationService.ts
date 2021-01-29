@@ -18,6 +18,8 @@ export class VariableViewActivationService implements IExtensionSingleActivation
         // Only activate this when in the NativeNotebook experiment
         if (await this.experimentService.inExperiment(Experiments.NativeNotebook)) {
             this.extensionContext.subscriptions.push(
+                // Don't retain context on the variable view, we don't want to be sending and fetching variables when hidden
+                // instead the view just catches up to the current context when made visible
                 window.registerWebviewViewProvider(this.variableViewProvider.viewType, this.variableViewProvider, {
                     webviewOptions: { retainContextWhenHidden: false }
                 })
