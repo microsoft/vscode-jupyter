@@ -3,15 +3,16 @@
 
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 import { assert } from 'chai';
+import * as path from 'path';
 import * as sinon from 'sinon';
-import { CancellationTokenSource, CompletionContext, CompletionTriggerKind, Position } from 'vscode';
+import { CancellationTokenSource, CompletionContext, CompletionTriggerKind, Position, Uri } from 'vscode';
 import { IVSCodeNotebook } from '../../../../client/common/application/types';
 import { traceInfo } from '../../../../client/common/logger';
 import { IDisposable } from '../../../../client/common/types';
 import { NotebookCompletionProvider } from '../../../../client/datascience/notebook/intellisense/completionProvider';
 import { INotebookEditorProvider } from '../../../../client/datascience/types';
 import { IExtensionTestApi } from '../../../common';
-import { initialize } from '../../../initialize';
+import { EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../../initialize';
 import {
     canRunNotebookTests,
     closeNotebooksAndCleanUpAfterTests,
@@ -22,7 +23,8 @@ import {
     startJupyterServer,
     waitForExecutionCompletedSuccessfully,
     waitForKernelToGetAutoSelected,
-    prewarmNotebooks
+    prewarmNotebooks,
+    createTemporaryNotebook
 } from '../helper';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
@@ -33,6 +35,11 @@ suite('DataScience - VSCode Notebook - (Code Completion via Jupyter) (slow)', fu
     let vscodeNotebook: IVSCodeNotebook;
     let completionProvider: NotebookCompletionProvider;
     this.timeout(120_000);
+    const templatePythonNbFile = path.join(
+        EXTENSION_ROOT_DIR_FOR_TESTS,
+        'src/test/datascience/notebook/emptyPython.ipynb'
+    );
+    let nbFile: string;
     suiteSetup(async function () {
         this.timeout(120_000);
         api = await initialize();
@@ -51,9 +58,12 @@ suite('DataScience - VSCode Notebook - (Code Completion via Jupyter) (slow)', fu
     setup(async function () {
         traceInfo(`Start Test ${this.currentTest?.title}`);
         sinon.restore();
+        // Don't use same file (due to dirty handling, we might save in dirty.)
+        // Coz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
+        nbFile = await createTemporaryNotebook(templatePythonNbFile, disposables);
         await startJupyterServer();
-        // Open a notebook and use this for all tests in this test suite.
-        await editorProvider.createNew();
+        // Open a python notebook and use this for all tests in this test suite.
+        await editorProvider.open(Uri.file(nbFile));
         await waitForKernelToGetAutoSelected(undefined);
         await deleteAllCellsAndWait();
         assert.isOk(vscodeNotebook.activeNotebookEditor, 'No active notebook');

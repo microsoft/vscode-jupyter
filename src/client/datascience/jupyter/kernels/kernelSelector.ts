@@ -294,6 +294,15 @@ export class KernelSelector implements IKernelSelectionUsage {
                 if (spec.display_name && spec.display_name === notebookMetadata?.kernelspec?.display_name) {
                     score += 16;
                 }
+
+                if (
+                    score === 0 &&
+                    isPythonNotebook(notebookMetadata) &&
+                    spec.language?.toLowerCase() === PYTHON_LANGUAGE.toLowerCase()
+                ) {
+                    // Find a kernel spec that matches the language.
+                    score = 1;
+                }
             }
 
             if (score > bestScore) {
