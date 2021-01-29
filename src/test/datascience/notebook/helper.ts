@@ -653,7 +653,7 @@ export function createNotebookDocument(
 export async function hijackPrompt(
     promptType: 'showErrorMessage',
     message: { exactMatch: string } | { endsWith: string },
-    buttonToClick?: { text?: string; clickImmediately?: boolean },
+    buttonToClick?: { text?: string; clickImmediately?: boolean; dismissPrompt?: boolean },
     disposables: IDisposable[] = []
 ): Promise<{
     dispose: Function;
@@ -680,7 +680,7 @@ export async function hijackPrompt(
             displayCount += 1;
             displayed.resolve(true);
             if (buttonToClick) {
-                return clickButton.promise;
+                return buttonToClick.dismissPrompt ? undefined : clickButton.promise;
             }
         }
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
