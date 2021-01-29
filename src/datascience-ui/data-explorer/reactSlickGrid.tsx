@@ -4,7 +4,6 @@
 
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import Select from 'react-select';
 import { ColumnType, IGetSliceRequest, MaxStringCompare } from '../../client/datascience/data-viewing/types';
 import { KeyCodes } from '../react-common/constants';
 import { measureText } from '../react-common/textMeasure';
@@ -37,9 +36,6 @@ import 'slickgrid/slick.grid.css';
 // Make sure our css comes after the slick grid css. We override some of its styles.
 // eslint-disable-next-line import/order
 import './reactSlickGrid.css';
-import { getLocString } from '../react-common/locReactSide';
-import { ShapeDetail } from './shapeDetail';
-import { SliceDetail } from './sliceDetail';
 import { SliceControl } from './sliceControl';
 /*
 WARNING: Do not change the order of these imports.
@@ -315,8 +311,6 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
                             <span>{this.props.filterRowsText}</span>
                         </button>
                         {this.renderTemporarySliceIndicator()}
-                        {this.renderSliceDataButton()}
-                        {this.renderSliceControls()}
                     </div>
                 </div>
                 <div className="react-grid-container" style={style} ref={this.containerRef}></div>
@@ -325,20 +319,6 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         );
     }
 
-    public renderSliceDataButton = () => {
-        if (false) {
-            return (
-                <button
-                    className="react-grid-filter-button"
-                    title={getLocString('DataScience.sliceDataTooltip', 'View and slice 3-dimensional data')}
-                    onClick={this.toggleSliceMenu}
-                >
-                    <span>{getLocString('DataScience.sliceDataButton', 'Slice Data')}</span>
-                </button>
-            );
-        }
-    };
-
     public renderTemporarySliceIndicator = () => {
         if (this.props.isSliceDataSupported && this.props.dataShape) {
             return (
@@ -346,74 +326,6 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
             );
         }
     }
-
-    public renderSliceControls = () => {
-        if (this.state.isSlicing) {
-            const axisOptions = [];
-            for (let i = 0; i < this.props.dataDimensionionality; i += 1) {
-                axisOptions.push({ value: i, label: i.toString() });
-            }
-            const indexOptions = [];
-            for (let i = 0; i < this.props.totalRowCount; i += 1) {
-                indexOptions.push({ value: i, label: i.toString() });
-            }
-
-            return (
-                <div style={{ display: 'flex', justifyContent: 'space-around' }}>
-                    <div
-                        className="slice-data-control-container"
-                        style={{ display: 'flex', justifyContent: 'space-around' }}
-                    >
-                        <span style={{ alignSelf: 'center' }}>Axis:</span>
-                        <Select
-                            className="slice-data-select"
-                            value={{ value: this.state.selectedAxis, label: this.state.selectedAxis.toString() }}
-                            options={axisOptions}
-                            width={'20px'}
-                            isSearchable={false}
-                            onChange={this.handleAxisChange}
-                        />
-                    </div>
-                    <div
-                        className="slice-data-control-container"
-                        style={{ display: 'flex', justifyContent: 'space-around' }}
-                    >
-                        <span style={{ alignSelf: 'center' }}>Shape:</span>
-                        <ShapeDetail
-                            highlightedIndex={this.state.selectedAxis}
-                            shapeComponents={this.props.dataShape}
-                        />
-                    </div>
-                    <div
-                        className="slice-data-control-container"
-                        style={{ display: 'flex', justifyContent: 'space-around' }}
-                    >
-                        <span style={{ alignSelf: 'center' }}>Index:</span>
-                        <Select
-                            className="slice-data-select"
-                            isSearchable={false}
-                            width={'20px'}
-                            options={indexOptions}
-                            onChange={this.handleIndexChange}
-                            value={{ value: this.state.selectedIndex, label: this.state.selectedIndex.toString() }}
-                        />
-                    </div>
-                    <div
-                        className="slice-data-control-container"
-                        style={{ display: 'flex', justifyContent: 'space-around' }}
-                    >
-                        <span style={{ alignSelf: 'center' }}>Slicing:</span>
-                        <SliceDetail 
-                            highlightedAxis={this.state.selectedAxis}
-                            index={this.state.selectedIndex}
-                            shapeComponents={this.props.dataShape}
-                        />
-                    </div>
-                </div>
-            );
-        }
-        return null;
-    };
 
     // public for testing
     public sort = (_e: Slick.EventData, args: Slick.OnSortEventArgs<Slick.SlickData>) => {
@@ -655,23 +567,6 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         }
 
         return -1;
-    }
-
-    private toggleSliceMenu = (e: React.SyntheticEvent) => {
-        e.preventDefault();
-        this.setState({ isSlicing: !this.state.isSlicing });
-        // Request slice with default axis = 0, index = 0
-        // this.props.handleSliceRequest({ axis: this.state.selectedAxis, index: this.state.selectedIndex });
-    };
-
-    private handleAxisChange = (response: any) => {
-        this.setState({ selectedAxis: response.value });
-        // this.props.handleSliceRequest({ axis: this.state.selectedAxis, index: this.state.selectedIndex });
-    }
-
-    private handleIndexChange = (response: any) => {
-        this.setState({ selectedIndex: response.value });
-        // this.props.handleSliceRequest({ axis: this.state.selectedAxis, index: this.state.selectedIndex });
     }
 }
 

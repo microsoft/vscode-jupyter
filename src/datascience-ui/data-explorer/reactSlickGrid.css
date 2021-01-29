@@ -3,16 +3,6 @@
     height: 100%;
 }
 
-.slice-data-select {
-    display: flex;
-    align-self: center;
-    height: 80%;
-}
-
-.slice-data-control-container {
-    margin-right: 18px;
-}
-
 .react-grid-container {
     border-color: var(--vscode-editor-inactiveSelectionBackground);
     border-style: solid;
