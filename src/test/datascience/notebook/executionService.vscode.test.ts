@@ -37,7 +37,6 @@ import {
     waitForEmptyCellExecutionCompleted,
     createTemporaryNotebook,
     closeNotebooks,
-    createTemporaryFile,
     waitForExecutionInProgress,
     waitForQueuedForExecution,
     insertMarkdownCell,
