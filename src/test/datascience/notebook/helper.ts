@@ -70,15 +70,15 @@ export async function selectCell(notebook: NotebookDocument, start: number, end:
     });
 }
 
-export async function insertMarkdownCell(source: string) {
+export async function insertMarkdownCell(source: string, options?: { index?: number }) {
     const { vscodeNotebook } = await getServices();
     const activeEditor = vscodeNotebook.activeNotebookEditor;
     if (!activeEditor) {
-        assert.fail('No active editor');
-        return;
+        throw new Error('No active editor');
     }
+    const startNumber = options?.index ?? activeEditor.document.cells.length;
     await chainWithPendingUpdates(activeEditor, (edit) =>
-        edit.replaceCells(activeEditor.document.cells.length, 0, [
+        edit.replaceCells(startNumber, 0, [
             {
                 cellKind: vscodeNotebookEnums.CellKind.Markdown,
                 language: MARKDOWN_LANGUAGE,
@@ -90,13 +90,13 @@ export async function insertMarkdownCell(source: string) {
             }
         ])
     );
+    return activeEditor.document.cells[startNumber]!;
 }
 export async function insertCodeCell(source: string, options?: { language?: string; index?: number }) {
     const { vscodeNotebook } = await getServices();
     const activeEditor = vscodeNotebook.activeNotebookEditor;
     if (!activeEditor) {
-        assert.fail('No active editor');
-        return;
+        throw new Error('No active editor');
     }
     const startNumber = options?.index ?? activeEditor.document.cells.length;
     await activeEditor.edit((edit) => {
@@ -112,6 +112,8 @@ export async function insertCodeCell(source: string, options?: { language?: stri
             }
         ]);
     });
+
+    return activeEditor.document.cells[startNumber]!;
 }
 export async function deleteCell(index: number = 0) {
     const { vscodeNotebook } = await getServices();
@@ -424,6 +426,35 @@ export async function waitForExecutionCompletedSuccessfully(cell: NotebookCell, 
         async () => assertHasExecutionCompletedSuccessfully(cell),
         timeout,
         `Cell ${cell.index + 1} did not complete successfully`
+    );
+    await waitForCellExecutionToComplete(cell);
+}
+export async function waitForExecutionInProgress(cell: NotebookCell, timeout: number = 15_000) {
+    await waitForCondition(
+        async () =>
+            cell.metadata.runState === vscodeNotebookEnums.NotebookCellRunState.Running &&
+            cell.metadata.runStartTime &&
+            !cell.metadata.lastRunDuration &&
+            !cell.metadata.statusMessage &&
+            cell.metadata.runStartTime > 0
+                ? true
+                : false,
+        timeout,
+        `Cell ${cell.index + 1} did not start`
+    );
+    await waitForCellExecutionToComplete(cell);
+}
+export async function waitForQueuedForExecution(cell: NotebookCell, timeout: number = 15_000) {
+    await waitForCondition(
+        async () =>
+            cell.metadata.runState === vscodeNotebookEnums.NotebookCellRunState.Running &&
+            !cell.metadata.runStartTime &&
+            !cell.metadata.lastRunDuration &&
+            !cell.metadata.statusMessage
+                ? true
+                : false,
+        timeout,
+        `Cell ${cell.index + 1} did not start`
     );
     await waitForCellExecutionToComplete(cell);
 }

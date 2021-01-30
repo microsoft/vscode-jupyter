@@ -5,12 +5,13 @@
 
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 import { assert, expect } from 'chai';
+import * as fs from 'fs';
 import * as path from 'path';
 import * as dedent from 'dedent';
 import * as sinon from 'sinon';
 import { commands, Uri } from 'vscode';
 import { Common } from '../../../client/common/utils/localize';
-import { CellDisplayOutput, CellErrorOutput } from '../../../../typings/vscode-proposed';
+import { CellDisplayOutput, CellErrorOutput, NotebookCell } from '../../../../typings/vscode-proposed';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { traceInfo } from '../../../client/common/logger';
 import { IDisposable, Product } from '../../../client/common/types';
@@ -35,10 +36,16 @@ import {
     hijackPrompt,
     waitForEmptyCellExecutionCompleted,
     createTemporaryNotebook,
-    closeNotebooks
+    closeNotebooks,
+    createTemporaryFile,
+    waitForExecutionInProgress,
+    waitForQueuedForExecution,
+    insertMarkdownCell,
+    assertVSCCellIsNotRunning
 } from './helper';
 import { ProductNames } from '../../../client/common/installer/productNames';
 import { openNotebook } from '../helpers';
+import { noop } from '../../../client/common/utils/misc';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
@@ -50,6 +57,15 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
     let editorProvider: INotebookEditorProvider;
     const disposables: IDisposable[] = [];
     let vscodeNotebook: IVSCodeNotebook;
+    const templateNbPath = path.join(
+        EXTENSION_ROOT_DIR_FOR_TESTS,
+        'src',
+        'test',
+        'datascience',
+        'notebook',
+        'emptyCellWithOutput.ipynb'
+    );
+
     this.timeout(120_000);
     suiteSetup(async function () {
         this.timeout(120_000);
@@ -139,15 +155,6 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
     });
     test('Clear output in empty cells', async () => {
         await closeNotebooks();
-        const templateNbPath = path.join(
-            EXTENSION_ROOT_DIR_FOR_TESTS,
-            'src',
-            'test',
-            'datascience',
-            'notebook',
-            'emptyCellWithOutput.ipynb'
-        );
-
         const nbUri = Uri.file(await createTemporaryNotebook(templateNbPath, disposables));
         await openNotebook(api.serviceContainer, nbUri.fsPath);
         await waitForKernelToGetAutoSelected();
@@ -691,4 +698,276 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
 
         assert.equal(cell.outputs.length, 1, 'Second cell is empty after running individually');
     });
+    test('Run whole document and test status of cells', async () => {
+        const cells = await insertRandomCells({ count: 4, addMarkdownCells: false });
+
+        await executeActiveDocument();
+        const [cell1, cell2, cell3, cell4] = cells;
+        // Cell 1 should have started, cells 2 & 3 should be queued.
+        await Promise.all([
+            waitForExecutionInProgress(cell1.cell),
+            waitForQueuedForExecution(cell2.cell),
+            waitForQueuedForExecution(cell3.cell),
+            waitForQueuedForExecution(cell4.cell)
+        ]);
+
+        // After cell 1 completes, then cell 2 should start & cell 3 still queued.
+        cell1.runToCompletion();
+        await Promise.all([
+            waitForExecutionCompletedSuccessfully(cell1.cell),
+            waitForExecutionInProgress(cell2.cell),
+            waitForQueuedForExecution(cell3.cell),
+            waitForQueuedForExecution(cell4.cell)
+        ]);
+
+        // After cell 2 completes, then cell 3 should start.
+        cell2.runToCompletion();
+        await Promise.all([
+            waitForExecutionCompletedSuccessfully(cell1.cell),
+            waitForExecutionCompletedSuccessfully(cell2.cell),
+            waitForExecutionInProgress(cell3.cell),
+            waitForQueuedForExecution(cell4.cell)
+        ]);
+
+        // After cell 3 completes, then cell 4 should start.
+        cell3.runToCompletion();
+        await Promise.all([
+            waitForExecutionCompletedSuccessfully(cell1.cell),
+            waitForExecutionCompletedSuccessfully(cell2.cell),
+            waitForExecutionCompletedSuccessfully(cell3.cell),
+            waitForExecutionInProgress(cell4.cell)
+        ]);
+
+        // After cell 4 completes, all should have completed.
+        cell4.runToCompletion();
+        await Promise.all([
+            waitForExecutionCompletedSuccessfully(cell1.cell),
+            waitForExecutionCompletedSuccessfully(cell2.cell),
+            waitForExecutionCompletedSuccessfully(cell3.cell),
+            waitForExecutionCompletedSuccessfully(cell4.cell)
+        ]);
+        assertExecutionOrderOfCells(cells.map((item) => item.cell));
+    });
+    test('Run cells randomly & validate the order of execution', async () => {
+        const cells = await insertRandomCells({ count: 15, addMarkdownCells: true });
+
+        const queuedCells: typeof cells = [];
+        while (cells.length) {
+            const index = Math.floor(Math.random() * cells.length);
+            const cellToQueue = cells.splice(index, 1)[0];
+            queuedCells.push(cellToQueue);
+            await executeCell(cellToQueue.cell);
+        }
+
+        // Verify all have been queued.
+        await Promise.all(queuedCells.map((item) => item.cell).map(waitForExecutionInProgress));
+
+        // let all cells run to completion & validate their execution orders match the order of the queue.
+        queuedCells.forEach((item) => item.runToCompletion());
+        await Promise.all(queuedCells.map((item) => item.cell).map(waitForExecutionCompletedSuccessfully));
+        assertExecutionOrderOfCells(queuedCells.map((item) => item.cell));
+    });
+    test('Run 4 cells, fail 5th cell & validate rest did not run when running individually', async () => {
+        // Add first 4 code cells.
+        const cells = await insertRandomCells({ count: 4, addMarkdownCells: false });
+        // Add 5th code cells code errors.
+        cells.push({
+            runToCompletion: noop,
+            cell: await insertCodeCell('KABOOM', { index: 4 })
+        });
+        // Add 5 more code cells.
+        cells.push(...(await insertRandomCells({ count: 5, addMarkdownCells: false })));
+
+        // Run the whole document.
+        await executeActiveDocument();
+
+        // Verify all have been queued.
+        await Promise.all(cells.map((item) => item.cell).map(waitForExecutionInProgress));
+
+        // let all cells run to completion & validate their execution orders match the order of the queue.
+        cells.forEach((item) => item.runToCompletion());
+
+        // First 4 passed.
+        const first4Cells = cells.filter((_, index) => index <= 3);
+        await Promise.all(first4Cells.map((item) => item.cell).map(waitForExecutionCompletedSuccessfully));
+        assertExecutionOrderOfCells(first4Cells.map((item) => item.cell));
+        // 5th failed.
+        await waitForExecutionCompletedWithErrors(cells[4].cell);
+        // Rest did not run.
+        const restOfCells = cells.filter((_, index) => index > 5);
+        await restOfCells.map((item) => item.cell).map(assertVSCCellIsNotRunning);
+    });
+    test('Run cells randomly, and fail one & validate the order & status of execution', async () => {
+        // E.g. create 10 cells
+        // Run 3 cells successfully
+        // Run 4th cell and let it fail
+        // 3 should pass, 1 should fail, rest should not have run.
+
+        // Create some code cells (we need a minium of 5 for the test).
+        const cells = await insertRandomCells({ count: 5, addMarkdownCells: false });
+        // Create some code cells & markdown cells.
+        cells.push(...(await insertRandomCells({ count: 10, addMarkdownCells: true })));
+
+        const queuedCells: NotebookCell[] = [];
+        for (let index = 0; index < cells.length; index++) {
+            const cell = cells[index].cell;
+            if (cell.cellKind === vscodeNotebookEnums.CellKind.Code) {
+                queuedCells.push(cell);
+                await executeCell(cell);
+
+                await waitForExecutionInProgress(cell);
+            }
+        }
+
+        // let all cells run to completion & validate their execution orders match the order of the queue.
+        cells.forEach((item) => item.runToCompletion());
+        await Promise.all(queuedCells.map(waitForExecutionCompletedSuccessfully));
+        assertExecutionOrderOfCells(queuedCells);
+    });
+    test('Run whole document then add a new cell, ensure new cell is not executed', async () => {
+        const cells = await insertRandomCells({ count: 15, addMarkdownCells: true });
+
+        await executeActiveDocument();
+        const queuedCells = cells
+            .filter((item) => item.cell.cellKind === vscodeNotebookEnums.CellKind.Code)
+            .map((item) => item.cell);
+        await Promise.all(queuedCells.map(waitForQueuedForExecution));
+
+        await insertRandomCells({ count: 0, addMarkdownCells: false });
+        const lastCell = [...vscodeNotebook.activeNotebookEditor!.document.cells].pop()!;
+
+        // let all cells run to completion & validate their execution orders match the order of the queue.
+        // Also, the new cell should not have been executed.
+        cells.forEach((item) => item.runToCompletion());
+        await Promise.all(queuedCells.map(waitForExecutionCompletedSuccessfully));
+        assertExecutionOrderOfCells(queuedCells);
+
+        assert.equal(lastCell.metadata.runState, vscodeNotebookEnums.NotebookCellRunState.Idle);
+        assert.isFalse(lastCell.metadata.executionOrder);
+        assert.isFalse(lastCell.metadata.runStartTime);
+        assert.isFalse(lastCell.metadata.lastRunDuration);
+        assert.equal(lastCell.outputs.length, 0);
+    });
+    test('Run whole document then add a new cell & run that as well, ensure this new cell is also executed', async () => {
+        const cells = await insertRandomCells({ count: 15, addMarkdownCells: true });
+
+        await executeActiveDocument();
+        const queuedCells = cells
+            .filter((item) => item.cell.cellKind === vscodeNotebookEnums.CellKind.Code)
+            .map((item) => item.cell);
+        await Promise.all(queuedCells.map(waitForQueuedForExecution));
+
+        const [newCell] = await insertRandomCells({ count: 0, addMarkdownCells: false });
+
+        queuedCells.push(newCell.cell);
+        await executeCell(newCell.cell);
+        await Promise.all(queuedCells.map(waitForQueuedForExecution));
+
+        // let all cells run to completion & validate their execution orders match the order of the queue.
+        // Also, the new cell should not have been executed.
+        cells.forEach((item) => item.runToCompletion());
+        newCell.runToCompletion();
+        await Promise.all(queuedCells.map(waitForExecutionCompletedSuccessfully));
+        assertExecutionOrderOfCells(queuedCells);
+    });
+    test('Cell failures should not get cached', async () => {
+        // Run 3 cells
+        // cell 1 is ok
+        // cell 2 has errors
+        // cell 3 is ok
+        // Running all should fail on cell 2 & 3 not run.
+        // Running 1 & then 2, 2 should fail.
+        // Running 2 & then 3, 2 should fail & 3 should run.
+        // Running 2, it should fail, then running 2 again should fail once again.
+        // Found plenty of issues in code when testing like this (cells were getting cached in chain of promises & running in parallel)
+
+        const cell1 = await insertCodeCell('1', { index: 0 });
+        const cell2 = await insertCodeCell('KABOOM', { index: 1 });
+        const cell3 = await insertCodeCell('2', { index: 2 });
+
+        await executeActiveDocument();
+
+        await waitForExecutionCompletedSuccessfully(cell1);
+        await waitForExecutionCompletedWithErrors(cell2);
+        assertExecutionOrderOfCells([cell1, cell2]);
+        assertVSCCellIsNotRunning(cell3);
+
+        // Run cell 2 again, & it should fail again & execution count should increase.
+        let lastExecutionOrder = cell2.metadata.executionOrder!;
+        await executeCell(cell2);
+        // Give it time to run & fail, this time execution order is greater than previously
+        await waitForCondition(
+            async () => cell2.metadata.executionOrder === lastExecutionOrder + 1,
+            5_000,
+            'Cell did not fail again with a new execution order'
+        );
+        await waitForExecutionCompletedWithErrors(cell2);
+        lastExecutionOrder = +1;
+
+        // Run cell 3 & it should run to completion.
+        await executeCell(cell3);
+        await waitForExecutionCompletedSuccessfully(cell3);
+        const lastExecutionOrderOfCell3 = cell3.metadata.executionOrder!;
+        assert.equal(lastExecutionOrderOfCell3, lastExecutionOrder + 1);
+        lastExecutionOrder = +1;
+
+        // Run all cells again
+        await executeActiveDocument();
+        await waitForCondition(
+            async () => cell2.metadata.executionOrder === lastExecutionOrder + 2,
+            5_000,
+            'Cell did not fail again with a new execution order (3rd time)'
+        );
+        await waitForExecutionCompletedSuccessfully(cell1);
+        await waitForExecutionCompletedWithErrors(cell2);
+        assert.equal(cell1.metadata.executionOrder, lastExecutionOrder + 1);
+        assert.equal(cell1.metadata.executionOrder, lastExecutionOrder + 2);
+        assert.equal(cell3.metadata.executionOrder, lastExecutionOrderOfCell3, 'Cell 3 should not have run again');
+    });
+
+    function assertExecutionOrderOfCells(cells: readonly NotebookCell[]) {
+        let firstCellExecutionOrder = 1;
+        cells.forEach((cell, index) => {
+            if (index === 0) {
+                firstCellExecutionOrder = cell.metadata.executionOrder!;
+                return;
+            }
+            // This next cell must have an execution order +1 from previous cell in the queue.
+            assert.equal(
+                cell.metadata.executionOrder,
+                firstCellExecutionOrder + index,
+                `Execution order of cell ${cell.index} is not one more than previous cell`
+            );
+        });
+    }
+
+    async function insertRandomCells(options?: { count: number; addMarkdownCells: boolean }) {
+        const cellInfo: { runToCompletion: Function; cell: NotebookCell }[] = [];
+        const cellCount = options?.count ?? 10;
+        const startIndex = vscodeNotebook.activeNotebookEditor!.document.cells.length;
+        for (let index = startIndex; index < cellCount; index++) {
+            const tmpFile = await createTemporaryNotebook(templateNbPath, disposables);
+            let cell: NotebookCell;
+            if (!options?.addMarkdownCells || Math.floor(Math.random() * 2) === 0) {
+                cell = await insertCodeCell(
+                    dedent`
+                        print("Start Cell ${index}")
+                        import time
+                        import os.path
+                        from os import path
+                        while not os.path.exists('${tmpFile}'):
+                            time.sleep(0.1)
+
+                        print("End Cell ${index}")`,
+                    { index: index }
+                );
+            } else {
+                cell = await insertMarkdownCell(`Markdown Cell ${index}`, { index: index });
+            }
+
+            cellInfo.push({ runToCompletion: () => fs.unlinkSync(tmpFile), cell });
+        }
+
+        return cellInfo;
+    }
 });
