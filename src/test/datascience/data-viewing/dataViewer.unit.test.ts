@@ -64,7 +64,7 @@ suite('DataScience - DataViewer', () => {
     test('Data viewer showData calls gets dataFrame info from data provider', async () => {
         await dataViewer.showData(instance(dataProvider), title);
 
-        verify(dataProvider.getDataFrameInfo()).once();
+        verify(dataProvider.getDataFrameInfo(anything())).once();
     });
     test('Data viewer calls data provider dispose', async () => {
         await dataViewer.showData(instance(dataProvider), title);

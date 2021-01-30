@@ -205,12 +205,15 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
             if (e instanceof JupyterDataRateLimitError) {
                 traceError(e);
                 const actionTitle = localize.DataScience.pythonInteractiveHelpLink();
-                this.applicationShell.showErrorMessage(e.toString(), actionTitle).then((v) => {
-                    // User clicked on the link, open it.
-                    if (v === actionTitle) {
-                        this.applicationShell.openUrl(HelpLinks.JupyterDataRateHelpLink);
-                    }
-                }, (e) => traceError(e));
+                this.applicationShell.showErrorMessage(e.toString(), actionTitle).then(
+                    (v) => {
+                        // User clicked on the link, open it.
+                        if (v === actionTitle) {
+                            this.applicationShell.openUrl(HelpLinks.JupyterDataRateHelpLink);
+                        }
+                    },
+                    (e) => traceError(e)
+                );
                 this.dispose();
             }
             traceError(e);
