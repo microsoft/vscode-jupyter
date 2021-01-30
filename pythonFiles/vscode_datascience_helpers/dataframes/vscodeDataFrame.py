@@ -124,11 +124,6 @@ def _VSCODE_getRowCount(var):
         except TypeError:
             return 0
 
-def _VSCODE_getSlice(expr):
-    df = _VSCODE_convertToDataFrame(expr)
-    return _VSCODE_pd_json.to_json(None, df, orient="table", date_format="iso")
-
-
 # Function to retrieve a set of rows for a data frame
 def _VSCODE_getDataFrameRows(df, start, end):
     df = _VSCODE_convertToDataFrame(df)

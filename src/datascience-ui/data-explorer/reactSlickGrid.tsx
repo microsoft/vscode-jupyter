@@ -50,14 +50,14 @@ export interface ISlickGridAdd {
     newRows: ISlickRow[];
 }
 
-export interface ISlickGridSlice { rows: ISlickRow[], columns: Slick.Column<Slick.SlickData>[]};
+export interface ISlickGridSlice { columns: Slick.Column<Slick.SlickData>[]};
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export interface ISlickGridProps {
     idProperty: string;
     columns: Slick.Column<ISlickRow>[];
     rowsAdded: Slick.Event<ISlickGridAdd>;
-    setDataEvent: Slick.Event<ISlickGridSlice>
+    resetGridEvent: Slick.Event<ISlickGridSlice>
     filterRowsText: string;
     filterRowsTooltip: string;
     forceHeight?: number;
@@ -72,7 +72,7 @@ interface ISlickGridState {
     grid?: Slick.Grid<ISlickRow>;
     showingFilters?: boolean;
     fontSize: number;
-    isSlicing: boolean;
+    isSlicing: boolean; // TODO remove
     selectedIndex: number;
     selectedAxis: number;
 }
@@ -152,7 +152,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         this.containerRef = React.createRef<HTMLDivElement>();
         this.measureRef = React.createRef<HTMLDivElement>();
         this.props.rowsAdded.subscribe(this.addedRows);
-        this.props.setDataEvent.subscribe(this.setData);
+        this.props.resetGridEvent.subscribe(this.resetGrid);
     }
 
     // eslint-disable-next-line
@@ -487,10 +487,8 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         return null;
     }
 
-    private setData = (_e: Slick.EventData, data: ISlickGridSlice) => {
-        this.state.grid?.invalidateAllRows();
+    private resetGrid = (_e: Slick.EventData) => {
         this.createSlickGrid();
-        this.dataView.setItems(data.rows);
         this.autoResizeColumns();
     }
 

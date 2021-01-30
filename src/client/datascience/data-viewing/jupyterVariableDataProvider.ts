@@ -8,7 +8,7 @@ import { inject, injectable, named } from 'inversify';
 import { Identifiers } from '../constants';
 import { IJupyterVariable, IJupyterVariableDataProvider, IJupyterVariables, INotebook } from '../types';
 import { DataViewerDependencyService } from './dataViewerDependencyService';
-import { ColumnType, IDataFrameInfo, IRowsResponse, ISliceResponse } from './types';
+import { ColumnType, IDataFrameInfo, IRowsResponse } from './types';
 import { traceError } from '../../common/logger';
 
 @injectable()
@@ -78,24 +78,30 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
         this.variable = variable;
     }
 
-    public async getDataFrameInfo(): Promise<IDataFrameInfo> {
+    public async getDataFrameInfo(sliceExpression?: string): Promise<IDataFrameInfo> {
         let dataFrameInfo: IDataFrameInfo = {};
         await this.ensureInitialized();
-        if (this.variable) {
+        let variable = this.variable;
+        if (variable) {
+            if (sliceExpression) {
+                variable = await this.variableManager.getDataFrameInfo(variable, this.notebook, sliceExpression);
+            }
             dataFrameInfo = {
-                columns: this.variable.columns
-                    ? JupyterVariableDataProvider.getNormalizedColumns(this.variable.columns)
-                    : this.variable.columns,
-                indexColumn: this.variable.indexColumn,
-                rowCount: this.variable.rowCount,
-                dataDimensionality: this.variable.dataDimensionality,
-                shape: JupyterVariableDataProvider.parseShape(this.variable.shape)
+                columns: variable.columns
+                    ? JupyterVariableDataProvider.getNormalizedColumns(variable.columns)
+                    : variable.columns,
+                indexColumn: variable.indexColumn,
+                rowCount: variable.rowCount,
+                dataDimensionality: variable.dataDimensionality,
+                shape: JupyterVariableDataProvider.parseShape(variable.shape),
+                sliceExpression,
+                supportsSlicing: variable.supportsSlicing
             };
         }
         return dataFrameInfo;
     }
 
-    public async getAllRows() {
+    public async getAllRows(sliceExpression?: string) {
         let allRows: IRowsResponse = [];
         await this.ensureInitialized();
         if (this.variable && this.variable.rowCount) {
@@ -103,30 +109,22 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
                 this.variable,
                 0,
                 this.variable.rowCount,
-                this.notebook
+                this.notebook,
+                sliceExpression
             );
             allRows = dataFrameRows && dataFrameRows.data ? (dataFrameRows.data as IRowsResponse) : [];
         }
         return allRows;
     }
 
-    public async getRows(start: number, end: number) {
+    public async getRows(start: number, end: number, sliceExpression?: string) {
         let rows: IRowsResponse = [];
         await this.ensureInitialized();
         if (this.variable && this.variable.rowCount) {
-            const dataFrameRows = await this.variableManager.getDataFrameRows(this.variable, start, end, this.notebook);
+            const dataFrameRows = await this.variableManager.getDataFrameRows(this.variable, start, end, this.notebook, sliceExpression);
             rows = dataFrameRows && dataFrameRows.data ? (dataFrameRows.data as IRowsResponse) : [];
         }
         return rows;
-    }
-
-    public async getSlice(slice: string) {
-        let data: ISliceResponse = { rows: [] };
-        await this.ensureInitialized();
-        if (this.variable && this.variableManager.getSlice) {
-            data = await this.variableManager.getSlice(this.variable, slice, this.notebook);
-        }
-        return data;
     }
 
     private async ensureInitialized(): Promise<void> {

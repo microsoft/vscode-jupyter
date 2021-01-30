@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 'use strict';
 import type { nbformat } from '@jupyterlab/coreutils';
-import { JSONObject } from '@phosphor/coreutils';
 import { inject, injectable } from 'inversify';
 import stripAnsi from 'strip-ansi';
 import * as uuid from 'uuid/v4';
@@ -14,7 +13,6 @@ import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, IDisposable } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { DataFrameLoading, GetVariableInfo, Identifiers, Settings } from '../constants';
-import { IDataFrameInfo, ISliceResponse } from '../data-viewing/types';
 import {
     ICell,
     IJupyterVariable,
@@ -43,6 +41,12 @@ const DataViewableTypes: Set<string> = new Set<string>([
     'dict',
     'ndarray',
     'Series',
+    'Tensor',
+    'EagerTensor'
+]);
+const SliceableTypes: Set<string> = new Set<string>([
+    'DataFrame',
+    'ndarray',
     'Tensor',
     'EagerTensor'
 ]);
@@ -115,13 +119,18 @@ export class KernelVariables implements IJupyterVariables {
         }
     }
 
-    public async getDataFrameInfo(targetVariable: IJupyterVariable, notebook: INotebook): Promise<IJupyterVariable> {
+    public async getDataFrameInfo(targetVariable: IJupyterVariable, notebook: INotebook, sliceExpression?: string): Promise<IJupyterVariable> {
         // Import the data frame script directory if we haven't already
         await this.importDataFrameScripts(notebook);
 
+        let expression = targetVariable.name;
+        if (sliceExpression) {
+            expression = `${targetVariable.name}${sliceExpression}`;
+        }
+
         // Then execute a call to get the info and turn it into JSON
         const results = await notebook.execute(
-            `print(${DataFrameLoading.DataFrameInfoFunc}(${targetVariable.name}))`,
+            `print(${DataFrameLoading.DataFrameInfoFunc}(${expression}))`,
             Identifiers.EmptyFileName,
             0,
             uuid(),
@@ -136,36 +145,12 @@ export class KernelVariables implements IJupyterVariables {
         };
     }
 
-    public async getSlice(targetVariable: IJupyterVariable, slice: string, notebook: INotebook): Promise<ISliceResponse> {
-        // Import the data frame script directory if we haven't already
-        await this.importDataFrameScripts(notebook);
-
-        // Then execute a call to get the rows and turn it into JSON
-        const results = await notebook.execute(
-            `print(${DataFrameLoading.GetSliceFunc}(${targetVariable.name}${slice}))`,
-            Identifiers.EmptyFileName,
-            0,
-            uuid(),
-            undefined,
-            true
-        );
-        const rows = this.deserializeJupyterResult(results) as JSONObject;
-        const sliceInfo: IDataFrameInfo = this.deserializeJupyterResult(await notebook.execute(
-            `print(${DataFrameLoading.DataFrameInfoFunc}(${targetVariable.name}${slice}))`,
-            Identifiers.EmptyFileName,
-            0,
-            uuid(),
-            undefined,
-            true
-        ));
-        return { rows: rows.data as any[], ...sliceInfo };
-    }
-
     public async getDataFrameRows(
         targetVariable: IJupyterVariable,
         start: number,
         end: number,
-        notebook: INotebook
+        notebook: INotebook,
+        sliceExpression?: string
     ): Promise<{}> {
         // Import the data frame script directory if we haven't already
         await this.importDataFrameScripts(notebook);
@@ -174,9 +159,14 @@ export class KernelVariables implements IJupyterVariables {
             end = Math.min(end, targetVariable.rowCount);
         }
 
+        let expression = targetVariable.name;
+        if (sliceExpression) {
+            expression = `${targetVariable.name}${sliceExpression}`;
+        }
+
         // Then execute a call to get the rows and turn it into JSON
         const results = await notebook.execute(
-            `print(${DataFrameLoading.DataFrameRowFunc}(${targetVariable.name}, ${start}, ${end}))`,
+            `print(${DataFrameLoading.DataFrameRowFunc}(${expression}, ${start}, ${end}))`,
             Identifiers.EmptyFileName,
             0,
             uuid(),
@@ -508,6 +498,11 @@ export class KernelVariables implements IJupyterVariables {
             if (DataViewableTypes.has(result.type)) {
                 result.supportsDataExplorer = true;
             }
+
+            if (SliceableTypes.has(result.type)) {
+                result.supportsSlicing = true;
+            }
+            
         }
 
         // For a python kernel, we might be able to get a better shape. It seems the 'inspect' request doesn't always return it.

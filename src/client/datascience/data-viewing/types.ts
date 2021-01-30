@@ -26,12 +26,12 @@ export namespace DataViewerMessages {
     export const GetRowsResponse = 'get_rows_response';
     export const CompletedData = 'complete';
     export const GetSliceRequest = 'get_slice_request';
-    export const GetSliceResponse = 'get_slice_response';
 }
 
 export interface IGetRowsRequest {
     start: number;
     end: number;
+    sliceExpression?: string;
 }
 
 export interface IGetRowsResponse {
@@ -42,6 +42,7 @@ export interface IGetRowsResponse {
 
 export interface IGetSliceRequest {
     slice: string;
+    originalShape: number[] | undefined;
 }
 
 // Map all messages to specific payloads
@@ -49,13 +50,12 @@ export type IDataViewerMapping = {
     [DataViewerMessages.Started]: never | undefined;
     [DataViewerMessages.UpdateSettings]: string;
     [DataViewerMessages.InitializeData]: IDataFrameInfo & { isSliceDataSupported: boolean };
-    [DataViewerMessages.GetAllRowsRequest]: never | undefined;
+    [DataViewerMessages.GetAllRowsRequest]: never | undefined | string;
     [DataViewerMessages.GetAllRowsResponse]: IRowsResponse;
     [DataViewerMessages.GetRowsRequest]: IGetRowsRequest;
     [DataViewerMessages.GetRowsResponse]: IGetRowsResponse;
     [DataViewerMessages.CompletedData]: never | undefined;
     [DataViewerMessages.GetSliceRequest]: IGetSliceRequest;
-    [DataViewerMessages.GetSliceResponse]: ISliceResponse;
 };
 
 export interface IDataFrameInfo {
@@ -64,14 +64,15 @@ export interface IDataFrameInfo {
     rowCount?: number;
     shape?: number[];
     dataDimensionality?: number;
+    sliceExpression?: string;
+    supportsSlicing?: boolean;
 }
 
 export interface IDataViewerDataProvider {
     dispose(): void;
-    getDataFrameInfo(): Promise<IDataFrameInfo>;
-    getAllRows(): Promise<IRowsResponse>;
-    getRows(start: number, end: number): Promise<IRowsResponse>;
-    getSlice?(slice: string): Promise<ISliceResponse>;
+    getDataFrameInfo(sliceExpression?: string): Promise<IDataFrameInfo>;
+    getAllRows(sliceExpression?: string): Promise<IRowsResponse>;
+    getRows(start: number, end: number, sliceExpression?: string): Promise<IRowsResponse>;
 }
 
 export enum ColumnType {

@@ -18,7 +18,6 @@ import {
     IGetRowsResponse,
     IGetSliceRequest,
     IRowsResponse,
-    ISliceResponse
 } from '../../client/datascience/data-viewing/types';
 import { SharedMessages } from '../../client/datascience/messages';
 import { IJupyterExtraSettings } from '../../client/datascience/types';
@@ -55,7 +54,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private container: React.Ref<HTMLDivElement> = React.createRef<HTMLDivElement>();
     private sentDone = false;
     private postOffice: PostOffice = new PostOffice();
-    private gridSetDataEvent: Slick.Event<ISlickGridSlice> = new Slick.Event<ISlickGridSlice>();
+    private resetGridEvent: Slick.Event<ISlickGridSlice> = new Slick.Event<ISlickGridSlice>();
     private gridAddEvent: Slick.Event<ISlickGridAdd> = new Slick.Event<ISlickGridAdd>();
     private rowFetchSizeFirst: number = 0;
     private rowFetchSizeSubsequent: number = 0;
@@ -159,10 +158,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 this.handleGetRowChunkResponse(payload as IGetRowsResponse);
                 break;
 
-            case DataViewerMessages.GetSliceResponse:
-                this.handleSliceResponse(payload as ISliceResponse);
-                break;
-
             case SharedMessages.UpdateSettings:
                 this.updateSettings(payload);
                 break;
@@ -198,15 +193,13 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private renderGrid() {
         const filterRowsText = getLocString('DataScience.filterRowsButton', 'Filter Rows');
         const filterRowsTooltip = getLocString('DataScience.filterRowsTooltip', 'Click to filter');
-        console.log(`data dimensionality is ${this.state.dataDimensionality}`);
-        console.log(`Total row count is ${this.state.totalRowCount}`);
         return (
             <ReactSlickGrid
                 ref={this.grid}
                 columns={this.state.gridColumns}
                 idProperty={this.state.indexColumn}
                 rowsAdded={this.gridAddEvent}
-                setDataEvent={this.gridSetDataEvent}
+                resetGridEvent={this.resetGridEvent}
                 filterRowsText={filterRowsText}
                 filterRowsTooltip={filterRowsTooltip}
                 forceHeight={this.props.testMode ? 200 : undefined}
@@ -221,7 +214,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private initializeData(payload: any) {
-        // Payload should be an IJupyterVariable with the first 100 rows filled out
         if (payload) {
             const variable = payload as IDataFrameInfo & { isSliceDataSupported: boolean };
             if (variable) {
@@ -241,6 +233,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                     isSliceDataSupported: variable.isSliceDataSupported
                 });
 
+                this.resetGridEvent.notify();
+
                 // Compute our row fetch sizes based on the number of columns
                 this.rowFetchSizeAll = Math.round(CellFetchAllLimit / columns.length);
                 this.rowFetchSizeFirst = Math.round(Math.max(2, CellFetchSizeFirst / columns.length));
@@ -250,25 +244,25 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 if (initialRows.length !== totalRowCount) {
                     // Get all at once if less than 1000
                     if (totalRowCount < this.rowFetchSizeAll) {
-                        this.getAllRows();
+                        this.getAllRows(variable.sliceExpression);
                     } else {
-                        this.getRowsInChunks(initialRows.length, totalRowCount);
+                        this.getRowsInChunks(initialRows.length, totalRowCount, variable.sliceExpression);
                     }
                 }
             }
         }
     }
 
-    private getAllRows() {
-        this.sendMessage(DataViewerMessages.GetAllRowsRequest);
+    private getAllRows(sliceExpression?: string) {
+        this.sendMessage(DataViewerMessages.GetAllRowsRequest, sliceExpression);
     }
 
-    private getRowsInChunks(startIndex: number, endIndex: number) {
+    private getRowsInChunks(startIndex: number, endIndex: number, sliceExpression?: string) {
         // Ask for our first chunk. Don't spam jupyter though with all requests at once
         // Instead, do them one at a time.
         const chunkEnd = startIndex + Math.min(this.rowFetchSizeFirst, endIndex);
         const chunkStart = startIndex;
-        this.sendMessage(DataViewerMessages.GetRowsRequest, { start: chunkStart, end: chunkEnd });
+        this.sendMessage(DataViewerMessages.GetRowsRequest, { start: chunkStart, end: chunkEnd, sliceExpression });
     }
 
     private handleGetAllRowsResponse(response: IRowsResponse) {
@@ -283,25 +277,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
         // Add all of these rows to the grid
         this.updateRows(normalized);
-    }
-
-    private handleSliceResponse(response: ISliceResponse) {
-        console.log('Got slice response', response);
-        const rows = response ? (response.rows as JSONArray) : [];
-        const normalized = this.normalizeRows(rows);
-        const columns = this.generateColumns(response);
-        const totalRowCount = response.rowCount ? response.rowCount : 0;
-        const indexColumn = response.indexColumn ? response.indexColumn : 'index';
-
-        // Update our fetched count and actual rows
-        this.setState({
-            gridColumns: columns,
-            gridRows: normalized,
-            totalRowCount,
-            indexColumn: indexColumn,
-        });
-
-        this.gridSetDataEvent.notify({ rows: normalized, columns });
     }
 
     private handleGetRowChunkResponse(response: IGetRowsResponse) {

@@ -25,7 +25,7 @@ export class SliceControl extends React.Component<ISliceFormProps, ISliceFormSta
   
     public handleSubmit(event: React.SyntheticEvent) {
       event.preventDefault();
-      this.props.handleSliceRequest({ slice: this.state.value});
+      this.props.handleSliceRequest({ slice: this.state.value, originalShape: this.props.dataShapeAsArray });
     }
   
     render() {

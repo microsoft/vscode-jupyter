@@ -9,7 +9,6 @@ import { ServerStatus } from '../../../datascience-ui/interactive-common/mainSta
 import { IDisposableRegistry } from '../../common/types';
 import { captureTelemetry } from '../../telemetry';
 import { Identifiers, Telemetry } from '../constants';
-import { ISliceResponse } from '../data-viewing/types';
 import {
     IConditionalJupyterVariables,
     IJupyterVariable,
@@ -55,26 +54,18 @@ export class JupyterVariables implements IJupyterVariables {
         return (await this.getVariableHandler(notebook)).getMatchingVariable(name, notebook);
     }
 
-    public async getDataFrameInfo(targetVariable: IJupyterVariable, notebook?: INotebook): Promise<IJupyterVariable> {
-        return (await this.getVariableHandler(notebook)).getDataFrameInfo(targetVariable, notebook);
+    public async getDataFrameInfo(targetVariable: IJupyterVariable, notebook?: INotebook, sliceExpression?: string): Promise<IJupyterVariable> {
+        return (await this.getVariableHandler(notebook)).getDataFrameInfo(targetVariable, notebook, sliceExpression);
     }
 
     public async getDataFrameRows(
         targetVariable: IJupyterVariable,
         start: number,
         end: number,
-        notebook?: INotebook
+        notebook?: INotebook,
+        sliceExpression?: string
     ): Promise<JSONObject> {
-        return (await this.getVariableHandler(notebook)).getDataFrameRows(targetVariable, start, end, notebook);
-    }
-
-    public async getSlice(
-        targetVariable: IJupyterVariable,
-        slice: string,
-        notebook: INotebook
-    ): Promise<ISliceResponse> {
-        const variableHandler = await this.getVariableHandler(notebook);
-        return variableHandler.getSlice(targetVariable, slice, notebook);
+        return (await this.getVariableHandler(notebook)).getDataFrameRows(targetVariable, start, end, notebook, sliceExpression);
     }
 
     private async getVariableHandler(notebook?: INotebook): Promise<IJupyterVariables> {

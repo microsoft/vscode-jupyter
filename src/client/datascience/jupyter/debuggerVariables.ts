@@ -29,6 +29,12 @@ const DataViewableTypes: Set<string> = new Set<string>([
     'Tensor',
     'EagerTensor'
 ]);
+const SliceableTypes: Set<string> = new Set<string>([
+    'DataFrame',
+    'ndarray',
+    'Tensor',
+    'EagerTensor'
+]);
 const KnownExcludedVariables = new Set<string>(['In', 'Out', 'exit', 'quit']);
 
 @injectable()
@@ -132,19 +138,12 @@ export class DebuggerVariables extends DebugLocationTracker
             : targetVariable;
     }
 
-    public async getSlice(
-        _targetVariable: IJupyterVariable,
-        _slice: string,
-        _notebook?: INotebook
-    ) {
-        return { rows: [] };
-    }
-
     public async getDataFrameRows(
         targetVariable: IJupyterVariable,
         start: number,
         end: number,
-        notebook?: INotebook
+        notebook?: INotebook,
+        sliceExpression?: string,
     ): Promise<{}> {
         // Run the get dataframe rows script
         if (!this.debugService.activeDebugSession || targetVariable.columns === undefined) {
@@ -154,6 +153,11 @@ export class DebuggerVariables extends DebugLocationTracker
         // Listen to notebook events if we haven't already
         if (notebook) {
             this.watchNotebook(notebook);
+        }
+
+        let expression = targetVariable.name;
+        if (sliceExpression) {
+            expression = `${targetVariable.name}${sliceExpression}`;
         }
 
         // See if we imported or not into the kernel our special function
@@ -171,7 +175,7 @@ export class DebuggerVariables extends DebugLocationTracker
         for (let pos = start; pos < end; pos += chunkSize) {
             const chunkEnd = Math.min(pos + chunkSize, minnedEnd);
             const results = await this.evaluate(
-                `${DataFrameLoading.DataFrameRowImportFunc}(${targetVariable.name}, ${pos}, ${chunkEnd})`,
+                `${DataFrameLoading.DataFrameRowImportFunc}(${expression}, ${pos}, ${chunkEnd})`,
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 (targetVariable as any).frameId
             );
@@ -360,6 +364,7 @@ export function convertDebugProtocolVariableToIJupyterVariable(variable: DebugPr
         supportsDataExplorer: DataViewableTypes.has(variable.type || ''),
         value: variable.value,
         truncated: true,
-        frameId: variable.variablesReference
+        frameId: variable.variablesReference,
+        supportsSlicing: SliceableTypes.has(variable.type || '')
     };
 }

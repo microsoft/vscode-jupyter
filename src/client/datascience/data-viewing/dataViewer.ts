@@ -64,6 +64,10 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
         );
     }
 
+    private async isSliceDataSupported(dataFrameInfo: IDataFrameInfo) {
+        return !!dataFrameInfo.supportsSlicing && (await this.experimentService.inExperiment(Experiments.SliceDataViewer));
+    }
+
     public async showData(dataProvider: IDataViewerDataProvider, title: string): Promise<void> {
         if (!this.isDisposed) {
             // Save the data provider
@@ -79,7 +83,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
 
             const dataFrameInfo = await this.prepDataFrameInfo();
 
-            const isSliceDataSupported = (await this.experimentService.inExperiment(Experiments.SliceDataViewer)) && (!!this.dataProvider.getSlice);
+            const isSliceDataSupported = await this.isSliceDataSupported(dataFrameInfo);
 
             // Send a message with our data
             this.postMessage(DataViewerMessages.InitializeData, { ...dataFrameInfo, isSliceDataSupported }).ignoreErrors();
@@ -104,7 +108,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
     protected onMessage(message: string, payload: any) {
         switch (message) {
             case DataViewerMessages.GetAllRowsRequest:
-                this.getAllRows().ignoreErrors();
+                this.getAllRows(payload as string).ignoreErrors();
                 break;
 
             case DataViewerMessages.GetRowsRequest:
@@ -122,9 +126,9 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
         super.onMessage(message, payload);
     }
 
-    private getDataFrameInfo(): Promise<IDataFrameInfo> {
+    private getDataFrameInfo(sliceExpression?: string): Promise<IDataFrameInfo> {
         if (!this.dataFrameInfoPromise) {
-            this.dataFrameInfoPromise = this.dataProvider ? this.dataProvider.getDataFrameInfo() : Promise.resolve({});
+            this.dataFrameInfoPromise = this.dataProvider ? this.dataProvider.getDataFrameInfo(sliceExpression) : Promise.resolve({});
         }
         return this.dataFrameInfoPromise;
     }
@@ -149,10 +153,10 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
         return output;
     }
 
-    private async getAllRows() {
+    private async getAllRows(sliceExpression?: string) {
         return this.wrapRequest(async () => {
             if (this.dataProvider) {
-                const allRows = await this.dataProvider.getAllRows();
+                const allRows = await this.dataProvider.getAllRows(sliceExpression);
                 this.pendingRowsCount = 0;
                 return this.postMessage(DataViewerMessages.GetAllRowsResponse, allRows);
             }
@@ -161,9 +165,10 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
 
     private getSlice(request: IGetSliceRequest) {
         return this.wrapRequest(async () => {
-            if (this.dataProvider && this.dataProvider.getSlice) {
-                const data = await this.dataProvider.getSlice(request.slice);
-                return this.postMessage(DataViewerMessages.GetSliceResponse, data);
+            if (this.dataProvider) {
+                const payload = await this.dataProvider.getDataFrameInfo(request.slice);
+                payload.shape = request.originalShape;
+                return this.postMessage(DataViewerMessages.InitializeData, { ...payload, isSliceDataSupported: true });
             }
         });
     }
@@ -171,10 +176,11 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
     private getRowChunk(request: IGetRowsRequest) {
         return this.wrapRequest(async () => {
             if (this.dataProvider) {
-                const dataFrameInfo = await this.getDataFrameInfo();
+                const dataFrameInfo = await this.getDataFrameInfo(request.sliceExpression);
                 const rows = await this.dataProvider.getRows(
                     request.start,
-                    Math.min(request.end, dataFrameInfo.rowCount ? dataFrameInfo.rowCount : 0)
+                    Math.min(request.end, dataFrameInfo.rowCount ? dataFrameInfo.rowCount : 0),
+                    request.sliceExpression
                 );
                 return this.postMessage(DataViewerMessages.GetRowsResponse, {
                     rows,

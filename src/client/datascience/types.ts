@@ -33,7 +33,7 @@ import { IAsyncDisposable, IDisposable, IJupyterSettings, InteractiveWindowMode,
 import { StopWatch } from '../common/utils/stopWatch';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import { JupyterCommands } from './constants';
-import { IDataViewerDataProvider, ISliceResponse } from './data-viewing/types';
+import { IDataViewerDataProvider } from './data-viewing/types';
 import { NotebookModelChange } from './interactive-common/interactiveWindowTypes';
 import { JupyterServerInfo } from './jupyter/jupyterConnection';
 import { JupyterInstallError } from './jupyter/jupyterInstallError';
@@ -870,6 +870,7 @@ export interface IJupyterVariable {
     value: string | undefined;
     executionCount?: number;
     supportsDataExplorer: boolean;
+    supportsSlicing?: boolean;
     type: string;
     size: number;
     shape: string;
@@ -895,23 +896,19 @@ export const IJupyterVariables = Symbol('IJupyterVariables');
 export interface IJupyterVariables {
     readonly refreshRequired: Event<void>;
     getVariables(request: IJupyterVariablesRequest, notebook?: INotebook): Promise<IJupyterVariablesResponse>;
-    getDataFrameInfo(targetVariable: IJupyterVariable, notebook?: INotebook): Promise<IJupyterVariable>;
+    getDataFrameInfo(targetVariable: IJupyterVariable, notebook?: INotebook, sliceExpression?: string): Promise<IJupyterVariable>;
     getDataFrameRows(
         targetVariable: IJupyterVariable,
         start: number,
         end: number,
-        notebook?: INotebook
+        notebook?: INotebook,
+        sliceExpression?: string
     ): Promise<JSONObject>;
     getMatchingVariable(
         name: string,
         notebook?: INotebook,
         cancelToken?: CancellationToken
     ): Promise<IJupyterVariable | undefined>;
-    getSlice(
-        targetVariable: IJupyterVariable,
-        slice: string,
-        notebook?: INotebook
-    ): Promise<ISliceResponse>;
 }
 
 export interface IConditionalJupyterVariables extends IJupyterVariables {
