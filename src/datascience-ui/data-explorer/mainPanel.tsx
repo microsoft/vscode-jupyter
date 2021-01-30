@@ -308,7 +308,12 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     }
 
     private normalizeRows(rows: JSONArray): ISlickRow[] {
+        // While processing rows we may encounter Inf, -Inf or NaN.
+        // These rows' column types will initially be 'object' so
+        // make sure we update the column types
         let shouldUpdateColumnTypes = false;
+        // Set of columns to update based on this batch of rows
+        const columnsToUpdate = new Set<string>();
         // Make sure we have an index field and all rows have an item
         const normalizedRows = rows.map((r: any | undefined) => {
             if (!r) {
@@ -321,18 +326,27 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 switch (value) {
                     case '_VSCODE_nan':
                         r[key] = NaN;
-                        shouldUpdateColumnTypes = true;
-                        this.columnsContainingInfOrNaN.add(key);
+                        if (!this.columnsContainingInfOrNaN.has(key)) {
+                            shouldUpdateColumnTypes = true;
+                            columnsToUpdate.add(key);
+                            this.columnsContainingInfOrNaN.add(key);
+                        }
                         break;
                     case '_VSCODE_neg_infinity':
                         r[key] = -Infinity;
-                        shouldUpdateColumnTypes = true;
-                        this.columnsContainingInfOrNaN.add(key);
+                        if (!this.columnsContainingInfOrNaN.has(key)) {
+                            shouldUpdateColumnTypes = true;
+                            columnsToUpdate.add(key);
+                            this.columnsContainingInfOrNaN.add(key);
+                        }
                         break;
                     case '_VSCODE_infinity':
                         r[key] = Infinity;
-                        shouldUpdateColumnTypes = true;
-                        this.columnsContainingInfOrNaN.add(key);
+                        if (!this.columnsContainingInfOrNaN.has(key)) {
+                            shouldUpdateColumnTypes = true;
+                            columnsToUpdate.add(key);
+                            this.columnsContainingInfOrNaN.add(key);
+                        }
                         break;
                     default:
                 }
@@ -344,7 +358,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         // there could be hundreds of thousands of them
         if (shouldUpdateColumnTypes) {
             const columns = this.state.gridColumns;
-            this.columnsContainingInfOrNaN.forEach((columnKey: string) => {
+            columnsToUpdate.forEach((columnKey: string) => {
                 // Assumes that ids in this.state.gridColumns match their array index
                 const index = parseInt(columnKey) + 1;
                 const currentDef = columns[index];
