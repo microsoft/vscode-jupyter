@@ -124,6 +124,7 @@ def _VSCODE_getRowCount(var):
         except TypeError:
             return 0
 
+
 # Function to retrieve a set of rows for a data frame
 def _VSCODE_getDataFrameRows(df, start, end):
     df = _VSCODE_convertToDataFrame(df)
