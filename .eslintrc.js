@@ -191,7 +191,6 @@ module.exports = {
         'src/test/datascience/liveshare.functional.test.tsx',
         'src/test/datascience/mountedWebViewFactory.ts',
         'src/test/datascience/data-viewing/dataViewerPDependencyService.unit.test.ts',
-        'src/test/datascience/data-viewing/dataViewer.unit.test.ts',
         'src/test/datascience/mockPythonService.ts',
         'src/test/datascience/testHelpersCore.ts',
         'src/test/datascience/shiftEnterBanner.unit.test.ts',
