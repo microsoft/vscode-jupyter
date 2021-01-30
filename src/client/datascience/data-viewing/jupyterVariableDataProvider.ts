@@ -121,7 +121,13 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
         let rows: IRowsResponse = [];
         await this.ensureInitialized();
         if (this.variable && this.variable.rowCount) {
-            const dataFrameRows = await this.variableManager.getDataFrameRows(this.variable, start, end, this.notebook, sliceExpression);
+            const dataFrameRows = await this.variableManager.getDataFrameRows(
+                this.variable,
+                start,
+                end,
+                this.notebook,
+                sliceExpression
+            );
             rows = dataFrameRows && dataFrameRows.data ? (dataFrameRows.data as IRowsResponse) : [];
         }
         return rows;

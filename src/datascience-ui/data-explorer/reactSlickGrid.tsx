@@ -50,14 +50,16 @@ export interface ISlickGridAdd {
     newRows: ISlickRow[];
 }
 
-export interface ISlickGridSlice { columns: Slick.Column<Slick.SlickData>[]};
+export interface ISlickGridSlice {
+    columns: Slick.Column<Slick.SlickData>[];
+}
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export interface ISlickGridProps {
     idProperty: string;
     columns: Slick.Column<ISlickRow>[];
     rowsAdded: Slick.Event<ISlickGridAdd>;
-    resetGridEvent: Slick.Event<ISlickGridSlice>
+    resetGridEvent: Slick.Event<ISlickGridSlice>;
     filterRowsText: string;
     filterRowsTooltip: string;
     forceHeight?: number;
@@ -166,7 +168,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
 
     private createSlickGrid() {
         if (this.containerRef.current) {
-                // Compute font size. Default to 15 if not found.
+            // Compute font size. Default to 15 if not found.
             let fontSize = parseInt(
                 getComputedStyle(this.containerRef.current).getPropertyValue('--code-font-size'),
                 10
@@ -322,10 +324,13 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
     public renderTemporarySliceIndicator = () => {
         if (this.props.isSliceDataSupported && this.props.dataShape) {
             return (
-                <SliceControl dataShapeAsArray={this.props.dataShape} handleSliceRequest={this.props.handleSliceRequest}/>
+                <SliceControl
+                    dataShapeAsArray={this.props.dataShape}
+                    handleSliceRequest={this.props.handleSliceRequest}
+                />
             );
         }
-    }
+    };
 
     // public for testing
     public sort = (_e: Slick.EventData, args: Slick.OnSortEventArgs<Slick.SlickData>) => {
@@ -490,7 +495,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
     private resetGrid = (_e: Slick.EventData) => {
         this.createSlickGrid();
         this.autoResizeColumns();
-    }
+    };
 
     private addedRows = (_e: Slick.EventData, data: ISlickGridAdd) => {
         // Add all of these new rows into our data.

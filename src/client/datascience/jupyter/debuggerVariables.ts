@@ -29,12 +29,7 @@ const DataViewableTypes: Set<string> = new Set<string>([
     'Tensor',
     'EagerTensor'
 ]);
-const SliceableTypes: Set<string> = new Set<string>([
-    'DataFrame',
-    'ndarray',
-    'Tensor',
-    'EagerTensor'
-]);
+const SliceableTypes: Set<string> = new Set<string>(['DataFrame', 'ndarray', 'Tensor', 'EagerTensor']);
 const KnownExcludedVariables = new Set<string>(['In', 'Out', 'exit', 'quit']);
 
 @injectable()
@@ -143,7 +138,7 @@ export class DebuggerVariables extends DebugLocationTracker
         start: number,
         end: number,
         notebook?: INotebook,
-        sliceExpression?: string,
+        sliceExpression?: string
     ): Promise<{}> {
         // Run the get dataframe rows script
         if (!this.debugService.activeDebugSession || targetVariable.columns === undefined) {

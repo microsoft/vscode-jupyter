@@ -85,8 +85,8 @@ export enum ColumnType {
 export type IRowsResponse = any[];
 
 export interface ISliceResponse extends IDataFrameInfo {
-    rows: IRowsResponse
-};
+    rows: IRowsResponse;
+}
 
 export const IDataViewerFactory = Symbol('IDataViewerFactory');
 export interface IDataViewerFactory {

@@ -44,12 +44,7 @@ const DataViewableTypes: Set<string> = new Set<string>([
     'Tensor',
     'EagerTensor'
 ]);
-const SliceableTypes: Set<string> = new Set<string>([
-    'DataFrame',
-    'ndarray',
-    'Tensor',
-    'EagerTensor'
-]);
+const SliceableTypes: Set<string> = new Set<string>(['DataFrame', 'ndarray', 'Tensor', 'EagerTensor']);
 interface INotebookState {
     currentExecutionCount: number;
     variables: IJupyterVariable[];
@@ -119,7 +114,11 @@ export class KernelVariables implements IJupyterVariables {
         }
     }
 
-    public async getDataFrameInfo(targetVariable: IJupyterVariable, notebook: INotebook, sliceExpression?: string): Promise<IJupyterVariable> {
+    public async getDataFrameInfo(
+        targetVariable: IJupyterVariable,
+        notebook: INotebook,
+        sliceExpression?: string
+    ): Promise<IJupyterVariable> {
         // Import the data frame script directory if we haven't already
         await this.importDataFrameScripts(notebook);
 
@@ -502,7 +501,6 @@ export class KernelVariables implements IJupyterVariables {
             if (SliceableTypes.has(result.type)) {
                 result.supportsSlicing = true;
             }
-            
         }
 
         // For a python kernel, we might be able to get a better shape. It seems the 'inspect' request doesn't always return it.

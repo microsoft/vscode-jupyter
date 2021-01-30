@@ -17,7 +17,7 @@ import {
     IDataViewerMapping,
     IGetRowsResponse,
     IGetSliceRequest,
-    IRowsResponse,
+    IRowsResponse
 } from '../../client/datascience/data-viewing/types';
 import { SharedMessages } from '../../client/datascience/messages';
 import { IJupyterExtraSettings } from '../../client/datascience/types';
@@ -355,5 +355,5 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     private handleSliceRequest = (args: IGetSliceRequest) => {
         this.sendMessage(DataViewerMessages.GetSliceRequest, args);
-    }
+    };
 }

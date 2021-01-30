@@ -65,7 +65,9 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
     }
 
     private async isSliceDataSupported(dataFrameInfo: IDataFrameInfo) {
-        return !!dataFrameInfo.supportsSlicing && (await this.experimentService.inExperiment(Experiments.SliceDataViewer));
+        return (
+            !!dataFrameInfo?.supportsSlicing && (await this.experimentService.inExperiment(Experiments.SliceDataViewer))
+        );
     }
 
     public async showData(dataProvider: IDataViewerDataProvider, title: string): Promise<void> {
@@ -86,7 +88,10 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
             const isSliceDataSupported = await this.isSliceDataSupported(dataFrameInfo);
 
             // Send a message with our data
-            this.postMessage(DataViewerMessages.InitializeData, { ...dataFrameInfo, isSliceDataSupported }).ignoreErrors();
+            this.postMessage(DataViewerMessages.InitializeData, {
+                ...dataFrameInfo,
+                isSliceDataSupported
+            }).ignoreErrors();
         }
     }
 
@@ -128,7 +133,9 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
 
     private getDataFrameInfo(sliceExpression?: string): Promise<IDataFrameInfo> {
         if (!this.dataFrameInfoPromise) {
-            this.dataFrameInfoPromise = this.dataProvider ? this.dataProvider.getDataFrameInfo(sliceExpression) : Promise.resolve({});
+            this.dataFrameInfoPromise = this.dataProvider
+                ? this.dataProvider.getDataFrameInfo(sliceExpression)
+                : Promise.resolve({});
         }
         return this.dataFrameInfoPromise;
     }
@@ -203,11 +210,11 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
                     if (v === actionTitle) {
                         this.applicationShell.openUrl(HelpLinks.JupyterDataRateHelpLink);
                     }
-                });
+                }, (e) => traceError(e));
                 this.dispose();
             }
             traceError(e);
-            this.applicationShell.showErrorMessage(e);
+            this.applicationShell.showErrorMessage(e).then(() => {}, (e) => traceError(e));
         } finally {
             this.sendElapsedTimeTelemetry();
         }

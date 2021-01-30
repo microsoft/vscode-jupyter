@@ -54,7 +54,11 @@ export class JupyterVariables implements IJupyterVariables {
         return (await this.getVariableHandler(notebook)).getMatchingVariable(name, notebook);
     }
 
-    public async getDataFrameInfo(targetVariable: IJupyterVariable, notebook?: INotebook, sliceExpression?: string): Promise<IJupyterVariable> {
+    public async getDataFrameInfo(
+        targetVariable: IJupyterVariable,
+        notebook?: INotebook,
+        sliceExpression?: string
+    ): Promise<IJupyterVariable> {
         return (await this.getVariableHandler(notebook)).getDataFrameInfo(targetVariable, notebook, sliceExpression);
     }
 
@@ -65,7 +69,13 @@ export class JupyterVariables implements IJupyterVariables {
         notebook?: INotebook,
         sliceExpression?: string
     ): Promise<JSONObject> {
-        return (await this.getVariableHandler(notebook)).getDataFrameRows(targetVariable, start, end, notebook, sliceExpression);
+        return (await this.getVariableHandler(notebook)).getDataFrameRows(
+            targetVariable,
+            start,
+            end,
+            notebook,
+            sliceExpression
+        );
     }
 
     private async getVariableHandler(notebook?: INotebook): Promise<IJupyterVariables> {
