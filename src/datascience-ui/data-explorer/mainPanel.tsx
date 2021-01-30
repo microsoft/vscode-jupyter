@@ -52,12 +52,14 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private sentDone = false;
     private postOffice: PostOffice = new PostOffice();
     private gridAddEvent: Slick.Event<ISlickGridAdd> = new Slick.Event<ISlickGridAdd>();
+    private gridColumnUpdateEvent: Slick.Event<Slick.Column<Slick.SlickData>[]> = new Slick.Event<Slick.Column<Slick.SlickData>[]>();
     private rowFetchSizeFirst: number = 0;
     private rowFetchSizeSubsequent: number = 0;
     private rowFetchSizeAll: number = 0;
     // Just used for testing.
     private grid: React.RefObject<ReactSlickGrid> = React.createRef<ReactSlickGrid>();
     private updateTimeout?: NodeJS.Timer | number;
+    private columnsContainingInfOrNaN = new Set<string>();
 
     // eslint-disable-next-line
     constructor(props: IMainPanelProps, _state: IMainPanelState) {
@@ -190,6 +192,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 columns={this.state.gridColumns}
                 idProperty={this.state.indexColumn}
                 rowsAdded={this.gridAddEvent}
+                columnsUpdated={this.gridColumnUpdateEvent}
                 filterRowsText={filterRowsText}
                 filterRowsTooltip={filterRowsTooltip}
                 forceHeight={this.props.testMode ? 200 : undefined}
@@ -305,8 +308,9 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     }
 
     private normalizeRows(rows: JSONArray): ISlickRow[] {
+        let shouldUpdateColumnTypes = false;
         // Make sure we have an index field and all rows have an item
-        return rows.map((r: any | undefined) => {
+        const normalizedRows = rows.map((r: any | undefined) => {
             if (!r) {
                 r = {};
             }
@@ -317,17 +321,38 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 switch (value) {
                     case '_VSCODE_nan':
                         r[key] = NaN;
+                        shouldUpdateColumnTypes = true;
+                        this.columnsContainingInfOrNaN.add(key);
                         break;
                     case '_VSCODE_neg_infinity':
                         r[key] = -Infinity;
+                        shouldUpdateColumnTypes = true;
+                        this.columnsContainingInfOrNaN.add(key);
                         break;
                     case '_VSCODE_infinity':
                         r[key] = Infinity;
+                        shouldUpdateColumnTypes = true;
+                        this.columnsContainingInfOrNaN.add(key);
                         break;
+                    default:
                 }
             }
             return r;
         });
+        // Need to update the column types so that that column gets treated as numeric
+        // This should be unusual in practice. Don't want to loop over all columns as
+        // there could be hundreds of thousands of them
+        if (shouldUpdateColumnTypes) {
+            const columns = this.state.gridColumns;
+            this.columnsContainingInfOrNaN.forEach((columnKey: string) => {
+                // Assumes that ids in this.state.gridColumns match their array index
+                const index = parseInt(columnKey) + 1;
+                const currentDef = columns[index];
+                columns[index] = { ...currentDef, type: ColumnType.Number } as any;
+            })
+            this.updateColumns(columns);
+        }
+        return normalizedRows;
     }
 
     private sendMessage<M extends IDataViewerMapping, T extends keyof M>(type: T, payload?: M[T]) {
@@ -345,5 +370,12 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         } else {
             this.gridAddEvent.notify({ newRows });
         }
+    }
+
+    private updateColumns(newColumns: Slick.Column<Slick.SlickData>[]) {
+        this.setState({ gridColumns: newColumns });
+        // State updates do not trigger a rerender on the SlickGrid,
+        // so we need to tell it to update itself with an event
+        this.gridColumnUpdateEvent.notify(newColumns);
     }
 }

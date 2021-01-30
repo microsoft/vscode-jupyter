@@ -45,6 +45,10 @@ export interface ISlickRow extends Slick.SlickData {
     id: string;
 }
 
+export interface ISlickColumn extends Slick.Column<Slick.SlickData> {
+    type: string;
+}
+
 export interface ISlickGridAdd {
     newRows: ISlickRow[];
 }
@@ -54,6 +58,7 @@ export interface ISlickGridProps {
     idProperty: string;
     columns: Slick.Column<ISlickRow>[];
     rowsAdded: Slick.Event<ISlickGridAdd>;
+    columnsUpdated: Slick.Event<Slick.Column<Slick.SlickData>[]>;
     filterRowsText: string;
     filterRowsTooltip: string;
     forceHeight?: number;
@@ -104,6 +109,7 @@ class ColumnFilter {
     }
 
     private generateNumericOperation(text: string): (v: any) => boolean {
+        // TODO handle Infinity, NaN
         if (this.lessThanRegEx.test(text)) {
             const n1 = this.extractDigits(text, this.lessThanRegEx);
             return (v: any) => v !== undefined && v < n1;
@@ -140,6 +146,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         this.containerRef = React.createRef<HTMLDivElement>();
         this.measureRef = React.createRef<HTMLDivElement>();
         this.props.rowsAdded.subscribe(this.addedRows);
+        this.props.columnsUpdated.subscribe(this.updateColumns);
     }
 
     // eslint-disable-next-line
@@ -456,6 +463,11 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
             return style ? style.font : null;
         }
         return null;
+    }
+
+    private updateColumns = (_e: Slick.EventData, newColumns: Slick.Column<Slick.SlickData>[]) => {
+        this.state.grid?.setColumns(newColumns);
+        this.state.grid?.render(); // We might be able to skip this rerender?
     }
 
     private addedRows = (_e: Slick.EventData, data: ISlickGridAdd) => {

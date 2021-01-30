@@ -53,7 +53,14 @@ class CellFormatter extends React.Component<ICellFormatterProps> {
     }
 
     private renderNumber(value: number) {
-        const val = value.toString();
+        let val = value.toString();
+        if (isNaN(value)) { // NaN !== NaN in JavaScript
+            val = 'nan';
+        } else if (value === Infinity) {
+            val = 'inf';
+        } else if (value === -Infinity) {
+            val = '-inf';
+        }
         return (
             <div className="number-formatter cell-formatter" role="gridcell" title={val}>
                 <span>{val}</span>
