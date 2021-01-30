@@ -52,7 +52,9 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private sentDone = false;
     private postOffice: PostOffice = new PostOffice();
     private gridAddEvent: Slick.Event<ISlickGridAdd> = new Slick.Event<ISlickGridAdd>();
-    private gridColumnUpdateEvent: Slick.Event<Slick.Column<Slick.SlickData>[]> = new Slick.Event<Slick.Column<Slick.SlickData>[]>();
+    private gridColumnUpdateEvent: Slick.Event<Slick.Column<Slick.SlickData>[]> = new Slick.Event<
+        Slick.Column<Slick.SlickData>[]
+    >();
     private rowFetchSizeFirst: number = 0;
     private rowFetchSizeSubsequent: number = 0;
     private rowFetchSizeAll: number = 0;
@@ -363,7 +365,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 const index = parseInt(columnKey) + 1;
                 const currentDef = columns[index];
                 columns[index] = { ...currentDef, type: ColumnType.Number } as any;
-            })
+            });
             this.updateColumns(columns);
         }
         return normalizedRows;

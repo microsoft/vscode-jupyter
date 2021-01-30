@@ -481,7 +481,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
     private updateColumns = (_e: Slick.EventData, newColumns: Slick.Column<Slick.SlickData>[]) => {
         this.state.grid?.setColumns(newColumns);
         this.state.grid?.render(); // We might be able to skip this rerender?
-    }
+    };
 
     private addedRows = (_e: Slick.EventData, data: ISlickGridAdd) => {
         // Add all of these new rows into our data.
