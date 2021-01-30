@@ -313,6 +313,19 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             if (!r.hasOwnProperty(this.state.indexColumn)) {
                 r[this.state.indexColumn] = uuid();
             }
+            for (let [key, value] of Object.entries(r)) {
+                switch (value) {
+                    case '_VSCODE_nan':
+                        r[key] = NaN;
+                        break;
+                    case '_VSCODE_neg_infinity':
+                        r[key] = -Infinity;
+                        break;
+                    case '_VSCODE_infinity':
+                        r[key] = Infinity;
+                        break;
+                }
+            }
             return r;
         });
     }
