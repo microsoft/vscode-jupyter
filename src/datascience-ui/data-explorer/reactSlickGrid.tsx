@@ -45,10 +45,6 @@ export interface ISlickRow extends Slick.SlickData {
     id: string;
 }
 
-export interface ISlickColumn extends Slick.Column<Slick.SlickData> {
-    type: string;
-}
-
 export interface ISlickGridAdd {
     newRows: ISlickRow[];
 }
