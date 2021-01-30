@@ -72,11 +72,11 @@ interface ISlickGridState {
 
 class ColumnFilter {
     private matchFunc: (v: any) => boolean;
-    private lessThanRegEx = /^\s*<\s*(\d+.*)/;
-    private lessThanEqualRegEx = /^\s*<=\s*(\d+.*).*/;
-    private greaterThanRegEx = /^\s*>\s*(\d+.*).*/;
-    private greaterThanEqualRegEx = /^\s*>=\s*(\d+.*).*/;
-    private equalThanRegEx = /^\s*=\s*(\d+.*).*/;
+    private lessThanRegEx = /^\s*<\s*((?<Number>\d+.*)|(?<NaN>nan)|(?<Inf>inf)|(?<NegInf>-inf))/;
+    private lessThanEqualRegEx = /^\s*<=\s*((?<Number>\d+.*)|(?<NaN>nan)|(?<Inf>inf)|(?<NegInf>-inf)).*/;
+    private greaterThanRegEx = /^\s*>\s*((?<Number>\d+.*)|(?<NaN>nan)|(?<Inf>inf)|(?<NegInf>-inf)).*/;
+    private greaterThanEqualRegEx = /^\s*>=\s*((?<Number>\d+.*)|(?<NaN>nan)|(?<Inf>inf)|(?<NegInf>-inf)).*/;
+    private equalThanRegEx = /^\s*=\s*((?<Number>\d+.*)|(?<NaN>nan)|(?<Inf>inf)|(?<NegInf>-inf)).*/;
 
     constructor(text: string, column: Slick.Column<Slick.SlickData>) {
         if (text && text.length > 0) {
@@ -102,15 +102,28 @@ class ColumnFilter {
 
     private extractDigits(text: string, regex: RegExp): number {
         const match = regex.exec(text);
-        if (match && match.length > 1) {
-            return parseFloat(match[1]);
+        if (match && match.groups) {
+            if (match.groups.Number) {
+                return parseFloat(match.groups.Number);
+            } else if (match.groups.Inf) {
+                return Infinity;
+            } else if (match.groups.NegInf) {
+                return -Infinity;
+            } else if (match.groups.NaN) {
+                return NaN;
+            }
         }
         return 0;
     }
 
     private generateNumericOperation(text: string): (v: any) => boolean {
-        // TODO handle Infinity, NaN
-        if (this.lessThanRegEx.test(text)) {
+        if (text === 'nan') {
+            return (v: any) => v !== undefined && isNaN(v);
+        } else if (text === 'inf') {
+            return (v: any) => v !== undefined && v === Infinity;
+        } else if (text === '-inf') {
+            return (v: any) => v !== undefined && v === -Infinity;
+        } else if (this.lessThanRegEx.test(text)) {
             const n1 = this.extractDigits(text, this.lessThanRegEx);
             return (v: any) => v !== undefined && v < n1;
         } else if (this.lessThanEqualRegEx.test(text)) {
