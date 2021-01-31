@@ -253,7 +253,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     private handleGetAllRowsResponse(response: IRowsResponse) {
         const rows = response ? (response as JSONArray) : [];
-        const normalized = this.normalizeRows(rows);
+        const normalized = this.normalizeData(rows);
 
         // Update our fetched count and actual rows
         this.setState({
@@ -268,7 +268,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private handleGetRowChunkResponse(response: IGetRowsResponse) {
         // We have a new fetched row count
         const rows = response.rows ? (response.rows as JSONArray) : [];
-        const normalized = this.normalizeRows(rows);
+        const normalized = this.normalizeData(rows);
         const newFetched = this.state.fetchedRowCount + (response.end - response.start);
 
         // gridRows should have our entire list. We need to replace our part with our new results
@@ -309,7 +309,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         return [];
     }
 
-    private normalizeRows(rows: JSONArray): ISlickRow[] {
+    private normalizeData(rows: JSONArray): ISlickRow[] {
         // While processing rows we may encounter Inf, -Inf or NaN.
         // These rows' column types will initially be 'string' or 'object' so
         // make sure we update the column types
