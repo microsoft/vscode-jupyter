@@ -366,21 +366,25 @@ suite('DataScience DataViewer tests', () => {
     });
 
     runMountedTest('2D PyTorch tensors', async (wrapper) => {
-        await injectCode('import torch\r\nfoo = torch.LongTensor([0, 1])');
+        await injectCode(
+            "import torch\r\nimport numpy as np\r\nfoo = torch.tensor([0, 1, np.inf, float('-inf'), np.nan])"
+        );
         const gotAllRows = getCompletedPromise(wrapper);
         const dv = await createJupyterVariableDataViewer('foo', 'Tensor');
         assert.ok(dv, 'DataViewer not created');
         await gotAllRows;
-        verifyRows(wrapper.wrapper, [0, 0, 1, 1]);
+        verifyRows(wrapper.wrapper, [0, 0, 1, 1, 2, 'inf', 3, '-inf', 4, 'nan']);
     });
 
     runMountedTest('2D TensorFlow tensors', async (wrapper) => {
-        await injectCode('import tensorflow as tf\r\nbar = tf.constant([0, 1])');
+        await injectCode(
+            "import tensorflow as tf\r\nimport numpy as np\r\nbar = tf.constant([0, 1, np.inf, float('-inf'), np.nan])"
+        );
         const gotAllRows = getCompletedPromise(wrapper);
         const dv = await createJupyterVariableDataViewer('bar', 'EagerTensor');
         assert.ok(dv, 'DataViewer not created');
         await gotAllRows;
-        verifyRows(wrapper.wrapper, [0, 0, 1, 1]);
+        verifyRows(wrapper.wrapper, [0, 0, 1, 1, 2, 'inf', 3, '-inf', 4, 'nan']);
     });
 
     runMountedTest('3D PyTorch tensors', async (wrapper) => {
@@ -439,12 +443,12 @@ suite('DataScience DataViewer tests', () => {
     });
 
     runMountedTest('Ragged 2D numpy array', async (wrapper) => {
-        await injectCode('import numpy as np\r\nfoo = np.array([[1, 2, 3], [4, 5]])');
+        await injectCode("import numpy as np\r\nfoo = np.array([[1, 2, 3, float('inf')], [4, np.nan, 5]])");
         const gotAllRows = getCompletedPromise(wrapper);
         const dv = await createJupyterVariableDataViewer('foo', 'ndarray');
         assert.ok(dv, 'DataViewer not created');
         await gotAllRows;
-        verifyRows(wrapper.wrapper, [0, 1, 2, 3, 1, 4, 5]);
+        verifyRows(wrapper.wrapper, [0, 1, 2, 3, 'inf', 1, 4, 'nan', 5]);
     });
 
     runMountedTest('Ragged 3D numpy array', async (wrapper) => {

@@ -132,9 +132,9 @@ def _VSCODE_getDataFrameRows(df, start, end):
     rows = df.iloc[start:end]
     rows = rows.replace(
         {
-            _VSCODE_np.inf: "_VSCODE_infinity",
-            -_VSCODE_np.inf: "_VSCODE_neg_infinity",
-            _VSCODE_np.nan: "_VSCODE_nan",
+            _VSCODE_np.inf: "inf",
+            -_VSCODE_np.inf: "-inf",
+            _VSCODE_np.nan: "nan",
         }
     )
     return _VSCODE_pd_json.to_json(None, rows, orient="table", date_format="iso")
