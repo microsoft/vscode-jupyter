@@ -311,29 +311,58 @@ suite('DataScience DataViewer tests', () => {
     });
 
     runMountedTest('Sorting', async (wrapper) => {
-        await injectCode('import numpy as np\r\nx = np.array([0, 1, 2, 3])');
+        await injectCode('import numpy as np\r\nx = np.array([0, 1, 2, 3, np.inf, -np.inf, np.nan])');
         const gotAllRows = getCompletedPromise(wrapper);
         const dv = await createJupyterVariableDataViewer('x', 'ndarray');
         assert.ok(dv, 'DataViewer not created');
         await gotAllRows;
 
-        verifyRows(wrapper.wrapper, [0, 0, 1, 1, 2, 2, 3, 3]);
+        verifyRows(wrapper.wrapper, [0, 0, 1, 1, 2, 2, 3, 3, 4, 'inf', 5, '-inf', 6, 'nan']);
         sortRows(wrapper.wrapper, '0', false);
-        verifyRows(wrapper.wrapper, [3, 3, 2, 2, 1, 1, 0, 0]);
+        verifyRows(wrapper.wrapper, [6, 'nan', 4, 'inf', 3, 3, 2, 2, 1, 1, 0, 0, 5, '-inf']);
+        sortRows(wrapper.wrapper, '0', true);
+        verifyRows(wrapper.wrapper, [5, '-inf', 0, 0, 1, 1, 2, 2, 3, 3, 4, 'inf', 6, 'nan']);
     });
 
     runMountedTest('Filter', async (wrapper) => {
-        await injectCode('import numpy as np\r\nx = np.array([0, 1, 2, 3])');
+        await injectCode('import numpy as np\r\nx = np.array([0, 1, 2, 3, np.inf, -np.inf, np.nan])');
         const gotAllRows = getCompletedPromise(wrapper);
         const dv = await createJupyterVariableDataViewer('x', 'ndarray');
         assert.ok(dv, 'DataViewer not created');
         await gotAllRows;
+        verifyRows(wrapper.wrapper, [0, 0, 1, 1, 2, 2, 3, 3, 4, 'inf', 5, '-inf', 6, 'nan']);
 
-        verifyRows(wrapper.wrapper, [0, 0, 1, 1, 2, 2, 3, 3]);
-        await filterRows(wrapper.wrapper, '0', '> 1');
-        verifyRows(wrapper.wrapper, [2, 2, 3, 3]);
-        await filterRows(wrapper.wrapper, '0', '0');
-        verifyRows(wrapper.wrapper, [0, 0]);
+        const filtersAndExpectedResults = {
+            '> 1': [2, 2, 3, 3, 4, 'inf'],
+            '0': [0, 0],
+            // Search for inf, -inf, nan
+            inf: [4, 'inf'],
+            '-inf': [5, '-inf'],
+            nan: [6, 'nan'],
+            // inf comparison
+            '> inf': [],
+            '>= inf': [4, 'inf'],
+            '= inf': [4, 'inf'],
+            '<= inf': [0, 0, 1, 1, 2, 2, 3, 3, 4, 'inf', 5, '-inf'],
+            '< inf': [0, 0, 1, 1, 2, 2, 3, 3, 5, '-inf'],
+            // -inf comparison
+            '> -inf': [0, 0, 1, 1, 2, 2, 3, 3, 4, 'inf'],
+            '>= -inf': [0, 0, 1, 1, 2, 2, 3, 3, 4, 'inf', 5, '-inf'],
+            '= -inf': [5, '-inf'],
+            '<= -inf': [5, '-inf'],
+            '< -inf': [],
+            // nan comparison
+            '= nan': [6, 'nan'],
+            '>= nan': [6, 'nan'],
+            '<= nan': [6, 'nan'],
+            '> nan': [],
+            '< nan': []
+        };
+
+        for (const [filter, expectedResult] of Object.entries(filtersAndExpectedResults)) {
+            await filterRows(wrapper.wrapper, '0', filter);
+            verifyRows(wrapper.wrapper, expectedResult);
+        }
     });
 
     runMountedTest('2D PyTorch tensors', async (wrapper) => {
