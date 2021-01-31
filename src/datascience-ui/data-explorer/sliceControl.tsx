@@ -1,17 +1,18 @@
 import * as React from 'react';
 import { IGetSliceRequest } from '../../client/datascience/data-viewing/types';
 
-interface ISliceFormProps {
+interface ISliceControlProps {
     dataShapeAsArray: number[];
     handleSliceRequest(slice: IGetSliceRequest): void;
 }
 
-interface ISliceFormState {
+interface ISliceControlState {
     value: string;
 }
 
-export class SliceControl extends React.Component<ISliceFormProps, ISliceFormState> {
-    constructor(props: ISliceFormProps) {
+// Temporary UI entrypoint to slicing functionality until we get a proper UI designed
+export class SliceControl extends React.Component<ISliceControlProps, ISliceControlState> {
+    constructor(props: ISliceControlProps) {
         super(props);
         this.state = { value: '[' + this.props.dataShapeAsArray.map(() => ':').join(', ') + ']' };
 

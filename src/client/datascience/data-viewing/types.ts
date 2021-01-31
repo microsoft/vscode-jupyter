@@ -84,10 +84,6 @@ export enum ColumnType {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type IRowsResponse = any[];
 
-export interface ISliceResponse extends IDataFrameInfo {
-    rows: IRowsResponse;
-}
-
 export const IDataViewerFactory = Symbol('IDataViewerFactory');
 export interface IDataViewerFactory {
     create(dataProvider: IDataViewerDataProvider, title: string): Promise<IDataViewer>;

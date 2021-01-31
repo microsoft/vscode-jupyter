@@ -205,7 +205,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 forceHeight={this.props.testMode ? 200 : undefined}
                 dataDimensionionality={this.state.dataDimensionality}
                 dataShape={this.state.dataShape}
-                totalRowCount={this.state.totalRowCount}
                 isSliceDataSupported={this.state.isSliceDataSupported}
                 handleSliceRequest={this.handleSliceRequest}
             />

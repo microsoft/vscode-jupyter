@@ -65,7 +65,6 @@ export interface ISlickGridProps {
     forceHeight?: number;
     dataDimensionionality: number;
     dataShape: number[] | undefined;
-    totalRowCount: number;
     isSliceDataSupported: boolean; // Feature flag. This should eventually be removed
     handleSliceRequest(args: IGetSliceRequest): void;
 }
@@ -74,7 +73,6 @@ interface ISlickGridState {
     grid?: Slick.Grid<ISlickRow>;
     showingFilters?: boolean;
     fontSize: number;
-    isSlicing: boolean; // TODO remove
     selectedIndex: number;
     selectedAxis: number;
 }
@@ -150,7 +148,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
 
     constructor(props: ISlickGridProps) {
         super(props);
-        this.state = { fontSize: 15, isSlicing: false, selectedIndex: 0, selectedAxis: 0 };
+        this.state = { fontSize: 15, selectedIndex: 0, selectedAxis: 0 };
         this.containerRef = React.createRef<HTMLDivElement>();
         this.measureRef = React.createRef<HTMLDivElement>();
         this.props.rowsAdded.subscribe(this.addedRows);
