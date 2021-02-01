@@ -783,7 +783,6 @@ module.exports = {
         'src/client/common/application/commands/reloadCommand.ts',
         'src/client/common/application/terminalManager.ts',
         'src/client/common/application/applicationEnvironment.ts',
-        'src/client/common/errors/errorUtils.ts',
         'src/client/common/errors/moduleNotInstalledError.ts',
         'src/client/common/installer/serviceRegistry.ts',
         'src/client/common/installer/productNames.ts',
