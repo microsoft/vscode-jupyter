@@ -23,7 +23,7 @@ import {
     closeNotebooks,
     closeNotebooksAndCleanUpAfterTests,
     createTemporaryNotebook,
-    executeActiveDocument,
+    runAllCellsInActiveNotebook,
     insertCodeCell,
     saveActiveNotebook,
     trustAllNotebooks,
@@ -83,7 +83,7 @@ suite('DataScience - VSCode Notebook - (Saving) (slow)', function () {
             cell4 = vscodeNotebook.activeNotebookEditor?.document.cells![3]!;
         }
         initializeCells();
-        await executeActiveDocument();
+        await runAllCellsInActiveNotebook();
         // Wait till 1 & 2 finish & 3rd cell starts executing.
         await waitForExecutionCompletedSuccessfully(cell1!);
         await waitForExecutionCompletedWithErrors(cell2!);

@@ -19,7 +19,7 @@ import {
     canRunNotebookTests,
     closeNotebooks,
     closeNotebooksAndCleanUpAfterTests,
-    executeCell,
+    runCell,
     waitForExecutionCompletedSuccessfully
 } from './helper';
 import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
@@ -86,7 +86,7 @@ suite('DataScience - VSCode Notebook - IPyWidget test', () => {
         }
 
         // Execute cell. It should load and render the widget
-        await executeCell(cell);
+        await runCell(cell);
 
         // Wait till execution count changes and status is success.
         await waitForExecutionCompletedSuccessfully(cell);
@@ -97,7 +97,7 @@ suite('DataScience - VSCode Notebook - IPyWidget test', () => {
         await openNotebook(api.serviceContainer, testWidgetNb.fsPath);
         let cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
         // Execute cell. It should load and render the widget
-        await executeCell(cell);
+        await runCell(cell);
 
         // Wait till execution count changes and status is success.
         await waitForExecutionCompletedSuccessfully(cell);
@@ -125,7 +125,7 @@ suite('DataScience - VSCode Notebook - IPyWidget test', () => {
         }
 
         // Execute cell. It should load and render the widget
-        await executeCell(cell);
+        await runCell(cell);
 
         // Wait till execution count changes and status is success.
         await waitForExecutionCompletedSuccessfully(cell);
@@ -153,7 +153,7 @@ suite('DataScience - VSCode Notebook - IPyWidget test', () => {
         }
 
         // Execute cell. It should load and render the widget
-        await executeCell(cell);
+        await runCell(cell);
 
         // Wait till execution count changes and status is success.
         await waitForExecutionCompletedSuccessfully(cell);

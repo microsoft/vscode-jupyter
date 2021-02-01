@@ -1,11 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { ICommandManager, IVSCodeNotebook } from '../../../client/common/application/types';
 import { IDisposable } from '../../../client/common/types';
-import { Commands, VSCodeNotebookProvider } from '../../../client/datascience/constants';
+import { Commands } from '../../../client/datascience/constants';
 import { IVariableViewProvider } from '../../../client/datascience/variablesView/types';
 import { IExtensionTestApi } from '../../common';
 import { initialize, IS_REMOTE_NATIVE_TEST, IS_WEBVIEW_BUILD_SKIPPED } from '../../initialize';
@@ -13,15 +12,13 @@ import {
     canRunNotebookTests,
     closeNotebooks,
     closeNotebooksAndCleanUpAfterTests,
-    deleteAllCellsAndWait,
-    executeCell,
+    createEmptyPythonNotebook,
+    runCell,
     insertCodeCell,
     prewarmNotebooks,
     trustAllNotebooks,
-    waitForExecutionCompletedSuccessfully,
-    waitForKernelToGetAutoSelected
+    waitForExecutionCompletedSuccessfully
 } from '../notebook/helper';
-import { INotebookEditorProvider } from '../../../client/datascience/types';
 import { OnMessageListener } from '../vscodeTestHelpers';
 import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { verifyViewVariables } from './variableViewHelpers';
@@ -33,7 +30,6 @@ suite('DataScience - VariableView', () => {
     const disposables: IDisposable[] = [];
     let commandManager: ICommandManager;
     let variableViewProvider: ITestVariableViewProvider;
-    let editorProvider: INotebookEditorProvider;
     let vscodeNotebook: IVSCodeNotebook;
     suiteSetup(async function () {
         this.timeout(120_000);
@@ -56,16 +52,12 @@ suite('DataScience - VariableView', () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         variableViewProvider = (coreVariableViewProvider as any) as ITestVariableViewProvider; // Cast to expose the test interfaces
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
-        editorProvider = api.serviceContainer.get<INotebookEditorProvider>(VSCodeNotebookProvider);
     });
     setup(async function () {
         sinon.restore();
 
         // Create an editor to use for our tests
-        await editorProvider.createNew();
-        await waitForKernelToGetAutoSelected();
-        await deleteAllCellsAndWait();
-        assert.isOk(vscodeNotebook.activeNotebookEditor, 'No active notebook');
+        await createEmptyPythonNotebook(disposables);
     });
     teardown(async function () {
         await closeNotebooks(disposables);
@@ -80,7 +72,7 @@ suite('DataScience - VariableView', () => {
         // Add one simple cell and execute it
         await insertCodeCell('test = "MYTESTVALUE"', { index: 0 });
         const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
-        await executeCell(cell);
+        await runCell(cell);
         await waitForExecutionCompletedSuccessfully(cell);
 
         // Send the command to open the view
@@ -97,7 +89,7 @@ suite('DataScience - VariableView', () => {
         // Send a second cell
         await insertCodeCell('test2 = "MYTESTVALUE2"', { index: 1 });
         const cell2 = vscodeNotebook.activeNotebookEditor?.document.cells![1]!;
-        await executeCell(cell2);
+        await runCell(cell2);
 
         // Wait until our VariablesComplete message to see that we have the new variables and have rendered them
         await onMessageListener.waitForMessage(InteractiveWindowMessages.VariablesComplete);

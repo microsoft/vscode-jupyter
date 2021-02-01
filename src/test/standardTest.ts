@@ -74,7 +74,7 @@ async function createSettings(): Promise<string> {
     const userDataDirectory = await createTempDir();
     process.env.VSC_JUPYTER_VSCODE_SETTINGS_DIR = userDataDirectory;
     const settingsFile = path.join(userDataDirectory, 'User', 'settings.json');
-    const defaultSettings: Record<string, string | boolean> = {
+    const defaultSettings: Record<string, string | boolean | string[]> = {
         'python.insidersChannel': 'off',
         'jupyter.logging.level': 'debug',
         'python.logging.level': 'debug',
@@ -87,7 +87,11 @@ async function createSettings(): Promise<string> {
     if (isRunningSmokeTests) {
         defaultSettings['jupyter.alwaysTrustNotebooks'] = true;
     }
-
+    if (channel !== 'insiders') {
+        // When in Stable, ensure we don't end up using Native Notebooks in CI tests.
+        // I.e. ensure we have predictable state/experiments.
+        defaultSettings['jupyter.experiments.optOutFrom'] = ['NativeNotebookEditor'];
+    }
     fs.ensureDirSync(path.dirname(settingsFile));
     fs.writeFileSync(settingsFile, JSON.stringify(defaultSettings, undefined, 4));
     return userDataDirectory;
