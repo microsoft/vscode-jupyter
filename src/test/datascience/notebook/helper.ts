@@ -454,6 +454,9 @@ export async function waitForExecutionCompletedSuccessfully(cell: NotebookCell, 
     );
     await waitForCellExecutionToComplete(cell);
 }
+/**
+ * When a cell is running (in progress), the start time will be > 0.
+ */
 export async function waitForExecutionInProgress(cell: NotebookCell, timeout: number = defaultTimeout) {
     await waitForCondition(
         async () => {
@@ -470,6 +473,9 @@ export async function waitForExecutionInProgress(cell: NotebookCell, timeout: nu
         `Cell ${cell.index + 1} did not start`
     );
 }
+/**
+ * When a cell is queued for execution (in progress), the start time, last duration & status message will be `empty`.
+ */
 export async function waitForQueuedForExecution(cell: NotebookCell, timeout: number = defaultTimeout) {
     await waitForCondition(
         async () =>
