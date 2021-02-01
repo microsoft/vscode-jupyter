@@ -9,6 +9,7 @@ import * as tmp from 'tmp';
 import { CancellationToken, CancellationTokenSource, Event, EventEmitter } from 'vscode';
 import { IPythonExtensionChecker } from '../../api/types';
 import { createPromiseFromCancellation, wrapCancellationTokens } from '../../common/cancellation';
+import { getErrorMessageFromPythonTraceback } from '../../common/errors/errorUtils';
 import { traceDecorators, traceError, traceInfo, traceWarning } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IProcessServiceFactory, ObservableExecutionResult } from '../../common/process/types';
@@ -90,14 +91,18 @@ export class KernelProcess implements IKernelProcess {
         let exitEventFired = false;
         const cancelWaiting = new CancellationTokenSource();
         const combinedToken = wrapCancellationTokens(cancelWaiting.token, cancelToken);
-
+        let providedExitCode: number | null;
         exeObs.proc!.on('exit', (exitCode) => {
+            exitCode = exitCode || providedExitCode;
             traceInfo('KernelProcess Exit', `Exit - ${exitCode}`, stderrProc);
             if (this.disposed) {
                 return;
             }
             if (!exitEventFired) {
-                this.exitEvent.fire({ exitCode: exitCode || undefined, reason: stderrProc });
+                this.exitEvent.fire({
+                    exitCode: exitCode || undefined,
+                    reason: getErrorMessageFromPythonTraceback(stderrProc) || stderrProc
+                });
                 exitEventFired = true;
             }
             cancelWaiting.cancel();
@@ -130,18 +135,30 @@ export class KernelProcess implements IKernelProcess {
                 }
                 traceError('Kernel died', error, stderr);
                 if (error instanceof PythonKernelDiedError) {
+                    providedExitCode = error.exitCode;
                     if (this.disposed) {
                         traceInfo('KernelProcess Exit', `Exit - ${error.exitCode}, ${error.reason}`, error);
                         return;
                     } else {
                         traceError('KernelProcess Exit', `Exit - ${error.exitCode}, ${error.reason}`, error);
                     }
+                    if (!stderrProc && (error.reason || error.message)) {
+                        // This is used when process exits.
+                        stderrProc = error.reason || error.message;
+                    }
                     if (!exitEventFired) {
-                        this.exitEvent.fire({ exitCode: error.exitCode, reason: error.reason || error.message });
+                        let reason = error.reason || error.message;
+                        this.exitEvent.fire({
+                            exitCode: error.exitCode,
+                            reason: getErrorMessageFromPythonTraceback(reason) || reason
+                        });
                         exitEventFired = true;
                     }
                     cancelWaiting.cancel();
                 }
+            },
+            () => {
+                console.error('Completed');
             }
         );
 
@@ -162,12 +179,11 @@ export class KernelProcess implements IKernelProcess {
 
             if (cancelWaiting.token.isCancellationRequested) {
                 traceError(stderrProc || stderr);
-                throw new Error(
-                    localize.DataScience.kernelDied().format(
-                        Commands.ViewJupyterOutput,
-                        (stderrProc || stderr).substring(0, 100)
-                    )
-                );
+                // If we have the python error message, display that.
+                const errorMessage =
+                    getErrorMessageFromPythonTraceback(stderrProc || stderr) ||
+                    (stderrProc || stderr).substring(0, 100);
+                throw new Error(localize.DataScience.kernelDied().format(Commands.ViewJupyterOutput, errorMessage));
             } else {
                 traceError('Timed out waiting to get a heartbeat from kernel process.');
                 throw new TimedOutError(localize.DataScience.kernelTimeout().format(Commands.ViewJupyterOutput));
