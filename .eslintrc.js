@@ -810,7 +810,6 @@ module.exports = {
         'src/client/common/process/pythonDaemonFactory.ts',
         'src/client/common/process/types.ts',
         'src/client/common/process/logger.ts',
-        'src/client/common/process/baseDaemon.ts',
         'src/client/common/process/constants.ts',
         'src/client/common/process/pythonProcess.ts',
         'src/client/common/process/proc.ts',
