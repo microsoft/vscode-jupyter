@@ -198,7 +198,6 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         // Once ipykernel prompt has been dismissed, execution should stop due to missing dependencies.
         await waitForCellExecutionToComplete(cell);
 
-
         // Execute a cell this time & we should get yet another prompted to install ipykernel.
         previousPromptDisplayCount = prompt.getDisplayCount();
         await runAllCellsInActiveNotebook();
