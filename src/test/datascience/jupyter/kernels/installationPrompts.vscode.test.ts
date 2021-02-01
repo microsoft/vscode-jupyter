@@ -22,7 +22,7 @@ import {
     canRunNotebookTests,
     closeNotebooksAndCleanUpAfterTests,
     createTemporaryNotebook,
-    executeActiveDocument,
+    runAllCellsInActiveNotebook,
     hijackPrompt,
     waitForCellExecutionToComplete,
     waitForExecutionCompletedSuccessfully,
@@ -161,7 +161,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
             }
         });
     });
-    test('Ensure ipykernel install prompt is displayed every time you try to run a cell (VSCode Notebook)xxx', async function () {
+    test('Ensure ipykernel install prompt is displayed every time you try to run a cell (VSCode Notebook)', async function () {
         if (!(await canRunNotebookTests()) || IS_REMOTE_NATIVE_TEST || IS_NON_RAW_NATIVE_TEST) {
             return this.skip();
         }
@@ -180,7 +180,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         assert.equal(cell.outputs.length, 0);
 
         // The prompt should be displayed when we run a cell.
-        await executeActiveDocument();
+        await runAllCellsInActiveNotebook();
         await waitForCondition(async () => prompt.displayed.then(() => true), delayForUITest, 'Prompt not displayed');
 
         // Once ipykernel prompt has been dismissed, execution should stop due to missing dependencies.
@@ -188,7 +188,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
 
         // Execute notebook once again & we should get another prompted to install ipykernel.
         let previousPromptDisplayCount = prompt.getDisplayCount();
-        await executeActiveDocument();
+        await runAllCellsInActiveNotebook();
         await waitForCondition(
             async () => prompt.getDisplayCount() > previousPromptDisplayCount,
             delayForUITest,
@@ -201,7 +201,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
 
         // Execute a cell this time & we should get yet another prompted to install ipykernel.
         previousPromptDisplayCount = prompt.getDisplayCount();
-        await executeActiveDocument();
+        await runAllCellsInActiveNotebook();
         await waitForCondition(
             async () => prompt.getDisplayCount() > previousPromptDisplayCount,
             delayForUITest,

@@ -13,22 +13,20 @@ import { IDisposable, Product } from '../../../client/common/types';
 import { Common } from '../../../client/common/utils/localize';
 import { Commands } from '../../../client/datascience/constants';
 import { INotebookKernelProvider } from '../../../client/datascience/notebook/types';
-import { INotebookEditorProvider } from '../../../client/datascience/types';
 import { IExtensionTestApi } from '../../common';
 import { initialize } from '../../initialize';
 import {
     canRunNotebookTests,
     closeNotebooksAndCleanUpAfterTests,
-    deleteAllCellsAndWait,
-    executeCell,
+    runCell,
     insertCodeCell,
     selectCell,
     startJupyterServer,
     trustAllNotebooks,
     waitForExecutionCompletedSuccessfully,
-    waitForKernelToGetAutoSelected,
     waitForKernelToChange,
-    hijackPrompt
+    hijackPrompt,
+    createEmptyPythonNotebook
 } from './helper';
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 const expectedPromptMessageSuffix = `requires ${ProductNames.get(Product.ipykernel)!} to be installed.`;
@@ -36,7 +34,6 @@ const expectedPromptMessageSuffix = `requires ${ProductNames.get(Product.ipykern
 suite('Notebook Editor tests', () => {
     let api: IExtensionTestApi;
     let vscodeNotebook: IVSCodeNotebook;
-    let editorProvider: INotebookEditorProvider;
     let commandManager: ICommandManager;
     let kernelProvider: INotebookKernelProvider;
     const disposables: IDisposable[] = [];
@@ -48,7 +45,6 @@ suite('Notebook Editor tests', () => {
         }
         await startJupyterServer();
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
-        editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
         commandManager = api.serviceContainer.get<ICommandManager>(ICommandManager);
         kernelProvider = api.serviceContainer.get<INotebookKernelProvider>(INotebookKernelProvider);
 
@@ -60,10 +56,7 @@ suite('Notebook Editor tests', () => {
         traceInfo(`Start Test ${this.currentTest?.title}`);
         await startJupyterServer();
         await trustAllNotebooks();
-        // Open a notebook and use this for all tests in this test suite.
-        await editorProvider.createNew();
-        await waitForKernelToGetAutoSelected();
-        await deleteAllCellsAndWait();
+        await createEmptyPythonNotebook(disposables);
         assert.isOk(vscodeNotebook.activeNotebookEditor, 'No active notebook');
         traceInfo(`Start Test Completed ${this.currentTest?.title}`);
     });
@@ -139,7 +132,7 @@ suite('Notebook Editor tests', () => {
         await insertCodeCell('import sys\nprint(sys.executable)', { index: 0 });
 
         let cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
-        await executeCell(cell);
+        await runCell(cell);
 
         // Wait till execution count changes and status is success.
         await waitForExecutionCompletedSuccessfully(cell);
@@ -166,7 +159,7 @@ suite('Notebook Editor tests', () => {
         }
 
         // Execute cell and verify output
-        await executeCell(cell);
+        await runCell(cell);
         await waitForExecutionCompletedSuccessfully(cell);
         cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
 

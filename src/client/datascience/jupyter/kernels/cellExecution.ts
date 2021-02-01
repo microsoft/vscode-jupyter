@@ -335,6 +335,7 @@ export class CellExecution {
             traceCellMessage(this.cell, 'Update cell state as it was enqueued');
             edit.replaceCellMetadata(this.cell.index, {
                 ...this.cell.metadata,
+                statusMessage: '', // We don't want any previous status anymore.
                 runStartTime: undefined, // We don't want any previous counters anymore.
                 lastRunDuration: undefined,
                 runState: vscodeNotebookEnums.NotebookCellRunState.Running

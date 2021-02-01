@@ -17,14 +17,14 @@ import {
     assertHasTextOutputInVSCode,
     canRunNotebookTests,
     closeNotebooksAndCleanUpAfterTests,
-    executeActiveDocument,
+    runAllCellsInActiveNotebook,
     trustAllNotebooks,
     startJupyterServer,
     waitForExecutionCompletedSuccessfully,
     waitForKernelToGetAutoSelected,
     createTemporaryNotebook,
     saveActiveNotebook,
-    executeCell,
+    runCell,
     deleteAllCellsAndWait,
     insertCodeCell
 } from './helper';
@@ -92,7 +92,7 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
         await waitForKernelToGetAutoSelected(PYTHON_LANGUAGE);
         await deleteAllCellsAndWait();
         await insertCodeCell('print("123412341234")', { index: 0 });
-        await executeActiveDocument();
+        await runAllCellsInActiveNotebook();
 
         const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
         await waitForExecutionCompletedSuccessfully(cell);
@@ -107,10 +107,9 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
         await waitForKernelToGetAutoSelected(PYTHON_LANGUAGE);
         let nbEditor = vscodeNotebook.activeNotebookEditor!;
         assert.isOk(nbEditor, 'No active notebook');
-        // await sleep(60_000);
         // Cell 1 = `a = "Hello World"`
         // Cell 2 = `print(a)`
-        await executeActiveDocument();
+        await runAllCellsInActiveNotebook();
 
         let cell2 = nbEditor.document.cells![1]!;
         await waitForExecutionCompletedSuccessfully(cell2);
@@ -127,7 +126,6 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
         );
 
         await saveActiveNotebook(disposables);
-        // await sleep(60_000);
         await closeActiveWindows();
 
         // Re-open and execute the second cell.
@@ -135,9 +133,7 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
         // Second cell should display the value of existing variable from previous execution.
 
         await openNotebook(api.serviceContainer, ipynbFile.fsPath, { isNotTrusted: true });
-        // await sleep(60_000);
         await waitForKernelToGetAutoSelected(PYTHON_LANGUAGE);
-        // await sleep(60_000);
         nbEditor = vscodeNotebook.activeNotebookEditor!;
         assert.isOk(nbEditor, 'No active notebook');
 
@@ -152,7 +148,7 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
 
         // Execute second cell
         cell2 = nbEditor.document.cells![1]!;
-        await executeCell(cell2);
+        await runCell(cell2);
         await waitForExecutionCompletedSuccessfully(cell2);
         assertHasTextOutputInVSCode(cell2, 'Hello World', 0);
     });
