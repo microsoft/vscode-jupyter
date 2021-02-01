@@ -36,6 +36,7 @@ import 'slickgrid/slick.grid.css';
 // Make sure our css comes after the slick grid css. We override some of its styles.
 // eslint-disable-next-line import/order
 import './reactSlickGrid.css';
+import { generateDisplayValue } from './cellFormatter';
 /*
 WARNING: Do not change the order of these imports.
 Slick grid MUST be imported after we load jQuery and other stuff from `./globalJQueryImports`
@@ -68,11 +69,14 @@ interface ISlickGridState {
 
 class ColumnFilter {
     private matchFunc: (v: any) => boolean;
-    private lessThanRegEx = /^\s*<\s*((?<Number>\d+.*)|(?<NaN>nan)|(?<Inf>inf)|(?<NegInf>-inf))/;
-    private lessThanEqualRegEx = /^\s*<=\s*((?<Number>\d+.*)|(?<NaN>nan)|(?<Inf>inf)|(?<NegInf>-inf)).*/;
-    private greaterThanRegEx = /^\s*>\s*((?<Number>\d+.*)|(?<NaN>nan)|(?<Inf>inf)|(?<NegInf>-inf)).*/;
-    private greaterThanEqualRegEx = /^\s*>=\s*((?<Number>\d+.*)|(?<NaN>nan)|(?<Inf>inf)|(?<NegInf>-inf)).*/;
-    private equalThanRegEx = /^\s*=\s*((?<Number>\d+.*)|(?<NaN>nan)|(?<Inf>inf)|(?<NegInf>-inf)).*/;
+    private nanRegEx = /^\s*nan.*/i;
+    private infRegEx = /^\s*inf.*/i;
+    private negInfRegEx = /^\s*-inf.*/i;
+    private lessThanRegEx = /^\s*<\s*((?<Number>\d+.*)|(?<NaN>nan)|(?<Inf>inf)|(?<NegInf>-inf))/i;
+    private lessThanEqualRegEx = /^\s*<=\s*((?<Number>\d+.*)|(?<NaN>nan)|(?<Inf>inf)|(?<NegInf>-inf)).*/i;
+    private greaterThanRegEx = /^\s*>\s*((?<Number>\d+.*)|(?<NaN>nan)|(?<Inf>inf)|(?<NegInf>-inf)).*/i;
+    private greaterThanEqualRegEx = /^\s*>=\s*((?<Number>\d+.*)|(?<NaN>nan)|(?<Inf>inf)|(?<NegInf>-inf)).*/i;
+    private equalThanRegEx = /^\s*=\s*((?<Number>\d+.*)|(?<NaN>nan)|(?<Inf>inf)|(?<NegInf>-inf)).*/i;
 
     constructor(text: string, column: Slick.Column<Slick.SlickData>) {
         if (text && text.length > 0) {
@@ -113,11 +117,11 @@ class ColumnFilter {
     }
 
     private generateNumericOperation(text: string): (v: any) => boolean {
-        if (text === 'nan') {
+        if (this.nanRegEx.test(text)) {
             return (v: any) => v !== undefined && Number.isNaN(v);
-        } else if (text === 'inf') {
+        } else if (this.infRegEx.test(text)) {
             return (v: any) => v !== undefined && v === Infinity;
-        } else if (text === '-inf') {
+        } else if (this.negInfRegEx.test(text)) {
             return (v: any) => v !== undefined && v === -Infinity;
         } else if (this.lessThanRegEx.test(text)) {
             const n1 = this.extractDigits(text, this.lessThanRegEx);
@@ -582,9 +586,7 @@ function readonlyCellEditor(this: any, args: any) {
     };
 
     this.loadValue = function loadValue(item: any) {
-        // In the original SlickGrid TextEditor this is || instead of ??
-        // which causes problems when the value in the item is the number 0
-        defaultValue = item[args.column.field] ?? '';
+        defaultValue = generateDisplayValue(item[args.column.field]);
         $input.val(defaultValue);
         $input[0].defaultValue = defaultValue;
         $input.select();

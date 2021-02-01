@@ -1,4 +1,5 @@
-# To run this file either conda or pip install the following: jupyter, numpy, matplotlib, pandas, tqdm, bokeh, vega_datasets, altair, vega, plotly
+# To run this file either conda or pip install the following: jupyter, torch, numpy, matplotlib, pandas, tqdm, bokeh, vega_datasets, altair, vega, plotly
+# When installing torch please visit https://pytorch.org to identify the install instructions for your OS
 
 # %% Basic Imports
 import numpy as np
