@@ -758,7 +758,6 @@ jobs:
           VSC_FORCE_REAL_JUPYTER: 1
           VSC_JUPYTER_FORCE_LOGGING: 1
           VSC_PYTHON_FORCE_LOGGING: 1
-          VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
           VSC_JUPYTER_WEBVIEW_TEST_MIDDLEWARE: 'true'
           VSC_JUPYTER_REMOTE_NATIVE_TEST: 'false'
           VSC_JUPYTER_NON_RAW_NATIVE_TEST: 'false' 
@@ -773,7 +772,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           report_paths: ${{ env.TEST_RESULTS_GLOB }}
           check_name: Notebook Test Report ${{matrix.test-suite}} ${{matrix.os}}
-        if: steps.test_notebook_vscode.outcome == 'failure' && failure()
+        if: steps.test_notebook_webview_vscode.outcome == 'failure' && failure()
 
 
       # Upload unit test coverage reports for later use in the "reports" job.
