@@ -8,7 +8,7 @@ import { IDisposable } from '../../../client/common/types';
 import { Commands, VSCodeNotebookProvider } from '../../../client/datascience/constants';
 import { IVariableViewProvider } from '../../../client/datascience/variablesView/types';
 import { IExtensionTestApi } from '../../common';
-import { initialize, IS_REMOTE_NATIVE_TEST } from '../../initialize';
+import { initialize, IS_REMOTE_NATIVE_TEST, IS_WEBVIEW_BUILD_SKIPPED } from '../../initialize';
 import {
     canRunNotebookTests,
     closeNotebooks,
@@ -38,6 +38,11 @@ suite('DataScience - VariableView', () => {
     suiteSetup(async function () {
         this.timeout(120_000);
         api = await initialize();
+
+        // We need to have webviews built to run this, so skip if we don't have them
+        if (IS_WEBVIEW_BUILD_SKIPPED) {
+            console.log('Variable view tests require webview build to be enabled');
+        }
 
         // Don't run if we can't use the native notebook interface
         if (IS_REMOTE_NATIVE_TEST || !(await canRunNotebookTests())) {
@@ -71,8 +76,7 @@ suite('DataScience - VariableView', () => {
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
 
     // Test showing the basic variable view with a value or two
-    test('Can show VariableView', async function () {
-        this.skip(); // Re-enable in CI when #4412 is fixed
+    test('Can show VariableView (webview-test)', async function () {
         // Add one simple cell and execute it
         await insertCodeCell('test = "MYTESTVALUE"', { index: 0 });
         const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
