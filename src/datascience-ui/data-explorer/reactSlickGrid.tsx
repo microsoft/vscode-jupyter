@@ -114,7 +114,7 @@ class ColumnFilter {
 
     private generateNumericOperation(text: string): (v: any) => boolean {
         if (text === 'nan') {
-            return (v: any) => v !== undefined && isNaN(v);
+            return (v: any) => v !== undefined && Number.isNaN(v);
         } else if (text === 'inf') {
             return (v: any) => v !== undefined && v === Infinity;
         } else if (text === '-inf') {
@@ -124,16 +124,16 @@ class ColumnFilter {
             return (v: any) => v !== undefined && v < n1;
         } else if (this.lessThanEqualRegEx.test(text)) {
             const n2 = this.extractDigits(text, this.lessThanEqualRegEx);
-            return (v: any) => v !== undefined && (v <= n2 || (isNaN(v) && isNaN(n2)));
+            return (v: any) => v !== undefined && (v <= n2 || (Number.isNaN(v) && Number.isNaN(n2)));
         } else if (this.greaterThanRegEx.test(text)) {
             const n3 = this.extractDigits(text, this.greaterThanRegEx);
             return (v: any) => v !== undefined && v > n3;
         } else if (this.greaterThanEqualRegEx.test(text)) {
             const n4 = this.extractDigits(text, this.greaterThanEqualRegEx);
-            return (v: any) => v !== undefined && (v >= n4 || (isNaN(v) && isNaN(n4)));
+            return (v: any) => v !== undefined && (v >= n4 || (Number.isNaN(v) && Number.isNaN(n4)));
         } else if (this.equalThanRegEx.test(text)) {
             const n5 = this.extractDigits(text, this.equalThanRegEx);
-            return (v: any) => v !== undefined && (v === n5 || (isNaN(v) && isNaN(n5)));
+            return (v: any) => v !== undefined && (v === n5 || (Number.isNaN(v) && Number.isNaN(n5)));
         } else {
             const n6 = parseFloat(text);
             return (v: any) => v !== undefined && v === n6;

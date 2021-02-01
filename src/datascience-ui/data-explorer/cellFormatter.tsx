@@ -54,7 +54,7 @@ class CellFormatter extends React.Component<ICellFormatterProps> {
 
     private renderNumber(value: number) {
         let val = value.toString();
-        if (isNaN(value)) {
+        if (Number.isNaN(value)) {
             val = 'nan';
         } else if (value === Infinity) {
             val = 'inf';
