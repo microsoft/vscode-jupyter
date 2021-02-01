@@ -5,14 +5,13 @@ import { assert } from 'chai';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as sinon from 'sinon';
-import { commands, Uri } from 'vscode';
+import { commands } from 'vscode';
 import { CellDisplayOutput } from '../../../../types/vscode-proposed';
 import { IPythonExtensionChecker } from '../../../client/api/types';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { BufferDecoder } from '../../../client/common/process/decoder';
 import { ProcessService } from '../../../client/common/process/proc';
 import { IDisposable } from '../../../client/common/types';
-import { INotebookEditorProvider } from '../../../client/datascience/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { getOSType, IExtensionTestApi, OSType, waitForCondition } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_NON_RAW_NATIVE_TEST, IS_REMOTE_NATIVE_TEST } from '../../constants';
@@ -22,9 +21,9 @@ import {
     assertHasTextOutputInVSCode,
     canRunNotebookTests,
     closeNotebooksAndCleanUpAfterTests,
+    createEmptyPythonNotebook,
     createTemporaryNotebook,
-    deleteAllCellsAndWait,
-    executeActiveDocument,
+    runAllCellsInActiveNotebook,
     insertCodeCell,
     startJupyterServer,
     trustAllNotebooks,
@@ -40,10 +39,6 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         EXTENSION_ROOT_DIR_FOR_TESTS,
         'src/test/datascience/notebook/nbWithKernel.ipynb'
     );
-    const templateEmptyPython = path.join(
-        EXTENSION_ROOT_DIR_FOR_TESTS,
-        'src/test/datascience/notebook/emptyPython.ipynb'
-    );
     const executable = getOSType() === OSType.Windows ? 'Scripts/python.exe' : 'bin/python'; // If running locally on Windows box.
     const venvNoKernelPython = path.join(
         EXTENSION_ROOT_DIR_FOR_TESTS,
@@ -54,9 +49,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
     const venvNoRegPath = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src/test/datascience/.venvnoreg', executable);
 
     let nbFile1: string;
-    let emptyPythonNb: string;
     let api: IExtensionTestApi;
-    let editorProvider: INotebookEditorProvider;
     let activeInterpreterPath: string;
     let venvNoKernelPythonPath: string;
     let venvKernelPythonPath: string;
@@ -85,7 +78,6 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         }
 
         const pythonChecker = api.serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker);
-        editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
 
         if (!pythonChecker.isPythonExtensionInstalled) {
@@ -117,7 +109,6 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         // Don't use same file (due to dirty handling, we might save in dirty.)
         // Coz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
         nbFile1 = await createTemporaryNotebook(templateIPynbFile, disposables);
-        emptyPythonNb = await createTemporaryNotebook(templateEmptyPython, disposables);
         // Ensure IPykernel is in all environments.
         const proc = new ProcessService(new BufferDecoder());
         await Promise.all([
@@ -139,13 +130,11 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         if (IS_NON_RAW_NATIVE_TEST || IS_REMOTE_NATIVE_TEST) {
             return this.skip();
         }
-        await editorProvider.open(Uri.file(emptyPythonNb));
-        await waitForKernelToGetAutoSelected(undefined);
-        await deleteAllCellsAndWait();
+        await createEmptyPythonNotebook(disposables);
         await insertCodeCell('import sys\nsys.executable', { index: 0 });
 
         // Run all cells
-        await executeActiveDocument();
+        await runAllCellsInActiveNotebook();
         const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
         await waitForExecutionCompletedSuccessfully(cell);
 
@@ -157,7 +146,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         await waitForKernelToGetAutoSelected(undefined);
 
         // Run all cells
-        await executeActiveDocument();
+        await runAllCellsInActiveNotebook();
         const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
         await waitForExecutionCompletedSuccessfully(cell);
 
@@ -165,14 +154,12 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         assertHasTextOutputInVSCode(cell, venvNoKernelPythonPath, 0, false);
     });
     test('Ensure we select a Python kernel for a nb with python language information', async function () {
-        await editorProvider.open(Uri.file(emptyPythonNb));
-        await waitForKernelToGetAutoSelected(undefined);
+        await createEmptyPythonNotebook(disposables);
 
         // Run all cells
-        await deleteAllCellsAndWait();
         await insertCodeCell('import sys\nsys.executable', { index: 0 });
         await insertCodeCell('print("Hello World")', { index: 1 });
-        await executeActiveDocument();
+        await runAllCellsInActiveNotebook();
 
         const cell1 = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
         const cell2 = vscodeNotebook.activeNotebookEditor?.document.cells![1]!;
@@ -186,7 +173,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         await waitForKernelToGetAutoSelected(undefined);
 
         // Run all cells
-        await executeActiveDocument();
+        await runAllCellsInActiveNotebook();
         const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
         await waitForExecutionCompletedSuccessfully(cell);
 
@@ -199,7 +186,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         // Clear the cells & execute again
         await commands.executeCommand('notebook.clearAllCellsOutputs');
         await waitForCondition(async () => cell.outputs.length === 0, 5_000, 'Cell did not get cleared');
-        await executeActiveDocument();
+        await runAllCellsInActiveNotebook();
         await waitForExecutionCompletedSuccessfully(cell);
 
         // Confirm the executable printed as a result of code in cell `import sys;sys.executable`
@@ -210,13 +197,11 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         if (IS_REMOTE_NATIVE_TEST || IS_NON_RAW_NATIVE_TEST) {
             return this.skip();
         }
-        await editorProvider.open(Uri.file(emptyPythonNb));
-        await waitForKernelToGetAutoSelected(undefined);
-        await deleteAllCellsAndWait();
+        await createEmptyPythonNotebook(disposables);
         await insertCodeCell('import sys\nsys.executable', { index: 0 });
 
         // Run all cells
-        await executeActiveDocument();
+        await runAllCellsInActiveNotebook();
         const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
         await waitForExecutionCompletedSuccessfully(cell);
 
@@ -231,7 +216,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         // Clear the cells & execute again
         await commands.executeCommand('notebook.clearAllCellsOutputs');
         await waitForCondition(async () => cell.outputs.length === 0, 5_000, 'Cell did not get cleared');
-        await executeActiveDocument();
+        await runAllCellsInActiveNotebook();
         await waitForExecutionCompletedSuccessfully(cell);
 
         // Confirm the executable printed as a result of code in cell `import sys;sys.executable`
@@ -242,13 +227,11 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         if (IS_NON_RAW_NATIVE_TEST || IS_REMOTE_NATIVE_TEST) {
             return this.skip();
         }
-        await editorProvider.open(Uri.file(emptyPythonNb));
-        await waitForKernelToGetAutoSelected(undefined);
-        await deleteAllCellsAndWait();
+        await createEmptyPythonNotebook(disposables);
         await insertCodeCell('import sys\nsys.executable', { index: 0 });
 
         // Run all cells
-        await executeActiveDocument();
+        await runAllCellsInActiveNotebook();
 
         const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
         await waitForExecutionCompletedSuccessfully(cell);
@@ -264,7 +247,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         // Clear the cells & execute again
         await commands.executeCommand('notebook.clearAllCellsOutputs');
         await waitForCondition(async () => cell.outputs.length === 0, 5_000, 'Cell did not get cleared');
-        await executeActiveDocument();
+        await runAllCellsInActiveNotebook();
         await waitForExecutionCompletedSuccessfully(cell);
 
         // Confirm the executable printed as a result of code in cell `import sys;sys.executable`
