@@ -730,7 +730,6 @@ jobs:
         uses: GabrielBB/xvfb-action@v1.4
         with:
           run: ${{ env.xvfbCommand }} npm run testNativeNotebooksWithoutPythonInVSCode
-          run: npm run 
         env:
           VSC_FORCE_REAL_JUPYTER: 1
           VSC_JUPYTER_FORCE_LOGGING: 1
