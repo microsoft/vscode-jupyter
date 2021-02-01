@@ -336,12 +336,12 @@ suite('DataScience DataViewer tests', () => {
             '> 1': [2, 2, 3, 3, 4, 'inf'],
             '0': [0, 0],
             // Search for inf, -inf, nan
-            'inf': [4, 'inf'],
-            'Inf': [4, 'inf'],
+            inf: [4, 'inf'],
+            Inf: [4, 'inf'],
             '-inf': [5, '-inf'],
             '-INF': [5, '-inf'],
-            'nan': [6, 'nan'],
-            'NaN': [6, 'nan'],
+            nan: [6, 'nan'],
+            NaN: [6, 'nan'],
             // inf comparison
             '> inf': [],
             '>= inf': [4, 'inf'],
