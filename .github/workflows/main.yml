@@ -636,7 +636,7 @@ jobs:
 
         # Check to see if we should build webviews or not
       - name: Check if webviews are needed
-        if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebookAndWebview'
+        if: matrix.test-suite != 'integration' && matrix.test-suite != 'notebookAndWebview'
         run: echo "VSC_JUPYTER_SKIP_WEBVIEW_BUILD=true" >> $GITHUB_ENV
 
         # This step is slow.

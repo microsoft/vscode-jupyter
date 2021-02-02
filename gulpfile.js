@@ -260,7 +260,7 @@ if (isCI && process.env.VSC_JUPYTER_SKIP_WEBVIEW_BUILD === 'true') {
         gulp.parallel('compile', 'includeBCryptGenRandomExe', 'downloadRendererExtension')
     );
 } else {
-    console.log(`IANHU Skip Webview: ${process.env.VSC_JUPYTER_SKIP_WEBVIEW_BUILD}`);
+    console.log(`IANHU Build Webview: ${process.env.VSC_JUPYTER_SKIP_WEBVIEW_BUILD}`);
     gulp.task(
         'prePublishNonBundle',
         gulp.parallel(
