@@ -26,6 +26,8 @@ import { ExperimentationTelemetry } from './telemetry';
 // This is a hacky way to determine what experiments have been loaded by the Experiments service.
 // There's no public API yet, hence we access the global storage that is updated by the experiments package.
 const EXP_MEMENTO_KEY = 'VSCode.ABExp.FeatureData';
+export const CacheKeyForNewUserInNativeNotebookExperiment = 'IS_IN_NATIVE_NOTEBOOK_NEW_USER_EXP';
+export const CacheKeyForNewUserCanBeInNativeNotebookExperiment = 'USER_CAN_BE_IN_NATIVE_NOTEBOOK_EXP';
 
 @injectable()
 export class ExperimentService implements IExperimentService {
@@ -113,11 +115,17 @@ export class ExperimentService implements IExperimentService {
             }
 
             default:
-                if (
-                    experiment === ExperimentGroups.NativeNotebook &&
-                    (await this.isNewUserInNativeNotebookExperiment())
-                ) {
-                    return true;
+                if (experiment === ExperimentGroups.NativeNotebook) {
+                    if (await this.isNewUserInNativeNotebookExperiment()) {
+                        // This is a new user who belongs to the Native Notebook New User experiment.
+                        return true;
+                    }
+                    if (this.isNewUserExcludedFromNativeNotebookExperiment()) {
+                        // This is a new user who was excluded from the Native Notebook New User experiment.
+                        // They cannot be added to Native Notebook experiment (as thats for existing users).
+                        // At least not for n days (where n is considered as them being not new anymore).
+                        return false;
+                    }
                 }
                 return this.experimentationService.isCachedFlightEnabled(experiment);
         }
@@ -151,6 +159,17 @@ export class ExperimentService implements IExperimentService {
         });
     }
 
+    private async isNewUserExcludedFromNativeNotebookExperiment() {
+        // Only new users from stable can be in experiment.
+        if (this.appEnvironment.channel === 'insiders') {
+            return false;
+        }
+        if (!this.globalState.get(CacheKeyForNewUserCanBeInNativeNotebookExperiment, true)) {
+            // This is a new user who was excluded from the native notebook New User experiment.
+            return true;
+        }
+        return false;
+    }
     private async isNewUserInNativeNotebookExperiment() {
         // Only new users from stable can be in experiment.
         if (this.appEnvironment.channel === 'insiders') {
@@ -160,15 +179,15 @@ export class ExperimentService implements IExperimentService {
             return false;
         }
         // If this user was already set to use native notebook, then keep using native notebooks.
-        if (this.globalState.get('IS_IN_NATIVE_NOTEBOOK_NEW_USER_EXP', false)) {
+        if (this.globalState.get(CacheKeyForNewUserInNativeNotebookExperiment, false)) {
             return true;
         }
         // This can be set to `false` if native notebook experiment is disabled for new users.
-        if (!this.globalState.get('USER_CAN_BE_IN_NATIVE_NOTEBOOK_EXP', true)) {
+        if (!this.globalState.get(CacheKeyForNewUserCanBeInNativeNotebookExperiment, true)) {
             return false;
         }
         // So that even tomorrow they are treated as belonging to native notebooks.
-        await this.globalState.update('IS_IN_NATIVE_NOTEBOOK_NEW_USER_EXP', true);
+        await this.globalState.update(CacheKeyForNewUserInNativeNotebookExperiment, true);
         // All new users will be in native notebook experiment, unless `USER_CAN_BE_IN_NATIVE_NOTEBOOK_EXP` is set to false.
         // This is set elsewhere based on some other criteria.
         return true;

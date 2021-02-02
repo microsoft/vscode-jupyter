@@ -8,6 +8,10 @@ import { traceError, traceWarning } from '../logger';
 import { GLOBAL_MEMENTO, IHttpClient, IMemento } from '../types';
 import { sleep } from '../utils/async';
 import { Experiments } from './groups';
+import {
+    CacheKeyForNewUserCanBeInNativeNotebookExperiment,
+    CacheKeyForNewUserInNativeNotebookExperiment
+} from './service';
 
 export const configUri = 'https://raw.githubusercontent.com/microsoft/vscode-jupyter/master/experiments.json';
 export class NewUserNativeNotebookService {
@@ -29,8 +33,8 @@ export class NewUserNativeNotebookService {
         // If experiment was already disabled for this user
         // Or if user is already in the experiment, then no need to check on the server.
         if (
-            !this.globalState.get<boolean>('USER_CAN_BE_IN_NATIVE_NOTEBOOK_EXP', true) ||
-            this.globalState.get('IS_IN_NATIVE_NOTEBOOK_NEW_USER_EXP', false)
+            !this.globalState.get<boolean>(CacheKeyForNewUserCanBeInNativeNotebookExperiment, true) ||
+            this.globalState.get(CacheKeyForNewUserInNativeNotebookExperiment, false)
         ) {
             return;
         }
@@ -44,7 +48,7 @@ export class NewUserNativeNotebookService {
             })
         ]);
         if (!enabled) {
-            await this.globalState.update('USER_CAN_BE_IN_NATIVE_NOTEBOOK_EXP', false);
+            await this.globalState.update(CacheKeyForNewUserCanBeInNativeNotebookExperiment, false);
         }
     }
     private async isNewUserExperimentEnabledOnServer() {
