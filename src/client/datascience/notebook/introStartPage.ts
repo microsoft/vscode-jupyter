@@ -14,11 +14,12 @@ import { CommandSource } from '../../testing/common/constants';
 import { Commands } from '../constants';
 import { ITrustService } from '../types';
 import { swallowExceptions } from '../../common/utils/decorators';
+import { InsidersNotebookSurveyStateKeys } from '../insidersNativeNotebookSurveyBanner';
 
 const IntroduceNativeNotebookDisplayed = 'JVSC_INTRO_NATIVE_NB_DISPLAYED';
 
 /**
- * Display a notebook introducing Native Notebooks to those users in the stable Notebook experiment.
+ * Display a notebook introducing Native Notebooks to those users in the stable Notebook experiment & have previously run a notebook.
  */
 export class IntroduceNativeNotebookStartPage implements IExtensionSingleActivationService {
     private readonly introNotebook: Uri;
@@ -40,16 +41,28 @@ export class IntroduceNativeNotebookStartPage implements IExtensionSingleActivat
         ) {
             return;
         }
+
+        // Only display to users who have run a notebook at least once before.
+        if (this.memento.get<number>(InsidersNotebookSurveyStateKeys.ExecutionCount, 0) === 0) {
+            this.doNotShowStartPageAgain().then(noop, noop);
+            return;
+        }
         this.trustAndOpenIntroNotebook().catch(noop);
+    }
+    private async doNotShowStartPageAgain() {
+        await this.memento.update(IntroduceNativeNotebookDisplayed, true);
     }
     @swallowExceptions('Open Intro Native Notebook')
     private async trustAndOpenIntroNotebook() {
         // Ensure we display once & it is trusted.
-        await this.memento.update(IntroduceNativeNotebookDisplayed, true);
+        await this.doNotShowStartPageAgain();
         const contents = await fs.readFile(this.introNotebook.fsPath, 'utf8');
         await this.trustService.trustNotebook(this.introNotebook, contents);
-        this.commandManager
-            .executeCommand(Commands.OpenNotebook, this.introNotebook, undefined, CommandSource.auto)
-            .then(noop, noop);
+        await this.commandManager.executeCommand(
+            Commands.OpenNotebook,
+            this.introNotebook,
+            undefined,
+            CommandSource.auto
+        );
     }
 }
