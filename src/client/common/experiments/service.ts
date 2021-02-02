@@ -183,8 +183,8 @@ export class ExperimentService implements IExperimentService {
             return 'optOut';
         }
 
-        // In stable users cannot open into `NativeNotebook`.
-        // (unless we have `__NativeNotebook__` in optIn) thats just a way for testing internally.
+        // In stable users cannot manually opt into `NativeNotebook`.
+        // (unless we have `__NativeNotebook__` in optIn, thats just a way for testing internally).
         if (this.appEnvironment.channel === 'stable' && experiment === ExperimentGroups.NativeNotebook) {
             return;
         }
