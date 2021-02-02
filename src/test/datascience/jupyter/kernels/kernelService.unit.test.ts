@@ -195,6 +195,7 @@ suite('DataScience - KernelService', () => {
         test('Fail if installed kernel is not an instance of JupyterKernelSpec', async () => {
             when(execService.execModule('ipykernel', anything(), anything())).thenResolve({ stdout: '' });
             when(dependencyService.areDependenciesInstalled(interpreter, anything())).thenResolve(true);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             when(kernelFinder.findKernelSpec(anything(), anything(), anything())).thenResolve({} as any);
 
             const promise = kernelService.registerKernel(undefined, interpreter);
