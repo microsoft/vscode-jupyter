@@ -686,7 +686,6 @@ module.exports = {
         'src/client/common/experiments/manager.ts',
         'src/client/common/experiments/groups.ts',
         'src/client/common/experiments/telemetry.ts',
-        'src/client/common/experiments/service.ts',
         'src/client/common/refBool.ts',
         'src/client/common/open.ts',
         'src/client/common/platform/serviceRegistry.ts',
