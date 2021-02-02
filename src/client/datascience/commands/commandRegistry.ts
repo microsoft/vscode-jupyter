@@ -61,7 +61,7 @@ export class CommandRegistry implements IDisposable {
         private readonly jupyterVariableDataProviderFactory: IJupyterVariableDataProviderFactory,
         @inject(IDataViewerFactory) private readonly dataViewerFactory: IDataViewerFactory,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
-        @inject(IJupyterVariables) @named(Identifiers.DEBUGGER_VARIABLES) private variableProvider: IJupyterVariables,
+        @inject(IJupyterVariables) @named(Identifiers.DEBUGGER_VARIABLES) private variableProvider: IJupyterVariables
     ) {
         this.disposables.push(this.serverSelectedCommand);
         this.disposables.push(this.notebookCommands);
@@ -323,7 +323,7 @@ export class CommandRegistry implements IDisposable {
     private async debugStepOver(): Promise<void> {
         // Make sure that we are in debug mode
         if (this.debugService.activeDebugSession) {
-            this.commandManager.executeCommand('workbench.action.debug.stepOver');
+            void this.commandManager.executeCommand('workbench.action.debug.stepOver');
         }
     }
 
@@ -331,7 +331,7 @@ export class CommandRegistry implements IDisposable {
     private async debugStop(): Promise<void> {
         // Make sure that we are in debug mode
         if (this.debugService.activeDebugSession) {
-            this.commandManager.executeCommand('workbench.action.debug.stop');
+            void this.commandManager.executeCommand('workbench.action.debug.stop');
         }
     }
 
@@ -339,7 +339,7 @@ export class CommandRegistry implements IDisposable {
     private async debugContinue(): Promise<void> {
         // Make sure that we are in debug mode
         if (this.debugService.activeDebugSession) {
-            this.commandManager.executeCommand('workbench.action.debug.continue');
+            void this.commandManager.executeCommand('workbench.action.debug.continue');
         }
     }
 
@@ -349,47 +349,47 @@ export class CommandRegistry implements IDisposable {
     }
 
     private async runCurrentCellAndAddBelow(): Promise<void> {
-        this.getCurrentCodeWatcher()?.runCurrentCellAndAddBelow();
+        void this.getCurrentCodeWatcher()?.runCurrentCellAndAddBelow();
     }
 
     private async insertCellBelowPosition(): Promise<void> {
-        this.getCurrentCodeWatcher()?.insertCellBelowPosition();
+        void this.getCurrentCodeWatcher()?.insertCellBelowPosition();
     }
 
     private async insertCellBelow(): Promise<void> {
-        this.getCurrentCodeWatcher()?.insertCellBelow();
+        void this.getCurrentCodeWatcher()?.insertCellBelow();
     }
 
     private async insertCellAbove(): Promise<void> {
-        this.getCurrentCodeWatcher()?.insertCellAbove();
+        void this.getCurrentCodeWatcher()?.insertCellAbove();
     }
 
     private async deleteCells(): Promise<void> {
-        this.getCurrentCodeWatcher()?.deleteCells();
+        void this.getCurrentCodeWatcher()?.deleteCells();
     }
 
     private async selectCell(): Promise<void> {
-        this.getCurrentCodeWatcher()?.selectCell();
+        void this.getCurrentCodeWatcher()?.selectCell();
     }
 
     private async selectCellContents(): Promise<void> {
-        this.getCurrentCodeWatcher()?.selectCellContents();
+        void this.getCurrentCodeWatcher()?.selectCellContents();
     }
 
     private async extendSelectionByCellAbove(): Promise<void> {
-        this.getCurrentCodeWatcher()?.extendSelectionByCellAbove();
+        void this.getCurrentCodeWatcher()?.extendSelectionByCellAbove();
     }
 
     private async extendSelectionByCellBelow(): Promise<void> {
-        this.getCurrentCodeWatcher()?.extendSelectionByCellBelow();
+        void this.getCurrentCodeWatcher()?.extendSelectionByCellBelow();
     }
 
     private async moveCellsUp(): Promise<void> {
-        this.getCurrentCodeWatcher()?.moveCellsUp();
+        void this.getCurrentCodeWatcher()?.moveCellsUp();
     }
 
     private async moveCellsDown(): Promise<void> {
-        this.getCurrentCodeWatcher()?.moveCellsDown();
+        void this.getCurrentCodeWatcher()?.moveCellsDown();
     }
 
     private async changeCellToMarkdown(): Promise<void> {
@@ -486,7 +486,7 @@ export class CommandRegistry implements IDisposable {
     }
 
     private openPythonExtensionPage() {
-        env.openExternal(Uri.parse(`https://marketplace.visualstudio.com/items?itemName=ms-toolsai.jupyter`));
+        void env.openExternal(Uri.parse(`https://marketplace.visualstudio.com/items?itemName=ms-toolsai.jupyter`));
     }
 
     // Open up our variable viewer using the command that VS Code provides for this
@@ -497,7 +497,9 @@ export class CommandRegistry implements IDisposable {
     }
     private async onVariablePanelShowDataViewerRequest(request: IShowDataViewerFromVariablePanel) {
         sendTelemetryEvent(EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_REQUEST);
-        const jupyterVariable = await this.variableProvider.getMatchingVariable((request.variable as DebugProtocol.Variable).name);
+        const jupyterVariable = await this.variableProvider.getMatchingVariable(
+            (request.variable as DebugProtocol.Variable).name
+        );
         if (this.debugService.activeDebugSession && jupyterVariable) {
             try {
                 const jupyterVariableDataProvider = await this.jupyterVariableDataProviderFactory.create(
@@ -513,7 +515,7 @@ export class CommandRegistry implements IDisposable {
             } catch (e) {
                 sendTelemetryEvent(EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_ERROR, undefined, e);
                 traceError(e);
-                this.appShell.showErrorMessage(e.toString());
+                void this.appShell.showErrorMessage(e.toString());
             }
         }
     }

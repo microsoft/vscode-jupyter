@@ -513,7 +513,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
     private resetGrid = (_e: Slick.EventData) => {
         this.createSlickGrid();
         this.autoResizeColumns();
-    }
+    };
     private updateColumns = (_e: Slick.EventData, newColumns: Slick.Column<Slick.SlickData>[]) => {
         this.state.grid?.setColumns(newColumns);
         this.state.grid?.render(); // We might be able to skip this rerender?

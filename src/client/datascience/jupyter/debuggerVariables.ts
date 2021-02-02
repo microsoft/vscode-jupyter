@@ -33,7 +33,8 @@ const SliceableTypes: Set<string> = new Set<string>(['DataFrame', 'ndarray', 'Te
 const KnownExcludedVariables = new Set<string>(['In', 'Out', 'exit', 'quit']);
 
 @injectable()
-export class DebuggerVariables extends DebugLocationTracker
+export class DebuggerVariables
+    extends DebugLocationTracker
     implements IConditionalJupyterVariables, DebugAdapterTracker {
     private refreshEventEmitter = new EventEmitter<void>();
     private lastKnownVariables: IJupyterVariable[] = [];
@@ -93,11 +94,16 @@ export class DebuggerVariables extends DebugLocationTracker
         return result;
     }
 
-    public async getMatchingVariable(name: string, notebook?: INotebook, _cancelToken?: CancellationToken | undefined, needsFullVariable?: boolean): Promise<IJupyterVariable | undefined> {
+    public async getMatchingVariable(
+        name: string,
+        notebook?: INotebook,
+        _cancelToken?: CancellationToken | undefined,
+        needsFullVariable?: boolean
+    ): Promise<IJupyterVariable | undefined> {
         let result;
         if (this.active) {
             let pos = -1;
-            result = this.lastKnownVariables.find((v, idx) => { 
+            result = this.lastKnownVariables.find((v, idx) => {
                 if (v.name === name) {
                     pos = idx;
                     return true;
@@ -115,7 +121,11 @@ export class DebuggerVariables extends DebugLocationTracker
         return result;
     }
 
-    public async getDataFrameInfo(targetVariable: IJupyterVariable, notebook?: INotebook, sliceExpression?: string): Promise<IJupyterVariable> {
+    public async getDataFrameInfo(
+        targetVariable: IJupyterVariable,
+        notebook?: INotebook,
+        sliceExpression?: string
+    ): Promise<IJupyterVariable> {
         if (!this.active) {
             // No active server just return the unchanged target variable
             return targetVariable;
@@ -145,7 +155,7 @@ export class DebuggerVariables extends DebugLocationTracker
             ? {
                   ...targetVariable,
                   ...JSON.parse(results.result),
-                  maximumRowChunkSize: 100,
+                  maximumRowChunkSize: 100
               }
             : targetVariable;
     }
