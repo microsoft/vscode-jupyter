@@ -3,12 +3,7 @@ import { UIKind } from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IApplicationEnvironment, IApplicationShell, IVSCodeNotebook } from '../common/application/types';
 import { UseVSCodeNotebookEditorApi } from '../common/constants';
-import {
-    IBrowserService,
-    IDisposableRegistry,
-    IPersistentState,
-    IPersistentStateFactory
-} from '../common/types';
+import { IBrowserService, IDisposableRegistry, IPersistentState, IPersistentStateFactory } from '../common/types';
 import * as localize from '../common/utils/localize';
 import { MillisecondsInADay } from '../constants';
 import { KernelState, KernelStateEventArgs } from './notebookExtensibility';
