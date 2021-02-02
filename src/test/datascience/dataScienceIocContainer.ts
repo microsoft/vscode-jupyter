@@ -802,7 +802,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             KernelEnvironmentVariablesService,
             KernelEnvironmentVariablesService
         );
-        this.serviceManager.addSingleton<IKernelFinder>(IKernelFinder, KernelFinder);
 
         this.serviceManager.addSingleton<IJupyterSubCommandExecutionService>(
             IJupyterSubCommandExecutionService,
