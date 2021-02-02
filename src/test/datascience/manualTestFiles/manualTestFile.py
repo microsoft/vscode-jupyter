@@ -1,9 +1,11 @@
-# To run this file either conda or pip install the following: jupyter, numpy, matplotlib, pandas, tqdm, bokeh, vega_datasets, altair, vega, plotly
+# To run this file either conda or pip install the following: jupyter, torch, numpy, matplotlib, pandas, tqdm, bokeh, vega_datasets, altair, vega, plotly
+# When installing torch please visit https://pytorch.org to identify the install instructions for your OS
 
 # %% Basic Imports
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import torch 
 
 # %% Matplotlib Plot
 x = np.linspace(0, 20, 100)
@@ -46,11 +48,12 @@ for i in trange(100):
 %whos
 
 # %% Some extra variable types for the variable explorer
-myNparray = np.array([['Bob', 1, 2, 3], ['Alice', 4, 5, 6], ['Gina', 7, 8, 9]])
+myNparray = np.array([['Bob', 1, 2, np.inf], ['Alice', 4, np.nan, 6], ['Gina', -np.inf, 8, 9]])
 myDataFrame = pd.DataFrame(myNparray, columns=['name', 'b', 'c', 'd'])
 mySeries = myDataFrame['name']
 myList = [x ** 2 for x in range(0, 100000)]
 myString = 'testing testing testing'
+myTensor = torch.LongTensor([[[1, 2, 3], [4, 5, 6]]])
 
 # %% Latex
 %%latex

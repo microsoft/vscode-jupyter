@@ -13,7 +13,7 @@ import { KernelDaemonPool } from '../../client/datascience/kernel-launcher/kerne
 import { KernelLauncher } from '../../client/datascience/kernel-launcher/kernelLauncher';
 import { IKernelConnection, IKernelFinder } from '../../client/datascience/kernel-launcher/types';
 import { createRawKernel } from '../../client/datascience/raw-kernel/rawKernel';
-import { IJupyterKernelSpec } from '../../client/datascience/types';
+import { IJupyterKernelSpec, IKernelDependencyService } from '../../client/datascience/types';
 import { PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { sleep, waitForCondition } from '../common';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
@@ -34,7 +34,7 @@ suite('DataScience - Kernel Launcher', () => {
     let pythonInterpreter: PythonEnvironment | undefined;
     let kernelSpec: IJupyterKernelSpec;
     let kernelFinder: MockKernelFinder;
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let snapshot: any;
 
     suiteSetup(() => {
@@ -54,8 +54,10 @@ suite('DataScience - Kernel Launcher', () => {
             fileSystem,
             daemonPool,
             extensionChecker,
-            ioc.get<KernelEnvironmentVariablesService>(KernelEnvironmentVariablesService)
+            ioc.get<KernelEnvironmentVariablesService>(KernelEnvironmentVariablesService),
+            ioc.get<IKernelDependencyService>(IKernelDependencyService)
         );
+
         await ioc.activate();
         if (!ioc.mockJupyter) {
             pythonInterpreter = await ioc.getJupyterCapableInterpreter();
@@ -76,13 +78,14 @@ suite('DataScience - Kernel Launcher', () => {
 
     test('Launch from kernelspec', async function () {
         if (!process.env.VSC_FORCE_REAL_JUPYTER) {
-            // tslint:disable-next-line: no-invalid-this
+            // eslint-disable-next-line no-invalid-this
             this.skip();
         } else {
             let exitExpected = false;
             const deferred = createDeferred<boolean>();
             const kernel = await kernelLauncher.launch(
                 { kernelSpec, kind: 'startUsingKernelSpec' },
+                -1,
                 undefined,
                 process.cwd()
             );
@@ -112,7 +115,7 @@ suite('DataScience - Kernel Launcher', () => {
 
     test('Launch with environment', async function () {
         if (!process.env.VSC_FORCE_REAL_JUPYTER || !pythonInterpreter) {
-            // tslint:disable-next-line: no-invalid-this
+            // eslint-disable-next-line no-invalid-this
             this.skip();
         } else {
             const spec: IJupyterKernelSpec = {
@@ -129,10 +132,10 @@ suite('DataScience - Kernel Launcher', () => {
 
             const kernel = await kernelLauncher.launch(
                 { kernelSpec: spec, kind: 'startUsingKernelSpec' },
+                30_000,
                 undefined,
                 process.cwd()
             );
-            const exited = new Promise<boolean>((resolve) => kernel.exited(() => resolve(true)));
 
             assert.isOk<IKernelConnection | undefined>(kernel.connection, 'Connection not found');
 
@@ -149,20 +152,17 @@ suite('DataScience - Kernel Launcher', () => {
             // Upon disposing, we should get an exit event within 100ms or less.
             // If this happens, then we know a process existed.
             await kernel.dispose();
-            assert.isRejected(
-                waitForCondition(() => exited, 100, 'Timeout'),
-                'Timeout'
-            );
         }
     }).timeout(10_000);
 
     test('Bind with ZMQ', async function () {
         if (!process.env.VSC_FORCE_REAL_JUPYTER) {
-            // tslint:disable-next-line: no-invalid-this
+            // eslint-disable-next-line no-invalid-this
             this.skip();
         } else {
             const kernel = await kernelLauncher.launch(
                 { kernelSpec, kind: 'startUsingKernelSpec' },
+                -1,
                 undefined,
                 process.cwd()
             );

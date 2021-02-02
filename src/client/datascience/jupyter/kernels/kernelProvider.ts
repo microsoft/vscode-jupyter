@@ -6,17 +6,20 @@
 import * as fastDeepEqual from 'fast-deep-equal';
 import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
-import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../../common/application/types';
+import { IApplicationShell, IVSCodeNotebook } from '../../../common/application/types';
 import { traceInfo, traceWarning } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 import {
+    IAsyncDisposable,
     IAsyncDisposableRegistry,
     IConfigurationService,
     IDisposableRegistry,
     IExtensionContext
 } from '../../../common/types';
+import { noop } from '../../../common/utils/misc';
 import {
     IDataScienceErrorHandler,
+    IJupyterServerUriStorage,
     INotebookEditorProvider,
     INotebookProvider,
     IRawNotebookSupportedService
@@ -28,12 +31,12 @@ import { IKernel, IKernelProvider, IKernelSelectionUsage, KernelOptions } from '
 @injectable()
 export class KernelProvider implements IKernelProvider {
     private readonly kernelsByUri = new Map<string, { options: KernelOptions; kernel: IKernel }>();
+    private readonly pendingDisposables = new Set<IAsyncDisposable>();
     constructor(
         @inject(IAsyncDisposableRegistry) private asyncDisposables: IAsyncDisposableRegistry,
         @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
         @inject(INotebookProvider) private notebookProvider: INotebookProvider,
         @inject(IConfigurationService) private configService: IConfigurationService,
-        @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IDataScienceErrorHandler) private readonly errorHandler: IDataScienceErrorHandler,
         @inject(INotebookEditorProvider) private readonly editorProvider: INotebookEditorProvider,
         @inject(KernelSelector) private readonly kernelSelectionUsage: IKernelSelectionUsage,
@@ -41,10 +44,19 @@ export class KernelProvider implements IKernelProvider {
         @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
         @inject(IRawNotebookSupportedService) private readonly rawNotebookSupported: IRawNotebookSupportedService,
         @inject(IFileSystem) private readonly fs: IFileSystem,
-        @inject(IExtensionContext) private readonly context: IExtensionContext
-    ) {}
+        @inject(IExtensionContext) private readonly context: IExtensionContext,
+        @inject(IJupyterServerUriStorage) private readonly serverStorage: IJupyterServerUriStorage
+    ) {
+        this.asyncDisposables.push(this);
+    }
+
     public get(uri: Uri): IKernel | undefined {
         return this.kernelsByUri.get(uri.toString())?.kernel;
+    }
+    public async dispose() {
+        const items = Array.from(this.pendingDisposables.values());
+        this.pendingDisposables.clear();
+        await Promise.all(items);
     }
     public getOrCreate(uri: Uri, options: KernelOptions): IKernel | undefined {
         const existingKernelInfo = this.kernelsByUri.get(uri.toString());
@@ -68,13 +80,14 @@ export class KernelProvider implements IKernelProvider {
         this.disposeOldKernel(uri);
 
         const waitForIdleTimeout = this.configService.getSettings(uri).jupyterLaunchTimeout;
+        const interruptTimeout = this.configService.getSettings(uri).jupyterInterruptTimeout;
         const kernel = new Kernel(
             uri,
             options.metadata,
             this.notebookProvider,
             this.disposables,
             waitForIdleTimeout,
-            this.commandManager,
+            interruptTimeout,
             this.errorHandler,
             this.editorProvider,
             this,
@@ -83,7 +96,8 @@ export class KernelProvider implements IKernelProvider {
             this.vscNotebook,
             this.rawNotebookSupported,
             this.fs,
-            this.context
+            this.context,
+            this.serverStorage
         );
         this.asyncDisposables.push(kernel);
         this.kernelsByUri.set(uri.toString(), { options, kernel });
@@ -110,10 +124,15 @@ export class KernelProvider implements IKernelProvider {
         );
     }
     private disposeOldKernel(uri: Uri) {
-        this.kernelsByUri
-            .get(uri.toString())
-            ?.kernel.dispose()
-            .catch((ex) => traceWarning('Failed to dispose old kernel', ex)); // NOSONAR.
+        const kernelToDispose = this.kernelsByUri.get(uri.toString());
+        if (kernelToDispose) {
+            this.pendingDisposables.add(kernelToDispose.kernel);
+            kernelToDispose.kernel
+                .dispose()
+                .catch((ex) => traceWarning('Failed to dispose old kernel', ex))
+                .finally(() => this.pendingDisposables.delete(kernelToDispose.kernel))
+                .catch(noop);
+        }
         this.kernelsByUri.delete(uri.toString());
     }
 }

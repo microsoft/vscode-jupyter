@@ -105,7 +105,7 @@ export class ExportManager implements IExportManager {
     }
 
     private showExportFailed(msg: string) {
-        // tslint:disable-next-line: messages-must-be-localized
+        // eslint-disable-next-line
         this.applicationShell.showErrorMessage(`${localize.DataScience.failedExportMessage()} ${msg}`).then();
     }
 

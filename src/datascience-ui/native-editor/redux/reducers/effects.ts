@@ -77,7 +77,7 @@ export namespace Effects {
                 focused: false
             };
 
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             newVMs[index] = Helpers.asCellViewModel(newCell); // This is because IMessageCell doesn't fit in here
 
             return {
@@ -92,7 +92,7 @@ export namespace Effects {
                 ...current
             };
 
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             newVMs[index] = newCell as any; // This is because IMessageCell doesn't fit in here
 
             return {
@@ -115,7 +115,7 @@ export namespace Effects {
                 selected: false
             };
 
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             newVMs[index] = newCell as any; // This is because IMessageCell doesn't fit in here
 
             return {

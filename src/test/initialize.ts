@@ -1,12 +1,13 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 import type { IExtensionApi } from '../client/api';
+import { disposeAllDisposables } from '../client/common/helpers';
 import type { IDisposable } from '../client/common/types';
 import { clearPendingChainedUpdatesForTests } from '../client/datascience/notebook/helpers/notebookUpdater';
 import { clearPendingTimers, IExtensionTestApi, PYTHON_PATH, setPythonPathInWorkspaceRoot } from './common';
 import { IS_SMOKE_TEST, JVSC_EXTENSION_ID_FOR_TESTS } from './constants';
 import { sleep } from './core';
-import { disposeAllDisposables } from './datascience/notebook/helper';
+import { startJupyterServer } from './datascience/notebook/helper';
 
 export * from './constants';
 export * from './ciConstants';
@@ -23,11 +24,18 @@ export async function initializePython() {
 export function isInsiders() {
     return vscode.env.appName.indexOf('Insider') > 0;
 }
-// tslint:disable-next-line:no-any
+
+let jupyterServerStarted = false;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function initialize(): Promise<IExtensionTestApi> {
     await initializePython();
     const api = await activateExtension();
-    // tslint:disable-next-line:no-any
+    // Ensure we start jupyter server before opening any notebooks or the like.
+    if (!jupyterServerStarted) {
+        jupyterServerStarted = true;
+        await startJupyterServer((api as unknown) as IExtensionTestApi);
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (api as any) as IExtensionTestApi;
 }
 
@@ -38,7 +46,7 @@ export async function activateExtension() {
     await api.ready;
     return api;
 }
-// tslint:disable-next-line:no-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function initializeTest(): Promise<any> {
     await initializePython();
     await closeActiveWindows();
@@ -63,7 +71,7 @@ export async function closeActiveNotebooks(): Promise<void> {
         return;
     }
     // We could have untitled notebooks, close them by reverting changes.
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     while ((vscode as any).notebook.activeNotebookEditor || vscode.window.activeTextEditor) {
         await vscode.commands.executeCommand('workbench.action.revertAndCloseActiveEditor');
     }
@@ -76,12 +84,22 @@ export async function closeActiveNotebooks(): Promise<void> {
 }
 
 async function closeWindowsInternal() {
+    // If there are no editors, we can skip. This seems to time out if no editors visible.
+    if (
+        !vscode.window.visibleTextEditors ||
+        (vscode.env.appName.toLowerCase().includes('insiders') && !vscode.window.visibleNotebookEditors)
+    ) {
+        // Instead just post the command
+        void vscode.commands.executeCommand('workbench.action.closeAllEditors');
+        return;
+    }
+
     class CloseEditorsTimeoutError extends Error {
         constructor() {
             super("Command 'workbench.action.closeAllEditors' timed out");
         }
     }
-    const closeWindowsImplementation = (timeout = 15_000) => {
+    const closeWindowsImplementation = (timeout = 2_000) => {
         return new Promise<void>((resolve, reject) => {
             // Attempt to fix #1301.
             // Lets not waste too much time.
@@ -106,9 +124,7 @@ async function closeWindowsInternal() {
         await closeWindowsImplementation();
     } catch (ex) {
         if (ex instanceof CloseEditorsTimeoutError) {
-            // Try again with a smaller timeout (no idea why VSCode is timeout out here).
-            sleep(500); // Possible VSC is busy & wasn't able to handle previous command.
-            await closeWindowsImplementation(5_000);
+            // Do nothing. Just stop waiting.
         } else {
             throw ex;
         }
@@ -116,7 +132,7 @@ async function closeWindowsInternal() {
 }
 
 function isANotebookOpen() {
-    // tslint:disable
+    /* eslint-disable */
     if (
         Array.isArray((vscode as any).notebook.visibleNotebookEditors) &&
         (vscode as any).notebook.visibleNotebookEditors.length

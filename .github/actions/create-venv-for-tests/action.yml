@@ -14,12 +14,24 @@ runs:
     # These tests are slow hence will only run on linux.
     # This env will be used to install ipykernel & test for prompts if ipykernel is missing & imilar tests.
     # Ensure this is registered as a kernel.
-    - name: Create virtual environment for Tests
+    # Use specific version of Jedi https://github.com/ipython/ipython/issues/12740
+    - name: Create virtual environment without ipykernel
       run: |
+        python -m venv .venvnoreg
+
+        python -m venv .venvkernel
+        source .venvkernel/bin/activate
+        python -m pip install ipykernel
+        python -m ipykernel install --user --name .venvkernel --display-name .venvkernel
+        python -m pip uninstall jedi --yes
+        python -m pip install jedi==0.17.2
+
         python -m venv .venvnokernel
         source .venvnokernel/bin/activate
         python -m pip install ipykernel
         python -m ipykernel install --user --name .venvnokernel --display-name .venvnokernel
+        python -m pip uninstall jedi --yes
+        python -m pip install jedi==0.17.2
         python -m pip uninstall ipykernel --yes
       working-directory: src/test/datascience
       shell: bash

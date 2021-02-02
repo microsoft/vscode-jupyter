@@ -7,9 +7,11 @@ import { ChildProcess } from 'child_process';
 import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import { IDisposable } from 'monaco-editor';
+import { traceInfo } from '../../common/logger';
 import { ObservableExecutionResult } from '../../common/process/types';
 import { Resource } from '../../common/types';
 import { noop } from '../../common/utils/misc';
+import { traceDecorators } from '../../logging';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { IJupyterKernelSpec } from '../types';
 import { KernelDaemonPool } from './kernelDaemonPool';
@@ -29,12 +31,14 @@ export class PythonKernelLauncherDaemon implements IDisposable {
         @inject(KernelEnvironmentVariablesService)
         private readonly kernelEnvVarsService: KernelEnvironmentVariablesService
     ) {}
+    @traceDecorators.verbose('Launching kernel daemon')
     public async launch(
         resource: Resource,
         workingDirectory: string,
         kernelSpec: IJupyterKernelSpec,
         interpreter?: PythonEnvironment
     ): Promise<{ observableOutput: ObservableExecutionResult<string>; daemon: IPythonKernelDaemon | undefined }> {
+        traceInfo(`Launching kernel daemon for ${kernelSpec.display_name} # ${interpreter?.path}`);
         const [daemon, wdExists, env] = await Promise.all([
             this.daemonPool.get(resource, kernelSpec, interpreter),
             fs.pathExists(workingDirectory),

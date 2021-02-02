@@ -45,11 +45,11 @@ export class DebugService implements IDebugService {
     public get onDidChangeBreakpoints(): Event<BreakpointsChangeEvent> {
         return debug.onDidChangeBreakpoints;
     }
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public registerDebugConfigurationProvider(debugType: string, provider: any): Disposable {
         return debug.registerDebugConfigurationProvider(debugType, provider);
     }
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public registerDebugAdapterTrackerFactory(debugType: string, provider: any): Disposable {
         return debug.registerDebugAdapterTrackerFactory(debugType, provider);
     }

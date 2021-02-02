@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-// tslint:disable:no-require-imports no-var-requires import-name no-function-expression no-any prefer-template no-console no-var-self
+/* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires, , , @typescript-eslint/no-explicit-any, prefer-template, no-console */
 // Most of the source is in node_modules/vscode/lib/testrunner.js
 
 'use strict';
@@ -9,6 +9,8 @@ import * as glob from 'glob';
 import * as Mocha from 'mocha';
 import * as path from 'path';
 import { IS_SMOKE_TEST, MAX_EXTENSION_ACTIVATION_TIME } from './constants';
+import { noop } from './core';
+import { stopJupyterServer } from './datascience/notebook/helper';
 import { initialize } from './initialize';
 
 // Linux: prevent a weird NPE when mocha on Linux requires the window size from the TTY.
@@ -92,6 +94,9 @@ export async function run(): Promise<void> {
                                 failures > 0 ? reject(new Error(`${failures} total failures`)) : resolve()
                             )
                         )
+                        .finally(() => {
+                            stopJupyterServer().catch(noop);
+                        })
                         .catch(reject);
                 } catch (error) {
                     return reject(error);

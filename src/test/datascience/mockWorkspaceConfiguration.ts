@@ -2,11 +2,11 @@
 // Licensed under the MIT License.
 import { ConfigurationTarget, WorkspaceConfiguration } from 'vscode';
 
-// tslint:disable: no-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export class MockWorkspaceConfiguration implements WorkspaceConfiguration {
     private map: Map<string, any> = new Map<string, any>();
 
-    // tslint:disable: no-any
+    /* eslint-disable @typescript-eslint/no-explicit-any */
     public get(key: string): any;
     public get<T>(section: string): T | undefined;
     public get<T>(section: string, defaultValue: T): T;

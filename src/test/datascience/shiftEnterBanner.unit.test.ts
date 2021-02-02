@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-//tslint:disable:max-func-body-length match-default-export-name no-any no-multiline-string no-trailing-whitespace
+/* eslint-disable , , @typescript-eslint/no-explicit-any, no-multi-str, no-trailing-spaces */
 import { expect } from 'chai';
 import rewiremock from 'rewiremock';
 import * as typemoq from 'typemoq';

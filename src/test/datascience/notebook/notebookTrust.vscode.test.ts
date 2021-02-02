@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-// tslint:disable:no-require-imports no-var-requires
+/* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 import { nbformat } from '@jupyterlab/coreutils';
 import { assert } from 'chai';
 import * as fs from 'fs-extra';
@@ -32,10 +32,10 @@ import {
     saveActiveNotebook,
     waitForKernelToGetAutoSelected
 } from './helper';
-// tslint:disable-next-line: no-var-requires no-require-imports
+// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
-// tslint:disable: no-any no-invalid-this no-function-expression
+/* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this,  */
 suite('DataScience - VSCode Notebook - (Trust) (slow)', function () {
     const templateIPynbWithOutput = path.join(
         EXTENSION_ROOT_DIR_FOR_TESTS,
@@ -60,8 +60,8 @@ suite('DataScience - VSCode Notebook - (Trust) (slow)', function () {
     let storageProvider: INotebookStorageProvider;
     let vscodeNotebook: IVSCodeNotebook;
     let trustService: ITrustService;
+    this.timeout(15_000);
     suiteSetup(async function () {
-        this.timeout(15_000);
         api = await initialize();
         if (!(await canRunNotebookTests())) {
             return this.skip();

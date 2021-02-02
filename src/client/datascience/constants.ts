@@ -66,6 +66,7 @@ export namespace Commands {
     export const OpenNotebook = 'jupyter.opennotebook';
     export const OpenNotebookInPreviewEditor = 'jupyter.opennotebookInPreviewEditor';
     export const SelectJupyterURI = 'jupyter.selectjupyteruri';
+    export const SelectNativeJupyterUriFromToolBar = 'jupyter.selectNativeJupyterUriFromToolBar';
     export const SelectJupyterCommandLine = 'jupyter.selectjupytercommandline';
     export const ExportFileAsNotebook = 'jupyter.exportfileasnotebook';
     export const ExportFileAndOutputAsNotebook = 'jupyter.exportfileandoutputasnotebook';
@@ -122,6 +123,7 @@ export namespace Commands {
     export const OpenNotebookNonCustomEditor = 'jupyter.notebookeditor.open';
     export const LatestExtension = 'jupyter.latestExtension';
     export const TrustNotebook = 'jupyter.notebookeditor.trust';
+    export const NotebookTrusted = 'jupyter.notebookeditor.trusted';
     export const EnableLoadingWidgetsFrom3rdPartySource = 'jupyter.enableLoadingWidgetScriptsFromThirdPartySource';
     export const NotebookEditorExpandAllCells = 'jupyter.notebookeditor.expandallcells';
     export const NotebookEditorCollapseAllCells = 'jupyter.notebookeditor.collapseallcells';
@@ -131,6 +133,7 @@ export namespace Commands {
     export const SubmitGitHubIssue = 'jupyter.submitGitHubIssue';
     export const ShowDataViewer = 'jupyter.showDataViewer';
     export const ClearSavedJupyterUris = 'jupyter.clearSavedJupyterUris';
+    export const OpenVariableView = 'jupyter.openVariableView';
 }
 
 export namespace CodeLensCommands {
@@ -243,6 +246,7 @@ export enum Telemetry {
     SelectRemoteJupyterKernel = 'DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL',
     SetJupyterURIToLocal = 'DATASCIENCE.SET_JUPYTER_URI_LOCAL',
     SetJupyterURIToUserSpecified = 'DATASCIENCE.SET_JUPYTER_URI_USER_SPECIFIED',
+    SetJupyterURIUIDisplayed = 'DATASCIENCE.SET_JUPYTER_URI_UI_DISPLAYED',
     Interrupt = 'DATASCIENCE.INTERRUPT',
     /**
      * Exporting from the interactive window
@@ -314,6 +318,7 @@ export enum Telemetry {
      */
     SelectJupyterInterpreterCommand = 'DATASCIENCE.SELECT_JUPYTER_INTERPRETER_Command',
     StartJupyterProcess = 'DS_INTERNAL.START_JUPYTER_PROCESS',
+    NumberOfSavedRemoteKernelIds = 'DS_INTERNAL.NUMBER_OF_REMOTE_KERNEL_IDS_SAVED',
     WaitForIdleJupyter = 'DS_INTERNAL.WAIT_FOR_IDLE_JUPYTER',
     HiddenCellTime = 'DS_INTERNAL.HIDDEN_EXECUTION_TIME',
     RestartJupyterTime = 'DS_INTERNAL.RESTART_JUPYTER_TIME',
@@ -399,13 +404,16 @@ export enum Telemetry {
     IPyWidgetUnhandledMessage = 'DS_INTERNAL.IPYWIDGET_UNHANDLED_MESSAGE',
     RawKernelCreatingNotebook = 'DS_INTERNAL.RAWKERNEL_CREATING_NOTEBOOK',
     JupyterCreatingNotebook = 'DS_INTERNAL.JUPYTER_CREATING_NOTEBOOK',
+    KernelStartFailedAndUIDisabled = 'DS_INTERNAL.START_RAW_FAILED_UI_DISABLED',
     RawKernelSessionConnect = 'DS_INTERNAL.RAWKERNEL_SESSION_CONNECT',
     RawKernelStartRawSession = 'DS_INTERNAL.RAWKERNEL_START_RAW_SESSION',
     RawKernelSessionStartSuccess = 'DS_INTERNAL.RAWKERNEL_SESSION_START_SUCCESS',
     RawKernelSessionStartUserCancel = 'DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL',
     RawKernelSessionStartTimeout = 'DS_INTERNAL.RAWKERNEL_SESSION_START_TIMEOUT',
     RawKernelSessionStartException = 'DS_INTERNAL.RAWKERNEL_SESSION_START_EXCEPTION',
+    RawKernelSessionStartNoIpykernel = 'DS_INTERNAL.RAWKERNEL_SESSION_NO_IPYKERNEL',
     RawKernelProcessLaunch = 'DS_INTERNAL.RAWKERNEL_PROCESS_LAUNCH',
+    AttemptedToLaunchRawKernelWithoutInterpreter = 'DS_INTERNAL.ERROR_START_RAWKERNEL_WITHOUT_INTERPRETER',
     RunByLineStart = 'DATASCIENCE.RUN_BY_LINE',
     RunByLineStep = 'DATASCIENCE.RUN_BY_LINE_STEP',
     RunByLineStop = 'DATASCIENCE.RUN_BY_LINE_STOP',

@@ -5,7 +5,7 @@
 
 'use strict';
 
-// tslint:disable:rule1 no-any no-unnecessary-callback-wrapper jsdoc-format no-for-in prefer-const no-increment-decrement
+/* eslint-disable @typescript-eslint/no-explicit-any, jsdoc/check-alignment, jsdoc/check-indentation, jsdoc/newline-after-description, no-restricted-syntax, prefer-const */
 
 const _typeof = {
     number: 'number',

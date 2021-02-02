@@ -1,14 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import type { nbformat } from '@jupyterlab/coreutils';
+import { nbformat } from '@jupyterlab/coreutils';
 import { inject, injectable, named } from 'inversify';
 import * as uuid from 'uuid/v4';
 import { Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
 import { IPythonExtensionChecker } from '../../api/types';
-import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../common/application/types';
+import { IApplicationShell, ILiveShareApi, IVSCodeNotebook, IWorkspaceService } from '../../common/application/types';
 import '../../common/extensions';
 import { IFileSystem } from '../../common/platform/types';
 
@@ -31,6 +31,7 @@ import {
     INotebookServerLaunchInfo
 } from '../types';
 import { KernelSelector } from './kernels/kernelSelector';
+import { KernelConnectionMetadata } from './kernels/types';
 import { GuestJupyterServer } from './liveshare/guestJupyterServer';
 import { HostJupyterServer } from './liveshare/hostJupyterServer';
 import { IRoleBasedObject, RoleBasedFactory } from './liveshare/roleBasedFactory';
@@ -38,7 +39,7 @@ import { ILiveShareHasRole } from './liveshare/types';
 
 interface IJupyterServerInterface extends IRoleBasedObject, INotebookServer {}
 
-// tslint:disable:callable-types
+/* eslint-disable @typescript-eslint/prefer-function-type */
 type JupyterServerClassType = {
     new (
         liveShare: ILiveShareApi,
@@ -55,10 +56,11 @@ type JupyterServerClassType = {
         interpreterService: IInterpreterService,
         outputChannel: IOutputChannel,
         progressReporter: ProgressReporter,
-        extensionChecker: IPythonExtensionChecker
+        extensionChecker: IPythonExtensionChecker,
+        vscodeNotebook: IVSCodeNotebook
     ): IJupyterServerInterface;
 };
-// tslint:enable:callable-types
+/* eslint-enable @typescript-eslint/prefer-function-type */
 
 // This class wraps either a HostJupyterServer or a GuestJupyterServer based on the liveshare state. It abstracts
 // out the live share specific parts.
@@ -84,7 +86,8 @@ export class JupyterServerWrapper implements INotebookServer, ILiveShareHasRole 
         @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) jupyterOutput: IOutputChannel,
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
         @inject(ProgressReporter) progressReporter: ProgressReporter,
-        @inject(IPythonExtensionChecker) extensionChecker: IPythonExtensionChecker
+        @inject(IPythonExtensionChecker) extensionChecker: IPythonExtensionChecker,
+        @inject(IVSCodeNotebook) vscodeNotebook: IVSCodeNotebook
     ) {
         // The server factory will create the appropriate HostJupyterServer or GuestJupyterServer based on
         // the liveshare state.
@@ -106,7 +109,8 @@ export class JupyterServerWrapper implements INotebookServer, ILiveShareHasRole 
             interpreterService,
             jupyterOutput,
             progressReporter,
-            extensionChecker
+            extensionChecker,
+            vscodeNotebook
         );
     }
 
@@ -128,10 +132,11 @@ export class JupyterServerWrapper implements INotebookServer, ILiveShareHasRole 
         resource: Resource,
         identity: Uri,
         notebookMetadata?: nbformat.INotebookMetadata,
+        kernelConnection?: KernelConnectionMetadata,
         cancelToken?: CancellationToken
     ): Promise<INotebook> {
         const server = await this.serverFactory.get();
-        return server.createNotebook(resource, identity, notebookMetadata, cancelToken);
+        return server.createNotebook(resource, identity, notebookMetadata, kernelConnection, cancelToken);
     }
 
     public async shutdown(): Promise<void> {
@@ -149,7 +154,6 @@ export class JupyterServerWrapper implements INotebookServer, ILiveShareHasRole 
         if (this.launchInfo) {
             return this.launchInfo.connectionInfo;
         }
-
         return undefined;
     }
 

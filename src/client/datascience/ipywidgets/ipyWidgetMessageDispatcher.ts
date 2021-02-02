@@ -25,7 +25,7 @@ type PendingMessage = {
     startTime: number;
 };
 
-// tslint:disable: no-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * This class maps between messages from the react code and talking to a real kernel.
  */
@@ -79,7 +79,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         );
         this.mirrorSend = this.mirrorSend.bind(this);
         this.onKernelSocketMessage = this.onKernelSocketMessage.bind(this);
-        // tslint:disable-next-line: no-require-imports
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
         const jupyterLabSerialize = require('@jupyterlab/services/lib/kernel/serialize') as typeof import('@jupyterlab/services/lib/kernel/serialize'); // NOSONAR
         this.deserialize = jupyterLabSerialize.deserialize;
     }
@@ -149,7 +149,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
     public async initialize() {
         if (!this.jupyterLab) {
             // Lazy load jupyter lab for faster extension loading.
-            // tslint:disable-next-line:no-require-imports
+            // eslint-disable-next-line @typescript-eslint/no-require-imports
             this.jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services'); // NOSONAR
         }
 
@@ -225,7 +225,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         // we get the kernel in the UI to have the same set of futures we have on this side
         if (typeof data === 'string') {
             const startTime = Date.now();
-            // tslint:disable-next-line: no-require-imports
+            // eslint-disable-next-line @typescript-eslint/no-require-imports
             const msg = this.deserialize(data);
             if (msg.channel === 'shell' && msg.header.msg_type === 'execute_request') {
                 const promise = this.mirrorExecuteRequest(msg as KernelMessage.IExecuteRequestMsg); // NOSONAR
@@ -463,7 +463,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
     private async messageHookCallback(msg: KernelMessage.IIOPubMessage): Promise<boolean> {
         const promise = createDeferred<boolean>();
         const requestId = uuid();
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const parentId = (msg.parent_header as any).msg_id;
         if (this.messageHooks.has(parentId)) {
             this.messageHookRequests.set(requestId, promise);

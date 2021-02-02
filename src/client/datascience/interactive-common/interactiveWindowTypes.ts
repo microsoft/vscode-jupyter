@@ -150,7 +150,9 @@ export enum InteractiveWindowMessages {
     GetCellCode = 'get_cell_code',
     ReturnCellCode = 'return_cell_code',
     GetAllCellCode = 'get_all_cell_code',
-    ReturnAllCellCode = 'return_all_cell_code'
+    ReturnAllCellCode = 'return_all_cell_code',
+    GetHTMLByIdRequest = 'get_html_by_id_request',
+    GetHTMLByIdResponse = 'get_html_by_id_response'
 }
 
 export enum IPyWidgetMessages {
@@ -543,7 +545,7 @@ export interface IRunByLine {
 export interface ILoadTmLanguageResponse {
     languageId: string;
     scopeName: string; // Name in the tmlanguage scope file (scope.python instead of python)
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     languageConfiguration: ILanguageConfigurationDto;
     languageJSON: string; // Contents of the tmLanguage.json file
     extensions: string[]; // Array of file extensions that map to this language
@@ -572,7 +574,7 @@ export class IInteractiveWindowMapping {
     public [IPyWidgetMessages.IPyWidgets_onRestartKernel]: never | undefined;
     public [IPyWidgetMessages.IPyWidgets_onKernelChanged]: never | undefined;
     public [IPyWidgetMessages.IPyWidgets_registerCommTarget]: string;
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public [IPyWidgetMessages.IPyWidgets_binary_msg]: { id: string; data: any };
     public [IPyWidgetMessages.IPyWidgets_msg]: { id: string; data: string };
     public [IPyWidgetMessages.IPyWidgets_msg_received]: { id: string };
@@ -674,7 +676,7 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.SaveAll]: ISaveAll;
     public [InteractiveWindowMessages.Sync]: {
         type: InteractiveWindowMessages | SharedMessages | CommonActionType;
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         payload: BaseReduxActionPayload<any>;
     };
     public [InteractiveWindowMessages.NativeCommand]: INativeCommand;
@@ -715,4 +717,6 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.HasCellResponse]: { id: string; result: boolean };
     public [InteractiveWindowMessages.UpdateExternalCellButtons]: IExternalWebviewCellButton[];
     public [InteractiveWindowMessages.ExecuteExternalCommand]: IExternalCommandFromWebview;
+    public [InteractiveWindowMessages.GetHTMLByIdRequest]: string;
+    public [InteractiveWindowMessages.GetHTMLByIdResponse]: string;
 }

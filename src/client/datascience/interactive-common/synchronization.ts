@@ -31,7 +31,7 @@ export enum MessageType {
     noIdea = 1 << 2
 }
 
-// tslint:disable-next-line: no-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type MessageAction = (payload: any) => boolean;
 
 type MessageMapping<T> = {
@@ -96,6 +96,7 @@ const messageWithMessageTypes: MessageMapping<IInteractiveWindowMapping> & Messa
     [CommonActionType.TOGGLE_OUTPUT]: MessageType.syncWithLiveShare,
     [CommonActionType.TOGGLE_VARIABLE_EXPLORER]: MessageType.syncWithLiveShare,
     [CommonActionType.SET_VARIABLE_EXPLORER_HEIGHT]: MessageType.other,
+    [CommonActionType.SET_VARIABLE_VIEW_HEIGHT]: MessageType.other,
     [CommonActionType.UNDO]: MessageType.syncAcrossSameNotebooks | MessageType.syncWithLiveShare,
     [CommonActionType.UNFOCUS_CELL]: MessageType.syncWithLiveShare,
     [CommonActionType.UNMOUNT]: MessageType.other,
@@ -225,6 +226,8 @@ const messageWithMessageTypes: MessageMapping<IInteractiveWindowMapping> & Messa
     [InteractiveWindowMessages.ConvertUriForUseInWebViewResponse]: MessageType.other,
     [InteractiveWindowMessages.UpdateExternalCellButtons]: MessageType.other,
     [InteractiveWindowMessages.ExecuteExternalCommand]: MessageType.other,
+    [InteractiveWindowMessages.GetHTMLByIdRequest]: MessageType.other,
+    [InteractiveWindowMessages.GetHTMLByIdResponse]: MessageType.other,
     // Types from CssMessages
     [CssMessages.GetCssRequest]: MessageType.other,
     [CssMessages.GetCssResponse]: MessageType.other,
@@ -284,7 +287,7 @@ export function checkToPostBasedOnOriginalMessageType(messageType?: MessageType)
     return true;
 }
 
-// tslint:disable-next-line: no-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function shouldRebroadcast(message: keyof IInteractiveWindowMapping, payload: any): [boolean, MessageType] {
     // Get the configured type for this message (whether it should be re-broadcasted or not).
     const messageTypeOrFunc: MessageType | undefined | MessageAction = messageWithMessageTypes[message];

@@ -15,13 +15,21 @@ import { CancellationToken } from 'vscode-jsonrpc';
 import { Cancellation } from '../../common/cancellation';
 import { traceError, traceInfo } from '../../common/logger';
 import { IOutputChannel } from '../../common/types';
+import { Deferred, createDeferredFromPromise } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry } from '../../telemetry';
 import { BaseJupyterSession, JupyterSessionStartError } from '../baseJupyterSession';
 import { Telemetry } from '../constants';
+import { IpyKernelNotInstalledError } from '../kernel-launcher/types';
 import { reportAction } from '../progress/decorator';
 import { ReportableAction } from '../progress/types';
-import { IJupyterConnection, ISessionWithSocket } from '../types';
+import {
+    IJupyterConnection,
+    IKernelDependencyService,
+    ISessionWithSocket,
+    KernelInterpreterDependencyResponse
+} from '../types';
 import { JupyterInvalidKernelError } from './jupyterInvalidKernelError';
 import { JupyterWaitForIdleError } from './jupyterWaitForIdleError';
 import { JupyterWebSockets } from './jupyterWebSocket';
@@ -29,6 +37,8 @@ import { getNameOfKernelConnection } from './kernels/helpers';
 import { KernelConnectionMetadata } from './kernels/types';
 
 export class JupyterSession extends BaseJupyterSession {
+    private dependencyPromises = new Map<string, Deferred<KernelInterpreterDependencyResponse>>();
+
     constructor(
         private connInfo: IJupyterConnection,
         private serverSettings: ServerConnection.ISettings,
@@ -39,9 +49,10 @@ export class JupyterSession extends BaseJupyterSession {
         private readonly restartSessionCreated: (id: Kernel.IKernelConnection) => void,
         restartSessionUsed: (id: Kernel.IKernelConnection) => void,
         readonly workingDirectory: string,
-        private readonly idleTimeout: number
+        private readonly idleTimeout: number,
+        private readonly kernelDependencyService: IKernelDependencyService
     ) {
-        super(restartSessionUsed, workingDirectory);
+        super(restartSessionUsed, workingDirectory, idleTimeout);
         this.kernelConnectionMetadata = kernelSpec;
     }
 
@@ -52,13 +63,15 @@ export class JupyterSession extends BaseJupyterSession {
         return this.waitForIdleOnSession(this.session, timeout);
     }
 
-    public async connect(timeoutMs: number, cancelToken?: CancellationToken): Promise<void> {
+    public async connect(timeoutMs: number, cancelToken?: CancellationToken, disableUI?: boolean): Promise<void> {
         if (!this.connInfo) {
             throw new Error(localize.DataScience.sessionDisposed());
         }
 
         // Start a new session
-        this.setSession(await this.createNewKernelSession(this.kernelConnectionMetadata, timeoutMs, cancelToken));
+        this.setSession(
+            await this.createNewKernelSession(this.kernelConnectionMetadata, timeoutMs, cancelToken, disableUI)
+        );
 
         // Listen for session status changes
         this.session?.statusChanged.connect(this.statusHandler); // NOSONAR
@@ -70,7 +83,8 @@ export class JupyterSession extends BaseJupyterSession {
     public async createNewKernelSession(
         kernelConnection: KernelConnectionMetadata | undefined,
         timeoutMS: number,
-        cancelToken?: CancellationToken
+        cancelToken?: CancellationToken,
+        disableUI?: boolean
     ): Promise<ISessionWithSocket> {
         let newSession: ISessionWithSocket | undefined;
 
@@ -85,7 +99,10 @@ export class JupyterSession extends BaseJupyterSession {
                 newSession = this.sessionManager.connectTo(kernelConnection.kernelModel.session);
                 newSession.isRemoteSession = true;
             } else {
-                newSession = await this.createSession(this.serverSettings, kernelConnection, cancelToken);
+                newSession = await this.createSession(this.serverSettings, kernelConnection, cancelToken, disableUI);
+                if (!this.connInfo.localLaunch) {
+                    newSession.isRemoteSession = true;
+                }
             }
 
             // Make sure it is idle before we return
@@ -106,6 +123,7 @@ export class JupyterSession extends BaseJupyterSession {
     protected async createRestartSession(
         kernelConnection: KernelConnectionMetadata | undefined,
         session: ISessionWithSocket,
+        _timeout: number,
         cancelToken?: CancellationToken
     ): Promise<ISessionWithSocket> {
         // We need all of the above to create a restart session
@@ -114,11 +132,11 @@ export class JupyterSession extends BaseJupyterSession {
         }
         let result: ISessionWithSocket | undefined;
         let tryCount = 0;
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         let exception: any;
         while (tryCount < 3) {
             try {
-                result = await this.createSession(session.serverSettings, kernelConnection, cancelToken);
+                result = await this.createSession(session.serverSettings, kernelConnection, cancelToken, true);
                 await this.waitForIdleOnSession(result, this.idleTimeout);
                 this.restartSessionCreated(result.kernel);
                 return result;
@@ -135,9 +153,13 @@ export class JupyterSession extends BaseJupyterSession {
         throw exception;
     }
 
-    protected startRestartSession() {
+    protected startRestartSession(timeout: number) {
         if (!this.restartSessionPromise && this.session && this.contentsManager) {
-            this.restartSessionPromise = this.createRestartSession(this.kernelConnectionMetadata, this.session);
+            this.restartSessionPromise = this.createRestartSession(
+                this.kernelConnectionMetadata,
+                this.session,
+                timeout
+            );
         }
     }
 
@@ -188,10 +210,16 @@ export class JupyterSession extends BaseJupyterSession {
     private async createSession(
         serverSettings: ServerConnection.ISettings,
         kernelConnection: KernelConnectionMetadata | undefined,
-        cancelToken?: CancellationToken
+        cancelToken?: CancellationToken,
+        disableUI?: boolean
     ): Promise<ISessionWithSocket> {
         // Create our backing file for the notebook
         const backingFile = await this.createBackingFile();
+
+        // Make sure the kernel has ipykernel installed if on a local machine.
+        if (kernelConnection?.interpreter && this.connInfo.localLaunch) {
+            await this.installDependenciesIntoInterpreter(kernelConnection.interpreter, cancelToken, disableUI);
+        }
 
         // Create our session options using this temporary notebook and our connection info
         const options: Session.IOptions = {
@@ -210,7 +238,7 @@ export class JupyterSession extends BaseJupyterSession {
                         );
 
                         // Add on the kernel sock information
-                        // tslint:disable-next-line: no-any
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         (session as any).kernelSocketInformation = {
                             socket: JupyterWebSockets.get(session.kernel.id),
                             options: {
@@ -236,6 +264,39 @@ export class JupyterSession extends BaseJupyterSession {
     private logRemoteOutput(output: string) {
         if (this.connInfo && !this.connInfo.localLaunch) {
             this.outputChannel.appendLine(output);
+        }
+    }
+
+    private async installDependenciesIntoInterpreter(
+        interpreter: PythonEnvironment,
+        cancelToken?: CancellationToken,
+        disableUI?: boolean
+    ) {
+        // TODO: On next submission move this code into a common location.
+
+        // Cache the install question so when two kernels start at the same time for the same interpreter we don't ask twice
+        let deferred = this.dependencyPromises.get(interpreter.path);
+        if (!deferred) {
+            deferred = createDeferredFromPromise(
+                this.kernelDependencyService.installMissingDependencies(interpreter, cancelToken, disableUI)
+            );
+            this.dependencyPromises.set(interpreter.path, deferred);
+        }
+
+        // Get the result of the question
+        try {
+            const result = await deferred.promise;
+            if (result !== KernelInterpreterDependencyResponse.ok) {
+                throw new IpyKernelNotInstalledError(
+                    localize.DataScience.ipykernelNotInstalled().format(
+                        `${interpreter.displayName || interpreter.path}:${interpreter.path}`
+                    ),
+                    result
+                );
+            }
+        } finally {
+            // Don't need to cache anymore
+            this.dependencyPromises.delete(interpreter.path);
         }
     }
 }

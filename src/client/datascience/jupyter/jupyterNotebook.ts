@@ -9,7 +9,7 @@ import * as uuid from 'uuid/v4';
 import { Disposable, Event, EventEmitter, Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
-import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../common/application/types';
+import { IApplicationShell, ILiveShareApi, IVSCodeNotebook, IWorkspaceService } from '../../common/application/types';
 import { CancellationError, createPromiseFromCancellation } from '../../common/cancellation';
 import '../../common/extensions';
 import { traceError, traceInfo, traceWarning } from '../../common/logger';
@@ -37,7 +37,7 @@ import {
 import { expandWorkingDir } from './jupyterUtils';
 import { KernelConnectionMetadata } from './kernels/types';
 
-// tslint:disable-next-line: no-require-imports
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
 import { concatMultilineString, formatStreamText, splitMultilineString } from '../../../datascience-ui/common';
 import { PYTHON_LANGUAGE } from '../../common/constants';
@@ -50,6 +50,7 @@ import {
     getKernelConnectionLanguage,
     isPythonKernelConnection
 } from './kernels/helpers';
+import { isResourceNativeNotebook } from '../notebook/helpers/helpers';
 
 class CellSubscriber {
     public get startTime(): number {
@@ -93,7 +94,7 @@ class CellSubscriber {
         }
     }
 
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public error(sessionStartTime: number | undefined, err: any) {
         if (this.isValid(sessionStartTime)) {
             this.subscriber.error(err);
@@ -113,7 +114,7 @@ class CellSubscriber {
         this.attemptToFinish();
     }
 
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public reject(e: any) {
         if (!this.deferred.completed) {
             this.cellRef.state = CellState.error;
@@ -200,7 +201,8 @@ export class JupyterNotebookBase implements INotebook {
         private getDisposedError: () => Error,
         private workspace: IWorkspaceService,
         private applicationService: IApplicationShell,
-        private fs: IFileSystem
+        private fs: IFileSystem,
+        private readonly vscNotebook: IVSCodeNotebook
     ) {
         this.sessionStartTime = Date.now();
 
@@ -278,7 +280,7 @@ export class JupyterNotebookBase implements INotebook {
     }
 
     // Set up our initial plotting and imports
-    // tslint:disable-next-line: cyclomatic-complexity
+    // eslint-disable-next-line complexity
     public async initialize(cancelToken?: CancellationToken): Promise<void> {
         if (this.ranInitialSetup) {
             return;
@@ -318,7 +320,10 @@ export class JupyterNotebookBase implements INotebook {
             } else {
                 this.initializedMatplotlib = false;
                 const configInit =
-                    !settings || settings.enablePlotViewer ? CodeSnippets.ConfigSvg : CodeSnippets.ConfigPng;
+                    (!settings || settings.enablePlotViewer) &&
+                    !isResourceNativeNotebook(this._resource, this.vscNotebook, this.fs)
+                        ? CodeSnippets.ConfigSvg
+                        : CodeSnippets.ConfigPng;
                 traceInfo(`Initialize config for plots for ${this.identity.toString()}`);
                 if (!isDefinitelyNotAPythonKernel) {
                     await this.executeSilently(configInit, cancelToken);
@@ -499,7 +504,7 @@ export class JupyterNotebookBase implements INotebook {
 
             // Tell our loggers
             this.loggers.forEach((l) => l.onKernelRestarted(this.getNotebookId()));
-
+            traceInfo(`Time to restart kernel is ${(Date.now() - this.sessionStartTime) / 1000}s`);
             this.kernelRestarted.fire();
             return;
         }
@@ -704,9 +709,9 @@ export class JupyterNotebookBase implements INotebook {
     public sendCommMessage(
         buffers: (ArrayBuffer | ArrayBufferView)[],
         content: { comm_id: string; data: JSONObject; target_name: string | undefined },
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         metadata: any,
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         msgId: any
     ): Kernel.IShellFuture<
         KernelMessage.IShellMessage<'comm_msg'>,
@@ -757,7 +762,8 @@ export class JupyterNotebookBase implements INotebook {
         const settings = this.configService.getSettings(this.resource);
         if (settings && settings.themeMatplotlibPlots) {
             const matplobInit =
-                !settings || settings.enablePlotViewer
+                (!settings || settings.enablePlotViewer) &&
+                !isResourceNativeNotebook(this._resource, this.vscNotebook, this.fs)
                     ? CodeSnippets.MatplotLibInitSvg
                     : CodeSnippets.MatplotLibInitPng;
 
@@ -848,7 +854,7 @@ export class JupyterNotebookBase implements INotebook {
     private generateRequest = (
         code: string,
         silent?: boolean,
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         metadata?: Record<string, any>
     ): Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> | undefined => {
         //traceInfo(`Executing code in jupyter : ${code}`);
@@ -955,12 +961,12 @@ export class JupyterNotebookBase implements INotebook {
         silent: boolean | undefined,
         clearState: RefBool,
         msg: KernelMessage.IIOPubMessage
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ) {
         // Let our loggers get a first crack at the message. They may change it
         this.getLoggers().forEach((f) => (msg = f.preHandleIOPub ? f.preHandleIOPub(msg) : msg));
 
-        // tslint:disable-next-line:no-require-imports
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
         const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
 
         // Create a trimming function. Only trim user output. Silent output requires the full thing
@@ -1041,7 +1047,7 @@ export class JupyterNotebookBase implements INotebook {
         // Ask the user for input
         if (msg.content && 'prompt' in msg.content) {
             const hasPassword = msg.content.password !== null && (msg.content.password as boolean);
-            this.applicationService
+            void this.applicationService
                 .showInputBox({
                     prompt: msg.content.prompt ? msg.content.prompt.toString() : '',
                     ignoreFocusOut: true,
@@ -1049,7 +1055,7 @@ export class JupyterNotebookBase implements INotebook {
                 })
                 .then((v) => {
                     this.session.sendInputReply(v || '');
-                });
+                }, noop);
         }
     }
 
@@ -1059,7 +1065,7 @@ export class JupyterNotebookBase implements INotebook {
         clearState: RefBool,
         msg: KernelMessage.IShellControlMessage
     ) {
-        // tslint:disable-next-line:no-require-imports
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
         const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
 
         // Create a trimming function. Only trim user output. Silent output requires the full thing
@@ -1078,7 +1084,7 @@ export class JupyterNotebookBase implements INotebook {
         }
     }
 
-    // tslint:disable-next-line: max-func-body-length
+    // eslint-disable-next-line
     private handleCodeRequest = (subscriber: CellSubscriber, silent?: boolean) => {
         // Generate a new request if we still can
         if (subscriber.isValid(this.sessionStartTime)) {
@@ -1235,7 +1241,7 @@ export class JupyterNotebookBase implements INotebook {
         // Check our length on text output
         if (msg.content.data && msg.content.data.hasOwnProperty('text/plain')) {
             msg.content.data['text/plain'] = splitMultilineString(
-                // tslint:disable-next-line: no-any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 trimFunc(concatMultilineString(msg.content.data['text/plain'] as any))
             );
         }
@@ -1246,7 +1252,7 @@ export class JupyterNotebookBase implements INotebook {
                 output_type: 'execute_result',
                 data: msg.content.data,
                 metadata: msg.content.metadata,
-                // tslint:disable-next-line: no-any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 transient: msg.content.transient as any, // NOSONAR
                 execution_count: msg.content.execution_count
             },
@@ -1264,7 +1270,7 @@ export class JupyterNotebookBase implements INotebook {
         if (reply.payload) {
             reply.payload.forEach((o) => {
                 if (o.data && o.data.hasOwnProperty('text/plain')) {
-                    // tslint:disable-next-line: no-any
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     const str = concatMultilineString((o.data as any)['text/plain']); // NOSONAR
                     const data = trimFunc(str);
                     this.addToCellData(
@@ -1315,7 +1321,7 @@ export class JupyterNotebookBase implements INotebook {
                 : undefined;
         if (existing) {
             const originalText = formatStreamText(
-                // tslint:disable-next-line: no-any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 `${concatMultilineString(existing.text as any)}${concatMultilineString(msg.content.text)}`
             );
             originalTextLength = originalText.length;
@@ -1356,7 +1362,7 @@ export class JupyterNotebookBase implements INotebook {
             output_type: 'display_data',
             data: newData,
             metadata: msg.content.metadata,
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             transient: msg.content.transient as any // NOSONAR
         };
         this.addToCellData(cell, output, clearState);
@@ -1404,7 +1410,7 @@ export class JupyterNotebookBase implements INotebook {
             traceback: msg.content.traceback
         };
         if (msg.content.hasOwnProperty('transient')) {
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             output.transient = (msg.content as any).transient;
         }
         this.addToCellData(cell, output, clearState);

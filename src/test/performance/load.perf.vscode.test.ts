@@ -3,7 +3,7 @@
 
 'use strict';
 
-// tslint:disable:no-invalid-this no-console
+/* eslint-disable no-invalid-this, no-console */
 
 import { expect } from 'chai';
 import * as fs from 'fs-extra';
@@ -37,7 +37,7 @@ suite('Activation Times', () => {
                 await fs.appendFile(logFile, `${elapsedTime}${EOL}`, { encoding: 'utf8' });
                 console.log(`Loaded in ${elapsedTime}ms`);
             }
-            commands.executeCommand('workbench.action.reloadWindow');
+            await commands.executeCommand('workbench.action.reloadWindow');
         });
     }
 

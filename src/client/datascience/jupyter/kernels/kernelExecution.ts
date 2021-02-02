@@ -3,25 +3,28 @@
 
 'use strict';
 
-import { NotebookCell, NotebookCellRunState, NotebookDocument } from 'vscode';
-import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../../common/application/types';
-import { traceInfo } from '../../../common/logger';
+import { NotebookCell, NotebookDocument, NotebookEditor } from 'vscode';
+import { ServerStatus } from '../../../../datascience-ui/interactive-common/mainState';
+import { IApplicationShell, IVSCodeNotebook } from '../../../common/application/types';
+import { traceInfo, traceWarning } from '../../../common/logger';
 import { IDisposable, IExtensionContext } from '../../../common/types';
-import { noop } from '../../../common/utils/misc';
+import { createDeferred, waitForPromise } from '../../../common/utils/async';
 import { captureTelemetry } from '../../../telemetry';
-import { Commands, Telemetry, VSCodeNativeTelemetry } from '../../constants';
+import { Telemetry, VSCodeNativeTelemetry } from '../../constants';
 import { traceCellMessage } from '../../notebook/helpers/helpers';
-import { MultiCancellationTokenSource } from '../../notebook/helpers/multiCancellationToken';
+import { chainWithPendingUpdates } from '../../notebook/helpers/notebookUpdater';
 import {
     IDataScienceErrorHandler,
+    IJupyterSession,
     INotebook,
     INotebookEditorProvider,
-    IRawNotebookSupportedService
+    InterruptResult
 } from '../../types';
-import { CellExecution, CellExecutionFactory } from './cellExecution';
+import { CellExecutionFactory } from './cellExecution';
+import { CellExecutionQueue } from './cellExecutionQueue';
 import { isPythonKernelConnection } from './helpers';
 import type { IKernel, IKernelProvider, IKernelSelectionUsage, KernelConnectionMetadata } from './types';
-// tslint:disable-next-line: no-var-requires no-require-imports
+// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
 /**
@@ -29,142 +32,231 @@ const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed'
  * Else the `Kernel` class gets very big.
  */
 export class KernelExecution implements IDisposable {
-    public notebook?: INotebook;
-
-    private readonly cellExecutions = new WeakMap<NotebookCell, CellExecution>();
-
-    private readonly documentExecutions = new WeakMap<NotebookDocument, MultiCancellationTokenSource>();
-
-    private readonly kernelValidated = new WeakMap<NotebookDocument, { kernel: IKernel; promise: Promise<void> }>();
-
+    private readonly documentExecutions = new WeakMap<NotebookDocument, CellExecutionQueue>();
     private readonly executionFactory: CellExecutionFactory;
     private readonly disposables: IDisposable[] = [];
-    private isRawNotebookSupported?: Promise<boolean>;
+    private readonly kernelRestartHandlerAdded = new WeakSet<IKernel>();
+    private _interruptPromise?: Promise<InterruptResult>;
     constructor(
         private readonly kernelProvider: IKernelProvider,
-        private readonly commandManager: ICommandManager,
         errorHandler: IDataScienceErrorHandler,
         editorProvider: INotebookEditorProvider,
         readonly kernelSelectionUsage: IKernelSelectionUsage,
-        readonly appShell: IApplicationShell,
+        appShell: IApplicationShell,
         readonly vscNotebook: IVSCodeNotebook,
         readonly metadata: Readonly<KernelConnectionMetadata>,
-        private readonly rawNotebookSupported: IRawNotebookSupportedService,
-        context: IExtensionContext
+        context: IExtensionContext,
+        private readonly interruptTimeout: number
     ) {
         this.executionFactory = new CellExecutionFactory(errorHandler, editorProvider, appShell, vscNotebook, context);
     }
 
     @captureTelemetry(Telemetry.ExecuteNativeCell, undefined, true)
-    public async executeCell(cell: NotebookCell): Promise<void> {
-        if (!this.notebook) {
-            throw new Error('executeObservable cannot be called if kernel has not been started!');
-        }
-        // Cannot execute empty cells.
-        if (this.cellExecutions.has(cell) || cell.document.getText().trim().length === 0) {
+    public async executeCell(notebookPromise: Promise<INotebook>, cell: NotebookCell): Promise<void> {
+        const editor = this.vscNotebook.notebookEditors.find((item) => item.document === cell.notebook);
+        if (!editor) {
+            // No editor, possible it was closed.
             return;
         }
-        const cellExecution = this.executionFactory.create(cell, isPythonKernelConnection(this.metadata));
-        this.cellExecutions.set(cell, cellExecution);
-
-        const kernel = this.getKernel(cell.notebook);
-
-        try {
-            traceCellMessage(cell, 'executeCell started in KernelExecution');
-            await this.executeIndividualCell(kernel, cellExecution);
-        } finally {
-            traceCellMessage(cell, 'executeCell completed in KernelExecution');
-            this.cellExecutions.delete(cell);
+        if (cell.metadata.runState === vscodeNotebookEnums.NotebookCellRunState.Running) {
+            // This is an unlikely scenario (UI doesn't allow this).
+            // Seen something similar in CI tests when we manually run whole document using the commands.
+            traceCellMessage(cell, 'Cell is already running, somehow executeCell called again');
+            return;
         }
+
+        const executionQueue = this.getOrCreateCellExecutionQueue(editor, notebookPromise);
+        executionQueue.queueCell(cell);
+        await executionQueue.waitForCompletion([cell]);
     }
 
     @captureTelemetry(Telemetry.ExecuteNativeCell, undefined, true)
     @captureTelemetry(VSCodeNativeTelemetry.RunAllCells, undefined, true)
-    public async executeAllCells(document: NotebookDocument): Promise<void> {
-        if (!this.notebook) {
-            throw new Error('executeObservable cannot be called if kernel has not been started!');
-        }
-        if (this.documentExecutions.has(document)) {
-            return;
-        }
+    public async executeAllCells(notebookPromise: Promise<INotebook>, document: NotebookDocument): Promise<void> {
         const editor = this.vscNotebook.notebookEditors.find((item) => item.document === document);
         if (!editor) {
+            // No editor, possible it was closed.
             return;
         }
-        const cancelTokenSource = new MultiCancellationTokenSource();
-        this.documentExecutions.set(document, cancelTokenSource);
-        const kernel = this.getKernel(document);
 
-        traceInfo('Update notebook execution state as running');
-        await editor.edit((edit) =>
-            edit.replaceMetadata({ ...document.metadata, runState: vscodeNotebookEnums.NotebookRunState.Running })
-        );
-        const codeCellsToExecute = document.cells
+        // Only run code cells that are not already running.
+        const cellsThatWeCanRun = editor.document.cells
             .filter((cell) => cell.cellKind === vscodeNotebookEnums.CellKind.Code)
-            .filter((cell) => cell.document.getText().trim().length > 0)
-            .map((cell) => {
-                const cellExecution = this.executionFactory.create(cell, isPythonKernelConnection(this.metadata));
-                this.cellExecutions.set(cellExecution.cell, cellExecution);
-                return cellExecution;
-            });
-        cancelTokenSource.token.onCancellationRequested(
-            () => codeCellsToExecute.forEach((cell) => cell.cancel()),
-            this,
-            this.disposables
-        );
+            .filter((cell) => cell.metadata.runState !== vscodeNotebookEnums.NotebookCellRunState.Running);
+        if (cellsThatWeCanRun.length === 0) {
+            // This is an unlikely scenario (UI doesn't allow this).
+            // Seen this in CI tests when we manually run whole document using the commands.
+            return;
+        }
+
+        const executionQueue = this.getOrCreateCellExecutionQueue(editor, notebookPromise);
 
         try {
-            codeCellsToExecute.forEach((exec) => traceCellMessage(exec.cell, 'Ready to execute'));
-            for (const cellToExecute of codeCellsToExecute) {
-                traceCellMessage(cellToExecute.cell, 'Before Execute individual cell');
-                const result = this.executeIndividualCell(kernel, cellToExecute);
-                result.finally(() => this.cellExecutions.delete(cellToExecute.cell)).catch(noop);
-                const executionResult = await result;
-                traceCellMessage(cellToExecute.cell, `After Execute individual cell ${executionResult}`);
-                // If a cell has failed or execution cancelled, the get out.
-                if (
-                    cancelTokenSource.token.isCancellationRequested ||
-                    executionResult === vscodeNotebookEnums.NotebookCellRunState.Error
-                ) {
-                    traceInfo(
-                        `Cancel all remaining cells ${cancelTokenSource.token.isCancellationRequested} || ${executionResult}`
-                    );
-                    await Promise.all(codeCellsToExecute.map((cell) => cell.cancel())); // Cancel pending cells.
-                    break;
-                }
-            }
+            traceInfo('Update notebook execution state as running');
+
+            const updateNotebookStatus = chainWithPendingUpdates(editor, (edit) =>
+                edit.replaceMetadata({
+                    ...document.metadata,
+                    runState: vscodeNotebookEnums.NotebookRunState.Running
+                })
+            );
+            cellsThatWeCanRun.forEach((cell) => executionQueue.queueCell(cell));
+            const runAllCells = executionQueue.waitForCompletion(cellsThatWeCanRun);
+
+            await Promise.all([updateNotebookStatus, runAllCells]);
         } finally {
-            traceInfo(`Cancel all remaining cells after finally`);
-            await Promise.all(codeCellsToExecute.map((cell) => cell.cancel())); // Cancel pending cells.
-            this.documentExecutions.delete(document);
-            traceInfo('Restore notebook state to idle');
-            await editor.edit((edit) =>
+            traceInfo('Restore notebook state to idle after completion');
+            await chainWithPendingUpdates(editor, (edit) =>
                 edit.replaceMetadata({ ...document.metadata, runState: vscodeNotebookEnums.NotebookRunState.Idle })
             );
         }
     }
-
-    public async cancelCell(cell: NotebookCell) {
-        if (this.cellExecutions.get(cell)) {
-            traceCellMessage(cell, 'Cancel cell from Kernel Execution');
-            await this.cellExecutions.get(cell)!.cancel();
-        } else {
-            traceCellMessage(cell, 'Cannot cancel cell execution from Kernel Execution');
+    /**
+     * Interrupts the execution of cells.
+     * If we don't have a kernel (Jupyter Session) available, then just abort all of the cell executions.
+     */
+    public async interrupt(document: NotebookDocument, notebookPromise?: Promise<INotebook>): Promise<InterruptResult> {
+        const executionQueue = this.documentExecutions.get(document);
+        if (!executionQueue) {
+            return InterruptResult.Success;
         }
-    }
+        // Possible we don't have a notebook.
+        const notebook = notebookPromise ? await notebookPromise.catch(() => undefined) : undefined;
+        traceInfo('Interrupt kernel execution');
+        // First cancel all the cells & then wait for them to complete.
+        // Both must happen together, we cannot just wait for cells to complete, as its possible
+        // that cell1 has started & cell2 has been queued. If Cell1 completes, then Cell2 will start.
+        // What we want is, if Cell1 completes then Cell2 should not start (it must be cancelled before hand).
+        const pendingCells = executionQueue.cancel().then(() => executionQueue.waitForCompletion());
 
-    public cancelAllCells(document: NotebookDocument): void {
-        if (this.documentExecutions.get(document)) {
-            this.documentExecutions.get(document)!.cancel();
+        if (!notebook) {
+            traceInfo('No notebook to interrupt');
+            this._interruptPromise = undefined;
+            await pendingCells;
+            return InterruptResult.Success;
         }
-        traceInfo('Cancel document execution');
-        document.cells.forEach((cell) => this.cancelCell(cell));
+
+        // Interrupt the active execution
+        const result = this._interruptPromise
+            ? await this._interruptPromise
+            : await (this._interruptPromise = this.interruptExecution(notebook.session, pendingCells));
+
+        // Done interrupting, clear interrupt promise
+        this._interruptPromise = undefined;
+
+        return result;
     }
     public dispose() {
         this.disposables.forEach((d) => d.dispose());
     }
+    private getOrCreateCellExecutionQueue(editor: NotebookEditor, notebookPromise: Promise<INotebook>) {
+        const existingExecutionQueue = this.documentExecutions.get(editor.document);
+        // Re-use the existing Queue if it can be used.
+        if (existingExecutionQueue && !existingExecutionQueue.isEmpty && !existingExecutionQueue.failed) {
+            return existingExecutionQueue;
+        }
+
+        // We need to add the handler to kernel immediately (before we resolve the notebook, else its possible user hits restart or the like and we miss that event).
+        const wrappedNotebookPromise = this.getKernel(editor.document)
+            .then((kernel) => this.addKernelRestartHandler(kernel, editor.document))
+            .then(() => notebookPromise);
+
+        const newCellExecutionQueue = new CellExecutionQueue(
+            wrappedNotebookPromise,
+            this.executionFactory,
+            isPythonKernelConnection(this.metadata)
+        );
+
+        // If the editor is closed (user or on CI), then just stop handling the UI updates.
+        editor.onDidDispose(
+            async () => {
+                if (!newCellExecutionQueue.failed || !newCellExecutionQueue.isEmpty) {
+                    await newCellExecutionQueue.cancel(true);
+                }
+            },
+            this,
+            this.disposables
+        );
+
+        this.documentExecutions.set(editor.document, newCellExecutionQueue);
+        return newCellExecutionQueue;
+    }
+    private async interruptExecution(
+        session: IJupyterSession,
+        pendingCells: Promise<unknown>
+    ): Promise<InterruptResult> {
+        // Create a deferred promise that resolves if we have a failure
+        const restarted = createDeferred<boolean>();
+
+        // Listen to status change events so we can tell if we're restarting
+        const restartHandler = (e: ServerStatus) => {
+            if (e === ServerStatus.Restarting) {
+                // We restarted the kernel.
+                traceWarning('Kernel restarting during interrupt');
+
+                // Indicate we restarted the race below
+                restarted.resolve(true);
+            }
+        };
+        const restartHandlerToken = session.onSessionStatusChanged(restartHandler);
+
+        // Start our interrupt. If it fails, indicate a restart
+        session.interrupt(this.interruptTimeout).catch((exc) => {
+            traceWarning(`Error during interrupt: ${exc}`);
+            restarted.resolve(true);
+        });
+
+        try {
+            // Wait for all of the pending cells to finish or the timeout to fire
+            const result = await waitForPromise(Promise.race([pendingCells, restarted.promise]), this.interruptTimeout);
+
+            // See if we restarted or not
+            if (restarted.completed) {
+                return InterruptResult.Restarted;
+            }
+
+            if (result === null) {
+                // We timed out. You might think we should stop our pending list, but that's not
+                // up to us. The cells are still executing. The user has to request a restart or try again
+                return InterruptResult.TimedOut;
+            }
+
+            // Indicate the interrupt worked.
+            return InterruptResult.Success;
+        } catch (exc) {
+            // Something failed. See if we restarted or not.
+            if (restarted.completed) {
+                return InterruptResult.Restarted;
+            }
+
+            // Otherwise a real error occurred.
+            throw exc;
+        } finally {
+            restartHandlerToken.dispose();
+        }
+    }
+    private addKernelRestartHandler(kernel: IKernel, document: NotebookDocument) {
+        if (this.kernelRestartHandlerAdded.has(kernel)) {
+            return;
+        }
+        this.kernelRestartHandlerAdded.add(kernel);
+        traceInfo('Hooked up kernel restart handler');
+        kernel.onRestarted(
+            () => {
+                // We're only interested in restarts of the kernel associated with this document.
+                const executionQueue = this.documentExecutions.get(document);
+                if (kernel !== this.kernelProvider.get(document.uri) || !executionQueue) {
+                    return;
+                }
+
+                traceInfo('Cancel all executions as Kernel was restarted');
+                return executionQueue.cancel(true);
+            },
+            this,
+            this.disposables
+        );
+    }
     private async getKernel(document: NotebookDocument): Promise<IKernel> {
-        await this.validateKernel(document);
         let kernel = this.kernelProvider.get(document.uri);
         if (!kernel) {
             kernel = this.kernelProvider.getOrCreate(document.uri, { metadata: this.metadata });
@@ -172,59 +264,7 @@ export class KernelExecution implements IDisposable {
         if (!kernel) {
             throw new Error('Unable to create a Kernel to run cell');
         }
-        await kernel.start();
+        await kernel.start({ document });
         return kernel;
-    }
-
-    private async executeIndividualCell(
-        kernelPromise: Promise<IKernel>,
-        cellExecution: CellExecution
-    ): Promise<NotebookCellRunState | undefined> {
-        if (!this.notebook) {
-            throw new Error('No notebook object');
-        }
-
-        cellExecution.token.onCancellationRequested(
-            // Interrupt kernel only if we need to cancel a cell execution.
-            () => {
-                traceCellMessage(cellExecution.cell, 'Cell cancellation requested');
-                this.commandManager.executeCommand(Commands.NotebookEditorInterruptKernel).then(noop, noop);
-            },
-            this,
-            this.disposables
-        );
-
-        // Start execution
-        await cellExecution.start(kernelPromise, this.notebook);
-
-        // The result promise will resolve when complete.
-        return cellExecution.result;
-    }
-    private async validateKernel(document: NotebookDocument): Promise<void> {
-        const kernel = this.kernelProvider.get(document.uri);
-        if (!kernel) {
-            return;
-        }
-        if (!this.kernelValidated.get(document)) {
-            const promise = new Promise<void>(async (resolve) => {
-                this.isRawNotebookSupported =
-                    this.isRawNotebookSupported || this.rawNotebookSupported.isSupportedForLocalLaunch();
-                const rawSupported = await this.isRawNotebookSupported;
-                this.kernelSelectionUsage
-                    .useSelectedKernel(kernel?.metadata, document.uri, rawSupported ? 'raw' : 'jupyter')
-                    .finally(() => {
-                        // If there's an exception, then we cannot use the kernel and a message would have been displayed.
-                        // We don't want to cache such a promise, as its possible the user later installs the dependencies.
-                        if (this.kernelValidated.get(document)?.kernel === kernel) {
-                            this.kernelValidated.delete(document);
-                        }
-                    })
-                    .finally(resolve)
-                    .catch(noop);
-            });
-
-            this.kernelValidated.set(document, { kernel, promise });
-        }
-        await this.kernelValidated.get(document)!.promise;
     }
 }

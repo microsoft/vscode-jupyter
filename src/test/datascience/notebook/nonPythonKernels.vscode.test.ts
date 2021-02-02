@@ -3,7 +3,7 @@
 
 'use strict';
 
-// tslint:disable:no-require-imports no-var-requires
+/* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 import * as path from 'path';
 import * as sinon from 'sinon';
 import { Uri } from 'vscode';
@@ -15,7 +15,7 @@ import { VSCodeNotebookProvider } from '../../../client/datascience/constants';
 import { NotebookCellLanguageService } from '../../../client/datascience/notebook/defaultCellLanguageService';
 import { INotebookEditorProvider } from '../../../client/datascience/types';
 import { IExtensionTestApi, waitForCondition } from '../../common';
-import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
+import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST, IS_NON_RAW_NATIVE_TEST } from '../../constants';
 import { initialize } from '../../initialize';
 import { openNotebook } from '../helpers';
 import {
@@ -24,7 +24,8 @@ import {
     closeNotebooks,
     closeNotebooksAndCleanUpAfterTests,
     createTemporaryNotebook,
-    executeActiveDocument,
+    runAllCellsInActiveNotebook,
+    runCell,
     insertCodeCell,
     insertMarkdownCell,
     saveActiveNotebook,
@@ -33,7 +34,7 @@ import {
     waitForKernelToGetAutoSelected
 } from './helper';
 
-// tslint:disable: no-any no-invalid-this
+/* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () => {
     const juliaNb = path.join(
         EXTENSION_ROOT_DIR_FOR_TESTS,
@@ -81,7 +82,12 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
     const testJavaKernels = (process.env.VSC_JUPYTER_CI_RUN_JAVA_NB_TEST || '').toLowerCase() === 'true';
     suiteSetup(async function () {
         api = await initialize();
-        if (!process.env.VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST || !(await canRunNotebookTests())) {
+        if (
+            !process.env.VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST ||
+            !(await canRunNotebookTests()) ||
+            IS_REMOTE_NATIVE_TEST ||
+            IS_NON_RAW_NATIVE_TEST
+        ) {
             return this.skip();
         }
         await trustAllNotebooks();
@@ -102,10 +108,9 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         testEmptyPythonNb = Uri.file(await createTemporaryNotebook(emptyPythonNb, disposables));
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
     });
-    teardown(async () => {
-        await closeNotebooksAndCleanUpAfterTests(disposables);
-    });
+    teardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
     test('Automatically pick java kernel when opening a Java Notebook', async function () {
+        return this.skip(); // Remove this when https://github.com/microsoft/vscode-jupyter/issues/4372 is fixed
         if (!testJavaKernels) {
             return this.skip();
         }
@@ -166,16 +171,13 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         }
     });
     test('Can run a Julia notebook', async function () {
-        this.timeout(30_000); // Can be slow to start Julia kernel on CI.
+        this.timeout(60_000); // Can be slow to start Julia kernel on CI.
         await openNotebook(api.serviceContainer, testJuliaNb.fsPath);
         await insertCodeCell('123456', { language: 'julia', index: 0 });
-        await waitForKernelToGetAutoSelected('julia');
-        await executeActiveDocument();
-
         const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
+        await runCell(cell);
         // Wait till execution count changes and status is success.
-        await waitForExecutionCompletedSuccessfully(cell);
-
+        await waitForExecutionCompletedSuccessfully(cell, 60_000);
         assertHasTextOutputInVSCode(cell, '123456', 0, false);
     });
     test('Can run a CSharp notebook', async function () {
@@ -188,7 +190,7 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         this.timeout(30_000); // Can be slow to start csharp kernel on CI.
         await openNotebook(api.serviceContainer, testCSharpNb.fsPath);
         await waitForKernelToGetAutoSelected('c#');
-        await executeActiveDocument();
+        await runAllCellsInActiveNotebook();
 
         const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
         // Wait till execution count changes and status is success.
@@ -218,7 +220,7 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         this.timeout(30_000); // In case starting Java kernel is slow on CI (we know julia is slow).
         await openNotebook(api.serviceContainer, testJavaNb.fsPath);
         await waitForKernelToGetAutoSelected('java');
-        await executeActiveDocument();
+        await runAllCellsInActiveNotebook();
 
         const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
         // Wait till execution count changes and status is success.

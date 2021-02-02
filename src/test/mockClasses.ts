@@ -15,18 +15,18 @@ export class MockOutputChannel implements vscode.OutputChannel {
         this.append(value);
         this.append('\n');
     }
-    // tslint:disable-next-line:no-empty
+    // eslint-disable-next-line no-empty,@typescript-eslint/no-empty-function
     public clear() {}
     public show(preservceFocus?: boolean): void;
     public show(column?: vscode.ViewColumn, preserveFocus?: boolean): void;
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public show(_x?: any, _y?: any): void {
         this.isShown = true;
     }
     public hide() {
         this.isShown = false;
     }
-    // tslint:disable-next-line:no-empty
+    // eslint-disable-next-line no-empty,@typescript-eslint/no-empty-function
     public dispose() {}
 }
 
@@ -37,10 +37,10 @@ export class MockStatusBarItem implements vscode.StatusBarItem {
     public tooltip!: string;
     public color!: string;
     public command!: string;
-    // tslint:disable-next-line:no-empty
+    // eslint-disable-next-line no-empty,@typescript-eslint/no-empty-function
     public show(): void {}
-    // tslint:disable-next-line:no-empty
+    // eslint-disable-next-line no-empty,@typescript-eslint/no-empty-function
     public hide(): void {}
-    // tslint:disable-next-line:no-empty
+    // eslint-disable-next-line no-empty,@typescript-eslint/no-empty-function
     public dispose(): void {}
 }

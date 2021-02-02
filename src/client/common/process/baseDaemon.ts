@@ -39,12 +39,12 @@ export abstract class BasePythonDaemon {
     public get isAlive(): boolean {
         return this.connectionClosedMessage === '';
     }
-    protected outputObservale = new Subject<Output<string>>();
+    protected outputObservable = new Subject<Output<string>>();
     private connectionClosedMessage: string = '';
     protected get closed() {
         return this.connectionClosedDeferred.promise;
     }
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private readonly connectionClosedDeferred: Deferred<any>;
     private disposables: IDisposable[] = [];
     private disposed = false;
@@ -55,7 +55,7 @@ export abstract class BasePythonDaemon {
         public readonly proc: ChildProcess,
         public readonly connection: MessageConnection
     ) {
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         this.connectionClosedDeferred = createDeferred<any>();
         // This promise gets used conditionally, if it doesn't get used, and the promise is rejected,
         // then node logs errors. We don't want that, hence add a dummy error handler.
@@ -174,7 +174,7 @@ export abstract class BasePythonDaemon {
             'mergeStdOutErr',
             'extraVariables'
         ];
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         return Object.keys(options).every((item) => daemonSupportedSpawnOptions.indexOf(item as any) >= 0);
     }
     protected sendRequestWithoutArgs<R, E, RO>(type: RequestType0<R, E, RO>): Thenable<R> {
@@ -208,7 +208,7 @@ export abstract class BasePythonDaemon {
             let response: ExecResponse;
             if ('fileName' in moduleOrFile) {
                 const request = new RequestType<
-                    // tslint:disable-next-line: no-any
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     { file_name: string; args: string[]; cwd?: string; env?: any },
                     ExecResponse,
                     void,
@@ -222,7 +222,7 @@ export abstract class BasePythonDaemon {
                 });
             } else {
                 const request = new RequestType<
-                    // tslint:disable-next-line: no-any
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     { module_name: string; args: string[]; cwd?: string; env?: any },
                     ExecResponse,
                     void,
@@ -243,7 +243,7 @@ export abstract class BasePythonDaemon {
         let stdErr = '';
         this.proc.stderr.on('data', (output: string | Buffer) => (stdErr += output.toString()));
         // Wire up stdout/stderr.
-        const subscription = this.outputObservale.subscribe((out) => {
+        const subscription = this.outputObservable.subscribe((out) => {
             if (out.source === 'stderr' && options.throwOnStdErr) {
                 subject.error(new StdErrError(out.out));
             } else if (out.source === 'stderr' && options.mergeStdOutErr) {
@@ -306,7 +306,7 @@ export abstract class BasePythonDaemon {
         options: SpawnOptions
     ): Promise<ExecutionResult<string>> {
         const request = new RequestType<
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             { file_name: string; args: string[]; cwd?: string; env?: any },
             ExecResponse,
             void,
@@ -327,7 +327,7 @@ export abstract class BasePythonDaemon {
         options: SpawnOptions
     ): Promise<ExecutionResult<string>> {
         const request = new RequestType<
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             { module_name: string; args: string[]; cwd?: string; env?: any },
             ExecResponse,
             void,
@@ -343,7 +343,7 @@ export abstract class BasePythonDaemon {
         return response;
     }
     private monitorConnection() {
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const logConnectionStatus = (msg: string, ex?: any) => {
             if (!this.disposed) {
                 this.connectionClosedMessage += msg + (ex ? `, With Error: ${util.format(ex)}` : '');
@@ -360,8 +360,8 @@ export abstract class BasePythonDaemon {
         // this.proc.on('error', error => logConnectionStatus('Daemon Processed died with error', error));
         this.proc.on('exit', (code) => logConnectionStatus('Daemon Processed died with exit code', code));
         // Wire up stdout/stderr.
-        const OuputNotification = new NotificationType<Output<string>, void>('output');
-        this.connection.onNotification(OuputNotification, (output) => this.outputObservale.next(output));
+        const OutputNotification = new NotificationType<Output<string>, void>('output');
+        this.connection.onNotification(OutputNotification, (output) => this.outputObservable.next(output));
         const logNotification = new NotificationType<
             { level: 'WARN' | 'WARNING' | 'INFO' | 'DEBUG' | 'NOTSET'; msg: string; pid?: string },
             void

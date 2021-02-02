@@ -81,7 +81,7 @@ import type {
 import { IAsyncDisposable, Resource } from '../types';
 import { ICommandNameArgumentTypeMapping } from './commands';
 
-// tslint:disable:no-any unified-signatures
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/unified-signatures */
 
 export const IApplicationShell = Symbol('IApplicationShell');
 export interface IApplicationShell {
@@ -1093,7 +1093,10 @@ export interface IWebview {
 
 // Wraps the VS Code webview view
 export const IWebviewView = Symbol('IWebviewView');
-export interface IWebviewView extends IWebview {}
+export interface IWebviewView extends IWebview {
+    readonly onDidChangeVisiblity: Event<void>;
+    readonly visible: boolean;
+}
 
 export interface IWebviewOptions {
     rootPath: string;
@@ -1104,7 +1107,7 @@ export interface IWebviewOptions {
      * E.g. required for webview to serve images from worksapces when nb is in a nested folder.
      */
     additionalPaths?: string[];
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     settings?: any;
     // Instead of creating a webview we may be passed on already created by VS Code
     webviewHost?: vscodeWebviewView | vscodeWebviewPanel;
@@ -1216,7 +1219,7 @@ export interface IActiveResourceService {
 
 // Temporary hack to get the nyc compiler to find these types. vscode.proposed.d.ts doesn't work for some reason.
 
-// tslint:disable: interface-name
+/* eslint-disable @typescript-eslint/naming-convention */
 //#region Custom editor https://github.com/microsoft/vscode/issues/77131
 
 /**

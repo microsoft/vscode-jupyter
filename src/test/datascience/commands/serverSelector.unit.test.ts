@@ -7,7 +7,7 @@ import { JupyterServerSelectorCommand } from '../../../client/datascience/comman
 import { Commands } from '../../../client/datascience/constants';
 import { JupyterServerSelector } from '../../../client/datascience/jupyter/serverSelector';
 
-// tslint:disable: max-func-body-length
+/* eslint-disable  */
 suite('DataScience - Server Selector Command', () => {
     let serverSelectorCommand: JupyterServerSelectorCommand;
     let commandManager: ICommandManager;
@@ -28,13 +28,13 @@ suite('DataScience - Server Selector Command', () => {
 
     test('Command Handler should invoke ServerSelector', () => {
         serverSelectorCommand.register();
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const handler = (capture(commandManager.registerCommand as any).first()[1] as Function).bind(
             serverSelectorCommand
         );
 
         handler();
 
-        verify(serverSelector.selectJupyterURI(true)).once();
+        verify(serverSelector.selectJupyterURI(true, 'commandPalette')).once();
     });
 });

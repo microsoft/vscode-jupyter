@@ -18,7 +18,7 @@ import {
 import { BaseNotebookModel, getDefaultNotebookContentForNativeNotebooks } from './baseModel';
 
 // https://github.com/microsoft/vscode-python/issues/13155
-// tslint:disable-next-line: no-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function sortObjectPropertiesRecursively(obj: any): any {
     if (Array.isArray(obj)) {
         return obj.map(sortObjectPropertiesRecursively);
@@ -27,11 +27,11 @@ export function sortObjectPropertiesRecursively(obj: any): any {
         return (
             Object.keys(obj)
                 .sort()
-                // tslint:disable-next-line: no-any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 .reduce<Record<string, any>>((sortedObj, prop) => {
                     sortedObj[prop] = sortObjectPropertiesRecursively(obj[prop]);
                     return sortedObj;
-                    // tslint:disable-next-line: no-any
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 }, {}) as any
         );
     }
@@ -76,13 +76,13 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
         file: Uri,
         globalMemento: Memento,
         crypto: ICryptoUtils,
-        json: Partial<nbformat.INotebookContent> = {},
+        private readonly originalJson: Partial<nbformat.INotebookContent> = {},
         indentAmount: string = ' ',
         pythonNumber: number = 3,
         private readonly vscodeNotebook: IVSCodeNotebook,
         private readonly cellLanguageService: NotebookCellLanguageService
     ) {
-        super(isTrusted, file, globalMemento, crypto, json, indentAmount, pythonNumber, false);
+        super(isTrusted, file, globalMemento, crypto, originalJson, indentAmount, pythonNumber, false);
         // Do not change this code without changing code in base class.
         // We cannot invoke this in base class as `cellLanguageService` is not available in base class.
         this.ensureNotebookJson();
@@ -101,7 +101,8 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
             this.notebookContentWithoutCells,
             this.file,
             this.notebookJson.cells || [],
-            this._preferredLanguage
+            this._preferredLanguage,
+            this.originalJson
         );
     }
     public markAsReloadedAfterTrusting() {
@@ -168,7 +169,7 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
             // The output can contain custom metadata, we need to remove that.
             json.cells = json.cells.map((cell) => {
                 const metadata = { ...cell.metadata };
-                // tslint:disable-next-line: no-any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const outputs: nbformat.IOutput[] = Array.isArray(cell.outputs) ? (cell.outputs as any) : [];
                 outputs.forEach((output: nbformat.IOutput) => {
                     if (
@@ -186,7 +187,7 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
                 return {
                     ...cell,
                     metadata
-                    // tslint:disable-next-line: no-any
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 } as any;
             });
         }

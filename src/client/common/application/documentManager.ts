@@ -21,7 +21,7 @@ import {
 
 import { IDocumentManager } from './types';
 
-// tslint:disable:no-any unified-signatures
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/unified-signatures */
 
 @injectable()
 export class DocumentManager implements IDocumentManager {

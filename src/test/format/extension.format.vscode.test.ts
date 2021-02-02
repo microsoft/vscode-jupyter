@@ -21,7 +21,7 @@
 // } from '../datascience/notebook/helper';
 // import { EXTENSION_ROOT_DIR_FOR_TESTS, initialize, initializeTest } from '../initialize';
 
-// // tslint:disable: no-any no-invalid-this
+/* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 // suite('Formatting - Notebooks (slow)', () => {
 //     let api: IExtensionTestApi;
 //     suiteSetup(async function () {

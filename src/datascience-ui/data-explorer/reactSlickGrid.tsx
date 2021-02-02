@@ -14,34 +14,33 @@ import { ReactSlickGridFilterBox } from './reactSlickGridFilterBox';
 WARNING: Do not change the order of these imports.
 Slick grid MUST be imported after we load jQuery and other stuff from `./globalJQueryImports`
 */
-// tslint:disable-next-line: no-var-requires no-require-imports
+// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const slickgridJQ = require('slickgrid/lib/jquery-1.11.2.min');
 
 // Adding comments to ensure order of imports does not change due to auto formatters.
-// tslint:disable-next-line: ordered-imports
+// eslint-disable-next-line import/order
 import 'slickgrid/slick.core';
 // Adding comments to ensure order of imports does not change due to auto formatters.
-// tslint:disable-next-line: ordered-imports
+// eslint-disable-next-line import/order
 import 'slickgrid/slick.dataview';
 // Adding comments to ensure order of imports does not change due to auto formatters.
-// tslint:disable-next-line: ordered-imports
+// eslint-disable-next-line import/order
 import 'slickgrid/slick.grid';
+import 'slickgrid/slick.editors';
 // Adding comments to ensure order of imports does not change due to auto formatters.
-// tslint:disable-next-line: ordered-imports
+// eslint-disable-next-line import/order
 import 'slickgrid/plugins/slick.autotooltips';
 // Adding comments to ensure order of imports does not change due to auto formatters.
-// tslint:disable-next-line: ordered-imports
+// eslint-disable-next-line import/order
 import 'slickgrid/slick.grid.css';
 // Make sure our css comes after the slick grid css. We override some of its styles.
-// tslint:disable-next-line: ordered-imports
+// eslint-disable-next-line import/order
 import './reactSlickGrid.css';
+import { generateDisplayValue } from './cellFormatter';
 /*
 WARNING: Do not change the order of these imports.
 Slick grid MUST be imported after we load jQuery and other stuff from `./globalJQueryImports`
 */
-
-const MinColumnWidth = 70;
-const MaxColumnWidth = 500;
 
 export interface ISlickRow extends Slick.SlickData {
     id: string;
@@ -51,11 +50,12 @@ export interface ISlickGridAdd {
     newRows: ISlickRow[];
 }
 
-// tslint:disable:no-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export interface ISlickGridProps {
     idProperty: string;
     columns: Slick.Column<ISlickRow>[];
     rowsAdded: Slick.Event<ISlickGridAdd>;
+    columnsUpdated: Slick.Event<Slick.Column<Slick.SlickData>[]>;
     filterRowsText: string;
     filterRowsTooltip: string;
     forceHeight?: number;
@@ -69,11 +69,14 @@ interface ISlickGridState {
 
 class ColumnFilter {
     private matchFunc: (v: any) => boolean;
-    private lessThanRegEx = /^\s*<\s*(\d+.*)/;
-    private lessThanEqualRegEx = /^\s*<=\s*(\d+.*).*/;
-    private greaterThanRegEx = /^\s*>\s*(\d+.*).*/;
-    private greaterThanEqualRegEx = /^\s*>=\s*(\d+.*).*/;
-    private equalThanRegEx = /^\s*=\s*(\d+.*).*/;
+    private nanRegEx = /^\s*nan.*/i;
+    private infRegEx = /^\s*inf.*/i;
+    private negInfRegEx = /^\s*-inf.*/i;
+    private lessThanRegEx = /^\s*<\s*((?<Number>\d+.*)|(?<NaN>nan)|(?<Inf>inf)|(?<NegInf>-inf))/i;
+    private lessThanEqualRegEx = /^\s*<=\s*((?<Number>\d+.*)|(?<NaN>nan)|(?<Inf>inf)|(?<NegInf>-inf)).*/i;
+    private greaterThanRegEx = /^\s*>\s*((?<Number>\d+.*)|(?<NaN>nan)|(?<Inf>inf)|(?<NegInf>-inf)).*/i;
+    private greaterThanEqualRegEx = /^\s*>=\s*((?<Number>\d+.*)|(?<NaN>nan)|(?<Inf>inf)|(?<NegInf>-inf)).*/i;
+    private equalThanRegEx = /^\s*=\s*((?<Number>\d+.*)|(?<NaN>nan)|(?<Inf>inf)|(?<NegInf>-inf)).*/i;
 
     constructor(text: string, column: Slick.Column<Slick.SlickData>) {
         if (text && text.length > 0) {
@@ -99,28 +102,42 @@ class ColumnFilter {
 
     private extractDigits(text: string, regex: RegExp): number {
         const match = regex.exec(text);
-        if (match && match.length > 1) {
-            return parseFloat(match[1]);
+        if (match && match.groups) {
+            if (match.groups.Number) {
+                return parseFloat(match.groups.Number);
+            } else if (match.groups.Inf) {
+                return Infinity;
+            } else if (match.groups.NegInf) {
+                return -Infinity;
+            } else if (match.groups.NaN) {
+                return NaN;
+            }
         }
         return 0;
     }
 
     private generateNumericOperation(text: string): (v: any) => boolean {
-        if (this.lessThanRegEx.test(text)) {
+        if (this.nanRegEx.test(text)) {
+            return (v: any) => v !== undefined && Number.isNaN(v);
+        } else if (this.infRegEx.test(text)) {
+            return (v: any) => v !== undefined && v === Infinity;
+        } else if (this.negInfRegEx.test(text)) {
+            return (v: any) => v !== undefined && v === -Infinity;
+        } else if (this.lessThanRegEx.test(text)) {
             const n1 = this.extractDigits(text, this.lessThanRegEx);
             return (v: any) => v !== undefined && v < n1;
         } else if (this.lessThanEqualRegEx.test(text)) {
             const n2 = this.extractDigits(text, this.lessThanEqualRegEx);
-            return (v: any) => v !== undefined && v <= n2;
+            return (v: any) => v !== undefined && (v <= n2 || (Number.isNaN(v) && Number.isNaN(n2)));
         } else if (this.greaterThanRegEx.test(text)) {
             const n3 = this.extractDigits(text, this.greaterThanRegEx);
             return (v: any) => v !== undefined && v > n3;
         } else if (this.greaterThanEqualRegEx.test(text)) {
             const n4 = this.extractDigits(text, this.greaterThanEqualRegEx);
-            return (v: any) => v !== undefined && v >= n4;
+            return (v: any) => v !== undefined && (v >= n4 || (Number.isNaN(v) && Number.isNaN(n4)));
         } else if (this.equalThanRegEx.test(text)) {
             const n5 = this.extractDigits(text, this.equalThanRegEx);
-            return (v: any) => v !== undefined && v === n5;
+            return (v: any) => v !== undefined && (v === n5 || (Number.isNaN(v) && Number.isNaN(n5)));
         } else {
             const n6 = parseFloat(text);
             return (v: any) => v !== undefined && v === n6;
@@ -142,9 +159,10 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         this.containerRef = React.createRef<HTMLDivElement>();
         this.measureRef = React.createRef<HTMLDivElement>();
         this.props.rowsAdded.subscribe(this.addedRows);
+        this.props.columnsUpdated.subscribe(this.updateColumns);
     }
 
-    // tslint:disable-next-line:max-func-body-length
+    // eslint-disable-next-line
     public componentDidMount = () => {
         window.addEventListener('resize', this.windowResized);
 
@@ -161,8 +179,10 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
             // Setup options for the grid
             const options: Slick.GridOptions<Slick.SlickData> = {
                 asyncEditorLoading: true,
-                editable: false,
+                editable: true,
+                enableTextSelectionOnCells: true,
                 enableCellNavigation: true,
+                editorCellNavOnLRKeys: true,
                 showHeaderRow: true,
                 enableColumnReorder: false,
                 explicitInitialization: false,
@@ -173,6 +193,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
             // Transform columns so they are sortable and stylable
             const columns = this.props.columns.map((c) => {
                 c.sortable = true;
+                c.editor = readonlyCellEditor;
                 c.headerCssClass = 'react-grid-header-cell';
                 c.cssClass = 'react-grid-cell';
                 return c;
@@ -427,18 +448,14 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         }
     };
 
-    private autoResizeColumns(rows: ISlickRow[]) {
+    private autoResizeColumns() {
         if (this.state.grid) {
             const fontString = this.computeFont();
             const columns = this.state.grid.getColumns();
+            const placeholder = '99999999999';
+            const maxFieldWidth = measureText(placeholder, fontString);
             columns.forEach((c) => {
-                let colWidth = MinColumnWidth;
-                rows.forEach((r: any) => {
-                    const field = c.field ? r[c.field] : '';
-                    const fieldWidth = field ? measureText(field.toString(), fontString) : 0;
-                    colWidth = Math.min(MaxColumnWidth, Math.max(colWidth, fieldWidth));
-                });
-                c.width = colWidth;
+                c.width = maxFieldWidth;
             });
             this.state.grid.setColumns(columns);
 
@@ -461,6 +478,11 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         return null;
     }
 
+    private updateColumns = (_e: Slick.EventData, newColumns: Slick.Column<Slick.SlickData>[]) => {
+        this.state.grid?.setColumns(newColumns);
+        this.state.grid?.render(); // We might be able to skip this rerender?
+    };
+
     private addedRows = (_e: Slick.EventData, data: ISlickGridAdd) => {
         // Add all of these new rows into our data.
         this.dataView.beginUpdate();
@@ -471,7 +493,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         // Update columns if we haven't already
         if (!this.autoResizedColumns) {
             this.autoResizedColumns = true;
-            this.autoResizeColumns(data.newRows);
+            this.autoResizeColumns();
         }
 
         this.dataView.endUpdate();
@@ -480,7 +502,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         // refresh the grid.
     };
 
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private filter(item: any, _args: any): boolean {
         const fields = Array.from(this.columnFilters.keys());
         for (const field of fields) {
@@ -535,4 +557,84 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
 
         return -1;
     }
+}
+
+// Modified version of https://github.com/6pac/SlickGrid/blob/master/slick.editors.js#L24
+// with some fixes to get things working in our context
+function readonlyCellEditor(this: any, args: any) {
+    var $input: any;
+    var defaultValue: any;
+
+    this.init = function init() {
+        $input = slickgridJQ("<input type=text class='editor-text'/>")
+            .appendTo(args.container)
+            .on('keydown.nav', handleKeyDown)
+            .focus()
+            .select();
+    };
+
+    this.destroy = function destroy() {
+        $input.remove();
+    };
+
+    this.focus = function focus() {
+        $input.focus();
+    };
+
+    this.isValueChanged = function isValueChanged() {
+        return false;
+    };
+
+    this.loadValue = function loadValue(item: any) {
+        defaultValue = generateDisplayValue(item[args.column.field]);
+        $input.val(defaultValue);
+        $input[0].defaultValue = defaultValue;
+        $input.select();
+    };
+
+    this.applyValue = function applyValue() {
+        // Noop as we never want to overwrite the cell's value.
+        // Defined to avoid polluting the console with typeerrors
+    };
+
+    this.validate = function validate() {
+        return {
+            valid: true,
+            msg: null
+        };
+    };
+
+    this.serializeValue = function serializeValue() {
+        // Defined to avoid polluting the console with typeerrors
+        return $input.val();
+    };
+
+    function handleKeyDown(this: any, e: JQueryKeyEventObject) {
+        var cursorPosition = this.selectionStart;
+        var textLength = this.value.length;
+        // In the original SlickGrid TextEditor this references
+        // $.ui.keyDown.LEFT which is undefined, so couldn't use
+        // that out of the box if we wanted to allow the user
+        // to move their cursor within the focused input element
+        if (
+            (e.keyCode === KeyCodes.LeftArrow && cursorPosition > 0) ||
+            (e.keyCode === KeyCodes.RightArrow && cursorPosition < textLength - 1)
+        ) {
+            e.stopImmediatePropagation();
+        }
+        // Readonly input elements do not have a cursor, but we want the user to be able
+        // to navigate the cell via cursor and left/right arrows. Solution is to make
+        // the input editable, but suppress printable keys or keys which would modify
+        // the input
+        if (
+            e.key.length === 1 ||
+            e.keyCode === KeyCodes.Backspace ||
+            e.keyCode === KeyCodes.Delete ||
+            e.keyCode === KeyCodes.Insert
+        ) {
+            e.preventDefault();
+        }
+    }
+
+    this.init();
 }

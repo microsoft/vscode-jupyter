@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 'use strict';
 
-// tslint:disable:all
+/* eslint-disable  */
 export namespace vscMockPosition {
     /**
      * A position in the editor. This interface is suitable for serialization.

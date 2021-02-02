@@ -65,7 +65,7 @@ interface INativeCellBaseProps {
 
 type INativeCellProps = INativeCellBaseProps & typeof actionCreators;
 
-// tslint:disable: react-this-binding-issue
+/* eslint-disable  */
 export class NativeCell extends React.Component<INativeCellProps> {
     private inputRef: React.RefObject<CellInput> = React.createRef<CellInput>();
     private wrapperRef: React.RefObject<HTMLDivElement> = React.createRef<HTMLDivElement>();
@@ -110,7 +110,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
 
             // Scroll into view (since we have focus). However this function
             // is not supported on enzyme
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             if ((this.wrapperRef.current as any).scrollIntoView) {
                 this.wrapperRef.current.scrollIntoView({ behavior: 'auto', block: 'nearest', inline: 'nearest' });
             }
@@ -275,7 +275,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
         return false;
     }
 
-    // tslint:disable-next-line: cyclomatic-complexity max-func-body-length
+    // eslint-disable-next-line complexity,
     private keyDownInput = (cellId: string, e: IKeyboardEvent) => {
         if (!this.isNotebookTrusted() && !isCellNavigationKeyboardEvent(e)) {
             return;

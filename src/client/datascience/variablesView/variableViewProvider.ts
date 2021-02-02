@@ -4,26 +4,42 @@
 
 import { inject, injectable, named } from 'inversify';
 import { CancellationToken, WebviewView, WebviewViewResolveContext } from 'vscode';
-import { IApplicationShell, IWebviewViewProvider, IWorkspaceService } from '../../common/application/types';
-import { IFileSystem } from '../../common/platform/types';
+import {
+    IApplicationShell,
+    ICommandManager,
+    IWebviewViewProvider,
+    IWorkspaceService
+} from '../../common/application/types';
+import { isTestExecution } from '../../common/constants';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
+import { createDeferred, Deferred } from '../../common/utils/async';
 import { Identifiers } from '../constants';
 import { IDataViewerFactory } from '../data-viewing/types';
-import {
-    ICodeCssGenerator,
-    IJupyterVariableDataProviderFactory,
-    IJupyterVariables,
-    INotebookEditorProvider,
-    INotebookExtensibility,
-    IThemeFinder
-} from '../types';
-import { IVariableViewProvider } from './types';
+import { ICodeCssGenerator, IJupyterVariableDataProviderFactory, IJupyterVariables, IThemeFinder } from '../types';
+import { INotebookWatcher, IVariableViewProvider } from './types';
 import { VariableView } from './variableView';
 
 // This class creates our UI for our variable view and links it to the vs code webview view
 @injectable()
 export class VariableViewProvider implements IVariableViewProvider {
     public readonly viewType = 'jupyterViewVariables';
+
+    // Either return the active variable view or wait until it's created and return it
+    // @ts-ignore Property will be accessed in test code via casting to ITestVariableViewProviderInterface
+    private get activeVariableView(): Promise<VariableView> {
+        if (!isTestExecution()) {
+            throw new Error('activeVariableView only for test code');
+        }
+        // If we have already created the view, then just return it
+        if (this.variableView) {
+            return Promise.resolve(this.variableView);
+        }
+
+        // If not wait until created and then return
+        this.activeVariableViewPromise = createDeferred<VariableView>();
+        return this.activeVariableViewPromise.promise;
+    }
+    private activeVariableViewPromise?: Deferred<VariableView>;
 
     private variableView?: VariableView;
 
@@ -34,14 +50,13 @@ export class VariableViewProvider implements IVariableViewProvider {
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IWebviewViewProvider) private readonly webviewViewProvider: IWebviewViewProvider,
         @inject(IJupyterVariables) @named(Identifiers.ALL_VARIABLES) private variables: IJupyterVariables,
-        @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider,
-        @inject(INotebookExtensibility) private readonly notebookExtensibility: INotebookExtensibility,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IJupyterVariableDataProviderFactory)
         private readonly jupyterVariableDataProviderFactory: IJupyterVariableDataProviderFactory,
         @inject(IDataViewerFactory) private readonly dataViewerFactory: IDataViewerFactory,
-        @inject(IFileSystem) private readonly fileSystem: IFileSystem
+        @inject(INotebookWatcher) private readonly notebookWatcher: INotebookWatcher,
+        @inject(ICommandManager) private readonly commandManager: ICommandManager
     ) {}
 
     public async resolveWebviewView(
@@ -59,14 +74,18 @@ export class VariableViewProvider implements IVariableViewProvider {
             this.workspaceService,
             this.webviewViewProvider,
             this.variables,
-            this.notebookEditorProvider,
-            this.notebookExtensibility,
             this.disposables,
             this.appShell,
             this.jupyterVariableDataProviderFactory,
             this.dataViewerFactory,
-            this.fileSystem
+            this.notebookWatcher,
+            this.commandManager
         );
+
+        // If someone is waiting for the variable view resolve that here
+        if (this.activeVariableViewPromise) {
+            this.activeVariableViewPromise.resolve(this.variableView);
+        }
 
         await this.variableView.load(webviewView);
     }

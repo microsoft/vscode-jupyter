@@ -42,6 +42,14 @@ export enum JupyterProductToInstall {
     pandas = 'pandas'
 }
 
+/**
+ * Implement this interface to control the visibility of the interpreter statusbar.
+ */
+export interface IInterpreterStatusbarVisibilityFilter {
+    readonly changed?: Event<void>;
+    readonly hidden: boolean;
+}
+
 export type PythonApi = {
     /**
      * IInterpreterService
@@ -94,6 +102,10 @@ export type PythonApi = {
      * @param resource file that determines which connection to return
      */
     getLanguageServer(resource?: InterpreterUri): Promise<ILanguageServer | undefined>;
+    /**
+     * Registers a visibility filter for the interpreter status bar.
+     */
+    registerInterpreterStatusFilter(filter: IInterpreterStatusbarVisibilityFilter): void;
 };
 
 export const IPythonInstaller = Symbol('IPythonInstaller');

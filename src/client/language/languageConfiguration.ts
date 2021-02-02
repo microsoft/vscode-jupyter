@@ -5,9 +5,9 @@
 import { IndentAction, LanguageConfiguration } from 'vscode';
 import { verboseRegExp } from '../common/utils/regexp';
 
-// tslint:disable:no-multiline-string
+/* eslint-disable no-multi-str */
 
-// tslint:disable-next-line:max-func-body-length
+// eslint-disable-next-line
 export function getLanguageConfiguration(): LanguageConfiguration {
     return {
         onEnterRules: [

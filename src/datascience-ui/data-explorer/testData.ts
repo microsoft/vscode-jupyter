@@ -9,7 +9,7 @@ export interface ITestData {
     loadingRows: {}[];
 }
 
-// tslint:disable
+/* eslint-disable */
 export function generateTestData(_numberOfRows: number): ITestData {
     const columns = [
         { id: 'PassengerId', name: 'PassengerId', field: 'PassengerId', type: 'integer' },

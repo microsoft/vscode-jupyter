@@ -871,6 +871,18 @@ export namespace DataScience {
         'DataScience.jupyterSelectURIRemoteDetail',
         'Specify the URI of an existing server'
     );
+    export const specifyLocalOrRemoteJupyterServerForConnections = localize(
+        'jupyter.command.jupyter.selectjupyteruri.title',
+        'Specify local or remote Jupyter server for connections'
+    );
+    export const jupyterNativeNotebookUriStatusLabelForLocal = localize(
+        'DataScience.jupyterNativeNotebookUriStatusLabelForLocal',
+        'Jupyter Server: local'
+    );
+    export const jupyterNativeNotebookUriStatusLabelForRemote = localize(
+        'DataScience.jupyterNativeNotebookUriStatusLabelForRemote',
+        'Jupyter Server: Remote'
+    );
 
     export const loadClassFailedWithNoInternet = localize(
         'DataScience.loadClassFailedWithNoInternet',
@@ -1002,7 +1014,7 @@ export function getCollectionJSON(): string {
     return JSON.stringify({ ...defaultCollection, ...loadedCollection });
 }
 
-// tslint:disable-next-line:no-suspicious-comment
+// eslint-disable-next-line
 export function localize(key: string, defValue?: string) {
     // Return a pointer to function so that we refetch it on each call.
     return () => {

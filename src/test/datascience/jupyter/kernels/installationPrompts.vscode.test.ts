@@ -15,19 +15,23 @@ import { Common, DataScience } from '../../../../client/common/utils/localize';
 import { INotebookEditorProvider } from '../../../../client/datascience/types';
 import { IS_CI_SERVER } from '../../../ciConstants';
 import { getOSType, IExtensionTestApi, OSType, waitForCondition } from '../../../common';
-import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../../constants';
+import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_NON_RAW_NATIVE_TEST, IS_REMOTE_NATIVE_TEST } from '../../../constants';
 import { closeActiveWindows, initialize } from '../../../initialize';
 import { openNotebook } from '../../helpers';
 import {
+    canRunNotebookTests,
     closeNotebooksAndCleanUpAfterTests,
     createTemporaryNotebook,
+    runAllCellsInActiveNotebook,
     hijackPrompt,
+    waitForCellExecutionToComplete,
     waitForExecutionCompletedSuccessfully,
+    waitForKernelToChange,
     waitForKernelToGetAutoSelected
 } from '../../notebook/helper';
 
-// tslint:disable: no-invalid-this max-func-body-length no-function-expression no-any
-suite('DataScience Install IPyKernel (slow) (install)', () => {
+/* eslint-disable no-invalid-this, , , @typescript-eslint/no-explicit-any */
+suite('DataScience Install IPyKernel (slow) (install)', function () {
     const disposables: IDisposable[] = [];
     let nbFile: string;
     const templateIPynbFile = path.join(
@@ -36,6 +40,7 @@ suite('DataScience Install IPyKernel (slow) (install)', () => {
     );
     const executable = getOSType() === OSType.Windows ? 'Scripts/python.exe' : 'bin/python'; // If running locally on Windows box.
     const venvPythonPath = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src/test/datascience/.venvnokernel', executable);
+    const venvNoRegPath = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src/test/datascience/.venvnoreg', executable);
     const expectedPromptMessageSuffix = `requires ${ProductNames.get(Product.ipykernel)!} to be installed.`;
 
     let api: IExtensionTestApi;
@@ -43,15 +48,21 @@ suite('DataScience Install IPyKernel (slow) (install)', () => {
     let installer: IInstaller;
     let vscodeNotebook: IVSCodeNotebook;
     const delayForUITest = 30_000;
+    this.timeout(60_000); // Slow test, we need to uninstall/install ipykernel.
     /*
     This test requires a virtual environment to be created & registered as a kernel.
     It also needs to have ipykernel installed in it.
     */
     suiteSetup(async function () {
-        this.timeout(60_000); // Slow test, we need to uninstall/install ipykernel.
-
         // These are slow tests, hence lets run only on linux on CI.
-        if ((IS_CI_SERVER && getOSType() !== OSType.Linux) || !fs.pathExistsSync(venvPythonPath)) {
+        if (IS_REMOTE_NATIVE_TEST) {
+            return this.skip();
+        }
+        if (
+            (IS_CI_SERVER && getOSType() !== OSType.Linux) ||
+            !fs.pathExistsSync(venvPythonPath) ||
+            !fs.pathExistsSync(venvNoRegPath)
+        ) {
             // Virtual env does not exist.
             return this.skip();
         }
@@ -61,7 +72,8 @@ suite('DataScience Install IPyKernel (slow) (install)', () => {
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
     });
 
-    setup(async () => {
+    setup(async function () {
+        console.log(`Start test ${this.currentTest?.title}`);
         // Don't use same file (due to dirty handling, we might save in dirty.)
         // Coz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
         nbFile = await createTemporaryNotebook(templateIPynbFile, disposables);
@@ -70,8 +82,12 @@ suite('DataScience Install IPyKernel (slow) (install)', () => {
         await proc.exec(venvPythonPath, ['-m', 'pip', 'uninstall', 'ipykernel', '--yes']);
         await closeActiveWindows();
         sinon.restore();
+        console.log(`Start Test completed ${this.currentTest?.title}`);
     });
-    teardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
+    teardown(async function () {
+        console.log(`End test ${this.currentTest?.title}`);
+        await closeNotebooksAndCleanUpAfterTests(disposables);
+    });
 
     test('Test Install IPyKernel prompt message', async () => {
         // Confirm the message has not changed.
@@ -83,55 +99,115 @@ suite('DataScience Install IPyKernel (slow) (install)', () => {
         );
     });
 
-    test('Ensure prompt is displayed when ipykernel module is not found and it gets installed', async () => {
-        const installed = createDeferred();
+    ['.venvnokernel', '.venvnoreg'].forEach((kName) => {
+        test(`Ensure prompt is displayed when ipykernel module is not found and it gets installed (${kName})`, async function () {
+            // Confirm message is displayed & we click 'Install` button.
+            const prompt = await hijackPrompt(
+                'showErrorMessage',
+                { endsWith: expectedPromptMessageSuffix },
+                { text: Common.install(), clickImmediately: true },
+                disposables
+            );
+            const installed = createDeferred();
 
-        // Confirm it is installed.
-        const showInformationMessage = sinon.stub(installer, 'install').callsFake(async function (product: Product) {
-            // Call original method
-            const result: InstallerResponse = await ((installer.install as any).wrappedMethod.apply(
-                installer,
-                arguments
-            ) as Promise<InstallerResponse>);
-            if (product === Product.ipykernel && result === InstallerResponse.Installed) {
-                installed.resolve();
+            // Confirm it is installed.
+            const showInformationMessage = sinon
+                .stub(installer, 'install')
+                .callsFake(async function (product: Product) {
+                    // Call original method
+                    const result: InstallerResponse = await ((installer.install as any).wrappedMethod.apply(
+                        installer,
+                        arguments
+                    ) as Promise<InstallerResponse>);
+                    if (product === Product.ipykernel && result === InstallerResponse.Installed) {
+                        installed.resolve();
+                    }
+                    return result;
+                });
+
+            try {
+                await openNotebook(api.serviceContainer, nbFile);
+                // If this is a native notebook, then wait for kernel to get selected.
+                if (editorProvider.activeEditor?.type === 'native') {
+                    await waitForKernelToChange({ labelOrId: kName });
+                }
+
+                // Run all cells
+                editorProvider.activeEditor!.runAllCells();
+
+                // The prompt should be displayed.
+                await waitForCondition(
+                    async () => prompt.displayed.then(() => true),
+                    delayForUITest,
+                    'Prompt not displayed'
+                );
+
+                // ipykernel should get installed.
+                await waitForCondition(
+                    async () => installed.promise.then(() => true),
+                    delayForUITest,
+                    'Prompt not displayed or not installed successfully'
+                );
+
+                // If this is a native notebook, then wait for cell to get executed completely (else VSC can hang).
+                // This is because extension will attempt to update cells, while tests may have deleted/closed notebooks.
+                if (editorProvider.activeEditor?.type === 'native') {
+                    const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
+                    await waitForExecutionCompletedSuccessfully(cell);
+                }
+            } finally {
+                prompt.dispose();
+                showInformationMessage.restore();
             }
-            return result;
         });
-        disposables.push({ dispose: () => showInformationMessage.restore() });
+    });
+    test('Ensure ipykernel install prompt is displayed every time you try to run a cell (VSCode Notebook)', async function () {
+        if (!(await canRunNotebookTests()) || IS_REMOTE_NATIVE_TEST || IS_NON_RAW_NATIVE_TEST) {
+            return this.skip();
+        }
 
-        // Confirm message is displayed & we click 'Install` button.
+        // Confirm message is displayed & then dismiss the message (so that execution stops due to missing dependency).
         const prompt = await hijackPrompt(
             'showErrorMessage',
             { endsWith: expectedPromptMessageSuffix },
-            { text: Common.install(), clickImmediately: true },
+            { dismissPrompt: true },
             disposables
         );
 
         await openNotebook(api.serviceContainer, nbFile);
-        // If this is a native notebook, then wait for kernel to get selected.
-        if (editorProvider.activeEditor?.type === 'native') {
-            await waitForKernelToGetAutoSelected();
-        }
+        await waitForKernelToGetAutoSelected();
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
+        assert.equal(cell.outputs.length, 0);
 
-        // Run all cells
-        editorProvider.activeEditor!.runAllCells();
-
-        // The prompt should be displayed.
+        // The prompt should be displayed when we run a cell.
+        await runAllCellsInActiveNotebook();
         await waitForCondition(async () => prompt.displayed.then(() => true), delayForUITest, 'Prompt not displayed');
 
-        // ipykernel should get installed.
+        // Once ipykernel prompt has been dismissed, execution should stop due to missing dependencies.
+        await waitForCellExecutionToComplete(cell);
+
+        // Execute notebook once again & we should get another prompted to install ipykernel.
+        let previousPromptDisplayCount = prompt.getDisplayCount();
+        await runAllCellsInActiveNotebook();
         await waitForCondition(
-            async () => installed.promise.then(() => true),
+            async () => prompt.getDisplayCount() > previousPromptDisplayCount,
             delayForUITest,
-            'Prompt not displayed or not installed successfully'
+            'Prompt not displayed second time'
         );
 
-        // If this is a native notebook, then wait for cell to get executed completely (else VSC can hang).
-        // This is because extension will attempt to update cells, while tests may have deleted/closed notebooks.
-        if (editorProvider.activeEditor?.type === 'native') {
-            const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
-            await waitForExecutionCompletedSuccessfully(cell);
-        }
+        // Once ipykernel prompt has been dismissed, execution should stop due to missing dependencies.
+        await waitForCellExecutionToComplete(cell);
+
+        // Execute a cell this time & we should get yet another prompted to install ipykernel.
+        previousPromptDisplayCount = prompt.getDisplayCount();
+        await runAllCellsInActiveNotebook();
+        await waitForCondition(
+            async () => prompt.getDisplayCount() > previousPromptDisplayCount,
+            delayForUITest,
+            'Prompt not displayed second time'
+        );
+
+        // Once ipykernel prompt has been dismissed, execution should stop due to missing dependencies.
+        await waitForCellExecutionToComplete(cell);
     });
 });

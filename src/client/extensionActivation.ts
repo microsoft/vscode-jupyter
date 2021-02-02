@@ -3,8 +3,8 @@
 
 'use strict';
 
-// tslint:disable:max-func-body-length
-import { OutputChannel, window } from 'vscode';
+/* eslint-disable  */
+import { env, OutputChannel, window } from 'vscode';
 
 import { registerTypes as activationRegisterTypes } from './activation/serviceRegistry';
 import { IExtensionActivationManager } from './activation/types';
@@ -49,7 +49,7 @@ export async function activateComponents(
 /////////////////////////////
 // old activation code
 
-// tslint:disable-next-line:no-suspicious-comment
+// eslint-disable-next-line
 // TODO: Gradually move simple initialization
 // and DI registration currently in this function over
 // to initializeComponents().  Likewise with complex
@@ -83,8 +83,24 @@ async function activateLegacy(
     const fs = serviceManager.get<IFileSystem>(IFileSystem);
     await setExtensionInstallTelemetryProperties(fs);
 
+    // Load the two data science experiments that we need to register types
+    // Await here to keep the register method sync
+    const experimentService = serviceContainer.get<IExperimentService>(IExperimentService);
+    experimentService.logExperiments();
+    let useVSCodeNotebookAPI =
+        env.appName.includes('Insider') || (await experimentService.inExperiment(Experiments.NativeNotebook));
+    let inCustomEditorApiExperiment = await experimentService.inExperiment(Experiments.CustomEditor);
+
+    // These should be mutually exclusive, but if someone opts into both, notify them and disable both
+    if (useVSCodeNotebookAPI && inCustomEditorApiExperiment) {
+        const appShell = serviceContainer.get<IApplicationShell>(IApplicationShell);
+        appShell.showErrorMessage(localize.DataScience.illegalEditorConfig()).then(noop, noop);
+        useVSCodeNotebookAPI = false;
+        inCustomEditorApiExperiment = false;
+    }
+
     const applicationEnv = serviceManager.get<IApplicationEnvironment>(IApplicationEnvironment);
-    const enableProposedApi = applicationEnv.packageJson.enableProposedApi;
+    const enableProposedApi = applicationEnv.packageJson.enableProposedApi || useVSCodeNotebookAPI;
     serviceManager.addSingletonInstance<boolean>(UseProposedApi, enableProposedApi);
     // Feature specific registrations.
     variableRegisterTypes(serviceManager);
@@ -96,21 +112,6 @@ async function activateLegacy(
     // `IConfigurationService` may depend any of the registered types, so doing it after all registrations are finished.
     // XXX Move this *after* abExperiments is activated?
     setLoggingLevel(configuration.getSettings().logging.level);
-
-    // Load the two data science experiments that we need to register types
-    // Await here to keep the register method sync
-    const experimentService = serviceContainer.get<IExperimentService>(IExperimentService);
-    experimentService.logExperiments();
-    let useVSCodeNotebookAPI = await experimentService.inExperiment(Experiments.NativeNotebook);
-    let inCustomEditorApiExperiment = await experimentService.inExperiment(Experiments.CustomEditor);
-
-    // These should be mutually exclusive, but if someone opts into both, notify them and disable both
-    if (useVSCodeNotebookAPI && inCustomEditorApiExperiment) {
-        const appShell = serviceContainer.get<IApplicationShell>(IApplicationShell);
-        appShell.showErrorMessage(localize.DataScience.illegalEditorConfig()).then(noop, noop);
-        useVSCodeNotebookAPI = false;
-        inCustomEditorApiExperiment = false;
-    }
 
     // Register datascience types after experiments have loaded.
     // To ensure we can register types based on experiments.

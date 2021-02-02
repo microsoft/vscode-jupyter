@@ -13,7 +13,8 @@ import {
     CommonActionTypeMapping,
     ILinkClickAction,
     IShowDataViewerAction,
-    IVariableExplorerHeight
+    IVariableExplorerHeight,
+    IVariableViewHeight
 } from '../../interactive-common/redux/reducers/types';
 
 // This function isn't made common and not exported, to ensure it isn't used elsewhere.
@@ -21,7 +22,7 @@ function createIncomingActionWithPayload<
     M extends IInteractiveWindowMapping & CommonActionTypeMapping,
     K extends keyof M
 >(type: K, data: M[K]): CommonAction<M[K]> {
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return { type, payload: { data, messageDirection: 'incoming' } as any } as any;
 }
 // This function isn't made common and not exported, to ensure it isn't used elsewhere.
@@ -36,6 +37,8 @@ export const actionCreators = {
     toggleVariableExplorer: (): CommonAction => createIncomingAction(CommonActionType.TOGGLE_VARIABLE_EXPLORER),
     setVariableExplorerHeight: (containerHeight: number, gridHeight: number): CommonAction<IVariableExplorerHeight> =>
         createIncomingActionWithPayload(CommonActionType.SET_VARIABLE_EXPLORER_HEIGHT, { containerHeight, gridHeight }),
+    setVariableViewHeight: (viewHeight: number): CommonAction<IVariableViewHeight> =>
+        createIncomingActionWithPayload(CommonActionType.SET_VARIABLE_VIEW_HEIGHT, { viewHeight }),
     showDataViewer: (variable: IJupyterVariable, columnSize: number): CommonAction<IShowDataViewerAction> =>
         createIncomingActionWithPayload(CommonActionType.SHOW_DATA_VIEWER, { variable, columnSize }),
     variableViewLoaded: (): CommonAction => createIncomingAction(CommonActionType.VARIABLE_VIEW_LOADED),

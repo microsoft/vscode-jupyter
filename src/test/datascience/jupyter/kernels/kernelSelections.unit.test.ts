@@ -3,16 +3,21 @@
 
 'use strict';
 
+import type { Kernel } from '@jupyterlab/services';
 import { assert } from 'chai';
+import { teardown } from 'mocha';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
+import { EventEmitter } from 'vscode';
 import { PythonExtensionChecker } from '../../../../client/api/pythonApi';
 import { PYTHON_LANGUAGE } from '../../../../client/common/constants';
+import { disposeAllDisposables } from '../../../../client/common/helpers';
 import { FileSystem } from '../../../../client/common/platform/fileSystem';
 import { PathUtils } from '../../../../client/common/platform/pathUtils';
 import { IFileSystem } from '../../../../client/common/platform/types';
-import { IPathUtils } from '../../../../client/common/types';
+import { IDisposable, IPathUtils } from '../../../../client/common/types';
 import * as localize from '../../../../client/common/utils/localize';
 import { JupyterSessionManager } from '../../../../client/datascience/jupyter/jupyterSessionManager';
+import { JupyterSessionManagerFactory } from '../../../../client/datascience/jupyter/jupyterSessionManagerFactory';
 import { KernelSelectionProvider } from '../../../../client/datascience/jupyter/kernels/kernelSelections';
 import { KernelService } from '../../../../client/datascience/jupyter/kernels/kernelService';
 import { IKernelSpecQuickPickItem } from '../../../../client/datascience/jupyter/kernels/types';
@@ -21,7 +26,7 @@ import { IJupyterKernel, IJupyterKernelSpec, IJupyterSessionManager } from '../.
 import { IInterpreterQuickPickItem, IInterpreterSelector } from '../../../../client/interpreter/configuration/types';
 import { IInterpreterService } from '../../../../client/interpreter/contracts';
 
-// tslint:disable-next-line: max-func-body-length
+// eslint-disable-next-line
 suite('DataScience - KernelSelections', () => {
     let kernelSelectionProvider: KernelSelectionProvider;
     let kernelService: KernelService;
@@ -122,10 +127,17 @@ suite('DataScience - KernelSelections', () => {
             description: ''
         }
     ];
-
+    const disposableRegistry: IDisposable[] = [];
     setup(() => {
         interpreterSelector = mock<IInterpreterSelector>();
         sessionManager = mock(JupyterSessionManager);
+        const jupyterSessionManagerFactory = mock(JupyterSessionManagerFactory);
+        when(jupyterSessionManagerFactory.create(anything())).thenResolve(instance(sessionManager));
+        when(jupyterSessionManagerFactory.create(anything(), anything())).thenResolve(instance(sessionManager));
+        const eventEmitter = new EventEmitter<Kernel.IKernelConnection>();
+        disposableRegistry.push(eventEmitter);
+        when(jupyterSessionManagerFactory.onRestartSessionCreated).thenReturn(eventEmitter.event);
+        when(jupyterSessionManagerFactory.onRestartSessionUsed).thenReturn(eventEmitter.event);
         kernelService = mock(KernelService);
         kernelFinder = mock<IKernelFinder>();
         fs = mock(FileSystem);
@@ -143,9 +155,12 @@ suite('DataScience - KernelSelections', () => {
             instance(fs),
             instance(pathUtils),
             instance(kernelFinder),
-            instance(extensionChecker)
+            instance(extensionChecker),
+            disposableRegistry,
+            instance(jupyterSessionManagerFactory)
         );
     });
+    teardown(() => disposeAllDisposables(disposableRegistry));
 
     test('Should return an empty list for remote kernels if there are none', async () => {
         when(kernelService.getKernelSpecs(instance(sessionManager), anything())).thenResolve([]);
@@ -165,7 +180,7 @@ suite('DataScience - KernelSelections', () => {
             return {
                 id: `sessionId${index}`,
                 name: 'someSession',
-                // tslint:disable-next-line: no-any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 kernel: { id: `sessionId${index}`, ...(item as any) },
                 type: '',
                 path: ''
@@ -183,7 +198,7 @@ suite('DataScience - KernelSelections', () => {
         const expectedItems: IKernelSpecQuickPickItem[] = [
             {
                 label: python1KernelSpecModel.display_name,
-                // tslint:disable-next-line: no-any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 selection: {
                     interpreter: undefined,
                     kernelModel: {
@@ -193,11 +208,11 @@ suite('DataScience - KernelSelections', () => {
                         session: {
                             id: 'sessionId0',
                             name: 'someSession',
-                            // tslint:disable-next-line: no-any
+                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
                             kernel: { id: 'sessionId0', ...(activeKernels[0] as any) },
                             type: '',
                             path: ''
-                            // tslint:disable-next-line: no-any
+                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         } as any
                     },
                     kind: 'connectToLiveKernel'
@@ -210,7 +225,7 @@ suite('DataScience - KernelSelections', () => {
             },
             {
                 label: juliaKernelSpecModel.display_name,
-                // tslint:disable-next-line: no-any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 selection: {
                     interpreter: undefined,
                     kernelModel: {
@@ -220,11 +235,11 @@ suite('DataScience - KernelSelections', () => {
                         session: {
                             id: 'sessionId1',
                             name: 'someSession',
-                            // tslint:disable-next-line: no-any
+                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
                             kernel: { id: 'sessionId1', ...(activeKernels[1] as any) },
                             type: '',
                             path: ''
-                            // tslint:disable-next-line: no-any
+                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         } as any
                     },
                     kind: 'connectToLiveKernel'
@@ -290,6 +305,11 @@ suite('DataScience - KernelSelections', () => {
             instance(sessionManager)
         );
 
+        // Ensure interpreter property is set when comparing.
+        items.map((item) => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            ((item.selection as unknown) as any).interpreter = item.selection.interpreter || undefined;
+        });
         assert.deepEqual(items, expectedList);
     });
     test('Should return a list of Local Kernels + Interpreters for local jupyter connection', async () => {

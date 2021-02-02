@@ -8,10 +8,11 @@ import * as path from 'path';
 import { CancellationToken } from 'vscode';
 import { IPythonExtensionChecker } from '../../api/types';
 import { IWorkspaceService } from '../../common/application/types';
-import { traceDecorators, traceError, traceInfo, traceWarning } from '../../common/logger';
+import { traceDecorators, traceError, traceInfo, traceInfoIf, traceWarning } from '../../common/logger';
 import { IFileSystem, IPlatformService } from '../../common/platform/types';
 import { IPythonExecutionFactory } from '../../common/process/types';
 import { IExtensionContext, IPathUtils, Resource } from '../../common/types';
+import { noop } from '../../common/utils/misc';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
@@ -107,7 +108,16 @@ export class KernelFinder implements IKernelFinder {
         this.writeCache().ignoreErrors();
 
         // ! as the has and set above verify that we have a return here
-        return this.workspaceToKernels.get(workspaceFolderId)!;
+        const promise = this.workspaceToKernels.get(workspaceFolderId)!;
+        promise
+            .then((items) =>
+                traceInfoIf(
+                    !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
+                    `Kernel specs for ${resource.toString()} are \n ${JSON.stringify(items)}`
+                )
+            )
+            .catch(noop);
+        return promise;
     }
 
     private async findKernelSpecBasedOnKernelSpecMetadata(
@@ -267,8 +277,7 @@ export class KernelFinder implements IKernelFinder {
     ): Promise<{ interpreter: PythonEnvironment; kernelSearchPath: string }[]> {
         if (this.extensionChecker.isPythonExtensionInstalled) {
             const interpreters = await this.interpreterService.getInterpreters(resource);
-            // tslint:disable-next-line: no-console
-            console.debug(`Search all interpreters ${interpreters.map((item) => item.path).join(', ')}`);
+            traceInfo(`Search all interpreters ${interpreters.map((item) => item.path).join(', ')}`);
             const interpreterPaths = new Set<string>();
             return interpreters
                 .filter((interpreter) => {
@@ -479,6 +488,10 @@ export class KernelFinder implements IKernelFinder {
             await this.fs.writeLocalFile(
                 path.join(this.context.globalStorageUri.fsPath, cacheFile),
                 JSON.stringify(this.cache)
+            );
+            traceInfoIf(
+                !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
+                `Kernel specs in cache ${JSON.stringify(this.cache)}`
             );
             this.cacheDirty = false;
         }

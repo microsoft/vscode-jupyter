@@ -3,7 +3,7 @@
 
 'use strict';
 
-// tslint:disable:no-require-imports no-var-requires
+/* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 import { assert, expect } from 'chai';
 import * as path from 'path';
 import * as sinon from 'sinon';
@@ -12,6 +12,7 @@ import { NotebookCell } from '../../../../typings/vscode-proposed';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { IDisposable } from '../../../client/common/types';
 import { IExtensionTestApi, waitForCondition } from '../../common';
+import { IS_REMOTE_NATIVE_TEST } from '../../constants';
 import { closeActiveWindows, EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../initialize';
 import { openNotebook } from '../helpers';
 import {
@@ -22,17 +23,17 @@ import {
     closeNotebooks,
     closeNotebooksAndCleanUpAfterTests,
     createTemporaryNotebook,
-    executeActiveDocument,
+    runAllCellsInActiveNotebook,
     insertCodeCell,
     saveActiveNotebook,
     trustAllNotebooks,
     waitForExecutionCompletedSuccessfully,
     waitForExecutionCompletedWithErrors
 } from './helper';
-// tslint:disable-next-line:no-require-imports no-var-requires
+// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
-// tslint:disable: no-any no-invalid-this
+/* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - VSCode Notebook - (Saving) (slow)', function () {
     this.timeout(60_000);
     let api: IExtensionTestApi;
@@ -48,9 +49,8 @@ suite('DataScience - VSCode Notebook - (Saving) (slow)', function () {
     );
     let testEmptyIPynb: Uri;
     suiteSetup(async function () {
-        this.timeout(60_000);
         api = await initialize();
-        if (!(await canRunNotebookTests())) {
+        if (IS_REMOTE_NATIVE_TEST || !(await canRunNotebookTests())) {
             return this.skip();
         }
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
@@ -62,7 +62,6 @@ suite('DataScience - VSCode Notebook - (Saving) (slow)', function () {
         // Coz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
         testEmptyIPynb = Uri.file(await createTemporaryNotebook(templateIPynbEmpty, disposables));
     });
-    // teardown(async () => closeNotebooksAndCleanUpAfterTests(disposables));
     teardown(() => closeNotebooks(disposables));
     suiteTeardown(closeNotebooksAndCleanUpAfterTests);
     test('Verify output & metadata when re-opening (slow)', async () => {
@@ -84,7 +83,7 @@ suite('DataScience - VSCode Notebook - (Saving) (slow)', function () {
             cell4 = vscodeNotebook.activeNotebookEditor?.document.cells![3]!;
         }
         initializeCells();
-        await executeActiveDocument();
+        await runAllCellsInActiveNotebook();
         // Wait till 1 & 2 finish & 3rd cell starts executing.
         await waitForExecutionCompletedSuccessfully(cell1!);
         await waitForExecutionCompletedWithErrors(cell2!);
@@ -94,7 +93,7 @@ suite('DataScience - VSCode Notebook - (Saving) (slow)', function () {
             'Cells did not finish executing'
         );
 
-        function verifyCelMetadata() {
+        function verifyCelMetadata(reOpened = false) {
             assert.lengthOf(cell1.outputs, 1, 'Incorrect output for cell 1');
             assert.lengthOf(cell2.outputs, 1, 'Incorrect output for cell 2');
             assert.lengthOf(cell3.outputs, 0, 'Incorrect output for cell 3'); // stream and interrupt error.
@@ -102,19 +101,27 @@ suite('DataScience - VSCode Notebook - (Saving) (slow)', function () {
 
             assert.equal(
                 cell1.metadata.runState,
-                vscodeNotebookEnums.NotebookCellRunState.Success,
-                'Incorrect state 1'
+                reOpened
+                    ? vscodeNotebookEnums.NotebookCellRunState.Idle
+                    : vscodeNotebookEnums.NotebookCellRunState.Success,
+                'Incorrect state in cell 1'
             );
-            assert.equal(cell2.metadata.runState, vscodeNotebookEnums.NotebookCellRunState.Error, 'Incorrect state 2');
+            assert.equal(
+                cell2.metadata.runState,
+                reOpened
+                    ? vscodeNotebookEnums.NotebookCellRunState.Idle
+                    : vscodeNotebookEnums.NotebookCellRunState.Error,
+                'Incorrect state in cell 2'
+            );
             assert.equal(
                 cell3.metadata.runState || vscodeNotebookEnums.NotebookCellRunState.Idle,
                 vscodeNotebookEnums.NotebookCellRunState.Idle,
-                'Incorrect state 3'
+                'Incorrect state in cell 3'
             );
             assert.equal(
                 cell4.metadata.runState || vscodeNotebookEnums.NotebookCellRunState.Idle,
                 vscodeNotebookEnums.NotebookCellRunState.Idle,
-                'Incorrect state 4'
+                'Incorrect state in cell 4'
             );
 
             assertHasTextOutputInVSCode(cell1, '1', 0);
@@ -134,7 +141,7 @@ suite('DataScience - VSCode Notebook - (Saving) (slow)', function () {
             assert.isEmpty(cell4.metadata.statusMessage || '', 'Cell 4 status should be empty'); // Not executed.
 
             // Persisting these require us to save custom metadata in ipynb. Not sure users would like this. We'll have more changes in ipynb files.
-            // tslint:disable-next-line: no-suspicious-comment
+            // eslint-disable-next-line
             // TODO: Discuss whether we need to persist these.
             // assert.isOk(cell1.metadata.runStartTime, 'Start time should be > 0');
             // assert.isOk(cell1.metadata.lastRunDuration, 'Duration should be > 0');
@@ -155,6 +162,6 @@ suite('DataScience - VSCode Notebook - (Saving) (slow)', function () {
         // Reopen the notebook & validate the metadata.
         await openNotebook(api.serviceContainer, testEmptyIPynb.fsPath);
         initializeCells();
-        verifyCelMetadata();
+        verifyCelMetadata(true);
     });
 });

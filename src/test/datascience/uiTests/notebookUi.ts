@@ -53,7 +53,7 @@ export class NotebookEditorUI extends BaseWebUI {
         // Click the run button.
         const runButton = await this.getToolbarButton(cellIndex, CellToolbarButton.run);
 
-        // tslint:disable-next-line: no-console
+        // eslint-disable-next-line no-console
         console.log(`Executing cell ${cellIndex} by clicking ${runButton.toString()}`);
         await Promise.all([runButton.click({ button: 'left', force: true, timeout: 0 }), renderedPromise]);
     }

@@ -10,7 +10,7 @@ import * as localize from '../../common/utils/localize';
 import { LiveShare, LiveShareCommands } from '../constants';
 import { ServiceProxy } from './serviceProxy';
 
-// tslint:disable:no-any unified-signatures
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/unified-signatures */
 export class LiveShareProxy implements vsls.LiveShare {
     private currentRole: vsls.Role = vsls.Role.None;
     private guestChecker: vsls.SharedService | vsls.SharedServiceProxy | null = null;

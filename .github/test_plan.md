@@ -32,6 +32,7 @@
 -   [ ] Start and connect to local Jupyter server
     1. Open the file src/test/datascience/manualTestFiles/manualTestFile.py in VSCode
     1. At the top of the file it will list the things that you need installed in your Python environment
+        1. Please note, when installing PyTorch please visit pytorch.org to determine how to install `torch` for your environment. Do not run `pip install torch` as that will not suffice.
     1. On the first cell click `Run Below`
     1. Interactive Window should open, show connection information, and execute cells
     1. The first thing in the window should have a line like this: `Jupyter Server URI: http://localhost:[port number]/?token=[token value]`
@@ -72,7 +73,7 @@
     1. In the Variables list there should be an entry for all variables created. These variables might change as more is added to manualTestFile.py.
     1. Check that variables have expected values. They will be truncated for longer items
     1. Sort the list ascending and descending by Type. Also sort the list ascending and descending by Count. Values like (X, Y) use the first X value for Count sort ordering
-    1. Check that list, Series, ndarray, and DataFrame types have a button to "Show variable in data viewer" on the right
+    1. Check that list, Series, ndarray, DataFrame and Tensor types have a button to "Show variable in data viewer" on the right
     1. In the Interactive Window input box add a new variable. Verify that it is added into the Variable Explorer
     1. Export the contents of the interactive window as a notebook and open the notebook editor
     1. Find the first cell and click on the Run Below button
@@ -89,6 +90,9 @@
         1. Click the Filter Rows button
         1. In the name filter box input 'a' to filter to just name with an a in them
         1. In one of the numerical columns input a number 1 - 9 to filter to just that column
+        1. In the 'b' filter box input '> -inf'. Verify that this filters to show just the rows with 1 and 4 in the 'b' column.
+        1. In the 'c' filter box input '= nan'. Verify that this filters to show just the row with 'nan' in the 'c' column.
+        1. In the 'd' filter box input '<= inf'. Verify that this shows all rows.
     1. Open the myList variable in the explorer
     1. Make sure that you can scroll all the way to the end of the entries
        [ ] Verify notebook outputs

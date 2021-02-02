@@ -1,8 +1,13 @@
 .number-formatter {
     text-align: right;
+    text-overflow: ellipsis;
+    overflow: hidden;
 }
 
 .cell-formatter {
     /* Note: This is impacted by the RowHeightAdjustment in reactSlickGrid.tsx */
     margin: 0px 0px 0px 0px;
+    text-align: right;
+    text-overflow: ellipsis;
+    overflow: hidden;
 }

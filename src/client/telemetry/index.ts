@@ -3,7 +3,7 @@
 
 import type { JSONObject } from '@phosphor/coreutils';
 import * as stackTrace from 'stack-trace';
-// tslint:disable-next-line: import-name
+// eslint-disable-next-line
 import TelemetryReporter from 'vscode-extension-telemetry/lib/telemetryReporter';
 
 import { IWorkspaceService } from '../common/application/types';
@@ -20,7 +20,7 @@ import {
 import { ExportFormat } from '../datascience/export/types';
 import { EventName, PlatformErrors } from './constants';
 
-// tslint:disable: no-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 /**
  * Checks whether telemetry is supported.
@@ -30,9 +30,9 @@ import { EventName, PlatformErrors } from './constants';
  */
 function isTelemetrySupported(): boolean {
     try {
-        // tslint:disable-next-line:no-require-imports
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
         const vsc = require('vscode');
-        // tslint:disable-next-line:no-require-imports
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
         const reporter = require('vscode-extension-telemetry');
         return vsc !== undefined && reporter !== undefined;
     } catch {
@@ -81,12 +81,12 @@ function getTelemetryReporter() {
         return telemetryReporter;
     }
     const extensionId = JVSC_EXTENSION_ID;
-    // tslint:disable-next-line:no-require-imports
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const extensions = (require('vscode') as typeof import('vscode')).extensions;
     const extension = extensions.getExtension(extensionId)!;
     const extensionVersion = extension.packageJSON.version;
 
-    // tslint:disable-next-line:no-require-imports
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const reporter = require('vscode-extension-telemetry').default as typeof TelemetryReporter;
     return (telemetryReporter = new reporter(extensionId, extensionVersion, AppinsightsKey, true));
 }
@@ -182,7 +182,7 @@ type TypedMethodDescriptor<T> = (
  * @param lazyProperties A static function on the decorated class which returns extra properties to add to the event.
  * This can be used to provide properties which are only known at runtime (after the decorator has executed).
  */
-// tslint:disable-next-line:no-any function-name
+// eslint-disable-next-line @typescript-eslint/no-explicit-any,
 export function captureTelemetry<This, P extends IEventNamePropertyMapping, E extends keyof P>(
     eventName: E,
     properties?: P[E],
@@ -190,20 +190,20 @@ export function captureTelemetry<This, P extends IEventNamePropertyMapping, E ex
     failureEventName?: E,
     lazyProperties?: (obj: This) => P[E]
 ): TypedMethodDescriptor<(this: This, ...args: any[]) => any> {
-    // tslint:disable-next-line:no-function-expression no-any
+    // eslint-disable-next-line , @typescript-eslint/no-explicit-any
     return function (
         _target: Object,
         _propertyKey: string | symbol,
         descriptor: TypedPropertyDescriptor<(this: This, ...args: any[]) => any>
     ) {
         const originalMethod = descriptor.value!;
-        // tslint:disable-next-line:no-function-expression no-any
+        // eslint-disable-next-line , @typescript-eslint/no-explicit-any
         descriptor.value = function (this: This, ...args: any[]) {
             // Legacy case; fast path that sends event before method executes.
             // Does not set "failed" if the result is a Promise and throws an exception.
             if (!captureDuration && !lazyProperties) {
                 sendTelemetryEvent(eventName, undefined, properties);
-                // tslint:disable-next-line:no-invalid-this
+                // eslint-disable-next-line no-invalid-this
                 return originalMethod.apply(this, args);
             }
 
@@ -216,21 +216,21 @@ export function captureTelemetry<This, P extends IEventNamePropertyMapping, E ex
 
             const stopWatch = captureDuration ? new StopWatch() : undefined;
 
-            // tslint:disable-next-line:no-invalid-this no-use-before-declare no-unsafe-any
+            // eslint-disable-next-line no-invalid-this, @typescript-eslint/no-use-before-define,
             const result = originalMethod.apply(this, args);
 
             // If method being wrapped returns a promise then wait for it.
-            // tslint:disable-next-line:no-unsafe-any
+            // eslint-disable-next-line
             if (result && typeof result.then === 'function' && typeof result.catch === 'function') {
-                // tslint:disable-next-line:prefer-type-cast
+                // eslint-disable-next-line
                 (result as Promise<void>)
                     .then((data) => {
                         sendTelemetryEvent(eventName, stopWatch?.elapsedTime, props());
                         return data;
                     })
-                    // tslint:disable-next-line:promise-function-async
+                    // eslint-disable-next-line @typescript-eslint/promise-function-async
                     .catch((ex) => {
-                        // tslint:disable-next-line:no-any
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         const failedProps: P[E] = props() || ({} as any);
                         (failedProps as any).failed = true;
                         sendTelemetryEvent(
@@ -260,16 +260,16 @@ export function sendTelemetryWhenDone<P extends IEventNamePropertyMapping, E ext
 ) {
     stopWatch = stopWatch ? stopWatch : new StopWatch();
     if (typeof promise.then === 'function') {
-        // tslint:disable-next-line:prefer-type-cast no-any
+        // eslint-disable-next-line , @typescript-eslint/no-explicit-any
         (promise as Promise<any>).then(
             (data) => {
-                // tslint:disable-next-line:no-non-null-assertion
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                 sendTelemetryEvent(eventName, stopWatch!.elapsedTime, properties);
                 return data;
-                // tslint:disable-next-line:promise-function-async
+                // eslint-disable-next-line @typescript-eslint/promise-function-async
             },
             (ex) => {
-                // tslint:disable-next-line:no-non-null-assertion
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                 sendTelemetryEvent(eventName, stopWatch!.elapsedTime, properties, ex);
                 return Promise.reject(ex);
             }
@@ -638,6 +638,20 @@ export interface IEventNamePropertyMapping {
     [Telemetry.UserInstalledPandas]: never | undefined;
     [Telemetry.UserDidNotInstallJupyter]: never | undefined;
     [Telemetry.UserDidNotInstallPandas]: never | undefined;
+    /**
+     * This telemetry tracks the display of the Picker for Jupyter Remote servers.
+     */
+    [Telemetry.SetJupyterURIUIDisplayed]: {
+        /**
+         * This telemetry tracks the source of this UI.
+         * nonUser - Invoked internally by our code.
+         * toolbar - Invoked by user from Native or Interactive window toolbar.
+         * commandPalette - Invoked from command palette by the user.
+         * nativeNotebookStatusBar - Invoked from Native notebook statusbar.
+         * nativeNotebookToolbar - Invoked from Native notebook toolbar.
+         */
+        commandSource: 'nonUser' | 'commandPalette' | 'toolbar' | 'nativeNotebookStatusBar' | 'nativeNotebookToolbar';
+    };
     [Telemetry.SetJupyterURIToLocal]: never | undefined;
     [Telemetry.SetJupyterURIToUserSpecified]: {
         azure: boolean;
@@ -962,7 +976,7 @@ export interface IEventNamePropertyMapping {
      */
     [Telemetry.IPyWidgetPromptToUseCDN]: never | undefined;
     /**
-     * Telemetry sent when user does somethign with the prompt displsyed to user about using CDN for IPyWidget scripts.
+     * Telemetry sent when user does something with the prompt displayed to user about using CDN for IPyWidget scripts.
      */
     [Telemetry.IPyWidgetPromptToUseCDNSelection]: {
         selection: 'ok' | 'cancel' | 'dismissed' | 'doNotShowAgain';
@@ -990,6 +1004,8 @@ export interface IEventNamePropertyMapping {
     // Telemetry send when we create a notebook for a raw kernel or jupyter
     [Telemetry.RawKernelCreatingNotebook]: never | undefined;
     [Telemetry.JupyterCreatingNotebook]: never | undefined;
+    // Telemetry sent when starting auto starting Native Notebook kernel fails silently.
+    [Telemetry.KernelStartFailedAndUIDisabled]: never | undefined;
 
     // Raw kernel timing events
     [Telemetry.RawKernelSessionConnect]: never | undefined;
@@ -1001,6 +1017,9 @@ export interface IEventNamePropertyMapping {
     [Telemetry.RawKernelSessionStartException]: never | undefined;
     [Telemetry.RawKernelSessionStartTimeout]: never | undefined;
     [Telemetry.RawKernelSessionStartUserCancel]: never | undefined;
+    [Telemetry.RawKernelSessionStartNoIpykernel]: {
+        reason: number;
+    };
 
     // Run by line events
     [Telemetry.RunByLineStart]: never | undefined;
@@ -1029,4 +1048,20 @@ export interface IEventNamePropertyMapping {
     // Sync events
     [Telemetry.SyncAllCells]: never | undefined;
     [Telemetry.SyncSingleCell]: never | undefined;
+
+    // When users connect to a remote kernel, we store the kernel id so we can re-connect to that
+    // when user opens the same notebook. We only store the last 100.
+    // Count is the number of entries saved in the list.
+    [Telemetry.NumberOfSavedRemoteKernelIds]: { count: number };
+
+    // Whether we've attempted to start a raw Python kernel without any interpreter information.
+    // If we don't detect such telemetry in a few months, then we can remove this along with the temporary code associated with this telemetry.
+    [Telemetry.AttemptedToLaunchRawKernelWithoutInterpreter]: {
+        /**
+         * Indicates whether the python extension is installed.
+         * If we send telemetry fro this & this is `true`, then we have a bug.
+         * If its `false`, then we can ignore this telemetry.
+         */
+        pythonExtensionInstalled: boolean;
+    };
 }

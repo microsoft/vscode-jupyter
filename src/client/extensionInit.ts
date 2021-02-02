@@ -3,7 +3,7 @@
 
 'use strict';
 
-// tslint:disable:max-func-body-length
+/* eslint-disable */
 
 import { Container } from 'inversify';
 import { Disposable, Memento } from 'vscode';

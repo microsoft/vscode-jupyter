@@ -22,16 +22,14 @@ export interface IVariablePanelProps {
     containerHeight: number;
     showDataExplorer(targetVariable: IJupyterVariable, numberOfColumns: number): void;
     closeVariableExplorer(): void;
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     setVariableExplorerHeight(containerHeight: number, gridHeight: number): any;
     pageIn(startIndex: number, pageSize: number): void;
+    standaloneMode?: boolean;
+    viewHeight: number;
 }
 
 export class VariablePanel extends React.Component<IVariablePanelProps> {
-    constructor(prop: IVariablePanelProps) {
-        super(prop);
-    }
-
     public render() {
         return (
             <VariableExplorer
@@ -49,6 +47,8 @@ export class VariablePanel extends React.Component<IVariablePanelProps> {
                 pageIn={this.props.pageIn}
                 executionCount={this.props.executionCount}
                 refreshCount={this.props.refreshCount}
+                standaloneMode={this.props.standaloneMode}
+                viewHeight={this.props.viewHeight}
             />
         );
     }

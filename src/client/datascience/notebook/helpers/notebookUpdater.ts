@@ -31,7 +31,8 @@ export async function chainWithPendingUpdates(
     const aggregatedPromise = pendingUpdates
         // We need to ensure the update operation gets invoked after previous updates have been completed.
         // This way, the callback making references to cell metadata will have the latest information.
-        .then(async () =>
+        // Even if previous update fails, we should not fail this current update.
+        .finally(async () =>
             editor.edit(update).then(
                 (result) => deferred.resolve(result),
                 (ex) => deferred.reject(ex)
@@ -43,10 +44,10 @@ export async function chainWithPendingUpdates(
 }
 
 export function clearPendingChainedUpdatesForTests() {
-    // tslint:disable-next-line: no-any no-require-imports
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-require-imports
     const vsc = require('vscode') as any;
     const editor: NotebookEditor | undefined = vsc.notebook.activeNotebookEditor;
-    if (editor) {
+    if (editor?.document) {
         pendingCellUpdates.delete(editor.document);
     }
 }

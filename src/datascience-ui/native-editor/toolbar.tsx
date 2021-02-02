@@ -68,8 +68,8 @@ export class Toolbar extends React.PureComponent<INativeEditorToolbarProps> {
         super(props);
     }
 
-    // tslint:disable: react-this-binding-issue
-    // tslint:disable-next-line: max-func-body-length
+    /* eslint-disable  */
+    // eslint-disable-next-line
     public render() {
         const selectedInfo = this.props.selectionFocusedInfo;
 
@@ -101,7 +101,7 @@ export class Toolbar extends React.PureComponent<INativeEditorToolbarProps> {
         };
         const runBelow = () => {
             if (selectedInfo.selectedCellId && typeof selectedInfo.selectedCellIndex === 'number') {
-                // tslint:disable-next-line: no-suspicious-comment
+                // eslint-disable-next-line
                 // TODO: Is the source going to be up to date during run below?
                 this.props.executeCellAndBelow(
                     selectedInfo.selectedCellId,

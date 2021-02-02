@@ -9,7 +9,7 @@ import {
 import { IServiceManager } from '../../client/ioc/types';
 import { MockJupyterManager } from './mockJupyterManager';
 
-// tslint:disable:no-any no-http-string no-multiline-string max-func-body-length
+/* eslint-disable @typescript-eslint/no-explicit-any, , no-multi-str,  */
 
 // This class is used to mock talking to jupyter. It mocks
 // the process services, the interpreter services, the python services, and the jupyter session

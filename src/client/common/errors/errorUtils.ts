@@ -3,7 +3,7 @@
 
 import { EOL } from 'os';
 
-// tslint:disable-next-line:no-stateless-class no-unnecessary-class
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class ErrorUtils {
     public static outputHasModuleNotInstalledError(moduleName: string, content?: string): boolean {
         return content &&
@@ -24,4 +24,25 @@ export class WrappedError extends Error {
         // Also retain the call stack of the original error.
         this.stack = `${new Error('').stack}${EOL}${EOL}${originalException.stack}`;
     }
+}
+
+/**
+ * Given a python traceback, attempt to get the Python error message.
+ * Generally Python error messages are at the bottom of the traceback.
+ */
+export function getErrorMessageFromPythonTraceback(traceback: string) {
+    if (!traceback) {
+        return;
+    }
+    // Look for something like `NameError: name 'XYZ' is not defined` in the last line.
+    const pythonErrorMessageRegExp = /\S+Error: /g;
+    const reversedLines = traceback
+        .split('\n')
+        .filter((item) => item.trim().length)
+        .reverse();
+    if (reversedLines.length === 0) {
+        return;
+    }
+    const lastLine = reversedLines[0];
+    return lastLine.match(pythonErrorMessageRegExp) ? lastLine : undefined;
 }

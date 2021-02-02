@@ -2,6 +2,7 @@ import { OSType } from '../../client/common/utils/platform';
 
 // Javascript keyCodes
 export const KeyCodes = {
+    Backspace: 8,
     LeftArrow: 37,
     UpArrow: 38,
     RightArrow: 39,
@@ -9,7 +10,9 @@ export const KeyCodes = {
     PageUp: 33,
     PageDown: 34,
     End: 35,
-    Home: 36
+    Home: 36,
+    Insert: 45,
+    Delete: 46
 };
 
 export function getOSType() {

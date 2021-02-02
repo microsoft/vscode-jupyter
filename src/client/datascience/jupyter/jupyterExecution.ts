@@ -49,7 +49,6 @@ export class JupyterExecutionBase implements IJupyterExecution {
     private readonly jupyterPickerRegistration: IJupyterUriProviderRegistration;
     private uriToJupyterServerUri = new Map<string, IJupyterServerUri>();
     private pendingTimeouts: (NodeJS.Timeout | number)[] = [];
-
     constructor(
         _liveShare: ILiveShareApi,
         private readonly interpreterService: IInterpreterService,
@@ -125,20 +124,20 @@ export class JupyterExecutionBase implements IJupyterExecution {
         return this.isNotebookSupported(cancelToken);
     }
 
-    //tslint:disable:cyclomatic-complexity max-func-body-length
+    /* eslint-disable complexity,  */
     public connectToNotebookServer(
         options?: INotebookServerOptions,
         cancelToken?: CancellationToken
     ): Promise<INotebookServer | undefined> {
         // Return nothing if we cancel
-        // tslint:disable-next-line: max-func-body-length
+        // eslint-disable-next-line
         return Cancellation.race(async () => {
             let result: INotebookServer | undefined;
             let connection: IJupyterConnection | undefined;
-            let kernelConnectionMetadata: KernelConnectionMetadata | undefined;
+            let kernelConnectionMetadata = options?.kernelConnection;
             let kernelConnectionMetadataPromise: Promise<KernelConnectionMetadata | undefined> = Promise.resolve<
                 KernelConnectionMetadata | undefined
-            >(undefined);
+            >(kernelConnectionMetadata);
             traceInfo(`Connecting to ${options ? options.purpose : 'unknown type of'} server`);
             const allowUI = !options || options.allowUI();
             const kernelSpecCancelSource = new CancellationTokenSource();
@@ -149,7 +148,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
             }
             const isLocalConnection = !options || !options.uri;
 
-            if (isLocalConnection) {
+            if (isLocalConnection && !options?.kernelConnection) {
                 // Get hold of the kernelspec and corresponding (matching) interpreter that'll be used as the spec.
                 // We can do this in parallel, while starting the server (faster).
                 traceInfo(`Getting kernel specs for ${options ? options.purpose : 'unknown type of'} server`);
@@ -181,7 +180,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                     // Create a server tha  t we will then attempt to connect to.
                     result = this.serviceContainer.get<INotebookServer>(INotebookServer);
 
-                    // In a remote non quest situation, figure out a kernel spec too.
+                    // In a remote non guest situation, figure out a kernel spec too.
                     if (
                         (!kernelConnectionMetadata ||
                             !kernelConnectionMetadataHasKernelSpec(kernelConnectionMetadata)) &&
@@ -192,13 +191,16 @@ export class JupyterExecutionBase implements IJupyterExecution {
                             IJupyterSessionManagerFactory
                         );
                         const sessionManager = await sessionManagerFactory.create(connection);
-                        kernelConnectionMetadata = await this.kernelSelector.getPreferredKernelForRemoteConnection(
-                            undefined,
-                            sessionManager,
-                            options?.metadata,
-                            cancelToken
-                        );
-                        await sessionManager.dispose();
+                        try {
+                            kernelConnectionMetadata = await this.kernelSelector.getPreferredKernelForRemoteConnection(
+                                undefined,
+                                sessionManager,
+                                options?.metadata,
+                                cancelToken
+                            );
+                        } finally {
+                            await sessionManager.dispose();
+                        }
                     }
 
                     // Populate the launch info that we are starting our server with
@@ -207,10 +209,11 @@ export class JupyterExecutionBase implements IJupyterExecution {
                         kernelConnectionMetadata,
                         workingDir: options ? options.workingDir : undefined,
                         uri: options ? options.uri : undefined,
-                        purpose: options ? options.purpose : uuid()
+                        purpose: options ? options.purpose : uuid(),
+                        disableUI: !allowUI
                     };
 
-                    // tslint:disable-next-line: no-constant-condition
+                    // eslint-disable-next-line no-constant-condition
                     while (true) {
                         try {
                             traceInfo(
@@ -383,7 +386,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
         }
     }
 
-    // tslint:disable-next-line: max-func-body-length
+    // eslint-disable-next-line
     @captureTelemetry(Telemetry.StartJupyter)
     private async startNotebookServer(
         useDefaultConfig: boolean,
@@ -408,7 +411,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
     }
 
     private clearTimeouts() {
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         this.pendingTimeouts.forEach((t) => clearTimeout(t as any));
         this.pendingTimeouts = [];
     }

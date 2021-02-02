@@ -153,7 +153,7 @@ export function generateMarkdownFromCodeLines(lines: string[]) {
     return appendLineFeed(extractComments(lines.slice(lines.length > 1 ? 1 : 0)));
 }
 
-// tslint:disable-next-line: cyclomatic-complexity
+// eslint-disable-next-line complexity
 export function parseForComments(
     lines: string[],
     foundCommentLine: (s: string, i: number) => void,

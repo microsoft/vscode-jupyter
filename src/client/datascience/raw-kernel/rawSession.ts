@@ -6,6 +6,7 @@ import * as uuid from 'uuid/v4';
 import '../../common/extensions';
 import { traceError } from '../../common/logger';
 import { IDisposable } from '../../common/types';
+import { noop } from '../../common/utils/misc';
 import { IKernelProcess } from '../kernel-launcher/types';
 import { ISessionWithSocket, KernelSocketInformation } from '../types';
 import { createRawKernel, RawKernel } from './rawKernel';
@@ -32,7 +33,7 @@ export class RawSession implements ISessionWithSocket {
 
     // RawSession owns the lifetime of the kernel process and will dispose it
     constructor(public kernelProcess: IKernelProcess) {
-        // tslint:disable-next-line: no-require-imports
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
         const signaling = require('@phosphor/signaling') as typeof import('@phosphor/signaling');
         this._statusChanged = new signaling.Signal<this, Kernel.Status>(this);
         this._kernelChanged = new signaling.Signal<this, Session.IKernelChangedArgs>(this);
@@ -56,7 +57,7 @@ export class RawSession implements ISessionWithSocket {
             this.exitHandler.dispose();
             await this._kernel.shutdown();
             this._kernel.dispose();
-            this.kernelProcess.dispose().ignoreErrors();
+            await this.kernelProcess.dispose().catch(noop);
         }
         this.isDisposed = true;
     }

@@ -3,7 +3,7 @@
 
 'use strict';
 
-// tslint:disable:no-any max-func-body-length
+/* eslint-disable @typescript-eslint/no-explicit-any,  */
 
 import * as fakeTimers from '@sinonjs/fake-timers';
 import * as sinon from 'sinon';

@@ -10,6 +10,7 @@ import { createCodeCell } from '../../../datascience-ui/common/cellFactory';
 import { ICryptoUtils } from '../../common/types';
 import { Identifiers } from '../constants';
 import { IEditorContentChange, NotebookModelChange } from '../interactive-common/interactiveWindowTypes';
+import { KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { CellState, ICell } from '../types';
 import { BaseNotebookModel } from './baseModel';
 
@@ -22,6 +23,9 @@ export class NativeEditorNotebookModel extends BaseNotebookModel {
     }
     public get cells(): ICell[] {
         return this._cells;
+    }
+    public get kernelConnection(): KernelConnectionMetadata | undefined {
+        return this._kernelConnection;
     }
     private _id = uuid();
     private saveChangeCount: number = 0;
@@ -288,7 +292,7 @@ export class NativeEditorNotebookModel extends BaseNotebookModel {
         return true;
     }
 
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private asCell(cell: any): ICell {
         // Works around problems with setting a cell to another one in the nyc compiler.
         return cell as ICell;

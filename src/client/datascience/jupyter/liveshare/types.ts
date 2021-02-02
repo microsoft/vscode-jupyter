@@ -6,7 +6,7 @@ import * as vsls from 'vsls/vscode';
 import { IAsyncDisposable } from '../../../common/types';
 import { ICell } from '../../types';
 
-// tslint:disable:max-classes-per-file
+/* eslint-disable max-classes-per-file */
 
 export enum ServerResponseType {
     ExecuteObservable,

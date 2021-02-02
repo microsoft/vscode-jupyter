@@ -22,7 +22,7 @@ import { getOrCreateInteractiveWindow } from './interactiveWindowTestHelpers';
 import { MockDocumentManager } from './mockDocumentManager';
 import { waitForVariablesUpdated } from './testHelpers';
 
-// tslint:disable: no-var-requires no-require-imports no-any chai-vague-errors no-unused-expression
+/* eslint-disable @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports, @typescript-eslint/no-explicit-any, , @typescript-eslint/no-unused-expressions */
 
 export async function verifyAfterStep(
     ioc: DataScienceIocContainer,
@@ -106,7 +106,7 @@ function verifyCell(
     const cellHTML = parse(cellWrapper.html()) as any;
     const innerHTML = cellHTML.innerHTML;
     if (typeof value === 'string') {
-        // tslint:disable-next-line:no-string-literal
+        // eslint-disable-next-line @typescript-eslint/dot-notation
         const match = /value="([\s\S]+?)"\s+/.exec(innerHTML);
         expect(match).to.not.be.equal(null, `${targetName} does not have a value attribute`);
 

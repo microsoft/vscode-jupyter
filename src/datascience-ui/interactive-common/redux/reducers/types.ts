@@ -75,6 +75,7 @@ export enum CommonActionType {
     SELECT_CELL = 'action.select_cell',
     SELECT_SERVER = 'action.select_server',
     SET_VARIABLE_EXPLORER_HEIGHT = 'action.set_variable_explorer_height',
+    SET_VARIABLE_VIEW_HEIGHT = 'action.set_variable_view_height',
     SEND_COMMAND = 'action.send_command',
     SHOW_DATA_VIEWER = 'action.show_data_viewer',
     STEP = 'action.step',
@@ -137,6 +138,7 @@ export type CommonActionTypeMapping = {
     [CommonActionType.GET_VARIABLE_DATA]: IJupyterVariablesRequest;
     [CommonActionType.TOGGLE_VARIABLE_EXPLORER]: never | undefined;
     [CommonActionType.SET_VARIABLE_EXPLORER_HEIGHT]: IVariableExplorerHeight;
+    [CommonActionType.SET_VARIABLE_VIEW_HEIGHT]: IVariableViewHeight;
     [CommonActionType.PostOutgoingMessage]: never | undefined;
     [CommonActionType.REFRESH_VARIABLES]: never | undefined;
     [CommonActionType.OPEN_SETTINGS]: IOpenSettingsAction;
@@ -164,7 +166,7 @@ export interface IScrollAction {
     isAtBottom: boolean;
 }
 
-// tslint:disable-next-line: no-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type CommonReducerArg<AT = CommonActionType | InteractiveWindowMessages, T = never | undefined> = ReducerArg<
     IMainState,
     AT,
@@ -234,7 +236,7 @@ export interface ILoadIPyWidgetClassFailureAction {
     moduleVersion: string;
     cdnsUsed: boolean;
     isOnline: boolean;
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error: any;
     timedout: boolean;
 }
@@ -242,6 +244,10 @@ export interface ILoadIPyWidgetClassFailureAction {
 export interface IVariableExplorerHeight {
     containerHeight: number;
     gridHeight: number;
+}
+
+export interface IVariableViewHeight {
+    viewHeight: number;
 }
 
 export type LoadIPyWidgetClassDisabledAction = {

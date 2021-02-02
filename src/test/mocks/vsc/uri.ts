@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 'use strict';
 
-/* tslint:disable */
+/* eslint-disable */
 
 import { CharCode } from './charCode';
 import * as path from 'path';
@@ -78,7 +78,7 @@ export namespace vscUri {
             return scheme || _empty;
         }
         if (!scheme) {
-            // tslint:disable-next-line: no-console
+            // eslint-disable-next-line no-console
             console.trace('BAD uri lacks scheme, falling back to file-scheme.');
             scheme = 'file';
         }
@@ -123,7 +123,7 @@ export namespace vscUri {
      *       / \ /                        \
      *       urn:example:animal:ferret:nose
      */
-    // tslint:disable-next-line: no-use-before-declare
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
     export class URI implements UriComponents {
         static isUri(thing: any): thing is URI {
             if (thing instanceof URI) {
@@ -461,7 +461,7 @@ export namespace vscUri {
 
     const _pathSepMarker = isWindows ? 1 : undefined;
 
-    // tslint:disable-next-line:class-name
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     class _URI extends URI {
         _formatted: string | null = null;
         _fsPath: string | null = null;

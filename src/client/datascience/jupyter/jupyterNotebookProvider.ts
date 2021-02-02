@@ -39,7 +39,13 @@ export class JupyterNotebookProvider implements IJupyterNotebookProvider {
         });
 
         if (server) {
-            return server.createNotebook(options.resource, options.identity, options.metadata, options.token);
+            return server.createNotebook(
+                options.resource,
+                options.identity,
+                options.metadata,
+                options.kernelConnection,
+                options.token
+            );
         }
         // We want createNotebook to always return a notebook promise, so if we don't have a server
         // here throw our generic server disposed message that we use in server creatio n
@@ -49,7 +55,9 @@ export class JupyterNotebookProvider implements IJupyterNotebookProvider {
         const server = await this.serverProvider.getOrCreateServer({
             getOnly: options.getOnly,
             disableUI: options.disableUI,
-            token: options.token
+            token: options.token,
+            metadata: options.metadata,
+            kernelConnection: options.kernelConnection
         });
         if (server) {
             return server.getNotebook(options.identity, options.token);

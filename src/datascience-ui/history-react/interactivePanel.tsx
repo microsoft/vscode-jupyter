@@ -19,7 +19,7 @@ import { InteractiveCellComponent } from './interactiveCell';
 import './interactivePanel.less';
 import { actionCreators } from './redux/actions';
 
-// tslint:disable: no-suspicious-comment
+/* eslint-disable  */
 
 export type IInteractivePanelProps = IMainWithVariables & typeof actionCreators;
 
@@ -96,7 +96,7 @@ ${buildSettingsCss(this.props.settings)}`}</style>
         this.props.focusInput();
     };
 
-    // tslint:disable-next-line: max-func-body-length
+    // eslint-disable-next-line
     private renderToolbarPanel() {
         const variableExplorerTooltip = this.props.variableState.visible
             ? getLocString('DataScience.collapseVariableExplorerTooltip', 'Hide variables active in jupyter kernel')
@@ -341,7 +341,8 @@ ${buildSettingsCss(this.props.settings)}`}</style>
             fontSize: this.props.font.size,
             executionCount: this.props.currentExecutionCount,
             refreshCount: this.props.variableState.refreshCount,
-            offsetHeight: toolbarHeight
+            offsetHeight: toolbarHeight,
+            viewHeight: 0
         };
     };
 

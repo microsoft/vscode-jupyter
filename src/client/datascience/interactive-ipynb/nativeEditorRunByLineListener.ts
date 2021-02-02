@@ -21,7 +21,7 @@ import { Identifiers, Telemetry } from '../constants';
 import { InteractiveWindowMessages, IRunByLine } from '../interactive-common/interactiveWindowTypes';
 import { ICell, IInteractiveWindowListener, IJupyterDebugService } from '../types';
 
-// tslint:disable: no-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Native editor listener that responds to run by line commands from the UI and uses
  * those commands to control a debug client.

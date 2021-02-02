@@ -3,30 +3,39 @@
 'use strict';
 import '../../../common/extensions';
 
+import { nbformat } from '@jupyterlab/coreutils';
 import * as vscode from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
 
-import type { nbformat } from '@jupyterlab/coreutils';
-import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../../common/application/types';
+import { IPythonExtensionChecker } from '../../../api/types';
+import {
+    IApplicationShell,
+    ILiveShareApi,
+    IVSCodeNotebook,
+    IWorkspaceService
+} from '../../../common/application/types';
 import { traceError, traceInfo } from '../../../common/logger';
-
 import { IFileSystem } from '../../../common/platform/types';
 import {
     IAsyncDisposableRegistry,
     IConfigurationService,
     IDisposableRegistry,
     IOutputChannel,
+    ReadWrite,
     Resource
 } from '../../../common/types';
 import { createDeferred } from '../../../common/utils/async';
 import * as localize from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
 import { IServiceContainer } from '../../../ioc/types';
-import { Identifiers, LiveShare, LiveShareCommands, Settings } from '../../constants';
+import { PythonEnvironment } from '../../../pythonEnvironments/info';
+import { sendTelemetryEvent } from '../../../telemetry';
+import { Identifiers, LiveShare, LiveShareCommands, Settings, Telemetry } from '../../constants';
 import { computeWorkingDirectory } from '../../jupyter/jupyterUtils';
-import { getDisplayNameOrNameOfKernelConnection } from '../../jupyter/kernels/helpers';
+import { getDisplayNameOrNameOfKernelConnection, isPythonKernelConnection } from '../../jupyter/kernels/helpers';
 import { KernelSelector } from '../../jupyter/kernels/kernelSelector';
+import { KernelService } from '../../jupyter/kernels/kernelService';
 import { KernelConnectionMetadata } from '../../jupyter/kernels/types';
 import { HostJupyterNotebook } from '../../jupyter/liveshare/hostJupyterNotebook';
 import { LiveShareParticipantHost } from '../../jupyter/liveshare/liveShareParticipantMixin';
@@ -34,18 +43,20 @@ import { IRoleBasedObject } from '../../jupyter/liveshare/roleBasedFactory';
 import { IKernelLauncher } from '../../kernel-launcher/types';
 import { ProgressReporter } from '../../progress/progressReporter';
 import {
+    IKernelDependencyService,
     INotebook,
     INotebookExecutionInfo,
     INotebookExecutionLogger,
     IRawNotebookProvider,
-    IRawNotebookSupportedService
+    IRawNotebookSupportedService,
+    KernelInterpreterDependencyResponse
 } from '../../types';
 import { calculateWorkingDirectory } from '../../utils';
 import { RawJupyterSession } from '../rawJupyterSession';
 import { RawNotebookProviderBase } from '../rawNotebookProvider';
 
-// tslint:disable-next-line: no-require-imports
-// tslint:disable:no-any
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 export class HostRawNotebookProvider
     extends LiveShareParticipantHost(RawNotebookProviderBase, LiveShare.RawNotebookProviderService)
@@ -65,7 +76,11 @@ export class HostRawNotebookProvider
         private kernelSelector: KernelSelector,
         private progressReporter: ProgressReporter,
         private outputChannel: IOutputChannel,
-        rawNotebookSupported: IRawNotebookSupportedService
+        rawNotebookSupported: IRawNotebookSupportedService,
+        private readonly kernelDependencyService: IKernelDependencyService,
+        private readonly kernelService: KernelService,
+        private readonly extensionChecker: IPythonExtensionChecker,
+        private readonly vscodeNotebook: IVSCodeNotebook
     ) {
         super(liveShare, asyncRegistry, rawNotebookSupported);
     }
@@ -96,12 +111,14 @@ export class HostRawNotebookProvider
                         const resource = this.parseUri(args[0]);
                         const identity = this.parseUri(args[1]);
                         const notebookMetadata = JSON.parse(args[2]) as nbformat.INotebookMetadata;
+                        const kernelConnection = JSON.parse(args[3]) as KernelConnectionMetadata;
                         // Don't return the notebook. We don't want it to be serialized. We just want its live share server to be started.
                         const notebook = (await this.createNotebook(
                             identity!,
                             resource,
                             true, // Disable UI for this creation
                             notebookMetadata,
+                            kernelConnection,
                             undefined
                         )) as HostJupyterNotebook;
                         await notebook.onAttach(api);
@@ -135,6 +152,7 @@ export class HostRawNotebookProvider
         identity: vscode.Uri,
         disableUI?: boolean,
         notebookMetadata?: nbformat.INotebookMetadata,
+        kernelConnection?: KernelConnectionMetadata,
         cancelToken?: CancellationToken
     ): Promise<INotebook> {
         traceInfo(`Creating raw notebook for ${identity.toString()}`);
@@ -145,15 +163,47 @@ export class HostRawNotebookProvider
 
         traceInfo(`Getting preferred kernel for ${identity.toString()}`);
         try {
+            if (
+                kernelConnection &&
+                isPythonKernelConnection(kernelConnection) &&
+                kernelConnection.kind === 'startUsingKernelSpec'
+            ) {
+                if (!kernelConnection.interpreter) {
+                    sendTelemetryEvent(Telemetry.AttemptedToLaunchRawKernelWithoutInterpreter, undefined, {
+                        pythonExtensionInstalled: this.extensionChecker.isPythonExtensionInstalled
+                    });
+                    // Temporary, if there's no telemetry for this, then its safe to remove
+                    // this code as well as the code where we initialize the interpreter via a hack.
+                    // This is used to check if there are situations under which this is possible & to safeguard against it.
+                    // The only real world scenario is when users do not install Python (which we cannot prevent).
+                    const readWriteConnection = kernelConnection as ReadWrite<KernelConnectionMetadata>;
+                    readWriteConnection.interpreter = await this.kernelService.findMatchingInterpreter(
+                        kernelConnection.kernelSpec,
+                        cancelToken
+                    );
+                    if (readWriteConnection.kind === 'startUsingKernelSpec') {
+                        readWriteConnection.kernelSpec.interpreterPath =
+                            readWriteConnection.kernelSpec.interpreterPath || readWriteConnection.interpreter?.path;
+                    }
+                }
+                if (kernelConnection.interpreter) {
+                    // Install missing dependencies only if we're dealing with a Python kernel.
+                    await this.installDependenciesIntoInterpreter(kernelConnection.interpreter, cancelToken, disableUI);
+                } else {
+                    traceError('No interpreter fetched to start a raw kernel');
+                }
+            }
             // We need to locate kernelspec and possible interpreter for this launch based on resource and notebook metadata
-            const kernelConnectionMetadata = await this.kernelSelector.getPreferredKernelForLocalConnection(
-                resource,
-                'raw',
-                undefined,
-                notebookMetadata,
-                disableUI,
-                cancelToken
-            );
+            const kernelConnectionMetadata =
+                kernelConnection ||
+                (await this.kernelSelector.getPreferredKernelForLocalConnection(
+                    resource,
+                    'raw',
+                    undefined,
+                    notebookMetadata,
+                    disableUI,
+                    cancelToken
+                ));
 
             const displayName = getDisplayNameOrNameOfKernelConnection(kernelConnectionMetadata);
 
@@ -165,6 +215,7 @@ export class HostRawNotebookProvider
 
             traceInfo(`Computing working directory ${identity.toString()}`);
             const workingDirectory = await computeWorkingDirectory(resource, this.workspaceService);
+            const launchTimeout = this.configService.getSettings().jupyterLaunchTimeout;
 
             rawSession = new RawJupyterSession(
                 this.kernelLauncher,
@@ -172,20 +223,23 @@ export class HostRawNotebookProvider
                 this.outputChannel,
                 noop,
                 noop,
-                workingDirectory
+                workingDirectory,
+                launchTimeout
             );
-
-            const launchTimeout = this.configService.getSettings().jupyterLaunchTimeout;
 
             // Interpreter is optional, but we must have a kernel spec for a raw launch if using a kernelspec
             if (
                 !kernelConnectionMetadata ||
-                (!kernelConnectionMetadata?.kernelSpec && kernelConnectionMetadata?.kind === 'startUsingKernelSpec')
+                (kernelConnectionMetadata?.kind === 'startUsingKernelSpec' && !kernelConnectionMetadata?.kernelSpec)
             ) {
                 notebookPromise.reject('Failed to find a kernelspec to use for ipykernel launch');
             } else {
-                traceInfo(`Connecting to raw session for ${identity.toString()}`);
-                await rawSession.connect(kernelConnectionMetadata, launchTimeout, cancelToken);
+                traceInfo(
+                    `Connecting to raw session for ${identity.toString()} with connection ${JSON.stringify(
+                        kernelConnectionMetadata
+                    )}`
+                );
+                await rawSession.connect(kernelConnectionMetadata, launchTimeout, cancelToken, disableUI);
 
                 // Get the execution info for our notebook
                 const info = await this.getExecutionInfo(kernelConnectionMetadata);
@@ -204,7 +258,8 @@ export class HostRawNotebookProvider
                         this.getDisposedError.bind(this),
                         this.workspaceService,
                         this.appShell,
-                        this.fs
+                        this.fs,
+                        this.vscodeNotebook
                     );
 
                     // Run initial setup
@@ -230,6 +285,25 @@ export class HostRawNotebookProvider
         }
 
         return notebookPromise.promise;
+    }
+
+    // If we need to install our dependencies now (for non-native scenarios)
+    // then install ipykernel into the interpreter or throw error
+    private async installDependenciesIntoInterpreter(
+        interpreter: PythonEnvironment,
+        cancelToken?: CancellationToken,
+        disableUI?: boolean
+    ) {
+        if (
+            (await this.kernelDependencyService.installMissingDependencies(interpreter, cancelToken, disableUI)) !==
+            KernelInterpreterDependencyResponse.ok
+        ) {
+            throw new Error(
+                localize.DataScience.ipykernelNotInstalled().format(
+                    `${interpreter.displayName || interpreter.path}:${interpreter.path}`
+                )
+            );
+        }
     }
 
     // Get the notebook execution info for this raw session instance

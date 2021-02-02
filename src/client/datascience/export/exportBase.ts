@@ -25,7 +25,7 @@ export class ExportBase implements IExport {
         _target: Uri,
         _interpreter: PythonEnvironment,
         _token: CancellationToken
-        // tslint:disable-next-line: no-empty
+        // eslint-disable-next-line no-empty,@typescript-eslint/no-empty-function
     ): Promise<void> {}
 
     @reportAction(ReportableAction.PerformingExport)
@@ -70,7 +70,6 @@ export class ExportBase implements IExport {
             tempTarget.dispose();
             return;
         }
-
         try {
             if ((await this.fs.stat(Uri.file(tempTarget.filePath))).size > 1) {
                 await this.fs.copyLocal(tempTarget.filePath, target.fsPath);

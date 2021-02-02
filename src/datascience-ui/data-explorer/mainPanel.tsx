@@ -35,7 +35,7 @@ export interface IMainPanelProps {
     testMode?: boolean;
 }
 
-//tslint:disable:no-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 interface IMainPanelState {
     gridColumns: Slick.Column<Slick.SlickData>[];
     gridRows: ISlickRow[];
@@ -52,14 +52,18 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private sentDone = false;
     private postOffice: PostOffice = new PostOffice();
     private gridAddEvent: Slick.Event<ISlickGridAdd> = new Slick.Event<ISlickGridAdd>();
+    private gridColumnUpdateEvent: Slick.Event<Slick.Column<Slick.SlickData>[]> = new Slick.Event<
+        Slick.Column<Slick.SlickData>[]
+    >();
     private rowFetchSizeFirst: number = 0;
     private rowFetchSizeSubsequent: number = 0;
     private rowFetchSizeAll: number = 0;
     // Just used for testing.
     private grid: React.RefObject<ReactSlickGrid> = React.createRef<ReactSlickGrid>();
     private updateTimeout?: NodeJS.Timer | number;
+    private columnsContainingInfOrNaN = new Set<string>();
 
-    // tslint:disable-next-line:max-func-body-length
+    // eslint-disable-next-line
     constructor(props: IMainPanelProps, _state: IMainPanelState) {
         super(props);
 
@@ -133,7 +137,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         );
     };
 
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public handleMessage = (msg: string, payload?: any) => {
         switch (msg) {
             case DataViewerMessages.InitializeData:
@@ -190,6 +194,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 columns={this.state.gridColumns}
                 idProperty={this.state.indexColumn}
                 rowsAdded={this.gridAddEvent}
+                columnsUpdated={this.gridColumnUpdateEvent}
                 filterRowsText={filterRowsText}
                 filterRowsTooltip={filterRowsTooltip}
                 forceHeight={this.props.testMode ? 200 : undefined}
@@ -197,7 +202,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         );
     }
 
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private initializeData(payload: any) {
         // Payload should be an IJupyterVariable with the first 100 rows filled out
         if (payload) {
@@ -248,7 +253,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     private handleGetAllRowsResponse(response: IRowsResponse) {
         const rows = response ? (response as JSONArray) : [];
-        const normalized = this.normalizeRows(rows);
+        const normalized = this.normalizeData(rows);
 
         // Update our fetched count and actual rows
         this.setState({
@@ -263,7 +268,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private handleGetRowChunkResponse(response: IGetRowsResponse) {
         // We have a new fetched row count
         const rows = response.rows ? (response.rows as JSONArray) : [];
-        const normalized = this.normalizeRows(rows);
+        const normalized = this.normalizeData(rows);
         const newFetched = this.state.fetchedRowCount + (response.end - response.start);
 
         // gridRows should have our entire list. We need to replace our part with our new results
@@ -304,17 +309,60 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         return [];
     }
 
-    private normalizeRows(rows: JSONArray): ISlickRow[] {
+    private normalizeData(rows: JSONArray): ISlickRow[] {
+        // While processing rows we may encounter Inf, -Inf or NaN.
+        // These rows' column types will initially be 'string' or 'object' so
+        // make sure we update the column types
+        // Set of columns to update based on this batch of rows
+        const columnsToUpdate = new Set<string>();
         // Make sure we have an index field and all rows have an item
-        return rows.map((r: any | undefined) => {
+        const normalizedRows = rows.map((r: any | undefined) => {
             if (!r) {
                 r = {};
             }
             if (!r.hasOwnProperty(this.state.indexColumn)) {
                 r[this.state.indexColumn] = uuid();
             }
+            for (let [key, value] of Object.entries(r)) {
+                switch (value) {
+                    case 'nan':
+                        r[key] = NaN;
+                        if (!this.columnsContainingInfOrNaN.has(key)) {
+                            columnsToUpdate.add(key);
+                            this.columnsContainingInfOrNaN.add(key);
+                        }
+                        break;
+                    case '-inf':
+                        r[key] = -Infinity;
+                        if (!this.columnsContainingInfOrNaN.has(key)) {
+                            columnsToUpdate.add(key);
+                            this.columnsContainingInfOrNaN.add(key);
+                        }
+                        break;
+                    case 'inf':
+                        r[key] = Infinity;
+                        if (!this.columnsContainingInfOrNaN.has(key)) {
+                            columnsToUpdate.add(key);
+                            this.columnsContainingInfOrNaN.add(key);
+                        }
+                        break;
+                    default:
+                }
+            }
             return r;
         });
+        // Need to update the column types so that that column gets number treatment.
+        // This should be unusual in practice.
+        if (columnsToUpdate.size > 0) {
+            const columns = this.state.gridColumns;
+            columns
+                .filter((column) => column.name && columnsToUpdate.has(column.name))
+                .forEach((column) => {
+                    (column as any).type = ColumnType.Number;
+                });
+            this.updateColumns(columns);
+        }
+        return normalizedRows;
     }
 
     private sendMessage<M extends IDataViewerMapping, T extends keyof M>(type: T, payload?: M[T]) {
@@ -332,5 +380,12 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         } else {
             this.gridAddEvent.notify({ newRows });
         }
+    }
+
+    private updateColumns(newColumns: Slick.Column<Slick.SlickData>[]) {
+        this.setState({ gridColumns: newColumns });
+        // State updates do not trigger a rerender on the SlickGrid,
+        // so we need to tell it to update itself with an event
+        this.gridColumnUpdateEvent.notify(newColumns);
     }
 }

@@ -19,7 +19,7 @@ import * as AdazzleReactDataGrid from 'react-data-grid';
 import { VariableExplorerHeaderCellFormatter } from './variableExplorerHeaderCellFormatter';
 import { VariableExplorerRowRenderer } from './variableExplorerRowRenderer';
 
-// tslint:disable-next-line: import-name
+// eslint-disable-next-line
 import Draggable from 'react-draggable';
 
 import { IVariableState } from './redux/reducers/variables';
@@ -40,6 +40,8 @@ interface IVariableExplorerProps {
     closeVariableExplorer(): void;
     setVariableExplorerHeight(containerHeight: number, gridHeight: number): void;
     pageIn(startIndex: number, pageSize: number): void;
+    standaloneMode?: boolean;
+    viewHeight: number;
 }
 
 const defaultColumnProperties = {
@@ -55,7 +57,7 @@ interface IFormatterArgs {
 }
 
 interface IGridRow {
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     name: string;
     type: string;
     size: string;
@@ -69,7 +71,7 @@ interface IVariableExplorerState {
     gridHeight: number;
 }
 
-// tslint:disable:no-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export class VariableExplorer extends React.Component<IVariableExplorerProps, IVariableExplorerState> {
     private variableExplorerRef: React.RefObject<HTMLDivElement>;
     private variableExplorerMenuBarRef: React.RefObject<HTMLDivElement>;
@@ -178,8 +180,13 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
         }
         if (
             prevState.containerHeight !== this.state.containerHeight ||
-            prevState.gridHeight !== this.state.gridHeight
+            (prevState.gridHeight !== this.state.gridHeight && !this.props.standaloneMode)
         ) {
+            return true;
+        }
+
+        // In standalone mode, we need to update when our height changes
+        if (this.props.standaloneMode && prevState.viewHeight !== nextProps.viewHeight) {
             return true;
         }
 
@@ -187,6 +194,37 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
     }
 
     public render() {
+        // This control renders differently when hosted standalone versus a document
+        if (this.props.standaloneMode) {
+            return this.renderInViewMode();
+        } else {
+            return this.renderInDocumentMode();
+        }
+    }
+
+    private renderInViewMode() {
+        const contentClassName = `variable-explorer-content`;
+        let variableExplorerStyles: React.CSSProperties = { fontSize: `${this.props.fontSize.toString()}px` };
+        if (this.props.viewHeight !== 0) {
+            variableExplorerStyles = { ...variableExplorerStyles, height: this.props.viewHeight };
+        }
+        return (
+            <div id="variable-panel" ref={this.variablePanelRef}>
+                <div id="variable-panel-padding">
+                    <div className="variable-explorer" ref={this.variableExplorerRef} style={variableExplorerStyles}>
+                        <div className="variable-explorer-menu-bar" ref={this.variableExplorerMenuBarRef}>
+                            <label className="inputLabel variable-explorer-label">
+                                {getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}
+                            </label>
+                        </div>
+                        <div className={contentClassName}>{this.renderGrid()}</div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    private renderInDocumentMode() {
         const contentClassName = `variable-explorer-content`;
         const containerHeight = this.state.containerHeight;
         let variableExplorerStyles: React.CSSProperties = { fontSize: `${this.props.fontSize.toString()}px` };
@@ -234,6 +272,13 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
     }
 
     private renderGrid() {
+        let newGridHeight: number | undefined;
+
+        // In in standalone mode, just use the viewHeight prop for calculating size
+        if (this.props.standaloneMode) {
+            newGridHeight = this.calculateGridHeight(this.props.viewHeight);
+        }
+
         return (
             <div
                 id="variable-explorer-data-grid"
@@ -244,10 +289,10 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
                     columns={this.gridColumns.map((c) => {
                         return { ...defaultColumnProperties, ...c };
                     })}
-                    // tslint:disable-next-line: react-this-binding-issue
+                    // eslint-disable-next-line
                     rowGetter={this.getRow}
                     rowsCount={this.props.variables.length}
-                    minHeight={this.state.gridHeight}
+                    minHeight={newGridHeight || this.state.gridHeight}
                     headerRowHeight={this.getRowHeight()}
                     rowHeight={this.getRowHeight()}
                     onRowDoubleClick={this.rowDoubleClick}
@@ -305,17 +350,23 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
         }
     }
 
-    private setVariableGridHeight() {
+    private calculateGridHeight(baseHeight: number): number {
         const variableExplorerMenuBar = this.variableExplorerMenuBarRef.current;
 
         if (!variableExplorerMenuBar) {
+            return baseHeight;
+        }
+
+        return baseHeight - variableExplorerMenuBar.clientHeight;
+    }
+
+    private setVariableGridHeight() {
+        if (!this.variableExplorerMenuBarRef.current) {
             return;
         }
 
-        const updatedHeight = this.state.containerHeight - variableExplorerMenuBar.clientHeight;
-
         this.setState({
-            gridHeight: updatedHeight
+            gridHeight: this.calculateGridHeight(this.state.containerHeight)
         });
     }
 
@@ -389,7 +440,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
         const newExecution =
             this.props.executionCount !== this.requestedPagesExecutionCount ||
             this.props.refreshCount !== this.requestedRefreshCount;
-        // tslint:disable-next-line: restrict-plus-operands
+        // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
         const notRequested = !this.requestedPages.find((n) => n <= index && index < n + pageSize);
         if (!haveValue && (newExecution || notRequested)) {
             // Try to find a page of data around this index.

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-// tslint:disable:max-func-body-length trailing-comma no-any no-multiline-string
+/* eslint-disable , comma-dangle, @typescript-eslint/no-explicit-any, no-multi-str */
 import '../../client/common/extensions';
 
 import { nbformat } from '@jupyterlab/coreutils';
@@ -47,9 +47,9 @@ suite('DataScience DataViewer tests', () => {
         // run any of our variable execution code
         const isRollingBuild = process.env ? process.env.VSC_FORCE_REAL_JUPYTER !== undefined : false;
         if (!isRollingBuild) {
-            // tslint:disable-next-line:no-console
+            // eslint-disable-next-line no-console
             console.log('Skipping DataViewer tests. Requires python environment');
-            // tslint:disable-next-line:no-invalid-this
+            // eslint-disable-next-line no-invalid-this
             this.skip();
         }
     });
@@ -85,7 +85,7 @@ suite('DataScience DataViewer tests', () => {
             if (!disposable) {
                 continue;
             }
-            // tslint:disable-next-line:no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const promise = disposable.dispose() as Promise<any>;
             if (promise) {
                 await promise;
@@ -149,7 +149,7 @@ suite('DataScience DataViewer tests', () => {
         return mountedWebView.waitForMessage(DataViewerMessages.CompletedData);
     }
 
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     function runMountedTest(name: string, testFunc: (mount: IMountedWebView) => Promise<void>) {
         test(name, async () => {
             const wrapper = mountWebView();
@@ -162,18 +162,23 @@ suite('DataScience DataViewer tests', () => {
         });
     }
 
-    function sortRows(
-        wrapper: ReactWrapper<any, Readonly<{}>, React.Component>,
-        sortCol: string,
-        sortAsc: boolean
-    ): void {
-        // Cause our sort
+    function findGrid(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) {
         const mainPanelWrapper = wrapper.find(MainPanel);
         assert.ok(mainPanelWrapper && mainPanelWrapper.length > 0, 'Grid not found to sort on');
         const mainPanel = mainPanelWrapper.instance() as MainPanel;
         assert.ok(mainPanel, 'Main panel instance not found');
         const reactGrid = (mainPanel as any).grid.current as ReactSlickGrid;
         assert.ok(reactGrid, 'Grid control not found');
+        return reactGrid;
+    }
+
+    function sortRows(
+        wrapper: ReactWrapper<any, Readonly<{}>, React.Component>,
+        sortCol: string,
+        sortAsc: boolean
+    ): void {
+        // Cause our sort
+        const reactGrid = findGrid(wrapper);
         if (reactGrid.state.grid) {
             const cols = reactGrid.state.grid.getColumns();
             const col = cols.find((c) => c.field === sortCol);
@@ -193,12 +198,7 @@ suite('DataScience DataViewer tests', () => {
         filterText: string
     ): Promise<void> {
         // Cause our sort
-        const mainPanelWrapper = wrapper.find(MainPanel);
-        assert.ok(mainPanelWrapper && mainPanelWrapper.length > 0, 'Grid not found to sort on');
-        const mainPanel = mainPanelWrapper.instance() as MainPanel;
-        assert.ok(mainPanel, 'Main panel instance not found');
-        const reactGrid = (mainPanel as any).grid.current as ReactSlickGrid;
-        assert.ok(reactGrid, 'Grid control not found');
+        const reactGrid = findGrid(wrapper);
         if (reactGrid.state.grid) {
             const cols = reactGrid.state.grid.getColumns();
             const col = cols.find((c) => c.field === filterCol);
@@ -226,8 +226,38 @@ suite('DataScience DataViewer tests', () => {
             const span = cells[i].querySelector('div.cell-formatter span') as HTMLSpanElement;
             assert.ok(span, `Span ${i} not found`);
             const val = rows[i].toString();
-            assert.equal(val, span.innerHTML, `Row ${i} not matching. ${span.innerHTML} !== ${val}`);
+            assert.equal(span.innerHTML, val, `Row ${i} not matching. ${span.innerHTML} !== ${val}`);
         }
+    }
+
+    function editCell(
+        wrapper: ReactWrapper<any, Readonly<{}>, React.Component>,
+        dataViewRow: number,
+        dataViewColumn: number
+    ) {
+        const reactGrid = findGrid(wrapper);
+        reactGrid.state.grid?.setActiveCell(dataViewRow, dataViewColumn);
+        reactGrid.state.grid?.render();
+        reactGrid.state.grid?.editActiveCell();
+        wrapper.update();
+    }
+
+    function cancelEdits(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) {
+        const reactGrid = findGrid(wrapper);
+        reactGrid.state.grid?.getEditorLock().cancelCurrentEdit();
+        wrapper.update();
+    }
+
+    function verifyInputIncludes(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, text: string) {
+        const mainPanel = wrapper.find('.main-panel');
+        assert.ok(mainPanel.length >= 1, "Didn't find any cells being rendered");
+        wrapper.update();
+        const html = mainPanel.html();
+        const root = parse(html) as any;
+        const cells = root.querySelectorAll('.editor-text') as HTMLInputElement[];
+        assert.ok(cells.length === 1, 'Did not find input cell');
+        const cell = cells[0];
+        assert.ok(cell.outerHTML.includes(text));
     }
 
     runMountedTest('Data Frame', async (wrapper) => {
@@ -281,28 +311,156 @@ suite('DataScience DataViewer tests', () => {
     });
 
     runMountedTest('Sorting', async (wrapper) => {
-        await injectCode('import numpy as np\r\nx = np.array([0, 1, 2, 3])');
+        await injectCode('import numpy as np\r\nx = np.array([0, 1, 2, 3, np.inf, -np.inf, np.nan])');
         const gotAllRows = getCompletedPromise(wrapper);
         const dv = await createJupyterVariableDataViewer('x', 'ndarray');
         assert.ok(dv, 'DataViewer not created');
         await gotAllRows;
 
-        verifyRows(wrapper.wrapper, [0, 0, 1, 1, 2, 2, 3, 3]);
+        verifyRows(wrapper.wrapper, [0, 0, 1, 1, 2, 2, 3, 3, 4, 'inf', 5, '-inf', 6, 'nan']);
         sortRows(wrapper.wrapper, '0', false);
-        verifyRows(wrapper.wrapper, [3, 3, 2, 2, 1, 1, 0, 0]);
+        verifyRows(wrapper.wrapper, [6, 'nan', 4, 'inf', 3, 3, 2, 2, 1, 1, 0, 0, 5, '-inf']);
+        sortRows(wrapper.wrapper, '0', true);
+        verifyRows(wrapper.wrapper, [5, '-inf', 0, 0, 1, 1, 2, 2, 3, 3, 4, 'inf', 6, 'nan']);
     });
 
     runMountedTest('Filter', async (wrapper) => {
-        await injectCode('import numpy as np\r\nx = np.array([0, 1, 2, 3])');
+        await injectCode('import numpy as np\r\nx = np.array([0, 1, 2, 3, np.inf, -np.inf, np.nan])');
         const gotAllRows = getCompletedPromise(wrapper);
         const dv = await createJupyterVariableDataViewer('x', 'ndarray');
         assert.ok(dv, 'DataViewer not created');
         await gotAllRows;
+        verifyRows(wrapper.wrapper, [0, 0, 1, 1, 2, 2, 3, 3, 4, 'inf', 5, '-inf', 6, 'nan']);
 
-        verifyRows(wrapper.wrapper, [0, 0, 1, 1, 2, 2, 3, 3]);
-        await filterRows(wrapper.wrapper, '0', '> 1');
-        verifyRows(wrapper.wrapper, [2, 2, 3, 3]);
-        await filterRows(wrapper.wrapper, '0', '0');
-        verifyRows(wrapper.wrapper, [0, 0]);
+        const filtersAndExpectedResults = {
+            '> 1': [2, 2, 3, 3, 4, 'inf'],
+            '0': [0, 0],
+            // Search for inf, -inf, nan
+            inf: [4, 'inf'],
+            Inf: [4, 'inf'],
+            '-inf': [5, '-inf'],
+            '-INF': [5, '-inf'],
+            nan: [6, 'nan'],
+            NaN: [6, 'nan'],
+            // inf comparison
+            '> inf': [],
+            '>= inf': [4, 'inf'],
+            '= inf': [4, 'inf'],
+            '<= inf': [0, 0, 1, 1, 2, 2, 3, 3, 4, 'inf', 5, '-inf'],
+            '< inf': [0, 0, 1, 1, 2, 2, 3, 3, 5, '-inf'],
+            // -inf comparison
+            '> -inf': [0, 0, 1, 1, 2, 2, 3, 3, 4, 'inf'],
+            '>= -inf': [0, 0, 1, 1, 2, 2, 3, 3, 4, 'inf', 5, '-inf'],
+            '= -inf': [5, '-inf'],
+            '<= -inf': [5, '-inf'],
+            '< -inf': [],
+            // nan comparison
+            '= nan': [6, 'nan'],
+            '>= nan': [6, 'nan'],
+            '<= nan': [6, 'nan'],
+            '> nan': [],
+            '< nan': []
+        };
+
+        for (const [filter, expectedResult] of Object.entries(filtersAndExpectedResults)) {
+            await filterRows(wrapper.wrapper, '0', filter);
+            verifyRows(wrapper.wrapper, expectedResult);
+        }
+    });
+
+    runMountedTest('2D PyTorch tensors', async (wrapper) => {
+        await injectCode(
+            "import torch\r\nimport numpy as np\r\nfoo = torch.tensor([0, 1, np.inf, float('-inf'), np.nan])"
+        );
+        const gotAllRows = getCompletedPromise(wrapper);
+        const dv = await createJupyterVariableDataViewer('foo', 'Tensor');
+        assert.ok(dv, 'DataViewer not created');
+        await gotAllRows;
+        verifyRows(wrapper.wrapper, [0, 0, 1, 1, 2, 'inf', 3, '-inf', 4, 'nan']);
+    });
+
+    runMountedTest('2D TensorFlow tensors', async (wrapper) => {
+        await injectCode(
+            "import tensorflow as tf\r\nimport numpy as np\r\nbar = tf.constant([0, 1, np.inf, float('-inf'), np.nan])"
+        );
+        const gotAllRows = getCompletedPromise(wrapper);
+        const dv = await createJupyterVariableDataViewer('bar', 'EagerTensor');
+        assert.ok(dv, 'DataViewer not created');
+        await gotAllRows;
+        verifyRows(wrapper.wrapper, [0, 0, 1, 1, 2, 'inf', 3, '-inf', 4, 'nan']);
+    });
+
+    runMountedTest('3D PyTorch tensors', async (wrapper) => {
+        // Should be able to successfully create data viewer for 3D data
+        await injectCode('import torch\r\nfoo = torch.LongTensor([[[1, 2, 3, 4, 5, 6], [7, 8, 9, 10, 11, 12]]])');
+        const gotAllRows = getCompletedPromise(wrapper);
+        const dv = await createJupyterVariableDataViewer('foo', 'Tensor');
+        assert.ok(dv, 'DataViewer not created');
+        await gotAllRows;
+
+        verifyRows(wrapper.wrapper, [0, '[1, 2, 3, 4, 5, 6]', '[7, 8, 9, 10, 11, 12]']);
+        wrapper.wrapper.update();
+
+        // Put cell into edit mode and verify that input value is updated to be the non-truncated, stringified value
+        editCell(wrapper.wrapper, 0, 1);
+        verifyInputIncludes(wrapper.wrapper, 'value="[1, 2, 3, 4, 5, 6]"');
+
+        // Data should still be there after exiting edit mode
+        cancelEdits(wrapper.wrapper);
+        verifyRows(wrapper.wrapper, [0, '[1, 2, 3, 4, 5, 6]', '[7, 8, 9, 10, 11, 12]']);
+    });
+
+    runMountedTest('4D numpy ndarrays', async (wrapper) => {
+        // Should be able to successfully create data viewer for >2D numpy ndarrays
+        await injectCode('import numpy as np\r\nfoo = np.arange(24).reshape((1, 2, 3, 4))');
+        const gotAllRows = getCompletedPromise(wrapper);
+        const dv = await createJupyterVariableDataViewer('foo', 'ndarray');
+        assert.ok(dv, 'DataViewer not created');
+        await gotAllRows;
+
+        verifyRows(wrapper.wrapper, [
+            0,
+            `[[0, 1, 2, 3],
+ [4, 5, 6, 7],
+ [8, 9, 10, 11]]`,
+            `[[12, 13, 14, 15],
+ [16, 17, 18, 19],
+ [20, 21, 22, 23]]`
+        ]);
+
+        // Put cell into edit mode and verify that input value is updated to be the non-truncated, stringified value
+        editCell(wrapper.wrapper, 0, 1);
+        verifyInputIncludes(wrapper.wrapper, `value="[[0, 1, 2, 3],\n [4, 5, 6, 7],\n [8, 9, 10, 11]]"`);
+
+        // Data should still be there after exiting edit mode
+        cancelEdits(wrapper.wrapper);
+        verifyRows(wrapper.wrapper, [
+            0,
+            `[[0, 1, 2, 3],
+ [4, 5, 6, 7],
+ [8, 9, 10, 11]]`,
+            `[[12, 13, 14, 15],
+ [16, 17, 18, 19],
+ [20, 21, 22, 23]]`
+        ]);
+    });
+
+    runMountedTest('Ragged 2D numpy array', async (wrapper) => {
+        await injectCode("import numpy as np\r\nfoo = np.array([[1, 2, 3, float('inf')], [4, np.nan, 5]])");
+        const gotAllRows = getCompletedPromise(wrapper);
+        const dv = await createJupyterVariableDataViewer('foo', 'ndarray');
+        assert.ok(dv, 'DataViewer not created');
+        await gotAllRows;
+        verifyRows(wrapper.wrapper, [0, 1, 2, 3, 'inf', 1, 4, 'nan', 5]);
+    });
+
+    runMountedTest('Ragged 3D numpy array', async (wrapper) => {
+        // Should be able to successfully create data viewer for ragged 3D numpy arrays
+        await injectCode('import numpy as np\r\nfoo = np.array([[[1, 2, 3], [4, 5]], [[6, 7, 8, 9]]])');
+        const gotAllRows = getCompletedPromise(wrapper);
+        const dv = await createJupyterVariableDataViewer('foo', 'ndarray');
+        assert.ok(dv, 'DataViewer not created');
+        await gotAllRows;
+        verifyRows(wrapper.wrapper, [0, `[1, 2, 3]`, `[4, 5]`, 1, `[6, 7, 8, 9]`, '']);
     });
 });

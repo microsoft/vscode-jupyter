@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 
-// tslint:disable:no-suspicious-comment
+/* eslint-disable  */
 
 import { createHash } from 'crypto';
 import * as fs from 'fs-extra';
@@ -450,7 +450,7 @@ export class FileSystemUtils {
     }
 
     public async search(globPattern: string, cwd?: string, dot?: boolean): Promise<string[]> {
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         let options: any;
         if (cwd) {
             options = { ...options, cwd };

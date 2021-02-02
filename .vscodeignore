@@ -42,7 +42,7 @@ test.ipynb
 travis*.log
 tsconfig*.json
 tsfmt.json
-tslint.json
+.eslintrc.js
 typings.json
 vsc-extension-quickstart.md
 vscode-python-signing.*

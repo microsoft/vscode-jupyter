@@ -19,7 +19,8 @@ import {
     IJupyterKernelSpec,
     IJupyterPasswordConnect,
     IJupyterSession,
-    IJupyterSessionManager
+    IJupyterSessionManager,
+    IKernelDependencyService
 } from '../types';
 import { createAuthorizingRequest } from './jupyterRequest';
 import { JupyterSession } from './jupyterSession';
@@ -31,7 +32,7 @@ import { KernelConnectionMetadata } from './kernels/types';
 // Key for our insecure connection global state
 const GlobalStateUserAllowsInsecureConnections = 'DataScienceAllowInsecureConnections';
 
-// tslint:disable: no-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 export class JupyterSessionManager implements IJupyterSessionManager {
     private static secureServers = new Map<string, Promise<boolean>>();
@@ -45,7 +46,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
     private restartSessionUsedEvent = new EventEmitter<Kernel.IKernelConnection>();
     private get jupyterlab(): typeof import('@jupyterlab/services') {
         if (!this._jupyterlab) {
-            // tslint:disable-next-line: no-require-imports
+            // eslint-disable-next-line @typescript-eslint/no-require-imports
             this._jupyterlab = require('@jupyterlab/services');
         }
         return this._jupyterlab!;
@@ -57,7 +58,8 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         private outputChannel: IOutputChannel,
         private configService: IConfigurationService,
         private readonly appShell: IApplicationShell,
-        private readonly stateFactory: IPersistentStateFactory
+        private readonly stateFactory: IPersistentStateFactory,
+        private readonly kernelDependencyService: IKernelDependencyService
     ) {
         this.userAllowsInsecureConnections = this.stateFactory.createGlobalPersistentState<boolean>(
             GlobalStateUserAllowsInsecureConnections,
@@ -85,7 +87,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
                 // Make sure it finishes startup.
                 await Promise.race([sleep(10_000), this.sessionManager.ready]);
 
-                // tslint:disable-next-line: no-any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const sessionManager = this.sessionManager as any;
                 this.sessionManager.dispose(); // Note, shutting down all will kill all kernels on the same connection. We don't want that.
                 this.sessionManager = undefined;
@@ -167,7 +169,8 @@ export class JupyterSessionManager implements IJupyterSessionManager {
     public async startNew(
         kernelConnection: KernelConnectionMetadata | undefined,
         workingDirectory: string,
-        cancelToken?: CancellationToken
+        cancelToken?: CancellationToken,
+        disableUI?: boolean
     ): Promise<IJupyterSession> {
         if (!this.connInfo || !this.sessionManager || !this.contentsManager || !this.serverSettings) {
             throw new Error(localize.DataScience.sessionDisposed());
@@ -183,10 +186,11 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             this.restartSessionCreatedEvent.fire.bind(this.restartSessionCreatedEvent),
             this.restartSessionUsedEvent.fire.bind(this.restartSessionUsedEvent),
             workingDirectory,
-            this.configService.getSettings().jupyterLaunchTimeout
+            this.configService.getSettings().jupyterLaunchTimeout,
+            this.kernelDependencyService
         );
         try {
-            await session.connect(this.configService.getSettings().jupyterLaunchTimeout, cancelToken);
+            await session.connect(this.configService.getSettings().jupyterLaunchTimeout, cancelToken, disableUI);
         } finally {
             if (!session.isConnected) {
                 await session.dispose();
@@ -225,7 +229,9 @@ export class JupyterSessionManager implements IJupyterSessionManager {
                     return new JupyterKernelSpec(spec) as IJupyterKernelSpec;
                 });
             } else {
-                traceError(`SessionManager cannot enumerate kernelspecs. Returning default.`);
+                traceError(
+                    `SessionManager cannot enumerate kernelspecs. Returning default ${JSON.stringify(kernelspecs)}.`
+                );
                 // If for some reason the session manager refuses to communicate, fall
                 // back to a default. This may not exist, but it's likely.
                 return [createDefaultKernelSpec()];
@@ -237,7 +243,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         }
     }
 
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private clearPoll(poll: { _timeout: any }) {
         try {
             clearTimeout(poll._timeout);
@@ -258,10 +264,10 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         await this.secureConnectionCheck(connInfo);
 
         // Agent is allowed to be set on this object, but ts doesn't like it on RequestInit, so any
-        // tslint:disable-next-line:no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         let requestInit: any = { cache: 'no-store', credentials: 'same-origin' };
         let cookieString;
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         let requestCtor: any = nodeFetch.Request;
 
         // If authorization header is provided, then we need to prevent jupyterlab services from
@@ -317,15 +323,15 @@ export class JupyterSessionManager implements IJupyterSessionManager {
                 cookieString,
                 allowUnauthorized,
                 connInfo.getAuthHeader
-                // tslint:disable-next-line:no-any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
             ) as any,
             // Redefine fetch to our node-modules so it picks up the correct version.
             // Typecasting as any works fine as long as all 3 of these are the same version
-            // tslint:disable-next-line:no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             fetch: nodeFetch.default as any,
-            // tslint:disable-next-line:no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             Request: requestCtor,
-            // tslint:disable-next-line:no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             Headers: nodeFetch.Headers as any
         };
 

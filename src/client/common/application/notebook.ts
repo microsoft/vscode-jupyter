@@ -15,7 +15,7 @@ import type {
     NotebookKernelProvider,
     window as notebookWindow
 } from '../../../../types/vscode-proposed';
-import { UseProposedApi } from '../constants';
+import { UseVSCodeNotebookEditorApi } from '../constants';
 import { IDisposableRegistry } from '../types';
 import { IApplicationEnvironment, IVSCodeNotebook, NotebookCellChangedEvent } from './types';
 
@@ -64,7 +64,7 @@ export class VSCodeNotebook implements IVSCodeNotebook {
             : new EventEmitter<NotebookCellChangedEvent>().event;
     }
     public get activeNotebookEditor(): NotebookEditor | undefined {
-        if (!this.useProposedApi) {
+        if (!this.useNativeNb) {
             return;
         }
         try {
@@ -75,14 +75,14 @@ export class VSCodeNotebook implements IVSCodeNotebook {
     }
     private get notebook() {
         if (!this._notebook) {
-            // tslint:disable-next-line: no-require-imports
+            // eslint-disable-next-line @typescript-eslint/no-require-imports
             this._notebook = require('vscode').notebook;
         }
         return this._notebook!;
     }
     private get window() {
         if (!this._window) {
-            // tslint:disable-next-line: no-require-imports
+            // eslint-disable-next-line @typescript-eslint/no-require-imports
             this._window = require('vscode').window;
         }
         return this._window!;
@@ -94,11 +94,11 @@ export class VSCodeNotebook implements IVSCodeNotebook {
     private readonly canUseNotebookApi?: boolean;
     private readonly handledCellChanges = new WeakSet<VSCNotebookCellsChangeEvent>();
     constructor(
-        @inject(UseProposedApi) private readonly useProposedApi: boolean,
+        @inject(UseVSCodeNotebookEditorApi) private readonly useNativeNb: boolean,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IApplicationEnvironment) readonly env: IApplicationEnvironment
     ) {
-        if (this.useProposedApi && this.env.channel === 'insiders') {
+        if (this.useNativeNb) {
             this.addEventHandlers();
             this.canUseNotebookApi = true;
         }

@@ -33,10 +33,10 @@ interface ICommandNameWithoutArgumentTypeMapping {
     ['editor.action.formatDocument']: [];
     ['editor.action.rename']: [];
     ['jupyter.selectJupyterInterpreter']: [];
+    ['jupyterViewVariables.focus']: [];
     [DSCommands.RunCurrentCell]: [];
     [DSCommands.RunCurrentCellAdvance]: [];
     [DSCommands.ExecSelectionInInteractiveWindow]: [];
-    [DSCommands.SelectJupyterURI]: [];
     [DSCommands.CreateNewInteractive]: [];
     [DSCommands.UndoCells]: [];
     [DSCommands.RedoCells]: [];
@@ -58,6 +58,7 @@ interface ICommandNameWithoutArgumentTypeMapping {
     [DSCommands.CreateNewNotebook]: [];
     [DSCommands.EnableDebugLogging]: [];
     [DSCommands.ResetLoggingLevel]: [];
+    [DSCommands.OpenVariableView]: [];
 }
 
 /**
@@ -141,10 +142,13 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.LatestExtension]: [string];
     [DSCommands.EnableLoadingWidgetsFrom3rdPartySource]: [undefined | never];
     [DSCommands.TrustNotebook]: [undefined | never | Uri];
+    [DSCommands.NotebookTrusted]: [];
     [DSCommands.NotebookEditorExpandAllCells]: [];
     [DSCommands.NotebookEditorCollapseAllCells]: [];
     [DSCommands.CreateGitHubIssue]: [];
     [DSCommands.SubmitGitHubIssue]: [];
     [DSCommands.ShowDataViewer]: [IShowDataViewerFromVariablePanel];
     [DSCommands.ClearSavedJupyterUris]: [];
+    [DSCommands.SelectJupyterURI]: [undefined, 'toolbar' | 'nativeNotebookStatusBar' | undefined];
+    [DSCommands.SelectNativeJupyterUriFromToolBar]: [];
 }

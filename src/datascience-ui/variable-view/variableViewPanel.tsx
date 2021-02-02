@@ -7,7 +7,9 @@ import { IMainWithVariables, IStore } from '../interactive-common/redux/store';
 import { IVariablePanelProps, VariablePanel } from '../interactive-common/variablePanel';
 import { actionCreators } from './redux/actions';
 
-// tslint:disable: no-suspicious-comment
+import './variableViewPanel.css';
+
+/* eslint-disable  */
 export type IVariableViewPanelProps = IMainWithVariables & typeof actionCreators;
 
 function mapStateToProps(state: IStore): IMainWithVariables {
@@ -19,17 +21,27 @@ function mapStateToProps(state: IStore): IMainWithVariables {
 // with the existing variable panels, but the UI contains only the Variable part of the UI
 export class VariableViewPanel extends React.Component<IVariableViewPanelProps> {
     private renderCount: number = 0;
+    private resizeTimer?: number;
+    private panelRef: React.RefObject<HTMLDivElement>;
 
     constructor(props: IVariableViewPanelProps) {
         super(props);
+
+        this.panelRef = React.createRef<HTMLDivElement>();
     }
 
     public componentDidMount() {
+        window.addEventListener('resize', this.windowResized);
         document.addEventListener('click', this.linkClick, true);
         this.props.variableViewLoaded();
+        this.updateSize(); // Update our initial size after mount
     }
 
     public componentWillUnmount() {
+        if (this.resizeTimer) {
+            window.clearTimeout(this.resizeTimer);
+        }
+        window.removeEventListener('resize', this.windowResized);
         document.removeEventListener('click', this.linkClick);
     }
 
@@ -47,12 +59,26 @@ export class VariableViewPanel extends React.Component<IVariableViewPanelProps> 
         // Return our variable panel, we wrap this in one more top level element "variable-view-main-panel" so that
         // we can size and host it differently from the variable panel in the interactive window or native editor
         return (
-            <div id="variable-view-main-panel" role="Main" style={dynamicFont}>
-                <button onClick={this.props.toggleVariableExplorer}>OPEN</button>
+            <div id="variable-view-main-panel" role="Main" ref={this.panelRef} style={dynamicFont}>
                 {this.renderVariablePanel(this.props.baseTheme)}
             </div>
-        ); // NOTE: Currently the OPEN, button just exists to mimic the toggling of the variable view, make it easier to test when working
+        );
     }
+
+    private windowResized = () => {
+        if (this.resizeTimer) {
+            clearTimeout(this.resizeTimer);
+        }
+        this.resizeTimer = window.setTimeout(this.updateSize, 50);
+    };
+
+    // When the variable view panel updates size, inform the variable view
+    private updateSize = () => {
+        if (this.panelRef.current) {
+            const newHeight = this.panelRef.current.clientHeight;
+            this.props.setVariableViewHeight(newHeight);
+        }
+    };
 
     // Render function and variable props are the same as those from InterativePanel to allow us to reuse the same
     // control without alterations
@@ -82,13 +108,15 @@ export class VariableViewPanel extends React.Component<IVariableViewPanelProps> 
             fontSize: this.props.font.size,
             executionCount: this.props.currentExecutionCount,
             refreshCount: this.props.variableState.refreshCount,
-            offsetHeight: 0 // No toolbar in variable view panel
+            offsetHeight: 0, // No toolbar in variable view panel
+            standaloneMode: true, // Set that we are in standalone variable view mode
+            viewHeight: this.props.variableState.viewHeight // Height to use for variable view mode
         };
     };
 
     private pageInVariableData = (startIndex: number, pageSize: number) => {
         this.props.getVariableData(
-            this.props.currentExecutionCount,
+            this.props.variableState.currentExecutionCount,
             this.props.variableState.refreshCount,
             startIndex,
             pageSize

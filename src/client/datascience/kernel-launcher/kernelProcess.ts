@@ -6,13 +6,15 @@ import { ChildProcess } from 'child_process';
 import * as fs from 'fs-extra';
 import * as tcpPortUsed from 'tcp-port-used';
 import * as tmp from 'tmp';
-import { CancellationTokenSource, Event, EventEmitter } from 'vscode';
+import { CancellationToken, CancellationTokenSource, Event, EventEmitter } from 'vscode';
 import { IPythonExtensionChecker } from '../../api/types';
-import { createPromiseFromCancellation } from '../../common/cancellation';
-import { traceError, traceInfo, traceWarning } from '../../common/logger';
+import { createPromiseFromCancellation, wrapCancellationTokens } from '../../common/cancellation';
+import { getErrorMessageFromPythonTraceback } from '../../common/errors/errorUtils';
+import { traceDecorators, traceError, traceInfo, traceWarning } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IProcessServiceFactory, ObservableExecutionResult } from '../../common/process/types';
 import { Resource } from '../../common/types';
+import { TimedOutError } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop, swallowExceptions } from '../../common/utils/misc';
 import { captureTelemetry } from '../../telemetry';
@@ -72,7 +74,7 @@ export class KernelProcess implements IKernelProcess {
     }
 
     @captureTelemetry(Telemetry.RawKernelProcessLaunch, undefined, true)
-    public async launch(workingDirectory: string): Promise<void> {
+    public async launch(workingDirectory: string, timeout: number, cancelToken?: CancellationToken): Promise<void> {
         if (this.launchedOnce) {
             throw new Error('Kernel has already been launched.');
         }
@@ -88,14 +90,19 @@ export class KernelProcess implements IKernelProcess {
         let stderrProc = '';
         let exitEventFired = false;
         const cancelWaiting = new CancellationTokenSource();
-
+        const combinedToken = wrapCancellationTokens(cancelWaiting.token, cancelToken);
+        let providedExitCode: number | null;
         exeObs.proc!.on('exit', (exitCode) => {
+            exitCode = exitCode || providedExitCode;
             traceInfo('KernelProcess Exit', `Exit - ${exitCode}`, stderrProc);
             if (this.disposed) {
                 return;
             }
             if (!exitEventFired) {
-                this.exitEvent.fire({ exitCode: exitCode || undefined, reason: stderrProc });
+                this.exitEvent.fire({
+                    exitCode: exitCode || undefined,
+                    reason: getErrorMessageFromPythonTraceback(stderrProc) || stderrProc
+                });
                 exitEventFired = true;
             }
             cancelWaiting.cancel();
@@ -128,51 +135,64 @@ export class KernelProcess implements IKernelProcess {
                 }
                 traceError('Kernel died', error, stderr);
                 if (error instanceof PythonKernelDiedError) {
+                    providedExitCode = error.exitCode;
                     if (this.disposed) {
                         traceInfo('KernelProcess Exit', `Exit - ${error.exitCode}, ${error.reason}`, error);
                         return;
                     } else {
                         traceError('KernelProcess Exit', `Exit - ${error.exitCode}, ${error.reason}`, error);
                     }
+                    if (!stderrProc && (error.reason || error.message)) {
+                        // This is used when process exits.
+                        stderrProc = error.reason || error.message;
+                    }
                     if (!exitEventFired) {
-                        this.exitEvent.fire({ exitCode: error.exitCode, reason: error.reason || error.message });
+                        let reason = error.reason || error.message;
+                        this.exitEvent.fire({
+                            exitCode: error.exitCode,
+                            reason: getErrorMessageFromPythonTraceback(reason) || reason
+                        });
                         exitEventFired = true;
                     }
                     cancelWaiting.cancel();
                 }
+            },
+            () => {
+                console.error('Completed');
             }
         );
 
-        // Don't return until our heartbeat channel is open for connections or the kernel died
+        // Don't return until our heartbeat channel is open for connections or the kernel died or we timed out
         try {
             await Promise.race([
-                tcpPortUsed.waitUntilUsed(this.connection.hb_port, 200, 30_000),
+                tcpPortUsed.waitUntilUsed(this.connection.hb_port, 200, timeout),
                 createPromiseFromCancellation({
-                    token: cancelWaiting.token,
+                    token: combinedToken,
                     cancelAction: 'reject',
                     defaultValue: undefined
                 })
             ]);
         } catch (e) {
+            traceError('Disposing kernel process due to an error', e);
             // Make sure to dispose if we never get a heartbeat
             this.dispose().ignoreErrors();
 
             if (cancelWaiting.token.isCancellationRequested) {
                 traceError(stderrProc || stderr);
-                throw new Error(
-                    localize.DataScience.kernelDied().format(
-                        Commands.ViewJupyterOutput,
-                        (stderrProc || stderr).substring(0, 100)
-                    )
-                );
+                // If we have the python error message, display that.
+                const errorMessage =
+                    getErrorMessageFromPythonTraceback(stderrProc || stderr) ||
+                    (stderrProc || stderr).substring(0, 100);
+                throw new Error(localize.DataScience.kernelDied().format(Commands.ViewJupyterOutput, errorMessage));
             } else {
                 traceError('Timed out waiting to get a heartbeat from kernel process.');
-                throw new Error(localize.DataScience.kernelTimeout().format(Commands.ViewJupyterOutput));
+                throw new TimedOutError(localize.DataScience.kernelTimeout().format(Commands.ViewJupyterOutput));
             }
         }
     }
 
     public async dispose(): Promise<void> {
+        traceInfo('Dispose Kernel process');
         if (this.disposed) {
             return;
         }
@@ -197,15 +217,21 @@ export class KernelProcess implements IKernelProcess {
         let kernelSpec = this._kernelConnectionMetadata.kernelSpec;
         // If there is no kernelspec & when launching a Python process, generate a dummy `kernelSpec`
         if (!kernelSpec && this._kernelConnectionMetadata.kind === 'startUsingPythonInterpreter') {
+            traceInfo(
+                `Creating a default kernel spec for use with interpreter ${this._kernelConnectionMetadata.interpreter.displayName} # ${this._kernelConnectionMetadata.interpreter.path}`
+            );
             kernelSpec = createDefaultKernelSpec(this._kernelConnectionMetadata.interpreter);
+            traceInfo(
+                `Created a default kernel spec for use with interpreter ${kernelSpec.display_name} # ${kernelSpec.interpreterPath}`
+            );
         }
         // We always expect a kernel spec.
         if (!kernelSpec) {
             throw new Error('KernelSpec cannot be empty in KernelProcess.ts');
         }
         if (!Array.isArray(kernelSpec.argv)) {
-            traceError('KernelSpec.argv in KernelPrcess is undefined');
-            // tslint:disable-next-line: no-any
+            traceError('KernelSpec.argv in KernelProcess is undefined');
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             this._launchKernelSpec = undefined;
         } else {
             // Copy our kernelspec and assign a new argv array
@@ -288,6 +314,7 @@ export class KernelProcess implements IKernelProcess {
         return newConnectionArgs;
     }
 
+    @traceDecorators.verbose('Launching kernel in kernelProcess.ts')
     private async launchAsObservable(workingDirectory: string) {
         let exeObs: ObservableExecutionResult<string> | undefined;
 
@@ -309,6 +336,7 @@ export class KernelProcess implements IKernelProcess {
         if (!exeObs) {
             // First part of argument is always the executable.
             const executable = this.launchKernelSpec.argv[0];
+            traceInfo(`Launching Raw Kernel & not daemon ${this.launchKernelSpec.display_name} # ${executable}`);
             const [executionService, env] = await Promise.all([
                 this.processExecutionFactory.create(this.resource),
                 this.kernelEnvVarsService.getEnvironmentVariables(this.resource, this.launchKernelSpec)

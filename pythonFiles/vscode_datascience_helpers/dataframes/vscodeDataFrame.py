@@ -1,10 +1,87 @@
 import pandas as _VSCODE_pd
 import builtins as _VSCODE_builtins
 import json as _VSCODE_json
+import numpy as _VSCODE_np
 import pandas.io.json as _VSCODE_pd_json
+
+# PyTorch and TensorFlow tensors which can be converted to numpy arrays
+_VSCODE_allowedTensorTypes = ["Tensor", "EagerTensor"]
+
+# Convert numpy array to DataFrame
+def _VSCODE_convertNumpyArrayToDataFrame(ndarray):
+    # Save the user's current setting
+    current_options = _VSCODE_np.get_printoptions()
+    # Ask for the full string. Without this numpy truncates to 3 leading and 3 trailing by default
+    _VSCODE_np.set_printoptions(threshold=99999)
+    temp = ndarray
+
+    try:
+        x_len = temp.shape[0]
+        y_len = None
+        # Figure out if we're dealing with ragged data
+        # Handle ragged arrays by making a container where the number of
+        # columns is the max length of all rows. Missing elements are
+        # represented as empty strings.
+        y_len = max([len(temp[i]) for i in range(x_len)])
+
+        if y_len:
+            # Figure out what kind of object the rows are
+            flattened = _VSCODE_np.full((x_len, y_len), "", dtype="object")
+            for i in range(x_len):
+                for j in range(len(temp[i])):
+                    element = temp[i][j]
+                    if isinstance(element, _VSCODE_np.ndarray):
+                        # Ensure no rjust or ljust padding is applied to stringified elements
+                        stringified = _VSCODE_np.array2string(
+                            element, separator=", ", formatter={"all": lambda x: str(x)}
+                        )
+                    elif isinstance(element, (list, tuple)):
+                        # We can't pass lists and tuples to array2string because it expects
+                        # the size attribute to be defined
+                        stringified = str(element)
+                    else:
+                        stringified = element
+                    flattened[i][j] = stringified
+            temp = flattened
+    except TypeError:
+        # Ragged as well as 1D ndarrays both have ndim==1, but computing
+        # y_len for 1D ndarray will raise a TypeError
+        pass  # nosec
+    finally:
+        # Restore the user's printoptions
+        _VSCODE_np.set_printoptions(threshold=current_options["threshold"])
+        temp = _VSCODE_pd.DataFrame(temp)
+        ndarray = temp
+        del temp
+        return ndarray
+
+
+# Function that converts tensors to DataFrames
+def _VSCODE_convertTensorToDataFrame(tensor):
+    try:
+        temp = tensor
+        # Can't directly convert sparse tensors to numpy arrays
+        # so first convert them to dense tensors
+        if hasattr(temp, "is_sparse") and temp.is_sparse:
+            # This guard is needed because to_dense exists on all PyTorch
+            # tensors and throws an error if the tensor is already strided
+            temp = temp.to_dense()
+        # Two step conversion process required to convert tensors to DataFrames
+        # tensor --> numpy array --> dataframe
+        temp = temp.numpy()
+        temp = _VSCODE_convertNumpyArrayToDataFrame(temp)
+        tensor = temp
+        del temp
+    except AttributeError:
+        # TensorFlow EagerTensors and PyTorch Tensors support numpy()
+        # but avoid a crash just in case the current variable doesn't
+        pass
+    return tensor
+
 
 # Function that converts the var passed in into a pandas data frame if possible
 def _VSCODE_convertToDataFrame(df):
+    vartype = type(df)
     if isinstance(df, list):
         df = _VSCODE_pd.DataFrame(df)
     elif isinstance(df, _VSCODE_pd.Series):
@@ -14,6 +91,12 @@ def _VSCODE_convertToDataFrame(df):
         df = _VSCODE_pd.Series.to_frame(df)
     elif hasattr(df, "toPandas"):
         df = df.toPandas()
+    elif (
+        hasattr(vartype, "__name__") and vartype.__name__ in _VSCODE_allowedTensorTypes
+    ):
+        df = _VSCODE_convertTensorToDataFrame(df)
+    elif hasattr(vartype, "__name__") and vartype.__name__ == "ndarray":
+        df = _VSCODE_convertNumpyArrayToDataFrame(df)
     else:
         """Disabling bandit warning for try, except, pass. We want to swallow all exceptions here to not crash on
         variable fetching"""
@@ -22,6 +105,7 @@ def _VSCODE_convertToDataFrame(df):
             df = temp
         except:  # nosec
             pass
+    del vartype
     return df
 
 
@@ -44,9 +128,15 @@ def _VSCODE_getRowCount(var):
 # Function to retrieve a set of rows for a data frame
 def _VSCODE_getDataFrameRows(df, start, end):
     df = _VSCODE_convertToDataFrame(df)
-
     # Turn into JSON using pandas. We use pandas because it's about 3 orders of magnitude faster to turn into JSON
     rows = df.iloc[start:end]
+    rows = rows.replace(
+        {
+            _VSCODE_np.inf: "inf",
+            -_VSCODE_np.inf: "-inf",
+            _VSCODE_np.nan: "nan",
+        }
+    )
     return _VSCODE_pd_json.to_json(None, rows, orient="table", date_format="iso")
 
 

@@ -96,7 +96,6 @@ import {
     IMessageCell,
     INotebook,
     INotebookExporter,
-    INotebookMetadataLive,
     INotebookProvider,
     INotebookProviderConnection,
     InterruptResult,
@@ -127,7 +126,8 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
     }
 
     public abstract isInteractive: boolean;
-    protected abstract get notebookMetadata(): INotebookMetadataLive | undefined;
+    protected abstract get notebookMetadata(): Readonly<nbformat.INotebookMetadata> | undefined;
+    protected abstract get kernelConnection(): Readonly<KernelConnectionMetadata> | undefined;
 
     protected abstract get notebookIdentity(): INotebookIdentity;
     protected fileInKernel: string | undefined;
@@ -233,7 +233,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         }, 0);
     }
 
-    // tslint:disable-next-line: no-any no-empty cyclomatic-complexity max-func-body-length
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, no-empty,@typescript-eslint/no-empty-function, complexity,
     public onMessage(message: string, payload: any) {
         switch (message) {
             case InteractiveWindowMessages.ConvertUriForUseInWebViewRequest:
@@ -256,7 +256,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
                             data
                         ).ignoreErrors()
                     )
-                    .catch(); // do nothing
+                    .catch(noop); // do nothing
                 break;
 
             case InteractiveWindowMessages.GotoCodeCell:
@@ -489,7 +489,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
             } catch (err) {
                 status.dispose();
                 traceError(err);
-                this.applicationShell.showErrorMessage(err);
+                this.applicationShell.showErrorMessage(err).then(noop, noop);
             }
         }
     }
@@ -497,7 +497,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
     @captureTelemetry(Telemetry.CopySourceCode, undefined, false)
     public copyCode(args: ICopyCode) {
         return this.copyCodeInternal(args.source).catch((err) => {
-            this.applicationShell.showErrorMessage(err);
+            this.applicationShell.showErrorMessage(err).then(noop, noop);
         });
     }
 
@@ -602,7 +602,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         return this._notebook;
     }
 
-    // tslint:disable-next-line: max-func-body-length
+    // eslint-disable-next-line
     protected async submitCode(
         code: string,
         file: string,
@@ -715,7 +715,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
                         traceError(`Error executing a cell: `, error);
                         status.dispose();
                         if (!(error instanceof CancellationError)) {
-                            this.applicationShell.showErrorMessage(error.toString());
+                            this.applicationShell.showErrorMessage(error.toString()).then(noop, noop);
                         }
                     },
                     () => {
@@ -807,7 +807,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
 
     protected handleMessage<M extends IInteractiveWindowMapping, T extends keyof M>(
         _message: T,
-        // tslint:disable-next-line:no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         payload: any,
         handler: (args: M[T]) => void
     ) {
@@ -881,7 +881,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
 
     // ensureNotebook can be called apart from ensureNotebookAndServer and it needs
     // the same protection to not be called twice
-    // tslint:disable-next-line: member-ordering
+    // eslint-disable-next-line @typescript-eslint/member-ordering
     protected async ensureNotebook(serverConnection: INotebookProviderConnection): Promise<void> {
         if (!this.notebookPromise) {
             this.notebookPromise = this.ensureNotebookImpl(serverConnection);
@@ -969,10 +969,10 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
                 }
             };
             // Workaround the nyc compiler problem.
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             return (result as any) as ICell;
         }
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         return (cell as any) as ICell;
     }
 
@@ -986,7 +986,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
             }
         } catch (exc) {
             traceError(`Exception attempting to start notebook: `, exc);
-            // We should dispose ourselves if the load fails. Othewise the user
+            // We should dispose ourselves if the load fails. Otherwise the user
             // updates their install and we just fail again because the load promise is the same.
             await this.closeBecauseOfFailure(exc);
 
@@ -995,7 +995,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         }
     }
 
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private postMessageToListeners(message: string, payload: any) {
         if (this.listeners) {
             this.listeners.forEach((l) => l.onMessage(message, payload));
@@ -1029,7 +1029,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         } catch (e) {
             traceError(e);
             sendTelemetryEvent(Telemetry.FailedShowDataViewer);
-            this.applicationShell.showErrorMessage(localize.DataScience.showDataViewerFail());
+            this.applicationShell.showErrorMessage(localize.DataScience.showDataViewerFail()).then(noop, noop);
         }
     }
 
@@ -1150,7 +1150,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
                 await this.addSysInfo(SysInfoReason.Restart);
             } else {
                 // Show the error message
-                this.applicationShell.showErrorMessage(exc);
+                this.applicationShell.showErrorMessage(exc).then(noop, noop);
                 traceError(exc);
             }
         } finally {
@@ -1165,14 +1165,16 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
 
     private selectNewKernel() {
         // This is handled by a command.
-        this.commandManager.executeCommand(Commands.SwitchJupyterKernel, {
-            identity: this.notebookIdentity.resource,
-            resource: this.owningResource,
-            currentKernelDisplayName:
-                this.notebookMetadata?.kernelspec?.display_name ||
-                this.notebookMetadata?.kernelspec?.name ||
-                getDisplayNameOrNameOfKernelConnection(this._notebook?.getKernelConnection())
-        });
+        this.commandManager
+            .executeCommand(Commands.SwitchJupyterKernel, {
+                identity: this.notebookIdentity.resource,
+                resource: this.owningResource,
+                currentKernelDisplayName:
+                    this.notebookMetadata?.kernelspec?.display_name ||
+                    this.notebookMetadata?.kernelspec?.name ||
+                    getDisplayNameOrNameOfKernelConnection(this._notebook?.getKernelConnection())
+            })
+            .then(noop, noop);
     }
 
     private async createNotebook(serverConnection: INotebookProviderConnection): Promise<INotebook> {
@@ -1182,7 +1184,8 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
                 notebook = await this.notebookProvider.getOrCreateNotebook({
                     identity: this.notebookIdentity.resource,
                     resource: this.owningResource,
-                    metadata: this.notebookMetadata
+                    metadata: this.notebookMetadata,
+                    kernelConnection: this.kernelConnection
                 });
                 if (notebook) {
                     const executionActivation = { ...this.notebookIdentity, owningResource: this.owningResource };
@@ -1201,12 +1204,14 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
                         e.kernelConnectionMetadata
                     );
                     if (newKernel && kernelConnectionMetadataHasKernelSpec(newKernel) && newKernel.kernelSpec) {
-                        this.commandManager.executeCommand(
-                            Commands.SetJupyterKernel,
-                            newKernel,
-                            this.notebookIdentity.resource,
-                            this.owningResource
-                        );
+                        this.commandManager
+                            .executeCommand(
+                                Commands.SetJupyterKernel,
+                                newKernel,
+                                this.notebookIdentity.resource,
+                                this.owningResource
+                            )
+                            .then(noop, noop);
                     }
                 } else {
                     throw e;
@@ -1290,7 +1295,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
     @captureTelemetry(Telemetry.GotoSourceCode, undefined, false)
     private gotoCode(args: IGotoCode) {
         this.gotoCodeInternal(args.file, args.line).catch((err) => {
-            this.applicationShell.showErrorMessage(err);
+            this.applicationShell.showErrorMessage(err).then(noop, noop);
         });
     }
 
@@ -1384,7 +1389,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         }
     }
 
-    // tslint:disable-next-line: no-suspicious-comment
+    // eslint-disable-next-line
     // TODO: Allow other kernels to support this information. Right now it just skips this for other kernels.
     private generateSysInfoCell = async (reason: SysInfoReason): Promise<ICell | undefined> => {
         // Execute the code 'import sys\r\nsys.version' and 'import sys\r\nsys.executable' to get our
@@ -1459,7 +1464,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         sendTelemetryEvent(Telemetry.VariableExplorerVariableCount, undefined, { variableCount: response.totalCount });
     }
 
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private variableExplorerToggle = (payload?: any) => {
         // Direct undefined check as false boolean will skip code
         if (payload !== undefined) {
@@ -1473,7 +1478,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         }
     };
 
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private async setVariableExplorerHeight(payload?: any) {
         // Store variable explorer height based on file name in workspace storage
         if (payload !== undefined) {
@@ -1487,10 +1492,10 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
             //  { "fully qualified Path to 1.ipynb": 1234,
             //    "fully qualified path to 2.ipynb": 1234 }
 
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const value = this.workspaceStorage.get(VariableExplorerStateKeys.height, {} as any);
             value[uri.toString()] = updatedHeights;
-            this.workspaceStorage.update(VariableExplorerStateKeys.height, value);
+            this.workspaceStorage.update(VariableExplorerStateKeys.height, value).then(noop, noop);
         }
     }
 
@@ -1503,7 +1508,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
             return; // don't restore height of untitled notebooks
         }
 
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const value = this.workspaceStorage.get(VariableExplorerStateKeys.height, {} as any);
         const uriString = uri.toString();
         if (uriString in value) {
@@ -1551,7 +1556,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
     }
 
     private async selectServer() {
-        await this.commandManager.executeCommand(Commands.SelectJupyterURI);
+        await this.commandManager.executeCommand(Commands.SelectJupyterURI, undefined, 'toolbar');
     }
     private async kernelChangeHandler(kernelConnection: KernelConnectionMetadata) {
         // Check if we are changing to LiveKernelModel
@@ -1560,20 +1565,26 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         } else {
             await this.addSysInfo(SysInfoReason.New);
         }
+        // Reset our file in the kernel.
+        const fileInKernel = this.fileInKernel;
+        this.fileInKernel = undefined;
+        if (fileInKernel) {
+            await this.setFileInKernel(fileInKernel, undefined);
+        }
         return this.updateNotebookOptions(kernelConnection);
     }
 
     private openSettings(setting: string | undefined) {
         if (setting) {
-            commands.executeCommand('workbench.action.openSettings', setting);
+            commands.executeCommand('workbench.action.openSettings', setting).then(noop, noop);
         } else {
-            commands.executeCommand('workbench.action.openSettings');
+            commands.executeCommand('workbench.action.openSettings').then(noop, noop);
         }
     }
 
     private handleKernelMessage(msg: KernelMessage.IIOPubMessage, _requestId: string) {
         // Only care about one sort of message, UpdateDisplayData
-        // tslint:disable-next-line: no-require-imports
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
         const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services'); // NOSONAR
         if (jupyterLab.KernelMessage.isUpdateDisplayDataMsg(msg)) {
             this.handleUpdateDisplayData(msg as KernelMessage.IUpdateDisplayDataMsg);

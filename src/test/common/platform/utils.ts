@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-// tslint:disable:no-console
+/* eslint-disable no-console */
 
 import { expect } from 'chai';
 import * as fsextra from 'fs-extra';

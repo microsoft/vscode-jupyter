@@ -121,7 +121,6 @@ export class GuestJupyterServer
         if (this.launchInfo) {
             return this.launchInfo.connectionInfo;
         }
-
         return undefined;
     }
 
@@ -137,7 +136,7 @@ export class GuestJupyterServer
         if (!launchInfo) {
             return LiveShare.JupyterServerSharedService;
         }
-        // tslint:disable-next-line:no-suspicious-comment
+        // eslint-disable-next-line
         // TODO: Should there be some separator in the name?
         return `${LiveShare.JupyterServerSharedService}${launchInfo.purpose}`;
     }

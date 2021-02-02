@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 import { CharacterPair, CommentRule, EnterAction, IndentationRule, LanguageConfiguration, OnEnterRule } from 'vscode';
 
-// tslint:disable: no-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 export interface IRegExpDto {
     pattern: string;

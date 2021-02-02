@@ -3,7 +3,7 @@
 
 'use strict';
 
-// tslint:disable:no-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { expect } from 'chai';
 import { instance, mock, verify, when } from 'ts-mockito';
@@ -21,7 +21,7 @@ import { IConfigurationService } from '../../../client/common/types';
 import { createDeferred } from '../../../client/common/utils/async';
 import { sleep } from '../../../test/common';
 
-// tslint:disable-next-line:max-func-body-length
+// eslint-disable-next-line
 suite('Download channel service', () => {
     let configService: IConfigurationService;
     let workspaceService: IWorkspaceService;

@@ -8,7 +8,7 @@ import { cloneDeep } from 'lodash';
 import { IDisposable } from 'monaco-editor';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { EventEmitter, Memento, Uri } from 'vscode';
-// tslint:disable-next-line: no-var-requires no-require-imports
+// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 import type {
     NotebookContentProvider as VSCodeNotebookContentProvider,
@@ -16,12 +16,13 @@ import type {
 } from '../../../../types/vscode-proposed';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
+import { disposeAllDisposables } from '../../../client/common/helpers';
 import { ICryptoUtils } from '../../../client/common/types';
 import { NotebookContentProvider } from '../../../client/datascience/notebook/contentProvider';
 import { NotebookEditorCompatibilitySupport } from '../../../client/datascience/notebook/notebookEditorCompatibilitySupport';
 import { INotebookStorageProvider } from '../../../client/datascience/notebookStorage/notebookStorageProvider';
-import { createNotebookModel, disposeAllDisposables } from './helper';
-// tslint:disable: no-any
+import { createNotebookModel } from './helper';
+/* eslint-disable @typescript-eslint/no-explicit-any */
 suite('DataScience - NativeNotebook ContentProvider', () => {
     let storageProvider: INotebookStorageProvider;
     let contentProvider: VSCodeNotebookContentProvider;
@@ -90,7 +91,7 @@ suite('DataScience - NativeNotebook ContentProvider', () => {
 
                 assert.deepEqual(cellsWithoutCustomMetadata, [
                     {
-                        cellKind: (vscodeNotebookEnums as any).CellKind.Code,
+                        cellKind: vscodeNotebookEnums.CellKind.Code,
                         language: PYTHON_LANGUAGE,
                         outputs: [],
                         source: 'print(1)',
@@ -98,15 +99,13 @@ suite('DataScience - NativeNotebook ContentProvider', () => {
                             editable: isNotebookTrusted,
                             executionOrder: 10,
                             hasExecutionOrder: true,
-                            lastRunDuration: undefined,
-                            runStartTime: undefined,
-                            runState: (vscodeNotebookEnums as any).NotebookCellRunState.Success,
+                            runState: vscodeNotebookEnums.NotebookCellRunState.Idle,
                             runnable: isNotebookTrusted,
                             statusMessage: undefined
                         }
                     },
                     {
-                        cellKind: (vscodeNotebookEnums as any).CellKind.Markdown,
+                        cellKind: vscodeNotebookEnums.CellKind.Markdown,
                         language: MARKDOWN_LANGUAGE,
                         outputs: [],
                         source: '# HEAD',
@@ -172,7 +171,7 @@ suite('DataScience - NativeNotebook ContentProvider', () => {
 
                 assert.deepEqual(cellsWithoutCustomMetadata, [
                     {
-                        cellKind: (vscodeNotebookEnums as any).CellKind.Code,
+                        cellKind: vscodeNotebookEnums.CellKind.Code,
                         language: 'csharp',
                         outputs: [],
                         source: 'Console.WriteLine("1")',
@@ -180,15 +179,13 @@ suite('DataScience - NativeNotebook ContentProvider', () => {
                             editable: isNotebookTrusted,
                             executionOrder: 10,
                             hasExecutionOrder: true,
-                            runState: (vscodeNotebookEnums as any).NotebookCellRunState.Success,
+                            runState: vscodeNotebookEnums.NotebookCellRunState.Idle,
                             runnable: isNotebookTrusted,
-                            statusMessage: undefined,
-                            runStartTime: undefined,
-                            lastRunDuration: undefined
+                            statusMessage: undefined
                         }
                     },
                     {
-                        cellKind: (vscodeNotebookEnums as any).CellKind.Markdown,
+                        cellKind: vscodeNotebookEnums.CellKind.Markdown,
                         language: MARKDOWN_LANGUAGE,
                         outputs: [],
                         source: '# HEAD',

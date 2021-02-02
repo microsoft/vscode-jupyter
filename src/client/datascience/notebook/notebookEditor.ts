@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { ConfigurationTarget, Event, EventEmitter, Uri, WebviewPanel } from 'vscode';
+import { ConfigurationTarget, Event, EventEmitter, ProgressLocation, Uri, WebviewPanel } from 'vscode';
 import { NotebookCell, NotebookDocument } from '../../../../types/vscode-proposed';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import { traceError } from '../../common/logger';
@@ -24,7 +24,7 @@ import {
 } from '../types';
 import { NotebookCellLanguageService } from './defaultCellLanguageService';
 import { chainWithPendingUpdates } from './helpers/notebookUpdater';
-// tslint:disable-next-line: no-var-requires no-require-imports
+// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
 export class NotebookEditor implements INotebookEditor {
@@ -204,10 +204,7 @@ export class NotebookEditor implements INotebookEditor {
         const status = this.statusProvider.set(DataScience.interruptKernelStatus(), true, undefined, undefined);
 
         try {
-            const result = await kernel.interrupt();
-            status.dispose();
-
-            // We timed out, ask the user if they want to restart instead.
+            const result = await kernel.interrupt(this.document);
             if (result === InterruptResult.TimedOut) {
                 const message = DataScience.restartKernelAfterInterruptMessage();
                 const yes = DataScience.restartKernelMessageYes();
@@ -219,9 +216,10 @@ export class NotebookEditor implements INotebookEditor {
                 }
             }
         } catch (err) {
+            traceError('Failed to interrupt kernel', err);
+            void this.applicationShell.showErrorMessage(err);
+        } finally {
             status.dispose();
-            traceError(err);
-            this.applicationShell.showErrorMessage(err);
         }
     }
 
@@ -243,12 +241,21 @@ export class NotebookEditor implements INotebookEditor {
                 const response = await this.applicationShell.showInformationMessage(message, yes, dontAskAgain, no);
                 if (response === dontAskAgain) {
                     await this.disableAskForRestart();
-                    await this.restartKernelInternal(kernel);
+                    void this.applicationShell.withProgress(
+                        { location: ProgressLocation.Notification, title: DataScience.restartingKernelStatus() },
+                        () => this.restartKernelInternal(kernel)
+                    );
                 } else if (response === yes) {
-                    await this.restartKernelInternal(kernel);
+                    void this.applicationShell.withProgress(
+                        { location: ProgressLocation.Notification, title: DataScience.restartingKernelStatus() },
+                        () => this.restartKernelInternal(kernel)
+                    );
                 }
             } else {
-                await this.restartKernelInternal(kernel);
+                void this.applicationShell.withProgress(
+                    { location: ProgressLocation.Notification, title: DataScience.restartingKernelStatus() },
+                    () => this.restartKernelInternal(kernel)
+                );
             }
         }
     }
@@ -325,7 +332,7 @@ export class NotebookEditor implements INotebookEditor {
                 await this.notebookProvider.connect({ getOnly: false, disableUI: false });
             } else {
                 // Show the error message
-                this.applicationShell.showErrorMessage(exc);
+                void this.applicationShell.showErrorMessage(exc);
                 traceError(exc);
             }
         } finally {

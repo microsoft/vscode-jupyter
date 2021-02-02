@@ -24,7 +24,7 @@ import {
 import { JupyterDataRateLimitError } from './jupyterDataRateLimitError';
 import { getKernelConnectionLanguage, isPythonKernelConnection } from './kernels/helpers';
 
-// tslint:disable-next-line: no-var-requires no-require-imports
+// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 
 // Regexes for parsing data from Python kernel. Not sure yet if other
 // kernels will add the ansi encoding.
@@ -35,8 +35,15 @@ const DocStringRegex = /.*?\[.*?;31mDocstring:.*?\[0m\s+(.*)/;
 const CountRegex = /.*?\[.*?;31mLength:.*?\[0m\s+(.*)/;
 const ShapeRegex = /^\s+\[(\d+) rows x (\d+) columns\]/m;
 
-const DataViewableTypes: Set<string> = new Set<string>(['DataFrame', 'list', 'dict', 'ndarray', 'Series', 'Tensor']);
-
+const DataViewableTypes: Set<string> = new Set<string>([
+    'DataFrame',
+    'list',
+    'dict',
+    'ndarray',
+    'Series',
+    'Tensor',
+    'EagerTensor'
+]);
 interface INotebookState {
     currentExecutionCount: number;
     variables: IJupyterVariable[];
@@ -251,7 +258,7 @@ export class KernelVariables implements IJupyterVariables {
                 if (codeCellOutput && codeCellOutput.output_type === 'execute_result') {
                     const data = codeCellOutput.data;
                     if (data && data.hasOwnProperty('text/plain')) {
-                        // tslint:disable-next-line:no-any
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         return (data as any)['text/plain'];
                     }
                 }
@@ -315,7 +322,7 @@ export class KernelVariables implements IJupyterVariables {
     private getAllMatches(regex: RegExp, text: string): string[] {
         const result: string[] = [];
         let m: RegExpExecArray | null = null;
-        // tslint:disable-next-line: no-conditional-assignment
+        // eslint-disable-next-line no-cond-assign
         while ((m = regex.exec(text)) !== null) {
             if (m.index === regex.lastIndex) {
                 regex.lastIndex += 1;
@@ -420,6 +427,7 @@ export class KernelVariables implements IJupyterVariables {
         return [];
     }
 
+    // eslint-disable-next-line complexity
     private async getVariableValueFromKernel(
         targetVariable: IJupyterVariable,
         notebook: INotebook,
@@ -431,7 +439,7 @@ export class KernelVariables implements IJupyterVariables {
 
             // Should be a text/plain inside of it (at least IPython does this)
             if (output && output.hasOwnProperty('text/plain')) {
-                // tslint:disable-next-line: no-any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const text = (output as any)['text/plain'].toString();
 
                 // Parse into bits
@@ -462,10 +470,10 @@ export class KernelVariables implements IJupyterVariables {
             }
 
             // Otherwise look for the appropriate entries
-            if (output.type) {
+            if (output && output.type) {
                 result.type = output.type.toString();
             }
-            if (output.value) {
+            if (output && output.value) {
                 result.value = output.value.toString();
             }
 
