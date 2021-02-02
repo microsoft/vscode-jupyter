@@ -33,8 +33,7 @@ const SliceableTypes: Set<string> = new Set<string>(['DataFrame', 'ndarray', 'Te
 const KnownExcludedVariables = new Set<string>(['In', 'Out', 'exit', 'quit']);
 
 @injectable()
-export class DebuggerVariables
-    extends DebugLocationTracker
+export class DebuggerVariables extends DebugLocationTracker
     implements IConditionalJupyterVariables, DebugAdapterTracker {
     private refreshEventEmitter = new EventEmitter<void>();
     private lastKnownVariables: IJupyterVariable[] = [];
