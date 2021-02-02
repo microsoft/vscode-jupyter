@@ -46,7 +46,7 @@ interface IMainPanelState {
     styleReady: boolean;
     settings?: IJupyterExtraSettings;
     dataDimensionality: number;
-    dataShape?: number[];
+    originalVariableShape?: number[];
     isSliceDataSupported: boolean;
 }
 
@@ -84,7 +84,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 indexColumn: data.primaryKeys[0],
                 styleReady: false,
                 dataDimensionality: data.dataDimensionality ?? 2,
-                dataShape: data.dataShape,
+                originalVariableShape: data.originalVariableShape,
                 isSliceDataSupported: false
             };
 
@@ -100,7 +100,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 indexColumn: 'index',
                 styleReady: false,
                 dataDimensionality: 2,
-                dataShape: undefined,
+                originalVariableShape: undefined,
                 isSliceDataSupported: false
             };
         }
@@ -209,7 +209,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 filterRowsTooltip={filterRowsTooltip}
                 forceHeight={this.props.testMode ? 200 : undefined}
                 dataDimensionionality={this.state.dataDimensionality}
-                dataShape={this.state.dataShape}
+                originalVariableShape={this.state.originalVariableShape}
                 isSliceDataSupported={this.state.isSliceDataSupported}
                 handleSliceRequest={this.handleSliceRequest}
             />
@@ -232,7 +232,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                     totalRowCount,
                     fetchedRowCount: initialRows.length,
                     indexColumn: indexColumn,
-                    dataShape: variable.shape,
+                    originalVariableShape: variable.originalVariableShape ?? variable.shape,
                     dataDimensionality: variable.dataDimensionality ?? 2,
                     isSliceDataSupported: variable.isSliceDataSupported
                 });

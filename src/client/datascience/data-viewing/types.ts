@@ -42,7 +42,7 @@ export interface IGetRowsResponse {
 
 export interface IGetSliceRequest {
     slice: string;
-    originalShape: number[] | undefined;
+    originalVariableShape: number[] | undefined;
 }
 
 // Map all messages to specific payloads
@@ -63,6 +63,7 @@ export interface IDataFrameInfo {
     indexColumn?: string;
     rowCount?: number;
     shape?: number[];
+    originalVariableShape?: number[];
     dataDimensionality?: number;
     sliceExpression?: string;
     supportsSlicing?: boolean;

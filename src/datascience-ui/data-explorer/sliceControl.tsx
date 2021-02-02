@@ -2,7 +2,7 @@ import * as React from 'react';
 import { IGetSliceRequest } from '../../client/datascience/data-viewing/types';
 
 interface ISliceControlProps {
-    dataShapeAsArray: number[];
+    originalVariableShape: number[];
     handleSliceRequest(slice: IGetSliceRequest): void;
 }
 
@@ -14,7 +14,7 @@ interface ISliceControlState {
 export class SliceControl extends React.Component<ISliceControlProps, ISliceControlState> {
     constructor(props: ISliceControlProps) {
         super(props);
-        this.state = { value: '[' + this.props.dataShapeAsArray.map(() => ':').join(', ') + ']' };
+        this.state = { value: '[' + this.props.originalVariableShape.map(() => ':').join(', ') + ']' };
 
         this.handleChange = this.handleChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
@@ -26,7 +26,7 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
 
     public handleSubmit(event: React.SyntheticEvent) {
         event.preventDefault();
-        this.props.handleSliceRequest({ slice: this.state.value, originalShape: this.props.dataShapeAsArray });
+        this.props.handleSliceRequest({ slice: this.state.value, originalVariableShape: this.props.originalVariableShape });
     }
 
     render() {

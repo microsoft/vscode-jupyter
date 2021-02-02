@@ -8,7 +8,7 @@ export interface ITestData {
     rows: {}[];
     loadingRows: {}[];
     dataDimensionality: number | undefined;
-    dataShape: number[] | undefined;
+    originalVariableShape: number[] | undefined;
 }
 
 /* eslint-disable */
@@ -40,7 +40,7 @@ export function generateTestData(_numberOfRows: number): ITestData {
             return {};
         }),
         dataDimensionality: 2,
-        dataShape: undefined
+        originalVariableShape: undefined
     };
 }
 

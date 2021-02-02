@@ -174,7 +174,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
         return this.wrapRequest(async () => {
             if (this.dataProvider) {
                 const payload = await this.dataProvider.getDataFrameInfo(request.slice);
-                payload.shape = request.originalShape;
+                payload.originalVariableShape = request.originalVariableShape;
                 return this.postMessage(DataViewerMessages.InitializeData, { ...payload, isSliceDataSupported: true });
             }
         });

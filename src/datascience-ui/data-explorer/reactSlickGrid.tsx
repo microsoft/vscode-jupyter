@@ -66,7 +66,7 @@ export interface ISlickGridProps {
     filterRowsTooltip: string;
     forceHeight?: number;
     dataDimensionionality: number;
-    dataShape: number[] | undefined;
+    originalVariableShape: number[] | undefined;
     isSliceDataSupported: boolean; // Feature flag. This should eventually be removed
     handleSliceRequest(args: IGetSliceRequest): void;
 }
@@ -340,10 +340,10 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
     }
 
     public renderTemporarySliceIndicator = () => {
-        if (this.props.isSliceDataSupported && this.props.dataShape) {
+        if (this.props.isSliceDataSupported && this.props.originalVariableShape) {
             return (
                 <SliceControl
-                    dataShapeAsArray={this.props.dataShape}
+                    originalVariableShape={this.props.originalVariableShape}
                     handleSliceRequest={this.props.handleSliceRequest}
                 />
             );
