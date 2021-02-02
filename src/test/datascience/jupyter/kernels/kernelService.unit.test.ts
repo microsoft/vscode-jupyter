@@ -195,6 +195,7 @@ suite('DataScience - KernelService', () => {
         test('Fail if installed kernel is not an instance of JupyterKernelSpec', async () => {
             when(execService.execModule('ipykernel', anything(), anything())).thenResolve({ stdout: '' });
             when(dependencyService.areDependenciesInstalled(interpreter, anything())).thenResolve(true);
+            when(kernelFinder.findKernelSpec(anything(), anything(), anything())).thenResolve({} as any);
 
             const promise = kernelService.registerKernel(undefined, interpreter);
 
@@ -210,6 +211,9 @@ suite('DataScience - KernelService', () => {
         test('Fail if installed kernel spec does not have a specFile setup', async () => {
             when(execService.execModule('ipykernel', anything(), anything())).thenResolve({ stdout: '' });
             when(dependencyService.areDependenciesInstalled(interpreter, anything())).thenResolve(true);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const kernel = new JupyterKernelSpec({} as any);
+            when(kernelFinder.findKernelSpec(anything(), anything(), anything())).thenResolve(kernel);
             const promise = kernelService.registerKernel(undefined, interpreter);
 
             await assert.isRejected(promise);
@@ -225,6 +229,7 @@ suite('DataScience - KernelService', () => {
             when(execService.execModule('ipykernel', anything(), anything())).thenResolve({ stdout: '' });
             when(dependencyService.areDependenciesInstalled(interpreter, anything())).thenResolve(true);
             const kernel = new JupyterKernelSpec(kernelSpecModel, kernelJsonFile);
+            when(kernelFinder.findKernelSpec(anything(), anything(), anything())).thenResolve(kernel);
             when(fs.readLocalFile(kernelJsonFile)).thenResolve(JSON.stringify(kernelSpecModel));
             when(fs.writeLocalFile(kernelJsonFile, anything())).thenResolve();
             when(activationHelper.getActivatedEnvironmentVariables(undefined, interpreter, true)).thenResolve(
@@ -248,6 +253,7 @@ suite('DataScience - KernelService', () => {
             when(execService.execModule('ipykernel', anything(), anything())).thenResolve({ stdout: '' });
             when(dependencyService.areDependenciesInstalled(interpreter, anything())).thenResolve(true);
             const kernel = new JupyterKernelSpec(kernelSpecModel, kernelJsonFile);
+            when(kernelFinder.findKernelSpec(anything(), anything(), anything())).thenResolve(kernel);
             when(fs.readLocalFile(kernelJsonFile)).thenResolve(JSON.stringify(kernelSpecModel));
             when(fs.writeLocalFile(kernelJsonFile, anything())).thenResolve();
             const envVariables = { MYVAR: '1' };
@@ -274,7 +280,7 @@ suite('DataScience - KernelService', () => {
             when(execService.execModule('ipykernel', anything(), anything())).thenResolve({ stdout: '' });
             when(dependencyService.areDependenciesInstalled(interpreter, anything())).thenResolve(true);
             const kernel = new JupyterKernelSpec(kernelSpecModel, kernelJsonFile);
-            when(jupyterInterpreterExecutionService.getKernelSpecs(anything())).thenResolve([kernel]);
+            when(kernelFinder.findKernelSpec(anything(), anything(), anything())).thenResolve(kernel);
             when(fs.readLocalFile(kernelJsonFile)).thenResolve(JSON.stringify(kernelSpecModel));
             when(fs.writeLocalFile(kernelJsonFile, anything())).thenResolve();
             const envVariables = { MYVAR: '1' };
@@ -301,7 +307,7 @@ suite('DataScience - KernelService', () => {
             when(execService.execModule('ipykernel', anything(), anything())).thenResolve({ stdout: '' });
             when(dependencyService.areDependenciesInstalled(interpreter, anything())).thenResolve(true);
             const kernel = new JupyterKernelSpec(userKernelSpecModel, kernelJsonFile);
-            when(jupyterInterpreterExecutionService.getKernelSpecs(anything())).thenResolve([kernel]);
+            when(kernelFinder.findKernelSpec(anything(), anything(), anything())).thenResolve(kernel);
             when(fs.readLocalFile(kernelJsonFile)).thenResolve(JSON.stringify(userKernelSpecModel));
             let contents: string | undefined;
             when(fs.writeLocalFile(kernelJsonFile, anything())).thenCall((_f, c) => {

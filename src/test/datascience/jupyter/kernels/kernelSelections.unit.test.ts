@@ -144,6 +144,7 @@ suite('DataScience - KernelSelections', () => {
         pathUtils = mock(PathUtils);
         when(pathUtils.getDisplayName(anything())).thenReturn('<user friendly path>');
         when(pathUtils.getDisplayName(anything(), anything())).thenReturn('<user friendly path>');
+        when(kernelService.findMatchingInterpreter(anything(), anything())).thenResolve(undefined);
         const extensionChecker = mock(PythonExtensionChecker);
         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
         const interpreterService = mock<IInterpreterService>();
@@ -311,6 +312,7 @@ suite('DataScience - KernelSelections', () => {
     test('Should return a list of Local Kernels + Interpreters for local jupyter connection', async () => {
         when(sessionManager.getKernelSpecs()).thenResolve(allSpecs);
         when(kernelService.getKernelSpecs(anything(), anything())).thenResolve(allSpecs);
+        when(kernelFinder.listKernelSpecs(anything())).thenResolve(allSpecs);
         when(interpreterSelector.getSuggestions(undefined)).thenResolve(allInterpreters);
 
         // Quick pick must contain

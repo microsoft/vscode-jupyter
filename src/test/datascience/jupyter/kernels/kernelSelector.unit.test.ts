@@ -389,17 +389,17 @@ suite('DataScience - KernelSelector', () => {
             when(kernelService.findMatchingInterpreter(kernelSpec, anything())).thenResolve(interpreter);
             when(kernelSelectionProvider.getKernelSelectionsForLocalSession(anything(), anything())).thenResolve();
 
-            const kernel = await kernelSelector.getPreferredKernelForLocalConnection(anything(), 'raw', nbMetadata);
+            const kernel = await kernelSelector.getPreferredKernelForLocalConnection(undefined, 'raw', nbMetadata);
 
             assert.deepEqual((kernel as any).kernelSpec, kernelSpec);
             assert.deepEqual(kernel?.interpreter, interpreter);
         });
         test('If metadata contains kernel information, then return a matching kernel and a matching interpreter', async () => {
-            when(kernelFinder.findKernelSpec(undefined, nbMetadata, anything())).thenResolve(kernelSpec);
+            when(kernelFinder.findKernelSpec(anything(), nbMetadata, anything())).thenResolve(kernelSpec);
             when(kernelService.findMatchingInterpreter(kernelSpec, anything())).thenResolve(interpreter);
             when(kernelSelectionProvider.getKernelSelectionsForLocalSession(anything(), anything())).thenResolve();
 
-            const kernel = await kernelSelector.getPreferredKernelForLocalConnection(anything(), 'jupyter', nbMetadata);
+            const kernel = await kernelSelector.getPreferredKernelForLocalConnection(undefined, 'jupyter', nbMetadata);
 
             assert.deepEqual((kernel as any).kernelSpec, kernelSpec);
             assert.deepEqual(kernel?.interpreter, interpreter);
@@ -426,7 +426,7 @@ suite('DataScience - KernelSelector', () => {
             when(dependencyService.areDependenciesInstalled(interpreter, anything())).thenResolve(false);
             when(kernelFinder.findKernelSpec(undefined, nbMetadata, anything())).thenResolve(undefined);
             when(interpreterService.getActiveInterpreter(undefined)).thenResolve(interpreter);
-            when(kernelService.registerKernel(anything(), anything(), anything())).thenResolve(kernelSpec);
+            when(kernelService.registerKernel(anything(), anything(), anything(), anything())).thenResolve(kernelSpec);
             when(
                 appShell.showInformationMessage(localize.DataScience.fallbackToUseActiveInterpreterAsKernel())
             ).thenResolve();
@@ -447,7 +447,6 @@ suite('DataScience - KernelSelector', () => {
             verify(kernelService.updateKernelEnvironment(interpreter, anything(), anything())).never();
             verify(kernelService.findMatchingInterpreter(kernelSpec, anything())).never();
             verify(appShell.showQuickPick(anything(), anything(), anything())).never();
-            verify(kernelService.registerKernel(anything(), anything(), anything())).once();
             verify(
                 appShell.showInformationMessage(
                     localize.DataScience.fallBackToPromptToUseActiveInterpreterOrSelectAKernel()
