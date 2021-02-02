@@ -9,12 +9,7 @@ import * as fakeTimers from '@sinonjs/fake-timers';
 import * as sinon from 'sinon';
 import { anything, instance, mock, when, verify, resetCalls } from 'ts-mockito';
 import { IApplicationEnvironment, IApplicationShell, IVSCodeNotebook } from '../../client/common/application/types';
-import {
-    IBrowserService,
-    IExperimentService,
-    IPersistentState,
-    IPersistentStateFactory
-} from '../../client/common/types';
+import { IBrowserService, IPersistentState, IPersistentStateFactory } from '../../client/common/types';
 import { ShowBannerWithExpiryTime } from '../../client/datascience/dataScienceSurveyBanner';
 import { initialize } from '../initialize';
 import { noop } from '../../client/common/utils/misc';
@@ -25,13 +20,11 @@ import {
     InsidersNativeNotebooksSurveyBanner,
     InsidersNotebookSurveyStateKeys
 } from '../../client/datascience/insidersNativeNotebookSurveyBanner';
-import { Experiments } from '../../client/common/experiments/groups';
 import { INotebookExtensibility } from '../../client/datascience/types';
 
 suite('Insiders Native Notebooks Survey Banner', () => {
     let appShell: IApplicationShell;
     let browser: IBrowserService;
-    let experimentService: IExperimentService;
     let bannerService: InsidersNativeNotebooksSurveyBanner;
     let vscNotebook: IVSCodeNotebook;
     let persistentStateFactory: IPersistentStateFactory;
@@ -51,7 +44,6 @@ suite('Insiders Native Notebooks Survey Banner', () => {
         clock = fakeTimers.install();
         appShell = mock<IApplicationShell>();
         browser = mock<IBrowserService>();
-        experimentService = mock<IExperimentService>();
         vscNotebook = mock<IVSCodeNotebook>();
         appEnv = mock<IApplicationEnvironment>();
         persistentStateFactory = mock<IPersistentStateFactory>();
@@ -59,7 +51,6 @@ suite('Insiders Native Notebooks Survey Banner', () => {
 
         when(appEnv.uiKind).thenReturn(UIKind.Desktop);
         when(appEnv.channel).thenReturn('insiders');
-        when(experimentService.inExperiment(Experiments.NativeNotebook)).thenResolve(true);
         when(vscNotebook.onDidOpenNotebookDocument(anything(), anything(), anything())).thenReturn(noop as any);
         when(notebookExtensibility.onKernelStateChange(anything(), anything(), anything())).thenReturn(noop as any);
         const realStateFactory = api.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
@@ -107,7 +98,7 @@ suite('Insiders Native Notebooks Survey Banner', () => {
             instance(persistentStateFactory),
             instance(browser),
             instance(vscNotebook),
-            instance(experimentService),
+            true,
             instance(appEnv),
             instance(notebookExtensibility),
             []

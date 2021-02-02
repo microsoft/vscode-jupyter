@@ -45,6 +45,7 @@ import { ExportToPDF } from './export/exportToPDF';
 import { ExportToPython } from './export/exportToPython';
 import { ExportUtil } from './export/exportUtil';
 import { ExportFormat, IExport, IExportDialog, IExportManager } from './export/types';
+import { FeatureUsageTracker } from './featureUsageTracker';
 import { InsidersNativeNotebooksSurveyBanner } from './insidersNativeNotebookSurveyBanner';
 import { DebugListener } from './interactive-common/debugListener';
 import { IntellisenseProvider } from './interactive-common/intellisense/intellisenseProvider';
@@ -261,6 +262,7 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     serviceManager.addSingleton<IDataViewerFactory>(IDataViewerFactory, DataViewerFactory);
     serviceManager.addSingleton<IDebugLocationTracker>(IDebugLocationTracker, DebugLocationTrackerFactory);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, Activation);
+    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, FeatureUsageTracker);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, Decorator);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, JupyterInterpreterSelectionCommand);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, PreWarmActivatedJupyterEnvironmentVariables);

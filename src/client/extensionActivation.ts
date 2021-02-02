@@ -4,7 +4,7 @@
 'use strict';
 
 /* eslint-disable  */
-import { env, OutputChannel, window } from 'vscode';
+import { OutputChannel, window } from 'vscode';
 
 import { registerTypes as activationRegisterTypes } from './activation/serviceRegistry';
 import { IExtensionActivationManager } from './activation/types';
@@ -12,6 +12,8 @@ import { registerTypes as registerApiTypes } from './api/serviceRegistry';
 import { IApplicationEnvironment, IApplicationShell, ICommandManager } from './common/application/types';
 import { STANDARD_OUTPUT_CHANNEL, UseProposedApi } from './common/constants';
 import { Experiments } from './common/experiments/groups';
+import { NewUserNativeNotebookService } from './common/experiments/newUserNativeNotebook';
+import { ExtensionUsage } from './common/extensionUsage';
 import { registerTypes as installerRegisterTypes } from './common/installer/serviceRegistry';
 import { registerTypes as platformRegisterTypes } from './common/platform/serviceRegistry';
 import { IFileSystem } from './common/platform/types';
@@ -86,9 +88,15 @@ async function activateLegacy(
     // Load the two data science experiments that we need to register types
     // Await here to keep the register method sync
     const experimentService = serviceContainer.get<IExperimentService>(IExperimentService);
-    experimentService.logExperiments();
-    let useVSCodeNotebookAPI =
-        env.appName.includes('Insider') || (await experimentService.inExperiment(Experiments.NativeNotebook));
+    const extensionUsage = serviceContainer.get<ExtensionUsage>(ExtensionUsage);
+    const newUserNativeNotebookExperiment = serviceContainer.get<NewUserNativeNotebookService>(
+        NewUserNativeNotebookService
+    );
+    // Check whether New user can belong to Native Notebook experiment.
+    await newUserNativeNotebookExperiment.activate(extensionUsage.isFirstTimeUser);
+    await experimentService.logExperiments();
+
+    let useVSCodeNotebookAPI = await experimentService.inExperiment(Experiments.NativeNotebook);
     let inCustomEditorApiExperiment = await experimentService.inExperiment(Experiments.CustomEditor);
 
     // These should be mutually exclusive, but if someone opts into both, notify them and disable both

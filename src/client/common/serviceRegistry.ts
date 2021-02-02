@@ -35,7 +35,9 @@ import {
 import { AsyncDisposableRegistry } from './asyncDisposableRegistry';
 import { CryptoUtils } from './crypto';
 import { EditorUtils } from './editor';
+import { NewUserNativeNotebookService } from './experiments/newUserNativeNotebook';
 import { ExperimentService } from './experiments/service';
+import { ExtensionUsage } from './extensionUsage';
 import { FeatureDeprecationManager } from './featureDeprecationManager';
 import {
     ExtensionInsidersDailyChannelRule,
@@ -98,6 +100,11 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IEditorUtils>(IEditorUtils, EditorUtils);
     serviceManager.addSingleton<ILiveShareApi>(ILiveShareApi, LiveShareApi);
     serviceManager.addSingleton<ICryptoUtils>(ICryptoUtils, CryptoUtils);
+    serviceManager.addSingleton<ExtensionUsage>(ExtensionUsage, ExtensionUsage);
+    serviceManager.addSingleton<NewUserNativeNotebookService>(
+        NewUserNativeNotebookService,
+        NewUserNativeNotebookService
+    );
     serviceManager.addSingleton<IExperimentService>(IExperimentService, ExperimentService);
 
     serviceManager.addSingleton<IFeatureDeprecationManager>(IFeatureDeprecationManager, FeatureDeprecationManager);

@@ -11,6 +11,7 @@ import { ApplicationEnvironment } from '../../../client/common/application/appli
 import { Channel, IApplicationEnvironment } from '../../../client/common/application/types';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import { ExperimentService } from '../../../client/common/experiments/service';
+import { ExtensionUsage } from '../../../client/common/extensionUsage';
 import { IConfigurationService } from '../../../client/common/types';
 import { Experiments } from '../../../client/common/utils/localize';
 import * as Telemetry from '../../../client/telemetry';
@@ -26,6 +27,8 @@ suite('Experimentation service', () => {
     let appEnvironment: IApplicationEnvironment;
     let globalMemento: MockMemento;
     let outputChannel: MockOutputChannel;
+    const extensionUsage = mock(ExtensionUsage);
+    when(extensionUsage.isFirstTimeUser).thenReturn(false);
 
     setup(() => {
         configurationService = mock(ConfigurationService);
@@ -62,12 +65,12 @@ suite('Experimentation service', () => {
 
             configureSettings(true, [], []);
             configureApplicationEnvironment('stable', extensionVersion);
-
             // eslint-disable-next-line @typescript-eslint/no-unused-expressions
             new ExperimentService(
                 instance(configurationService),
                 instance(appEnvironment),
                 globalMemento,
+                instance(extensionUsage),
                 outputChannel
             );
 
@@ -92,6 +95,7 @@ suite('Experimentation service', () => {
                 instance(configurationService),
                 instance(appEnvironment),
                 globalMemento,
+                instance(extensionUsage),
                 outputChannel
             );
 
@@ -115,6 +119,7 @@ suite('Experimentation service', () => {
                 instance(configurationService),
                 instance(appEnvironment),
                 globalMemento,
+                instance(extensionUsage),
                 outputChannel
             );
 
@@ -130,6 +135,7 @@ suite('Experimentation service', () => {
                 instance(configurationService),
                 instance(appEnvironment),
                 globalMemento,
+                instance(extensionUsage),
                 outputChannel
             );
 
@@ -149,6 +155,7 @@ suite('Experimentation service', () => {
                 instance(configurationService),
                 instance(appEnvironment),
                 instance(globalMemento),
+                instance(extensionUsage),
                 outputChannel
             );
             const output = `${Experiments.inGroup().format('pythonExperiment')}\n`;
@@ -192,6 +199,7 @@ suite('Experimentation service', () => {
                 instance(configurationService),
                 instance(appEnvironment),
                 globalMemento,
+                instance(extensionUsage),
                 outputChannel
             );
             const result = await experimentService.inExperiment(experiment);
@@ -208,6 +216,7 @@ suite('Experimentation service', () => {
                 instance(configurationService),
                 instance(appEnvironment),
                 globalMemento,
+                instance(extensionUsage),
                 outputChannel
             );
             const result = await experimentService.inExperiment(experiment);
@@ -224,6 +233,7 @@ suite('Experimentation service', () => {
                 instance(configurationService),
                 instance(appEnvironment),
                 globalMemento,
+                instance(extensionUsage),
                 outputChannel
             );
             const result = await experimentService.inExperiment(experiment);
@@ -244,6 +254,7 @@ suite('Experimentation service', () => {
                 instance(configurationService),
                 instance(appEnvironment),
                 globalMemento,
+                instance(extensionUsage),
                 outputChannel
             );
             const result = await experimentService.inExperiment(experiment);
@@ -264,6 +275,7 @@ suite('Experimentation service', () => {
                 instance(configurationService),
                 instance(appEnvironment),
                 globalMemento,
+                instance(extensionUsage),
                 outputChannel
             );
             const result = await experimentService.inExperiment(experiment);
@@ -284,6 +296,7 @@ suite('Experimentation service', () => {
                 instance(configurationService),
                 instance(appEnvironment),
                 globalMemento,
+                instance(extensionUsage),
                 outputChannel
             );
             const result = await experimentService.inExperiment(experiment);
@@ -319,6 +332,7 @@ suite('Experimentation service', () => {
                 instance(configurationService),
                 instance(appEnvironment),
                 globalMemento,
+                instance(extensionUsage),
                 outputChannel
             );
             const result = await experimentService.getExperimentValue(experiment);
@@ -334,6 +348,7 @@ suite('Experimentation service', () => {
                 instance(configurationService),
                 instance(appEnvironment),
                 globalMemento,
+                instance(extensionUsage),
                 outputChannel
             );
             const result = await experimentService.getExperimentValue(experiment);
@@ -349,6 +364,7 @@ suite('Experimentation service', () => {
                 instance(configurationService),
                 instance(appEnvironment),
                 globalMemento,
+                instance(extensionUsage),
                 outputChannel
             );
             const result = await experimentService.getExperimentValue(experiment);
@@ -364,6 +380,7 @@ suite('Experimentation service', () => {
                 instance(configurationService),
                 instance(appEnvironment),
                 globalMemento,
+                instance(extensionUsage),
                 outputChannel
             );
             const result = await experimentService.getExperimentValue(experiment);

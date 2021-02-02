@@ -22,6 +22,8 @@ interface IKeyBinding {
     command: string;
 }
 
+export const SettingsMigratedMementoKey = 'MigratedDataScienceSettingsService';
+export const KeyBindingsMigratedMementoKey = 'MigratedDataScienceKeybindingsService';
 @injectable()
 export class MigrateDataScienceSettingsService implements IExtensionActivationService {
     constructor(
@@ -35,11 +37,11 @@ export class MigrateDataScienceSettingsService implements IExtensionActivationSe
     public async activate(resource: Resource): Promise<void> {
         // Only perform the migrate once
         const migratedSettings = this.persistentStateFactory.createGlobalPersistentState(
-            'MigratedDataScienceSettingsService',
+            SettingsMigratedMementoKey,
             false
         );
         const migratedKeybindings = this.persistentStateFactory.createGlobalPersistentState(
-            'MigratedDataScienceKeybindingsService',
+            KeyBindingsMigratedMementoKey,
             false
         );
         if (!migratedSettings.value) {

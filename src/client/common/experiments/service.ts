@@ -10,6 +10,7 @@ import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { IApplicationEnvironment } from '../application/types';
 import { JVSC_EXTENSION_ID, STANDARD_OUTPUT_CHANNEL } from '../constants';
+import { ExtensionUsage } from '../extensionUsage';
 import {
     GLOBAL_MEMENTO,
     IConfigurationService,
@@ -45,6 +46,7 @@ export class ExperimentService implements IExperimentService {
         @inject(IConfigurationService) readonly configurationService: IConfigurationService,
         @inject(IApplicationEnvironment) private readonly appEnvironment: IApplicationEnvironment,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalState: Memento,
+        @inject(ExtensionUsage) private readonly extensionUsage: ExtensionUsage,
         @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly output: IOutputChannel
     ) {
         this.settings = configurationService.getSettings(undefined);
@@ -78,10 +80,7 @@ export class ExperimentService implements IExperimentService {
             telemetryReporter,
             this.globalState
         );
-
-        this.logExperiments();
     }
-
     public async inExperiment(experiment: ExperimentGroups): Promise<boolean> {
         if (!this.experimentationService) {
             return false;
@@ -114,6 +113,12 @@ export class ExperimentService implements IExperimentService {
             }
 
             default:
+                if (
+                    experiment === ExperimentGroups.NativeNotebook &&
+                    (await this.isNewUserInNativeNotebookExperiment())
+                ) {
+                    return true;
+                }
                 return this.experimentationService.isCachedFlightEnabled(experiment);
         }
     }
@@ -125,16 +130,20 @@ export class ExperimentService implements IExperimentService {
 
         return this.experimentationService.getTreatmentVariableAsync('vscode', experiment);
     }
-    public logExperiments() {
+    public async logExperiments() {
         if (!this.experimentationService || this.logged) {
             return;
         }
         this.logged = true;
+        const isNewUserInNativeNotebookExperiment = await this.isNewUserInNativeNotebookExperiment();
         const experiments = this.globalState.get<{ features: string[] }>(EXP_MEMENTO_KEY, { features: [] });
         experiments.features.forEach((exp) => {
             // Filter out experiments groups that are not from the Python extension.
             if (exp.toLowerCase().startsWith('python') || exp.toLowerCase().startsWith('jupyter')) {
                 this.output.appendLine(Experiments.inGroup().format(exp));
+            }
+            if (isNewUserInNativeNotebookExperiment) {
+                this.output.appendLine(Experiments.inGroup().format(ExperimentGroups.NativeNotebook));
             }
         });
         this.getExperimentsUserHasManuallyOptedInto().forEach((exp) => {
@@ -142,15 +151,42 @@ export class ExperimentService implements IExperimentService {
         });
     }
 
+    private async isNewUserInNativeNotebookExperiment() {
+        // Only new users from stable can be in experiment.
+        if (this.appEnvironment.channel === 'insiders') {
+            return false;
+        }
+        if (!this.extensionUsage.isFirstTimeUser) {
+            return false;
+        }
+        // If this user was already set to use native notebook, then keep using native notebooks.
+        if (this.globalState.get('IS_IN_NATIVE_NOTEBOOK_NEW_USER_EXP', false)) {
+            return true;
+        }
+        // This can be set to `false` if native notebook experiment is disabled for new users.
+        if (!this.globalState.get('USER_CAN_BE_IN_NATIVE_NOTEBOOK_EXP', true)) {
+            return false;
+        }
+        // So that even tomorrow they are treated as belonging to native notebooks.
+        await this.globalState.update('IS_IN_NATIVE_NOTEBOOK_NEW_USER_EXP', true);
+        // All new users will be in native notebook experiment, unless `USER_CAN_BE_IN_NATIVE_NOTEBOOK_EXP` is set to false.
+        // This is set elsewhere based on some other criteria.
+        return true;
+    }
     private getOptInOptOutStatus(experiment: ExperimentGroups): 'optOut' | 'optIn' | undefined {
         if (!this.experimentationService) {
             return;
         }
-
         // Currently the service doesn't support opting in and out of experiments,
         // so we need to perform these checks and send the corresponding telemetry manually.
         if (this._optOutFrom.includes('All') || this._optOutFrom.includes(experiment)) {
             return 'optOut';
+        }
+
+        // In stable users cannot open into `NativeNotebook`.
+        // (unless we have `__NativeNotebook__` in optIn) thats just a way for testing internally.
+        if (this.appEnvironment.channel === 'stable' && experiment === ExperimentGroups.NativeNotebook) {
+            return;
         }
 
         if (this._optInto.includes('All') || this._optInto.includes(experiment)) {
