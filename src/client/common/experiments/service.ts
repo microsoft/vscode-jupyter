@@ -153,6 +153,11 @@ export class ExperimentService implements IExperimentService {
             return 'optOut';
         }
 
+        // Users in stable cannot opt into notebook experiment unless we have `__NotebookEditor__` (used for testing).
+        if (this.appEnvironment.channel === 'stable' && experiment === ExperimentGroups.NativeNotebook) {
+            return this._optInto.includes(`__${experiment}__`) ? 'optIn' : undefined;
+        }
+
         if (this._optInto.includes('All') || this._optInto.includes(experiment)) {
             return 'optIn';
         }

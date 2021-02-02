@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IExperimentService, IFileDownloader, IHttpClient } from '../common/types';
+import { AmlComputeContext } from './amlContext';
 import { LiveShareApi } from '../datascience/liveshare/liveshare';
 import { INotebookExecutionLogger } from '../datascience/types';
 import { IServiceManager } from '../ioc/types';
@@ -116,6 +117,11 @@ export function registerTypes(serviceManager: IServiceManager) {
         IExtensionSingleActivationService,
         ReloadVSCodeCommandHandler
     );
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        AmlComputeContext
+    );
+    serviceManager.addSingleton<AmlComputeContext>(AmlComputeContext, AmlComputeContext);
     serviceManager.addSingleton<IExtensionChannelService>(IExtensionChannelService, ExtensionChannelService);
     serviceManager.addSingleton<IExtensionChannelRule>(
         IExtensionChannelRule,

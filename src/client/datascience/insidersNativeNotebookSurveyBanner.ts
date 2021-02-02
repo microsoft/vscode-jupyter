@@ -2,14 +2,8 @@ import { inject, injectable } from 'inversify';
 import { UIKind } from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IApplicationEnvironment, IApplicationShell, IVSCodeNotebook } from '../common/application/types';
-import { Experiments } from '../common/experiments/groups';
-import {
-    IBrowserService,
-    IDisposableRegistry,
-    IExperimentService,
-    IPersistentState,
-    IPersistentStateFactory
-} from '../common/types';
+import { UseVSCodeNotebookEditorApi } from '../common/constants';
+import { IBrowserService, IDisposableRegistry, IPersistentState, IPersistentStateFactory } from '../common/types';
 import * as localize from '../common/utils/localize';
 import { MillisecondsInADay } from '../constants';
 import { KernelState, KernelStateEventArgs } from './notebookExtensibility';
@@ -71,7 +65,7 @@ export class InsidersNativeNotebooksSurveyBanner implements IExtensionSingleActi
         @inject(IPersistentStateFactory) private persistentState: IPersistentStateFactory,
         @inject(IBrowserService) private browserService: IBrowserService,
         @inject(IVSCodeNotebook) private vscodeNotebook: IVSCodeNotebook,
-        @inject(IExperimentService) private experimentService: IExperimentService,
+        @inject(UseVSCodeNotebookEditorApi) private useVSCodeNotebookEditorApi: boolean,
         @inject(IApplicationEnvironment) private applicationEnvironment: IApplicationEnvironment,
         @inject(INotebookExtensibility) private notebookExtensibility: INotebookExtensibility,
         @inject(IDisposableRegistry) private disposables: IDisposableRegistry
@@ -134,7 +128,7 @@ export class InsidersNativeNotebooksSurveyBanner implements IExtensionSingleActi
     }
 
     private async isInsidersNativeNotebooksUser() {
-        return this.experimentService.inExperiment(Experiments.NativeNotebook);
+        return this.useVSCodeNotebookEditorApi;
     }
 
     private getOpenNotebookCount(): number {

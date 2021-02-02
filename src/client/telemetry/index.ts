@@ -330,6 +330,11 @@ export interface ISharedPropertyMapping {
      * For every DS telemetry we would like to know the type of Notebook Editor used when doing something.
      */
     ['ds_notebookeditor']: undefined | 'old' | 'custom' | 'native';
+    /**
+     * For every DS telemetry we would like to know whether the this is from AML compute or not.
+     * If not in AML compute, then do not send this telemetry.
+     */
+    ['isamlcompute']: 'yes';
 
     /**
      * For every telemetry event from the extension we want to make sure we can associate it with install
