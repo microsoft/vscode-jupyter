@@ -857,6 +857,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
                 EnvironmentActivationService
             );
             this.serviceManager.addSingleton<KernelService>(KernelService, KernelService);
+            this.serviceManager.addSingleton<IKernelFinder>(IKernelFinder, KernelFinder);
             this.serviceManager.addSingleton<IProcessServiceFactory>(IProcessServiceFactory, ProcessServiceFactory);
             this.serviceManager.addSingleton<IPythonExecutionFactory>(IPythonExecutionFactory, PythonExecutionFactory);
 
