@@ -134,10 +134,10 @@ export class KernelSelectionProvider {
     ): Promise<IKernelSpecQuickPickItem<KernelSpecConnectionMetadata | PythonKernelConnectionMetadata>[]> {
         const getSelections = async () => {
             const installedKernelsPromise = new InstalledLocalKernelSelectionListProvider(
-                        this.kernelFinder,
-                        this.pathUtils,
-                        this.kernelService
-                    ).getKernelSelections(resource, cancelToken);
+                this.kernelFinder,
+                this.pathUtils,
+                this.kernelService
+            ).getKernelSelections(resource, cancelToken);
             const interpretersPromise = this.extensionChecker.isPythonExtensionInstalled
                 ? new InterpreterKernelSelectionListProvider(this.interpreterSelector).getKernelSelections(
                       resource,
