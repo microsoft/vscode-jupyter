@@ -13,8 +13,6 @@ import { AmlComputeContext } from './common/amlContext';
 import { IApplicationEnvironment, IApplicationShell, ICommandManager } from './common/application/types';
 import { STANDARD_OUTPUT_CHANNEL, UseProposedApi } from './common/constants';
 import { Experiments } from './common/experiments/groups';
-import { NewUserNativeNotebookService } from './common/experiments/newUserNativeNotebook';
-import { ExtensionUsage } from './common/extensionUsage';
 import { registerTypes as installerRegisterTypes } from './common/installer/serviceRegistry';
 import { registerTypes as platformRegisterTypes } from './common/platform/serviceRegistry';
 import { IFileSystem } from './common/platform/types';
@@ -89,14 +87,8 @@ async function activateLegacy(
     // Load the two data science experiments that we need to register types
     // Await here to keep the register method sync
     const experimentService = serviceContainer.get<IExperimentService>(IExperimentService);
-    const extensionUsage = serviceContainer.get<ExtensionUsage>(ExtensionUsage);
     const amlCompute = serviceContainer.get<AmlComputeContext>(AmlComputeContext);
-    const newUserNativeNotebookExperiment = serviceContainer.get<NewUserNativeNotebookService>(
-        NewUserNativeNotebookService
-    );
-    // Check whether New user can belong to Native Notebook experiment.
-    await newUserNativeNotebookExperiment.activate(extensionUsage.isFirstTimeUser);
-    await experimentService.logExperiments();
+    experimentService.logExperiments();
 
     let useVSCodeNotebookAPI =
         amlCompute.isAmlCompute || (await experimentService.inExperiment(Experiments.NativeNotebook));
