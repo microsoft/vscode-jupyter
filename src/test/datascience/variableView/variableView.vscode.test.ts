@@ -38,6 +38,7 @@ suite('DataScience - VariableView', () => {
         // We need to have webviews built to run this, so skip if we don't have them
         if (IS_WEBVIEW_BUILD_SKIPPED) {
             console.log('Variable view tests require webview build to be enabled');
+            return this.skip();
         }
 
         // Don't run if we can't use the native notebook interface
