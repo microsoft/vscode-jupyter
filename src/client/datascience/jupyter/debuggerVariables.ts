@@ -293,7 +293,7 @@ export class DebuggerVariables extends DebugLocationTracker
         }
     }
 
-    private async getFullVariable(variable: IJupyterVariable): Promise<IJupyterVariable> {
+    public async getFullVariable(variable: IJupyterVariable): Promise<IJupyterVariable> {
         // See if we imported or not into the kernel our special function
         await this.importGetVariableInfoScripts();
 
@@ -305,10 +305,13 @@ export class DebuggerVariables extends DebugLocationTracker
         );
         if (results && results.result) {
             // Results should be the updated variable.
+            const info = JSON.parse(results.result);
+
             return {
                 ...variable,
+                ...info,
                 truncated: false,
-                ...JSON.parse(results.result)
+                supportsSlicing: SliceableTypes.has(info.type || '')
             };
         } else {
             // If no results, just return current value. Better than nothing.

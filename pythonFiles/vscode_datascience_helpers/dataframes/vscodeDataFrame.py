@@ -27,21 +27,30 @@ def _VSCODE_convertNumpyArrayToDataFrame(ndarray):
         if y_len:
             # Figure out what kind of object the rows are
             flattened = _VSCODE_np.full((x_len, y_len), "", dtype="object")
+
+            def stringifyElement(element):
+                if isinstance(element, _VSCODE_np.ndarray):
+                    # Ensure no rjust or ljust padding is applied to stringified elements
+                    stringified = _VSCODE_np.array2string(
+                        element, separator=", ", formatter={"all": lambda x: str(x)}
+                    )
+                elif isinstance(element, (list, tuple)):
+                    # We can't pass lists and tuples to array2string because it expects
+                    # the size attribute to be defined
+                    stringified = str(element)
+                else:
+                    stringified = element
+                return stringified
+
             for i in range(x_len):
-                for j in range(len(temp[i])):
+                # For 1D lists of strings, stop looping here
+                row = temp[i]
+                if not isinstance(row, (_VSCODE_np.ndarray, list, tuple)):
+                    flattened = temp
+                    break
+                for j in range(len(row)):
                     element = temp[i][j]
-                    if isinstance(element, _VSCODE_np.ndarray):
-                        # Ensure no rjust or ljust padding is applied to stringified elements
-                        stringified = _VSCODE_np.array2string(
-                            element, separator=", ", formatter={"all": lambda x: str(x)}
-                        )
-                    elif isinstance(element, (list, tuple)):
-                        # We can't pass lists and tuples to array2string because it expects
-                        # the size attribute to be defined
-                        stringified = str(element)
-                    else:
-                        stringified = element
-                    flattened[i][j] = stringified
+                    flattened[i][j] = stringifyElement(element)
             temp = flattened
     except TypeError:
         # Ragged as well as 1D ndarrays both have ndim==1, but computing

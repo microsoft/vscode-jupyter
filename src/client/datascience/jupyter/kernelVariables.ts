@@ -224,7 +224,7 @@ export class KernelVariables implements IJupyterVariables {
         }
     }
 
-    private async getFullVariable(
+    public async getFullVariable(
         targetVariable: IJupyterVariable,
         notebook: INotebook,
         token?: CancellationToken

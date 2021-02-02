@@ -296,16 +296,16 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         }
     };
 
-    public componentDidUpdate = (_prevProps: ISlickGridProps, prevState: ISlickGridState) => {
+    public componentDidUpdate = (_prevProps: ISlickGridProps) => {
         if (this.state.showingFilters && this.state.grid) {
             this.state.grid.setHeaderRowVisibility(true);
         } else if (this.state.showingFilters === false && this.state.grid) {
             this.state.grid.setHeaderRowVisibility(false);
         }
 
-        // If this is our first time setting the grid, we need to dynanically modify the styles
-        // that the slickGrid generates for the rows. It's eliminating some of the height
-        if (!prevState.grid && this.state.grid && this.containerRef.current) {
+        // Dynamically modify the styles that the slickGrid generates for the rows.
+        // It's eliminating some of the height
+        if (this.state.grid && this.containerRef.current) {
             this.updateCssStyles();
         }
     };

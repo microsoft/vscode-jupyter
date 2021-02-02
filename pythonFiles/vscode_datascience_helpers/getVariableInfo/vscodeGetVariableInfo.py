@@ -8,16 +8,21 @@ def _VSCODE_getVariableInfo(var):
     result = {}
     result["shape"] = ""
     result["count"] = 0
+    result["type"] = ""
+
+    vartype = type(var)
+    typeName = None
+    if hasattr(vartype, "__name__"):
+        result["type"] = vartype.__name__
 
     # Find shape and count if available
     if hasattr(var, "shape"):
         try:
-            vartype = type(var)
             # Get a bit more restrictive with exactly what we want to count as a shape, since anything can define it
             if (
                 isinstance(var.shape, tuple)
-                or hasattr(vartype, "__name__")
-                and vartype.__name__ == "EagerTensor"
+                or typeName is not None
+                and typeName == "EagerTensor"
             ):
                 _VSCODE_shapeStr = str(var.shape)
                 if (

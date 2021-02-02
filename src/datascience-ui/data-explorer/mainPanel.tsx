@@ -240,6 +240,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                     maximumRowChunkSize: variable.maximumRowChunkSize ?? this.state.maximumRowChunkSize
                 });
 
+                // New data coming in, so reset everything and clear our cache of columns
+                this.columnsContainingInfOrNaN.clear();
                 this.resetGridEvent.notify();
 
                 // Compute our row fetch sizes based on the number of columns
@@ -254,19 +256,10 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
                 // Request the rest of the data if necessary
                 if (initialRows.length !== totalRowCount) {
-                    // Get all at once if less than 1000
-                    if (totalRowCount < this.rowFetchSizeAll) {
-                        this.getAllRows(variable.sliceExpression);
-                    } else {
-                        this.getRowsInChunks(initialRows.length, totalRowCount, variable.sliceExpression);
-                    }
+                    this.getRowsInChunks(initialRows.length, totalRowCount, variable.sliceExpression);
                 }
             }
         }
-    }
-
-    private getAllRows(sliceExpression?: string) {
-        this.sendMessage(DataViewerMessages.GetAllRowsRequest, sliceExpression);
     }
 
     private getRowsInChunks(startIndex: number, endIndex: number, sliceExpression?: string) {
@@ -293,6 +286,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     private handleGetRowChunkResponse(response: IGetRowsResponse) {
         // We have a new fetched row count
+        console.log('Got row chunk response', response);
         const rows = response.rows ? (response.rows as JSONArray) : [];
         const normalized = this.normalizeData(rows);
         const newFetched = this.state.fetchedRowCount + (response.end - response.start);
@@ -386,6 +380,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 .forEach((column) => {
                     (column as any).type = ColumnType.Number;
                 });
+            console.log('New columns', columns);
             this.updateColumns(columns);
         }
         return normalizedRows;

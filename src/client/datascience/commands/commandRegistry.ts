@@ -21,6 +21,7 @@ import { Commands, Identifiers, JUPYTER_OUTPUT_CHANNEL, Telemetry } from '../con
 import { IDataViewerFactory } from '../data-viewing/types';
 import { DataViewerChecker } from '../interactive-common/dataViewerChecker';
 import { IShowDataViewerFromVariablePanel } from '../interactive-common/interactiveWindowTypes';
+import { convertDebugProtocolVariableToIJupyterVariable } from '../jupyter/debuggerVariables';
 import {
     ICodeWatcher,
     IDataScienceCodeLensProvider,
@@ -497,11 +498,12 @@ export class CommandRegistry implements IDisposable {
     }
     private async onVariablePanelShowDataViewerRequest(request: IShowDataViewerFromVariablePanel) {
         sendTelemetryEvent(EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_REQUEST);
-        const jupyterVariable = await this.variableProvider.getMatchingVariable(
-            (request.variable as DebugProtocol.Variable).name
-        );
-        if (this.debugService.activeDebugSession && jupyterVariable) {
+        if (this.debugService.activeDebugSession && this.variableProvider.getFullVariable) {
             try {
+                const variable = convertDebugProtocolVariableToIJupyterVariable(
+                    request.variable as DebugProtocol.Variable
+                );
+                const jupyterVariable = await this.variableProvider.getFullVariable(variable);
                 const jupyterVariableDataProvider = await this.jupyterVariableDataProviderFactory.create(
                     jupyterVariable
                 );

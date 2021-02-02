@@ -109,7 +109,7 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
             const dataFrameRows = await this.variableManager.getDataFrameRows(
                 this.variable,
                 0,
-                this.variable.rowCount,
+                this.variable.rowCount, // This needs to be updated
                 this.notebook,
                 sliceExpression
             );
