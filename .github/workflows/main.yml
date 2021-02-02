@@ -635,7 +635,7 @@ jobs:
         run: npm ci --prefer-offline
 
         # Check to see if we should build webviews or not
-      - name: Check if webviews are needed
+      - name: Check if we need to build webviews
         if: matrix.test-suite != 'integration' && matrix.test-suite != 'notebookAndWebview'
         run: echo "VSC_JUPYTER_SKIP_WEBVIEW_BUILD=true" >> $GITHUB_ENV
 
@@ -719,7 +719,6 @@ jobs:
           VSC_JUPYTER_NON_RAW_NATIVE_TEST: ${{ contains(matrix.test-suite, 'nonRawNotebook') }}
           VSC_JUPYTER_CI_RUN_JAVA_NB_TEST: ${{ contains(matrix.test-suite, 'conda') }}
           VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
-          VSC_JUPYTER_SKIP_WEBVIEW_BUILD: 'true'
         id: test_notebook_vscode
         if: matrix.test-suite == 'notebook' || matrix.test-suite == 'nonRawNotebook' || matrix.test-suite == 'remoteNotebook' || matrix.test-suite == 'conda'
 
@@ -740,7 +739,6 @@ jobs:
           VSC_JUPYTER_FORCE_LOGGING: 1
           VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
           VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
-          VSC_JUPYTER_SKIP_WEBVIEW_BUILD: 'true'
         id: test_notebookWithoutPythonExt_vscode
         if: matrix.test-suite == 'notebookWithoutPythonExt'
 

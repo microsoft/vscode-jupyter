@@ -254,13 +254,11 @@ gulp.task('checkDependencies', gulp.series('checkNativeDependencies'));
 // On CI, when running Notebook tests, we don't need old webviews.
 // Simple & temporary optimization for the Notebook Test Job.
 if (isCI && process.env.VSC_JUPYTER_SKIP_WEBVIEW_BUILD === 'true') {
-    console.log(`IANHU Skip Webview: ${process.env.VSC_JUPYTER_SKIP_WEBVIEW_BUILD}`);
     gulp.task(
         'prePublishNonBundle',
         gulp.parallel('compile', 'includeBCryptGenRandomExe', 'downloadRendererExtension')
     );
 } else {
-    console.log(`IANHU Build Webview: ${process.env.VSC_JUPYTER_SKIP_WEBVIEW_BUILD}`);
     gulp.task(
         'prePublishNonBundle',
         gulp.parallel(
