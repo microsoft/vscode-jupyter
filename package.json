@@ -1372,7 +1372,6 @@
                     "default": [],
                     "items": {
                         "enum": [
-                            "NativeNotebookEditor",
                             "CustomEditor",
                             "All"
                         ]
