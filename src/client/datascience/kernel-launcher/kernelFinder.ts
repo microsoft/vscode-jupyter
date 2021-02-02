@@ -8,6 +8,7 @@ import * as path from 'path';
 import { CancellationToken } from 'vscode';
 import { IPythonExtensionChecker } from '../../api/types';
 import { IWorkspaceService } from '../../common/application/types';
+import { PYTHON_LANGUAGE } from '../../common/constants';
 import { traceDecorators, traceError, traceInfo, traceInfoIf, traceWarning } from '../../common/logger';
 import { IFileSystem, IPlatformService } from '../../common/platform/types';
 import { IPythonExecutionFactory } from '../../common/process/types';
@@ -31,6 +32,19 @@ const baseKernelPath = path.join('share', 'jupyter', 'kernels');
 const cacheFile = 'kernelSpecPaths.json';
 
 type KernelSpecFileWithContainingInterpreter = { interpreterPath?: string; kernelSpecFile: string };
+
+/**
+ * Helper to ensure we can differentiate between two types in union types, keeping typing information.
+ * (basically avoiding the need to case using `as`).
+ * We cannot use `xx in` as jupyter uses `JSONObject` which is too broad and captures anything and everything.
+ *
+ * @param {(nbformat.IKernelspecMetadata | PythonEnvironment)} item
+ * @returns {item is PythonEnvironment}
+ */
+export function isInterpreter(item: nbformat.INotebookMetadata | PythonEnvironment): item is PythonEnvironment {
+    // Interpreters will not have a `display_name` property, but have `path` and `type` properties.
+    return !!(item as PythonEnvironment).path && !(item as nbformat.INotebookMetadata).kernelspec?.display_name;
+}
 
 // This class searches for a kernel that matches the given kernel name.
 // First it searches on a global persistent state, then on the installed python interpreters,
@@ -63,31 +77,23 @@ export class KernelFinder implements IKernelFinder {
     @captureTelemetry(Telemetry.KernelFinderPerf)
     public async findKernelSpec(
         resource: Resource,
-        notebookMetadata?: nbformat.INotebookMetadata
+        option?: nbformat.INotebookMetadata | PythonEnvironment,
+        _cancelToken?: CancellationToken
     ): Promise<IJupyterKernelSpec | undefined> {
-        traceInfo(
-            `Searching for kernel based on ${JSON.stringify(notebookMetadata?.kernelspec || {})} for ${
-                resource?.fsPath || ''
-            }`
-        );
-        await this.readCache();
-
-        const searchBasedOnKernelSpecMetadata = this.findKernelSpecBasedOnKernelSpecMetadata(
-            resource,
-            notebookMetadata && notebookMetadata.kernelspec ? notebookMetadata.kernelspec : undefined
-        );
-
-        if (!notebookMetadata || notebookMetadata.kernelspec || !notebookMetadata.language_info?.name) {
-            return searchBasedOnKernelSpecMetadata;
+        if (option && isInterpreter(option)) {
+            const specs = await this.listKernelSpecs(resource);
+            return specs.find((item) => {
+                if (item.language?.toLowerCase() !== PYTHON_LANGUAGE.toLowerCase()) {
+                    return false;
+                }
+                return (
+                    this.fs.areLocalPathsSame(item.argv[0], option.path) ||
+                    this.fs.areLocalPathsSame(item.metadata?.interpreter?.path || '', option.path)
+                );
+            });
+        } else {
+            return this.findKernelSpecBasedOnNotebookMetadata(resource, option);
         }
-
-        // If given a language, then find based on language else revert to default behaviour.
-        const searchBasedOnLanguage = await this.findKernelSpecBasedOnLanguage(
-            resource,
-            notebookMetadata.language_info.name
-        );
-        // If none found based on language, then return the default.s
-        return searchBasedOnLanguage || searchBasedOnKernelSpecMetadata;
     }
     // Search all our local file system locations for installed kernel specs and return them
     @captureTelemetry(Telemetry.KernelListingPerf)
@@ -118,6 +124,35 @@ export class KernelFinder implements IKernelFinder {
             )
             .catch(noop);
         return promise;
+    }
+
+    private async findKernelSpecBasedOnNotebookMetadata(
+        resource: Resource,
+        notebookMetadata?: nbformat.INotebookMetadata
+    ) {
+        traceInfo(
+            `Searching for kernel based on ${JSON.stringify(notebookMetadata?.kernelspec || {})} for ${
+                resource?.fsPath || ''
+            }`
+        );
+        await this.readCache();
+
+        const searchBasedOnKernelSpecMetadata = this.findKernelSpecBasedOnKernelSpecMetadata(
+            resource,
+            notebookMetadata && notebookMetadata.kernelspec ? notebookMetadata.kernelspec : undefined
+        );
+
+        if (!notebookMetadata || notebookMetadata.kernelspec || !notebookMetadata.language_info?.name) {
+            return searchBasedOnKernelSpecMetadata;
+        }
+
+        // If given a language, then find based on language else revert to default behaviour.
+        const searchBasedOnLanguage = await this.findKernelSpecBasedOnLanguage(
+            resource,
+            notebookMetadata.language_info.name
+        );
+        // If none found based on language, then return the default.s
+        return searchBasedOnLanguage || searchBasedOnKernelSpecMetadata;
     }
 
     private async findKernelSpecBasedOnKernelSpecMetadata(

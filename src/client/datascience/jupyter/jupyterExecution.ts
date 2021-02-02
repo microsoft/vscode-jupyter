@@ -155,7 +155,6 @@ export class JupyterExecutionBase implements IJupyterExecution {
                 kernelConnectionMetadataPromise = this.kernelSelector.getPreferredKernelForLocalConnection(
                     undefined,
                     'jupyter',
-                    undefined,
                     options?.metadata,
                     !allowUI,
                     kernelSpecCancelSource.token
@@ -238,15 +237,10 @@ export class JupyterExecutionBase implements IJupyterExecution {
                                 const cancel = localize.Common.cancel();
                                 const selection = await this.appShell.showErrorMessage(message, selectKernel, cancel);
                                 if (selection === selectKernel) {
-                                    const sessionManagerFactory = this.serviceContainer.get<
-                                        IJupyterSessionManagerFactory
-                                    >(IJupyterSessionManagerFactory);
-                                    const sessionManager = await sessionManagerFactory.create(connection);
                                     const kernelInterpreter = await this.kernelSelector.selectLocalKernel(
                                         undefined,
                                         'jupyter',
                                         new StopWatch(),
-                                        sessionManager,
                                         cancelToken,
                                         getDisplayNameOrNameOfKernelConnection(launchInfo.kernelConnectionMetadata)
                                     );

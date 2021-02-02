@@ -10,13 +10,7 @@ import { NotebookCell, NotebookDocument } from '../../../../../types/vscode-prop
 import type { ServerStatus } from '../../../../datascience-ui/interactive-common/mainState';
 import type { IAsyncDisposable, Resource } from '../../../common/types';
 import type { PythonEnvironment } from '../../../pythonEnvironments/info';
-import type {
-    IJupyterKernel,
-    IJupyterKernelSpec,
-    IJupyterSessionManager,
-    InterruptResult,
-    KernelSocketInformation
-} from '../../types';
+import type { IJupyterKernel, IJupyterKernelSpec, InterruptResult, KernelSocketInformation } from '../../types';
 import { isPythonKernelConnection } from './helpers';
 
 export type LiveKernelModel = IJupyterKernel & Partial<IJupyterKernelSpec> & { session: Session.IModel };
@@ -148,7 +142,6 @@ export interface IKernelSelectionUsage {
         selection: KernelConnectionMetadata,
         resource: Resource,
         type: 'raw' | 'jupyter' | 'noConnection',
-        session?: IJupyterSessionManager,
         cancelToken?: CancellationToken,
         disableUI?: boolean
     ): Promise<KernelConnectionMetadata | undefined>;

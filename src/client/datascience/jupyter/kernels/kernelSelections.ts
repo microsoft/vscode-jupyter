@@ -19,7 +19,7 @@ import { IJupyterSessionManager, IJupyterSessionManagerFactory } from '../../typ
 import { isPythonKernelConnection } from './helpers';
 import { KernelService } from './kernelService';
 import { ActiveJupyterSessionKernelSelectionListProvider } from './providers/activeJupyterSessionKernelProvider';
-import { InstalledRawKernelSelectionListProvider } from './providers/installedRawKernelProvider';
+import { InstalledLocalKernelSelectionListProvider } from './providers/installedLocalKernelProvider';
 import { InstalledJupyterKernelSelectionListProvider } from './providers/installJupyterKernelProvider';
 import { InterpreterKernelSelectionListProvider } from './providers/interpretersAsKernelProvider';
 import {
@@ -130,37 +130,14 @@ export class KernelSelectionProvider {
      */
     public async getKernelSelectionsForLocalSession(
         resource: Resource,
-        type: 'raw' | 'jupyter' | 'noConnection',
-        sessionManager?: IJupyterSessionManager,
         cancelToken?: CancellationToken
     ): Promise<IKernelSpecQuickPickItem<KernelSpecConnectionMetadata | PythonKernelConnectionMetadata>[]> {
         const getSelections = async () => {
-            // For raw versus jupyter connections we need to use a different method for fetching installed kernelspecs
-            // There is a possible unknown case for if we have a guest jupyter notebook that has not yet connected
-            // in that case we don't use either method
-            let installedKernelsPromise: Promise<
-                IKernelSpecQuickPickItem<KernelSpecConnectionMetadata>[]
-            > = Promise.resolve([]);
-            switch (type) {
-                case 'raw':
-                    installedKernelsPromise = new InstalledRawKernelSelectionListProvider(
+            const installedKernelsPromise = new InstalledLocalKernelSelectionListProvider(
                         this.kernelFinder,
                         this.pathUtils,
                         this.kernelService
                     ).getKernelSelections(resource, cancelToken);
-                    break;
-                case 'jupyter':
-                    installedKernelsPromise = new InstalledJupyterKernelSelectionListProvider(
-                        this.kernelService,
-                        this.pathUtils,
-                        this.extensionChecker,
-                        this.interpreterService,
-                        sessionManager
-                    ).getKernelSelections(resource, cancelToken);
-                    break;
-                default:
-                    break;
-            }
             const interpretersPromise = this.extensionChecker.isPythonExtensionInstalled
                 ? new InterpreterKernelSelectionListProvider(this.interpreterSelector).getKernelSelections(
                       resource,

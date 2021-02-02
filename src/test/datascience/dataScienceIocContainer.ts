@@ -336,6 +336,9 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     public get kernelService() {
         return this.kernelServiceMock;
     }
+    public get kernelFinder() {
+        return this.kernelFinderMock;
+    }
     private static jupyterInterpreters: PythonEnvironment[] = [];
     public applicationShell!: ApplicationShell;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -374,6 +377,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     private emptyConfig = new MockWorkspaceConfiguration();
     private workspaceFolders: MockWorkspaceFolder[] = [];
     private kernelServiceMock = mock(KernelService);
+    private kernelFinderMock = mock(KernelFinder);
     private disposed = false;
     private experimentState = new Map<string, boolean>();
     private extensionRootPath: string | undefined;
@@ -821,8 +825,9 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             this.jupyterMock = new MockJupyterManagerFactory(this.serviceManager);
             // When using mocked Jupyter, default to using default kernel.
             when(this.kernelServiceMock.searchAndRegisterKernel(anything(), anything())).thenResolve(undefined);
-            when(this.kernelServiceMock.getKernelSpecs(anything(), anything())).thenResolve([]);
+            when(this.kernelFinderMock.findKernelSpec(anything(), anything())).thenResolve(undefined);
             this.serviceManager.addSingletonInstance<KernelService>(KernelService, instance(this.kernelServiceMock));
+            this.serviceManager.addSingletonInstance<IKernelFinder>(IKernelFinder, instance(this.kernelFinderMock));
 
             this.serviceManager.addSingletonInstance<IInterpreterSelector>(
                 IInterpreterSelector,

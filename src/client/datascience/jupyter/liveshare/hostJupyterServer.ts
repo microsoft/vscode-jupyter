@@ -344,7 +344,6 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
                     ? this.kernelSelector.getPreferredKernelForLocalConnection(
                           resource,
                           'jupyter',
-                          sessionManager,
                           notebookMetadata,
                           isTestExecution(),
                           cancelToken

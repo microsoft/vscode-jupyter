@@ -205,20 +205,7 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
         >[]
     > {
         if (this.isLocalLaunch()) {
-            this.isRawNotebookSupported =
-                this.isRawNotebookSupported || this.rawNotebookSupported.isSupportedForLocalLaunch();
-
-            const isRawSupported = await this.isRawNotebookSupported;
-            if (token.isCancellationRequested) {
-                return [];
-            }
-
-            return this.kernelSelectionProvider.getKernelSelectionsForLocalSession(
-                document.uri,
-                isRawSupported ? 'raw' : 'jupyter',
-                undefined,
-                token
-            );
+            return this.kernelSelectionProvider.getKernelSelectionsForLocalSession(document.uri, token);
         } else {
             if (!sessionManager) {
                 throw new Error('Session Manager not available');
@@ -328,7 +315,6 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
             return this.kernelSelector.getPreferredKernelForLocalConnection(
                 document.uri,
                 rawSupported ? 'raw' : 'jupyter',
-                undefined,
                 getNotebookMetadata(document),
                 true,
                 token,

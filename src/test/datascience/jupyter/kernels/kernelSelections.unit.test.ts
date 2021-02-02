@@ -299,11 +299,7 @@ suite('DataScience - KernelSelections', () => {
         const expectedList = [...expectedKernelItems, ...expectedInterpreterItems];
         expectedList.sort((a, b) => (a.label === b.label ? 0 : a.label > b.label ? 1 : -1));
 
-        const items = await kernelSelectionProvider.getKernelSelectionsForLocalSession(
-            undefined,
-            'raw',
-            instance(sessionManager)
-        );
+        const items = await kernelSelectionProvider.getKernelSelectionsForLocalSession(undefined);
 
         // Ensure interpreter property is set when comparing.
         items.map((item) => {
@@ -350,13 +346,8 @@ suite('DataScience - KernelSelections', () => {
         const expectedList = [...expectedKernelItems, ...expectedInterpreterItems];
         expectedList.sort((a, b) => (a.label === b.label ? 0 : a.label > b.label ? 1 : -1));
 
-        const items = await kernelSelectionProvider.getKernelSelectionsForLocalSession(
-            undefined,
-            'jupyter',
-            instance(sessionManager)
-        );
+        const items = await kernelSelectionProvider.getKernelSelectionsForLocalSession(undefined);
 
-        verify(kernelService.getKernelSpecs(anything(), anything())).once();
         assert.deepEqual(items, expectedList);
     });
 });
