@@ -48,6 +48,7 @@ interface IMainPanelState {
     dataDimensionality: number;
     originalVariableShape?: number[];
     isSliceDataSupported: boolean;
+    maximumRowChunkSize?: number;
 }
 
 export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState> implements IMessageHandler {
@@ -234,7 +235,9 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                     indexColumn: indexColumn,
                     originalVariableShape: variable.originalVariableShape ?? variable.shape,
                     dataDimensionality: variable.dataDimensionality ?? 2,
-                    isSliceDataSupported: variable.isSliceDataSupported
+                    isSliceDataSupported: variable.isSliceDataSupported,
+                    // Maximum number of rows is 100 if evaluating in debugger, undefined otherwise
+                    maximumRowChunkSize: variable.maximumRowChunkSize ?? this.state.maximumRowChunkSize
                 });
 
                 this.resetGridEvent.notify();
@@ -243,6 +246,11 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 this.rowFetchSizeAll = Math.round(CellFetchAllLimit / columns.length);
                 this.rowFetchSizeFirst = Math.round(Math.max(2, CellFetchSizeFirst / columns.length));
                 this.rowFetchSizeSubsequent = Math.round(Math.max(2, CellFetchSizeSubsequent / columns.length));
+                if (this.state.maximumRowChunkSize) {
+                    this.rowFetchSizeAll = Math.min(this.rowFetchSizeAll, this.state.maximumRowChunkSize);
+                    this.rowFetchSizeFirst = Math.min(this.rowFetchSizeFirst, this.state.maximumRowChunkSize);
+                    this.rowFetchSizeSubsequent = Math.min(this.rowFetchSizeSubsequent, this.state.maximumRowChunkSize);
+                }
 
                 // Request the rest of the data if necessary
                 if (initialRows.length !== totalRowCount) {

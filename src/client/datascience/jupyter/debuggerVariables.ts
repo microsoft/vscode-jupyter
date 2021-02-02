@@ -3,7 +3,7 @@
 'use strict';
 import { inject, injectable, named } from 'inversify';
 
-import { DebugAdapterTracker, Disposable, Event, EventEmitter } from 'vscode';
+import { CancellationToken, DebugAdapterTracker, Disposable, Event, EventEmitter } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { IDebugService } from '../../common/application/types';
 import { traceError } from '../../common/logger';
@@ -93,18 +93,29 @@ export class DebuggerVariables extends DebugLocationTracker
         return result;
     }
 
-    public async getMatchingVariable(name: string, notebook?: INotebook): Promise<IJupyterVariable | undefined> {
+    public async getMatchingVariable(name: string, notebook?: INotebook, _cancelToken?: CancellationToken | undefined, needsFullVariable?: boolean): Promise<IJupyterVariable | undefined> {
+        let result;
         if (this.active) {
-            // Note, full variable results isn't necessary for this call. It only really needs the variable value.
-            const result = this.lastKnownVariables.find((v) => v.name === name);
+            let pos = -1;
+            result = this.lastKnownVariables.find((v, idx) => { 
+                if (v.name === name) {
+                    pos = idx;
+                    return true;
+                }
+                return false;
+            });
             if (result && notebook && notebook.identity.fsPath.endsWith('.ipynb')) {
                 sendTelemetryEvent(Telemetry.RunByLineVariableHover);
             }
-            return result;
+            if (needsFullVariable && result && result.truncated) {
+                result = await this.getFullVariable(result);
+                this.lastKnownVariables[pos] = result;
+            }
         }
+        return result;
     }
 
-    public async getDataFrameInfo(targetVariable: IJupyterVariable, notebook?: INotebook): Promise<IJupyterVariable> {
+    public async getDataFrameInfo(targetVariable: IJupyterVariable, notebook?: INotebook, sliceExpression?: string): Promise<IJupyterVariable> {
         if (!this.active) {
             // No active server just return the unchanged target variable
             return targetVariable;
@@ -117,9 +128,14 @@ export class DebuggerVariables extends DebugLocationTracker
         // See if we imported or not into the kernel our special function
         await this.importDataFrameScripts();
 
+        let expression = targetVariable.name;
+        if (sliceExpression) {
+            expression = `${targetVariable.name}${sliceExpression}`;
+        }
+
         // Then eval calling the main function with our target variable
         const results = await this.evaluate(
-            `${DataFrameLoading.DataFrameInfoImportFunc}(${targetVariable.name})`,
+            `${DataFrameLoading.DataFrameInfoImportFunc}(${expression})`,
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (targetVariable as any).frameId
         );
@@ -128,7 +144,8 @@ export class DebuggerVariables extends DebugLocationTracker
         return results
             ? {
                   ...targetVariable,
-                  ...JSON.parse(results.result)
+                  ...JSON.parse(results.result),
+                  maximumRowChunkSize: 100,
               }
             : targetVariable;
     }
@@ -140,6 +157,11 @@ export class DebuggerVariables extends DebugLocationTracker
         notebook?: INotebook,
         sliceExpression?: string
     ): Promise<{}> {
+        // Developer error. The debugger cannot eval more than 100 rows at once.
+        if (end - start > 100) {
+            throw new Error('Debugger cannot provide more than 100 rows at once');
+        }
+
         // Run the get dataframe rows script
         if (!this.debugService.activeDebugSession || targetVariable.columns === undefined) {
             // No active server just return no rows
@@ -158,35 +180,12 @@ export class DebuggerVariables extends DebugLocationTracker
         // See if we imported or not into the kernel our special function
         await this.importDataFrameScripts();
 
-        // Since the debugger splits up long requests, split this based on the number of items.
-
-        // Maximum 100 cells at a time or one row
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        let output: any;
-        const minnedEnd = Math.min(targetVariable.rowCount || 0, end);
-        const totalRowCount = end - start;
-        const cellsPerRow = targetVariable.columns!.length;
-        const chunkSize = Math.floor(Math.max(1, Math.min(100 / cellsPerRow, totalRowCount / cellsPerRow)));
-        for (let pos = start; pos < end; pos += chunkSize) {
-            const chunkEnd = Math.min(pos + chunkSize, minnedEnd);
-            const results = await this.evaluate(
-                `${DataFrameLoading.DataFrameRowImportFunc}(${expression}, ${pos}, ${chunkEnd})`,
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                (targetVariable as any).frameId
-            );
-            const chunkResults = JSON.parse(results.result);
-            if (output && output.data) {
-                output = {
-                    ...output,
-                    data: output.data.concat(chunkResults.data)
-                };
-            } else {
-                output = chunkResults;
-            }
-        }
-
-        // Results should be the rows.
-        return output;
+        const results = await this.evaluate(
+            `${DataFrameLoading.DataFrameRowImportFunc}(${expression}, ${start}, ${end})`,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (targetVariable as any).frameId
+        );
+        return JSON.parse(results.result);
     }
 
     // This special DebugAdapterTracker function listens to messages sent from the debug adapter to VS Code

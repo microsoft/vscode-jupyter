@@ -67,6 +67,7 @@ export interface IDataFrameInfo {
     dataDimensionality?: number;
     sliceExpression?: string;
     supportsSlicing?: boolean;
+    maximumRowChunkSize?: number;
 }
 
 export interface IDataViewerDataProvider {

@@ -95,7 +95,8 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
                 dataDimensionality: variable.dataDimensionality,
                 shape: JupyterVariableDataProvider.parseShape(variable.shape),
                 sliceExpression,
-                supportsSlicing: variable.supportsSlicing
+                supportsSlicing: variable.supportsSlicing,
+                maximumRowChunkSize: variable.maximumRowChunkSize
             };
         }
         return dataFrameInfo;
