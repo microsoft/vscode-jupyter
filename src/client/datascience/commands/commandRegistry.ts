@@ -17,17 +17,17 @@ import { noop } from '../../common/utils/misc';
 import { LogLevel } from '../../logging/levels';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
-import { Commands, JUPYTER_OUTPUT_CHANNEL, Telemetry } from '../constants';
+import { Commands, Identifiers, JUPYTER_OUTPUT_CHANNEL, Telemetry } from '../constants';
 import { IDataViewerFactory } from '../data-viewing/types';
 import { DataViewerChecker } from '../interactive-common/dataViewerChecker';
 import { IShowDataViewerFromVariablePanel } from '../interactive-common/interactiveWindowTypes';
-import { convertDebugProtocolVariableToIJupyterVariable } from '../jupyter/debuggerVariables';
 import {
     ICodeWatcher,
     IDataScienceCodeLensProvider,
     IDataScienceCommandListener,
     IJupyterServerUriStorage,
     IJupyterVariableDataProviderFactory,
+    IJupyterVariables,
     INotebookEditorProvider
 } from '../types';
 import { JupyterCommandLineSelectorCommand } from './commandLineSelector';
@@ -60,7 +60,8 @@ export class CommandRegistry implements IDisposable {
         @inject(IJupyterVariableDataProviderFactory)
         private readonly jupyterVariableDataProviderFactory: IJupyterVariableDataProviderFactory,
         @inject(IDataViewerFactory) private readonly dataViewerFactory: IDataViewerFactory,
-        @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage
+        @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
+        @inject(IJupyterVariables) @named(Identifiers.DEBUGGER_VARIABLES) private variableProvider: IJupyterVariables,
     ) {
         this.disposables.push(this.serverSelectedCommand);
         this.disposables.push(this.notebookCommands);
@@ -496,10 +497,8 @@ export class CommandRegistry implements IDisposable {
     }
     private async onVariablePanelShowDataViewerRequest(request: IShowDataViewerFromVariablePanel) {
         sendTelemetryEvent(EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_REQUEST);
-        if (this.debugService.activeDebugSession) {
-            const jupyterVariable = convertDebugProtocolVariableToIJupyterVariable(
-                request.variable as DebugProtocol.Variable
-            );
+        const jupyterVariable = await this.variableProvider.getMatchingVariable((request.variable as DebugProtocol.Variable).name);
+        if (this.debugService.activeDebugSession && jupyterVariable) {
             try {
                 const jupyterVariableDataProvider = await this.jupyterVariableDataProviderFactory.create(
                     jupyterVariable
