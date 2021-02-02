@@ -55,7 +55,9 @@ export class JupyterNotebookProvider implements IJupyterNotebookProvider {
         const server = await this.serverProvider.getOrCreateServer({
             getOnly: options.getOnly,
             disableUI: options.disableUI,
-            token: options.token
+            token: options.token,
+            metadata: options.metadata,
+            kernelConnection: options.kernelConnection
         });
         if (server) {
             return server.getNotebook(options.identity, options.token);

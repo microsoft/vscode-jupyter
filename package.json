@@ -1378,7 +1378,7 @@
                         ]
                     },
                     "description": "List of experiment to opt into. If empty, user is assigned the default experiment groups. See https://github.com/microsoft/vscode-jupyter/wiki/Experiments for more details.",
-                    "scope": "machine"
+                    "scope": "application"
                 },
                 "jupyter.experiments.optOutFrom": {
                     "type": "array",
@@ -1391,7 +1391,7 @@
                         ]
                     },
                     "description": "List of experiment to opt out of. If empty, user is assigned the default experiment groups. See https://github.com/microsoft/vscode-jupyter/wiki/Experiments for more details.",
-                    "scope": "machine"
+                    "scope": "application"
                 },
                 "jupyter.enableKeyboardShortcuts": {
                     "type": "boolean",

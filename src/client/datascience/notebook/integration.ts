@@ -60,7 +60,7 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
             // Again, this is temporary code.
             await this.disableNotebooks();
         }
-        if (this.env.channel === 'insiders') {
+        if (this.useNativeNb) {
             try {
                 this.disposables.push(
                     this.vscNotebook.registerNotebookContentProvider(

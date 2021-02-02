@@ -24,8 +24,8 @@ import {
     closeNotebooks,
     closeNotebooksAndCleanUpAfterTests,
     createTemporaryNotebook,
-    executeActiveDocument,
-    executeCell,
+    runAllCellsInActiveNotebook,
+    runCell,
     insertCodeCell,
     insertMarkdownCell,
     saveActiveNotebook,
@@ -175,7 +175,7 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         await openNotebook(api.serviceContainer, testJuliaNb.fsPath);
         await insertCodeCell('123456', { language: 'julia', index: 0 });
         const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
-        await executeCell(cell);
+        await runCell(cell);
         // Wait till execution count changes and status is success.
         await waitForExecutionCompletedSuccessfully(cell, 60_000);
         assertHasTextOutputInVSCode(cell, '123456', 0, false);
@@ -190,7 +190,7 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         this.timeout(30_000); // Can be slow to start csharp kernel on CI.
         await openNotebook(api.serviceContainer, testCSharpNb.fsPath);
         await waitForKernelToGetAutoSelected('c#');
-        await executeActiveDocument();
+        await runAllCellsInActiveNotebook();
 
         const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
         // Wait till execution count changes and status is success.
@@ -220,7 +220,7 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         this.timeout(30_000); // In case starting Java kernel is slow on CI (we know julia is slow).
         await openNotebook(api.serviceContainer, testJavaNb.fsPath);
         await waitForKernelToGetAutoSelected('java');
-        await executeActiveDocument();
+        await runAllCellsInActiveNotebook();
 
         const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
         // Wait till execution count changes and status is success.

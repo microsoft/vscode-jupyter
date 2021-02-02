@@ -410,6 +410,7 @@ export function createStore<M>(
     testMode: boolean,
     editable: boolean,
     showVariablesOnDebug: boolean,
+    variablesStartOpen: boolean,
     reducerMap: M,
     postOffice: PostOffice
 ) {
@@ -423,7 +424,7 @@ export function createStore<M>(
     const monacoReducer = generateMonacoReducer(testMode, postOffice);
 
     // Create another reducer for handling variable state
-    const variableReducer = generateVariableReducer(showVariablesOnDebug);
+    const variableReducer = generateVariableReducer(showVariablesOnDebug, variablesStartOpen);
 
     // Combine these together
     const rootReducer = Redux.combineReducers<IStore>({

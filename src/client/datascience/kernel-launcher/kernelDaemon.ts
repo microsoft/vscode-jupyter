@@ -6,16 +6,10 @@
 import { ChildProcess } from 'child_process';
 import { Subject } from 'rxjs/Subject';
 import { MessageConnection, NotificationType, RequestType, RequestType0 } from 'vscode-jsonrpc';
-import { traceInfo } from '../../common/logger';
+import { traceInfo, traceWarning } from '../../common/logger';
 import { IPlatformService } from '../../common/platform/types';
 import { BasePythonDaemon, ExecResponse } from '../../common/process/baseDaemon';
-import {
-    IPythonExecutionService,
-    ObservableExecutionResult,
-    Output,
-    SpawnOptions,
-    StdErrError
-} from '../../common/process/types';
+import { IPythonExecutionService, ObservableExecutionResult, Output, SpawnOptions } from '../../common/process/types';
 import { IPythonKernelDaemon, PythonKernelDiedError } from './types';
 
 export class PythonKernelDaemon extends BasePythonDaemon implements IPythonKernelDaemon {
@@ -111,19 +105,26 @@ export class PythonKernelDaemon extends BasePythonDaemon implements IPythonKerne
         const KernelDiedNotification = new NotificationType<{ exit_code: string; reason?: string }, void>(
             'kernel_died'
         );
+        let possibleReasonForProcExit = '';
         this.connection.onNotification(KernelDiedNotification, (output) => {
             this.subject.error(
-                new PythonKernelDiedError({ exitCode: parseInt(output.exit_code, 10), reason: output.reason })
+                new PythonKernelDiedError({
+                    exitCode: parseInt(output.exit_code, 10),
+                    reason: output.reason || possibleReasonForProcExit // If we have collected the error then use that (if reason is empty).
+                })
             );
         });
 
         // All output messages from daemon from here on are considered to be coming from the kernel.
         // This is because the kernel is a long running process and that will be the only code in the daemon
-        // sptting stuff into stdout/stderr.
-        this.outputObservale.subscribe(
+        // spitting stuff into stdout/stderr.
+        this.outputObservable.subscribe(
             (out) => {
                 if (out.source === 'stderr') {
-                    this.subject.error(new StdErrError(out.out));
+                    // Don't call this.subject.error, as that can only be called once (hence can only be handled once).
+                    // Instead log this error & pass this only when the kernel dies.
+                    possibleReasonForProcExit += out.out;
+                    traceWarning(`Kernel ${this.proc.pid} as possibly died, StdErr from Kernel Process ${out.out}`);
                 } else {
                     this.subject.next(out);
                 }

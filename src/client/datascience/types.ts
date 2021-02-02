@@ -258,6 +258,7 @@ export interface INotebookServerOptions {
     workingDir?: string;
     purpose: string;
     metadata?: nbformat.INotebookMetadata;
+    kernelConnection?: KernelConnectionMetadata;
     skipSearchingForKernel?: boolean;
     allowUI(): boolean;
 }
@@ -1168,6 +1169,8 @@ export type GetServerOptions = {
     disableUI?: boolean;
     localOnly?: boolean;
     token?: CancellationToken;
+    metadata?: nbformat.INotebookMetadata;
+    kernelConnection?: KernelConnectionMetadata;
     onConnectionMade?(): void; // Optional callback for when the first connection is made
 };
 

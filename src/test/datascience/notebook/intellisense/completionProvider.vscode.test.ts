@@ -5,30 +5,28 @@
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { CancellationTokenSource, CompletionContext, CompletionTriggerKind, Position } from 'vscode';
+import { CellDisplayOutput } from '../../../../../types/vscode-proposed';
 import { IVSCodeNotebook } from '../../../../client/common/application/types';
 import { traceInfo } from '../../../../client/common/logger';
 import { IDisposable } from '../../../../client/common/types';
 import { NotebookCompletionProvider } from '../../../../client/datascience/notebook/intellisense/completionProvider';
-import { INotebookEditorProvider } from '../../../../client/datascience/types';
 import { IExtensionTestApi } from '../../../common';
 import { initialize } from '../../../initialize';
 import {
     canRunNotebookTests,
     closeNotebooksAndCleanUpAfterTests,
-    deleteAllCellsAndWait,
-    executeCell,
+    runCell,
     insertCodeCell,
     trustAllNotebooks,
     startJupyterServer,
     waitForExecutionCompletedSuccessfully,
-    waitForKernelToGetAutoSelected,
-    prewarmNotebooks
+    prewarmNotebooks,
+    createEmptyPythonNotebook
 } from '../helper';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - VSCode Notebook - (Code Completion via Jupyter) (slow)', function () {
     let api: IExtensionTestApi;
-    let editorProvider: INotebookEditorProvider;
     const disposables: IDisposable[] = [];
     let vscodeNotebook: IVSCodeNotebook;
     let completionProvider: NotebookCompletionProvider;
@@ -44,7 +42,6 @@ suite('DataScience - VSCode Notebook - (Code Completion via Jupyter) (slow)', fu
         await prewarmNotebooks();
         sinon.restore();
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
-        editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
         completionProvider = api.serviceContainer.get<NotebookCompletionProvider>(NotebookCompletionProvider);
     });
     // Use same notebook without starting kernel in every single test (use one for whole suite).
@@ -52,12 +49,8 @@ suite('DataScience - VSCode Notebook - (Code Completion via Jupyter) (slow)', fu
         traceInfo(`Start Test ${this.currentTest?.title}`);
         sinon.restore();
         await startJupyterServer();
-        // Open a notebook and use this for all tests in this test suite.
-        await editorProvider.createNew();
-        await waitForKernelToGetAutoSelected(undefined);
-        await deleteAllCellsAndWait();
-        assert.isOk(vscodeNotebook.activeNotebookEditor, 'No active notebook');
-        process.env.VSC_JUPYTER_IntellisenseTimeout = '10000';
+        await createEmptyPythonNotebook(disposables);
+        process.env.VSC_JUPYTER_IntellisenseTimeout = '30000';
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
     });
     teardown(async function () {
@@ -68,14 +61,15 @@ suite('DataScience - VSCode Notebook - (Code Completion via Jupyter) (slow)', fu
     });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
     test('Execute cell and get completions for variable', async () => {
-        await insertCodeCell('a = 1', { index: 0 });
+        await insertCodeCell('import sys\nprint(sys.executable)\na = 1', { index: 0 });
         const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
 
-        await executeCell(cell);
+        await runCell(cell);
 
         // Wait till execution count changes and status is success.
         await waitForExecutionCompletedSuccessfully(cell);
-
+        const outputText: string = (cell.outputs[0] as CellDisplayOutput).data['text/plain'].trim();
+        traceInfo(`Cell Output ${outputText}`);
         await insertCodeCell('a.', { index: 1 });
         const cell2 = vscodeNotebook.activeNotebookEditor!.document.cells[1];
 

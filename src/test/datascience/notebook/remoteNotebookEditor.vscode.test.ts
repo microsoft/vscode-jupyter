@@ -7,28 +7,31 @@
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import * as path from 'path';
-import { commands, Uri } from 'vscode';
-import { IVSCodeNotebook } from '../../../client/common/application/types';
+import { commands, Memento, Uri } from 'vscode';
+import { IEncryptedStorage, IVSCodeNotebook } from '../../../client/common/application/types';
 import { traceInfo } from '../../../client/common/logger';
-import { IDisposable } from '../../../client/common/types';
+import { GLOBAL_MEMENTO, IDisposable, IMemento } from '../../../client/common/types';
 import { IExtensionTestApi, waitForCondition } from '../../common';
 import { closeActiveWindows, EXTENSION_ROOT_DIR_FOR_TESTS, initialize, IS_REMOTE_NATIVE_TEST } from '../../initialize';
 import {
     assertHasTextOutputInVSCode,
     canRunNotebookTests,
     closeNotebooksAndCleanUpAfterTests,
-    executeActiveDocument,
+    runAllCellsInActiveNotebook,
     trustAllNotebooks,
     startJupyterServer,
     waitForExecutionCompletedSuccessfully,
     waitForKernelToGetAutoSelected,
     createTemporaryNotebook,
     saveActiveNotebook,
-    executeCell
+    runCell,
+    deleteAllCellsAndWait,
+    insertCodeCell
 } from './helper';
 import { openNotebook } from '../helpers';
 import { PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { PreferredRemoteKernelIdProvider } from '../../../client/datascience/notebookStorage/preferredRemoteKernelIdProvider';
+import { Settings } from '../../../client/datascience/constants';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function () {
@@ -46,6 +49,8 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
         'rememberRemoteKernel.ipynb'
     );
     let ipynbFile: Uri;
+    let globalMemento: Memento;
+    let encryptedStorage: IEncryptedStorage;
     suiteSetup(async function () {
         if (!IS_REMOTE_NATIVE_TEST) {
             return this.skip();
@@ -57,9 +62,10 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
         }
         await trustAllNotebooks();
         await startJupyterServer();
-        // await prewarmNotebooks();
         sinon.restore();
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
+        encryptedStorage = api.serviceContainer.get<IEncryptedStorage>(IEncryptedStorage);
+        globalMemento = api.serviceContainer.get<Memento>(IMemento, GLOBAL_MEMENTO);
         remoteKernelIdProvider = api.serviceContainer.get<PreferredRemoteKernelIdProvider>(
             PreferredRemoteKernelIdProvider
         );
@@ -79,15 +85,31 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
+    test('MRU and encrypted storage should be updated with remote Uri info', async () => {
+        const previousList = globalMemento.get<{}[]>(Settings.JupyterServerUriList, []);
+        const encryptedStorageSpiedStore = sinon.spy(encryptedStorage, 'store');
+        await openNotebook(api.serviceContainer, ipynbFile.fsPath, { isNotTrusted: true });
+        await waitForKernelToGetAutoSelected(PYTHON_LANGUAGE);
+        await deleteAllCellsAndWait();
+        await insertCodeCell('print("123412341234")', { index: 0 });
+        await runAllCellsInActiveNotebook();
+
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
+        await waitForExecutionCompletedSuccessfully(cell);
+
+        // Wait for MRU to get updated & encrypted storage to get updated.
+        await waitForCondition(async () => encryptedStorageSpiedStore.called, 5_000, 'Encrypted storage not updated');
+        const newList = globalMemento.get<{}[]>(Settings.JupyterServerUriList, []);
+        assert.notDeepEqual(previousList, newList, 'MRU not updated');
+    });
     test('Use same kernel when re-opening notebook', async () => {
         await openNotebook(api.serviceContainer, ipynbFile.fsPath, { isNotTrusted: true });
         await waitForKernelToGetAutoSelected(PYTHON_LANGUAGE);
         let nbEditor = vscodeNotebook.activeNotebookEditor!;
         assert.isOk(nbEditor, 'No active notebook');
-        // await sleep(60_000);
         // Cell 1 = `a = "Hello World"`
         // Cell 2 = `print(a)`
-        await executeActiveDocument();
+        await runAllCellsInActiveNotebook();
 
         let cell2 = nbEditor.document.cells![1]!;
         await waitForExecutionCompletedSuccessfully(cell2);
@@ -104,7 +126,6 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
         );
 
         await saveActiveNotebook(disposables);
-        // await sleep(60_000);
         await closeActiveWindows();
 
         // Re-open and execute the second cell.
@@ -112,9 +133,7 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
         // Second cell should display the value of existing variable from previous execution.
 
         await openNotebook(api.serviceContainer, ipynbFile.fsPath, { isNotTrusted: true });
-        // await sleep(60_000);
         await waitForKernelToGetAutoSelected(PYTHON_LANGUAGE);
-        // await sleep(60_000);
         nbEditor = vscodeNotebook.activeNotebookEditor!;
         assert.isOk(nbEditor, 'No active notebook');
 
@@ -129,7 +148,7 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
 
         // Execute second cell
         cell2 = nbEditor.document.cells![1]!;
-        await executeCell(cell2);
+        await runCell(cell2);
         await waitForExecutionCompletedSuccessfully(cell2);
         assertHasTextOutputInVSCode(cell2, 'Hello World', 0);
     });

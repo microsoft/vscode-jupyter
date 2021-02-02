@@ -41,6 +41,7 @@ import {
 } from '../../../client/datascience/notebook/defaultCellLanguageService';
 import { isJupyterKernel } from '../../../client/datascience/notebook/helpers/helpers';
 import { chainWithPendingUpdates } from '../../../client/datascience/notebook/helpers/notebookUpdater';
+import { VSCodeNotebookKernelMetadata } from '../../../client/datascience/notebook/kernelWithMetadata';
 import { NotebookEditor } from '../../../client/datascience/notebook/notebookEditor';
 import { INotebookContentProvider, INotebookKernelProvider } from '../../../client/datascience/notebook/types';
 import { VSCodeNotebookModel } from '../../../client/datascience/notebookStorage/vscNotebookModel';
@@ -51,6 +52,7 @@ import { noop } from '../../core';
 import { closeActiveWindows, initialize, isInsiders } from '../../initialize';
 import { JupyterServer } from '../jupyterServer';
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
+const defaultTimeout = 15_000;
 
 async function getServices() {
     const api = await initialize();
@@ -69,15 +71,15 @@ export async function selectCell(notebook: NotebookDocument, start: number, end:
     });
 }
 
-export async function insertMarkdownCell(source: string) {
+export async function insertMarkdownCell(source: string, options?: { index?: number }) {
     const { vscodeNotebook } = await getServices();
     const activeEditor = vscodeNotebook.activeNotebookEditor;
     if (!activeEditor) {
-        assert.fail('No active editor');
-        return;
+        throw new Error('No active editor');
     }
+    const startNumber = options?.index ?? activeEditor.document.cells.length;
     await chainWithPendingUpdates(activeEditor, (edit) =>
-        edit.replaceCells(activeEditor.document.cells.length, 0, [
+        edit.replaceCells(startNumber, 0, [
             {
                 cellKind: vscodeNotebookEnums.CellKind.Markdown,
                 language: MARKDOWN_LANGUAGE,
@@ -89,13 +91,13 @@ export async function insertMarkdownCell(source: string) {
             }
         ])
     );
+    return activeEditor.document.cells[startNumber]!;
 }
 export async function insertCodeCell(source: string, options?: { language?: string; index?: number }) {
     const { vscodeNotebook } = await getServices();
     const activeEditor = vscodeNotebook.activeNotebookEditor;
     if (!activeEditor) {
-        assert.fail('No active editor');
-        return;
+        throw new Error('No active editor');
     }
     const startNumber = options?.index ?? activeEditor.document.cells.length;
     await activeEditor.edit((edit) => {
@@ -111,6 +113,8 @@ export async function insertCodeCell(source: string, options?: { language?: stri
             }
         ]);
     });
+
+    return activeEditor.document.cells[startNumber]!;
 }
 export async function deleteCell(index: number = 0) {
     const { vscodeNotebook } = await getServices();
@@ -227,22 +231,33 @@ export async function closeNotebooks(disposables: IDisposable[] = []) {
     disposeAllDisposables(disposables);
 }
 
-export async function waitForKernelToChange(labelOrId: string | undefined) {
+export async function waitForKernelToChange(criteria: { labelOrId?: string; interpreterPath?: string }) {
     const { vscodeNotebook, kernelProvider } = await getServices();
 
     // Wait for the active editor to come up
     await waitForCondition(async () => !!vscodeNotebook.activeNotebookEditor, 10_000, 'Active editor not a notebook');
 
     // Get the list of kernels possible
-    const kernels = await kernelProvider.provideKernels(
+    const kernels = (await kernelProvider.provideKernels(
         vscodeNotebook.activeNotebookEditor!.document,
         CancellationToken.None
-    );
+    )) as VSCodeNotebookKernelMetadata[];
 
     traceInfo(`Kernels found for wait search: ${kernels?.map((k) => k.label).join('\n')}`);
 
     // Find the kernel id that matches the name we want
-    const id = kernels?.find((k) => (labelOrId && k.label.includes(labelOrId)) || (k.id && k.id == labelOrId))?.id;
+    let id: string | undefined;
+    if (criteria.labelOrId) {
+        const labelOrId = criteria.labelOrId;
+        id = kernels?.find((k) => (labelOrId && k.label.includes(labelOrId)) || (k.id && k.id == labelOrId))?.id;
+    }
+
+    if (criteria.interpreterPath) {
+        id = kernels
+            ?.filter((k) => k.selection.interpreter)
+            .find((k) => k.selection.interpreter!.path.toLowerCase().includes(criteria.interpreterPath!.toLowerCase()))
+            ?.id;
+    }
 
     // Send a select kernel on the active notebook editor
     void commands.executeCommand('notebook.selectKernel', { id, extension: JVSC_EXTENSION_ID });
@@ -260,7 +275,11 @@ export async function waitForKernelToChange(labelOrId: string | undefined) {
         traceInfo(`Active kernel is ${vscodeNotebook.activeNotebookEditor.kernel.id}`);
         return false;
     };
-    await waitForCondition(async () => isRightKernel(), 15_000, `Kernel with label/id ${labelOrId} not selected`);
+    await waitForCondition(
+        async () => isRightKernel(),
+        defaultTimeout,
+        `Kernel with criteria ${JSON.stringify(criteria)} not selected`
+    );
 }
 
 export async function waitForKernelToGetAutoSelected(expectedLanguage?: string, time = 100_000) {
@@ -311,7 +330,7 @@ export async function waitForKernelToGetAutoSelected(expectedLanguage?: string, 
 
     // Wait for the active kernel to be a julia kernel.
     const errorMessage = expectedLanguage ? `${expectedLanguage} kernel not auto selected` : 'Kernel not auto selected';
-    await waitForCondition(async () => isRightKernel(), 15_000, errorMessage);
+    await waitForCondition(async () => isRightKernel(), defaultTimeout, errorMessage);
     traceInfo(`Preferred kernel auto selected for Native Notebook for ${kernelInfo}.`);
 }
 export async function trustNotebook(ipynbFile: string | Uri) {
@@ -342,6 +361,30 @@ export async function startJupyterServer(api?: IExtensionTestApi) {
         traceInfo(`Jupyter not started and set to local`); // This is the default
     }
 }
+/**
+ * Open an existing notebook with some metadata that tells extension to use Python kernel.
+ * Else creating a blank notebook could result in selection of non-python kernel, based on other tests.
+ * We have other tests where we test non-python kernels, this could mean we might end up with non-python kernels
+ * when creating a new notebook.
+ * This function ensures we always open a notebook for testing that is guaranteed to use a Python kernel.
+ */
+export async function createEmptyPythonNotebook(disposables: IDisposable[] = []) {
+    const { serviceContainer } = await getServices();
+    const templatePythonNbFile = path.join(
+        EXTENSION_ROOT_DIR_FOR_TESTS,
+        'src/test/datascience/notebook/emptyPython.ipynb'
+    );
+    const editorProvider = serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
+    const vscodeNotebook = serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
+    // Don't use same file (due to dirty handling, we might save in dirty.)
+    // Coz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
+    const nbFile = await createTemporaryNotebook(templatePythonNbFile, disposables);
+    // Open a python notebook and use this for all tests in this test suite.
+    await editorProvider.open(Uri.file(nbFile));
+    assert.isOk(vscodeNotebook.activeNotebookEditor, 'No active notebook');
+    await waitForKernelToGetAutoSelected(undefined);
+    await deleteAllCellsAndWait();
+}
 
 export async function stopJupyterServer() {
     if (!IS_REMOTE_NATIVE_TEST) {
@@ -365,7 +408,7 @@ export async function prewarmNotebooks() {
         await insertCodeCell('print("Hello World1")', { index: 0 });
         await waitForKernelToGetAutoSelected();
         const cell = vscodeNotebook.activeNotebookEditor!.document.cells[0]!;
-        await executeActiveDocument();
+        await runAllCellsInActiveNotebook();
         // Wait for Jupyter to start.
         await waitForExecutionCompletedSuccessfully(cell, 60_000);
         await closeActiveWindows();
@@ -403,7 +446,7 @@ export async function waitForCellExecutionToComplete(cell: NotebookCell) {
     await CellExecution.cellsCompletedForTesting.get(cell)!.promise;
     await sleep(100);
 }
-export async function waitForExecutionCompletedSuccessfully(cell: NotebookCell, timeout: number = 15_000) {
+export async function waitForExecutionCompletedSuccessfully(cell: NotebookCell, timeout: number = defaultTimeout) {
     await waitForCondition(
         async () => assertHasExecutionCompletedSuccessfully(cell),
         timeout,
@@ -411,7 +454,42 @@ export async function waitForExecutionCompletedSuccessfully(cell: NotebookCell, 
     );
     await waitForCellExecutionToComplete(cell);
 }
-export async function waitForEmptyCellExecutionCompleted(cell: NotebookCell, timeout: number = 15_000) {
+/**
+ * When a cell is running (in progress), the start time will be > 0.
+ */
+export async function waitForExecutionInProgress(cell: NotebookCell, timeout: number = defaultTimeout) {
+    await waitForCondition(
+        async () => {
+            const result =
+                cell.metadata.runState === vscodeNotebookEnums.NotebookCellRunState.Running &&
+                cell.metadata.runStartTime &&
+                !cell.metadata.lastRunDuration &&
+                !cell.metadata.statusMessage
+                    ? true
+                    : false;
+            return result;
+        },
+        timeout,
+        `Cell ${cell.index + 1} did not start`
+    );
+}
+/**
+ * When a cell is queued for execution (in progress), the start time, last duration & status message will be `empty`.
+ */
+export async function waitForQueuedForExecution(cell: NotebookCell, timeout: number = defaultTimeout) {
+    await waitForCondition(
+        async () =>
+            cell.metadata.runState === vscodeNotebookEnums.NotebookCellRunState.Running &&
+            !cell.metadata.runStartTime &&
+            !cell.metadata.lastRunDuration &&
+            !cell.metadata.statusMessage
+                ? true
+                : false,
+        timeout,
+        `Cell ${cell.index + 1} not queued for execution`
+    );
+}
+export async function waitForEmptyCellExecutionCompleted(cell: NotebookCell, timeout: number = defaultTimeout) {
     await waitForCondition(
         async () => assertHasEmptyCellExecutionCompleted(cell),
         timeout,
@@ -419,7 +497,7 @@ export async function waitForEmptyCellExecutionCompleted(cell: NotebookCell, tim
     );
     await waitForCellExecutionToComplete(cell);
 }
-export async function waitForExecutionCompletedWithErrors(cell: NotebookCell, timeout: number = 15_000) {
+export async function waitForExecutionCompletedWithErrors(cell: NotebookCell, timeout: number = defaultTimeout) {
     await waitForCondition(
         async () => assertHasExecutionCompletedWithErrors(cell),
         timeout,
@@ -546,7 +624,7 @@ export function createNotebookModel(
         instance(cellLanguageService)
     );
 }
-export async function executeCell(cell: NotebookCell) {
+export async function runCell(cell: NotebookCell) {
     const api = await initialize();
     const vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
     await waitForCondition(
@@ -560,18 +638,17 @@ export async function executeCell(cell: NotebookCell) {
     // Execute cells (it should throw an error).
     vscodeNotebook.activeNotebookEditor.kernel.executeCell(cell.notebook, cell);
 }
-export async function executeActiveDocument() {
+export async function runAllCellsInActiveNotebook() {
     const api = await initialize();
     const vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
     await waitForCondition(
         async () => !!vscodeNotebook.activeNotebookEditor?.kernel,
-        60_000, // Validating kernel can take a while.
+        60_000, // Validating kernel can take a while (this is required to ensure a kernel is available for use).
         'Timeout waiting for active kernel'
     );
     if (!vscodeNotebook.activeNotebookEditor || !vscodeNotebook.activeNotebookEditor.kernel) {
         throw new Error('No notebook or kernel');
     }
-    // Execute cells (it should throw an error).
     vscodeNotebook.activeNotebookEditor.kernel.executeAllCells(vscodeNotebook.activeNotebookEditor.document);
 }
 export function createNotebookDocument(
@@ -637,7 +714,7 @@ export function createNotebookDocument(
 export async function hijackPrompt(
     promptType: 'showErrorMessage',
     message: { exactMatch: string } | { endsWith: string },
-    buttonToClick?: { text?: string; clickImmediately?: boolean },
+    buttonToClick?: { text?: string; clickImmediately?: boolean; dismissPrompt?: boolean },
     disposables: IDisposable[] = []
 ): Promise<{
     dispose: Function;
@@ -664,7 +741,7 @@ export async function hijackPrompt(
             displayCount += 1;
             displayed.resolve(true);
             if (buttonToClick) {
-                return clickButton.promise;
+                return buttonToClick.dismissPrompt ? undefined : clickButton.promise;
             }
         }
         // eslint-disable-next-line @typescript-eslint/no-explicit-any

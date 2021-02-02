@@ -134,9 +134,6 @@ export class InsidersNativeNotebooksSurveyBanner implements IExtensionSingleActi
     }
 
     private async isInsidersNativeNotebooksUser() {
-        if (this.applicationEnvironment.channel !== 'insiders') {
-            return false;
-        }
         return this.experimentService.inExperiment(Experiments.NativeNotebook);
     }
 

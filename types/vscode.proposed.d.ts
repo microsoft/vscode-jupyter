@@ -882,7 +882,7 @@ declare module 'vscode' {
          * @param key The key to store the password under.
          * @param value The password.
          */
-        set(key: string, value: string): Thenable<void>;
+        store(key: string, value: string): Thenable<void>;
 
         /**
          * Remove a secret from storage.

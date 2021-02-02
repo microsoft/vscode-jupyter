@@ -19,6 +19,7 @@ import {
 import { noop } from '../../../common/utils/misc';
 import {
     IDataScienceErrorHandler,
+    IJupyterServerUriStorage,
     INotebookEditorProvider,
     INotebookProvider,
     IRawNotebookSupportedService
@@ -43,7 +44,8 @@ export class KernelProvider implements IKernelProvider {
         @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
         @inject(IRawNotebookSupportedService) private readonly rawNotebookSupported: IRawNotebookSupportedService,
         @inject(IFileSystem) private readonly fs: IFileSystem,
-        @inject(IExtensionContext) private readonly context: IExtensionContext
+        @inject(IExtensionContext) private readonly context: IExtensionContext,
+        @inject(IJupyterServerUriStorage) private readonly serverStorage: IJupyterServerUriStorage
     ) {
         this.asyncDisposables.push(this);
     }
@@ -94,7 +96,8 @@ export class KernelProvider implements IKernelProvider {
             this.vscNotebook,
             this.rawNotebookSupported,
             this.fs,
-            this.context
+            this.context,
+            this.serverStorage
         );
         this.asyncDisposables.push(kernel);
         this.kernelsByUri.set(uri.toString(), { options, kernel });

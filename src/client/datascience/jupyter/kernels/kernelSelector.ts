@@ -294,6 +294,14 @@ export class KernelSelector implements IKernelSelectionUsage {
                 if (spec.display_name && spec.display_name === notebookMetadata?.kernelspec?.display_name) {
                     score += 16;
                 }
+
+                // Find a kernel spec that matches the language in the notebook metadata.
+                const nbMetadataLanguage = isPythonNotebook(notebookMetadata)
+                    ? PYTHON_LANGUAGE
+                    : (notebookMetadata?.kernelspec?.language as string) || notebookMetadata?.language_info?.name;
+                if (score === 0 && spec.language?.toLowerCase() === (nbMetadataLanguage || '').toLowerCase()) {
+                    score = 1;
+                }
             }
 
             if (score > bestScore) {

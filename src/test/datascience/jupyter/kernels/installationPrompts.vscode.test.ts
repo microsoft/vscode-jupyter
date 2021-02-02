@@ -15,15 +15,19 @@ import { Common, DataScience } from '../../../../client/common/utils/localize';
 import { INotebookEditorProvider } from '../../../../client/datascience/types';
 import { IS_CI_SERVER } from '../../../ciConstants';
 import { getOSType, IExtensionTestApi, OSType, waitForCondition } from '../../../common';
-import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST } from '../../../constants';
+import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_NON_RAW_NATIVE_TEST, IS_REMOTE_NATIVE_TEST } from '../../../constants';
 import { closeActiveWindows, initialize } from '../../../initialize';
 import { openNotebook } from '../../helpers';
 import {
+    canRunNotebookTests,
     closeNotebooksAndCleanUpAfterTests,
     createTemporaryNotebook,
+    runAllCellsInActiveNotebook,
     hijackPrompt,
+    waitForCellExecutionToComplete,
     waitForExecutionCompletedSuccessfully,
-    waitForKernelToChange
+    waitForKernelToChange,
+    waitForKernelToGetAutoSelected
 } from '../../notebook/helper';
 
 /* eslint-disable no-invalid-this, , , @typescript-eslint/no-explicit-any */
@@ -95,8 +99,8 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         );
     });
 
-    ['.venvnokernel', '.venvnoreg'].forEach((kName) =>
-        test('Ensure prompt is displayed when ipykernel module is not found and it gets installed', async function () {
+    ['.venvnokernel', '.venvnoreg'].forEach((kName) => {
+        test(`Ensure prompt is displayed when ipykernel module is not found and it gets installed (${kName})`, async function () {
             // Confirm message is displayed & we click 'Install` button.
             const prompt = await hijackPrompt(
                 'showErrorMessage',
@@ -125,7 +129,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
                 await openNotebook(api.serviceContainer, nbFile);
                 // If this is a native notebook, then wait for kernel to get selected.
                 if (editorProvider.activeEditor?.type === 'native') {
-                    await waitForKernelToChange(kName);
+                    await waitForKernelToChange({ labelOrId: kName });
                 }
 
                 // Run all cells
@@ -155,6 +159,55 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
                 prompt.dispose();
                 showInformationMessage.restore();
             }
-        })
-    );
+        });
+    });
+    test('Ensure ipykernel install prompt is displayed every time you try to run a cell (VSCode Notebook)', async function () {
+        if (!(await canRunNotebookTests()) || IS_REMOTE_NATIVE_TEST || IS_NON_RAW_NATIVE_TEST) {
+            return this.skip();
+        }
+
+        // Confirm message is displayed & then dismiss the message (so that execution stops due to missing dependency).
+        const prompt = await hijackPrompt(
+            'showErrorMessage',
+            { endsWith: expectedPromptMessageSuffix },
+            { dismissPrompt: true },
+            disposables
+        );
+
+        await openNotebook(api.serviceContainer, nbFile);
+        await waitForKernelToGetAutoSelected();
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
+        assert.equal(cell.outputs.length, 0);
+
+        // The prompt should be displayed when we run a cell.
+        await runAllCellsInActiveNotebook();
+        await waitForCondition(async () => prompt.displayed.then(() => true), delayForUITest, 'Prompt not displayed');
+
+        // Once ipykernel prompt has been dismissed, execution should stop due to missing dependencies.
+        await waitForCellExecutionToComplete(cell);
+
+        // Execute notebook once again & we should get another prompted to install ipykernel.
+        let previousPromptDisplayCount = prompt.getDisplayCount();
+        await runAllCellsInActiveNotebook();
+        await waitForCondition(
+            async () => prompt.getDisplayCount() > previousPromptDisplayCount,
+            delayForUITest,
+            'Prompt not displayed second time'
+        );
+
+        // Once ipykernel prompt has been dismissed, execution should stop due to missing dependencies.
+        await waitForCellExecutionToComplete(cell);
+
+        // Execute a cell this time & we should get yet another prompted to install ipykernel.
+        previousPromptDisplayCount = prompt.getDisplayCount();
+        await runAllCellsInActiveNotebook();
+        await waitForCondition(
+            async () => prompt.getDisplayCount() > previousPromptDisplayCount,
+            delayForUITest,
+            'Prompt not displayed second time'
+        );
+
+        // Once ipykernel prompt has been dismissed, execution should stop due to missing dependencies.
+        await waitForCellExecutionToComplete(cell);
+    });
 });
