@@ -863,7 +863,7 @@ export interface IJupyterExtraSettings extends IJupyterSettings {
     };
 }
 
-// Get variables from the currently running active Jupyter server
+// Get variables from the currently running active Jupyter server or debugger
 // Note: This definition is used implicitly by getJupyterVariableValue.py file
 // Changes here may need to be reflected there as well
 export interface IJupyterVariable {
@@ -881,6 +881,7 @@ export interface IJupyterVariable {
     columns?: { key: string; type: string }[];
     rowCount?: number;
     indexColumn?: string;
+    maximumRowChunkSize?: number;
 }
 
 export const IJupyterVariableDataProvider = Symbol('IJupyterVariableDataProvider');
