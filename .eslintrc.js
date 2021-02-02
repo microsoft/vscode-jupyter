@@ -672,7 +672,6 @@ module.exports = {
         'src/client/testing/display/picker.ts',
         'src/client/testing/configuration.ts',
         'src/client/common/configuration/service.ts',
-        'src/client/common/serviceRegistry.ts',
         'src/client/common/net/browser.ts',
         'src/client/common/net/fileDownloader.ts',
         'src/client/common/net/httpClient.ts',
