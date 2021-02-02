@@ -36,6 +36,7 @@ import 'slickgrid/slick.grid.css';
 // Make sure our css comes after the slick grid css. We override some of its styles.
 // eslint-disable-next-line import/order
 import './reactSlickGrid.css';
+import { generateDisplayValue } from './cellFormatter';
 /*
 WARNING: Do not change the order of these imports.
 Slick grid MUST be imported after we load jQuery and other stuff from `./globalJQueryImports`
@@ -54,6 +55,7 @@ export interface ISlickGridProps {
     idProperty: string;
     columns: Slick.Column<ISlickRow>[];
     rowsAdded: Slick.Event<ISlickGridAdd>;
+    columnsUpdated: Slick.Event<Slick.Column<Slick.SlickData>[]>;
     filterRowsText: string;
     filterRowsTooltip: string;
     forceHeight?: number;
@@ -67,11 +69,14 @@ interface ISlickGridState {
 
 class ColumnFilter {
     private matchFunc: (v: any) => boolean;
-    private lessThanRegEx = /^\s*<\s*(\d+.*)/;
-    private lessThanEqualRegEx = /^\s*<=\s*(\d+.*).*/;
-    private greaterThanRegEx = /^\s*>\s*(\d+.*).*/;
-    private greaterThanEqualRegEx = /^\s*>=\s*(\d+.*).*/;
-    private equalThanRegEx = /^\s*=\s*(\d+.*).*/;
+    private nanRegEx = /^\s*nan.*/i;
+    private infRegEx = /^\s*inf.*/i;
+    private negInfRegEx = /^\s*-inf.*/i;
+    private lessThanRegEx = /^\s*<\s*((?<Number>\d+.*)|(?<NaN>nan)|(?<Inf>inf)|(?<NegInf>-inf))/i;
+    private lessThanEqualRegEx = /^\s*<=\s*((?<Number>\d+.*)|(?<NaN>nan)|(?<Inf>inf)|(?<NegInf>-inf)).*/i;
+    private greaterThanRegEx = /^\s*>\s*((?<Number>\d+.*)|(?<NaN>nan)|(?<Inf>inf)|(?<NegInf>-inf)).*/i;
+    private greaterThanEqualRegEx = /^\s*>=\s*((?<Number>\d+.*)|(?<NaN>nan)|(?<Inf>inf)|(?<NegInf>-inf)).*/i;
+    private equalThanRegEx = /^\s*=\s*((?<Number>\d+.*)|(?<NaN>nan)|(?<Inf>inf)|(?<NegInf>-inf)).*/i;
 
     constructor(text: string, column: Slick.Column<Slick.SlickData>) {
         if (text && text.length > 0) {
@@ -97,28 +102,42 @@ class ColumnFilter {
 
     private extractDigits(text: string, regex: RegExp): number {
         const match = regex.exec(text);
-        if (match && match.length > 1) {
-            return parseFloat(match[1]);
+        if (match && match.groups) {
+            if (match.groups.Number) {
+                return parseFloat(match.groups.Number);
+            } else if (match.groups.Inf) {
+                return Infinity;
+            } else if (match.groups.NegInf) {
+                return -Infinity;
+            } else if (match.groups.NaN) {
+                return NaN;
+            }
         }
         return 0;
     }
 
     private generateNumericOperation(text: string): (v: any) => boolean {
-        if (this.lessThanRegEx.test(text)) {
+        if (this.nanRegEx.test(text)) {
+            return (v: any) => v !== undefined && Number.isNaN(v);
+        } else if (this.infRegEx.test(text)) {
+            return (v: any) => v !== undefined && v === Infinity;
+        } else if (this.negInfRegEx.test(text)) {
+            return (v: any) => v !== undefined && v === -Infinity;
+        } else if (this.lessThanRegEx.test(text)) {
             const n1 = this.extractDigits(text, this.lessThanRegEx);
             return (v: any) => v !== undefined && v < n1;
         } else if (this.lessThanEqualRegEx.test(text)) {
             const n2 = this.extractDigits(text, this.lessThanEqualRegEx);
-            return (v: any) => v !== undefined && v <= n2;
+            return (v: any) => v !== undefined && (v <= n2 || (Number.isNaN(v) && Number.isNaN(n2)));
         } else if (this.greaterThanRegEx.test(text)) {
             const n3 = this.extractDigits(text, this.greaterThanRegEx);
             return (v: any) => v !== undefined && v > n3;
         } else if (this.greaterThanEqualRegEx.test(text)) {
             const n4 = this.extractDigits(text, this.greaterThanEqualRegEx);
-            return (v: any) => v !== undefined && v >= n4;
+            return (v: any) => v !== undefined && (v >= n4 || (Number.isNaN(v) && Number.isNaN(n4)));
         } else if (this.equalThanRegEx.test(text)) {
             const n5 = this.extractDigits(text, this.equalThanRegEx);
-            return (v: any) => v !== undefined && v === n5;
+            return (v: any) => v !== undefined && (v === n5 || (Number.isNaN(v) && Number.isNaN(n5)));
         } else {
             const n6 = parseFloat(text);
             return (v: any) => v !== undefined && v === n6;
@@ -140,6 +159,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         this.containerRef = React.createRef<HTMLDivElement>();
         this.measureRef = React.createRef<HTMLDivElement>();
         this.props.rowsAdded.subscribe(this.addedRows);
+        this.props.columnsUpdated.subscribe(this.updateColumns);
     }
 
     // eslint-disable-next-line
@@ -458,6 +478,11 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         return null;
     }
 
+    private updateColumns = (_e: Slick.EventData, newColumns: Slick.Column<Slick.SlickData>[]) => {
+        this.state.grid?.setColumns(newColumns);
+        this.state.grid?.render(); // We might be able to skip this rerender?
+    };
+
     private addedRows = (_e: Slick.EventData, data: ISlickGridAdd) => {
         // Add all of these new rows into our data.
         this.dataView.beginUpdate();
@@ -561,9 +586,7 @@ function readonlyCellEditor(this: any, args: any) {
     };
 
     this.loadValue = function loadValue(item: any) {
-        // In the original SlickGrid TextEditor this is || instead of ??
-        // which causes problems when the value in the item is the number 0
-        defaultValue = item[args.column.field] ?? '';
+        defaultValue = generateDisplayValue(item[args.column.field]);
         $input.val(defaultValue);
         $input[0].defaultValue = defaultValue;
         $input.select();

@@ -454,7 +454,6 @@ module.exports = {
         'src/datascience-ui/data-explorer/progressBar.tsx',
         'src/datascience-ui/data-explorer/testData.ts',
         'src/datascience-ui/data-explorer/reactSlickGridFilterBox.tsx',
-        'src/datascience-ui/data-explorer/mainPanel.tsx',
         'src/client/interpreter/interpreterService.ts',
         'src/client/interpreter/configuration/interpreterComparer.ts',
         'src/client/interpreter/configuration/interpreterSelector/commands/base.ts',
