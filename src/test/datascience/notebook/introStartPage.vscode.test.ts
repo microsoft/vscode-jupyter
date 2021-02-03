@@ -3,6 +3,7 @@
 
 import { assert } from 'chai';
 import * as sinon from 'sinon';
+import * as path from 'path';
 import { instance, mock, when } from 'ts-mockito';
 import { Memento } from 'vscode';
 import { IApplicationEnvironment, ICommandManager } from '../../../client/common/application/types';
@@ -38,6 +39,7 @@ suite('DataScience - VSCode Notebook - Native Notebook Experiment', function () 
     let previousExecutionCount: number | undefined;
     let previousValueForStartPageDisplayed: boolean | undefined;
     const suiteDisposables: IDisposable[] = [];
+    let nbPath: string;
     suiteSetup(async function () {
         traceInfo(`Start Suite Test`);
         api = await initialize();
@@ -52,6 +54,7 @@ suite('DataScience - VSCode Notebook - Native Notebook Experiment', function () 
         commandManager = api.serviceContainer.get<ICommandManager>(ICommandManager);
         previousExecutionCount = memento.get<number | undefined>(InsidersNotebookSurveyStateKeys.OpenNotebookCount);
         previousValueForStartPageDisplayed = memento.get<boolean | undefined>(IntroduceNativeNotebookDisplayed);
+        nbPath = path.join(context.extensionPath, 'resources/startNativeNotebooks.ipynb').toLowerCase();
         traceInfo(`Start Suite Test Complete`);
     });
     setup(async function () {
@@ -87,7 +90,7 @@ suite('DataScience - VSCode Notebook - Native Notebook Experiment', function () 
 
         await startPage.activate();
 
-        // Wait for 5 seconds, and confirm that nothing was displayed.
+        // Wait for 1 second, and confirm that nothing was displayed.
         await sleep(1_000);
 
         assert.isUndefined(notebookEditorProvider.activeEditor);
@@ -107,7 +110,7 @@ suite('DataScience - VSCode Notebook - Native Notebook Experiment', function () 
 
         await startPage.activate();
 
-        // Wait for 5 seconds, and confirm that nothing was displayed.
+        // Wait for 1 second, and confirm that nothing was displayed.
         await sleep(1_000);
 
         assert.isUndefined(notebookEditorProvider.activeEditor);
@@ -136,6 +139,7 @@ suite('DataScience - VSCode Notebook - Native Notebook Experiment', function () 
         );
         assert.isOk(notebookEditorProvider.activeEditor);
         assert.equal(notebookEditorProvider.editors.length, 1);
+        assert.equal(notebookEditorProvider.activeEditor?.file.fsPath.toLocaleLowerCase(), nbPath);
     });
     test('Do not display start page for Stable VS Code in experiment if execution count is 0', async () => {
         when(appEnv.channel).thenReturn('stable');
@@ -151,7 +155,7 @@ suite('DataScience - VSCode Notebook - Native Notebook Experiment', function () 
 
         await startPage.activate();
 
-        // Wait for 5 seconds, and confirm that nothing was displayed.
+        // Wait for 1 second, and confirm that nothing was displayed.
         await sleep(1_000);
 
         assert.isUndefined(notebookEditorProvider.activeEditor);
@@ -180,6 +184,7 @@ suite('DataScience - VSCode Notebook - Native Notebook Experiment', function () 
         );
         assert.isOk(notebookEditorProvider.activeEditor);
         assert.equal(notebookEditorProvider.editors.length, 1);
+        assert.equal(notebookEditorProvider.activeEditor?.file.fsPath.toLocaleLowerCase(), nbPath);
 
         await closeNotebooksAndCleanUpAfterTests();
 
@@ -190,7 +195,7 @@ suite('DataScience - VSCode Notebook - Native Notebook Experiment', function () 
         await startPage.activate();
         await startPage.activate();
 
-        // Wait for 5 seconds, and confirm that nothing was displayed.
+        // Wait for 1 second, and confirm that nothing was displayed.
         await sleep(1_000);
 
         assert.isUndefined(notebookEditorProvider.activeEditor);
