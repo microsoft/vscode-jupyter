@@ -344,7 +344,7 @@ export class DebuggerVariables extends DebugLocationTracker
 
 export function convertDebugProtocolVariableToIJupyterVariable(variable: DebugProtocol.Variable) {
     return {
-        name: variable.name,
+        name: variable.evaluateName ?? variable.name,
         type: variable.type!,
         count: 0,
         shape: '',
