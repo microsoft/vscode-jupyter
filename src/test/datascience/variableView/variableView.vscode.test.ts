@@ -24,6 +24,7 @@ import { InteractiveWindowMessages } from '../../../client/datascience/interacti
 import { verifyViewVariables } from './variableViewHelpers';
 import { ITestVariableViewProvider } from './variableViewTestInterfaces';
 import { ITestWebviewHost } from '../testInterfaces';
+import { sleep } from '../../core';
 
 suite('DataScience - VariableView', () => {
     let api: IExtensionTestApi;
@@ -70,6 +71,7 @@ suite('DataScience - VariableView', () => {
 
     // Test showing the basic variable view with a value or two
     test('Can show VariableView (webview-test)', async function () {
+        return this.skip();
         // Add one simple cell and execute it
         await insertCodeCell('test = "MYTESTVALUE"', { index: 0 });
         const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
@@ -104,4 +106,137 @@ suite('DataScience - VariableView', () => {
         ];
         verifyViewVariables(expectedVariables, htmlResult);
     });
+
+    test('Variable view document switching (webview-test)', async function () {
+        this.timeout(60_000);
+        // Add one simple cell and execute it
+        await insertCodeCell('test = "MYTESTVALUE"', { index: 0 });
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
+        await runCell(cell);
+        await waitForExecutionCompletedSuccessfully(cell);
+
+        // Send the command to open the view
+        await commandManager.executeCommand(Commands.OpenVariableView);
+
+        // Aquire the variable view from the provider
+        const coreVariableView = await variableViewProvider.activeVariableView;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const variableView = (coreVariableView as any) as ITestWebviewHost;
+
+        // Add our message listener
+        const onMessageListener = new OnMessageListener(variableView);
+
+        // Wait until our VariablesComplete message to see that we have the new variables and have rendered them
+        await onMessageListener.waitForMessage(InteractiveWindowMessages.VariablesComplete);
+
+        const htmlResult = await variableView?.getHTMLById('variable-view-main-panel');
+
+        // Parse the HTML for our expected variables
+        const expectedVariables = [{ name: 'test', type: 'str', length: '11', value: ' MYTESTVALUE' }];
+        verifyViewVariables(expectedVariables, htmlResult);
+
+        // Now create a second document
+        await createEmptyPythonNotebook(disposables);
+
+        // Execute a cell on the second document
+        await insertCodeCell('test2 = "MYTESTVALUE2"', { index: 0 });
+        const cell2 = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
+        await runCell(cell2);
+        await waitForExecutionCompletedSuccessfully(cell2);
+
+        // Because this document was not open, we need to open the variable view again
+        await commandManager.executeCommand(Commands.OpenVariableView);
+
+        // Aquire the variable view from the provider
+        const coreVariableView2 = await variableViewProvider.activeVariableView;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const variableView2 = (coreVariableView2 as any) as ITestWebviewHost;
+
+        // Add our message listener
+        const onMessageListener2 = new OnMessageListener(variableView2);
+
+        // Execute a second cell on the second document
+        await insertCodeCell('test3 = "MYTESTVALUE3"', { index: 1 });
+        const cell3 = vscodeNotebook.activeNotebookEditor?.document.cells![1]!;
+        await runCell(cell3);
+        await waitForExecutionCompletedSuccessfully(cell3);
+
+        // Wait until our VariablesComplete message to see that we have the new variables and have rendered them
+        await onMessageListener2.waitForMessage(InteractiveWindowMessages.VariablesComplete);
+
+        const htmlResult2 = await variableView2?.getHTMLById('variable-view-main-panel');
+
+        // Parse the HTML for our expected variables
+        const expectedVariables2 = [
+            { name: 'test2', type: 'str', length: '12', value: ' MYTESTVALUE2' },
+            { name: 'test3', type: 'str', length: '12', value: ' MYTESTVALUE3' }
+        ];
+        verifyViewVariables(expectedVariables2, htmlResult2);
+        // Change back to the first document
+    });
+
+    // Variable change between two documents
+    test('Variable view document switching (webview-test)', async function () {
+        return this.skip();
+        this.timeout(60_000);
+        // Add one simple cell and execute it
+        await insertCodeCell('test = "MYTESTVALUE"', { index: 0 });
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
+        await runCell(cell);
+        await waitForExecutionCompletedSuccessfully(cell);
+
+        // Send the command to open the view
+        await commandManager.executeCommand(Commands.OpenVariableView);
+
+        // Aquire the variable view from the provider
+        const coreVariableView = await variableViewProvider.activeVariableView;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const variableView = (coreVariableView as any) as ITestWebviewHost;
+
+        // Add our message listener
+        const onMessageListener = new OnMessageListener(variableView);
+
+        // Wait until our VariablesComplete message to see that we have the new variables and have rendered them
+        await onMessageListener.waitForMessage(InteractiveWindowMessages.VariablesComplete);
+
+        const htmlResult = await variableView?.getHTMLById('variable-view-main-panel');
+
+        // Parse the HTML for our expected variables
+        const expectedVariables = [{ name: 'test', type: 'str', length: '11', value: ' MYTESTVALUE' }];
+        verifyViewVariables(expectedVariables, htmlResult);
+
+        // Now create a second document
+        await createEmptyPythonNotebook(disposables);
+
+        // Execute a cell on the second document
+        await insertCodeCell('test2 = "MYTESTVALUE2"', { index: 0 });
+        const cell2 = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
+        await runCell(cell2);
+        await waitForExecutionCompletedSuccessfully(cell2);
+
+        // Send the command to open the view
+        await commandManager.executeCommand(Commands.OpenVariableView);
+
+        const coreVariableView2 = await variableViewProvider.activeVariableView;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const variableView2 = (coreVariableView2 as any) as ITestWebviewHost;
+
+        // We have to create a second message listener?
+        const onMessageListener2 = new OnMessageListener(variableView2);
+
+        // Wait until our VariablesComplete message to see that we have the new variables and have rendered them
+        await onMessageListener2.waitForMessage(InteractiveWindowMessages.VariablesComplete);
+
+        const htmlResult2 = await variableView2?.getHTMLById('variable-view-main-panel');
+
+        // Parse the HTML for our expected variables
+        const expectedVariables2 = [{ name: 'test2', type: 'str', length: '12', value: ' MYTESTVALUE2' }];
+        verifyViewVariables(expectedVariables2, htmlResult2);
+
+        //await sleep(5_000);
+        // Change back to the first document
+    });
+
+    // Long list of variables loads
+    // Open data viewer?
 });
