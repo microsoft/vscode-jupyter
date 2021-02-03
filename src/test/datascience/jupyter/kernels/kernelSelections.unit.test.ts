@@ -144,6 +144,7 @@ suite('DataScience - KernelSelections', () => {
         pathUtils = mock(PathUtils);
         when(pathUtils.getDisplayName(anything())).thenReturn('<user friendly path>');
         when(pathUtils.getDisplayName(anything(), anything())).thenReturn('<user friendly path>');
+        when(kernelService.findMatchingInterpreter(anything(), anything())).thenResolve(undefined);
         const extensionChecker = mock(PythonExtensionChecker);
         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
         const interpreterService = mock<IInterpreterService>();
@@ -299,11 +300,7 @@ suite('DataScience - KernelSelections', () => {
         const expectedList = [...expectedKernelItems, ...expectedInterpreterItems];
         expectedList.sort((a, b) => (a.label === b.label ? 0 : a.label > b.label ? 1 : -1));
 
-        const items = await kernelSelectionProvider.getKernelSelectionsForLocalSession(
-            undefined,
-            'raw',
-            instance(sessionManager)
-        );
+        const items = await kernelSelectionProvider.getKernelSelectionsForLocalSession(undefined);
 
         // Ensure interpreter property is set when comparing.
         items.map((item) => {
@@ -315,6 +312,7 @@ suite('DataScience - KernelSelections', () => {
     test('Should return a list of Local Kernels + Interpreters for local jupyter connection', async () => {
         when(sessionManager.getKernelSpecs()).thenResolve(allSpecs);
         when(kernelService.getKernelSpecs(anything(), anything())).thenResolve(allSpecs);
+        when(kernelFinder.listKernelSpecs(anything())).thenResolve(allSpecs);
         when(interpreterSelector.getSuggestions(undefined)).thenResolve(allInterpreters);
 
         // Quick pick must contain
@@ -350,13 +348,8 @@ suite('DataScience - KernelSelections', () => {
         const expectedList = [...expectedKernelItems, ...expectedInterpreterItems];
         expectedList.sort((a, b) => (a.label === b.label ? 0 : a.label > b.label ? 1 : -1));
 
-        const items = await kernelSelectionProvider.getKernelSelectionsForLocalSession(
-            undefined,
-            'jupyter',
-            instance(sessionManager)
-        );
+        const items = await kernelSelectionProvider.getKernelSelectionsForLocalSession(undefined);
 
-        verify(kernelService.getKernelSpecs(anything(), anything())).once();
         assert.deepEqual(items, expectedList);
     });
 });

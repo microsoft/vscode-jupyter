@@ -482,7 +482,7 @@ suite('Kernel Finder', () => {
                     }
                     return Promise.resolve(JSON.stringify(kernel));
                 });
-            const spec = await kernelFinder.findKernelSpec(activeInterpreter, {
+            const spec = await kernelFinder.findKernelSpec(undefined, {
                 kernelspec: testKernelMetadata,
                 orig_nbformat: 4
             });
@@ -506,7 +506,7 @@ suite('Kernel Finder', () => {
             interpreterService
                 .setup((is) => is.getActiveInterpreter(typemoq.It.isAny()))
                 .returns(() => Promise.resolve(undefined));
-            const spec = await kernelFinder.findKernelSpec(activeInterpreter, {
+            const spec = await kernelFinder.findKernelSpec(undefined, {
                 kernelspec: testKernelMetadata,
                 orig_nbformat: 4
             });

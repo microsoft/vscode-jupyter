@@ -199,7 +199,6 @@ export class HostRawNotebookProvider
                 (await this.kernelSelector.getPreferredKernelForLocalConnection(
                     resource,
                     'raw',
-                    undefined,
                     notebookMetadata,
                     disableUI,
                     cancelToken
