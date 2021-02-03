@@ -324,7 +324,6 @@ module.exports = {
         'src/test/datascience/jupyter/serverCache.unit.test.ts',
         'src/test/datascience/mockWorkspaceConfig.ts',
         'src/test/datascience/mountedWebView.ts',
-        'src/test/datascience/execution.unit.test.ts',
         'src/test/datascience/mockProcessService.ts',
         'src/test/datascience/testNativeEditorProvider.ts',
         'src/test/datascience/cellFactory.unit.test.ts',
