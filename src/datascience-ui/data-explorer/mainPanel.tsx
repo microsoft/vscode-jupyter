@@ -286,7 +286,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     private handleGetRowChunkResponse(response: IGetRowsResponse) {
         // We have a new fetched row count
-        console.log('Got row chunk response', response);
         const rows = response.rows ? (response.rows as JSONArray) : [];
         const normalized = this.normalizeData(rows);
         const newFetched = this.state.fetchedRowCount + (response.end - response.start);
@@ -380,7 +379,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 .forEach((column) => {
                     (column as any).type = ColumnType.Number;
                 });
-            console.log('New columns', columns);
             this.updateColumns(columns);
         }
         return normalizedRows;

@@ -85,6 +85,7 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
         if (variable) {
             if (sliceExpression) {
                 variable = await this.variableManager.getDataFrameInfo(variable, this.notebook, sliceExpression);
+                this.variable = variable;
             }
             dataFrameInfo = {
                 columns: variable.columns
@@ -109,7 +110,7 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
             const dataFrameRows = await this.variableManager.getDataFrameRows(
                 this.variable,
                 0,
-                this.variable.rowCount, // This needs to be updated
+                this.variable.rowCount,
                 this.notebook,
                 sliceExpression
             );
