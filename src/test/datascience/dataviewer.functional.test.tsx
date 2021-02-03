@@ -446,7 +446,7 @@ suite('DataScience DataViewer tests', () => {
     });
 
     runMountedTest('Ragged 1D numpy array', async (wrapper) => {
-        await injectCode("import numpy as np\r\nfoo = np.array(['hello', 42, ['hi', 'hey']])")
+        await injectCode("import numpy as np\r\nfoo = np.array(['hello', 42, ['hi', 'hey']])");
         const gotAllRows = getCompletedPromise(wrapper);
         const dv = await createJupyterVariableDataViewer('foo', 'ndarray');
         assert.ok(dv, 'DataViewer not created');
