@@ -3,7 +3,7 @@
 
 import * as path from 'path';
 import * as fs from 'fs-extra';
-import { inject, named } from 'inversify';
+import { inject, injectable, named } from 'inversify';
 import { Memento, Uri } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IApplicationEnvironment, ICommandManager } from '../../common/application/types';
@@ -16,11 +16,12 @@ import { ITrustService } from '../types';
 import { swallowExceptions } from '../../common/utils/decorators';
 import { InsidersNotebookSurveyStateKeys } from '../insidersNativeNotebookSurveyBanner';
 
-const IntroduceNativeNotebookDisplayed = 'JVSC_INTRO_NATIVE_NB_DISPLAYED';
+export const IntroduceNativeNotebookDisplayed = 'JVSC_INTRO_NATIVE_NB_DISPLAYED';
 
 /**
  * Display a notebook introducing Native Notebooks to those users in the stable Notebook experiment & have previously run a notebook.
  */
+@injectable()
 export class IntroduceNativeNotebookStartPage implements IExtensionSingleActivationService {
     private readonly introNotebook: Uri;
     constructor(
