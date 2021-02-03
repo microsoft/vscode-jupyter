@@ -958,10 +958,6 @@ export namespace DataScience {
         'DataScience.insecureSessionDenied',
         'Denied connection to insecure server.'
     );
-    export const previewNotebookOnlySupportedInVSCInsiders = localize(
-        'DataScience.previewNotebookOnlySupportedInVSCInsiders',
-        'The Preview Notebook Editor is supported only in the Insiders version of Visual Studio Code.'
-    );
     export const connected = localize('DataScience.connected', 'Connected');
     export const disconnected = localize('DataScience.disconnected', 'Disconnected');
     export const ipykernelNotInstalled = localize(
