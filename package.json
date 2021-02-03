@@ -766,17 +766,17 @@
                 {
                     "command": "jupyter.runfromline",
                     "group": "Jupyter2",
-                    "when": "editorFocus && editorLangId == python && jupyter.ownsSelection && !notebookEditorFocused"
+                    "when": "editorFocus && editorLangId == python && !notebookEditorFocused"
                 },
                 {
                     "command": "jupyter.runtoline",
                     "group": "Jupyter2",
-                    "when": "editorFocus && editorLangId == python && jupyter.ownsSelection && !notebookEditorFocused"
+                    "when": "editorFocus && editorLangId == python && !notebookEditorFocused"
                 },
                 {
                     "command": "jupyter.execSelectionInteractive",
                     "group": "Jupyter2",
-                    "when": "editorFocus && editorLangId == python && jupyter.ownsSelection && !notebookEditorFocused"
+                    "when": "editorFocus && editorLangId == python && !notebookEditorFocused"
                 },
                 {
                     "when": "editorFocus && editorLangId == python && resourceLangId == jupyter && !notebookEditorFocused",
