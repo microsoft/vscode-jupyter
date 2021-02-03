@@ -28,6 +28,8 @@ import { IFileSystem } from '../../client/common/platform/types';
 import { KernelEnvironmentVariablesService } from '../../client/datascience/kernel-launcher/kernelEnvVarsService';
 use(chaiAsPromised);
 
+const test_Timeout = 30_000;
+
 suite('DataScience - Kernel Launcher', () => {
     let ioc: DataScienceIocContainer;
     let kernelLauncher: KernelLauncher;
@@ -111,7 +113,7 @@ suite('DataScience - Kernel Launcher', () => {
             await kernel.dispose();
             await deferred.promise;
         }
-    }).timeout(10_000);
+    }).timeout(test_Timeout);
 
     test('Launch with environment', async function () {
         if (!process.env.VSC_FORCE_REAL_JUPYTER || !pythonInterpreter) {
@@ -153,7 +155,7 @@ suite('DataScience - Kernel Launcher', () => {
             // If this happens, then we know a process existed.
             await kernel.dispose();
         }
-    }).timeout(10_000);
+    }).timeout(test_Timeout);
 
     test('Bind with ZMQ', async function () {
         if (!process.env.VSC_FORCE_REAL_JUPYTER) {
