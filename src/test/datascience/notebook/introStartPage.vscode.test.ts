@@ -20,11 +20,6 @@ import { initialize } from '../../initialize';
 import { canRunNotebookTests, closeNotebooksAndCleanUpAfterTests } from './helper';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this,  */
-/*
- * This test focuses on interrupting, restarting kernels.
- * We will not use actual kernels, just ensure the appropriate methods are invoked on the appropriate classes.
- * This is done by stubbing out some methods.
- */
 suite('DataScience - VSCode Notebook - Native Notebook Experiment', function () {
     this.timeout(60_000);
 
