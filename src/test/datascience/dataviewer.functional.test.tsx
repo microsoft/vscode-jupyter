@@ -445,6 +445,15 @@ suite('DataScience DataViewer tests', () => {
         ]);
     });
 
+    runMountedTest('Ragged 1D numpy array', async (wrapper) => {
+        await injectCode("import numpy as np\r\nfoo = np.array(['hello', 42, ['hi', 'hey']])");
+        const gotAllRows = getCompletedPromise(wrapper);
+        const dv = await createJupyterVariableDataViewer('foo', 'ndarray');
+        assert.ok(dv, 'DataViewer not created');
+        await gotAllRows;
+        verifyRows(wrapper.wrapper, [0, 'hello', '', 1, 42, '', 2, 'hi', 'hey']);
+    });
+
     runMountedTest('Ragged 2D numpy array', async (wrapper) => {
         await injectCode("import numpy as np\r\nfoo = np.array([[1, 2, 3, float('inf')], [4, np.nan, 5]])");
         const gotAllRows = getCompletedPromise(wrapper);
@@ -461,6 +470,6 @@ suite('DataScience DataViewer tests', () => {
         const dv = await createJupyterVariableDataViewer('foo', 'ndarray');
         assert.ok(dv, 'DataViewer not created');
         await gotAllRows;
-        verifyRows(wrapper.wrapper, [0, `[1, 2, 3]`, `[4, 5]`, 1, `[6, 7, 8, 9]`, '']);
+        verifyRows(wrapper.wrapper, [0, `[1, 2, 3]`, `[4, 5]`, 1, `[[6, 7, 8, 9]]`, '']);
     });
 });
