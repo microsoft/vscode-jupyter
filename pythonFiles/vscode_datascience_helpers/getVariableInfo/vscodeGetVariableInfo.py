@@ -13,7 +13,7 @@ def _VSCODE_getVariableInfo(var):
     vartype = type(var)
     typeName = None
     if hasattr(vartype, "__name__"):
-        result["type"] = vartype.__name__
+        result["type"] = typeName = vartype.__name__
 
     # Find shape and count if available
     if hasattr(var, "shape"):
@@ -46,3 +46,8 @@ def _VSCODE_getVariableInfo(var):
 
     # return our json object as a string
     return _VSCODE_json.dumps(result)
+
+
+import tensorflow as tf
+d = tf.constant([[1.0, 2.0], [3.0, 4.0]])
+print(_VSCODE_getVariableInfo(d))
