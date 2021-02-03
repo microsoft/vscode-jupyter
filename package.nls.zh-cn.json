@@ -463,7 +463,6 @@
     "DataScience.reloadVSCodeNotebookEditor": "请重新加载 VS Code 来使用笔记本编辑器",
     "DataScience.step": "运行下一行 (F10)",
     "DataScience.usingPreviewNotebookWithOtherNotebookWarning": "不建议在预览笔记本编辑器和稳定笔记本编辑器中打开同一个文件。这样做可能导致数据丢失或笔记本损坏。",
-    "DataScience.previewNotebookOnlySupportedInVSCInsiders": "预览笔记本编辑器仅在 Visual Studio Code 的预览版本中支持。",
     "DataScience.unknownServerUri": "不能使用服务器 URI。您是否卸载了提供 Jupyter 服务器连接的扩展？",
     "DataScienceRendererExtension.installingExtension": "正在安装笔记本渲染器扩展...",
     "DataScienceRendererExtension.installationCompleteMessage": "完成。",
