@@ -29,7 +29,7 @@ const DataViewableTypes: Set<string> = new Set<string>([
     'Tensor',
     'EagerTensor'
 ]);
-const SliceableTypes: Set<string> = new Set<string>(['DataFrame', 'ndarray', 'Tensor', 'EagerTensor']);
+const SliceableTypes: Set<string> = new Set<string>(['ndarray', 'Tensor', 'EagerTensor']);
 const KnownExcludedVariables = new Set<string>(['In', 'Out', 'exit', 'quit']);
 
 @injectable()

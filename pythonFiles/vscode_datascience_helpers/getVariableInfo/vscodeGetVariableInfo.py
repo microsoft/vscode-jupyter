@@ -46,8 +46,3 @@ def _VSCODE_getVariableInfo(var):
 
     # return our json object as a string
     return _VSCODE_json.dumps(result)
-
-
-import tensorflow as tf
-d = tf.constant([[1.0, 2.0], [3.0, 4.0]])
-print(_VSCODE_getVariableInfo(d))

@@ -44,7 +44,7 @@ const DataViewableTypes: Set<string> = new Set<string>([
     'Tensor',
     'EagerTensor'
 ]);
-const SliceableTypes: Set<string> = new Set<string>(['DataFrame', 'ndarray', 'Tensor', 'EagerTensor']);
+const SliceableTypes: Set<string> = new Set<string>(['ndarray', 'Tensor', 'EagerTensor']);
 interface INotebookState {
     currentExecutionCount: number;
     variables: IJupyterVariable[];
