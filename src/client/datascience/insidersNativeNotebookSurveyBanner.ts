@@ -118,7 +118,7 @@ export class InsidersNativeNotebooksSurveyBanner implements IExtensionSingleActi
         }
 
         return (
-            (await this.isInsidersNativeNotebooksUser()) &&
+            this.isInsidersNativeNotebooksUser() &&
             (executionCount >= NotebookExecutionThreshold || notebookOpenCount > NotebookOpenThreshold)
         );
     }
@@ -127,8 +127,8 @@ export class InsidersNativeNotebooksSurveyBanner implements IExtensionSingleActi
         this.browserService.launch('https://aka.ms/vscjupyternb');
     }
 
-    private async isInsidersNativeNotebooksUser() {
-        return this.useVSCodeNotebookEditorApi;
+    private isInsidersNativeNotebooksUser() {
+        return this.useVSCodeNotebookEditorApi && this.applicationEnvironment.channel === 'insiders';
     }
 
     private getOpenNotebookCount(): number {

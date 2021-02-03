@@ -7,7 +7,6 @@ import { NotebookContentProvider as VSCNotebookContentProvider } from '../../../
 import { IExtensionSingleActivationService } from '../../activation/types';
 import {
     IApplicationEnvironment,
-    IApplicationShell,
     ICommandManager,
     IVSCodeNotebook,
     IWorkspaceService
@@ -15,7 +14,6 @@ import {
 import { NotebookCellScheme, PYTHON_LANGUAGE, UseVSCodeNotebookEditorApi } from '../../common/constants';
 import { traceError } from '../../common/logger';
 import { IDisposableRegistry } from '../../common/types';
-import { DataScience } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { JupyterNotebookView } from './constants';
 import { isJupyterNotebook } from './helpers/helpers';
@@ -37,7 +35,6 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
         @inject(INotebookContentProvider) private readonly notebookContentProvider: VSCNotebookContentProvider,
         @inject(INotebookKernelProvider) private readonly kernelProvider: VSCodeKernelPickerProvider,
         @inject(IApplicationEnvironment) private readonly env: IApplicationEnvironment,
-        @inject(IApplicationShell) private readonly shell: IApplicationShell,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(NotebookCompletionProvider) private readonly completionProvider: NotebookCompletionProvider
@@ -110,11 +107,6 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
         this.disposables.push(disposable);
     }
     private async enableNotebooks() {
-        if (this.env.channel === 'stable') {
-            this.shell.showErrorMessage(DataScience.previewNotebookOnlySupportedInVSCInsiders()).then(noop, noop);
-            return;
-        }
-
         await this.enableDisableEditorAssociation(true);
     }
     private async enableDisableEditorAssociation(enable: boolean) {
@@ -150,9 +142,6 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
         }
     }
     private async disableNotebooks() {
-        if (this.env.channel === 'stable') {
-            return;
-        }
         await this.enableDisableEditorAssociation(false);
     }
 }
