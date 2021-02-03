@@ -31,6 +31,7 @@ const DataViewableTypes: Set<string> = new Set<string>([
 ]);
 const SliceableTypes: Set<string> = new Set<string>(['ndarray', 'Tensor', 'EagerTensor']);
 const KnownExcludedVariables = new Set<string>(['In', 'Out', 'exit', 'quit']);
+const MaximumRowChunkSizeForDebugger = 100;
 
 @injectable()
 export class DebuggerVariables extends DebugLocationTracker
@@ -76,7 +77,7 @@ export class DebuggerVariables extends DebugLocationTracker
 
         if (this.active) {
             const startPos = request.startIndex ? request.startIndex : 0;
-            const chunkSize = request.pageSize ? request.pageSize : 100;
+            const chunkSize = request.pageSize ? request.pageSize : MaximumRowChunkSizeForDebugger;
             result.pageStartIndex = startPos;
 
             // Do one at a time. All at once doesn't work as they all have to wait for each other anyway
@@ -138,7 +139,7 @@ export class DebuggerVariables extends DebugLocationTracker
             ? {
                   ...targetVariable,
                   ...JSON.parse(results.result),
-                  maximumRowChunkSize: 100
+                  maximumRowChunkSize: MaximumRowChunkSizeForDebugger
               }
             : targetVariable;
     }
@@ -151,8 +152,8 @@ export class DebuggerVariables extends DebugLocationTracker
         sliceExpression?: string
     ): Promise<{}> {
         // Developer error. The debugger cannot eval more than 100 rows at once.
-        if (end - start > 100) {
-            throw new Error('Debugger cannot provide more than 100 rows at once');
+        if (end - start > MaximumRowChunkSizeForDebugger) {
+            throw new Error(`Debugger cannot provide more than ${MaximumRowChunkSizeForDebugger} rows at once`);
         }
 
         // Run the get dataframe rows script
