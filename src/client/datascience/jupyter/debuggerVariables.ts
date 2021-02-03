@@ -93,31 +93,15 @@ export class DebuggerVariables extends DebugLocationTracker
         return result;
     }
 
-    public async getMatchingVariable(
-        name: string,
-        notebook?: INotebook,
-        _cancelToken?: CancellationToken | undefined,
-        needsFullVariable?: boolean
-    ): Promise<IJupyterVariable | undefined> {
-        let result;
+    public async getMatchingVariable(name: string, notebook?: INotebook): Promise<IJupyterVariable | undefined> {
         if (this.active) {
-            let pos = -1;
-            result = this.lastKnownVariables.find((v, idx) => {
-                if (v.name === name) {
-                    pos = idx;
-                    return true;
-                }
-                return false;
-            });
+            // Note, full variable results isn't necessary for this call. It only really needs the variable value.
+            const result = this.lastKnownVariables.find((v) => v.name === name);
             if (result && notebook && notebook.identity.fsPath.endsWith('.ipynb')) {
                 sendTelemetryEvent(Telemetry.RunByLineVariableHover);
             }
-            if (needsFullVariable && result && result.truncated) {
-                result = await this.getFullVariable(result);
-                this.lastKnownVariables[pos] = result;
-            }
+            return result;
         }
-        return result;
     }
 
     public async getDataFrameInfo(
