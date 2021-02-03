@@ -3,7 +3,7 @@
 'use strict';
 import { inject, injectable, named } from 'inversify';
 
-import { CancellationToken, DebugAdapterTracker, Disposable, Event, EventEmitter } from 'vscode';
+import { DebugAdapterTracker, Disposable, Event, EventEmitter } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { IDebugService } from '../../common/application/types';
 import { traceError } from '../../common/logger';
