@@ -420,13 +420,9 @@ suite('DataScience Native Editor', () => {
                         };
 
                         // Allow the invalid kernel to be used
-                        const kernelServiceMock = ioc.kernelService;
+                        const kernelFinderMock = ioc.kernelFinder;
                         when(
-                            kernelServiceMock.findMatchingKernelSpec(
-                                objectContaining(kernelDesc),
-                                anything(),
-                                anything()
-                            )
+                            kernelFinderMock.findKernelSpec(objectContaining(kernelDesc), anything(), anything())
                         ).thenResolve(invalidKernel);
 
                         // Can only do this with the mock. Have to force the first call to changeKernel on the

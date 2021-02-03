@@ -230,7 +230,6 @@ export class Kernel implements IKernel {
                             uri,
                             isRawNotebookSupported ? 'raw' : 'jupyter',
                             undefined,
-                            undefined,
                             true // Disable UI when validating.
                         )
                         .finally(() => {

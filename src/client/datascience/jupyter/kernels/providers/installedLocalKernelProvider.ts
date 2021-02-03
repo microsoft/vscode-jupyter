@@ -15,7 +15,7 @@ import { IKernelSelectionListProvider, KernelSpecConnectionMetadata, IKernelSpec
 import { getQuickPickItemForKernelSpec } from './installJupyterKernelProvider';
 
 // Provider for searching for installed kernelspecs on disk without using jupyter to search
-export class InstalledRawKernelSelectionListProvider
+export class InstalledLocalKernelSelectionListProvider
     implements IKernelSelectionListProvider<KernelSpecConnectionMetadata> {
     constructor(
         private readonly kernelFinder: IKernelFinder,

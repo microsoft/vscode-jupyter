@@ -103,14 +103,9 @@ suite('DataScience - Notebook Commands', () => {
                 const kernelDependencyService = mock(KernelDependencyService);
                 const kernelService = mock(KernelService);
                 kernelSelectionProvider = mock(KernelSelectionProvider);
-                when(
-                    kernelSelectionProvider.getKernelSelectionsForLocalSession(
-                        anything(),
-                        anything(),
-                        anything(),
-                        anything()
-                    )
-                ).thenResolve(localSelections);
+                when(kernelSelectionProvider.getKernelSelectionsForLocalSession(anything(), anything())).thenResolve(
+                    localSelections
+                );
                 when(
                     kernelSelectionProvider.getKernelSelectionsForRemoteSession(anything(), anything(), anything())
                 ).thenResolve(remoteSelections);
@@ -211,14 +206,7 @@ suite('DataScience - Notebook Commands', () => {
                 });
                 test('Should not switch if no identity', async () => {
                     await commandHandler.bind(notebookCommands)();
-                    verify(
-                        kernelSelectionProvider.getKernelSelectionsForLocalSession(
-                            anything(),
-                            anything(),
-                            anything(),
-                            anything()
-                        )
-                    ).never();
+                    verify(kernelSelectionProvider.getKernelSelectionsForLocalSession(anything(), anything())).never();
                 });
                 test('Should switch kernel using the provided notebook', async () => {
                     const notebook = createNotebookMock();

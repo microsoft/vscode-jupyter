@@ -5,9 +5,9 @@
 import type { nbformat } from '@jupyterlab/coreutils';
 import { SpawnOptions } from 'child_process';
 import { CancellationToken, Event } from 'vscode';
-import { InterpreterUri } from '../../common/installer/types';
 import { ObservableExecutionResult } from '../../common/process/types';
 import { IAsyncDisposable, IDisposable, Resource } from '../../common/types';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { KernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../jupyter/kernels/types';
 import { IJupyterKernelSpec, KernelInterpreterDependencyResponse } from '../types';
 
@@ -49,9 +49,9 @@ export interface IKernelProcess extends IAsyncDisposable {
 export const IKernelFinder = Symbol('IKernelFinder');
 export interface IKernelFinder {
     findKernelSpec(
-        interpreterUri: InterpreterUri,
-        notebookMetadata?: nbformat.INotebookMetadata,
-        cancelToken?: CancellationToken
+        resource: Resource,
+        option?: nbformat.INotebookMetadata | PythonEnvironment,
+        _cancelToken?: CancellationToken
     ): Promise<IJupyterKernelSpec | undefined>;
     listKernelSpecs(resource: Resource): Promise<IJupyterKernelSpec[]>;
 }

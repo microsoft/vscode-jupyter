@@ -950,7 +950,6 @@ suite('Jupyter Execution', async () => {
                 anything(),
                 anything(),
                 anything(),
-                anything(),
                 anything()
             )
         ).thenResolve({

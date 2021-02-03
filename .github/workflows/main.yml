@@ -491,7 +491,7 @@ jobs:
         python: [3.8] # Use flaky tests to run against more versions of Python.
         # integration: Tests with VS Code, Python extension & real Jupyter
         # notebook: Notebook Tests with VS Code, Python extension & real Jupyter
-        test-suite: [integration, notebook, remoteNotebook, nonRawNotebook, notebookWithoutPythonExt, conda]
+        test-suite: [integration, notebook, remoteNotebook, nonRawNotebook, notebookWithoutPythonExt, conda, notebookAndWebview]
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -634,6 +634,11 @@ jobs:
       - name: Install dependencies (npm ci)
         run: npm ci --prefer-offline
 
+        # Check to see if we should build webviews or not
+      - name: Check if we need to build webviews
+        if: matrix.test-suite != 'integration' && matrix.test-suite != 'notebookAndWebview'
+        run: echo "VSC_JUPYTER_SKIP_WEBVIEW_BUILD=true" >> $GITHUB_ENV
+
         # This step is slow.
       - name: Compile if not cached
         run: npx gulp prePublishNonBundle
@@ -672,12 +677,20 @@ jobs:
 
       - name: Create Virtual Env for Tests
         uses: ./.github/actions/create-venv-for-tests
-        if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook' || matrix.test-suite == 'nonRawNotebook' || matrix.test-suite == 'remoteNotebook'
+        if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook' || matrix.test-suite == 'nonRawNotebook' || matrix.test-suite == 'remoteNotebook' || matrix.test-suite == 'notebookAndWebview'
+
+      # Set the correct xvfb commands to run vscode tests
+      # https://code.visualstudio.com/api/working-with-extensions/continuous-integration
+      # Note that xvfb github action only runs through xvfb on linux, so only set the commands there
+      # as on windows / mac they would get directly passed to run, not xvfb-run
+      - name: Set xvfb parameters linux
+        if: matrix.os == 'ubuntu-latest'
+        run: echo "xvfbCommand=--server-args=\"-screen 0 1024x768x24\"" >> $GITHUB_ENV
 
       - name: Run tests with VSCode & Jupyter
         uses: GabrielBB/xvfb-action@v1.4
         with:
-          run: npm run testVSCode
+          run: ${{ env.xvfbCommand }} npm run testVSCode
         env:
           VSC_FORCE_REAL_JUPYTER: 1
           VSC_JUPYTER_FORCE_LOGGING: 1
@@ -696,7 +709,7 @@ jobs:
       - name: Run Native Notebook with VSCode & Jupyter
         uses: GabrielBB/xvfb-action@v1.4
         with:
-          run: npm run testNativeNotebooksInVSCode
+          run: ${{ env.xvfbCommand }} npm run testNativeNotebooksInVSCode
         env:
           VSC_FORCE_REAL_JUPYTER: 1
           VSC_JUPYTER_FORCE_LOGGING: 1
@@ -720,7 +733,7 @@ jobs:
       - name: Run Native Notebook with VSCode & Jupyter (without Python)
         uses: GabrielBB/xvfb-action@v1.4
         with:
-          run: npm run testNativeNotebooksWithoutPythonInVSCode
+          run: ${{ env.xvfbCommand }} npm run testNativeNotebooksWithoutPythonInVSCode
         env:
           VSC_FORCE_REAL_JUPYTER: 1
           VSC_JUPYTER_FORCE_LOGGING: 1
@@ -737,6 +750,33 @@ jobs:
           check_name: Notebook without Python Test Report
         if: steps.test_notebookWithoutPythonExt_vscode.outcome == 'failure' && failure()
 
+        # Run native notebook tests that also require webviews
+        # note, Webview test middleware on, and webview build not skipped
+      - name: Run Native Notebook and Webview tests with VSCode & Jupyter
+        uses: GabrielBB/xvfb-action@v1.4
+        with:
+          run: ${{ env.xvfbCommand }} npm run testNativeNotebooksAndWebviews
+        env:
+          VSC_FORCE_REAL_JUPYTER: 1
+          VSC_JUPYTER_FORCE_LOGGING: 1
+          VSC_PYTHON_FORCE_LOGGING: 1
+          VSC_JUPYTER_WEBVIEW_TEST_MIDDLEWARE: 'true'
+          VSC_JUPYTER_REMOTE_NATIVE_TEST: 'false'
+          VSC_JUPYTER_NON_RAW_NATIVE_TEST: 'false' 
+          VSC_JUPYTER_CI_RUN_JAVA_NB_TEST: 'false'
+          VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
+        id: test_notebook_webview_vscode
+        if: matrix.test-suite == 'notebookAndWebview'
+
+      - name: Publish Notebook Test Report
+        uses: scacap/action-surefire-report@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          report_paths: ${{ env.TEST_RESULTS_GLOB }}
+          check_name: Notebook Test Report ${{matrix.test-suite}} ${{matrix.os}}
+        if: steps.test_notebook_webview_vscode.outcome == 'failure' && failure()
+
+
       # Upload unit test coverage reports for later use in the "reports" job.
       - name: Upload unit test coverage reports
         uses: actions/upload-artifact@v2
@@ -745,7 +785,6 @@ jobs:
           name: ${{runner.os}}-${{env.COVERAGE_REPORTS}}
           path: .nyc_output
           retention-days: 1
-          if: always()
 
   smoke-tests:
     timeout-minutes: 30

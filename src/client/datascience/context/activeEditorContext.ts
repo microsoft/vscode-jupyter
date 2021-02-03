@@ -8,11 +8,10 @@ import { TextEditor } from 'vscode';
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { ICommandManager, IDocumentManager } from '../../common/application/types';
-import { PYTHON_LANGUAGE } from '../../common/constants';
+import { PYTHON_LANGUAGE, UseVSCodeNotebookEditorApi } from '../../common/constants';
 import { ContextKey } from '../../common/contextKey';
-import { Experiments } from '../../common/experiments/groups';
 import { traceError } from '../../common/logger';
-import { IDisposable, IDisposableRegistry, IExperimentService } from '../../common/types';
+import { IDisposable, IDisposableRegistry } from '../../common/types';
 import { setSharedProperty } from '../../telemetry';
 import { EditorContexts } from '../constants';
 import { isPythonNotebook } from '../notebook/helpers/helpers';
@@ -39,7 +38,6 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
     private hasNativeNotebookCells: ContextKey;
     private isNotebookTrusted: ContextKey;
     private isPythonFileActive: boolean = false;
-    private inNativeNotebookExperiment: boolean = false;
     private isPythonNotebook: ContextKey;
     constructor(
         @inject(IInteractiveWindowProvider) private readonly interactiveProvider: IInteractiveWindowProvider,
@@ -47,7 +45,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         @inject(IDocumentManager) private readonly docManager: IDocumentManager,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
-        @inject(IExperimentService) private readonly experimentService: IExperimentService,
+        @inject(UseVSCodeNotebookEditorApi) private readonly inNativeNotebookExperiment: boolean,
         @inject(INotebookProvider) private readonly notebookProvider: INotebookProvider,
         @inject(ITrustService) private readonly trustService: ITrustService
     ) {
@@ -97,7 +95,6 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         if (this.docManager.activeTextEditor?.document.languageId === PYTHON_LANGUAGE) {
             this.onDidChangeActiveTextEditor(this.docManager.activeTextEditor);
         }
-        this.inNativeNotebookExperiment = await this.experimentService.inExperiment(Experiments.NativeNotebook);
     }
 
     private updateNativeNotebookCellContext() {
