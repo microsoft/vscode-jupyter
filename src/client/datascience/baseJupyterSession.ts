@@ -132,12 +132,13 @@ export abstract class BaseJupyterSession implements IJupyterSession {
             throw new Error('Cannot request KernelInfo, Session not initialized.');
         }
         if (this.session.kernel.info) {
-            // eslint-disable @typescript-eslint/no-explicit-any
             const infoMsg: KernelMessage.IInfoReplyMsg = {
                 content: this.session.kernel.info,
                 channel: 'shell',
                 metadata: {},
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 parent_header: {} as any,
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 header: {} as any
             };
             return Promise.resolve(infoMsg);
