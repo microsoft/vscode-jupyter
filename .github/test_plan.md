@@ -141,6 +141,13 @@
     1. Verify the variables explorer window shows output not available while debugging
     1. When you get to the end of the cell, the debugger should stop
     1. Output from the cell should show up in the Interactive Window (sometimes you have to finish debugging the cell first)
+-   [ ] Verify ability to open data viewer from debugger
+    1. Open the file src/test/datascience/manualTestFiles/manualTestFileDebugger.py in VS Code
+    1. Set a breakpoint on the last line
+    1. Open the debug panel in the left sidebar of VS Code and run 'Python: Current File' debug configuration
+    1. All the variables defined in the file should appear in the debug variables window in the sidebar
+    1. Right click on each of the following variables and select the 'View Variable in Data Viewer' option from the context menu: myNparray, myDataFrame, mySeries, myList, myString, myTensor. Verify that the data viewer opens and displays them
+    1. Expand the tree view for the variable `x`. Right click on its instance member `b` and select 'View Variable in Data Viewer' from the context menu. Verify that this opens `x.b` and not `b` in the data viewer.
 -   [ ] Verify installing ipykernel in a new environment
     1. Create a brand new folder on your machine
     1. Create a new venv in that folder via command line / terminal `python3 -m venv .newEnv`
