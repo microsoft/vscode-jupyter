@@ -121,15 +121,15 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         this.interactiveContext.set(!!e).ignoreErrors();
         this.updateMergedContexts();
     }
-    private onDidChangeActiveNotebookEditor(activeEditor?: INotebookEditor) {
+    private onDidChangeActiveNotebookEditor(e?: INotebookEditor) {
         // This will ensure all subsequent telemetry will get the context of whether it is a custom/native/old notebook editor.
         // This is temporary, and once we ship native editor this needs to be removed.
-        setSharedProperty('ds_notebookeditor', activeEditor?.type);
-        this.nativeContext.set(!!activeEditor).ignoreErrors();
-        this.isNotebookTrusted.set(activeEditor?.model?.isTrusted === true).ignoreErrors();
-        this.isPythonNotebook.set(isPythonNotebook(activeEditor?.model?.metadata)).ignoreErrors();
+        setSharedProperty('ds_notebookeditor', e?.type);
+        this.nativeContext.set(!!e).ignoreErrors();
+        this.isNotebookTrusted.set(e?.model?.isTrusted === true).ignoreErrors();
+        this.isPythonNotebook.set(isPythonNotebook(e?.model?.metadata)).ignoreErrors();
         this.updateMergedContexts();
-        this.updateContextOfActiveNotebookKernel(activeEditor);
+        this.updateContextOfActiveNotebookKernel(e);
         this.updateNativeNotebookContext();
     }
     private updateNativeNotebookContext() {
