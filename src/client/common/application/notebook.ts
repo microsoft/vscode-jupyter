@@ -11,6 +11,7 @@ import type {
     NotebookDocument,
     NotebookDocumentFilter,
     NotebookEditor,
+    NotebookEditorSelectionChangeEvent,
     NotebookKernel,
     NotebookKernelProvider,
     window as notebookWindow
@@ -31,6 +32,11 @@ export class VSCodeNotebook implements IVSCodeNotebook {
                   document: NotebookDocument;
                   kernel: NotebookKernel | undefined;
               }>().event;
+    }
+    public get onDidChangeNotebookEditorSelection(): Event<NotebookEditorSelectionChangeEvent> {
+        return this.canUseNotebookApi
+            ? this.window.onDidChangeNotebookEditorSelection
+            : new EventEmitter<NotebookEditorSelectionChangeEvent>().event;
     }
     public get onDidChangeActiveNotebookEditor(): Event<NotebookEditor | undefined> {
         return this.canUseNotebookApi

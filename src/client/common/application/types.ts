@@ -74,6 +74,7 @@ import type {
     NotebookDocumentFilter,
     NotebookDocumentMetadataChangeEvent as VSCNotebookDocumentMetadataChangeEvent,
     NotebookEditor,
+    NotebookEditorSelectionChangeEvent,
     NotebookKernel,
     NotebookKernelProvider
 } from '../../../../types/vscode-proposed';
@@ -1573,6 +1574,7 @@ export interface IVSCodeNotebook {
     readonly onDidOpenNotebookDocument: Event<NotebookDocument>;
     readonly onDidCloseNotebookDocument: Event<NotebookDocument>;
     readonly onDidSaveNotebookDocument: Event<NotebookDocument>;
+    readonly onDidChangeNotebookEditorSelection: Event<NotebookEditorSelectionChangeEvent>;
     readonly onDidChangeActiveNotebookEditor: Event<NotebookEditor | undefined>;
     readonly onDidChangeNotebookDocument: Event<NotebookCellChangedEvent>;
     readonly notebookEditors: Readonly<NotebookEditor[]>;
