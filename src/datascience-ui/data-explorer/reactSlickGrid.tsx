@@ -76,7 +76,7 @@ class ColumnFilter {
     private lessThanEqualRegEx = /^\s*<=\s*((?<Number>\d+.*)|(?<NaN>nan)|(?<Inf>inf)|(?<NegInf>-inf)).*/i;
     private greaterThanRegEx = /^\s*>\s*((?<Number>\d+.*)|(?<NaN>nan)|(?<Inf>inf)|(?<NegInf>-inf)).*/i;
     private greaterThanEqualRegEx = /^\s*>=\s*((?<Number>\d+.*)|(?<NaN>nan)|(?<Inf>inf)|(?<NegInf>-inf)).*/i;
-    private equalThanRegEx = /^\s*(?:=|==)\s*((?<Number>\d+.*)|(?<NaN>nan)|(?<Inf>inf)|(?<NegInf>-inf)).*/i;
+    private equalToRegEx = /^\s*(?:=|==)\s*((?<Number>\d+.*)|(?<NaN>nan)|(?<Inf>inf)|(?<NegInf>-inf)).*/i;
 
     constructor(text: string, column: Slick.Column<Slick.SlickData>) {
         if (text && text.length > 0) {
@@ -135,8 +135,8 @@ class ColumnFilter {
         } else if (this.greaterThanEqualRegEx.test(text)) {
             const n4 = this.extractDigits(text, this.greaterThanEqualRegEx);
             return (v: any) => v !== undefined && (v >= n4 || (Number.isNaN(v) && Number.isNaN(n4)));
-        } else if (this.equalThanRegEx.test(text)) {
-            const n5 = this.extractDigits(text, this.equalThanRegEx);
+        } else if (this.equalToRegEx.test(text)) {
+            const n5 = this.extractDigits(text, this.equalToRegEx);
             return (v: any) => v !== undefined && (v === n5 || (Number.isNaN(v) && Number.isNaN(n5)));
         } else {
             const n6 = parseFloat(text);
