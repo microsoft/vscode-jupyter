@@ -42,14 +42,13 @@ export interface IGetRowsResponse {
 
 export interface IGetSliceRequest {
     slice: string;
-    originalVariableShape: number[] | undefined;
 }
 
 // Map all messages to specific payloads
 export type IDataViewerMapping = {
     [DataViewerMessages.Started]: never | undefined;
     [DataViewerMessages.UpdateSettings]: string;
-    [DataViewerMessages.InitializeData]: IDataFrameInfo & { isSliceDataSupported: boolean };
+    [DataViewerMessages.InitializeData]: IDataFrameInfo & { isSliceDataEnabled: boolean };
     [DataViewerMessages.GetAllRowsRequest]: never | undefined | string;
     [DataViewerMessages.GetAllRowsResponse]: IRowsResponse;
     [DataViewerMessages.GetRowsRequest]: IGetRowsRequest;
@@ -66,8 +65,9 @@ export interface IDataFrameInfo {
     originalVariableShape?: number[];
     dataDimensionality?: number;
     sliceExpression?: string;
-    supportsSlicing?: boolean;
     maximumRowChunkSize?: number;
+    type?: string;
+    originalVariableType?: string;
 }
 
 export interface IDataViewerDataProvider {

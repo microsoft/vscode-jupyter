@@ -67,7 +67,7 @@ export interface ISlickGridProps {
     forceHeight?: number;
     dataDimensionionality: number;
     originalVariableShape: number[] | undefined;
-    isSliceDataSupported: boolean; // Feature flag. This should eventually be removed
+    isSliceDataEnabled: boolean; // Feature flag. This should eventually be removed
     handleSliceRequest(args: IGetSliceRequest): void;
 }
 
@@ -338,7 +338,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
     }
 
     public renderTemporarySliceIndicator = () => {
-        if (this.props.isSliceDataSupported && this.props.originalVariableShape) {
+        if (this.props.isSliceDataEnabled && this.props.originalVariableShape) {
             return (
                 <SliceControl
                     originalVariableShape={this.props.originalVariableShape}

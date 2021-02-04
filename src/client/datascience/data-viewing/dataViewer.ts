@@ -65,12 +65,6 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
         );
     }
 
-    private async isSliceDataSupported(dataFrameInfo: IDataFrameInfo) {
-        return (
-            !!dataFrameInfo?.supportsSlicing && (await this.experimentService.inExperiment(Experiments.SliceDataViewer))
-        );
-    }
-
     public async showData(dataProvider: IDataViewerDataProvider, title: string): Promise<void> {
         if (!this.isDisposed) {
             // Save the data provider
@@ -86,12 +80,12 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
 
             const dataFrameInfo = await this.prepDataFrameInfo();
 
-            const isSliceDataSupported = await this.isSliceDataSupported(dataFrameInfo);
+            const isSliceDataEnabled = await this.experimentService.inExperiment(Experiments.SliceDataViewer);
 
             // Send a message with our data
             this.postMessage(DataViewerMessages.InitializeData, {
                 ...dataFrameInfo,
-                isSliceDataSupported
+                isSliceDataEnabled
             }).ignoreErrors();
         }
     }
@@ -178,8 +172,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
         return this.wrapRequest(async () => {
             if (this.dataProvider) {
                 const payload = await this.dataProvider.getDataFrameInfo(request.slice);
-                payload.originalVariableShape = request.originalVariableShape;
-                return this.postMessage(DataViewerMessages.InitializeData, { ...payload, isSliceDataSupported: true });
+                return this.postMessage(DataViewerMessages.InitializeData, { ...payload, isSliceDataEnabled: true });
             }
         });
     }

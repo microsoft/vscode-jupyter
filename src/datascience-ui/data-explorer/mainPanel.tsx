@@ -29,6 +29,8 @@ import { cellFormatterFunc } from './cellFormatter';
 import { ISlickGridAdd, ISlickGridSlice, ISlickRow, ReactSlickGrid } from './reactSlickGrid';
 import { generateTestData } from './testData';
 
+const SliceableTypes: Set<string> = new Set<string>(['ndarray', 'Tensor', 'EagerTensor']);
+
 // Our css has to come after in order to override body styles
 export interface IMainPanelProps {
     skipDefault?: boolean;
@@ -47,7 +49,8 @@ interface IMainPanelState {
     settings?: IJupyterExtraSettings;
     dataDimensionality: number;
     originalVariableShape?: number[];
-    isSliceDataSupported: boolean;
+    originalVariableType?: string;
+    isSliceDataEnabled: boolean;
     maximumRowChunkSize?: number;
 }
 
@@ -86,7 +89,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 styleReady: false,
                 dataDimensionality: data.dataDimensionality ?? 2,
                 originalVariableShape: data.originalVariableShape,
-                isSliceDataSupported: false
+                isSliceDataEnabled: false,
+                originalVariableType: undefined
             };
 
             // Fire off a timer to mimic dynamic loading
@@ -102,7 +106,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 styleReady: false,
                 dataDimensionality: 2,
                 originalVariableShape: undefined,
-                isSliceDataSupported: false
+                isSliceDataEnabled: false,
+                originalVariableType: undefined
             };
         }
     }
@@ -211,7 +216,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 forceHeight={this.props.testMode ? 200 : undefined}
                 dataDimensionionality={this.state.dataDimensionality}
                 originalVariableShape={this.state.originalVariableShape}
-                isSliceDataSupported={this.state.isSliceDataSupported}
+                isSliceDataEnabled={this.state.isSliceDataEnabled}
                 handleSliceRequest={this.handleSliceRequest}
             />
         );
@@ -220,12 +225,15 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private initializeData(payload: any) {
         if (payload) {
-            const variable = payload as IDataFrameInfo & { isSliceDataSupported: boolean };
+            const variable = payload as IDataFrameInfo & { isSliceDataEnabled: boolean };
             if (variable) {
                 const columns = this.generateColumns(variable);
                 const totalRowCount = variable.rowCount ? variable.rowCount : 0;
                 const initialRows: ISlickRow[] = [];
                 const indexColumn = variable.indexColumn ? variable.indexColumn : 'index';
+                const originalVariableType = this.state.originalVariableType ?? variable.type;
+                const originalVariableShape = this.state.originalVariableShape ?? variable.shape;
+                const isSliceDataEnabled = payload.isSliceDataEnabled && SliceableTypes.has(originalVariableType || '');
 
                 this.setState({
                     gridColumns: columns,
@@ -233,9 +241,10 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                     totalRowCount,
                     fetchedRowCount: initialRows.length,
                     indexColumn: indexColumn,
-                    originalVariableShape: variable.originalVariableShape ?? variable.shape,
+                    originalVariableType,
+                    originalVariableShape,
                     dataDimensionality: variable.dataDimensionality ?? 2,
-                    isSliceDataSupported: variable.isSliceDataSupported,
+                    isSliceDataEnabled,
                     // Maximum number of rows is 100 if evaluating in debugger, undefined otherwise
                     maximumRowChunkSize: variable.maximumRowChunkSize ?? this.state.maximumRowChunkSize
                 });

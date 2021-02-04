@@ -44,7 +44,6 @@ const DataViewableTypes: Set<string> = new Set<string>([
     'Tensor',
     'EagerTensor'
 ]);
-const SliceableTypes: Set<string> = new Set<string>(['ndarray', 'Tensor', 'EagerTensor']);
 interface INotebookState {
     currentExecutionCount: number;
     variables: IJupyterVariable[];
@@ -496,10 +495,6 @@ export class KernelVariables implements IJupyterVariables {
             // Determine if supports viewing based on type
             if (DataViewableTypes.has(result.type)) {
                 result.supportsDataExplorer = true;
-            }
-
-            if (SliceableTypes.has(result.type)) {
-                result.supportsSlicing = true;
             }
         }
 

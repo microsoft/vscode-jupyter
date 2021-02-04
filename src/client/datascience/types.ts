@@ -871,7 +871,6 @@ export interface IJupyterVariable {
     value: string | undefined;
     executionCount?: number;
     supportsDataExplorer: boolean;
-    supportsSlicing?: boolean;
     type: string;
     size: number;
     shape: string;

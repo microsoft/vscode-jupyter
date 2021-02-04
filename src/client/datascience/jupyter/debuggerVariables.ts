@@ -29,7 +29,6 @@ const DataViewableTypes: Set<string> = new Set<string>([
     'Tensor',
     'EagerTensor'
 ]);
-const SliceableTypes: Set<string> = new Set<string>(['ndarray', 'Tensor', 'EagerTensor']);
 const KnownExcludedVariables = new Set<string>(['In', 'Out', 'exit', 'quit']);
 const MaximumRowChunkSizeForDebugger = 100;
 
@@ -295,8 +294,7 @@ export class DebuggerVariables extends DebugLocationTracker
             return {
                 ...variable,
                 ...info,
-                truncated: false,
-                supportsSlicing: SliceableTypes.has(info.type || '')
+                truncated: false
             };
         } else {
             // If no results, just return current value. Better than nothing.
@@ -355,7 +353,6 @@ export function convertDebugProtocolVariableToIJupyterVariable(variable: DebugPr
         supportsDataExplorer: DataViewableTypes.has(variable.type || ''),
         value: variable.value,
         truncated: true,
-        frameId: variable.variablesReference,
-        supportsSlicing: SliceableTypes.has(variable.type || '')
+        frameId: variable.variablesReference
     };
 }
