@@ -357,7 +357,9 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
             return baseHeight;
         }
 
-        return baseHeight - variableExplorerMenuBar.clientHeight;
+        // Subtract another 10px to take into acount the 5px margin in .variable-explorer
+        // src\datascience-ui\interactive-common\variableExplorer.css
+        return baseHeight - variableExplorerMenuBar.clientHeight - 10;
     }
 
     private setVariableGridHeight() {
