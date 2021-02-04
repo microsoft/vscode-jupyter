@@ -897,7 +897,7 @@ export const IJupyterVariables = Symbol('IJupyterVariables');
 export interface IJupyterVariables {
     readonly refreshRequired: Event<void>;
     getVariables(request: IJupyterVariablesRequest, notebook?: INotebook): Promise<IJupyterVariablesResponse>;
-    getFullVariable?(
+    getFullVariable(
         variable: IJupyterVariable,
         notebook?: INotebook,
         cancelToken?: CancellationToken

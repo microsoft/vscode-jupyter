@@ -50,6 +50,10 @@ export class JupyterVariables implements IJupyterVariables {
         return (await this.getVariableHandler(notebook)).getVariables(request, notebook);
     }
 
+    public async getFullVariable(variable: IJupyterVariable, notebook?: INotebook): Promise<IJupyterVariable> {
+        return (await this.getVariableHandler(notebook)).getFullVariable(variable, notebook);
+    }
+
     public async getMatchingVariable(
         name: string,
         notebook?: INotebook,

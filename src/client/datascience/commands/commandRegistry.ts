@@ -498,7 +498,7 @@ export class CommandRegistry implements IDisposable {
     }
     private async onVariablePanelShowDataViewerRequest(request: IShowDataViewerFromVariablePanel) {
         sendTelemetryEvent(EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_REQUEST);
-        if (this.debugService.activeDebugSession && this.variableProvider.getFullVariable) {
+        if (this.debugService.activeDebugSession) {
             try {
                 const variable = convertDebugProtocolVariableToIJupyterVariable(
                     request.variable as DebugProtocol.Variable
