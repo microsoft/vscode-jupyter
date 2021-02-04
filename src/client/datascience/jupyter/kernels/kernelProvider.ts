@@ -97,7 +97,8 @@ export class KernelProvider implements IKernelProvider {
             this.rawNotebookSupported,
             this.fs,
             this.context,
-            this.serverStorage
+            this.serverStorage,
+            this.configService
         );
         this.asyncDisposables.push(kernel);
         this.kernelsByUri.set(uri.toString(), { options, kernel });
