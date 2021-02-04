@@ -12,7 +12,7 @@ import { ServerStatus } from '../../../../datascience-ui/interactive-common/main
 import { IApplicationShell, IVSCodeNotebook } from '../../../common/application/types';
 import { traceError, traceInfo, traceWarning } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
-import { IConfigurationService, IDisposableRegistry, IExtensionContext } from '../../../common/types';
+import { IDisposableRegistry, IExtensionContext } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
 import { noop } from '../../../common/utils/misc';
 import { sendTelemetryEvent } from '../../../telemetry';
@@ -29,7 +29,7 @@ import {
     IRawNotebookSupportedService,
     KernelSocketInformation
 } from '../../types';
-import { isLocalLaunch, isPythonKernelConnection } from './helpers';
+import { isPythonKernelConnection } from './helpers';
 import { KernelExecution } from './kernelExecution';
 import type { IKernel, IKernelProvider, IKernelSelectionUsage, KernelConnectionMetadata } from './types';
 
@@ -88,8 +88,7 @@ export class Kernel implements IKernel {
         private readonly rawNotebookSupported: IRawNotebookSupportedService,
         private readonly fs: IFileSystem,
         context: IExtensionContext,
-        private readonly serverStorage: IJupyterServerUriStorage,
-        private readonly configService: IConfigurationService
+        private readonly serverStorage: IJupyterServerUriStorage
     ) {
         this.kernelExecution = new KernelExecution(
             kernelProvider,
@@ -220,9 +219,7 @@ export class Kernel implements IKernel {
         }
         const key = uri.toString();
         if (!this.kernelValidated.get(key)) {
-            this.isRawNotebookSupported = isLocalLaunch(this.configService)
-                ? this.isRawNotebookSupported || this.rawNotebookSupported.isSupportedForLocalLaunch()
-                : Promise.resolve(false);
+            this.isRawNotebookSupported = this.isRawNotebookSupported || this.rawNotebookSupported.supported();
 
             const promise = new Promise<void>((resolve) =>
                 this.isRawNotebookSupported!.then((isRawNotebookSupported) =>

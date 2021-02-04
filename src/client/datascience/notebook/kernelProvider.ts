@@ -299,7 +299,7 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
 
         if (this.isLocalLaunch) {
             this.isRawNotebookSupported =
-                this.isRawNotebookSupported || this.rawNotebookSupported.isSupportedForLocalLaunch();
+                this.isRawNotebookSupported || this.rawNotebookSupported.supported();
             const rawSupported = await this.isRawNotebookSupported;
             if (token.isCancellationRequested) {
                 return;
