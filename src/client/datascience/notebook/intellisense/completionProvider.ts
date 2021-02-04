@@ -16,7 +16,8 @@ import { traceError, traceInfoIf } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 import { sleep } from '../../../common/utils/async';
 import { isNotebookCell } from '../../../common/utils/misc';
-import { Settings } from '../../constants';
+import { captureTelemetry } from '../../../telemetry';
+import { Settings, Telemetry } from '../../constants';
 import { INotebookCompletion, INotebookProvider } from '../../types';
 import { findAssociatedNotebookDocument } from '../helpers/helpers';
 
@@ -27,6 +28,7 @@ export class NotebookCompletionProvider implements CompletionItemProvider {
         @inject(INotebookProvider) private readonly notebookProvider: INotebookProvider,
         @inject(IFileSystem) private readonly fs: IFileSystem
     ) {}
+    @captureTelemetry(Telemetry.CompletionTimeFromJupyter)
     public async provideCompletionItems(
         document: TextDocument,
         position: Position,

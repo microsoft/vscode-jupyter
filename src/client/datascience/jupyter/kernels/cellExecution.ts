@@ -21,7 +21,7 @@ import { createDeferred, Deferred } from '../../../common/utils/async';
 import { swallowExceptions } from '../../../common/utils/decorators';
 import { noop } from '../../../common/utils/misc';
 import { StopWatch } from '../../../common/utils/stopWatch';
-import { sendTelemetryEvent } from '../../../telemetry';
+import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../constants';
 import {
     handleTensorBoardDisplayDataOutput,
@@ -367,6 +367,7 @@ export class CellExecution {
         await this.executeCodeCell(code, session, loggers);
     }
 
+    @captureTelemetry(Telemetry.ExecuteCell)
     private async executeCodeCell(code: string, session: IJupyterSession, loggers: INotebookExecutionLogger[]) {
         // Skip if no code to execute
         if (code.trim().length === 0) {
