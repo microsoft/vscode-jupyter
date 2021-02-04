@@ -372,9 +372,7 @@ suite('DataScience DataViewer tests', () => {
     });
 
     runMountedTest('Filter 2D PyTorch tensors', async (wrapper) => {
-        await injectCode(
-            "import torch\r\nfoo = torch.tensor([0, 1, 2, 3, 4, 5])"
-        );
+        await injectCode('import torch\r\nfoo = torch.tensor([0, 1, 2, 3, 4, 5])');
         const gotAllRows = getCompletedPromise(wrapper);
         const dv = await createJupyterVariableDataViewer('foo', 'Tensor');
         assert.ok(dv, 'DataViewer not created');
