@@ -98,9 +98,17 @@ export class HoverProvider implements INotebookExecutionLogger, vscode.HoverProv
                             notebooks.map((n) => this.variableProvider.getMatchingVariable(word, n, t))
                         );
                         if (match) {
-                            return {
-                                contents: [`${word} = ${match.value}`]
-                            };
+                            const contents = [new vscode.MarkdownString(`${word} = ${match.value}`)];
+                            if (match.shape) {
+                                contents.push(new vscode.MarkdownString(`Shape: ${match.shape}`));
+                            }
+                            // if (match.dtype) {
+                            //     contents.push(`Dtype: ${match.dtype}`);
+                            // }
+                            // if (match.device) {
+                            //     contents.push(`Device: ${match.device}`);
+                            // }
+                            return { contents };
                         }
                     }
                 }
