@@ -157,12 +157,14 @@ export namespace EditorContexts {
     export const HaveNative = 'jupyter.havenative';
     export const IsNativeActive = 'jupyter.isnativeactive';
     export const IsInteractiveOrNativeActive = 'jupyter.isinteractiveornativeactive';
+    export const canRunCellsAboveInNativeNotebook = 'jupyter.notebookeditor.canRunCellsAboveInNativeNotebook';
     export const IsPythonOrNativeActive = 'jupyter.ispythonornativeactive';
     export const IsPythonOrInteractiveActive = 'jupyter.ispythonorinteractiveeactive';
     export const IsPythonOrInteractiveOrNativeActive = 'jupyter.ispythonorinteractiveornativeeactive';
     export const HaveCellSelected = 'jupyter.havecellselected';
     export const IsNotebookTrusted = 'jupyter.isnotebooktrusted';
     export const CanRestartNotebookKernel = 'jupyter.notebookeditor.canrestartNotebookkernel';
+    export const CanInterruptNotebookKernel = 'jupyter.notebookeditor.canInterruptNotebookKernel';
     export const IsPythonNotebook = 'jupyter.ispythonnotebook';
 }
 
