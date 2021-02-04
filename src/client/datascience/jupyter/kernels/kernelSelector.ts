@@ -19,7 +19,7 @@ import { IInterpreterService } from '../../../interpreter/contracts';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { captureTelemetry, IEventNamePropertyMapping, sendTelemetryEvent } from '../../../telemetry';
 import { sendNotebookOrKernelLanguageTelemetry } from '../../common';
-import { Commands, Settings, Telemetry } from '../../constants';
+import { Commands, Telemetry } from '../../constants';
 import { IKernelFinder } from '../../kernel-launcher/types';
 import { isPythonNotebook } from '../../notebook/helpers/helpers';
 import { getInterpreterInfoStoredInMetadata } from '../../notebookStorage/baseModel';
@@ -35,7 +35,12 @@ import {
     INotebookProviderConnection,
     KernelInterpreterDependencyResponse
 } from '../../types';
-import { createDefaultKernelSpec, getDisplayNameOrNameOfKernelConnection, isPythonKernelConnection } from './helpers';
+import {
+    createDefaultKernelSpec,
+    getDisplayNameOrNameOfKernelConnection,
+    isLocalLaunch,
+    isPythonKernelConnection
+} from './helpers';
 import { KernelSelectionProvider } from './kernelSelections';
 import { KernelService } from './kernelService';
 import {
@@ -384,9 +389,7 @@ export class KernelSelector implements IKernelSelectionUsage {
         currentKernelDisplayName: string | undefined
     ): Promise<KernelConnectionMetadata | undefined> {
         let kernelConnection: KernelConnectionMetadata | undefined;
-        const settings = this.configService.getSettings(resource);
-        const isLocalConnection =
-            connection?.localLaunch ?? settings.jupyterServerType.toLowerCase() === Settings.JupyterServerLocalLaunch;
+        const isLocalConnection = connection?.localLaunch ?? isLocalLaunch(this.configService);
 
         if (isLocalConnection) {
             kernelConnection = await this.selectLocalJupyterKernel(
