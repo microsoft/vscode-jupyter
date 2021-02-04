@@ -167,7 +167,7 @@
     "DataScience.connectedToKernel": "已连接。",
     "DataScience.connected": "已连接",
     "DataScience.disconnected": "连接断开",
-    "DataScience.pythonExtensionRecommended": "您已经打开了一个 Python 笔记本。是否安装 Python 扩展？",
+    "DataScience.pythonExtensionRecommended": "您已打开一个Python笔记本。 您是否要安装Python扩展程序以增强编辑体验？",
     "Experiments.inGroup": "用户属于实验组 '{0}'",
     "Logging.CurrentWorkingDirectory": "cwd:",
     "Logging.WarnUserAboutDebugLoggingSetting": "您已经为 Jupyter 扩展启用了调试日志，它将继续向磁盘写入日志。是否关闭调试日志？",

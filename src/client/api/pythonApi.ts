@@ -120,7 +120,7 @@ export class PythonExtensionChecker implements IPythonExtensionChecker {
             const doNotShowAgain = localize.Common.doNotShowAgain();
 
             const promise = (this.waitingOnInstallPrompt = new Promise<void>(async (resolve) => {
-                const answer = await this.appShell.showInformationMessage(
+                const answer = await this.appShell.showWarningMessage(
                     localize.DataScience.pythonExtensionRecommended(),
                     yes,
                     no,
