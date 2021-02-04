@@ -18,16 +18,24 @@ def _VSCODE_convertNumpyArrayToDataFrame(ndarray):
     try:
         x_len = temp.shape[0]
         # Figure out if we're dealing with ragged data
-        # Handle ragged arrays by making a container where the number of
-        # columns is the max length of all rows. Missing elements are
-        # represented as empty strings.
         row_lengths = [
             len(temp[i])
             if isinstance(temp[i], (list, tuple, _VSCODE_np.ndarray))
             else 1
             for i in range(x_len)
         ]
-        flattened = _VSCODE_np.full((x_len, max(row_lengths)), "", dtype="object")
+        max_y_len = max(row_lengths)
+        is_ragged_or_ndimensional = hasattr(temp, "ndim") and (
+            (temp.ndim == 1 and max_y_len > 1) or temp.ndim > 2
+        )
+
+        if not is_ragged_or_ndimensional:
+            return _VSCODE_pd.DataFrame(temp)
+
+        # Handle ragged arrays by making a container where the number of
+        # columns is the max length of all rows. Missing elements are
+        # represented as empty strings.
+        flattened = _VSCODE_np.full((x_len, max_y_len), "", dtype="object")
 
         def _VSCODE_stringifyElement(element):
             if isinstance(element, _VSCODE_np.ndarray):
@@ -50,15 +58,17 @@ def _VSCODE_convertNumpyArrayToDataFrame(ndarray):
                 cell = row if row_length == 1 else row[j]
                 flattened[i][j] = _VSCODE_stringifyElement(cell)
 
-        temp = flattened
+        ndarray = flattened
         del flattened
+        del is_ragged_or_ndimensional
+        del x_len
+        del max_y_len
+        del row_lengths
+        del temp
+        return _VSCODE_pd.DataFrame(ndarray)
     finally:
         # Restore the user's printoptions
         _VSCODE_np.set_printoptions(threshold=current_options["threshold"])
-        temp = _VSCODE_pd.DataFrame(temp)
-        ndarray = temp
-        del temp
-        return ndarray
 
 
 # Function that converts tensors to DataFrames

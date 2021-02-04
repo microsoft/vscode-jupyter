@@ -371,6 +371,19 @@ suite('DataScience DataViewer tests', () => {
         }
     });
 
+    runMountedTest('Filter 2D PyTorch tensors', async (wrapper) => {
+        await injectCode(
+            "import torch\r\nfoo = torch.tensor([0, 1, 2, 3, 4, 5])"
+        );
+        const gotAllRows = getCompletedPromise(wrapper);
+        const dv = await createJupyterVariableDataViewer('foo', 'Tensor');
+        assert.ok(dv, 'DataViewer not created');
+        await gotAllRows;
+
+        await filterRows(wrapper.wrapper, '0', '> 0');
+        verifyRows(wrapper.wrapper, [1, 1, 2, 2, 3, 3, 4, 4, 5, 5]);
+    });
+
     runMountedTest('2D PyTorch tensors', async (wrapper) => {
         await injectCode(
             "import torch\r\nimport numpy as np\r\nfoo = torch.tensor([0, 1, np.inf, float('-inf'), np.nan])"
