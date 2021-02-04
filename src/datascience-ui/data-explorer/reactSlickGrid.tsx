@@ -76,7 +76,7 @@ class ColumnFilter {
     private lessThanEqualRegEx = /^\s*<=\s*((?<Number>\d+.*)|(?<NaN>nan)|(?<Inf>inf)|(?<NegInf>-inf)).*/i;
     private greaterThanRegEx = /^\s*>\s*((?<Number>\d+.*)|(?<NaN>nan)|(?<Inf>inf)|(?<NegInf>-inf)).*/i;
     private greaterThanEqualRegEx = /^\s*>=\s*((?<Number>\d+.*)|(?<NaN>nan)|(?<Inf>inf)|(?<NegInf>-inf)).*/i;
-    private equalThanRegEx = /^\s*=\s*((?<Number>\d+.*)|(?<NaN>nan)|(?<Inf>inf)|(?<NegInf>-inf)).*/i;
+    private equalThanRegEx = /^\s*(?:=|==)\s*((?<Number>\d+.*)|(?<NaN>nan)|(?<Inf>inf)|(?<NegInf>-inf)).*/i;
 
     constructor(text: string, column: Slick.Column<Slick.SlickData>) {
         if (text && text.length > 0) {

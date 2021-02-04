@@ -93,6 +93,7 @@
         1. In the 'b' filter box input '> -inf'. Verify that this filters to show just the rows with 1 and 4 in the 'b' column.
         1. In the 'c' filter box input '= nan'. Verify that this filters to show just the row with 'nan' in the 'c' column.
         1. In the 'd' filter box input '<= inf'. Verify that this shows all rows.
+        1. In the 'd' filter box input '== inf'. Verify that this just the row with 'inf' in the 'd' column.
     1. Open the myList variable in the explorer
     1. Make sure that you can scroll all the way to the end of the entries
        [ ] Verify notebook outputs
