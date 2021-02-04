@@ -9,6 +9,7 @@ import { IPathUtils, Resource, ReadWrite } from '../../../../common/types';
 import { sendTelemetryEvent } from '../../../../telemetry';
 import { Telemetry } from '../../../constants';
 import { IKernelFinder } from '../../../kernel-launcher/types';
+import { IRawNotebookSupportedService } from '../../../types';
 import { detectDefaultKernelName, isPythonKernelConnection } from '../helpers';
 import { KernelService } from '../kernelService';
 import { IKernelSelectionListProvider, KernelSpecConnectionMetadata, IKernelSpecQuickPickItem } from '../types';
@@ -20,12 +21,14 @@ export class InstalledLocalKernelSelectionListProvider
     constructor(
         private readonly kernelFinder: IKernelFinder,
         private readonly pathUtils: IPathUtils,
-        private readonly kernelService: KernelService
+        private readonly kernelService: KernelService,
+        private readonly rawNotebookSupportedService: IRawNotebookSupportedService
     ) {}
     public async getKernelSelections(
         resource: Resource,
         cancelToken?: CancellationToken
     ): Promise<IKernelSpecQuickPickItem<KernelSpecConnectionMetadata>[]> {
+        const rawNotebookSupported = this.rawNotebookSupportedService.isSupportedForLocalLaunch();
         const items = await this.kernelFinder.listKernelSpecs(resource);
         const selections = await Promise.all(
             items
@@ -39,8 +42,13 @@ export class InstalledLocalKernelSelectionListProvider
                         // If it is, then no need to display that (selecting kernels registered is done by selecting the corresponding interpreter).
                         // Hence we can hide such kernels.
                         // Kernels we create will end with a uuid (with - stripped), & will have interpreter info in the metadata.
+                        // Only do this for raw kernel scenarios
                         const guidRegEx = /[a-f0-9]{32}$/;
-                        if (item.metadata?.interpreter && item.name.toLowerCase().search(guidRegEx)) {
+                        if (
+                            rawNotebookSupported &&
+                            item.metadata?.interpreter &&
+                            item.name.toLowerCase().search(guidRegEx)
+                        ) {
                             return false;
                         }
 
