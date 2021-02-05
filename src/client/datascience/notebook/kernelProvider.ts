@@ -9,8 +9,10 @@ import {
     NotebookDocument,
     NotebookKernel as VSCNotebookKernel
 } from '../../../../types/vscode-proposed';
+import { IS_CI_SERVER } from '../../../test/initialize';
 import { ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
+import { traceInfoIf } from '../../common/logger';
 import { IConfigurationService, IDisposableRegistry, IExtensionContext } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { captureTelemetry } from '../../telemetry';
@@ -111,7 +113,7 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
             }
             return [];
         }
-
+        traceInfoIf(IS_CI_SERVER, 'Provide kernels');
         const [preferredKernel, kernels] = await Promise.all([
             this.getPreferredKernel(document, token, sessionManager),
             this.getKernelSelections(document, token, sessionManager)
@@ -293,10 +295,12 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
                 ? this.notebook.activeNotebookEditor
                 : undefined);
         if (editor && isJupyterKernel(editor.kernel)) {
+            traceInfoIf(IS_CI_SERVER, 'Use existing kernel from notebook as preferred');
             return editor.kernel.selection;
         }
 
         if (this.isLocalLaunch) {
+            traceInfoIf(IS_CI_SERVER, 'Get preferred local kernel');
             const rawSupported = await this.rawNotebookSupported.supported();
             if (token.isCancellationRequested) {
                 return;
@@ -311,6 +315,7 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
                 true
             );
         } else {
+            traceInfoIf(IS_CI_SERVER, 'Get preferred remote kernel');
             return this.kernelSelector.getPreferredKernelForRemoteConnection(
                 document.uri,
                 sessionManager,

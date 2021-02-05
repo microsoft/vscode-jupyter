@@ -304,7 +304,6 @@ export class KernelSelector implements IKernelSelectionUsage {
                 bestScore = score;
             }
         }
-
         if (bestMatch) {
             return cloneDeep({
                 kernelSpec: bestMatch,
@@ -312,6 +311,7 @@ export class KernelSelector implements IKernelSelectionUsage {
                 kind: 'startUsingKernelSpec'
             });
         } else {
+            traceError('No preferred kernel, using the default kernel');
             // Unlikely scenario, we expect there to be at least one kernel spec.
             // Either way, return so that we can start using the default kernel.
             return cloneDeep({
