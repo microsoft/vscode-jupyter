@@ -214,7 +214,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 filterRowsText={filterRowsText}
                 filterRowsTooltip={filterRowsTooltip}
                 forceHeight={this.props.testMode ? 200 : undefined}
-                dataDimensionionality={this.state.dataDimensionality}
+                dataDimensionality={this.state.dataDimensionality}
                 originalVariableShape={this.state.originalVariableShape}
                 isSliceDataEnabled={this.state.isSliceDataEnabled}
                 handleSliceRequest={this.handleSliceRequest}
@@ -235,6 +235,10 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 const originalVariableShape = this.state.originalVariableShape ?? variable.shape;
                 const isSliceDataEnabled = payload.isSliceDataEnabled && SliceableTypes.has(originalVariableType || '');
 
+                // New data coming in, so reset everything and clear our cache of columns
+                this.columnsContainingInfOrNaN.clear();
+                this.resetGridEvent.notify({ columns });
+
                 this.setState({
                     gridColumns: columns,
                     gridRows: initialRows,
@@ -248,10 +252,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                     // Maximum number of rows is 100 if evaluating in debugger, undefined otherwise
                     maximumRowChunkSize: variable.maximumRowChunkSize ?? this.state.maximumRowChunkSize
                 });
-
-                // New data coming in, so reset everything and clear our cache of columns
-                this.columnsContainingInfOrNaN.clear();
-                this.resetGridEvent.notify();
 
                 // Compute our row fetch sizes based on the number of columns
                 this.rowFetchSizeAll = Math.round(CellFetchAllLimit / columns.length);

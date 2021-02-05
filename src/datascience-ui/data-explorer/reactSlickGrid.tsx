@@ -65,7 +65,7 @@ export interface ISlickGridProps {
     filterRowsText: string;
     filterRowsTooltip: string;
     forceHeight?: number;
-    dataDimensionionality: number;
+    dataDimensionality: number;
     originalVariableShape: number[] | undefined;
     isSliceDataEnabled: boolean; // Feature flag. This should eventually be removed
     handleSliceRequest(args: IGetSliceRequest): void;
@@ -177,12 +177,6 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
     public componentDidMount = () => {
         window.addEventListener('resize', this.windowResized);
 
-        this.createSlickGrid();
-        // Act like a resize happened to refresh the layout.
-        this.windowResized();
-    };
-
-    private createSlickGrid() {
         if (this.containerRef.current) {
             // Compute font size. Default to 15 if not found.
             let fontSize = parseInt(
@@ -207,14 +201,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
                 rowHeight: this.getAppropiateRowHeight(fontSize)
             };
 
-            // Transform columns so they are sortable and stylable
-            const columns = this.props.columns.map((c) => {
-                c.sortable = true;
-                c.editor = readonlyCellEditor;
-                c.headerCssClass = 'react-grid-header-cell';
-                c.cssClass = 'react-grid-cell';
-                return c;
-            });
+            const columns = this.styleColumns(this.props.columns);
 
             // Create the grid
             const grid = new Slick.Grid<ISlickRow>(this.containerRef.current, this.dataView, columns, options);
@@ -282,7 +269,10 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
             // Save in our state
             this.setState({ grid, fontSize });
         }
-    }
+
+        // Act like a resize happened to refresh the layout.
+        this.windowResized();
+    };
 
     public componentWillUnmount = () => {
         if (this.resizeTimer) {
@@ -363,6 +353,17 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
             this.dataView.refresh();
         }
     };
+
+    private styleColumns(columns: Slick.Column<ISlickRow>[]) {
+        // Transform columns so they are sortable and stylable
+        return columns.map((c) => {
+            c.sortable = true;
+            c.editor = readonlyCellEditor;
+            c.headerCssClass = 'react-grid-header-cell';
+            c.cssClass = 'react-grid-cell';
+            return c;
+        });
+    }
 
     // These adjustments for the row height come from trial and error, by changing the font size in VS code,
     // opening a new Data Viewer, and making sure the data is visible
@@ -508,13 +509,25 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         return null;
     }
 
-    private resetGrid = (_e: Slick.EventData) => {
-        this.createSlickGrid();
+    private resetGrid = (_e: Slick.EventData, data: ISlickGridSlice) => {
+        this.dataView.setItems([]);
+        const styledColumns = this.styleColumns(data.columns);
+        this.setColumns(styledColumns);
         this.autoResizeColumns();
     };
+
     private updateColumns = (_e: Slick.EventData, newColumns: Slick.Column<Slick.SlickData>[]) => {
-        this.state.grid?.setColumns(newColumns);
+        this.setColumns(newColumns);
         this.state.grid?.render(); // We might be able to skip this rerender?
+    };
+
+    private setColumns = (newColumns: Slick.Column<Slick.SlickData>[]) => {
+        // HACK: SlickGrid header row does not rerender if its visibility is false when columns
+        // are updated, and this causes the header to simply not show up when clicking the
+        // filter button after we update the grid column headers on receiving a slice response.
+        // The solution is to force the header row to become visible just before sending our slice request.
+        this.state.grid?.setHeaderRowVisibility(true);
+        this.state.grid?.setColumns(newColumns);
     };
 
     private addedRows = (_e: Slick.EventData, data: ISlickGridAdd) => {
