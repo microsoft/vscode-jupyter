@@ -27,7 +27,6 @@ import { PostOffice } from '../../react-common/postOffice';
 import { combineReducers, createQueueableActionMiddleware, QueuableAction } from '../../react-common/reduxUtils';
 import { computeEditorOptions, getDefaultSettings } from '../../react-common/settingsReactSide';
 import { createEditableCellVM, generateTestState } from '../mainState';
-import { forceLoad } from '../transforms';
 import { isAllowedAction, isAllowedMessage, postActionToExtension } from './helpers';
 import { generatePostOfficeSendReducer } from './postOffice';
 import { generateMonacoReducer, IMonacoState } from './reducers/monaco';
@@ -148,9 +147,9 @@ function createTestLogger() {
     }
 }
 
-function createTestMiddleware(): Redux.Middleware<{}, IStore> {
+function createTestMiddleware(transformLoad: () => Promise<void>): Redux.Middleware<{}, IStore> {
     // Make sure all dynamic imports are loaded.
-    const transformPromise = forceLoad();
+    const transformPromise = transformLoad();
 
     // eslint-disable-next-line complexity
     return (store) => (next) => (action) => {
@@ -297,7 +296,11 @@ function getDebugState(vms: ICellViewModel[]): DebugState {
     return firstNonDesign ? firstNonDesign.runningByLine : DebugState.Design;
 }
 
-function createMiddleWare(testMode: boolean, postOffice: PostOffice): Redux.Middleware<{}, IStore>[] {
+function createMiddleWare(
+    testMode: boolean,
+    postOffice: PostOffice,
+    transformLoad: () => Promise<void>
+): Redux.Middleware<{}, IStore>[] {
     // Create the middleware that modifies actions to queue new actions
     const queueableActions = createQueueableActionMiddleware();
 
@@ -313,7 +316,8 @@ function createMiddleWare(testMode: boolean, postOffice: PostOffice): Redux.Midd
     if (typeof forceTestMiddleware !== 'undefined') {
         forceOnTestMiddleware = forceTestMiddleware();
     }
-    const testMiddleware = forceOnTestMiddleware || testMode || isUITest ? createTestMiddleware() : undefined;
+    const testMiddleware =
+        forceOnTestMiddleware || testMode || isUITest ? createTestMiddleware(transformLoad) : undefined;
 
     // Create the logger if we're not in production mode or we're forcing logging
     const reduceLogMessage = '<payload too large to displayed in logs (at least on CI)>';
@@ -412,7 +416,8 @@ export function createStore<M>(
     showVariablesOnDebug: boolean,
     variablesStartOpen: boolean,
     reducerMap: M,
-    postOffice: PostOffice
+    postOffice: PostOffice,
+    transformLoad: () => Promise<void>
 ) {
     // Create reducer for the main react UI
     const mainReducer = generateMainReducer(skipDefault, testMode, baseTheme, editable, reducerMap);
@@ -435,7 +440,7 @@ export function createStore<M>(
     });
 
     // Create our middleware
-    const middleware = createMiddleWare(testMode, postOffice).concat([addMessageDirectionMiddleware]);
+    const middleware = createMiddleWare(testMode, postOffice, transformLoad).concat([addMessageDirectionMiddleware]);
 
     // Use this reducer and middle ware to create a store
     const store = Redux.createStore(rootReducer, Redux.applyMiddleware(...middleware));
