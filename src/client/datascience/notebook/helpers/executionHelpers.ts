@@ -97,6 +97,38 @@ export async function updateCellWithErrorStatus(
     });
 }
 
+// Update the code contents of the cell
+export async function updateCellCode(notebookEditor: NotebookEditor, cell: NotebookCell, text: string) {
+    await chainWithPendingUpdates(notebookEditor, (edit) => {
+        traceCellMessage(cell, 'Update cell with new code');
+        edit.replaceCells(cell.index, cell.index + 1, [
+            {
+                cellKind: vscodeNotebookEnums.CellKind.Code,
+                language: cell.language,
+                metadata: { ...cell.metadata, runState: vscodeNotebookEnums.NotebookCellRunState.Success },
+                outputs: [],
+                source: text
+            }
+        ]);
+    });
+}
+
+// Add a new cell with the given contents after the current
+export async function addNewCellAfter(notebookEditor: NotebookEditor, cell: NotebookCell, text: string) {
+    await chainWithPendingUpdates(notebookEditor, (edit) => {
+        traceCellMessage(cell, 'Create new cell after current');
+        edit.replaceCells(cell.index + 1, cell.index + 1, [
+            {
+                cellKind: vscodeNotebookEnums.CellKind.Code,
+                language: cell.language,
+                metadata: { ...cell.metadata, runState: vscodeNotebookEnums.NotebookCellRunState.Success },
+                outputs: [],
+                source: text
+            }
+        ]);
+    });
+}
+
 /**
  * @returns {boolean} Returns `true` if execution count has changed.
  */

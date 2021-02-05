@@ -24,8 +24,10 @@ import { StopWatch } from '../../../common/utils/stopWatch';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../constants';
 import {
+    addNewCellAfter,
     handleTensorBoardDisplayDataOutput,
     handleUpdateDisplayDataMessage,
+    updateCellCode,
     updateCellExecutionCount,
     updateCellWithErrorStatus
 } from '../../notebook/helpers/executionHelpers';
@@ -49,6 +51,13 @@ import {
 import { translateCellFromNative } from '../../utils';
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
+
+// Helper interface for the set_next_input execute reply payload
+interface ISetNextInputPayload {
+    replace: boolean;
+    source: 'set_next_input';
+    text: string;
+}
 
 export class CellExecutionFactory {
     constructor(
@@ -575,14 +584,22 @@ export class CellExecution {
         const reply = msg.content as KernelMessage.IExecuteReply;
         if (reply.payload) {
             await Promise.all(
-                reply.payload.map(async (o) => {
-                    if (o.data && o.data.hasOwnProperty('text/plain')) {
+                reply.payload.map(async (payload) => {
+                    if (
+                        payload.source &&
+                        payload.source === 'set_next_input' &&
+                        'text' in payload &&
+                        'replace' in payload
+                    ) {
+                        await this.handleSetNextInput((payload as unknown) as ISetNextInputPayload);
+                    }
+                    if (payload.data && payload.data.hasOwnProperty('text/plain')) {
                         await this.addToCellData(
                             {
                                 // Mark as stream output so the text is formatted because it likely has ansi codes in it.
                                 output_type: 'stream',
                                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                                text: (o.data as any)['text/plain'].toString(),
+                                text: (payload.data as any)['text/plain'].toString(),
                                 name: 'stdout',
                                 metadata: {},
                                 execution_count: reply.execution_count
@@ -592,6 +609,16 @@ export class CellExecution {
                     }
                 })
             );
+        }
+    }
+
+    private async handleSetNextInput(payload: ISetNextInputPayload) {
+        if (payload.replace) {
+            // Replace the contents of the current cell with text
+            return updateCellCode(this.editor, this.cell, payload.text);
+        } else {
+            // Add a new cell after the current with text
+            return addNewCellAfter(this.editor, this.cell, payload.text);
         }
     }
 
