@@ -371,6 +371,17 @@ suite('DataScience DataViewer tests', () => {
         }
     });
 
+    runMountedTest('Filter 2D PyTorch tensors', async (wrapper) => {
+        await injectCode('import torch\r\nfoo = torch.tensor([0, 1, 2, 3, 4, 5])');
+        const gotAllRows = getCompletedPromise(wrapper);
+        const dv = await createJupyterVariableDataViewer('foo', 'Tensor');
+        assert.ok(dv, 'DataViewer not created');
+        await gotAllRows;
+
+        await filterRows(wrapper.wrapper, '0', '> 0');
+        verifyRows(wrapper.wrapper, [1, 1, 2, 2, 3, 3, 4, 4, 5, 5]);
+    });
+
     runMountedTest('2D PyTorch tensors', async (wrapper) => {
         await injectCode(
             "import torch\r\nimport numpy as np\r\nfoo = torch.tensor([0, 1, np.inf, float('-inf'), np.nan])"
@@ -454,7 +465,7 @@ suite('DataScience DataViewer tests', () => {
         const dv = await createJupyterVariableDataViewer('foo', 'ndarray');
         assert.ok(dv, 'DataViewer not created');
         await gotAllRows;
-        verifyRows(wrapper.wrapper, [0, 'hello', '', 1, 42, '', 2, 'hi', 'hey']);
+        verifyRows(wrapper.wrapper, [0, 'hello', 1, 42, 2, "['hi', 'hey']"]);
     });
 
     runMountedTest('Ragged 2D numpy array', async (wrapper) => {
@@ -463,7 +474,7 @@ suite('DataScience DataViewer tests', () => {
         const dv = await createJupyterVariableDataViewer('foo', 'ndarray');
         assert.ok(dv, 'DataViewer not created');
         await gotAllRows;
-        verifyRows(wrapper.wrapper, [0, 1, 2, 3, 'inf', 1, 4, 'nan', 5]);
+        verifyRows(wrapper.wrapper, [0, '[1, 2, 3, inf]', 1, '[4, nan, 5]']);
     });
 
     runMountedTest('Ragged 3D numpy array', async (wrapper) => {
@@ -473,6 +484,6 @@ suite('DataScience DataViewer tests', () => {
         const dv = await createJupyterVariableDataViewer('foo', 'ndarray');
         assert.ok(dv, 'DataViewer not created');
         await gotAllRows;
-        verifyRows(wrapper.wrapper, [0, `[1, 2, 3]`, `[4, 5]`, 1, `[[6, 7, 8, 9]]`, '']);
+        verifyRows(wrapper.wrapper, [0, `[[1, 2, 3], [4, 5]]`, 1, '[[6, 7, 8, 9]]']);
     });
 });
