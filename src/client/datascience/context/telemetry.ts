@@ -11,7 +11,7 @@ import { IEventNamePropertyMapping, sendTelemetryEvent, sendTelemetryWhenDone } 
 import { StopWatch } from '../../common/utils/stopWatch';
 
 let connection: KernelConnectionMetadata;
-export type ResourceSpecificTelemetryProperties = {
+type ResourceSpecificTelemetryProperties = {
     resourceType: 'notebook' | 'interactive';
     pythonEnvironmentType?: EnvironmentType;
     pythonEnvironmentPath?: string;
