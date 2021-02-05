@@ -23,7 +23,7 @@ export class RawNotebookSupportedService implements IRawNotebookSupportedService
         return this.localLaunch() && (await this.isSupportedForLocalLaunch()) ? true : false;
     }
 
-    public async isSupportedForLocalLaunch(): Promise<boolean> {
+    private async isSupportedForLocalLaunch(): Promise<boolean> {
         // Save the ZMQ support for last, since it's probably the slowest part
         return !this.isZQMDisabled() && (await this.zmqSupported()) ? true : false;
     }

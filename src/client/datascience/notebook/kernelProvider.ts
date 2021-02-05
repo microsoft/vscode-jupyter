@@ -15,8 +15,8 @@ import { IConfigurationService, IDisposableRegistry, IExtensionContext } from '.
 import { noop } from '../../common/utils/misc';
 import { captureTelemetry } from '../../telemetry';
 import { sendNotebookOrKernelLanguageTelemetry } from '../common';
-import { Settings, Telemetry } from '../constants';
-import { areKernelConnectionsEqual } from '../jupyter/kernels/helpers';
+import { Telemetry } from '../constants';
+import { areKernelConnectionsEqual, isLocalLaunch } from '../jupyter/kernels/helpers';
 import { KernelSelectionProvider } from '../jupyter/kernels/kernelSelections';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
 import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
@@ -53,7 +53,7 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
     }
     private readonly _onDidChangeKernels = new EventEmitter<NotebookDocument | undefined>();
     private notebookKernelChangeHandled = new WeakSet<INotebook>();
-    private isRawNotebookSupported?: Promise<boolean>;
+    private readonly isLocalLaunch: boolean;
     constructor(
         @inject(KernelSelectionProvider) private readonly kernelSelectionProvider: KernelSelectionProvider,
         @inject(KernelSelector) private readonly kernelSelector: KernelSelector,
@@ -73,6 +73,8 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
         private readonly preferredRemoteKernelIdProvider: PreferredRemoteKernelIdProvider,
         @inject(ICommandManager) private readonly commandManager: ICommandManager
     ) {
+        this.isLocalLaunch = isLocalLaunch(this.configuration);
+
         this.kernelSelectionProvider.onDidChangeSelections(
             (e) => {
                 if (e) {
@@ -109,7 +111,6 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
             }
             return [];
         }
-
         const [preferredKernel, kernels] = await Promise.all([
             this.getPreferredKernel(document, token, sessionManager),
             this.getKernelSelections(document, token, sessionManager)
@@ -204,7 +205,7 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
             | PythonKernelConnectionMetadata
         >[]
     > {
-        if (this.isLocalLaunch()) {
+        if (this.isLocalLaunch) {
             return this.kernelSelectionProvider.getKernelSelectionsForLocalSession(document.uri, token);
         } else {
             if (!sessionManager) {
@@ -218,7 +219,7 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
         }
     }
     private async getJupyterSessionManager() {
-        if (this.isLocalLaunch()) {
+        if (this.isLocalLaunch) {
             return;
         }
         // Make sure we have a connection or we can't get remote kernels.
@@ -230,16 +231,6 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
         } else {
             return this.jupyterSessionManagerFactory.create(connection);
         }
-    }
-    private isLocalLaunch(): boolean {
-        const settings = this.configuration.getSettings(undefined);
-        const serverType: string | undefined = settings.jupyterServerType;
-
-        if (!serverType || serverType.toLowerCase() === Settings.JupyterServerLocalLaunch) {
-            return true;
-        }
-
-        return false;
     }
     private createNotebookKernelMetadataFromPreferredKernel(
         preferredKernel?: KernelConnectionMetadata
@@ -304,10 +295,8 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
             return editor.kernel.selection;
         }
 
-        if (this.isLocalLaunch()) {
-            this.isRawNotebookSupported =
-                this.isRawNotebookSupported || this.rawNotebookSupported.isSupportedForLocalLaunch();
-            const rawSupported = await this.isRawNotebookSupported;
+        if (this.isLocalLaunch) {
+            const rawSupported = await this.rawNotebookSupported.supported();
             if (token.isCancellationRequested) {
                 return;
             }
@@ -393,7 +382,7 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
         });
 
         // Auto start the local kernels.
-        if (newKernel && !this.configuration.getSettings(undefined).disableJupyterAutoStart && this.isLocalLaunch()) {
+        if (newKernel && !this.configuration.getSettings(undefined).disableJupyterAutoStart && this.isLocalLaunch) {
             newKernel.start({ disableUI: true, document }).catch(noop);
         }
 
