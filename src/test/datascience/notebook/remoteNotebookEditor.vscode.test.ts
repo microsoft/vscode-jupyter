@@ -103,6 +103,7 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
         assert.notDeepEqual(previousList, newList, 'MRU not updated');
     });
     test('Use same kernel when re-opening notebook', async () => {
+        traceInfo('Step1');
         await openNotebook(api.serviceContainer, ipynbFile.fsPath, { isNotTrusted: true });
         await waitForKernelToGetAutoSelected(PYTHON_LANGUAGE);
         let nbEditor = vscodeNotebook.activeNotebookEditor!;
@@ -114,6 +115,7 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
         let cell2 = nbEditor.document.cells![1]!;
         await waitForExecutionCompletedSuccessfully(cell2);
         assertHasTextOutputInVSCode(cell2, 'Hello World', 0);
+        traceInfo('Step2');
 
         // Confirm kernel id gets saved for this notebook.
         // This is not necessary, but this guarantees a faster & non-flaky test to ensure we don't close the notebook too early.
@@ -125,8 +127,10 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
             'Remote Kernel id not saved'
         );
 
+        traceInfo('Step3');
         await saveActiveNotebook(disposables);
         await closeActiveWindows();
+        traceInfo('Step4');
 
         // Re-open and execute the second cell.
         // It should connect to the same live kernel
@@ -134,6 +138,7 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
 
         await openNotebook(api.serviceContainer, ipynbFile.fsPath, { isNotTrusted: true });
         await waitForKernelToGetAutoSelected(PYTHON_LANGUAGE);
+        traceInfo('Step5');
         nbEditor = vscodeNotebook.activeNotebookEditor!;
         assert.isOk(nbEditor, 'No active notebook');
 
@@ -145,6 +150,7 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
             5_000,
             'Cell output not cleared'
         );
+        traceInfo('Step6');
 
         // Execute second cell
         cell2 = nbEditor.document.cells![1]!;
