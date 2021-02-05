@@ -18,9 +18,11 @@ import {
 import { createDeferred, Deferred, sleep } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
+import { StopWatch } from '../../common/utils/stopWatch';
 import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry } from '../../telemetry';
 import { Telemetry } from '../constants';
+import { sendKernelTelemetryEvent } from '../context/telemetry';
 import {
     IJupyterConnection,
     IJupyterSession,
@@ -108,8 +110,7 @@ export class JupyterServerBase implements INotebookServer {
         this.savedSession = session;
     }
 
-    @captureTelemetry(Telemetry.JupyterCreatingNotebook, undefined, true)
-    public createNotebook(
+    public async createNotebook(
         resource: Resource,
         identity: Uri,
         notebookMetadata?: nbformat.INotebookMetadata,
@@ -122,24 +123,29 @@ export class JupyterServerBase implements INotebookServer {
         // If we have a saved session send this into the notebook so we don't create a new one
         const savedSession = this.savedSession;
         this.savedSession = undefined;
-
+        const stopWatch = new StopWatch();
         // Create a notebook and return it.
-        return this.createNotebookInstance(
-            resource,
-            identity,
-            this.sessionManager,
-            savedSession,
-            this.disposableRegistry,
-            this.configService,
-            this.serviceContainer,
-            notebookMetadata,
-            kernelConnection,
-            cancelToken
-        ).then((r) => {
+        try {
+            const notebook = await this.createNotebookInstance(
+                resource,
+                identity,
+                this.sessionManager,
+                savedSession,
+                this.disposableRegistry,
+                this.configService,
+                this.serviceContainer,
+                notebookMetadata,
+                kernelConnection,
+                cancelToken
+            );
             const baseUrl = this.launchInfo?.connectionInfo.baseUrl || '';
             this.logRemoteOutput(localize.DataScience.createdNewNotebook().format(baseUrl));
-            return r;
-        });
+            sendKernelTelemetryEvent(resource, Telemetry.JupyterCreatingNotebook, stopWatch.elapsedTime);
+            return notebook;
+        } catch (ex) {
+            sendKernelTelemetryEvent(resource, Telemetry.JupyterCreatingNotebook, stopWatch.elapsedTime, undefined, ex);
+            throw ex;
+        }
     }
 
     public async shutdown(): Promise<void> {
