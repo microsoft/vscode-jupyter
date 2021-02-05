@@ -15,7 +15,7 @@ import { JupyterDaemonModule, Telemetry } from './constants';
 import { ActiveEditorContextService } from './context/activeEditorContext';
 import { JupyterInterpreterService } from './jupyter/interpreter/jupyterInterpreterService';
 import { KernelDaemonPreWarmer } from './kernel-launcher/kernelDaemonPreWarmer';
-import { INotebookCreationTracker, INotebookEditor, INotebookEditorProvider } from './types';
+import { INotebookCreationTracker, INotebookEditorProvider } from './types';
 
 @injectable()
 export class Activation implements IExtensionSingleActivationService {
