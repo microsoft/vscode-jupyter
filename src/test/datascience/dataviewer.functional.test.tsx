@@ -465,7 +465,7 @@ suite('DataScience DataViewer tests', () => {
         const dv = await createJupyterVariableDataViewer('foo', 'ndarray');
         assert.ok(dv, 'DataViewer not created');
         await gotAllRows;
-        verifyRows(wrapper.wrapper, [0, 'hello', '', 1, 42, '', 2, 'hi', 'hey']);
+        verifyRows(wrapper.wrapper, [0, 'hello', 1, 42, 2, "['hi', 'hey']"]);
     });
 
     runMountedTest('Ragged 2D numpy array', async (wrapper) => {
@@ -474,7 +474,7 @@ suite('DataScience DataViewer tests', () => {
         const dv = await createJupyterVariableDataViewer('foo', 'ndarray');
         assert.ok(dv, 'DataViewer not created');
         await gotAllRows;
-        verifyRows(wrapper.wrapper, [0, 1, 2, 3, 'inf', 1, 4, 'nan', 5]);
+        verifyRows(wrapper.wrapper, [0, '[1, 2, 3, inf]', 1, '[4, nan, 5]']);
     });
 
     runMountedTest('Ragged 3D numpy array', async (wrapper) => {
@@ -484,6 +484,6 @@ suite('DataScience DataViewer tests', () => {
         const dv = await createJupyterVariableDataViewer('foo', 'ndarray');
         assert.ok(dv, 'DataViewer not created');
         await gotAllRows;
-        verifyRows(wrapper.wrapper, [0, `[1, 2, 3]`, `[4, 5]`, 1, `[[6, 7, 8, 9]]`, '']);
+        verifyRows(wrapper.wrapper, [0, `[[1, 2, 3], [4, 5]]`, 1, '[[6, 7, 8, 9]]']);
     });
 });
