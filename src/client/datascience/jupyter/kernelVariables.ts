@@ -113,13 +113,22 @@ export class KernelVariables implements IJupyterVariables {
         }
     }
 
-    public async getDataFrameInfo(targetVariable: IJupyterVariable, notebook: INotebook): Promise<IJupyterVariable> {
+    public async getDataFrameInfo(
+        targetVariable: IJupyterVariable,
+        notebook: INotebook,
+        sliceExpression?: string
+    ): Promise<IJupyterVariable> {
         // Import the data frame script directory if we haven't already
         await this.importDataFrameScripts(notebook);
 
+        let expression = targetVariable.name;
+        if (sliceExpression) {
+            expression = `${targetVariable.name}${sliceExpression}`;
+        }
+
         // Then execute a call to get the info and turn it into JSON
         const results = await notebook.execute(
-            `print(${DataFrameLoading.DataFrameInfoFunc}(${targetVariable.name}))`,
+            `print(${DataFrameLoading.DataFrameInfoFunc}(${expression}))`,
             Identifiers.EmptyFileName,
             0,
             uuid(),
@@ -138,7 +147,8 @@ export class KernelVariables implements IJupyterVariables {
         targetVariable: IJupyterVariable,
         start: number,
         end: number,
-        notebook: INotebook
+        notebook: INotebook,
+        sliceExpression?: string
     ): Promise<{}> {
         // Import the data frame script directory if we haven't already
         await this.importDataFrameScripts(notebook);
@@ -147,9 +157,14 @@ export class KernelVariables implements IJupyterVariables {
             end = Math.min(end, targetVariable.rowCount);
         }
 
+        let expression = targetVariable.name;
+        if (sliceExpression) {
+            expression = `${targetVariable.name}${sliceExpression}`;
+        }
+
         // Then execute a call to get the rows and turn it into JSON
         const results = await notebook.execute(
-            `print(${DataFrameLoading.DataFrameRowFunc}(${targetVariable.name}, ${start}, ${end}))`,
+            `print(${DataFrameLoading.DataFrameRowFunc}(${expression}, ${start}, ${end}))`,
             Identifiers.EmptyFileName,
             0,
             uuid(),
@@ -208,7 +223,7 @@ export class KernelVariables implements IJupyterVariables {
         }
     }
 
-    private async getFullVariable(
+    public async getFullVariable(
         targetVariable: IJupyterVariable,
         notebook: INotebook,
         token?: CancellationToken

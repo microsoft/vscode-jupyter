@@ -4,7 +4,7 @@
 import type { JSONObject } from '@phosphor/coreutils';
 import { inject, injectable, named } from 'inversify';
 
-import { Event, EventEmitter } from 'vscode';
+import { CancellationToken, Event, EventEmitter } from 'vscode';
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
 import { IDisposableRegistry } from '../../common/types';
 import { captureTelemetry } from '../../telemetry';
@@ -50,21 +50,40 @@ export class JupyterVariables implements IJupyterVariables {
         return (await this.getVariableHandler(notebook)).getVariables(request, notebook);
     }
 
-    public async getMatchingVariable(name: string, notebook?: INotebook): Promise<IJupyterVariable | undefined> {
-        return (await this.getVariableHandler(notebook)).getMatchingVariable(name, notebook);
+    public async getFullVariable(variable: IJupyterVariable, notebook?: INotebook): Promise<IJupyterVariable> {
+        return (await this.getVariableHandler(notebook)).getFullVariable(variable, notebook);
     }
 
-    public async getDataFrameInfo(targetVariable: IJupyterVariable, notebook?: INotebook): Promise<IJupyterVariable> {
-        return (await this.getVariableHandler(notebook)).getDataFrameInfo(targetVariable, notebook);
+    public async getMatchingVariable(
+        name: string,
+        notebook?: INotebook,
+        cancelToken?: CancellationToken
+    ): Promise<IJupyterVariable | undefined> {
+        return (await this.getVariableHandler(notebook)).getMatchingVariable(name, notebook, cancelToken);
+    }
+
+    public async getDataFrameInfo(
+        targetVariable: IJupyterVariable,
+        notebook?: INotebook,
+        sliceExpression?: string
+    ): Promise<IJupyterVariable> {
+        return (await this.getVariableHandler(notebook)).getDataFrameInfo(targetVariable, notebook, sliceExpression);
     }
 
     public async getDataFrameRows(
         targetVariable: IJupyterVariable,
         start: number,
         end: number,
-        notebook?: INotebook
+        notebook?: INotebook,
+        sliceExpression?: string
     ): Promise<JSONObject> {
-        return (await this.getVariableHandler(notebook)).getDataFrameRows(targetVariable, start, end, notebook);
+        return (await this.getVariableHandler(notebook)).getDataFrameRows(
+            targetVariable,
+            start,
+            end,
+            notebook,
+            sliceExpression
+        );
     }
 
     private async getVariableHandler(notebook?: INotebook): Promise<IJupyterVariables> {

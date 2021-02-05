@@ -169,7 +169,7 @@
     "DataScience.connectedToKernel": "Connected.",
     "DataScience.connected": "Connected",
     "DataScience.disconnected": "Disconnected",
-    "DataScience.pythonExtensionRecommended": "You have opened a Python notebook. Would you like to install the Python extension to enhance the editing experience?",
+    "DataScience.pythonExtensionRecommended": "Installation of the Python Extension is strongly recommended when working with Python notebooks. For all features and the most seamless experience, would you like to install now?",
     "Experiments.inGroup": "User belongs to experiment group '{0}'",
     "Logging.CurrentWorkingDirectory": "cwd:",
     "Logging.WarnUserAboutDebugLoggingSetting": "You have enabled debug logging for the Jupyter extension, which will continue to write logs to disk. Would you like to turn debug logging off?",

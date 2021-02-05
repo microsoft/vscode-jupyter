@@ -30,6 +30,7 @@ const DataViewableTypes: Set<string> = new Set<string>([
     'EagerTensor'
 ]);
 const KnownExcludedVariables = new Set<string>(['In', 'Out', 'exit', 'quit']);
+const MaximumRowChunkSizeForDebugger = 100;
 
 @injectable()
 export class DebuggerVariables extends DebugLocationTracker
@@ -75,7 +76,7 @@ export class DebuggerVariables extends DebugLocationTracker
 
         if (this.active) {
             const startPos = request.startIndex ? request.startIndex : 0;
-            const chunkSize = request.pageSize ? request.pageSize : 100;
+            const chunkSize = request.pageSize ? request.pageSize : MaximumRowChunkSizeForDebugger;
             result.pageStartIndex = startPos;
 
             // Do one at a time. All at once doesn't work as they all have to wait for each other anyway
@@ -103,7 +104,11 @@ export class DebuggerVariables extends DebugLocationTracker
         }
     }
 
-    public async getDataFrameInfo(targetVariable: IJupyterVariable, notebook?: INotebook): Promise<IJupyterVariable> {
+    public async getDataFrameInfo(
+        targetVariable: IJupyterVariable,
+        notebook?: INotebook,
+        sliceExpression?: string
+    ): Promise<IJupyterVariable> {
         if (!this.active) {
             // No active server just return the unchanged target variable
             return targetVariable;
@@ -116,9 +121,14 @@ export class DebuggerVariables extends DebugLocationTracker
         // See if we imported or not into the kernel our special function
         await this.importDataFrameScripts();
 
+        let expression = targetVariable.name;
+        if (sliceExpression) {
+            expression = `${targetVariable.name}${sliceExpression}`;
+        }
+
         // Then eval calling the main function with our target variable
         const results = await this.evaluate(
-            `${DataFrameLoading.DataFrameInfoImportFunc}(${targetVariable.name})`,
+            `${DataFrameLoading.DataFrameInfoImportFunc}(${expression})`,
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (targetVariable as any).frameId
         );
@@ -127,7 +137,8 @@ export class DebuggerVariables extends DebugLocationTracker
         return results
             ? {
                   ...targetVariable,
-                  ...JSON.parse(results.result)
+                  ...JSON.parse(results.result),
+                  maximumRowChunkSize: MaximumRowChunkSizeForDebugger
               }
             : targetVariable;
     }
@@ -136,8 +147,14 @@ export class DebuggerVariables extends DebugLocationTracker
         targetVariable: IJupyterVariable,
         start: number,
         end: number,
-        notebook?: INotebook
+        notebook?: INotebook,
+        sliceExpression?: string
     ): Promise<{}> {
+        // Developer error. The debugger cannot eval more than 100 rows at once.
+        if (end - start > MaximumRowChunkSizeForDebugger) {
+            throw new Error(`Debugger cannot provide more than ${MaximumRowChunkSizeForDebugger} rows at once`);
+        }
+
         // Run the get dataframe rows script
         if (!this.debugService.activeDebugSession || targetVariable.columns === undefined) {
             // No active server just return no rows
@@ -148,38 +165,20 @@ export class DebuggerVariables extends DebugLocationTracker
             this.watchNotebook(notebook);
         }
 
+        let expression = targetVariable.name;
+        if (sliceExpression) {
+            expression = `${targetVariable.name}${sliceExpression}`;
+        }
+
         // See if we imported or not into the kernel our special function
         await this.importDataFrameScripts();
 
-        // Since the debugger splits up long requests, split this based on the number of items.
-
-        // Maximum 100 cells at a time or one row
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        let output: any;
-        const minnedEnd = Math.min(targetVariable.rowCount || 0, end);
-        const totalRowCount = end - start;
-        const cellsPerRow = targetVariable.columns!.length;
-        const chunkSize = Math.floor(Math.max(1, Math.min(100 / cellsPerRow, totalRowCount / cellsPerRow)));
-        for (let pos = start; pos < end; pos += chunkSize) {
-            const chunkEnd = Math.min(pos + chunkSize, minnedEnd);
-            const results = await this.evaluate(
-                `${DataFrameLoading.DataFrameRowImportFunc}(${targetVariable.name}, ${pos}, ${chunkEnd})`,
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                (targetVariable as any).frameId
-            );
-            const chunkResults = JSON.parse(results.result);
-            if (output && output.data) {
-                output = {
-                    ...output,
-                    data: output.data.concat(chunkResults.data)
-                };
-            } else {
-                output = chunkResults;
-            }
-        }
-
-        // Results should be the rows.
-        return output;
+        const results = await this.evaluate(
+            `${DataFrameLoading.DataFrameRowImportFunc}(${expression}, ${start}, ${end})`,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (targetVariable as any).frameId
+        );
+        return JSON.parse(results.result);
     }
 
     // This special DebugAdapterTracker function listens to messages sent from the debug adapter to VS Code
@@ -278,7 +277,7 @@ export class DebuggerVariables extends DebugLocationTracker
         }
     }
 
-    private async getFullVariable(variable: IJupyterVariable): Promise<IJupyterVariable> {
+    public async getFullVariable(variable: IJupyterVariable): Promise<IJupyterVariable> {
         // See if we imported or not into the kernel our special function
         await this.importGetVariableInfoScripts();
 

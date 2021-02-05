@@ -12,7 +12,6 @@ import { PYTHON_LANGUAGE, UseVSCodeNotebookEditorApi } from '../../common/consta
 import { ContextKey } from '../../common/contextKey';
 import { traceError } from '../../common/logger';
 import { IDisposable, IDisposableRegistry } from '../../common/types';
-import { setSharedProperty } from '../../telemetry';
 import { EditorContexts } from '../constants';
 import { isPythonNotebook } from '../notebook/helpers/helpers';
 import {
@@ -122,9 +121,6 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         this.updateMergedContexts();
     }
     private onDidChangeActiveNotebookEditor(e?: INotebookEditor) {
-        // This will ensure all subsequent telemetry will get the context of whether it is a custom/native/old notebook editor.
-        // This is temporary, and once we ship native editor this needs to be removed.
-        setSharedProperty('ds_notebookeditor', e?.type);
         this.nativeContext.set(!!e).ignoreErrors();
         this.isNotebookTrusted.set(e?.model?.isTrusted === true).ignoreErrors();
         this.isPythonNotebook.set(isPythonNotebook(e?.model?.metadata)).ignoreErrors();

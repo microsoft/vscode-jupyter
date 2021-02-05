@@ -862,7 +862,7 @@ export interface IJupyterExtraSettings extends IJupyterSettings {
     };
 }
 
-// Get variables from the currently running active Jupyter server
+// Get variables from the currently running active Jupyter server or debugger
 // Note: This definition is used implicitly by getJupyterVariableValue.py file
 // Changes here may need to be reflected there as well
 export interface IJupyterVariable {
@@ -873,11 +873,13 @@ export interface IJupyterVariable {
     type: string;
     size: number;
     shape: string;
+    dataDimensionality?: number;
     count: number;
     truncated: boolean;
     columns?: { key: string; type: string }[];
     rowCount?: number;
     indexColumn?: string;
+    maximumRowChunkSize?: number;
 }
 
 export const IJupyterVariableDataProvider = Symbol('IJupyterVariableDataProvider');
@@ -894,12 +896,22 @@ export const IJupyterVariables = Symbol('IJupyterVariables');
 export interface IJupyterVariables {
     readonly refreshRequired: Event<void>;
     getVariables(request: IJupyterVariablesRequest, notebook?: INotebook): Promise<IJupyterVariablesResponse>;
-    getDataFrameInfo(targetVariable: IJupyterVariable, notebook?: INotebook): Promise<IJupyterVariable>;
+    getFullVariable(
+        variable: IJupyterVariable,
+        notebook?: INotebook,
+        cancelToken?: CancellationToken
+    ): Promise<IJupyterVariable>;
+    getDataFrameInfo(
+        targetVariable: IJupyterVariable,
+        notebook?: INotebook,
+        sliceExpression?: string
+    ): Promise<IJupyterVariable>;
     getDataFrameRows(
         targetVariable: IJupyterVariable,
         start: number,
         end: number,
-        notebook?: INotebook
+        notebook?: INotebook,
+        sliceExpression?: string
     ): Promise<JSONObject>;
     getMatchingVariable(
         name: string,
