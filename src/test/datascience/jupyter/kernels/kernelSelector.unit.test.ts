@@ -25,7 +25,11 @@ import { KernelSelector } from '../../../../client/datascience/jupyter/kernels/k
 import { KernelService } from '../../../../client/datascience/jupyter/kernels/kernelService';
 import { LiveKernelModel } from '../../../../client/datascience/jupyter/kernels/types';
 import { IKernelFinder } from '../../../../client/datascience/kernel-launcher/types';
-import { IJupyterSessionManager, KernelInterpreterDependencyResponse } from '../../../../client/datascience/types';
+import {
+    IJupyterSessionManager,
+    IRawNotebookSupportedService,
+    KernelInterpreterDependencyResponse
+} from '../../../../client/datascience/types';
 import { IInterpreterService } from '../../../../client/interpreter/contracts';
 import { PythonEnvironment } from '../../../../client/pythonEnvironments/info';
 import { PreferredRemoteKernelIdProvider } from '../../../../client/datascience/notebookStorage/preferredRemoteKernelIdProvider';
@@ -224,6 +228,8 @@ suite('DataScience - KernelSelector', () => {
             sinon
                 .stub(ActiveJupyterSessionKernelSelectionListProvider.prototype, 'getKernelSelections')
                 .resolves(quickPickItems);
+            const rawSupportedService = mock<IRawNotebookSupportedService>();
+            when(rawSupportedService.supported()).thenResolve(true);
             const provider = new KernelSelectionProvider(
                 instance(kernelService),
                 instance(mock<IInterpreterSelector>()),
@@ -233,7 +239,8 @@ suite('DataScience - KernelSelector', () => {
                 instance(kernelFinder),
                 instance(mock<IPythonExtensionChecker>()),
                 disposableRegistry,
-                instance(jupyterSessionManagerFactory)
+                instance(jupyterSessionManagerFactory),
+                instance(rawSupportedService)
             );
             when(appShell.showQuickPick(anything(), anything(), anything())).thenResolve(undefined);
 

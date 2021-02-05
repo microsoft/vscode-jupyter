@@ -22,7 +22,12 @@ import { KernelSelectionProvider } from '../../../../client/datascience/jupyter/
 import { KernelService } from '../../../../client/datascience/jupyter/kernels/kernelService';
 import { IKernelSpecQuickPickItem } from '../../../../client/datascience/jupyter/kernels/types';
 import { IKernelFinder } from '../../../../client/datascience/kernel-launcher/types';
-import { IJupyterKernel, IJupyterKernelSpec, IJupyterSessionManager } from '../../../../client/datascience/types';
+import {
+    IJupyterKernel,
+    IJupyterKernelSpec,
+    IJupyterSessionManager,
+    IRawNotebookSupportedService
+} from '../../../../client/datascience/types';
 import { IInterpreterQuickPickItem, IInterpreterSelector } from '../../../../client/interpreter/configuration/types';
 import { IInterpreterService } from '../../../../client/interpreter/contracts';
 
@@ -149,6 +154,8 @@ suite('DataScience - KernelSelections', () => {
         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
         const interpreterService = mock<IInterpreterService>();
         when(interpreterService.getActiveInterpreter(anything())).thenResolve();
+        const rawSupportedService = mock<IRawNotebookSupportedService>();
+        when(rawSupportedService.supported()).thenResolve(true);
         kernelSelectionProvider = new KernelSelectionProvider(
             instance(kernelService),
             instance(interpreterSelector),
@@ -158,7 +165,8 @@ suite('DataScience - KernelSelections', () => {
             instance(kernelFinder),
             instance(extensionChecker),
             disposableRegistry,
-            instance(jupyterSessionManagerFactory)
+            instance(jupyterSessionManagerFactory),
+            instance(rawSupportedService)
         );
     });
     teardown(() => disposeAllDisposables(disposableRegistry));

@@ -19,7 +19,7 @@ import { IInterpreterService } from '../../../interpreter/contracts';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { captureTelemetry, IEventNamePropertyMapping, sendTelemetryEvent } from '../../../telemetry';
 import { sendNotebookOrKernelLanguageTelemetry } from '../../common';
-import { Commands, Settings, Telemetry } from '../../constants';
+import { Commands, Telemetry } from '../../constants';
 import { IKernelFinder } from '../../kernel-launcher/types';
 import { isPythonNotebook } from '../../notebook/helpers/helpers';
 import { getInterpreterInfoStoredInMetadata } from '../../notebookStorage/baseModel';
@@ -35,7 +35,12 @@ import {
     INotebookProviderConnection,
     KernelInterpreterDependencyResponse
 } from '../../types';
-import { createDefaultKernelSpec, getDisplayNameOrNameOfKernelConnection, isPythonKernelConnection } from './helpers';
+import {
+    createDefaultKernelSpec,
+    getDisplayNameOrNameOfKernelConnection,
+    isLocalLaunch,
+    isPythonKernelConnection
+} from './helpers';
 import { KernelSelectionProvider } from './kernelSelections';
 import { KernelService } from './kernelService';
 import {
@@ -122,6 +127,7 @@ export class KernelSelector implements IKernelSelectionUsage {
      * Gets a kernel that needs to be used with a local session.
      * (will attempt to find the best matching kernel, or prompt user to use current interpreter or select one).
      */
+    @traceDecorators.info('Get preferred local kernel connection')
     @reportAction(ReportableAction.KernelsGetKernelForLocalConnection)
     @captureTelemetry(Telemetry.GetPreferredKernelPerf)
     public async getPreferredKernelForLocalConnection(
@@ -206,6 +212,7 @@ export class KernelSelector implements IKernelSelectionUsage {
      * (will attempt to find the best matching kernel, or prompt user to use current interpreter or select one).
      */
     // eslint-disable-next-line complexity
+    @traceDecorators.info('Get preferred remote kernel connection')
     @reportAction(ReportableAction.KernelsGetKernelForRemoteConnection)
     public async getPreferredKernelForRemoteConnection(
         resource: Resource,
@@ -249,6 +256,8 @@ export class KernelSelector implements IKernelSelectionUsage {
                     `Got Preferred kernel for ${resource?.toString()} & it is ${preferredKernelId}, but without a matching session`
                 );
             }
+        } else {
+            traceInfo(`No preferred kernel for remote notebook connection ${resource?.toString()}`);
         }
 
         // No running session, try matching based on interpreter
@@ -297,7 +306,6 @@ export class KernelSelector implements IKernelSelectionUsage {
                 bestScore = score;
             }
         }
-
         if (bestMatch) {
             return cloneDeep({
                 kernelSpec: bestMatch,
@@ -305,6 +313,7 @@ export class KernelSelector implements IKernelSelectionUsage {
                 kind: 'startUsingKernelSpec'
             });
         } else {
+            traceError('No preferred kernel, using the default kernel');
             // Unlikely scenario, we expect there to be at least one kernel spec.
             // Either way, return so that we can start using the default kernel.
             return cloneDeep({
@@ -384,9 +393,7 @@ export class KernelSelector implements IKernelSelectionUsage {
         currentKernelDisplayName: string | undefined
     ): Promise<KernelConnectionMetadata | undefined> {
         let kernelConnection: KernelConnectionMetadata | undefined;
-        const settings = this.configService.getSettings(resource);
-        const isLocalConnection =
-            connection?.localLaunch ?? settings.jupyterServerType.toLowerCase() === Settings.JupyterServerLocalLaunch;
+        const isLocalConnection = connection?.localLaunch ?? isLocalLaunch(this.configService);
 
         if (isLocalConnection) {
             kernelConnection = await this.selectLocalJupyterKernel(

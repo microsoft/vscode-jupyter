@@ -12,7 +12,7 @@ import { nbformat } from '@jupyterlab/coreutils';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
 import { PYTHON_LANGUAGE } from '../../../common/constants';
-import { ReadWrite } from '../../../common/types';
+import { IConfigurationService, ReadWrite } from '../../../common/types';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import {
     DefaultKernelConnectionMetadata,
@@ -22,6 +22,7 @@ import {
     LiveKernelModel,
     PythonKernelConnectionMetadata
 } from './types';
+import { Settings } from '../../constants';
 
 // Helper functions for dealing with kernels and kernelspecs
 
@@ -265,4 +266,15 @@ export function cleanEnvironment<T>(spec: T): T {
     }
 
     return copy as T;
+}
+
+export function isLocalLaunch(configuration: IConfigurationService) {
+    const settings = configuration.getSettings(undefined);
+    const serverType: string | undefined = settings.jupyterServerType;
+
+    if (!serverType || serverType.toLowerCase() === Settings.JupyterServerLocalLaunch) {
+        return true;
+    }
+
+    return false;
 }

@@ -343,7 +343,9 @@ export class DebuggerVariables extends DebugLocationTracker
 
 export function convertDebugProtocolVariableToIJupyterVariable(variable: DebugProtocol.Variable) {
     return {
-        name: variable.name,
+        // If `evaluateName` is available use that. That is the name that we can eval in the debugger
+        // but it's an optional property so fallback to `variable.name`
+        name: variable.evaluateName ?? variable.name,
         type: variable.type!,
         count: 0,
         shape: '',

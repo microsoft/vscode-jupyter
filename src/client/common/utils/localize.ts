@@ -184,7 +184,7 @@ export namespace DataScience {
 
     export const pythonExtensionRecommended = localize(
         'DataScience.pythonExtensionRecommended',
-        'You have opened a Python notebook. Would you like to install the Python extension?'
+        'Installation of the Python Extension is strongly recommended when working with Python notebooks. For all features and the most seamless experience, would you like to install now?'
     );
 
     export const pythonExtensionInstalled = localize(
@@ -957,10 +957,6 @@ export namespace DataScience {
     export const insecureSessionDenied = localize(
         'DataScience.insecureSessionDenied',
         'Denied connection to insecure server.'
-    );
-    export const previewNotebookOnlySupportedInVSCInsiders = localize(
-        'DataScience.previewNotebookOnlySupportedInVSCInsiders',
-        'The Preview Notebook Editor is supported only in the Insiders version of Visual Studio Code.'
     );
     export const connected = localize('DataScience.connected', 'Connected');
     export const disconnected = localize('DataScience.disconnected', 'Disconnected');

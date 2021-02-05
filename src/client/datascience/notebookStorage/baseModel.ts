@@ -47,7 +47,7 @@ export function updateNotebookMetadata(
         return { changed, kernelId };
     }
 
-    if (kernelInfo && kernelInfo.status === 'ok') {
+    if (kernelInfo && 'language_info' in kernelInfo && kernelInfo.language_info) {
         if (!fastDeepEqual(metadata.language_info, kernelInfo.language_info)) {
             metadata.language_info = cloneDeep(kernelInfo.language_info);
             changed = true;
