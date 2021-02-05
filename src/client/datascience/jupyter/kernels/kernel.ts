@@ -61,7 +61,6 @@ export class Kernel implements IKernel {
     }
     private notebook?: INotebook;
     private _disposed?: boolean;
-    private isRawNotebookSupported?: Promise<boolean>;
     private readonly _kernelSocket = new Subject<KernelSocketInformation | undefined>();
     private readonly _onStatusChanged = new EventEmitter<ServerStatus>();
     private readonly _onRestarted = new EventEmitter<void>();
@@ -219,10 +218,8 @@ export class Kernel implements IKernel {
         }
         const key = uri.toString();
         if (!this.kernelValidated.get(key)) {
-            this.isRawNotebookSupported = this.isRawNotebookSupported || this.rawNotebookSupported.supported();
-
             const promise = new Promise<void>((resolve) =>
-                this.isRawNotebookSupported!.then((isRawNotebookSupported) =>
+                this.rawNotebookSupported.supported().then((isRawNotebookSupported) =>
                     this.kernelSelectionUsage
                         .useSelectedKernel(
                             kernel?.kernelConnectionMetadata,

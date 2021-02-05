@@ -53,7 +53,6 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
     }
     private readonly _onDidChangeKernels = new EventEmitter<NotebookDocument | undefined>();
     private notebookKernelChangeHandled = new WeakSet<INotebook>();
-    private isRawNotebookSupported?: Promise<boolean>;
     private readonly isLocalLaunch: boolean;
     constructor(
         @inject(KernelSelectionProvider) private readonly kernelSelectionProvider: KernelSelectionProvider,
@@ -298,8 +297,7 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
         }
 
         if (this.isLocalLaunch) {
-            this.isRawNotebookSupported = this.isRawNotebookSupported || this.rawNotebookSupported.supported();
-            const rawSupported = await this.isRawNotebookSupported;
+            const rawSupported = await this.rawNotebookSupported.supported();
             if (token.isCancellationRequested) {
                 return;
             }
