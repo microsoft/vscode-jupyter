@@ -28,7 +28,7 @@ export class InstalledLocalKernelSelectionListProvider
         resource: Resource,
         cancelToken?: CancellationToken
     ): Promise<IKernelSpecQuickPickItem<KernelSpecConnectionMetadata>[]> {
-        const rawNotebookSupported = this.rawNotebookSupportedService.isSupportedForLocalLaunch();
+        const rawNotebookSupported = await this.rawNotebookSupportedService.supported();
         const items = await this.kernelFinder.listKernelSpecs(resource);
         const selections = await Promise.all(
             items
