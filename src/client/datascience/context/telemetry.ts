@@ -13,10 +13,14 @@ import { StopWatch } from '../../common/utils/stopWatch';
 let connection: KernelConnectionMetadata;
 type ResourceSpecificTelemetryProperties = {
     resourceType: 'notebook' | 'interactive';
+    // Found plenty of issues when starting kernels with conda, hence useful to capture this info.
     pythonEnvironmentType?: EnvironmentType;
+    // A key, so that rest of the information is tied to this.
     pythonEnvironmentPath?: string;
+    // Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)
     pythonEnvironmentVersion?: string;
     kernelWasAutoStarted?: boolean;
+    // Whether kernel was started using kernel spec, interpreter, etc.
     kernelConnectionType?: typeof connection.kind;
     kernelStartedSuccessfully?: boolean;
 };
