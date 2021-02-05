@@ -28,7 +28,6 @@ export enum ImageName {
     Next,
     Prev,
     Copy,
-    GatherCode,
     Up,
     Down,
     Run,
@@ -69,10 +68,6 @@ const images: { [key: string]: { light: string; dark: string } } = {
     ExpandAll: {
         light: require('./images/ExpandAll/ExpandAll_16x_vscode.svg'),
         dark: require('./images/ExpandAll/ExpandAll_16x_vscode_dark.svg')
-    },
-    GatherCode: {
-        light: require('./images/GatherCode/gather_light.svg'),
-        dark: require('./images/GatherCode/gather_dark.svg')
     },
     GoToSourceCode: {
         light: require('./images/GoToSourceCode/GoToSourceCode_16x_vscode.svg'),
@@ -228,7 +223,7 @@ export class Image extends React.Component<IImageProps> {
     }
 
     public render() {
-        if (this.props.codicon && this.props.codicon !== 'gather') {
+        if (this.props.codicon) {
             const pre = 'codicon codicon-';
             const styles: React.CSSProperties = {
                 color: 'var(--vscode-editor-foreground)'
@@ -236,10 +231,7 @@ export class Image extends React.Component<IImageProps> {
             return <div style={styles} className={pre + this.props.codicon}></div>;
         }
 
-        const key =
-            this.props.codicon === 'gather'
-                ? ImageName[ImageName.GatherCode].toString()
-                : ImageName[this.props.image].toString();
+        const key = ImageName[this.props.image].toString();
         const image = images.hasOwnProperty(key) ? images[key] : images.Cancel; // Default is cancel.
         const source = this.props.baseTheme.includes('dark') ? image.dark : image.light;
         return <InlineSVG className={this.props.class} src={source} title={this.props.title} />;
