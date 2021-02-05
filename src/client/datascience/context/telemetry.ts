@@ -29,16 +29,6 @@ type ContextualTelemetryProps = {
 const trackedInfo = new Map<string, ResourceSpecificTelemetryProperties>();
 const currentOSType = getOSType();
 
-function getUriKey(uri: Uri) {
-    return currentOSType ? uri.fsPath.toLowerCase() : uri.fsPath;
-}
-
-function getContextualPropsForTelemetry(resource: Resource): ResourceSpecificTelemetryProperties | undefined {
-    if (!resource) {
-        return;
-    }
-    return trackedInfo.get(getUriKey(resource));
-}
 export function sendKernelTelemetryEvent<P extends IEventNamePropertyMapping, E extends keyof P>(
     resource: Resource,
     eventName: E,
@@ -100,4 +90,14 @@ export function deleteTrackedInformation(resource: Uri) {
 
 function getResourceType(uri: Uri) {
     return uri.fsPath.toLowerCase().endsWith('ipynb') ? 'notebook' : 'interactive';
+}
+function getUriKey(uri: Uri) {
+    return currentOSType ? uri.fsPath.toLowerCase() : uri.fsPath;
+}
+
+function getContextualPropsForTelemetry(resource: Resource): ResourceSpecificTelemetryProperties | undefined {
+    if (!resource) {
+        return;
+    }
+    return trackedInfo.get(getUriKey(resource));
 }

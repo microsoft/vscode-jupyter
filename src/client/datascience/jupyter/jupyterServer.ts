@@ -20,7 +20,6 @@ import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { IServiceContainer } from '../../ioc/types';
-import { captureTelemetry } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { sendKernelTelemetryEvent } from '../context/telemetry';
 import {
