@@ -127,6 +127,7 @@ export class KernelSelector implements IKernelSelectionUsage {
      * Gets a kernel that needs to be used with a local session.
      * (will attempt to find the best matching kernel, or prompt user to use current interpreter or select one).
      */
+    @traceDecorators.info('Get preferred local kernel connection')
     @reportAction(ReportableAction.KernelsGetKernelForLocalConnection)
     @captureTelemetry(Telemetry.GetPreferredKernelPerf)
     public async getPreferredKernelForLocalConnection(
@@ -211,6 +212,7 @@ export class KernelSelector implements IKernelSelectionUsage {
      * (will attempt to find the best matching kernel, or prompt user to use current interpreter or select one).
      */
     // eslint-disable-next-line complexity
+    @traceDecorators.info('Get preferred remote kernel connection')
     @reportAction(ReportableAction.KernelsGetKernelForRemoteConnection)
     public async getPreferredKernelForRemoteConnection(
         resource: Resource,
