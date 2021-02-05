@@ -23,6 +23,8 @@ import {
     PythonKernelConnectionMetadata
 } from './types';
 import { Settings } from '../../constants';
+import { traceInfoIf } from '../../../common/logger';
+import { IS_CI_SERVER } from '../../../../test/ciConstants';
 
 // Helper functions for dealing with kernels and kernelspecs
 
@@ -273,8 +275,10 @@ export function isLocalLaunch(configuration: IConfigurationService) {
     const serverType: string | undefined = settings.jupyterServerType;
 
     if (!serverType || serverType.toLowerCase() === Settings.JupyterServerLocalLaunch) {
+        traceInfoIf(IS_CI_SERVER, `isLocalLaunch = ${serverType}`);
         return true;
     }
 
+    traceInfoIf(IS_CI_SERVER, `isLocalLaunch = false`);
     return false;
 }
