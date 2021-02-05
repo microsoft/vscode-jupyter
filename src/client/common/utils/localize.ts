@@ -184,7 +184,7 @@ export namespace DataScience {
 
     export const pythonExtensionRecommended = localize(
         'DataScience.pythonExtensionRecommended',
-        'You have opened a Python notebook. Would you like to install the Python extension to enhance the editing experience?'
+        'Installation of the Python Extension is strongly recommended when working with Python notebooks. For all features and the most seamless experience, would you like to install now?'
     );
 
     export const pythonExtensionInstalled = localize(
