@@ -12,6 +12,7 @@ import { IFileSystem } from '../../common/platform/types';
 
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
+import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry } from '../../telemetry';
 import { Commands, Telemetry } from '../constants';
@@ -128,7 +129,7 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
 
             // If we have no editors for this file, then dispose the notebook.
             if (otherEditors.length === 0) {
-                editor.notebook?.dispose();
+                editor.notebook?.dispose().catch(noop);
             }
         }
     }
