@@ -254,6 +254,8 @@ export class KernelSelector implements IKernelSelectionUsage {
                     `Got Preferred kernel for ${resource?.toString()} & it is ${preferredKernelId}, but without a matching session`
                 );
             }
+        } else {
+            traceInfo(`No preferred kernel for remote notebook connection ${resource?.toString()}`);
         }
 
         // No running session, try matching based on interpreter
