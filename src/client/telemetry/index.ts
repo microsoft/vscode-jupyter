@@ -334,13 +334,28 @@ export interface ISharedPropertyMapping {
      * For every DS telemetry we would like to know whether the this is from AML compute or not.
      * If not in AML compute, then do not send this telemetry.
      */
-    ['isamlcompute']: 'yes';
+    ['isamlcompute']: boolean;
 
     /**
      * For every telemetry event from the extension we want to make sure we can associate it with install
      * source. We took this approach to work around very limiting query performance issues.
      */
     ['installSource']: undefined | 'marketPlace' | 'pythonCodingPack';
+
+    /**
+     * Whether raw kernel is supported or not.
+     */
+    ['rawKernelSupported']: boolean;
+
+    /**
+     * Whether using local or remote connection.
+     */
+    ['localOrRemoteConnection']: 'local' | 'remote';
+
+    /**
+     * Whether using local or remote connection.
+     */
+    ['isPythonExtensionInstalled']: boolean;
 }
 
 // Map all events to their properties

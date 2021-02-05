@@ -19,7 +19,7 @@ import { IVSCodeNotebook } from '../../common/application/types';
 import { MARKDOWN_LANGUAGE } from '../../common/constants';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { DataScience } from '../../common/utils/localize';
-import { captureTelemetry, sendTelemetryEvent, setSharedProperty } from '../../telemetry';
+import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { INotebookStorageProvider } from '../notebookStorage/notebookStorageProvider';
 import { VSCodeNotebookModel } from '../notebookStorage/vscNotebookModel';
@@ -90,7 +90,6 @@ export class NotebookContentProvider implements VSCNotebookContentProvider {
         if (!(model instanceof VSCodeNotebookModel)) {
             throw new Error('Incorrect NotebookModel, expected VSCodeNotebookModel');
         }
-        setSharedProperty('ds_notebookeditor', 'native');
         sendTelemetryEvent(Telemetry.CellCount, undefined, { count: model.cellCount });
         try {
             return model.getNotebookData();
