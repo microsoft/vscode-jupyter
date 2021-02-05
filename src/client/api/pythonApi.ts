@@ -13,7 +13,7 @@
 
 import { inject, injectable } from 'inversify';
 import { CancellationToken, Disposable, Event, EventEmitter, Uri } from 'vscode';
-import { IApplicationEnvironment, IApplicationShell } from '../common/application/types';
+import { IApplicationShell, ICommandManager } from '../common/application/types';
 import { InterpreterUri } from '../common/installer/types';
 import { IExtensions, InstallerResponse, IPersistentStateFactory, Product, Resource } from '../common/types';
 import { createDeferred } from '../common/utils/async';
@@ -86,7 +86,7 @@ export class PythonExtensionChecker implements IPythonExtensionChecker {
         @inject(IExtensions) private readonly extensions: IExtensions,
         @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
-        @inject(IApplicationEnvironment) private readonly appEnv: IApplicationEnvironment
+        @inject(ICommandManager) private readonly commandManager: ICommandManager
     ) {
         // If the python extension is not installed listen to see if anything does install it
         if (!this.isPythonExtensionInstalled) {
@@ -145,7 +145,7 @@ export class PythonExtensionChecker implements IPythonExtensionChecker {
 
     private async installPythonExtension() {
         // Have the user install python
-        this.appShell.openUrl(`${this.appEnv.uriScheme}:extension/${this.pythonExtensionId}`);
+        void this.commandManager.executeCommand('extension.open', PythonExtension);
     }
 
     private async extensionsChangeHandler(): Promise<void> {
