@@ -289,12 +289,10 @@ export class DebuggerVariables extends DebugLocationTracker
         );
         if (results && results.result) {
             // Results should be the updated variable.
-            const info = JSON.parse(results.result);
-
             return {
                 ...variable,
-                ...info,
-                truncated: false
+                truncated: false,
+                ...JSON.parse(results.result)
             };
         } else {
             // If no results, just return current value. Better than nothing.

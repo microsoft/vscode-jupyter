@@ -10,10 +10,13 @@ def _VSCODE_getVariableInfo(var):
     result["count"] = 0
     result["type"] = ""
 
-    vartype = type(var)
     typeName = None
-    if hasattr(vartype, "__name__"):
-        result["type"] = typeName = vartype.__name__
+    try:
+        vartype = type(var)
+        if hasattr(vartype, "__name__"):
+            result["type"] = typeName = vartype.__name__
+    except TypeError:
+        pass
 
     # Find shape and count if available
     if hasattr(var, "shape"):
