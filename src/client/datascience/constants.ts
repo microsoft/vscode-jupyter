@@ -426,7 +426,8 @@ export enum Telemetry {
     NotebookTrustPromptShown = 'DATASCIENCE.NOTEBOOK_TRUST_PROMPT_SHOWN',
     SyncAllCells = 'DS_INTERNAL.SYNC_ALL_CELLS',
     SyncSingleCell = 'DS_INTERNAL.SYNC_SINGLE_CELL',
-    NativeRandomBytesGenerationFailed = 'DS_INTERNAL.NATIVE_RANDOM_BYTES_GENERATION_FAILED'
+    NativeRandomBytesGenerationFailed = 'DS_INTERNAL.NATIVE_RANDOM_BYTES_GENERATION_FAILED',
+    NotebookStart = 'DATASCIENCE.NOTEBOOK_START'
 }
 
 export enum NativeKeyboardCommandTelemetry {

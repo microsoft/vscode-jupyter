@@ -238,7 +238,7 @@ export class HostRawNotebookProvider
                         kernelConnectionMetadata
                     )}`
                 );
-                await rawSession.connect(kernelConnectionMetadata, launchTimeout, cancelToken, disableUI);
+                await rawSession.connect(resource, kernelConnectionMetadata, launchTimeout, cancelToken, disableUI);
 
                 // Get the execution info for our notebook
                 const info = await this.getExecutionInfo(kernelConnectionMetadata);

@@ -3,31 +3,17 @@
 
 import { Uri } from 'vscode';
 import { getOSType } from '../../common/utils/platform';
-import { EnvironmentType } from '../../pythonEnvironments/info';
 import { KernelConnectionMetadata } from '../jupyter/kernels/types';
 import * as hashjs from 'hash.js';
 import { Resource } from '../../common/types';
 import { IEventNamePropertyMapping, sendTelemetryEvent, sendTelemetryWhenDone } from '../../telemetry';
 import { StopWatch } from '../../common/utils/stopWatch';
-
-let connection: KernelConnectionMetadata;
-type ResourceSpecificTelemetryProperties = {
-    resourceType: 'notebook' | 'interactive';
-    // Found plenty of issues when starting kernels with conda, hence useful to capture this info.
-    pythonEnvironmentType?: EnvironmentType;
-    // A key, so that rest of the information is tied to this.
-    pythonEnvironmentPath?: string;
-    // Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)
-    pythonEnvironmentVersion?: string;
-    kernelWasAutoStarted?: boolean;
-    // Whether kernel was started using kernel spec, interpreter, etc.
-    kernelConnectionType?: typeof connection.kind;
-    kernelStartedSuccessfully?: boolean;
-};
+import { ResourceSpecificTelemetryProperties } from './types';
 
 type ContextualTelemetryProps = {
     kernelConnection: KernelConnectionMetadata;
     wasJupyterAutoStarted: boolean;
+    kernelDied: boolean;
 };
 
 const trackedInfo = new Map<string, ResourceSpecificTelemetryProperties>();
@@ -43,14 +29,17 @@ export function sendKernelTelemetryEvent<P extends IEventNamePropertyMapping, E 
     const addOnTelemetry = getContextualPropsForTelemetry(resource);
     if (addOnTelemetry) {
         const props = properties || {};
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         sendTelemetryEvent(eventName as any, durationMs, Object.assign(props, addOnTelemetry), ex);
     } else {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         sendTelemetryEvent(eventName as any, durationMs, properties, ex);
     }
 }
 export function sendKernelTelemetryWhenDone<P extends IEventNamePropertyMapping, E extends keyof P>(
     resource: Resource,
     eventName: E,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     promise: Promise<any> | Thenable<any>,
     stopWatch?: StopWatch,
     properties?: P[E]
@@ -58,8 +47,10 @@ export function sendKernelTelemetryWhenDone<P extends IEventNamePropertyMapping,
     const addOnTelemetry = getContextualPropsForTelemetry(resource);
     if (addOnTelemetry) {
         const props = properties || {};
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         sendTelemetryWhenDone(eventName as any, promise, stopWatch, Object.assign(props, addOnTelemetry));
     } else {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         sendTelemetryWhenDone(eventName as any, promise, stopWatch, properties);
     }
 }

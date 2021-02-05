@@ -18,7 +18,7 @@ export class ErrorUtils {
  * Wraps an error with a custom error message, retaining the call stack information.
  */
 export class WrappedError extends Error {
-    constructor(message: string, originalException: Error) {
+    constructor(message: string, public readonly originalException: Error) {
         super(message);
         // Retain call stack that trapped the error and rethrows this error.
         // Also retain the call stack of the original error.

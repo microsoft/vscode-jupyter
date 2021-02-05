@@ -17,6 +17,7 @@ import {
     Telemetry,
     VSCodeNativeTelemetry
 } from '../datascience/constants';
+import { ResourceSpecificTelemetryProperties } from '../datascience/context/types';
 import { ExportFormat } from '../datascience/export/types';
 import { EventName, PlatformErrors } from './constants';
 
@@ -1031,6 +1032,9 @@ export interface IEventNamePropertyMapping {
     [Telemetry.RawKernelSessionConnect]: never | undefined;
     [Telemetry.RawKernelStartRawSession]: never | undefined;
     [Telemetry.RawKernelProcessLaunch]: never | undefined;
+
+    // Applies to everything (interactive+Notebooks & local+remote)
+    [Telemetry.NotebookStart]: { success: boolean } & ResourceSpecificTelemetryProperties;
 
     // Raw kernel single events
     [Telemetry.RawKernelSessionStartSuccess]: never | undefined;

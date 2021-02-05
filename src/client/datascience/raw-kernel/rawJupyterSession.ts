@@ -10,9 +10,11 @@ import { IDisposable, IOutputChannel, Resource } from '../../common/types';
 import { TimedOutError } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
-import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
+import { StopWatch } from '../../common/utils/stopWatch';
+import { captureTelemetry } from '../../telemetry';
 import { BaseJupyterSession } from '../baseJupyterSession';
 import { Identifiers, Telemetry } from '../constants';
+import { sendKernelTelemetryEvent, trackResourceInformation } from '../context/telemetry';
 import { getDisplayNameOrNameOfKernelConnection } from '../jupyter/kernels/helpers';
 import { KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { IKernelLauncher, IpyKernelNotInstalledError } from '../kernel-launcher/types';
@@ -76,8 +78,8 @@ export class RawJupyterSession extends BaseJupyterSession {
     }
 
     // Connect to the given kernelspec, which should already have ipykernel installed into its interpreter
-    @captureTelemetry(Telemetry.RawKernelSessionConnect, undefined, true)
     public async connect(
+        resource: Resource,
         kernelConnection: KernelConnectionMetadata,
         timeout: number,
         cancelToken?: CancellationToken,
@@ -85,13 +87,15 @@ export class RawJupyterSession extends BaseJupyterSession {
     ): Promise<KernelConnectionMetadata | undefined> {
         // Save the resource that we connect with
         let newSession: RawSession | null | CancellationError = null;
+        trackResourceInformation(resource, { kernelConnection });
+        const stopWatch = new StopWatch();
         try {
             // Try to start up our raw session, allow for cancellation or timeout
             // Notebook Provider level will handle the thrown error
             newSession = await this.startRawSession(kernelConnection, timeout, cancelToken, disableUI);
 
             // Only connect our session if we didn't cancel or timeout
-            sendTelemetryEvent(Telemetry.RawKernelSessionStartSuccess);
+            sendKernelTelemetryEvent(resource, Telemetry.RawKernelSessionStartSuccess);
             traceInfo('Raw session started and connected');
             this.setSession(newSession);
 
@@ -109,24 +113,34 @@ export class RawJupyterSession extends BaseJupyterSession {
         } catch (error) {
             this.connected = false;
             if (error instanceof CancellationError) {
-                sendTelemetryEvent(Telemetry.RawKernelSessionStartUserCancel);
+                sendKernelTelemetryEvent(resource, Telemetry.RawKernelSessionStartUserCancel);
                 traceInfo('Starting of raw session cancelled by user');
                 throw error;
             } else if (error instanceof TimedOutError) {
-                sendTelemetryEvent(Telemetry.RawKernelSessionStartTimeout);
+                sendKernelTelemetryEvent(resource, Telemetry.RawKernelSessionStartTimeout);
                 traceError('Raw session failed to start in given timeout');
                 // Translate into original error
                 throw new RawKernelSessionStartError(kernelConnection);
             } else if (error instanceof IpyKernelNotInstalledError) {
-                sendTelemetryEvent(Telemetry.RawKernelSessionStartNoIpykernel, { reason: error.reason });
+                sendKernelTelemetryEvent(resource, Telemetry.RawKernelSessionStartNoIpykernel, {
+                    reason: error.reason
+                });
                 traceError('Raw session failed to start because dependencies not installed');
                 throw error;
             } else {
                 // Send our telemetry event with the error included
-                sendTelemetryEvent(Telemetry.RawKernelSessionStartException, undefined, undefined, error);
+                sendKernelTelemetryEvent(
+                    resource,
+                    Telemetry.RawKernelSessionStartException,
+                    undefined,
+                    undefined,
+                    error
+                );
                 traceError(`Failed to connect raw kernel session: ${error}`);
                 throw error;
             }
+        } finally {
+            sendKernelTelemetryEvent(resource, Telemetry.RawKernelSessionConnect, stopWatch.elapsedTime);
         }
 
         this.connected = true;
