@@ -39,7 +39,7 @@ export class Activation implements IExtensionSingleActivationService {
         this.tracker.startTracking();
     }
 
-    private onDidOpenNotebookEditor(_: INotebookEditor) {
+    private onDidOpenNotebookEditor() {
         this.notebookOpened = true;
         this.PreWarmDaemonPool().ignoreErrors();
         sendTelemetryEvent(Telemetry.OpenNotebookAll);
