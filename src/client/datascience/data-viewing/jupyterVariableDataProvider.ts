@@ -85,7 +85,6 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
         if (variable) {
             if (sliceExpression) {
                 variable = await this.variableManager.getDataFrameInfo(variable, this.notebook, sliceExpression);
-                this.variable = variable;
             }
             dataFrameInfo = {
                 columns: variable.columns

@@ -38,7 +38,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
     private rowsTimer: StopWatch | undefined;
     private pendingRowsCount: number = 0;
     private dataFrameInfoPromise: Promise<IDataFrameInfo> | undefined;
-    private currentSlice: string | undefined;
+    private currentSliceExpression: string | undefined;
 
     constructor(
         @inject(IWebviewPanelProvider) provider: IWebviewPanelProvider,
@@ -128,11 +128,11 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
 
     private getDataFrameInfo(sliceExpression?: string): Promise<IDataFrameInfo> {
         // If requesting a new slice, refresh our cached info promise
-        if (!this.dataFrameInfoPromise || sliceExpression !== this.currentSlice) {
+        if (!this.dataFrameInfoPromise || sliceExpression !== this.currentSliceExpression) {
             this.dataFrameInfoPromise = this.dataProvider
                 ? this.dataProvider.getDataFrameInfo(sliceExpression)
                 : Promise.resolve({});
-            this.currentSlice = sliceExpression;
+            this.currentSliceExpression = sliceExpression;
         }
         return this.dataFrameInfoPromise;
     }
