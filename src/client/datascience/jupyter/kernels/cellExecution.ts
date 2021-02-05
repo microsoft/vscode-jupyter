@@ -615,7 +615,7 @@ export class CellExecution {
     private async handleSetNextInput(payload: ISetNextInputPayload) {
         if (payload.replace) {
             // Replace the contents of the current cell with text
-            return updateCellCode(this.editor, this.cell, payload.text);
+            return updateCellCode(this.cell, payload.text);
         } else {
             // Add a new cell after the current with text
             return addNewCellAfter(this.editor, this.cell, payload.text);

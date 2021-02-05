@@ -6,6 +6,7 @@
 import type { nbformat } from '@jupyterlab/coreutils';
 import type { KernelMessage } from '@jupyterlab/services';
 import * as fastDeepEqual from 'fast-deep-equal';
+import { window, Range } from 'vscode';
 import type { NotebookCell, NotebookEditor } from '../../../../../types/vscode-proposed';
 import { createErrorOutput } from '../../../../datascience-ui/common/cellFactory';
 import {
@@ -98,19 +99,24 @@ export async function updateCellWithErrorStatus(
 }
 
 // Update the code contents of the cell
-export async function updateCellCode(notebookEditor: NotebookEditor, cell: NotebookCell, text: string) {
-    await chainWithPendingUpdates(notebookEditor, (edit) => {
-        traceCellMessage(cell, 'Update cell with new code');
-        edit.replaceCells(cell.index, cell.index + 1, [
-            {
-                cellKind: vscodeNotebookEnums.CellKind.Code,
-                language: cell.language,
-                metadata: { ...cell.metadata, runState: vscodeNotebookEnums.NotebookCellRunState.Success },
-                outputs: [],
-                source: text
-            }
-        ]);
+export async function updateCellCode(cell: NotebookCell, text: string) {
+    // Locate the textEditor that matches this cell URI
+    const textEditor = window.visibleTextEditors.find((editor) => {
+        return cell.document.uri === editor.document.uri;
     });
+
+    // If we found a text editor, perform the update
+    if (textEditor) {
+        textEditor.edit((editBuilder) => {
+            editBuilder.replace(
+                new Range(
+                    textEditor.document.lineAt(0).range.start,
+                    textEditor.document.lineAt(textEditor.document.lineCount - 1).range.end
+                ),
+                text
+            );
+        });
+    }
 }
 
 // Add a new cell with the given contents after the current

@@ -51,7 +51,7 @@ const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed'
 const expectedPromptMessageSuffix = `requires ${ProductNames.get(Product.ipykernel)!} to be installed.`;
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
+suite('IANHU DataScience - VSCode Notebook - (Execution) (slow)', function () {
     let api: IExtensionTestApi;
     let editorProvider: INotebookEditorProvider;
     const disposables: IDisposable[] = [];
@@ -103,7 +103,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
-    test('Execute cell using VSCode Kernel', async () => {
+    test('IANHU Execute cell using VSCode Kernel', async () => {
         await insertCodeCell('print("123412341234")', { index: 0 });
         const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
 
