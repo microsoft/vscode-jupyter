@@ -209,7 +209,6 @@ module.exports = {
         'src/test/datascience/uiTests/webBrowserPanelProvider.ts',
         'src/test/datascience/uiTests/recorder.ts',
         'src/test/datascience/uiTests/notebookHelpers.ts',
-        'src/test/datascience/uiTests/ipywidget.ui.functional.test.ts',
         'src/test/datascience/mockWorkspaceConfiguration.ts',
         'src/test/datascience/mockTextEditor.ts',
         'src/test/datascience/mockLanguageServerAnalysisOptions.ts',
