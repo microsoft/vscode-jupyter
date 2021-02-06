@@ -917,12 +917,8 @@ export interface IJupyterVariables {
         name: string,
         notebook?: INotebook,
         cancelToken?: CancellationToken
-        ): Promise<IJupyterVariable | undefined>;
-    getVariableProperties?(            
-        name: string,
-        notebook?: INotebook,
-        cancelToken?: CancellationToken
-    ): Promise<JSONObject>;
+    ): Promise<IJupyterVariable | undefined>;
+    getVariableProperties?(name: string, notebook?: INotebook, cancelToken?: CancellationToken): Promise<JSONObject>;
 }
 
 export interface IConditionalJupyterVariables extends IJupyterVariables {

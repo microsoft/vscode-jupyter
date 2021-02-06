@@ -97,8 +97,8 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     public disableZMQSupport: boolean = false;
     public verboseLogging: boolean = false;
     public variableTooltipFields: JSONObject = {
-        "python": {
-            "Tensor": ["shape", "dtype", "device"]
+        python: {
+            Tensor: ['shape', 'dtype', 'device']
         }
     };
     // Privates should start with _ so that they are not read from the settings.json
