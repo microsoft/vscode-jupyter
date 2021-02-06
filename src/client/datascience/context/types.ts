@@ -5,7 +5,7 @@ import { EnvironmentType } from '../../pythonEnvironments/info';
 import { KernelConnectionMetadata } from '../jupyter/kernels/types';
 
 let connection: KernelConnectionMetadata;
-export type ResourceSpecificTelemetryProperties = {
+export type ResourceSpecificTelemetryProperties = Partial<{
     resourceType: 'notebook' | 'interactive';
     // Found plenty of issues when starting kernels with conda, hence useful to capture this info.
     pythonEnvironmentType?: EnvironmentType;
@@ -16,4 +16,4 @@ export type ResourceSpecificTelemetryProperties = {
     kernelWasAutoStarted?: boolean;
     // Whether kernel was started using kernel spec, interpreter, etc.
     kernelConnectionType?: typeof connection.kind;
-};
+}>;

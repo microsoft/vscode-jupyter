@@ -23,7 +23,7 @@ export function sendKernelTelemetryEvent<P extends IEventNamePropertyMapping, E 
     resource: Resource,
     eventName: E,
     durationMs?: Record<string, number> | number,
-    properties?: Omit<P[E], keyof ResourceSpecificTelemetryProperties>,
+    properties?: P[E],
     ex?: Error
 ) {
     const addOnTelemetry = getContextualPropsForTelemetry(resource);
@@ -47,11 +47,17 @@ export function sendKernelTelemetryWhenDone<P extends IEventNamePropertyMapping,
     const addOnTelemetry = getContextualPropsForTelemetry(resource);
     if (addOnTelemetry) {
         const props = properties || {};
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        sendTelemetryWhenDone(eventName as any, promise, stopWatch, Object.assign(props, addOnTelemetry));
+        sendTelemetryWhenDone(
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            eventName as any,
+            promise,
+            stopWatch,
+            Object.assign(props, addOnTelemetry),
+            true
+        );
     } else {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        sendTelemetryWhenDone(eventName as any, promise, stopWatch, properties);
+        sendTelemetryWhenDone(eventName as any, promise, stopWatch, properties, true);
     }
 }
 export function trackResourceInformation(resource: Resource, information: Partial<ContextualTelemetryProps>) {

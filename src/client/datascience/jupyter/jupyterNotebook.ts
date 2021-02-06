@@ -588,6 +588,13 @@ export class JupyterNotebookBase implements INotebook {
                     }
 
                     // Otherwise a real error occurred.
+                    sendKernelTelemetryEvent(
+                        this.resource,
+                        Telemetry.NotebookInterrupt,
+                        stopWatch.elapsedTime,
+                        undefined,
+                        exc
+                    );
                     throw exc;
                 } finally {
                     restartHandlerToken.dispose();

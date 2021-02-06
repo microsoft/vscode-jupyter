@@ -237,6 +237,13 @@ export class KernelExecution implements IDisposable {
                 }
 
                 // Otherwise a real error occurred.
+                sendKernelTelemetryEvent(
+                    document.uri,
+                    Telemetry.NotebookInterrupt,
+                    stopWatch.elapsedTime,
+                    undefined,
+                    exc
+                );
                 throw exc;
             } finally {
                 restartHandlerToken.dispose();

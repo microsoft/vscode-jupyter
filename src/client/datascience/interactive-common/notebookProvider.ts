@@ -151,7 +151,6 @@ export class NotebookProvider implements INotebookProvider {
         }
 
         trackResourceInformation(resource, { kernelConnection: options.kernelConnection });
-
         const promise = rawKernel
             ? this.rawNotebookProvider.createNotebook(
                   options.identity,

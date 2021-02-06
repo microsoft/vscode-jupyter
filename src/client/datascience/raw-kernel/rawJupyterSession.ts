@@ -17,7 +17,7 @@ import { Identifiers, Telemetry } from '../constants';
 import { sendKernelTelemetryEvent, trackResourceInformation } from '../context/telemetry';
 import { getDisplayNameOrNameOfKernelConnection } from '../jupyter/kernels/helpers';
 import { KernelConnectionMetadata } from '../jupyter/kernels/types';
-import { IKernelLauncher, IpyKernelNotInstalledError } from '../kernel-launcher/types';
+import { IKernelLauncher, IpyKernelNotInstalledError, KernelDiedError } from '../kernel-launcher/types';
 import { reportAction } from '../progress/decorator';
 import { ReportableAction } from '../progress/types';
 import { RawSession } from '../raw-kernel/rawSession';
@@ -96,6 +96,7 @@ export class RawJupyterSession extends BaseJupyterSession {
 
             // Only connect our session if we didn't cancel or timeout
             sendKernelTelemetryEvent(resource, Telemetry.RawKernelSessionStartSuccess);
+            sendKernelTelemetryEvent(resource, Telemetry.RawKernelSessionStart, stopWatch.elapsedTime);
             traceInfo('Raw session started and connected');
             this.setSession(newSession);
 
@@ -113,22 +114,39 @@ export class RawJupyterSession extends BaseJupyterSession {
         } catch (error) {
             this.connected = false;
             if (error instanceof CancellationError) {
+                sendKernelTelemetryEvent(resource, Telemetry.RawKernelSessionStart, stopWatch.elapsedTime, {
+                    failed: 'true',
+                    reason: 'cancelled'
+                });
                 sendKernelTelemetryEvent(resource, Telemetry.RawKernelSessionStartUserCancel);
                 traceInfo('Starting of raw session cancelled by user');
                 throw error;
             } else if (error instanceof TimedOutError) {
+                sendKernelTelemetryEvent(resource, Telemetry.RawKernelSessionStart, stopWatch.elapsedTime, {
+                    failed: 'true',
+                    reason: 'timeout'
+                });
                 sendKernelTelemetryEvent(resource, Telemetry.RawKernelSessionStartTimeout);
                 traceError('Raw session failed to start in given timeout');
                 // Translate into original error
                 throw new RawKernelSessionStartError(kernelConnection);
             } else if (error instanceof IpyKernelNotInstalledError) {
+                sendKernelTelemetryEvent(resource, Telemetry.RawKernelSessionStart, stopWatch.elapsedTime, {
+                    failed: 'true',
+                    reason: 'noipykernel'
+                });
                 sendKernelTelemetryEvent(resource, Telemetry.RawKernelSessionStartNoIpykernel, {
                     reason: error.reason
                 });
                 traceError('Raw session failed to start because dependencies not installed');
                 throw error;
             } else {
+                const reason = error instanceof KernelDiedError ? 'kerneldied' : 'unknown';
                 // Send our telemetry event with the error included
+                sendKernelTelemetryEvent(resource, Telemetry.RawKernelSessionStart, stopWatch.elapsedTime, {
+                    failed: 'true',
+                    reason
+                });
                 sendKernelTelemetryEvent(
                     resource,
                     Telemetry.RawKernelSessionStartException,

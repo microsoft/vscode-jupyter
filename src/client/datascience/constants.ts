@@ -410,6 +410,7 @@ export enum Telemetry {
     RawKernelSessionConnect = 'DS_INTERNAL.RAWKERNEL_SESSION_CONNECT',
     RawKernelStartRawSession = 'DS_INTERNAL.RAWKERNEL_START_RAW_SESSION',
     RawKernelSessionStartSuccess = 'DS_INTERNAL.RAWKERNEL_SESSION_START_SUCCESS',
+    RawKernelSessionStart = 'DS_INTERNAL.RAWKERNEL_SESSION_START',
     RawKernelSessionStartUserCancel = 'DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL',
     RawKernelSessionStartTimeout = 'DS_INTERNAL.RAWKERNEL_SESSION_START_TIMEOUT',
     RawKernelSessionStartException = 'DS_INTERNAL.RAWKERNEL_SESSION_START_EXCEPTION',
@@ -428,7 +429,7 @@ export enum Telemetry {
     SyncSingleCell = 'DS_INTERNAL.SYNC_SINGLE_CELL',
     NativeRandomBytesGenerationFailed = 'DS_INTERNAL.NATIVE_RANDOM_BYTES_GENERATION_FAILED',
     NotebookStart = 'DATASCIENCE.NOTEBOOK_START',
-    NotebookInterrupt = 'DATASCIENCE.NOTEBOOK_INTERRUPT',
+    NotebookInterrupt = 'DATASCIENCE.NOTEBOOK_INTERRUPT'
 }
 
 export enum NativeKeyboardCommandTelemetry {

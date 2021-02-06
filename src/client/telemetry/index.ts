@@ -101,7 +101,8 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
     eventName: E,
     durationMs?: Record<string, number> | number,
     properties?: P[E],
-    ex?: Error
+    ex?: Error,
+    sendOriginalEventWithErrors?: boolean
 ) {
     if (isTestExecution() || !isTelemetrySupported()) {
         return;
@@ -112,14 +113,21 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
     let eventNameSent = eventName as string;
 
     if (ex) {
-        // When sending telemetry events for exceptions no need to send custom properties.
-        // Else we have to review all properties every time as part of GDPR.
-        // Assume we have 10 events all with their own properties.
-        // As we have errors for each event, those properties are treated as new data items.
-        // Hence they need to be classified as part of the GDPR process, and thats unnecessary and onerous.
-        eventNameSent = 'ERROR';
-        customProperties = { originalEventName: eventName as string, stackTrace: serializeStackTrace(ex) };
-        reporter.sendTelemetryErrorEvent(eventNameSent, customProperties, measures, []);
+        if (!sendOriginalEventWithErrors) {
+            // When sending telemetry events for exceptions no need to send custom properties.
+            // Else we have to review all properties every time as part of GDPR.
+            // Assume we have 10 events all with their own properties.
+            // As we have errors for each event, those properties are treated as new data items.
+            // Hence they need to be classified as part of the GDPR process, and thats unnecessary and onerous.
+            eventNameSent = 'ERROR';
+            customProperties = { originalEventName: eventName as string, stackTrace: serializeStackTrace(ex) };
+            reporter.sendTelemetryErrorEvent(eventNameSent, customProperties, measures, []);
+        } else {
+            // Include a property failed, to indicate there are errors.
+            // Lets pay the price for better data.
+            customProperties = { failed: 'true', stackTrace: serializeStackTrace(ex) };
+            reporter.sendTelemetryEvent(eventNameSent, customProperties, measures);
+        }
     } else {
         if (properties) {
             const data = properties as any;
@@ -258,7 +266,8 @@ export function sendTelemetryWhenDone<P extends IEventNamePropertyMapping, E ext
     eventName: E,
     promise: Promise<any> | Thenable<any>,
     stopWatch?: StopWatch,
-    properties?: P[E]
+    properties?: P[E],
+    sendOriginalEventWithErrors?: boolean
 ) {
     stopWatch = stopWatch ? stopWatch : new StopWatch();
     if (typeof promise.then === 'function') {
@@ -272,7 +281,7 @@ export function sendTelemetryWhenDone<P extends IEventNamePropertyMapping, E ext
             },
             (ex) => {
                 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                sendTelemetryEvent(eventName, stopWatch!.elapsedTime, properties, ex);
+                sendTelemetryEvent(eventName, stopWatch!.elapsedTime, properties, ex, sendOriginalEventWithErrors);
                 return Promise.reject(ex);
             }
         );
@@ -359,6 +368,9 @@ export interface ISharedPropertyMapping {
      */
     ['isPythonExtensionInstalled']: boolean;
 }
+
+// If there are errors, then the are added to the telementry properties.
+export type TelemetryErrorProperties = { failed: 'true'; stackTrace: string };
 
 // Map all events to their properties
 export interface IEventNamePropertyMapping {
@@ -864,7 +876,7 @@ export interface IEventNamePropertyMapping {
     /**
      * Total time taken to Launch a raw kernel.
      */
-    [Telemetry.KernelLauncherPerf]: undefined | never;
+    [Telemetry.KernelLauncherPerf]: undefined | never | TelemetryErrorProperties;
     /**
      * Total time taken to find a kernel on disc.
      */
@@ -1025,7 +1037,7 @@ export interface IEventNamePropertyMapping {
 
     // Telemetry send when we create a notebook for a raw kernel or jupyter
     [Telemetry.RawKernelCreatingNotebook]: never | undefined;
-    [Telemetry.JupyterCreatingNotebook]: never | undefined;
+    [Telemetry.JupyterCreatingNotebook]: never | undefined | TelemetryErrorProperties;
     // Telemetry sent when starting auto starting Native Notebook kernel fails silently.
     [Telemetry.KernelStartFailedAndUIDisabled]: never | undefined;
 
@@ -1035,17 +1047,28 @@ export interface IEventNamePropertyMapping {
     [Telemetry.RawKernelProcessLaunch]: never | undefined;
 
     // Applies to everything (interactive+Notebooks & local+remote)
-    [Telemetry.NotebookStart]: { success: boolean } & ResourceSpecificTelemetryProperties;
-    [Telemetry.NotebookInterrupt]: { result: InterruptResult } & ResourceSpecificTelemetryProperties;
+    [Telemetry.NotebookStart]:
+        | ResourceSpecificTelemetryProperties // If successful.
+        | (ResourceSpecificTelemetryProperties & TelemetryErrorProperties); // If there any any unhandled exceptions.
+    [Telemetry.NotebookInterrupt]:
+        | ({ result: InterruptResult } & ResourceSpecificTelemetryProperties) // If successful (interrupted, timeout, restart).
+        | (ResourceSpecificTelemetryProperties & TelemetryErrorProperties); // If there are unhandled exceptions;
 
     // Raw kernel single events
+    [Telemetry.RawKernelSessionStart]:
+        | ResourceSpecificTelemetryProperties
+        | ({
+              failed: 'true';
+              reason: 'cancelled' | 'timeout' | 'noipykernel' | 'kerneldied' | 'unknown';
+          } & ResourceSpecificTelemetryProperties)
+        | (ResourceSpecificTelemetryProperties & TelemetryErrorProperties); // If there are unhandled exceptions;
     [Telemetry.RawKernelSessionStartSuccess]: never | undefined;
     [Telemetry.RawKernelSessionStartException]: never | undefined;
     [Telemetry.RawKernelSessionStartTimeout]: never | undefined;
     [Telemetry.RawKernelSessionStartUserCancel]: never | undefined;
     [Telemetry.RawKernelSessionStartNoIpykernel]: {
         reason: number;
-    };
+    } & TelemetryErrorProperties;
 
     // Run by line events
     [Telemetry.RunByLineStart]: never | undefined;
