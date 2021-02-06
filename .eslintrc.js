@@ -429,7 +429,6 @@ module.exports = {
         'src/datascience-ui/react-common/locReactSide.ts',
         'src/datascience-ui/react-common/button.tsx',
         'src/datascience-ui/react-common/themeDetector.ts',
-        'src/datascience-ui/react-common/image.tsx',
         'src/datascience-ui/react-common/event.ts',
         'src/datascience-ui/react-common/codicon/codicon.ts',
         'src/datascience-ui/react-common/postOffice.ts',
