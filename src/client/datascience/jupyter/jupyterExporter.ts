@@ -65,8 +65,9 @@ export class JupyterExporter implements INotebookExporter {
                 return;
             }
             const openQuestion1 = localize.DataScience.exportOpenQuestion1();
-            this.showInformationMessage(localize.DataScience.exportDialogComplete().format(file), openQuestion1).then(
-                async (str: string | undefined) => {
+            this.applicationShell
+                .showInformationMessage(localize.DataScience.exportDialogComplete().format(file), openQuestion1)
+                .then(async (str: string | undefined) => {
                     try {
                         if (str === openQuestion1) {
                             await this.ipynbProvider.open(Uri.file(file));
@@ -74,8 +75,7 @@ export class JupyterExporter implements INotebookExporter {
                     } catch (e) {
                         await this.errorHandler.handleError(e);
                     }
-                }
-            );
+                });
         } catch (exc) {
             traceError('Error in exporting notebook file');
             this.applicationShell.showInformationMessage(localize.DataScience.exportDialogFailed().format(exc));
@@ -122,18 +122,6 @@ export class JupyterExporter implements INotebookExporter {
             nbformat_minor: 2,
             metadata: metadata
         };
-    }
-
-    private showInformationMessage(
-        message: string,
-        question1: string,
-        question2?: string
-    ): Thenable<string | undefined> {
-        if (question2) {
-            return this.applicationShell.showInformationMessage(message, question1, question2);
-        } else {
-            return this.applicationShell.showInformationMessage(message, question1);
-        }
     }
 
     // For exporting, put in a cell that will change the working directory back to the workspace directory so relative data paths will load correctly
