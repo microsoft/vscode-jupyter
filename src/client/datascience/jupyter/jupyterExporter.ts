@@ -65,16 +65,9 @@ export class JupyterExporter implements INotebookExporter {
                 return;
             }
             const openQuestion1 = localize.DataScience.exportOpenQuestion1();
-            // const openQuestion2 = (await this.jupyterExecution.isSpawnSupported())
-            //     ? localize.DataScience.exportOpenQuestion()
-            //     : undefined;
             this.showInformationMessage(localize.DataScience.exportDialogComplete().format(file), openQuestion1).then(
                 async (str: string | undefined) => {
                     try {
-                        // if (str === openQuestion2 && openQuestion2) {
-                        //     // If the user wants to, open the notebook they just generated.
-                        //     await this.jupyterExecution.spawnNotebook(file);
-                        // } else
                         if (str === openQuestion1) {
                             await this.ipynbProvider.open(Uri.file(file));
                         }

@@ -211,10 +211,6 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
                     // When all done, show a notice that it completed.
                     if (uri && uri.fsPath) {
                         const openQuestion1 = localize.DataScience.exportOpenQuestion1();
-                        // const openQuestion2 = (await this.jupyterExecution.isSpawnSupported())
-                        //     ? localize.DataScience.exportOpenQuestion()
-                        //     : undefined;
-                        // const questions = [openQuestion1, ...(openQuestion2 ? [openQuestion2] : [])];
                         const selection = await this.applicationShell.showInformationMessage(
                             localize.DataScience.exportDialogComplete().format(uri.fsPath),
                             openQuestion1
@@ -222,10 +218,6 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
                         if (selection === openQuestion1) {
                             await this.ipynbProvider.open(uri);
                         }
-                        // if (selection === openQuestion2) {
-                        //     // If the user wants to, open the notebook they just generated.
-                        //     this.jupyterExecution.spawnNotebook(uri.fsPath).ignoreErrors();
-                        // }
                     }
                 }
             }
@@ -281,10 +273,6 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
 
                         // When all done, show a notice that it completed.
                         const openQuestion1 = localize.DataScience.exportOpenQuestion1();
-                        // const openQuestion2 = (await this.jupyterExecution.isSpawnSupported())
-                        //     ? localize.DataScience.exportOpenQuestion()
-                        //     : undefined;
-                        // const questions = [openQuestion1, ...(openQuestion2 ? [openQuestion2] : [])];
                         const selection = await this.applicationShell.showInformationMessage(
                             localize.DataScience.exportDialogComplete().format(output.fsPath),
                             openQuestion1
@@ -292,10 +280,6 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
                         if (selection === openQuestion1) {
                             await this.ipynbProvider.open(output);
                         }
-                        // if (selection === openQuestion2) {
-                        //     // If the user wants to, open the notebook they just generated.
-                        //     this.jupyterExecution.spawnNotebook(output.fsPath).ignoreErrors();
-                        // }
                         return output;
                     }
                 }
