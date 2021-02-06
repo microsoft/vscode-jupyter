@@ -49,3 +49,11 @@ def _VSCODE_getVariableInfo(var):
 
     # return our json object as a string
     return _VSCODE_json.dumps(result)
+
+
+def _VSCODE_getVariableProperties(var, listOfAttributes):
+    result = {
+        attr: repr(getattr(var, attr)) if hasattr(var, attr) else None
+        for attr in listOfAttributes
+    }
+    return _VSCODE_json.dumps(result)

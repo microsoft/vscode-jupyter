@@ -534,6 +534,7 @@ export namespace GetVariableInfo {
     export const GetVariableInfoSysImport = `import sys\nsys.path.append("${SysPath.replace(/\\/g, '\\\\')}")`;
     export const ScriptPath = path.join(SysPath, 'vscodeGetVariableInfo.py');
     export const VariableInfoFunc = '_VSCODE_getVariableInfo';
+    export const VariablePropertiesFunc = '_VSCODE_getVariableProperties';
 
     // Constants for the debugger which imports the script files
     export const VariableInfoImportName = '_VSCODE_VariableImport';

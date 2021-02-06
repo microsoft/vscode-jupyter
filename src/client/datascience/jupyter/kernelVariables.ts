@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import type { nbformat } from '@jupyterlab/coreutils';
+import { JSONObject } from '@phosphor/coreutils';
 import { inject, injectable } from 'inversify';
 import stripAnsi from 'strip-ansi';
 import * as uuid from 'uuid/v4';
@@ -418,6 +419,37 @@ export class KernelVariables implements IJupyterVariables {
             result.totalCount = list.variables.length;
         }
 
+        return result;
+    }
+
+    public async getVariableProperties(
+        word: string,
+        notebook: INotebook,
+        cancelToken: CancellationToken | undefined
+    ): Promise<JSONObject> {
+        const matchingVariable = await this.getMatchingVariable(word, notebook, cancelToken);
+        const settings = this.configService.getSettings();
+        const variableTooltipSettings = settings.variableTooltipFields;
+        const languageSettings = variableTooltipSettings['python'] as JSONObject;
+        const type = matchingVariable?.type;
+        let result: JSONObject = {};
+        if (matchingVariable && type) {
+            result[`${word}`] = type;
+            if (type in languageSettings) {
+                const attributeNames: string[] = languageSettings[type] as string[];
+                const stringifiedAttributeNames =
+                    '[' + attributeNames.reduce((accumulator, currVal) => accumulator + `"${currVal}", `, '') + ']';
+                const attributes = await notebook.execute(
+                    `print(${GetVariableInfo.VariablePropertiesFunc}(${matchingVariable.name}, ${stringifiedAttributeNames}))`,
+                    Identifiers.EmptyFileName,
+                    0,
+                    uuid(),
+                    cancelToken,
+                    true
+                );
+                result = { ...result, ...this.deserializeJupyterResult(attributes) };
+            }
+        }
         return result;
     }
 

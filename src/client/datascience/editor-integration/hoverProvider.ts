@@ -67,7 +67,7 @@ export class HoverProvider implements INotebookExecutionLogger, vscode.HoverProv
         token: vscode.CancellationToken
     ): vscode.ProviderResult<vscode.Hover> {
         const timeoutHandler = async () => {
-            await sleep(100);
+            await sleep(300);
             return null;
         };
         return Promise.race([timeoutHandler(), this.getVariableHover(document, position, token)]);
@@ -94,21 +94,19 @@ export class HoverProvider implements INotebookExecutionLogger, vscode.HoverProv
                     const notebooks = this.getMatchingNotebooks(document);
                     if (notebooks && notebooks.length) {
                         // Just use the first one to reply if more than one.
-                        const match = await Promise.race(
-                            notebooks.map((n) => this.variableProvider.getMatchingVariable(word, n, t))
+                        const attributes = await Promise.race(
+                            notebooks.map((n) => this.variableProvider.getVariableProperties!(word, n, t))
                         );
-                        if (match) {
-                            const contents = [new vscode.MarkdownString(`${word} = ${match.value}`)];
-                            if (match.shape) {
-                                contents.push(new vscode.MarkdownString(`Shape: ${match.shape}`));
-                            }
-                            // if (match.dtype) {
-                            //     contents.push(`Dtype: ${match.dtype}`);
-                            // }
-                            // if (match.device) {
-                            //     contents.push(`Device: ${match.device}`);
-                            // }
-                            return { contents };
+                        if (attributes) {
+                            const asMarkdown =
+                                Object.entries(attributes).reduce(
+                                    (accum, entry) => accum + `${entry[0]}: ${entry[1]}\n`,
+                                    '```\n'
+                                ) + '```';
+                            const result = {
+                                contents: [new vscode.MarkdownString(asMarkdown)]
+                            };
+                            return result;
                         }
                     }
                 }

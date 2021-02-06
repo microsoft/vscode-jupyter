@@ -1,5 +1,6 @@
 'use strict';
 
+import { JSONObject } from '@phosphor/coreutils';
 import {
     ConfigurationChangeEvent,
     ConfigurationTarget,
@@ -95,6 +96,11 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     // Hidden settings not surfaced in package.json
     public disableZMQSupport: boolean = false;
     public verboseLogging: boolean = false;
+    public variableTooltipFields: JSONObject = {
+        "python": {
+            "Tensor": ["shape", "dtype", "device"]
+        }
+    };
     // Privates should start with _ so that they are not read from the settings.json
     private _changeEmitter = new EventEmitter<void>();
     private _workspaceRoot: Resource;
