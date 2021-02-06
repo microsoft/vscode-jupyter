@@ -23,7 +23,7 @@ export function sendKernelTelemetryEvent<P extends IEventNamePropertyMapping, E 
     resource: Resource,
     eventName: E,
     durationMs?: Record<string, number> | number,
-    properties?: P[E],
+    properties?: Omit<P[E], keyof ResourceSpecificTelemetryProperties>,
     ex?: Error
 ) {
     const addOnTelemetry = getContextualPropsForTelemetry(resource);

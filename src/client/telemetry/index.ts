@@ -19,6 +19,7 @@ import {
 } from '../datascience/constants';
 import { ResourceSpecificTelemetryProperties } from '../datascience/context/types';
 import { ExportFormat } from '../datascience/export/types';
+import { InterruptResult } from '../datascience/types';
 import { EventName, PlatformErrors } from './constants';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -1035,6 +1036,7 @@ export interface IEventNamePropertyMapping {
 
     // Applies to everything (interactive+Notebooks & local+remote)
     [Telemetry.NotebookStart]: { success: boolean } & ResourceSpecificTelemetryProperties;
+    [Telemetry.NotebookInterrupt]: { result: InterruptResult } & ResourceSpecificTelemetryProperties;
 
     // Raw kernel single events
     [Telemetry.RawKernelSessionStartSuccess]: never | undefined;

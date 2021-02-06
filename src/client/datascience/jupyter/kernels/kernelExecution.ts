@@ -9,8 +9,10 @@ import { IApplicationShell, IVSCodeNotebook } from '../../../common/application/
 import { traceInfo, traceWarning } from '../../../common/logger';
 import { IDisposable, IExtensionContext } from '../../../common/types';
 import { createDeferred, waitForPromise } from '../../../common/utils/async';
+import { StopWatch } from '../../../common/utils/stopWatch';
 import { captureTelemetry } from '../../../telemetry';
 import { Telemetry, VSCodeNativeTelemetry } from '../../constants';
+import { sendKernelTelemetryEvent } from '../../context/telemetry';
 import { traceCellMessage } from '../../notebook/helpers/helpers';
 import { chainWithPendingUpdates } from '../../notebook/helpers/notebookUpdater';
 import {
@@ -139,7 +141,7 @@ export class KernelExecution implements IDisposable {
         // Interrupt the active execution
         const result = this._interruptPromise
             ? await this._interruptPromise
-            : await (this._interruptPromise = this.interruptExecution(notebook.session, pendingCells));
+            : await (this._interruptPromise = this.interruptExecution(document, notebook.session, pendingCells));
 
         // Done interrupting, clear interrupt promise
         this._interruptPromise = undefined;
@@ -182,12 +184,13 @@ export class KernelExecution implements IDisposable {
         return newCellExecutionQueue;
     }
     private async interruptExecution(
+        document: NotebookDocument,
         session: IJupyterSession,
         pendingCells: Promise<unknown>
     ): Promise<InterruptResult> {
         // Create a deferred promise that resolves if we have a failure
         const restarted = createDeferred<boolean>();
-
+        const stopWatch = new StopWatch();
         // Listen to status change events so we can tell if we're restarting
         const restartHandler = (e: ServerStatus) => {
             if (e === ServerStatus.Restarting) {
@@ -206,34 +209,44 @@ export class KernelExecution implements IDisposable {
             restarted.resolve(true);
         });
 
-        try {
-            // Wait for all of the pending cells to finish or the timeout to fire
-            const result = await waitForPromise(Promise.race([pendingCells, restarted.promise]), this.interruptTimeout);
+        const promise = (async () => {
+            try {
+                // Wait for all of the pending cells to finish or the timeout to fire
+                const result = await waitForPromise(
+                    Promise.race([pendingCells, restarted.promise]),
+                    this.interruptTimeout
+                );
 
-            // See if we restarted or not
-            if (restarted.completed) {
-                return InterruptResult.Restarted;
+                // See if we restarted or not
+                if (restarted.completed) {
+                    return InterruptResult.Restarted;
+                }
+
+                if (result === null) {
+                    // We timed out. You might think we should stop our pending list, but that's not
+                    // up to us. The cells are still executing. The user has to request a restart or try again
+                    return InterruptResult.TimedOut;
+                }
+
+                // Indicate the interrupt worked.
+                return InterruptResult.Success;
+            } catch (exc) {
+                // Something failed. See if we restarted or not.
+                if (restarted.completed) {
+                    return InterruptResult.Restarted;
+                }
+
+                // Otherwise a real error occurred.
+                throw exc;
+            } finally {
+                restartHandlerToken.dispose();
             }
+        })();
 
-            if (result === null) {
-                // We timed out. You might think we should stop our pending list, but that's not
-                // up to us. The cells are still executing. The user has to request a restart or try again
-                return InterruptResult.TimedOut;
-            }
-
-            // Indicate the interrupt worked.
-            return InterruptResult.Success;
-        } catch (exc) {
-            // Something failed. See if we restarted or not.
-            if (restarted.completed) {
-                return InterruptResult.Restarted;
-            }
-
-            // Otherwise a real error occurred.
-            throw exc;
-        } finally {
-            restartHandlerToken.dispose();
-        }
+        return promise.then((result) => {
+            sendKernelTelemetryEvent(document.uri, Telemetry.NotebookInterrupt, stopWatch.elapsedTime, { result });
+            return result;
+        });
     }
     private addKernelRestartHandler(kernel: IKernel, document: NotebookDocument) {
         if (this.kernelRestartHandlerAdded.has(kernel)) {
