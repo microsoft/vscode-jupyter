@@ -116,5 +116,5 @@ export async function openNotebook(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (editorProvider.activeEditor as any).askForSave = () => Promise.resolve(AskForSaveResult.No);
     }
-    traceInfo(`Opened notebook ${ipynbFile}`);
+    traceInfo(`Opened notebook ${ipynbFile} & trusted= ${editorProvider.activeEditor?.model.isTrusted}`);
 }

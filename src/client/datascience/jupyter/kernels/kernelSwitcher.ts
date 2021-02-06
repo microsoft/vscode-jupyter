@@ -9,11 +9,10 @@ import { IApplicationShell } from '../../../common/application/types';
 import { IConfigurationService } from '../../../common/types';
 import { DataScience } from '../../../common/utils/localize';
 import { JupyterSessionStartError } from '../../baseJupyterSession';
-import { Settings } from '../../constants';
 import { RawKernelSessionStartError } from '../../raw-kernel/rawJupyterSession';
 import { IKernelDependencyService, INotebook, KernelInterpreterDependencyResponse } from '../../types';
 import { JupyterInvalidKernelError } from '../jupyterInvalidKernelError';
-import { getDisplayNameOrNameOfKernelConnection } from './helpers';
+import { getDisplayNameOrNameOfKernelConnection, isLocalLaunch } from './helpers';
 import { KernelSelector } from './kernelSelector';
 import { KernelConnectionMetadata } from './types';
 
@@ -27,10 +26,7 @@ export class KernelSwitcher {
     ) {}
 
     public async switchKernelWithRetry(notebook: INotebook, kernel: KernelConnectionMetadata): Promise<void> {
-        const settings = this.configService.getSettings(notebook.resource);
-        const isLocalConnection =
-            notebook.connection?.localLaunch ??
-            settings.jupyterServerType.toLowerCase() === Settings.JupyterServerLocalLaunch;
+        const isLocalConnection = notebook.connection?.localLaunch ?? isLocalLaunch(this.configService);
         if (!notebook.connection?.localLaunch) {
             await this.switchToKernel(notebook, kernel);
             return;

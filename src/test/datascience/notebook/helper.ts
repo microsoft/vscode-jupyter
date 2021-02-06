@@ -304,7 +304,9 @@ export async function waitForKernelToGetAutoSelected(expectedLanguage?: string, 
             }
             switch (vscodeNotebook.activeNotebookEditor.kernel.selection.kind) {
                 case 'startUsingKernelSpec':
-                    kernelInfo = JSON.stringify(vscodeNotebook.activeNotebookEditor.kernel.selection.kernelSpec || {});
+                    kernelInfo = `<startUsingKernelSpec>${JSON.stringify(
+                        vscodeNotebook.activeNotebookEditor.kernel.selection.kernelSpec || {}
+                    )}`;
                     return (
                         vscodeNotebook.activeNotebookEditor.kernel.selection.kernelSpec.language?.toLowerCase() ===
                         expectedLanguage.toLowerCase()

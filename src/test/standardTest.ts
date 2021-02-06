@@ -5,7 +5,7 @@ import * as path from 'path';
 import * as fs from 'fs-extra';
 import { downloadAndUnzipVSCode, resolveCliPathFromVSCodeExecutablePath, runTests } from 'vscode-test';
 import { PythonExtension } from '../client/datascience/constants';
-import { EXTENSION_ROOT_DIR_FOR_TESTS } from './constants';
+import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST } from './constants';
 import { initializeLogger } from './testLogger';
 import * as tmp from 'tmp';
 
@@ -91,6 +91,10 @@ async function createSettings(): Promise<string> {
         // When in Stable, ensure we don't end up using Native Notebooks in CI tests.
         // I.e. ensure we have predictable state/experiments.
         defaultSettings['jupyter.experiments.optOutFrom'] = ['NativeNotebookEditor'];
+    }
+    if (IS_REMOTE_NATIVE_TEST) {
+        // Make this a remote instance.
+        defaultSettings['jupyter.jupyterServerType'] = 'remote';
     }
     fs.ensureDirSync(path.dirname(settingsFile));
     fs.writeFileSync(settingsFile, JSON.stringify(defaultSettings, undefined, 4));

@@ -17,11 +17,12 @@
 .react-grid-filter-button {
     background: var(--vscode-button-background);
     color: var(--vscode-button-foreground);
-    padding: 10px;
+    padding: 10px 15px;
     border: none;
     border-radius: 5px;
     cursor: pointer;
-    margin: 8px 4px;
+    margin:8px 4px;
+    margin-right: 18px;
 }
 
 .react-grid-header-cell {
@@ -100,7 +101,7 @@ input.editor-text {
     border-right-style: solid;
     background-color: var(--vscode-button-background);
     color: var(--vscode-button-foreground);
-    text-align: right;
+    text-align: left;
     /* input does not inherit font from body */
     font-family: var(--vscode-editor-font-family);
     font-weight: var(--vscode-editor-font-weight);
@@ -110,4 +111,13 @@ input.editor-text {
 .slick-cell.editable {
     border-color: none;
     border-style: none;
+}
+
+input.slice-data {
+    background-color: var(--vscode-editor-background);
+    color: var(--vscode-editor-foreground);
+    border-style: solid;
+    border-radius: 1pt;
+    border-color: var(--vscode-editor-inactiveSelectionBackground);
+    outline: 0 none;
 }

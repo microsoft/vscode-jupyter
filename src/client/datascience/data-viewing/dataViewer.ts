@@ -10,7 +10,7 @@ import { ViewColumn } from 'vscode';
 import { IApplicationShell, IWebviewPanelProvider, IWorkspaceService } from '../../common/application/types';
 import { EXTENSION_ROOT_DIR, UseCustomEditorApi } from '../../common/constants';
 import { traceError } from '../../common/logger';
-import { IConfigurationService, IDisposable, Resource } from '../../common/types';
+import { IConfigurationService, IDisposable, IExperimentService, Resource } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
@@ -26,8 +26,10 @@ import {
     IDataViewer,
     IDataViewerDataProvider,
     IDataViewerMapping,
-    IGetRowsRequest
+    IGetRowsRequest,
+    IGetSliceRequest
 } from './types';
+import { Experiments } from '../../common/experiments/groups';
 
 const dataExplorerDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'viewers');
 @injectable()
@@ -36,6 +38,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
     private rowsTimer: StopWatch | undefined;
     private pendingRowsCount: number = 0;
     private dataFrameInfoPromise: Promise<IDataFrameInfo> | undefined;
+    private currentSliceExpression: string | undefined;
 
     constructor(
         @inject(IWebviewPanelProvider) provider: IWebviewPanelProvider,
@@ -44,7 +47,8 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
         @inject(IThemeFinder) themeFinder: IThemeFinder,
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
-        @inject(UseCustomEditorApi) useCustomEditorApi: boolean
+        @inject(UseCustomEditorApi) useCustomEditorApi: boolean,
+        @inject(IExperimentService) private experimentService: IExperimentService
     ) {
         super(
             configuration,
@@ -76,8 +80,13 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
 
             const dataFrameInfo = await this.prepDataFrameInfo();
 
+            const isSliceDataEnabled = await this.experimentService.inExperiment(Experiments.SliceDataViewer);
+
             // Send a message with our data
-            this.postMessage(DataViewerMessages.InitializeData, dataFrameInfo).ignoreErrors();
+            this.postMessage(DataViewerMessages.InitializeData, {
+                ...dataFrameInfo,
+                isSliceDataEnabled
+            }).ignoreErrors();
         }
     }
 
@@ -99,11 +108,15 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
     protected onMessage(message: string, payload: any) {
         switch (message) {
             case DataViewerMessages.GetAllRowsRequest:
-                this.getAllRows().ignoreErrors();
+                this.getAllRows(payload as string).ignoreErrors();
                 break;
 
             case DataViewerMessages.GetRowsRequest:
                 this.getRowChunk(payload as IGetRowsRequest).ignoreErrors();
+                break;
+
+            case DataViewerMessages.GetSliceRequest:
+                this.getSlice(payload as IGetSliceRequest).ignoreErrors();
                 break;
 
             default:
@@ -113,9 +126,13 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
         super.onMessage(message, payload);
     }
 
-    private getDataFrameInfo(): Promise<IDataFrameInfo> {
-        if (!this.dataFrameInfoPromise) {
-            this.dataFrameInfoPromise = this.dataProvider ? this.dataProvider.getDataFrameInfo() : Promise.resolve({});
+    private getDataFrameInfo(sliceExpression?: string): Promise<IDataFrameInfo> {
+        // If requesting a new slice, refresh our cached info promise
+        if (!this.dataFrameInfoPromise || sliceExpression !== this.currentSliceExpression) {
+            this.dataFrameInfoPromise = this.dataProvider
+                ? this.dataProvider.getDataFrameInfo(sliceExpression)
+                : Promise.resolve({});
+            this.currentSliceExpression = sliceExpression;
         }
         return this.dataFrameInfoPromise;
     }
@@ -140,12 +157,22 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
         return output;
     }
 
-    private async getAllRows() {
+    // Deprecate this
+    private async getAllRows(sliceExpression?: string) {
         return this.wrapRequest(async () => {
             if (this.dataProvider) {
-                const allRows = await this.dataProvider.getAllRows();
+                const allRows = await this.dataProvider.getAllRows(sliceExpression);
                 this.pendingRowsCount = 0;
                 return this.postMessage(DataViewerMessages.GetAllRowsResponse, allRows);
+            }
+        });
+    }
+
+    private getSlice(request: IGetSliceRequest) {
+        return this.wrapRequest(async () => {
+            if (this.dataProvider) {
+                const payload = await this.dataProvider.getDataFrameInfo(request.slice);
+                return this.postMessage(DataViewerMessages.InitializeData, { ...payload, isSliceDataEnabled: true });
             }
         });
     }
@@ -153,10 +180,11 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
     private getRowChunk(request: IGetRowsRequest) {
         return this.wrapRequest(async () => {
             if (this.dataProvider) {
-                const dataFrameInfo = await this.getDataFrameInfo();
+                const dataFrameInfo = await this.getDataFrameInfo(request.sliceExpression);
                 const rows = await this.dataProvider.getRows(
                     request.start,
-                    Math.min(request.end, dataFrameInfo.rowCount ? dataFrameInfo.rowCount : 0)
+                    Math.min(request.end, dataFrameInfo.rowCount ? dataFrameInfo.rowCount : 0),
+                    request.sliceExpression
                 );
                 return this.postMessage(DataViewerMessages.GetRowsResponse, {
                     rows,
@@ -179,11 +207,11 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
                     if (v === actionTitle) {
                         this.applicationShell.openUrl(HelpLinks.JupyterDataRateHelpLink);
                     }
-                });
+                }, noop);
                 this.dispose();
             }
             traceError(e);
-            this.applicationShell.showErrorMessage(e);
+            this.applicationShell.showErrorMessage(e).then(noop, noop);
         } finally {
             this.sendElapsedTimeTelemetry();
         }

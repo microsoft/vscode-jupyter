@@ -3,13 +3,16 @@
 'use strict';
 import * as vscode from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
+import { IPythonExtensionChecker } from '../api/types';
 import { UseCustomEditorApi, UseVSCodeNotebookEditorApi } from '../common/constants';
 import { FileSystemPathUtils } from '../common/platform/fs-paths';
 import { IFileSystemPathUtils } from '../common/platform/types';
+import { IConfigurationService } from '../common/types';
 import { ProtocolParser } from '../debugger/extension/helpers/protocolParser';
 import { IProtocolParser } from '../debugger/extension/types';
 import { IServiceManager } from '../ioc/types';
 import { GitHubIssueCommandListener } from '../logging/gitHubIssueCommandListener';
+import { setSharedProperty } from '../telemetry';
 import { Activation } from './activation';
 import { CodeCssGenerator } from './codeCssGenerator';
 import { JupyterCommandLineSelectorCommand } from './commands/commandLineSelector';
@@ -93,6 +96,7 @@ import { JupyterPasswordConnect } from './jupyter/jupyterPasswordConnect';
 import { JupyterServerWrapper } from './jupyter/jupyterServerWrapper';
 import { JupyterSessionManagerFactory } from './jupyter/jupyterSessionManagerFactory';
 import { JupyterVariables } from './jupyter/jupyterVariables';
+import { isLocalLaunch } from './jupyter/kernels/helpers';
 import { KernelDependencyService } from './jupyter/kernels/kernelDependencyService';
 import { KernelSelectionProvider } from './jupyter/kernels/kernelSelections';
 import { KernelSelector } from './jupyter/kernels/kernelSelector';
@@ -202,6 +206,14 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     serviceManager.addSingletonInstance<boolean>(UseCustomEditorApi, usingCustomEditor);
     serviceManager.addSingletonInstance<boolean>(UseVSCodeNotebookEditorApi, useVSCodeNotebookAPI);
     serviceManager.addSingletonInstance<number>(DataScienceStartupTime, Date.now());
+
+    // This will ensure all subsequent telemetry will get the context of whether it is a custom/native/old notebook editor.
+    // This is temporary, and once we ship native editor this needs to be removed.
+    setSharedProperty('ds_notebookeditor', useVSCodeNotebookAPI ? 'native' : UseCustomEditorApi ? 'custom' : 'old');
+    const isLocalConnection = isLocalLaunch(serviceManager.get<IConfigurationService>(IConfigurationService));
+    setSharedProperty('localOrRemoteConnection', isLocalConnection ? 'local' : 'remote');
+    const isPythonExtensionInstalled = serviceManager.get<IPythonExtensionChecker>(IPythonExtensionChecker);
+    setSharedProperty('isPythonExtensionInstalled', isPythonExtensionInstalled.isPythonExtensionInstalled);
 
     // This condition is temporary.
     serviceManager.addSingleton<INotebookEditorProvider>(VSCodeNotebookProvider, NotebookEditorProvider);

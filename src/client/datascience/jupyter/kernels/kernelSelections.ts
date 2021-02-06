@@ -15,7 +15,7 @@ import { noop } from '../../../common/utils/misc';
 import { IInterpreterSelector } from '../../../interpreter/configuration/types';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { IKernelFinder } from '../../kernel-launcher/types';
-import { IJupyterSessionManager, IJupyterSessionManagerFactory } from '../../types';
+import { IJupyterSessionManager, IJupyterSessionManagerFactory, IRawNotebookSupportedService } from '../../types';
 import { isPythonKernelConnection } from './helpers';
 import { KernelService } from './kernelService';
 import { ActiveJupyterSessionKernelSelectionListProvider } from './providers/activeJupyterSessionKernelProvider';
@@ -64,8 +64,8 @@ export class KernelSelectionProvider {
         @inject(IKernelFinder) private readonly kernelFinder: IKernelFinder,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
-
-        @inject(IJupyterSessionManagerFactory) private jupyterSessionManagerFactory: IJupyterSessionManagerFactory
+        @inject(IJupyterSessionManagerFactory) private jupyterSessionManagerFactory: IJupyterSessionManagerFactory,
+        @inject(IRawNotebookSupportedService) private rawNotebookSupportedService: IRawNotebookSupportedService
     ) {
         disposableRegistry.push(
             this.jupyterSessionManagerFactory.onRestartSessionCreated(this.addKernelToIgnoreList.bind(this))
@@ -136,7 +136,8 @@ export class KernelSelectionProvider {
             const installedKernelsPromise = new InstalledLocalKernelSelectionListProvider(
                 this.kernelFinder,
                 this.pathUtils,
-                this.kernelService
+                this.kernelService,
+                this.rawNotebookSupportedService
             ).getKernelSelections(resource, cancelToken);
             const interpretersPromise = this.extensionChecker.isPythonExtensionInstalled
                 ? new InterpreterKernelSelectionListProvider(this.interpreterSelector).getKernelSelections(

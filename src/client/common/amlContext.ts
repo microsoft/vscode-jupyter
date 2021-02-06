@@ -34,13 +34,15 @@ export class AmlComputeContext implements IExtensionSingleActivationService {
     }
     public async activate(): Promise<void> {
         if (this.memento.get<boolean>(amlComputeMementoKey, false)) {
-            setSharedProperty('isamlcompute', 'yes');
+            setSharedProperty('isamlcompute', true);
             return;
         }
         if (this.isAmlComputeWorkspace()) {
-            setSharedProperty('isamlcompute', 'yes');
+            setSharedProperty('isamlcompute', true);
             // Next time user opens VSC on this machine, it is known to be an AML compute (even if there are no workspace folders open).
             this.memento.update(amlComputeMementoKey, true).then(noop, noop);
+        } else {
+            setSharedProperty('isamlcompute', false);
         }
     }
 }

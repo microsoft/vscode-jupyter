@@ -298,7 +298,7 @@
                     "light": "resources/light/runabove.svg",
                     "dark": "resources/dark/runabove-inverse.svg"
                 },
-                "enablement": "notebookViewType == jupyter-notebook && jupyter.isnotebooktrusted"
+                "enablement": "notebookViewType == jupyter-notebook && jupyter.isnotebooktrusted && jupyter.notebookeditor.canRunCellsAboveInNativeNotebook"
             },
             {
                 "command": "jupyter.notebookeditor.runcellandallbelow",
@@ -594,7 +594,9 @@
             {
                 "command": "jupyter.notebookeditor.interruptkernel",
                 "title": "%jupyter.command.jupyter.interruptkernel.title%",
-                "category": "Jupyter"
+                "category": "Jupyter",
+                "icon": "$(primitive-square)",
+                "enablement": "notebookViewType == 'jupyter-notebook' && jupyter.isnotebooktrusted && jupyter.notebookeditor.canInterruptNotebookKernel"
             },
             {
                 "command": "jupyter.notebookeditor.restartkernel",
@@ -604,7 +606,7 @@
                     "light": "resources/light/restart-kernel.svg",
                     "dark": "resources/dark/restart-kernel.svg"
                 },
-                "enablement": "jupyter.notebookeditor.canrestartNotebookkernel"
+                "enablement": "jupyter.notebookeditor.canrestartNotebookkernel && jupyter.isnotebooktrusted"
             },
             {
                 "command": "jupyter.selectNativeJupyterUriFromToolBar",
@@ -798,32 +800,38 @@
                 {
                     "command": "jupyter.notebookeditor.runallcellsabove",
                     "title": "%DataScience.runAbove%",
-                    "group": "navigation",
-                    "when": "notebookViewType == 'jupyter-notebook' && jupyter.isnotebooktrusted && jupyter.havenativecells"
+                    "group": "navigation@1",
+                    "when": "notebookViewType == 'jupyter-notebook'"
                 },
                 {
                     "command": "jupyter.notebookeditor.runcellandallbelow",
                     "title": "%DataScience.runBelow%",
-                    "group": "navigation",
-                    "when": "notebookViewType == 'jupyter-notebook' && jupyter.isnotebooktrusted && jupyter.havenativecells"
+                    "group": "navigation@2",
+                    "when": "notebookViewType == 'jupyter-notebook'"
                 },
                 {
                     "command": "jupyter.notebookeditor.restartkernel",
                     "title": "%jupyter.command.jupyter.restartkernel.title%",
-                    "group": "navigation",
+                    "group": "navigation@3",
+                    "when": "notebookViewType == 'jupyter-notebook'"
+                },
+                {
+                    "command": "jupyter.notebookeditor.interruptkernel",
+                    "title": "%jupyter.command.jupyter.interruptkernel.title%",
+                    "group": "navigation@4",
+                    "when": "notebookViewType == 'jupyter-notebook'"
+                },
+                {
+                    "command": "jupyter.openVariableView",
+                    "title": "%jupyter.command.jupyter.openVariableView.title%",
+                    "group": "navigation@5",
                     "when": "notebookViewType == 'jupyter-notebook'"
                 },
                 {
                     "command": "jupyter.notebookeditor.export",
                     "title": "%DataScience.notebookExportAs%",
-                    "group": "navigation",
-                    "when": "notebookViewType == 'jupyter-notebook' && jupyter.isnotebooktrusted"
-                },
-                {
-                    "command": "jupyter.openVariableView",
-                    "title": "%jupyter.command.jupyter.openVariableView.title%",
-                    "group": "navigation",
-                    "when": "resourceLangId == jupyter && notebookViewType == 'jupyter-notebook'"
+                    "group": "navigation@6",
+                    "when": "notebookViewType == 'jupyter-notebook'"
                 },
                 {
                     "command": "jupyter.notebookeditor.trust",
@@ -1132,7 +1140,7 @@
                     "command": "jupyter.notebookeditor.interruptkernel",
                     "title": "%jupyter.command.jupyter.interruptkernel.title%",
                     "category": "Jupyter",
-                    "when": "jupyter.isnativeactive && jupyter.isnotebooktrusted"
+                    "when": "notebookViewType == 'jupyter-notebook'"
                 },
                 {
                     "command": "jupyter.notebookeditor.restartkernel",

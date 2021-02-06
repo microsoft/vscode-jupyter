@@ -74,6 +74,7 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     ['workbench.extensions.installExtension']: [Uri | 'ms-toolsai.jupyter'];
     ['workbench.action.files.openFolder']: [];
     ['workbench.action.openWorkspace']: [];
+    ['extension.open']: [string];
     ['setContext']: [string, boolean] | ['jupyter.vscode.channel', Channel];
     ['jupyter.reloadVSCode']: [string];
     ['revealLine']: [{ lineNumber: number; at: 'top' | 'center' | 'bottom' }];

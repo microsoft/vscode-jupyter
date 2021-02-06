@@ -12,8 +12,9 @@ import { IFileSystem } from '../../common/platform/types';
 
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
+import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
-import { captureTelemetry, setSharedProperty } from '../../telemetry';
+import { captureTelemetry } from '../../telemetry';
 import { Commands, Telemetry } from '../constants';
 import { IKernelProvider } from '../jupyter/kernels/types';
 import { INotebookStorageProvider } from '../notebookStorage/notebookStorageProvider';
@@ -75,7 +76,6 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         this.disposables.push(
             this.commandManager.registerCommand(Commands.OpenNotebookInPreviewEditor, async (uri?: Uri) => {
                 if (uri) {
-                    setSharedProperty('ds_notebookeditor', 'native');
                     captureTelemetry(Telemetry.OpenNotebook, { scope: 'command' }, false);
                     this.open(uri).ignoreErrors();
                 }
@@ -84,7 +84,6 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
     }
 
     public async open(file: Uri): Promise<INotebookEditor> {
-        setSharedProperty('ds_notebookeditor', 'native');
         if (this.notebooksWaitingToBeOpenedByUri.get(file.toString())) {
             return this.notebooksWaitingToBeOpenedByUri.get(file.toString())!.promise;
         }
@@ -107,7 +106,6 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
     }
     @captureTelemetry(Telemetry.CreateNewNotebook, undefined, false)
     public async createNew(contents?: string): Promise<INotebookEditor> {
-        setSharedProperty('ds_notebookeditor', 'native');
         const model = await this.storage.createNew(contents, true);
         return this.open(model.file);
     }
@@ -131,7 +129,7 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
 
             // If we have no editors for this file, then dispose the notebook.
             if (otherEditors.length === 0) {
-                editor.notebook?.dispose();
+                editor.notebook?.dispose().catch(noop);
             }
         }
     }
