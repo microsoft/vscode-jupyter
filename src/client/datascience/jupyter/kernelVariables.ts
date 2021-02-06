@@ -433,14 +433,14 @@ export class KernelVariables implements IJupyterVariables {
         const languageSettings = variableTooltipSettings['python'] as JSONObject;
         const type = matchingVariable?.type;
         let result: JSONObject = {};
-        if (matchingVariable && type) {
-            result[`${word}`] = type;
-            if (type in languageSettings) {
+        if (matchingVariable) {
+            if (type && type in languageSettings) {
+                result[`${word}`] = type;
                 const attributeNames: string[] = languageSettings[type] as string[];
-                const stringifiedAttributeNames =
+                const stringifiedAttributeNameList =
                     '[' + attributeNames.reduce((accumulator, currVal) => accumulator + `"${currVal}", `, '') + ']';
                 const attributes = await notebook.execute(
-                    `print(${GetVariableInfo.VariablePropertiesFunc}(${matchingVariable.name}, ${stringifiedAttributeNames}))`,
+                    `print(${GetVariableInfo.VariablePropertiesFunc}(${matchingVariable.name}, ${stringifiedAttributeNameList}))`,
                     Identifiers.EmptyFileName,
                     0,
                     uuid(),
@@ -448,6 +448,8 @@ export class KernelVariables implements IJupyterVariables {
                     true
                 );
                 result = { ...result, ...this.deserializeJupyterResult(attributes) };
+            } else {
+                result[`${word}`] = matchingVariable.value;
             }
         }
         return result;

@@ -732,7 +732,6 @@ module.exports = {
         'src/client/common/dotnet/services/macCompatibilityService.ts',
         'src/client/common/dotnet/services/linuxCompatibilityService.ts',
         'src/client/common/dotnet/services/windowsCompatibilityService.ts',
-        'src/client/common/types.ts',
         'src/client/common/logger.ts',
         'src/client/common/variables/serviceRegistry.ts',
         'src/client/common/variables/environment.ts',
