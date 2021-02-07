@@ -53,7 +53,8 @@ def _VSCODE_getVariableInfo(var):
 
 def _VSCODE_getVariableProperties(var, listOfAttributes):
     result = {
-        attr: repr(getattr(var, attr)) if hasattr(var, attr) else None
+        attr: repr(getattr(var, attr))
         for attr in listOfAttributes
+        if hasattr(var, attr)
     }
     return _VSCODE_json.dumps(result)
