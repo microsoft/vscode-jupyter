@@ -17,7 +17,7 @@ suite('Hover provider', async () => {
     );
     let api: IExtensionTestApi;
     suiteSetup(async function () {
-        if (process.env.VSC_FORCE_REAL_JUPYTER !== 'true') {
+        if (process.env.VSC_FORCE_REAL_JUPYTER === undefined) {
             return this.skip();
         }
         api = await initialize();
