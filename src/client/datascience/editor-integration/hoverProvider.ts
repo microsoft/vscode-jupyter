@@ -12,12 +12,19 @@ import { IFileSystem } from '../../common/platform/types';
 import { sleep } from '../../common/utils/async';
 import { noop } from '../../common/utils/misc';
 import { Identifiers } from '../constants';
-import { ICell, IInteractiveWindowProvider, IJupyterVariables, INotebook, INotebookExecutionLogger } from '../types';
+import {
+    ICell,
+    IHoverProvider,
+    IInteractiveWindowProvider,
+    IJupyterVariables,
+    INotebook,
+    INotebookExecutionLogger
+} from '../types';
 
 // This class provides hashes for debugging jupyter cells. Call getHashes just before starting debugging to compute all of the
 // hashes for cells.
 @injectable()
-export class HoverProvider implements INotebookExecutionLogger, vscode.HoverProvider {
+export class HoverProvider implements INotebookExecutionLogger, IHoverProvider {
     private runFiles = new Set<string>();
     private hoverProviderRegistration: vscode.Disposable | undefined;
 
