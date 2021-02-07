@@ -44,7 +44,7 @@ suite('Hover provider', async () => {
         assert.ok(
             contents.value ===
                 "```\nmyTensor: Tensor\nshape: torch.Size([64, 1000])\ndtype: torch.float32\ndevice: device(type='cpu')\n```",
-            'Unexpected hover provider result'
+            `Unexpected hover provider result: ${contents.value}`
         );
     });
 });
