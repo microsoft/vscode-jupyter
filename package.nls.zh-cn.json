@@ -129,7 +129,6 @@
     "DataScience.exportDialogFilter": "Jupyter 笔记本",
     "DataScience.exportDialogComplete": "笔记本已写入 {0}",
     "DataScience.exportDialogFailed": "笔记本导出失败。 {0}",
-    "DataScience.exportOpenQuestion": "在浏览器中打开",
     "DataScience.exportOpenQuestion1": "在编辑器中打开",
     "DataScience.notebookExportAs": "导出为",
     "DataScience.exportAsQuickPickPlaceholder": "导出为...",
