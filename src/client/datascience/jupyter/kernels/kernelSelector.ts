@@ -81,13 +81,13 @@ export class KernelSelector implements IKernelSelectionUsage {
     public async selectRemoteKernel(
         resource: Resource,
         stopWatch: StopWatch,
-        session: IJupyterSessionManager,
+        sessionManagerCreator: () => Promise<IJupyterSessionManager>,
         cancelToken?: CancellationToken,
         currentKernelDisplayName?: string
     ): Promise<LiveKernelConnectionMetadata | KernelSpecConnectionMetadata | undefined> {
         const suggestions = await this.selectionProvider.getKernelSelectionsForRemoteSession(
             resource,
-            session,
+            sessionManagerCreator,
             cancelToken
         );
         const selection = await this.selectKernel<LiveKernelConnectionMetadata | KernelSpecConnectionMetadata>(
@@ -421,8 +421,8 @@ export class KernelSelector implements IKernelSelectionUsage {
         currentKernelDisplayName?: string
     ): Promise<KernelConnectionMetadata | undefined> {
         const stopWatch = new StopWatch();
-        const session = await this.jupyterSessionManagerFactory.create(connInfo);
-        return this.selectRemoteKernel(resource, stopWatch, session, undefined, currentKernelDisplayName);
+        const sessionManagerCreator = () => this.jupyterSessionManagerFactory.create(connInfo);
+        return this.selectRemoteKernel(resource, stopWatch, sessionManagerCreator, undefined, currentKernelDisplayName);
     }
 
     // Get our kernelspec and matching interpreter for a connection to a local jupyter server

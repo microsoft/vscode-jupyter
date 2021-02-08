@@ -32,7 +32,7 @@ import { IInterpreterQuickPickItem, IInterpreterSelector } from '../../../../cli
 import { IInterpreterService } from '../../../../client/interpreter/contracts';
 
 // eslint-disable-next-line
-suite('DataScience - KernelSelections', () => {
+suite('DataScience - KernelSelectionsxxx', () => {
     let kernelSelectionProvider: KernelSelectionProvider;
     let kernelService: KernelService;
     let kernelFinder: IKernelFinder;
@@ -178,7 +178,7 @@ suite('DataScience - KernelSelections', () => {
 
         const items = await kernelSelectionProvider.getKernelSelectionsForRemoteSession(
             undefined,
-            instance(sessionManager)
+            async () => instance(sessionManager)
         );
 
         assert.equal(items.length, 0);
@@ -264,7 +264,7 @@ suite('DataScience - KernelSelections', () => {
 
         const items = await kernelSelectionProvider.getKernelSelectionsForRemoteSession(
             undefined,
-            instance(sessionManager)
+            async () => instance(sessionManager)
         );
 
         verify(sessionManager.getRunningKernels()).once();
