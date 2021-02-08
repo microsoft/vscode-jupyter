@@ -800,7 +800,6 @@ module.exports = {
         'src/client/common/process/decoder.ts',
         'src/client/common/process/pythonExecutionFactory.ts',
         'src/client/common/insidersBuild/insidersExtensionPrompt.ts',
-        'src/client/common/insidersBuild/insidersExtensionService.ts',
         'src/client/common/insidersBuild/types.ts',
         'src/client/common/insidersBuild/downloadChannelService.ts',
         'src/client/common/insidersBuild/downloadChannelRules.ts',
