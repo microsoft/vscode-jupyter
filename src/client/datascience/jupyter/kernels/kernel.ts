@@ -15,8 +15,10 @@ import { IFileSystem } from '../../../common/platform/types';
 import { IDisposableRegistry, IExtensionContext } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
 import { noop } from '../../../common/utils/misc';
+import { StopWatch } from '../../../common/utils/stopWatch';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { CodeSnippets, Telemetry } from '../../constants';
+import { getKernelFailureReason, sendKernelTelemetryEvent } from '../../context/telemetry';
 import { getNotebookMetadata } from '../../notebook/helpers/helpers';
 import {
     IDataScienceErrorHandler,
@@ -158,6 +160,7 @@ export class Kernel implements IKernel {
             this.startCancellation = new CancellationTokenSource();
             this._notebookPromise = new Promise<INotebook>(async (resolve, reject) => {
                 try {
+                    const stopWatch = new StopWatch();
                     await this.validate(this.uri);
                     try {
                         this.notebook = await this.notebookProvider.getOrCreateNotebook({
@@ -176,6 +179,10 @@ export class Kernel implements IKernel {
                         }
                     } catch (ex) {
                         traceError('failed to create INotebook in kernel', ex);
+                        sendKernelTelemetryEvent(options.document.uri, Telemetry.NotebookStart, stopWatch.elapsedTime, {
+                            failed: 'true',
+                            reason: getKernelFailureReason(ex)
+                        });
                         if (!options.disableUI) {
                             this.errorHandler.handleError(ex).ignoreErrors(); // Just a notification, so don't await this
                         }

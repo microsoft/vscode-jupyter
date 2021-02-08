@@ -9,6 +9,17 @@ import { Resource } from '../../common/types';
 import { IEventNamePropertyMapping, sendTelemetryEvent, sendTelemetryWhenDone } from '../../telemetry';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { ResourceSpecificTelemetryProperties } from './types';
+import { isErrorType } from '../../common/errors/errorUtils';
+import { CancellationError } from '../../common/cancellation';
+import { TimedOutError } from '../../common/utils/async';
+import { JupyterInvalidKernelError } from '../jupyter/jupyterInvalidKernelError';
+import { JupyterWaitForIdleError } from '../jupyter/jupyterWaitForIdleError';
+import { JupyterKernelPromiseFailedError } from '../jupyter/kernels/jupyterKernelPromiseFailedError';
+import { IpyKernelNotInstalledError, KernelDiedError } from '../kernel-launcher/types';
+import { JupyterSessionStartError } from '../baseJupyterSession';
+import { JupyterConnectError } from '../jupyter/jupyterConnectError';
+import { JupyterInstallError } from '../jupyter/jupyterInstallError';
+import { JupyterSelfCertsError } from '../jupyter/jupyterSelfCertsError';
 
 type ContextualTelemetryProps = {
     kernelConnection: KernelConnectionMetadata;
@@ -19,6 +30,30 @@ type ContextualTelemetryProps = {
 const trackedInfo = new Map<string, ResourceSpecificTelemetryProperties>();
 const currentOSType = getOSType();
 
+export function getKernelFailureReason(error: Error) {
+    if (isErrorType(error, JupyterWaitForIdleError) || isErrorType(error, TimedOutError)) {
+        return 'timeout';
+    } else if (isErrorType(error, JupyterInvalidKernelError)) {
+        return 'invalidkernel';
+    } else if (isErrorType(error, JupyterKernelPromiseFailedError)) {
+        return 'kernelpromisetimeout';
+    } else if (isErrorType(error, IpyKernelNotInstalledError)) {
+        return 'kernelpromisetimeout';
+    } else if (isErrorType(error, CancellationError)) {
+        return 'cancelled';
+    } else if (isErrorType(error, JupyterSessionStartError)) {
+        return 'jupytersession';
+    } else if (isErrorType(error, JupyterConnectError)) {
+        return 'jupyterconnection';
+    } else if (isErrorType(error, JupyterSelfCertsError)) {
+        return 'jupyterselfcert';
+    } else if (isErrorType(error, JupyterInstallError)) {
+        return 'jupyterinstall';
+    } else if (isErrorType(error, KernelDiedError)) {
+        return 'kerneldied';
+    }
+    return 'unknown';
+}
 export function sendKernelTelemetryEvent<P extends IEventNamePropertyMapping, E extends keyof P>(
     resource: Resource,
     eventName: E,

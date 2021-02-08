@@ -5,6 +5,7 @@ import type { Kernel } from '@jupyterlab/services';
 import type { Slot } from '@phosphor/signaling';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { CancellationError } from '../../common/cancellation';
+import { WrappedError } from '../../common/errors/errorUtils';
 import { traceError, traceInfo } from '../../common/logger';
 import { IDisposable, IOutputChannel, Resource } from '../../common/types';
 import { TimedOutError } from '../../common/utils/async';
@@ -24,12 +25,13 @@ import { RawSession } from '../raw-kernel/rawSession';
 import { ISessionWithSocket } from '../types';
 
 // Error thrown when we are unable to start a raw kernel session
-export class RawKernelSessionStartError extends Error {
-    constructor(kernelConnection: KernelConnectionMetadata) {
+export class RawKernelSessionStartError extends WrappedError {
+    constructor(kernelConnection: KernelConnectionMetadata, originalException?: Error) {
         super(
             localize.DataScience.rawKernelSessionFailed().format(
                 getDisplayNameOrNameOfKernelConnection(kernelConnection)
-            )
+            ),
+            originalException
         );
     }
 }
@@ -129,7 +131,7 @@ export class RawJupyterSession extends BaseJupyterSession {
                 sendKernelTelemetryEvent(resource, Telemetry.RawKernelSessionStartTimeout);
                 traceError('Raw session failed to start in given timeout');
                 // Translate into original error
-                throw new RawKernelSessionStartError(kernelConnection);
+                throw new RawKernelSessionStartError(kernelConnection, error);
             } else if (error instanceof IpyKernelNotInstalledError) {
                 sendKernelTelemetryEvent(resource, Telemetry.RawKernelSessionStart, stopWatch.elapsedTime, {
                     failed: 'true',

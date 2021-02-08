@@ -1049,6 +1049,21 @@ export interface IEventNamePropertyMapping {
     // Applies to everything (interactive+Notebooks & local+remote)
     [Telemetry.NotebookStart]:
         | ResourceSpecificTelemetryProperties // If successful.
+        | ({
+              failed: 'true';
+              reason:
+                  | 'cancelled'
+                  | 'timeout'
+                  | 'kerneldied'
+                  | 'kerneldied'
+                  | 'kernelpromisetimeout'
+                  | 'jupytersession'
+                  | 'jupyterconnection'
+                  | 'jupyterinstall'
+                  | 'jupyterselfcert'
+                  | 'invalidkernel'
+                  | 'unknown';
+          } & ResourceSpecificTelemetryProperties)
         | (ResourceSpecificTelemetryProperties & TelemetryErrorProperties); // If there any any unhandled exceptions.
     [Telemetry.NotebookInterrupt]:
         | ({ result: InterruptResult } & ResourceSpecificTelemetryProperties) // If successful (interrupted, timeout, restart).

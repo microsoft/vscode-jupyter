@@ -9,6 +9,7 @@ import { ReplaySubject } from 'rxjs/ReplaySubject';
 import { Event, EventEmitter } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { ServerStatus } from '../../datascience-ui/interactive-common/mainState';
+import { WrappedError } from '../common/errors/errorUtils';
 import { traceError, traceInfo, traceWarning } from '../common/logger';
 import { sleep, waitForPromise } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
@@ -30,10 +31,9 @@ import { IJupyterSession, ISessionWithSocket, KernelSocketInformation } from './
  * @class JupyterSessionStartError
  * @extends {Error}
  */
-export class JupyterSessionStartError extends Error {
+export class JupyterSessionStartError extends WrappedError {
     constructor(originalException: Error) {
-        super(originalException.message);
-        this.stack = originalException.stack;
+        super(originalException.message, originalException);
         sendTelemetryEvent(Telemetry.StartSessionFailedJupyter);
     }
 }
@@ -355,6 +355,9 @@ export abstract class BaseJupyterSession implements IJupyterSession {
 
     protected async waitForIdleOnSession(session: ISessionWithSocket | undefined, timeout: number): Promise<void> {
         if (session && session.kernel) {
+            if (!process.env.ASDYSDSD) {
+                throw new JupyterWaitForIdleError(localize.DataScience.jupyterLaunchTimedOut());
+            }
             traceInfo(`Waiting for idle on (kernel): ${session.kernel.id} -> ${session.kernel.status}`);
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const statusHandler = (resolve: () => void, reject: (exc: any) => void, e: Kernel.Status | undefined) => {

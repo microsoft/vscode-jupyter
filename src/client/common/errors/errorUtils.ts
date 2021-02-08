@@ -18,11 +18,13 @@ export class ErrorUtils {
  * Wraps an error with a custom error message, retaining the call stack information.
  */
 export class WrappedError extends Error {
-    constructor(message: string, public readonly originalException: Error) {
+    constructor(message: string, public readonly originalException?: Error) {
         super(message);
-        // Retain call stack that trapped the error and rethrows this error.
-        // Also retain the call stack of the original error.
-        this.stack = `${new Error('').stack}${EOL}${EOL}${originalException.stack}`;
+        if (originalException) {
+            // Retain call stack that trapped the error and rethrows this error.
+            // Also retain the call stack of the original error.
+            this.stack = `${new Error('').stack}${EOL}${EOL}${originalException.stack}`;
+        }
     }
 }
 
@@ -45,4 +47,16 @@ export function getErrorMessageFromPythonTraceback(traceback: string) {
     }
     const lastLine = reversedLines[0];
     return lastLine.match(pythonErrorMessageRegExp) ? lastLine : undefined;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Constructor<T> = { new (...args: any[]): T };
+export function isErrorType<T>(error: Error, expectedType: Constructor<T>) {
+    if (error instanceof expectedType) {
+        return true;
+    }
+    if (error instanceof WrappedError && error.originalException instanceof expectedType) {
+        return true;
+    }
+    return false;
 }
