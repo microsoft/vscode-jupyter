@@ -71,7 +71,7 @@ export class InsidersExtensionService implements IExtensionSingleActivationServi
     @traceDecorators.error('Handling channel failed')
     public async handleChannel(installChannel: ExtensionChannels, didChannelChange: boolean = false): Promise<void> {
         const channelRule = this.serviceContainer.get<IExtensionChannelRule>(IExtensionChannelRule, installChannel);
-        const shouldInstall = await channelRule.shouldLookForInsidersBuild(didChannelChange);
+        const shouldInstall = this.appEnvironment.channel === 'insiders' && await channelRule.shouldLookForInsidersBuild(didChannelChange);
         if (!shouldInstall) {
             return;
         }
