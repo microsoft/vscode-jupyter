@@ -1077,7 +1077,6 @@ module.exports = {
         'src/client/logging/levels.ts',
         'src/client/logging/transports.ts',
         'src/client/logging/_global.ts',
-        'src/client/logging/logger.ts',
         'src/client/logging/util.ts',
         'src/client/logging/index.ts',
         'src/client/logging/formatters.ts',
