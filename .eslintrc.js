@@ -163,7 +163,6 @@ module.exports = {
         'src/test/common/insidersBuild/downloadChannelRules.unit.test.ts',
         'src/test/common/insidersBuild/insidersExtensionPrompt.unit.test.ts',
         'src/test/common/insidersBuild/downloadChannelService.unit.test.ts',
-        'src/test/common/insidersBuild/insidersExtensionService.unit.test.ts',
         'src/test/pythonFiles/formatting/dummy.ts',
         'src/test/format/extension.dispatch.test.ts',
         'src/test/format/extension.format.native.vscode.test.ts',
