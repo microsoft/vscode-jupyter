@@ -1373,7 +1373,7 @@
                         "debug"
                     ],
                     "description": "The logging level the extension logs at, defaults to 'error'",
-                    "scope": "machine"
+                    "scope": "resource"
                 },
                 "jupyter.experiments.optInto": {
                     "type": "array",
@@ -1385,7 +1385,7 @@
                         ]
                     },
                     "description": "List of experiment to opt into. If empty, user is assigned the default experiment groups. See https://github.com/microsoft/vscode-jupyter/wiki/Experiments for more details.",
-                    "scope": "application"
+                    "scope": "resource"
                 },
                 "jupyter.experiments.optOutFrom": {
                     "type": "array",
@@ -1815,8 +1815,7 @@
                     {
                         "filenamePattern": "*.ipynb"
                     }
-                ],
-                "priority": "option"
+                ]
             }
         ],
         "notebookOutputRenderer": [
