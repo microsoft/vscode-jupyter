@@ -65,7 +65,7 @@ export class JupyterExporter implements INotebookExporter {
                 return;
             }
             const openQuestion1 = localize.DataScience.exportOpenQuestion1();
-            this.applicationShell
+            void this.applicationShell
                 .showInformationMessage(localize.DataScience.exportDialogComplete().format(file), openQuestion1)
                 .then(async (str: string | undefined) => {
                     try {
@@ -78,7 +78,7 @@ export class JupyterExporter implements INotebookExporter {
                 });
         } catch (exc) {
             traceError('Error in exporting notebook file');
-            this.applicationShell.showInformationMessage(localize.DataScience.exportDialogFailed().format(exc));
+            void this.applicationShell.showInformationMessage(localize.DataScience.exportDialogFailed().format(exc));
         }
     }
     public async translateToNotebook(

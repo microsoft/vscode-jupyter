@@ -156,10 +156,10 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
             if (!(err instanceof CancellationError)) {
                 if (err.message) {
                     traceError(err.message);
-                    this.applicationShell.showErrorMessage(err.message);
+                    void this.applicationShell.showErrorMessage(err.message);
                 } else {
                     traceError(err.toString());
-                    this.applicationShell.showErrorMessage(err.toString());
+                    void this.applicationShell.showErrorMessage(err.toString());
                 }
             } else {
                 traceInfo('Canceled');
@@ -257,7 +257,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
                                     );
                                 } catch (err) {
                                     if (!(err instanceof CancellationError)) {
-                                        this.showInformationMessage(
+                                        void this.showInformationMessage(
                                             localize.DataScience.exportDialogFailed().format(err)
                                         );
                                     }
