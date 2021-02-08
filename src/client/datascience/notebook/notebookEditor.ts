@@ -122,7 +122,9 @@ export class NotebookEditor implements INotebookEditor {
         throw new Error('Method not implemented.');
     }
     public createWebviewCellButton(): IDisposable {
-        throw new Error('Method not implemented.');
+        return {
+            dispose: () => noop()
+        };
     }
     public hasCell(): Promise<boolean> {
         return Promise.resolve(this.document.cells.length > 0);

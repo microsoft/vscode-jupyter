@@ -3,13 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-@font-face {
+ @font-face {
 	font-family: "codicon";
-	src: url("./codicon.ttf?b72c513f65e30cf5c3607d5a7971b6a9") format("truetype");
+	src: url("./codicon.ttf?d8db032c436945ad93e5e6e06a007865") format("truetype");
 }
 
 .codicon[class*='codicon-'] {
-	font: normal normal normal 16px/1 codicon; 
+	font: normal normal normal 16px/1 codicon;
 	display: inline-block;
 	text-decoration: none;
 	text-rendering: auto;
@@ -204,7 +204,6 @@
 .codicon-collapse-all:before { content: "\eac5" }
 .codicon-color-mode:before { content: "\eac6" }
 .codicon-comment-discussion:before { content: "\eac7" }
-.codicon-compare-changes:before { content: "\eac8" }
 .codicon-credit-card:before { content: "\eac9" }
 .codicon-dash:before { content: "\eacc" }
 .codicon-dashboard:before { content: "\eacd" }
@@ -256,6 +255,7 @@
 .codicon-gist:before { content: "\eafb" }
 .codicon-git-commit:before { content: "\eafc" }
 .codicon-git-compare:before { content: "\eafd" }
+.codicon-compare-changes:before { content: "\eafd" }
 .codicon-git-merge:before { content: "\eafe" }
 .codicon-github-action:before { content: "\eaff" }
 .codicon-github-alt:before { content: "\eb00" }
@@ -408,7 +408,7 @@
 .codicon-debug-reverse-continue:before { content: "\eb8e" }
 .codicon-debug-step-back:before { content: "\eb8f" }
 .codicon-debug-restart-frame:before { content: "\eb90" }
-.codicon-debug-alternate:before { content: "\eb91" }
+.codicon-debug-alt:before { content: "\eb91" }
 .codicon-call-incoming:before { content: "\eb92" }
 .codicon-call-outgoing:before { content: "\eb93" }
 .codicon-menu:before { content: "\eb94" }
@@ -425,5 +425,31 @@
 .codicon-sync-ignored:before { content: "\eb9f" }
 .codicon-pinned:before { content: "\eba0" }
 .codicon-github-inverted:before { content: "\eba1" }
-.codicon-debug-alt-2:before { content: "\f101" }
-.codicon-debug-alt:before { content: "\f102" }
+.codicon-server-process:before { content: "\eba2" }
+.codicon-server-environment:before { content: "\eba3" }
+.codicon-pass:before { content: "\eba4" }
+.codicon-stop-circle:before { content: "\eba5" }
+.codicon-play-circle:before { content: "\eba6" }
+.codicon-record:before { content: "\eba7" }
+.codicon-debug-alt-small:before { content: "\eba8" }
+.codicon-vm-connect:before { content: "\eba9" }
+.codicon-cloud:before { content: "\ebaa" }
+.codicon-merge:before { content: "\ebab" }
+.codicon-export:before { content: "\ebac" }
+.codicon-graph-left:before { content: "\ebad" }
+.codicon-magnet:before { content: "\ebae" }
+.codicon-notebook:before { content: "\ebaf" }
+.codicon-redo:before { content: "\ebb0" }
+.codicon-check-all:before { content: "\ebb1" }
+.codicon-pinned-dirty:before { content: "\ebb2" }
+.codicon-pass-filled:before { content: "\ebb3" }
+.codicon-circle-large-filled:before { content: "\ebb4" }
+.codicon-circle-large-outline:before { content: "\ebb5" }
+.codicon-combine:before { content: "\ebb6" }
+.codicon-gather:before { content: "\ebb6" }
+.codicon-table:before { content: "\ebb7" }
+.codicon-variable-group:before { content: "\ebb8" }
+.codicon-type-hierarchy:before { content: "\ebb9" }
+.codicon-type-hierarchy-sub:before { content: "\ebba" }
+.codicon-type-hierarchy-super:before { content: "\ebbb" }
+.codicon-git-pull-request-create:before { content: "\ebbc" }
