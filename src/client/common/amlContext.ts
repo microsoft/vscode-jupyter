@@ -16,7 +16,7 @@ export class AmlComputeContext implements IExtensionSingleActivationService {
     public get isAmlCompute() {
         return env.remoteName === amlComputeRemoteName;
     }
-    public activate(): Promise<void> {
-        return Promise.resolve();
+    public async activate(): Promise<void> {
+        return;
     }
 }
