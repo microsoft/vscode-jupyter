@@ -51,4 +51,16 @@ export type ResourceSpecificTelemetryProperties = Partial<{
      * Number of times the kernel was changed.
      */
     switchKernelCount?: number;
+    /**
+     * Total number of kernel specs in the kernel spec list.
+     */
+    kernelSpecCount: number;
+    /**
+     * Total number of interpreters in the kernel spec list.
+     */
+    kernelInterpreterCount: number;
+    /**
+     * Total number of live kernels in the kernel spec list.
+     */
+    kernelLiveCount: number;
 }>;

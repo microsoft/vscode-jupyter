@@ -5,7 +5,7 @@ import { Resource } from '../../common/types';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { Telemetry } from '../constants';
 import { KernelConnectionMetadata } from '../jupyter/kernels/types';
-import { sendKernelTelemetryEvent } from './telemetry';
+import { sendKernelTelemetryEvent, trackKernelResourceInformation } from './telemetry';
 
 export function sendKernelListTelemetry(
     resource: Resource,
@@ -13,25 +13,26 @@ export function sendKernelListTelemetry(
     stopWatch: StopWatch
 ) {
     let counters = {
-        kernelSpecs: 0,
-        interpreters: 0,
-        liveKernels: 0
+        kernelSpecCount: 0,
+        kernelInterpreterCount: 0,
+        kernelLiveCount: 0
     };
     kernels.forEach((item) => {
         switch (item.selection.kind) {
             case 'connectToLiveKernel':
-                counters.liveKernels += 1;
+                counters.kernelLiveCount += 1;
                 break;
             case 'startUsingDefaultKernel':
             case 'startUsingKernelSpec':
-                counters.kernelSpecs += 1;
+                counters.kernelSpecCount += 1;
                 break;
             case 'startUsingPythonInterpreter':
-                counters.interpreters += 1;
+                counters.kernelInterpreterCount += 1;
                 break;
             default:
                 break;
         }
     });
+    trackKernelResourceInformation(resource, counters);
     sendKernelTelemetryEvent(resource, Telemetry.KernelCount, stopWatch.elapsedTime, counters);
 }

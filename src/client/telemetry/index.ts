@@ -1101,9 +1101,9 @@ export interface IEventNamePropertyMapping {
 
     // Misc
     [Telemetry.KernelCount]: {
-        kernelSpecs: number;
-        interpreters: number;
-        liveKernels: number;
+        kernelSpecCount: number; // Total number of kernel specs in the kernel list.
+        kernelInterpreterCount: number; // Total number of interpreters in the kernel list.
+        kernelLiveCount: number; // Total number of live kernels in the kernel list.
     } & ResourceSpecificTelemetryProperties;
 
     // Trusted notebooks events

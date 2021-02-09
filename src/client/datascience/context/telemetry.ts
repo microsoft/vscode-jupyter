@@ -41,6 +41,9 @@ type ContextualTelemetryProps = {
     kernelDied: boolean;
     interruptKernel: boolean;
     restartKernel: boolean;
+    kernelSpecCount: number; // Total number of kernel specs in list of kernels.
+    kernelInterpreterCount: number; // Total number of interpreters in list of kernels
+    kernelLiveCount: number; // Total number of live kernels in list of kernels.
 };
 
 type Context = {
@@ -157,6 +160,9 @@ export function trackKernelResourceInformation(resource: Resource, information: 
     if (information.startFailed) {
         currentData.startFailureCount = (currentData.startFailureCount || 0) + 1;
     }
+    currentData.kernelSpecCount = information.kernelSpecCount || currentData.kernelSpecCount || 0;
+    currentData.kernelLiveCount = information.kernelLiveCount || currentData.kernelLiveCount || 0;
+    currentData.kernelInterpreterCount = information.kernelInterpreterCount || currentData.kernelInterpreterCount || 0;
     currentData.pythonEnvironmentCount = InterpreterCountTracker.totalNumberOfInterpreters;
 
     const kernelConnection = information.kernelConnection;
@@ -167,6 +173,11 @@ export function trackKernelResourceInformation(resource: Resource, information: 
         if (context.previouslySelectedKernelConnectionId !== newKernelConnectionId) {
             clearInterruptCounter(resource);
             clearRestartCounter(resource);
+        }
+        if (
+            context.previouslySelectedKernelConnectionId &&
+            context.previouslySelectedKernelConnectionId !== newKernelConnectionId
+        ) {
             currentData.switchKernelCount = (currentData.switchKernelCount || 0) + 1;
         }
         if (information.kernelConnectionChanged) {
@@ -200,7 +211,7 @@ export function trackKernelResourceInformation(resource: Resource, information: 
             currentData.pythonEnvironmentPath = hashjs.sha256().update(interpreter.path).digest('hex');
             if (interpreter.version) {
                 const { major, minor, patch } = interpreter.version;
-                currentData.pythonEnvironmentVersion = `${major}${minor}${patch}`;
+                currentData.pythonEnvironmentVersion = `${major}.${minor}.${patch}`;
             } else {
                 currentData.pythonEnvironmentVersion = undefined;
             }
@@ -225,6 +236,12 @@ function getContextualPropsForTelemetry(resource: Resource): ResourceSpecificTel
         return;
     }
     const data = trackedInfo.get(getUriKey(resource));
+    const resourceType = getResourceType(resource);
+    if (!data && resourceType) {
+        return {
+            resourceType
+        };
+    }
     return data ? data[0] : undefined;
 }
 /**
