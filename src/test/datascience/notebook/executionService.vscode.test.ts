@@ -45,7 +45,6 @@ import {
 import { ProductNames } from '../../../client/common/installer/productNames';
 import { openNotebook } from '../helpers';
 import { noop } from '../../../client/common/utils/misc';
-import { sleep } from '../../../client/common/utils/async';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
