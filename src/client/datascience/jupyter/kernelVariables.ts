@@ -428,14 +428,12 @@ export class KernelVariables implements IJupyterVariables {
         cancelToken: CancellationToken | undefined
     ): Promise<JSONObject> {
         const matchingVariable = await this.getMatchingVariable(word, notebook, cancelToken);
-        const settings = this.configService.getSettings();
-        const variableTooltipSettings = settings.variableTooltipFields;
-        const languageSettings = variableTooltipSettings['python'] as JSONObject;
+        const settings = this.configService.getSettings(notebook.resource).variableTooltipFields;
+        const languageSettings = settings['python'] as JSONObject;
         const type = matchingVariable?.type;
         let result: JSONObject = {};
         if (matchingVariable) {
             if (type && type in languageSettings) {
-                result[`${word}`] = type;
                 const attributeNames: string[] = languageSettings[type] as string[];
                 const stringifiedAttributeNameList =
                     '[' + attributeNames.reduce((accumulator, currVal) => accumulator + `"${currVal}", `, '') + ']';
