@@ -113,7 +113,7 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
         }
         const [preferredKernel, kernels] = await Promise.all([
             this.getPreferredKernel(document, token, sessionManager),
-            this.getKernelSelections(document, token, sessionManager)
+            this.getKernelSelections(document, token)
         ]).finally(() => (sessionManager ? sessionManager.dispose() : undefined));
         if (token.isCancellationRequested) {
             return [];
@@ -195,8 +195,7 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
     }
     private async getKernelSelections(
         document: NotebookDocument,
-        token: CancellationToken,
-        sessionManager?: IJupyterSessionManager
+        token: CancellationToken
     ): Promise<
         IKernelSpecQuickPickItem<
             | LiveKernelConnectionMetadata
@@ -208,12 +207,15 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
         if (this.isLocalLaunch) {
             return this.kernelSelectionProvider.getKernelSelectionsForLocalSession(document.uri, token);
         } else {
-            if (!sessionManager) {
-                throw new Error('Session Manager not available');
-            }
             return this.kernelSelectionProvider.getKernelSelectionsForRemoteSession(
                 document.uri,
-                sessionManager,
+                async () => {
+                    const sessionManager = await this.getJupyterSessionManager();
+                    if (!sessionManager) {
+                        throw new Error('Session Manager not available');
+                    }
+                    return sessionManager;
+                },
                 token
             );
         }

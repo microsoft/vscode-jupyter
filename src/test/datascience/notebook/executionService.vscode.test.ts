@@ -927,6 +927,41 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         assert.equal(cell3.metadata.executionOrder, lastExecutionOrderOfCell3, 'Cell 3 should not have run again');
     });
 
+    // Check the set next input statements correctly insert or update cells
+    test('Test set_next_input message payload', async () => {
+        await insertCodeCell(
+            dedent`
+            import IPython
+            IPython.get_ipython().set_next_input("print('INSERT')")`,
+            { index: 0 }
+        );
+        await insertCodeCell(
+            dedent`
+            import IPython
+            IPython.get_ipython().set_next_input("print('REPLACE')", replace=True)`,
+            { index: 1 }
+        );
+        const cells = vscodeNotebook.activeNotebookEditor?.document.cells!;
+
+        await runAllCellsInActiveNotebook();
+
+        // Wait till execution count changes and status is success.
+        await waitForExecutionCompletedSuccessfully(cells[0]);
+        await waitForExecutionCompletedSuccessfully(cells[1]);
+
+        const cellsPostExecute = vscodeNotebook.activeNotebookEditor?.document.cells!;
+
+        // Check our output, one cell should have been inserted, and one been replaced
+        expect(cellsPostExecute.length).to.equal(3);
+        expect(cellsPostExecute[0].document.getText()).to.equal(
+            dedent`
+            import IPython
+            IPython.get_ipython().set_next_input("print('INSERT')")`
+        );
+        expect(cellsPostExecute[1].document.getText()).to.equal("print('INSERT')");
+        expect(cellsPostExecute[2].document.getText()).to.equal("print('REPLACE')");
+    });
+
     /**
      * Verify the fact that cells provided were executed in the order they appear in the list.
      * (the execution order of each subsequent cell in the list is expected to have an execution order greater than the previous cell).
