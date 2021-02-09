@@ -17,7 +17,8 @@ export enum InsidersNotebookSurveyStateKeys {
 
 enum DSSurveyLabelIndex {
     Yes,
-    No
+    No,
+    DontShowAgain
 }
 
 const NotebookOpenThreshold = 5;
@@ -43,10 +44,13 @@ export class InsidersNativeNotebooksSurveyBanner implements IExtensionSingleActi
         if (this.applicationEnvironment.uiKind !== UIKind.Desktop) {
             return false;
         }
-        if (!this.showBannerState.value.expiry) {
-            return true;
+        if (this.showBannerState.value.data) {
+            if (!this.showBannerState.value.expiry) {
+                return true;
+            }
+            return this.showBannerState.value.expiry! < Date.now();
         }
-        return this.showBannerState.value.expiry! < Date.now();
+        return false;
     }
 
     private disabledInCurrentSession = false;
@@ -55,7 +59,8 @@ export class InsidersNativeNotebooksSurveyBanner implements IExtensionSingleActi
 
     private bannerLabels: string[] = [
         localize.DataScienceSurveyBanner.bannerLabelYes(),
-        localize.DataScienceSurveyBanner.bannerLabelNo()
+        localize.DataScienceSurveyBanner.bannerLabelNo(),
+        localize.Common.doNotShowAgain()
     ];
 
     private readonly showBannerState: IPersistentState<ShowBannerWithExpiryTime>;
@@ -71,10 +76,7 @@ export class InsidersNativeNotebooksSurveyBanner implements IExtensionSingleActi
         @inject(IDisposableRegistry) private disposables: IDisposableRegistry
     ) {
         this.showBannerState = this.persistentState.createGlobalPersistentState<ShowBannerWithExpiryTime>(
-            InsidersNotebookSurveyStateKeys.ShowBanner,
-            {
-                data: true
-            }
+            InsidersNotebookSurveyStateKeys.ShowBanner
         );
     }
 
@@ -106,6 +108,13 @@ export class InsidersNativeNotebooksSurveyBanner implements IExtensionSingleActi
             case this.bannerLabels[DSSurveyLabelIndex.No]: {
                 // Disable for 3 months
                 await this.disable(3);
+                break;
+            }
+            case this.bannerLabels[DSSurveyLabelIndex.DontShowAgain]: {
+                await this.showBannerState.updateValue({
+                    expiry: 0,
+                    data: false
+                });
                 break;
             }
             default:
