@@ -18,8 +18,9 @@ import { StopWatch } from '../../../common/utils/stopWatch';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { captureTelemetry, IEventNamePropertyMapping, sendTelemetryEvent } from '../../../telemetry';
-import { sendNotebookOrKernelLanguageTelemetry } from '../../common';
+import { getResourceType, sendNotebookOrKernelLanguageTelemetry } from '../../common';
 import { Commands, Telemetry } from '../../constants';
+import { sendKernelListTelemetry } from '../../context/kernelTelemetry';
 import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../../context/telemetry';
 import { IKernelFinder } from '../../kernel-launcher/types';
 import { isPythonNotebook } from '../../notebook/helpers/helpers';
@@ -594,11 +595,15 @@ export class KernelSelector implements IKernelSelectionUsage {
             localize.DataScience.selectKernel() +
             (currentKernelDisplayName ? ` (current: ${currentKernelDisplayName})` : '');
         sendTelemetryEvent(telemetryEvent, stopWatch.elapsedTime);
+        sendKernelListTelemetry(resource, suggestions, stopWatch);
         const selection = await this.applicationShell.showQuickPick(suggestions, { placeHolder }, cancelToken);
         if (!selection?.selection) {
             return;
         }
-        trackKernelResourceInformation(resource, { kernelConnection: selection.selection, kernelConnectionChanged: true });
+        trackKernelResourceInformation(resource, {
+            kernelConnection: selection.selection,
+            kernelConnectionChanged: true
+        });
         sendKernelTelemetryEvent(resource, Telemetry.SwitchKernel);
         return (this.useSelectedKernel(selection.selection, resource, type, cancelToken) as unknown) as T | undefined;
     }

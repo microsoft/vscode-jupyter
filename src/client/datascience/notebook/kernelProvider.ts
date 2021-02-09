@@ -13,9 +13,11 @@ import { ICommandManager, IVSCodeNotebook } from '../../common/application/types
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { IConfigurationService, IDisposableRegistry, IExtensionContext } from '../../common/types';
 import { noop } from '../../common/utils/misc';
+import { StopWatch } from '../../common/utils/stopWatch';
 import { captureTelemetry } from '../../telemetry';
 import { sendNotebookOrKernelLanguageTelemetry } from '../common';
 import { Telemetry } from '../constants';
+import { sendKernelListTelemetry } from '../context/kernelTelemetry';
 import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../context/telemetry';
 import { areKernelConnectionsEqual, isLocalLaunch } from '../jupyter/kernels/helpers';
 import { KernelSelectionProvider } from '../jupyter/kernels/kernelSelections';
@@ -106,6 +108,7 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
         document: NotebookDocument,
         token: CancellationToken
     ): Promise<VSCodeNotebookKernelMetadata[]> {
+        const stopWatch = new StopWatch();
         const sessionManager = await this.getJupyterSessionManager();
         if (token.isCancellationRequested) {
             if (sessionManager) {
@@ -184,6 +187,9 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
                 );
             }
         }
+
+        sendKernelListTelemetry(document.uri, mapped, stopWatch);
+
         mapped.sort((a, b) => {
             if (a.label > b.label) {
                 return 1;

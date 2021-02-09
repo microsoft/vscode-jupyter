@@ -431,7 +431,8 @@ export enum Telemetry {
     NotebookStart = 'DATASCIENCE.NOTEBOOK_START',
     NotebookInterrupt = 'DATASCIENCE.NOTEBOOK_INTERRUPT',
     NotebookRestart = 'DATASCIENCE.NOTEBOOK_RESTART',
-    SwitchKernel = 'DS_INTERNAL.SWITCH_KERNEL'
+    SwitchKernel = 'DS_INTERNAL.SWITCH_KERNEL',
+    KernelCount = 'DS_INTERNAL.KERNEL_COUNT'
 }
 
 export enum NativeKeyboardCommandTelemetry {

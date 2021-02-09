@@ -46,7 +46,10 @@ export const AllowedCellOutputKeys = {
     ['execute_result']: new Set(Object.keys(dummyExecuteResultObj))
 };
 
-export function getResourceType(uri: Uri) {
+export function getResourceType(uri?: Uri): 'notebook' | 'interactive' {
+    if (!uri) {
+        return 'interactive';
+    }
     return uri.fsPath.toLowerCase().endsWith('ipynb') ? 'notebook' : 'interactive';
 }
 

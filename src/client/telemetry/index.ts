@@ -1099,6 +1099,13 @@ export interface IEventNamePropertyMapping {
     [Telemetry.RunByLineStop]: never | undefined;
     [Telemetry.RunByLineVariableHover]: never | undefined;
 
+    // Misc
+    [Telemetry.KernelCount]: {
+        kernelSpecs: number;
+        interpreters: number;
+        liveKernels: number;
+    } & ResourceSpecificTelemetryProperties;
+
     // Trusted notebooks events
     [Telemetry.NotebookTrustPromptShown]: never | undefined;
     [Telemetry.TrustNotebook]: never | undefined;
