@@ -922,6 +922,7 @@ export interface IJupyterVariables {
         notebook?: INotebook,
         cancelToken?: CancellationToken
     ): Promise<IJupyterVariable | undefined>;
+    // This is currently only defined in kernelVariables.ts
     getVariableProperties?(name: string, notebook?: INotebook, cancelToken?: CancellationToken): Promise<JSONObject>;
 }
 

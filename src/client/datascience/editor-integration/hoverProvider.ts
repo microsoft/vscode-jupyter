@@ -102,11 +102,14 @@ export class HoverProvider implements INotebookExecutionLogger, IHoverProvider {
                     if (notebooks && notebooks.length) {
                         // Just use the first one to reply if more than one.
                         const attributes = await Promise.race(
+                            // Note, getVariableProperties is non null here because we are specifically
+                            // injecting kernelVariables, which does define this interface method
                             notebooks.map((n) => this.variableProvider.getVariableProperties!(word, n, t))
                         );
-                        if (attributes) {
+                        const entries = Object.entries(attributes);
+                        if (entries.length > 0) {
                             const asMarkdown =
-                                Object.entries(attributes).reduce(
+                                entries.reduce(
                                     (accum, entry) => accum + `${entry[0]}: ${entry[1]}\n`,
                                     '```\n'
                                 ) + '```';
