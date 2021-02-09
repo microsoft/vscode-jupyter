@@ -1062,6 +1062,7 @@ export interface IEventNamePropertyMapping {
                   | 'jupyterinstall'
                   | 'jupyterselfcert'
                   | 'invalidkernel'
+                  | 'noipykernel'
                   | 'unknown';
           } & ResourceSpecificTelemetryProperties)
         | (ResourceSpecificTelemetryProperties & TelemetryErrorProperties); // If there any any unhandled exceptions.

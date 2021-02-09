@@ -58,7 +58,7 @@ export function getKernelFailureReason(error: Error) {
     } else if (isErrorType(error, JupyterKernelPromiseFailedError)) {
         return 'kernelpromisetimeout';
     } else if (isErrorType(error, IpyKernelNotInstalledError)) {
-        return 'kernelpromisetimeout';
+        return 'noipykernel';
     } else if (isErrorType(error, CancellationError)) {
         return 'cancelled';
     } else if (isErrorType(error, JupyterSessionStartError)) {
