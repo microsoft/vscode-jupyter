@@ -1,6 +1,8 @@
 import { assert } from 'chai';
+import { cloneDeep } from 'lodash';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import { IConfigurationService, IJupyterSettings, ReadWrite } from '../../../client/common/types';
 import { IHoverProvider } from '../../../client/datascience/types';
 import { IExtensionTestApi, openFile, sleep } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
@@ -15,12 +17,25 @@ suite('Hover provider', async () => {
         'editor-integration',
         'tooltips.py'
     );
+    let dsSettings: ReadWrite<IJupyterSettings>;
     let api: IExtensionTestApi;
+    let oldSetting: any;
     suiteSetup(async function () {
         if (process.env.VSC_FORCE_REAL_JUPYTER === undefined) {
             return this.skip();
         }
         api = await initialize();
+        const configService = api.serviceManager.get<IConfigurationService>(IConfigurationService);
+        dsSettings = configService.getSettings();
+        oldSetting = cloneDeep(dsSettings.variableTooltipFields);
+        dsSettings.variableTooltipFields = {
+            python: {
+                Tensor: ['shape', 'dtype', 'device']
+            }
+        };
+    });
+    suiteTeardown(async () => {
+        dsSettings.variableTooltipFields = oldSetting;
     });
     test('Tensor tooltips', async () => {
         // Open a Python file
