@@ -24,7 +24,8 @@ import { Telemetry } from '../constants';
 import { noop } from '../../common/utils/misc';
 import { WorkspaceInterpreterTracker } from './workspaceInterpreterTracker';
 import { InterruptResult } from '../types';
-import { getResourceType } from '../common';
+import { getResourceType, getTelemetrySafeLanguage } from '../common';
+import { PYTHON_LANGUAGE } from '../../common/constants';
 
 type ContextualTelemetryProps = {
     kernelConnection: KernelConnectionMetadata;
@@ -35,7 +36,7 @@ type ContextualTelemetryProps = {
      * In Native Notebooks we track changes to selection by checking if previously selected kernel is the same as the new one.
      */
     kernelConnectionChanged: boolean;
-    wasJupyterAutoStarted: boolean;
+    startFailed: boolean;
     kernelDied: boolean;
     interruptKernel: boolean;
     restartKernel: boolean;
@@ -92,6 +93,9 @@ export function sendKernelTelemetryEvent<P extends IEventNamePropertyMapping, E 
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resetData(resource, eventName as any, properties);
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    incrementStartFailureCount(resource, eventName as any, properties);
 }
 
 export function sendKernelTelemetryWhenDone<P extends IEventNamePropertyMapping, E extends keyof P>(
@@ -124,6 +128,9 @@ export function sendKernelTelemetryWhenDone<P extends IEventNamePropertyMapping,
         } finally {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             resetData(resource, eventName as any, properties);
+
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            incrementStartFailureCount(resource, eventName as any, properties);
         }
     })().catch(noop);
 }
@@ -146,9 +153,13 @@ export function trackKernelResourceInformation(resource: Resource, information: 
     if (information.interruptKernel) {
         currentData.interruptCount = (currentData.interruptCount || 0) + 1;
     }
+    if (information.startFailed) {
+        currentData.startFailureCount = (currentData.startFailureCount || 0) + 1;
+    }
 
-    if (information.kernelConnection) {
-        const newKernelConnectionId = getKernelConnectionId(information.kernelConnection);
+    const kernelConnection = information.kernelConnection;
+    if (kernelConnection) {
+        const newKernelConnectionId = getKernelConnectionId(kernelConnection);
         // If we have selected a whole new kernel connection for this,
         // Then reset some of the data
         if (context.previouslySelectedKernelConnectionId !== newKernelConnectionId) {
@@ -159,11 +170,25 @@ export function trackKernelResourceInformation(resource: Resource, information: 
         if (information.kernelConnectionChanged) {
             currentData.switchKernelCount = (currentData.switchKernelCount || 0) + 1;
         }
-
+        let language: string | undefined;
+        switch (kernelConnection.kind) {
+            case 'connectToLiveKernel':
+                language = kernelConnection.kernelModel.language;
+                break;
+            case 'startUsingKernelSpec':
+                language = kernelConnection.kernelSpec.language;
+                break;
+            case 'startUsingPythonInterpreter':
+                language = PYTHON_LANGUAGE;
+                break;
+            default:
+                break;
+        }
+        currentData.kernelLanguage = getTelemetrySafeLanguage(language);
         // Keep track of the kernel that was last selected.
-        context.previouslySelectedKernelConnectionId = getKernelConnectionId(information.kernelConnection);
+        context.previouslySelectedKernelConnectionId = getKernelConnectionId(kernelConnection);
 
-        const interpreter = information.kernelConnection.interpreter;
+        const interpreter = kernelConnection.interpreter;
         if (interpreter) {
             currentData.isUsingActiveInterpreter = WorkspaceInterpreterTracker.isActiveWorkspaceInterpreter(
                 resource,
@@ -179,7 +204,7 @@ export function trackKernelResourceInformation(resource: Resource, information: 
             }
         }
 
-        currentData.kernelConnectionType = currentData.kernelConnectionType || information.kernelConnection?.kind;
+        currentData.kernelConnectionType = currentData.kernelConnectionType || kernelConnection?.kind;
     } else {
         context.previouslySelectedKernelConnectionId = '';
     }
@@ -244,5 +269,17 @@ function clearRestartCounter(resource: Resource) {
     const currentData = trackedInfo.get(key);
     if (currentData) {
         currentData[0].restartCount = 0;
+        currentData[0].startFailureCount = 0;
+    }
+}
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function incrementStartFailureCount(resource: Resource, eventName: any, properties: any) {
+    if (eventName === Telemetry.NotebookStart) {
+        let kv: Pick<IEventNamePropertyMapping, Telemetry.NotebookStart>;
+        const data: typeof kv[Telemetry.NotebookStart] = properties;
+        // Check start failed.
+        if ('failed' in data && data.failed === 'true') {
+            trackKernelResourceInformation(resource, { startFailed: true });
+        }
     }
 }

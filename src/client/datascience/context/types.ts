@@ -7,6 +7,7 @@ import { KernelConnectionMetadata } from '../jupyter/kernels/types';
 let connection: KernelConnectionMetadata;
 export type ResourceSpecificTelemetryProperties = Partial<{
     resourceType: 'notebook' | 'interactive';
+    kernelLanguage: string;
     /**
      * Whether this resource is using the active Python interpreter or not.
      */
@@ -35,6 +36,10 @@ export type ResourceSpecificTelemetryProperties = Partial<{
      * This number gets reset after change the kernel.
      */
     restartCount?: number;
+    /**
+     * Number of times starting the kernel failed.
+     */
+    startFailureCount?: number;
     /**
      * Number of times the kernel was changed.
      */

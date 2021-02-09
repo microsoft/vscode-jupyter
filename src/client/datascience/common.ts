@@ -203,3 +203,12 @@ export function sendNotebookOrKernelLanguageTelemetry(
     }
     sendTelemetryEvent(telemetryEvent, undefined, { language });
 }
+
+export function getTelemetrySafeLanguage(language: string = 'unknown') {
+    language = (language || 'unknown').toLowerCase();
+    language = KnownKernelLanguageAliases.get(language) || language;
+    if (!KnownNotebookLanguages.includes(language)) {
+        language = 'unknown';
+    }
+    return language;
+}
