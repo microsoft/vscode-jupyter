@@ -20,6 +20,7 @@ import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { captureTelemetry, IEventNamePropertyMapping, sendTelemetryEvent } from '../../../telemetry';
 import { sendNotebookOrKernelLanguageTelemetry } from '../../common';
 import { Commands, Telemetry } from '../../constants';
+import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../../context/telemetry';
 import { IKernelFinder } from '../../kernel-launcher/types';
 import { isPythonNotebook } from '../../notebook/helpers/helpers';
 import { getInterpreterInfoStoredInMetadata } from '../../notebookStorage/baseModel';
@@ -597,6 +598,8 @@ export class KernelSelector implements IKernelSelectionUsage {
         if (!selection?.selection) {
             return;
         }
+        trackKernelResourceInformation(resource, { kernelConnection: selection.selection, kernelConnectionChanged: true });
+        sendKernelTelemetryEvent(resource, Telemetry.SwitchKernel);
         return (this.useSelectedKernel(selection.selection, resource, type, cancelToken) as unknown) as T | undefined;
     }
 

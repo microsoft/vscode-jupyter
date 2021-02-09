@@ -46,6 +46,10 @@ export const AllowedCellOutputKeys = {
     ['execute_result']: new Set(Object.keys(dummyExecuteResultObj))
 };
 
+export function getResourceType(uri: Uri) {
+    return uri.fsPath.toLowerCase().endsWith('ipynb') ? 'notebook' : 'interactive';
+}
+
 function fixupOutput(output: nbformat.IOutput): nbformat.IOutput {
     let allowedKeys: Set<string>;
     switch (output.output_type) {

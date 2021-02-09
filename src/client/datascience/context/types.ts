@@ -7,15 +7,36 @@ import { KernelConnectionMetadata } from '../jupyter/kernels/types';
 let connection: KernelConnectionMetadata;
 export type ResourceSpecificTelemetryProperties = Partial<{
     resourceType: 'notebook' | 'interactive';
-    // Found plenty of issues when starting kernels with conda, hence useful to capture this info.
+    /**
+     * Whether this resource is using the active Python interpreter or not.
+     */
+    isUsingActiveInterpreter?: boolean;
+    /**
+     * Found plenty of issues when starting kernels with conda, hence useful to capture this info.
+     */
     pythonEnvironmentType?: EnvironmentType;
-    // A key, so that rest of the information is tied to this.
+    /**
+     * A key, so that rest of the information is tied to this. (hash)
+     */
     pythonEnvironmentPath?: string;
-    // Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)
+    /**
+     * Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)
+     */
     pythonEnvironmentVersion?: string;
-    // Whether kernel was started using kernel spec, interpreter, etc.
+    /**
+     * Whether kernel was started using kernel spec, interpreter, etc.
+     */
     kernelConnectionType?: typeof connection.kind;
-    // This number gets reset after we attempt a restart.
+    /**
+     * This number gets reset after we attempt a restart or change kernel.
+     */
     interruptCount?: number;
+    /**
+     * This number gets reset after change the kernel.
+     */
     restartCount?: number;
+    /**
+     * Number of times the kernel was changed.
+     */
+    switchKernelCount?: number;
 }>;

@@ -6,13 +6,16 @@
 import { ConfigurationTarget, Event, EventEmitter, ProgressLocation, Uri, WebviewPanel } from 'vscode';
 import { NotebookCell, NotebookDocument } from '../../../../types/vscode-proposed';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../common/application/types';
+import { CancellationError } from '../../common/cancellation';
+import { isErrorType } from '../../common/errors/errorUtils';
 import { traceError } from '../../common/logger';
 import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../common/types';
 import { DataScience } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
+import { StopWatch } from '../../common/utils/stopWatch';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
-import { trackKernelResourceInformation } from '../context/telemetry';
+import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../context/telemetry';
 import { JupyterKernelPromiseFailedError } from '../jupyter/kernels/jupyterKernelPromiseFailedError';
 import { IKernel, IKernelProvider } from '../jupyter/kernels/types';
 import {
@@ -197,12 +200,13 @@ export class NotebookEditor implements INotebookEditor {
         this.executedCode.fire(cell.document.getText());
     }
     public async interruptKernel(): Promise<void> {
-        trackKernelResourceInformation(this.document.uri, { interruptKernel: true });
         if (this.restartingKernel) {
+            trackKernelResourceInformation(this.document.uri, { interruptKernel: true });
             return;
         }
         const kernel = this.kernelProvider.get(this.file);
         if (!kernel || this.restartingKernel) {
+            trackKernelResourceInformation(this.document.uri, { interruptKernel: true });
             return;
         }
         const status = this.statusProvider.set(DataScience.interruptKernelStatus(), true, undefined, undefined);
@@ -231,6 +235,7 @@ export class NotebookEditor implements INotebookEditor {
         trackKernelResourceInformation(this.document.uri, { restartKernel: true });
         sendTelemetryEvent(Telemetry.RestartKernelCommand);
         if (this.restartingKernel) {
+            trackKernelResourceInformation(this.document.uri, { restartKernel: true });
             return;
         }
         const kernel = this.kernelProvider.get(this.file);
@@ -319,12 +324,18 @@ export class NotebookEditor implements INotebookEditor {
         // Set our status
         const status = this.statusProvider.set(DataScience.restartingKernelStatus(), true, undefined, undefined);
 
+        const stopWatch = new StopWatch();
         try {
             await kernel.restart();
+            sendKernelTelemetryEvent(this.document.uri, Telemetry.NotebookRestart, stopWatch.elapsedTime);
         } catch (exc) {
             // If we get a kernel promise failure, then restarting timed out. Just shutdown and restart the entire server.
             // Note, this code might not be necessary, as such an error is thrown only when interrupting a kernel times out.
             if (exc instanceof JupyterKernelPromiseFailedError && kernel) {
+                sendKernelTelemetryEvent(this.document.uri, Telemetry.NotebookRestart, stopWatch.elapsedTime, {
+                    failed: 'true',
+                    reason: 'kernelpromisetimeout'
+                });
                 // Old approach (INotebook is not exposed in IKernel, and INotebook will eventually go away).
                 const notebook = await this.notebookProvider.getOrCreateNotebook({
                     resource: this.file,
@@ -336,6 +347,10 @@ export class NotebookEditor implements INotebookEditor {
                 }
                 await this.notebookProvider.connect({ getOnly: false, disableUI: false });
             } else {
+                sendKernelTelemetryEvent(this.document.uri, Telemetry.NotebookRestart, stopWatch.elapsedTime, {
+                    failed: 'true',
+                    reason: isErrorType(exc, CancellationError) ? 'cancelled' : 'unknown'
+                });
                 // Show the error message
                 void this.applicationShell.showErrorMessage(exc);
                 traceError(exc);

@@ -12,7 +12,7 @@ import { createDeferred, waitForPromise } from '../../../common/utils/async';
 import { StopWatch } from '../../../common/utils/stopWatch';
 import { captureTelemetry } from '../../../telemetry';
 import { Telemetry, VSCodeNativeTelemetry } from '../../constants';
-import { sendKernelTelemetryEvent } from '../../context/telemetry';
+import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../../context/telemetry';
 import { traceCellMessage } from '../../notebook/helpers/helpers';
 import { chainWithPendingUpdates } from '../../notebook/helpers/notebookUpdater';
 import {
@@ -118,6 +118,7 @@ export class KernelExecution implements IDisposable {
      * If we don't have a kernel (Jupyter Session) available, then just abort all of the cell executions.
      */
     public async interrupt(document: NotebookDocument, notebookPromise?: Promise<INotebook>): Promise<InterruptResult> {
+        trackKernelResourceInformation(document.uri, { interruptKernel: true });
         const executionQueue = this.documentExecutions.get(document);
         if (!executionQueue) {
             return InterruptResult.Success;
@@ -183,12 +184,13 @@ export class KernelExecution implements IDisposable {
         this.documentExecutions.set(editor.document, newCellExecutionQueue);
         return newCellExecutionQueue;
     }
+    @captureTelemetry(Telemetry.Interrupt)
+    @captureTelemetry(Telemetry.InterruptJupyterTime)
     private async interruptExecution(
         document: NotebookDocument,
         session: IJupyterSession,
         pendingCells: Promise<unknown>
     ): Promise<InterruptResult> {
-        // Create a deferred promise that resolves if we have a failure
         const restarted = createDeferred<boolean>();
         const stopWatch = new StopWatch();
         // Listen to status change events so we can tell if we're restarting

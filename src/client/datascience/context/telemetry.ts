@@ -3,7 +3,7 @@
 
 import { Uri } from 'vscode';
 import { getOSType } from '../../common/utils/platform';
-import { KernelConnectionMetadata } from '../jupyter/kernels/types';
+import { getKernelConnectionId, KernelConnectionMetadata } from '../jupyter/kernels/types';
 import * as hashjs from 'hash.js';
 import { Resource } from '../../common/types';
 import { IEventNamePropertyMapping, sendTelemetryEvent, sendTelemetryWhenDone } from '../../telemetry';
@@ -21,20 +21,36 @@ import { JupyterConnectError } from '../jupyter/jupyterConnectError';
 import { JupyterInstallError } from '../jupyter/jupyterInstallError';
 import { JupyterSelfCertsError } from '../jupyter/jupyterSelfCertsError';
 import { Telemetry } from '../constants';
+import { noop } from '../../common/utils/misc';
+import { WorkspaceInterpreterTracker } from './workspaceInterpreterTracker';
+import { InterruptResult } from '../types';
+import { getResourceType } from '../common';
 
 type ContextualTelemetryProps = {
     kernelConnection: KernelConnectionMetadata;
+    /**
+     * Used by WebViews & Interactive window.
+     * In those cases we know for a fact that the user changes the kernel.
+     * In Native Notebooks, we don't know whether the user changed the kernel or VS Code is just asking for default kernel.
+     * In Native Notebooks we track changes to selection by checking if previously selected kernel is the same as the new one.
+     */
+    kernelConnectionChanged: boolean;
     wasJupyterAutoStarted: boolean;
     kernelDied: boolean;
     interruptKernel: boolean;
     restartKernel: boolean;
 };
 
-const trackedInfo = new Map<string, ResourceSpecificTelemetryProperties>();
+type Context = {
+    previouslySelectedKernelConnectionId: string;
+};
+const trackedInfo = new Map<string, [ResourceSpecificTelemetryProperties, Context]>();
 const currentOSType = getOSType();
 
 export function getKernelFailureReason(error: Error) {
-    if (isErrorType(error, JupyterWaitForIdleError) || isErrorType(error, TimedOutError)) {
+    if (isErrorType(error, JupyterWaitForIdleError)) {
+        return 'timeout';
+    } else if (isErrorType(error, TimedOutError)) {
         return 'timeout';
     } else if (isErrorType(error, JupyterInvalidKernelError)) {
         return 'invalidkernel';
@@ -74,22 +90,10 @@ export function sendKernelTelemetryEvent<P extends IEventNamePropertyMapping, E 
         sendTelemetryEvent(eventName as any, durationMs, properties, ex);
     }
 
-    // Once we have successfully interrupted, clear the interrupt counter.
-    if (eventName === Telemetry.NotebookInterrupt) {
-        clearInterruptCounter(resource);
-    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    resetData(resource, eventName as any, properties);
 }
 
-function clearInterruptCounter(resource: Resource) {
-    if (!resource) {
-        return;
-    }
-    const key = getUriKey(resource);
-    const currentData = trackedInfo.get(key);
-    if (currentData) {
-        currentData.interruptCount = 0;
-    }
-}
 export function sendKernelTelemetryWhenDone<P extends IEventNamePropertyMapping, E extends keyof P>(
     resource: Resource,
     eventName: E,
@@ -113,18 +117,58 @@ export function sendKernelTelemetryWhenDone<P extends IEventNamePropertyMapping,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         sendTelemetryWhenDone(eventName as any, promise, stopWatch, properties, true);
     }
+
+    (async () => {
+        try {
+            await promise;
+        } finally {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            resetData(resource, eventName as any, properties);
+        }
+    })().catch(noop);
 }
 export function trackKernelResourceInformation(resource: Resource, information: Partial<ContextualTelemetryProps>) {
     if (!resource) {
         return;
     }
     const key = getUriKey(resource);
-    const currentData: ResourceSpecificTelemetryProperties = trackedInfo.get(key) || {
-        resourceType: getResourceType(resource)
-    };
+    const [currentData, context] = trackedInfo.get(key) || [
+        {
+            resourceType: getResourceType(resource)
+        },
+        { previouslySelectedKernelConnectionId: '' }
+    ];
+
+    if (information.restartKernel) {
+        currentData.interruptCount = 0;
+        currentData.restartCount = (currentData.restartCount || 0) + 1;
+    }
+    if (information.interruptKernel) {
+        currentData.interruptCount = (currentData.interruptCount || 0) + 1;
+    }
+
     if (information.kernelConnection) {
+        const newKernelConnectionId = getKernelConnectionId(information.kernelConnection);
+        // If we have selected a whole new kernel connection for this,
+        // Then reset some of the data
+        if (context.previouslySelectedKernelConnectionId !== newKernelConnectionId) {
+            clearInterruptCounter(resource);
+            clearRestartCounter(resource);
+            currentData.switchKernelCount = (currentData.switchKernelCount || 0) + 1;
+        }
+        if (information.kernelConnectionChanged) {
+            currentData.switchKernelCount = (currentData.switchKernelCount || 0) + 1;
+        }
+
+        // Keep track of the kernel that was last selected.
+        context.previouslySelectedKernelConnectionId = getKernelConnectionId(information.kernelConnection);
+
         const interpreter = information.kernelConnection.interpreter;
         if (interpreter) {
+            currentData.isUsingActiveInterpreter = WorkspaceInterpreterTracker.isActiveWorkspaceInterpreter(
+                resource,
+                interpreter
+            );
             currentData.pythonEnvironmentType = interpreter.envType;
             currentData.pythonEnvironmentPath = hashjs.sha256().update(interpreter.path).digest('hex');
             if (interpreter.version) {
@@ -134,25 +178,17 @@ export function trackKernelResourceInformation(resource: Resource, information: 
                 currentData.pythonEnvironmentVersion = undefined;
             }
         }
-        currentData.kernelConnectionType = currentData.kernelConnectionType || information.kernelConnection?.kind;
-    }
-    if (information.restartKernel) {
-        currentData.interruptCount = 0;
-        currentData.restartCount = (currentData.restartCount || 0) + 1;
-    }
-    if (information.interruptKernel) {
-        currentData.interruptCount = (currentData.interruptCount || 0) + 1;
-    }
 
-    trackedInfo.set(key, currentData);
+        currentData.kernelConnectionType = currentData.kernelConnectionType || information.kernelConnection?.kind;
+    } else {
+        context.previouslySelectedKernelConnectionId = '';
+    }
+    trackedInfo.set(key, [currentData, context]);
 }
 export function deleteTrackedInformation(resource: Uri) {
     trackedInfo.delete(getUriKey(resource));
 }
 
-function getResourceType(uri: Uri) {
-    return uri.fsPath.toLowerCase().endsWith('ipynb') ? 'notebook' : 'interactive';
-}
 function getUriKey(uri: Uri) {
     return currentOSType ? uri.fsPath.toLowerCase() : uri.fsPath;
 }
@@ -161,5 +197,52 @@ function getContextualPropsForTelemetry(resource: Resource): ResourceSpecificTel
     if (!resource) {
         return;
     }
-    return trackedInfo.get(getUriKey(resource));
+    const data = trackedInfo.get(getUriKey(resource));
+    return data ? data[0] : undefined;
+}
+/**
+ * Some information such as interrupt counters & restart counters need to be reset
+ * after we have successfully interrupted or restarted a kernel.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function resetData(resource: Resource, eventName: string, properties: any) {
+    // Once we have successfully interrupted, clear the interrupt counter.
+    if (eventName === Telemetry.NotebookInterrupt) {
+        let kv: Pick<IEventNamePropertyMapping, Telemetry.NotebookInterrupt>;
+        const data: typeof kv[Telemetry.NotebookInterrupt] = properties;
+        // Check result to determine if success.
+        if ('result' in data && data.result === InterruptResult.Success) {
+            clearInterruptCounter(resource);
+        }
+    }
+    // Once we have successfully restarted, clear the interrupt counter.
+    if (eventName === Telemetry.NotebookRestart) {
+        let kv: Pick<IEventNamePropertyMapping, Telemetry.NotebookInterrupt>;
+        const data: typeof kv[Telemetry.NotebookInterrupt] = properties;
+        // For restart to be successful, we should not have `failed`
+        const failed = 'failed' in data ? data.failed === 'true' : false;
+        if (!failed) {
+            clearInterruptCounter(resource);
+        }
+    }
+}
+function clearInterruptCounter(resource: Resource) {
+    if (!resource) {
+        return;
+    }
+    const key = getUriKey(resource);
+    const currentData = trackedInfo.get(key);
+    if (currentData) {
+        currentData[0].interruptCount = 0;
+    }
+}
+function clearRestartCounter(resource: Resource) {
+    if (!resource) {
+        return;
+    }
+    const key = getUriKey(resource);
+    const currentData = trackedInfo.get(key);
+    if (currentData) {
+        currentData[0].restartCount = 0;
+    }
 }

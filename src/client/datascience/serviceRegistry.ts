@@ -21,7 +21,6 @@ import { ExportCommands } from './commands/exportCommands';
 import { NotebookCommands } from './commands/notebookCommands';
 import { JupyterServerSelectorCommand } from './commands/serverSelector';
 import { DataScienceStartupTime, Identifiers, OurNotebookProvider, VSCodeNotebookProvider } from './constants';
-import { ActiveEditorContextService } from './context/activeEditorContext';
 import { DataViewer } from './data-viewing/dataViewer';
 import { DataViewerDependencyService } from './data-viewing/dataViewerDependencyService';
 import { DataViewerFactory } from './data-viewing/dataViewerFactory';
@@ -120,6 +119,7 @@ import { NotebookEditorCompatibilitySupport } from './notebook/notebookEditorCom
 import { NotebookEditorProvider } from './notebook/notebookEditorProvider';
 import { NotebookEditorProviderWrapper } from './notebook/notebookEditorProviderWrapper';
 import { registerTypes as registerNotebookTypes } from './notebook/serviceRegistry';
+import { registerTypes as registerContextTypes } from './context/serviceRegistry';
 import { NotebookCreationTracker } from './notebookAndInteractiveTracker';
 import { NotebookExtensibility } from './notebookExtensibility';
 import { NotebookModelFactory } from './notebookStorage/factory';
@@ -258,7 +258,6 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     serviceManager.addSingleton<IKernelLauncher>(IKernelLauncher, KernelLauncher);
     serviceManager.addSingleton<KernelEnvironmentVariablesService>(KernelEnvironmentVariablesService, KernelEnvironmentVariablesService);
     serviceManager.addSingleton<IKernelFinder>(IKernelFinder, KernelFinder);
-    serviceManager.addSingleton<ActiveEditorContextService>(ActiveEditorContextService, ActiveEditorContextService);
     serviceManager.addSingleton<CellOutputMimeTypeTracker>(CellOutputMimeTypeTracker, CellOutputMimeTypeTracker, undefined, [IExtensionSingleActivationService, INotebookExecutionLogger]);
     serviceManager.addSingleton<CommandRegistry>(CommandRegistry, CommandRegistry);
     serviceManager.addSingleton<DataViewerDependencyService>(DataViewerDependencyService, DataViewerDependencyService);
@@ -350,4 +349,5 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     serviceManager.addSingleton<INotebookWatcher>(INotebookWatcher, NotebookWatcher);
 
     registerNotebookTypes(serviceManager);
+    registerContextTypes(serviceManager);
 }

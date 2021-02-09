@@ -16,6 +16,10 @@ export const IExtensionActivationManager = Symbol('IExtensionActivationManager')
 export interface IExtensionActivationManager extends IDisposable {
     /**
      * Method invoked when extension activates (invoked once).
+     */
+    activateSync(): void;
+    /**
+     * Method invoked when extension activates (invoked once).
      *
      * @returns {Promise<void>}
      * @memberof IExtensionActivationManager
@@ -71,4 +75,16 @@ export const IExtensionSingleActivationService = Symbol('IExtensionSingleActivat
  */
 export interface IExtensionSingleActivationService {
     activate(): Promise<void>;
+}
+
+export const IExtensionSyncActivationService = Symbol('IExtensionSyncActivationService');
+/**
+ * Classes implementing this interface will have their `activate` methods
+ * invoked during the activation of the extension.
+ * This is a great hook for extension activation code, i.e. you don't need to modify
+ * the `extension.ts` file to invoke some code when extension gets activated.
+ * Unlike `IExtensionSingleActivationService`, this is synchronous, & guaranteed to run before any other code.
+ */
+export interface IExtensionSyncActivationService {
+    activate(): void;
 }

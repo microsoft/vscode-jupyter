@@ -16,6 +16,7 @@ import { noop } from '../../common/utils/misc';
 import { captureTelemetry } from '../../telemetry';
 import { sendNotebookOrKernelLanguageTelemetry } from '../common';
 import { Telemetry } from '../constants';
+import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../context/telemetry';
 import { areKernelConnectionsEqual, isLocalLaunch } from '../jupyter/kernels/helpers';
 import { KernelSelectionProvider } from '../jupyter/kernels/kernelSelections';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
@@ -100,6 +101,7 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
         return this.kernelResolver.resolveKernel(kernel, document, webview, token);
     }
     @captureTelemetry(Telemetry.NativeNotebookKernelSelectionPerf)
+    @captureTelemetry(Telemetry.KernelProviderPerf)
     public async provideKernels(
         document: NotebookDocument,
         token: CancellationToken
@@ -373,7 +375,16 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
             default:
             // We don't know as its the default kernel on Jupyter server.
         }
-
+        trackKernelResourceInformation(document.uri, { kernelConnection: kernel.selection });
+        sendKernelTelemetryEvent(document.uri, Telemetry.SwitchKernel);
+        // If we have an existing kernel, then we know for a fact the user is changing the kernel.
+        // Else VSC is just setting a kernel for a notebook after it has opened.
+        if (existingKernel) {
+            const telemetryEvent = this.isLocalLaunch
+                ? Telemetry.SelectLocalJupyterKernel
+                : Telemetry.SelectRemoteJupyterKernel;
+            sendKernelTelemetryEvent(document.uri, telemetryEvent);
+        }
         // Make this the new kernel (calling this method will associate the new kernel with this Uri).
         // Calling `getOrCreate` will ensure a kernel is created and it is mapped to the Uri provided.
         // This will dispose any existing (older kernels) associated with this notebook.

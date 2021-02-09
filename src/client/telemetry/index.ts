@@ -1065,8 +1065,15 @@ export interface IEventNamePropertyMapping {
                   | 'unknown';
           } & ResourceSpecificTelemetryProperties)
         | (ResourceSpecificTelemetryProperties & TelemetryErrorProperties); // If there any any unhandled exceptions.
+    [Telemetry.SwitchKernel]: ResourceSpecificTelemetryProperties; // If there are unhandled exceptions;
     [Telemetry.NotebookInterrupt]:
         | ({ result: InterruptResult } & ResourceSpecificTelemetryProperties) // If successful (interrupted, timeout, restart).
+        | (ResourceSpecificTelemetryProperties & TelemetryErrorProperties); // If there are unhandled exceptions;
+    [Telemetry.NotebookRestart]:
+        | ({
+              failed: 'true';
+              reason: 'cancelled' | 'kernelpromisetimeout' | 'unknown';
+          } & ResourceSpecificTelemetryProperties)
         | (ResourceSpecificTelemetryProperties & TelemetryErrorProperties); // If there are unhandled exceptions;
 
     // Raw kernel single events

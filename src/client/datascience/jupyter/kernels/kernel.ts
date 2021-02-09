@@ -18,7 +18,11 @@ import { noop } from '../../../common/utils/misc';
 import { StopWatch } from '../../../common/utils/stopWatch';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { CodeSnippets, Telemetry } from '../../constants';
-import { getKernelFailureReason, sendKernelTelemetryEvent } from '../../context/telemetry';
+import {
+    getKernelFailureReason,
+    sendKernelTelemetryEvent,
+    trackKernelResourceInformation
+} from '../../context/telemetry';
 import { getNotebookMetadata } from '../../notebook/helpers/helpers';
 import {
     IDataScienceErrorHandler,
@@ -103,12 +107,17 @@ export class Kernel implements IKernel {
             interruptTimeout
         );
     }
+    private perceivedJupyterStartupTelemetryCaptured?: boolean;
     public async executeCell(cell: NotebookCell): Promise<void> {
+        const stopWatch = new StopWatch();
         const notebookPromise = this.startNotebook({ disableUI: false, document: cell.notebook });
+        this.trackNotebookCellPerceivedColdTime(stopWatch, notebookPromise).catch(noop);
         await this.kernelExecution.executeCell(notebookPromise, cell);
     }
     public async executeAllCells(document: NotebookDocument): Promise<void> {
+        const stopWatch = new StopWatch();
         const notebookPromise = this.startNotebook({ disableUI: false, document });
+        this.trackNotebookCellPerceivedColdTime(stopWatch, notebookPromise).catch(noop);
         await this.kernelExecution.executeAllCells(notebookPromise, document);
     }
     public async start(options: { disableUI?: boolean; document: NotebookDocument }): Promise<void> {
@@ -117,6 +126,7 @@ export class Kernel implements IKernel {
     public async interrupt(document: NotebookDocument): Promise<InterruptResult> {
         if (this.restarting) {
             traceInfo(`Interrupt requested & currently restarting ${document.uri}`);
+            trackKernelResourceInformation(document.uri, { interruptKernel: true });
             await this.restarting.promise;
         }
         traceInfo(`Interrupt requested ${document.uri}`);
@@ -150,6 +160,29 @@ export class Kernel implements IKernel {
             } finally {
                 this.restarting = undefined;
             }
+        }
+    }
+    private async trackNotebookCellPerceivedColdTime(
+        stopWatch: StopWatch,
+        notebookPromise: Promise<INotebook>
+    ): Promise<void> {
+        if (this.perceivedJupyterStartupTelemetryCaptured) {
+            return;
+        }
+        const notebook = await notebookPromise;
+        if (!notebook) {
+            return;
+        }
+        // Setup telemetry
+        if (!this.perceivedJupyterStartupTelemetryCaptured) {
+            this.perceivedJupyterStartupTelemetryCaptured = true;
+            sendTelemetryEvent(Telemetry.PerceivedJupyterStartupNotebook, stopWatch?.elapsedTime);
+            const disposable = notebook.onSessionStatusChanged((e) => {
+                if (e === ServerStatus.Busy) {
+                    sendTelemetryEvent(Telemetry.StartExecuteNotebookCellPerceivedCold, stopWatch?.elapsedTime);
+                    disposable.dispose();
+                }
+            });
         }
     }
     private async startNotebook(options: { disableUI?: boolean; document: NotebookDocument }): Promise<INotebook> {
@@ -189,6 +222,11 @@ export class Kernel implements IKernel {
                         throw ex;
                     }
                     await this.initializeAfterStart();
+                    sendKernelTelemetryEvent(
+                        this.uri,
+                        Telemetry.PerceivedJupyterStartupNotebook,
+                        stopWatch.elapsedTime
+                    );
                     if (this.notebook?.connection) {
                         this.updateRemoteUriList(this.notebook.connection).catch(noop);
                     }
