@@ -112,7 +112,8 @@ export function sendKernelTelemetryWhenDone<P extends IEventNamePropertyMapping,
     stopWatch?: StopWatch,
     properties?: P[E]
 ) {
-    const props = properties || {};
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const props: any = properties || {};
     stopWatch = stopWatch ? stopWatch : new StopWatch();
     if (typeof promise.then === 'function') {
         // eslint-disable-next-line , @typescript-eslint/no-explicit-any
@@ -128,10 +129,12 @@ export function sendKernelTelemetryWhenDone<P extends IEventNamePropertyMapping,
             (ex) => {
                 const addOnTelemetry = getContextualPropsForTelemetry(resource);
                 Object.assign(props, addOnTelemetry)
+                props.failed = true;
+                props.failureReason = getKernelFailureReason(ex)
                 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-explicit-any
                 sendTelemetryEvent(eventName as any, stopWatch!.elapsedTime, props as any, ex, true);
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                incrementStartFailureCount(resource, eventName as any, { failed: true });
+                incrementStartFailureCount(resource, eventName as any, props);
                 return Promise.reject(ex);
             }
         ).finally(() => {
