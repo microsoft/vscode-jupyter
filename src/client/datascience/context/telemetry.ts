@@ -125,12 +125,12 @@ export function sendKernelTelemetryWhenDone<P extends IEventNamePropertyMapping,
     (async () => {
         try {
             await promise;
+        } catch {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            incrementStartFailureCount(resource, eventName as any, { failed: 'true' });
         } finally {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             resetData(resource, eventName as any, properties);
-
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            incrementStartFailureCount(resource, eventName as any, properties);
         }
     })().catch(noop);
 }
