@@ -778,6 +778,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
 
                 case CellState.error:
                 case CellState.finished:
+                    traceInfo('Finished cell', cell);
                     // Tell the react controls we're done
                     this.postMessage(InteractiveWindowMessages.FinishCell, {
                         cell,
