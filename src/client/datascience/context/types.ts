@@ -47,5 +47,5 @@ export type ResourceSpecificTelemetryProperties = Partial<{
     /**
      * Total number of python environments.
      */
-    pythonEnvironmentCount?:number;
+    pythonEnvironmentCount?: number;
 }>;
