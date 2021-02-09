@@ -18,7 +18,7 @@ import { StopWatch } from '../../../common/utils/stopWatch';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { captureTelemetry, IEventNamePropertyMapping, sendTelemetryEvent } from '../../../telemetry';
-import { getResourceType, sendNotebookOrKernelLanguageTelemetry } from '../../common';
+import { sendNotebookOrKernelLanguageTelemetry } from '../../common';
 import { Commands, Telemetry } from '../../constants';
 import { sendKernelListTelemetry } from '../../context/kernelTelemetry';
 import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../../context/telemetry';
