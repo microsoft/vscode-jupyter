@@ -118,7 +118,7 @@ export class RawJupyterSession extends BaseJupyterSession {
             if (error instanceof CancellationError) {
                 sendKernelTelemetryEvent(resource, Telemetry.RawKernelSessionStart, stopWatch.elapsedTime, {
                     failed: 'true',
-                    reason: 'cancelled'
+                    failureReason: 'cancelled'
                 });
                 sendKernelTelemetryEvent(resource, Telemetry.RawKernelSessionStartUserCancel);
                 traceInfo('Starting of raw session cancelled by user');
@@ -126,7 +126,7 @@ export class RawJupyterSession extends BaseJupyterSession {
             } else if (error instanceof TimedOutError) {
                 sendKernelTelemetryEvent(resource, Telemetry.RawKernelSessionStart, stopWatch.elapsedTime, {
                     failed: 'true',
-                    reason: 'timeout'
+                    failureReason: 'timeout'
                 });
                 sendKernelTelemetryEvent(resource, Telemetry.RawKernelSessionStartTimeout);
                 traceError('Raw session failed to start in given timeout');
@@ -135,7 +135,7 @@ export class RawJupyterSession extends BaseJupyterSession {
             } else if (error instanceof IpyKernelNotInstalledError) {
                 sendKernelTelemetryEvent(resource, Telemetry.RawKernelSessionStart, stopWatch.elapsedTime, {
                     failed: 'true',
-                    reason: 'noipykernel'
+                    failureReason: 'noipykernel'
                 });
                 sendKernelTelemetryEvent(resource, Telemetry.RawKernelSessionStartNoIpykernel, {
                     reason: error.reason
@@ -143,11 +143,11 @@ export class RawJupyterSession extends BaseJupyterSession {
                 traceError('Raw session failed to start because dependencies not installed');
                 throw error;
             } else {
-                const reason = error instanceof KernelDiedError ? 'kerneldied' : 'unknown';
+                const failureReason = error instanceof KernelDiedError ? 'kerneldied' : 'unknown';
                 // Send our telemetry event with the error included
                 sendKernelTelemetryEvent(resource, Telemetry.RawKernelSessionStart, stopWatch.elapsedTime, {
                     failed: 'true',
-                    reason
+                    failureReason
                 });
                 sendKernelTelemetryEvent(
                     resource,

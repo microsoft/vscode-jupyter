@@ -214,7 +214,7 @@ export class Kernel implements IKernel {
                         traceError('failed to create INotebook in kernel', ex);
                         sendKernelTelemetryEvent(options.document.uri, Telemetry.NotebookStart, stopWatch.elapsedTime, {
                             failed: 'true',
-                            reason: getKernelFailureReason(ex)
+                            failureReason: getKernelFailureReason(ex)
                         });
                         if (!options.disableUI) {
                             this.errorHandler.handleError(ex).ignoreErrors(); // Just a notification, so don't await this

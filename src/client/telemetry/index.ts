@@ -120,12 +120,20 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
             // As we have errors for each event, those properties are treated as new data items.
             // Hence they need to be classified as part of the GDPR process, and thats unnecessary and onerous.
             eventNameSent = 'ERROR';
-            customProperties = { originalEventName: eventName as string, stackTrace: serializeStackTrace(ex) };
+            customProperties = {
+                failed: 'true',
+                originalEventName: eventName as string,
+                stackTrace: serializeStackTrace(ex)
+            };
+            // Add shared properties to telemetry props (we may overwrite existing ones).
+            Object.assign(customProperties, sharedProperties);
             reporter.sendTelemetryErrorEvent(eventNameSent, customProperties, measures, []);
         } else {
             // Include a property failed, to indicate there are errors.
             // Lets pay the price for better data.
             customProperties = { failed: 'true', stackTrace: serializeStackTrace(ex) };
+            // Add shared properties to telemetry props (we may overwrite existing ones).
+            Object.assign(customProperties, sharedProperties);
             reporter.sendTelemetryEvent(eventNameSent, customProperties, measures);
         }
     } else {
@@ -152,17 +160,6 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
 
         // Add shared properties to telemetry props (we may overwrite existing ones).
         Object.assign(customProperties, sharedProperties);
-
-        // Remove shared DS properties from core extension telemetry.
-        Object.keys(sharedProperties).forEach((shareProperty) => {
-            if (
-                customProperties[shareProperty] &&
-                shareProperty.startsWith('ds_') &&
-                !(eventNameSent.startsWith('DS_') || eventNameSent.startsWith('DATASCIENCE'))
-            ) {
-                delete customProperties[shareProperty];
-            }
-        });
 
         reporter.sendTelemetryEvent(eventNameSent, customProperties, measures);
     }
@@ -1051,7 +1048,7 @@ export interface IEventNamePropertyMapping {
         | ResourceSpecificTelemetryProperties // If successful.
         | ({
               failed: 'true';
-              reason:
+              failureReason:
                   | 'cancelled'
                   | 'timeout'
                   | 'kerneldied'
@@ -1063,6 +1060,7 @@ export interface IEventNamePropertyMapping {
                   | 'jupyterselfcert'
                   | 'invalidkernel'
                   | 'noipykernel'
+                  | 'fetcherror'
                   | 'unknown';
           } & ResourceSpecificTelemetryProperties)
         | (ResourceSpecificTelemetryProperties & TelemetryErrorProperties); // If there any any unhandled exceptions.
@@ -1073,7 +1071,7 @@ export interface IEventNamePropertyMapping {
     [Telemetry.NotebookRestart]:
         | ({
               failed: 'true';
-              reason: 'cancelled' | 'kernelpromisetimeout' | 'unknown';
+              failureReason: 'cancelled' | 'kernelpromisetimeout' | 'unknown';
           } & ResourceSpecificTelemetryProperties)
         | (ResourceSpecificTelemetryProperties & TelemetryErrorProperties); // If there are unhandled exceptions;
 
@@ -1082,7 +1080,7 @@ export interface IEventNamePropertyMapping {
         | ResourceSpecificTelemetryProperties
         | ({
               failed: 'true';
-              reason: 'cancelled' | 'timeout' | 'noipykernel' | 'kerneldied' | 'unknown';
+              failureReason: 'cancelled' | 'timeout' | 'noipykernel' | 'kerneldied' | 'unknown';
           } & ResourceSpecificTelemetryProperties)
         | (ResourceSpecificTelemetryProperties & TelemetryErrorProperties); // If there are unhandled exceptions;
     [Telemetry.RawKernelSessionStartSuccess]: never | undefined;

@@ -27,6 +27,7 @@ import { InterruptResult } from '../types';
 import { getResourceType, getTelemetrySafeLanguage } from '../common';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { InterpreterCountTracker } from './interpreterCountTracker';
+import { FetchError } from 'node-fetch';
 
 type ContextualTelemetryProps = {
     kernelConnection: KernelConnectionMetadata;
@@ -75,6 +76,8 @@ export function getKernelFailureReason(error: Error) {
         return 'jupyterinstall';
     } else if (isErrorType(error, KernelDiedError)) {
         return 'kerneldied';
+    } else if (isErrorType(error, FetchError)) {
+        return 'fetcherror';
     }
     return 'unknown';
 }
@@ -253,18 +256,18 @@ function resetData(resource: Resource, eventName: string, properties: any) {
     // Once we have successfully interrupted, clear the interrupt counter.
     if (eventName === Telemetry.NotebookInterrupt) {
         let kv: Pick<IEventNamePropertyMapping, Telemetry.NotebookInterrupt>;
-        const data: typeof kv[Telemetry.NotebookInterrupt] = properties;
+        const data: undefined | typeof kv[Telemetry.NotebookInterrupt] = properties;
         // Check result to determine if success.
-        if ('result' in data && data.result === InterruptResult.Success) {
+        if (data && 'result' in data && data.result === InterruptResult.Success) {
             clearInterruptCounter(resource);
         }
     }
     // Once we have successfully restarted, clear the interrupt counter.
     if (eventName === Telemetry.NotebookRestart) {
         let kv: Pick<IEventNamePropertyMapping, Telemetry.NotebookInterrupt>;
-        const data: typeof kv[Telemetry.NotebookInterrupt] = properties;
+        const data: undefined | typeof kv[Telemetry.NotebookInterrupt] = properties;
         // For restart to be successful, we should not have `failed`
-        const failed = 'failed' in data ? data.failed === 'true' : false;
+        const failed = data && 'failed' in data ? data.failed === 'true' : false;
         if (!failed) {
             clearInterruptCounter(resource);
         }
@@ -295,9 +298,9 @@ function clearRestartCounter(resource: Resource) {
 function incrementStartFailureCount(resource: Resource, eventName: any, properties: any) {
     if (eventName === Telemetry.NotebookStart) {
         let kv: Pick<IEventNamePropertyMapping, Telemetry.NotebookStart>;
-        const data: typeof kv[Telemetry.NotebookStart] = properties;
+        const data: undefined | typeof kv[Telemetry.NotebookStart] = properties;
         // Check start failed.
-        if ('failed' in data && data.failed === 'true') {
+        if (data && 'failed' in data && data.failed === 'true') {
             trackKernelResourceInformation(resource, { startFailed: true });
         }
     }

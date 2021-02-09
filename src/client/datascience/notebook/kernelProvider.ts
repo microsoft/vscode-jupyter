@@ -3,7 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-import { CancellationToken, Event, EventEmitter } from 'vscode';
+import { CancellationToken, Event, EventEmitter, Uri } from 'vscode';
 import {
     NotebookCommunication,
     NotebookDocument,
@@ -18,7 +18,7 @@ import { captureTelemetry } from '../../telemetry';
 import { sendNotebookOrKernelLanguageTelemetry } from '../common';
 import { Telemetry } from '../constants';
 import { sendKernelListTelemetry } from '../context/kernelTelemetry';
-import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../context/telemetry';
+import { getKernelFailureReason, sendKernelTelemetryEvent, trackKernelResourceInformation } from '../context/telemetry';
 import { areKernelConnectionsEqual, isLocalLaunch } from '../jupyter/kernels/helpers';
 import { KernelSelectionProvider } from '../jupyter/kernels/kernelSelections';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
@@ -109,7 +109,7 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
         token: CancellationToken
     ): Promise<VSCodeNotebookKernelMetadata[]> {
         const stopWatch = new StopWatch();
-        const sessionManager = await this.getJupyterSessionManager();
+        const sessionManager = await this.getJupyterSessionManager(document.uri);
         if (token.isCancellationRequested) {
             if (sessionManager) {
                 await sessionManager.dispose();
@@ -218,7 +218,7 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
             return this.kernelSelectionProvider.getKernelSelectionsForRemoteSession(
                 document.uri,
                 async () => {
-                    const sessionManager = await this.getJupyterSessionManager();
+                    const sessionManager = await this.getJupyterSessionManager(document.uri);
                     if (!sessionManager) {
                         throw new Error('Session Manager not available');
                     }
@@ -228,18 +228,32 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
             );
         }
     }
-    private async getJupyterSessionManager() {
+    private async getJupyterSessionManager(resource: Uri) {
         if (this.isLocalLaunch) {
             return;
         }
-        // Make sure we have a connection or we can't get remote kernels.
-        const connection = await this.notebookProvider.connect({ getOnly: false, disableUI: false, localOnly: false });
-        if (!connection) {
-            throw new Error('Using remote connection but connection is undefined');
-        } else if (connection?.type === 'raw') {
-            throw new Error('Using remote connection but connection type is raw');
-        } else {
-            return this.jupyterSessionManagerFactory.create(connection);
+        try {
+            // Make sure we have a connection or we can't get remote kernels.
+            const connection = await this.notebookProvider.connect({
+                getOnly: false,
+                disableUI: false,
+                localOnly: false
+            });
+            if (!connection) {
+                throw new Error('Using remote connection but connection is undefined');
+            } else if (connection?.type === 'raw') {
+                throw new Error('Using remote connection but connection type is raw');
+            } else {
+                return this.jupyterSessionManagerFactory.create(connection);
+            }
+        } catch (ex) {
+            // This condition is met when remote Uri is invalid.
+            // User cannot even run a cell, as kernel list is invalid (we can't get it).
+            sendKernelTelemetryEvent(resource, Telemetry.NotebookStart, undefined, {
+                failed: 'true',
+                failureReason: getKernelFailureReason(ex)
+            });
+            throw ex;
         }
     }
     private createNotebookKernelMetadataFromPreferredKernel(
