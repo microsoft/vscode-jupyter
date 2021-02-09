@@ -27,6 +27,12 @@ import {
 export class HoverProvider implements INotebookExecutionLogger, IHoverProvider {
     private runFiles = new Set<string>();
     private hoverProviderRegistration: vscode.Disposable | undefined;
+    private documentSelector = PYTHON;
+
+    private get language() {
+        // Just take the first one for now
+        return this.documentSelector[0].language;
+    }
 
     constructor(
         @inject(IJupyterVariables) @named(Identifiers.KERNEL_VARIABLES) private variableProvider: IJupyterVariables,
@@ -82,7 +88,7 @@ export class HoverProvider implements INotebookExecutionLogger, IHoverProvider {
 
     private async initializeHoverProvider() {
         if (!this.hoverProviderRegistration) {
-            this.hoverProviderRegistration = vscode.languages.registerHoverProvider(PYTHON, this);
+            this.hoverProviderRegistration = vscode.languages.registerHoverProvider(this.documentSelector, this);
         }
     }
 
@@ -104,15 +110,14 @@ export class HoverProvider implements INotebookExecutionLogger, IHoverProvider {
                         const attributes = await Promise.race(
                             // Note, getVariableProperties is non null here because we are specifically
                             // injecting kernelVariables, which does define this interface method
-                            notebooks.map((n) => this.variableProvider.getVariableProperties!(word, n, t))
+                            notebooks.map((n) =>
+                                this.variableProvider.getVariableProperties!(word, this.language, n, t)
+                            )
                         );
                         const entries = Object.entries(attributes);
                         if (entries.length > 0) {
                             const asMarkdown =
-                                entries.reduce(
-                                    (accum, entry) => accum + `${entry[0]}: ${entry[1]}\n`,
-                                    '```\n'
-                                ) + '```';
+                                entries.reduce((accum, entry) => accum + `${entry[0]}: ${entry[1]}\n`, '```\n') + '```';
                             const result = {
                                 contents: [new vscode.MarkdownString(asMarkdown)]
                             };

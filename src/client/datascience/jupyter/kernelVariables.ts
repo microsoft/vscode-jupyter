@@ -424,12 +424,13 @@ export class KernelVariables implements IJupyterVariables {
 
     public async getVariableProperties(
         word: string,
+        languageId: string,
         notebook: INotebook,
         cancelToken: CancellationToken | undefined
     ): Promise<JSONObject> {
         const matchingVariable = await this.getMatchingVariable(word, notebook, cancelToken);
-        const settings = this.configService.getSettings(notebook.resource).variableTooltipFields;
-        const languageSettings = settings['python'] as JSONObject;
+        const settings = this.configService.getSettings().variableTooltipFields;
+        const languageSettings = settings[languageId] as JSONObject;
         const type = matchingVariable?.type;
         let result: JSONObject = {};
         if (matchingVariable) {
