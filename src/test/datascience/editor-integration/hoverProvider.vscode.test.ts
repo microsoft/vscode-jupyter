@@ -2,10 +2,15 @@ import { assert } from 'chai';
 import { cloneDeep } from 'lodash';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { IConfigurationService, IJupyterSettings, ReadWrite } from '../../../client/common/types';
+import {
+    IConfigurationService,
+    IJupyterSettings,
+    IVariableTooltipFields,
+    ReadWrite
+} from '../../../client/common/types';
 import { IHoverProvider } from '../../../client/datascience/types';
 import { IExtensionTestApi, openFile, sleep } from '../../common';
-import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
+import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_WEBVIEW_BUILD_SKIPPED } from '../../constants';
 import { initialize } from '../../initialize';
 
 suite('Hover provider', async () => {
@@ -19,9 +24,10 @@ suite('Hover provider', async () => {
     );
     let dsSettings: ReadWrite<IJupyterSettings>;
     let api: IExtensionTestApi;
-    let oldSetting: any;
+    let oldSetting: IVariableTooltipFields;
     suiteSetup(async function () {
-        if (process.env.VSC_FORCE_REAL_JUPYTER === undefined) {
+        if (IS_WEBVIEW_BUILD_SKIPPED) {
+            console.log('Hover provider tests require webview build to be enabled');
             return this.skip();
         }
         api = await initialize();
@@ -35,7 +41,9 @@ suite('Hover provider', async () => {
         };
     });
     suiteTeardown(async () => {
-        dsSettings.variableTooltipFields = oldSetting;
+        if (dsSettings) {
+            dsSettings.variableTooltipFields = oldSetting;
+        }
     });
     test('Tensor tooltips', async () => {
         // Open a Python file
