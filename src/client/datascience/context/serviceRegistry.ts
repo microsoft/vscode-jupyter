@@ -3,9 +3,10 @@
 
 'use strict';
 
-import { IExtensionSyncActivationService } from '../../activation/types';
+import { IExtensionSingleActivationService, IExtensionSyncActivationService } from '../../activation/types';
 import { IServiceManager } from '../../ioc/types';
 import { ActiveEditorContextService } from './activeEditorContext';
+import { InterpreterCountTracker } from './interpreterCountTracker';
 import { WorkspaceInterpreterTracker } from './workspaceInterpreterTracker';
 
 export function registerTypes(serviceManager: IServiceManager) {
@@ -13,5 +14,9 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         WorkspaceInterpreterTracker
+    );
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        InterpreterCountTracker
     );
 }

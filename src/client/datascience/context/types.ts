@@ -44,4 +44,8 @@ export type ResourceSpecificTelemetryProperties = Partial<{
      * Number of times the kernel was changed.
      */
     switchKernelCount?: number;
+    /**
+     * Total number of python environments.
+     */
+    pythonEnvironmentCount?:number;
 }>;

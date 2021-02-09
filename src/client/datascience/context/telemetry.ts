@@ -26,6 +26,7 @@ import { WorkspaceInterpreterTracker } from './workspaceInterpreterTracker';
 import { InterruptResult } from '../types';
 import { getResourceType, getTelemetrySafeLanguage } from '../common';
 import { PYTHON_LANGUAGE } from '../../common/constants';
+import { InterpreterCountTracker } from './interpreterCountTracker';
 
 type ContextualTelemetryProps = {
     kernelConnection: KernelConnectionMetadata;
@@ -156,6 +157,7 @@ export function trackKernelResourceInformation(resource: Resource, information: 
     if (information.startFailed) {
         currentData.startFailureCount = (currentData.startFailureCount || 0) + 1;
     }
+    currentData.pythonEnvironmentCount = InterpreterCountTracker.totalNumberOfInterpreters;
 
     const kernelConnection = information.kernelConnection;
     if (kernelConnection) {
