@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 'use strict';
 import type { nbformat } from '@jupyterlab/coreutils';
-import { JSONObject } from '@phosphor/coreutils';
 import { inject, injectable } from 'inversify';
 import stripAnsi from 'strip-ansi';
 import * as uuid from 'uuid/v4';
@@ -427,15 +426,15 @@ export class KernelVariables implements IJupyterVariables {
         languageId: string,
         notebook: INotebook,
         cancelToken: CancellationToken | undefined
-    ): Promise<JSONObject> {
+    ): Promise<{ [attributeName: string]: string }> {
         const matchingVariable = await this.getMatchingVariable(word, notebook, cancelToken);
         const settings = this.configService.getSettings().variableTooltipFields;
-        const languageSettings = settings[languageId] as JSONObject;
+        const languageSettings = settings[languageId];
         const type = matchingVariable?.type;
-        let result: JSONObject = {};
-        if (matchingVariable) {
+        let result: { [attributeName: string]: string } = {};
+        if (matchingVariable && matchingVariable.value) {
             if (type && type in languageSettings) {
-                const attributeNames: string[] = languageSettings[type] as string[];
+                const attributeNames = languageSettings[type];
                 const stringifiedAttributeNameList =
                     '[' + attributeNames.reduce((accumulator, currVal) => accumulator + `"${currVal}", `, '') + ']';
                 const attributes = await notebook.execute(

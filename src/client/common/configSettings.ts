@@ -1,6 +1,5 @@
 'use strict';
 
-import { JSONObject } from '@phosphor/coreutils';
 import {
     ConfigurationChangeEvent,
     ConfigurationTarget,
@@ -21,6 +20,7 @@ import {
     ILoggingSettings,
     InteractiveWindowMode,
     IVariableQuery,
+    IVariableTooltipFields,
     IWatchableJupyterSettings,
     LoggingLevelSettingType,
     Resource,
@@ -96,7 +96,7 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     // Hidden settings not surfaced in package.json
     public disableZMQSupport: boolean = false;
     public verboseLogging: boolean = false;
-    public variableTooltipFields: JSONObject = {
+    public variableTooltipFields: IVariableTooltipFields = {
         python: {
             Tensor: ['shape', 'dtype', 'device']
         }
