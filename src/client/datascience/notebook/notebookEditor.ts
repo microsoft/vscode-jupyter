@@ -333,7 +333,7 @@ export class NotebookEditor implements INotebookEditor {
             // Note, this code might not be necessary, as such an error is thrown only when interrupting a kernel times out.
             if (exc instanceof JupyterKernelPromiseFailedError && kernel) {
                 sendKernelTelemetryEvent(this.document.uri, Telemetry.NotebookRestart, stopWatch.elapsedTime, {
-                    failed: 'true',
+                    failed: true,
                     failureReason: 'kernelpromisetimeout'
                 });
                 // Old approach (INotebook is not exposed in IKernel, and INotebook will eventually go away).
@@ -348,7 +348,7 @@ export class NotebookEditor implements INotebookEditor {
                 await this.notebookProvider.connect({ getOnly: false, disableUI: false });
             } else {
                 sendKernelTelemetryEvent(this.document.uri, Telemetry.NotebookRestart, stopWatch.elapsedTime, {
-                    failed: 'true',
+                    failed: true,
                     failureReason: isErrorType(exc, CancellationError) ? 'cancelled' : 'unknown'
                 });
                 // Show the error message

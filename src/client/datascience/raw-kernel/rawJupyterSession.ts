@@ -117,7 +117,7 @@ export class RawJupyterSession extends BaseJupyterSession {
             this.connected = false;
             if (error instanceof CancellationError) {
                 sendKernelTelemetryEvent(resource, Telemetry.RawKernelSessionStart, stopWatch.elapsedTime, {
-                    failed: 'true',
+                    failed: true,
                     failureReason: 'cancelled'
                 });
                 sendKernelTelemetryEvent(resource, Telemetry.RawKernelSessionStartUserCancel);
@@ -125,7 +125,7 @@ export class RawJupyterSession extends BaseJupyterSession {
                 throw error;
             } else if (error instanceof TimedOutError) {
                 sendKernelTelemetryEvent(resource, Telemetry.RawKernelSessionStart, stopWatch.elapsedTime, {
-                    failed: 'true',
+                    failed: true,
                     failureReason: 'timeout'
                 });
                 sendKernelTelemetryEvent(resource, Telemetry.RawKernelSessionStartTimeout);
@@ -134,7 +134,7 @@ export class RawJupyterSession extends BaseJupyterSession {
                 throw new RawKernelSessionStartError(kernelConnection, error);
             } else if (error instanceof IpyKernelNotInstalledError) {
                 sendKernelTelemetryEvent(resource, Telemetry.RawKernelSessionStart, stopWatch.elapsedTime, {
-                    failed: 'true',
+                    failed: true,
                     failureReason: 'noipykernel'
                 });
                 sendKernelTelemetryEvent(resource, Telemetry.RawKernelSessionStartNoIpykernel, {
@@ -146,7 +146,7 @@ export class RawJupyterSession extends BaseJupyterSession {
                 const failureReason = error instanceof KernelDiedError ? 'kerneldied' : 'unknown';
                 // Send our telemetry event with the error included
                 sendKernelTelemetryEvent(resource, Telemetry.RawKernelSessionStart, stopWatch.elapsedTime, {
-                    failed: 'true',
+                    failed: true,
                     failureReason
                 });
                 sendKernelTelemetryEvent(

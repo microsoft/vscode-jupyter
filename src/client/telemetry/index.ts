@@ -109,7 +109,7 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
     }
     const reporter = getTelemetryReporter();
     const measures = typeof durationMs === 'number' ? { duration: durationMs } : durationMs ? durationMs : undefined;
-    let customProperties: Record<string, string> = {};
+    let customProperties: Record<string, any> = {};
     let eventNameSent = eventName as string;
 
     if (ex) {
@@ -121,7 +121,7 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
             // Hence they need to be classified as part of the GDPR process, and thats unnecessary and onerous.
             eventNameSent = 'ERROR';
             customProperties = {
-                failed: 'true',
+                failed: true,
                 originalEventName: eventName as string,
                 stackTrace: serializeStackTrace(ex)
             };
@@ -131,7 +131,7 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
         } else {
             // Include a property failed, to indicate there are errors.
             // Lets pay the price for better data.
-            customProperties = { failed: 'true', stackTrace: serializeStackTrace(ex) };
+            customProperties = { failed: true, stackTrace: serializeStackTrace(ex) };
             // Add shared properties to telemetry props (we may overwrite existing ones).
             Object.assign(customProperties, sharedProperties);
             reporter.sendTelemetryEvent(eventNameSent, customProperties, measures);
@@ -367,7 +367,7 @@ export interface ISharedPropertyMapping {
 }
 
 // If there are errors, then the are added to the telementry properties.
-export type TelemetryErrorProperties = { failed: 'true'; stackTrace: string };
+export type TelemetryErrorProperties = { failed: true; stackTrace: string };
 
 // Map all events to their properties
 export interface IEventNamePropertyMapping {
@@ -1047,7 +1047,7 @@ export interface IEventNamePropertyMapping {
     [Telemetry.NotebookStart]:
         | ResourceSpecificTelemetryProperties // If successful.
         | ({
-              failed: 'true';
+              failed: true;
               failureReason:
                   | 'cancelled'
                   | 'timeout'
@@ -1070,7 +1070,7 @@ export interface IEventNamePropertyMapping {
         | (ResourceSpecificTelemetryProperties & TelemetryErrorProperties); // If there are unhandled exceptions;
     [Telemetry.NotebookRestart]:
         | ({
-              failed: 'true';
+              failed: true;
               failureReason: 'cancelled' | 'kernelpromisetimeout' | 'unknown';
           } & ResourceSpecificTelemetryProperties)
         | (ResourceSpecificTelemetryProperties & TelemetryErrorProperties); // If there are unhandled exceptions;
@@ -1079,7 +1079,7 @@ export interface IEventNamePropertyMapping {
     [Telemetry.RawKernelSessionStart]:
         | ResourceSpecificTelemetryProperties
         | ({
-              failed: 'true';
+              failed: true;
               failureReason: 'cancelled' | 'timeout' | 'noipykernel' | 'kerneldied' | 'unknown';
           } & ResourceSpecificTelemetryProperties)
         | (ResourceSpecificTelemetryProperties & TelemetryErrorProperties); // If there are unhandled exceptions;

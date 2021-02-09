@@ -250,7 +250,7 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
             // This condition is met when remote Uri is invalid.
             // User cannot even run a cell, as kernel list is invalid (we can't get it).
             sendKernelTelemetryEvent(resource, Telemetry.NotebookStart, undefined, {
-                failed: 'true',
+                failed: true,
                 failureReason: getKernelFailureReason(ex)
             });
             throw ex;

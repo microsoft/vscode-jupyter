@@ -267,7 +267,7 @@ function resetData(resource: Resource, eventName: string, properties: any) {
         let kv: Pick<IEventNamePropertyMapping, Telemetry.NotebookInterrupt>;
         const data: undefined | typeof kv[Telemetry.NotebookInterrupt] = properties;
         // For restart to be successful, we should not have `failed`
-        const failed = data && 'failed' in data ? data.failed === 'true' : false;
+        const failed = data && 'failed' in data ? data.failed : false;
         if (!failed) {
             clearInterruptCounter(resource);
         }
@@ -300,7 +300,7 @@ function incrementStartFailureCount(resource: Resource, eventName: any, properti
         let kv: Pick<IEventNamePropertyMapping, Telemetry.NotebookStart>;
         const data: undefined | typeof kv[Telemetry.NotebookStart] = properties;
         // Check start failed.
-        if (data && 'failed' in data && data.failed === 'true') {
+        if (data && 'failed' in data && data.failed) {
             trackKernelResourceInformation(resource, { startFailed: true });
         }
     }
