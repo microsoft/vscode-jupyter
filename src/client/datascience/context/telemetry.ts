@@ -6,7 +6,7 @@ import { getOSType } from '../../common/utils/platform';
 import { getKernelConnectionId, KernelConnectionMetadata } from '../jupyter/kernels/types';
 import * as hashjs from 'hash.js';
 import { Resource } from '../../common/types';
-import { IEventNamePropertyMapping, sendTelemetryEvent, sendTelemetryWhenDone } from '../../telemetry';
+import { IEventNamePropertyMapping, sendTelemetryEvent } from '../../telemetry';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { ResourceSpecificTelemetryProperties } from './types';
 import { isErrorType } from '../../common/errors/errorUtils';
@@ -21,7 +21,6 @@ import { JupyterConnectError } from '../jupyter/jupyterConnectError';
 import { JupyterInstallError } from '../jupyter/jupyterInstallError';
 import { JupyterSelfCertsError } from '../jupyter/jupyterSelfCertsError';
 import { Telemetry } from '../constants';
-import { noop } from '../../common/utils/misc';
 import { WorkspaceInterpreterTracker } from './workspaceInterpreterTracker';
 import { InterruptResult } from '../types';
 import { getResourceType, getTelemetrySafeLanguage } from '../common';
@@ -113,33 +112,34 @@ export function sendKernelTelemetryWhenDone<P extends IEventNamePropertyMapping,
     stopWatch?: StopWatch,
     properties?: P[E]
 ) {
-    const addOnTelemetry = getContextualPropsForTelemetry(resource);
-    if (addOnTelemetry) {
-        const props = properties || {};
-        sendTelemetryWhenDone(
+    const props = properties || {};
+    stopWatch = stopWatch ? stopWatch : new StopWatch();
+    if (typeof promise.then === 'function') {
+        // eslint-disable-next-line , @typescript-eslint/no-explicit-any
+        (promise as Promise<any>).then(
+            (data) => {
+                const addOnTelemetry = getContextualPropsForTelemetry(resource);
+                Object.assign(props, addOnTelemetry)
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-explicit-any
+                sendTelemetryEvent(eventName as any, stopWatch!.elapsedTime, props as any);
+                return data;
+                // eslint-disable-next-line @typescript-eslint/promise-function-async
+            },
+            (ex) => {
+                const addOnTelemetry = getContextualPropsForTelemetry(resource);
+                Object.assign(props, addOnTelemetry)
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-explicit-any
+                sendTelemetryEvent(eventName as any, stopWatch!.elapsedTime, props as any, ex, true);
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                incrementStartFailureCount(resource, eventName as any, { failed: true });
+                return Promise.reject(ex);
+            }
+        ).finally(() => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            eventName as any,
-            promise,
-            stopWatch,
-            Object.assign(props, addOnTelemetry),
-            true
-        );
-    } else {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        sendTelemetryWhenDone(eventName as any, promise, stopWatch, properties, true);
+            resetData(resource, eventName as any, props);
+        });
     }
 
-    (async () => {
-        try {
-            await promise;
-        } catch {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            incrementStartFailureCount(resource, eventName as any, { failed: true });
-        } finally {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            resetData(resource, eventName as any, properties);
-        }
-    })().catch(noop);
 }
 export function trackKernelResourceInformation(resource: Resource, information: Partial<ContextualTelemetryProps>) {
     if (!resource) {
