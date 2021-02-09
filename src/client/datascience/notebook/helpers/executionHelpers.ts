@@ -6,7 +6,7 @@
 import type { nbformat } from '@jupyterlab/coreutils';
 import type { KernelMessage } from '@jupyterlab/services';
 import * as fastDeepEqual from 'fast-deep-equal';
-import { window, workspace, Range, WorkspaceEdit } from 'vscode';
+import { workspace, Range, WorkspaceEdit } from 'vscode';
 import type { NotebookCell, NotebookEditor } from '../../../../../types/vscode-proposed';
 import { createErrorOutput } from '../../../../datascience-ui/common/cellFactory';
 import {
@@ -100,6 +100,7 @@ export async function updateCellWithErrorStatus(
 
 // Update the code contents of the cell
 export async function updateCellCode(cell: NotebookCell, text: string) {
+    // Use Workspace edit to apply a replace to the full cell text
     const edit = new WorkspaceEdit();
     edit.replace(
         cell.document.uri,

@@ -612,6 +612,7 @@ export class CellExecution {
         }
     }
 
+    // Handle our set_next_input message, which can either replace or insert a new cell with text
     private async handleSetNextInput(payload: ISetNextInputPayload) {
         if (payload.replace) {
             // Replace the contents of the current cell with text

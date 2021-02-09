@@ -45,6 +45,7 @@ import {
 import { ProductNames } from '../../../client/common/installer/productNames';
 import { openNotebook } from '../helpers';
 import { noop } from '../../../client/common/utils/misc';
+import { sleep } from '../../../client/common/utils/async';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
@@ -925,6 +926,41 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         assert.equal(cell1.metadata.executionOrder, lastExecutionOrder + 1);
         assert.equal(cell2.metadata.executionOrder, lastExecutionOrder + 2);
         assert.equal(cell3.metadata.executionOrder, lastExecutionOrderOfCell3, 'Cell 3 should not have run again');
+    });
+
+    // Check the set next input statements correctly insert or update cells
+    test('Test set_next_input message payload', async () => {
+        await insertCodeCell(
+            dedent`
+            import IPython
+            IPython.get_ipython().set_next_input("print('INSERT')")`,
+            { index: 0 }
+        );
+        await insertCodeCell(
+            dedent`
+            import IPython
+            IPython.get_ipython().set_next_input("print('REPLACE')", replace=True)`,
+            { index: 1 }
+        );
+        const cells = vscodeNotebook.activeNotebookEditor?.document.cells!;
+
+        await runAllCellsInActiveNotebook();
+
+        // Wait till execution count changes and status is success.
+        await waitForExecutionCompletedSuccessfully(cells[0]);
+        await waitForExecutionCompletedSuccessfully(cells[1]);
+
+        const cellsPostExecute = vscodeNotebook.activeNotebookEditor?.document.cells!;
+
+        // Check our output, one cell should have been inserted, and one been replaced
+        expect(cellsPostExecute.length).to.equal(3);
+        expect(cellsPostExecute[0].document.getText()).to.equal(
+            dedent`
+            import IPython
+            IPython.get_ipython().set_next_input("print('INSERT')")`
+        );
+        expect(cellsPostExecute[1].document.getText()).to.equal("print('INSERT')");
+        expect(cellsPostExecute[2].document.getText()).to.equal("print('REPLACE')");
     });
 
     /**
