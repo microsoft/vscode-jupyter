@@ -213,7 +213,7 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     const isLocalConnection = isLocalLaunch(serviceManager.get<IConfigurationService>(IConfigurationService));
     setSharedProperty('localOrRemoteConnection', isLocalConnection ? 'local' : 'remote');
     const isPythonExtensionInstalled = serviceManager.get<IPythonExtensionChecker>(IPythonExtensionChecker);
-    setSharedProperty('isPythonExtensionInstalled', isPythonExtensionInstalled.isPythonExtensionInstalled);
+    setSharedProperty('isPythonExtensionInstalled', isPythonExtensionInstalled.isPythonExtensionInstalled ? 'true' : 'false');
 
     // This condition is temporary.
     serviceManager.addSingleton<INotebookEditorProvider>(VSCodeNotebookProvider, NotebookEditorProvider);

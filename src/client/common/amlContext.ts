@@ -11,7 +11,7 @@ const amlComputeRemoteName = 'amlext';
 @injectable()
 export class AmlComputeContext implements IExtensionSingleActivationService {
     constructor() {
-        setSharedProperty('isamlcompute', this.isAmlCompute);
+        setSharedProperty('isamlcompute', this.isAmlCompute ? 'true' : 'false');
     }
     public get isAmlCompute() {
         return env.remoteName === amlComputeRemoteName;

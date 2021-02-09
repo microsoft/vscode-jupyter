@@ -109,7 +109,7 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
     }
     const reporter = getTelemetryReporter();
     const measures = typeof durationMs === 'number' ? { duration: durationMs } : durationMs ? durationMs : undefined;
-    let customProperties: Record<string, any> = {};
+    let customProperties: Record<string, string> = {};
     let eventNameSent = eventName as string;
 
     if (ex) {
@@ -121,7 +121,7 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
             // Hence they need to be classified as part of the GDPR process, and thats unnecessary and onerous.
             eventNameSent = 'ERROR';
             customProperties = {
-                failed: true,
+                failed: 'true',
                 originalEventName: eventName as string,
                 stackTrace: serializeStackTrace(ex)
             };
@@ -131,7 +131,7 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
         } else {
             // Include a property failed, to indicate there are errors.
             // Lets pay the price for better data.
-            customProperties = { failed: true, stackTrace: serializeStackTrace(ex) };
+            customProperties = { failed: 'true', stackTrace: serializeStackTrace(ex) };
             // Add shared properties to telemetry props (we may overwrite existing ones).
             Object.assign(customProperties, sharedProperties);
             reporter.sendTelemetryEvent(eventNameSent, customProperties, measures);
@@ -342,7 +342,7 @@ export interface ISharedPropertyMapping {
      * For every DS telemetry we would like to know whether the this is from AML compute or not.
      * If not in AML compute, then do not send this telemetry.
      */
-    ['isamlcompute']: boolean;
+    ['isamlcompute']: 'true' | 'false';
 
     /**
      * For every telemetry event from the extension we want to make sure we can associate it with install
@@ -353,7 +353,7 @@ export interface ISharedPropertyMapping {
     /**
      * Whether raw kernel is supported or not.
      */
-    ['rawKernelSupported']: boolean;
+    ['rawKernelSupported']: 'true' | 'false';
 
     /**
      * Whether using local or remote connection.
@@ -363,7 +363,7 @@ export interface ISharedPropertyMapping {
     /**
      * Whether using local or remote connection.
      */
-    ['isPythonExtensionInstalled']: boolean;
+    ['isPythonExtensionInstalled']: 'true' | 'false';
 }
 
 // If there are errors, then the are added to the telementry properties.
