@@ -1782,16 +1782,6 @@
                         "daily"
                     ],
                     "scope": "application"
-                },
-                "jupyter.variableTooltipFields": {
-                    "type": "object",
-                    "scope": "application",
-                    "default": {
-                        "python": {
-                            "Tensor": ["shape", "dtype", "device"]
-                        }
-                    },
-                    "description": "Mapping of types to attributes, keyed by language, which is used to customize attributes shown in tooltips for Python files which have been run in the interactive window."
                 }
             }
         },
