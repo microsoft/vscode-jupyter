@@ -115,25 +115,19 @@ suite('DataScience - KernelSelector', () => {
             when(
                 kernelSelectionProvider.getKernelSelectionsForRemoteSession(
                     anything(),
-                    instance(sessionManager),
+                    async () => instance(sessionManager),
                     anything()
                 )
             ).thenResolve([]);
             when(appShell.showQuickPick(anything(), anything(), anything())).thenResolve();
 
-            const kernel = await kernelSelector.selectRemoteKernel(
-                undefined,
-                new StopWatch(),
+            const kernel = await kernelSelector.selectRemoteKernel(undefined, new StopWatch(), async () =>
                 instance(sessionManager)
             );
 
             assert.isUndefined(kernel);
             verify(
-                kernelSelectionProvider.getKernelSelectionsForRemoteSession(
-                    anything(),
-                    instance(sessionManager),
-                    anything()
-                )
+                kernelSelectionProvider.getKernelSelectionsForRemoteSession(anything(), anything(), anything())
             ).once();
             verify(appShell.showQuickPick(anything(), anything(), anything())).once();
         });
@@ -151,7 +145,7 @@ suite('DataScience - KernelSelector', () => {
             when(
                 kernelSelectionProvider.getKernelSelectionsForRemoteSession(
                     anything(),
-                    instance(sessionManager),
+                    async () => instance(sessionManager),
                     anything()
                 )
             ).thenResolve([]);
@@ -160,20 +154,14 @@ suite('DataScience - KernelSelector', () => {
                 selection: { kernelSpec }
             } as any);
 
-            const kernel = await kernelSelector.selectRemoteKernel(
-                undefined,
-                new StopWatch(),
+            const kernel = await kernelSelector.selectRemoteKernel(undefined, new StopWatch(), async () =>
                 instance(sessionManager)
             );
 
             assert.deepEqual((kernel as any)?.kernelSpec, kernelSpec);
             assert.deepEqual(kernel?.interpreter, interpreter);
             verify(
-                kernelSelectionProvider.getKernelSelectionsForRemoteSession(
-                    anything(),
-                    instance(sessionManager),
-                    anything()
-                )
+                kernelSelectionProvider.getKernelSelectionsForRemoteSession(anything(), anything(), anything())
             ).once();
             verify(appShell.showQuickPick(anything(), anything(), anything())).once();
             verify(kernelService.findMatchingInterpreter(kernelSpec, anything())).once();
@@ -246,7 +234,9 @@ suite('DataScience - KernelSelector', () => {
 
             provider.addKernelToIgnoreList({ id: 'id2' } as any);
             provider.addKernelToIgnoreList({ clientId: 'id4' } as any);
-            const suggestions = await provider.getKernelSelectionsForRemoteSession(undefined, instance(sessionManager));
+            const suggestions = await provider.getKernelSelectionsForRemoteSession(undefined, async () =>
+                instance(sessionManager)
+            );
 
             assert.deepEqual(
                 suggestions,
