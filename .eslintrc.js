@@ -546,7 +546,6 @@ module.exports = {
         'src/client/activation/commands.ts',
         'src/client/activation/progress.ts',
         'src/client/activation/extensionSurvey.ts',
-        'src/client/activation/types.ts',
         'src/client/activation/common/languageServerChangeHandler.ts',
         'src/client/activation/common/activatorBase.ts',
         'src/client/activation/common/languageServerFolderService.ts',
