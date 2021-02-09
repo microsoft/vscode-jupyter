@@ -15,7 +15,7 @@ import { StopWatch } from '../../common/utils/stopWatch';
 import { captureTelemetry } from '../../telemetry';
 import { BaseJupyterSession } from '../baseJupyterSession';
 import { Identifiers, Telemetry } from '../constants';
-import { sendKernelTelemetryEvent, trackResourceInformation } from '../context/telemetry';
+import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../context/telemetry';
 import { getDisplayNameOrNameOfKernelConnection } from '../jupyter/kernels/helpers';
 import { KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { IKernelLauncher, IpyKernelNotInstalledError, KernelDiedError } from '../kernel-launcher/types';
@@ -89,7 +89,7 @@ export class RawJupyterSession extends BaseJupyterSession {
     ): Promise<KernelConnectionMetadata | undefined> {
         // Save the resource that we connect with
         let newSession: RawSession | null | CancellationError = null;
-        trackResourceInformation(resource, { kernelConnection });
+        trackKernelResourceInformation(resource, { kernelConnection });
         const stopWatch = new StopWatch();
         try {
             // Try to start up our raw session, allow for cancellation or timeout

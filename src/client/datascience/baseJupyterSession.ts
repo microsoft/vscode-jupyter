@@ -355,9 +355,6 @@ export abstract class BaseJupyterSession implements IJupyterSession {
 
     protected async waitForIdleOnSession(session: ISessionWithSocket | undefined, timeout: number): Promise<void> {
         if (session && session.kernel) {
-            if (!process.env.ASDYSDSD) {
-                throw new JupyterWaitForIdleError(localize.DataScience.jupyterLaunchTimedOut());
-            }
             traceInfo(`Waiting for idle on (kernel): ${session.kernel.id} -> ${session.kernel.status}`);
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const statusHandler = (resolve: () => void, reject: (exc: any) => void, e: Kernel.Status | undefined) => {

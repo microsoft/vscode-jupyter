@@ -20,11 +20,14 @@ import { JupyterSessionStartError } from '../baseJupyterSession';
 import { JupyterConnectError } from '../jupyter/jupyterConnectError';
 import { JupyterInstallError } from '../jupyter/jupyterInstallError';
 import { JupyterSelfCertsError } from '../jupyter/jupyterSelfCertsError';
+import { Telemetry } from '../constants';
 
 type ContextualTelemetryProps = {
     kernelConnection: KernelConnectionMetadata;
     wasJupyterAutoStarted: boolean;
     kernelDied: boolean;
+    interruptKernel: boolean;
+    restartKernel: boolean;
 };
 
 const trackedInfo = new Map<string, ResourceSpecificTelemetryProperties>();
@@ -70,6 +73,22 @@ export function sendKernelTelemetryEvent<P extends IEventNamePropertyMapping, E 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         sendTelemetryEvent(eventName as any, durationMs, properties, ex);
     }
+
+    // Once we have successfully interrupted, clear the interrupt counter.
+    if (eventName === Telemetry.NotebookInterrupt) {
+        clearInterruptCounter(resource);
+    }
+}
+
+function clearInterruptCounter(resource: Resource) {
+    if (!resource) {
+        return;
+    }
+    const key = getUriKey(resource);
+    const currentData = trackedInfo.get(key);
+    if (currentData) {
+        currentData.interruptCount = 0;
+    }
 }
 export function sendKernelTelemetryWhenDone<P extends IEventNamePropertyMapping, E extends keyof P>(
     resource: Resource,
@@ -95,7 +114,7 @@ export function sendKernelTelemetryWhenDone<P extends IEventNamePropertyMapping,
         sendTelemetryWhenDone(eventName as any, promise, stopWatch, properties, true);
     }
 }
-export function trackResourceInformation(resource: Resource, information: Partial<ContextualTelemetryProps>) {
+export function trackKernelResourceInformation(resource: Resource, information: Partial<ContextualTelemetryProps>) {
     if (!resource) {
         return;
     }
@@ -116,6 +135,13 @@ export function trackResourceInformation(resource: Resource, information: Partia
             }
         }
         currentData.kernelConnectionType = currentData.kernelConnectionType || information.kernelConnection?.kind;
+    }
+    if (information.restartKernel) {
+        currentData.interruptCount = 0;
+        currentData.restartCount = (currentData.restartCount || 0) + 1;
+    }
+    if (information.interruptKernel) {
+        currentData.interruptCount = (currentData.interruptCount || 0) + 1;
     }
 
     trackedInfo.set(key, currentData);

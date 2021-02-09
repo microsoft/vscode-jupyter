@@ -13,7 +13,9 @@ export type ResourceSpecificTelemetryProperties = Partial<{
     pythonEnvironmentPath?: string;
     // Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)
     pythonEnvironmentVersion?: string;
-    kernelWasAutoStarted?: boolean;
     // Whether kernel was started using kernel spec, interpreter, etc.
     kernelConnectionType?: typeof connection.kind;
+    // This number gets reset after we attempt a restart.
+    interruptCount?: number;
+    restartCount?: number;
 }>;

@@ -108,6 +108,7 @@ import { WebviewPanelHost } from '../webviews/webviewPanelHost';
 import { DataViewerChecker } from './dataViewerChecker';
 import { InteractiveWindowMessageListener } from './interactiveWindowMessageListener';
 import { serializeLanguageConfiguration } from './serialization';
+import { trackKernelResourceInformation } from '../context/telemetry';
 
 export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindowMapping> implements IInteractiveBase {
     public get notebook(): INotebook | undefined {
@@ -423,6 +424,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
     public async restartKernel(internal: boolean = false): Promise<void> {
         // Only log this if it's user requested restart
         if (!internal) {
+            trackKernelResourceInformation(this._notebook?.resource, { restartKernel: true });
             this.logTelemetry(Telemetry.RestartKernelCommand);
         }
 
@@ -457,6 +459,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
 
     @captureTelemetry(Telemetry.Interrupt)
     public async interruptKernel(): Promise<void> {
+        trackKernelResourceInformation(this._notebook?.resource, { interruptKernel: true });
         if (this._notebook && !this.restartingKernel) {
             const status = this.statusProvider.set(
                 localize.DataScience.interruptKernelStatus(),

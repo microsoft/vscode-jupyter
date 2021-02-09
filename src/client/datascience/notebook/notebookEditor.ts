@@ -12,6 +12,7 @@ import { DataScience } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
+import { trackKernelResourceInformation } from '../context/telemetry';
 import { JupyterKernelPromiseFailedError } from '../jupyter/kernels/jupyterKernelPromiseFailedError';
 import { IKernel, IKernelProvider } from '../jupyter/kernels/types';
 import {
@@ -196,6 +197,7 @@ export class NotebookEditor implements INotebookEditor {
         this.executedCode.fire(cell.document.getText());
     }
     public async interruptKernel(): Promise<void> {
+        trackKernelResourceInformation(this.document.uri, { interruptKernel: true });
         if (this.restartingKernel) {
             return;
         }
@@ -226,6 +228,7 @@ export class NotebookEditor implements INotebookEditor {
     }
 
     public async restartKernel(): Promise<void> {
+        trackKernelResourceInformation(this.document.uri, { restartKernel: true });
         sendTelemetryEvent(Telemetry.RestartKernelCommand);
         if (this.restartingKernel) {
             return;

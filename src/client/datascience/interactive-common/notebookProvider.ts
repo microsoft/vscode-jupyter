@@ -12,7 +12,7 @@ import { traceWarning } from '../../common/logger';
 import { IConfigurationService, IDisposableRegistry, Resource } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { Identifiers, Settings, Telemetry } from '../constants';
-import { sendKernelTelemetryWhenDone, trackResourceInformation } from '../context/telemetry';
+import { sendKernelTelemetryWhenDone, trackKernelResourceInformation } from '../context/telemetry';
 import { KernelConnectionMetadata } from '../jupyter/kernels/types';
 import {
     ConnectNotebookProviderOptions,
@@ -150,7 +150,7 @@ export class NotebookProvider implements INotebookProvider {
                 : undefined;
         }
 
-        trackResourceInformation(resource, { kernelConnection: options.kernelConnection });
+        trackKernelResourceInformation(resource, { kernelConnection: options.kernelConnection });
         const promise = rawKernel
             ? this.rawNotebookProvider.createNotebook(
                   options.identity,
