@@ -544,7 +544,6 @@ module.exports = {
         'src/client/activation/languageServer/analysisOptions.ts',
         'src/client/activation/languageServer/activator.ts',
         'src/client/activation/commands.ts',
-        'src/client/activation/activationManager.ts',
         'src/client/activation/progress.ts',
         'src/client/activation/extensionSurvey.ts',
         'src/client/activation/types.ts',
