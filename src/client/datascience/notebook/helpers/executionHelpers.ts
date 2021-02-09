@@ -6,6 +6,7 @@
 import type { nbformat } from '@jupyterlab/coreutils';
 import type { KernelMessage } from '@jupyterlab/services';
 import * as fastDeepEqual from 'fast-deep-equal';
+import { workspace, Range, WorkspaceEdit } from 'vscode';
 import type { NotebookCell, NotebookEditor } from '../../../../../types/vscode-proposed';
 import { createErrorOutput } from '../../../../datascience-ui/common/cellFactory';
 import {
@@ -94,6 +95,34 @@ export async function updateCellWithErrorStatus(
             runState: vscodeNotebookEnums.NotebookCellRunState.Error
         });
         edit.replaceCellOutput(cell.index, [translateErrorOutput(createErrorOutput(ex))]);
+    });
+}
+
+// Update the code contents of the cell
+export async function updateCellCode(cell: NotebookCell, text: string) {
+    // Use Workspace edit to apply a replace to the full cell text
+    const edit = new WorkspaceEdit();
+    edit.replace(
+        cell.document.uri,
+        new Range(cell.document.lineAt(0).range.start, cell.document.lineAt(cell.document.lineCount - 1).range.end),
+        text
+    );
+    await workspace.applyEdit(edit);
+}
+
+// Add a new cell with the given contents after the current
+export async function addNewCellAfter(notebookEditor: NotebookEditor, cell: NotebookCell, text: string) {
+    await chainWithPendingUpdates(notebookEditor, (edit) => {
+        traceCellMessage(cell, 'Create new cell after current');
+        edit.replaceCells(cell.index + 1, cell.index + 1, [
+            {
+                cellKind: vscodeNotebookEnums.CellKind.Code,
+                language: cell.language,
+                metadata: { ...cell.metadata, runState: vscodeNotebookEnums.NotebookCellRunState.Success },
+                outputs: [],
+                source: text
+            }
+        ]);
     });
 }
 
