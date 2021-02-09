@@ -8,7 +8,7 @@ import * as uuid from 'uuid/v4';
 
 import { CancellationToken, Event, EventEmitter, Uri } from 'vscode';
 import { PYTHON_LANGUAGE } from '../../common/constants';
-import { traceError } from '../../common/logger';
+import { traceError, traceInfo } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, IDisposable } from '../../common/types';
 import * as localize from '../../common/utils/localize';
@@ -429,6 +429,7 @@ export class KernelVariables implements IJupyterVariables {
     ): Promise<{ [attributeName: string]: string }> {
         const matchingVariable = await this.getMatchingVariable(word, notebook, cancelToken);
         const settings = this.configService.getSettings().variableTooltipFields;
+        traceInfo(this.configService.getSettings());
         const languageSettings = settings[languageId];
         const type = matchingVariable?.type;
         let result: { [attributeName: string]: string } = {};
