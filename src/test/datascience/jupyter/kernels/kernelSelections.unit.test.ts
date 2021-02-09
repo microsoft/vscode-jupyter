@@ -32,7 +32,7 @@ import { IInterpreterQuickPickItem, IInterpreterSelector } from '../../../../cli
 import { IInterpreterService } from '../../../../client/interpreter/contracts';
 
 // eslint-disable-next-line
-suite('DataScience - KernelSelectionsxxx', () => {
+suite('DataScience - KernelSelections', () => {
     let kernelSelectionProvider: KernelSelectionProvider;
     let kernelService: KernelService;
     let kernelFinder: IKernelFinder;

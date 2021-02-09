@@ -45,7 +45,7 @@ import { disposeAllDisposables } from '../../../../client/common/helpers';
 
 /* eslint-disable , @typescript-eslint/no-unused-expressions, @typescript-eslint/no-explicit-any */
 
-suite('DataScience - KernelSelectorxxx', () => {
+suite('DataScience - KernelSelector', () => {
     let kernelSelectionProvider: KernelSelectionProvider;
     let kernelService: KernelService;
     let sessionManager: IJupyterSessionManager;
@@ -127,11 +127,7 @@ suite('DataScience - KernelSelectorxxx', () => {
 
             assert.isUndefined(kernel);
             verify(
-                kernelSelectionProvider.getKernelSelectionsForRemoteSession(
-                    anything(),
-                    async () => instance(sessionManager),
-                    anything()
-                )
+                kernelSelectionProvider.getKernelSelectionsForRemoteSession(anything(), anything(), anything())
             ).once();
             verify(appShell.showQuickPick(anything(), anything(), anything())).once();
         });
@@ -165,11 +161,7 @@ suite('DataScience - KernelSelectorxxx', () => {
             assert.deepEqual((kernel as any)?.kernelSpec, kernelSpec);
             assert.deepEqual(kernel?.interpreter, interpreter);
             verify(
-                kernelSelectionProvider.getKernelSelectionsForRemoteSession(
-                    anything(),
-                    async () => instance(sessionManager),
-                    anything()
-                )
+                kernelSelectionProvider.getKernelSelectionsForRemoteSession(anything(), anything(), anything())
             ).once();
             verify(appShell.showQuickPick(anything(), anything(), anything())).once();
             verify(kernelService.findMatchingInterpreter(kernelSpec, anything())).once();
