@@ -125,13 +125,16 @@ def _VSCODE_getDataFrameRows(df, start, end):
     df = _VSCODE_convertToDataFrame(df)
     # Turn into JSON using pandas. We use pandas because it's about 3 orders of magnitude faster to turn into JSON
     rows = df.iloc[start:end]
-    rows = rows.replace(
-        {
-            _VSCODE_np.inf: "inf",
-            -_VSCODE_np.inf: "-inf",
-            _VSCODE_np.nan: "nan",
-        }
-    )
+    try:
+        rows = rows.replace(
+            {
+                _VSCODE_np.inf: "inf",
+                -_VSCODE_np.inf: "-inf",
+                _VSCODE_np.nan: "nan",
+            }
+        )
+    except:
+        pass
     return _VSCODE_pd_json.to_json(None, rows, orient="table", date_format="iso")
 
 
