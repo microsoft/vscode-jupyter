@@ -168,6 +168,8 @@ suite('Telemetry', () => {
         sendTelemetryEvent(eventName as any, measures, properties as any, error);
 
         const expectedErrorProperties = {
+            failed: 'true',
+            failureReason: 'unknown',
             originalEventName: eventName
         };
 
@@ -212,6 +214,8 @@ suite('Telemetry', () => {
         sendTelemetryEvent(eventName as any, measures, properties as any, error);
 
         const expectedErrorProperties = {
+            failed: 'true',
+            failureReason: 'unknown',
             originalEventName: eventName
         };
 

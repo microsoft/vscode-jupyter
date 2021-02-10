@@ -3,7 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-import { CancellationToken, Event, EventEmitter } from 'vscode';
+import { CancellationToken, Event, EventEmitter, Uri } from 'vscode';
 import {
     NotebookCommunication,
     NotebookDocument,
@@ -13,9 +13,12 @@ import { ICommandManager, IVSCodeNotebook } from '../../common/application/types
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { IConfigurationService, IDisposableRegistry, IExtensionContext } from '../../common/types';
 import { noop } from '../../common/utils/misc';
+import { StopWatch } from '../../common/utils/stopWatch';
 import { captureTelemetry } from '../../telemetry';
 import { sendNotebookOrKernelLanguageTelemetry } from '../common';
 import { Telemetry } from '../constants';
+import { sendKernelListTelemetry } from '../context/kernelTelemetry';
+import { getErrorClassification, sendKernelTelemetryEvent, trackKernelResourceInformation } from '../context/telemetry';
 import { areKernelConnectionsEqual, isLocalLaunch } from '../jupyter/kernels/helpers';
 import { KernelSelectionProvider } from '../jupyter/kernels/kernelSelections';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
@@ -100,11 +103,13 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
         return this.kernelResolver.resolveKernel(kernel, document, webview, token);
     }
     @captureTelemetry(Telemetry.NativeNotebookKernelSelectionPerf)
+    @captureTelemetry(Telemetry.KernelProviderPerf)
     public async provideKernels(
         document: NotebookDocument,
         token: CancellationToken
     ): Promise<VSCodeNotebookKernelMetadata[]> {
-        const sessionManager = await this.getJupyterSessionManager();
+        const stopWatch = new StopWatch();
+        const sessionManager = await this.getJupyterSessionManager(document.uri);
         if (token.isCancellationRequested) {
             if (sessionManager) {
                 await sessionManager.dispose();
@@ -182,6 +187,9 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
                 );
             }
         }
+
+        sendKernelListTelemetry(document.uri, mapped, stopWatch);
+
         mapped.sort((a, b) => {
             if (a.label > b.label) {
                 return 1;
@@ -210,7 +218,7 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
             return this.kernelSelectionProvider.getKernelSelectionsForRemoteSession(
                 document.uri,
                 async () => {
-                    const sessionManager = await this.getJupyterSessionManager();
+                    const sessionManager = await this.getJupyterSessionManager(document.uri);
                     if (!sessionManager) {
                         throw new Error('Session Manager not available');
                     }
@@ -220,18 +228,32 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
             );
         }
     }
-    private async getJupyterSessionManager() {
+    private async getJupyterSessionManager(resource: Uri) {
         if (this.isLocalLaunch) {
             return;
         }
-        // Make sure we have a connection or we can't get remote kernels.
-        const connection = await this.notebookProvider.connect({ getOnly: false, disableUI: false, localOnly: false });
-        if (!connection) {
-            throw new Error('Using remote connection but connection is undefined');
-        } else if (connection?.type === 'raw') {
-            throw new Error('Using remote connection but connection type is raw');
-        } else {
-            return this.jupyterSessionManagerFactory.create(connection);
+        try {
+            // Make sure we have a connection or we can't get remote kernels.
+            const connection = await this.notebookProvider.connect({
+                getOnly: false,
+                disableUI: false,
+                localOnly: false
+            });
+            if (!connection) {
+                throw new Error('Using remote connection but connection is undefined');
+            } else if (connection?.type === 'raw') {
+                throw new Error('Using remote connection but connection type is raw');
+            } else {
+                return this.jupyterSessionManagerFactory.create(connection);
+            }
+        } catch (ex) {
+            // This condition is met when remote Uri is invalid.
+            // User cannot even run a cell, as kernel list is invalid (we can't get it).
+            sendKernelTelemetryEvent(resource, Telemetry.NotebookStart, undefined, {
+                failed: true,
+                failureReason: getErrorClassification(ex)
+            });
+            throw ex;
         }
     }
     private createNotebookKernelMetadataFromPreferredKernel(
@@ -373,7 +395,16 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
             default:
             // We don't know as its the default kernel on Jupyter server.
         }
-
+        trackKernelResourceInformation(document.uri, { kernelConnection: kernel.selection });
+        sendKernelTelemetryEvent(document.uri, Telemetry.SwitchKernel);
+        // If we have an existing kernel, then we know for a fact the user is changing the kernel.
+        // Else VSC is just setting a kernel for a notebook after it has opened.
+        if (existingKernel) {
+            const telemetryEvent = this.isLocalLaunch
+                ? Telemetry.SelectLocalJupyterKernel
+                : Telemetry.SelectRemoteJupyterKernel;
+            sendKernelTelemetryEvent(document.uri, telemetryEvent);
+        }
         // Make this the new kernel (calling this method will associate the new kernel with this Uri).
         // Calling `getOrCreate` will ensure a kernel is created and it is mapped to the Uri provided.
         // This will dispose any existing (older kernels) associated with this notebook.

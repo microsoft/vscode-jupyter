@@ -84,6 +84,8 @@ import { getCellHashProvider } from '../editor-integration/cellhashprovider';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
 import { KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { NativeEditorNotebookModel } from '../notebookStorage/notebookModel';
+import { sendKernelTelemetryEvent } from '../context/telemetry';
+import { noop } from '../../common/utils/misc';
 
 const nativeEditorDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'notebook');
 export class NativeEditor extends InteractiveBase implements INotebookEditor {
@@ -611,20 +613,20 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         // This should be called by the python interactive window every
         // time state changes. We use this opportunity to update our
         // extension contexts
-        if (this.commandManager && this.commandManager.executeCommand) {
+        if (this.commandManager && typeof this.commandManager.executeCommand === 'function') {
             const nativeContext = new ContextKey(EditorContexts.HaveNative, this.commandManager);
-            nativeContext.set(!this.isDisposed).catch();
+            nativeContext.set(!this.isDisposed).catch(noop);
             const interactiveCellsContext = new ContextKey(EditorContexts.HaveNativeCells, this.commandManager);
             const redoableContext = new ContextKey(EditorContexts.HaveNativeRedoableCells, this.commandManager);
             const hasCellSelectedContext = new ContextKey(EditorContexts.HaveCellSelected, this.commandManager);
             if (info) {
-                interactiveCellsContext.set(info.cellCount > 0).catch();
-                redoableContext.set(info.redoCount > 0).catch();
-                hasCellSelectedContext.set(info.selectedCell ? true : false).catch();
+                interactiveCellsContext.set(info.cellCount > 0).catch(noop);
+                redoableContext.set(info.redoCount > 0).catch(noop);
+                hasCellSelectedContext.set(info.selectedCell ? true : false).catch(noop);
             } else {
-                hasCellSelectedContext.set(false).catch();
-                interactiveCellsContext.set(false).catch();
-                redoableContext.set(false).catch();
+                hasCellSelectedContext.set(false).catch(noop);
+                interactiveCellsContext.set(false).catch(noop);
+                redoableContext.set(false).catch(noop);
             }
         }
     }
@@ -634,7 +636,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
         // Update our contexts
         const nativeContext = new ContextKey(EditorContexts.HaveNative, this.commandManager);
-        nativeContext.set(args.current.visible && args.current.active).catch();
+        nativeContext.set(args.current.visible && args.current.active).catch(noop);
         this._onDidChangeViewState.fire();
     }
 
@@ -652,7 +654,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     }
 
     protected saveAll() {
-        this.commandManager.executeCommand('workbench.action.files.save', this.file);
+        this.commandManager.executeCommand('workbench.action.files.save', this.file).then(noop, noop);
     }
 
     private async modelChanged(change: NotebookModelChange) {
@@ -700,7 +702,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
         value[updatedName] = value[name];
         delete value[name];
-        this.workspaceStorage.update(VariableExplorerStateKeys.height, value);
+        this.workspaceStorage.update(VariableExplorerStateKeys.height, value).then(noop, noop);
     }
 
     private async launchNotebookTrustPrompt() {
@@ -723,6 +725,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     }
 
     private async reexecuteCell(cell: ICell, code: string, cancelToken: CancellationToken): Promise<void> {
+        let sendExecuteCellTelemetry = true;
         try {
             // If there's any payload, it has the code and the id
             if (cell.id && cell.data.cell_type !== 'messages') {
@@ -730,6 +733,10 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
                 // Clear the result if we've run before
                 await this.clearResult(cell.id);
+                // When user runs a cell `submitCode` gets executed, however in at least this one scenario
+                // if `clearResult` crashes, then `submitCode` will not be executed.
+                // Example is if kernel cannot be started.
+                sendExecuteCellTelemetry = false;
 
                 // Clear 'per run' data passed to WebView before execution
                 if (cell.data.metadata.tags !== undefined) {
@@ -740,6 +747,9 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                 await this.submitCode(code, Identifiers.EmptyFileName, 0, cell.id, cell.data, undefined, cancelToken);
             }
         } catch (exc) {
+            if (sendExecuteCellTelemetry) {
+                sendKernelTelemetryEvent(this.owningResource, Telemetry.ExecuteCell);
+            }
             traceInfo(`Exception executing cell ${cell.id}: `, exc);
 
             // Make this error our cell output
@@ -802,13 +812,15 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         if (!activeEditor || !activeEditor.model) {
             return;
         }
-        this.commandManager.executeCommand(
-            Commands.Export,
-            activeEditor.model.getContent(),
-            activeEditor.model.file,
-            undefined,
-            activeEditor.notebook?.getMatchingInterpreter()
-        );
+        this.commandManager
+            .executeCommand(
+                Commands.Export,
+                activeEditor.model.getContent(),
+                activeEditor.model.file,
+                undefined,
+                activeEditor.notebook?.getMatchingInterpreter()
+            )
+            .then(noop, noop);
     }
 
     private logNativeCommand(args: INativeCommand) {

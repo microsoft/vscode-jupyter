@@ -84,9 +84,9 @@ export interface IJupyterConnection extends Disposable {
 export type INotebookProviderConnection = IRawConnection | IJupyterConnection;
 
 export enum InterruptResult {
-    Success = 0,
-    TimedOut = 1,
-    Restarted = 2
+    Success = 'success',
+    TimedOut = 'timeout',
+    Restarted = 'restart'
 }
 
 // Information used to execute a notebook

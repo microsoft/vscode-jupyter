@@ -5,6 +5,7 @@
 import type { nbformat } from '@jupyterlab/coreutils';
 import { SpawnOptions } from 'child_process';
 import { CancellationToken, Event } from 'vscode';
+import { WrappedError } from '../../common/errors/errorUtils';
 import { ObservableExecutionResult } from '../../common/process/types';
 import { IAsyncDisposable, IDisposable, Resource } from '../../common/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
@@ -65,6 +66,8 @@ export interface IPythonKernelDaemon extends IDisposable {
     preWarm(): Promise<void>;
     start(moduleName: string, args: string[], options: SpawnOptions): Promise<ObservableExecutionResult<string>>;
 }
+
+export class KernelDiedError extends WrappedError {}
 
 export class PythonKernelDiedError extends Error {
     public readonly exitCode: number;

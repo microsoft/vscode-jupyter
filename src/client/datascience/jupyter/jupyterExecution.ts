@@ -19,6 +19,7 @@ import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { JupyterSessionStartError } from '../baseJupyterSession';
 import { Commands, Identifiers, Telemetry } from '../constants';
+import { getErrorClassification } from '../context/telemetry';
 import {
     IJupyterConnection,
     IJupyterExecution,
@@ -268,7 +269,6 @@ export class JupyterExecutionBase implements IJupyterExecution {
                         // Special case. This sometimes happens where jupyter doesn't ever connect. Cleanup after
                         // ourselves and propagate the failure outwards.
                         traceInfo('Retry because of wait for idle problem.');
-                        sendTelemetryEvent(Telemetry.SessionIdleTimeout);
 
                         // Close existing connection.
                         connection?.dispose();
@@ -283,7 +283,9 @@ export class JupyterExecutionBase implements IJupyterExecution {
 
                         // Something else went wrong
                         if (!isLocalConnection) {
-                            sendTelemetryEvent(Telemetry.ConnectRemoteFailedJupyter);
+                            sendTelemetryEvent(Telemetry.ConnectRemoteFailedJupyter, undefined, {
+                                failureReason: getErrorClassification(err)
+                            });
 
                             // Check for the self signed certs error specifically
                             if (err.message.indexOf('reason: self signed certificate') >= 0) {
@@ -299,7 +301,9 @@ export class JupyterExecutionBase implements IJupyterExecution {
                                 );
                             }
                         } else {
-                            sendTelemetryEvent(Telemetry.ConnectFailedJupyter);
+                            sendTelemetryEvent(Telemetry.ConnectFailedJupyter, undefined, {
+                                failureReason: getErrorClassification(err)
+                            });
                             throw new WrappedError(
                                 localize.DataScience.jupyterNotebookConnectFailed().format(connection.baseUrl, err),
                                 err
@@ -312,6 +316,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                 }
             }
 
+            // Note: This is unlikely, so far only 1 telemetry captured for this.
             // If we're here, then starting jupyter timeout.
             // Kill any existing connections.
             connection?.dispose();
