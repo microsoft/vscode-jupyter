@@ -274,14 +274,17 @@ function getPythonEnvironmentPackages(options: { interpreter: PythonEnvironment 
         return '';
     }
     const packages = InterpreterPackages.getPackageVersions(interpreter);
-    if (!packages) {
+    if (!packages || packages.size === 0) {
         return '';
     }
     // Comma delimited list of interested package (hashed) names & their versions.
     // This is used to determine if user has a faulty package (faulty ipykernel, nbformat, traitlets), etc.
-    return Array.from(packages.entries())
-        .map((item) => `${item[0]}:${item[1]}`)
+    const items = Array.from(packages.entries())
+        .map((item) => `${item[0]}=${item[1]}`)
         .join(',');
+
+    // Prefix with a comma, so that its easy to split this in ADE.
+    return `,${items}`;
 }
 export function deleteTrackedInformation(resource: Uri) {
     trackedInfo.delete(getUriKey(resource));
