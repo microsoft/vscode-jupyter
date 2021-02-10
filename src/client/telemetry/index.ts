@@ -1084,4 +1084,9 @@ export interface IEventNamePropertyMapping {
          */
         pythonExtensionInstalled: boolean;
     };
+    // Capture telemetry re: how long returning a tooltip takes
+    [Telemetry.InteractiveFileTooltipsPerf]: {
+        // Result is null if user signalled cancellation or if we timed out
+        isResultNull: boolean;
+    };
 }

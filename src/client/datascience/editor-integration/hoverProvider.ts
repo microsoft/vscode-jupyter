@@ -11,7 +11,9 @@ import { IFileSystem } from '../../common/platform/types';
 
 import { sleep } from '../../common/utils/async';
 import { noop } from '../../common/utils/misc';
-import { Identifiers } from '../constants';
+import { StopWatch } from '../../common/utils/stopWatch';
+import { sendTelemetryEvent } from '../../telemetry';
+import { Identifiers, Telemetry } from '../constants';
 import {
     ICell,
     IHoverProvider,
@@ -27,6 +29,7 @@ import {
 export class HoverProvider implements INotebookExecutionLogger, IHoverProvider {
     private runFiles = new Set<string>();
     private hoverProviderRegistration: vscode.Disposable | undefined;
+    private stopWatch = new StopWatch();
 
     constructor(
         @inject(IJupyterVariables) @named(Identifiers.KERNEL_VARIABLES) private variableProvider: IJupyterVariables,
@@ -77,7 +80,12 @@ export class HoverProvider implements INotebookExecutionLogger, IHoverProvider {
             await sleep(300);
             return null;
         };
-        return Promise.race([timeoutHandler(), this.getVariableHover(document, position, token)]);
+        this.stopWatch.reset();
+        const result = Promise.race([timeoutHandler(), this.getVariableHover(document, position, token)]);
+        sendTelemetryEvent(Telemetry.InteractiveFileTooltipsPerf, this.stopWatch.elapsedTime, {
+            isResultNull: !!result
+        });
+        return result;
     }
 
     private async initializeHoverProvider() {
