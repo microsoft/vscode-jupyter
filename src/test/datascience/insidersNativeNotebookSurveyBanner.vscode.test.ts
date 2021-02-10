@@ -104,8 +104,8 @@ suite('Insiders Native Notebooks Survey Banner', () => {
             []
         );
     }
-    test('Confirm prompt is displayed & only once per session', async () => {
-        when(appShell.showInformationMessage(anything(), anything(), anything())).thenResolve();
+    test('Confirm prompt is displayed & only once per session eee', async () => {
+        when(appShell.showInformationMessage(anything(), anything(), anything(), anything())).thenResolve();
         await showBannerState.updateValue({ data: true });
         await executionCountState.updateValue(100);
 
@@ -113,10 +113,10 @@ suite('Insiders Native Notebooks Survey Banner', () => {
         await bannerService.showBanner();
         await bannerService.showBanner();
 
-        verify(appShell.showInformationMessage(anything(), anything(), anything())).once();
+        verify(appShell.showInformationMessage(anything(), anything(), anything(), anything())).once();
     });
     test('Confirm prompt is displayed 3 months later', async () => {
-        when(appShell.showInformationMessage(anything(), anything(), anything())).thenResolve(
+        when(appShell.showInformationMessage(anything(), anything(), anything(), anything())).thenResolve(
             localize.DataScienceSurveyBanner.bannerLabelNo() as any
         );
         await showBannerState.updateValue({ data: true });
@@ -124,31 +124,31 @@ suite('Insiders Native Notebooks Survey Banner', () => {
 
         await bannerService.showBanner();
 
-        verify(appShell.showInformationMessage(anything(), anything(), anything())).once();
+        verify(appShell.showInformationMessage(anything(), anything(), anything(), anything())).once();
         resetCalls(appShell);
 
         // Attempt to display again & it won't.
         bannerService = createBannerService();
         await bannerService.showBanner();
         verify(browser.launch(anything())).never();
-        verify(appShell.showInformationMessage(anything(), anything(), anything())).never();
+        verify(appShell.showInformationMessage(anything(), anything(), anything(), anything())).never();
 
         // Advance time by 1 month & still not displayed.
         clock.tick(MillisecondsInADay * 30);
         bannerService = createBannerService();
         await bannerService.showBanner();
         verify(browser.launch(anything())).never();
-        verify(appShell.showInformationMessage(anything(), anything(), anything())).never();
+        verify(appShell.showInformationMessage(anything(), anything(), anything(), anything())).never();
 
         // Advance time by 3.5 month & it will be displayed.
         clock.tick(MillisecondsInADay * 30 * 3.5);
         bannerService = createBannerService();
         await bannerService.showBanner();
         verify(browser.launch(anything())).never();
-        verify(appShell.showInformationMessage(anything(), anything(), anything())).once();
+        verify(appShell.showInformationMessage(anything(), anything(), anything(), anything())).once();
     });
     test('Confirm prompt is displayed 6 months later & survey displayed', async () => {
-        when(appShell.showInformationMessage(anything(), anything(), anything())).thenResolve(
+        when(appShell.showInformationMessage(anything(), anything(), anything(), anything())).thenResolve(
             localize.DataScienceSurveyBanner.bannerLabelYes() as any
         );
 
@@ -157,7 +157,7 @@ suite('Insiders Native Notebooks Survey Banner', () => {
 
         await bannerService.showBanner();
         verify(browser.launch(anything())).once();
-        verify(appShell.showInformationMessage(anything(), anything(), anything())).once();
+        verify(appShell.showInformationMessage(anything(), anything(), anything(), anything())).once();
         resetCalls(browser);
         resetCalls(appShell);
 
@@ -165,23 +165,23 @@ suite('Insiders Native Notebooks Survey Banner', () => {
         bannerService = createBannerService();
         await bannerService.showBanner();
         verify(browser.launch(anything())).never();
-        verify(appShell.showInformationMessage(anything(), anything(), anything())).never();
+        verify(appShell.showInformationMessage(anything(), anything(), anything(), anything())).never();
 
         // Advance time by 1 month & still not displayed.
         clock.tick(MillisecondsInADay * 30);
         bannerService = createBannerService();
         await bannerService.showBanner();
         verify(browser.launch(anything())).never();
-        verify(appShell.showInformationMessage(anything(), anything(), anything())).never();
+        verify(appShell.showInformationMessage(anything(), anything(), anything(), anything())).never();
 
         // Advance time by 6.5 month & it will be displayed.
         clock.tick(MillisecondsInADay * 30 * 6.5);
-        when(appShell.showInformationMessage(anything(), anything(), anything())).thenResolve(
+        when(appShell.showInformationMessage(anything(), anything(), anything(), anything())).thenResolve(
             localize.DataScienceSurveyBanner.bannerLabelNo() as any
         );
         bannerService = createBannerService();
         await bannerService.showBanner();
         verify(browser.launch(anything())).never();
-        verify(appShell.showInformationMessage(anything(), anything(), anything())).once();
+        verify(appShell.showInformationMessage(anything(), anything(), anything(), anything())).once();
     });
 });

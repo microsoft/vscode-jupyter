@@ -44,13 +44,13 @@ export class InsidersNativeNotebooksSurveyBanner implements IExtensionSingleActi
         if (this.applicationEnvironment.uiKind !== UIKind.Desktop) {
             return false;
         }
-        if (this.showBannerState.value.data) {
-            if (!this.showBannerState.value.expiry) {
-                return true;
-            }
-            return this.showBannerState.value.expiry! < Date.now();
+        if (!this.showBannerState.value.expiry) {
+            return true;
         }
-        return false;
+        if (this.showBannerState.value.expiry === -1) {
+            return false;
+        }
+        return this.showBannerState.value.expiry! < Date.now();
     }
 
     private disabledInCurrentSession = false;
@@ -76,7 +76,10 @@ export class InsidersNativeNotebooksSurveyBanner implements IExtensionSingleActi
         @inject(IDisposableRegistry) private disposables: IDisposableRegistry
     ) {
         this.showBannerState = this.persistentState.createGlobalPersistentState<ShowBannerWithExpiryTime>(
-            InsidersNotebookSurveyStateKeys.ShowBanner
+            InsidersNotebookSurveyStateKeys.ShowBanner,
+            {
+                data: true
+            }
         );
     }
 
@@ -112,8 +115,8 @@ export class InsidersNativeNotebooksSurveyBanner implements IExtensionSingleActi
             }
             case this.bannerLabels[DSSurveyLabelIndex.DontShowAgain]: {
                 await this.showBannerState.updateValue({
-                    expiry: 0,
-                    data: false
+                    expiry: -1,
+                    data: true
                 });
                 break;
             }
