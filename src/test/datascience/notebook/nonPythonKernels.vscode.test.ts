@@ -181,6 +181,7 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         assertHasTextOutputInVSCode(cell, '123456', 0, false);
     });
     test('Can run a CSharp notebook', async function () {
+        return this.skip(); // Flakey disabled and tracked by 4738
         // C# Kernels can only be installed when you have Jupyter
         // On CI we install Jupyter only when testing with Python extension.
         const pythonChecker = api.serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker);

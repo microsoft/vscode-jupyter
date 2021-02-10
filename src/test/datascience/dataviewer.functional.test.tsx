@@ -486,4 +486,19 @@ suite('DataScience DataViewer tests', () => {
         await gotAllRows;
         verifyRows(wrapper.wrapper, [0, `[[1, 2, 3], [4, 5]]`, 1, '[[6, 7, 8, 9]]']);
     });
+
+    // https://github.com/microsoft/vscode-jupyter/issues/4706
+    // Disabled for now. Root cause is that pd.replace isn't recursive over objects in DataFrames,
+    // so our current inf/nan handling does not work for DataFrames whose cells are Series, ndarray, or list
+    // runMountedTest('Inf/NaN in DataFrame', async (wrapper) => {
+    //     await injectCode(
+    //         'import pandas as pd\r\nimport numpy as np\r\ndf = pd.DataFrame([], columns=["foo", "bar", "baz"])\r\ndf = df.append({"foo": [0, 1, np.inf], "bar": [-np.inf, 0, 1], "baz": [1, np.nan, 0]}, ignore_index=True)'
+    //     );
+    //     const gotAllRows = getCompletedPromise(wrapper);
+    //     const dv = await createJupyterVariableDataViewer('df', 'DataFrame');
+    //     assert.ok(dv, 'DataViewer not created');
+    //     await gotAllRows;
+
+    //     verifyRows(wrapper.wrapper, [0, '[0,1,inf]', '[-inf,0,1]', '[1,nan,0]']);
+    // });
 });

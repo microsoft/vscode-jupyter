@@ -113,11 +113,7 @@ suite('DataScience - KernelSelector', () => {
     suite('Select Remote Kernel', () => {
         test('Should display quick pick and return nothing when nothing is selected (remote sessions)', async () => {
             when(
-                kernelSelectionProvider.getKernelSelectionsForRemoteSession(
-                    anything(),
-                    async () => instance(sessionManager),
-                    anything()
-                )
+                kernelSelectionProvider.getKernelSelectionsForRemoteSession(anything(), anything(), anything())
             ).thenResolve([]);
             when(appShell.showQuickPick(anything(), anything(), anything())).thenResolve();
 
@@ -143,11 +139,7 @@ suite('DataScience - KernelSelector', () => {
         });
         test('Should return the selected remote kernelspec along with a matching interpreter', async () => {
             when(
-                kernelSelectionProvider.getKernelSelectionsForRemoteSession(
-                    anything(),
-                    async () => instance(sessionManager),
-                    anything()
-                )
+                kernelSelectionProvider.getKernelSelectionsForRemoteSession(anything(), anything(), anything())
             ).thenResolve([]);
             when(kernelService.findMatchingInterpreter(kernelSpec, anything())).thenResolve(interpreter);
             when(appShell.showQuickPick(anything(), anything(), anything())).thenResolve({

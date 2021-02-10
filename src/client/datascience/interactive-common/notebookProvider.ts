@@ -11,7 +11,8 @@ import { IWorkspaceService } from '../../common/application/types';
 import { traceWarning } from '../../common/logger';
 import { IConfigurationService, IDisposableRegistry, Resource } from '../../common/types';
 import { noop } from '../../common/utils/misc';
-import { Identifiers, Settings } from '../constants';
+import { Identifiers, Settings, Telemetry } from '../constants';
+import { sendKernelTelemetryWhenDone, trackKernelResourceInformation } from '../context/telemetry';
 import { KernelConnectionMetadata } from '../jupyter/kernels/types';
 import {
     ConnectNotebookProviderOptions,
@@ -148,6 +149,8 @@ export class NotebookProvider implements INotebookProvider {
                 ? this.workspaceService.workspaceFolders![0]!.uri
                 : undefined;
         }
+
+        trackKernelResourceInformation(resource, { kernelConnection: options.kernelConnection });
         const promise = rawKernel
             ? this.rawNotebookProvider.createNotebook(
                   options.identity,
@@ -158,6 +161,8 @@ export class NotebookProvider implements INotebookProvider {
                   options.token
               )
             : this.jupyterNotebookProvider.createNotebook(options);
+
+        sendKernelTelemetryWhenDone(resource, Telemetry.NotebookStart, promise);
 
         this.cacheNotebookPromise(options.identity, promise);
 

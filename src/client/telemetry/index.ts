@@ -17,7 +17,9 @@ import {
     Telemetry,
     VSCodeNativeTelemetry
 } from '../datascience/constants';
+import { ResourceSpecificTelemetryProperties } from '../datascience/context/types';
 import { ExportFormat } from '../datascience/export/types';
+import { InterruptResult } from '../datascience/types';
 import { EventName, PlatformErrors } from './constants';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -40,6 +42,20 @@ function isTelemetrySupported(): boolean {
     }
 }
 
+type ErrorClassifier = (error: Error) => string | undefined;
+const errorClassifiers: ErrorClassifier[] = [];
+export function registerErrorClassifier(classifier: ErrorClassifier) {
+    errorClassifiers.push(classifier);
+}
+function getErrorClassification(error: Error): string {
+    for (const classifier of errorClassifiers) {
+        const classification = classifier(error);
+        if (classification && classification !== 'unknown') {
+            return classification;
+        }
+    }
+    return 'unknown';
+}
 /**
  * Checks if the telemetry is disabled in user settings
  * @returns {boolean}
@@ -95,11 +111,33 @@ export function clearTelemetryReporter() {
     telemetryReporter = undefined;
 }
 
+function stringifyProperties(eventName: string, data: Record<string, any>) {
+    let customProperties: Record<string, string> = {};
+    Object.getOwnPropertyNames(data).forEach((prop) => {
+        if (data[prop] === undefined || data[prop] === null) {
+            return;
+        }
+        try {
+            // If there are any errors in serializing one property, ignore that and move on.
+            // Else nothing will be sent.
+            customProperties[prop] =
+                typeof data[prop] === 'string'
+                    ? data[prop]
+                    : typeof data[prop] === 'object'
+                    ? 'object'
+                    : data[prop].toString();
+        } catch (ex) {
+            traceError(`Failed to serialize ${prop} for ${eventName}`, ex);
+        }
+    });
+    return customProperties;
+}
 export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extends keyof P>(
     eventName: E,
     durationMs?: Record<string, number> | number,
     properties?: P[E],
-    ex?: Error
+    ex?: Error,
+    sendOriginalEventWithErrors?: boolean
 ) {
     if (isTestExecution() || !isTelemetrySupported()) {
         return;
@@ -110,49 +148,44 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
     let eventNameSent = eventName as string;
 
     if (ex) {
-        // When sending telemetry events for exceptions no need to send custom properties.
-        // Else we have to review all properties every time as part of GDPR.
-        // Assume we have 10 events all with their own properties.
-        // As we have errors for each event, those properties are treated as new data items.
-        // Hence they need to be classified as part of the GDPR process, and thats unnecessary and onerous.
-        eventNameSent = 'ERROR';
-        customProperties = { originalEventName: eventName as string, stackTrace: serializeStackTrace(ex) };
-        reporter.sendTelemetryErrorEvent(eventNameSent, customProperties, measures, []);
+        if (!sendOriginalEventWithErrors) {
+            // When sending telemetry events for exceptions no need to send custom properties.
+            // Else we have to review all properties every time as part of GDPR.
+            // Assume we have 10 events all with their own properties.
+            // As we have errors for each event, those properties are treated as new data items.
+            // Hence they need to be classified as part of the GDPR process, and thats unnecessary and onerous.
+            eventNameSent = 'ERROR';
+            customProperties = {
+                failed: 'true',
+                originalEventName: eventName as string,
+                failureReason: getErrorClassification(ex),
+                stackTrace: serializeStackTrace(ex)
+            };
+            // Add shared properties to telemetry props (we may overwrite existing ones).
+            Object.assign(customProperties, sharedProperties);
+            customProperties = stringifyProperties(eventNameSent, customProperties);
+            reporter.sendTelemetryErrorEvent(eventNameSent, customProperties, measures, []);
+        } else {
+            // Include a property failed, to indicate there are errors.
+            // Lets pay the price for better data.
+            customProperties = {
+                failed: 'true',
+                stackTrace: serializeStackTrace(ex),
+                failureReason: getErrorClassification(ex)
+            };
+            // Add shared properties to telemetry props (we may overwrite existing ones).
+            Object.assign(customProperties, sharedProperties);
+            Object.assign(customProperties, properties || {});
+            customProperties = stringifyProperties(eventNameSent, customProperties);
+            reporter.sendTelemetryEvent(eventNameSent, customProperties, measures);
+        }
     } else {
         if (properties) {
-            const data = properties as any;
-            Object.getOwnPropertyNames(data).forEach((prop) => {
-                if (data[prop] === undefined || data[prop] === null) {
-                    return;
-                }
-                try {
-                    // If there are any errors in serializing one property, ignore that and move on.
-                    // Else nothing will be sent.
-                    customProperties[prop] =
-                        typeof data[prop] === 'string'
-                            ? data[prop]
-                            : typeof data[prop] === 'object'
-                            ? 'object'
-                            : data[prop].toString();
-                } catch (ex) {
-                    traceError(`Failed to serialize ${prop} for ${eventName}`, ex);
-                }
-            });
+            customProperties = stringifyProperties(eventNameSent, properties);
         }
 
         // Add shared properties to telemetry props (we may overwrite existing ones).
         Object.assign(customProperties, sharedProperties);
-
-        // Remove shared DS properties from core extension telemetry.
-        Object.keys(sharedProperties).forEach((shareProperty) => {
-            if (
-                customProperties[shareProperty] &&
-                shareProperty.startsWith('ds_') &&
-                !(eventNameSent.startsWith('DS_') || eventNameSent.startsWith('DATASCIENCE'))
-            ) {
-                delete customProperties[shareProperty];
-            }
-        });
 
         reporter.sendTelemetryEvent(eventNameSent, customProperties, measures);
     }
@@ -256,7 +289,8 @@ export function sendTelemetryWhenDone<P extends IEventNamePropertyMapping, E ext
     eventName: E,
     promise: Promise<any> | Thenable<any>,
     stopWatch?: StopWatch,
-    properties?: P[E]
+    properties?: P[E],
+    sendOriginalEventWithErrors?: boolean
 ) {
     stopWatch = stopWatch ? stopWatch : new StopWatch();
     if (typeof promise.then === 'function') {
@@ -270,7 +304,7 @@ export function sendTelemetryWhenDone<P extends IEventNamePropertyMapping, E ext
             },
             (ex) => {
                 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                sendTelemetryEvent(eventName, stopWatch!.elapsedTime, properties, ex);
+                sendTelemetryEvent(eventName, stopWatch!.elapsedTime, properties, ex, sendOriginalEventWithErrors);
                 return Promise.reject(ex);
             }
         );
@@ -327,6 +361,14 @@ function getCallsite(frame: stackTrace.StackFrame) {
  */
 export interface ISharedPropertyMapping {
     /**
+     * Whether user ran a cell or not.
+     * Its possible we have auto start enabled, in which case things could fall over
+     * (jupyter not start, kernel not start), and these are all not user initiated events.
+     * Hence sending telemetry indicating failure in starting a kernel could be misleading.
+     * This tells us that user started the action.
+     */
+    userExecutedCell: 'true';
+    /**
      * For every DS telemetry we would like to know the type of Notebook Editor used when doing something.
      */
     ['ds_notebookeditor']: undefined | 'old' | 'custom' | 'native';
@@ -334,7 +376,7 @@ export interface ISharedPropertyMapping {
      * For every DS telemetry we would like to know whether the this is from AML compute or not.
      * If not in AML compute, then do not send this telemetry.
      */
-    ['isamlcompute']: boolean;
+    ['isamlcompute']: 'true' | 'false';
 
     /**
      * For every telemetry event from the extension we want to make sure we can associate it with install
@@ -345,7 +387,7 @@ export interface ISharedPropertyMapping {
     /**
      * Whether raw kernel is supported or not.
      */
-    ['rawKernelSupported']: boolean;
+    ['rawKernelSupported']: 'true' | 'false';
 
     /**
      * Whether using local or remote connection.
@@ -355,8 +397,11 @@ export interface ISharedPropertyMapping {
     /**
      * Whether using local or remote connection.
      */
-    ['isPythonExtensionInstalled']: boolean;
+    ['isPythonExtensionInstalled']: 'true' | 'false';
 }
+
+// If there are errors, then the are added to the telementry properties.
+export type TelemetryErrorProperties = { failed: true; stackTrace: string };
 
 // Map all events to their properties
 export interface IEventNamePropertyMapping {
@@ -520,14 +565,44 @@ export interface IEventNamePropertyMapping {
     [Telemetry.AddCellBelow]: never | undefined;
     [Telemetry.CodeLensAverageAcquisitionTime]: never | undefined;
     [Telemetry.CollapseAll]: never | undefined;
-    [Telemetry.ConnectFailedJupyter]: never | undefined;
+    [Telemetry.ConnectFailedJupyter]: {
+        failureReason:
+            | 'cancelled'
+            | 'timeout'
+            | 'kerneldied'
+            | 'kerneldied'
+            | 'kernelpromisetimeout'
+            | 'jupytersession'
+            | 'jupyterconnection'
+            | 'jupyterinstall'
+            | 'jupyterselfcert'
+            | 'invalidkernel'
+            | 'noipykernel'
+            | 'fetcherror'
+            | 'unknown';
+    };
     [Telemetry.ConnectLocalJupyter]: never | undefined;
     [Telemetry.ConnectRemoteJupyter]: never | undefined;
     /**
      * Connecting to an existing Jupyter server, but connecting to localhost.
      */
     [Telemetry.ConnectRemoteJupyterViaLocalHost]: never | undefined;
-    [Telemetry.ConnectRemoteFailedJupyter]: never | undefined;
+    [Telemetry.ConnectRemoteFailedJupyter]: {
+        failureReason:
+            | 'cancelled'
+            | 'timeout'
+            | 'kerneldied'
+            | 'kerneldied'
+            | 'kernelpromisetimeout'
+            | 'jupytersession'
+            | 'jupyterconnection'
+            | 'jupyterinstall'
+            | 'jupyterselfcert'
+            | 'invalidkernel'
+            | 'noipykernel'
+            | 'fetcherror'
+            | 'unknown';
+    };
     [Telemetry.ConnectRemoteSelfCertFailedJupyter]: never | undefined;
     [Telemetry.RegisterAndUseInterpreterAsKernel]: never | undefined;
     [Telemetry.UseInterpreterAsKernel]: never | undefined;
@@ -549,7 +624,7 @@ export interface IEventNamePropertyMapping {
     [Telemetry.FindJupyterKernelSpec]: never | undefined;
     [Telemetry.DisableInteractiveShiftEnter]: never | undefined;
     [Telemetry.EnableInteractiveShiftEnter]: never | undefined;
-    [Telemetry.ExecuteCell]: never | undefined;
+    [Telemetry.ExecuteCellTime]: never | undefined;
     /**
      * Telemetry sent to capture first time execution of a cell.
      * If `notebook = true`, this its telemetry for native editor/notebooks.
@@ -862,7 +937,7 @@ export interface IEventNamePropertyMapping {
     /**
      * Total time taken to Launch a raw kernel.
      */
-    [Telemetry.KernelLauncherPerf]: undefined | never;
+    [Telemetry.KernelLauncherPerf]: undefined | never | TelemetryErrorProperties;
     /**
      * Total time taken to find a kernel on disc.
      */
@@ -1023,7 +1098,7 @@ export interface IEventNamePropertyMapping {
 
     // Telemetry send when we create a notebook for a raw kernel or jupyter
     [Telemetry.RawKernelCreatingNotebook]: never | undefined;
-    [Telemetry.JupyterCreatingNotebook]: never | undefined;
+    [Telemetry.JupyterCreatingNotebook]: never | undefined | TelemetryErrorProperties;
     // Telemetry sent when starting auto starting Native Notebook kernel fails silently.
     [Telemetry.KernelStartFailedAndUIDisabled]: never | undefined;
 
@@ -1032,20 +1107,67 @@ export interface IEventNamePropertyMapping {
     [Telemetry.RawKernelStartRawSession]: never | undefined;
     [Telemetry.RawKernelProcessLaunch]: never | undefined;
 
+    // Applies to everything (interactive+Notebooks & local+remote)
+    [Telemetry.ExecuteCell]: ResourceSpecificTelemetryProperties;
+    [Telemetry.NotebookStart]:
+        | ResourceSpecificTelemetryProperties // If successful.
+        | ({
+              failed: true;
+              failureReason:
+                  | 'cancelled'
+                  | 'timeout'
+                  | 'kerneldied'
+                  | 'kerneldied'
+                  | 'kernelpromisetimeout'
+                  | 'jupytersession'
+                  | 'jupyterconnection'
+                  | 'jupyterinstall'
+                  | 'jupyterselfcert'
+                  | 'invalidkernel'
+                  | 'noipykernel'
+                  | 'fetcherror'
+                  | 'unknown';
+          } & ResourceSpecificTelemetryProperties)
+        | (ResourceSpecificTelemetryProperties & TelemetryErrorProperties); // If there any any unhandled exceptions.
+    [Telemetry.SwitchKernel]: ResourceSpecificTelemetryProperties; // If there are unhandled exceptions;
+    [Telemetry.NotebookInterrupt]:
+        | ({ result: InterruptResult } & ResourceSpecificTelemetryProperties) // If successful (interrupted, timeout, restart).
+        | (ResourceSpecificTelemetryProperties & TelemetryErrorProperties); // If there are unhandled exceptions;
+    [Telemetry.NotebookRestart]:
+        | ({
+              failed: true;
+              failureReason: 'cancelled' | 'kernelpromisetimeout' | 'unknown';
+          } & ResourceSpecificTelemetryProperties)
+        | (ResourceSpecificTelemetryProperties & TelemetryErrorProperties); // If there are unhandled exceptions;
+
     // Raw kernel single events
+    [Telemetry.RawKernelSessionStart]:
+        | ResourceSpecificTelemetryProperties
+        | ({
+              failed: true;
+              failureReason: 'cancelled' | 'timeout' | 'noipykernel' | 'kerneldied' | 'unknown';
+          } & ResourceSpecificTelemetryProperties)
+        | (ResourceSpecificTelemetryProperties & TelemetryErrorProperties); // If there are unhandled exceptions;
     [Telemetry.RawKernelSessionStartSuccess]: never | undefined;
     [Telemetry.RawKernelSessionStartException]: never | undefined;
     [Telemetry.RawKernelSessionStartTimeout]: never | undefined;
     [Telemetry.RawKernelSessionStartUserCancel]: never | undefined;
     [Telemetry.RawKernelSessionStartNoIpykernel]: {
         reason: number;
-    };
+    } & TelemetryErrorProperties;
 
     // Run by line events
     [Telemetry.RunByLineStart]: never | undefined;
     [Telemetry.RunByLineStep]: never | undefined;
     [Telemetry.RunByLineStop]: never | undefined;
     [Telemetry.RunByLineVariableHover]: never | undefined;
+
+    // Misc
+    [Telemetry.KernelCount]: {
+        kernelSpecCount: number; // Total number of kernel specs in the kernel list.
+        kernelInterpreterCount: number; // Total number of interpreters in the kernel list.
+        kernelLiveCount: number; // Total number of live kernels in the kernel list.
+    } & ResourceSpecificTelemetryProperties;
 
     // Trusted notebooks events
     [Telemetry.NotebookTrustPromptShown]: never | undefined;

@@ -40,7 +40,7 @@ import { KernelConnectionMetadata } from '../../jupyter/kernels/types';
 import { HostJupyterNotebook } from '../../jupyter/liveshare/hostJupyterNotebook';
 import { LiveShareParticipantHost } from '../../jupyter/liveshare/liveShareParticipantMixin';
 import { IRoleBasedObject } from '../../jupyter/liveshare/roleBasedFactory';
-import { IKernelLauncher } from '../../kernel-launcher/types';
+import { IKernelLauncher, IpyKernelNotInstalledError } from '../../kernel-launcher/types';
 import { ProgressReporter } from '../../progress/progressReporter';
 import {
     IKernelDependencyService,
@@ -238,7 +238,7 @@ export class HostRawNotebookProvider
                         kernelConnectionMetadata
                     )}`
                 );
-                await rawSession.connect(kernelConnectionMetadata, launchTimeout, cancelToken, disableUI);
+                await rawSession.connect(resource, kernelConnectionMetadata, launchTimeout, cancelToken, disableUI);
 
                 // Get the execution info for our notebook
                 const info = await this.getExecutionInfo(kernelConnectionMetadata);
@@ -293,14 +293,17 @@ export class HostRawNotebookProvider
         cancelToken?: CancellationToken,
         disableUI?: boolean
     ) {
-        if (
-            (await this.kernelDependencyService.installMissingDependencies(interpreter, cancelToken, disableUI)) !==
-            KernelInterpreterDependencyResponse.ok
-        ) {
-            throw new Error(
+        const response = await this.kernelDependencyService.installMissingDependencies(
+            interpreter,
+            cancelToken,
+            disableUI
+        );
+        if (response !== KernelInterpreterDependencyResponse.ok) {
+            throw new IpyKernelNotInstalledError(
                 localize.DataScience.ipykernelNotInstalled().format(
                     `${interpreter.displayName || interpreter.path}:${interpreter.path}`
-                )
+                ),
+                response
             );
         }
     }

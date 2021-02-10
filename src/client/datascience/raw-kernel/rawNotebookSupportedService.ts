@@ -23,7 +23,7 @@ export class RawNotebookSupportedService implements IRawNotebookSupportedService
             return false;
         }
         const isSupported = await this.isSupportedForLocalLaunch();
-        setSharedProperty('rawKernelSupported', isSupported);
+        setSharedProperty('rawKernelSupported', isSupported ? 'true' : 'false');
         return isSupported;
     }
 

@@ -9,6 +9,7 @@ import { ReplaySubject } from 'rxjs/ReplaySubject';
 import { Event, EventEmitter } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { ServerStatus } from '../../datascience-ui/interactive-common/mainState';
+import { WrappedError } from '../common/errors/errorUtils';
 import { traceError, traceInfo, traceWarning } from '../common/logger';
 import { sleep, waitForPromise } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
@@ -30,10 +31,9 @@ import { IJupyterSession, ISessionWithSocket, KernelSocketInformation } from './
  * @class JupyterSessionStartError
  * @extends {Error}
  */
-export class JupyterSessionStartError extends Error {
+export class JupyterSessionStartError extends WrappedError {
     constructor(originalException: Error) {
-        super(originalException.message);
-        this.stack = originalException.stack;
+        super(originalException.message, originalException);
         sendTelemetryEvent(Telemetry.StartSessionFailedJupyter);
     }
 }

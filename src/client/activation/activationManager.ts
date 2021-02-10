@@ -14,7 +14,12 @@ import { IDisposable, Resource } from '../common/types';
 import { Deferred } from '../common/utils/async';
 import { IInterpreterService } from '../interpreter/contracts';
 import { sendActivationTelemetry } from '../telemetry/envFileTelemetry';
-import { IExtensionActivationManager, IExtensionActivationService, IExtensionSingleActivationService } from './types';
+import {
+    IExtensionActivationManager,
+    IExtensionActivationService,
+    IExtensionSingleActivationService,
+    IExtensionSyncActivationService
+} from './types';
 
 @injectable()
 export class ExtensionActivationManager implements IExtensionActivationManager {
@@ -28,6 +33,8 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
         private readonly activationServices: IExtensionActivationService[],
         @multiInject(IExtensionSingleActivationService)
         private readonly singleActivationServices: IExtensionSingleActivationService[],
+        @multiInject(IExtensionSyncActivationService)
+        private readonly syncActivationServices: IExtensionSyncActivationService[],
         @inject(IDocumentManager) private readonly documentManager: IDocumentManager,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
@@ -45,6 +52,9 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
             this.docOpenedHandler.dispose();
             this.docOpenedHandler = undefined;
         }
+    }
+    public activateSync(): void {
+        this.syncActivationServices.map((item) => item.activate());
     }
     public async activate(): Promise<void> {
         await this.initialize();
