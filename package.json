@@ -1832,7 +1832,7 @@
                 {
                     "id": "jupyter-variables",
                     "title": "Jupyter",
-                    "icon": "NOICON.svg"
+                    "icon": "$(notebook)"
                 }
             ]
         },
