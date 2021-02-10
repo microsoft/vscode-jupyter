@@ -9,8 +9,8 @@ import { assert } from 'chai';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as sinon from 'sinon';
-import { CellErrorOutput, commands, Uri } from 'vscode';
-import { CellDisplayOutput, NotebookContentProvider } from '../../../../types/vscode-proposed';
+import { commands, Uri } from 'vscode';
+import { NotebookContentProvider } from '../../../../types/vscode-proposed';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { IDisposable } from '../../../client/common/types';
 import { INotebookContentProvider } from '../../../client/datascience/notebook/types';
@@ -128,7 +128,7 @@ suite('DataScience - VSCode Notebook - (Open)', function () {
         assert.equal(notebook.cells[1].cellKind, vscodeNotebookEnums.CellKind.Code, 'Cell2, type');
         assert.include(notebook.cells[1].document.getText(), 'pip list', 'Cell1, source');
         assert.lengthOf(notebook.cells[1].outputs, 1, 'Cell2, outputs');
-        assert.equal(notebook.cells[1].outputs[0].outputKind, vscodeNotebookEnums.CellOutputKind.Rich, 'Cell2, output');
+        // assert.equal(notebook.cells[1].outputs[0].outputKind, vscodeNotebookEnums.CellOutputKind.Rich, 'Cell2, output');
         assert.equal(notebook.cells[1].metadata.executionOrder, 3, 'Cell2, execution count');
         assert.lengthOf(Object.keys(notebook.cells[1].metadata.custom || {}), 1, 'Cell2, metadata');
         assert.deepEqual(notebook.cells[1].metadata.custom?.metadata.tags, ['WOW'], 'Cell2, metadata');
@@ -145,12 +145,12 @@ suite('DataScience - VSCode Notebook - (Open)', function () {
         assert.equal(notebook.cells[3].cellKind, vscodeNotebookEnums.CellKind.Code, 'Cell4, type');
         assert.include(notebook.cells[3].document.getText(), 'with Error', 'Cell4, source');
         assert.lengthOf(notebook.cells[3].outputs, 1, 'Cell4, outputs');
-        assert.equal(
-            notebook.cells[3].outputs[0].outputKind,
-            vscodeNotebookEnums.CellOutputKind.Error,
-            'Cell4, output'
-        );
-        const errorOutput = (notebook.cells[3].outputs[0] as unknown) as CellErrorOutput;
+        // assert.equal(
+        //     notebook.cells[3].outputs[0].outputKind,
+        //     vscodeNotebookEnums.CellOutputKind.Error,
+        //     'Cell4, output'
+        // );
+        const errorOutput = notebook.cells[3].outputs[0].outputs[0] as any;
         assert.equal(errorOutput.ename, 'SyntaxError', 'Cell4, output');
         assert.equal(errorOutput.evalue, 'invalid syntax (<ipython-input-1-8b7c24be1ec9>, line 1)', 'Cell3, output');
         assert.lengthOf(errorOutput.traceback, 1, 'Cell4, output');
@@ -164,7 +164,7 @@ suite('DataScience - VSCode Notebook - (Open)', function () {
         assert.include(notebook.cells[4].document.getText(), 'import matplotlib', 'Cell5, source');
         assert.include(notebook.cells[4].document.getText(), 'plt.show()', 'Cell5, source');
         assert.lengthOf(notebook.cells[4].outputs, 1, 'Cell5, outputs');
-        assert.equal(notebook.cells[4].outputs[0].outputKind, vscodeNotebookEnums.CellOutputKind.Rich, 'Cell5, output');
+        // assert.equal(notebook.cells[4].outputs[0].outputKind, vscodeNotebookEnums.CellOutputKind.Rich, 'Cell5, output');
         const richOutput = (notebook.cells[4].outputs[0] as unknown) as CellDisplayOutput;
         assert.containsAllKeys(
             richOutput.data,

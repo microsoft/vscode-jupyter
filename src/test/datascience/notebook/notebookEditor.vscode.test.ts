@@ -4,7 +4,6 @@
 'use strict';
 
 import { assert } from 'chai';
-import { CellDisplayOutput } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { ICommandManager, IVSCodeNotebook } from '../../../client/common/application/types';
 import { ProductNames } from '../../../client/common/installer/productNames';
@@ -136,7 +135,7 @@ suite('Notebook Editor tests', () => {
 
         // Wait till execution count changes and status is success.
         await waitForExecutionCompletedSuccessfully(cell);
-        const originalSysPath = (cell.outputs[0] as CellDisplayOutput).data['text/plain'].toString();
+        const originalSysPath = (cell.outputs[0].outputs.find(opit => opit.mime === 'text/plain')?.value as any).toString();
 
         // Switch kernels to the other kernel
         const kernels = await kernelProvider.provideKernels(
@@ -167,7 +166,7 @@ suite('Notebook Editor tests', () => {
         assert.strictEqual(cell?.metadata.runState, vscodeNotebookEnums.NotebookCellRunState.Success);
 
         if (anotherKernel && preferredKernel) {
-            const newSysPath = (cell.outputs[0] as CellDisplayOutput).data['text/plain'].toString();
+            const newSysPath = (cell.outputs[0].outputs.find(opit => opit.mime === 'text/plain')?.value as any).toString();
             assert.notEqual(
                 newSysPath,
                 originalSysPath,

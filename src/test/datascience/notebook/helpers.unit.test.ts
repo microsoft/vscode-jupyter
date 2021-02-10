@@ -7,7 +7,7 @@ import { nbformat } from '@jupyterlab/coreutils';
 import { assert } from 'chai';
 import { cloneDeep } from 'lodash';
 import { Uri } from 'vscode';
-import { CellOutput, NotebookCellData } from '../../../../types/vscode-proposed';
+import { NotebookCellOutput, NotebookCellData, NotebookCellOutputItem } from '../../../../types/vscode-proposed';
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
@@ -72,7 +72,7 @@ suite('DataScience - NativeNotebook helpers', () => {
         ]);
     });
     suite('Outputs', () => {
-        function validateCellOutputTranslation(outputs: nbformat.IOutput[], expectedOutputs: CellOutput[]) {
+        function validateCellOutputTranslation(outputs: nbformat.IOutput[], expectedOutputs: NotebookCellOutput[]) {
             const cells = [
                 {
                     cell_type: 'code',
@@ -105,10 +105,8 @@ suite('DataScience - NativeNotebook helpers', () => {
                     }
                 ],
                 [
-                    {
-                        outputKind: vscodeNotebookEnums.CellOutputKind.Rich,
-                        data: { 'text/plain': 'Error' },
-                        metadata: {
+                    new NotebookCellOutput([
+                        new NotebookCellOutputItem('text/plain', 'Error', {
                             custom: {
                                 vscode: {
                                     name: 'stderr',
@@ -116,11 +114,10 @@ suite('DataScience - NativeNotebook helpers', () => {
                                 }
                             }
                         }
-                    },
-                    {
-                        outputKind: vscodeNotebookEnums.CellOutputKind.Rich,
-                        data: { 'text/plain': 'NoError' },
-                        metadata: {
+                        )]
+                    ),
+                    new NotebookCellOutput([
+                        new NotebookCellOutputItem('text/plain', 'NoError', {
                             custom: {
                                 vscode: {
                                     name: 'stdout',
@@ -128,7 +125,8 @@ suite('DataScience - NativeNotebook helpers', () => {
                                 }
                             }
                         }
-                    }
+                        )]
+                    ),
                 ]
             );
         });
@@ -142,12 +140,8 @@ suite('DataScience - NativeNotebook helpers', () => {
                     }
                 ],
                 [
-                    {
-                        outputKind: vscodeNotebookEnums.CellOutputKind.Rich,
-                        data: {
-                            'text/plain': '\u001b[K\u001b[33m✅ \u001b[0m Loading\n'
-                        },
-                        metadata: {
+                    new NotebookCellOutput([
+                        new NotebookCellOutputItem('text/plain', '\u001b[K\u001b[33m✅ \u001b[0m Loading\n', {
                             custom: {
                                 vscode: {
                                     name: 'stderr',
@@ -155,7 +149,8 @@ suite('DataScience - NativeNotebook helpers', () => {
                                 }
                             }
                         }
-                    }
+                        )]
+                    )
                 ]
             );
         });
@@ -169,12 +164,8 @@ suite('DataScience - NativeNotebook helpers', () => {
                     }
                 ],
                 [
-                    {
-                        outputKind: vscodeNotebookEnums.CellOutputKind.Rich,
-                        data: {
-                            'text/plain': '1 is < 2'
-                        },
-                        metadata: {
+                    new NotebookCellOutput([
+                        new NotebookCellOutputItem('text/plain', '1 is < 2', {
                             custom: {
                                 vscode: {
                                     name: 'stderr',
@@ -182,7 +173,8 @@ suite('DataScience - NativeNotebook helpers', () => {
                                 }
                             }
                         }
-                    }
+                        )]
+                    )
                 ]
             );
         });
@@ -196,12 +188,8 @@ suite('DataScience - NativeNotebook helpers', () => {
                     }
                 ],
                 [
-                    {
-                        outputKind: vscodeNotebookEnums.CellOutputKind.Rich,
-                        data: {
-                            'text/plain': '1 is < 2\u001b[K\u001b[33m✅ \u001b[0m Loading\n'
-                        },
-                        metadata: {
+                    new NotebookCellOutput([
+                        new NotebookCellOutputItem('text/plain', '1 is < 2\u001b[K\u001b[33m✅ \u001b[0m Loading\n', {
                             custom: {
                                 vscode: {
                                     name: 'stderr',
@@ -209,7 +197,8 @@ suite('DataScience - NativeNotebook helpers', () => {
                                 }
                             }
                         }
-                    }
+                        )]
+                    )
                 ]
             );
         });
@@ -224,12 +213,13 @@ suite('DataScience - NativeNotebook helpers', () => {
                     }
                 ],
                 [
-                    {
-                        outputKind: vscodeNotebookEnums.CellOutputKind.Error,
-                        ename: 'Error Name',
-                        evalue: 'Error Value',
-                        traceback: ['stack1', 'stack2', 'stack3']
-                    }
+                    new NotebookCellOutput([
+                        new NotebookCellOutputItem('application/x.notebook.error-traceback', {
+                            ename: 'Error Name',
+                            evalue: 'Error Value',
+                            traceback: ['stack1', 'stack2', 'stack3']
+                        })
+                    ])
                 ]
             );
         });
@@ -247,19 +237,15 @@ suite('DataScience - NativeNotebook helpers', () => {
                             }
                         ],
                         [
-                            {
-                                outputKind: vscodeNotebookEnums.CellOutputKind.Rich,
-                                data: {
-                                    'text/plain': 'Hello World!'
-                                },
-                                metadata: {
+                            new NotebookCellOutput([
+                                new NotebookCellOutputItem('text/plain', 'Hello World!', {
                                     custom: {
                                         vscode: {
                                             outputType: output_type
                                         }
                                     }
-                                }
-                            }
+                                })
+                            ])
                         ]
                     );
                 });
@@ -276,20 +262,17 @@ suite('DataScience - NativeNotebook helpers', () => {
                             }
                         ],
                         [
-                            {
-                                outputKind: vscodeNotebookEnums.CellOutputKind.Rich,
-                                data: {
-                                    'image/png': 'base64PNG',
-                                    'image/jpeg': 'base64JPEG'
-                                },
-                                metadata: {
+                            new NotebookCellOutput([
+                                new NotebookCellOutputItem('image/png', 'base64PNG', {
                                     custom: {
                                         vscode: {
                                             outputType: output_type
                                         }
                                     }
-                                }
-                            }
+                                }),
+                                new NotebookCellOutputItem('image/jpeg', 'base64JPEG')
+
+                            ])
                         ]
                     );
                 });
@@ -307,20 +290,16 @@ suite('DataScience - NativeNotebook helpers', () => {
                             }
                         ],
                         [
-                            {
-                                outputKind: vscodeNotebookEnums.CellOutputKind.Rich,
-                                data: {
-                                    'image/png': 'base64PNG'
-                                },
-                                metadata: {
+                            new NotebookCellOutput([
+                                new NotebookCellOutputItem('image/png', 'base64PNG', {
                                     custom: {
                                         needs_background: 'light',
                                         vscode: {
                                             outputType: output_type
                                         }
                                     }
-                                }
-                            }
+                                })
+                            ])
                         ]
                     );
                 });
@@ -338,20 +317,16 @@ suite('DataScience - NativeNotebook helpers', () => {
                             }
                         ],
                         [
-                            {
-                                outputKind: vscodeNotebookEnums.CellOutputKind.Rich,
-                                data: {
-                                    'image/png': 'base64PNG'
-                                },
-                                metadata: {
+                            new NotebookCellOutput([
+                                new NotebookCellOutputItem('image/png', 'base64PNG', {
                                     custom: {
                                         needs_background: 'dark',
                                         vscode: {
                                             outputType: output_type
                                         }
                                     }
-                                }
-                            }
+                                })
+                            ])
                         ]
                     );
                 });
@@ -369,20 +344,16 @@ suite('DataScience - NativeNotebook helpers', () => {
                             }
                         ],
                         [
-                            {
-                                outputKind: vscodeNotebookEnums.CellOutputKind.Rich,
-                                data: {
-                                    'image/png': 'base64PNG'
-                                },
-                                metadata: {
+                            new NotebookCellOutput([
+                                new NotebookCellOutputItem('image/png', 'base64PNG', {
                                     custom: {
                                         'image/png': { height: '111px', width: '999px' },
                                         vscode: {
                                             outputType: output_type
                                         }
                                     }
-                                }
-                            }
+                                }),
+                            ])
                         ]
                     );
                 });
@@ -401,12 +372,8 @@ suite('DataScience - NativeNotebook helpers', () => {
                             }
                         ],
                         [
-                            {
-                                outputKind: vscodeNotebookEnums.CellOutputKind.Rich,
-                                data: {
-                                    'image/png': 'base64PNG'
-                                },
-                                metadata: {
+                            new NotebookCellOutput([
+                                new NotebookCellOutputItem('image/png', 'base64PNG', {
                                     custom: {
                                         unconfined: true,
                                         'image/png': { width: '999px' },
@@ -414,8 +381,8 @@ suite('DataScience - NativeNotebook helpers', () => {
                                             outputType: output_type
                                         }
                                     }
-                                }
-                            }
+                                }),
+                            ])
                         ]
                     );
                 });

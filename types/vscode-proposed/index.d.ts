@@ -609,9 +609,9 @@ export class NotebookCellOutputItem {
 
     readonly mime: string;
     readonly value: unknown;
-    readonly metadata?: Record<string, string | number | boolean>;
+    readonly metadata?: Record<string, string | number | boolean | unknown>;
 
-    constructor(mime: string, value: unknown, metadata?: Record<string, string | number | boolean>);
+    constructor(mime: string, value: unknown, metadata?: Record<string, string | number | boolean | unknown>);
 }
 
 // @jrieken
