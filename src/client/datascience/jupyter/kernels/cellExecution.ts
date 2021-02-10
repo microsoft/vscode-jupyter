@@ -183,8 +183,8 @@ export class CellExecution {
         // Ensure we clear the cell state and trigger a change.
         await clearCellForExecution(this.editor, this.cell);
         if (!this.isEmptyCodeCell) {
-            await chainWithPendingUpdates(this.editor, (edit) => {
-                edit.replaceCellMetadata(this.cell.index, {
+            await chainWithPendingUpdates(this.editor.document, (edit) => {
+                edit.replaceNotebookCellMetadata(this.cell.notebook.uri, this.cell.index, {
                     ...this.cell.metadata,
                     runStartTime: new Date().getTime()
                 });
@@ -245,9 +245,9 @@ export class CellExecution {
         traceCellMessage(this.cell, 'Completed with errors');
         this.sendPerceivedCellExecute();
         if (!this.isEmptyCodeCell) {
-            await chainWithPendingUpdates(this.editor, (edit) => {
+            await chainWithPendingUpdates(this.editor.document, (edit) => {
                 traceCellMessage(this.cell, 'Update run run duration');
-                edit.replaceCellMetadata(this.cell.index, {
+                edit.replaceNotebookCellMetadata(this.editor.document.uri, this.cell.index, {
                     ...this.cell.metadata,
                     lastRunDuration: this.stopWatch.elapsedTime
                 });
@@ -286,9 +286,9 @@ export class CellExecution {
             statusMessage = getCellStatusMessageBasedOnFirstCellErrorOutput(this.cell.outputs);
         }
 
-        await chainWithPendingUpdates(this.editor, (edit) => {
+        await chainWithPendingUpdates(this.editor.document, (edit) => {
             traceCellMessage(this.cell, `Update cell state ${runState} and message '${statusMessage}'`);
-            edit.replaceCellMetadata(this.cell.index, {
+            edit.replaceNotebookCellMetadata(this.editor.document.uri, this.cell.index, {
                 ...this.cell.metadata,
                 runState,
                 statusMessage
@@ -302,9 +302,9 @@ export class CellExecution {
 
     private async completedDueToCancellation() {
         traceCellMessage(this.cell, 'Completed due to cancellation');
-        await chainWithPendingUpdates(this.editor, (edit) => {
+        await chainWithPendingUpdates(this.editor.document, (edit) => {
             traceCellMessage(this.cell, 'Update cell statue as idle and message as empty');
-            edit.replaceCellMetadata(this.cell.index, {
+            edit.replaceNotebookCellMetadata(this.editor.document.uri, this.cell.index, {
                 ...this.cell.metadata,
                 runStartTime: undefined,
                 lastRunDuration: undefined,
@@ -340,9 +340,9 @@ export class CellExecution {
         if (!this.canExecuteCell()) {
             return;
         }
-        await chainWithPendingUpdates(this.editor, (edit) => {
+        await chainWithPendingUpdates(this.editor.document, (edit) => {
             traceCellMessage(this.cell, 'Update cell state as it was enqueued');
-            edit.replaceCellMetadata(this.cell.index, {
+            edit.replaceNotebookCellMetadata(this.editor.document.uri, this.cell.index, {
                 ...this.cell.metadata,
                 statusMessage: '', // We don't want any previous status anymore.
                 runStartTime: undefined, // We don't want any previous counters anymore.
@@ -533,7 +533,7 @@ export class CellExecution {
     ) {
         const converted = cellOutputToVSCCellOutput(output);
 
-        await chainWithPendingUpdates(this.editor, (edit) => {
+        await chainWithPendingUpdates(this.editor.document, (edit) => {
             traceCellMessage(this.cell, 'Update output');
             let existingOutput = [...this.cell.outputs];
 
@@ -544,7 +544,8 @@ export class CellExecution {
             }
 
             // Append to the data (we would push here but VS code requires a recreation of the array)
-            edit.replaceCellOutput(this.cell.index, existingOutput.concat(converted));
+            edit.replaceNotebookCellOutput(this.editor.document.uri, this.cell.index, existingOutput.concat(converted));
+            return edit;
         });
     }
 
@@ -634,7 +635,7 @@ export class CellExecution {
     }
     private async handleStreamMessage(msg: KernelMessage.IStreamMsg, clearState: RefBool) {
         // eslint-disable-next-line complexity
-        await chainWithPendingUpdates(this.editor, (edit) => {
+        await chainWithPendingUpdates(this.editor.document, (edit) => {
             traceCellMessage(this.cell, 'Update streamed output');
             let exitingCellOutput = this.cell.outputs;
             // Clear output if waiting for a clear
@@ -671,7 +672,7 @@ export class CellExecution {
                 }
                 // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
                 existing.data['text/plain'] = formatStreamText(concatMultilineString(`${existingOutput}${newContent}`));
-                edit.replaceCellOutput(this.cell.index, [...exitingCellOutput]); // This is necessary to get VS code to update (for now)
+                edit.replaceNotebookCellOutput(this.editor.document.uri, this.cell.index, [...exitingCellOutput]); // This is necessary to get VS code to update (for now)
             } else {
                 const originalText = formatStreamText(concatMultilineString(msg.content.text));
                 // Create a new stream entry
@@ -680,8 +681,12 @@ export class CellExecution {
                     name: msg.content.name,
                     text: originalText
                 };
-                edit.replaceCellOutput(this.cell.index, [...exitingCellOutput, cellOutputToVSCCellOutput(output)]);
+                edit.replaceNotebookCellOutput(this.editor.document.uri, this.cell.index, [
+                    ...exitingCellOutput,
+                    cellOutputToVSCCellOutput(output)
+                ]);
             }
+            return edit;
         });
     }
 
@@ -703,9 +708,10 @@ export class CellExecution {
             clearState.update(true);
         } else {
             // Clear all outputs and start over again.
-            await chainWithPendingUpdates(this.editor, (edit) => {
+            await chainWithPendingUpdates(this.editor.document, (edit) => {
                 traceCellMessage(this.cell, 'Handle clear output message & clear output');
-                edit.replaceCellOutput(this.cell.index, []);
+                edit.replaceNotebookCellOutput(this.editor.document.uri, this.cell.index, []);
+                return edit;
             });
         }
     }

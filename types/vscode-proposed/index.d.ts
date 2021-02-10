@@ -15,95 +15,186 @@ import {
     Command,
     AccessibilityInformation,
     AuthenticationProviderInformation,
-    AuthenticationSession,
-    Position
+    AuthenticationSession
 } from 'vscode';
 
 // Copy nb section from https://github.com/microsoft/vscode/blob/master/src/vs/vscode.proposed.d.ts.
-//#region @rebornix: Notebook
+/**
+ * Represents a storage utility for secrets, information that is
+ * sensitive.
+ */
+export interface SecretStorage {
+    /**
+     * Retrieve a secret that was stored with key. Returns undefined if there
+     * is no password matching that key.
+     * @param key The key the password was stored under.
+     * @returns The stored value or `undefined`.
+     */
+    get(key: string): Thenable<string | undefined>;
+
+    /**
+     * Store a secret under a given key.
+     * @param key The key to store the password under.
+     * @param value The password.
+     */
+    store(key: string, value: string): Thenable<void>;
+
+    /**
+     * Remove a secret from storage.
+     * @param key The key the password was stored under.
+     */
+    delete(key: string): Thenable<void>;
+
+    /**
+     * Fires when a secret is set or deleted.
+     */
+    onDidChange: Event<void>;
+}
+export interface ExtensionContext {
+    secrets: SecretStorage;
+}
+//#region auth provider: https://github.com/microsoft/vscode/issues/88309
+
+/**
+ * An [event](#Event) which fires when an [AuthenticationProvider](#AuthenticationProvider) is added or removed.
+ */
+export interface AuthenticationProvidersChangeEvent {
+    /**
+     * The ids of the [authenticationProvider](#AuthenticationProvider)s that have been added.
+     */
+    readonly added: ReadonlyArray<AuthenticationProviderInformation>;
+
+    /**
+     * The ids of the [authenticationProvider](#AuthenticationProvider)s that have been removed.
+     */
+    readonly removed: ReadonlyArray<AuthenticationProviderInformation>;
+}
+
+/**
+ * An [event](#Event) which fires when an [AuthenticationSession](#AuthenticationSession) is added, removed, or changed.
+ */
+export interface AuthenticationProviderAuthenticationSessionsChangeEvent {
+    /**
+     * The ids of the [AuthenticationSession](#AuthenticationSession)s that have been added.
+     */
+    readonly added: ReadonlyArray<string>;
+
+    /**
+     * The ids of the [AuthenticationSession](#AuthenticationSession)s that have been removed.
+     */
+    readonly removed: ReadonlyArray<string>;
+
+    /**
+     * The ids of the [AuthenticationSession](#AuthenticationSession)s that have been changed.
+     */
+    readonly changed: ReadonlyArray<string>;
+}
+
+/**
+ * A provider for performing authentication to a service.
+ */
+export interface AuthenticationProvider {
+    /**
+     * An [event](#Event) which fires when the array of sessions has changed, or data
+     * within a session has changed.
+     */
+    readonly onDidChangeSessions: Event<AuthenticationProviderAuthenticationSessionsChangeEvent>;
+
+    /**
+     * Returns an array of current sessions.
+     */
+    // eslint-disable-next-line vscode-dts-provider-naming
+    getSessions(): Thenable<ReadonlyArray<AuthenticationSession>>;
+
+    /**
+     * Prompts a user to login.
+     */
+    // eslint-disable-next-line vscode-dts-provider-naming
+    login(scopes: string[]): Thenable<AuthenticationSession>;
+
+    /**
+     * Removes the session corresponding to session id.
+     * @param sessionId The session id to log out of
+     */
+    // eslint-disable-next-line vscode-dts-provider-naming
+    logout(sessionId: string): Thenable<void>;
+}
+
+/**
+ * Options for creating an [AuthenticationProvider](#AuthentcationProvider).
+ */
+export interface AuthenticationProviderOptions {
+    /**
+     * Whether it is possible to be signed into multiple accounts at once with this provider.
+     * If not specified, will default to false.
+     */
+    readonly supportsMultipleAccounts?: boolean;
+}
+
+export namespace authentication {
+    /**
+     * Register an authentication provider.
+     *
+     * There can only be one provider per id and an error is being thrown when an id
+     * has already been used by another provider. Ids are case-sensitive.
+     *
+     * @param id The unique identifier of the provider.
+     * @param label The human-readable name of the provider.
+     * @param provider The authentication provider provider.
+     * @params options Additional options for the provider.
+     * @return A [disposable](#Disposable) that unregisters this provider when being disposed.
+     */
+    export function registerAuthenticationProvider(
+        id: string,
+        label: string,
+        provider: AuthenticationProvider,
+        options?: AuthenticationProviderOptions
+    ): Disposable;
+
+    /**
+     * @deprecated - getSession should now trigger extension activation.
+     * Fires with the provider id that was registered or unregistered.
+     */
+    export const onDidChangeAuthenticationProviders: Event<AuthenticationProvidersChangeEvent>;
+
+    /**
+     * An array of the information of authentication providers that are currently registered.
+     */
+    export const providers: ReadonlyArray<AuthenticationProviderInformation>;
+
+    /**
+     * Logout of a specific session.
+     * @param providerId The id of the provider to use
+     * @param sessionId The session id to remove
+     * provider
+     */
+    export function logout(providerId: string, sessionId: string): Thenable<void>;
+}
+
+//#endregion
+//#region debug
+
+/**
+ * A DebugProtocolVariableContainer is an opaque stand-in type for the intersection of the Scope and Variable types defined in the Debug Adapter Protocol.
+ * See https://microsoft.github.io/debug-adapter-protocol/specification#Types_Scope and https://microsoft.github.io/debug-adapter-protocol/specification#Types_Variable.
+ */
+export interface DebugProtocolVariableContainer {
+    // Properties: the intersection of DAP's Scope and Variable types.
+}
+
+/**
+ * A DebugProtocolVariable is an opaque stand-in type for the Variable type defined in the Debug Adapter Protocol.
+ * See https://microsoft.github.io/debug-adapter-protocol/specification#Types_Variable.
+ */
+export interface DebugProtocolVariable {
+    // Properties: see details [here](https://microsoft.github.io/debug-adapter-protocol/specification#Base_Protocol_Variable).
+}
+//#endregion
+//#region https://github.com/microsoft/vscode/issues/106744, Notebooks (misc)
 
 export enum CellKind {
     Markdown = 1,
     Code = 2
-}
-
-export enum CellOutputKind {
-    Text = 1,
-    Error = 2,
-    Rich = 3
-}
-
-export interface CellStreamOutput {
-    outputKind: CellOutputKind.Text;
-    text: string;
-}
-
-export interface CellErrorOutput {
-    outputKind: CellOutputKind.Error;
-    /**
-     * Exception Name
-     */
-    ename: string;
-    /**
-     * Exception Value
-     */
-    evalue: string;
-    /**
-     * Exception call stack
-     */
-    traceback: string[];
-}
-
-export interface NotebookCellOutputMetadata {
-    /**
-     * Additional attributes of a cell metadata.
-     */
-    custom?: { [key: string]: any };
-}
-
-export interface CellDisplayOutput {
-    outputKind: CellOutputKind.Rich;
-    /**
-     * { mime_type: value }
-     *
-     * Example:
-     * ```json
-     * {
-     *   "outputKind": vscode.CellOutputKind.Rich,
-     *   "data": {
-     *      "text/html": [
-     *          "<h1>Hello</h1>"
-     *       ],
-     *      "text/plain": [
-     *        "<IPython.lib.display.IFrame at 0x11dee3e80>"
-     *      ]
-     *   }
-     * }
-     */
-    data: { [key: string]: any };
-
-    readonly metadata?: NotebookCellOutputMetadata;
-}
-
-export type CellOutput = CellStreamOutput | CellErrorOutput | CellDisplayOutput;
-
-export class NotebookCellOutputItem {
-    readonly mime: string;
-    readonly value: unknown;
-    readonly metadata?: Record<string, string | number | boolean>;
-
-    constructor(mime: string, value: unknown, metadata?: Record<string, string | number | boolean>);
-}
-
-//TODO@jrieken add id?
-export class NotebookCellOutput {
-    readonly outputs: NotebookCellOutputItem[];
-    readonly metadata?: Record<string, string | number | boolean>;
-
-    constructor(outputs: NotebookCellOutputItem[], metadata?: Record<string, string | number | boolean>);
-
-    //TODO@jrieken HACK to workaround dependency issues...
-    toJSON(): any;
 }
 
 export enum NotebookCellRunState {
@@ -183,6 +274,7 @@ export interface NotebookCellMetadata {
     custom?: { [key: string]: any };
 }
 
+// todo@API support ids https://github.com/jupyter/enhancement-proposals/blob/master/62-cell-id/cell-id.md
 export interface NotebookCell {
     readonly index: number;
     readonly notebook: NotebookDocument;
@@ -190,8 +282,13 @@ export interface NotebookCell {
     readonly cellKind: CellKind;
     readonly document: TextDocument;
     readonly language: string;
-    outputs: CellOutput[];
-    metadata: NotebookCellMetadata;
+    readonly outputs: readonly NotebookCellOutput[];
+    readonly metadata: NotebookCellMetadata;
+    /** @deprecated use WorkspaceEdit.replaceCellOutput */
+    // outputs: CellOutput[];
+    // readonly outputs2: NotebookCellOutput[];
+    /** @deprecated use WorkspaceEdit.replaceCellMetadata */
+    // metadata: NotebookCellMetadata;
 }
 
 export interface NotebookDocumentMetadata {
@@ -236,6 +333,17 @@ export interface NotebookDocumentMetadata {
      * The document's current run state
      */
     runState?: NotebookRunState;
+
+    /**
+     * Whether the document is trusted, default to true
+     * When false, insecure outputs like HTML, JavaScript, SVG will not be rendered.
+     */
+    trusted?: boolean;
+
+    /**
+     * Languages the document supports
+     */
+    languages?: string[];
 }
 
 export interface NotebookDocumentContentOptions {
@@ -261,59 +369,15 @@ export interface NotebookDocument {
     readonly isUntitled: boolean;
     readonly cells: ReadonlyArray<NotebookCell>;
     readonly contentOptions: NotebookDocumentContentOptions;
+    // todo@API
+    // make readonly
+    // languages comes from the kernel
     languages: string[];
-    metadata: NotebookDocumentMetadata;
+    readonly metadata: NotebookDocumentMetadata;
 }
 
-export interface NotebookConcatTextDocument {
-    uri: Uri;
-    isClosed: boolean;
-    dispose(): void;
-    onDidChange: Event<void>;
-    version: number;
-    getText(): string;
-    getText(range: Range): string;
-
-    offsetAt(position: Position): number;
-    positionAt(offset: number): Position;
-    validateRange(range: Range): Range;
-    validatePosition(position: Position): Position;
-
-    locationAt(positionOrRange: Position | Range): Location;
-    positionAt(location: Location): Position;
-    contains(uri: Uri): boolean;
-}
-
-export interface WorkspaceEdit {
-    replaceNotebookMetadata(uri: Uri, value: NotebookDocumentMetadata): void;
-    replaceNotebookCells(
-        uri: Uri,
-        start: number,
-        end: number,
-        cells: NotebookCellData[],
-        metadata?: WorkspaceEditEntryMetadata
-    ): void;
-    replaceNotebookCellOutput(
-        uri: Uri,
-        index: number,
-        outputs: (NotebookCellOutput | CellOutput)[],
-        metadata?: WorkspaceEditEntryMetadata
-    ): void;
-    replaceNotebookCellMetadata(
-        uri: Uri,
-        index: number,
-        cellMetadata: NotebookCellMetadata,
-        metadata?: WorkspaceEditEntryMetadata
-    ): void;
-}
-
-export interface NotebookEditorEdit {
-    replaceMetadata(value: NotebookDocumentMetadata): void;
-    replaceCells(start: number, end: number, cells: NotebookCellData[]): void;
-    replaceCellOutput(index: number, outputs: (NotebookCellOutput | CellOutput)[]): void;
-    replaceCellMetadata(index: number, metadata: NotebookCellMetadata): void;
-}
-
+// todo@API maybe have a NotebookCellPosition sibling
+// todo@API should be a class
 export interface NotebookCellRange {
     readonly start: number;
     /**
@@ -331,11 +395,17 @@ export enum NotebookEditorRevealType {
      * The range will always be revealed in the center of the viewport.
      */
     InCenter = 1,
+
     /**
      * If the range is outside the viewport, it will be revealed in the center of the viewport.
      * Otherwise, it will be revealed with as little scrolling as possible.
      */
-    InCenterIfOutsideViewport = 2
+    InCenterIfOutsideViewport = 2,
+
+    /**
+     * The range will always be revealed at the top of the viewport.
+     */
+    AtTop = 3
 }
 
 export interface NotebookEditor {
@@ -347,71 +417,36 @@ export interface NotebookEditor {
     /**
      * The primary selected cell on this notebook editor.
      */
+    // todo@API should not be undefined, rather a default
     readonly selection?: NotebookCell;
+
+    // @rebornix
+    // todo@API should replace selection
+    // never empty!
+    // primary/secondary selections
+    // readonly selections: NotebookCellRange[];
 
     /**
      * The current visible ranges in the editor (vertically).
      */
     readonly visibleRanges: NotebookCellRange[];
 
+    revealRange(range: NotebookCellRange, revealType?: NotebookEditorRevealType): void;
+
     /**
      * The column in which this editor shows.
      */
+    // @jrieken
+    // todo@API maybe never undefined because notebooks always show in the editor area (unlike text editors)
+    // maybe for notebook diff editor
     readonly viewColumn?: ViewColumn;
 
     /**
      * Fired when the panel is disposed.
      */
+    // @rebornix REMOVE/REplace NotebookCommunication
+    // todo@API fishy? notebooks are public objects, there should be a "global" events for this
     readonly onDidDispose: Event<void>;
-
-    /**
-     * Active kernel used in the editor
-     */
-    readonly kernel?: NotebookKernel;
-
-    /**
-     * Fired when the output hosting webview posts a message.
-     */
-    readonly onDidReceiveMessage: Event<any>;
-    /**
-     * Post a message to the output hosting webview.
-     *
-     * Messages are only delivered if the editor is live.
-     *
-     * @param message Body of the message. This must be a string or other json serializable object.
-     */
-    postMessage(message: any): Thenable<boolean>;
-
-    /**
-     * Convert a uri for the local file system to one that can be used inside outputs webview.
-     */
-    asWebviewUri(localResource: Uri): Uri;
-
-    /**
-     * Perform an edit on the notebook associated with this notebook editor.
-     *
-     * The given callback-function is invoked with an [edit-builder](#NotebookEditorEdit) which must
-     * be used to make edits. Note that the edit-builder is only valid while the
-     * callback executes.
-     *
-     * @param callback A function which can create edits using an [edit-builder](#NotebookEditorEdit).
-     * @return A promise that resolves with a value indicating if the edits could be applied.
-     */
-    edit(callback: (editBuilder: NotebookEditorEdit) => void): Thenable<boolean>;
-
-    setDecorations(decorationType: NotebookEditorDecorationType, range: NotebookCellRange): void;
-
-    revealRange(range: NotebookCellRange, revealType?: NotebookEditorRevealType): void;
-}
-
-export interface NotebookOutputSelector {
-    mimeTypes?: string[];
-}
-
-export interface NotebookRenderRequest {
-    output: CellDisplayOutput;
-    mimeType: string;
-    outputId: string;
 }
 
 export interface NotebookDocumentMetadataChangeEvent {
@@ -431,15 +466,6 @@ export interface NotebookCellsChangeEvent {
      */
     readonly document: NotebookDocument;
     readonly changes: ReadonlyArray<NotebookCellsChangeData>;
-}
-
-export interface NotebookCellMoveEvent {
-    /**
-     * The affected document.
-     */
-    readonly document: NotebookDocument;
-    readonly index: number;
-    readonly newIndex: number;
 }
 
 export interface NotebookCellOutputsChangeEvent {
@@ -466,6 +492,8 @@ export interface NotebookCellMetadataChangeEvent {
 
 export interface NotebookEditorSelectionChangeEvent {
     readonly notebookEditor: NotebookEditor;
+    // @rebornix
+    // todo@API show NotebookCellRange[] instead
     readonly selection?: NotebookCell;
 }
 
@@ -474,11 +502,13 @@ export interface NotebookEditorVisibleRangesChangeEvent {
     readonly visibleRanges: ReadonlyArray<NotebookCellRange>;
 }
 
+// todo@API support ids https://github.com/jupyter/enhancement-proposals/blob/master/62-cell-id/cell-id.md
 export interface NotebookCellData {
     readonly cellKind: CellKind;
     readonly source: string;
     readonly language: string;
-    readonly outputs: CellOutput[];
+    // todo@API maybe use a separate data type?
+    readonly outputs: NotebookCellOutput[];
     readonly metadata: NotebookCellMetadata | undefined;
 }
 
@@ -486,70 +516,6 @@ export interface NotebookData {
     readonly cells: NotebookCellData[];
     readonly languages: string[];
     readonly metadata: NotebookDocumentMetadata;
-}
-
-interface NotebookDocumentContentChangeEvent {
-    /**
-     * The document that the edit is for.
-     */
-    readonly document: NotebookDocument;
-}
-
-interface NotebookDocumentEditEvent {
-    /**
-     * The document that the edit is for.
-     */
-    readonly document: NotebookDocument;
-
-    /**
-     * Undo the edit operation.
-     *
-     * This is invoked by VS Code when the user undoes this edit. To implement `undo`, your
-     * extension should restore the document and editor to the state they were in just before this
-     * edit was added to VS Code's internal edit stack by `onDidChangeCustomDocument`.
-     */
-    undo(): Thenable<void> | void;
-
-    /**
-     * Redo the edit operation.
-     *
-     * This is invoked by VS Code when the user redoes this edit. To implement `redo`, your
-     * extension should restore the document and editor to the state they were in just after this
-     * edit was added to VS Code's internal edit stack by `onDidChangeCustomDocument`.
-     */
-    redo(): Thenable<void> | void;
-
-    /**
-     * Display name describing the edit.
-     *
-     * This will be shown to users in the UI for undo/redo operations.
-     */
-    readonly label?: string;
-}
-
-interface NotebookDocumentBackup {
-    /**
-     * Unique identifier for the backup.
-     *
-     * This id is passed back to your extension in `openNotebook` when opening a notebook editor from a backup.
-     */
-    readonly id: string;
-
-    /**
-     * Delete the current backup.
-     *
-     * This is called by VS Code when it is clear the current backup is no longer needed, such as when a new backup
-     * is made or when the file is saved.
-     */
-    delete(): void;
-}
-
-interface NotebookDocumentBackupContext {
-    readonly destination: Uri;
-}
-
-interface NotebookDocumentOpenContext {
-    readonly backupId?: string;
 }
 
 /**
@@ -582,27 +548,233 @@ export interface NotebookCommunication {
      * Convert a uri for the local file system to one that can be used inside outputs webview.
      */
     asWebviewUri(localResource: Uri): Uri;
+
+    // @rebornix
+    // readonly onDidDispose: Event<void>;
+}
+
+// export function registerNotebookKernel(selector: string, kernel: NotebookKernel): Disposable;
+
+export interface NotebookDocumentShowOptions {
+    viewColumn?: ViewColumn;
+    preserveFocus?: boolean;
+    preview?: boolean;
+    selection?: NotebookCellRange;
+}
+
+export namespace notebook {
+    export function openNotebookDocument(uri: Uri, viewType?: string): Thenable<NotebookDocument>;
+    export const onDidOpenNotebookDocument: Event<NotebookDocument>;
+    export const onDidCloseNotebookDocument: Event<NotebookDocument>;
+
+    // todo@API really needed?
+    export const onDidSaveNotebookDocument: Event<NotebookDocument>;
+
+    /**
+     * All currently known notebook documents.
+     */
+    export const notebookDocuments: ReadonlyArray<NotebookDocument>;
+    export const onDidChangeNotebookDocumentMetadata: Event<NotebookDocumentMetadataChangeEvent>;
+    export const onDidChangeNotebookCells: Event<NotebookCellsChangeEvent>;
+    export const onDidChangeCellOutputs: Event<NotebookCellOutputsChangeEvent>;
+    export const onDidChangeCellLanguage: Event<NotebookCellLanguageChangeEvent>;
+    export const onDidChangeCellMetadata: Event<NotebookCellMetadataChangeEvent>;
+}
+
+export namespace window {
+    export const visibleNotebookEditors: NotebookEditor[];
+    export const onDidChangeVisibleNotebookEditors: Event<NotebookEditor[]>;
+    export const activeNotebookEditor: NotebookEditor | undefined;
+    export const onDidChangeActiveNotebookEditor: Event<NotebookEditor | undefined>;
+    export const onDidChangeNotebookEditorSelection: Event<NotebookEditorSelectionChangeEvent>;
+    export const onDidChangeNotebookEditorVisibleRanges: Event<NotebookEditorVisibleRangesChangeEvent>;
+    export function showNotebookDocument(
+        document: NotebookDocument,
+        options?: NotebookDocumentShowOptions
+    ): Thenable<NotebookEditor>;
+}
+
+//#endregion
+
+//#region https://github.com/microsoft/vscode/issues/106744, NotebookCellOutput
+
+// code specific mime types
+// application/x.notebook.error-traceback
+// application/x.notebook.stream
+export class NotebookCellOutputItem {
+    // todo@API
+    // add factory functions for common mime types
+    // static textplain(value:string): NotebookCellOutputItem;
+    // static errortrace(value:any): NotebookCellOutputItem;
+
+    readonly mime: string;
+    readonly value: unknown;
+    readonly metadata?: Record<string, string | number | boolean>;
+
+    constructor(mime: string, value: unknown, metadata?: Record<string, string | number | boolean>);
+}
+
+// @jrieken
+//TODO@API add execution count to cell output?
+export class NotebookCellOutput {
+    readonly id: string;
+    readonly outputs: NotebookCellOutputItem[];
+    constructor(outputs: NotebookCellOutputItem[]);
+}
+
+//#endregion
+
+//#region https://github.com/microsoft/vscode/issues/106744, NotebookEditorEdit
+
+export interface WorkspaceEdit {
+    replaceNotebookMetadata(uri: Uri, value: NotebookDocumentMetadata): void;
+
+    // todo@API use NotebookCellRange
+    replaceNotebookCells(
+        uri: Uri,
+        start: number,
+        end: number,
+        cells: NotebookCellData[],
+        metadata?: WorkspaceEditEntryMetadata
+    ): void;
+    replaceNotebookCellMetadata(
+        uri: Uri,
+        index: number,
+        cellMetadata: NotebookCellMetadata,
+        metadata?: WorkspaceEditEntryMetadata
+    ): void;
+
+    replaceNotebookCellOutput(
+        uri: Uri,
+        index: number,
+        outputs: NotebookCellOutput[],
+        metadata?: WorkspaceEditEntryMetadata
+    ): void;
+    appendNotebookCellOutput(
+        uri: Uri,
+        index: number,
+        outputs: NotebookCellOutput[],
+        metadata?: WorkspaceEditEntryMetadata
+    ): void;
+
+    // TODO@api
+    // https://jupyter-protocol.readthedocs.io/en/latest/messaging.html#update-display-data
+    replaceNotebookCellOutputItems(
+        uri: Uri,
+        index: number,
+        outputId: string,
+        items: NotebookCellOutputItem[],
+        metadata?: WorkspaceEditEntryMetadata
+    ): void;
+    appendNotebookCellOutputItems(
+        uri: Uri,
+        index: number,
+        outputId: string,
+        items: NotebookCellOutputItem[],
+        metadata?: WorkspaceEditEntryMetadata
+    ): void;
+}
+
+export interface NotebookEditorEdit {
+    replaceMetadata(value: NotebookDocumentMetadata): void;
+    replaceCells(start: number, end: number, cells: NotebookCellData[]): void;
+    replaceCellOutput(index: number, outputs: NotebookCellOutput[]): void;
+    replaceCellMetadata(index: number, metadata: NotebookCellMetadata): void;
+}
+
+export interface NotebookEditor {
+    /**
+     * Perform an edit on the notebook associated with this notebook editor.
+     *
+     * The given callback-function is invoked with an [edit-builder](#NotebookEditorEdit) which must
+     * be used to make edits. Note that the edit-builder is only valid while the
+     * callback executes.
+     *
+     * @param callback A function which can create edits using an [edit-builder](#NotebookEditorEdit).
+     * @return A promise that resolves with a value indicating if the edits could be applied.
+     */
+    // @jrieken REMOVE maybe
+    edit(callback: (editBuilder: NotebookEditorEdit) => void): Thenable<boolean>;
+}
+
+//#endregion
+
+//#region https://github.com/microsoft/vscode/issues/106744, NotebookContentProvider
+
+interface NotebookDocumentBackup {
+    /**
+     * Unique identifier for the backup.
+     *
+     * This id is passed back to your extension in `openNotebook` when opening a notebook editor from a backup.
+     */
+    readonly id: string;
+
+    /**
+     * Delete the current backup.
+     *
+     * This is called by VS Code when it is clear the current backup is no longer needed, such as when a new backup
+     * is made or when the file is saved.
+     */
+    delete(): void;
+}
+
+interface NotebookDocumentBackupContext {
+    readonly destination: Uri;
+}
+
+interface NotebookDocumentOpenContext {
+    readonly backupId?: string;
 }
 
 export interface NotebookContentProvider {
     readonly options?: NotebookDocumentContentOptions;
     readonly onDidChangeNotebookContentOptions?: Event<NotebookDocumentContentOptions>;
-    readonly onDidChangeNotebook: Event<NotebookDocumentContentChangeEvent | NotebookDocumentEditEvent>;
-
     /**
      * Content providers should always use [file system providers](#FileSystemProvider) to
      * resolve the raw content for `uri` as the resouce is not necessarily a file on disk.
      */
-    openNotebook(uri: Uri, openContext: NotebookDocumentOpenContext): NotebookData | Promise<NotebookData>;
-    resolveNotebook(document: NotebookDocument, webview: NotebookCommunication): Promise<void>;
-    saveNotebook(document: NotebookDocument, cancellation: CancellationToken): Promise<void>;
-    saveNotebookAs(targetResource: Uri, document: NotebookDocument, cancellation: CancellationToken): Promise<void>;
+    // eslint-disable-next-line vscode-dts-provider-naming
+    openNotebook(uri: Uri, openContext: NotebookDocumentOpenContext): NotebookData | Thenable<NotebookData>;
+    // eslint-disable-next-line vscode-dts-provider-naming
+    // eslint-disable-next-line vscode-dts-cancellation
+    resolveNotebook(document: NotebookDocument, webview: NotebookCommunication): Thenable<void>;
+    // eslint-disable-next-line vscode-dts-provider-naming
+    saveNotebook(document: NotebookDocument, cancellation: CancellationToken): Thenable<void>;
+    // eslint-disable-next-line vscode-dts-provider-naming
+    saveNotebookAs(targetResource: Uri, document: NotebookDocument, cancellation: CancellationToken): Thenable<void>;
+    // eslint-disable-next-line vscode-dts-provider-naming
     backupNotebook(
         document: NotebookDocument,
         context: NotebookDocumentBackupContext,
         cancellation: CancellationToken
-    ): Promise<NotebookDocumentBackup>;
+    ): Thenable<NotebookDocumentBackup>;
+
+    // ???
+    // provideKernels(document: NotebookDocument, token: CancellationToken): ProviderResult<T[]>;
 }
+
+export namespace notebook {
+    // TODO@api use NotebookDocumentFilter instead of just notebookType:string?
+    // TODO@API options duplicates the more powerful variant on NotebookContentProvider
+    export function registerNotebookContentProvider(
+        notebookType: string,
+        provider: NotebookContentProvider,
+        options?: NotebookDocumentContentOptions & {
+            /**
+             * Not ready for production or development use yet.
+             */
+            viewOptions?: {
+                displayName: string;
+                filenamePattern: NotebookFilenamePattern[];
+                exclusive?: boolean;
+            };
+        }
+    ): Disposable;
+}
+
+//#endregion
+
+//#region https://github.com/microsoft/vscode/issues/106744, NotebookKernel
 
 export interface NotebookKernel {
     readonly id?: string;
@@ -611,6 +783,10 @@ export interface NotebookKernel {
     detail?: string;
     isPreferred?: boolean;
     preloads?: Uri[];
+    // @roblourens
+    // todo@API change to `executeCells(document: NotebookDocument, cells: NotebookCellRange[], context:{isWholeNotebooke: boolean}, token: CancelationToken): void;`
+    // todo@API interrupt vs cancellation, https://github.com/microsoft/vscode/issues/106741
+    // interrupt?():void;
     executeCell(document: NotebookDocument, cell: NotebookCell): void;
     cancelCellExecution(document: NotebookDocument, cell: NotebookCell): void;
     executeAllCells(document: NotebookDocument): void;
@@ -619,11 +795,14 @@ export interface NotebookKernel {
 
 export type NotebookFilenamePattern = GlobPattern | { include: GlobPattern; exclude: GlobPattern };
 
+// todo@API why not for NotebookContentProvider?
 export interface NotebookDocumentFilter {
     viewType?: string | string[];
     filenamePattern?: NotebookFilenamePattern;
 }
 
+// todo@API very unclear, provider MUST not return alive object but only data object
+// todo@API unclear how the flow goes
 export interface NotebookKernelProvider<T extends NotebookKernel = NotebookKernel> {
     onDidChangeKernels?: Event<NotebookDocument | undefined>;
     provideKernels(document: NotebookDocument, token: CancellationToken): ProviderResult<T[]>;
@@ -634,6 +813,44 @@ export interface NotebookKernelProvider<T extends NotebookKernel = NotebookKerne
         token: CancellationToken
     ): ProviderResult<void>;
 }
+
+export interface NotebookEditor {
+    /**
+     * Active kernel used in the editor
+     */
+    // todo@API unsure about that
+    // kernel, kernel selection, kernel provider
+    readonly kernel?: NotebookKernel;
+}
+
+export namespace notebook {
+    export const onDidChangeActiveNotebookKernel: Event<{
+        document: NotebookDocument;
+        kernel: NotebookKernel | undefined;
+    }>;
+
+    export function registerNotebookKernelProvider(
+        selector: NotebookDocumentFilter,
+        provider: NotebookKernelProvider
+    ): Disposable;
+}
+
+//#endregion
+
+//#region https://github.com/microsoft/vscode/issues/106744, NotebookEditorDecorationType
+
+export interface NotebookEditor {
+    setDecorations(decorationType: NotebookEditorDecorationType, range: NotebookCellRange): void;
+}
+
+export interface NotebookEditorDecorationType {
+    readonly key: string;
+    dispose(): void;
+}
+
+//#endregion
+
+//#region https://github.com/microsoft/vscode/issues/106744, NotebookCellStatusBarItem
 
 /**
  * Represents the alignment of status bar items.
@@ -663,70 +880,7 @@ export interface NotebookCellStatusBarItem {
     dispose(): void;
 }
 
-export interface NotebookEditorDecorationType {
-    readonly key: string;
-    dispose(): void;
-}
-
-export interface NotebookDocumentShowOptions {
-    viewColumn?: ViewColumn;
-    preserveFocus?: boolean;
-    preview?: boolean;
-    selection?: NotebookCellRange;
-}
-
 export namespace notebook {
-    export function registerNotebookContentProvider(
-        notebookType: string,
-        provider: NotebookContentProvider,
-        options?: NotebookDocumentContentOptions & {
-            /**
-             * Not ready for production or development use yet.
-             */
-            viewOptions?: {
-                displayName: string;
-                filenamePattern: NotebookFilenamePattern[];
-                exclusive?: boolean;
-            };
-        }
-    ): Disposable;
-
-    export function registerNotebookKernelProvider(
-        selector: NotebookDocumentFilter,
-        provider: NotebookKernelProvider
-    ): Disposable;
-
-    export function openNotebookDocument(uri: Uri, viewType?: string): Promise<NotebookDocument>;
-    export const onDidOpenNotebookDocument: Event<NotebookDocument>;
-    export const onDidCloseNotebookDocument: Event<NotebookDocument>;
-    export const onDidSaveNotebookDocument: Event<NotebookDocument>;
-
-    /**
-     * All currently known notebook documents.
-     */
-    export const notebookDocuments: ReadonlyArray<NotebookDocument>;
-    export const onDidChangeNotebookDocumentMetadata: Event<NotebookDocumentMetadataChangeEvent>;
-    export const onDidChangeNotebookCells: Event<NotebookCellsChangeEvent>;
-    export const onDidChangeCellOutputs: Event<NotebookCellOutputsChangeEvent>;
-    export const onDidChangeCellLanguage: Event<NotebookCellLanguageChangeEvent>;
-    export const onDidChangeCellMetadata: Event<NotebookCellMetadataChangeEvent>;
-    /**
-     * Create a document that is the concatenation of all  notebook cells. By default all code-cells are included
-     * but a selector can be provided to narrow to down the set of cells.
-     *
-     * @param notebook
-     * @param selector
-     */
-    export function createConcatTextDocument(
-        notebook: NotebookDocument,
-        selector?: DocumentSelector
-    ): NotebookConcatTextDocument;
-
-    export const onDidChangeActiveNotebookKernel: Event<{
-        document: NotebookDocument;
-        kernel: NotebookKernel | undefined;
-    }>;
-
     /**
      * Creates a notebook cell status bar [item](#NotebookCellStatusBarItem).
      * It will be disposed automatically when the notebook document is closed or the cell is deleted.
@@ -736,6 +890,8 @@ export namespace notebook {
      * @param priority The priority of the item. Higher values mean the item should be shown more to the left.
      * @return A new status bar item.
      */
+    // @roblourens
+    // todo@API this should be a provider, https://github.com/microsoft/vscode/issues/105809
     export function createCellStatusBarItem(
         cell: NotebookCell,
         alignment?: NotebookCellStatusBarAlignment,
@@ -743,34 +899,4 @@ export namespace notebook {
     ): NotebookCellStatusBarItem;
 }
 
-export namespace window {
-    export const visibleNotebookEditors: NotebookEditor[];
-    export const onDidChangeVisibleNotebookEditors: Event<NotebookEditor[]>;
-    export const activeNotebookEditor: NotebookEditor | undefined;
-    export const onDidChangeActiveNotebookEditor: Event<NotebookEditor | undefined>;
-    export const onDidChangeNotebookEditorSelection: Event<NotebookEditorSelectionChangeEvent>;
-    export const onDidChangeNotebookEditorVisibleRanges: Event<NotebookEditorVisibleRangesChangeEvent>;
-    export function showNotebookDocument(
-        document: NotebookDocument,
-        options?: NotebookDocumentShowOptions
-    ): Promise<NotebookEditor>;
-}
-
-//#region debug
-
-/**
- * A DebugProtocolVariableContainer is an opaque stand-in type for the intersection of the Scope and Variable types defined in the Debug Adapter Protocol.
- * See https://microsoft.github.io/debug-adapter-protocol/specification#Types_Scope and https://microsoft.github.io/debug-adapter-protocol/specification#Types_Variable.
- */
-export interface DebugProtocolVariableContainer {
-    // Properties: the intersection of DAP's Scope and Variable types.
-}
-
-/**
- * A DebugProtocolVariable is an opaque stand-in type for the Variable type defined in the Debug Adapter Protocol.
- * See https://microsoft.github.io/debug-adapter-protocol/specification#Types_Variable.
- */
-export interface DebugProtocolVariable {
-    // Properties: see details [here](https://microsoft.github.io/debug-adapter-protocol/specification#Base_Protocol_Variable).
-}
 //#endregion

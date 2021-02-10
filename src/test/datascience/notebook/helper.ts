@@ -10,7 +10,8 @@ import * as path from 'path';
 import * as sinon from 'sinon';
 import * as tmp from 'tmp';
 import { anything, instance, mock, when } from 'ts-mockito';
-import { commands, Memento, TextDocument, Uri, window } from 'vscode';
+import { WorkspaceEdit } from 'vscode';
+import { commands, Memento, TextDocument, Uri, window, workspace } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import {
     CellDisplayOutput,
@@ -78,8 +79,8 @@ export async function insertMarkdownCell(source: string, options?: { index?: num
         throw new Error('No active editor');
     }
     const startNumber = options?.index ?? activeEditor.document.cells.length;
-    await chainWithPendingUpdates(activeEditor, (edit) =>
-        edit.replaceCells(startNumber, 0, [
+    await chainWithPendingUpdates(activeEditor.document, (edit) =>
+        edit.replaceNotebookCells(activeEditor.document.uri, startNumber, 0, [
             {
                 cellKind: vscodeNotebookEnums.CellKind.Markdown,
                 language: MARKDOWN_LANGUAGE,
@@ -100,19 +101,19 @@ export async function insertCodeCell(source: string, options?: { language?: stri
         throw new Error('No active editor');
     }
     const startNumber = options?.index ?? activeEditor.document.cells.length;
-    await activeEditor.edit((edit) => {
-        edit.replaceCells(startNumber, 0, [
-            {
-                cellKind: vscodeNotebookEnums.CellKind.Code,
-                language: options?.language || PYTHON_LANGUAGE,
-                source,
-                metadata: {
-                    hasExecutionOrder: false
-                },
-                outputs: []
-            }
-        ]);
-    });
+    const edit = new WorkspaceEdit();
+    edit.replaceNotebookCells(activeEditor.document.uri, startNumber, 0, [
+        {
+            cellKind: vscodeNotebookEnums.CellKind.Code,
+            language: options?.language || PYTHON_LANGUAGE,
+            source,
+            metadata: {
+                hasExecutionOrder: false
+            },
+            outputs: []
+        }
+    ]);
+    await workspace.applyEdit(edit);
 
     return activeEditor.document.cells[startNumber]!;
 }
@@ -126,7 +127,9 @@ export async function deleteCell(index: number = 0) {
         assert.fail('No active editor');
         return;
     }
-    await chainWithPendingUpdates(activeEditor, (edit) => edit.replaceCells(index, 1, []));
+    await chainWithPendingUpdates(activeEditor.document, (edit) =>
+        edit.replaceNotebookCells(activeEditor.document.uri, index, 1, [])
+    );
 }
 export async function deleteAllCellsAndWait() {
     const { vscodeNotebook } = await getServices();
@@ -134,7 +137,9 @@ export async function deleteAllCellsAndWait() {
     if (!activeEditor || activeEditor.document.cells.length === 0) {
         return;
     }
-    await chainWithPendingUpdates(activeEditor, (edit) => edit.replaceCells(0, activeEditor.document.cells.length, []));
+    await chainWithPendingUpdates(activeEditor.document, (edit) =>
+        edit.replaceNotebookCells(activeEditor.document.uri, 0, activeEditor.document.cells.length, [])
+    );
 }
 
 export async function createTemporaryFile(options: {

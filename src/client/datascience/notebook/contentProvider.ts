@@ -4,7 +4,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { CancellationToken, EventEmitter, Uri } from 'vscode';
+import { CancellationToken, Uri } from 'vscode';
 import type {
     NotebookCommunication,
     NotebookContentProvider as VSCNotebookContentProvider,
@@ -12,7 +12,6 @@ import type {
     NotebookDocument,
     NotebookDocumentBackup,
     NotebookDocumentBackupContext,
-    NotebookDocumentContentChangeEvent,
     NotebookDocumentOpenContext
 } from '../../../../types/vscode-proposed';
 import { IVSCodeNotebook } from '../../common/application/types';
@@ -37,11 +36,7 @@ const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed'
  */
 @injectable()
 export class NotebookContentProvider implements VSCNotebookContentProvider {
-    public get onDidChangeNotebook() {
-        return this.notebookChanged.event;
-    }
     public webviews = new Map<string, NotebookCommunication[]>();
-    private notebookChanged = new EventEmitter<NotebookDocumentContentChangeEvent>();
     private readonly nativeNotebookModelsWaitingToGetReloaded = new WeakMap<INotebookModel, Deferred<void>>();
     constructor(
         @inject(INotebookStorageProvider) private readonly notebookStorage: INotebookStorageProvider,
