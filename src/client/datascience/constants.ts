@@ -429,6 +429,8 @@ export enum Telemetry {
     SyncSingleCell = 'DS_INTERNAL.SYNC_SINGLE_CELL',
     NativeRandomBytesGenerationFailed = 'DS_INTERNAL.NATIVE_RANDOM_BYTES_GENERATION_FAILED',
     InteractiveFileTooltipsPerf = 'DS_INTERNAL.INTERACTIVE_FILE_TOOLTIPS_PERF',
+    NativeVariableViewLoaded = 'DS_INTERNAL.NATIVE_VARIABLE_VIEW_LOADED',
+    NativeVariableViewMadeVisible = 'DS_INTERNAL.NATIVE_VARIABLE_VIEW_MADE_VISIBLE',
     NotebookStart = 'DATASCIENCE.NOTEBOOK_START',
     NotebookInterrupt = 'DATASCIENCE.NOTEBOOK_INTERRUPT',
     NotebookRestart = 'DATASCIENCE.NOTEBOOK_RESTART',

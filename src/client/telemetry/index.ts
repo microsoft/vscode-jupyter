@@ -1211,4 +1211,8 @@ export interface IEventNamePropertyMapping {
         // Result is null if user signalled cancellation or if we timed out
         isResultNull: boolean;
     };
+
+    // Native variable view events
+    [Telemetry.NativeVariableViewLoaded]: never | undefined;
+    [Telemetry.NativeVariableViewMadeVisible]: never | undefined;
 }
