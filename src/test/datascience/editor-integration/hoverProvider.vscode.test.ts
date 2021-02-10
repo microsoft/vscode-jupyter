@@ -47,7 +47,9 @@ suite('Hover provider', async () => {
         sandbox.stub(experimentService, 'inExperiment').resolves(true);
     });
     suiteTeardown(async () => {
-        sandbox.restore();
+        if (sandbox) {
+            sandbox.restore();
+        }
         if (dsSettings) {
             dsSettings.variableTooltipFields = oldSetting;
         }
