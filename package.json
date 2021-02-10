@@ -590,7 +590,10 @@
                 "command": "jupyter.notebookeditor.interruptkernel",
                 "title": "%jupyter.command.jupyter.interruptkernel.title%",
                 "category": "Notebook",
-                "icon": "$(primitive-square)",
+                "icon": {
+                    "light": "resources/light/interrupt.svg",
+                    "dark": "resources/dark/interrupt.svg"
+                },
                 "enablement": "notebookViewType == 'jupyter-notebook' && jupyter.isnotebooktrusted && jupyter.notebookeditor.canInterruptNotebookKernel"
             },
             {
@@ -785,55 +788,49 @@
                 {
                     "command": "jupyter.notebookeditor.runallcellsabove",
                     "title": "%DataScience.runAbove%",
-                    "group": "navigation@1",
+                    "group": "overflow@1",
                     "when": "notebookViewType == 'jupyter-notebook'"
                 },
                 {
                     "command": "jupyter.notebookeditor.runcellandallbelow",
                     "title": "%DataScience.runBelow%",
-                    "group": "navigation@2",
+                    "group": "overflow@2",
                     "when": "notebookViewType == 'jupyter-notebook'"
                 },
                 {
                     "command": "jupyter.notebookeditor.restartkernel",
                     "title": "%jupyter.command.jupyter.restartkernel.title%",
-                    "group": "navigation@3",
-                    "when": "notebookViewType == 'jupyter-notebook'"
+                    "group": "navigation@1",
+                    "when": "notebookViewType == 'jupyter-notebook' && jupyter.notebookeditor.canrestartNotebookkernel && !jupyter.notebookeditor.canInterruptNotebookKernel"
                 },
                 {
                     "command": "jupyter.notebookeditor.interruptkernel",
                     "title": "%jupyter.command.jupyter.interruptkernel.title%",
-                    "group": "navigation@4",
-                    "when": "notebookViewType == 'jupyter-notebook'"
+                    "group": "navigation@1",
+                    "when": "notebookViewType == 'jupyter-notebook' && jupyter.notebookeditor.canInterruptNotebookKernel"
                 },
                 {
                     "command": "jupyter.openVariableView",
                     "title": "%jupyter.command.jupyter.openVariableView.title%",
-                    "group": "navigation@5",
+                    "group": "navigation@2",
                     "when": "notebookViewType == 'jupyter-notebook'"
                 },
                 {
                     "command": "jupyter.notebookeditor.export",
                     "title": "%DataScience.notebookExportAs%",
-                    "group": "navigation@6",
+                    "group": "navigation@3",
                     "when": "notebookViewType == 'jupyter-notebook'"
                 },
                 {
                     "command": "jupyter.notebookeditor.trust",
                     "title": "%DataScience.trustNotebookCommandTitle%",
-                    "group": "navigation@999",
+                    "group": "overflow@999",
                     "when": "notebookViewType == 'jupyter-notebook' && !jupyter.isnotebooktrusted && jupyter.trustfeatureenabled"
-                },
-                {
-                    "command": "jupyter.notebookeditor.trusted",
-                    "title": "%DataScience.notebookIsTrusted%",
-                    "group": "navigation@999",
-                    "when": "notebookViewType == 'jupyter-notebook' && jupyter.isnotebooktrusted && jupyter.trustfeatureenabled"
                 },
                 {
                     "command": "jupyter.selectNativeJupyterUriFromToolBar",
                     "title": "%jupyter.command.jupyter.selectjupyteruri.title%",
-                    "group": "navigation@1000",
+                    "group": "overflow@1000",
                     "when": "notebookViewType == 'jupyter-notebook'"
                 }
             ],
