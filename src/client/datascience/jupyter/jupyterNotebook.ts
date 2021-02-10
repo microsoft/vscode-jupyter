@@ -51,6 +51,7 @@ import {
     isPythonKernelConnection
 } from './kernels/helpers';
 import { isResourceNativeNotebook } from '../notebook/helpers/helpers';
+import { sendKernelTelemetryEvent } from '../context/telemetry';
 
 class CellSubscriber {
     public get startTime(): number {
@@ -452,7 +453,7 @@ export class JupyterNotebookBase implements INotebook {
                 },
                 () => {
                     subscriber.complete();
-                    sendTelemetryEvent(Telemetry.ExecuteCell, stopWatch.elapsedTime);
+                    sendTelemetryEvent(Telemetry.ExecuteCellTime, stopWatch.elapsedTime);
                 }
             );
         });
@@ -555,41 +556,54 @@ export class JupyterNotebookBase implements INotebook {
                 traceWarning(`Error during interrupt: ${exc}`);
                 restarted.resolve([]);
             });
+            const stopWatch = new StopWatch();
+            const promise = (async () => {
+                try {
+                    // Wait for all of the pending cells to finish or the timeout to fire
+                    const result = await waitForPromise(Promise.race([finished, restarted.promise]), timeoutMs);
 
-            try {
-                // Wait for all of the pending cells to finish or the timeout to fire
-                const result = await waitForPromise(Promise.race([finished, restarted.promise]), timeoutMs);
+                    // See if we restarted or not
+                    if (restarted.completed) {
+                        return InterruptResult.Restarted;
+                    }
 
-                // See if we restarted or not
-                if (restarted.completed) {
-                    return InterruptResult.Restarted;
+                    if (result === null) {
+                        // We timed out. You might think we should stop our pending list, but that's not
+                        // up to us. The cells are still executing. The user has to request a restart or try again
+                        return InterruptResult.TimedOut;
+                    }
+
+                    // Cancel all other pending cells as we interrupted.
+                    this.finishUncompletedCells();
+
+                    // Fire event that we interrupted.
+                    this.kernelInterrupted.fire();
+
+                    // Indicate the interrupt worked.
+                    return InterruptResult.Success;
+                } catch (exc) {
+                    // Something failed. See if we restarted or not.
+                    if (this.sessionStartTime && interruptBeginTime < this.sessionStartTime) {
+                        return InterruptResult.Restarted;
+                    }
+
+                    // Otherwise a real error occurred.
+                    sendKernelTelemetryEvent(
+                        this.resource,
+                        Telemetry.NotebookInterrupt,
+                        stopWatch.elapsedTime,
+                        undefined,
+                        exc
+                    );
+                    throw exc;
+                } finally {
+                    restartHandlerToken.dispose();
                 }
-
-                if (result === null) {
-                    // We timed out. You might think we should stop our pending list, but that's not
-                    // up to us. The cells are still executing. The user has to request a restart or try again
-                    return InterruptResult.TimedOut;
-                }
-
-                // Cancel all other pending cells as we interrupted.
-                this.finishUncompletedCells();
-
-                // Fire event that we interrupted.
-                this.kernelInterrupted.fire();
-
-                // Indicate the interrupt worked.
-                return InterruptResult.Success;
-            } catch (exc) {
-                // Something failed. See if we restarted or not.
-                if (this.sessionStartTime && interruptBeginTime < this.sessionStartTime) {
-                    return InterruptResult.Restarted;
-                }
-
-                // Otherwise a real error occurred.
-                throw exc;
-            } finally {
-                restartHandlerToken.dispose();
-            }
+            })();
+            return promise.then((result) => {
+                sendKernelTelemetryEvent(this.resource, Telemetry.NotebookInterrupt, stopWatch.elapsedTime, { result });
+                return result;
+            });
         }
 
         throw this.getDisposedError();

@@ -4,6 +4,8 @@
 import { NotebookCell, NotebookCellRunState } from '../../../../../types/vscode-proposed';
 import { traceError, traceInfo } from '../../../common/logger';
 import { noop } from '../../../common/utils/misc';
+import { Telemetry } from '../../constants';
+import { sendKernelTelemetryEvent } from '../../context/telemetry';
 import { traceCellMessage } from '../../notebook/helpers/helpers';
 import { INotebook } from '../../types';
 import { CellExecution, CellExecutionFactory } from './cellExecution';
@@ -41,6 +43,7 @@ export class CellExecutionQueue {
      * Queue the cell for execution & start processing it immediately.
      */
     public queueCell(cell: NotebookCell) {
+        sendKernelTelemetryEvent(cell.document.uri, Telemetry.ExecuteCell);
         const existingCellExecution = this.queueOfCellsToExecute.find((item) => item.cell === cell);
         if (existingCellExecution) {
             traceCellMessage(cell, 'Use existing cell execution');

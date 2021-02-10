@@ -17,7 +17,6 @@ import { IFileSystem } from '../../common/platform/types';
 import { IProcessServiceFactory } from '../../common/process/types';
 import { Resource } from '../../common/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
-import { captureTelemetry } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { KernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../jupyter/kernels/types';
 import { IKernelDependencyService, KernelInterpreterDependencyResponse } from '../types';
@@ -28,6 +27,7 @@ import { IKernelConnection, IKernelLauncher, IKernelProcess, IpyKernelNotInstall
 import * as localize from '../../common/utils/localize';
 import { createDeferredFromPromise, Deferred } from '../../common/utils/async';
 import { CancellationError } from '../../common/cancellation';
+import { sendKernelTelemetryWhenDone } from '../context/telemetry';
 
 const PortFormatString = `kernelLauncherPortStart_{0}.tmp`;
 
@@ -91,7 +91,6 @@ export class KernelLauncher implements IKernelLauncher {
         }
     }
 
-    @captureTelemetry(Telemetry.KernelLauncherPerf)
     public async launch(
         kernelConnectionMetadata: KernelSpecConnectionMetadata | PythonKernelConnectionMetadata,
         timeout: number,
@@ -100,13 +99,21 @@ export class KernelLauncher implements IKernelLauncher {
         cancelToken?: CancellationToken,
         disableUI?: boolean
     ): Promise<IKernelProcess> {
-        // If this is a python interpreter, make sure it has ipykernel
-        if (kernelConnectionMetadata.interpreter) {
-            await this.installDependenciesIntoInterpreter(kernelConnectionMetadata.interpreter, cancelToken, disableUI);
-        }
+        const promise = (async () => {
+            // If this is a python interpreter, make sure it has ipykernel
+            if (kernelConnectionMetadata.interpreter) {
+                await this.installDependenciesIntoInterpreter(
+                    kernelConnectionMetadata.interpreter,
+                    cancelToken,
+                    disableUI
+                );
+            }
 
-        // Should be available now, wait with a timeout
-        return await this.launchProcess(kernelConnectionMetadata, resource, workingDirectory, timeout, cancelToken);
+            // Should be available now, wait with a timeout
+            return await this.launchProcess(kernelConnectionMetadata, resource, workingDirectory, timeout, cancelToken);
+        })();
+        sendKernelTelemetryWhenDone(resource, Telemetry.KernelLauncherPerf, promise);
+        return promise;
     }
 
     private async launchProcess(

@@ -29,7 +29,13 @@ import { IJupyterKernelSpec } from '../types';
 import { KernelDaemonPool } from './kernelDaemonPool';
 import { KernelEnvironmentVariablesService } from './kernelEnvVarsService';
 import { PythonKernelLauncherDaemon } from './kernelLauncherDaemon';
-import { IKernelConnection, IKernelProcess, IPythonKernelDaemon, PythonKernelDiedError } from './types';
+import {
+    IKernelConnection,
+    IKernelProcess,
+    IPythonKernelDaemon,
+    KernelDiedError,
+    PythonKernelDiedError
+} from './types';
 
 // Launches and disposes a kernel process given a kernelspec and a resource or python interpreter.
 // Exposes connection information and the process itself.
@@ -183,7 +189,10 @@ export class KernelProcess implements IKernelProcess {
                 const errorMessage =
                     getErrorMessageFromPythonTraceback(stderrProc || stderr) ||
                     (stderrProc || stderr).substring(0, 100);
-                throw new Error(localize.DataScience.kernelDied().format(Commands.ViewJupyterOutput, errorMessage));
+                throw new KernelDiedError(
+                    localize.DataScience.kernelDied().format(Commands.ViewJupyterOutput, errorMessage),
+                    e
+                );
             } else {
                 traceError('Timed out waiting to get a heartbeat from kernel process.');
                 throw new TimedOutError(localize.DataScience.kernelTimeout().format(Commands.ViewJupyterOutput));

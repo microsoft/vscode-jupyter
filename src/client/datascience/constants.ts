@@ -325,7 +325,7 @@ export enum Telemetry {
     HiddenCellTime = 'DS_INTERNAL.HIDDEN_EXECUTION_TIME',
     RestartJupyterTime = 'DS_INTERNAL.RESTART_JUPYTER_TIME',
     InterruptJupyterTime = 'DS_INTERNAL.INTERRUPT_JUPYTER_TIME',
-    ExecuteCell = 'DATASCIENCE.EXECUTE_CELL_TIME',
+    ExecuteCellTime = 'DATASCIENCE.EXECUTE_CELL_TIME',
     ExecuteCellPerceivedCold = 'DS_INTERNAL.EXECUTE_CELL_PERCEIVED_COLD',
     ExecuteCellPerceivedWarm = 'DS_INTERNAL.EXECUTE_CELL_PERCEIVED_WARM',
     PerceivedJupyterStartupNotebook = 'DS_INTERNAL.PERCEIVED_JUPYTER_STARTUP_NOTEBOOK',
@@ -410,6 +410,7 @@ export enum Telemetry {
     RawKernelSessionConnect = 'DS_INTERNAL.RAWKERNEL_SESSION_CONNECT',
     RawKernelStartRawSession = 'DS_INTERNAL.RAWKERNEL_START_RAW_SESSION',
     RawKernelSessionStartSuccess = 'DS_INTERNAL.RAWKERNEL_SESSION_START_SUCCESS',
+    RawKernelSessionStart = 'DS_INTERNAL.RAWKERNEL_SESSION_START',
     RawKernelSessionStartUserCancel = 'DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL',
     RawKernelSessionStartTimeout = 'DS_INTERNAL.RAWKERNEL_SESSION_START_TIMEOUT',
     RawKernelSessionStartException = 'DS_INTERNAL.RAWKERNEL_SESSION_START_EXCEPTION',
@@ -428,7 +429,13 @@ export enum Telemetry {
     SyncSingleCell = 'DS_INTERNAL.SYNC_SINGLE_CELL',
     NativeRandomBytesGenerationFailed = 'DS_INTERNAL.NATIVE_RANDOM_BYTES_GENERATION_FAILED',
     NativeVariableViewLoaded = 'DS_INTERNAL.NATIVE_VARIABLE_VIEW_LOADED',
-    NativeVariableViewMadeVisible = 'DS_INTERNAL.NATIVE_VARIABLE_VIEW_MADE_VISIBLE'
+    NativeVariableViewMadeVisible = 'DS_INTERNAL.NATIVE_VARIABLE_VIEW_MADE_VISIBLE',
+    NotebookStart = 'DATASCIENCE.NOTEBOOK_START',
+    NotebookInterrupt = 'DATASCIENCE.NOTEBOOK_INTERRUPT',
+    NotebookRestart = 'DATASCIENCE.NOTEBOOK_RESTART',
+    SwitchKernel = 'DS_INTERNAL.SWITCH_KERNEL',
+    KernelCount = 'DS_INTERNAL.KERNEL_COUNT',
+    ExecuteCell = 'DATASCIENCE.EXECUTE_CELL'
 }
 
 export enum NativeKeyboardCommandTelemetry {
