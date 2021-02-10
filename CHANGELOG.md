@@ -23,6 +23,8 @@
    ([#4486](https://github.com/Microsoft/vscode-jupyter/issues/4486))
 1. Users on AML Compute will automatically get the new Native Notebook experience.
    ([#4550](https://github.com/Microsoft/vscode-jupyter/issues/4550))
+1. Improved Tensor tooltips in Python files which have been run in the interactive window.
+   ([#302](https://github.com/Microsoft/vscode-jupyter/issues/302))
 
 ### Fixes
 
@@ -87,6 +89,8 @@
    ([#4632](https://github.com/Microsoft/vscode-jupyter/issues/4632))
 1. Allow installing python extension in codespaces.
    ([#4664](https://github.com/Microsoft/vscode-jupyter/issues/4664))
+1. Add notebook codicon for Juypter viewContainer.
+   ([#4538](https://github.com/Microsoft/vscode-jupyter/issues/4538))
 
 ### Code Health
 
