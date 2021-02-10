@@ -153,6 +153,7 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
             };
             // Add shared properties to telemetry props (we may overwrite existing ones).
             Object.assign(customProperties, sharedProperties);
+            Object.assign(customProperties, properties || {});
             reporter.sendTelemetryEvent(eventNameSent, customProperties, measures);
         }
     } else {
@@ -360,7 +361,7 @@ export interface ISharedPropertyMapping {
      * Hence sending telemetry indicating failure in starting a kernel could be misleading.
      * This tells us that user started the action.
      */
-    userExecutedCell: 'true'
+    userExecutedCell: 'true';
     /**
      * For every DS telemetry we would like to know the type of Notebook Editor used when doing something.
      */
