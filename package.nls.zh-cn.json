@@ -90,7 +90,6 @@
     "jupyter.command.jupyter.redocells.title": "重做最后一个互动性动作",
     "jupyter.command.jupyter.removeallcells.title": "删除所有交互式单元",
     "jupyter.command.jupyter.notebookeditor.removeallcells.title": "删除所有笔记本编辑器单元",
-    "jupyter.command.jupyter.notebookeditor.runselectedcell.title": "运行选定的笔记本单元",
     "jupyter.command.jupyter.notebookeditor.addcellbelow.title": "添加空单元到笔记本文件",
     "jupyter.command.jupyter.interruptkernel.title": "中止 Jupyter 内核",
     "jupyter.command.jupyter.restartkernel.title": "重新启动 Jupyter 内核",

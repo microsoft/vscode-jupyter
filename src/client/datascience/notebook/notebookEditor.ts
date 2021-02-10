@@ -265,7 +265,7 @@ export class NotebookEditor implements INotebookEditor {
         this._closed.fire(this);
     }
 
-    public runAbove(uri: Uri): void {
+    public runAbove(uri: Uri | undefined): void {
         const cellId = this.getSelectedCellId(uri);
         const index = this.document.cells.findIndex((c) => c.uri.toString() === cellId);
 
@@ -275,7 +275,7 @@ export class NotebookEditor implements INotebookEditor {
             this.runCellRange(cells);
         }
     }
-    public runCellAndBelow(uri: Uri): void {
+    public runCellAndBelow(uri: Uri | undefined): void {
         const cellId = this.getSelectedCellId(uri);
         const index = this.document.cells.findIndex((c) => c.uri.toString() === cellId);
 
@@ -286,8 +286,9 @@ export class NotebookEditor implements INotebookEditor {
         }
     }
 
-    private getSelectedCellId(uri: Uri): string | undefined {
-        const editor = this.vscodeNotebook.notebookEditors.find((nb) => nb.document.uri.toString() === uri.toString());
+    private getSelectedCellId(uri: Uri | undefined): string | undefined {
+        const uriStr = uri ? uri.toString() : this.document.uri.toString();
+        const editor = this.vscodeNotebook.notebookEditors.find((nb) => nb.document.uri.toString() === uriStr);
 
         if (editor && editor.selection) {
             return editor.selection.uri.toString();

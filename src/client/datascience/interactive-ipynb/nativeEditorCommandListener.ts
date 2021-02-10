@@ -50,9 +50,6 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
             commandManager.registerCommand(Commands.NotebookEditorRunAllCells, () => this.runAllCells())
         );
         this.disposableRegistry.push(
-            commandManager.registerCommand(Commands.NotebookEditorRunSelectedCell, () => this.runSelectedCell())
-        );
-        this.disposableRegistry.push(
             commandManager.registerCommand(Commands.NotebookEditorAddCellBelow, () => this.addCellBelow())
         );
         this.disposableRegistry.push(
@@ -69,13 +66,6 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
         const activeEditor = this.provider.activeEditor;
         if (activeEditor) {
             activeEditor.runAllCells();
-        }
-    }
-
-    private runSelectedCell() {
-        const activeEditor = this.provider.activeEditor;
-        if (activeEditor) {
-            activeEditor.runSelectedCell();
         }
     }
 
