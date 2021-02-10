@@ -261,7 +261,7 @@ function updatePythonPackages(currentData: ResourceSpecificTelemetryProperties) 
     }
 }
 /**
- * Gets a hashed list of some python packages along with their versions.
+ * Gets a JSON with hashed keys of some python packages along with their versions.
  */
 function getPythonEnvironmentPackages(options: { interpreter: PythonEnvironment } | { interpreterHash: string }) {
     let interpreter: PythonEnvironment | undefined;
@@ -271,20 +271,13 @@ function getPythonEnvironmentPackages(options: { interpreter: PythonEnvironment 
         interpreter = pythonEnvironmentsByHash.get(options.interpreterHash);
     }
     if (!interpreter) {
-        return '';
+        return '{}';
     }
     const packages = InterpreterPackages.getPackageVersions(interpreter);
     if (!packages || packages.size === 0) {
-        return '';
+        return '{}';
     }
-    // Comma delimited list of interested package (hashed) names & their versions.
-    // This is used to determine if user has a faulty package (faulty ipykernel, nbformat, traitlets), etc.
-    const items = Array.from(packages.entries())
-        .map((item) => `${item[0]}=${item[1]}`)
-        .join(',');
-
-    // Prefix with a comma, so that its easy to split this in ADE.
-    return `,${items}`;
+    return JSON.stringify(Object.fromEntries(packages));
 }
 export function deleteTrackedInformation(resource: Uri) {
     trackedInfo.delete(getUriKey(resource));

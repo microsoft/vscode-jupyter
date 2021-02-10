@@ -16,7 +16,6 @@ const interestedPackages = new Set(
     [
         'ipykernel',
         'ipython-genutils',
-        'jedi',
         'jupyter',
         'jupyter-client',
         'jupyter-core',
@@ -88,6 +87,12 @@ export class InterpreterPackages {
         // Ignore errors, and merge the two (in case some versions of python write to stderr).
         const output = await service.execModule('pip', ['list'], { throwOnStdErr: false, mergeStdOutErr: true });
         const packageAndVersions = new Map<string, string>();
+        // Add defaults.
+        interestedPackages.forEach((item) => {
+            if (!packageAndVersions.has(item)) {
+                packageAndVersions.set(item, 'NOT INSTALLED');
+            }
+        });
         InterpreterPackages.interpreterInformation.set(interpreter.path, packageAndVersions);
         output.stdout
             .split('\n')
