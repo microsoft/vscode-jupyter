@@ -28,6 +28,7 @@ import { InterpreterCountTracker } from './interpreterCountTracker';
 import { FetchError } from 'node-fetch';
 import { getTelemetrySafeHashedString, getTelemetrySafeLanguage } from '../../telemetry/helpers';
 import { InterpreterPackages } from './interpreterPackages';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 
 type ContextualTelemetryProps = {
     kernelConnection: KernelConnectionMetadata;
@@ -52,6 +53,7 @@ type Context = {
 };
 const trackedInfo = new Map<string, [ResourceSpecificTelemetryProperties, Context]>();
 const currentOSType = getOSType();
+const pythonEnvironmentsByHash = new Map<string, PythonEnvironment>();
 
 export function getErrorClassification(error: Error) {
     if (error.message.indexOf('reason: self signed certificate') >= 0) {
@@ -226,6 +228,7 @@ export function trackKernelResourceInformation(resource: Resource, information: 
             );
             currentData.pythonEnvironmentType = interpreter.envType;
             currentData.pythonEnvironmentPath = getTelemetrySafeHashedString(interpreter.path);
+            pythonEnvironmentsByHash.set(currentData.pythonEnvironmentPath, interpreter);
             if (interpreter.version) {
                 const { major, minor, patch } = interpreter.version;
                 currentData.pythonEnvironmentVersion = `${major}.${minor}.${patch}`;
@@ -233,22 +236,52 @@ export function trackKernelResourceInformation(resource: Resource, information: 
                 currentData.pythonEnvironmentVersion = undefined;
             }
 
-            const packages = InterpreterPackages.getPackageVersions(interpreter);
-            if (packages) {
-                // Comma delimited list of interested package (hashed) names & their versions.
-                // This is used to determine if user has a faulty package (faulty ipykernel, nbformat, traitlets), etc.
-                currentData.pythonEnvironmentPackages = Array.from(packages.entries())
-                    .map((item) => `${item[0]}:${item[1]}`)
-                    .join(', ');
-            }
-            currentData.pythonEnvironmentPackages = '';
+            currentData.pythonEnvironmentPackages = getPythonEnvironmentPackages({ interpreter });
         }
 
         currentData.kernelConnectionType = currentData.kernelConnectionType || kernelConnection?.kind;
     } else {
         context.previouslySelectedKernelConnectionId = '';
     }
+
     trackedInfo.set(key, [currentData, context]);
+}
+
+/**
+ * The python package information is fetch asynchronously.
+ * Its possible the information is available at a later time.
+ * Use this to update with the latest information (if available)
+ */
+function updatePythonPackages(currentData: ResourceSpecificTelemetryProperties) {
+    // Possible the Python package information is now available, update the properties accordingly.
+    if (currentData.pythonEnvironmentPath) {
+        currentData.pythonEnvironmentPackages =
+            getPythonEnvironmentPackages({ interpreterHash: currentData.pythonEnvironmentPath }) ||
+            currentData.pythonEnvironmentPackages;
+    }
+}
+/**
+ * Gets a hashed list of some python packages along with their versions.
+ */
+function getPythonEnvironmentPackages(options: { interpreter: PythonEnvironment } | { interpreterHash: string }) {
+    let interpreter: PythonEnvironment | undefined;
+    if ('interpreter' in options) {
+        interpreter = options.interpreter;
+    } else {
+        interpreter = pythonEnvironmentsByHash.get(options.interpreterHash);
+    }
+    if (!interpreter) {
+        return '';
+    }
+    const packages = InterpreterPackages.getPackageVersions(interpreter);
+    if (!packages) {
+        return '';
+    }
+    // Comma delimited list of interested package (hashed) names & their versions.
+    // This is used to determine if user has a faulty package (faulty ipykernel, nbformat, traitlets), etc.
+    return Array.from(packages.entries())
+        .map((item) => `${item[0]}:${item[1]}`)
+        .join(', ');
 }
 export function deleteTrackedInformation(resource: Uri) {
     trackedInfo.delete(getUriKey(resource));
@@ -268,6 +301,10 @@ function getContextualPropsForTelemetry(resource: Resource): ResourceSpecificTel
         return {
             resourceType
         };
+    }
+    if (data) {
+        // Possible the Python package information is now available, update the properties accordingly.
+        updatePythonPackages(data[0]);
     }
     return data ? data[0] : undefined;
 }
