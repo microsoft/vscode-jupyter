@@ -7,7 +7,7 @@ import { nbformat } from '@jupyterlab/coreutils';
 import {
     NotebookCellOutput,
     NotebookCellOutputItem
-} from '../../../../../typings/vscode-proposed';
+} from 'vscode';
 import type {
     NotebookCell,
     NotebookCellData,

@@ -2,7 +2,8 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { NotebookCellOutput, NotebookDocument, NotebookKernel as VSCNotebookKernel } from '../../../../types/vscode-proposed';
+import { NotebookCellOutput } from 'vscode';
+import { NotebookDocument, NotebookKernel as VSCNotebookKernel } from '../../../../types/vscode-proposed';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IVSCodeNotebook } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';

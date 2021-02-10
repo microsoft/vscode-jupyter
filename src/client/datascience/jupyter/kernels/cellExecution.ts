@@ -5,11 +5,9 @@
 
 import { nbformat } from '@jupyterlab/coreutils';
 import type { KernelMessage } from '@jupyterlab/services/lib/kernel/messages';
-import { ExtensionMode } from 'vscode';
+import { NotebookCellOutput, NotebookCellOutputItem, ExtensionMode } from 'vscode';
 import {
     NotebookCell,
-    NotebookCellOutput,
-    NotebookCellOutputItem,
     NotebookCellRunState,
     NotebookEditor as VSCNotebookEditor
 } from '../../../../../types/vscode-proposed';
