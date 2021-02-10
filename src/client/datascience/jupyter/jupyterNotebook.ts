@@ -453,7 +453,7 @@ export class JupyterNotebookBase implements INotebook {
                 },
                 () => {
                     subscriber.complete();
-                    sendTelemetryEvent(Telemetry.ExecuteCell, stopWatch.elapsedTime);
+                    sendTelemetryEvent(Telemetry.ExecuteCellTime, stopWatch.elapsedTime);
                 }
             );
         });

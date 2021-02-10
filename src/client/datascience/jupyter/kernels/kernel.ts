@@ -111,14 +111,16 @@ export class Kernel implements IKernel {
     public async executeCell(cell: NotebookCell): Promise<void> {
         const stopWatch = new StopWatch();
         const notebookPromise = this.startNotebook({ disableUI: false, document: cell.notebook });
-        this.trackNotebookCellPerceivedColdTime(stopWatch, notebookPromise).catch(noop);
-        await this.kernelExecution.executeCell(notebookPromise, cell);
+        const promise = this.kernelExecution.executeCell(notebookPromise, cell);
+        this.trackNotebookCellPerceivedColdTime(stopWatch, notebookPromise, promise).catch(noop);
+        await promise;
     }
     public async executeAllCells(document: NotebookDocument): Promise<void> {
         const stopWatch = new StopWatch();
         const notebookPromise = this.startNotebook({ disableUI: false, document });
-        this.trackNotebookCellPerceivedColdTime(stopWatch, notebookPromise).catch(noop);
-        await this.kernelExecution.executeAllCells(notebookPromise, document);
+        const promise = this.kernelExecution.executeAllCells(notebookPromise, document);
+        this.trackNotebookCellPerceivedColdTime(stopWatch, notebookPromise, promise).catch(noop);
+        await promise;
     }
     public async start(options: { disableUI?: boolean; document: NotebookDocument }): Promise<void> {
         await this.startNotebook(options);
@@ -164,7 +166,8 @@ export class Kernel implements IKernel {
     }
     private async trackNotebookCellPerceivedColdTime(
         stopWatch: StopWatch,
-        notebookPromise: Promise<INotebook>
+        notebookPromise: Promise<INotebook | undefined>,
+        executionPromise: Promise<unknown>
     ): Promise<void> {
         if (this.perceivedJupyterStartupTelemetryCaptured) {
             return;
@@ -176,13 +179,10 @@ export class Kernel implements IKernel {
         // Setup telemetry
         if (!this.perceivedJupyterStartupTelemetryCaptured) {
             this.perceivedJupyterStartupTelemetryCaptured = true;
-            sendTelemetryEvent(Telemetry.PerceivedJupyterStartupNotebook, stopWatch?.elapsedTime);
-            const disposable = notebook.onSessionStatusChanged((e) => {
-                if (e === ServerStatus.Busy) {
-                    sendTelemetryEvent(Telemetry.StartExecuteNotebookCellPerceivedCold, stopWatch?.elapsedTime);
-                    disposable.dispose();
-                }
-            });
+            sendTelemetryEvent(Telemetry.PerceivedJupyterStartupNotebook, stopWatch.elapsedTime);
+            executionPromise.finally(() =>
+                sendTelemetryEvent(Telemetry.StartExecuteNotebookCellPerceivedCold, stopWatch.elapsedTime)
+            );
         }
     }
     private async startNotebook(options: { disableUI?: boolean; document: NotebookDocument }): Promise<INotebook> {

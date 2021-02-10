@@ -615,6 +615,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         debugInfo?: { runByLine: boolean; hashFileName?: string },
         cancelToken?: CancellationToken
     ): Promise<boolean> {
+        sendKernelTelemetryEvent(this.owningResource, Telemetry.ExecuteCell);
         traceInfo(`Submitting code for ${this.id}`);
         const stopWatch =
             this._notebook && !this.perceivedJupyterStartupTelemetryCaptured ? new StopWatch() : undefined;

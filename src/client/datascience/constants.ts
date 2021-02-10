@@ -325,7 +325,7 @@ export enum Telemetry {
     HiddenCellTime = 'DS_INTERNAL.HIDDEN_EXECUTION_TIME',
     RestartJupyterTime = 'DS_INTERNAL.RESTART_JUPYTER_TIME',
     InterruptJupyterTime = 'DS_INTERNAL.INTERRUPT_JUPYTER_TIME',
-    ExecuteCell = 'DATASCIENCE.EXECUTE_CELL_TIME',
+    ExecuteCellTime = 'DATASCIENCE.EXECUTE_CELL_TIME',
     ExecuteCellPerceivedCold = 'DS_INTERNAL.EXECUTE_CELL_PERCEIVED_COLD',
     ExecuteCellPerceivedWarm = 'DS_INTERNAL.EXECUTE_CELL_PERCEIVED_WARM',
     PerceivedJupyterStartupNotebook = 'DS_INTERNAL.PERCEIVED_JUPYTER_STARTUP_NOTEBOOK',
@@ -432,7 +432,8 @@ export enum Telemetry {
     NotebookInterrupt = 'DATASCIENCE.NOTEBOOK_INTERRUPT',
     NotebookRestart = 'DATASCIENCE.NOTEBOOK_RESTART',
     SwitchKernel = 'DS_INTERNAL.SWITCH_KERNEL',
-    KernelCount = 'DS_INTERNAL.KERNEL_COUNT'
+    KernelCount = 'DS_INTERNAL.KERNEL_COUNT',
+    ExecuteCell = 'DATASCIENCE.EXECUTE_CELL'
 }
 
 export enum NativeKeyboardCommandTelemetry {

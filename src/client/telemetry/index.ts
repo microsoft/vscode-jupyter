@@ -42,6 +42,20 @@ function isTelemetrySupported(): boolean {
     }
 }
 
+type ErrorClassifier = (error: Error) => string | undefined;
+const errorClassifiers: ErrorClassifier[] = [];
+export function registerErrorClassifier(classifier: ErrorClassifier) {
+    errorClassifiers.push(classifier);
+}
+function getErrorClassification(error: Error): string {
+    for (const classifier of errorClassifiers) {
+        const classification = classifier(error);
+        if (classification && classification !== 'unknown') {
+            return classification;
+        }
+    }
+    return 'unknown';
+}
 /**
  * Checks if the telemetry is disabled in user settings
  * @returns {boolean}
@@ -123,6 +137,7 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
             customProperties = {
                 failed: 'true',
                 originalEventName: eventName as string,
+                failureReason: getErrorClassification(ex),
                 stackTrace: serializeStackTrace(ex)
             };
             // Add shared properties to telemetry props (we may overwrite existing ones).
@@ -131,7 +146,11 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
         } else {
             // Include a property failed, to indicate there are errors.
             // Lets pay the price for better data.
-            customProperties = { failed: 'true', stackTrace: serializeStackTrace(ex) };
+            customProperties = {
+                failed: 'true',
+                stackTrace: serializeStackTrace(ex),
+                failureReason: getErrorClassification(ex)
+            };
             // Add shared properties to telemetry props (we may overwrite existing ones).
             Object.assign(customProperties, sharedProperties);
             reporter.sendTelemetryEvent(eventNameSent, customProperties, measures);
@@ -560,7 +579,7 @@ export interface IEventNamePropertyMapping {
     [Telemetry.FindJupyterKernelSpec]: never | undefined;
     [Telemetry.DisableInteractiveShiftEnter]: never | undefined;
     [Telemetry.EnableInteractiveShiftEnter]: never | undefined;
-    [Telemetry.ExecuteCell]: never | undefined;
+    [Telemetry.ExecuteCellTime]: never | undefined;
     /**
      * Telemetry sent to capture first time execution of a cell.
      * If `notebook = true`, this its telemetry for native editor/notebooks.
@@ -1044,6 +1063,7 @@ export interface IEventNamePropertyMapping {
     [Telemetry.RawKernelProcessLaunch]: never | undefined;
 
     // Applies to everything (interactive+Notebooks & local+remote)
+    [Telemetry.ExecuteCell]: ResourceSpecificTelemetryProperties;
     [Telemetry.NotebookStart]:
         | ResourceSpecificTelemetryProperties // If successful.
         | ({
