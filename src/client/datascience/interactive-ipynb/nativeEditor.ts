@@ -84,6 +84,7 @@ import { getCellHashProvider } from '../editor-integration/cellhashprovider';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
 import { KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { NativeEditorNotebookModel } from '../notebookStorage/notebookModel';
+import { sendKernelTelemetryEvent } from '../context/telemetry';
 
 const nativeEditorDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'notebook');
 export class NativeEditor extends InteractiveBase implements INotebookEditor {
@@ -723,6 +724,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     }
 
     private async reexecuteCell(cell: ICell, code: string, cancelToken: CancellationToken): Promise<void> {
+        let sendExecuteCellTelemetry = true;
         try {
             // If there's any payload, it has the code and the id
             if (cell.id && cell.data.cell_type !== 'messages') {
@@ -730,6 +732,10 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
                 // Clear the result if we've run before
                 await this.clearResult(cell.id);
+                // When user runs a cell `submitCode` gets executed, however in at least this one scenario
+                // if `clearResult` crashes, then `submitCode` will not be executed.
+                // Example is if kernel cannot be started.
+                sendExecuteCellTelemetry = false;
 
                 // Clear 'per run' data passed to WebView before execution
                 if (cell.data.metadata.tags !== undefined) {
@@ -740,6 +746,9 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                 await this.submitCode(code, Identifiers.EmptyFileName, 0, cell.id, cell.data, undefined, cancelToken);
             }
         } catch (exc) {
+            if (sendExecuteCellTelemetry){
+                sendKernelTelemetryEvent(this.owningResource, Telemetry.ExecuteCell);
+            }
             traceInfo(`Exception executing cell ${cell.id}: `, exc);
 
             // Make this error our cell output
