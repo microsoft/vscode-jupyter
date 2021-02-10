@@ -301,7 +301,6 @@ module.exports = {
         'src/test/datascience/markdownManipulation.unit.test.ts',
         'src/test/datascience/interactivePanel.functional.test.tsx',
         'src/test/datascience/variableTestHelpers.ts',
-        'src/test/datascience/activation.unit.test.ts',
         'src/test/datascience/testPersistentStateFactory.ts',
         'src/test/datascience/jupyter/interpreter/jupyterInterpreterSubCommandExecutionService.unit.test.ts',
         'src/test/datascience/jupyter/interpreter/jupyterInterpreterDependencyService.unit.test.ts',
