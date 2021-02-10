@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { inject } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IPythonInstaller, IPythonExtensionChecker } from '../../api/types';
 import { IVSCodeNotebook } from '../../common/application/types';
@@ -15,6 +15,7 @@ import { InterpreterPackages } from './interpreterPackages';
 import { NotebookKernel as VSCNotebookKernel } from '../../../../types/vscode-proposed';
 import { isJupyterKernel } from '../notebook/helpers/helpers';
 
+@injectable()
 export class InterpreterPackageTracker implements IExtensionSingleActivationService {
     private activeInterpreterTrackedUponActivation?: boolean;
     constructor(
