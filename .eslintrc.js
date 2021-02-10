@@ -969,7 +969,6 @@ module.exports = {
         'src/client/datascience/interactive-ipynb/nativeEditorViewTracker.ts',
         'src/client/datascience/interactive-ipynb/nativeEditorOldWebView.ts',
         'src/client/datascience/interactive-ipynb/nativeEditorSynchronizer.ts',
-        'src/client/datascience/interactive-ipynb/nativeEditor.ts',
         'src/client/datascience/interactive-ipynb/trustService.ts',
         'src/client/datascience/interactive-ipynb/digestStorage.ts',
         'src/client/datascience/interactive-ipynb/nativeEditorProviderOld.ts',
