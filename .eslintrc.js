@@ -177,7 +177,6 @@ module.exports = {
         'src/test/debugger/envVars.test.ts',
         'src/test/startPage/startPage.unit.test.ts',
         'src/test/startPage/startPage.functional.test.tsx',
-        'src/test/telemetry/index.unit.test.ts',
         'src/test/telemetry/importTracker.unit.test.ts',
         'src/test/telemetry/envFileTelemetry.unit.test.ts',
         'src/test/telemetry/extensionInstallTelemetry.unit.test.ts',
