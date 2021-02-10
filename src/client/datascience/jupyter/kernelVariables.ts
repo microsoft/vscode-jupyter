@@ -423,12 +423,12 @@ export class KernelVariables implements IJupyterVariables {
 
     public async getVariableProperties(
         word: string,
-        languageId: string,
         notebook: INotebook,
         cancelToken: CancellationToken | undefined
     ): Promise<{ [attributeName: string]: string }> {
         const matchingVariable = await this.getMatchingVariable(word, notebook, cancelToken);
         const settings = this.configService.getSettings().variableTooltipFields;
+        const languageId = getKernelConnectionLanguage(notebook?.getKernelConnection()) || PYTHON_LANGUAGE;
         const languageSettings = settings[languageId];
         const type = matchingVariable?.type;
         let result: { [attributeName: string]: string } = {};
