@@ -6,7 +6,7 @@ import { getOSType } from '../../common/utils/platform';
 import { getKernelConnectionId, KernelConnectionMetadata } from '../jupyter/kernels/types';
 import * as hashjs from 'hash.js';
 import { Resource } from '../../common/types';
-import { IEventNamePropertyMapping, sendTelemetryEvent } from '../../telemetry';
+import { IEventNamePropertyMapping, sendTelemetryEvent, setSharedProperty } from '../../telemetry';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { ResourceSpecificTelemetryProperties } from './types';
 import { isErrorType } from '../../common/errors/errorUtils';
@@ -97,6 +97,9 @@ export function sendKernelTelemetryEvent<P extends IEventNamePropertyMapping, E 
         sendTelemetryEvent(eventName as any, durationMs, properties, ex);
     }
 
+    if (eventName === Telemetry.ExecuteCell){
+        setSharedProperty('userExecutedCell', 'true');
+    }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resetData(resource, eventName as any, properties);
 
@@ -112,6 +115,9 @@ export function sendKernelTelemetryWhenDone<P extends IEventNamePropertyMapping,
     stopWatch?: StopWatch,
     properties?: P[E]
 ) {
+    if (eventName === Telemetry.ExecuteCell){
+        setSharedProperty('userExecutedCell', 'true');
+    }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const props: any = properties || {};
     stopWatch = stopWatch ? stopWatch : new StopWatch();

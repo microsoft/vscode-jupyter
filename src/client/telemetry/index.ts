@@ -354,6 +354,14 @@ function getCallsite(frame: stackTrace.StackFrame) {
  */
 export interface ISharedPropertyMapping {
     /**
+     * Whether user ran a cell or not.
+     * Its possible we have auto start enabled, in which case things could fall over
+     * (jupyter not start, kernel not start), and these are all not user initiated events.
+     * Hence sending telemetry indicating failure in starting a kernel could be misleading.
+     * This tells us that user started the action.
+     */
+    userExecutedCell: 'true'
+    /**
      * For every DS telemetry we would like to know the type of Notebook Editor used when doing something.
      */
     ['ds_notebookeditor']: undefined | 'old' | 'custom' | 'native';
