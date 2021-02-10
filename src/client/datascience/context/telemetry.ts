@@ -267,8 +267,8 @@ function resetData(resource: Resource, eventName: string, properties: any) {
     }
     // Once we have successfully restarted, clear the interrupt counter.
     if (eventName === Telemetry.NotebookRestart) {
-        let kv: Pick<IEventNamePropertyMapping, Telemetry.NotebookInterrupt>;
-        const data: undefined | typeof kv[Telemetry.NotebookInterrupt] = properties;
+        let kv: Pick<IEventNamePropertyMapping, Telemetry.NotebookRestart>;
+        const data: undefined | typeof kv[Telemetry.NotebookRestart] = properties;
         // For restart to be successful, we should not have `failed`
         const failed = data && 'failed' in data ? data.failed : false;
         if (!failed) {
