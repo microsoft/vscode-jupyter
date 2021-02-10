@@ -88,13 +88,15 @@ export async function updateCellWithErrorStatus(
     cell: NotebookCell,
     ex: Partial<Error>
 ) {
-    await chainWithPendingUpdates(notebookEditor, (edit) => {
+    await chainWithPendingUpdates(notebookEditor.document, (edit) => {
         traceCellMessage(cell, 'Update with error state & output');
-        edit.replaceCellMetadata(cell.index, {
+        edit.replaceNotebookCellMetadata(notebookEditor.document.uri, cell.index, {
             ...cell.metadata,
             runState: vscodeNotebookEnums.NotebookCellRunState.Error
         });
-        edit.replaceCellOutput(cell.index, [translateErrorOutput(createErrorOutput(ex))]);
+        edit.replaceNotebookCellOutput(notebookEditor.document.uri, cell.index, [
+            translateErrorOutput(createErrorOutput(ex))
+        ]);
     });
 }
 
@@ -112,9 +114,9 @@ export async function updateCellCode(cell: NotebookCell, text: string) {
 
 // Add a new cell with the given contents after the current
 export async function addNewCellAfter(notebookEditor: NotebookEditor, cell: NotebookCell, text: string) {
-    await chainWithPendingUpdates(notebookEditor, (edit) => {
+    await chainWithPendingUpdates(notebookEditor.document, (edit) => {
         traceCellMessage(cell, 'Create new cell after current');
-        edit.replaceCells(cell.index + 1, cell.index + 1, [
+        edit.replaceNotebookCells(notebookEditor.document.uri, cell.index + 1, cell.index + 1, [
             {
                 cellKind: vscodeNotebookEnums.CellKind.Code,
                 language: cell.language,
@@ -135,9 +137,9 @@ export async function updateCellExecutionCount(
     executionCount: number
 ): Promise<void> {
     if (cell.metadata.executionOrder !== executionCount && executionCount) {
-        await chainWithPendingUpdates(editor, (edit) => {
+        await chainWithPendingUpdates(editor.document, (edit) => {
             traceCellMessage(cell, 'Update execution count');
-            edit.replaceCellMetadata(cell.index, {
+            edit.replaceNotebookCellMetadata(editor.document.uri, cell.index, {
                 ...cell.metadata,
                 executionOrder: executionCount
             });
@@ -160,5 +162,7 @@ export async function updateCellOutput(editor: NotebookEditor, cell: NotebookCel
     if (cell.outputs.length === newOutput.length && fastDeepEqual(cell.outputs, newOutput)) {
         return;
     }
-    await chainWithPendingUpdates(editor, (edit) => edit.replaceCellOutput(cell.index, newOutput));
+    await chainWithPendingUpdates(editor.document, (edit) =>
+        edit.replaceNotebookCellOutput(editor.document.uri, cell.index, newOutput)
+    );
 }

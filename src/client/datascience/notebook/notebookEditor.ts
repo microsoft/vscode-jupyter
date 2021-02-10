@@ -142,8 +142,8 @@ export class NotebookEditor implements INotebookEditor {
         const defaultLanguage = this.cellLanguageService.getPreferredLanguage(this.model.metadata);
         const editor = this.vscodeNotebook.notebookEditors.find((item) => item.document === this.document);
         if (editor) {
-            chainWithPendingUpdates(editor, (edit) =>
-                edit.replaceCells(0, this.document.cells.length, [
+            chainWithPendingUpdates(editor.document, (edit) =>
+                edit.replaceNotebookCells(editor.document.uri, 0, this.document.cells.length, [
                     {
                         cellKind: vscodeNotebookEnums.CellKind.Code,
                         language: defaultLanguage,
@@ -162,9 +162,9 @@ export class NotebookEditor implements INotebookEditor {
         const notebook = this.vscodeNotebook.activeNotebookEditor.document;
         const editor = this.vscodeNotebook.notebookEditors.find((item) => item.document === this.document);
         if (editor) {
-            chainWithPendingUpdates(editor, (edit) => {
+            chainWithPendingUpdates(editor.document, (edit) => {
                 notebook.cells.forEach((cell, index) => {
-                    edit.replaceCellMetadata(index, {
+                    edit.replaceNotebookCellMetadata(editor.document.uri, index, {
                         ...cell.metadata,
                         inputCollapsed: false,
                         outputCollapsed: false
@@ -180,9 +180,9 @@ export class NotebookEditor implements INotebookEditor {
         const notebook = this.vscodeNotebook.activeNotebookEditor.document;
         const editor = this.vscodeNotebook.notebookEditors.find((item) => item.document === this.document);
         if (editor) {
-            chainWithPendingUpdates(editor, (edit) => {
+            chainWithPendingUpdates(editor.document, (edit) => {
                 notebook.cells.forEach((cell, index) => {
-                    edit.replaceCellMetadata(index, {
+                    edit.replaceNotebookCellMetadata(editor.document.uri, index, {
                         ...cell.metadata,
                         inputCollapsed: true,
                         outputCollapsed: true

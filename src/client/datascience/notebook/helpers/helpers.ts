@@ -5,12 +5,10 @@
 
 import { nbformat } from '@jupyterlab/coreutils';
 import type {
-    CellDisplayOutput,
-    CellErrorOutput,
-    CellOutput,
     NotebookCell,
     NotebookCellData,
     NotebookCellMetadata,
+    NotebookCellOutput,
     NotebookCellRunState,
     NotebookData,
     NotebookDocument,
@@ -390,15 +388,15 @@ export function createIOutputFromCellOutputs(cellOutputs: CellOutput[]): nbforma
 }
 
 export async function clearCellForExecution(editor: NotebookEditor, cell: NotebookCell) {
-    await chainWithPendingUpdates(editor, (edit) => {
-        edit.replaceCellMetadata(cell.index, {
+    await chainWithPendingUpdates(editor.document, (edit) => {
+        edit.replaceNotebookCellMetadata(editor.document.uri, cell.index, {
             ...cell.metadata,
             statusMessage: undefined,
             executionOrder: undefined,
             lastRunDuration: undefined,
             runStartTime: undefined
         });
-        edit.replaceCellOutput(cell.index, []);
+        edit.replaceNotebookCellOutput(editor.document.uri, cell.index, []);
     });
     await updateCellExecutionTimes(editor, cell);
 }
@@ -452,9 +450,9 @@ export async function updateCellExecutionTimes(
     // customMetadata.metadata.vscode.end_execution_time = endTimeISO;
     // customMetadata.metadata.vscode.start_execution_time = startTimeISO;
     const lastRunDuration = times.lastRunDuration ?? cell.metadata.lastRunDuration;
-    await chainWithPendingUpdates(editor, (edit) => {
+    await chainWithPendingUpdates(editor.document, (edit) => {
         traceCellMessage(cell, 'Update run duration');
-        edit.replaceCellMetadata(cell.index, {
+        edit.replaceNotebookCellMetadata(editor.document.uri, cell.index, {
             ...cell.metadata,
             // custom: customMetadata,
             lastRunDuration
@@ -512,7 +510,30 @@ cellOutputMappers.set('execute_result', translateDisplayDataOutput as any);
 cellOutputMappers.set('stream', translateStreamOutput as any);
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 cellOutputMappers.set('update_display_data', translateDisplayDataOutput as any);
-export function cellOutputToVSCCellOutput(output: nbformat.IOutput): CellOutput {
+export function cellOutputToVSCCellOutput(output: nbformat.IOutput): NotebookCellOutput {
+    /**
+     * Stream, `application/x.notebook.stream`
+     * Error, `application/x.notebook.error-traceback`
+     * Rich, { mime: value }
+     *
+     * outputs: [
+            new vscode.NotebookCellOutput([
+                new vscode.NotebookCellOutputItem('application/x.notebook.stream', 2),
+                new vscode.NotebookCellOutputItem('application/x.notebook.stream', 3),
+            ]),
+            new vscode.NotebookCellOutput([
+                new vscode.NotebookCellOutputItem('text/markdown', '## header 2'),
+                new vscode.NotebookCellOutputItem('image/svg+xml', [
+                    "<svg baseProfile=\"full\" height=\"200\" version=\"1.1\" width=\"300\" xmlns=\"http://www.w3.org/2000/svg\">\n",
+                    "  <rect fill=\"blue\" height=\"100%\" width=\"100%\"/>\n",
+                    "  <circle cx=\"150\" cy=\"100\" fill=\"green\" r=\"80\"/>\n",
+                    "  <text fill=\"white\" font-size=\"60\" text-anchor=\"middle\" x=\"150\" y=\"125\">SVG</text>\n",
+                    "</svg>"
+                    ]),
+            ]),
+        ]
+     *
+     */
     const fn = cellOutputMappers.get(output.output_type as nbformat.OutputType);
     let result: CellOutput;
     if (fn) {
@@ -777,8 +798,8 @@ export async function updateVSCNotebookAfterTrustingNotebook(
         return;
     }
 
-    await chainWithPendingUpdates(editor, (edit) => {
-        edit.replaceMetadata({
+    await chainWithPendingUpdates(editor.document, (edit) => {
+        edit.replaceNotebookMetadata(document.uri, {
             ...document.metadata,
             cellEditable: true,
             cellRunnable: true,
@@ -787,15 +808,16 @@ export async function updateVSCNotebookAfterTrustingNotebook(
         });
         document.cells.forEach((cell, index) => {
             if (cell.cellKind === vscodeNotebookEnums.CellKind.Markdown) {
-                edit.replaceCellMetadata(index, { ...cell.metadata, editable: true });
+                edit.replaceNotebookCellMetadata(document.uri, index, { ...cell.metadata, editable: true });
             } else {
-                edit.replaceCellMetadata(index, {
+                edit.replaceNotebookCellMetadata(document.uri, index, {
                     ...cell.metadata,
                     editable: true,
                     runnable: true
                 });
                 // Restore the output once we trust the notebook.
-                edit.replaceCellOutput(
+                edit.replaceNotebookCellOutput(
+                    document.uri,
                     index,
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     createVSCCellOutputsFromOutputs(originalCells[index].outputs as any)

@@ -85,12 +85,12 @@ export class EmptyNotebookCellLanguageService implements IExtensionSingleActivat
         }
 
         const monacoLanguage = translateKernelLanguageToMonaco(language);
-        chainWithPendingUpdates(editor, (edit) => {
+        chainWithPendingUpdates(editor.document, (edit) => {
             emptyCodeCells.forEach((cell) => {
                 if (monacoLanguage.toLowerCase() === cell.language) {
                     return;
                 }
-                edit.replaceCells(cell.index, cell.index + 1, [
+                edit.replaceNotebookCells(editor.document.uri, cell.index, cell.index + 1, [
                     {
                         cellKind: cell.cellKind,
                         language: monacoLanguage,

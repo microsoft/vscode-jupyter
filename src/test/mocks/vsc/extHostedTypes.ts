@@ -547,6 +547,14 @@ export namespace vscMockExtHostedTypes {
     }
 
     export class WorkspaceEdit implements vscode.WorkspaceEdit {
+        appendNotebookCellOutput(
+            _uri: vscode.Uri,
+            _index: number,
+            _outputs: (vscode.CellOutput | vscode.NotebookCellOutput)[],
+            _metadata?: vscode.WorkspaceEditEntryMetadata
+        ): void {
+            // Noop
+        }
         replaceNotebookMetadata(_uri: vscode.Uri, _value: vscode.NotebookDocumentMetadata): void {
             //
         }

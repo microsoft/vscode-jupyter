@@ -22,9 +22,6 @@ export class AuthenticationService implements IAuthenticationService {
     public get onDidChangeAuthenticationProviders(): vscode.Event<vscode.AuthenticationProvidersChangeEvent> {
         return vscode.authentication.onDidChangeAuthenticationProviders;
     }
-    public get providerIds(): readonly string[] {
-        return vscode.authentication.providerIds;
-    }
     public get providers(): readonly vscode.AuthenticationProviderInformation[] {
         return vscode.authentication.providers;
     }
