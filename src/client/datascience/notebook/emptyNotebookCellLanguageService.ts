@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { NotebookCellOutput } from 'vscode';
 import { NotebookDocument, NotebookKernel as VSCNotebookKernel } from '../../../../types/vscode-proposed';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IVSCodeNotebook } from '../../common/application/types';
@@ -96,7 +95,7 @@ export class EmptyNotebookCellLanguageService implements IExtensionSingleActivat
                         cellKind: cell.cellKind,
                         language: monacoLanguage,
                         metadata: cell.metadata,
-                        outputs: cell.outputs.map(op => new NotebookCellOutput(op.outputs)),
+                        outputs: cell.outputs.map(op => new vscodeNotebookEnums.NotebookCellOutput(op.outputs)),
                         source: cell.document.getText()
                     }
                 ]);
