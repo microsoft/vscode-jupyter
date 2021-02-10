@@ -1084,4 +1084,8 @@ export interface IEventNamePropertyMapping {
          */
         pythonExtensionInstalled: boolean;
     };
+
+    // Native variable view events
+    [Telemetry.NativeVariableViewLoaded]: never | undefined;
+    [Telemetry.NativeVariableViewMadeVisible]: never | undefined;
 }
