@@ -184,4 +184,39 @@ suite('Insiders Native Notebooks Survey Banner', () => {
         verify(browser.launch(anything())).never();
         verify(appShell.showInformationMessage(anything(), anything(), anything(), anything())).once();
     });
+    test('Confirm prompt is not displayed again', async () => {
+        when(appShell.showInformationMessage(anything(), anything(), anything(), anything())).thenResolve(
+            localize.Common.doNotShowAgain() as any
+        );
+        await showBannerState.updateValue({ data: true });
+        await executionCountState.updateValue(100);
+
+        await bannerService.showBanner();
+
+        verify(appShell.showInformationMessage(anything(), anything(), anything(), anything())).once();
+        resetCalls(appShell);
+
+        // Attempt to display again & it won't.
+        bannerService = createBannerService();
+        await bannerService.showBanner();
+        verify(browser.launch(anything())).never();
+        verify(appShell.showInformationMessage(anything(), anything(), anything(), anything())).never();
+
+        // Advance time by 1 month & still not displayed.
+        clock.tick(MillisecondsInADay * 30);
+        bannerService = createBannerService();
+        await bannerService.showBanner();
+        verify(browser.launch(anything())).never();
+        verify(appShell.showInformationMessage(anything(), anything(), anything(), anything())).never();
+
+        // Advance time by 6.5 month & still not displayed.
+        clock.tick(MillisecondsInADay * 30 * 6.5);
+        when(appShell.showInformationMessage(anything(), anything(), anything(), anything())).thenResolve(
+            localize.DataScienceSurveyBanner.bannerLabelNo() as any
+        );
+        bannerService = createBannerService();
+        await bannerService.showBanner();
+        verify(browser.launch(anything())).never();
+        verify(appShell.showInformationMessage(anything(), anything(), anything(), anything())).never();
+    });
 });
