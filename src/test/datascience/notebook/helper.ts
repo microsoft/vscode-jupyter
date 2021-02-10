@@ -14,7 +14,6 @@ import { WorkspaceEdit } from 'vscode';
 import { commands, Memento, TextDocument, Uri, window, workspace } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import {
-    CellDisplayOutput,
     NotebookCell,
     NotebookContentProvider as VSCNotebookContentProvider,
     NotebookDocument
@@ -168,8 +167,7 @@ export async function createTemporaryNotebook(templateFile: string, disposables:
 export async function canRunNotebookTests() {
     if (!isInsiders() || !process.env.VSC_JUPYTER_RUN_NB_TEST) {
         console.log(
-            `Can't run native nb tests isInsiders() = ${isInsiders()}, process.env.VSC_JUPYTER_RUN_NB_TEST = ${
-                process.env.VSC_JUPYTER_RUN_NB_TEST
+            `Can't run native nb tests isInsiders() = ${isInsiders()}, process.env.VSC_JUPYTER_RUN_NB_TEST = ${process.env.VSC_JUPYTER_RUN_NB_TEST
             }`
         );
         return false;
@@ -469,9 +467,9 @@ export async function waitForExecutionInProgress(cell: NotebookCell, timeout: nu
         async () => {
             const result =
                 cell.metadata.runState === vscodeNotebookEnums.NotebookCellRunState.Running &&
-                cell.metadata.runStartTime &&
-                !cell.metadata.lastRunDuration &&
-                !cell.metadata.statusMessage
+                    cell.metadata.runStartTime &&
+                    !cell.metadata.lastRunDuration &&
+                    !cell.metadata.statusMessage
                     ? true
                     : false;
             return result;
@@ -487,9 +485,9 @@ export async function waitForQueuedForExecution(cell: NotebookCell, timeout: num
     await waitForCondition(
         async () =>
             cell.metadata.runState === vscodeNotebookEnums.NotebookCellRunState.Running &&
-            !cell.metadata.runStartTime &&
-            !cell.metadata.lastRunDuration &&
-            !cell.metadata.statusMessage
+                !cell.metadata.runStartTime &&
+                !cell.metadata.lastRunDuration &&
+                !cell.metadata.statusMessage
                 ? true
                 : false,
         timeout,
@@ -521,8 +519,8 @@ function assertHasExecutionCompletedWithErrors(cell: NotebookCell) {
 export function assertHasTextOutputInVSCode(cell: NotebookCell, text: string, index: number = 0, isExactMatch = true) {
     const cellOutputs = cell.outputs;
     assert.ok(cellOutputs.length, 'No output');
-    assert.equal(cellOutputs[index].outputKind, vscodeNotebookEnums.CellOutputKind.Rich, 'Incorrect output kind');
-    const outputText = (cellOutputs[index] as CellDisplayOutput).data['text/plain'].trim();
+    // assert.equal(cellOutputs[index].outputKind, vscodeNotebookEnums.CellOutputKind.Rich, 'Incorrect output kind');
+    const outputText = (cellOutputs[index].outputs.find(opit => opit.mime === 'text/plain')?.value as string).trim();
     if (isExactMatch) {
         assert.equal(outputText, text, 'Incorrect output');
     } else {
@@ -546,8 +544,8 @@ export async function waitForTextOutputInVSCode(
 export function assertNotHasTextOutputInVSCode(cell: NotebookCell, text: string, index: number, isExactMatch = true) {
     const cellOutputs = cell.outputs;
     assert.ok(cellOutputs, 'No output');
-    assert.equal(cellOutputs[index].outputKind, vscodeNotebookEnums.CellOutputKind.Rich, 'Incorrect output kind');
-    const outputText = (cellOutputs[index] as CellDisplayOutput).data['text/plain'].trim();
+    // assert.equal(cellOutputs[index].outputKind, vscodeNotebookEnums.CellOutputKind.Rich, 'Incorrect output kind');
+    const outputText = (cellOutputs[index].outputs.find(opit => opit.mime === 'text/plain')?.value as string).trim();
     if (isExactMatch) {
         assert.notEqual(outputText, text, 'Incorrect output');
     } else {
@@ -576,7 +574,7 @@ export function assertVSCCellHasErrors(cell: NotebookCell) {
 }
 export function assertVSCCellHasErrorOutput(cell: NotebookCell) {
     assert.ok(
-        cell.outputs.filter((output) => output.outputKind === vscodeNotebookEnums.CellOutputKind.Error).length,
+        cell.outputs.filter((output) => output.outputs.some(opit => opit.mime === 'application/x.notebook.error-traceback')).length,
         'No error output in cell'
     );
     return true;

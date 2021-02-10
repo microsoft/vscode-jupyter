@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { workspace, WorkspaceEdit } from 'vscode';
-import { NotebookDocument, NotebookEditor } from '../../../../../types/vscode-proposed';
+import { NotebookDocument, NotebookEditor } from '../../../../../typings/vscode-proposed';
 import { createDeferred } from '../../../common/utils/async';
 import { noop } from '../../../common/utils/misc';
 

@@ -4,11 +4,14 @@
 'use strict';
 
 import { nbformat } from '@jupyterlab/coreutils';
+import {
+    NotebookCellOutput,
+    NotebookCellOutputItem
+} from '../../../../../typings/vscode-proposed';
 import type {
     NotebookCell,
     NotebookCellData,
     NotebookCellMetadata,
-    NotebookCellOutput,
     NotebookCellRunState,
     NotebookData,
     NotebookDocument,
@@ -330,7 +333,7 @@ function createNotebookCellDataFromCodeCell(
     const cellOutputs: nbformat.IOutput[] = Array.isArray(cell.outputs) ? cell.outputs : [];
     const outputs = createVSCCellOutputsFromOutputs(cellOutputs);
     const runState = vscodeNotebookEnums.NotebookCellRunState.Idle;
-    const hasErrors = outputs.some((output) => output.outputKind === vscodeNotebookEnums.CellOutputKind.Error);
+    const hasErrors = outputs.some((output) => output.outputs.some(opit => opit.mime === 'application/x.notebook.error-traceback'));
     const hasExecutionCount = typeof cell.execution_count === 'number' && cell.execution_count > 0;
     let statusMessage: string | undefined;
     if (hasExecutionCount && hasErrors) {
@@ -368,19 +371,16 @@ function createNotebookCellDataFromCodeCell(
     };
 }
 
-export function createIOutputFromCellOutputs(cellOutputs: CellOutput[]): nbformat.IOutput[] {
+export function createIOutputFromCellOutputs(cellOutputs: readonly NotebookCellOutput[]): nbformat.IOutput[] {
     return cellOutputs
         .map((output) => {
-            switch (output.outputKind) {
-                case vscodeNotebookEnums.CellOutputKind.Error:
-                    return translateCellErrorOutput(output);
-                case vscodeNotebookEnums.CellOutputKind.Rich:
-                    return translateCellDisplayOutput(output);
-                case vscodeNotebookEnums.CellOutputKind.Text:
-                    // We do not generate text output.
-                    return;
-                default:
-                    return;
+            if (!output.outputs.some(opit => opit.mime !== 'application/x.notebook.stream')) {
+                // every output item is `application/x.notebook.stream`
+                return;
+            } else if (!output.outputs.some(opit => opit.mime !== 'application/x.notebook.error-traceback')) {
+                return translateCellErrorOutput(output);
+            } else {
+                return translateCellDisplayOutput(output);
             }
         })
         .filter((output) => !!output)
@@ -492,13 +492,13 @@ export function createVSCNotebookCellDataFromCell(
     }
 }
 
-export function createVSCCellOutputsFromOutputs(outputs?: nbformat.IOutput[]): CellOutput[] {
+export function createVSCCellOutputsFromOutputs(outputs?: nbformat.IOutput[]): NotebookCellOutput[] {
     const cellOutputs: nbformat.IOutput[] = Array.isArray(outputs) ? (outputs as []) : [];
     return cellOutputs.map(cellOutputToVSCCellOutput);
 }
 const cellOutputMappers = new Map<
     nbformat.OutputType,
-    (output: nbformat.IOutput, outputType: nbformat.OutputType) => CellOutput
+    (output: nbformat.IOutput, outputType: nbformat.OutputType) => NotebookCellOutput
 >();
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 cellOutputMappers.set('display_data', translateDisplayDataOutput as any);
@@ -535,47 +535,44 @@ export function cellOutputToVSCCellOutput(output: nbformat.IOutput): NotebookCel
      *
      */
     const fn = cellOutputMappers.get(output.output_type as nbformat.OutputType);
-    let result: CellOutput;
+    let result: NotebookCellOutput;
     if (fn) {
         result = fn(output, (output.output_type as unknown) as nbformat.OutputType);
     } else {
         traceWarning(`Unable to translate cell from ${output.output_type} to NotebookCellData for VS Code.`);
-        result = {
-            outputKind: vscodeNotebookEnums.CellOutputKind.Rich,
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            data: output.data as any,
-            metadata: { custom: { vscode: { outputType: output.output_type } } }
-        };
+
+        const metadata = output.metadata ? ({ custom: cloneDeep(output.metadata) } as any) : { custom: {} };
+        metadata.custom.vscode = { outputType: output.output_type };
+        const items: NotebookCellOutputItem[] = [];
+        for (const key in output.data as any) {
+            items.push(new NotebookCellOutputItem(key, (output.data as any)[key], metadata[key]));
+        }
+
+        result = new NotebookCellOutput(items);
     }
 
     // Add on transient data if we have any. This should be removed by our save functions elsewhere.
-    if (
-        output.transient &&
-        result &&
-        result.outputKind === vscodeNotebookEnums.CellOutputKind.Rich &&
-        result.metadata
-    ) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        result.metadata.custom = { ...result.metadata.custom, transient: output.transient };
-    }
+    // TODO@DonJayamanne maybe we should save the transient metadata in the first output item
+    // if (
+    //     output.transient &&
+    //     result &&
+    //     result.outputKind === vscodeNotebookEnums.CellOutputKind.Rich &&
+    //     result.metadata
+    // ) {
+    //     // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    //     result.metadata.custom = { ...result.metadata.custom, transient: output.transient };
+    // }
     return result;
 }
 
-export function vscCellOutputToCellOutput(output: CellOutput): nbformat.IOutput | undefined {
-    switch (output.outputKind) {
-        case vscodeNotebookEnums.CellOutputKind.Error: {
-            return translateCellErrorOutput(output);
-        }
-        case vscodeNotebookEnums.CellOutputKind.Rich: {
-            return translateCellDisplayOutput(output);
-        }
-        case vscodeNotebookEnums.CellOutputKind.Text: {
-            // We do not return such output.
-            return;
-        }
-        default: {
-            return;
-        }
+export function vscCellOutputToCellOutput(output: NotebookCellOutput): nbformat.IOutput | undefined {
+    if (!output.outputs.some(opit => opit.mime !== 'application/x.notebook.stream')) {
+        // every output item is `application/x.notebook.stream`
+        return;
+    } else if (!output.outputs.some(opit => opit.mime !== 'application/x.notebook.error-traceback')) {
+        return translateCellErrorOutput(output);
+    } else {
+        return translateCellDisplayOutput(output);
     }
 }
 
@@ -591,51 +588,56 @@ export function vscCellOutputToCellOutput(output: CellOutput): nbformat.IOutput 
 function translateDisplayDataOutput(
     output: nbformat.IDisplayData | nbformat.IDisplayUpdate | nbformat.IExecuteResult,
     outputType: nbformat.OutputType
-): CellDisplayOutput | undefined {
-    const data = { ...output.data };
+): NotebookCellOutput | undefined {
+    // const data = { ...output.data };
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const metadata = output.metadata ? ({ custom: cloneDeep(output.metadata) } as any) : { custom: {} };
     metadata.custom.vscode = { outputType };
     if (output.execution_count) {
         metadata.custom.vscode.execution_count = output.execution_count;
     }
-    return {
-        outputKind: vscodeNotebookEnums.CellOutputKind.Rich,
-        data,
-        metadata // Used be renderers & VS Code for diffing (it knows what has changed).
-    };
+
+    const items: NotebookCellOutputItem[] = [];
+    for (const key in output.data) {
+        items.push(new NotebookCellOutputItem(key, output.data[key], metadata[key]));
+    }
+
+    // return output
+
+    return new NotebookCellOutput(items);
 }
 
-function translateStreamOutput(output: nbformat.IStream, outputType: nbformat.OutputType): CellDisplayOutput {
+function translateStreamOutput(output: nbformat.IStream, outputType: nbformat.OutputType): NotebookCellOutput {
     // Do not return as `CellOutputKind.Text`. VSC will not translate ascii output correctly.
     // Instead format the output as rich.
-    return {
-        outputKind: vscodeNotebookEnums.CellOutputKind.Rich,
-        data: {
-            ['text/plain']: concatMultilineString(output.text)
-        },
-        metadata: {
+    return new NotebookCellOutput([
+        new NotebookCellOutputItem('application/x.notebook.stream', concatMultilineString(output.text), {
             custom: { vscode: { outputType, name: output.name } }
-        }
-    };
+        })
+    ]);
 }
 
-export function isStreamOutput(output: CellOutput, expectedStreamName: string): boolean {
-    if (output.outputKind !== vscodeNotebookEnums.CellOutputKind.Rich) {
+export function isStreamOutput(output: NotebookCellOutput, expectedStreamName: string): boolean {
+    if (!output.outputs.length) {
         return false;
     }
-    output = (output as unknown) as CellDisplayOutput;
-    if (!('text/plain' in output.data)) {
+
+    if (output.outputs.find(opit => opit.mime !== 'application/x.notebook.stream')) {
         return false;
     }
+
     // Logic of metadata can be found here translateStreamOutput.
     // That function adds the vscode metadata.
-    if (output.metadata?.custom?.vscode?.outputType !== 'stream') {
+    const firstOutputItem = output.outputs[0]!;
+
+    if (firstOutputItem.metadata && (firstOutputItem.metadata!['custom'] as any)?.vscode?.outputType !== 'stream') {
         return false;
     }
-    if (expectedStreamName && output.metadata?.custom?.vscode?.name !== expectedStreamName) {
+
+    if (expectedStreamName && firstOutputItem.metadata && (firstOutputItem.metadata!['custom'] as any)?.vscode?.name !== expectedStreamName) {
         return false;
     }
+
     return true;
 }
 
@@ -655,46 +657,51 @@ type JupyterOutput =
     | nbformat.IStream
     | nbformat.IError;
 
-function translateCellDisplayOutput(output: CellDisplayOutput): JupyterOutput {
-    const outputType: nbformat.OutputType = output.metadata?.custom?.vscode?.outputType;
+function translateCellDisplayOutput(output: NotebookCellOutput): JupyterOutput {
+    // TODO@DonJayamanne this takes assumption that we store the custom metadata in the first output item
+    const customMetadata = output.outputs[0]?.metadata as any
+    const outputType: nbformat.OutputType = customMetadata?.custom?.vscode?.outputType;
     let result: JupyterOutput;
     switch (outputType) {
         case 'stream':
             {
                 result = {
                     output_type: 'stream',
-                    name: output.metadata?.custom?.vscode?.name,
-                    text: splitMultilineString(output.data['text/plain'])
+                    name: customMetadata?.custom?.vscode?.name,
+                    text: splitMultilineString(
+                        output.outputs.filter(opit => opit.mime === 'text/plain' || opit.mime === 'application/x.notebook.stream')
+                            .map(opit => opit.value as string | string[])
+                            .reduceRight((prev, curr) => { return [...prev, ...curr] }, []))
                 };
             }
             break;
         case 'display_data':
             {
-                const metadata = getSanitizedCellMetadata(output.metadata?.custom);
+                const metadata = getSanitizedCellMetadata(customMetadata?.custom);
                 result = {
                     output_type: 'display_data',
-                    data: output.data,
+                    data: output.outputs.reduceRight((prev: any, curr) => { prev[curr.mime] = curr.value; return prev; }, {}),
                     metadata
                 };
             }
             break;
         case 'execute_result':
             {
-                const metadata = getSanitizedCellMetadata(output.metadata?.custom);
+                const metadata = getSanitizedCellMetadata(customMetadata?.custom);
                 result = {
                     output_type: 'execute_result',
-                    data: output.data,
+                    data: output.outputs.reduceRight((prev: any, curr) => { prev[curr.mime] = curr.value; return prev; }, {}),
                     metadata,
-                    execution_count: output.metadata?.custom?.vscode?.execution_count
+                    execution_count: customMetadata?.custom?.vscode?.execution_count
                 };
             }
             break;
         case 'update_display_data':
             {
-                const metadata = getSanitizedCellMetadata(output.metadata?.custom);
+                const metadata = getSanitizedCellMetadata(customMetadata?.custom);
                 result = {
                     output_type: 'update_display_data',
-                    data: output.data,
+                    data: output.outputs.reduceRight((prev: any, curr) => { prev[curr.mime] = curr.value; return prev; }, {}),
                     metadata
                 };
             }
@@ -704,13 +711,13 @@ function translateCellDisplayOutput(output: CellDisplayOutput): JupyterOutput {
                 sendTelemetryEvent(Telemetry.VSCNotebookCellTranslationFailed, undefined, {
                     isErrorOutput: outputType === 'error'
                 });
-                const metadata = getSanitizedCellMetadata(output.metadata?.custom);
+                const metadata = getSanitizedCellMetadata(customMetadata?.custom);
                 const unknownOutput: nbformat.IUnrecognizedOutput = { output_type: outputType };
                 if (Object.keys(metadata).length > 0) {
                     unknownOutput.metadata = metadata;
                 }
-                if (Object.keys(output.data).length > 0) {
-                    unknownOutput.data = output.data;
+                if (output.outputs.length > 0) {
+                    unknownOutput.data = output.outputs.reduceRight((prev: any, curr) => { prev[curr.mime] = curr.value; return prev; }, {});
                 }
                 result = unknownOutput;
             }
@@ -718,8 +725,8 @@ function translateCellDisplayOutput(output: CellDisplayOutput): JupyterOutput {
     }
 
     // Account for transient data as well
-    if (result && output.metadata && output.metadata.custom?.transient) {
-        result.transient = { ...output.metadata.custom?.transient };
+    if (result && customMetadata && customMetadata.custom?.transient) {
+        result.transient = { ...customMetadata.custom?.transient };
     }
     return result;
 }
@@ -730,20 +737,24 @@ function translateCellDisplayOutput(output: CellDisplayOutput): JupyterOutput {
  * As we're displaying the error in the statusbar, we don't want this dup error in output.
  * Hence remove this.
  */
-export function translateErrorOutput(output: nbformat.IError): CellErrorOutput {
-    return {
-        ename: output.ename,
-        evalue: output.evalue,
-        outputKind: vscodeNotebookEnums.CellOutputKind.Error,
-        traceback: output.traceback
-    };
+export function translateErrorOutput(output: nbformat.IError): NotebookCellOutput {
+    return new NotebookCellOutput([
+        new NotebookCellOutputItem('application/x.notebook.error-traceback', {
+            ename: output.ename,
+            evalue: output.evalue,
+            traceback: output.traceback
+        })
+    ]);
 }
-export function translateCellErrorOutput(output: CellErrorOutput): nbformat.IError {
+export function translateCellErrorOutput(output: NotebookCellOutput): nbformat.IError {
+    // it should have at least one output item
+    const firstItem = output.outputs[0];
+
     return {
         output_type: 'error',
-        ename: output.ename,
-        evalue: output.evalue,
-        traceback: output.traceback
+        ename: (firstItem.value as nbformat.IError).ename,
+        evalue: (firstItem.value as nbformat.IError).evalue,
+        traceback: (firstItem.value as nbformat.IError).traceback
     };
 }
 
@@ -759,17 +770,33 @@ export function getCellStatusMessageBasedOnFirstErrorOutput(outputs?: nbformat.I
     }
     return `${errorOutput.ename}${errorOutput.evalue ? ': ' : ''}${errorOutput.evalue}`;
 }
-export function getCellStatusMessageBasedOnFirstCellErrorOutput(outputs?: CellOutput[]): string {
+
+export function hasErrorOutputs(outputs: readonly NotebookCellOutput[]) {
+    const errorOutput = outputs.find(op => op.outputs.length && !op.outputs.some(opit => opit.mime !== 'application/x.notebook.error-traceback'))
+
+    return !!errorOutput;
+}
+
+export function getCellStatusMessageBasedOnFirstCellErrorOutput(outputs?: readonly NotebookCellOutput[]): string {
     if (!Array.isArray(outputs)) {
         return '';
     }
-    const errorOutput = outputs.find((output) => output.outputKind === vscodeNotebookEnums.CellOutputKind.Error) as
-        | CellErrorOutput
-        | undefined;
+
+    const errorOutput = outputs.find(op => op.outputs.length && !op.outputs.some(opit => opit.mime !== 'application/x.notebook.error-traceback'))
+
     if (!errorOutput) {
         return '';
     }
-    return `${errorOutput.ename}${errorOutput.evalue ? ': ' : ''}${errorOutput.evalue}`;
+
+    const firstItem = errorOutput.outputs[0];
+
+    if (!firstItem) {
+        return '';
+    }
+
+    const errorValue = firstItem.value as nbformat.IError;
+
+    return `${errorValue.ename}${errorValue.evalue ? ': ' : ''}${errorValue.evalue}`;
 }
 
 /**

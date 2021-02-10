@@ -6,7 +6,6 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as sinon from 'sinon';
 import { commands } from 'vscode';
-import { CellDisplayOutput } from '../../../../types/vscode-proposed';
 import { IPythonExtensionChecker } from '../../../client/api/types';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { BufferDecoder } from '../../../client/common/process/decoder';
@@ -207,7 +206,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
 
         // Confirm the executable printed is not venvkernel
         assert.ok(cell.outputs.length);
-        const outputText: string = (cell.outputs[0] as CellDisplayOutput).data['text/plain'].trim();
+        const outputText: string = (cell.outputs[0].outputs.find(opit => opit.mime === 'text/plain')?.value as string).trim();
         assert.equal(outputText.toLowerCase().indexOf(venvKernelPythonPath), -1);
 
         // Change kernel to the interpreter venvkernel
@@ -238,7 +237,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
 
         // Confirm the executable printed is not venvNoReg
         assert.ok(cell.outputs.length);
-        const outputText: string = (cell.outputs[0] as CellDisplayOutput).data['text/plain'].trim();
+        const outputText: string = (cell.outputs[0].outputs.find(opit => opit.mime === 'text/plain')?.value as string).trim();
         assert.equal(outputText.toLowerCase().indexOf(venvNoRegPythonPath), -1);
 
         // Change kernel to the interpreter venvNoReg

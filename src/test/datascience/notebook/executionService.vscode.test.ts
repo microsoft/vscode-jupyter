@@ -11,7 +11,7 @@ import * as dedent from 'dedent';
 import * as sinon from 'sinon';
 import { commands, Uri } from 'vscode';
 import { Common } from '../../../client/common/utils/localize';
-import { CellDisplayOutput, CellErrorOutput, NotebookCell } from '../../../../typings/vscode-proposed';
+import { NotebookCell } from '../../../../typings/vscode-proposed';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { traceInfo } from '../../../client/common/logger';
 import { IDisposable, Product } from '../../../client/common/types';
@@ -119,7 +119,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         await runCell(cell);
 
         await waitForExecutionCompletedSuccessfully(cell);
-        const output = (cell.outputs[0] as CellDisplayOutput).data['text/plain'];
+        const output = (cell.outputs[0].outputs.find(opit => opit.mime === 'text/plain')?.value as string);
         assert.equal(output, '\tho\n\tho\n\tho\n', 'Cell with leading whitespace has incorrect output');
     });
     test('Executed events are triggered', async () => {
@@ -224,8 +224,8 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         await waitForExecutionCompletedWithErrors(cell);
 
         assert.lengthOf(cell.outputs, 1, 'Incorrect output');
-        const errorOutput = cell.outputs[0] as CellErrorOutput;
-        assert.equal(errorOutput.outputKind, vscodeNotebookEnums.CellOutputKind.Error, 'Incorrect output');
+        const errorOutput = cell.outputs[0].outputs.find(opit => opit.mime === 'application/x.notebook.error-traceback')?.value as any;
+        // assert.equal(errorOutput.outputKind, vscodeNotebookEnums.CellOutputKind.Error, 'Incorrect output');
         assert.equal(errorOutput.ename, 'NameError', 'Incorrect ename'); // As status contains ename, we don't want this displayed again.
         assert.equal(errorOutput.evalue, "name 'abcd' is not defined", 'Incorrect evalue'); // As status contains ename, we don't want this displayed again.
         assert.isNotEmpty(errorOutput.traceback, 'Incorrect traceback');
