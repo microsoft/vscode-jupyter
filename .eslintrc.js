@@ -971,7 +971,6 @@ module.exports = {
         'src/client/datascience/interactive-ipynb/trustService.ts',
         'src/client/datascience/interactive-ipynb/digestStorage.ts',
         'src/client/datascience/interactive-ipynb/nativeEditorProviderOld.ts',
-        'src/client/datascience/interactive-ipynb/nativeEditorCommandListener.ts',
         'src/client/datascience/interactive-ipynb/autoSaveService.ts',
         'src/client/datascience/editor-integration/hoverProvider.ts',
         'src/client/datascience/editor-integration/codeLensFactory.ts',
