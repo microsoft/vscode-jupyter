@@ -1,9 +1,11 @@
 import { assert } from 'chai';
 import { cloneDeep } from 'lodash';
+import * as sinon from 'sinon';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import {
     IConfigurationService,
+    IExperimentService,
     IJupyterSettings,
     IVariableTooltipFields,
     ReadWrite
@@ -25,6 +27,7 @@ suite('Hover provider', async () => {
     let dsSettings: ReadWrite<IJupyterSettings>;
     let api: IExtensionTestApi;
     let oldSetting: IVariableTooltipFields;
+    let sandbox: sinon.SinonSandbox;
     suiteSetup(async function () {
         if (IS_WEBVIEW_BUILD_SKIPPED) {
             console.log('Hover provider tests require webview build to be enabled');
@@ -39,8 +42,12 @@ suite('Hover provider', async () => {
                 Tensor: ['shape', 'dtype', 'device']
             }
         };
+        sandbox = sinon.createSandbox();
+        const experimentService = api.serviceManager.get<IExperimentService>(IExperimentService);
+        sandbox.stub(experimentService, 'inExperiment').resolves(true);
     });
     suiteTeardown(async () => {
+        sandbox.restore();
         if (dsSettings) {
             dsSettings.variableTooltipFields = oldSetting;
         }
