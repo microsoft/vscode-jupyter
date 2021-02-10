@@ -114,7 +114,7 @@ import { ExportCommands } from '../../client/datascience/commands/exportCommands
 import { NotebookCommands } from '../../client/datascience/commands/notebookCommands';
 import { JupyterServerSelectorCommand } from '../../client/datascience/commands/serverSelector';
 import { DataScienceStartupTime, Identifiers, JUPYTER_OUTPUT_CHANNEL } from '../../client/datascience/constants';
-import { ActiveEditorContextService } from '../../client/datascience/context/activeEditorContext';
+import { ActiveEditorContextService } from '../../client/datascience/telemetry/activeEditorContext';
 import { DataViewer } from '../../client/datascience/data-viewing/dataViewer';
 import { DataViewerDependencyService } from '../../client/datascience/data-viewing/dataViewerDependencyService';
 import { DataViewerFactory } from '../../client/datascience/data-viewing/dataViewerFactory';

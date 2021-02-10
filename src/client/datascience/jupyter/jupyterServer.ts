@@ -21,7 +21,7 @@ import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { IServiceContainer } from '../../ioc/types';
 import { Telemetry } from '../constants';
-import { sendKernelTelemetryEvent } from '../context/telemetry';
+import { sendKernelTelemetryEvent } from '../telemetry/telemetry';
 import {
     IJupyterConnection,
     IJupyterSession,

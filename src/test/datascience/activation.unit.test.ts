@@ -12,7 +12,7 @@ import { IPythonExecutionFactory } from '../../client/common/process/types';
 import { sleep } from '../../client/common/utils/async';
 import { Activation } from '../../client/datascience/activation';
 import { JupyterDaemonModule } from '../../client/datascience/constants';
-import { ActiveEditorContextService } from '../../client/datascience/context/activeEditorContext';
+import { ActiveEditorContextService } from '../../client/datascience/telemetry/activeEditorContext';
 import { NativeEditor } from '../../client/datascience/interactive-ipynb/nativeEditor';
 import { JupyterInterpreterService } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterService';
 import { KernelDaemonPreWarmer } from '../../client/datascience/kernel-launcher/kernelDaemonPreWarmer';

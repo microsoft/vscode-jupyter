@@ -84,7 +84,7 @@ import { getCellHashProvider } from '../editor-integration/cellhashprovider';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
 import { KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { NativeEditorNotebookModel } from '../notebookStorage/notebookModel';
-import { sendKernelTelemetryEvent } from '../context/telemetry';
+import { sendKernelTelemetryEvent } from '../telemetry/telemetry';
 import { noop } from '../../common/utils/misc';
 
 const nativeEditorDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'notebook');

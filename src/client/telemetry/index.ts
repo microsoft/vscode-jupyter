@@ -17,7 +17,7 @@ import {
     Telemetry,
     VSCodeNativeTelemetry
 } from '../datascience/constants';
-import { ResourceSpecificTelemetryProperties } from '../datascience/context/types';
+import { ResourceSpecificTelemetryProperties } from '../datascience/telemetry/types';
 import { ExportFormat } from '../datascience/export/types';
 import { InterruptResult } from '../datascience/types';
 import { EventName, PlatformErrors } from './constants';

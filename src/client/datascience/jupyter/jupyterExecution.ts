@@ -19,7 +19,7 @@ import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { JupyterSessionStartError } from '../baseJupyterSession';
 import { Commands, Identifiers, Telemetry } from '../constants';
-import { getErrorClassification } from '../context/telemetry';
+import { getErrorClassification } from '../telemetry/telemetry';
 import {
     IJupyterConnection,
     IJupyterExecution,
