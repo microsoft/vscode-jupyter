@@ -4,7 +4,6 @@
 import { Uri } from 'vscode';
 import { getOSType } from '../../common/utils/platform';
 import { getKernelConnectionId, KernelConnectionMetadata } from '../jupyter/kernels/types';
-import * as hashjs from 'hash.js';
 import { Resource } from '../../common/types';
 import { IEventNamePropertyMapping, sendTelemetryEvent, setSharedProperty } from '../../telemetry';
 import { StopWatch } from '../../common/utils/stopWatch';
@@ -23,10 +22,12 @@ import { JupyterSelfCertsError } from '../jupyter/jupyterSelfCertsError';
 import { Telemetry } from '../constants';
 import { WorkspaceInterpreterTracker } from './workspaceInterpreterTracker';
 import { InterruptResult } from '../types';
-import { getResourceType, getTelemetrySafeLanguage } from '../common';
+import { getResourceType } from '../common';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { InterpreterCountTracker } from './interpreterCountTracker';
 import { FetchError } from 'node-fetch';
+import { getTelemetrySafeHashedString, getTelemetrySafeLanguage } from '../../telemetry/helpers';
+import { InterpreterPackages } from './interpreterPackages';
 
 type ContextualTelemetryProps = {
     kernelConnection: KernelConnectionMetadata;
@@ -224,13 +225,23 @@ export function trackKernelResourceInformation(resource: Resource, information: 
                 interpreter
             );
             currentData.pythonEnvironmentType = interpreter.envType;
-            currentData.pythonEnvironmentPath = hashjs.sha256().update(interpreter.path).digest('hex');
+            currentData.pythonEnvironmentPath = getTelemetrySafeHashedString(interpreter.path);
             if (interpreter.version) {
                 const { major, minor, patch } = interpreter.version;
                 currentData.pythonEnvironmentVersion = `${major}.${minor}.${patch}`;
             } else {
                 currentData.pythonEnvironmentVersion = undefined;
             }
+
+            const packages = InterpreterPackages.getPackageVersions(interpreter);
+            if (packages) {
+                // Comma delimited list of interested package (hashed) names & their versions.
+                // This is used to determine if user has a faulty package (faulty ipykernel, nbformat, traitlets), etc.
+                currentData.pythonEnvironmentPackages = Array.from(packages.entries())
+                    .map((item) => `${item[0]}:${item[1]}`)
+                    .join(', ');
+            }
+            currentData.pythonEnvironmentPackages = '';
         }
 
         currentData.kernelConnectionType = currentData.kernelConnectionType || kernelConnection?.kind;

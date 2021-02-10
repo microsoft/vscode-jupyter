@@ -110,6 +110,7 @@ export type PythonApi = {
 
 export const IPythonInstaller = Symbol('IPythonInstaller');
 export interface IPythonInstaller {
+    readonly onInstalled: Event<{product: Product, resource?: InterpreterUri}>;
     install(product: Product, resource?: InterpreterUri, cancel?: CancellationToken): Promise<InstallerResponse>;
 }
 

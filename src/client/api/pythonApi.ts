@@ -201,6 +201,10 @@ const ProductMapping: { [key in Product]: JupyterProductToInstall } = {
 /* eslint-disable max-classes-per-file */
 @injectable()
 export class PythonInstaller implements IPythonInstaller {
+    private readonly _onInstalled = new EventEmitter<{ product: Product; resource?: InterpreterUri }>();
+    public get onInstalled(): Event<{ product: Product; resource?: InterpreterUri }> {
+        return this._onInstalled.event;
+    }
     constructor(@inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider) {}
 
     public install(
@@ -208,7 +212,15 @@ export class PythonInstaller implements IPythonInstaller {
         resource?: InterpreterUri,
         cancel?: CancellationToken
     ): Promise<InstallerResponse> {
-        return this.apiProvider.getApi().then((api) => api.install(ProductMapping[product], resource, cancel));
+        return this.apiProvider
+            .getApi()
+            .then((api) => api.install(ProductMapping[product], resource, cancel))
+            .then((result) => {
+                if (result === InstallerResponse.Installed) {
+                    this._onInstalled.fire({ product, resource });
+                }
+                return result;
+            });
     }
 }
 

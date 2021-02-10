@@ -331,6 +331,7 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
                 getNotebookMetadata(document),
                 true,
                 token,
+                true,
                 true
             );
         } else {
@@ -338,7 +339,8 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
                 document.uri,
                 sessionManager,
                 getNotebookMetadata(document),
-                token
+                token,
+                true
             );
         }
     }
