@@ -281,7 +281,7 @@ function getPythonEnvironmentPackages(options: { interpreter: PythonEnvironment 
     // This is used to determine if user has a faulty package (faulty ipykernel, nbformat, traitlets), etc.
     return Array.from(packages.entries())
         .map((item) => `${item[0]}:${item[1]}`)
-        .join(', ');
+        .join(',');
 }
 export function deleteTrackedInformation(resource: Uri) {
     trackedInfo.delete(getUriKey(resource));
