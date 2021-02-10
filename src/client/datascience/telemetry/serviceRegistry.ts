@@ -9,6 +9,7 @@ import { ActiveEditorContextService } from '../commands/activeEditorContext';
 import { ErrorClassificationRegistration } from './errorClassificationRegistration';
 import { InterpreterCountTracker } from './interpreterCountTracker';
 import { InterpreterPackages } from './interpreterPackages';
+import { InterpreterPackageTracker } from './interpreterPackageTracker';
 import { WorkspaceInterpreterTracker } from './workspaceInterpreterTracker';
 
 export function registerTypes(serviceManager: IServiceManager) {
@@ -17,6 +18,10 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         WorkspaceInterpreterTracker
+    );
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        InterpreterPackageTracker
     );
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,

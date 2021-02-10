@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { inject } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { IPythonExtensionChecker } from '../../api/types';
 import { InterpreterUri } from '../../common/installer/types';
 import { IPythonExecutionFactory } from '../../common/process/types';
@@ -30,6 +30,7 @@ const interestedPackages = new Set(
     ].map((item) => item.toLowerCase())
 );
 
+@injectable()
 export class InterpreterPackages {
     private static interpreterInformation = new Map<string, Map<string, string>>();
     private static pendingInterpreterInformation = new Map<string, Promise<void>>();
