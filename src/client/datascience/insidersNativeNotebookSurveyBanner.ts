@@ -17,7 +17,8 @@ export enum InsidersNotebookSurveyStateKeys {
 
 enum DSSurveyLabelIndex {
     Yes,
-    No
+    No,
+    DontShowAgain
 }
 
 const NotebookOpenThreshold = 5;
@@ -46,6 +47,9 @@ export class InsidersNativeNotebooksSurveyBanner implements IExtensionSingleActi
         if (!this.showBannerState.value.expiry) {
             return true;
         }
+        if (this.showBannerState.value.expiry === -1) {
+            return false;
+        }
         return this.showBannerState.value.expiry! < Date.now();
     }
 
@@ -55,7 +59,8 @@ export class InsidersNativeNotebooksSurveyBanner implements IExtensionSingleActi
 
     private bannerLabels: string[] = [
         localize.DataScienceSurveyBanner.bannerLabelYes(),
-        localize.DataScienceSurveyBanner.bannerLabelNo()
+        localize.DataScienceSurveyBanner.bannerLabelNo(),
+        localize.Common.doNotShowAgain()
     ];
 
     private readonly showBannerState: IPersistentState<ShowBannerWithExpiryTime>;
@@ -106,6 +111,13 @@ export class InsidersNativeNotebooksSurveyBanner implements IExtensionSingleActi
             case this.bannerLabels[DSSurveyLabelIndex.No]: {
                 // Disable for 3 months
                 await this.disable(3);
+                break;
+            }
+            case this.bannerLabels[DSSurveyLabelIndex.DontShowAgain]: {
+                await this.showBannerState.updateValue({
+                    expiry: -1,
+                    data: true
+                });
                 break;
             }
             default:
