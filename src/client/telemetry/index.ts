@@ -111,6 +111,27 @@ export function clearTelemetryReporter() {
     telemetryReporter = undefined;
 }
 
+function stringifyProperties(eventName: string, data: Record<string, any>){
+    let customProperties: Record<string, string> = {};
+    Object.getOwnPropertyNames(data).forEach((prop) => {
+        if (data[prop] === undefined || data[prop] === null) {
+            return;
+        }
+        try {
+            // If there are any errors in serializing one property, ignore that and move on.
+            // Else nothing will be sent.
+            customProperties[prop] =
+                typeof data[prop] === 'string'
+                    ? data[prop]
+                    : typeof data[prop] === 'object'
+                    ? 'object'
+                    : data[prop].toString();
+        } catch (ex) {
+            traceError(`Failed to serialize ${prop} for ${eventName}`, ex);
+        }
+    });
+    return customProperties;
+}
 export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extends keyof P>(
     eventName: E,
     durationMs?: Record<string, number> | number,
@@ -142,6 +163,7 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
             };
             // Add shared properties to telemetry props (we may overwrite existing ones).
             Object.assign(customProperties, sharedProperties);
+            customProperties = stringifyProperties(eventNameSent, customProperties);
             reporter.sendTelemetryErrorEvent(eventNameSent, customProperties, measures, []);
         } else {
             // Include a property failed, to indicate there are errors.
@@ -154,28 +176,12 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
             // Add shared properties to telemetry props (we may overwrite existing ones).
             Object.assign(customProperties, sharedProperties);
             Object.assign(customProperties, properties || {});
+            customProperties = stringifyProperties(eventNameSent, customProperties);
             reporter.sendTelemetryEvent(eventNameSent, customProperties, measures);
         }
     } else {
         if (properties) {
-            const data = properties as any;
-            Object.getOwnPropertyNames(data).forEach((prop) => {
-                if (data[prop] === undefined || data[prop] === null) {
-                    return;
-                }
-                try {
-                    // If there are any errors in serializing one property, ignore that and move on.
-                    // Else nothing will be sent.
-                    customProperties[prop] =
-                        typeof data[prop] === 'string'
-                            ? data[prop]
-                            : typeof data[prop] === 'object'
-                            ? 'object'
-                            : data[prop].toString();
-                } catch (ex) {
-                    traceError(`Failed to serialize ${prop} for ${eventName}`, ex);
-                }
-            });
+            customProperties = stringifyProperties(eventNameSent, properties);
         }
 
         // Add shared properties to telemetry props (we may overwrite existing ones).
