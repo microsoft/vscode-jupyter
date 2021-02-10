@@ -149,6 +149,7 @@ import {
     IDataScienceErrorHandler,
     IDebugLocationTracker,
     IDigestStorage,
+    IHoverProvider,
     IInteractiveWindow,
     IInteractiveWindowListener,
     IInteractiveWindowProvider,
@@ -233,7 +234,8 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     serviceManager.add<ICellHashProvider>(ICellHashProvider, CellHashProvider, undefined, [INotebookExecutionLogger]);
     serviceManager.addSingleton<INotebookModelFactory>(INotebookModelFactory, NotebookModelFactory);
     serviceManager.addSingleton<INotebookModelSynchronization>(INotebookModelSynchronization, NotebookModelSynchronization);
-    serviceManager.addSingleton<INotebookExecutionLogger>(INotebookExecutionLogger, HoverProvider);
+    serviceManager.addSingleton<IHoverProvider>(IHoverProvider, HoverProvider);
+    serviceManager.addBinding(IHoverProvider, INotebookExecutionLogger);
     serviceManager.add<ICodeWatcher>(ICodeWatcher, CodeWatcher);
     serviceManager.addSingleton<IDataScienceErrorHandler>(IDataScienceErrorHandler, DataScienceErrorHandler);
     serviceManager.add<IDataViewer>(IDataViewer, DataViewer);

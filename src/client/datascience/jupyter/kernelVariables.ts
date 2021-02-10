@@ -8,9 +8,10 @@ import * as uuid from 'uuid/v4';
 
 import { CancellationToken, Event, EventEmitter, Uri } from 'vscode';
 import { PYTHON_LANGUAGE } from '../../common/constants';
+import { Experiments } from '../../common/experiments/groups';
 import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
-import { IConfigurationService, IDisposable } from '../../common/types';
+import { IConfigurationService, IDisposable, IExperimentService } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { DataFrameLoading, GetVariableInfo, Identifiers, Settings } from '../constants';
 import {
@@ -56,10 +57,12 @@ export class KernelVariables implements IJupyterVariables {
     private languageToQueryMap = new Map<string, { query: string; parser: RegExp }>();
     private notebookState = new Map<Uri, INotebookState>();
     private refreshEventEmitter = new EventEmitter<void>();
+    private enhancedTooltipsExperimentPromise: boolean | undefined;
 
     constructor(
         @inject(IConfigurationService) private configService: IConfigurationService,
-        @inject(IFileSystem) private fs: IFileSystem
+        @inject(IFileSystem) private fs: IFileSystem,
+        @inject(IExperimentService) private experimentService: IExperimentService
     ) {}
 
     public get refreshRequired(): Event<void> {
@@ -421,6 +424,38 @@ export class KernelVariables implements IJupyterVariables {
         return result;
     }
 
+    public async getVariableProperties(
+        word: string,
+        notebook: INotebook,
+        cancelToken: CancellationToken | undefined
+    ): Promise<{ [attributeName: string]: string }> {
+        const matchingVariable = await this.getMatchingVariable(word, notebook, cancelToken);
+        const settings = this.configService.getSettings().variableTooltipFields;
+        const languageId = getKernelConnectionLanguage(notebook?.getKernelConnection()) || PYTHON_LANGUAGE;
+        const languageSettings = settings[languageId];
+        const type = matchingVariable?.type;
+        let result: { [attributeName: string]: string } = {};
+        if (matchingVariable && matchingVariable.value) {
+            if (type && type in languageSettings && (await this.inEnhancedTooltipsExperiment())) {
+                const attributeNames = languageSettings[type];
+                const stringifiedAttributeNameList =
+                    '[' + attributeNames.reduce((accumulator, currVal) => accumulator + `"${currVal}", `, '') + ']';
+                const attributes = await notebook.execute(
+                    `print(${GetVariableInfo.VariablePropertiesFunc}(${matchingVariable.name}, ${stringifiedAttributeNameList}))`,
+                    Identifiers.EmptyFileName,
+                    0,
+                    uuid(),
+                    cancelToken,
+                    true
+                );
+                result = { ...result, ...this.deserializeJupyterResult(attributes) };
+            } else {
+                result[`${word}`] = matchingVariable.value;
+            }
+        }
+        return result;
+    }
+
     private async getVariableNamesFromKernel(notebook: INotebook, token?: CancellationToken): Promise<string[]> {
         // Get our query and parser
         const query = this.getParser(notebook);
@@ -512,5 +547,14 @@ export class KernelVariables implements IJupyterVariables {
         }
 
         return result;
+    }
+
+    private async inEnhancedTooltipsExperiment() {
+        if (!this.enhancedTooltipsExperimentPromise) {
+            this.enhancedTooltipsExperimentPromise = await this.experimentService.inExperiment(
+                Experiments.EnhancedTooltips
+            );
+        }
+        return this.enhancedTooltipsExperimentPromise;
     }
 }

@@ -15,6 +15,7 @@ import {
     DebugSession,
     Disposable,
     Event,
+    HoverProvider,
     LanguageConfiguration,
     QuickPickItem,
     Range,
@@ -261,6 +262,9 @@ export interface INotebookServerOptions {
     skipSearchingForKernel?: boolean;
     allowUI(): boolean;
 }
+
+export interface IHoverProvider extends HoverProvider {}
+export const IHoverProvider = Symbol('IHoverProvider');
 
 export const INotebookExecutionLogger = Symbol('INotebookExecutionLogger');
 export interface INotebookExecutionLogger extends IDisposable {
@@ -918,6 +922,8 @@ export interface IJupyterVariables {
         notebook?: INotebook,
         cancelToken?: CancellationToken
     ): Promise<IJupyterVariable | undefined>;
+    // This is currently only defined in kernelVariables.ts
+    getVariableProperties?(name: string, notebook?: INotebook, cancelToken?: CancellationToken): Promise<JSONObject>;
 }
 
 export interface IConditionalJupyterVariables extends IJupyterVariables {

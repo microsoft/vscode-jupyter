@@ -163,6 +163,13 @@ export interface IJupyterSettings {
     readonly alwaysScrollOnNewCell: boolean;
     readonly interactiveWindowMode: InteractiveWindowMode;
     readonly disableZMQSupport: boolean;
+    readonly variableTooltipFields: IVariableTooltipFields;
+}
+
+export interface IVariableTooltipFields {
+    [languageKey: string]: {
+        [typeNameKey: string]: string[]; // List of attributes
+    };
 }
 
 export interface IWatchableJupyterSettings extends IJupyterSettings {

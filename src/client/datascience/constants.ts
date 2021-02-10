@@ -428,6 +428,7 @@ export enum Telemetry {
     SyncAllCells = 'DS_INTERNAL.SYNC_ALL_CELLS',
     SyncSingleCell = 'DS_INTERNAL.SYNC_SINGLE_CELL',
     NativeRandomBytesGenerationFailed = 'DS_INTERNAL.NATIVE_RANDOM_BYTES_GENERATION_FAILED',
+    InteractiveFileTooltipsPerf = 'DS_INTERNAL.INTERACTIVE_FILE_TOOLTIPS_PERF',
     NativeVariableViewLoaded = 'DS_INTERNAL.NATIVE_VARIABLE_VIEW_LOADED',
     NativeVariableViewMadeVisible = 'DS_INTERNAL.NATIVE_VARIABLE_VIEW_MADE_VISIBLE',
     NotebookStart = 'DATASCIENCE.NOTEBOOK_START',
@@ -543,6 +544,7 @@ export namespace GetVariableInfo {
     export const GetVariableInfoSysImport = `import sys\nsys.path.append("${SysPath.replace(/\\/g, '\\\\')}")`;
     export const ScriptPath = path.join(SysPath, 'vscodeGetVariableInfo.py');
     export const VariableInfoFunc = '_VSCODE_getVariableInfo';
+    export const VariablePropertiesFunc = '_VSCODE_getVariableProperties';
 
     // Constants for the debugger which imports the script files
     export const VariableInfoImportName = '_VSCODE_VariableImport';
