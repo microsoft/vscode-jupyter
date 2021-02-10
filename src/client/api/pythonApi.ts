@@ -15,7 +15,14 @@ import { inject, injectable } from 'inversify';
 import { CancellationToken, Disposable, Event, EventEmitter, Uri } from 'vscode';
 import { IApplicationShell, ICommandManager } from '../common/application/types';
 import { InterpreterUri } from '../common/installer/types';
-import { IExtensions, InstallerResponse, IPersistentStateFactory, Product, Resource } from '../common/types';
+import {
+    IDisposableRegistry,
+    IExtensions,
+    InstallerResponse,
+    IPersistentStateFactory,
+    Product,
+    Resource
+} from '../common/types';
 import { createDeferred } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
 import { noop } from '../common/utils/misc';
@@ -252,10 +259,25 @@ export class InterpreterSelector implements IInterpreterSelector {
 @injectable()
 export class InterpreterService implements IInterpreterService {
     private readonly didChangeInterpreter = new EventEmitter<void>();
-
-    constructor(@inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider) {}
+    private eventHandlerAdded?: boolean;
+    constructor(
+        @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider,
+        @inject(IPythonExtensionChecker) private extensionChecker: IPythonExtensionChecker,
+        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
+    ) {}
 
     public get onDidChangeInterpreter(): Event<void> {
+        if (this.extensionChecker.isPythonExtensionInstalled && !this.eventHandlerAdded) {
+            this.apiProvider
+                .getApi()
+                .then((api) => {
+                    if (!this.eventHandlerAdded) {
+                        this.eventHandlerAdded = true;
+                        api.onDidChangeInterpreter(() => this.didChangeInterpreter.fire(), this, this.disposables);
+                    }
+                })
+                .catch(noop);
+        }
         return this.didChangeInterpreter.event;
     }
 

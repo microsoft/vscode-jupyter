@@ -33,6 +33,7 @@ export class InterpreterPackageTracker implements IExtensionSingleActivationServ
             return;
         }
         this.notebook.onDidChangeActiveNotebookKernel(this.onDidChangeActiveNotebookKernel, this, this.disposables);
+        this.interpreterService.onDidChangeInterpreter(this.trackPackagesOfActiveInterpreter, this, this.disposables);
         this.installer.onInstalled(this.onDidInstallPackage, this, this.disposables);
         this.extensions.onDidChange(this.trackUponActivation, this, this.disposables);
         this.trackUponActivation().catch(noop);
