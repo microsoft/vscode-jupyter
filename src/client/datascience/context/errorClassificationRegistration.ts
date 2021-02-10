@@ -4,11 +4,11 @@
 import { injectable } from 'inversify';
 import { IExtensionSyncActivationService } from '../../activation/types';
 import { registerErrorClassifier } from '../../telemetry';
-import { getKernelFailureReason } from './telemetry';
+import { getErrorClassification } from './telemetry';
 
 @injectable()
 export class ErrorClassificationRegistration implements IExtensionSyncActivationService {
     activate(): void {
-        registerErrorClassifier(getKernelFailureReason);
+        registerErrorClassifier(getErrorClassification);
     }
 }

@@ -111,7 +111,7 @@ export function clearTelemetryReporter() {
     telemetryReporter = undefined;
 }
 
-function stringifyProperties(eventName: string, data: Record<string, any>){
+function stringifyProperties(eventName: string, data: Record<string, any>) {
     let customProperties: Record<string, string> = {};
     Object.getOwnPropertyNames(data).forEach((prop) => {
         if (data[prop] === undefined || data[prop] === null) {
@@ -565,14 +565,44 @@ export interface IEventNamePropertyMapping {
     [Telemetry.AddCellBelow]: never | undefined;
     [Telemetry.CodeLensAverageAcquisitionTime]: never | undefined;
     [Telemetry.CollapseAll]: never | undefined;
-    [Telemetry.ConnectFailedJupyter]: never | undefined;
+    [Telemetry.ConnectFailedJupyter]: {
+        failureReason:
+            | 'cancelled'
+            | 'timeout'
+            | 'kerneldied'
+            | 'kerneldied'
+            | 'kernelpromisetimeout'
+            | 'jupytersession'
+            | 'jupyterconnection'
+            | 'jupyterinstall'
+            | 'jupyterselfcert'
+            | 'invalidkernel'
+            | 'noipykernel'
+            | 'fetcherror'
+            | 'unknown';
+    };
     [Telemetry.ConnectLocalJupyter]: never | undefined;
     [Telemetry.ConnectRemoteJupyter]: never | undefined;
     /**
      * Connecting to an existing Jupyter server, but connecting to localhost.
      */
     [Telemetry.ConnectRemoteJupyterViaLocalHost]: never | undefined;
-    [Telemetry.ConnectRemoteFailedJupyter]: never | undefined;
+    [Telemetry.ConnectRemoteFailedJupyter]: {
+        failureReason:
+            | 'cancelled'
+            | 'timeout'
+            | 'kerneldied'
+            | 'kerneldied'
+            | 'kernelpromisetimeout'
+            | 'jupytersession'
+            | 'jupyterconnection'
+            | 'jupyterinstall'
+            | 'jupyterselfcert'
+            | 'invalidkernel'
+            | 'noipykernel'
+            | 'fetcherror'
+            | 'unknown';
+    };
     [Telemetry.ConnectRemoteSelfCertFailedJupyter]: never | undefined;
     [Telemetry.RegisterAndUseInterpreterAsKernel]: never | undefined;
     [Telemetry.UseInterpreterAsKernel]: never | undefined;

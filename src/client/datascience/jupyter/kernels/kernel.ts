@@ -19,7 +19,7 @@ import { StopWatch } from '../../../common/utils/stopWatch';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { CodeSnippets, Telemetry } from '../../constants';
 import {
-    getKernelFailureReason,
+    getErrorClassification,
     sendKernelTelemetryEvent,
     trackKernelResourceInformation
 } from '../../context/telemetry';
@@ -214,7 +214,7 @@ export class Kernel implements IKernel {
                         traceError('failed to create INotebook in kernel', ex);
                         sendKernelTelemetryEvent(options.document.uri, Telemetry.NotebookStart, stopWatch.elapsedTime, {
                             failed: true,
-                            failureReason: getKernelFailureReason(ex)
+                            failureReason: getErrorClassification(ex)
                         });
                         if (!options.disableUI) {
                             this.errorHandler.handleError(ex).ignoreErrors(); // Just a notification, so don't await this

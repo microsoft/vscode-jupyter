@@ -52,8 +52,12 @@ type Context = {
 const trackedInfo = new Map<string, [ResourceSpecificTelemetryProperties, Context]>();
 const currentOSType = getOSType();
 
-export function getKernelFailureReason(error: Error) {
-    if (isErrorType(error, JupyterWaitForIdleError)) {
+export function getErrorClassification(error: Error) {
+    if (error.message.indexOf('reason: self signed certificate') >= 0) {
+        return 'jupyterselfcert';
+    } else if (isErrorType(error, JupyterSelfCertsError)) {
+        return 'jupyterselfcert';
+    } else if (isErrorType(error, JupyterWaitForIdleError)) {
         return 'timeout';
     } else if (isErrorType(error, TimedOutError)) {
         return 'timeout';
@@ -69,8 +73,6 @@ export function getKernelFailureReason(error: Error) {
         return 'jupytersession';
     } else if (isErrorType(error, JupyterConnectError)) {
         return 'jupyterconnection';
-    } else if (isErrorType(error, JupyterSelfCertsError)) {
-        return 'jupyterselfcert';
     } else if (isErrorType(error, JupyterInstallError)) {
         return 'jupyterinstall';
     } else if (isErrorType(error, KernelDiedError)) {
@@ -138,7 +140,7 @@ export function sendKernelTelemetryWhenDone<P extends IEventNamePropertyMapping,
                     const addOnTelemetry = getContextualPropsForTelemetry(resource);
                     Object.assign(props, addOnTelemetry);
                     props.failed = true;
-                    props.failureReason = getKernelFailureReason(ex);
+                    props.failureReason = getErrorClassification(ex);
                     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-explicit-any
                     sendTelemetryEvent(eventName as any, stopWatch!.elapsedTime, props as any, ex, true);
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
