@@ -104,7 +104,7 @@ suite('Insiders Native Notebooks Survey Banner', () => {
             []
         );
     }
-    test('Confirm prompt is displayed & only once per session eee', async () => {
+    test('Confirm prompt is displayed & only once per session', async () => {
         when(appShell.showInformationMessage(anything(), anything(), anything(), anything())).thenResolve();
         await showBannerState.updateValue({ data: true });
         await executionCountState.updateValue(100);
