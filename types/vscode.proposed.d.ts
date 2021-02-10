@@ -20,41 +20,6 @@ import {
 
 // Copy nb section from https://github.com/microsoft/vscode/blob/master/src/vs/vscode.proposed.d.ts.
 declare module 'vscode' {
-    /**
-     * Represents a storage utility for secrets, information that is
-     * sensitive.
-     */
-    export interface SecretStorage {
-        /**
-         * Retrieve a secret that was stored with key. Returns undefined if there
-         * is no password matching that key.
-         * @param key The key the password was stored under.
-         * @returns The stored value or `undefined`.
-         */
-        get(key: string): Thenable<string | undefined>;
-
-        /**
-         * Store a secret under a given key.
-         * @param key The key to store the password under.
-         * @param value The password.
-         */
-        store(key: string, value: string): Thenable<void>;
-
-        /**
-         * Remove a secret from storage.
-         * @param key The key the password was stored under.
-         */
-        delete(key: string): Thenable<void>;
-
-        /**
-         * Fires when a secret is set or deleted.
-         */
-        onDidChange: Event<void>;
-    }
-    export interface ExtensionContext {
-        secrets: SecretStorage;
-    }
-    //#region auth provider: https://github.com/microsoft/vscode/issues/88309
 
     /**
      * An [event](#Event) which fires when an [AuthenticationProvider](#AuthenticationProvider) is added or removed.
@@ -92,9 +57,28 @@ declare module 'vscode' {
     }
 
     /**
-     * A provider for performing authentication to a service.
+     * **WARNING** When writing an AuthenticationProvider, `id` should be treated as part of your extension's
+     * API, changing it is a breaking change for all extensions relying on the provider. The id is
+     * treated case-sensitively.
      */
     export interface AuthenticationProvider {
+        /**
+         * Used as an identifier for extensions trying to work with a particular
+         * provider: 'microsoft', 'github', etc. id must be unique, registering
+         * another provider with the same id will fail.
+         */
+        readonly id: string;
+
+        /**
+         * The human-readable name of the provider.
+         */
+        readonly label: string;
+
+        /**
+         * Whether it is possible to be signed into multiple accounts at once with this provider
+         */
+        readonly supportsMultipleAccounts: boolean;
+
         /**
          * An [event](#Event) which fires when the array of sessions has changed, or data
          * within a session has changed.
@@ -104,32 +88,18 @@ declare module 'vscode' {
         /**
          * Returns an array of current sessions.
          */
-        // eslint-disable-next-line vscode-dts-provider-naming
         getSessions(): Thenable<ReadonlyArray<AuthenticationSession>>;
 
         /**
          * Prompts a user to login.
          */
-        // eslint-disable-next-line vscode-dts-provider-naming
         login(scopes: string[]): Thenable<AuthenticationSession>;
 
         /**
          * Removes the session corresponding to session id.
          * @param sessionId The session id to log out of
          */
-        // eslint-disable-next-line vscode-dts-provider-naming
         logout(sessionId: string): Thenable<void>;
-    }
-
-    /**
-     * Options for creating an [AuthenticationProvider](#AuthentcationProvider).
-     */
-    export interface AuthenticationProviderOptions {
-        /**
-         * Whether it is possible to be signed into multiple accounts at once with this provider.
-         * If not specified, will default to false.
-         */
-        readonly supportsMultipleAccounts?: boolean;
     }
 
     export namespace authentication {
@@ -137,20 +107,12 @@ declare module 'vscode' {
          * Register an authentication provider.
          *
          * There can only be one provider per id and an error is being thrown when an id
-         * has already been used by another provider. Ids are case-sensitive.
+         * has already been used by another provider.
          *
-         * @param id The unique identifier of the provider.
-         * @param label The human-readable name of the provider.
          * @param provider The authentication provider provider.
-         * @params options Additional options for the provider.
          * @return A [disposable](#Disposable) that unregisters this provider when being disposed.
          */
-        export function registerAuthenticationProvider(
-            id: string,
-            label: string,
-            provider: AuthenticationProvider,
-            options?: AuthenticationProviderOptions
-        ): Disposable;
+        export function registerAuthenticationProvider(provider: AuthenticationProvider): Disposable;
 
         /**
          * @deprecated - getSession should now trigger extension activation.
@@ -159,11 +121,25 @@ declare module 'vscode' {
         export const onDidChangeAuthenticationProviders: Event<AuthenticationProvidersChangeEvent>;
 
         /**
+         * @deprecated
+         * The ids of the currently registered authentication providers.
+         * @returns An array of the ids of authentication providers that are currently registered.
+         */
+        export function getProviderIds(): Thenable<ReadonlyArray<string>>;
+
+        /**
+         * @deprecated
+         * An array of the ids of authentication providers that are currently registered.
+         */
+        export const providerIds: ReadonlyArray<string>;
+
+        /**
          * An array of the information of authentication providers that are currently registered.
          */
         export const providers: ReadonlyArray<AuthenticationProviderInformation>;
 
         /**
+         * @deprecated
          * Logout of a specific session.
          * @param providerId The id of the provider to use
          * @param sessionId The session id to remove
@@ -171,8 +147,45 @@ declare module 'vscode' {
          */
         export function logout(providerId: string, sessionId: string): Thenable<void>;
     }
+    /**
+     * Represents a storage utility for secrets, information that is
+     * sensitive.
+     */
+    export interface SecretStorage {
+        /**
+         * Retrieve a secret that was stored with key. Returns undefined if there
+         * is no password matching that key.
+         * @param key The key the password was stored under.
+         * @returns The stored value or `undefined`.
+         */
+        get(key: string): Thenable<string | undefined>;
 
-    //#endregion
+        /**
+         * Store a secret under a given key.
+         * @param key The key to store the password under.
+         * @param value The password.
+         */
+        store(key: string, value: string): Thenable<void>;
+
+        /**
+         * Remove a secret from storage.
+         * @param key The key the password was stored under.
+         */
+        delete(key: string): Thenable<void>;
+
+        /**
+         * Fires when a secret is set or deleted.
+         */
+        onDidChange: Event<void>;
+    }
+
+    export interface ExtensionContext {
+        secrets: SecretStorage;
+    }
+    export interface ExtensionContext {
+        secrets: SecretStorage;
+    }
+
     //#region debug
 
     /**

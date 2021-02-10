@@ -45,6 +45,7 @@ import {
 import { ProductNames } from '../../../client/common/installer/productNames';
 import { openNotebook } from '../helpers';
 import { noop } from '../../../client/common/utils/misc';
+import { nbformat } from '@jupyterlab/coreutils';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
@@ -251,12 +252,10 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         await waitForExecutionCompletedSuccessfully(updateCell);
 
         assert.lengthOf(displayCell.outputs, 1, 'Incorrect output');
-        const markdownOutput = displayCell.outputs[0] as CellDisplayOutput;
-        assert.equal(markdownOutput.outputKind, vscodeNotebookEnums.CellOutputKind.Rich, 'Incorrect output');
         expect(displayCell.metadata.executionOrder).to.be.greaterThan(0, 'Execution count should be > 0');
         expect(displayCell.metadata.runStartTime).to.be.greaterThan(0, 'Start time should be > 0');
         expect(displayCell.metadata.lastRunDuration).to.be.greaterThan(0, 'Duration should be > 0');
-        expect(markdownOutput.data['text/markdown']).to.be.equal('foo', 'Display cell did not update');
+        expect(displayCell.outputs[0].outputs[0]?.value).to.be.equal('foo', 'Display cell did not update');
     });
     test('Clearing output while executing will ensure output is cleared', async () => {
         // Assume you are executing a cell that prints numbers 1-100.
@@ -297,8 +296,8 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         await waitForCondition(
             async () =>
                 assertNotHasTextOutputInVSCode(cell, 'Start', 0, false) &&
-                cell.outputs.length > 0 &&
-                cell.outputs[0].outputKind === vscodeNotebookEnums.CellOutputKind.Rich,
+                cell.outputs.length > 0,
+            //  && cell.outputs[0].outputKind === vscodeNotebookEnums.CellOutputKind.Rich,
             5_000,
             'Cell did not get cleared'
         );
@@ -403,26 +402,26 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         for (const cell of cells) {
             assert.lengthOf(cell.outputs, 1, 'Incorrect output');
         }
-        assert.equal(
-            cells[0].outputs[0].outputKind,
-            vscodeNotebookEnums.CellOutputKind.Rich,
-            'Incorrect output for first cell'
-        );
-        assert.equal(
-            cells[1].outputs[0].outputKind,
-            vscodeNotebookEnums.CellOutputKind.Rich,
-            'Incorrect output for first cell'
-        );
-        assert.equal(
-            cells[2].outputs[0].outputKind,
-            vscodeNotebookEnums.CellOutputKind.Rich,
-            'Incorrect output for first cell'
-        );
+        // assert.equal(
+        //     cells[0].outputs[0].outputKind,
+        //     vscodeNotebookEnums.CellOutputKind.Rich,
+        //     'Incorrect output for first cell'
+        // );
+        // assert.equal(
+        //     cells[1].outputs[0].outputKind,
+        //     vscodeNotebookEnums.CellOutputKind.Rich,
+        //     'Incorrect output for first cell'
+        // );
+        // assert.equal(
+        //     cells[2].outputs[0].outputKind,
+        //     vscodeNotebookEnums.CellOutputKind.Rich,
+        //     'Incorrect output for first cell'
+        // );
         assertHasTextOutputInVSCode(cells[0], '1');
         assertHasTextOutputInVSCode(cells[1], '<a href=f>', 0, false);
         assertHasTextOutputInVSCode(cells[2], '<a href=f>', 0, false);
-        const errorOutput = cells[3].outputs[0] as CellErrorOutput;
-        assert.equal(errorOutput.outputKind, vscodeNotebookEnums.CellOutputKind.Error, 'Incorrect output');
+        const errorOutput = cells[3].outputs[0].outputs[0].value as nbformat.IError;
+        // assert.equal(errorOutput.outputKind, vscodeNotebookEnums.CellOutputKind.Error, 'Incorrect output');
         assert.equal(errorOutput.ename, 'Exception', 'Incorrect ename'); // As status contains ename, we don't want this displayed again.
         assert.equal(errorOutput.evalue, '<whatever>', 'Incorrect evalue'); // As status contains ename, we don't want this displayed again.
         assert.isNotEmpty(errorOutput.traceback, 'Incorrect traceback');
@@ -438,10 +437,10 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
 
         assert.equal(cells[0].outputs.length, 0, 'Incorrect number of output');
         assert.equal(cells[1].outputs.length, 1, 'Incorrect number of output');
-        assert.equal(cells[1].outputs[0].outputKind, vscodeNotebookEnums.CellOutputKind.Rich, 'Incorrect output type');
-        assert.equal((cells[1].outputs[0] as CellDisplayOutput).data['text/markdown'], 'foo', 'Incorrect output value');
-        const displayId = (cells[1].outputs[0] as CellDisplayOutput).metadata?.custom?.transient?.display_id;
-        assert.ok(displayId, 'Display id not present in metadata');
+        // assert.equal(cells[1].outputs[0].outputKind, vscodeNotebookEnums.CellOutputKind.Rich, 'Incorrect output type');
+
+        assert.equal(cells[1].outputs[0].outputs[0]?.value, 'foo', 'Incorrect output value');
+        assert.ok((cells[1].outputs[0].outputs[0]?.metadata as any)?.custom?.transient?.display_id, 'Display id not present in metadata');
 
         await insertCodeCell(
             dedent`
@@ -456,8 +455,8 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         assert.equal(cells[0].outputs.length, 0, 'Incorrect number of output');
         assert.equal(cells[1].outputs.length, 1, 'Incorrect number of output');
         assert.equal(cells[2].outputs.length, 1, 'Incorrect number of output');
-        assert.equal(cells[1].outputs[0].outputKind, vscodeNotebookEnums.CellOutputKind.Rich, 'Incorrect output type');
-        assert.equal((cells[1].outputs[0] as CellDisplayOutput).data['text/markdown'], 'bar', 'Incorrect output value');
+        // assert.equal(cells[1].outputs[0].outputKind, vscodeNotebookEnums.CellOutputKind.Rich, 'Incorrect output type');
+        assert.equal(cells[1].outputs[0].outputs[0].value, 'bar', 'Incorrect output value');
         assertHasTextOutputInVSCode(cells[2], 'hello', 0, false);
     });
     test('More messages from background threads', async () => {
@@ -490,17 +489,18 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
 
         // Wait for last line to be `iteration 9`
         assert.equal(cells[0].outputs.length, 1, 'Incorrect number of output');
-        assert.equal(cells[0].outputs[0].outputKind, vscodeNotebookEnums.CellOutputKind.Rich, 'Incorrect output type');
+        // assert.equal(cells[0].outputs[0].outputKind, vscodeNotebookEnums.CellOutputKind.Rich, 'Incorrect output type');
         await waitForCondition(
             async () => {
-                const output = cells[0].outputs[0] as CellDisplayOutput;
-                const text = output.data['text/plain'] as string;
+                const output = cells[0].outputs[0];
+                const text = output.outputs.find(op => op.mime === 'text/plain')?.value as string;
                 return text.trim().endsWith('iteration 9');
             },
             10_000,
             'Incorrect output, expected all iterations'
         );
-        const textOutput = (cells[0].outputs[0] as CellDisplayOutput).data['text/plain'] as string;
+
+        const textOutput = cells[0].outputs[0].outputs.find(op => op.mime === 'text/plain')?.value as string;
         expect(textOutput.indexOf('main thread done')).lessThan(
             textOutput.indexOf('iteration 9'),
             'Main thread should have completed before background thread'
@@ -544,20 +544,20 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         // Wait for last line to be `iteration 9`
         assert.equal(cells[0].outputs.length, 1, 'Incorrect number of output');
         assert.equal(cells[1].outputs.length, 1, 'Incorrect number of output');
-        assert.equal(cells[0].outputs[0].outputKind, vscodeNotebookEnums.CellOutputKind.Rich, 'Incorrect output type');
+        // assert.equal(cells[0].outputs[0].outputKind, vscodeNotebookEnums.CellOutputKind.Rich, 'Incorrect output type');
 
         // The background messages from cell 1 will end up in cell 2.
         await waitForCondition(
             async () => {
-                const output = cells[1].outputs[0] as CellDisplayOutput;
-                const text = output.data['text/plain'] as string;
+                const output = cells[1].outputs[0];
+                const text = output.outputs.find(op => op.mime === 'text/plain')?.value as string;
                 return text.trim().endsWith('iteration 9');
             },
             10_000,
             'Expected background messages to end up in cell 2'
         );
-        const cell1Output = (cells[0].outputs[0] as CellDisplayOutput).data['text/plain'] as string;
-        const cell2Output = (cells[1].outputs[0] as CellDisplayOutput).data['text/plain'] as string;
+        const cell1Output = cells[0].outputs[0].outputs.find(op => op.mime === 'text/plain')?.value as string;
+        const cell2Output = cells[1].outputs[0].outputs.find(op => op.mime === 'text/plain')?.value as string;
         expect(cell1Output).includes('main thread done', 'Main thread did not complete in cell 1');
         expect(cell2Output).includes('HELLO', 'Print output from cell 2 not in output of cell 2');
         expect(cell2Output).includes('iteration 9', 'Background output from cell 1 not in output of cell 2');
@@ -614,17 +614,13 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         // Line2
         // Line3
         assert.equal(cells[0].outputs.length, 1, 'Incorrect number of output');
-        assert.equal(cells[0].outputs[0].outputKind, vscodeNotebookEnums.CellOutputKind.Rich, 'Incorrect output type');
+        // assert.equal(cells[0].outputs[0].outputKind, vscodeNotebookEnums.CellOutputKind.Rich, 'Incorrect output type');
         assert.equal(cells[1].outputs.length, 1, 'Incorrect number of output');
-        assert.equal(cells[1].outputs[0].outputKind, vscodeNotebookEnums.CellOutputKind.Rich, 'Incorrect output type');
+        // assert.equal(cells[1].outputs[0].outputKind, vscodeNotebookEnums.CellOutputKind.Rich, 'Incorrect output type');
 
         // Confirm the output
-        const output1Lines: string[] = ((cells[0].outputs[0] as CellDisplayOutput).data[
-            'text/plain'
-        ] as string).splitLines({ trim: false, removeEmptyEntries: false });
-        const output2Lines: string[] = ((cells[1].outputs[0] as CellDisplayOutput).data[
-            'text/plain'
-        ] as string).splitLines({ trim: false, removeEmptyEntries: false });
+        const output1Lines: string[] = (cells[0].outputs[0].outputs.find(op => op.mime === 'text/plain')?.value as string).splitLines({ trim: false, removeEmptyEntries: false });
+        const output2Lines: string[] = (cells[1].outputs[0].outputs.find(op => op.mime === 'text/plain')?.value as string).splitLines({ trim: false, removeEmptyEntries: false });
         assert.equal(output1Lines.length, 4);
         assert.equal(output2Lines.length, 3);
     });
@@ -659,18 +655,18 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         // ab
         // Basically have one output for stderr & a separate output for stdout.
         assert.equal(cells[0].outputs.length, 2, 'Incorrect number of output');
-        const output1 = cells[0].outputs[0] as CellDisplayOutput;
-        const output2 = cells[0].outputs[1] as CellDisplayOutput;
-        assert.equal(output1.metadata?.custom?.vscode?.outputType, 'stream', 'Incorrect output type');
-        assert.equal(output2.metadata?.custom?.vscode?.outputType, 'stream', 'Incorrect output type');
-        assert.equal(output1.metadata?.custom?.vscode?.name, 'stdout', 'Incorrect stream name');
-        assert.equal(output2.metadata?.custom?.vscode?.name, 'stderr', 'Incorrect stream name');
-        assert.equal(output1.outputKind, vscodeNotebookEnums.CellOutputKind.Rich, 'Incorrect output type');
-        assert.equal(output2.outputKind, vscodeNotebookEnums.CellOutputKind.Rich, 'Incorrect output type');
+        const output1 = cells[0].outputs[0];
+        const output2 = cells[0].outputs[1];
+        assert.equal((output1.outputs[0].metadata as any)?.custom?.vscode?.outputType, 'stream', 'Incorrect output type');
+        assert.equal((output2.outputs[0].metadata as any)?.custom?.vscode?.outputType, 'stream', 'Incorrect output type');
+        assert.equal((output1.outputs[0].metadata as any)?.custom?.vscode?.name, 'stdout', 'Incorrect stream name');
+        assert.equal((output2.outputs[0].metadata as any)?.custom?.vscode?.name, 'stderr', 'Incorrect stream name');
+        // assert.equal(output1.outputKind, vscodeNotebookEnums.CellOutputKind.Rich, 'Incorrect output type');
+        // assert.equal(output2.outputKind, vscodeNotebookEnums.CellOutputKind.Rich, 'Incorrect output type');
 
         // Confirm the output
-        assert.equal(output1.data['text/plain'], '12');
-        assert.equal(output2.data['text/plain'], 'ab');
+        assert.equal(output1.outputs.find(op => op.mime === 'text/plain')?.value, '12');
+        assert.equal(output2.outputs.find(op => op.mime === 'text/plain')?.value, 'ab');
     });
 
     test('Execute all cells and run after error', async () => {

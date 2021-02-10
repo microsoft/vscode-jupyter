@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { NotebookDocument, NotebookKernel as VSCNotebookKernel } from '../../../../types/vscode-proposed';
+import { NotebookCellOutput, NotebookDocument, NotebookKernel as VSCNotebookKernel } from '../../../../types/vscode-proposed';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IVSCodeNotebook } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
@@ -27,7 +27,7 @@ export class EmptyNotebookCellLanguageService implements IExtensionSingleActivat
     constructor(
         @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
-    ) {}
+    ) { }
     public async activate(): Promise<void> {
         this.notebook.onDidChangeActiveNotebookKernel(this.onDidChangeActiveNotebookKernel, this, this.disposables);
     }
@@ -95,7 +95,7 @@ export class EmptyNotebookCellLanguageService implements IExtensionSingleActivat
                         cellKind: cell.cellKind,
                         language: monacoLanguage,
                         metadata: cell.metadata,
-                        outputs: cell.outputs,
+                        outputs: cell.outputs.map(op => new NotebookCellOutput(op.outputs)),
                         source: cell.document.getText()
                     }
                 ]);

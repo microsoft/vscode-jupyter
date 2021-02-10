@@ -165,14 +165,11 @@ suite('DataScience - VSCode Notebook - (Open)', function () {
         assert.include(notebook.cells[4].document.getText(), 'plt.show()', 'Cell5, source');
         assert.lengthOf(notebook.cells[4].outputs, 1, 'Cell5, outputs');
         // assert.equal(notebook.cells[4].outputs[0].outputKind, vscodeNotebookEnums.CellOutputKind.Rich, 'Cell5, output');
-        const richOutput = (notebook.cells[4].outputs[0] as unknown) as CellDisplayOutput;
-        assert.containsAllKeys(
-            richOutput.data,
-            { 'text/plain': '', 'image/svg+xml': '', 'image/png': '' },
-            'Cell5, output'
-        );
+        const richOutput = notebook.cells[4].outputs[0];
+        assert.deepEqual(richOutput.outputs.map(op => op.mime), ['text/plain', 'image/svg+xml', 'image/png'], 'Cell5, output');
+
         assert.deepEqual(
-            richOutput.metadata?.custom,
+            richOutput.outputs[0]?.metadata?.custom,
             {
                 needs_background: 'light',
                 vscode: {

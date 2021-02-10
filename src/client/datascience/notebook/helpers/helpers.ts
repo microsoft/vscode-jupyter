@@ -782,7 +782,7 @@ export function getCellStatusMessageBasedOnFirstCellErrorOutput(outputs?: readon
         return '';
     }
 
-    const errorOutput = outputs.find(op => op.outputs.length && !op.outputs.some(opit => opit.mime !== 'application/x.notebook.error-traceback'))
+    const errorOutput = outputs.find(op => op.outputs.length && !op.outputs.some((opit: NotebookCellOutputItem) => opit.mime !== 'application/x.notebook.error-traceback'))
 
     if (!errorOutput) {
         return '';
