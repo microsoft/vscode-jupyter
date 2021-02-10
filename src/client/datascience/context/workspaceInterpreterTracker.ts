@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { Uri } from 'vscode';
-import { IDisposableRegistry, Resource } from '../../common/types';
+import { IDisposableRegistry, IExtensions, Resource } from '../../common/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { IExtensionSyncActivationService } from '../../activation/types';
 import { IWorkspaceService } from '../../common/application/types';
@@ -13,8 +13,10 @@ import { IPythonExtensionChecker } from '../../api/types';
 @injectable()
 export class WorkspaceInterpreterTracker implements IExtensionSyncActivationService {
     private static readonly workspaceInterpreters = new Map<string, undefined | string>();
+    private trackingInterpreters?: boolean;
     private static getWorkspaceIdentifier: (resource: Resource) => string = () => '';
     constructor(
+        @inject(IExtensions) private readonly extensions: IExtensions,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IPythonExtensionChecker) private readonly pythonExtensionChecker: IPythonExtensionChecker,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
@@ -26,6 +28,7 @@ export class WorkspaceInterpreterTracker implements IExtensionSyncActivationServ
     }
     public activate() {
         this.trackActiveInterpreters();
+        this.extensions.onDidChange(this.trackActiveInterpreters, this, this.disposables);
     }
     public static isActiveWorkspaceInterpreter(resource: Resource, interpreter?: PythonEnvironment) {
         if (!interpreter) {
@@ -39,9 +42,10 @@ export class WorkspaceInterpreterTracker implements IExtensionSyncActivationServ
         return activeInterpreterPath === interpreter.path;
     }
     private trackActiveInterpreters() {
-        if (!this.pythonExtensionChecker.isPythonExtensionInstalled) {
+        if (this.trackingInterpreters || !this.pythonExtensionChecker.isPythonExtensionInstalled) {
             return;
         }
+        this.trackingInterpreters = true;
         this.interpreterService.onDidChangeInterpreter(
             async () => {
                 const workspaces: Uri[] = Array.isArray(this.workspaceService.workspaceFolders)
