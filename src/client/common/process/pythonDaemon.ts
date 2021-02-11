@@ -34,6 +34,7 @@ export class DaemonError extends BaseError {
     }
 }
 export class PythonDaemonExecutionService extends BasePythonDaemon implements IPythonDaemonExecutionService {
+    // eslint-disable-next-line @typescript-eslint/no-useless-constructor
     constructor(
         pythonExecutionService: IPythonExecutionService,
         platformService: IPlatformService,
