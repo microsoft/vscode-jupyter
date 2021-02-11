@@ -18,7 +18,11 @@ import { captureTelemetry } from '../../telemetry';
 import { sendNotebookOrKernelLanguageTelemetry } from '../common';
 import { Telemetry } from '../constants';
 import { sendKernelListTelemetry } from '../telemetry/kernelTelemetry';
-import { getErrorClassification, sendKernelTelemetryEvent, trackKernelResourceInformation } from '../telemetry/telemetry';
+import {
+    getErrorClassification,
+    sendKernelTelemetryEvent,
+    trackKernelResourceInformation
+} from '../telemetry/telemetry';
 import { areKernelConnectionsEqual, isLocalLaunch } from '../jupyter/kernels/helpers';
 import { KernelSelectionProvider } from '../jupyter/kernels/kernelSelections';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';

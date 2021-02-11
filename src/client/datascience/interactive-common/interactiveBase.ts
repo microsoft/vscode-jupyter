@@ -108,7 +108,11 @@ import { WebviewPanelHost } from '../webviews/webviewPanelHost';
 import { DataViewerChecker } from './dataViewerChecker';
 import { InteractiveWindowMessageListener } from './interactiveWindowMessageListener';
 import { serializeLanguageConfiguration } from './serialization';
-import { getErrorClassification, sendKernelTelemetryEvent, trackKernelResourceInformation } from '../telemetry/telemetry';
+import {
+    getErrorClassification,
+    sendKernelTelemetryEvent,
+    trackKernelResourceInformation
+} from '../telemetry/telemetry';
 
 export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindowMapping> implements IInteractiveBase {
     public get notebook(): INotebook | undefined {
