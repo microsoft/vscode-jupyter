@@ -304,7 +304,10 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
         try {
             const settings = this.configuration.getSettings(document.uri);
             // Create a new notebook
-            notebook = await this.notebookProvider.getOrCreateNotebook({ identity: createExportInteractiveIdentity() });
+            notebook = await this.notebookProvider.getOrCreateNotebook({
+                identity: createExportInteractiveIdentity(),
+                resource: file
+            });
             // If that works, then execute all of the cells.
             const cells = Array.prototype.concat(
                 ...(await Promise.all(

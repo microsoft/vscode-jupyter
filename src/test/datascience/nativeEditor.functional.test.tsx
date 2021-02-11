@@ -1093,7 +1093,8 @@ df.head()`;
                     const jupyterExecution = ioc.serviceManager.get<IJupyterExecution>(IJupyterExecution);
                     const server = await jupyterExecution.getServer({
                         allowUI: () => false,
-                        purpose: Identifiers.HistoryPurpose
+                        purpose: Identifiers.HistoryPurpose,
+                        resource: undefined
                     });
                     assert.ok(server, 'Server was destroyed on notebook shutdown');
 

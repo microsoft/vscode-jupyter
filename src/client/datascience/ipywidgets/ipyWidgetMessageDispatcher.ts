@@ -389,6 +389,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         if (this.notebookIdentity && !this.notebook) {
             this.notebook = await this.notebookProvider.getOrCreateNotebook({
                 identity: this.notebookIdentity,
+                resource: this.notebookIdentity,
                 getOnly: true
             });
         }

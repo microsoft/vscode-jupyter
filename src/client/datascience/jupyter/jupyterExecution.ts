@@ -19,6 +19,7 @@ import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { JupyterSessionStartError } from '../baseJupyterSession';
 import { Commands, Identifiers, Telemetry } from '../constants';
+import { trackKernelResourceInformation } from '../telemetry/telemetry';
 import {
     IJupyterConnection,
     IJupyterExecution,
@@ -192,7 +193,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                         const sessionManager = await sessionManagerFactory.create(connection);
                         try {
                             kernelConnectionMetadata = await this.kernelSelector.getPreferredKernelForRemoteConnection(
-                                undefined,
+                                options?.resource,
                                 sessionManager,
                                 options?.metadata,
                                 cancelToken
@@ -211,7 +212,12 @@ export class JupyterExecutionBase implements IJupyterExecution {
                         purpose: options ? options.purpose : uuid(),
                         disableUI: !allowUI
                     };
-
+                    // If we were not provided a kernel connection, this means we changed the connection here.
+                    if (!options?.kernelConnection) {
+                        trackKernelResourceInformation(options?.resource, {
+                            kernelConnection: launchInfo.kernelConnectionMetadata
+                        });
+                    }
                     // eslint-disable-next-line no-constant-condition
                     while (true) {
                         try {
@@ -238,7 +244,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                                 const selection = await this.appShell.showErrorMessage(message, selectKernel, cancel);
                                 if (selection === selectKernel) {
                                     const kernelInterpreter = await this.kernelSelector.selectLocalKernel(
-                                        undefined,
+                                        options?.resource,
                                         'jupyter',
                                         new StopWatch(),
                                         cancelToken,
@@ -246,6 +252,9 @@ export class JupyterExecutionBase implements IJupyterExecution {
                                     );
                                     if (kernelInterpreter) {
                                         launchInfo.kernelConnectionMetadata = kernelInterpreter;
+                                        trackKernelResourceInformation(options?.resource, {
+                                            kernelConnection: launchInfo.kernelConnectionMetadata
+                                        });
                                         continue;
                                     }
                                 }

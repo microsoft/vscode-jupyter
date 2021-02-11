@@ -74,11 +74,15 @@ export class NotebookCommands implements IDisposable {
         }
         if (options.identity) {
             // Make sure we have a connection or we can't get remote kernels.
-            const connection = await this.notebookProvider.connect({ getOnly: false, disableUI: false });
+            const connection = await this.notebookProvider.connect({
+                getOnly: false,
+                disableUI: false,
+                resource: options.resource
+            });
 
             // Select a new kernel using the connection information
             const kernel = await this.kernelSelector.selectJupyterKernel(
-                options.identity,
+                options.resource,
                 connection,
                 connection?.type || this.notebookProvider.type,
                 options.currentKernelDisplayName

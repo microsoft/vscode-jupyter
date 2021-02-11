@@ -115,7 +115,8 @@ suite(`DataScience JupyterServerUriProvider tests`, () => {
         const server = await jupyterExecution.connectToNotebookServer({
             uri,
             purpose: 'history',
-            allowUI: () => false
+            allowUI: () => false,
+            resource: undefined
         });
 
         // Verify URI is our expected one

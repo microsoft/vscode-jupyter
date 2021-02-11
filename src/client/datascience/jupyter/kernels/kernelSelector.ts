@@ -21,7 +21,7 @@ import { captureTelemetry, IEventNamePropertyMapping, sendTelemetryEvent } from 
 import { sendNotebookOrKernelLanguageTelemetry } from '../../common';
 import { Commands, Telemetry } from '../../constants';
 import { sendKernelListTelemetry } from '../../telemetry/kernelTelemetry';
-import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../../telemetry/telemetry';
+import { sendKernelTelemetryEvent } from '../../telemetry/telemetry';
 import { IKernelFinder, IpyKernelNotInstalledError } from '../../kernel-launcher/types';
 import { isPythonNotebook } from '../../notebook/helpers/helpers';
 import { getInterpreterInfoStoredInMetadata } from '../../notebookStorage/baseModel';
@@ -147,8 +147,7 @@ export class KernelSelector implements IKernelSelectionUsage {
         notebookMetadata?: nbformat.INotebookMetadata,
         disableUI?: boolean,
         cancelToken?: CancellationToken,
-        ignoreDependencyCheck?: boolean,
-        ignoreTrackingKernelInformation?: boolean
+        ignoreDependencyCheck?: boolean
     ): Promise<
         KernelSpecConnectionMetadata | PythonKernelConnectionMetadata | DefaultKernelConnectionMetadata | undefined
     > {
@@ -177,16 +176,14 @@ export class KernelSelector implements IKernelSelectionUsage {
                 telemetryProps,
                 notebookMetadata,
                 disableUI,
-                cancelToken,
-                ignoreTrackingKernelInformation
+                cancelToken
             );
         } else if (type === 'raw') {
             selection = await this.getKernelForLocalRawConnection(
                 resource,
                 notebookMetadata,
                 cancelToken,
-                ignoreDependencyCheck,
-                ignoreTrackingKernelInformation
+                ignoreDependencyCheck
             );
         }
 
@@ -240,8 +237,7 @@ export class KernelSelector implements IKernelSelectionUsage {
         resource: Resource,
         sessionManager?: IJupyterSessionManager,
         notebookMetadata?: nbformat.INotebookMetadata,
-        cancelToken?: CancellationToken,
-        ignoreTrackingKernelInformation?: boolean
+        cancelToken?: CancellationToken
     ): Promise<KernelConnectionMetadata | undefined> {
         const [interpreter, specs, sessions] = await Promise.all([
             this.extensionChecker.isPythonExtensionInstalled
@@ -347,9 +343,6 @@ export class KernelSelector implements IKernelSelectionUsage {
             });
         }
 
-        if (!ignoreTrackingKernelInformation) {
-            trackKernelResourceInformation(resource, { kernelConnection });
-        }
         return kernelConnection;
     }
     public async useSelectedKernel(
@@ -469,8 +462,7 @@ export class KernelSelector implements IKernelSelectionUsage {
         telemetryProps: IEventNamePropertyMapping[Telemetry.FindKernelForLocalConnection],
         notebookMetadata?: nbformat.INotebookMetadata,
         disableUI?: boolean,
-        cancelToken?: CancellationToken,
-        ignoreTrackingKernelInformation?: boolean
+        cancelToken?: CancellationToken
     ): Promise<
         KernelSpecConnectionMetadata | PythonKernelConnectionMetadata | DefaultKernelConnectionMetadata | undefined
     > {
@@ -503,9 +495,6 @@ export class KernelSelector implements IKernelSelectionUsage {
                     telemetryProps.promptedToSelect = true;
                     kernelConnection = await this.selectLocalKernel(resource, 'jupyter', stopWatch, cancelToken);
                 }
-                if (!ignoreTrackingKernelInformation) {
-                    trackKernelResourceInformation(resource, { kernelConnection });
-                }
                 return kernelConnection;
             }
         } else if (!cancelToken?.isCancellationRequested) {
@@ -523,9 +512,6 @@ export class KernelSelector implements IKernelSelectionUsage {
                     kernelConnection = { kind: 'startUsingKernelSpec', kernelSpec, interpreter: activeInterpreter };
                 } else {
                     kernelConnection = { kind: 'startUsingDefaultKernel', interpreter: activeInterpreter };
-                }
-                if (!ignoreTrackingKernelInformation) {
-                    trackKernelResourceInformation(resource, { kernelConnection });
                 }
                 return kernelConnection;
             }
@@ -554,8 +540,7 @@ export class KernelSelector implements IKernelSelectionUsage {
         resource: Resource,
         notebookMetadata?: nbformat.INotebookMetadata,
         cancelToken?: CancellationToken,
-        ignoreDependencyCheck?: boolean,
-        ignoreTrackingKernelInformation?: boolean
+        ignoreDependencyCheck?: boolean
     ): Promise<KernelSpecConnectionMetadata | PythonKernelConnectionMetadata | undefined> {
         // If user had selected an interpreter (raw kernel), then that interpreter would be stored in the kernelspec metadata.
         // Find this matching interpreter & start that using raw kernel.
@@ -569,9 +554,6 @@ export class KernelSelector implements IKernelSelectionUsage {
                 interpreter: interpreterStoredInKernelSpec
             };
             // Install missing dependencies only if we're dealing with a Python kernel.
-            if (!ignoreTrackingKernelInformation) {
-                trackKernelResourceInformation(resource, { kernelConnection });
-            }
             if (interpreterStoredInKernelSpec && isPythonKernelConnection(kernelConnection)) {
                 await this.installDependenciesIntoInterpreter(
                     interpreterStoredInKernelSpec,
@@ -583,7 +565,13 @@ export class KernelSelector implements IKernelSelectionUsage {
         }
 
         // First use our kernel finder to locate a kernelspec on disk
-        const kernelSpec = await this.kernelFinder.findKernelSpec(resource, notebookMetadata, cancelToken);
+        const hasKernelMetadataForPythonNb =
+            isPythonNotebook(notebookMetadata) && notebookMetadata?.kernelspec ? true : false;
+        // Don't look for kernel spec for python notebooks if we don't have the kernel metadata.
+        const kernelSpec =
+            hasKernelMetadataForPythonNb || !isPythonNotebook(notebookMetadata)
+                ? await this.kernelFinder.findKernelSpec(resource, notebookMetadata, cancelToken)
+                : undefined;
         traceInfoIf(
             !!process.env.VSC_JUPYTER_FORCE_LOGGING,
             `Kernel spec found ${JSON.stringify(kernelSpec)}, metadata ${JSON.stringify(notebookMetadata || '')}`
@@ -597,9 +585,6 @@ export class KernelSelector implements IKernelSelectionUsage {
                 kind: 'startUsingPythonInterpreter',
                 interpreter: activeInterpreter
             };
-            if (!ignoreTrackingKernelInformation) {
-                trackKernelResourceInformation(resource, { kernelConnection });
-            }
             await this.installDependenciesIntoInterpreter(activeInterpreter, ignoreDependencyCheck, cancelToken);
 
             // Return current interpreter.
@@ -616,9 +601,6 @@ export class KernelSelector implements IKernelSelectionUsage {
                 kernelSpec,
                 interpreter
             };
-            if (!ignoreTrackingKernelInformation) {
-                trackKernelResourceInformation(resource, { kernelConnection });
-            }
             // Install missing dependencies only if we're dealing with a Python kernel.
             if (interpreter && isPythonKernelConnection(kernelConnection)) {
                 await this.installDependenciesIntoInterpreter(interpreter, ignoreDependencyCheck, cancelToken);
@@ -638,9 +620,6 @@ export class KernelSelector implements IKernelSelectionUsage {
                         kernelSpec: firstPython,
                         interpreter: undefined
                     };
-                    if (!ignoreTrackingKernelInformation) {
-                        trackKernelResourceInformation(resource, { kernelConnection });
-                    }
                     return kernelConnection;
                 }
             }
@@ -652,9 +631,6 @@ export class KernelSelector implements IKernelSelectionUsage {
                     kernelSpec: kernelSpecs[0],
                     interpreter: undefined
                 };
-                if (!ignoreTrackingKernelInformation) {
-                    trackKernelResourceInformation(resource, { kernelConnection });
-                }
                 return kernelConnection;
             }
         }
@@ -678,10 +654,9 @@ export class KernelSelector implements IKernelSelectionUsage {
         if (!selection?.selection) {
             return;
         }
-        trackKernelResourceInformation(resource, {
-            kernelConnection: selection.selection,
-            kernelConnectionChanged: true
-        });
+        if (selection.selection.interpreter) {
+            this.interpreterPackages.trackPackages(selection.selection.interpreter);
+        }
         sendKernelTelemetryEvent(resource, Telemetry.SwitchKernel);
         return (this.useSelectedKernel(selection.selection, resource, type, cancelToken) as unknown) as T | undefined;
     }

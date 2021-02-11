@@ -931,7 +931,12 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
 
     private async getNotebook(token: CancellationToken): Promise<INotebook | undefined> {
         return this.notebookIdentity
-            ? this.notebookProvider.getOrCreateNotebook({ identity: this.notebookIdentity, getOnly: true, token })
+            ? this.notebookProvider.getOrCreateNotebook({
+                  identity: this.notebookIdentity,
+                  resource: this.resource,
+                  getOnly: true,
+                  token
+              })
             : undefined;
     }
 
