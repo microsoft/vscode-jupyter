@@ -1020,7 +1020,6 @@ module.exports = {
         'src/client/datascience/jupyter/jupyterConnection.ts',
         'src/client/datascience/jupyter/jupyterPasswordConnect.ts',
         'src/client/datascience/jupyter/jupyterWebSocket.ts',
-        'src/client/datascience/jupyter/notebookStarter.ts',
         'src/client/datascience/jupyter/variableScriptLoader.ts',
         'src/client/datascience/jupyter/jupyterImporter.ts',
         'src/client/datascience/jupyter/oldJupyterVariables.ts',
