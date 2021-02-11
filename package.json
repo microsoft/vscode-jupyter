@@ -728,7 +728,7 @@
                     "dark": "resources/dark/variable_explorer.svg"
                 },
                 "category": "Jupyter",
-                "enablement": "!jupyter.variableViewVisible"
+                "enablement": "jupyter.isvscodenotebookactive && !jupyter.variableViewVisible"
             }
         ],
         "menus": {
@@ -1294,7 +1294,7 @@
                     "command": "jupyter.openVariableView",
                     "title": "%jupyter.command.jupyter.openVariableView.title%",
                     "category": "Jupyter",
-                    "when": "jupyter.isnativeactive"
+                    "when": "jupyter.isvscodenotebookactive"
                 },
                 {
                     "command": "jupyter.selectNativeJupyterUriFromToolBar",
@@ -1839,7 +1839,7 @@
                     "type": "webview",
                     "id": "jupyterViewVariables",
                     "name": "Variables",
-                    "when": "jupyter.isnativeactive"
+                    "when": "jupyter.isvscodenotebookactive"
                 }
             ]
         }
