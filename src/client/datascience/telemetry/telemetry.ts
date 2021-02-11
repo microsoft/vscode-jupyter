@@ -8,7 +8,7 @@ import { Resource } from '../../common/types';
 import { IEventNamePropertyMapping, sendTelemetryEvent, setSharedProperty } from '../../telemetry';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { ResourceSpecificTelemetryProperties } from './types';
-import { isErrorType, WrappedError } from '../../common/errors/errorUtils';
+import { getLastFrameFromPythonTraceback, isErrorType, WrappedError } from '../../common/errors/errorUtils';
 import { CancellationError } from '../../common/cancellation';
 import { TimedOutError } from '../../common/utils/async';
 import { JupyterInvalidKernelError } from '../jupyter/jupyterInvalidKernelError';
@@ -87,26 +87,43 @@ export function getErrorClassification(error: Error) {
     }
     return 'unknown';
 }
-/**
- * Analyze the details of the error such as `stdErr` from the kernel process and
- * try to determine the cause.
- */
-function getReasonForKernelToDie(error: Error) {
-    let kernelError: KernelDiedError | undefined;
+export function populateTelemetryWithErrorInfo(props: Record<string, any>, error: Error) {
+    const pythonStackTrace = getPythonStackTrace(error);
+    if (!pythonStackTrace) {
+        return;
+    }
+    const info = getLastFrameFromPythonTraceback(pythonStackTrace);
+    props.pythonErrorFile = getTelem
+}
+function getPythonStackTrace(error: Error) {
     if (error instanceof KernelDiedError) {
-        kernelError = error;
+        return error.stdErr;
+    }
+    if (error instanceof PythonKernelDiedError) {
+        return error.stdErr;
     }
     if (
         error instanceof WrappedError &&
         error.originalException &&
         error.originalException instanceof KernelDiedError
     ) {
-        kernelError = error.originalException;
+        return error.originalException.stdErr;
     }
-    if (!kernelError) {
-        return 'kerneldied';
+    if (
+        error instanceof WrappedError &&
+        error.originalException &&
+        error.originalException instanceof PythonKernelDiedError
+    ) {
+        return error.originalException.stdErr;
     }
-    const stdErr = kernelError.stdErr.toLowerCase();
+    return;
+}
+/**
+ * Analyze the details of the error such as `stdErr` from the kernel process and
+ * try to determine the cause.
+ */
+function getReasonForKernelToDie(error: Error) {
+    const stdErr = (getPythonStackTrace(error) || '').toLowerCase();
     if (stdErr.includes("ImportError: No module named 'win32api'".toLowerCase())) {
         // force re-installing ipykernel worked.
         /*
@@ -159,6 +176,16 @@ function getReasonForKernelToDie(error: Error) {
         // Conda environment with IPython 5.8.0 fails with this message.
         // Updating to latest version of ipython fixed it (conda update ipython).
         // Possible we might have to update other packages as well (when using `conda update ipython` plenty of other related pacakges got updated, such as zeromq, nbclient, jedi)
+        /*
+            Error: Kernel died with exit code 1. Traceback (most recent call last):
+            File "/Users/donjayamanne/miniconda3/envs/env3/lib/python3.7/site-packages/appnope/_nope.py", line 90, in nope
+                "Because Reasons"
+            File "/Users/donjayamanne/miniconda3/envs/env3/lib/python3.7/site-packages/appnope/_nope.py", line 60, in beginActivityWithOptions
+                NSProcessInfo = C('NSProcessInfo')
+            File "/Users/donjayamanne/miniconda3/envs/env3/lib/python3.7/site-packages/appnope/_nope.py", line 38, in C
+                assert ret is not None, "Couldn't find Class %s" % classname
+            AssertionError: Couldn't find Class NSProcessInfo
+        */
         return 'kerneldied.oldipython';
     }
     if (

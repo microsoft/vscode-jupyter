@@ -49,6 +49,33 @@ export function getErrorMessageFromPythonTraceback(traceback: string) {
     return lastLine.match(pythonErrorMessageRegExp) ? lastLine : undefined;
 }
 
+export function getLastFrameFromPythonTraceback(
+    traceback: string
+): { fileName: string; folderName: string } | undefined {
+    if (!traceback) {
+        return;
+    }
+    //             File "/Users/donjayamanne/miniconda3/envs/env3/lib/python3.7/site-packages/appnope/_nope.py", line 38, in C
+
+    const lastFrame = traceback
+        .split('\n')
+        .map((item) => item.trim().toLowerCase())
+        .filter((item) => item.length)
+        .reverse()
+        .find(
+            (line) =>
+                line.startsWith('file ') && line.includes(', line ') && line.includes('.pi') && line.includes('.pi')
+        );
+    if (!lastFrame) {
+        return;
+    }
+    const file = lastFrame.substring(0, lastFrame.lastIndexOf('.py')) + '.py';
+    const parts = file.replace(/\\/g, '/').split('/').reverse();
+    if (parts.length < 2) {
+        return;
+    }
+    return { fileName: parts[0], folderName: parts[1] };
+}
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Constructor<T> = { new (...args: any[]): T };
 export function isErrorType<T>(error: Error, expectedType: Constructor<T>) {
