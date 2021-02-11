@@ -19,7 +19,7 @@ import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { JupyterSessionStartError } from '../baseJupyterSession';
 import { Commands, Identifiers, Telemetry } from '../constants';
-import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../telemetry/telemetry';
+import { trackKernelResourceInformation } from '../telemetry/telemetry';
 import {
     IJupyterConnection,
     IJupyterExecution,
@@ -231,7 +231,6 @@ export class JupyterExecutionBase implements IJupyterExecution {
                             break;
                         } catch (ex) {
                             traceError('Failed to connect to server', ex);
-                            sendKernelTelemetryEvent(options?.resource, Telemetry.JupyterNotInstalledErrorShown);
                             if (ex instanceof JupyterSessionStartError && isLocalConnection && allowUI) {
                                 // Keep retrying, until it works or user cancels.
                                 // Sometimes if a bad kernel is selected, starting a session can fail.
