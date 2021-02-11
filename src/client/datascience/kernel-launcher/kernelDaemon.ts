@@ -105,12 +105,13 @@ export class PythonKernelDaemon extends BasePythonDaemon implements IPythonKerne
         const KernelDiedNotification = new NotificationType<{ exit_code: string; reason?: string }, void>(
             'kernel_died'
         );
-        let possibleReasonForProcExit = '';
+        let stdErr = '';
         this.connection.onNotification(KernelDiedNotification, (output) => {
             this.subject.error(
                 new PythonKernelDiedError({
                     exitCode: parseInt(output.exit_code, 10),
-                    reason: output.reason || possibleReasonForProcExit // If we have collected the error then use that (if reason is empty).
+                    reason: output.reason || stdErr, // If we have collected the error then use that (if reason is empty).
+                    stdErr: stdErr || output.reason || ''
                 })
             );
         });
@@ -123,7 +124,7 @@ export class PythonKernelDaemon extends BasePythonDaemon implements IPythonKerne
                 if (out.source === 'stderr') {
                     // Don't call this.subject.error, as that can only be called once (hence can only be handled once).
                     // Instead log this error & pass this only when the kernel dies.
-                    possibleReasonForProcExit += out.out;
+                    stdErr += out.out;
                     traceWarning(`Kernel ${this.proc.pid} as possibly died, StdErr from Kernel Process ${out.out}`);
                 } else {
                     this.subject.next(out);
@@ -134,6 +135,6 @@ export class PythonKernelDaemon extends BasePythonDaemon implements IPythonKerne
         );
 
         // If the daemon dies, then kernel is also dead.
-        this.closed.catch((error) => this.subject.error(new PythonKernelDiedError({ error })));
+        this.closed.catch((error) => this.subject.error(new PythonKernelDiedError({ error, stdErr })));
     }
 }

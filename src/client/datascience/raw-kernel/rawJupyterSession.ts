@@ -15,10 +15,14 @@ import { StopWatch } from '../../common/utils/stopWatch';
 import { captureTelemetry } from '../../telemetry';
 import { BaseJupyterSession } from '../baseJupyterSession';
 import { Identifiers, Telemetry } from '../constants';
-import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../telemetry/telemetry';
+import {
+    getErrorClassification,
+    sendKernelTelemetryEvent,
+    trackKernelResourceInformation
+} from '../telemetry/telemetry';
 import { getDisplayNameOrNameOfKernelConnection } from '../jupyter/kernels/helpers';
 import { KernelConnectionMetadata } from '../jupyter/kernels/types';
-import { IKernelLauncher, IpyKernelNotInstalledError, KernelDiedError } from '../kernel-launcher/types';
+import { IKernelLauncher, IpyKernelNotInstalledError } from '../kernel-launcher/types';
 import { reportAction } from '../progress/decorator';
 import { ReportableAction } from '../progress/types';
 import { RawSession } from '../raw-kernel/rawSession';
@@ -143,11 +147,10 @@ export class RawJupyterSession extends BaseJupyterSession {
                 traceError('Raw session failed to start because dependencies not installed');
                 throw error;
             } else {
-                const failureReason = error instanceof KernelDiedError ? 'kerneldied' : 'unknown';
                 // Send our telemetry event with the error included
                 sendKernelTelemetryEvent(resource, Telemetry.RawKernelSessionStart, stopWatch.elapsedTime, {
                     failed: true,
-                    failureReason
+                    failureReason: getErrorClassification(error)
                 });
                 sendKernelTelemetryEvent(
                     resource,

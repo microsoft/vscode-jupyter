@@ -67,17 +67,29 @@ export interface IPythonKernelDaemon extends IDisposable {
     start(moduleName: string, args: string[], options: SpawnOptions): Promise<ObservableExecutionResult<string>>;
 }
 
-export class KernelDiedError extends WrappedError {}
+export class KernelDiedError extends WrappedError {
+    constructor(message: string, public readonly stdErr: string, originalException?: Error) {
+        super(message, originalException);
+    }
+}
+
+export class KernelProcessExited extends Error {
+    constructor(public readonly exitCode: number = -1) {
+        super('Kernel process Exited');
+    }
+}
 
 export class PythonKernelDiedError extends Error {
     public readonly exitCode: number;
     public readonly reason?: string;
-    constructor(options: { exitCode: number; reason?: string } | { error: Error }) {
+    public readonly stdErr?: string;
+    constructor(options: { exitCode: number; reason?: string; stdErr: string } | { error: Error; stdErr: string }) {
         const message =
             'exitCode' in options
                 ? `Kernel died with exit code ${options.exitCode}. ${options.reason}`
                 : `Kernel died ${options.error.message}`;
         super(message);
+        this.stdErr = options.stdErr;
         if ('exitCode' in options) {
             this.exitCode = options.exitCode;
             this.reason = options.reason;

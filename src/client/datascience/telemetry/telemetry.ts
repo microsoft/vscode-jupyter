@@ -8,13 +8,13 @@ import { Resource } from '../../common/types';
 import { IEventNamePropertyMapping, sendTelemetryEvent, setSharedProperty } from '../../telemetry';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { ResourceSpecificTelemetryProperties } from './types';
-import { isErrorType } from '../../common/errors/errorUtils';
+import { isErrorType, WrappedError } from '../../common/errors/errorUtils';
 import { CancellationError } from '../../common/cancellation';
 import { TimedOutError } from '../../common/utils/async';
 import { JupyterInvalidKernelError } from '../jupyter/jupyterInvalidKernelError';
 import { JupyterWaitForIdleError } from '../jupyter/jupyterWaitForIdleError';
 import { JupyterKernelPromiseFailedError } from '../jupyter/kernels/jupyterKernelPromiseFailedError';
-import { IpyKernelNotInstalledError, KernelDiedError } from '../kernel-launcher/types';
+import { IpyKernelNotInstalledError, KernelDiedError, PythonKernelDiedError } from '../kernel-launcher/types';
 import { JupyterSessionStartError } from '../baseJupyterSession';
 import { JupyterConnectError } from '../jupyter/jupyterConnectError';
 import { JupyterInstallError } from '../jupyter/jupyterInstallError';
@@ -78,6 +78,8 @@ export function getErrorClassification(error: Error) {
         return 'jupyterconnection';
     } else if (isErrorType(error, JupyterInstallError)) {
         return 'jupyterinstall';
+    } else if (isErrorType(error, PythonKernelDiedError)) {
+        return getReasonForKernelToDie(error);
     } else if (isErrorType(error, KernelDiedError)) {
         return 'kerneldied';
     } else if (isErrorType(error, FetchError)) {
@@ -85,6 +87,60 @@ export function getErrorClassification(error: Error) {
     }
     return 'unknown';
 }
+function getReasonForKernelToDie(error: Error) {
+    let kernelError: KernelDiedError | undefined;
+    if (error instanceof KernelDiedError) {
+        kernelError = error;
+    }
+    if (
+        error instanceof WrappedError &&
+        error.originalException &&
+        error.originalException instanceof KernelDiedError
+    ) {
+        kernelError = error.originalException;
+    }
+    if (!kernelError) {
+        return 'kerneldied';
+    }
+    const stdErr = kernelError.stdErr.toLowerCase();
+    if (
+        stdErr.includes('ImportError: cannot import name'.toLowerCase()) &&
+        stdErr.includes('from partially initialized module'.toLowerCase()) &&
+        stdErr.includes('zmq.backend.cython'.toLowerCase())
+    ) {
+        // force re-installing ipykernel worked.
+        /*
+          File "C:\Users\<user>\AppData\Roaming\Python\Python38\site-packages\zmq\backend\cython\__init__.py", line 6, in <module>
+    from . import (constants, error, message, context,
+          ImportError: cannot import name 'constants' from partially initialized module 'zmq.backend.cython' (most likely due to a circular import) (C:\Users\<user>\AppData\Roaming\Python\Python38\site-packages\zmq\backend\cython\__init__.py)
+        */
+        return 'kerneldied.zmq.backend.cython';
+    }
+    if (
+        stdErr.includes('import win32api'.toLowerCase()) &&
+        stdErr.includes('ImportError: DLL load failed'.toLowerCase())
+    ) {
+        // Possibly a conda issue on windows
+        /*
+        win32_restrict_file_to_user
+        import win32api
+        ImportError: DLL load failed: 找不到指定的程序。
+        */
+        return 'kerneldied.dll.load.failed.win32api';
+    }
+    if (stdErr.includes('ImportError: DLL load failed'.toLowerCase())) {
+        // Possibly a conda issue or installation
+        return 'kerneldied.dll.load.failed';
+    }
+    if (stdErr.includes("AssertionError: Couldn't find Class NSProcessInfo".toLowerCase())) {
+        // Conda environment with IPython 5.8.0 fails with this message.
+        // Updating to latest version of ipython fixed it (conda update ipython).
+        // Possible we might have to update other packages as well (when using `conda update ipython` plenty of other related pacakges got updated, such as zeromq, nbclient, jedi)
+        return 'kerneldied.oldipython';
+    }
+    return 'kerneldied';
+}
+
 export function sendKernelTelemetryEvent<P extends IEventNamePropertyMapping, E extends keyof P>(
     resource: Resource,
     eventName: E,
