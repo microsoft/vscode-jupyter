@@ -21,7 +21,7 @@ import { ExportFormat } from '../datascience/export/types';
 import { InterruptResult } from '../datascience/types';
 import { EventName, PlatformErrors } from './constants';
 import { populateTelemetryWithErrorInfo } from '../common/errors';
-import { TelemetryErrorProperties } from '../common/errors/types';
+import { ErrorCategory, TelemetryErrorProperties } from '../common/errors/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -501,44 +501,14 @@ export interface IEventNamePropertyMapping {
     [Telemetry.AddCellBelow]: never | undefined;
     [Telemetry.CodeLensAverageAcquisitionTime]: never | undefined;
     [Telemetry.CollapseAll]: never | undefined;
-    [Telemetry.ConnectFailedJupyter]: {
-        failureCategory:
-            | 'cancelled'
-            | 'timeout'
-            | 'kerneldied'
-            | 'kerneldied'
-            | 'kernelpromisetimeout'
-            | 'jupytersession'
-            | 'jupyterconnection'
-            | 'jupyterinstall'
-            | 'jupyterselfcert'
-            | 'invalidkernel'
-            | 'noipykernel'
-            | 'fetcherror'
-            | 'unknown';
-    };
+    [Telemetry.ConnectFailedJupyter]: TelemetryErrorProperties;
     [Telemetry.ConnectLocalJupyter]: never | undefined;
     [Telemetry.ConnectRemoteJupyter]: never | undefined;
     /**
      * Connecting to an existing Jupyter server, but connecting to localhost.
      */
     [Telemetry.ConnectRemoteJupyterViaLocalHost]: never | undefined;
-    [Telemetry.ConnectRemoteFailedJupyter]: {
-        failureCategory:
-            | 'cancelled'
-            | 'timeout'
-            | 'kerneldied'
-            | 'kerneldied'
-            | 'kernelpromisetimeout'
-            | 'jupytersession'
-            | 'jupyterconnection'
-            | 'jupyterinstall'
-            | 'jupyterselfcert'
-            | 'invalidkernel'
-            | 'noipykernel'
-            | 'fetcherror'
-            | 'unknown';
-    };
+    [Telemetry.ConnectRemoteFailedJupyter]: TelemetryErrorProperties;
     [Telemetry.ConnectRemoteSelfCertFailedJupyter]: never | undefined;
     [Telemetry.RegisterAndUseInterpreterAsKernel]: never | undefined;
     [Telemetry.UseInterpreterAsKernel]: never | undefined;
@@ -1049,20 +1019,7 @@ export interface IEventNamePropertyMapping {
         | ResourceSpecificTelemetryProperties // If successful.
         | ({
               failed: true;
-              failureCategory:
-                  | 'cancelled'
-                  | 'timeout'
-                  | 'kerneldied'
-                  | 'kerneldied'
-                  | 'kernelpromisetimeout'
-                  | 'jupytersession'
-                  | 'jupyterconnection'
-                  | 'jupyterinstall'
-                  | 'jupyterselfcert'
-                  | 'invalidkernel'
-                  | 'noipykernel'
-                  | 'fetcherror'
-                  | 'unknown';
+              failureCategory: ErrorCategory;
           } & ResourceSpecificTelemetryProperties)
         | (ResourceSpecificTelemetryProperties & TelemetryErrorProperties); // If there any any unhandled exceptions.
     [Telemetry.SwitchKernel]: ResourceSpecificTelemetryProperties; // If there are unhandled exceptions;
@@ -1072,7 +1029,7 @@ export interface IEventNamePropertyMapping {
     [Telemetry.NotebookRestart]:
         | ({
               failed: true;
-              failureCategory: 'cancelled' | 'kernelpromisetimeout' | 'unknown';
+              failureCategory: ErrorCategory;
           } & ResourceSpecificTelemetryProperties)
         | (ResourceSpecificTelemetryProperties & TelemetryErrorProperties); // If there are unhandled exceptions;
 
@@ -1081,7 +1038,7 @@ export interface IEventNamePropertyMapping {
         | ResourceSpecificTelemetryProperties
         | ({
               failed: true;
-              failureCategory: 'cancelled' | 'timeout' | 'noipykernel' | 'kerneldied' | 'unknown';
+              failureCategory: ErrorCategory;
           } & ResourceSpecificTelemetryProperties)
         | (ResourceSpecificTelemetryProperties & TelemetryErrorProperties); // If there are unhandled exceptions;
     [Telemetry.RawKernelSessionStartSuccess]: never | undefined;
