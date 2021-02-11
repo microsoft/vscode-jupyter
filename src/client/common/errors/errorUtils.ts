@@ -48,7 +48,7 @@ export function getLastFrameFromPythonTraceback(
         .reverse()
         .find(
             (line) =>
-                line.startsWith('file ') && line.includes(', line ') && line.includes('.pi') && line.includes('.pi')
+                line.startsWith('file ') && line.includes(', line ') && line.includes('.py') && line.includes('.py')
         );
     if (!lastFrame) {
         return;
