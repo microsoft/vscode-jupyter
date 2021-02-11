@@ -58,7 +58,7 @@ export function getLastFrameFromPythonTraceback(
     const indexOfSitePackages = parts.indexOf('site-packages');
     let packageName =
         indexOfSitePackages >= 0 && parts.length > indexOfSitePackages + 1 ? parts[indexOfSitePackages + 1] : '';
-    const reversedParts = file.replace(/\\/g, '/').split('/').reverse();
+    const reversedParts = parts.reverse();
     if (reversedParts.length < 2) {
         return;
     }

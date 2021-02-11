@@ -38,7 +38,6 @@ export type ErrorCategory =
     | 'zmq'
     | 'debugger'
     | 'kerneldied'
-    | 'kerneldied'
     | 'kernelpromisetimeout'
     | 'jupytersession'
     | 'jupyterconnection'
