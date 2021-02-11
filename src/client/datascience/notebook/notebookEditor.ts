@@ -344,7 +344,7 @@ export class NotebookEditor implements INotebookEditor {
                 if (notebook) {
                     await notebook.dispose();
                 }
-                await this.notebookProvider.connect({ getOnly: false, disableUI: false });
+                await this.notebookProvider.connect({ getOnly: false, disableUI: false, resource: this.file });
             } else {
                 sendKernelTelemetryEvent(this.document.uri, Telemetry.NotebookRestart, stopWatch.elapsedTime, exc);
                 // Show the error message

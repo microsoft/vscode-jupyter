@@ -78,7 +78,7 @@ suite('DataScience gotocell tests', () => {
         // Catch exceptions. Throw a specific assertion if the promise fails
         try {
             const uri = getDefaultInteractiveIdentity();
-            const nb = await notebookProvider.getOrCreateNotebook({ identity: uri });
+            const nb = await notebookProvider.getOrCreateNotebook({ identity: uri, resource: uri });
             const listener = (codeLensFactory as any) as IInteractiveWindowListener;
             listener.onMessage(InteractiveWindowMessages.NotebookIdentity, {
                 resource: uri,

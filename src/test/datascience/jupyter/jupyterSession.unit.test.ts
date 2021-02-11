@@ -261,6 +261,7 @@ suite('DataScience - JupyterSession', () => {
 
                     assert.isFalse(remoteSessionInstance.isRemoteSession);
                     await jupyterSession.changeKernel(
+                        undefined,
                         { kernelModel: newActiveRemoteKernel, kind: 'connectToLiveKernel' },
                         10000
                     );
@@ -336,7 +337,11 @@ suite('DataScience - JupyterSession', () => {
                     env: undefined
                 };
 
-                await jupyterSession.changeKernel({ kernelSpec: newKernel, kind: 'startUsingKernelSpec' }, 10000);
+                await jupyterSession.changeKernel(
+                    undefined,
+                    { kernelSpec: newKernel, kind: 'startUsingKernelSpec' },
+                    10000
+                );
 
                 // Wait untill a new session has been started.
                 await newSessionCreated.promise;

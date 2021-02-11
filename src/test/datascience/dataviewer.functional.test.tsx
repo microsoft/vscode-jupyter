@@ -129,7 +129,8 @@ suite('DataScience DataViewer tests', () => {
     async function injectCode(code: string): Promise<void> {
         const notebookProvider = ioc.get<INotebookProvider>(INotebookProvider);
         notebook = await notebookProvider.getOrCreateNotebook({
-            identity: getDefaultInteractiveIdentity()
+            identity: getDefaultInteractiveIdentity(),
+            resource: undefined
         });
         if (notebook) {
             const cells = await notebook.execute(code, Identifiers.EmptyFileName, 0, uuid());

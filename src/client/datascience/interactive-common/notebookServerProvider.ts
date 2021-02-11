@@ -9,7 +9,7 @@ import { CancellationToken, ConfigurationTarget, EventEmitter, Uri } from 'vscod
 import { IApplicationShell } from '../../common/application/types';
 import { CancellationError, wrapCancellationTokens } from '../../common/cancellation';
 import { traceInfo } from '../../common/logger';
-import { IConfigurationService } from '../../common/types';
+import { IConfigurationService, Resource } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { IInterpreterService } from '../../interpreter/contracts';
@@ -95,6 +95,7 @@ export class NotebookServerProvider implements IJupyterServerProvider {
 
     private async startServer(
         options: {
+            resource: Resource;
             metadata?: nbformat.INotebookMetadata;
             kernelConnection?: KernelConnectionMetadata;
         },
@@ -215,6 +216,7 @@ export class NotebookServerProvider implements IJupyterServerProvider {
     }
 
     private async getNotebookServerOptions(options: {
+        resource: Resource;
         metadata?: nbformat.INotebookMetadata;
         kernelConnection?: KernelConnectionMetadata;
     }): Promise<INotebookServerOptions> {
@@ -230,6 +232,7 @@ export class NotebookServerProvider implements IJupyterServerProvider {
 
         return {
             uri: serverURI,
+            resource: options.resource,
             skipUsingDefaultConfig: !useDefaultConfig,
             purpose: Identifiers.HistoryPurpose,
             kernelConnection: options.kernelConnection,
