@@ -18,11 +18,7 @@ import { noop } from '../../../common/utils/misc';
 import { StopWatch } from '../../../common/utils/stopWatch';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { CodeSnippets, Telemetry } from '../../constants';
-import {
-    populateTelemetryWithErrorInfo,
-    sendKernelTelemetryEvent,
-    trackKernelResourceInformation
-} from '../../telemetry/telemetry';
+import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../../telemetry/telemetry';
 import { getNotebookMetadata } from '../../notebook/helpers/helpers';
 import {
     IDataScienceErrorHandler,
@@ -212,16 +208,12 @@ export class Kernel implements IKernel {
                         }
                     } catch (ex) {
                         traceError('failed to create INotebook in kernel', ex);
-                        const props: { failed: true; failureReason: 'unknown' } = {
-                            failed: true,
-                            failureReason: 'unknown'
-                        };
-                        populateTelemetryWithErrorInfo(props, ex);
                         sendKernelTelemetryEvent(
                             options.document.uri,
                             Telemetry.NotebookStart,
                             stopWatch.elapsedTime,
-                            props
+                            undefined,
+                            ex
                         );
                         if (!options.disableUI) {
                             this.errorHandler.handleError(ex).ignoreErrors(); // Just a notification, so don't await this

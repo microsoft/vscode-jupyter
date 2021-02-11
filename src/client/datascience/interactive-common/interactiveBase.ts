@@ -108,11 +108,7 @@ import { WebviewPanelHost } from '../webviews/webviewPanelHost';
 import { DataViewerChecker } from './dataViewerChecker';
 import { InteractiveWindowMessageListener } from './interactiveWindowMessageListener';
 import { serializeLanguageConfiguration } from './serialization';
-import {
-    populateTelemetryWithErrorInfo,
-    sendKernelTelemetryEvent,
-    trackKernelResourceInformation
-} from '../telemetry/telemetry';
+import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../telemetry/telemetry';
 
 export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindowMapping> implements IInteractiveBase {
     public get notebook(): INotebook | undefined {
@@ -881,9 +877,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         try {
             await this.connectionAndNotebookPromise;
         } catch (e) {
-            const props: { failed: true; failureReason: 'unknown' } = { failed: true, failureReason: 'unknown' };
-            populateTelemetryWithErrorInfo(props, e);
-            sendKernelTelemetryEvent(this.owningResource, Telemetry.NotebookStart, undefined, props);
+            sendKernelTelemetryEvent(this.owningResource, Telemetry.NotebookStart, undefined, undefined, e);
             // Reset the load promise. Don't want to keep hitting the same error
             this.connectionAndNotebookPromise = undefined;
             throw e;

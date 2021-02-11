@@ -19,7 +19,6 @@ import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { JupyterSessionStartError } from '../baseJupyterSession';
 import { Commands, Identifiers, Telemetry } from '../constants';
-import { populateTelemetryWithErrorInfo } from '../telemetry/telemetry';
 import {
     IJupyterConnection,
     IJupyterExecution,
@@ -283,12 +282,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
 
                         // Something else went wrong
                         if (!isLocalConnection) {
-                            const props: { failed: true; failureReason: 'unknown' } = {
-                                failed: true,
-                                failureReason: 'unknown'
-                            };
-                            populateTelemetryWithErrorInfo(props, err);
-                            sendTelemetryEvent(Telemetry.ConnectRemoteFailedJupyter, undefined, props);
+                            sendTelemetryEvent(Telemetry.ConnectRemoteFailedJupyter, undefined, undefined, err, true);
 
                             // Check for the self signed certs error specifically
                             if (err.message.indexOf('reason: self signed certificate') >= 0) {
@@ -304,12 +298,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                                 );
                             }
                         } else {
-                            const props: { failed: true; failureReason: 'unknown' } = {
-                                failed: true,
-                                failureReason: 'unknown'
-                            };
-                            populateTelemetryWithErrorInfo(props, err);
-                            sendTelemetryEvent(Telemetry.ConnectFailedJupyter, undefined, props);
+                            sendTelemetryEvent(Telemetry.ConnectFailedJupyter, undefined, undefined, err);
                             throw new WrappedError(
                                 localize.DataScience.jupyterNotebookConnectFailed().format(connection.baseUrl, err),
                                 err
