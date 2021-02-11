@@ -728,7 +728,7 @@
                     "dark": "resources/dark/variable_explorer.svg"
                 },
                 "category": "Jupyter",
-                "enablement": "jupyter.isvscodenotebookactive && !jupyter.variableViewVisible"
+                "enablement": "notebookViewType == jupyter-notebook && !jupyter.variableViewVisible"
             }
         ],
         "menus": {
@@ -1294,7 +1294,7 @@
                     "command": "jupyter.openVariableView",
                     "title": "%jupyter.command.jupyter.openVariableView.title%",
                     "category": "Jupyter",
-                    "when": "jupyter.isvscodenotebookactive"
+                    "when": "notebookViewType == jupyter-notebook"
                 },
                 {
                     "command": "jupyter.selectNativeJupyterUriFromToolBar",
