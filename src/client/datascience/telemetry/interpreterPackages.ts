@@ -8,9 +8,7 @@ import { IPythonExecutionFactory } from '../../common/process/types';
 import { isResource, noop } from '../../common/utils/misc';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
-import { captureTelemetry } from '../../telemetry';
 import { getTelemetrySafeHashedString, getTelemetrySafeVersion } from '../../telemetry/helpers';
-import { Telemetry } from '../constants';
 
 const interestedPackages = new Set(
     [
