@@ -95,6 +95,8 @@
    ([#4664](https://github.com/Microsoft/vscode-jupyter/issues/4664))
 1. Add notebook codicon for Juypter viewContainer.
    ([#4538](https://github.com/Microsoft/vscode-jupyter/issues/4538))
+1. Allow options to show native variable view only when looking at native notebooks.
+   ([#4761](https://github.com/Microsoft/vscode-jupyter/issues/4761))
 
 ### Code Health
 
