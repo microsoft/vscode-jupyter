@@ -28,6 +28,10 @@ export type ResourceSpecificTelemetryProperties = Partial<{
      */
     pythonEnvironmentCount?: number;
     /**
+     * Comma delimited list of hashed packages & their versions.
+     */
+    pythonEnvironmentPackages?: string;
+    /**
      * Whether kernel was started using kernel spec, interpreter, etc.
      */
     kernelConnectionType?: typeof connection.kind;

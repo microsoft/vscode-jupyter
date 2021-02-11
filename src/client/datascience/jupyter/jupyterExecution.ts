@@ -7,7 +7,7 @@ import { CancellationToken, CancellationTokenSource, Event, EventEmitter } from 
 
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../common/application/types';
 import { Cancellation } from '../../common/cancellation';
-import { WrappedError } from '../../common/errors/errorUtils';
+import { WrappedError } from '../../common/errors/types';
 import { traceError, traceInfo } from '../../common/logger';
 import { IConfigurationService, IDisposableRegistry, IOutputChannel } from '../../common/types';
 import * as localize from '../../common/utils/localize';
@@ -19,7 +19,7 @@ import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { JupyterSessionStartError } from '../baseJupyterSession';
 import { Commands, Identifiers, Telemetry } from '../constants';
-import { getErrorClassification } from '../context/telemetry';
+import { trackKernelResourceInformation } from '../telemetry/telemetry';
 import {
     IJupyterConnection,
     IJupyterExecution,
@@ -193,7 +193,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                         const sessionManager = await sessionManagerFactory.create(connection);
                         try {
                             kernelConnectionMetadata = await this.kernelSelector.getPreferredKernelForRemoteConnection(
-                                undefined,
+                                options?.resource,
                                 sessionManager,
                                 options?.metadata,
                                 cancelToken
@@ -212,7 +212,12 @@ export class JupyterExecutionBase implements IJupyterExecution {
                         purpose: options ? options.purpose : uuid(),
                         disableUI: !allowUI
                     };
-
+                    // If we were not provided a kernel connection, this means we changed the connection here.
+                    if (!options?.kernelConnection) {
+                        trackKernelResourceInformation(options?.resource, {
+                            kernelConnection: launchInfo.kernelConnectionMetadata
+                        });
+                    }
                     // eslint-disable-next-line no-constant-condition
                     while (true) {
                         try {
@@ -239,7 +244,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                                 const selection = await this.appShell.showErrorMessage(message, selectKernel, cancel);
                                 if (selection === selectKernel) {
                                     const kernelInterpreter = await this.kernelSelector.selectLocalKernel(
-                                        undefined,
+                                        options?.resource,
                                         'jupyter',
                                         new StopWatch(),
                                         cancelToken,
@@ -247,6 +252,9 @@ export class JupyterExecutionBase implements IJupyterExecution {
                                     );
                                     if (kernelInterpreter) {
                                         launchInfo.kernelConnectionMetadata = kernelInterpreter;
+                                        trackKernelResourceInformation(options?.resource, {
+                                            kernelConnection: launchInfo.kernelConnectionMetadata
+                                        });
                                         continue;
                                     }
                                 }
@@ -283,9 +291,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
 
                         // Something else went wrong
                         if (!isLocalConnection) {
-                            sendTelemetryEvent(Telemetry.ConnectRemoteFailedJupyter, undefined, {
-                                failureReason: getErrorClassification(err)
-                            });
+                            sendTelemetryEvent(Telemetry.ConnectRemoteFailedJupyter, undefined, undefined, err, true);
 
                             // Check for the self signed certs error specifically
                             if (err.message.indexOf('reason: self signed certificate') >= 0) {
@@ -301,9 +307,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                                 );
                             }
                         } else {
-                            sendTelemetryEvent(Telemetry.ConnectFailedJupyter, undefined, {
-                                failureReason: getErrorClassification(err)
-                            });
+                            sendTelemetryEvent(Telemetry.ConnectFailedJupyter, undefined, undefined, err, true);
                             throw new WrappedError(
                                 localize.DataScience.jupyterNotebookConnectFailed().format(connection.baseUrl, err),
                                 err
