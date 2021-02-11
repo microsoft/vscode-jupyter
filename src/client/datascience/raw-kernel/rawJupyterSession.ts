@@ -116,18 +116,36 @@ export class RawJupyterSession extends BaseJupyterSession {
         } catch (error) {
             this.connected = false;
             if (error instanceof CancellationError) {
-                sendKernelTelemetryEvent(resource, Telemetry.RawKernelSessionStart, stopWatch.elapsedTime, undefined, error);
+                sendKernelTelemetryEvent(
+                    resource,
+                    Telemetry.RawKernelSessionStart,
+                    stopWatch.elapsedTime,
+                    undefined,
+                    error
+                );
                 sendKernelTelemetryEvent(resource, Telemetry.RawKernelSessionStartUserCancel);
                 traceInfo('Starting of raw session cancelled by user');
                 throw error;
             } else if (error instanceof TimedOutError) {
-                sendKernelTelemetryEvent(resource, Telemetry.RawKernelSessionStart, stopWatch.elapsedTime, undefined, error);
+                sendKernelTelemetryEvent(
+                    resource,
+                    Telemetry.RawKernelSessionStart,
+                    stopWatch.elapsedTime,
+                    undefined,
+                    error
+                );
                 sendKernelTelemetryEvent(resource, Telemetry.RawKernelSessionStartTimeout);
                 traceError('Raw session failed to start in given timeout');
                 // Translate into original error
                 throw new RawKernelSessionStartError(kernelConnection, error);
             } else if (error instanceof IpyKernelNotInstalledError) {
-                sendKernelTelemetryEvent(resource, Telemetry.RawKernelSessionStart, stopWatch.elapsedTime, undefined, error);
+                sendKernelTelemetryEvent(
+                    resource,
+                    Telemetry.RawKernelSessionStart,
+                    stopWatch.elapsedTime,
+                    undefined,
+                    error
+                );
                 sendKernelTelemetryEvent(resource, Telemetry.RawKernelSessionStartNoIpykernel, {
                     reason: error.reason
                 });
@@ -135,7 +153,13 @@ export class RawJupyterSession extends BaseJupyterSession {
                 throw error;
             } else {
                 // Send our telemetry event with the error included
-                sendKernelTelemetryEvent(resource, Telemetry.RawKernelSessionStart, stopWatch.elapsedTime, undefined, error);
+                sendKernelTelemetryEvent(
+                    resource,
+                    Telemetry.RawKernelSessionStart,
+                    stopWatch.elapsedTime,
+                    undefined,
+                    error
+                );
                 sendKernelTelemetryEvent(
                     resource,
                     Telemetry.RawKernelSessionStartException,
