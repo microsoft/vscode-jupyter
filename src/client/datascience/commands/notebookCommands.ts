@@ -82,7 +82,7 @@ export class NotebookCommands implements IDisposable {
 
             // Select a new kernel using the connection information
             const kernel = await this.kernelSelector.selectJupyterKernel(
-                options.identity,
+                options.resource,
                 connection,
                 connection?.type || this.notebookProvider.type,
                 options.currentKernelDisplayName
