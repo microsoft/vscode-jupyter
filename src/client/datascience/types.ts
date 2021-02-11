@@ -249,6 +249,7 @@ export type ConnectNotebookProviderOptions = {
     localOnly?: boolean;
     token?: CancellationToken;
     resource: Resource;
+    metadata?: nbformat.INotebookMetadata;
     onConnectionMade?(): void; // Optional callback for when the first connection is made
 };
 
