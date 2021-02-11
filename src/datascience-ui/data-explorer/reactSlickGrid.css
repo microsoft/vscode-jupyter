@@ -21,7 +21,7 @@
     border: none;
     border-radius: 5px;
     cursor: pointer;
-    margin:8px 4px;
+    margin: 8px 4px;
     margin-right: 18px;
 }
 
@@ -120,4 +120,24 @@ input.slice-data {
     border-radius: 1pt;
     border-color: var(--vscode-editor-inactiveSelectionBackground);
     outline: 0 none;
+}
+
+.threestddevneg {
+    background-color: rgba(0, 0, 255, 0.8);
+}
+
+.threestddevpos {
+    background-color: rgba(255, 46, 46, 0.8);
+}
+
+.mid {
+    background-color: rgb(119, 2, 148);
+}
+
+.twostddevneg {
+    background-color: rgba(91, 53, 161, 0.8);
+}
+
+.twostddevpos {
+    background-color: rgba(167, 36, 112, 0.8);
 }

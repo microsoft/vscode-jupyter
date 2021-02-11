@@ -52,6 +52,8 @@ interface IMainPanelState {
     originalVariableType?: string;
     isSliceDataEnabled: boolean;
     maximumRowChunkSize?: number;
+    mean?: number;
+    stdDev?: number;
 }
 
 export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState> implements IMessageHandler {
@@ -70,6 +72,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private grid: React.RefObject<ReactSlickGrid> = React.createRef<ReactSlickGrid>();
     private updateTimeout?: NodeJS.Timer | number;
     private columnsContainingInfOrNaN = new Set<string>();
+    private data: number[] = []; // TODO ensure only allowed when all columns are numbers
 
     // eslint-disable-next-line
     constructor(props: IMainPanelProps, _state: IMainPanelState) {
@@ -208,6 +211,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 ref={this.grid}
                 columns={this.state.gridColumns}
                 idProperty={this.state.indexColumn}
+                mean={this.state.mean}
+                stdDev={this.state.stdDev}
                 rowsAdded={this.gridAddEvent}
                 resetGridEvent={this.resetGridEvent}
                 columnsUpdated={this.gridColumnUpdateEvent}
@@ -318,6 +323,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             const chunkStart = response.end;
             const chunkEnd = Math.min(chunkStart + this.rowFetchSizeSubsequent, this.state.totalRowCount);
             this.sendMessage(DataViewerMessages.GetRowsRequest, { start: chunkStart, end: chunkEnd });
+        } else {
+            this.calculateMeanAndStdDeviation(this.data);
         }
     }
 
@@ -354,27 +361,30 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             for (let [key, value] of Object.entries(r)) {
                 switch (value) {
                     case 'nan':
-                        r[key] = NaN;
+                        r[key] = value = NaN;
                         if (!this.columnsContainingInfOrNaN.has(key)) {
                             columnsToUpdate.add(key);
                             this.columnsContainingInfOrNaN.add(key);
                         }
                         break;
                     case '-inf':
-                        r[key] = -Infinity;
+                        r[key] = value = -Infinity;
                         if (!this.columnsContainingInfOrNaN.has(key)) {
                             columnsToUpdate.add(key);
                             this.columnsContainingInfOrNaN.add(key);
                         }
                         break;
                     case 'inf':
-                        r[key] = Infinity;
+                        r[key] = value = Infinity;
                         if (!this.columnsContainingInfOrNaN.has(key)) {
                             columnsToUpdate.add(key);
                             this.columnsContainingInfOrNaN.add(key);
                         }
                         break;
                     default:
+                }
+                if (typeof value === 'number' && key !== 'index') {
+                    this.data.push(value);
                 }
             }
             return r;
@@ -419,5 +429,14 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         // State updates do not trigger a rerender on the SlickGrid,
         // so we need to tell it to update itself with an event
         this.gridColumnUpdateEvent.notify(newColumns);
+    }
+
+    private calculateMeanAndStdDeviation(data: number[]) {
+        const calculateAverage = (arr: number[]) => arr.reduce((accum, curr) => accum + curr, 0) / arr.length; 
+        const mean = calculateAverage(data);
+        const differenceSquared = data.map((datum) => (datum - mean) ** 2);
+        const variance = calculateAverage(differenceSquared);
+        const stdDev = Math.sqrt(variance);
+        this.setState({ mean, stdDev });
     }
 }

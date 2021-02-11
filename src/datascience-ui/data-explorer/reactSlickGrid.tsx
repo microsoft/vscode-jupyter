@@ -69,12 +69,15 @@ export interface ISlickGridProps {
     originalVariableShape: number[] | undefined;
     isSliceDataEnabled: boolean; // Feature flag. This should eventually be removed
     handleSliceRequest(args: IGetSliceRequest): void;
+    mean?: number;
+    stdDev?: number;
 }
 
 interface ISlickGridState {
     grid?: Slick.Grid<ISlickRow>;
     showingFilters?: boolean;
     fontSize: number;
+    showingHeatmap: boolean;
 }
 
 class ColumnFilter {
@@ -165,7 +168,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
 
     constructor(props: ISlickGridProps) {
         super(props);
-        this.state = { fontSize: 15 };
+        this.state = { fontSize: 15, showingHeatmap: false };
         this.containerRef = React.createRef<HTMLDivElement>();
         this.measureRef = React.createRef<HTMLDivElement>();
         this.props.rowsAdded.subscribe(this.addedRows);
@@ -298,6 +301,50 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         }
     };
 
+    private generateCssClass(value: number): string {
+        if (this.props.mean === undefined || this.props.stdDev === undefined) {
+            return '';
+        }
+        if (value < (this.props.mean - (3 * this.props.stdDev))) {
+            return 'threestddevneg';
+        } else if (value > (this.props.mean + (3 * this.props.stdDev))) {
+            return 'threestddevpos';
+        } else if (value < (this.props.mean - (2 * this.props.stdDev))) {
+            return 'twostddevneg';
+        } else if (value > (this.props.mean + (2 * this.props.stdDev))) {
+            return 'twostddevpos';
+        }
+        return 'mid';
+    }
+
+    private getHeatmapCssStyles(): Slick.CellCssStylesHash {
+        const styles: Slick.CellCssStylesHash = {};
+        const rows = this.dataView.getItems();
+        rows.forEach((row, index) => {
+            const rowCellStyles: { [id: string]: string } = {};
+            Object.entries(row).forEach(([key, value]) => {
+                if (key === 'index') {
+                    return;
+                }
+                // TODO need to map to real css column numbers
+                rowCellStyles[parseInt(key)+1] = this.generateCssClass(value);
+            });
+            styles[index] = rowCellStyles;
+        });
+        console.log('styles', styles);
+        return styles;
+    }
+
+    public toggleHeatmap = () => {
+        const willShowHeatmap = !this.state.showingHeatmap;
+        if (willShowHeatmap) {
+            this.state.grid?.setCellCssStyles('heatmap', this.getHeatmapCssStyles());
+        } else {
+            this.state.grid?.removeCellCssStyles('heatmap');
+        }
+        this.setState({ showingHeatmap: willShowHeatmap });
+    }
+
     public render() {
         const style: React.CSSProperties = this.props.forceHeight
             ? {
@@ -319,10 +366,23 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
                             <span>{this.props.filterRowsText}</span>
                         </button>
                         {this.renderTemporarySliceIndicator()}
+                        {this.renderHeatmapCheckbox()}
                     </div>
                 </div>
                 <div className="react-grid-container" style={style} ref={this.containerRef}></div>
                 <div className="react-grid-measure" ref={this.measureRef} />
+            </div>
+        );
+    }
+
+    public renderHeatmapCheckbox = () => {
+        // TODO disable this checkbox while data is being loaded or if data is not all numeric
+        return (
+            <div style={{ display: 'flex', justifyContent: 'space-around' }}>
+                <label style={{ alignSelf: 'center' }}>
+                {'Enable heatmap:  '}
+                </label>
+                <input type="checkbox" style={{ alignSelf: 'center' }} onChange={this.toggleHeatmap}/>
             </div>
         );
     }
