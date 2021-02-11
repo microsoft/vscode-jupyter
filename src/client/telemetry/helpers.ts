@@ -32,6 +32,9 @@ export function getTelemetrySafeVersion(version: string): string | undefined {
     }
 }
 
+/**
+ * Safe way to send data in telemetry (obfuscate PII).
+ */
 export function getTelemetrySafeHashedString(data: string) {
     return hashjs.sha256().update(data).digest('hex');
 }
