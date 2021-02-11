@@ -7,7 +7,7 @@ import { CancellationToken, CancellationTokenSource, Event, EventEmitter } from 
 
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../common/application/types';
 import { Cancellation } from '../../common/cancellation';
-import { WrappedError } from '../../common/errors/errorUtils';
+import { WrappedError } from '../../common/errors/types';
 import { traceError, traceInfo } from '../../common/logger';
 import { IConfigurationService, IDisposableRegistry, IOutputChannel } from '../../common/types';
 import * as localize from '../../common/utils/localize';
@@ -19,7 +19,6 @@ import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { JupyterSessionStartError } from '../baseJupyterSession';
 import { Commands, Identifiers, Telemetry } from '../constants';
-import { getErrorClassification } from '../telemetry/telemetry';
 import {
     IJupyterConnection,
     IJupyterExecution,
@@ -283,9 +282,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
 
                         // Something else went wrong
                         if (!isLocalConnection) {
-                            sendTelemetryEvent(Telemetry.ConnectRemoteFailedJupyter, undefined, {
-                                failureReason: getErrorClassification(err)
-                            });
+                            sendTelemetryEvent(Telemetry.ConnectRemoteFailedJupyter, undefined, undefined, err, true);
 
                             // Check for the self signed certs error specifically
                             if (err.message.indexOf('reason: self signed certificate') >= 0) {
@@ -301,9 +298,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                                 );
                             }
                         } else {
-                            sendTelemetryEvent(Telemetry.ConnectFailedJupyter, undefined, {
-                                failureReason: getErrorClassification(err)
-                            });
+                            sendTelemetryEvent(Telemetry.ConnectFailedJupyter, undefined, undefined, err, true);
                             throw new WrappedError(
                                 localize.DataScience.jupyterNotebookConnectFailed().format(connection.baseUrl, err),
                                 err

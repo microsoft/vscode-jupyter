@@ -18,11 +18,7 @@ import { captureTelemetry } from '../../telemetry';
 import { sendNotebookOrKernelLanguageTelemetry } from '../common';
 import { Telemetry } from '../constants';
 import { sendKernelListTelemetry } from '../telemetry/kernelTelemetry';
-import {
-    getErrorClassification,
-    sendKernelTelemetryEvent,
-    trackKernelResourceInformation
-} from '../telemetry/telemetry';
+import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../telemetry/telemetry';
 import { areKernelConnectionsEqual, isLocalLaunch } from '../jupyter/kernels/helpers';
 import { KernelSelectionProvider } from '../jupyter/kernels/kernelSelections';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
@@ -253,10 +249,7 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
         } catch (ex) {
             // This condition is met when remote Uri is invalid.
             // User cannot even run a cell, as kernel list is invalid (we can't get it).
-            sendKernelTelemetryEvent(resource, Telemetry.NotebookStart, undefined, {
-                failed: true,
-                failureReason: getErrorClassification(ex)
-            });
+            sendKernelTelemetryEvent(resource, Telemetry.NotebookStart, undefined, undefined, ex);
             throw ex;
         }
     }

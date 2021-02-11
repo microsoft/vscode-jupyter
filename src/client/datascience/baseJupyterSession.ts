@@ -9,7 +9,7 @@ import { ReplaySubject } from 'rxjs/ReplaySubject';
 import { Event, EventEmitter } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { ServerStatus } from '../../datascience-ui/interactive-common/mainState';
-import { WrappedError } from '../common/errors/errorUtils';
+import { WrappedError } from '../common/errors/types';
 import { traceError, traceInfo, traceWarning } from '../common/logger';
 import { sleep, waitForPromise } from '../common/utils/async';
 import * as localize from '../common/utils/localize';

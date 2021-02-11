@@ -8,27 +8,16 @@ import { Resource } from '../../common/types';
 import { IEventNamePropertyMapping, sendTelemetryEvent, setSharedProperty } from '../../telemetry';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { ResourceSpecificTelemetryProperties } from './types';
-import { isErrorType } from '../../common/errors/errorUtils';
-import { CancellationError } from '../../common/cancellation';
-import { TimedOutError } from '../../common/utils/async';
-import { JupyterInvalidKernelError } from '../jupyter/jupyterInvalidKernelError';
-import { JupyterWaitForIdleError } from '../jupyter/jupyterWaitForIdleError';
-import { JupyterKernelPromiseFailedError } from '../jupyter/kernels/jupyterKernelPromiseFailedError';
-import { IpyKernelNotInstalledError, KernelDiedError } from '../kernel-launcher/types';
-import { JupyterSessionStartError } from '../baseJupyterSession';
-import { JupyterConnectError } from '../jupyter/jupyterConnectError';
-import { JupyterInstallError } from '../jupyter/jupyterInstallError';
-import { JupyterSelfCertsError } from '../jupyter/jupyterSelfCertsError';
 import { Telemetry } from '../constants';
 import { WorkspaceInterpreterTracker } from './workspaceInterpreterTracker';
 import { InterruptResult } from '../types';
 import { getResourceType } from '../common';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { InterpreterCountTracker } from './interpreterCountTracker';
-import { FetchError } from 'node-fetch';
 import { getTelemetrySafeHashedString, getTelemetrySafeLanguage } from '../../telemetry/helpers';
-import { InterpreterPackages } from './interpreterPackages';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
+import { InterpreterPackages } from './interpreterPackages';
+import { populateTelemetryWithErrorInfo } from '../../common/errors';
 
 type ContextualTelemetryProps = {
     kernelConnection: KernelConnectionMetadata;
@@ -55,36 +44,6 @@ const trackedInfo = new Map<string, [ResourceSpecificTelemetryProperties, Contex
 const currentOSType = getOSType();
 const pythonEnvironmentsByHash = new Map<string, PythonEnvironment>();
 
-export function getErrorClassification(error: Error) {
-    if (error.message.indexOf('reason: self signed certificate') >= 0) {
-        return 'jupyterselfcert';
-    } else if (isErrorType(error, JupyterSelfCertsError)) {
-        return 'jupyterselfcert';
-    } else if (isErrorType(error, JupyterWaitForIdleError)) {
-        return 'timeout';
-    } else if (isErrorType(error, TimedOutError)) {
-        return 'timeout';
-    } else if (isErrorType(error, JupyterInvalidKernelError)) {
-        return 'invalidkernel';
-    } else if (isErrorType(error, JupyterKernelPromiseFailedError)) {
-        return 'kernelpromisetimeout';
-    } else if (isErrorType(error, IpyKernelNotInstalledError)) {
-        return 'noipykernel';
-    } else if (isErrorType(error, CancellationError)) {
-        return 'cancelled';
-    } else if (isErrorType(error, JupyterSessionStartError)) {
-        return 'jupytersession';
-    } else if (isErrorType(error, JupyterConnectError)) {
-        return 'jupyterconnection';
-    } else if (isErrorType(error, JupyterInstallError)) {
-        return 'jupyterinstall';
-    } else if (isErrorType(error, KernelDiedError)) {
-        return 'kerneldied';
-    } else if (isErrorType(error, FetchError)) {
-        return 'fetcherror';
-    }
-    return 'unknown';
-}
 export function sendKernelTelemetryEvent<P extends IEventNamePropertyMapping, E extends keyof P>(
     resource: Resource,
     eventName: E,
@@ -97,20 +56,16 @@ export function sendKernelTelemetryEvent<P extends IEventNamePropertyMapping, E 
     }
 
     const addOnTelemetry = getContextualPropsForTelemetry(resource);
-    if (addOnTelemetry) {
-        const props = properties || {};
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        sendTelemetryEvent(eventName as any, durationMs, Object.assign(props, addOnTelemetry), ex);
-    } else {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        sendTelemetryEvent(eventName as any, durationMs, properties, ex);
-    }
+    const props = properties || {};
+    Object.assign(props, addOnTelemetry || {});
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    sendTelemetryEvent(eventName as any, durationMs, props, ex, true);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    resetData(resource, eventName as any, properties);
+    resetData(resource, eventName as any, props);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    incrementStartFailureCount(resource, eventName as any, properties);
+    incrementStartFailureCount(resource, eventName as any, props);
 }
 
 export function sendKernelTelemetryWhenDone<P extends IEventNamePropertyMapping, E extends keyof P>(
@@ -142,8 +97,7 @@ export function sendKernelTelemetryWhenDone<P extends IEventNamePropertyMapping,
                 (ex) => {
                     const addOnTelemetry = getContextualPropsForTelemetry(resource);
                     Object.assign(props, addOnTelemetry);
-                    props.failed = true;
-                    props.failureReason = getErrorClassification(ex);
+                    populateTelemetryWithErrorInfo(props, ex);
                     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-explicit-any
                     sendTelemetryEvent(eventName as any, stopWatch!.elapsedTime, props as any, ex, true);
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
