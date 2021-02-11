@@ -48,7 +48,7 @@ export function registerErrorTelemetryUpdater(classifier: ErrorTelemetryUpdater)
     errorTelemetryUpdaters.push(classifier);
 }
 function populateTelemetryWithErrorInfo(props: Record<string, any>, error: Error) {
-    errorTelemetryUpdaters.forEach(item => item(props, error));
+    errorTelemetryUpdaters.forEach((item) => item(props, error));
 }
 /**
  * Checks if the telemetry is disabled in user settings
@@ -164,7 +164,7 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
             // Lets pay the price for better data.
             customProperties = {
                 failed: 'true',
-                stackTrace: serializeStackTrace(ex),
+                stackTrace: serializeStackTrace(ex)
             };
             populateTelemetryWithErrorInfo(customProperties, ex);
             // Add shared properties to telemetry props (we may overwrite existing ones).
@@ -397,10 +397,22 @@ export interface ISharedPropertyMapping {
 // If there are errors, then the are added to the telementry properties.
 export type TelemetryErrorProperties = {
     failed: true;
+    /**
+     * Node stacktrace without PII.
+     */
     stackTrace: string;
+    /**
+     * A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.
+     */
     failureReason?: string;
-    pythonErrorFile: string;
-    pythonErrorFolder: string;
+    /**
+     * Hash of the file name that contains the file in the last frame (from Python stack trace).
+     */
+    pythonErrorFile?: string;
+    /**
+     * Hash of the folder that contains the file in the last frame (from Python stack trace).
+     */
+    pythonErrorFolder?: string;
 };
 
 // Map all events to their properties
