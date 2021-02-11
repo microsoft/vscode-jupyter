@@ -4,6 +4,7 @@
 import { FetchError } from 'node-fetch';
 import * as stackTrace from 'stack-trace';
 import { getTelemetrySafeHashedString } from '../../telemetry/helpers';
+import { getErrorTags } from './errors';
 import { getLastFrameFromPythonTraceback } from './errorUtils';
 import { BaseError, getErrorCategory, TelemetryErrorProperties, WrappedError } from './types';
 
@@ -20,7 +21,7 @@ export function populateTelemetryWithErrorInfo(props: Partial<TelemetryErrorProp
     if (!stdErr) {
         return;
     }
-    props.failureSubCategory = props.failureSubCategory || getReasonForKernelToDie(stdErr);
+    props.failureSubCategory = props.failureSubCategory || getErrorTags(stdErr);
     const info = getLastFrameFromPythonTraceback(stdErr);
     if (!info) {
         return;
@@ -47,7 +48,7 @@ function serializeStackTrace(ex: Error): string {
         if (filename) {
             const lineno = frame.getLineNumber();
             const colno = frame.getColumnNumber();
-            trace += `\n\tat ${getCallsite(frame)} ${filename}:${lineno}:${colno}`;
+            trace += `\n\tat ${getCallSite(frame)} ${filename}:${lineno}:${colno}`;
         } else {
             trace += '\n\tat <anonymous>';
         }
@@ -57,7 +58,7 @@ function serializeStackTrace(ex: Error): string {
     return trace.trim().replace(/\\/g, '/');
 }
 
-function getCallsite(frame: stackTrace.StackFrame) {
+function getCallSite(frame: stackTrace.StackFrame) {
     const parts: string[] = [];
     if (typeof frame.getTypeName() === 'string' && frame.getTypeName().length > 0) {
         parts.push(frame.getTypeName());
@@ -71,97 +72,6 @@ function getCallsite(frame: stackTrace.StackFrame) {
         }
     }
     return parts.join('.');
-}
-
-/**
- * Analyze the details of the error such as `stdErr` from the kernel process and
- * try to determine the cause.
- */
-function getReasonForKernelToDie(stdErr: string) {
-    stdErr = stdErr.toLowerCase();
-    if (stdErr.includes("ImportError: No module named 'win32api'".toLowerCase())) {
-        // force re-installing ipykernel worked.
-        /*
-          File "C:\Users\<user>\miniconda3\envs\env_zipline\lib\contextlib.py", line 59, in enter
-            return next(self.gen)
-            File "C:\Users\<user>\miniconda3\envs\env_zipline\lib\site-packages\jupyter_client\connect.py", line 100, in secure_write
-            win32_restrict_file_to_user(fname)
-            File "C:\Users\<user>\miniconda3\envs\env_zipline\lib\site-packages\jupyter_client\connect.py", line 53, in win32_restrict_file_to_user
-            import win32api
-            ImportError: No module named 'win32api'
-        */
-        return 'win32api';
-    }
-    if (
-        stdErr.includes('ImportError: cannot import name'.toLowerCase()) &&
-        stdErr.includes('from partially initialized module'.toLowerCase()) &&
-        stdErr.includes('zmq.backend.cython'.toLowerCase())
-    ) {
-        // force re-installing ipykernel worked.
-        /*
-          File "C:\Users\<user>\AppData\Roaming\Python\Python38\site-packages\zmq\backend\cython\__init__.py", line 6, in <module>
-    from . import (constants, error, message, context,
-          ImportError: cannot import name 'constants' from partially initialized module 'zmq.backend.cython' (most likely due to a circular import) (C:\Users\<user>\AppData\Roaming\Python\Python38\site-packages\zmq\backend\cython\__init__.py)
-        */
-        return 'zmq';
-    }
-    if (
-        stdErr.includes('zmq'.toLowerCase()) &&
-        stdErr.includes('cython'.toLowerCase()) &&
-        stdErr.includes('__init__.py'.toLowerCase())
-    ) {
-        // force re-installing ipykernel worked.
-        /*
-          File "C:\Users\<user>\AppData\Roaming\Python\Python38\site-packages\zmq\backend\cython\__init__.py", line 6, in <module>
-    from . import (constants, error, message, context,
-          ImportError: cannot import name 'constants' from partially initialized module 'zmq.backend.cython' (most likely due to a circular import) (C:\Users\<user>\AppData\Roaming\Python\Python38\site-packages\zmq\backend\cython\__init__.py)
-        */
-        return 'zmq';
-    }
-    if (stdErr.includes('ImportError: DLL load failed'.toLowerCase())) {
-        // Possibly a conda issue on windows
-        /*
-        win32_restrict_file_to_user
-        import win32api
-        ImportError: DLL load failed: 找不到指定的程序。
-        */
-        return 'dll.load.failed';
-    }
-    if (stdErr.includes("AssertionError: Couldn't find Class NSProcessInfo".toLowerCase())) {
-        // Conda environment with IPython 5.8.0 fails with this message.
-        // Updating to latest version of ipython fixed it (conda update ipython).
-        // Possible we might have to update other packages as well (when using `conda update ipython` plenty of other related pacakges got updated, such as zeromq, nbclient, jedi)
-        /*
-            Error: Kernel died with exit code 1. Traceback (most recent call last):
-            File "/Users/donjayamanne/miniconda3/envs/env3/lib/python3.7/site-packages/appnope/_nope.py", line 90, in nope
-                "Because Reasons"
-            File "/Users/donjayamanne/miniconda3/envs/env3/lib/python3.7/site-packages/appnope/_nope.py", line 60, in beginActivityWithOptions
-                NSProcessInfo = C('NSProcessInfo')
-            File "/Users/donjayamanne/miniconda3/envs/env3/lib/python3.7/site-packages/appnope/_nope.py", line 38, in C
-                assert ret is not None, "Couldn't find Class %s" % classname
-            AssertionError: Couldn't find Class NSProcessInfo
-        */
-        return 'oldipython';
-    }
-    if (
-        stdErr.includes('NotImplementedError'.toLowerCase()) &&
-        stdErr.includes('asyncio'.toLowerCase()) &&
-        stdErr.includes('events.py'.toLowerCase())
-    ) {
-        /*
-        "C:\Users\<user>\AppData\Roaming\Python\Python38\site-packages\zmq\eventloop\zmqstream.py", line 127, in __init__
-        Info 2020-08-10 12:14:11: Python Daemon (pid: 16976): write to stderr:     self._init_io_state()
-        Info 2020-08-10 12:14:11: Python Daemon (pid: 16976): write to stderr:   File "C:\Users\<user>\AppData\Roaming\Python\Python38\site-packages\zmq\eventloop\zmqstream.py", line 546, in _init_io_state
-        Info 2020-08-10 12:14:11: Python Daemon (pid: 16976): write to stderr:     self.io_loop.add_handler(self.socket, self._handle_events, self.io_loop.READ)
-        Info 2020-08-10 12:14:11: Python Daemon (pid: 16976): write to stderr:   File "C:\Users\<user>\AppData\Roaming\Python\Python38\site-packages\tornado\platform\asyncio.py", line 99, in add_handler
-        Info 2020-08-10 12:14:11: Python Daemon (pid: 16976): write to stderr:     self.asyncio_loop.add_reader(fd, self._handle_events, fd, IOLoop.READ)
-        Info 2020-08-10 12:14:11: Python Daemon (pid: 16976): write to stderr:   File "C:\Users\<user>\AppData\Local\Programs\Python\Python38-32\lib\asyncio\events.py", line 501, in add_reader
-        Info 2020-08-10 12:14:11: Python Daemon (pid: 16976): write to stderr:     raise NotImplementedError
-        Info 2020-08-10 12:14:11: Python Daemon (pid: 16976): write to stderr: NotImplementedError
-        */
-        return 'oldipykernel';
-    }
-    return '';
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
