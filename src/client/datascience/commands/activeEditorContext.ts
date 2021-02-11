@@ -148,7 +148,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
     private updateContextOfActiveNotebookKernel(activeEditor?: INotebookEditor) {
         if (activeEditor) {
             this.notebookProvider
-                .getOrCreateNotebook({ identity: activeEditor.file, getOnly: true })
+                .getOrCreateNotebook({ identity: activeEditor.file, resource: activeEditor.file, getOnly: true })
                 .then((nb) => {
                     if (activeEditor === this.notebookEditorProvider.activeEditor) {
                         const canStart = nb && nb.status !== ServerStatus.NotStarted && activeEditor.model?.isTrusted;

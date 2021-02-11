@@ -137,7 +137,8 @@ export async function verifyCanFetchData<T>(
     const notebookProvider = ioc.get<INotebookProvider>(INotebookProvider);
     const notebook = await notebookProvider.getOrCreateNotebook({
         getOnly: true,
-        identity: getDefaultInteractiveIdentity()
+        identity: getDefaultInteractiveIdentity(),
+        resource: undefined
     });
     expect(notebook).to.not.be.undefined;
     const variableList = await variableFetcher.getVariables(

@@ -289,7 +289,8 @@ suite('DataScience notebook tests', () => {
                     }
                     launchingFile = launchingFile || path.join(srcDirectory(), 'foo.py');
                     const notebook = await notebookProvider.getOrCreateNotebook({
-                        identity: getDefaultInteractiveIdentity()
+                        identity: getDefaultInteractiveIdentity(),
+                        resource: undefined
                     });
 
                     if (notebook) {
@@ -1366,7 +1367,8 @@ plt.show()`,
                             usingDarkTheme: false,
                             workingDir: testDir,
                             purpose: '1',
-                            allowUI: () => false
+                            allowUI: () => false,
+                            resource: undefined
                         });
                     } catch (e) {
                         threw = true;

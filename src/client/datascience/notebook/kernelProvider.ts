@@ -236,6 +236,7 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
             // Make sure we have a connection or we can't get remote kernels.
             const connection = await this.notebookProvider.connect({
                 getOnly: false,
+                resource,
                 disableUI: false,
                 localOnly: false
             });
