@@ -5,7 +5,7 @@ import type { Kernel } from '@jupyterlab/services';
 import type { Slot } from '@phosphor/signaling';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { CancellationError } from '../../common/cancellation';
-import { WrappedError } from '../../common/errors/errorUtils';
+import { WrappedError } from '../../common/errors/types';
 import { traceError, traceInfo } from '../../common/logger';
 import { IDisposable, IOutputChannel, Resource } from '../../common/types';
 import { TimedOutError } from '../../common/utils/async';

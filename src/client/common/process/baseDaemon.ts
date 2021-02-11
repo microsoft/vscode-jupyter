@@ -9,7 +9,7 @@ import { Subject } from 'rxjs/Subject';
 import * as util from 'util';
 import { MessageConnection, NotificationType, RequestType, RequestType0 } from 'vscode-jsonrpc';
 import { IPlatformService } from '../../common/platform/types';
-import { BaseError } from '../errors';
+import { BaseError } from '../errors/types';
 import { traceError, traceInfo, traceVerbose, traceWarning } from '../logger';
 import { IDisposable } from '../types';
 import { createDeferred, Deferred } from '../utils/async';

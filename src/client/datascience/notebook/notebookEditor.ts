@@ -6,8 +6,6 @@
 import { ConfigurationTarget, Event, EventEmitter, ProgressLocation, Uri, WebviewPanel } from 'vscode';
 import { NotebookCell, NotebookDocument } from '../../../../types/vscode-proposed';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../common/application/types';
-import { CancellationError } from '../../common/cancellation';
-import { isErrorType } from '../../common/errors/errorUtils';
 import { traceError } from '../../common/logger';
 import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../common/types';
 import { DataScience } from '../../common/utils/localize';
@@ -348,10 +346,7 @@ export class NotebookEditor implements INotebookEditor {
                 }
                 await this.notebookProvider.connect({ getOnly: false, disableUI: false });
             } else {
-                sendKernelTelemetryEvent(this.document.uri, Telemetry.NotebookRestart, stopWatch.elapsedTime, {
-                    failed: true,
-                    failureCategory: isErrorType(exc, CancellationError) ? 'cancelled' : 'unknown'
-                });
+                sendKernelTelemetryEvent(this.document.uri, Telemetry.NotebookRestart, stopWatch.elapsedTime, exc);
                 // Show the error message
                 void this.applicationShell.showErrorMessage(exc);
                 traceError(exc);

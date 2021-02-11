@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { BaseError } from '../../../common/errors';
+import { BaseError } from '../../../common/errors/types';
 
 export class JupyterKernelPromiseFailedError extends BaseError {
     constructor(message: string) {

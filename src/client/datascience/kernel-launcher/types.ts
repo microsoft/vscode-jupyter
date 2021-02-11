@@ -5,8 +5,7 @@
 import type { nbformat } from '@jupyterlab/coreutils';
 import { SpawnOptions } from 'child_process';
 import { CancellationToken, Event } from 'vscode';
-import { BaseError } from '../../common/errors';
-import { WrappedError } from '../../common/errors/errorUtils';
+import { BaseError, WrappedError } from '../../common/errors/types';
 import { ObservableExecutionResult } from '../../common/process/types';
 import { IAsyncDisposable, IDisposable, Resource } from '../../common/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';

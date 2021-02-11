@@ -1,76 +1,20 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { FetchError } from 'node-fetch';
 import * as stackTrace from 'stack-trace';
 import { getTelemetrySafeHashedString } from '../../telemetry/helpers';
 import { getLastFrameFromPythonTraceback } from './errorUtils';
-
-export abstract class BaseError extends Error {
-    public stdErr?: string;
-    constructor(public readonly category: ErrorCategory, message: string) {
-        super(message);
-    }
-}
-
-export function getErrorCategory(error?: Error): ErrorCategory {
-    if (!error) {
-        return 'unknown';
-    }
-    return error instanceof BaseError ? error.category : 'unknown';
-}
-export type ErrorCategory =
-    | 'cancelled'
-    | 'timeout'
-    | 'daemon'
-    | 'zmq'
-    | 'debugger'
-    | 'kerneldied'
-    | 'kerneldied'
-    | 'kernelpromisetimeout'
-    | 'jupytersession'
-    | 'jupyterconnection'
-    | 'jupyterinstall'
-    | 'jupyterselfcert'
-    | 'invalidkernel'
-    | 'noipykernel'
-    | 'fetcherror'
-    | 'notinstalled'
-    | 'unknown';
-
-// If there are errors, then the are added to the telementry properties.
-export type TelemetryErrorProperties = {
-    failed: true;
-    /**
-     * Node stacktrace without PII.
-     */
-    stackTrace: string;
-    /**
-     * A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.
-     */
-    failureCategory?: string;
-    /**
-     * Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.
-     */
-    failureSubCategory?: string;
-    /**
-     * Hash of the file name that contains the file in the last frame (from Python stack trace).
-     */
-    pythonErrorFile?: string;
-    /**
-     * Hash of the folder that contains the file in the last frame (from Python stack trace).
-     */
-    pythonErrorFolder?: string;
-    /**
-     * Hash of the module that contains the file in the last frame (from Python stack trace).
-     */
-    pythonErrorPackage?: string;
-};
+import { BaseError, getErrorCategory, TelemetryErrorProperties, WrappedError } from './types';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function populateTelemetryWithErrorInfo(props: Partial<TelemetryErrorProperties>, error: Error) {
     props.failed = true;
     // Don't blow away what we already have.
     props.failureCategory = props.failureCategory || getErrorCategory(error);
+    if (props.failureCategory === 'unknown' && isErrorType(error, FetchError)) {
+        props.failureCategory = 'fetcherror';
+    }
     props.stackTrace = serializeStackTrace(error);
     const stdErr = error instanceof BaseError ? error.stdErr : '';
     if (!stdErr) {
@@ -218,4 +162,16 @@ function getReasonForKernelToDie(stdErr: string) {
         return 'oldipykernel';
     }
     return '';
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Constructor<T> = { new (...args: any[]): T };
+function isErrorType<T>(error: Error, expectedType: Constructor<T>) {
+    if (error instanceof expectedType) {
+        return true;
+    }
+    if (error instanceof WrappedError && error.originalException instanceof expectedType) {
+        return true;
+    }
+    return false;
 }

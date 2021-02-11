@@ -7,7 +7,7 @@ import { CancellationToken, CancellationTokenSource, Event, EventEmitter } from 
 
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../common/application/types';
 import { Cancellation } from '../../common/cancellation';
-import { WrappedError } from '../../common/errors/errorUtils';
+import { WrappedError } from '../../common/errors/types';
 import { traceError, traceInfo } from '../../common/logger';
 import { IConfigurationService, IDisposableRegistry, IOutputChannel } from '../../common/types';
 import * as localize from '../../common/utils/localize';

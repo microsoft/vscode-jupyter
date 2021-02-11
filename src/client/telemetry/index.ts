@@ -20,7 +20,8 @@ import { ResourceSpecificTelemetryProperties } from '../datascience/telemetry/ty
 import { ExportFormat } from '../datascience/export/types';
 import { InterruptResult } from '../datascience/types';
 import { EventName, PlatformErrors } from './constants';
-import { populateTelemetryWithErrorInfo, TelemetryErrorProperties } from '../common/errors';
+import { populateTelemetryWithErrorInfo } from '../common/errors';
+import { TelemetryErrorProperties } from '../common/errors/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 

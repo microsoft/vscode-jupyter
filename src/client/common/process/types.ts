@@ -8,7 +8,7 @@ import { CancellationToken, Uri } from 'vscode';
 import { Newable } from '../../ioc/types';
 import { PythonExecInfo } from '../../pythonEnvironments/exec';
 import { InterpreterInformation, PythonEnvironment } from '../../pythonEnvironments/info';
-import { BaseError } from '../errors';
+import { BaseError } from '../errors/types';
 import { IDisposable } from '../types';
 import { EnvironmentVariables } from '../variables/types';
 
