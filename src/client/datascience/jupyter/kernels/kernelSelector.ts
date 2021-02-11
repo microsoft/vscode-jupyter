@@ -568,9 +568,10 @@ export class KernelSelector implements IKernelSelectionUsage {
         const hasKernelMetadataForPythonNb =
             isPythonNotebook(notebookMetadata) && notebookMetadata?.kernelspec ? true : false;
         // Don't look for kernel spec for python notebooks if we don't have the kernel metadata.
-        const kernelSpec = hasKernelMetadataForPythonNb
-            ? await this.kernelFinder.findKernelSpec(resource, notebookMetadata, cancelToken)
-            : undefined;
+        const kernelSpec =
+            hasKernelMetadataForPythonNb || !isPythonNotebook(notebookMetadata)
+                ? await this.kernelFinder.findKernelSpec(resource, notebookMetadata, cancelToken)
+                : undefined;
         traceInfoIf(
             !!process.env.VSC_JUPYTER_FORCE_LOGGING,
             `Kernel spec found ${JSON.stringify(kernelSpec)}, metadata ${JSON.stringify(notebookMetadata || '')}`
