@@ -42,6 +42,7 @@ import {
 } from '../../../../client/datascience/jupyter/kernels/providers/activeJupyterSessionKernelProvider';
 import { InstalledJupyterKernelSelectionListProvider } from '../../../../client/datascience/jupyter/kernels/providers/installJupyterKernelProvider';
 import { disposeAllDisposables } from '../../../../client/common/helpers';
+import { InterpreterPackages } from '../../../../client/datascience/telemetry/interpreterPackages';
 
 /* eslint-disable , @typescript-eslint/no-unused-expressions, @typescript-eslint/no-explicit-any */
 
@@ -103,7 +104,8 @@ suite('DataScience - KernelSelector', () => {
             instance(jupyterSessionManagerFactory),
             instance(configService),
             instance(extensionChecker),
-            instance(preferredKernelIdProvider)
+            instance(preferredKernelIdProvider),
+            instance(mock(InterpreterPackages))
         );
     });
     teardown(() => {

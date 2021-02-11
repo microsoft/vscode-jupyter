@@ -22,7 +22,7 @@ import {
     getErrorClassification,
     sendKernelTelemetryEvent,
     trackKernelResourceInformation
-} from '../../context/telemetry';
+} from '../../telemetry/telemetry';
 import { getNotebookMetadata } from '../../notebook/helpers/helpers';
 import {
     IDataScienceErrorHandler,

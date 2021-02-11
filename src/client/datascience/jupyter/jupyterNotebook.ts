@@ -51,7 +51,7 @@ import {
     isPythonKernelConnection
 } from './kernels/helpers';
 import { isResourceNativeNotebook } from '../notebook/helpers/helpers';
-import { sendKernelTelemetryEvent } from '../context/telemetry';
+import { sendKernelTelemetryEvent } from '../telemetry/telemetry';
 
 class CellSubscriber {
     public get startTime(): number {

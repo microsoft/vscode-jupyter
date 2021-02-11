@@ -17,8 +17,12 @@ import { StopWatch } from '../../common/utils/stopWatch';
 import { captureTelemetry } from '../../telemetry';
 import { sendNotebookOrKernelLanguageTelemetry } from '../common';
 import { Telemetry } from '../constants';
-import { sendKernelListTelemetry } from '../context/kernelTelemetry';
-import { getErrorClassification, sendKernelTelemetryEvent, trackKernelResourceInformation } from '../context/telemetry';
+import { sendKernelListTelemetry } from '../telemetry/kernelTelemetry';
+import {
+    getErrorClassification,
+    sendKernelTelemetryEvent,
+    trackKernelResourceInformation
+} from '../telemetry/telemetry';
 import { areKernelConnectionsEqual, isLocalLaunch } from '../jupyter/kernels/helpers';
 import { KernelSelectionProvider } from '../jupyter/kernels/kernelSelections';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
@@ -331,6 +335,7 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
                 getNotebookMetadata(document),
                 true,
                 token,
+                true,
                 true
             );
         } else {
@@ -338,7 +343,8 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
                 document.uri,
                 sessionManager,
                 getNotebookMetadata(document),
-                token
+                token,
+                true
             );
         }
     }

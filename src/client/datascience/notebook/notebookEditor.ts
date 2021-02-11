@@ -15,7 +15,7 @@ import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
-import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../context/telemetry';
+import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../telemetry/telemetry';
 import { JupyterKernelPromiseFailedError } from '../jupyter/kernels/jupyterKernelPromiseFailedError';
 import { IKernel, IKernelProvider } from '../jupyter/kernels/types';
 import {

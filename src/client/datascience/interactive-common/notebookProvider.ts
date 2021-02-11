@@ -12,7 +12,7 @@ import { traceWarning } from '../../common/logger';
 import { IConfigurationService, IDisposableRegistry, Resource } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { Identifiers, Settings, Telemetry } from '../constants';
-import { sendKernelTelemetryWhenDone, trackKernelResourceInformation } from '../context/telemetry';
+import { sendKernelTelemetryWhenDone, trackKernelResourceInformation } from '../telemetry/telemetry';
 import { KernelConnectionMetadata } from '../jupyter/kernels/types';
 import {
     ConnectNotebookProviderOptions,
