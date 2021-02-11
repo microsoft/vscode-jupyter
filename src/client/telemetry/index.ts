@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import type { JSONObject } from '@phosphor/coreutils';
-import * as stackTrace from 'stack-trace';
 // eslint-disable-next-line
 import TelemetryReporter from 'vscode-extension-telemetry/lib/telemetryReporter';
 
@@ -21,6 +20,7 @@ import { ResourceSpecificTelemetryProperties } from '../datascience/telemetry/ty
 import { ExportFormat } from '../datascience/export/types';
 import { InterruptResult } from '../datascience/types';
 import { EventName, PlatformErrors } from './constants';
+import { populateTelemetryWithErrorInfo, TelemetryErrorProperties } from '../common/errors';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -42,14 +42,6 @@ function isTelemetrySupported(): boolean {
     }
 }
 
-type ErrorTelemetryUpdater = (props: Record<string, any>, error: Error) => void;
-const errorTelemetryUpdaters: ErrorTelemetryUpdater[] = [];
-export function registerErrorTelemetryUpdater(classifier: ErrorTelemetryUpdater) {
-    errorTelemetryUpdaters.push(classifier);
-}
-function populateTelemetryWithErrorInfo(props: Record<string, any>, error: Error) {
-    errorTelemetryUpdaters.forEach((item) => item(props, error));
-}
 /**
  * Checks if the telemetry is disabled in user settings
  * @returns {boolean}
@@ -150,26 +142,21 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
             // Hence they need to be classified as part of the GDPR process, and thats unnecessary and onerous.
             eventNameSent = 'ERROR';
             customProperties = {
-                failed: 'true',
-                originalEventName: eventName as string,
-                stackTrace: serializeStackTrace(ex)
+                originalEventName: eventName as string
             };
-            populateTelemetryWithErrorInfo(customProperties, ex);
             // Add shared properties to telemetry props (we may overwrite existing ones).
             Object.assign(customProperties, sharedProperties);
+            populateTelemetryWithErrorInfo(customProperties, ex);
             customProperties = stringifyProperties(eventNameSent, customProperties);
             reporter.sendTelemetryErrorEvent(eventNameSent, customProperties, measures, []);
         } else {
             // Include a property failed, to indicate there are errors.
             // Lets pay the price for better data.
-            customProperties = {
-                failed: 'true',
-                stackTrace: serializeStackTrace(ex)
-            };
-            populateTelemetryWithErrorInfo(customProperties, ex);
+            customProperties = {};
             // Add shared properties to telemetry props (we may overwrite existing ones).
             Object.assign(customProperties, sharedProperties);
             Object.assign(customProperties, properties || {});
+            populateTelemetryWithErrorInfo(customProperties, ex);
             customProperties = stringifyProperties(eventNameSent, customProperties);
             reporter.sendTelemetryEvent(eventNameSent, customProperties, measures);
         }
@@ -307,49 +294,6 @@ export function sendTelemetryWhenDone<P extends IEventNamePropertyMapping, E ext
     }
 }
 
-function parseStack(ex: Error) {
-    // Work around bug in stackTrace when ex has an array already
-    if (ex.stack && Array.isArray(ex.stack)) {
-        const concatenated = { ...ex, stack: ex.stack.join('\n') };
-        return stackTrace.parse(concatenated);
-    }
-    return stackTrace.parse(ex);
-}
-
-function serializeStackTrace(ex: Error): string {
-    // We aren't showing the error message (ex.message) since it might contain PII.
-    let trace = '';
-    for (const frame of parseStack(ex)) {
-        const filename = frame.getFileName();
-        if (filename) {
-            const lineno = frame.getLineNumber();
-            const colno = frame.getColumnNumber();
-            trace += `\n\tat ${getCallsite(frame)} ${filename}:${lineno}:${colno}`;
-        } else {
-            trace += '\n\tat <anonymous>';
-        }
-    }
-    // Ensure we always use `/` as path separators.
-    // This way stack traces (with relative paths) coming from different OS will always look the same.
-    return trace.trim().replace(/\\/g, '/');
-}
-
-function getCallsite(frame: stackTrace.StackFrame) {
-    const parts: string[] = [];
-    if (typeof frame.getTypeName() === 'string' && frame.getTypeName().length > 0) {
-        parts.push(frame.getTypeName());
-    }
-    if (typeof frame.getMethodName() === 'string' && frame.getMethodName().length > 0) {
-        parts.push(frame.getMethodName());
-    }
-    if (typeof frame.getFunctionName() === 'string' && frame.getFunctionName().length > 0) {
-        if (parts.length !== 2 || parts.join('.') !== frame.getFunctionName()) {
-            parts.push(frame.getFunctionName());
-        }
-    }
-    return parts.join('.');
-}
-
 /**
  * Map all shared properties to their data types.
  */
@@ -393,27 +337,6 @@ export interface ISharedPropertyMapping {
      */
     ['isPythonExtensionInstalled']: 'true' | 'false';
 }
-
-// If there are errors, then the are added to the telementry properties.
-export type TelemetryErrorProperties = {
-    failed: true;
-    /**
-     * Node stacktrace without PII.
-     */
-    stackTrace: string;
-    /**
-     * A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.
-     */
-    failureReason?: string;
-    /**
-     * Hash of the file name that contains the file in the last frame (from Python stack trace).
-     */
-    pythonErrorFile?: string;
-    /**
-     * Hash of the folder that contains the file in the last frame (from Python stack trace).
-     */
-    pythonErrorFolder?: string;
-};
 
 // Map all events to their properties
 export interface IEventNamePropertyMapping {
@@ -578,7 +501,7 @@ export interface IEventNamePropertyMapping {
     [Telemetry.CodeLensAverageAcquisitionTime]: never | undefined;
     [Telemetry.CollapseAll]: never | undefined;
     [Telemetry.ConnectFailedJupyter]: {
-        failureReason:
+        failureCategory:
             | 'cancelled'
             | 'timeout'
             | 'kerneldied'
@@ -600,7 +523,7 @@ export interface IEventNamePropertyMapping {
      */
     [Telemetry.ConnectRemoteJupyterViaLocalHost]: never | undefined;
     [Telemetry.ConnectRemoteFailedJupyter]: {
-        failureReason:
+        failureCategory:
             | 'cancelled'
             | 'timeout'
             | 'kerneldied'
@@ -1125,7 +1048,7 @@ export interface IEventNamePropertyMapping {
         | ResourceSpecificTelemetryProperties // If successful.
         | ({
               failed: true;
-              failureReason:
+              failureCategory:
                   | 'cancelled'
                   | 'timeout'
                   | 'kerneldied'
@@ -1148,7 +1071,7 @@ export interface IEventNamePropertyMapping {
     [Telemetry.NotebookRestart]:
         | ({
               failed: true;
-              failureReason: 'cancelled' | 'kernelpromisetimeout' | 'unknown';
+              failureCategory: 'cancelled' | 'kernelpromisetimeout' | 'unknown';
           } & ResourceSpecificTelemetryProperties)
         | (ResourceSpecificTelemetryProperties & TelemetryErrorProperties); // If there are unhandled exceptions;
 
@@ -1157,7 +1080,7 @@ export interface IEventNamePropertyMapping {
         | ResourceSpecificTelemetryProperties
         | ({
               failed: true;
-              failureReason: 'cancelled' | 'timeout' | 'noipykernel' | 'kerneldied' | 'unknown';
+              failureCategory: 'cancelled' | 'timeout' | 'noipykernel' | 'kerneldied' | 'unknown';
           } & ResourceSpecificTelemetryProperties)
         | (ResourceSpecificTelemetryProperties & TelemetryErrorProperties); // If there are unhandled exceptions;
     [Telemetry.RawKernelSessionStartSuccess]: never | undefined;

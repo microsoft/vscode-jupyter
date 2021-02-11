@@ -335,7 +335,7 @@ export class NotebookEditor implements INotebookEditor {
             if (exc instanceof JupyterKernelPromiseFailedError && kernel) {
                 sendKernelTelemetryEvent(this.document.uri, Telemetry.NotebookRestart, stopWatch.elapsedTime, {
                     failed: true,
-                    failureReason: 'kernelpromisetimeout'
+                    failureCategory: 'kernelpromisetimeout'
                 });
                 // Old approach (INotebook is not exposed in IKernel, and INotebook will eventually go away).
                 const notebook = await this.notebookProvider.getOrCreateNotebook({
@@ -350,7 +350,7 @@ export class NotebookEditor implements INotebookEditor {
             } else {
                 sendKernelTelemetryEvent(this.document.uri, Telemetry.NotebookRestart, stopWatch.elapsedTime, {
                     failed: true,
-                    failureReason: isErrorType(exc, CancellationError) ? 'cancelled' : 'unknown'
+                    failureCategory: isErrorType(exc, CancellationError) ? 'cancelled' : 'unknown'
                 });
                 // Show the error message
                 void this.applicationShell.showErrorMessage(exc);

@@ -5,35 +5,19 @@ import { Uri } from 'vscode';
 import { getOSType } from '../../common/utils/platform';
 import { getKernelConnectionId, KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { Resource } from '../../common/types';
-import {
-    IEventNamePropertyMapping,
-    sendTelemetryEvent,
-    setSharedProperty,
-    TelemetryErrorProperties
-} from '../../telemetry';
+import { IEventNamePropertyMapping, sendTelemetryEvent, setSharedProperty } from '../../telemetry';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { ResourceSpecificTelemetryProperties } from './types';
-import { getLastFrameFromPythonTraceback, isErrorType, WrappedError } from '../../common/errors/errorUtils';
-import { CancellationError } from '../../common/cancellation';
-import { TimedOutError } from '../../common/utils/async';
-import { JupyterInvalidKernelError } from '../jupyter/jupyterInvalidKernelError';
-import { JupyterWaitForIdleError } from '../jupyter/jupyterWaitForIdleError';
-import { JupyterKernelPromiseFailedError } from '../jupyter/kernels/jupyterKernelPromiseFailedError';
-import { IpyKernelNotInstalledError, KernelDiedError, PythonKernelDiedError } from '../kernel-launcher/types';
-import { JupyterSessionStartError } from '../baseJupyterSession';
-import { JupyterConnectError } from '../jupyter/jupyterConnectError';
-import { JupyterInstallError } from '../jupyter/jupyterInstallError';
-import { JupyterSelfCertsError } from '../jupyter/jupyterSelfCertsError';
 import { Telemetry } from '../constants';
 import { WorkspaceInterpreterTracker } from './workspaceInterpreterTracker';
 import { InterruptResult } from '../types';
 import { getResourceType } from '../common';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { InterpreterCountTracker } from './interpreterCountTracker';
-import { FetchError } from 'node-fetch';
 import { getTelemetrySafeHashedString, getTelemetrySafeLanguage } from '../../telemetry/helpers';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { InterpreterPackages } from './interpreterPackages';
+import { populateTelemetryWithErrorInfo } from '../../common/errors';
 
 type ContextualTelemetryProps = {
     kernelConnection: KernelConnectionMetadata;
@@ -60,169 +44,6 @@ const trackedInfo = new Map<string, [ResourceSpecificTelemetryProperties, Contex
 const currentOSType = getOSType();
 const pythonEnvironmentsByHash = new Map<string, PythonEnvironment>();
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function populateTelemetryWithErrorInfo(props: Partial<TelemetryErrorProperties>, error: Error) {
-    props.failed = true;
-    props.failureReason = getErrorClassification(error);
-
-    const pythonStackTrace = getPythonStackTrace(error);
-    if (!pythonStackTrace) {
-        return;
-    }
-    const info = getLastFrameFromPythonTraceback(pythonStackTrace);
-    if (!info) {
-        return;
-    }
-    props.pythonErrorFile = getTelemetrySafeHashedString(info.fileName);
-    props.pythonErrorFolder = getTelemetrySafeHashedString(info.folderName);
-}
-
-function getErrorClassification(error: Error) {
-    if (error.message.indexOf('reason: self signed certificate') >= 0) {
-        return 'jupyterselfcert';
-    } else if (isErrorType(error, JupyterSelfCertsError)) {
-        return 'jupyterselfcert';
-    } else if (isErrorType(error, JupyterWaitForIdleError)) {
-        return 'timeout';
-    } else if (isErrorType(error, TimedOutError)) {
-        return 'timeout';
-    } else if (isErrorType(error, JupyterInvalidKernelError)) {
-        return 'invalidkernel';
-    } else if (isErrorType(error, JupyterKernelPromiseFailedError)) {
-        return 'kernelpromisetimeout';
-    } else if (isErrorType(error, IpyKernelNotInstalledError)) {
-        return 'noipykernel';
-    } else if (isErrorType(error, CancellationError)) {
-        return 'cancelled';
-    } else if (isErrorType(error, JupyterSessionStartError)) {
-        return 'jupytersession';
-    } else if (isErrorType(error, JupyterConnectError)) {
-        return 'jupyterconnection';
-    } else if (isErrorType(error, JupyterInstallError)) {
-        return 'jupyterinstall';
-    } else if (isErrorType(error, PythonKernelDiedError)) {
-        return getReasonForKernelToDie(error);
-    } else if (isErrorType(error, KernelDiedError)) {
-        return 'kerneldied';
-    } else if (isErrorType(error, FetchError)) {
-        return 'fetcherror';
-    }
-    return 'unknown';
-}
-function getPythonStackTrace(error: Error) {
-    if (error instanceof KernelDiedError) {
-        return error.stdErr;
-    }
-    if (error instanceof PythonKernelDiedError) {
-        return error.stdErr;
-    }
-    if (
-        error instanceof WrappedError &&
-        error.originalException &&
-        error.originalException instanceof KernelDiedError
-    ) {
-        return error.originalException.stdErr;
-    }
-    if (
-        error instanceof WrappedError &&
-        error.originalException &&
-        error.originalException instanceof PythonKernelDiedError
-    ) {
-        return error.originalException.stdErr;
-    }
-    return;
-}
-/**
- * Analyze the details of the error such as `stdErr` from the kernel process and
- * try to determine the cause.
- */
-function getReasonForKernelToDie(error: Error) {
-    const stdErr = (getPythonStackTrace(error) || '').toLowerCase();
-    if (stdErr.includes("ImportError: No module named 'win32api'".toLowerCase())) {
-        // force re-installing ipykernel worked.
-        /*
-          File "C:\Users\<user>\miniconda3\envs\env_zipline\lib\contextlib.py", line 59, in enter
-            return next(self.gen)
-            File "C:\Users\<user>\miniconda3\envs\env_zipline\lib\site-packages\jupyter_client\connect.py", line 100, in secure_write
-            win32_restrict_file_to_user(fname)
-            File "C:\Users\<user>\miniconda3\envs\env_zipline\lib\site-packages\jupyter_client\connect.py", line 53, in win32_restrict_file_to_user
-            import win32api
-            ImportError: No module named 'win32api'
-        */
-        return 'kerneldied.win32api';
-    }
-    if (
-        stdErr.includes('ImportError: cannot import name'.toLowerCase()) &&
-        stdErr.includes('from partially initialized module'.toLowerCase()) &&
-        stdErr.includes('zmq.backend.cython'.toLowerCase())
-    ) {
-        // force re-installing ipykernel worked.
-        /*
-          File "C:\Users\<user>\AppData\Roaming\Python\Python38\site-packages\zmq\backend\cython\__init__.py", line 6, in <module>
-    from . import (constants, error, message, context,
-          ImportError: cannot import name 'constants' from partially initialized module 'zmq.backend.cython' (most likely due to a circular import) (C:\Users\<user>\AppData\Roaming\Python\Python38\site-packages\zmq\backend\cython\__init__.py)
-        */
-        return 'kerneldied.zmq';
-    }
-    if (
-        stdErr.includes('zmq'.toLowerCase()) &&
-        stdErr.includes('cython'.toLowerCase()) &&
-        stdErr.includes('__init__.py'.toLowerCase())
-    ) {
-        // force re-installing ipykernel worked.
-        /*
-          File "C:\Users\<user>\AppData\Roaming\Python\Python38\site-packages\zmq\backend\cython\__init__.py", line 6, in <module>
-    from . import (constants, error, message, context,
-          ImportError: cannot import name 'constants' from partially initialized module 'zmq.backend.cython' (most likely due to a circular import) (C:\Users\<user>\AppData\Roaming\Python\Python38\site-packages\zmq\backend\cython\__init__.py)
-        */
-        return 'kerneldied.zmq';
-    }
-    if (stdErr.includes('ImportError: DLL load failed'.toLowerCase())) {
-        // Possibly a conda issue on windows
-        /*
-        win32_restrict_file_to_user
-        import win32api
-        ImportError: DLL load failed: 找不到指定的程序。
-        */
-        return 'kerneldied.dll.load.failed';
-    }
-    if (stdErr.includes("AssertionError: Couldn't find Class NSProcessInfo".toLowerCase())) {
-        // Conda environment with IPython 5.8.0 fails with this message.
-        // Updating to latest version of ipython fixed it (conda update ipython).
-        // Possible we might have to update other packages as well (when using `conda update ipython` plenty of other related pacakges got updated, such as zeromq, nbclient, jedi)
-        /*
-            Error: Kernel died with exit code 1. Traceback (most recent call last):
-            File "/Users/donjayamanne/miniconda3/envs/env3/lib/python3.7/site-packages/appnope/_nope.py", line 90, in nope
-                "Because Reasons"
-            File "/Users/donjayamanne/miniconda3/envs/env3/lib/python3.7/site-packages/appnope/_nope.py", line 60, in beginActivityWithOptions
-                NSProcessInfo = C('NSProcessInfo')
-            File "/Users/donjayamanne/miniconda3/envs/env3/lib/python3.7/site-packages/appnope/_nope.py", line 38, in C
-                assert ret is not None, "Couldn't find Class %s" % classname
-            AssertionError: Couldn't find Class NSProcessInfo
-        */
-        return 'kerneldied.oldipython';
-    }
-    if (
-        stdErr.includes('NotImplementedError'.toLowerCase()) &&
-        stdErr.includes('asyncio'.toLowerCase()) &&
-        stdErr.includes('events.py'.toLowerCase())
-    ) {
-        /*
-        "C:\Users\<user>\AppData\Roaming\Python\Python38\site-packages\zmq\eventloop\zmqstream.py", line 127, in __init__
-        Info 2020-08-10 12:14:11: Python Daemon (pid: 16976): write to stderr:     self._init_io_state()
-        Info 2020-08-10 12:14:11: Python Daemon (pid: 16976): write to stderr:   File "C:\Users\<user>\AppData\Roaming\Python\Python38\site-packages\zmq\eventloop\zmqstream.py", line 546, in _init_io_state
-        Info 2020-08-10 12:14:11: Python Daemon (pid: 16976): write to stderr:     self.io_loop.add_handler(self.socket, self._handle_events, self.io_loop.READ)
-        Info 2020-08-10 12:14:11: Python Daemon (pid: 16976): write to stderr:   File "C:\Users\<user>\AppData\Roaming\Python\Python38\site-packages\tornado\platform\asyncio.py", line 99, in add_handler
-        Info 2020-08-10 12:14:11: Python Daemon (pid: 16976): write to stderr:     self.asyncio_loop.add_reader(fd, self._handle_events, fd, IOLoop.READ)
-        Info 2020-08-10 12:14:11: Python Daemon (pid: 16976): write to stderr:   File "C:\Users\<user>\AppData\Local\Programs\Python\Python38-32\lib\asyncio\events.py", line 501, in add_reader
-        Info 2020-08-10 12:14:11: Python Daemon (pid: 16976): write to stderr:     raise NotImplementedError
-        Info 2020-08-10 12:14:11: Python Daemon (pid: 16976): write to stderr: NotImplementedError
-        */
-        return 'kerneldied.oldipykernel';
-    }
-    return 'kerneldied';
-}
-
 export function sendKernelTelemetryEvent<P extends IEventNamePropertyMapping, E extends keyof P>(
     resource: Resource,
     eventName: E,
@@ -236,16 +57,9 @@ export function sendKernelTelemetryEvent<P extends IEventNamePropertyMapping, E 
 
     const addOnTelemetry = getContextualPropsForTelemetry(resource);
     const props = properties || {};
-    if (ex) {
-        populateTelemetryWithErrorInfo(props, ex);
-    }
-    if (addOnTelemetry) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        sendTelemetryEvent(eventName as any, durationMs, Object.assign(props, addOnTelemetry), ex);
-    } else {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        sendTelemetryEvent(eventName as any, durationMs, props, ex);
-    }
+    Object.assign(props, addOnTelemetry || {});
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    sendTelemetryEvent(eventName as any, durationMs, props, ex);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resetData(resource, eventName as any, props);

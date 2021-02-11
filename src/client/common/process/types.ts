@@ -8,6 +8,7 @@ import { CancellationToken, Uri } from 'vscode';
 import { Newable } from '../../ioc/types';
 import { PythonExecInfo } from '../../pythonEnvironments/exec';
 import { InterpreterInformation, PythonEnvironment } from '../../pythonEnvironments/info';
+import { BaseError } from '../errors';
 import { IDisposable } from '../types';
 import { EnvironmentVariables } from '../variables/types';
 
@@ -183,9 +184,9 @@ export interface IPythonExecutionService {
  */
 export interface IPythonDaemonExecutionService extends IPythonExecutionService, IDisposable {}
 
-export class StdErrError extends Error {
+export class StdErrError extends BaseError {
     constructor(message: string) {
-        super(message);
+        super('unknown', message);
     }
 }
 

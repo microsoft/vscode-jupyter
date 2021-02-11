@@ -2,8 +2,10 @@
 // Licensed under the MIT License.
 'use strict';
 
-export class JupyterZMQBinariesNotFoundError extends Error {
+import { BaseError } from '../../common/errors';
+
+export class JupyterZMQBinariesNotFoundError extends BaseError {
     constructor(message: string) {
-        super(message);
+        super('zmq', message);
     }
 }

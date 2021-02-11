@@ -3,15 +3,16 @@
 'use strict';
 
 import { CancellationToken, CancellationTokenSource } from 'vscode';
+import { BaseError } from './errors';
 import { createDeferred } from './utils/async';
 import * as localize from './utils/localize';
 
 /**
  * Error type thrown when canceling.
  */
-export class CancellationError extends Error {
+export class CancellationError extends BaseError {
     constructor() {
-        super(localize.Common.canceled());
+        super('cancelled', localize.Common.canceled());
     }
 }
 

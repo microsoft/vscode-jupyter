@@ -6,7 +6,6 @@
 import { IExtensionSingleActivationService, IExtensionSyncActivationService } from '../../activation/types';
 import { IServiceManager } from '../../ioc/types';
 import { ActiveEditorContextService } from '../commands/activeEditorContext';
-import { ErrorClassificationRegistration } from './errorClassificationRegistration';
 import { InterpreterCountTracker } from './interpreterCountTracker';
 import { InterpreterPackages } from './interpreterPackages';
 import { InterpreterPackageTracker } from './interpreterPackageTracker';
@@ -22,10 +21,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         InterpreterPackageTracker
-    );
-    serviceManager.addSingleton<IExtensionSyncActivationService>(
-        IExtensionSyncActivationService,
-        ErrorClassificationRegistration
     );
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,

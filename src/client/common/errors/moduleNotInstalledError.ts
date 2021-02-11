@@ -1,8 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-export class ModuleNotInstalledError extends Error {
+import { BaseError } from '.';
+
+export class ModuleNotInstalledError extends BaseError {
     constructor(moduleName: string) {
-        super(`Module '${moduleName}' not installed.`);
+        super('notinstalled', `Module '${moduleName}' not installed.`);
     }
 }

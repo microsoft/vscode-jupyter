@@ -2,8 +2,10 @@
 // Licensed under the MIT License.
 'use strict';
 
-export class JupyterKernelPromiseFailedError extends Error {
+import { BaseError } from '../../../common/errors';
+
+export class JupyterKernelPromiseFailedError extends BaseError {
     constructor(message: string) {
-        super(message);
+        super('kernelpromisetimeout', message);
     }
 }

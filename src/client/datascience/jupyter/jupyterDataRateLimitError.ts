@@ -1,10 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import { BaseError } from '../../common/errors';
 import * as localize from '../../common/utils/localize';
 
-export class JupyterDataRateLimitError extends Error {
+export class JupyterDataRateLimitError extends BaseError {
     constructor() {
-        super(localize.DataScience.jupyterDataRateExceeded());
+        super('unknown', localize.DataScience.jupyterDataRateExceeded());
     }
 }

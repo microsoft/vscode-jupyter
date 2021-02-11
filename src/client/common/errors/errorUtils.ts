@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { EOL } from 'os';
+import { BaseError, getErrorCategory } from '.';
 
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class ErrorUtils {
@@ -17,9 +18,9 @@ export class ErrorUtils {
 /**
  * Wraps an error with a custom error message, retaining the call stack information.
  */
-export class WrappedError extends Error {
+export class WrappedError extends BaseError {
     constructor(message: string, public readonly originalException?: Error) {
-        super(message);
+        super(getErrorCategory(originalException), message);
         if (originalException) {
             // Retain call stack that trapped the error and rethrows this error.
             // Also retain the call stack of the original error.
@@ -51,7 +52,7 @@ export function getErrorMessageFromPythonTraceback(traceback: string) {
 
 export function getLastFrameFromPythonTraceback(
     traceback: string
-): { fileName: string; folderName: string } | undefined {
+): { fileName: string; folderName: string; packageName: string } | undefined {
     if (!traceback) {
         return;
     }
@@ -70,11 +71,15 @@ export function getLastFrameFromPythonTraceback(
         return;
     }
     const file = lastFrame.substring(0, lastFrame.lastIndexOf('.py')) + '.py';
-    const parts = file.replace(/\\/g, '/').split('/').reverse();
-    if (parts.length < 2) {
+    const parts = file.replace(/\\/g, '/').split('/');
+    const indexOfSitePackages = parts.indexOf('site-packages');
+    let packageName =
+        indexOfSitePackages >= 0 && parts.length > indexOfSitePackages + 1 ? parts[indexOfSitePackages + 1] : '';
+    const reversedParts = file.replace(/\\/g, '/').split('/').reverse();
+    if (reversedParts.length < 2) {
         return;
     }
-    return { fileName: parts[0], folderName: parts[1] };
+    return { fileName: reversedParts[0], folderName: reversedParts[1], packageName };
 }
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Constructor<T> = { new (...args: any[]): T };

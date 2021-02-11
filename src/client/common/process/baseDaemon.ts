@@ -9,6 +9,7 @@ import { Subject } from 'rxjs/Subject';
 import * as util from 'util';
 import { MessageConnection, NotificationType, RequestType, RequestType0 } from 'vscode-jsonrpc';
 import { IPlatformService } from '../../common/platform/types';
+import { BaseError } from '../errors';
 import { traceError, traceInfo, traceVerbose, traceWarning } from '../logger';
 import { IDisposable } from '../types';
 import { createDeferred, Deferred } from '../utils/async';
@@ -24,15 +25,15 @@ import {
 
 export type ErrorResponse = { error?: string };
 export type ExecResponse = ErrorResponse & { stdout: string; stderr?: string };
-export class ConnectionClosedError extends Error {
-    constructor(public readonly message: string) {
-        super();
+export class ConnectionClosedError extends BaseError {
+    constructor(message: string) {
+        super('daemon', message);
     }
 }
 
-export class DaemonError extends Error {
-    constructor(public readonly message: string) {
-        super();
+export class DaemonError extends BaseError {
+    constructor(message: string) {
+        super('daemon', message);
     }
 }
 export abstract class BasePythonDaemon {

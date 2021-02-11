@@ -3,10 +3,16 @@
 
 'use strict';
 
+import { BaseError } from '../errors';
+
 /**
  * Error type thrown when a timeout occurs
  */
-export class TimedOutError extends Error {}
+export class TimedOutError extends BaseError {
+    constructor(message: string) {
+        super('timeout', message);
+    }
+}
 
 export async function sleep(timeout: number): Promise<number> {
     return new Promise<number>((resolve) => {
