@@ -36,7 +36,7 @@ import { IJupyterSession, ISessionWithSocket, KernelSocketInformation } from './
 export class JupyterSessionStartError extends WrappedError {
     constructor(originalException: Error) {
         super(originalException.message, originalException);
-        sendTelemetryEvent(Telemetry.StartSessionFailedJupyter);
+        sendTelemetryEvent(Telemetry.StartSessionFailedJupyter, undefined, undefined, originalException, true);
     }
 }
 

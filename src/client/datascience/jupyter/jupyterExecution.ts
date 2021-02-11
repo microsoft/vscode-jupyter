@@ -211,7 +211,12 @@ export class JupyterExecutionBase implements IJupyterExecution {
                         purpose: options ? options.purpose : uuid(),
                         disableUI: !allowUI
                     };
-
+                    // If we were not provided a kernel connection, this means we changed the connection here.
+                    if (!options?.kernelConnection) {
+                        trackKernelResourceInformation(options?.resource, {
+                            kernelConnection: launchInfo.kernelConnectionMetadata
+                        });
+                    }
                     // eslint-disable-next-line no-constant-condition
                     while (true) {
                         try {
@@ -225,6 +230,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                             break;
                         } catch (ex) {
                             traceError('Failed to connect to server', ex);
+                            sendKernelTelemetryEvent(options?.resource, Telemetry.JupyterNotInstalledErrorShown);
                             if (ex instanceof JupyterSessionStartError && isLocalConnection && allowUI) {
                                 // Keep retrying, until it works or user cancels.
                                 // Sometimes if a bad kernel is selected, starting a session can fail.
@@ -246,6 +252,9 @@ export class JupyterExecutionBase implements IJupyterExecution {
                                     );
                                     if (kernelInterpreter) {
                                         launchInfo.kernelConnectionMetadata = kernelInterpreter;
+                                        trackKernelResourceInformation(options?.resource, {
+                                            kernelConnection: launchInfo.kernelConnectionMetadata
+                                        });
                                         continue;
                                     }
                                 }
