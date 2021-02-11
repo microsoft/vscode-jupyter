@@ -169,7 +169,7 @@ suite('Telemetry', () => {
 
         const expectedErrorProperties = {
             failed: 'true',
-            failureReason: 'unknown',
+            failureCategory: 'unknown',
             originalEventName: eventName
         };
 
@@ -215,7 +215,7 @@ suite('Telemetry', () => {
 
         const expectedErrorProperties = {
             failed: 'true',
-            failureReason: 'unknown',
+            failureCategory: 'unknown',
             originalEventName: eventName
         };
 
