@@ -87,6 +87,10 @@ export function getErrorClassification(error: Error) {
     }
     return 'unknown';
 }
+/**
+ * Analyze the details of the error such as `stdErr` from the kernel process and
+ * try to determine the cause.
+ */
 function getReasonForKernelToDie(error: Error) {
     let kernelError: KernelDiedError | undefined;
     if (error instanceof KernelDiedError) {
