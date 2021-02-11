@@ -86,7 +86,7 @@
             {
                 "command": "jupyter.runcurrentcell",
                 "key": "ctrl+enter",
-                "when": "editorTextFocus && !editorHasSelection && jupyter.hascodecells && !notebookEditorFocused && !jupyter.hasnativecells"
+                "when": "editorTextFocus && !editorHasSelection && jupyter.hascodecells && !notebookEditorFocused && !jupyter.havenativecells"
             },
             {
                 "command": "jupyter.runcurrentcellandaddbelow",
