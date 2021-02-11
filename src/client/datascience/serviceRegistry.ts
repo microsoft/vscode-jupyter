@@ -119,7 +119,7 @@ import { NotebookEditorCompatibilitySupport } from './notebook/notebookEditorCom
 import { NotebookEditorProvider } from './notebook/notebookEditorProvider';
 import { NotebookEditorProviderWrapper } from './notebook/notebookEditorProviderWrapper';
 import { registerTypes as registerNotebookTypes } from './notebook/serviceRegistry';
-import { registerTypes as registerContextTypes } from './context/serviceRegistry';
+import { registerTypes as registerContextTypes } from './telemetry/serviceRegistry';
 import { NotebookCreationTracker } from './notebookAndInteractiveTracker';
 import { NotebookExtensibility } from './notebookExtensibility';
 import { NotebookModelFactory } from './notebookStorage/factory';

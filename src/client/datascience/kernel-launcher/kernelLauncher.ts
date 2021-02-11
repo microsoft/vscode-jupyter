@@ -27,7 +27,7 @@ import { IKernelConnection, IKernelLauncher, IKernelProcess, IpyKernelNotInstall
 import * as localize from '../../common/utils/localize';
 import { createDeferredFromPromise, Deferred } from '../../common/utils/async';
 import { CancellationError } from '../../common/cancellation';
-import { sendKernelTelemetryWhenDone } from '../context/telemetry';
+import { sendKernelTelemetryWhenDone } from '../telemetry/telemetry';
 
 const PortFormatString = `kernelLauncherPortStart_{0}.tmp`;
 
