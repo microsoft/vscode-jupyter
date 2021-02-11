@@ -86,9 +86,7 @@ export class InterpreterPackages {
         const packageAndVersions = new Map<string, string>();
         // Add defaults.
         interestedPackages.forEach((item) => {
-            if (!packageAndVersions.has(item)) {
-                packageAndVersions.set(item, 'NOT INSTALLED');
-            }
+            packageAndVersions.set(getTelemetrySafeHashedString(item), 'NOT INSTALLED');
         });
         InterpreterPackages.interpreterInformation.set(interpreter.path, packageAndVersions);
         output.stdout

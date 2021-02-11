@@ -193,7 +193,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                         const sessionManager = await sessionManagerFactory.create(connection);
                         try {
                             kernelConnectionMetadata = await this.kernelSelector.getPreferredKernelForRemoteConnection(
-                                undefined,
+                                options?.resource,
                                 sessionManager,
                                 options?.metadata,
                                 cancelToken
@@ -244,7 +244,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                                 const selection = await this.appShell.showErrorMessage(message, selectKernel, cancel);
                                 if (selection === selectKernel) {
                                     const kernelInterpreter = await this.kernelSelector.selectLocalKernel(
-                                        undefined,
+                                        options?.resource,
                                         'jupyter',
                                         new StopWatch(),
                                         cancelToken,
