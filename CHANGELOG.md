@@ -27,6 +27,8 @@
    ([#302](https://github.com/Microsoft/vscode-jupyter/issues/302))
 1. Add do not show again option to the native notebook insiders survey banner.
    ([#4658](https://github.com/microsoft/vscode-jupyter/issues/4658))
+1. Minimize number of icons on the notebook toolbar (put the rest in overflow).
+   ([#4730](https://github.com/Microsoft/vscode-jupyter/issues/4730))
 
 ### Fixes
 
