@@ -19,7 +19,7 @@ import { StopWatch } from '../../../common/utils/stopWatch';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { CodeSnippets, Telemetry } from '../../constants';
 import {
-    getErrorClassification,
+    populateTelemetryWithErrorInfo,
     sendKernelTelemetryEvent,
     trackKernelResourceInformation
 } from '../../telemetry/telemetry';
@@ -212,10 +212,17 @@ export class Kernel implements IKernel {
                         }
                     } catch (ex) {
                         traceError('failed to create INotebook in kernel', ex);
-                        sendKernelTelemetryEvent(options.document.uri, Telemetry.NotebookStart, stopWatch.elapsedTime, {
+                        const props: { failed: true; failureReason: 'unknown' } = {
                             failed: true,
-                            failureReason: getErrorClassification(ex)
-                        });
+                            failureReason: 'unknown'
+                        };
+                        populateTelemetryWithErrorInfo(props, ex);
+                        sendKernelTelemetryEvent(
+                            options.document.uri,
+                            Telemetry.NotebookStart,
+                            stopWatch.elapsedTime,
+                            props
+                        );
                         if (!options.disableUI) {
                             this.errorHandler.handleError(ex).ignoreErrors(); // Just a notification, so don't await this
                         }

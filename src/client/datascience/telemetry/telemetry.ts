@@ -5,7 +5,12 @@ import { Uri } from 'vscode';
 import { getOSType } from '../../common/utils/platform';
 import { getKernelConnectionId, KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { Resource } from '../../common/types';
-import { IEventNamePropertyMapping, sendTelemetryEvent, setSharedProperty } from '../../telemetry';
+import {
+    IEventNamePropertyMapping,
+    sendTelemetryEvent,
+    setSharedProperty,
+    TelemetryErrorProperties
+} from '../../telemetry';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { ResourceSpecificTelemetryProperties } from './types';
 import { getLastFrameFromPythonTraceback, isErrorType, WrappedError } from '../../common/errors/errorUtils';
@@ -27,8 +32,8 @@ import { PYTHON_LANGUAGE } from '../../common/constants';
 import { InterpreterCountTracker } from './interpreterCountTracker';
 import { FetchError } from 'node-fetch';
 import { getTelemetrySafeHashedString, getTelemetrySafeLanguage } from '../../telemetry/helpers';
-import { InterpreterPackages } from './interpreterPackages';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
+import { InterpreterPackages } from './interpreterPackages';
 
 type ContextualTelemetryProps = {
     kernelConnection: KernelConnectionMetadata;
@@ -55,7 +60,24 @@ const trackedInfo = new Map<string, [ResourceSpecificTelemetryProperties, Contex
 const currentOSType = getOSType();
 const pythonEnvironmentsByHash = new Map<string, PythonEnvironment>();
 
-export function getErrorClassification(error: Error) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function populateTelemetryWithErrorInfo(props: Partial<TelemetryErrorProperties>, error: Error) {
+    props.failed = true;
+    props.failureReason = getErrorClassification(error);
+
+    const pythonStackTrace = getPythonStackTrace(error);
+    if (!pythonStackTrace) {
+        return;
+    }
+    const info = getLastFrameFromPythonTraceback(pythonStackTrace);
+    if (!info) {
+        return;
+    }
+    props.pythonErrorFile = getTelemetrySafeHashedString(info.fileName);
+    props.pythonErrorFolder = getTelemetrySafeHashedString(info.folderName);
+}
+
+function getErrorClassification(error: Error) {
     if (error.message.indexOf('reason: self signed certificate') >= 0) {
         return 'jupyterselfcert';
     } else if (isErrorType(error, JupyterSelfCertsError)) {
@@ -86,14 +108,6 @@ export function getErrorClassification(error: Error) {
         return 'fetcherror';
     }
     return 'unknown';
-}
-export function populateTelemetryWithErrorInfo(props: Record<string, any>, error: Error) {
-    const pythonStackTrace = getPythonStackTrace(error);
-    if (!pythonStackTrace) {
-        return;
-    }
-    const info = getLastFrameFromPythonTraceback(pythonStackTrace);
-    props.pythonErrorFile = getTelem
 }
 function getPythonStackTrace(error: Error) {
     if (error instanceof KernelDiedError) {
@@ -221,20 +235,23 @@ export function sendKernelTelemetryEvent<P extends IEventNamePropertyMapping, E 
     }
 
     const addOnTelemetry = getContextualPropsForTelemetry(resource);
+    const props = properties || {};
+    if (ex) {
+        populateTelemetryWithErrorInfo(props, ex);
+    }
     if (addOnTelemetry) {
-        const props = properties || {};
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         sendTelemetryEvent(eventName as any, durationMs, Object.assign(props, addOnTelemetry), ex);
     } else {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        sendTelemetryEvent(eventName as any, durationMs, properties, ex);
+        sendTelemetryEvent(eventName as any, durationMs, props, ex);
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    resetData(resource, eventName as any, properties);
+    resetData(resource, eventName as any, props);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    incrementStartFailureCount(resource, eventName as any, properties);
+    incrementStartFailureCount(resource, eventName as any, props);
 }
 
 export function sendKernelTelemetryWhenDone<P extends IEventNamePropertyMapping, E extends keyof P>(
@@ -266,8 +283,7 @@ export function sendKernelTelemetryWhenDone<P extends IEventNamePropertyMapping,
                 (ex) => {
                     const addOnTelemetry = getContextualPropsForTelemetry(resource);
                     Object.assign(props, addOnTelemetry);
-                    props.failed = true;
-                    props.failureReason = getErrorClassification(ex);
+                    populateTelemetryWithErrorInfo(props, ex);
                     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-explicit-any
                     sendTelemetryEvent(eventName as any, stopWatch!.elapsedTime, props as any, ex, true);
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any

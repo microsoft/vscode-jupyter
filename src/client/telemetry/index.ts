@@ -42,19 +42,13 @@ function isTelemetrySupported(): boolean {
     }
 }
 
-type ErrorClassifier = (error: Error) => string | undefined;
-const errorClassifiers: ErrorClassifier[] = [];
-export function registerErrorClassifier(classifier: ErrorClassifier) {
-    errorClassifiers.push(classifier);
+type ErrorTelemetryUpdater = (props: Record<string, any>, error: Error) => void;
+const errorTelemetryUpdaters: ErrorTelemetryUpdater[] = [];
+export function registerErrorTelemetryUpdater(classifier: ErrorTelemetryUpdater) {
+    errorTelemetryUpdaters.push(classifier);
 }
-function getErrorClassification(error: Error): string {
-    for (const classifier of errorClassifiers) {
-        const classification = classifier(error);
-        if (classification && classification !== 'unknown') {
-            return classification;
-        }
-    }
-    return 'unknown';
+function populateTelemetryWithErrorInfo(props: Record<string, any>, error: Error) {
+    errorTelemetryUpdaters.forEach(item => item(props, error));
 }
 /**
  * Checks if the telemetry is disabled in user settings
@@ -158,9 +152,9 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
             customProperties = {
                 failed: 'true',
                 originalEventName: eventName as string,
-                failureReason: getErrorClassification(ex),
                 stackTrace: serializeStackTrace(ex)
             };
+            populateTelemetryWithErrorInfo(customProperties, ex);
             // Add shared properties to telemetry props (we may overwrite existing ones).
             Object.assign(customProperties, sharedProperties);
             customProperties = stringifyProperties(eventNameSent, customProperties);
@@ -171,8 +165,8 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
             customProperties = {
                 failed: 'true',
                 stackTrace: serializeStackTrace(ex),
-                failureReason: getErrorClassification(ex)
             };
+            populateTelemetryWithErrorInfo(customProperties, ex);
             // Add shared properties to telemetry props (we may overwrite existing ones).
             Object.assign(customProperties, sharedProperties);
             Object.assign(customProperties, properties || {});
@@ -401,7 +395,13 @@ export interface ISharedPropertyMapping {
 }
 
 // If there are errors, then the are added to the telementry properties.
-export type TelemetryErrorProperties = { failed: true; stackTrace: string };
+export type TelemetryErrorProperties = {
+    failed: true;
+    stackTrace: string;
+    failureReason?: string;
+    pythonErrorFile: string;
+    pythonErrorFolder: string;
+};
 
 // Map all events to their properties
 export interface IEventNamePropertyMapping {

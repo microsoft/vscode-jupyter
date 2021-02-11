@@ -3,12 +3,12 @@
 
 import { injectable } from 'inversify';
 import { IExtensionSyncActivationService } from '../../activation/types';
-import { registerErrorClassifier } from '../../telemetry';
-import { getErrorClassification } from './telemetry';
+import { registerErrorTelemetryUpdater } from '../../telemetry';
+import { populateTelemetryWithErrorInfo } from './telemetry';
 
 @injectable()
 export class ErrorClassificationRegistration implements IExtensionSyncActivationService {
     activate(): void {
-        registerErrorClassifier(getErrorClassification);
+        registerErrorTelemetryUpdater(populateTelemetryWithErrorInfo);
     }
 }

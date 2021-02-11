@@ -109,7 +109,7 @@ import { DataViewerChecker } from './dataViewerChecker';
 import { InteractiveWindowMessageListener } from './interactiveWindowMessageListener';
 import { serializeLanguageConfiguration } from './serialization';
 import {
-    getErrorClassification,
+    populateTelemetryWithErrorInfo,
     sendKernelTelemetryEvent,
     trackKernelResourceInformation
 } from '../telemetry/telemetry';
@@ -881,10 +881,9 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         try {
             await this.connectionAndNotebookPromise;
         } catch (e) {
-            sendKernelTelemetryEvent(this.owningResource, Telemetry.NotebookStart, undefined, {
-                failed: true,
-                failureReason: getErrorClassification(e)
-            });
+            const props: { failed: true; failureReason: 'unknown' } = { failed: true, failureReason: 'unknown' };
+            populateTelemetryWithErrorInfo(props, e);
+            sendKernelTelemetryEvent(this.owningResource, Telemetry.NotebookStart, undefined, props);
             // Reset the load promise. Don't want to keep hitting the same error
             this.connectionAndNotebookPromise = undefined;
             throw e;

@@ -19,7 +19,7 @@ import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { JupyterSessionStartError } from '../baseJupyterSession';
 import { Commands, Identifiers, Telemetry } from '../constants';
-import { getErrorClassification } from '../telemetry/telemetry';
+import { populateTelemetryWithErrorInfo } from '../telemetry/telemetry';
 import {
     IJupyterConnection,
     IJupyterExecution,
@@ -283,9 +283,12 @@ export class JupyterExecutionBase implements IJupyterExecution {
 
                         // Something else went wrong
                         if (!isLocalConnection) {
-                            sendTelemetryEvent(Telemetry.ConnectRemoteFailedJupyter, undefined, {
-                                failureReason: getErrorClassification(err)
-                            });
+                            const props: { failed: true; failureReason: 'unknown' } = {
+                                failed: true,
+                                failureReason: 'unknown'
+                            };
+                            populateTelemetryWithErrorInfo(props, err);
+                            sendTelemetryEvent(Telemetry.ConnectRemoteFailedJupyter, undefined, props);
 
                             // Check for the self signed certs error specifically
                             if (err.message.indexOf('reason: self signed certificate') >= 0) {
@@ -301,9 +304,12 @@ export class JupyterExecutionBase implements IJupyterExecution {
                                 );
                             }
                         } else {
-                            sendTelemetryEvent(Telemetry.ConnectFailedJupyter, undefined, {
-                                failureReason: getErrorClassification(err)
-                            });
+                            const props: { failed: true; failureReason: 'unknown' } = {
+                                failed: true,
+                                failureReason: 'unknown'
+                            };
+                            populateTelemetryWithErrorInfo(props, err);
+                            sendTelemetryEvent(Telemetry.ConnectFailedJupyter, undefined, props);
                             throw new WrappedError(
                                 localize.DataScience.jupyterNotebookConnectFailed().format(connection.baseUrl, err),
                                 err
