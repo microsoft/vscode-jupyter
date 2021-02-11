@@ -76,7 +76,6 @@ export class InterpreterPackages {
         });
         InterpreterPackages.pendingInterpreterInformation.set(key, promise);
     }
-    @captureTelemetry(Telemetry.AttemptedToLaunchRawKernelWithoutInterpreter)
     private async getPackageInformation(interpreter: PythonEnvironment) {
         const service = await this.executionFactory.createActivatedEnvironment({
             allowEnvironmentFetchExceptions: true,

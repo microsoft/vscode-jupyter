@@ -7,7 +7,6 @@ import { IPythonInstaller, IPythonExtensionChecker } from '../../api/types';
 import { IVSCodeNotebook } from '../../common/application/types';
 import { InterpreterUri } from '../../common/installer/types';
 import { IExtensions, IDisposableRegistry, Product, IConfigurationService } from '../../common/types';
-import { swallowExceptions } from '../../common/utils/decorators';
 import { isResource, noop } from '../../common/utils/misc';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { isLocalLaunch } from '../jupyter/kernels/helpers';
@@ -58,14 +57,13 @@ export class InterpreterPackageTracker implements IExtensionSingleActivationServ
         if (!this.pythonExtensionChecker.isPythonExtensionInstalled) {
             return;
         }
-        // Get details of active interpreter for the Uri provided.
+        // Get details of active interpreter.
         const activeInterpreter = await this.interpreterService.getActiveInterpreter(undefined);
         if (!activeInterpreter) {
             return;
         }
         await this.packages.trackPackages(activeInterpreter);
     }
-    @swallowExceptions()
     private async onDidInstallPackage(args: { product: Product; resource?: InterpreterUri }) {
         if (!this.pythonExtensionChecker.isPythonExtensionInstalled) {
             return;
