@@ -13,165 +13,10 @@ import {
     ProviderResult,
     WorkspaceEditEntryMetadata,
     Command,
-    AccessibilityInformation,
-    AuthenticationProviderInformation,
-    AuthenticationSession
+    AccessibilityInformation
 } from 'vscode';
 
 // Copy nb section from https://github.com/microsoft/vscode/blob/master/src/vs/vscode.proposed.d.ts.
-/**
- * Represents a storage utility for secrets, information that is
- * sensitive.
- */
-export interface SecretStorage {
-    /**
-     * Retrieve a secret that was stored with key. Returns undefined if there
-     * is no password matching that key.
-     * @param key The key the password was stored under.
-     * @returns The stored value or `undefined`.
-     */
-    get(key: string): Thenable<string | undefined>;
-
-    /**
-     * Store a secret under a given key.
-     * @param key The key to store the password under.
-     * @param value The password.
-     */
-    store(key: string, value: string): Thenable<void>;
-
-    /**
-     * Remove a secret from storage.
-     * @param key The key the password was stored under.
-     */
-    delete(key: string): Thenable<void>;
-
-    /**
-     * Fires when a secret is set or deleted.
-     */
-    onDidChange: Event<void>;
-}
-export interface ExtensionContext {
-    secrets: SecretStorage;
-}
-//#region auth provider: https://github.com/microsoft/vscode/issues/88309
-
-/**
- * An [event](#Event) which fires when an [AuthenticationProvider](#AuthenticationProvider) is added or removed.
- */
-export interface AuthenticationProvidersChangeEvent {
-    /**
-     * The ids of the [authenticationProvider](#AuthenticationProvider)s that have been added.
-     */
-    readonly added: ReadonlyArray<AuthenticationProviderInformation>;
-
-    /**
-     * The ids of the [authenticationProvider](#AuthenticationProvider)s that have been removed.
-     */
-    readonly removed: ReadonlyArray<AuthenticationProviderInformation>;
-}
-
-/**
- * An [event](#Event) which fires when an [AuthenticationSession](#AuthenticationSession) is added, removed, or changed.
- */
-export interface AuthenticationProviderAuthenticationSessionsChangeEvent {
-    /**
-     * The ids of the [AuthenticationSession](#AuthenticationSession)s that have been added.
-     */
-    readonly added: ReadonlyArray<string>;
-
-    /**
-     * The ids of the [AuthenticationSession](#AuthenticationSession)s that have been removed.
-     */
-    readonly removed: ReadonlyArray<string>;
-
-    /**
-     * The ids of the [AuthenticationSession](#AuthenticationSession)s that have been changed.
-     */
-    readonly changed: ReadonlyArray<string>;
-}
-
-/**
- * A provider for performing authentication to a service.
- */
-export interface AuthenticationProvider {
-    /**
-     * An [event](#Event) which fires when the array of sessions has changed, or data
-     * within a session has changed.
-     */
-    readonly onDidChangeSessions: Event<AuthenticationProviderAuthenticationSessionsChangeEvent>;
-
-    /**
-     * Returns an array of current sessions.
-     */
-    // eslint-disable-next-line vscode-dts-provider-naming
-    getSessions(): Thenable<ReadonlyArray<AuthenticationSession>>;
-
-    /**
-     * Prompts a user to login.
-     */
-    // eslint-disable-next-line vscode-dts-provider-naming
-    login(scopes: string[]): Thenable<AuthenticationSession>;
-
-    /**
-     * Removes the session corresponding to session id.
-     * @param sessionId The session id to log out of
-     */
-    // eslint-disable-next-line vscode-dts-provider-naming
-    logout(sessionId: string): Thenable<void>;
-}
-
-/**
- * Options for creating an [AuthenticationProvider](#AuthentcationProvider).
- */
-export interface AuthenticationProviderOptions {
-    /**
-     * Whether it is possible to be signed into multiple accounts at once with this provider.
-     * If not specified, will default to false.
-     */
-    readonly supportsMultipleAccounts?: boolean;
-}
-
-export namespace authentication {
-    /**
-     * Register an authentication provider.
-     *
-     * There can only be one provider per id and an error is being thrown when an id
-     * has already been used by another provider. Ids are case-sensitive.
-     *
-     * @param id The unique identifier of the provider.
-     * @param label The human-readable name of the provider.
-     * @param provider The authentication provider provider.
-     * @params options Additional options for the provider.
-     * @return A [disposable](#Disposable) that unregisters this provider when being disposed.
-     */
-    export function registerAuthenticationProvider(
-        id: string,
-        label: string,
-        provider: AuthenticationProvider,
-        options?: AuthenticationProviderOptions
-    ): Disposable;
-
-    /**
-     * @deprecated - getSession should now trigger extension activation.
-     * Fires with the provider id that was registered or unregistered.
-     */
-    export const onDidChangeAuthenticationProviders: Event<AuthenticationProvidersChangeEvent>;
-
-    /**
-     * An array of the information of authentication providers that are currently registered.
-     */
-    export const providers: ReadonlyArray<AuthenticationProviderInformation>;
-
-    /**
-     * Logout of a specific session.
-     * @param providerId The id of the provider to use
-     * @param sessionId The session id to remove
-     * provider
-     */
-    export function logout(providerId: string, sessionId: string): Thenable<void>;
-}
-
-//#endregion
 //#region debug
 
 /**
@@ -920,7 +765,6 @@ export namespace notebook {
 }
 
 export class Position {
-
     /**
      * The zero-based line value.
      */
@@ -1009,7 +853,7 @@ export class Position {
      * @return A position that reflects the given delta. Will return `this` position if the change
      * is not changing anything.
      */
-    translate(change: { lineDelta?: number; characterDelta?: number; }): Position;
+    translate(change: { lineDelta?: number; characterDelta?: number }): Position;
 
     /**
      * Create a new position derived from this position.
@@ -1027,7 +871,7 @@ export class Position {
      * @return A position that reflects the given change. Will return `this` position if the change
      * is not changing anything.
      */
-    with(change: { line?: number; character?: number; }): Position;
+    with(change: { line?: number; character?: number }): Position;
 }
 
 export interface NotebookConcatTextDocument {

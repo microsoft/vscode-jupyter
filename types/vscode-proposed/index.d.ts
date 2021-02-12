@@ -9,7 +9,6 @@ import {
     ViewColumn,
     CancellationToken,
     Disposable,
-    DocumentSelector,
     ProviderResult,
     WorkspaceEditEntryMetadata,
     Command,
