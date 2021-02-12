@@ -905,7 +905,8 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         // Check to see if we are already connected to our provider
         const providerConnection = await this.notebookProvider.connect({
             getOnly: true,
-            resource: this.owningResource
+            resource: this.owningResource,
+            metadata: this.notebookMetadata
         });
 
         if (providerConnection) {
@@ -934,7 +935,11 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
             serverUri !== Settings.JupyterServerLocalLaunch &&
             !this.configService.getSettings(this.owningResource).disableJupyterAutoStart
         ) {
-            serverConnection = await this.notebookProvider.connect({ disableUI: true, resource: this.owningResource });
+            serverConnection = await this.notebookProvider.connect({
+                disableUI: true,
+                resource: this.owningResource,
+                metadata: this.notebookMetadata
+            });
         }
         let displayName =
             serverConnection?.displayName ||
@@ -991,7 +996,8 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
             const serverConnection = await this.notebookProvider.connect({
                 getOnly: false,
                 disableUI: false,
-                resource: this.owningResource
+                resource: this.owningResource,
+                metadata: this.notebookMetadata
             });
             if (serverConnection) {
                 await this.ensureNotebook(serverConnection);
