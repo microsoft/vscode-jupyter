@@ -10,6 +10,7 @@ import { IApplicationEnvironment, IApplicationShell, IVSCodeNotebook } from '../
 import { UseVSCodeNotebookEditorApi } from '../common/constants';
 import { Experiments } from '../common/experiments/groups';
 import '../common/extensions';
+import { traceError } from '../common/logger';
 import {
     BANNER_NAME_DS_SURVEY,
     IBrowserService,
@@ -128,10 +129,13 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
                 }
                 break;
             case BannerType.DSSurvey:
-            default:
                 if (this.applicationEnvironment.channel === 'stable') {
                     return this.isEnabledInternal(type);
                 }
+                break;
+            default:
+                traceError('Invalid Banner Type');
+                return false;
         }
         return false;
     }
@@ -140,10 +144,10 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
             return false;
         }
 
-        if (!this.showBannerState[type].value.expiry) {
+        if (!this.showBannerState.get(type)!.value.expiry) {
             return true;
         }
-        return this.showBannerState[type].value.expiry! < Date.now();
+        return this.showBannerState.get(type)!.value.expiry! < Date.now();
     }
 
     private disabledInCurrentSession: boolean = false;
@@ -151,7 +155,7 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
         localize.DataScienceSurveyBanner.bannerLabelYes(),
         localize.DataScienceSurveyBanner.bannerLabelNo()
     ];
-    private readonly showBannerState: IPersistentState<ShowBannerWithExpiryTime>[] = [];
+    private readonly showBannerState = new Map<BannerType, IPersistentState<ShowBannerWithExpiryTime>>();
 
     constructor(
         @inject(IApplicationShell) private appShell: IApplicationShell,
@@ -165,21 +169,9 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
         @inject(UseVSCodeNotebookEditorApi) private useVSCodeNotebookEditorApi: boolean,
         @inject(IExperimentService) private experimentService: IExperimentService
     ) {
-        this.showBannerState[BannerType.DSSurvey] = this.persistentState.createGlobalPersistentState<
-            ShowBannerWithExpiryTime
-        >(DSSurveyStateKeys.ShowBanner, {
-            data: true
-        });
-        this.showBannerState[BannerType.InsidersNotebookSurvey] = this.persistentState.createGlobalPersistentState<
-            ShowBannerWithExpiryTime
-        >(InsidersNotebookSurveyStateKeys.ShowBanner, {
-            data: true
-        });
-        this.showBannerState[BannerType.ExperimentNotebookSurvey] = this.persistentState.createGlobalPersistentState<
-            ShowBannerWithExpiryTime
-        >(ExperimentNotebookSurveyStateKeys.ShowBanner, {
-            data: true
-        });
+        this.setPersistentState(BannerType.DSSurvey, DSSurveyStateKeys.ShowBanner);
+        this.setPersistentState(BannerType.InsidersNotebookSurvey, InsidersNotebookSurveyStateKeys.ShowBanner);
+        this.setPersistentState(BannerType.ExperimentNotebookSurvey, ExperimentNotebookSurveyStateKeys.ShowBanner);
         editorProvider.onDidOpenNotebookEditor(this.openedNotebook.bind(this));
     }
 
@@ -213,7 +205,7 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
         }
     }
 
-    public shouldShowBanner(type: BannerType) {
+    private shouldShowBanner(type: BannerType) {
         if (!this.isEnabled(type) || this.disabledInCurrentSession) {
             return false;
         }
@@ -224,100 +216,87 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
         return executionCount >= NotebookExecutionThreshold || notebookCount > NotebookOpenThreshold;
     }
 
-    public async launchSurvey(type: BannerType): Promise<void> {
+    private setPersistentState(type: BannerType, val: string): void {
+        this.showBannerState.set(
+            type,
+            this.persistentState.createGlobalPersistentState<ShowBannerWithExpiryTime>(val, {
+                data: true
+            })
+        );
+    }
+
+    private async launchSurvey(type: BannerType): Promise<void> {
         this.browserService.launch(this.getSurveyLink(type));
     }
     private async disable(monthsTillNextPrompt: number, type: BannerType) {
-        await this.showBannerState[type].updateValue({
+        await this.showBannerState.get(type)!.updateValue({
             expiry: monthsTillNextPrompt * 31 * MillisecondsInADay + Date.now(),
             data: true
         });
     }
 
     private getOpenNotebookCount(type: BannerType): number {
-        let state: IPersistentState<number>;
         switch (type) {
             case BannerType.InsidersNotebookSurvey:
-                state = this.persistentState.createGlobalPersistentState<number>(
-                    InsidersNotebookSurveyStateKeys.OpenNotebookCount,
-                    0
-                );
-                return state.value;
+                return this.getPersistentState(InsidersNotebookSurveyStateKeys.OpenNotebookCount);
             case BannerType.ExperimentNotebookSurvey:
-                state = this.persistentState.createGlobalPersistentState<number>(
-                    ExperimentNotebookSurveyStateKeys.OpenNotebookCount,
-                    0
-                );
-                return state.value;
+                return this.getPersistentState(ExperimentNotebookSurveyStateKeys.OpenNotebookCount);
             case BannerType.DSSurvey:
+                return this.getPersistentState(DSSurveyStateKeys.OpenNotebookCount);
             default:
-                state = this.persistentState.createGlobalPersistentState<number>(
-                    DSSurveyStateKeys.OpenNotebookCount,
-                    0
-                );
-                return state.value;
+                traceError('Invalid Banner type');
+                return -1;
         }
     }
 
     private getExecutionCount(type: BannerType): number {
-        let state: IPersistentState<number>;
         switch (type) {
             case BannerType.InsidersNotebookSurvey:
-                state = this.persistentState.createGlobalPersistentState<number>(
-                    InsidersNotebookSurveyStateKeys.ExecutionCount,
-                    0
-                );
-                return state.value;
+                return this.getPersistentState(InsidersNotebookSurveyStateKeys.ExecutionCount);
             case BannerType.ExperimentNotebookSurvey:
-                state = this.persistentState.createGlobalPersistentState<number>(
-                    ExperimentNotebookSurveyStateKeys.ExecutionCount,
-                    0
-                );
-                return state.value;
+                return this.getPersistentState(ExperimentNotebookSurveyStateKeys.ExecutionCount);
             case BannerType.DSSurvey:
+                return this.getPersistentState(DSSurveyStateKeys.ExecutionCount);
             default:
-                state = this.persistentState.createGlobalPersistentState<number>(DSSurveyStateKeys.ExecutionCount, 0);
-                return state.value;
+                traceError('Invalid Banner type');
+                return -1;
         }
+    }
+
+    private getPersistentState(val: string): number {
+        const state = this.persistentState.createGlobalPersistentState<number>(val, 0);
+        return state.value;
     }
 
     private async openedNotebook() {
-        const state1 = this.persistentState.createGlobalPersistentState<number>(DSSurveyStateKeys.OpenNotebookCount, 0);
-        await state1.updateValue(state1.value + 1);
-        void this.showBanner(BannerType.DSSurvey);
-
-        const state2 = this.persistentState.createGlobalPersistentState<number>(
+        void this.updateStateAndShowBanner(DSSurveyStateKeys.OpenNotebookCount, BannerType.DSSurvey);
+        void this.updateStateAndShowBanner(
             InsidersNotebookSurveyStateKeys.OpenNotebookCount,
-            0
+            BannerType.InsidersNotebookSurvey
         );
-        await state2.updateValue(state2.value + 1);
-        void this.showBanner(BannerType.InsidersNotebookSurvey);
-
-        const state3 = this.persistentState.createGlobalPersistentState<number>(
+        void this.updateStateAndShowBanner(
             ExperimentNotebookSurveyStateKeys.OpenNotebookCount,
-            0
+            BannerType.ExperimentNotebookSurvey
         );
-        await state3.updateValue(state3.value + 1);
-        void this.showBanner(BannerType.ExperimentNotebookSurvey);
     }
 
     private async kernelStateChanged(kernelStateEvent: KernelStateEventArgs) {
-        // TODO Only on insiders native notebook survey FOR NOW
         if (kernelStateEvent.state === KernelState.executed) {
-            const state1 = this.persistentState.createGlobalPersistentState<number>(
+            void this.updateStateAndShowBanner(
                 InsidersNotebookSurveyStateKeys.ExecutionCount,
-                0
+                BannerType.InsidersNotebookSurvey
             );
-            await state1.updateValue(state1.value + 1);
-            void this.showBanner(BannerType.InsidersNotebookSurvey);
-
-            const state2 = this.persistentState.createGlobalPersistentState<number>(
+            void this.updateStateAndShowBanner(
                 ExperimentNotebookSurveyStateKeys.ExecutionCount,
-                0
+                BannerType.ExperimentNotebookSurvey
             );
-            await state2.updateValue(state2.value + 1);
-            void this.showBanner(BannerType.ExperimentNotebookSurvey);
         }
+    }
+
+    private async updateStateAndShowBanner(val: string, banner: BannerType) {
+        const state = this.persistentState.createGlobalPersistentState<number>(val, 0);
+        await state.updateValue(state.value + 1);
+        void this.showBanner(banner);
     }
 
     private getBannerMessage(type: BannerType): string {
@@ -326,8 +305,10 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
             case BannerType.ExperimentNotebookSurvey:
                 return localize.InsidersNativeNotebooksSurveyBanner.bannerMessage();
             case BannerType.DSSurvey:
-            default:
                 return localize.DataScienceSurveyBanner.bannerMessage();
+            default:
+                traceError('Invalid Banner type');
+                return '';
         }
     }
 
@@ -338,8 +319,10 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
             case BannerType.ExperimentNotebookSurvey:
                 return 'https://aka.ms/vscnbexp';
             case BannerType.DSSurvey:
-            default:
                 return 'https://aka.ms/pyaisurvey';
+            default:
+                traceError('Invalid Banner type');
+                return '';
         }
     }
 }

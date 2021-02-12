@@ -19,6 +19,7 @@ import {
     BannerType,
     DataScienceSurveyBanner,
     DSSurveyStateKeys,
+    InsidersNotebookSurveyStateKeys,
     ShowBannerWithExpiryTime
 } from '../../client/datascience/dataScienceSurveyBanner';
 import { INotebookEditorProvider, INotebookExtensibility } from '../../client/datascience/types';
@@ -30,6 +31,7 @@ import { MillisecondsInADay } from '../../client/constants';
 
 [true, false].forEach((UseVSCodeNotebookEditorApi) => {
     const type = UseVSCodeNotebookEditorApi ? 'Insiders' : 'Stable';
+    const survey = UseVSCodeNotebookEditorApi ? BannerType.InsidersNotebookSurvey : BannerType.DSSurvey;
 
     suite('DataScience Survey Banner - ' + type, () => {
         let appShell: IApplicationShell;
@@ -63,33 +65,58 @@ import { MillisecondsInADay } from '../../client/constants';
             experimentService = mock<IExperimentService>();
 
             when(appEnv.uiKind).thenReturn(UIKind.Desktop);
-            when(appEnv.channel).thenReturn('stable');
+            when(appEnv.channel).thenReturn(UseVSCodeNotebookEditorApi ? 'insiders' : 'stable');
             when(editorProvider.onDidOpenNotebookEditor).thenReturn(noop as any);
             const realStateFactory = api.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
             openNotebookCountState = realStateFactory.createGlobalPersistentState<number>(
-                DSSurveyStateKeys.OpenNotebookCount,
+                UseVSCodeNotebookEditorApi
+                    ? InsidersNotebookSurveyStateKeys.OpenNotebookCount
+                    : DSSurveyStateKeys.OpenNotebookCount,
                 0
             );
             executionCountState = realStateFactory.createGlobalPersistentState<number>(
-                DSSurveyStateKeys.ExecutionCount,
+                UseVSCodeNotebookEditorApi
+                    ? InsidersNotebookSurveyStateKeys.ExecutionCount
+                    : DSSurveyStateKeys.ExecutionCount,
                 0
             );
             showBannerState = realStateFactory.createGlobalPersistentState<ShowBannerWithExpiryTime>(
-                DSSurveyStateKeys.ShowBanner,
+                UseVSCodeNotebookEditorApi ? InsidersNotebookSurveyStateKeys.ShowBanner : DSSurveyStateKeys.ShowBanner,
                 { data: true }
             );
 
             when(
-                persistentStateFactory.createGlobalPersistentState(DSSurveyStateKeys.OpenNotebookCount, anything())
+                persistentStateFactory.createGlobalPersistentState(
+                    UseVSCodeNotebookEditorApi
+                        ? InsidersNotebookSurveyStateKeys.OpenNotebookCount
+                        : DSSurveyStateKeys.OpenNotebookCount,
+                    anything()
+                )
             ).thenReturn(openNotebookCountState);
             when(
-                persistentStateFactory.createGlobalPersistentState(DSSurveyStateKeys.ExecutionCount, anything())
+                persistentStateFactory.createGlobalPersistentState(
+                    UseVSCodeNotebookEditorApi
+                        ? InsidersNotebookSurveyStateKeys.ExecutionCount
+                        : DSSurveyStateKeys.ExecutionCount,
+                    anything()
+                )
             ).thenReturn(executionCountState);
             when(
-                persistentStateFactory.createGlobalPersistentState(DSSurveyStateKeys.ShowBanner, anything())
+                persistentStateFactory.createGlobalPersistentState(
+                    UseVSCodeNotebookEditorApi
+                        ? InsidersNotebookSurveyStateKeys.ShowBanner
+                        : DSSurveyStateKeys.ShowBanner,
+                    anything()
+                )
             ).thenReturn(showBannerState);
             when(
-                persistentStateFactory.createGlobalPersistentState(DSSurveyStateKeys.ShowBanner, anything(), anything())
+                persistentStateFactory.createGlobalPersistentState(
+                    UseVSCodeNotebookEditorApi
+                        ? InsidersNotebookSurveyStateKeys.ShowBanner
+                        : DSSurveyStateKeys.ShowBanner,
+                    anything(),
+                    anything()
+                )
             ).thenReturn(showBannerState);
 
             bannerService = createBannerService();
@@ -113,9 +140,9 @@ import { MillisecondsInADay } from '../../client/constants';
             await showBannerState.updateValue({ data: true });
             await executionCountState.updateValue(100);
 
-            await bannerService.showBanner(BannerType.DSSurvey);
-            await bannerService.showBanner(BannerType.DSSurvey);
-            await bannerService.showBanner(BannerType.DSSurvey);
+            await bannerService.showBanner(survey);
+            await bannerService.showBanner(survey);
+            await bannerService.showBanner(survey);
 
             verify(appShell.showInformationMessage(anything(), anything(), anything())).once();
         });
@@ -126,28 +153,28 @@ import { MillisecondsInADay } from '../../client/constants';
             await showBannerState.updateValue({ data: true });
             await executionCountState.updateValue(100);
 
-            await bannerService.showBanner(BannerType.DSSurvey);
+            await bannerService.showBanner(survey);
 
             verify(appShell.showInformationMessage(anything(), anything(), anything())).once();
             resetCalls(appShell);
 
             // Attempt to display again & it won't.
             bannerService = createBannerService();
-            await bannerService.showBanner(BannerType.DSSurvey);
+            await bannerService.showBanner(survey);
             verify(browser.launch(anything())).never();
             verify(appShell.showInformationMessage(anything(), anything(), anything())).never();
 
             // Advance time by 1 month & still not displayed.
             clock.tick(MillisecondsInADay * 30);
             bannerService = createBannerService();
-            await bannerService.showBanner(BannerType.DSSurvey);
+            await bannerService.showBanner(survey);
             verify(browser.launch(anything())).never();
             verify(appShell.showInformationMessage(anything(), anything(), anything())).never();
 
             // Advance time by 3.5 month & it will be displayed.
             clock.tick(MillisecondsInADay * 30 * 3.5);
             bannerService = createBannerService();
-            await bannerService.showBanner(BannerType.DSSurvey);
+            await bannerService.showBanner(survey);
             verify(browser.launch(anything())).never();
             verify(appShell.showInformationMessage(anything(), anything(), anything())).once();
         });
@@ -159,7 +186,7 @@ import { MillisecondsInADay } from '../../client/constants';
             await showBannerState.updateValue({ data: true });
             await executionCountState.updateValue(100);
 
-            await bannerService.showBanner(BannerType.DSSurvey);
+            await bannerService.showBanner(survey);
             verify(browser.launch(anything())).once();
             verify(appShell.showInformationMessage(anything(), anything(), anything())).once();
             resetCalls(browser);
@@ -167,14 +194,14 @@ import { MillisecondsInADay } from '../../client/constants';
 
             // Attempt to display again & it won't.
             bannerService = createBannerService();
-            await bannerService.showBanner(BannerType.DSSurvey);
+            await bannerService.showBanner(survey);
             verify(browser.launch(anything())).never();
             verify(appShell.showInformationMessage(anything(), anything(), anything())).never();
 
             // Advance time by 1 month & still not displayed.
             clock.tick(MillisecondsInADay * 30);
             bannerService = createBannerService();
-            await bannerService.showBanner(BannerType.DSSurvey);
+            await bannerService.showBanner(survey);
             verify(browser.launch(anything())).never();
             verify(appShell.showInformationMessage(anything(), anything(), anything())).never();
 
@@ -184,7 +211,7 @@ import { MillisecondsInADay } from '../../client/constants';
                 localize.DataScienceSurveyBanner.bannerLabelNo() as any
             );
             bannerService = createBannerService();
-            await bannerService.showBanner(BannerType.DSSurvey);
+            await bannerService.showBanner(survey);
             verify(browser.launch(anything())).never();
             verify(appShell.showInformationMessage(anything(), anything(), anything())).once();
         });
