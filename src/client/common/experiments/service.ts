@@ -14,6 +14,7 @@ import {
     GLOBAL_MEMENTO,
     IConfigurationService,
     IExperimentService,
+    IExtensions,
     IJupyterSettings,
     IMemento,
     IOutputChannel
@@ -45,7 +46,8 @@ export class ExperimentService implements IExperimentService {
         @inject(IConfigurationService) readonly configurationService: IConfigurationService,
         @inject(IApplicationEnvironment) private readonly appEnvironment: IApplicationEnvironment,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalState: Memento,
-        @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly output: IOutputChannel
+        @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly output: IOutputChannel,
+        @inject(IExtensions) private readonly extensions: IExtensions
     ) {
         this.settings = configurationService.getSettings(undefined);
 
@@ -93,6 +95,15 @@ export class ExperimentService implements IExperimentService {
             this.getOptInOptOutStatus(ExperimentGroups.NativeNotebook) === 'optIn'
         ) {
             return false;
+        }
+
+        // If user has .NET interactive installed, we HAVE to be in the native experiment. See this issue:
+        // https://github.com/microsoft/vscode-jupyter/issues/4771
+        if (
+            experiment === ExperimentGroups.NativeNotebook &&
+            this.extensions.getExtension('ms-dotnettools.dotnet-interactive-vscode')
+        ) {
+            return true;
         }
 
         // Currently the service doesn't support opting in and out of experiments,
