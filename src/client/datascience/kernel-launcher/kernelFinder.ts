@@ -98,16 +98,14 @@ export class KernelFinder implements IKernelFinder {
     // Search all our local file system locations for installed kernel specs and return them
     @captureTelemetry(Telemetry.KernelListingPerf)
     public async listKernelSpecs(resource: Resource): Promise<IJupyterKernelSpec[]> {
-        if (!resource) {
-            // We need a resource to search for related kernel specs
-            return [];
-        }
-
         // Get an id for the workspace folder, if we don't have one, use the fsPath of the resource
-        const workspaceFolderId = this.workspaceService.getWorkspaceFolderIdentifier(resource, resource.fsPath);
+        const workspaceFolderId = this.workspaceService.getWorkspaceFolderIdentifier(
+            resource,
+            resource?.fsPath || this.workspaceService.rootPath
+        );
 
         // If we have not already searched for this resource, then generate the search
-        if (!this.workspaceToKernels.has(workspaceFolderId)) {
+        if (workspaceFolderId && !this.workspaceToKernels.has(workspaceFolderId)) {
             this.workspaceToKernels.set(workspaceFolderId, this.findResourceKernelSpecs(resource));
         }
 
@@ -119,7 +117,7 @@ export class KernelFinder implements IKernelFinder {
             .then((items) =>
                 traceInfoIf(
                     !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
-                    `Kernel specs for ${resource.toString()} are \n ${JSON.stringify(items)}`
+                    `Kernel specs for ${resource?.toString() || 'undefined'} are \n ${JSON.stringify(items)}`
                 )
             )
             .catch(noop);
