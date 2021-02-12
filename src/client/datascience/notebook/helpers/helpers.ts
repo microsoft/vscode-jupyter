@@ -615,7 +615,7 @@ type JupyterOutput =
  * Metadata we store in VS Code cells.
  * This contains the original metadata from the Jupyuter cells.
  */
-type CellMetadata = {
+export type CellMetadata = {
     /**
      * Stores attachments for cells.
      */
@@ -629,7 +629,7 @@ type CellMetadata = {
  * Metadata we store in VS Code cell output items.
  * This contains the original metadata from the Jupyuter Outputs.
  */
-type CellOutputMetadata = {
+export type CellOutputMetadata = {
     /**
      * Cell output metadata.
      */
