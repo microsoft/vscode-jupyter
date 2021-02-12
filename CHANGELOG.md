@@ -97,6 +97,8 @@
    ([#4538](https://github.com/Microsoft/vscode-jupyter/issues/4538))
 1. Allow options to show native variable view only when looking at native notebooks.
    ([#4761](https://github.com/Microsoft/vscode-jupyter/issues/4761))
+1. Fix CTRL+ENTER and ALT+ENTER to behave as expected for a jupyter notebook.
+   ([#4713](https://github.com/Microsoft/vscode-jupyter/issues/4713))
 
 ### Code Health
 
