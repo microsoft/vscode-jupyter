@@ -45,7 +45,7 @@ function updateSettings(useNativeNotebooks: boolean) {
         }
     };
     let settingsJson = fs.readFileSync(settingsFile).toString();
-    const experiments = useNativeNotebooks ? ['NativeNotebookEditor'] : [];
+    const experiments = useNativeNotebooks ? ['__NativeNotebookEditor__'] : [];
     const autoSave = useNativeNotebooks ? 'off' : 'afterDelay';
 
     settingsJson = applyEdits(
@@ -66,7 +66,7 @@ function updateTestsForOldNotebooks() {
 
 updatePackageJsonForTests();
 
-if (process.env.VSC_JUPYTER_CI_TEST_VSC_CHANNEL === 'insiders' && process.env.VSC_JUPYTER_RUN_NB_TEST) {
+if (process.env.VSC_JUPYTER_RUN_NB_TEST) {
     // eslint-disable-next-line no-console
     console.info('Updated settings for Native Notebook tests');
     updateTestsForNativeNotebooks();
