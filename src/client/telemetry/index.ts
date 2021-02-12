@@ -376,7 +376,6 @@ export interface IEventNamePropertyMapping {
     };
     [Telemetry.HashedCellOutputMimeTypePerf]: never | undefined;
     [Telemetry.KernelListingPerf]: never | undefined;
-    [Telemetry.NativeNotebookKernelSelectionPerf]: never | undefined;
     [Telemetry.NumberOfLocalKernelSpecs]: {
         /**
          * Number of kernel specs.
