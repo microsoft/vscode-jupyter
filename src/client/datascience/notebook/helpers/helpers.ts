@@ -38,7 +38,6 @@ import { VSCodeNotebookKernelMetadata } from '../kernelWithMetadata';
 import { chainWithPendingUpdates } from './notebookUpdater';
 import { Resource } from '../../../common/types';
 import { IFileSystem } from '../../../common/platform/types';
-import { options } from 'yargs';
 
 // This is the custom type we are adding into nbformat.IBaseCellMetadata
 export interface IBaseCellVSCodeMetadata {
@@ -232,18 +231,6 @@ export function createJupyterCellFromVSCNotebookCell(
     } else {
         cell = createCodeCellFromNotebookCell(vscCell);
     }
-    // Delete the `metadata.custom.vscode` property we added.
-    if ('vscode' in cell.metadata) {
-        const metadata = { ...cell.metadata };
-        // Persisting these require us to save custom metadata in ipynb. Not sure users would like this. We'll have more changes in ipynb files.
-        // eslint-disable-next-line
-        // TODO: Discuss whether we need to persist these.
-        delete metadata.vscode;
-        // if (metadata.vscode && typeof metadata.vscode === 'object' && 'transient' in metadata.vscode) {
-        //     delete metadata.vscode.transient;
-        // }
-        cell.metadata = metadata;
-    }
     return cell;
 }
 
@@ -253,30 +240,44 @@ export function createJupyterCellFromVSCNotebookCell(
  * 1. When a user copies and pastes a cell, then the corresponding metadata is also copied across.
  * 2. Diffing (VSC knows about metadata & stuff that contributes changes to a cell).
  */
-export function getCustomNotebookCellMetadata(cell: nbformat.IBaseCell): Record<string, unknown> {
+export function getNotebookCellMetadata(cell: nbformat.IBaseCell): CellMetadata {
     // We put this only for VSC to display in diff view.
     // Else we don't use this.
-    const propertiesToClone = ['metadata', 'attachments'];
+    const propertiesToClone: (keyof CellMetadata)[] = ['metadata', 'attachments'];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const custom: Record<string, unknown> = {};
+    const custom: CellMetadata = {};
     propertiesToClone.forEach((propertyToClone) => {
         if (cell[propertyToClone]) {
-            custom[propertyToClone] = cloneDeep(cell[propertyToClone]);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            custom[propertyToClone] = cloneDeep(cell[propertyToClone]) as any;
         }
     });
     return custom;
 }
 
 function createRawCellFromNotebookCell(cell: NotebookCell): nbformat.IRawCell {
+    const cellMetadata = cell.metadata as CellMetadata | undefined;
     const rawCell: nbformat.IRawCell = {
         cell_type: 'raw',
         source: splitMultilineString(cell.document.getText()),
-        metadata: cell.metadata.custom?.metadata || {}
+        metadata: cellMetadata?.metadata || {} // This cannot be empty.
     };
-    if (cell.metadata.custom?.attachments) {
-        rawCell.attachments = cell.metadata.custom?.attachments;
+    if (cellMetadata?.attachments) {
+        rawCell.attachments = cellMetadata.attachments;
     }
     return rawCell;
+}
+
+function createCodeCellFromNotebookCell(cell: NotebookCell): nbformat.ICodeCell {
+    const cellMetadata = cell.metadata as CellMetadata | undefined;
+    const code = cell.document.getText();
+    return {
+        cell_type: 'code',
+        execution_count: cell.metadata.executionOrder ?? null,
+        source: splitMultilineString(code),
+        outputs: createIOutputFromCellOutputs(cell.outputs),
+        metadata: cellMetadata?.metadata || {} // This cannot be empty.
+    };
 }
 
 function createNotebookCellDataFromRawCell(isNbTrusted: boolean, cell: nbformat.IRawCell): NotebookCellData {
@@ -285,7 +286,7 @@ function createNotebookCellDataFromRawCell(isNbTrusted: boolean, cell: nbformat.
         executionOrder: undefined,
         hasExecutionOrder: false,
         runnable: false,
-        custom: getCustomNotebookCellMetadata(cell)
+        custom: getNotebookCellMetadata(cell)
     };
     return {
         cellKind: vscodeNotebookEnums.CellKind.Code,
@@ -296,13 +297,14 @@ function createNotebookCellDataFromRawCell(isNbTrusted: boolean, cell: nbformat.
     };
 }
 function createMarkdownCellFromNotebookCell(cell: NotebookCell): nbformat.IMarkdownCell {
+    const cellMetadata = cell.metadata as CellMetadata | undefined;
     const markdownCell: nbformat.IMarkdownCell = {
         cell_type: 'markdown',
         source: splitMultilineString(cell.document.getText()),
-        metadata: cell.metadata.custom?.metadata || {}
+        metadata: cellMetadata?.metadata || {} // This cannot be empty.
     };
-    if (cell.metadata.custom?.attachments) {
-        markdownCell.attachments = cell.metadata.custom?.attachments;
+    if (cellMetadata?.attachments) {
+        markdownCell.attachments = cellMetadata.attachments;
     }
     return markdownCell;
 }
@@ -312,7 +314,7 @@ function createNotebookCellDataFromMarkdownCell(isNbTrusted: boolean, cell: nbfo
         executionOrder: undefined,
         hasExecutionOrder: false,
         runnable: false,
-        custom: getCustomNotebookCellMetadata(cell)
+        custom: getNotebookCellMetadata(cell)
     };
     return {
         cellKind: vscodeNotebookEnums.CellKind.Markdown,
@@ -349,7 +351,7 @@ function createNotebookCellDataFromCodeCell(
         runState,
         runnable: isNbTrusted,
         statusMessage,
-        custom: getCustomNotebookCellMetadata(cell)
+        custom: getNotebookCellMetadata(cell)
     };
 
     // If not trusted, then clear the output in VSC Cell (for untrusted notebooks we do not display output).
@@ -417,38 +419,8 @@ export async function updateCellExecutionTimes(
     times?: { startTime?: number; lastRunDuration?: number }
 ) {
     if (!times || !times.lastRunDuration || !times.startTime) {
-        // Based on feedback from VSC, its best to clone these objects when updating them.
-        // const cellMetadata = cloneDeep(cell.metadata);
-        // let updated = false;
-        // if (cellMetadata.custom?.metadata?.vscode?.start_execution_time) {
-        //     delete cellMetadata.custom.metadata.vscode.start_execution_time;
-        //     updated = true;
-        // }
-        // if (cellMetadata.custom?.metadata?.vscode?.end_execution_time) {
-        //     delete cellMetadata.custom.metadata.vscode.end_execution_time;
-        //     updated = true;
-        // }
-        // if (updated) {
-        //     await editor.edit((edit) =>
-        //         edit.replaceCellMetadata(cell.index, {
-        //             ...cellMetadata
-        //         })
-        //     );
-        // }
         return;
     }
-    // Persisting these require us to save custom metadata in ipynb. Not sure users would like this. We'll have more changes in ipynb files.
-    // eslint-disable-next-line
-    // TODO: Discuss whether we need to persist these.
-    // const startTimeISO = new Date(times.startTime).toISOString();
-    // const endTimeISO = new Date(times.startTime + times.lastRunDuration).toISOString();
-    // Based on feedback from VSC, its best to clone these objects when updating them.
-    // const customMetadata = cloneDeep(cell.metadata.custom || {});
-    // customMetadata.metadata = customMetadata.metadata || {};
-    // customMetadata.metadata.vscode = customMetadata.metadata.vscode || {};
-    // // We store it in the metadata (stored in ipynb) so we can display this when user opens a notebook again.
-    // customMetadata.metadata.vscode.end_execution_time = endTimeISO;
-    // customMetadata.metadata.vscode.start_execution_time = startTimeISO;
     const lastRunDuration = times.lastRunDuration ?? cell.metadata.lastRunDuration;
     await chainWithPendingUpdates(editor.document, (edit) => {
         traceCellMessage(cell, 'Update run duration');
@@ -460,17 +432,6 @@ export async function updateCellExecutionTimes(
     });
 }
 
-function createCodeCellFromNotebookCell(cell: NotebookCell): nbformat.ICodeCell {
-    const metadata = cell.metadata.custom?.metadata || {};
-    const code = cell.document.getText();
-    return {
-        cell_type: 'code',
-        execution_count: cell.metadata.executionOrder ?? null,
-        source: splitMultilineString(code),
-        outputs: createIOutputFromCellOutputs(cell.outputs),
-        metadata
-    };
-}
 export function createVSCNotebookCellDataFromCell(
     isNbTrusted: boolean,
     cellLanguage: string,
@@ -496,10 +457,7 @@ export function createVSCCellOutputsFromOutputs(outputs?: nbformat.IOutput[]): N
     const cellOutputs: nbformat.IOutput[] = Array.isArray(outputs) ? (outputs as []) : [];
     return cellOutputs.map(cellOutputToVSCCellOutput);
 }
-const cellOutputMappers = new Map<
-    nbformat.OutputType,
-    (output: nbformat.IOutput, outputType: nbformat.OutputType) => NotebookCellOutput
->();
+const cellOutputMappers = new Map<nbformat.OutputType, (output: nbformat.IOutput) => NotebookCellOutput>();
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 cellOutputMappers.set('display_data', translateDisplayDataOutput as any);
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -537,83 +495,87 @@ export function cellOutputToVSCCellOutput(output: nbformat.IOutput): NotebookCel
     const fn = cellOutputMappers.get(output.output_type as nbformat.OutputType);
     let result: NotebookCellOutput;
     if (fn) {
-        result = fn(output, (output.output_type as unknown) as nbformat.OutputType);
+        result = fn(output);
     } else {
         traceWarning(`Unable to translate cell from ${output.output_type} to NotebookCellData for VS Code.`);
-
-        const metadata = output.metadata ? ({ custom: cloneDeep(output.metadata) } as any) : { custom: {} };
-        metadata.custom.vscode = { outputType: output.output_type };
-        const items: NotebookCellOutputItem[] = [];
-        for (const key in output.data as any) {
-            items.push(new NotebookCellOutputItem(key, (output.data as any)[key], metadata[key]));
-        }
-
-        result = new NotebookCellOutput(items);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        result = translateDisplayDataOutput(output as any);
     }
-
-    // Add on transient data if we have any. This should be removed by our save functions elsewhere.
-    // TODO@DonJayamanne maybe we should save the transient metadata in the first output item
-    // if (
-    //     output.transient &&
-    //     result &&
-    //     result.outputKind === vscodeNotebookEnums.CellOutputKind.Rich &&
-    //     result.metadata
-    // ) {
-    //     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    //     result.metadata.custom = { ...result.metadata.custom, transient: output.transient };
-    // }
     return result;
 }
 
-export function vscCellOutputToCellOutput(output: NotebookCellOutput): nbformat.IOutput | undefined {
-    if (!output.outputs.some((opit) => opit.mime !== 'application/x.notebook.stream')) {
-        // every output item is `application/x.notebook.stream`
-        return;
-    } else if (!output.outputs.some((opit) => opit.mime !== 'application/x.notebook.error-traceback')) {
-        return translateCellErrorOutput(output);
-    } else {
-        return translateCellDisplayOutput(output);
+function getOutputMetadata(output: nbformat.IOutput): CellOutputMetadata {
+    // Add on transient data if we have any. This should be removed by our save functions elsewhere.
+    const metadata: CellOutputMetadata = {
+        outputType: output.output_type,
+        transient: output.transient
+    };
+
+    switch (output.output_type as nbformat.OutputType) {
+        case 'display_data':
+        case 'execute_result':
+        case 'update_display_data': {
+            metadata.executionCount = output.execution_count;
+            metadata.metadata = output.metadata ? cloneDeep(output.metadata) : {};
+            break;
+        }
+        case 'stream': {
+            metadata.streamName = output.name as string;
+            break;
+        }
+        default:
+            break;
     }
+
+    return metadata;
 }
 
 /**
  * Converts a Jupyter display cell output into a VSCode cell output format.
  * Handles sizing, adding backgrounds to images and the like.
- * E.g. Jupyter cell output contains metadata to add backgrounds to images, here we generate the necessary HTML.
- *
- * @export
- * @param {nbformat.IDisplayData} output
- * @returns {(CellDisplayOutput | undefined)}
+ * E.g. Jupyter cell output contains metadata to add backgrounds to images.
  */
 function translateDisplayDataOutput(
-    output: nbformat.IDisplayData | nbformat.IDisplayUpdate | nbformat.IExecuteResult,
-    outputType: nbformat.OutputType
-): NotebookCellOutput | undefined {
-    // const data = { ...output.data };
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const metadata = output.metadata ? ({ custom: cloneDeep(output.metadata) } as any) : { custom: {} };
-    metadata.custom.vscode = { outputType };
-    if (output.execution_count) {
-        metadata.custom.vscode.execution_count = output.execution_count;
+    output: nbformat.IDisplayData | nbformat.IDisplayUpdate | nbformat.IExecuteResult
+): NotebookCellOutput {
+    // Metadata will be as follows:
+    // We'll have metadata specific to each mime type as well as generic metadata.
+    /*
+    IDisplayData = {
+        output_type: 'display_data',
+        data: {
+            'image/jpg': '/////'
+            'image/png': '/////'
+            'text/plain': '/////'
+        },
+        metadata: {
+            'image/png': '/////',
+            'background': true,
+            'xyz': '///
+        }
     }
-
+    */
     const items: NotebookCellOutputItem[] = [];
-    for (const key in output.data) {
-        items.push(new NotebookCellOutputItem(key, output.data[key], metadata[key]));
+    // eslint-disable-next-line
+    const data: Record<string, any> = output.data || {};
+    // eslint-disable-next-line
+    for (const key in data) {
+        // Add metadata to all (its the same)
+        // When we re-construct the nbformat.IDisplayData back we'll take the metadata from the first item.
+        // We can optionally remove metadata that belongs to other mime types (feels like over optimization, hence not doing that).
+        items.push(new NotebookCellOutputItem(key, data[key], getOutputMetadata(output)));
     }
-
-    // return output
 
     return new NotebookCellOutput(items);
 }
 
-function translateStreamOutput(output: nbformat.IStream, outputType: nbformat.OutputType): NotebookCellOutput {
-    // Do not return as `CellOutputKind.Text`. VSC will not translate ascii output correctly.
-    // Instead format the output as rich.
+function translateStreamOutput(output: nbformat.IStream): NotebookCellOutput {
     return new NotebookCellOutput([
-        new NotebookCellOutputItem('application/x.notebook.stream', concatMultilineString(output.text), {
-            custom: { vscode: { outputType, name: output.name } }
-        })
+        new NotebookCellOutputItem(
+            'application/x.notebook.stream',
+            concatMultilineString(output.text),
+            getOutputMetadata(output)
+        )
     ]);
 }
 
@@ -629,29 +591,16 @@ export function isStreamOutput(output: NotebookCellOutput, expectedStreamName: s
     // Logic of metadata can be found here translateStreamOutput.
     // That function adds the vscode metadata.
     const firstOutputItem = output.outputs[0]!;
-
-    if (firstOutputItem.metadata && (firstOutputItem.metadata!['custom'] as any)?.vscode?.outputType !== 'stream') {
+    const metadata = firstOutputItem.metadata as CellOutputMetadata | undefined;
+    if (metadata && metadata.outputType !== 'stream') {
         return false;
     }
 
-    if (
-        expectedStreamName &&
-        firstOutputItem.metadata &&
-        (firstOutputItem.metadata!['custom'] as any)?.vscode?.name !== expectedStreamName
-    ) {
+    if (expectedStreamName && metadata && metadata.streamName !== expectedStreamName) {
         return false;
     }
 
     return true;
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function getSanitizedCellMetadata(metadata?: { [key: string]: any }) {
-    const cloned = { ...metadata };
-    if ('vscode' in cloned) {
-        delete cloned.vscode;
-    }
-    return cloned;
 }
 
 type JupyterOutput =
@@ -661,17 +610,66 @@ type JupyterOutput =
     | nbformat.IStream
     | nbformat.IError;
 
-function translateCellDisplayOutput(output: NotebookCellOutput): JupyterOutput {
-    // TODO@DonJayamanne this takes assumption that we store the custom metadata in the first output item
-    const customMetadata = output.outputs[0]?.metadata as any;
-    const outputType: nbformat.OutputType = customMetadata?.custom?.vscode?.outputType;
+/**
+ * Metadata we store in VS Code cells.
+ * This contains the original metadata from the Jupyuter cells.
+ */
+type CellMetadata = {
+    /**
+     * Stores attachments for cells.
+     */
+    attachments?: nbformat.IAttachments;
+    /**
+     * Stores cell metadata.
+     */
+    metadata?: Partial<nbformat.ICellMetadata>;
+};
+/**
+ * Metadata we store in VS Code cell output items.
+ * This contains the original metadata from the Jupyuter Outputs.
+ */
+type CellOutputMetadata = {
+    /**
+     * Cell output metadata.
+     */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    metadata?: any;
+    /**
+     * Transient data from Jupyter.
+     */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    transient?: any;
+    /**
+     * Original cell output type
+     */
+    outputType: nbformat.OutputType | string;
+    /**
+     * Name of the stream (for text output).
+     */
+    streamName?: string;
+    executionCount?: nbformat.IExecuteResult['ExecutionCount'];
+};
+
+function translateCellDisplayOutput(output: NotebookCellOutput): JupyterOutput | undefined {
+    // Each NotebookCellOutputItem will contain all of the metadata associated with the original Jupyter output.
+    // If we don't have it, exit from here (some other extension probably added an output).
+    if (output.outputs.length === 0) {
+        return;
+    }
+    // When we create cells, all of the output items will contain the original metadata
+    const customMetadata = output.outputs[0]!.metadata as CellOutputMetadata | undefined;
+    // Possible some other extension added some output.
+    if (!customMetadata) {
+        return;
+    }
+
     let result: JupyterOutput;
-    switch (outputType) {
+    switch (customMetadata.outputType) {
         case 'stream':
             {
                 result = {
                     output_type: 'stream',
-                    name: customMetadata?.custom?.vscode?.name,
+                    name: customMetadata.streamName || '',
                     text: splitMultilineString(
                         output.outputs
                             .filter(
@@ -687,55 +685,58 @@ function translateCellDisplayOutput(output: NotebookCellOutput): JupyterOutput {
             break;
         case 'display_data':
             {
-                const metadata = getSanitizedCellMetadata(customMetadata?.custom);
                 result = {
                     output_type: 'display_data',
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     data: output.outputs.reduceRight((prev: any, curr) => {
                         prev[curr.mime] = curr.value;
                         return prev;
                     }, {}),
-                    metadata
+                    metadata: customMetadata.metadata || {} // This can never be undefined.
                 };
             }
             break;
         case 'execute_result':
             {
-                const metadata = getSanitizedCellMetadata(customMetadata?.custom);
                 result = {
                     output_type: 'execute_result',
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     data: output.outputs.reduceRight((prev: any, curr) => {
                         prev[curr.mime] = curr.value;
                         return prev;
                     }, {}),
-                    metadata,
-                    execution_count: customMetadata?.custom?.vscode?.execution_count
+                    metadata: customMetadata.metadata || {}, // This can never be undefined.
+                    execution_count: customMetadata.executionCount ?? null // This can never be undefined, only a number or `null`.
                 };
             }
             break;
         case 'update_display_data':
             {
-                const metadata = getSanitizedCellMetadata(customMetadata?.custom);
                 result = {
                     output_type: 'update_display_data',
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     data: output.outputs.reduceRight((prev: any, curr) => {
                         prev[curr.mime] = curr.value;
                         return prev;
                     }, {}),
-                    metadata
+                    metadata: customMetadata.metadata || {} // This can never be undefined.
                 };
             }
             break;
         default:
             {
+                const outputType = customMetadata.outputType;
                 sendTelemetryEvent(Telemetry.VSCNotebookCellTranslationFailed, undefined, {
                     isErrorOutput: outputType === 'error'
                 });
-                const metadata = getSanitizedCellMetadata(customMetadata?.custom);
-                const unknownOutput: nbformat.IUnrecognizedOutput = { output_type: outputType };
-                if (Object.keys(metadata).length > 0) {
-                    unknownOutput.metadata = metadata;
+                const unknownOutput: nbformat.IUnrecognizedOutput = {
+                    output_type: outputType
+                };
+                if (customMetadata.metadata) {
+                    unknownOutput.metadata = customMetadata.metadata;
                 }
                 if (output.outputs.length > 0) {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     unknownOutput.data = output.outputs.reduceRight((prev: any, curr) => {
                         prev[curr.mime] = curr.value;
                         return prev;
@@ -747,8 +748,8 @@ function translateCellDisplayOutput(output: NotebookCellOutput): JupyterOutput {
     }
 
     // Account for transient data as well
-    if (result && customMetadata && customMetadata.custom?.transient) {
-        result.transient = { ...customMetadata.custom?.transient };
+    if (result && customMetadata && customMetadata.transient) {
+        result.transient = customMetadata.transient;
     }
     return result;
 }
@@ -760,12 +761,22 @@ function translateCellDisplayOutput(output: NotebookCellOutput): JupyterOutput {
  * Hence remove this.
  */
 export function translateErrorOutput(output: nbformat.IError): NotebookCellOutput {
+    // Add on transient data if we have any. This should be removed by our save functions elsewhere.
+    const metadata: CellOutputMetadata = {
+        outputType: output.output_type,
+        transient: output.transient
+    };
+
     return new NotebookCellOutput([
-        new NotebookCellOutputItem('application/x.notebook.error-traceback', {
-            ename: output.ename,
-            evalue: output.evalue,
-            traceback: output.traceback
-        })
+        new NotebookCellOutputItem(
+            'application/x.notebook.error-traceback',
+            {
+                ename: output.ename,
+                evalue: output.evalue,
+                traceback: output.traceback
+            },
+            metadata
+        )
     ]);
 }
 
