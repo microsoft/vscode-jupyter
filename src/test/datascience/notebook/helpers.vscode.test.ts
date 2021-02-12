@@ -6,12 +6,19 @@
 import { nbformat } from '@jupyterlab/coreutils';
 import { assert } from 'chai';
 import { cloneDeep } from 'lodash';
-import { NotebookCellOutput, NotebookCellData, NotebookCellOutputItem, Uri, CellKind, NotebookCellRunState } from 'vscode';
+import {
+    NotebookCellOutput,
+    NotebookCellData,
+    NotebookCellOutputItem,
+    Uri,
+    CellKind,
+    NotebookCellRunState
+} from 'vscode';
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { ReadWrite } from '../../../client/common/types';
 import { notebookModelToVSCNotebookData } from '../../../client/datascience/notebook/helpers/helpers';
 
-suite('DataScience - NativeNotebook helpers', () => {
+suite('DataScience - VSCode Notebook - helpers', () => {
     test('Convert NotebookModel to VSCode NotebookData', async () => {
         const cells = [
             {
