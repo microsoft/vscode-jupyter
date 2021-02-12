@@ -4,10 +4,7 @@
 'use strict';
 
 import { nbformat } from '@jupyterlab/coreutils';
-import {
-    NotebookCellOutput,
-    NotebookCellOutputItem
-} from 'vscode';
+import { NotebookCellOutput, NotebookCellOutputItem } from 'vscode';
 import type {
     NotebookCell,
     NotebookCellData,
@@ -41,6 +38,7 @@ import { VSCodeNotebookKernelMetadata } from '../kernelWithMetadata';
 import { chainWithPendingUpdates } from './notebookUpdater';
 import { Resource } from '../../../common/types';
 import { IFileSystem } from '../../../common/platform/types';
+import { options } from 'yargs';
 
 // This is the custom type we are adding into nbformat.IBaseCellMetadata
 export interface IBaseCellVSCodeMetadata {
@@ -333,7 +331,9 @@ function createNotebookCellDataFromCodeCell(
     const cellOutputs: nbformat.IOutput[] = Array.isArray(cell.outputs) ? cell.outputs : [];
     const outputs = createVSCCellOutputsFromOutputs(cellOutputs);
     const runState = vscodeNotebookEnums.NotebookCellRunState.Idle;
-    const hasErrors = outputs.some((output) => output.outputs.some(opit => opit.mime === 'application/x.notebook.error-traceback'));
+    const hasErrors = outputs.some((output) =>
+        output.outputs.some((opit) => opit.mime === 'application/x.notebook.error-traceback')
+    );
     const hasExecutionCount = typeof cell.execution_count === 'number' && cell.execution_count > 0;
     let statusMessage: string | undefined;
     if (hasExecutionCount && hasErrors) {
@@ -374,10 +374,10 @@ function createNotebookCellDataFromCodeCell(
 export function createIOutputFromCellOutputs(cellOutputs: readonly NotebookCellOutput[]): nbformat.IOutput[] {
     return cellOutputs
         .map((output) => {
-            if (!output.outputs.some(opit => opit.mime !== 'application/x.notebook.stream')) {
+            if (!output.outputs.some((opit) => opit.mime !== 'application/x.notebook.stream')) {
                 // every output item is `application/x.notebook.stream`
                 return;
-            } else if (!output.outputs.some(opit => opit.mime !== 'application/x.notebook.error-traceback')) {
+            } else if (!output.outputs.some((opit) => opit.mime !== 'application/x.notebook.error-traceback')) {
                 return translateCellErrorOutput(output);
             } else {
                 return translateCellDisplayOutput(output);
@@ -566,10 +566,10 @@ export function cellOutputToVSCCellOutput(output: nbformat.IOutput): NotebookCel
 }
 
 export function vscCellOutputToCellOutput(output: NotebookCellOutput): nbformat.IOutput | undefined {
-    if (!output.outputs.some(opit => opit.mime !== 'application/x.notebook.stream')) {
+    if (!output.outputs.some((opit) => opit.mime !== 'application/x.notebook.stream')) {
         // every output item is `application/x.notebook.stream`
         return;
-    } else if (!output.outputs.some(opit => opit.mime !== 'application/x.notebook.error-traceback')) {
+    } else if (!output.outputs.some((opit) => opit.mime !== 'application/x.notebook.error-traceback')) {
         return translateCellErrorOutput(output);
     } else {
         return translateCellDisplayOutput(output);
@@ -622,7 +622,7 @@ export function isStreamOutput(output: NotebookCellOutput, expectedStreamName: s
         return false;
     }
 
-    if (output.outputs.find(opit => opit.mime !== 'application/x.notebook.stream')) {
+    if (output.outputs.find((opit) => opit.mime !== 'application/x.notebook.stream')) {
         return false;
     }
 
@@ -634,7 +634,11 @@ export function isStreamOutput(output: NotebookCellOutput, expectedStreamName: s
         return false;
     }
 
-    if (expectedStreamName && firstOutputItem.metadata && (firstOutputItem.metadata!['custom'] as any)?.vscode?.name !== expectedStreamName) {
+    if (
+        expectedStreamName &&
+        firstOutputItem.metadata &&
+        (firstOutputItem.metadata!['custom'] as any)?.vscode?.name !== expectedStreamName
+    ) {
         return false;
     }
 
@@ -659,7 +663,7 @@ type JupyterOutput =
 
 function translateCellDisplayOutput(output: NotebookCellOutput): JupyterOutput {
     // TODO@DonJayamanne this takes assumption that we store the custom metadata in the first output item
-    const customMetadata = output.outputs[0]?.metadata as any
+    const customMetadata = output.outputs[0]?.metadata as any;
     const outputType: nbformat.OutputType = customMetadata?.custom?.vscode?.outputType;
     let result: JupyterOutput;
     switch (outputType) {
@@ -669,9 +673,15 @@ function translateCellDisplayOutput(output: NotebookCellOutput): JupyterOutput {
                     output_type: 'stream',
                     name: customMetadata?.custom?.vscode?.name,
                     text: splitMultilineString(
-                        output.outputs.filter(opit => opit.mime === 'text/plain' || opit.mime === 'application/x.notebook.stream')
-                            .map(opit => opit.value as string | string[])
-                            .reduceRight((prev, curr) => { return [...prev, ...curr] }, []))
+                        output.outputs
+                            .filter(
+                                (opit) => opit.mime === 'text/plain' || opit.mime === 'application/x.notebook.stream'
+                            )
+                            .map((opit) => opit.value as string | string[])
+                            .reduceRight((prev, curr) => {
+                                return [...prev, ...curr];
+                            }, [])
+                    )
                 };
             }
             break;
@@ -680,7 +690,10 @@ function translateCellDisplayOutput(output: NotebookCellOutput): JupyterOutput {
                 const metadata = getSanitizedCellMetadata(customMetadata?.custom);
                 result = {
                     output_type: 'display_data',
-                    data: output.outputs.reduceRight((prev: any, curr) => { prev[curr.mime] = curr.value; return prev; }, {}),
+                    data: output.outputs.reduceRight((prev: any, curr) => {
+                        prev[curr.mime] = curr.value;
+                        return prev;
+                    }, {}),
                     metadata
                 };
             }
@@ -690,7 +703,10 @@ function translateCellDisplayOutput(output: NotebookCellOutput): JupyterOutput {
                 const metadata = getSanitizedCellMetadata(customMetadata?.custom);
                 result = {
                     output_type: 'execute_result',
-                    data: output.outputs.reduceRight((prev: any, curr) => { prev[curr.mime] = curr.value; return prev; }, {}),
+                    data: output.outputs.reduceRight((prev: any, curr) => {
+                        prev[curr.mime] = curr.value;
+                        return prev;
+                    }, {}),
                     metadata,
                     execution_count: customMetadata?.custom?.vscode?.execution_count
                 };
@@ -701,7 +717,10 @@ function translateCellDisplayOutput(output: NotebookCellOutput): JupyterOutput {
                 const metadata = getSanitizedCellMetadata(customMetadata?.custom);
                 result = {
                     output_type: 'update_display_data',
-                    data: output.outputs.reduceRight((prev: any, curr) => { prev[curr.mime] = curr.value; return prev; }, {}),
+                    data: output.outputs.reduceRight((prev: any, curr) => {
+                        prev[curr.mime] = curr.value;
+                        return prev;
+                    }, {}),
                     metadata
                 };
             }
@@ -717,7 +736,10 @@ function translateCellDisplayOutput(output: NotebookCellOutput): JupyterOutput {
                     unknownOutput.metadata = metadata;
                 }
                 if (output.outputs.length > 0) {
-                    unknownOutput.data = output.outputs.reduceRight((prev: any, curr) => { prev[curr.mime] = curr.value; return prev; }, {});
+                    unknownOutput.data = output.outputs.reduceRight((prev: any, curr) => {
+                        prev[curr.mime] = curr.value;
+                        return prev;
+                    }, {});
                 }
                 result = unknownOutput;
             }
@@ -746,6 +768,11 @@ export function translateErrorOutput(output: nbformat.IError): NotebookCellOutpu
         })
     ]);
 }
+
+export function hasErrorOutput(output: NotebookCellOutput) {
+    return output.outputs.some((item) => item.mime === 'application/x.notebook.error-traceback');
+}
+
 export function translateCellErrorOutput(output: NotebookCellOutput): nbformat.IError {
     // it should have at least one output item
     const firstItem = output.outputs[0];
@@ -772,7 +799,9 @@ export function getCellStatusMessageBasedOnFirstErrorOutput(outputs?: nbformat.I
 }
 
 export function hasErrorOutputs(outputs: readonly NotebookCellOutput[]) {
-    const errorOutput = outputs.find(op => op.outputs.length && !op.outputs.some(opit => opit.mime !== 'application/x.notebook.error-traceback'))
+    const errorOutput = outputs.find(
+        (op) => op.outputs.length && !op.outputs.some((opit) => opit.mime !== 'application/x.notebook.error-traceback')
+    );
 
     return !!errorOutput;
 }
@@ -782,7 +811,11 @@ export function getCellStatusMessageBasedOnFirstCellErrorOutput(outputs?: readon
         return '';
     }
 
-    const errorOutput = outputs.find(op => op.outputs.length && !op.outputs.some((opit: NotebookCellOutputItem) => opit.mime !== 'application/x.notebook.error-traceback'))
+    const errorOutput = outputs.find(
+        (op) =>
+            op.outputs.length &&
+            !op.outputs.some((opit: NotebookCellOutputItem) => opit.mime !== 'application/x.notebook.error-traceback')
+    );
 
     if (!errorOutput) {
         return '';
