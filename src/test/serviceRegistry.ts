@@ -26,6 +26,9 @@ import { MockMemento } from './mocks/mementos';
 // do not run under VS Code so they do not have access to the actual
 // "vscode" namespace.
 export class FakeVSCodeFileSystemAPI {
+    public isWritableFileSystem(_scheme: string): boolean | undefined {
+        return;
+    }
     public async readFile(uri: Uri): Promise<Uint8Array> {
         return fsextra.readFile(uri.fsPath);
     }

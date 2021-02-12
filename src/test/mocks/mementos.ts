@@ -23,4 +23,7 @@ export class MockMemento implements Memento {
     public clear() {
         this._value = {};
     }
+    public setKeysForSync(_keys: string[]): void {
+        // noop.
+    }
 }
