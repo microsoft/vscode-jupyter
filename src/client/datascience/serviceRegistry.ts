@@ -346,7 +346,6 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     serviceManager.addSingleton<INotebookExtensibility>(INotebookExtensibility, NotebookExtensibility);
     serviceManager.addBinding(INotebookExtensibility, INotebookExecutionLogger);
     serviceManager.addSingleton<IWebviewExtensibility>(IWebviewExtensibility, WebviewExtensibility);
-    // serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, InsidersNativeNotebooksSurveyBanner);
     serviceManager.addSingleton<INotebookWatcher>(INotebookWatcher, NotebookWatcher);
 
     registerNotebookTypes(serviceManager);

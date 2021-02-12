@@ -893,8 +893,6 @@ module.exports = {
         'src/client/datascience/data-viewing/dataViewerMessageListener.ts',
         'src/client/datascience/data-viewing/dataViewerDependencyService.ts',
         'src/client/datascience/data-viewing/dataViewerFactory.ts',
-        'src/client/datascience/shiftEnterBanner.ts',
-        'src/client/datascience/dataScienceSurveyBanner.ts',
         'src/client/datascience/webviews/webViewHost.ts',
         'src/client/datascience/progress/progressReporter.ts',
         'src/client/datascience/progress/messages.ts',
