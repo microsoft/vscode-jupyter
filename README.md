@@ -77,7 +77,7 @@ The extension is available in multiple languages: `de`, `en`, `es`, `fa`, `fr`, 
 
 ## Questions, issues, feature requests, and contributions
 
--   If you have a question about how to accomplish something with the extension, please [ask on Stack Overflow](https://stackoverflow.com/questions/tagged/visual-studio-code+jupyter).
+-   If you have a question about how to accomplish something with the extension, please [ask on Stack Overflow](https://stackoverflow.com/questions/tagged/visual-studio-code+jupyter). Our [wiki](https://github.com/microsoft/vscode-jupyter/wiki) is also updated periodically with useful information.
 -   Any and all feedback is appreciated and welcome! If you come across a problem with the extension, please [file an issue](https://github.com/microsoft/vscode-jupyter).
       - If someone has already [filed an issue](https://github.com/Microsoft/vscode-jupyter) that encompasses your feedback, please leave a 👍/👎 reaction on the issue.
 
