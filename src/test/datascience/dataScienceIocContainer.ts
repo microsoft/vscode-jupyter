@@ -1272,6 +1272,9 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         when(workspaceService.workspaceFolders).thenReturn(this.workspaceFolders);
         when(workspaceService.rootPath).thenReturn(testWorkspaceFolder);
         when(workspaceService.getWorkspaceFolder(anything())).thenCall(this.getWorkspaceFolder.bind(this));
+        when(workspaceService.getWorkspaceFolderIdentifier(anything(), anything())).thenCall(
+            this.getWorkspaceFolderIdentifier.bind(this)
+        );
         this.addWorkspaceFolder(testWorkspaceFolder);
         return workspaceService;
     }
@@ -1281,6 +1284,15 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             return this.workspaceFolders.find((w) => w.ownedResources.has(uri.toString()));
         }
         return undefined;
+    }
+    private getWorkspaceFolderIdentifier(uri: Resource, defaultValue: string | undefined): string | undefined {
+        if (uri) {
+            const folder = this.workspaceFolders.find((w) => w.ownedResources.has(uri.toString()));
+            if (folder) {
+                return folder.uri.fsPath;
+            }
+        }
+        return defaultValue;
     }
 
     private getResourceKey(resource: Resource): string {
