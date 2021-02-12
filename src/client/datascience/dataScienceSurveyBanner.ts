@@ -284,21 +284,21 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
     private async openedNotebook() {
         const state1 = this.persistentState.createGlobalPersistentState<number>(DSSurveyStateKeys.OpenNotebookCount, 0);
         await state1.updateValue(state1.value + 1);
-        this.showBanner(BannerType.DSSurvey);
+        void this.showBanner(BannerType.DSSurvey);
 
         const state2 = this.persistentState.createGlobalPersistentState<number>(
             InsidersNotebookSurveyStateKeys.OpenNotebookCount,
             0
         );
         await state2.updateValue(state2.value + 1);
-        this.showBanner(BannerType.InsidersNotebookSurvey);
+        void this.showBanner(BannerType.InsidersNotebookSurvey);
 
         const state3 = this.persistentState.createGlobalPersistentState<number>(
             ExperimentNotebookSurveyStateKeys.OpenNotebookCount,
             0
         );
         await state3.updateValue(state3.value + 1);
-        this.showBanner(BannerType.ExperimentNotebookSurvey);
+        void this.showBanner(BannerType.ExperimentNotebookSurvey);
     }
 
     private async kernelStateChanged(kernelStateEvent: KernelStateEventArgs) {
@@ -309,14 +309,14 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
                 0
             );
             await state1.updateValue(state1.value + 1);
-            this.showBanner(BannerType.InsidersNotebookSurvey);
+            void this.showBanner(BannerType.InsidersNotebookSurvey);
 
             const state2 = this.persistentState.createGlobalPersistentState<number>(
                 ExperimentNotebookSurveyStateKeys.ExecutionCount,
                 0
             );
             await state2.updateValue(state2.value + 1);
-            this.showBanner(BannerType.ExperimentNotebookSurvey);
+            void this.showBanner(BannerType.ExperimentNotebookSurvey);
         }
     }
 
