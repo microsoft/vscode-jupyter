@@ -243,7 +243,6 @@ module.exports = {
         'src/test/datascience/testexecutionLogger.ts',
         'src/test/datascience/interactiveWindow.functional.test.tsx',
         'src/test/datascience/mockQuickPick.ts',
-        'src/test/datascience/dsTestSetup.ts',
         'src/test/datascience/mockLanguageServer.ts',
         'src/test/datascience/debugger.functional.test.tsx',
         'src/test/datascience/testInteractiveWindowProvider.ts',
