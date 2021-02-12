@@ -99,6 +99,8 @@
    ([#4761](https://github.com/Microsoft/vscode-jupyter/issues/4761))
 1. Fix CTRL+ENTER and ALT+ENTER to behave as expected for a jupyter notebook.
    ([#4713](https://github.com/Microsoft/vscode-jupyter/issues/4713))
+1. If .NET interactive is installed, make sure to use the new notebook editor.
+   ([#4771](https://github.com/Microsoft/vscode-jupyter/issues/4771))
 
 ### Code Health
 
