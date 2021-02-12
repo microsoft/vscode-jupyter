@@ -102,7 +102,6 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
     ): Promise<void> {
         return this.kernelResolver.resolveKernel(kernel, document, webview, token);
     }
-    @captureTelemetry(Telemetry.NativeNotebookKernelSelectionPerf)
     @captureTelemetry(Telemetry.KernelProviderPerf)
     public async provideKernels(
         document: NotebookDocument,
@@ -302,6 +301,7 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
             );
         }
     }
+    @captureTelemetry(Telemetry.KernelProviderPerf)
     private async getPreferredKernel(
         document: NotebookDocument,
         token: CancellationToken,
