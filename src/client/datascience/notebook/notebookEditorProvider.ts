@@ -184,7 +184,6 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
             return;
         }
         this.trackedVSCodeNotebookEditors.add(editor);
-        this.disposables.push(editor.onDidDispose(() => this.onDidDisposeVSCodeNotebookEditor(editor)));
     }
     private async onDidCloseNotebookDocument(document: NotebookDocument) {
         this.disposeResourceRelatedToNotebookEditor(document.uri);
@@ -206,22 +205,5 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         }
         this.notebookEditorsByUri.delete(uri.toString());
         this.notebooksWaitingToBeOpenedByUri.delete(uri.toString());
-    }
-    /**
-     * We know a notebook editor has been closed.
-     * We need to close/dispose all of our resources related to this notebook document.
-     * However we also need to check if there are other notebooks opened, that are associated with this same notebook.
-     * I.e. we may have closed a duplicate editor.
-     */
-    private async onDidDisposeVSCodeNotebookEditor(closedEditor: VSCodeNotebookEditor) {
-        const uri = closedEditor.document.uri;
-        if (
-            this.vscodeNotebook.notebookEditors.some(
-                (item) => item !== closedEditor && item.document.uri.toString() === uri.toString()
-            )
-        ) {
-            return;
-        }
-        this.disposeResourceRelatedToNotebookEditor(closedEditor.document.uri);
     }
 }
