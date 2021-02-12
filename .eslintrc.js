@@ -84,7 +84,6 @@ module.exports = {
         'src/test/common/misc.test.ts',
         'src/test/common/socketStream.test.ts',
         'src/test/common/configSettings.test.ts',
-        'src/test/common/experiments/service.unit.test.ts',
         'src/test/common/experiments/manager.unit.test.ts',
         'src/test/common/experiments/telemetry.unit.test.ts',
         'src/test/common/platform/filesystem.unit.test.ts',
