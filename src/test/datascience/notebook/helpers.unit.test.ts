@@ -6,10 +6,7 @@
 import { nbformat } from '@jupyterlab/coreutils';
 import { assert } from 'chai';
 import { cloneDeep } from 'lodash';
-import { Uri } from 'vscode';
-import { NotebookCellOutput, NotebookCellData, NotebookCellOutputItem } from '../../../../types/vscode-proposed';
-// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
-const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
+import { NotebookCellOutput, NotebookCellData, NotebookCellOutputItem, Uri, CellKind, NotebookCellRunState } from 'vscode';
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { ReadWrite } from '../../../client/common/types';
 import { notebookModelToVSCNotebookData } from '../../../client/datascience/notebook/helpers/helpers';
@@ -44,7 +41,7 @@ suite('DataScience - NativeNotebook helpers', () => {
         });
         assert.deepEqual(cellsWithoutCustomMetadata, [
             {
-                cellKind: vscodeNotebookEnums.CellKind.Code,
+                cellKind: CellKind.Code,
                 language: PYTHON_LANGUAGE,
                 outputs: [],
                 source: 'print(1)',
@@ -52,13 +49,13 @@ suite('DataScience - NativeNotebook helpers', () => {
                     editable: true,
                     executionOrder: 10,
                     hasExecutionOrder: true,
-                    runState: vscodeNotebookEnums.NotebookCellRunState.Idle,
+                    runState: NotebookCellRunState.Idle,
                     runnable: true,
                     statusMessage: undefined
                 }
             },
             {
-                cellKind: vscodeNotebookEnums.CellKind.Markdown,
+                cellKind: CellKind.Markdown,
                 language: MARKDOWN_LANGUAGE,
                 outputs: [],
                 source: '# HEAD',
@@ -113,9 +110,8 @@ suite('DataScience - NativeNotebook helpers', () => {
                                     outputType: 'stream'
                                 }
                             }
-                        }
-                        )]
-                    ),
+                        })
+                    ]),
                     new NotebookCellOutput([
                         new NotebookCellOutputItem('text/plain', 'NoError', {
                             custom: {
@@ -124,9 +120,8 @@ suite('DataScience - NativeNotebook helpers', () => {
                                     outputType: 'stream'
                                 }
                             }
-                        }
-                        )]
-                    ),
+                        })
+                    ])
                 ]
             );
         });
@@ -148,9 +143,8 @@ suite('DataScience - NativeNotebook helpers', () => {
                                     outputType: 'stream'
                                 }
                             }
-                        }
-                        )]
-                    )
+                        })
+                    ])
                 ]
             );
         });
@@ -172,9 +166,8 @@ suite('DataScience - NativeNotebook helpers', () => {
                                     outputType: 'stream'
                                 }
                             }
-                        }
-                        )]
-                    )
+                        })
+                    ])
                 ]
             );
         });
@@ -196,9 +189,8 @@ suite('DataScience - NativeNotebook helpers', () => {
                                     outputType: 'stream'
                                 }
                             }
-                        }
-                        )]
-                    )
+                        })
+                    ])
                 ]
             );
         });
@@ -271,7 +263,6 @@ suite('DataScience - NativeNotebook helpers', () => {
                                     }
                                 }),
                                 new NotebookCellOutputItem('image/jpeg', 'base64JPEG')
-
                             ])
                         ]
                     );
@@ -352,7 +343,7 @@ suite('DataScience - NativeNotebook helpers', () => {
                                             outputType: output_type
                                         }
                                     }
-                                }),
+                                })
                             ])
                         ]
                     );
@@ -381,7 +372,7 @@ suite('DataScience - NativeNotebook helpers', () => {
                                             outputType: output_type
                                         }
                                     }
-                                }),
+                                })
                             ])
                         ]
                     );

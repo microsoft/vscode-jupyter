@@ -4,8 +4,9 @@
 'use strict';
 
 import { nbformat } from '@jupyterlab/coreutils';
-import { NotebookCellOutput, NotebookCellOutputItem } from 'vscode';
-import type {
+import {
+    NotebookCellOutput,
+    NotebookCellOutputItem,
     NotebookCell,
     NotebookCellData,
     NotebookCellMetadata,
@@ -14,7 +15,7 @@ import type {
     NotebookDocument,
     NotebookEditor,
     NotebookKernel as VSCNotebookKernel
-} from '../../../../../typings/vscode-proposed';
+} from 'vscode';
 import { concatMultilineString, splitMultilineString } from '../../../../datascience-ui/common';
 import { IVSCodeNotebook } from '../../../common/application/types';
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../common/constants';
