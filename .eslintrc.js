@@ -529,7 +529,6 @@ module.exports = {
         'src/client/providers/referenceProvider.ts',
         'src/client/providers/terminalProvider.ts',
         'src/client/providers/signatureProvider.ts',
-        'src/client/activation/serviceRegistry.ts',
         'src/client/activation/languageServer/manager.ts',
         'src/client/activation/languageServer/languageServerExtension.ts',
         'src/client/activation/languageServer/languageServerProxy.ts',
