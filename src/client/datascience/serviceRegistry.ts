@@ -47,7 +47,6 @@ import { ExportToPDF } from './export/exportToPDF';
 import { ExportToPython } from './export/exportToPython';
 import { ExportUtil } from './export/exportUtil';
 import { ExportFormat, IExport, IExportDialog, IExportManager } from './export/types';
-import { InsidersNativeNotebooksSurveyBanner } from './insidersNativeNotebookSurveyBanner';
 import { DebugListener } from './interactive-common/debugListener';
 import { IntellisenseProvider } from './interactive-common/intellisense/intellisenseProvider';
 import { LinkProvider } from './interactive-common/linkProvider';
@@ -347,7 +346,7 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     serviceManager.addSingleton<INotebookExtensibility>(INotebookExtensibility, NotebookExtensibility);
     serviceManager.addBinding(INotebookExtensibility, INotebookExecutionLogger);
     serviceManager.addSingleton<IWebviewExtensibility>(IWebviewExtensibility, WebviewExtensibility);
-    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, InsidersNativeNotebooksSurveyBanner);
+    // serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, InsidersNativeNotebooksSurveyBanner);
     serviceManager.addSingleton<INotebookWatcher>(INotebookWatcher, NotebookWatcher);
 
     registerNotebookTypes(serviceManager);
