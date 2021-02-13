@@ -54,6 +54,14 @@
     background-color: var(--vscode-debugToolBar-background);
     border-right-color: var(--vscode-editor-inactiveSelectionBackground);
     border-right-style: solid;
+    border-bottom-color: var(--vscode-debugToolBar-background);
+}
+
+.slick-headerrow-column.ui-state-default {
+    padding-left: 3px;
+    padding-right: 3px;
+    padding-bottom: 3px;
+    padding-top: 1px;
 }
 
 .slick-header-column.ui-state-default,
