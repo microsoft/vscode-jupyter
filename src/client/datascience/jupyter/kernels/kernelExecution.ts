@@ -12,7 +12,7 @@ import { createDeferred, waitForPromise } from '../../../common/utils/async';
 import { StopWatch } from '../../../common/utils/stopWatch';
 import { captureTelemetry } from '../../../telemetry';
 import { Telemetry, VSCodeNativeTelemetry } from '../../constants';
-import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../../context/telemetry';
+import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../../telemetry/telemetry';
 import { traceCellMessage } from '../../notebook/helpers/helpers';
 import { chainWithPendingUpdates } from '../../notebook/helpers/notebookUpdater';
 import {

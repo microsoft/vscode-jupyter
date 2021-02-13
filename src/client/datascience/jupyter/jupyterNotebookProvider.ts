@@ -35,6 +35,7 @@ export class JupyterNotebookProvider implements IJupyterNotebookProvider {
         const server = await this.serverProvider.getOrCreateServer({
             getOnly: options.getOnly,
             disableUI: options.disableUI,
+            resource: options.resource,
             token: options.token
         });
 
@@ -56,6 +57,7 @@ export class JupyterNotebookProvider implements IJupyterNotebookProvider {
             getOnly: options.getOnly,
             disableUI: options.disableUI,
             token: options.token,
+            resource: options.resource,
             metadata: options.metadata,
             kernelConnection: options.kernelConnection
         });

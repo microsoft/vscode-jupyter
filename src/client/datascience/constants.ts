@@ -166,6 +166,7 @@ export namespace EditorContexts {
     export const CanRestartNotebookKernel = 'jupyter.notebookeditor.canrestartNotebookkernel';
     export const CanInterruptNotebookKernel = 'jupyter.notebookeditor.canInterruptNotebookKernel';
     export const IsPythonNotebook = 'jupyter.ispythonnotebook';
+    export const IsVSCodeNotebookActive = 'jupyter.isvscodenotebookactive';
 }
 
 export namespace RegExpValues {

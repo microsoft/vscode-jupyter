@@ -4,29 +4,20 @@
 import { Uri } from 'vscode';
 import { getOSType } from '../../common/utils/platform';
 import { getKernelConnectionId, KernelConnectionMetadata } from '../jupyter/kernels/types';
-import * as hashjs from 'hash.js';
 import { Resource } from '../../common/types';
 import { IEventNamePropertyMapping, sendTelemetryEvent, setSharedProperty } from '../../telemetry';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { ResourceSpecificTelemetryProperties } from './types';
-import { isErrorType } from '../../common/errors/errorUtils';
-import { CancellationError } from '../../common/cancellation';
-import { TimedOutError } from '../../common/utils/async';
-import { JupyterInvalidKernelError } from '../jupyter/jupyterInvalidKernelError';
-import { JupyterWaitForIdleError } from '../jupyter/jupyterWaitForIdleError';
-import { JupyterKernelPromiseFailedError } from '../jupyter/kernels/jupyterKernelPromiseFailedError';
-import { IpyKernelNotInstalledError, KernelDiedError } from '../kernel-launcher/types';
-import { JupyterSessionStartError } from '../baseJupyterSession';
-import { JupyterConnectError } from '../jupyter/jupyterConnectError';
-import { JupyterInstallError } from '../jupyter/jupyterInstallError';
-import { JupyterSelfCertsError } from '../jupyter/jupyterSelfCertsError';
 import { Telemetry } from '../constants';
 import { WorkspaceInterpreterTracker } from './workspaceInterpreterTracker';
 import { InterruptResult } from '../types';
-import { getResourceType, getTelemetrySafeLanguage } from '../common';
+import { getResourceType } from '../common';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { InterpreterCountTracker } from './interpreterCountTracker';
-import { FetchError } from 'node-fetch';
+import { getTelemetrySafeHashedString, getTelemetrySafeLanguage } from '../../telemetry/helpers';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
+import { InterpreterPackages } from './interpreterPackages';
+import { populateTelemetryWithErrorInfo } from '../../common/errors';
 
 type ContextualTelemetryProps = {
     kernelConnection: KernelConnectionMetadata;
@@ -51,37 +42,8 @@ type Context = {
 };
 const trackedInfo = new Map<string, [ResourceSpecificTelemetryProperties, Context]>();
 const currentOSType = getOSType();
+const pythonEnvironmentsByHash = new Map<string, PythonEnvironment>();
 
-export function getErrorClassification(error: Error) {
-    if (error.message.indexOf('reason: self signed certificate') >= 0) {
-        return 'jupyterselfcert';
-    } else if (isErrorType(error, JupyterSelfCertsError)) {
-        return 'jupyterselfcert';
-    } else if (isErrorType(error, JupyterWaitForIdleError)) {
-        return 'timeout';
-    } else if (isErrorType(error, TimedOutError)) {
-        return 'timeout';
-    } else if (isErrorType(error, JupyterInvalidKernelError)) {
-        return 'invalidkernel';
-    } else if (isErrorType(error, JupyterKernelPromiseFailedError)) {
-        return 'kernelpromisetimeout';
-    } else if (isErrorType(error, IpyKernelNotInstalledError)) {
-        return 'noipykernel';
-    } else if (isErrorType(error, CancellationError)) {
-        return 'cancelled';
-    } else if (isErrorType(error, JupyterSessionStartError)) {
-        return 'jupytersession';
-    } else if (isErrorType(error, JupyterConnectError)) {
-        return 'jupyterconnection';
-    } else if (isErrorType(error, JupyterInstallError)) {
-        return 'jupyterinstall';
-    } else if (isErrorType(error, KernelDiedError)) {
-        return 'kerneldied';
-    } else if (isErrorType(error, FetchError)) {
-        return 'fetcherror';
-    }
-    return 'unknown';
-}
 export function sendKernelTelemetryEvent<P extends IEventNamePropertyMapping, E extends keyof P>(
     resource: Resource,
     eventName: E,
@@ -94,20 +56,16 @@ export function sendKernelTelemetryEvent<P extends IEventNamePropertyMapping, E 
     }
 
     const addOnTelemetry = getContextualPropsForTelemetry(resource);
-    if (addOnTelemetry) {
-        const props = properties || {};
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        sendTelemetryEvent(eventName as any, durationMs, Object.assign(props, addOnTelemetry), ex);
-    } else {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        sendTelemetryEvent(eventName as any, durationMs, properties, ex);
-    }
+    const props = properties || {};
+    Object.assign(props, addOnTelemetry || {});
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    sendTelemetryEvent(eventName as any, durationMs, props, ex, true);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    resetData(resource, eventName as any, properties);
+    resetData(resource, eventName as any, props);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    incrementStartFailureCount(resource, eventName as any, properties);
+    incrementStartFailureCount(resource, eventName as any, props);
 }
 
 export function sendKernelTelemetryWhenDone<P extends IEventNamePropertyMapping, E extends keyof P>(
@@ -139,8 +97,7 @@ export function sendKernelTelemetryWhenDone<P extends IEventNamePropertyMapping,
                 (ex) => {
                     const addOnTelemetry = getContextualPropsForTelemetry(resource);
                     Object.assign(props, addOnTelemetry);
-                    props.failed = true;
-                    props.failureReason = getErrorClassification(ex);
+                    populateTelemetryWithErrorInfo(props, ex);
                     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-explicit-any
                     sendTelemetryEvent(eventName as any, stopWatch!.elapsedTime, props as any, ex, true);
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -224,20 +181,57 @@ export function trackKernelResourceInformation(resource: Resource, information: 
                 interpreter
             );
             currentData.pythonEnvironmentType = interpreter.envType;
-            currentData.pythonEnvironmentPath = hashjs.sha256().update(interpreter.path).digest('hex');
+            currentData.pythonEnvironmentPath = getTelemetrySafeHashedString(interpreter.path);
+            pythonEnvironmentsByHash.set(currentData.pythonEnvironmentPath, interpreter);
             if (interpreter.version) {
                 const { major, minor, patch } = interpreter.version;
                 currentData.pythonEnvironmentVersion = `${major}.${minor}.${patch}`;
             } else {
                 currentData.pythonEnvironmentVersion = undefined;
             }
+
+            currentData.pythonEnvironmentPackages = getPythonEnvironmentPackages({ interpreter });
         }
 
         currentData.kernelConnectionType = currentData.kernelConnectionType || kernelConnection?.kind;
     } else {
         context.previouslySelectedKernelConnectionId = '';
     }
+
     trackedInfo.set(key, [currentData, context]);
+}
+
+/**
+ * The python package information is fetch asynchronously.
+ * Its possible the information is available at a later time.
+ * Use this to update with the latest information (if available)
+ */
+function updatePythonPackages(currentData: ResourceSpecificTelemetryProperties) {
+    // Possible the Python package information is now available, update the properties accordingly.
+    if (currentData.pythonEnvironmentPath) {
+        currentData.pythonEnvironmentPackages =
+            getPythonEnvironmentPackages({ interpreterHash: currentData.pythonEnvironmentPath }) ||
+            currentData.pythonEnvironmentPackages;
+    }
+}
+/**
+ * Gets a JSON with hashed keys of some python packages along with their versions.
+ */
+function getPythonEnvironmentPackages(options: { interpreter: PythonEnvironment } | { interpreterHash: string }) {
+    let interpreter: PythonEnvironment | undefined;
+    if ('interpreter' in options) {
+        interpreter = options.interpreter;
+    } else {
+        interpreter = pythonEnvironmentsByHash.get(options.interpreterHash);
+    }
+    if (!interpreter) {
+        return '{}';
+    }
+    const packages = InterpreterPackages.getPackageVersions(interpreter);
+    if (!packages || packages.size === 0) {
+        return '{}';
+    }
+    return JSON.stringify(Object.fromEntries(packages));
 }
 export function deleteTrackedInformation(resource: Uri) {
     trackedInfo.delete(getUriKey(resource));
@@ -257,6 +251,10 @@ function getContextualPropsForTelemetry(resource: Resource): ResourceSpecificTel
         return {
             resourceType
         };
+    }
+    if (data) {
+        // Possible the Python package information is now available, update the properties accordingly.
+        updatePythonPackages(data[0]);
     }
     return data ? data[0] : undefined;
 }

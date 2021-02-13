@@ -114,7 +114,7 @@ import { ExportCommands } from '../../client/datascience/commands/exportCommands
 import { NotebookCommands } from '../../client/datascience/commands/notebookCommands';
 import { JupyterServerSelectorCommand } from '../../client/datascience/commands/serverSelector';
 import { DataScienceStartupTime, Identifiers, JUPYTER_OUTPUT_CHANNEL } from '../../client/datascience/constants';
-import { ActiveEditorContextService } from '../../client/datascience/context/activeEditorContext';
+import { ActiveEditorContextService } from '../../client/datascience/commands/activeEditorContext';
 import { DataViewer } from '../../client/datascience/data-viewing/dataViewer';
 import { DataViewerDependencyService } from '../../client/datascience/data-viewing/dataViewerDependencyService';
 import { DataViewerFactory } from '../../client/datascience/data-viewing/dataViewerFactory';
@@ -311,6 +311,7 @@ import { SystemPseudoRandomNumberGenerator } from '../../client/datascience/inte
 import { KernelEnvironmentVariablesService } from '../../client/datascience/kernel-launcher/kernelEnvVarsService';
 import { PreferredRemoteKernelIdProvider } from '../../client/datascience/notebookStorage/preferredRemoteKernelIdProvider';
 import { NotebookWatcher } from '../../client/datascience/variablesView/notebookWatcher';
+import { InterpreterPackages } from '../../client/datascience/telemetry/interpreterPackages';
 
 export class DataScienceIocContainer extends UnitTestIocContainer {
     public get workingInterpreter() {
@@ -496,6 +497,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             NbConvertExportToPythonService
         );
 
+        this.serviceManager.addSingletonInstance<InterpreterPackages>(
+            InterpreterPackages,
+            instance(mock(InterpreterPackages))
+        );
         this.serviceManager.addSingleton<INotebookModelFactory>(INotebookModelFactory, NotebookModelFactory);
         this.serviceManager.addSingleton<IMountedWebViewFactory>(IMountedWebViewFactory, MountedWebViewFactory);
         this.serviceManager.addSingletonInstance<IFileSystem>(IFileSystem, new MockFileSystem());
@@ -1267,6 +1272,9 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         when(workspaceService.workspaceFolders).thenReturn(this.workspaceFolders);
         when(workspaceService.rootPath).thenReturn(testWorkspaceFolder);
         when(workspaceService.getWorkspaceFolder(anything())).thenCall(this.getWorkspaceFolder.bind(this));
+        when(workspaceService.getWorkspaceFolderIdentifier(anything(), anything())).thenCall(
+            this.getWorkspaceFolderIdentifier.bind(this)
+        );
         this.addWorkspaceFolder(testWorkspaceFolder);
         return workspaceService;
     }
@@ -1276,6 +1284,15 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             return this.workspaceFolders.find((w) => w.ownedResources.has(uri.toString()));
         }
         return undefined;
+    }
+    private getWorkspaceFolderIdentifier(uri: Resource, defaultValue: string | undefined): string | undefined {
+        if (uri) {
+            const folder = this.workspaceFolders.find((w) => w.ownedResources.has(uri.toString()));
+            if (folder) {
+                return folder.uri.fsPath;
+            }
+        }
+        return defaultValue;
     }
 
     private getResourceKey(resource: Resource): string {

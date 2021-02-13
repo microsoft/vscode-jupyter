@@ -5,7 +5,7 @@ import type { Kernel } from '@jupyterlab/services';
 import type { Slot } from '@phosphor/signaling';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { CancellationError } from '../../common/cancellation';
-import { WrappedError } from '../../common/errors/errorUtils';
+import { WrappedError } from '../../common/errors/types';
 import { traceError, traceInfo } from '../../common/logger';
 import { IDisposable, IOutputChannel, Resource } from '../../common/types';
 import { TimedOutError } from '../../common/utils/async';
@@ -15,13 +15,13 @@ import { StopWatch } from '../../common/utils/stopWatch';
 import { captureTelemetry } from '../../telemetry';
 import { BaseJupyterSession } from '../baseJupyterSession';
 import { Identifiers, Telemetry } from '../constants';
-import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../context/telemetry';
 import { getDisplayNameOrNameOfKernelConnection } from '../jupyter/kernels/helpers';
 import { KernelConnectionMetadata } from '../jupyter/kernels/types';
-import { IKernelLauncher, IpyKernelNotInstalledError, KernelDiedError } from '../kernel-launcher/types';
+import { IKernelLauncher, IpyKernelNotInstalledError } from '../kernel-launcher/types';
 import { reportAction } from '../progress/decorator';
 import { ReportableAction } from '../progress/types';
 import { RawSession } from '../raw-kernel/rawSession';
+import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../telemetry/telemetry';
 import { ISessionWithSocket } from '../types';
 
 // Error thrown when we are unable to start a raw kernel session
@@ -116,39 +116,50 @@ export class RawJupyterSession extends BaseJupyterSession {
         } catch (error) {
             this.connected = false;
             if (error instanceof CancellationError) {
-                sendKernelTelemetryEvent(resource, Telemetry.RawKernelSessionStart, stopWatch.elapsedTime, {
-                    failed: true,
-                    failureReason: 'cancelled'
-                });
+                sendKernelTelemetryEvent(
+                    resource,
+                    Telemetry.RawKernelSessionStart,
+                    stopWatch.elapsedTime,
+                    undefined,
+                    error
+                );
                 sendKernelTelemetryEvent(resource, Telemetry.RawKernelSessionStartUserCancel);
                 traceInfo('Starting of raw session cancelled by user');
                 throw error;
             } else if (error instanceof TimedOutError) {
-                sendKernelTelemetryEvent(resource, Telemetry.RawKernelSessionStart, stopWatch.elapsedTime, {
-                    failed: true,
-                    failureReason: 'timeout'
-                });
+                sendKernelTelemetryEvent(
+                    resource,
+                    Telemetry.RawKernelSessionStart,
+                    stopWatch.elapsedTime,
+                    undefined,
+                    error
+                );
                 sendKernelTelemetryEvent(resource, Telemetry.RawKernelSessionStartTimeout);
                 traceError('Raw session failed to start in given timeout');
                 // Translate into original error
                 throw new RawKernelSessionStartError(kernelConnection, error);
             } else if (error instanceof IpyKernelNotInstalledError) {
-                sendKernelTelemetryEvent(resource, Telemetry.RawKernelSessionStart, stopWatch.elapsedTime, {
-                    failed: true,
-                    failureReason: 'noipykernel'
-                });
+                sendKernelTelemetryEvent(
+                    resource,
+                    Telemetry.RawKernelSessionStart,
+                    stopWatch.elapsedTime,
+                    undefined,
+                    error
+                );
                 sendKernelTelemetryEvent(resource, Telemetry.RawKernelSessionStartNoIpykernel, {
                     reason: error.reason
                 });
                 traceError('Raw session failed to start because dependencies not installed');
                 throw error;
             } else {
-                const failureReason = error instanceof KernelDiedError ? 'kerneldied' : 'unknown';
                 // Send our telemetry event with the error included
-                sendKernelTelemetryEvent(resource, Telemetry.RawKernelSessionStart, stopWatch.elapsedTime, {
-                    failed: true,
-                    failureReason
-                });
+                sendKernelTelemetryEvent(
+                    resource,
+                    Telemetry.RawKernelSessionStart,
+                    stopWatch.elapsedTime,
+                    undefined,
+                    error
+                );
                 sendKernelTelemetryEvent(
                     resource,
                     Telemetry.RawKernelSessionStartException,

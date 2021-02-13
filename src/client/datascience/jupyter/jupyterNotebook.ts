@@ -51,7 +51,7 @@ import {
     isPythonKernelConnection
 } from './kernels/helpers';
 import { isResourceNativeNotebook } from '../notebook/helpers/helpers';
-import { sendKernelTelemetryEvent } from '../context/telemetry';
+import { sendKernelTelemetryEvent } from '../telemetry/telemetry';
 
 class CellSubscriber {
     public get startTime(): number {
@@ -685,7 +685,7 @@ export class JupyterNotebookBase implements INotebook {
             this.ranInitialSetup = false;
 
             // Change the kernel on the session
-            await this.session.changeKernel(connectionMetadata, timeoutMS);
+            await this.session.changeKernel(this.resource, connectionMetadata, timeoutMS);
 
             // Change our own kernel spec
             // Only after session was successfully created.

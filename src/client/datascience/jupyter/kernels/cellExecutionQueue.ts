@@ -5,7 +5,7 @@ import { NotebookCell, NotebookCellRunState } from '../../../../../types/vscode-
 import { traceError, traceInfo } from '../../../common/logger';
 import { noop } from '../../../common/utils/misc';
 import { Telemetry } from '../../constants';
-import { sendKernelTelemetryEvent } from '../../context/telemetry';
+import { sendKernelTelemetryEvent } from '../../telemetry/telemetry';
 import { traceCellMessage } from '../../notebook/helpers/helpers';
 import { INotebook } from '../../types';
 import { CellExecution, CellExecutionFactory } from './cellExecution';

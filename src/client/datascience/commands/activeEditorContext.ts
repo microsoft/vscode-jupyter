@@ -40,6 +40,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
     private isNotebookTrusted: ContextKey;
     private isPythonFileActive: boolean = false;
     private isPythonNotebook: ContextKey;
+    private isVSCodeNotebookActive: ContextKey;
     constructor(
         @inject(IInteractiveWindowProvider) private readonly interactiveProvider: IInteractiveWindowProvider,
         @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider,
@@ -82,6 +83,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         this.hasNativeNotebookCells = new ContextKey(EditorContexts.HaveNativeCells, this.commandManager);
         this.isNotebookTrusted = new ContextKey(EditorContexts.IsNotebookTrusted, this.commandManager);
         this.isPythonNotebook = new ContextKey(EditorContexts.IsPythonNotebook, this.commandManager);
+        this.isVSCodeNotebookActive = new ContextKey(EditorContexts.IsVSCodeNotebookActive, this.commandManager);
     }
     public dispose() {
         this.disposables.forEach((item) => item.dispose());
@@ -122,6 +124,14 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
     }
     private onDidChangeActiveNotebookEditor(e?: INotebookEditor) {
         this.nativeContext.set(!!e).ignoreErrors();
+
+        // jupyter.isnativeactive is set above, but also set jupyter.isvscodenotebookactive
+        // if the active document is also a vscode document
+        if (e && e.type === 'native') {
+            this.isVSCodeNotebookActive.set(true).ignoreErrors();
+        } else {
+            this.isVSCodeNotebookActive.set(false).ignoreErrors();
+        }
         this.isNotebookTrusted.set(e?.model?.isTrusted === true).ignoreErrors();
         this.isPythonNotebook.set(isPythonNotebook(e?.model?.metadata)).ignoreErrors();
         this.updateMergedContexts();
@@ -148,7 +158,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
     private updateContextOfActiveNotebookKernel(activeEditor?: INotebookEditor) {
         if (activeEditor) {
             this.notebookProvider
-                .getOrCreateNotebook({ identity: activeEditor.file, getOnly: true })
+                .getOrCreateNotebook({ identity: activeEditor.file, resource: activeEditor.file, getOnly: true })
                 .then((nb) => {
                     if (activeEditor === this.notebookEditorProvider.activeEditor) {
                         const canStart = nb && nb.status !== ServerStatus.NotStarted && activeEditor.model?.isTrusted;

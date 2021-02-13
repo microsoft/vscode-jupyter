@@ -86,7 +86,7 @@
             {
                 "command": "jupyter.runcurrentcell",
                 "key": "ctrl+enter",
-                "when": "editorTextFocus && !editorHasSelection && jupyter.hascodecells && !notebookEditorFocused"
+                "when": "editorTextFocus && !editorHasSelection && jupyter.hascodecells && !notebookEditorFocused && !jupyter.havenativecells"
             },
             {
                 "command": "jupyter.runcurrentcellandaddbelow",
@@ -187,6 +187,11 @@
                 "linux": "ctrl+shift+-",
                 "when": "editorTextFocus && inputFocus && notebookEditorFocused && notebookViewType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts",
                 "command": "notebook.cell.split"
+            },
+            {
+                "key": "ctrl+enter",
+                "when": "editorTextFocus && inputFocus && notebookEditorFocused && notebookViewType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts",
+                "command": "notebook.cell.execute"
             },
             {
                 "command": "jupyter.insertCellBelowPosition",
@@ -728,7 +733,7 @@
                     "dark": "resources/dark/variable_explorer.svg"
                 },
                 "category": "Jupyter",
-                "enablement": "!jupyter.variableViewVisible"
+                "enablement": "notebookViewType == jupyter-notebook && !jupyter.variableViewVisible"
             }
         ],
         "menus": {
@@ -981,25 +986,25 @@
                     "command": "jupyter.runcurrentcell",
                     "title": "%jupyter.command.jupyter.runcurrentcell.title%",
                     "category": "Jupyter",
-                    "when": "jupyter.hascodecells && jupyter.ispythonornativeactive"
+                    "when": "jupyter.hascodecells && jupyter.ispythonornativeactive && !jupyter.havenativecells"
                 },
                 {
                     "command": "jupyter.runcurrentcelladvance",
                     "title": "%jupyter.command.jupyter.runcurrentcelladvance.title%",
                     "category": "Jupyter",
-                    "when": "jupyter.hascodecells && jupyter.ispythonornativeactive"
+                    "when": "jupyter.hascodecells && jupyter.ispythonornativeactive && !jupyter.havenativecells"
                 },
                 {
                     "command": "jupyter.runcurrentcellandallbelow.palette",
                     "title": "%jupyter.command.jupyter.runcurrentcellandallbelow.palette.title%",
                     "category": "Jupyter",
-                    "when": "jupyter.hascodecells && jupyter.ispythonornativeactive"
+                    "when": "jupyter.hascodecells && jupyter.ispythonornativeactive && !jupyter.havenativecells"
                 },
                 {
                     "command": "jupyter.runallcellsabove.palette",
                     "title": "%jupyter.command.jupyter.runallcellsabove.palette.title%",
                     "category": "Jupyter",
-                    "when": "jupyter.hascodecells && jupyter.ispythonornativeactive"
+                    "when": "jupyter.hascodecells && jupyter.ispythonornativeactive && !jupyter.havenativecells"
                 },
                 {
                     "command": "jupyter.debugcurrentcell.palette",
@@ -1294,7 +1299,7 @@
                     "command": "jupyter.openVariableView",
                     "title": "%jupyter.command.jupyter.openVariableView.title%",
                     "category": "Jupyter",
-                    "when": "jupyter.isnativeactive"
+                    "when": "notebookViewType == jupyter-notebook"
                 },
                 {
                     "command": "jupyter.selectNativeJupyterUriFromToolBar",
@@ -1839,7 +1844,7 @@
                     "type": "webview",
                     "id": "jupyterViewVariables",
                     "name": "Variables",
-                    "when": "jupyter.isnativeactive"
+                    "when": "jupyter.isvscodenotebookactive"
                 }
             ]
         }

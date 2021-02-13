@@ -1,0 +1,71 @@
+name: Publish For Insiders
+
+on:
+  schedule:
+    # Every day at midnight
+    - cron:  '0 0 * * *'
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: 'Publish to VSCode marketplace?'
+        required: true
+        default: 'no'
+
+env:
+  PYTHON_VERSION: 3.8
+  VSIX_NAME: ms-toolsai-jupyter-insiders.vsix
+  VSIX_NAME_UPLOADED_TO_BLOB: ms-toolsai-jupyter-insiders.vsix
+  VSIX_NAME_TO_PUBLISH: ms-toolsai-jupyter-insiders.vsix
+  VSIX_ROOT_NAME: ms-toolsai-jupyter-insiders
+
+jobs:
+  publish:
+    name: Publish to marketplace
+    runs-on: ubuntu-latest
+    if: github.repository == 'microsoft/vscode-jupyter'
+    env:
+      BLOB_CONTAINER_NAME: extension-builds-jupyter
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          ref: main
+
+      - name: Use Python ${{env.PYTHON_VERSION}}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{env.PYTHON_VERSION}}
+
+      - name: Use Node ${{env.NODE_VERSION}}
+        uses: actions/setup-node@v2.1.2
+        with:
+          node-version: ${{env.NODE_VERSION}}
+
+      - name: Azure Login
+        uses: azure/login@v1.1.1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Download VSIX
+        run: az storage blob download --file ${{env.VSIX_NAME_TO_PUBLISH}} --account-name pvsc --container-name ${{env.BLOB_CONTAINER_NAME}} --name ${{ env.VSIX_NAME_UPLOADED_TO_BLOB }}
+
+      - name: Extract Extension
+        shell: bash
+        run: |
+          python -c "import zipfile;zip=zipfile.ZipFile('${{env.VSIX_NAME_TO_PUBLISH}}', 'r');zip.extractall('tmp')"
+
+      - name: Update VS code to be insiders only
+        shell: bash
+        run: |
+          node build/ci/scripts/updateEngineToInsiders.js
+
+      - name: ReZip Extension
+        shell: bash
+        run: |
+          python -c "import shutil;shutil.make_archive('${{env.VSIX_ROOT_NAME}}', 'zip', './tmp')"
+          python -c "import os; os.rename('${{env.VSIX_ROOT_NAME}}.zip', '${{env.VSIX_NAME_TO_PUBLISH}}')"
+
+      - name: Publish
+        run: vsce_ publish --packagePath ${{env.VSIX_NAME_TO_PUBLISH}} --pat ${{secrets.VSCE_TOKEN}} --noVerify
+

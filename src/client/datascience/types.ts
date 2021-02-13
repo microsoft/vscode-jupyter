@@ -248,11 +248,14 @@ export type ConnectNotebookProviderOptions = {
     disableUI?: boolean;
     localOnly?: boolean;
     token?: CancellationToken;
+    resource: Resource;
+    metadata?: nbformat.INotebookMetadata;
     onConnectionMade?(): void; // Optional callback for when the first connection is made
 };
 
 export interface INotebookServerOptions {
     uri?: string;
+    resource: Resource;
     usingDarkTheme?: boolean;
     skipUsingDefaultConfig?: boolean;
     workingDir?: string;
@@ -332,7 +335,7 @@ export interface IJupyterSession extends IAsyncDisposable {
         content: KernelMessage.IInspectRequestMsg['content']
     ): Promise<KernelMessage.IInspectReplyMsg | undefined>;
     sendInputReply(content: string): void;
-    changeKernel(kernelConnection: KernelConnectionMetadata, timeoutMS: number): Promise<void>;
+    changeKernel(resource: Resource, kernelConnection: KernelConnectionMetadata, timeoutMS: number): Promise<void>;
     registerCommTarget(
         targetName: string,
         callback: (comm: Kernel.IComm, msg: KernelMessage.ICommOpenMsg) => void | PromiseLike<void>
@@ -1179,6 +1182,7 @@ export type GetServerOptions = {
     disableUI?: boolean;
     localOnly?: boolean;
     token?: CancellationToken;
+    resource: Resource;
     metadata?: nbformat.INotebookMetadata;
     kernelConnection?: KernelConnectionMetadata;
     onConnectionMade?(): void; // Optional callback for when the first connection is made
@@ -1188,7 +1192,7 @@ export type GetServerOptions = {
  * Options for getting a notebook
  */
 export type GetNotebookOptions = {
-    resource?: Uri;
+    resource: Resource;
     identity: Uri;
     getOnly?: boolean;
     disableUI?: boolean;

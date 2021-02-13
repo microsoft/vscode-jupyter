@@ -6,8 +6,6 @@
 import { ConfigurationTarget, Event, EventEmitter, ProgressLocation, Uri, WebviewPanel } from 'vscode';
 import { NotebookCell, NotebookDocument } from '../../../../types/vscode-proposed';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../common/application/types';
-import { CancellationError } from '../../common/cancellation';
-import { isErrorType } from '../../common/errors/errorUtils';
 import { traceError } from '../../common/logger';
 import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../common/types';
 import { DataScience } from '../../common/utils/localize';
@@ -15,7 +13,7 @@ import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
-import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../context/telemetry';
+import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../telemetry/telemetry';
 import { JupyterKernelPromiseFailedError } from '../jupyter/kernels/jupyterKernelPromiseFailedError';
 import { IKernel, IKernelProvider } from '../jupyter/kernels/types';
 import {
@@ -97,7 +95,7 @@ export class NotebookEditor implements INotebookEditor {
                 }
             })
         );
-        disposables.push(model.onDidDispose(this._closed.fire.bind(this._closed, this)));
+        disposables.push(model.onDidDispose(this.dispose.bind(this)));
     }
     @captureTelemetry(Telemetry.SyncAllCells)
     public async syncAllCells(): Promise<void> {
@@ -335,7 +333,7 @@ export class NotebookEditor implements INotebookEditor {
             if (exc instanceof JupyterKernelPromiseFailedError && kernel) {
                 sendKernelTelemetryEvent(this.document.uri, Telemetry.NotebookRestart, stopWatch.elapsedTime, {
                     failed: true,
-                    failureReason: 'kernelpromisetimeout'
+                    failureCategory: 'kernelpromisetimeout'
                 });
                 // Old approach (INotebook is not exposed in IKernel, and INotebook will eventually go away).
                 const notebook = await this.notebookProvider.getOrCreateNotebook({
@@ -346,12 +344,14 @@ export class NotebookEditor implements INotebookEditor {
                 if (notebook) {
                     await notebook.dispose();
                 }
-                await this.notebookProvider.connect({ getOnly: false, disableUI: false });
-            } else {
-                sendKernelTelemetryEvent(this.document.uri, Telemetry.NotebookRestart, stopWatch.elapsedTime, {
-                    failed: true,
-                    failureReason: isErrorType(exc, CancellationError) ? 'cancelled' : 'unknown'
+                await this.notebookProvider.connect({
+                    getOnly: false,
+                    disableUI: false,
+                    resource: this.file,
+                    metadata: this.model.metadata
                 });
+            } else {
+                sendKernelTelemetryEvent(this.document.uri, Telemetry.NotebookRestart, stopWatch.elapsedTime, exc);
                 // Show the error message
                 void this.applicationShell.showErrorMessage(exc);
                 traceError(exc);
