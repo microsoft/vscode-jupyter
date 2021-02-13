@@ -285,12 +285,6 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
     };
 
     public componentDidUpdate = (_prevProps: ISlickGridProps) => {
-        if (this.state.showingFilters && this.state.grid) {
-            this.state.grid.setHeaderRowVisibility(true);
-        } else if (this.state.showingFilters === false && this.state.grid) {
-            this.state.grid.setHeaderRowVisibility(false);
-        }
-
         // Dynamically modify the styles that the slickGrid generates for the rows.
         // It's eliminating some of the height
         if (this.state.grid && this.containerRef.current) {
@@ -494,9 +488,6 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
             // again
             setTimeout(() => {
                 this.updateCssStyles();
-
-                // Hide the header row after we finally resize our columns
-                this.state.grid!.setHeaderRowVisibility(false);
             }, 0);
         }
     }
@@ -512,22 +503,13 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
     private resetGrid = (_e: Slick.EventData, data: ISlickGridSlice) => {
         this.dataView.setItems([]);
         const styledColumns = this.styleColumns(data.columns);
-        this.setColumns(styledColumns);
+        this.state.grid?.setColumns(styledColumns);
         this.autoResizeColumns();
     };
 
     private updateColumns = (_e: Slick.EventData, newColumns: Slick.Column<Slick.SlickData>[]) => {
-        this.setColumns(newColumns);
-        this.state.grid?.render(); // We might be able to skip this rerender?
-    };
-
-    private setColumns = (newColumns: Slick.Column<Slick.SlickData>[]) => {
-        // HACK: SlickGrid header row does not rerender if its visibility is false when columns
-        // are updated, and this causes the header to simply not show up when clicking the
-        // filter button after we update the grid column headers on receiving a slice response.
-        // The solution is to force the header row to become visible just before sending our slice request.
-        this.state.grid?.setHeaderRowVisibility(true);
         this.state.grid?.setColumns(newColumns);
+        this.state.grid?.render(); // We might be able to skip this rerender?
     };
 
     private addedRows = (_e: Slick.EventData, data: ISlickGridAdd) => {
@@ -571,7 +553,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
     };
 
     private renderFilterCell = (_e: Slick.EventData, args: Slick.OnHeaderRowCellRenderedEventArgs<Slick.SlickData>) => {
-        ReactDOM.render(<ReactSlickGridFilterBox column={args.column} onChange={this.filterChanged} />, args.node);
+        ReactDOM.render(<ReactSlickGridFilterBox column={args.column} onChange={this.filterChanged} fontSize={this.state.fontSize} />, args.node);
     };
 
     private compareElements(a: any, b: any, col?: Slick.Column<Slick.SlickData>): number {
