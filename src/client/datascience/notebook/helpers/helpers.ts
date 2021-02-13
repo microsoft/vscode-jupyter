@@ -501,9 +501,11 @@ export function cellOutputToVSCCellOutput(output: nbformat.IOutput): NotebookCel
 function getOutputMetadata(output: nbformat.IOutput): CellOutputMetadata {
     // Add on transient data if we have any. This should be removed by our save functions elsewhere.
     const metadata: CellOutputMetadata = {
-        outputType: output.output_type,
-        transient: output.transient
+        outputType: output.output_type
     };
+    if (output.transient) {
+        metadata.transient = output.transient;
+    }
 
     switch (output.output_type as nbformat.OutputType) {
         case 'display_data':
@@ -767,8 +769,10 @@ export function translateErrorOutput(output: nbformat.IError): NotebookCellOutpu
     // Add on transient data if we have any. This should be removed by our save functions elsewhere.
     const metadata: CellOutputMetadata = {
         outputType: output.output_type,
-        transient: output.transient
     };
+    if (output.transient) {
+        metadata.transient = output.transient;
+    }
 
     return new NotebookCellOutput([
         new NotebookCellOutputItem(
