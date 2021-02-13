@@ -768,7 +768,7 @@ function translateCellDisplayOutput(output: NotebookCellOutput): JupyterOutput |
 export function translateErrorOutput(output: nbformat.IError): NotebookCellOutput {
     // Add on transient data if we have any. This should be removed by our save functions elsewhere.
     const metadata: CellOutputMetadata = {
-        outputType: output.output_type,
+        outputType: output.output_type
     };
     if (output.transient) {
         metadata.transient = output.transient;
