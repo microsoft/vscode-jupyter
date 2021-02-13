@@ -257,7 +257,7 @@ export function getNotebookCellMetadata(cell: nbformat.IBaseCell): CellMetadata 
 }
 
 function createRawCellFromNotebookCell(cell: NotebookCell): nbformat.IRawCell {
-    const cellMetadata = cell.metadata as CellMetadata | undefined;
+    const cellMetadata = cell.metadata.custom as CellMetadata | undefined;
     const rawCell: nbformat.IRawCell = {
         cell_type: 'raw',
         source: splitMultilineString(cell.document.getText()),
@@ -270,7 +270,7 @@ function createRawCellFromNotebookCell(cell: NotebookCell): nbformat.IRawCell {
 }
 
 function createCodeCellFromNotebookCell(cell: NotebookCell): nbformat.ICodeCell {
-    const cellMetadata = cell.metadata as CellMetadata | undefined;
+    const cellMetadata = cell.metadata.custom as CellMetadata | undefined;
     const code = cell.document.getText();
     return {
         cell_type: 'code',
@@ -298,7 +298,7 @@ function createNotebookCellDataFromRawCell(isNbTrusted: boolean, cell: nbformat.
     };
 }
 function createMarkdownCellFromNotebookCell(cell: NotebookCell): nbformat.IMarkdownCell {
-    const cellMetadata = cell.metadata as CellMetadata | undefined;
+    const cellMetadata = cell.metadata.custom as CellMetadata | undefined;
     const markdownCell: nbformat.IMarkdownCell = {
         cell_type: 'markdown',
         source: splitMultilineString(cell.document.getText()),
@@ -376,16 +376,7 @@ function createNotebookCellDataFromCodeCell(
 
 export function createIOutputFromCellOutputs(cellOutputs: readonly NotebookCellOutput[]): nbformat.IOutput[] {
     return cellOutputs
-        .map((output) => {
-            if (!output.outputs.some((opit) => opit.mime !== 'application/x.notebook.stream')) {
-                // every output item is `application/x.notebook.stream`
-                return;
-            } else if (!output.outputs.some((opit) => opit.mime !== 'application/x.notebook.error-traceback')) {
-                return translateCellErrorOutput(output);
-            } else {
-                return translateCellDisplayOutput(output);
-            }
-        })
+        .map(translateCellDisplayOutput)
         .filter((output) => !!output)
         .map((output) => output!!);
 }
@@ -521,7 +512,7 @@ function getOutputMetadata(output: nbformat.IOutput): CellOutputMetadata {
             break;
         }
         case 'stream': {
-            metadata.streamName = output.name as string;
+            metadata.streamName = (output.name as unknown) as nbformat.StreamType;
             break;
         }
         default:
@@ -647,7 +638,7 @@ export type CellOutputMetadata = {
     /**
      * Name of the stream (for text output).
      */
-    streamName?: string;
+    streamName?: nbformat.StreamType;
     executionCount?: nbformat.IExecuteResult['ExecutionCount'];
 };
 
@@ -665,22 +656,31 @@ function translateCellDisplayOutput(output: NotebookCellOutput): JupyterOutput |
     }
 
     let result: JupyterOutput;
-    switch (customMetadata.outputType) {
+    switch (customMetadata.outputType as nbformat.OutputType) {
+        case 'error':
+            {
+                const firstItem = output.outputs[0].value as nbformat.IError;
+                result = {
+                    output_type: 'error',
+                    ename: firstItem.ename,
+                    evalue: firstItem.evalue,
+                    traceback: firstItem.traceback
+                };
+            }
+            break;
         case 'stream':
             {
+                const outputs = output.outputs
+                    .filter((opit) => opit.mime === 'application/x.notebook.stream')
+                    .map((opit) => opit.value as string | string[])
+                    .reduceRight<string[]>(
+                        (prev, curr) => (Array.isArray(curr) ? prev.concat(...curr) : prev.concat(curr)),
+                        []
+                    );
                 result = {
                     output_type: 'stream',
                     name: customMetadata.streamName || '',
-                    text: splitMultilineString(
-                        output.outputs
-                            .filter(
-                                (opit) => opit.mime === 'text/plain' || opit.mime === 'application/x.notebook.stream'
-                            )
-                            .map((opit) => opit.value as string | string[])
-                            .reduceRight((prev, curr) => {
-                                return [...prev, ...curr];
-                            }, [])
-                    )
+                    text: splitMultilineString(outputs.join(''))
                 };
             }
             break;
