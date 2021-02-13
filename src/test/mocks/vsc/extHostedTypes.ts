@@ -552,7 +552,8 @@ export namespace vscMockExtHostedTypes {
             _index: number,
             _outputId: string,
             _items: vscode.NotebookCellOutputItem[],
-            _metadata?: vscode.WorkspaceEditEntryMetadata): void {
+            _metadata?: vscode.WorkspaceEditEntryMetadata
+        ): void {
             // Noop
         }
         appendNotebookCellOutputItems(
@@ -560,7 +561,8 @@ export namespace vscMockExtHostedTypes {
             _index: number,
             _outputId: string,
             _items: vscode.NotebookCellOutputItem[],
-            _metadata?: vscode.WorkspaceEditEntryMetadata): void {
+            _metadata?: vscode.WorkspaceEditEntryMetadata
+        ): void {
             // Noop
         }
         appendNotebookCellOutput(
@@ -1070,7 +1072,7 @@ export namespace vscMockExtHostedTypes {
         public static readonly Source = CodeActionKind.Empty.append('source');
         public static readonly SourceOrganizeImports = CodeActionKind.Source.append('organizeImports');
 
-        constructor(public readonly value: string) { }
+        constructor(public readonly value: string) {}
 
         public append(parts: string): CodeActionKind {
             return new CodeActionKind(this.value ? this.value + CodeActionKind.sep + parts : parts);

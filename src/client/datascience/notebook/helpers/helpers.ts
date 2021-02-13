@@ -40,6 +40,8 @@ import { chainWithPendingUpdates } from './notebookUpdater';
 import { Resource } from '../../../common/types';
 import { IFileSystem } from '../../../common/platform/types';
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 // This is the custom type we are adding into nbformat.IBaseCellMetadata
 export interface IBaseCellVSCodeMetadata {
     end_execution_time?: string;
@@ -787,7 +789,6 @@ export function hasErrorOutput(output: NotebookCellOutput) {
 export function getTextOutputValue(output: NotebookCellOutput): string {
     return (
         (output.outputs.find((opit) => opit.mime === 'application/x.notebook.stream' || opit.mime === 'text/plain')
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
             ?.value as any) || ''
     );
 }

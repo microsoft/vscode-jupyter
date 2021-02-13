@@ -66,7 +66,7 @@ export class CellExecutionFactory {
         private readonly appShell: IApplicationShell,
         private readonly vscNotebook: IVSCodeNotebook,
         private readonly context: IExtensionContext
-    ) { }
+    ) {}
 
     public create(cell: NotebookCell, isPythonKernelConnection: boolean) {
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
@@ -417,13 +417,13 @@ export class CellExecution {
 
         // Listen to messages & chain each (to process them in the order we get them).
         request.onIOPub = (msg) =>
-        (this.requestHandlerChain = this.requestHandlerChain.then(() =>
-            this.handleIOPub(clearState, loggers, msg).catch(noop)
-        ));
+            (this.requestHandlerChain = this.requestHandlerChain.then(() =>
+                this.handleIOPub(clearState, loggers, msg).catch(noop)
+            ));
         request.onReply = (msg) =>
-        (this.requestHandlerChain = this.requestHandlerChain.then(() =>
-            this.handleReply(clearState, msg).catch(noop)
-        ));
+            (this.requestHandlerChain = this.requestHandlerChain.then(() =>
+                this.handleReply(clearState, msg).catch(noop)
+            ));
         request.onStdin = this.handleInputRequest.bind(this, session);
 
         // WARNING: Do not dispose `request`.
@@ -544,7 +544,11 @@ export class CellExecution {
             }
 
             // Append to the data (we would push here but VS code requires a recreation of the array)
-            edit.replaceNotebookCellOutput(this.editor.document.uri, this.cell.index, existingOutput.concat(converted as NotebookCellOutput));
+            edit.replaceNotebookCellOutput(
+                this.editor.document.uri,
+                this.cell.index,
+                existingOutput.concat(converted as NotebookCellOutput)
+            );
             return edit;
         });
     }
@@ -654,9 +658,14 @@ export class CellExecution {
             // Basically have one output for stderr & a seprate output for stdout.
             // If we output stderr first, then stdout & then stderr, we should append the new stderr to the previous stderr output.
             if (existing) {
-                let existingOutput: string = concatMultilineString(existing.outputs.filter(opit => opit.mime === 'text/plain' || opit.mime === 'application/x.notebook.stream')
-                    .map(opit => opit.value as string | string[])
-                    .reduceRight((prev, curr) => { return [...prev, ...curr]; }, []));
+                let existingOutput: string = concatMultilineString(
+                    existing.outputs
+                        .filter((opit) => opit.mime === 'text/plain' || opit.mime === 'application/x.notebook.stream')
+                        .map((opit) => opit.value as string | string[])
+                        .reduceRight((prev, curr) => {
+                            return [...prev, ...curr];
+                        }, [])
+                );
                 let newContent = msg.content.text;
                 // Look for the ansi code `<char27>[A`. (this means move up)
                 // Not going to support `[2A` (not for now).
@@ -671,7 +680,12 @@ export class CellExecution {
                     newContent = newContent.substring(moveUpCode.length);
                 }
                 // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
-                edit.replaceNotebookCellOutputItems(this.editor.document.uri, this.cell.index, existing.id, [new NotebookCellOutputItem('text/plain', formatStreamText(concatMultilineString(`${existingOutput}${newContent}`)))]);
+                edit.replaceNotebookCellOutputItems(this.editor.document.uri, this.cell.index, existing.id, [
+                    new NotebookCellOutputItem(
+                        'text/plain',
+                        formatStreamText(concatMultilineString(`${existingOutput}${newContent}`))
+                    )
+                ]);
                 // TODO@DonJayamanne, with above API, we can update content of a cell output
                 // edit.replaceNotebookCellOutput(this.editor.document.uri, this.cell.index, [...exitingCellOutput]); // This is necessary to get VS code to update (for now)
             } else {
