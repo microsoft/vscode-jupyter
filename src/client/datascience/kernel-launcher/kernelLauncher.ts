@@ -167,6 +167,7 @@ export class KernelLauncher implements IKernelLauncher {
 
         // Then get the next set starting at that point
         const ports = await getPorts(5, { host: '127.0.0.1', port });
+        traceInfo(`Kernel launching with ports ${ports.toString()}`);
 
         // We launch restart kernels in the background, its possible other session hasn't started.
         // Ensure we do not use same ports.
