@@ -4,6 +4,7 @@
 'use strict';
 
 import { assert } from 'chai';
+import { NotebookCellRunState } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { ICommandManager, IVSCodeNotebook } from '../../../client/common/application/types';
 import { ProductNames } from '../../../client/common/installer/productNames';
@@ -28,7 +29,6 @@ import {
     hijackPrompt,
     createEmptyPythonNotebook
 } from './helper';
-const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 const expectedPromptMessageSuffix = `requires ${ProductNames.get(Product.ipykernel)!} to be installed.`;
 
 suite('Notebook Editor tests', () => {
@@ -88,7 +88,7 @@ suite('Notebook Editor tests', () => {
         const thirdCell = vscodeNotebook.activeNotebookEditor?.document.cells![2]!;
 
         // The first cell should have a runState of Success
-        assert.strictEqual(firstCell?.metadata.runState, vscodeNotebookEnums.NotebookCellRunState.Success);
+        assert.strictEqual(firstCell?.metadata.runState, NotebookCellRunState.Success);
 
         // The third cell should have an undefined runState
         assert.strictEqual(thirdCell?.metadata.runState, undefined);
@@ -117,7 +117,7 @@ suite('Notebook Editor tests', () => {
         assert.strictEqual(firstCell?.metadata.runState, undefined);
 
         // The third cell should have a runState of Success
-        assert.strictEqual(thirdCell?.metadata.runState, vscodeNotebookEnums.NotebookCellRunState.Success);
+        assert.strictEqual(thirdCell?.metadata.runState, NotebookCellRunState.Success);
     });
 
     test('Switch kernels', async function () {
@@ -164,7 +164,7 @@ suite('Notebook Editor tests', () => {
         cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
 
         assert.strictEqual(cell?.outputs.length, 1);
-        assert.strictEqual(cell?.metadata.runState, vscodeNotebookEnums.NotebookCellRunState.Success);
+        assert.strictEqual(cell?.metadata.runState, NotebookCellRunState.Success);
 
         if (anotherKernel && preferredKernel) {
             const newSysPath = getTextOutputValue(cell.outputs[0]);
