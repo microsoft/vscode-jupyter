@@ -101,6 +101,8 @@
    ([#4713](https://github.com/Microsoft/vscode-jupyter/issues/4713))
 1. If .NET interactive is installed, make sure to use the new notebook editor.
    ([#4771](https://github.com/Microsoft/vscode-jupyter/issues/4771))
+1. Only clean up a notebook editor when it's closed, not when the panel is disposed.
+   ([#4786](https://github.com/Microsoft/vscode-jupyter/issues/4786))
 1. Fixes problem with duplicate jupyter kernels being generated.
    ([#4720](https://github.com/Microsoft/vscode-jupyter/issues/4720))
 
