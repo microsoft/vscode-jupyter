@@ -5,7 +5,7 @@
 
 import { nbformat } from '@jupyterlab/coreutils';
 import type { KernelMessage } from '@jupyterlab/services/lib/kernel/messages';
-import { NotebookCellOutput, NotebookCellOutputItem, ExtensionMode } from 'vscode';
+import { NotebookCellOutput, ExtensionMode } from 'vscode';
 import {
     NotebookCell,
     NotebookCellRunState,
@@ -648,57 +648,32 @@ export class CellExecution {
                 clearState.update(false);
             }
 
+            // Create a new output
+            const output = cellOutputToVSCCellOutput({
+                output_type: 'stream',
+                name: msg.content.name,
+                text: formatStreamText(concatMultilineString(msg.content.text))
+            });
+
+            // Ensure we append to previous output, only if the streams as the same.
+            // Possible we have stderr first, then later we get output from stdout.
+            // Basically have one output for stderr & a separate output for stdout.
+            // If we output stderr first, then stdout & then stderr, we should append the new stderr to the previous stderr output.
             // Might already have a stream message. If so, just add on to it.
             // We use Rich output for text streams (not CellStreamOutput, known VSC Issues).
             // https://github.com/microsoft/vscode-python/issues/14156
             const existing = exitingCellOutput.find((item) => item && isStreamOutput(item, msg.content.name));
-
-            // Ensure we append to previous output, only if the streams as the same.
-            // Possible we have stderr first, then later we get output from stdout.
-            // Basically have one output for stderr & a seprate output for stdout.
-            // If we output stderr first, then stdout & then stderr, we should append the new stderr to the previous stderr output.
             if (existing) {
-                let existingOutput: string = concatMultilineString(
-                    existing.outputs
-                        .filter((opit) => opit.mime === 'text/plain' || opit.mime === 'application/x.notebook.stream')
-                        .map((opit) => opit.value as string | string[])
-                        .reduceRight((prev, curr) => {
-                            return [...prev, ...curr];
-                        }, [])
+                edit.appendNotebookCellOutputItems(
+                    this.editor.document.uri,
+                    this.cell.index,
+                    existing.id,
+                    output.outputs
                 );
-                let newContent = msg.content.text;
-                // Look for the ansi code `<char27>[A`. (this means move up)
-                // Not going to support `[2A` (not for now).
-                const moveUpCode = `${String.fromCharCode(27)}[A`;
-                if (msg.content.text.startsWith(moveUpCode)) {
-                    // Split message by lines & strip out the last n lines (where n = number of lines to move cursor up).
-                    const existingOutputLines = existingOutput.splitLines({ trim: false, removeEmptyEntries: false });
-                    if (existingOutputLines.length) {
-                        existingOutputLines.pop();
-                    }
-                    existingOutput = existingOutputLines.join('\n');
-                    newContent = newContent.substring(moveUpCode.length);
-                }
-                // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
-                edit.replaceNotebookCellOutputItems(this.editor.document.uri, this.cell.index, existing.id, [
-                    new NotebookCellOutputItem(
-                        'text/plain',
-                        formatStreamText(concatMultilineString(`${existingOutput}${newContent}`))
-                    )
-                ]);
-                // TODO@DonJayamanne, with above API, we can update content of a cell output
-                // edit.replaceNotebookCellOutput(this.editor.document.uri, this.cell.index, [...exitingCellOutput]); // This is necessary to get VS code to update (for now)
             } else {
-                const originalText = formatStreamText(concatMultilineString(msg.content.text));
-                // Create a new stream entry
-                const output: nbformat.IStream = {
-                    output_type: 'stream',
-                    name: msg.content.name,
-                    text: originalText
-                };
                 edit.replaceNotebookCellOutput(this.editor.document.uri, this.cell.index, [
                     ...exitingCellOutput,
-                    cellOutputToVSCCellOutput(output)
+                    output
                 ]);
             }
             return edit;
