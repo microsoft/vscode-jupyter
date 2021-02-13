@@ -11,6 +11,7 @@ import { traceInfo } from '../../../client/common/logger';
 import { IDisposable, Product } from '../../../client/common/types';
 import { Common } from '../../../client/common/utils/localize';
 import { Commands } from '../../../client/datascience/constants';
+import { getTextOutputValue } from '../../../client/datascience/notebook/helpers/helpers';
 import { INotebookKernelProvider } from '../../../client/datascience/notebook/types';
 import { IExtensionTestApi } from '../../common';
 import { initialize } from '../../initialize';
@@ -135,7 +136,7 @@ suite('Notebook Editor tests', () => {
 
         // Wait till execution count changes and status is success.
         await waitForExecutionCompletedSuccessfully(cell);
-        const originalSysPath = (cell.outputs[0].outputs.find(opit => opit.mime === 'text/plain')?.value as any).toString();
+        const originalSysPath = getTextOutputValue(cell.outputs[0]);
 
         // Switch kernels to the other kernel
         const kernels = await kernelProvider.provideKernels(
@@ -166,7 +167,7 @@ suite('Notebook Editor tests', () => {
         assert.strictEqual(cell?.metadata.runState, vscodeNotebookEnums.NotebookCellRunState.Success);
 
         if (anotherKernel && preferredKernel) {
-            const newSysPath = (cell.outputs[0].outputs.find(opit => opit.mime === 'text/plain')?.value as any).toString();
+            const newSysPath = getTextOutputValue(cell.outputs[0]);
             assert.notEqual(
                 newSysPath,
                 originalSysPath,

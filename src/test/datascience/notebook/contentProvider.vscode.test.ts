@@ -203,8 +203,6 @@ suite('DataScience - VSCode Notebook - (Open)', function () {
         // assert.equal(model.getContent(), originalJsonStr, 'Untrusted notebook json not identical');
 
         model.trust();
-        const newJ = JSON.parse(model.getContent());
-        console.log(newJ);
         // , originalJson, 'Trusted notebook json content is invalid');
         assert.deepEqual(JSON.parse(model.getContent()), originalJson, 'Trusted notebook json content is invalid');
         // https://github.com/microsoft/vscode-python/issues/13155

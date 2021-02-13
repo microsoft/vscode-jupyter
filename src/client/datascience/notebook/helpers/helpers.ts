@@ -784,7 +784,13 @@ export function translateErrorOutput(output: nbformat.IError): NotebookCellOutpu
 export function hasErrorOutput(output: NotebookCellOutput) {
     return output.outputs.some((item) => item.mime === 'application/x.notebook.error-traceback');
 }
-
+export function getTextOutputValue(output: NotebookCellOutput): string {
+    return (
+        (output.outputs.find((opit) => opit.mime === 'application/x.notebook.stream' || opit.mime === 'text/plain')
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            ?.value as any) || ''
+    );
+}
 export function translateCellErrorOutput(output: NotebookCellOutput): nbformat.IError {
     // it should have at least one output item
     const firstItem = output.outputs[0];
