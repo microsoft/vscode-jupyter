@@ -15,6 +15,7 @@ import {
     Uri,
     WorkspaceEdit
 } from 'vscode';
+import { BannerType } from '../datascience/dataScienceSurveyBanner';
 import { LogLevel } from '../logging/levels';
 import { CommandsWithoutArgs } from './application/commands';
 import { Experiments } from './experiments/groups';
@@ -325,8 +326,8 @@ export interface IBrowserService {
 
 export const IJupyterExtensionBanner = Symbol('IJupyterExtensionBanner');
 export interface IJupyterExtensionBanner {
-    enabled: boolean;
-    showBanner(): Promise<void>;
+    isEnabled(type: BannerType): boolean;
+    showBanner(type: BannerType): Promise<void>;
 }
 export const BANNER_NAME_DS_SURVEY: string = 'DSSurveyBanner';
 export const BANNER_NAME_INTERACTIVE_SHIFTENTER: string = 'InteractiveShiftEnterBanner';

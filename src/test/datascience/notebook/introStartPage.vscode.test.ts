@@ -9,7 +9,6 @@ import { Memento } from 'vscode';
 import { IApplicationEnvironment, ICommandManager } from '../../../client/common/application/types';
 import { traceInfo } from '../../../client/common/logger';
 import { GLOBAL_MEMENTO, IDisposable, IExtensionContext, IMemento } from '../../../client/common/types';
-import { InsidersNotebookSurveyStateKeys } from '../../../client/datascience/insidersNativeNotebookSurveyBanner';
 import {
     IntroduceNativeNotebookDisplayed,
     IntroduceNativeNotebookStartPage
@@ -18,6 +17,7 @@ import { INotebookEditorProvider, ITrustService } from '../../../client/datascie
 import { IExtensionTestApi, sleep, waitForCondition } from '../../common';
 import { initialize } from '../../initialize';
 import { canRunNotebookTests, closeNotebooksAndCleanUpAfterTests } from './helper';
+import { InsidersNotebookSurveyStateKeys } from '../../../client/datascience/dataScienceSurveyBanner';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this,  */
 suite('DataScience - VSCode Notebook - Native Notebook Experiment', function () {
