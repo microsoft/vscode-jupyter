@@ -21,7 +21,7 @@
     border: none;
     border-radius: 5px;
     cursor: pointer;
-    margin:8px 4px;
+    margin: 8px 4px;
     margin-right: 18px;
 }
 
@@ -35,7 +35,7 @@
 }
 
 .react-grid-cell {
-    padding: 0px 4px;
+    padding: 4px;
     background-color: var(--vscode-editor-background);
     color: var(--vscode-editor-foreground);
     border-bottom-color: var(--vscode-editor-inactiveSelectionBackground);
@@ -45,7 +45,7 @@
 }
 
 .react-grid-cell.active {
-    background-color: var(--vscode-button-background);
+    background-color: var(--vscode-list-focusBackground);
     color: var(--vscode-button-foreground);
 }
 
@@ -85,21 +85,20 @@
 }
 
 .slick-row:hover > .react-grid-cell {
-    background-color: var(--override-selection-background, var(--vscode-editor-selectionBackground));
+    background-color: var(--override-selection-background, var(--vscode-list-hoverBackground));
 }
 
 /* Slick.Editors.Text */
 input.editor-text {
     width: 100%;
     height: 100%;
-    border: 0 none;
+    box-sizing: border-box;
+    border: 2px var(--vscode-input-border);
+    padding: 2px;
     margin: 0;
     outline: 0 none;
-    padding: 0;
-    border-bottom-color: var(--vscode-editor-inactiveSelectionBackground);
-    border-right-color: var(--vscode-editor-inactiveSelectionBackground);
-    border-right-style: solid;
-    background-color: var(--vscode-button-background);
+    border-style: solid;
+    background-color: var(--vscode-list-focusBackground);
     color: var(--vscode-button-foreground);
     text-align: left;
     /* input does not inherit font from body */
@@ -111,6 +110,9 @@ input.editor-text {
 .slick-cell.editable {
     border-color: none;
     border-style: none;
+    border: 0;
+    padding: 0;
+    margin: 0;
 }
 
 input.slice-data {

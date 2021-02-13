@@ -371,13 +371,13 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
     private getAppropiateRowHeight(fontSize: number): number {
         switch (true) {
             case fontSize < 15:
-                return fontSize + 4;
+                return fontSize + 4 + 8; // +8 for padding
             case fontSize < 20:
-                return fontSize + 8;
+                return fontSize + 8 + 8; // +8 for padding
             case fontSize < 30:
-                return fontSize + 10;
+                return fontSize + 10 + 8; // +8 for padding
             default:
-                return fontSize + 12;
+                return fontSize + 12 + 8; // +8 for padding
         }
     }
 
@@ -617,7 +617,6 @@ function readonlyCellEditor(this: any, args: any) {
             .appendTo(args.container)
             .on('keydown.nav', handleKeyDown)
             .focus()
-            .select();
     };
 
     this.destroy = function destroy() {
@@ -636,7 +635,6 @@ function readonlyCellEditor(this: any, args: any) {
         defaultValue = generateDisplayValue(item[args.column.field]);
         $input.val(defaultValue);
         $input[0].defaultValue = defaultValue;
-        $input.select();
     };
 
     this.applyValue = function applyValue() {
