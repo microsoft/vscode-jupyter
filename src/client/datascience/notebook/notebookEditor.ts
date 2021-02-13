@@ -95,7 +95,7 @@ export class NotebookEditor implements INotebookEditor {
                 }
             })
         );
-        disposables.push(model.onDidDispose(this._closed.fire.bind(this._closed, this)));
+        disposables.push(model.onDidDispose(this.dispose.bind(this)));
     }
     @captureTelemetry(Telemetry.SyncAllCells)
     public async syncAllCells(): Promise<void> {
