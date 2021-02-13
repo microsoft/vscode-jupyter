@@ -1,6 +1,6 @@
 # Changelog
 
-## 2021.2.1 (16 February 2021)
+## 2021.2.0 (17 February 2021)
 
 ### Enhancements
 
@@ -101,6 +101,8 @@
    ([#4713](https://github.com/Microsoft/vscode-jupyter/issues/4713))
 1. If .NET interactive is installed, make sure to use the new notebook editor.
    ([#4771](https://github.com/Microsoft/vscode-jupyter/issues/4771))
+1. Fixes problem with duplicate jupyter kernels being generated.
+   ([#4720](https://github.com/Microsoft/vscode-jupyter/issues/4720))
 
 ### Code Health
 
