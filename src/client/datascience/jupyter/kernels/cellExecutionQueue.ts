@@ -126,10 +126,7 @@ export class CellExecutionQueue {
             }
 
             // If a cell has failed the get out.
-            if (
-                this.cancelledOrCompletedWithErrors ||
-                executionResult === NotebookCellRunState.Error
-            ) {
+            if (this.cancelledOrCompletedWithErrors || executionResult === NotebookCellRunState.Error) {
                 this.cancelledOrCompletedWithErrors = true;
                 traceInfo(`Cancel all remaining cells ${this.cancelledOrCompletedWithErrors} || ${executionResult}`);
                 await this.cancel();

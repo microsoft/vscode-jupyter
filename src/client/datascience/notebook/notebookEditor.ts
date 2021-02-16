@@ -3,7 +3,17 @@
 
 'use strict';
 
-import { ConfigurationTarget, Event, EventEmitter, NotebookCell, NotebookCellKind, NotebookDocument, ProgressLocation, Uri, WebviewPanel } from 'vscode';
+import {
+    ConfigurationTarget,
+    Event,
+    EventEmitter,
+    NotebookCell,
+    NotebookCellKind,
+    NotebookDocument,
+    ProgressLocation,
+    Uri,
+    WebviewPanel
+} from 'vscode';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import { traceError } from '../../common/logger';
 import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../common/types';

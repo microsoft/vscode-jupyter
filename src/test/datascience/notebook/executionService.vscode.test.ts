@@ -343,7 +343,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
                 assertHasTextOutputInVSCode(cell, 'bar', 0, false) &&
                 assertHasTextOutputInVSCode(cell, 'bar', 1, false),
             15_000,
-             'Incorrect output'
+            'Incorrect output'
         );
 
         await waitForExecutionCompletedSuccessfully(cell);
