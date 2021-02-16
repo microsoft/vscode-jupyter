@@ -22,13 +22,15 @@ jobs:
   publish:
     name: Publish to marketplace
     runs-on: ubuntu-latest
-    if: github.repository == 'microsoft/vscode-jupyter' && startsWith(github.ref, 'refs/main')
+    if: github.repository == 'microsoft/vscode-jupyter'
     env:
       BLOB_CONTAINER_NAME: extension-builds-jupyter
 
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+        with:
+          ref: main
 
       - name: Use Python ${{env.PYTHON_VERSION}}
         uses: actions/setup-python@v2
