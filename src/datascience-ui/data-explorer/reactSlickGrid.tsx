@@ -540,7 +540,14 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
     }
 
     private renderFilterCell = (_e: Slick.EventData, args: Slick.OnHeaderRowCellRenderedEventArgs<Slick.SlickData>) => {
-        ReactDOM.render(<ReactSlickGridFilterBox column={args.column} onChange={this.filterChanged} fontSize={this.state.fontSize} />, args.node);
+        ReactDOM.render(
+            <ReactSlickGridFilterBox
+                column={args.column}
+                onChange={this.filterChanged}
+                fontSize={this.state.fontSize}
+            />,
+            args.node
+        );
     };
 
     private compareElements(a: any, b: any, col?: Slick.Column<Slick.SlickData>): number {
@@ -585,7 +592,7 @@ function readonlyCellEditor(this: any, args: any) {
         $input = slickgridJQ("<input type=text class='editor-text'/>")
             .appendTo(args.container)
             .on('keydown.nav', handleKeyDown)
-            .focus()
+            .focus();
     };
 
     this.destroy = function destroy() {
