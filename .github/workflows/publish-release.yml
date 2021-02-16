@@ -52,7 +52,7 @@ jobs:
         run: az storage blob download --file ${{env.VSIX_NAME_TO_PUBLISH}} --account-name pvsc --container-name ${{env.BLOB_CONTAINER_NAME}} --name ${{ env.VSIX_NAME_UPLOADED_TO_BLOB }}
 
       - name: Publish
-        run: vsce_ publish --packagePath ${{env.VSIX_NAME_TO_PUBLISH}} --pat ${{secrets.VSCE_TOKEN}} --noVerify
+        run: vsce publish --packagePath ${{env.VSIX_NAME_TO_PUBLISH}} --pat ${{secrets.VSCE_TOKEN}} --noVerify
 
       - name: Extract Extension
         shell: bash
