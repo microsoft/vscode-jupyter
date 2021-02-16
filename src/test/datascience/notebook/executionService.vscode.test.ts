@@ -343,12 +343,12 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
                 assertHasTextOutputInVSCode(cell, 'bar', 0, false) &&
                 assertHasTextOutputInVSCode(cell, 'bar', 1, false),
             15_000,
-            'Incorrect output'
+             'Incorrect output'
         );
 
         await waitForExecutionCompletedSuccessfully(cell);
     });
-    test('Testing streamed outputxxxx', async () => {
+    test('Testing streamed output', async () => {
         // Assume you are executing a cell that prints numbers 1-100.
         // When printing number 50, you click clear.
         // Cell output should now start printing output from 51 onwards, & not 1.
