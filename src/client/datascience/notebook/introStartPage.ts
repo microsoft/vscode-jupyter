@@ -14,7 +14,7 @@ import { CommandSource } from '../../testing/common/constants';
 import { Commands } from '../constants';
 import { ITrustService } from '../types';
 import { swallowExceptions } from '../../common/utils/decorators';
-import { InsidersNotebookSurveyStateKeys } from '../insidersNativeNotebookSurveyBanner';
+import { InsidersNotebookSurveyStateKeys } from '../dataScienceSurveyBanner';
 
 export const IntroduceNativeNotebookDisplayed = 'JVSC_INTRO_NATIVE_NB_DISPLAYED';
 
