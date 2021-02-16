@@ -1,9 +1,9 @@
 name: Publish For Insiders
 
 on:
-  schedule:
+#  schedule:
     # Every day at midnight
-    - cron:  '0 0 * * *'
+#    - cron:  '0 0 * * *'
   workflow_dispatch:
     inputs:
       confirmation:
@@ -67,5 +67,5 @@ jobs:
           python -c "import os; os.rename('${{env.VSIX_ROOT_NAME}}.zip', '${{env.VSIX_NAME_TO_PUBLISH}}')"
 
       - name: Publish
-        run: vsce_ publish --packagePath ${{env.VSIX_NAME_TO_PUBLISH}} --pat ${{secrets.VSCE_TOKEN}} --noVerify
+        run: vsce publish --packagePath ${{env.VSIX_NAME_TO_PUBLISH}} --pat ${{secrets.VSCE_TOKEN}} --noVerify
 
