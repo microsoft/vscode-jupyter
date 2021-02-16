@@ -15,6 +15,7 @@ import {
     Uri,
     WorkspaceEdit
 } from 'vscode';
+import { IExtensionSingleActivationService } from '../activation/types';
 import { BannerType } from '../datascience/dataScienceSurveyBanner';
 import { LogLevel } from '../logging/levels';
 import { CommandsWithoutArgs } from './application/commands';
@@ -329,8 +330,10 @@ export interface IJupyterExtensionBanner {
     isEnabled(type: BannerType): boolean;
     showBanner(type: BannerType): Promise<void>;
 }
-export const BANNER_NAME_DS_SURVEY: string = 'DSSurveyBanner';
 export const BANNER_NAME_INTERACTIVE_SHIFTENTER: string = 'InteractiveShiftEnterBanner';
+
+export const ISurveyBanner = Symbol('ISurveyBanner');
+export interface ISurveyBanner extends IExtensionSingleActivationService, IJupyterExtensionBanner {}
 
 export type DeprecatedSettingAndValue = {
     setting: string;
