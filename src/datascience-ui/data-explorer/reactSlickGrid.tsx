@@ -304,14 +304,6 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
             <div className="outer-container">
                 <div style={{ display: 'flex', justifyContent: 'start', flexDirection: 'row' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-around' }}>
-                        <button
-                            className="react-grid-filter-button"
-                            tabIndex={0}
-                            title={this.props.filterRowsTooltip}
-                            onClick={this.clickFilterButton}
-                        >
-                            <span>{this.props.filterRowsText}</span>
-                        </button>
                         {this.renderTemporarySliceIndicator()}
                     </div>
                 </div>
@@ -546,11 +538,6 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         }
         return true;
     }
-
-    private clickFilterButton = (e: React.SyntheticEvent) => {
-        e.preventDefault();
-        this.setState({ showingFilters: !this.state.showingFilters });
-    };
 
     private renderFilterCell = (_e: Slick.EventData, args: Slick.OnHeaderRowCellRenderedEventArgs<Slick.SlickData>) => {
         ReactDOM.render(<ReactSlickGridFilterBox column={args.column} onChange={this.filterChanged} fontSize={this.state.fontSize} />, args.node);
