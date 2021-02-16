@@ -66,7 +66,6 @@ module.exports = {
         'src/test/testLogger.ts',
         'src/test/textUtils.ts',
         'src/test/unittests.ts',
-        'src/test/vscode-mock.ts',
         'src/test/utils/interpreters.ts',
         'src/test/utils/fs.ts',
         'src/test/api.functional.test.ts',
