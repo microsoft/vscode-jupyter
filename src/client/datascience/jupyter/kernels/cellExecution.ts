@@ -660,8 +660,6 @@ export class CellExecution {
             // Basically have one output for stderr & a separate output for stdout.
             // If we output stderr first, then stdout & then stderr, we should append the new stderr to the previous stderr output.
             // Might already have a stream message. If so, just add on to it.
-            // We use Rich output for text streams (not CellStreamOutput, known VSC Issues).
-            // https://github.com/microsoft/vscode-python/issues/14156
             const existing = exitingCellOutput.find((item) => item && isStreamOutput(item, msg.content.name));
             if (existing) {
                 edit.appendNotebookCellOutputItems(
