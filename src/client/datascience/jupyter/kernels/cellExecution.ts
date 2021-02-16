@@ -34,6 +34,7 @@ import {
 import {
     cellOutputToVSCCellOutput,
     clearCellForExecution,
+    createIOutputFromCellOutputs,
     getCellStatusMessageBasedOnFirstCellErrorOutput,
     hasErrorOutput,
     isStreamOutput,
@@ -645,27 +646,53 @@ export class CellExecution {
                 clearState.update(false);
             }
 
-            // Create a new output
-            const output = cellOutputToVSCCellOutput({
-                output_type: 'stream',
-                name: msg.content.name,
-                text: formatStreamText(concatMultilineString(msg.content.text))
-            });
-
             // Ensure we append to previous output, only if the streams as the same.
             // Possible we have stderr first, then later we get output from stdout.
             // Basically have one output for stderr & a separate output for stdout.
             // If we output stderr first, then stdout & then stderr, we should append the new stderr to the previous stderr output.
             // Might already have a stream message. If so, just add on to it.
-            const existing = exitingCellOutput.find((item) => item && isStreamOutput(item, msg.content.name));
-            if (existing) {
-                edit.appendNotebookCellOutputItems(
-                    this.editor.document.uri,
-                    this.cell.index,
-                    existing.id,
-                    output.outputs
-                );
+            const existingItemToBeReplaced = exitingCellOutput.find(
+                (item) => item && isStreamOutput(item, msg.content.name)
+            );
+            // Get the jupyter output from the vs code output (so we can concatenate the text ourselves).
+            const outputs = existingItemToBeReplaced ? createIOutputFromCellOutputs([existingItemToBeReplaced]) : [];
+            if (existingItemToBeReplaced && outputs.length === 1 && nbformat.isStream(outputs[0])) {
+                let existingOutputText: string = concatMultilineString((outputs[0] as nbformat.IStream).text);
+                let newContent = msg.content.text;
+                // Look for the ansi code `<char27>[A`. (this means move up)
+                // Not going to support `[2A` (not for now).
+                const moveUpCode = `${String.fromCharCode(27)}[A`;
+                if (msg.content.text.startsWith(moveUpCode)) {
+                    // Split message by lines & strip out the last n lines (where n = number of lines to move cursor up).
+                    const existingOutputLines = existingOutputText.splitLines({
+                        trim: false,
+                        removeEmptyEntries: false
+                    });
+                    if (existingOutputLines.length) {
+                        existingOutputLines.pop();
+                    }
+                    existingOutputText = existingOutputLines.join('\n');
+                    newContent = newContent.substring(moveUpCode.length);
+                }
+                // Create a new output item with the concatenated string.
+                const output = cellOutputToVSCCellOutput({
+                    output_type: 'stream',
+                    name: msg.content.name,
+                    text: formatStreamText(concatMultilineString(`${existingOutputText}${newContent}`))
+                });
+
+                edit.replaceNotebookCellOutput(this.editor.document.uri, this.cell.index, [
+                    // Replace the existing output with a new output item (with concatenated strings...)
+                    ...exitingCellOutput.map((item) => (item === existingItemToBeReplaced ? output : item))
+                ]);
             } else {
+                // Create a new output
+                const output = cellOutputToVSCCellOutput({
+                    output_type: 'stream',
+                    name: msg.content.name,
+                    text: formatStreamText(concatMultilineString(msg.content.text))
+                });
+
                 edit.replaceNotebookCellOutput(this.editor.document.uri, this.cell.index, [
                     ...exitingCellOutput,
                     output

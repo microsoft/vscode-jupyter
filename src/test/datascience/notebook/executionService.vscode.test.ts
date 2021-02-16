@@ -15,7 +15,7 @@ import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { traceInfo } from '../../../client/common/logger';
 import { IDisposable, Product } from '../../../client/common/types';
 import { INotebookEditorProvider } from '../../../client/datascience/types';
-import { createEventHandler, IExtensionTestApi, sleep, waitForCondition } from '../../common';
+import { createEventHandler, IExtensionTestApi, waitForCondition } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../initialize';
 import {
     assertHasTextOutputInVSCode,
@@ -364,8 +364,6 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
 
         await runAllCellsInActiveNotebook();
-        await sleep(10_000);
-
         await waitForCondition(
             async () =>
                 assertHasTextOutputInVSCode(cell, 'Start', 0, false) &&
