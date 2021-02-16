@@ -21,7 +21,8 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         DataScienceSurveyBanner,
-        BANNER_NAME_DS_SURVEY
+        BANNER_NAME_DS_SURVEY,
+        [IJupyterExtensionBanner]
     );
     serviceManager.addSingleton<IJupyterExtensionBanner>(
         IJupyterExtensionBanner,
