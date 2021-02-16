@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { inject, injectable, named } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { Event, EventEmitter, UIKind } from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IApplicationEnvironment, IApplicationShell, IVSCodeNotebook } from '../common/application/types';
@@ -12,13 +12,13 @@ import { Experiments } from '../common/experiments/groups';
 import '../common/extensions';
 import { traceError } from '../common/logger';
 import {
-    BANNER_NAME_DS_SURVEY,
     IBrowserService,
     IDisposableRegistry,
     IExperimentService,
     IJupyterExtensionBanner,
     IPersistentState,
-    IPersistentStateFactory
+    IPersistentStateFactory,
+    ISurveyBanner
 } from '../common/types';
 import * as localize from '../common/utils/localize';
 import { noop } from '../common/utils/misc';
@@ -65,9 +65,8 @@ export class DataScienceSurveyBannerLogger implements IInteractiveWindowListener
     private postEmitter = new EventEmitter<{ message: string; payload: any }>();
     constructor(
         @inject(IPersistentStateFactory) private persistentState: IPersistentStateFactory,
-        @inject(IJupyterExtensionBanner)
-        @named(BANNER_NAME_DS_SURVEY)
-        private readonly dataScienceSurveyBanner: IJupyterExtensionBanner
+        @inject(ISurveyBanner)
+        private readonly dataScienceSurveyBanner: ISurveyBanner
     ) {}
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public get postMessage(): Event<{ message: string; payload: any }> {
