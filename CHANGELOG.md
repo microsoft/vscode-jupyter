@@ -25,10 +25,10 @@
    ([#4550](https://github.com/Microsoft/vscode-jupyter/issues/4550))
 1. Improved Tensor tooltips in Python files which have been run in the interactive window.
    ([#302](https://github.com/Microsoft/vscode-jupyter/issues/302))
-1. Add do not show again option to the native notebook insiders survey banner.
-   ([#4658](https://github.com/microsoft/vscode-jupyter/issues/4658))
 1. Minimize number of icons on the notebook toolbar (put the rest in overflow).
    ([#4730](https://github.com/Microsoft/vscode-jupyter/issues/4730))
+1. Add survey for the new Notebooks experience experiment.
+   ([#4726](https://github.com/microsoft/vscode-jupyter/issues/4726))
 
 ### Fixes
 
