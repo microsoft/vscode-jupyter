@@ -34,7 +34,7 @@ import {
     cellOutputToVSCCellOutput,
     clearCellForExecution,
     getCellStatusMessageBasedOnFirstCellErrorOutput,
-    hasErrorOutputs,
+    hasErrorOutput,
     isStreamOutput,
     traceCellMessage,
     updateCellExecutionTimes
@@ -281,7 +281,7 @@ export class CellExecution {
         }
 
         // If there are any errors in the cell, then change status to error.
-        if (hasErrorOutputs(this.cell.outputs)) {
+        if (hasErrorOutput(this.cell.outputs)) {
             runState = vscodeNotebookEnums.NotebookCellRunState.Error;
             statusMessage = getCellStatusMessageBasedOnFirstCellErrorOutput(this.cell.outputs);
         }

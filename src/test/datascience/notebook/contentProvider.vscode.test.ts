@@ -149,7 +149,7 @@ suite('DataScience - VSCode Notebook - (Open)', function () {
         assert.equal(notebook.cells[3].cellKind, CellKind.Code, 'Cell4, type');
         assert.include(notebook.cells[3].document.getText(), 'with Error', 'Cell4, source');
         assert.lengthOf(notebook.cells[3].outputs, 1, 'Cell4, outputs');
-        assert.ok(hasErrorOutput(notebook.cells[3].outputs[0]));
+        assert.isTrue(hasErrorOutput(notebook.cells[3].outputs));
         const nbError = translateCellErrorOutput(notebook.cells[3].outputs[0]);
         assert.equal(nbError.ename, 'SyntaxError', 'Cell4, output');
         assert.equal(nbError.evalue, 'invalid syntax (<ipython-input-1-8b7c24be1ec9>, line 1)', 'Cell3, output');

@@ -40,6 +40,10 @@ import { chainWithPendingUpdates } from './notebookUpdater';
 import { Resource } from '../../../common/types';
 import { IFileSystem } from '../../../common/platform/types';
 
+export enum CellOutputMimeTypes {
+    error = 'application/x.notebook.error-traceback',
+    textStream = 'application/x.notebook.stream'
+}
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 // This is the custom type we are adding into nbformat.IBaseCellMetadata
@@ -336,9 +340,7 @@ function createNotebookCellDataFromCodeCell(
     const cellOutputs: nbformat.IOutput[] = Array.isArray(cell.outputs) ? cell.outputs : [];
     const outputs = createVSCCellOutputsFromOutputs(cellOutputs);
     const runState = vscodeNotebookEnums.NotebookCellRunState.Idle;
-    const hasErrors = outputs.some((output) =>
-        output.outputs.some((opit) => opit.mime === 'application/x.notebook.error-traceback')
-    );
+    const hasErrors = outputs.some((output) => output.outputs.some((opit) => opit.mime === CellOutputMimeTypes.error));
     const hasExecutionCount = typeof cell.execution_count === 'number' && cell.execution_count > 0;
     let statusMessage: string | undefined;
     if (hasExecutionCount && hasErrors) {
@@ -420,7 +422,6 @@ export async function updateCellExecutionTimes(
         traceCellMessage(cell, 'Update run duration');
         edit.replaceNotebookCellMetadata(editor.document.uri, cell.index, {
             ...cell.metadata,
-            // custom: customMetadata,
             lastRunDuration
         });
     });
@@ -568,7 +569,7 @@ function translateDisplayDataOutput(
 function translateStreamOutput(output: nbformat.IStream): NotebookCellOutput {
     return new NotebookCellOutput([
         new NotebookCellOutputItem(
-            'application/x.notebook.stream',
+            CellOutputMimeTypes.textStream,
             concatMultilineString(output.text),
             getOutputMetadata(output)
         )
@@ -580,7 +581,7 @@ export function isStreamOutput(output: NotebookCellOutput, expectedStreamName: s
         return false;
     }
 
-    if (output.outputs.find((opit) => opit.mime !== 'application/x.notebook.stream')) {
+    if (output.outputs.find((opit) => opit.mime !== CellOutputMimeTypes.textStream)) {
         return false;
     }
 
@@ -634,7 +635,13 @@ export type CellOutputMetadata = {
      * Transient data from Jupyter.
      */
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    transient?: any;
+    transient?: {
+        /**
+         * This is used for updating the output in other cells.
+         * We don't know of others properties, but this is definitely used.
+         */
+        display_id?: string;
+    } & any;
     /**
      * Original cell output type
      */
@@ -645,6 +652,18 @@ export type CellOutputMetadata = {
     streamName?: nbformat.StreamType;
     executionCount?: nbformat.IExecuteResult['ExecutionCount'];
 };
+
+export function translateCellErrorOutput(output: NotebookCellOutput): nbformat.IError {
+    // it should have at least one output item
+    const firstItem = output.outputs[0];
+
+    return {
+        output_type: 'error',
+        ename: (firstItem.value as nbformat.IError).ename,
+        evalue: (firstItem.value as nbformat.IError).evalue,
+        traceback: (firstItem.value as nbformat.IError).traceback
+    };
+}
 
 function translateCellDisplayOutput(output: NotebookCellOutput): JupyterOutput | undefined {
     // Each NotebookCellOutputItem will contain all of the metadata associated with the original Jupyter output.
@@ -661,98 +680,87 @@ function translateCellDisplayOutput(output: NotebookCellOutput): JupyterOutput |
 
     let result: JupyterOutput;
     switch (customMetadata.outputType as nbformat.OutputType) {
-        case 'error':
-            {
-                const firstItem = output.outputs[0].value as nbformat.IError;
-                result = {
-                    output_type: 'error',
-                    ename: firstItem.ename,
-                    evalue: firstItem.evalue,
-                    traceback: firstItem.traceback
-                };
-            }
+        case 'error': {
+            result = translateCellErrorOutput(output);
             break;
-        case 'stream':
-            {
-                const outputs = output.outputs
-                    .filter((opit) => opit.mime === 'application/x.notebook.stream')
-                    .map((opit) => opit.value as string | string[])
-                    .reduceRight<string[]>(
-                        (prev, curr) => (Array.isArray(curr) ? prev.concat(...curr) : prev.concat(curr)),
-                        []
-                    );
-                result = {
-                    output_type: 'stream',
-                    name: customMetadata.streamName || '',
-                    text: splitMultilineString(outputs.join(''))
-                };
-            }
+        }
+        case 'stream': {
+            const outputs = output.outputs
+                .filter((opit) => opit.mime === CellOutputMimeTypes.textStream)
+                .map((opit) => opit.value as string | string[])
+                .reduceRight<string[]>(
+                    (prev, curr) => (Array.isArray(curr) ? prev.concat(...curr) : prev.concat(curr)),
+                    []
+                );
+            result = {
+                output_type: 'stream',
+                name: customMetadata.streamName || '',
+                text: splitMultilineString(outputs.join(''))
+            };
             break;
-        case 'display_data':
-            {
-                result = {
-                    output_type: 'display_data',
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    data: output.outputs.reduceRight((prev: any, curr) => {
-                        prev[curr.mime] = curr.value;
-                        return prev;
-                    }, {}),
-                    metadata: customMetadata.metadata || {} // This can never be undefined.
-                };
-            }
+        }
+        case 'display_data': {
+            result = {
+                output_type: 'display_data',
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                data: output.outputs.reduceRight((prev: any, curr) => {
+                    prev[curr.mime] = curr.value;
+                    return prev;
+                }, {}),
+                metadata: customMetadata.metadata || {} // This can never be undefined.
+            };
             break;
-        case 'execute_result':
-            {
-                result = {
-                    output_type: 'execute_result',
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    data: output.outputs.reduceRight((prev: any, curr) => {
-                        prev[curr.mime] = curr.value;
-                        return prev;
-                    }, {}),
-                    metadata: customMetadata.metadata || {}, // This can never be undefined.
-                    execution_count: customMetadata.executionCount ?? null // This can never be undefined, only a number or `null`.
-                };
-            }
+        }
+        case 'execute_result': {
+            result = {
+                output_type: 'execute_result',
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                data: output.outputs.reduceRight((prev: any, curr) => {
+                    prev[curr.mime] = curr.value;
+                    return prev;
+                }, {}),
+                metadata: customMetadata.metadata || {}, // This can never be undefined.
+                execution_count: customMetadata.executionCount ?? null // This can never be undefined, only a number or `null`.
+            };
             break;
-        case 'update_display_data':
-            {
-                result = {
-                    output_type: 'update_display_data',
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    data: output.outputs.reduceRight((prev: any, curr) => {
-                        prev[curr.mime] = curr.value;
-                        return prev;
-                    }, {}),
-                    metadata: customMetadata.metadata || {} // This can never be undefined.
-                };
-            }
+        }
+        case 'update_display_data': {
+            result = {
+                output_type: 'update_display_data',
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                data: output.outputs.reduceRight((prev: any, curr) => {
+                    prev[curr.mime] = curr.value;
+                    return prev;
+                }, {}),
+                metadata: customMetadata.metadata || {} // This can never be undefined.
+            };
             break;
-        default:
-            {
-                const outputType = customMetadata.outputType;
-                sendTelemetryEvent(Telemetry.VSCNotebookCellTranslationFailed, undefined, {
-                    isErrorOutput: outputType === 'error'
-                });
-                const unknownOutput: nbformat.IUnrecognizedOutput = {
-                    output_type: outputType
-                };
-                if (customMetadata.metadata) {
-                    unknownOutput.metadata = customMetadata.metadata;
-                }
-                if (output.outputs.length > 0) {
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    unknownOutput.data = output.outputs.reduceRight((prev: any, curr) => {
-                        prev[curr.mime] = curr.value;
-                        return prev;
-                    }, {});
-                }
-                result = unknownOutput;
+        }
+        default: {
+            const outputType = customMetadata.outputType;
+            sendTelemetryEvent(Telemetry.VSCNotebookCellTranslationFailed, undefined, {
+                isErrorOutput: outputType === 'error'
+            });
+            const unknownOutput: nbformat.IUnrecognizedOutput = {
+                output_type: outputType
+            };
+            if (customMetadata.metadata) {
+                unknownOutput.metadata = customMetadata.metadata;
             }
+            if (output.outputs.length > 0) {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                unknownOutput.data = output.outputs.reduceRight((prev: any, curr) => {
+                    prev[curr.mime] = curr.value;
+                    return prev;
+                }, {});
+            }
+            result = unknownOutput;
             break;
+        }
     }
 
     // Account for transient data as well
+    // `transient.display_id` is used to update cell output in other cells, at least thats one use case we know of.
     if (result && customMetadata && customMetadata.transient) {
         result.transient = customMetadata.transient;
     }
@@ -776,7 +784,7 @@ export function translateErrorOutput(output: nbformat.IError): NotebookCellOutpu
 
     return new NotebookCellOutput([
         new NotebookCellOutputItem(
-            'application/x.notebook.error-traceback',
+            CellOutputMimeTypes.error,
             {
                 ename: output.ename,
                 evalue: output.evalue,
@@ -787,27 +795,12 @@ export function translateErrorOutput(output: nbformat.IError): NotebookCellOutpu
     ]);
 }
 
-export function hasErrorOutput(output: NotebookCellOutput) {
-    return output.outputs.some((item) => item.mime === 'application/x.notebook.error-traceback');
-}
 export function getTextOutputValue(output: NotebookCellOutput): string {
     return (
-        (output.outputs.find((opit) => opit.mime === 'application/x.notebook.stream' || opit.mime === 'text/plain')
+        (output.outputs.find((opit) => opit.mime === CellOutputMimeTypes.textStream || opit.mime === 'text/plain')
             ?.value as any) || ''
     );
 }
-export function translateCellErrorOutput(output: NotebookCellOutput): nbformat.IError {
-    // it should have at least one output item
-    const firstItem = output.outputs[0];
-
-    return {
-        output_type: 'error',
-        ename: (firstItem.value as nbformat.IError).ename,
-        evalue: (firstItem.value as nbformat.IError).evalue,
-        traceback: (firstItem.value as nbformat.IError).traceback
-    };
-}
-
 export function getCellStatusMessageBasedOnFirstErrorOutput(outputs?: nbformat.IOutput[]): string {
     if (!Array.isArray(outputs)) {
         return '';
@@ -821,9 +814,9 @@ export function getCellStatusMessageBasedOnFirstErrorOutput(outputs?: nbformat.I
     return `${errorOutput.ename}${errorOutput.evalue ? ': ' : ''}${errorOutput.evalue}`;
 }
 
-export function hasErrorOutputs(outputs: readonly NotebookCellOutput[]) {
+export function hasErrorOutput(outputs: readonly NotebookCellOutput[]) {
     const errorOutput = outputs.find(
-        (op) => op.outputs.length && !op.outputs.some((opit) => opit.mime !== 'application/x.notebook.error-traceback')
+        (op) => op.outputs.length && !op.outputs.some((opit) => opit.mime !== CellOutputMimeTypes.error)
     );
 
     return !!errorOutput;
@@ -837,7 +830,7 @@ export function getCellStatusMessageBasedOnFirstCellErrorOutput(outputs?: readon
     const errorOutput = outputs.find(
         (op) =>
             op.outputs.length &&
-            !op.outputs.some((opit: NotebookCellOutputItem) => opit.mime !== 'application/x.notebook.error-traceback')
+            !op.outputs.some((opit: NotebookCellOutputItem) => opit.mime !== CellOutputMimeTypes.error)
     );
 
     if (!errorOutput) {

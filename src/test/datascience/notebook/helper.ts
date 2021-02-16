@@ -39,7 +39,11 @@ import {
     LastSavedNotebookCellLanguage,
     NotebookCellLanguageService
 } from '../../../client/datascience/notebook/defaultCellLanguageService';
-import { getTextOutputValue, isJupyterKernel } from '../../../client/datascience/notebook/helpers/helpers';
+import {
+    getTextOutputValue,
+    hasErrorOutput,
+    isJupyterKernel
+} from '../../../client/datascience/notebook/helpers/helpers';
 import { chainWithPendingUpdates } from '../../../client/datascience/notebook/helpers/notebookUpdater';
 import { VSCodeNotebookKernelMetadata } from '../../../client/datascience/notebook/kernelWithMetadata';
 import { NotebookEditor } from '../../../client/datascience/notebook/notebookEditor';
@@ -520,7 +524,6 @@ function assertHasExecutionCompletedWithErrors(cell: NotebookCell) {
 export function assertHasTextOutputInVSCode(cell: NotebookCell, text: string, index: number = 0, isExactMatch = true) {
     const cellOutputs = cell.outputs;
     assert.ok(cellOutputs.length, 'No output');
-    // assert.equal(cellOutputs[index].outputKind, vscodeNotebookEnums.CellOutputKind.Rich, 'Incorrect output kind');
     const outputText = getTextOutputValue(cellOutputs[index]).trim();
     if (isExactMatch) {
         assert.equal(outputText, text, 'Incorrect output');
@@ -545,7 +548,6 @@ export async function waitForTextOutputInVSCode(
 export function assertNotHasTextOutputInVSCode(cell: NotebookCell, text: string, index: number, isExactMatch = true) {
     const cellOutputs = cell.outputs;
     assert.ok(cellOutputs, 'No output');
-    // assert.equal(cellOutputs[index].outputKind, vscodeNotebookEnums.CellOutputKind.Rich, 'Incorrect output kind');
     const outputText = getTextOutputValue(cellOutputs[index]).trim();
     if (isExactMatch) {
         assert.notEqual(outputText, text, 'Incorrect output');
@@ -569,17 +571,8 @@ export function assertVSCCellStateIsUndefinedOrIdle(cell: NotebookCell) {
     assert.equal(cell.metadata.runState, vscodeNotebookEnums.NotebookCellRunState.Idle);
     return true;
 }
-export function assertVSCCellHasErrors(cell: NotebookCell) {
-    assert.equal(cell.metadata.runState, vscodeNotebookEnums.NotebookCellRunState.Error);
-    return true;
-}
 export function assertVSCCellHasErrorOutput(cell: NotebookCell) {
-    assert.ok(
-        cell.outputs.filter((output) =>
-            output.outputs.some((opit) => opit.mime === 'application/x.notebook.error-traceback')
-        ).length,
-        'No error output in cell'
-    );
+    assert.isTrue(hasErrorOutput(cell.outputs), 'No error output in cell');
     return true;
 }
 
@@ -595,7 +588,6 @@ export async function saveActiveNotebook(disposables: IDisposable[]) {
         await waitForCondition(async () => savedEvent.all.some((e) => e.kind === 'save'), 5_000, 'Not saved');
     }
 }
-
 export function createNotebookModel(
     trusted: boolean,
     uri: Uri,
@@ -643,7 +635,6 @@ export async function runCell(cell: NotebookCell) {
     if (!vscodeNotebook.activeNotebookEditor || !vscodeNotebook.activeNotebookEditor.kernel) {
         throw new Error('No notebook or kernel');
     }
-    // Execute cells (it should throw an error).
     vscodeNotebook.activeNotebookEditor.kernel.executeCell(cell.notebook, cell);
 }
 export async function runAllCellsInActiveNotebook() {
