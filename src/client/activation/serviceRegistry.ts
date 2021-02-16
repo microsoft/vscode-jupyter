@@ -18,12 +18,12 @@ export function registerTypes(serviceManager: IServiceManager) {
         IExtensionActivationService,
         MigrateDataScienceSettingsService
     );
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
+    serviceManager.addSingleton<IJupyterExtensionBanner>(
+        IJupyterExtensionBanner,
         DataScienceSurveyBanner,
-        BANNER_NAME_DS_SURVEY,
-        [IJupyterExtensionBanner]
+        BANNER_NAME_DS_SURVEY
     );
+    serviceManager.addBinding(IJupyterExtensionBanner, IExtensionSingleActivationService);
     serviceManager.addSingleton<IJupyterExtensionBanner>(
         IJupyterExtensionBanner,
         InteractiveShiftEnterBanner,
