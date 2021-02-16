@@ -1,8 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { workspace, WorkspaceEdit } from 'vscode';
-import { NotebookDocument, NotebookEditor } from '../../../../../typings/vscode-proposed';
+import { NotebookDocument, NotebookEditor, workspace, WorkspaceEdit, window } from 'vscode';
 import { createDeferred } from '../../../common/utils/async';
 import { noop } from '../../../common/utils/misc';
 
@@ -47,9 +46,7 @@ export async function chainWithPendingUpdates(
 }
 
 export function clearPendingChainedUpdatesForTests() {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-require-imports
-    const vsc = require('vscode') as any;
-    const editor: NotebookEditor | undefined = vsc.notebook.activeNotebookEditor;
+    const editor: NotebookEditor | undefined = window.activeNotebookEditor;
     if (editor?.document) {
         pendingCellUpdates.delete(editor.document);
     }

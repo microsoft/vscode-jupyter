@@ -4,8 +4,10 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { CancellationToken, Uri } from 'vscode';
-import type {
+import {
+    CancellationToken,
+    NotebookCellKind,
+    Uri,
     NotebookCommunication,
     NotebookContentProvider as VSCNotebookContentProvider,
     NotebookData,
@@ -13,7 +15,7 @@ import type {
     NotebookDocumentBackup,
     NotebookDocumentBackupContext,
     NotebookDocumentOpenContext
-} from '../../../../types/vscode-proposed';
+} from 'vscode';
 import { IVSCodeNotebook } from '../../common/application/types';
 import { MARKDOWN_LANGUAGE } from '../../common/constants';
 import { createDeferred, Deferred } from '../../common/utils/async';
@@ -24,8 +26,6 @@ import { INotebookStorageProvider } from '../notebookStorage/notebookStorageProv
 import { VSCodeNotebookModel } from '../notebookStorage/vscNotebookModel';
 import { INotebookModel } from '../types';
 import { NotebookEditorCompatibilitySupport } from './notebookEditorCompatibilitySupport';
-// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
-const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 /**
  * This class is responsible for reading a notebook file (ipynb or other files) and returning VS Code with the NotebookData.
  * Its up to extension authors to read the files and return it in a format that VSCode understands.
@@ -62,14 +62,13 @@ export class NotebookContentProvider implements VSCNotebookContentProvider {
             return {
                 cells: [
                     {
-                        cellKind: vscodeNotebookEnums.CellKind.Markdown,
+                        cellKind: NotebookCellKind.Markdown,
                         language: MARKDOWN_LANGUAGE,
                         source: `# ${DataScience.usingPreviewNotebookWithOtherNotebookWarning()}`,
                         metadata: { editable: false, runnable: false },
                         outputs: []
                     }
                 ],
-                languages: [],
                 metadata: { cellEditable: false, editable: false, runnable: false }
             };
         }

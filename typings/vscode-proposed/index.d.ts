@@ -13,7 +13,10 @@ import {
     ProviderResult,
     WorkspaceEditEntryMetadata,
     Command,
-    AccessibilityInformation
+    AccessibilityInformation,
+    Position,
+    ThemableDecorationAttachmentRenderOptions,
+    ThemeColor
 } from 'vscode';
 
 // Copy nb section from https://github.com/microsoft/vscode/blob/master/src/vs/vscode.proposed.d.ts.
@@ -37,7 +40,7 @@ export interface DebugProtocolVariable {
 //#endregion
 //#region https://github.com/microsoft/vscode/issues/106744, Notebooks (misc)
 
-export enum CellKind {
+export enum NotebookCellKind {
     Markdown = 1,
     Code = 2
 }
@@ -54,6 +57,8 @@ export enum NotebookRunState {
     Idle = 2
 }
 
+// TODO@API
+// make this a class, allow modified using with-pattern
 export interface NotebookCellMetadata {
     /**
      * Controls whether a cell's editor is editable/readonly.
@@ -61,47 +66,10 @@ export interface NotebookCellMetadata {
     editable?: boolean;
 
     /**
-     * Controls if the cell is executable.
-     * This metadata is ignored for markdown cell.
-     */
-    runnable?: boolean;
-
-    /**
      * Controls if the cell has a margin to support the breakpoint UI.
      * This metadata is ignored for markdown cell.
      */
     breakpointMargin?: boolean;
-
-    /**
-     * Whether the [execution order](#NotebookCellMetadata.executionOrder) indicator will be displayed.
-     * Defaults to true.
-     */
-    hasExecutionOrder?: boolean;
-
-    /**
-     * The order in which this cell was executed.
-     */
-    executionOrder?: number;
-
-    /**
-     * A status message to be shown in the cell's status bar
-     */
-    statusMessage?: string;
-
-    /**
-     * The cell's current run state
-     */
-    runState?: NotebookCellRunState;
-
-    /**
-     * If the cell is running, the time at which the cell started running
-     */
-    runStartTime?: number;
-
-    /**
-     * The total duration of the cell's last run
-     */
-    lastRunDuration?: number;
 
     /**
      * Whether a code cell's editor is collapsed
@@ -124,7 +92,7 @@ export interface NotebookCell {
     readonly index: number;
     readonly notebook: NotebookDocument;
     readonly uri: Uri;
-    readonly cellKind: CellKind;
+    readonly cellKind: NotebookCellKind;
     readonly document: TextDocument;
     readonly language: string;
     readonly outputs: readonly NotebookCellOutput[];
@@ -144,29 +112,10 @@ export interface NotebookDocumentMetadata {
     editable?: boolean;
 
     /**
-     * Controls whether the full notebook can be run at once.
-     * Defaults to true
-     */
-    runnable?: boolean;
-
-    /**
      * Default value for [cell editable metadata](#NotebookCellMetadata.editable).
      * Defaults to true.
      */
     cellEditable?: boolean;
-
-    /**
-     * Default value for [cell runnable metadata](#NotebookCellMetadata.runnable).
-     * Defaults to true.
-     */
-    cellRunnable?: boolean;
-
-    /**
-     * Default value for [cell hasExecutionOrder metadata](#NotebookCellMetadata.hasExecutionOrder).
-     * Defaults to true.
-     */
-    cellHasExecutionOrder?: boolean;
-
     displayOrder?: GlobPattern[];
 
     /**
@@ -175,20 +124,10 @@ export interface NotebookDocumentMetadata {
     custom?: { [key: string]: any };
 
     /**
-     * The document's current run state
-     */
-    runState?: NotebookRunState;
-
-    /**
      * Whether the document is trusted, default to true
      * When false, insecure outputs like HTML, JavaScript, SVG will not be rendered.
      */
     trusted?: boolean;
-
-    /**
-     * Languages the document supports
-     */
-    languages?: string[];
 }
 
 export interface NotebookDocumentContentOptions {
@@ -214,10 +153,6 @@ export interface NotebookDocument {
     readonly isUntitled: boolean;
     readonly cells: ReadonlyArray<NotebookCell>;
     readonly contentOptions: NotebookDocumentContentOptions;
-    // todo@API
-    // make readonly
-    // languages comes from the kernel
-    languages: string[];
     readonly metadata: NotebookDocumentMetadata;
 }
 
@@ -349,7 +284,7 @@ export interface NotebookEditorVisibleRangesChangeEvent {
 
 // todo@API support ids https://github.com/jupyter/enhancement-proposals/blob/master/62-cell-id/cell-id.md
 export interface NotebookCellData {
-    readonly cellKind: CellKind;
+    readonly cellKind: NotebookCellKind;
     readonly source: string;
     readonly language: string;
     // todo@API maybe use a separate data type?
@@ -359,7 +294,6 @@ export interface NotebookCellData {
 
 export interface NotebookData {
     readonly cells: NotebookCellData[];
-    readonly languages: string[];
     readonly metadata: NotebookDocumentMetadata;
 }
 
@@ -464,7 +398,7 @@ export class NotebookCellOutputItem {
 export class NotebookCellOutput {
     readonly id: string;
     readonly outputs: NotebookCellOutputItem[];
-    constructor(outputs: NotebookCellOutputItem[]);
+    constructor(outputs: NotebookCellOutputItem[], id?: string);
 }
 
 //#endregion
@@ -621,6 +555,96 @@ export namespace notebook {
 
 //#region https://github.com/microsoft/vscode/issues/106744, NotebookKernel
 
+export interface NotebookDocumentMetadata {
+    /**
+     * Controls whether the full notebook can be run at once.
+     * Defaults to true
+     */
+    // todo@API infer from kernel
+    // todo@API remove
+    runnable?: boolean;
+
+    /**
+     * Default value for [cell runnable metadata](#NotebookCellMetadata.runnable).
+     * Defaults to true.
+     */
+    cellRunnable?: boolean;
+
+    /**
+     * Default value for [cell hasExecutionOrder metadata](#NotebookCellMetadata.hasExecutionOrder).
+     * Defaults to true.
+     */
+    cellHasExecutionOrder?: boolean;
+
+    /**
+     * The document's current run state
+     */
+    runState?: NotebookRunState;
+}
+
+// todo@API use the NotebookCellExecution-object as a container to model and enforce
+// the flow of a cell execution
+
+// kernel -> execute_info
+// ext -> createNotebookCellExecution(cell)
+// kernel -> done
+// exec.dispose();
+
+// export interface NotebookCellExecution {
+// 	dispose(): void;
+// 	clearOutput(): void;
+// 	appendOutput(out: NotebookCellOutput): void;
+// 	replaceOutput(out: NotebookCellOutput): void;
+//  appendOutputItems(output:string, items: NotebookCellOutputItem[]):void;
+//  replaceOutputItems(output:string, items: NotebookCellOutputItem[]):void;
+// }
+
+// export function createNotebookCellExecution(cell: NotebookCell, startTime?: number): NotebookCellExecution;
+// export const onDidStartNotebookCellExecution: Event<any>;
+// export const onDidStopNotebookCellExecution: Event<any>;
+
+export interface NotebookCellMetadata {
+    /**
+     * Controls if the cell is executable.
+     * This metadata is ignored for markdown cell.
+     */
+    // todo@API infer from kernel
+    runnable?: boolean;
+
+    /**
+     * Whether the [execution order](#NotebookCellMetadata.executionOrder) indicator will be displayed.
+     * Defaults to true.
+     */
+    hasExecutionOrder?: boolean;
+
+    /**
+     * The order in which this cell was executed.
+     */
+    executionOrder?: number;
+
+    /**
+     * A status message to be shown in the cell's status bar
+     */
+    // todo@API duplicates status bar API
+    statusMessage?: string;
+
+    /**
+     * The cell's current run state
+     */
+    runState?: NotebookCellRunState;
+
+    /**
+     * If the cell is running, the time at which the cell started running
+     */
+    runStartTime?: number;
+
+    /**
+     * The total duration of the cell's last run
+     */
+    // todo@API depends on having output
+    lastRunDuration?: number;
+}
+
 export interface NotebookKernel {
     readonly id?: string;
     label: string;
@@ -628,6 +652,15 @@ export interface NotebookKernel {
     detail?: string;
     isPreferred?: boolean;
     preloads?: Uri[];
+
+    // TODO@API control runnable state of cell
+    /**
+     * languages supported by kernel
+     * - first is preferred
+     * - `undefined` means all languages available in the editor
+     */
+    supportedLanguages?: string[];
+
     // @roblourens
     // todo@API change to `executeCells(document: NotebookDocument, cells: NotebookCellRange[], context:{isWholeNotebooke: boolean}, token: CancelationToken): void;`
     // todo@API interrupt vs cancellation, https://github.com/microsoft/vscode/issues/106741
@@ -688,9 +721,21 @@ export interface NotebookEditor {
     setDecorations(decorationType: NotebookEditorDecorationType, range: NotebookCellRange): void;
 }
 
+export interface NotebookDecorationRenderOptions {
+    backgroundColor?: string | ThemeColor;
+    borderColor?: string | ThemeColor;
+    top: ThemableDecorationAttachmentRenderOptions;
+}
+
 export interface NotebookEditorDecorationType {
     readonly key: string;
     dispose(): void;
+}
+
+export namespace notebook {
+    export function createNotebookEditorDecorationType(
+        options: NotebookDecorationRenderOptions
+    ): NotebookEditorDecorationType;
 }
 
 //#endregion
@@ -762,116 +807,6 @@ export namespace notebook {
         notebook: NotebookDocument,
         selector?: DocumentSelector
     ): NotebookConcatTextDocument;
-}
-
-export class Position {
-    /**
-     * The zero-based line value.
-     */
-    readonly line: number;
-
-    /**
-     * The zero-based character value.
-     */
-    readonly character: number;
-
-    /**
-     * @param line A zero-based line value.
-     * @param character A zero-based character value.
-     */
-    constructor(line: number, character: number);
-
-    /**
-     * Check if this position is before `other`.
-     *
-     * @param other A position.
-     * @return `true` if position is on a smaller line
-     * or on the same line on a smaller character.
-     */
-    isBefore(other: Position): boolean;
-
-    /**
-     * Check if this position is before or equal to `other`.
-     *
-     * @param other A position.
-     * @return `true` if position is on a smaller line
-     * or on the same line on a smaller or equal character.
-     */
-    isBeforeOrEqual(other: Position): boolean;
-
-    /**
-     * Check if this position is after `other`.
-     *
-     * @param other A position.
-     * @return `true` if position is on a greater line
-     * or on the same line on a greater character.
-     */
-    isAfter(other: Position): boolean;
-
-    /**
-     * Check if this position is after or equal to `other`.
-     *
-     * @param other A position.
-     * @return `true` if position is on a greater line
-     * or on the same line on a greater or equal character.
-     */
-    isAfterOrEqual(other: Position): boolean;
-
-    /**
-     * Check if this position is equal to `other`.
-     *
-     * @param other A position.
-     * @return `true` if the line and character of the given position are equal to
-     * the line and character of this position.
-     */
-    isEqual(other: Position): boolean;
-
-    /**
-     * Compare this to `other`.
-     *
-     * @param other A position.
-     * @return A number smaller than zero if this position is before the given position,
-     * a number greater than zero if this position is after the given position, or zero when
-     * this and the given position are equal.
-     */
-    compareTo(other: Position): number;
-
-    /**
-     * Create a new position relative to this position.
-     *
-     * @param lineDelta Delta value for the line value, default is `0`.
-     * @param characterDelta Delta value for the character value, default is `0`.
-     * @return A position which line and character is the sum of the current line and
-     * character and the corresponding deltas.
-     */
-    translate(lineDelta?: number, characterDelta?: number): Position;
-
-    /**
-     * Derived a new position relative to this position.
-     *
-     * @param change An object that describes a delta to this position.
-     * @return A position that reflects the given delta. Will return `this` position if the change
-     * is not changing anything.
-     */
-    translate(change: { lineDelta?: number; characterDelta?: number }): Position;
-
-    /**
-     * Create a new position derived from this position.
-     *
-     * @param line Value that should be used as line value, default is the [existing value](#Position.line)
-     * @param character Value that should be used as character value, default is the [existing value](#Position.character)
-     * @return A position where line and character are replaced by the given values.
-     */
-    with(line?: number, character?: number): Position;
-
-    /**
-     * Derived a new position from this position.
-     *
-     * @param change An object that describes a change to this position.
-     * @return A position that reflects the given change. Will return `this` position if the change
-     * is not changing anything.
-     */
-    with(change: { line?: number; character?: number }): Position;
 }
 
 export interface NotebookConcatTextDocument {

@@ -10,14 +10,21 @@ import * as path from 'path';
 import * as sinon from 'sinon';
 import * as tmp from 'tmp';
 import { anything, instance, mock, when } from 'ts-mockito';
-import { WorkspaceEdit } from 'vscode';
-import { commands, Memento, TextDocument, Uri, window, workspace } from 'vscode';
-import { CancellationToken } from 'vscode-jsonrpc';
 import {
+    NotebookCellRunState,
+    WorkspaceEdit,
+    commands,
+    Memento,
+    TextDocument,
+    Uri,
+    window,
+    workspace,
     NotebookCell,
     NotebookContentProvider as VSCNotebookContentProvider,
-    NotebookDocument
-} from '../../../../typings/vscode-proposed';
+    NotebookDocument,
+    NotebookCellKind
+} from 'vscode';
+import { CancellationToken } from 'vscode-jsonrpc';
 import { IApplicationEnvironment, IApplicationShell, IVSCodeNotebook } from '../../../client/common/application/types';
 import { JVSC_EXTENSION_ID, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { disposeAllDisposables } from '../../../client/common/helpers';
@@ -55,7 +62,6 @@ import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST, IS_SMOKE_TEST } fr
 import { noop } from '../../core';
 import { closeActiveWindows, initialize, isInsiders } from '../../initialize';
 import { JupyterServer } from '../jupyterServer';
-const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 const defaultTimeout = 15_000;
 
 async function getServices() {
@@ -85,7 +91,7 @@ export async function insertMarkdownCell(source: string, options?: { index?: num
     await chainWithPendingUpdates(activeEditor.document, (edit) =>
         edit.replaceNotebookCells(activeEditor.document.uri, startNumber, 0, [
             {
-                cellKind: vscodeNotebookEnums.CellKind.Markdown,
+                cellKind: NotebookCellKind.Markdown,
                 language: MARKDOWN_LANGUAGE,
                 source,
                 metadata: {
@@ -107,7 +113,7 @@ export async function insertCodeCell(source: string, options?: { language?: stri
     const edit = new WorkspaceEdit();
     edit.replaceNotebookCells(activeEditor.document.uri, startNumber, 0, [
         {
-            cellKind: vscodeNotebookEnums.CellKind.Code,
+            cellKind: NotebookCellKind.Code,
             language: options?.language || PYTHON_LANGUAGE,
             source,
             metadata: {
@@ -428,16 +434,10 @@ export async function prewarmNotebooks() {
 }
 
 function assertHasExecutionCompletedSuccessfully(cell: NotebookCell) {
-    return (
-        (cell.metadata.executionOrder ?? 0) > 0 &&
-        cell.metadata.runState === vscodeNotebookEnums.NotebookCellRunState.Success
-    );
+    return (cell.metadata.executionOrder ?? 0) > 0 && cell.metadata.runState === NotebookCellRunState.Success;
 }
 function assertHasEmptyCellExecutionCompleted(cell: NotebookCell) {
-    return (
-        (cell.metadata.executionOrder ?? 0) === 0 &&
-        cell.metadata.runState === vscodeNotebookEnums.NotebookCellRunState.Idle
-    );
+    return (cell.metadata.executionOrder ?? 0) === 0 && cell.metadata.runState === NotebookCellRunState.Idle;
 }
 /**
  *  Wait for VSC to perform some last minute clean up of cells.
@@ -471,7 +471,7 @@ export async function waitForExecutionInProgress(cell: NotebookCell, timeout: nu
     await waitForCondition(
         async () => {
             const result =
-                cell.metadata.runState === vscodeNotebookEnums.NotebookCellRunState.Running &&
+                cell.metadata.runState === NotebookCellRunState.Running &&
                 cell.metadata.runStartTime &&
                 !cell.metadata.lastRunDuration &&
                 !cell.metadata.statusMessage
@@ -489,7 +489,7 @@ export async function waitForExecutionInProgress(cell: NotebookCell, timeout: nu
 export async function waitForQueuedForExecution(cell: NotebookCell, timeout: number = defaultTimeout) {
     await waitForCondition(
         async () =>
-            cell.metadata.runState === vscodeNotebookEnums.NotebookCellRunState.Running &&
+            cell.metadata.runState === NotebookCellRunState.Running &&
             !cell.metadata.runStartTime &&
             !cell.metadata.lastRunDuration &&
             !cell.metadata.statusMessage
@@ -516,10 +516,7 @@ export async function waitForExecutionCompletedWithErrors(cell: NotebookCell, ti
     await waitForCellExecutionToComplete(cell);
 }
 function assertHasExecutionCompletedWithErrors(cell: NotebookCell) {
-    return (
-        (cell.metadata.executionOrder ?? 0) > 0 &&
-        cell.metadata.runState === vscodeNotebookEnums.NotebookCellRunState.Error
-    );
+    return (cell.metadata.executionOrder ?? 0) > 0 && cell.metadata.runState === NotebookCellRunState.Error;
 }
 export function assertHasTextOutputInVSCode(cell: NotebookCell, text: string, index: number = 0, isExactMatch = true) {
     const cellOutputs = cell.outputs;
@@ -557,18 +554,18 @@ export function assertNotHasTextOutputInVSCode(cell: NotebookCell, text: string,
     return true;
 }
 export function assertVSCCellIsRunning(cell: NotebookCell) {
-    assert.equal(cell.metadata.runState, vscodeNotebookEnums.NotebookCellRunState.Running);
+    assert.equal(cell.metadata.runState, NotebookCellRunState.Running);
     return true;
 }
 export function assertVSCCellIsNotRunning(cell: NotebookCell) {
-    assert.notEqual(cell.metadata.runState, vscodeNotebookEnums.NotebookCellRunState.Running);
+    assert.notEqual(cell.metadata.runState, NotebookCellRunState.Running);
     return true;
 }
 export function assertVSCCellStateIsUndefinedOrIdle(cell: NotebookCell) {
     if (cell.metadata.runState === undefined) {
         return true;
     }
-    assert.equal(cell.metadata.runState, vscodeNotebookEnums.NotebookCellRunState.Idle);
+    assert.equal(cell.metadata.runState, NotebookCellRunState.Idle);
     return true;
 }
 export function assertVSCCellHasErrorOutput(cell: NotebookCell) {
@@ -660,7 +657,6 @@ export function createNotebookDocument(
         version: 1,
         fileName: model.file.fsPath,
         isDirty: false,
-        languages: [],
         uri: model.file,
         isUntitled: false,
         viewType,

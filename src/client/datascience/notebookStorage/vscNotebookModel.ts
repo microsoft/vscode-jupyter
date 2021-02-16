@@ -2,8 +2,7 @@
 // Licensed under the MIT License.
 
 import type { nbformat } from '@jupyterlab/coreutils';
-import { Memento, Uri } from 'vscode';
-import { NotebookDocument } from '../../../../types/vscode-proposed';
+import { Memento, NotebookDocument, Uri } from 'vscode';
 import { IVSCodeNotebook } from '../../common/application/types';
 import { ICryptoUtils } from '../../common/types';
 import { NotebookModelChange } from '../interactive-common/interactiveWindowTypes';

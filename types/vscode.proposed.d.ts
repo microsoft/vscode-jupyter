@@ -21,9 +21,10 @@ declare module 'vscode' {
         // Properties: see details [here](https://microsoft.github.io/debug-adapter-protocol/specification#Base_Protocol_Variable).
     }
     //#endregion
+
     //#region https://github.com/microsoft/vscode/issues/106744, Notebooks (misc)
 
-    export enum CellKind {
+    export enum NotebookCellKind {
         Markdown = 1,
         Code = 2
     }
@@ -40,6 +41,8 @@ declare module 'vscode' {
         Idle = 2
     }
 
+    // TODO@API
+    // make this a class, allow modified using with-pattern
     export interface NotebookCellMetadata {
         /**
          * Controls whether a cell's editor is editable/readonly.
@@ -47,47 +50,10 @@ declare module 'vscode' {
         editable?: boolean;
 
         /**
-         * Controls if the cell is executable.
-         * This metadata is ignored for markdown cell.
-         */
-        runnable?: boolean;
-
-        /**
          * Controls if the cell has a margin to support the breakpoint UI.
          * This metadata is ignored for markdown cell.
          */
         breakpointMargin?: boolean;
-
-        /**
-         * Whether the [execution order](#NotebookCellMetadata.executionOrder) indicator will be displayed.
-         * Defaults to true.
-         */
-        hasExecutionOrder?: boolean;
-
-        /**
-         * The order in which this cell was executed.
-         */
-        executionOrder?: number;
-
-        /**
-         * A status message to be shown in the cell's status bar
-         */
-        statusMessage?: string;
-
-        /**
-         * The cell's current run state
-         */
-        runState?: NotebookCellRunState;
-
-        /**
-         * If the cell is running, the time at which the cell started running
-         */
-        runStartTime?: number;
-
-        /**
-         * The total duration of the cell's last run
-         */
-        lastRunDuration?: number;
 
         /**
          * Whether a code cell's editor is collapsed
@@ -110,7 +76,7 @@ declare module 'vscode' {
         readonly index: number;
         readonly notebook: NotebookDocument;
         readonly uri: Uri;
-        readonly cellKind: CellKind;
+        readonly cellKind: NotebookCellKind;
         readonly document: TextDocument;
         readonly language: string;
         readonly outputs: readonly NotebookCellOutput[];
@@ -130,29 +96,10 @@ declare module 'vscode' {
         editable?: boolean;
 
         /**
-         * Controls whether the full notebook can be run at once.
-         * Defaults to true
-         */
-        runnable?: boolean;
-
-        /**
          * Default value for [cell editable metadata](#NotebookCellMetadata.editable).
          * Defaults to true.
          */
         cellEditable?: boolean;
-
-        /**
-         * Default value for [cell runnable metadata](#NotebookCellMetadata.runnable).
-         * Defaults to true.
-         */
-        cellRunnable?: boolean;
-
-        /**
-         * Default value for [cell hasExecutionOrder metadata](#NotebookCellMetadata.hasExecutionOrder).
-         * Defaults to true.
-         */
-        cellHasExecutionOrder?: boolean;
-
         displayOrder?: GlobPattern[];
 
         /**
@@ -161,20 +108,10 @@ declare module 'vscode' {
         custom?: { [key: string]: any };
 
         /**
-         * The document's current run state
-         */
-        runState?: NotebookRunState;
-
-        /**
          * Whether the document is trusted, default to true
          * When false, insecure outputs like HTML, JavaScript, SVG will not be rendered.
          */
         trusted?: boolean;
-
-        /**
-         * Languages the document supports
-         */
-        languages?: string[];
     }
 
     export interface NotebookDocumentContentOptions {
@@ -200,10 +137,6 @@ declare module 'vscode' {
         readonly isUntitled: boolean;
         readonly cells: ReadonlyArray<NotebookCell>;
         readonly contentOptions: NotebookDocumentContentOptions;
-        // todo@API
-        // make readonly
-        // languages comes from the kernel
-        languages: string[];
         readonly metadata: NotebookDocumentMetadata;
     }
 
@@ -335,7 +268,7 @@ declare module 'vscode' {
 
     // todo@API support ids https://github.com/jupyter/enhancement-proposals/blob/master/62-cell-id/cell-id.md
     export interface NotebookCellData {
-        readonly cellKind: CellKind;
+        readonly cellKind: NotebookCellKind;
         readonly source: string;
         readonly language: string;
         // todo@API maybe use a separate data type?
@@ -345,7 +278,6 @@ declare module 'vscode' {
 
     export interface NotebookData {
         readonly cells: NotebookCellData[];
-        readonly languages: string[];
         readonly metadata: NotebookDocumentMetadata;
     }
 
@@ -450,7 +382,7 @@ declare module 'vscode' {
     export class NotebookCellOutput {
         readonly id: string;
         readonly outputs: NotebookCellOutputItem[];
-        constructor(outputs: NotebookCellOutputItem[]);
+        constructor(outputs: NotebookCellOutputItem[], id?: string);
     }
 
     //#endregion
@@ -611,6 +543,96 @@ declare module 'vscode' {
 
     //#region https://github.com/microsoft/vscode/issues/106744, NotebookKernel
 
+    export interface NotebookDocumentMetadata {
+        /**
+         * Controls whether the full notebook can be run at once.
+         * Defaults to true
+         */
+        // todo@API infer from kernel
+        // todo@API remove
+        runnable?: boolean;
+
+        /**
+         * Default value for [cell runnable metadata](#NotebookCellMetadata.runnable).
+         * Defaults to true.
+         */
+        cellRunnable?: boolean;
+
+        /**
+         * Default value for [cell hasExecutionOrder metadata](#NotebookCellMetadata.hasExecutionOrder).
+         * Defaults to true.
+         */
+        cellHasExecutionOrder?: boolean;
+
+        /**
+         * The document's current run state
+         */
+        runState?: NotebookRunState;
+    }
+
+    // todo@API use the NotebookCellExecution-object as a container to model and enforce
+    // the flow of a cell execution
+
+    // kernel -> execute_info
+    // ext -> createNotebookCellExecution(cell)
+    // kernel -> done
+    // exec.dispose();
+
+    // export interface NotebookCellExecution {
+    // 	dispose(): void;
+    // 	clearOutput(): void;
+    // 	appendOutput(out: NotebookCellOutput): void;
+    // 	replaceOutput(out: NotebookCellOutput): void;
+    //  appendOutputItems(output:string, items: NotebookCellOutputItem[]):void;
+    //  replaceOutputItems(output:string, items: NotebookCellOutputItem[]):void;
+    // }
+
+    // export function createNotebookCellExecution(cell: NotebookCell, startTime?: number): NotebookCellExecution;
+    // export const onDidStartNotebookCellExecution: Event<any>;
+    // export const onDidStopNotebookCellExecution: Event<any>;
+
+    export interface NotebookCellMetadata {
+        /**
+         * Controls if the cell is executable.
+         * This metadata is ignored for markdown cell.
+         */
+        // todo@API infer from kernel
+        runnable?: boolean;
+
+        /**
+         * Whether the [execution order](#NotebookCellMetadata.executionOrder) indicator will be displayed.
+         * Defaults to true.
+         */
+        hasExecutionOrder?: boolean;
+
+        /**
+         * The order in which this cell was executed.
+         */
+        executionOrder?: number;
+
+        /**
+         * A status message to be shown in the cell's status bar
+         */
+        // todo@API duplicates status bar API
+        statusMessage?: string;
+
+        /**
+         * The cell's current run state
+         */
+        runState?: NotebookCellRunState;
+
+        /**
+         * If the cell is running, the time at which the cell started running
+         */
+        runStartTime?: number;
+
+        /**
+         * The total duration of the cell's last run
+         */
+        // todo@API depends on having output
+        lastRunDuration?: number;
+    }
+
     export interface NotebookKernel {
         readonly id?: string;
         label: string;
@@ -618,6 +640,15 @@ declare module 'vscode' {
         detail?: string;
         isPreferred?: boolean;
         preloads?: Uri[];
+
+        // TODO@API control runnable state of cell
+        /**
+         * languages supported by kernel
+         * - first is preferred
+         * - `undefined` means all languages available in the editor
+         */
+        supportedLanguages?: string[];
+
         // @roblourens
         // todo@API change to `executeCells(document: NotebookDocument, cells: NotebookCellRange[], context:{isWholeNotebooke: boolean}, token: CancelationToken): void;`
         // todo@API interrupt vs cancellation, https://github.com/microsoft/vscode/issues/106741
@@ -677,9 +708,22 @@ declare module 'vscode' {
     export interface NotebookEditor {
         setDecorations(decorationType: NotebookEditorDecorationType, range: NotebookCellRange): void;
     }
+
+    export interface NotebookDecorationRenderOptions {
+        backgroundColor?: string | ThemeColor;
+        borderColor?: string | ThemeColor;
+        top: ThemableDecorationAttachmentRenderOptions;
+    }
+
     export interface NotebookEditorDecorationType {
         readonly key: string;
         dispose(): void;
+    }
+
+    export namespace notebook {
+        export function createNotebookEditorDecorationType(
+            options: NotebookDecorationRenderOptions
+        ): NotebookEditorDecorationType;
     }
 
     //#endregion
@@ -732,4 +776,45 @@ declare module 'vscode' {
             priority?: number
         ): NotebookCellStatusBarItem;
     }
+
+    //#endregion
+
+    //#region https://github.com/microsoft/vscode/issues/106744, NotebookConcatTextDocument
+
+    export namespace notebook {
+        /**
+         * Create a document that is the concatenation of all  notebook cells. By default all code-cells are included
+         * but a selector can be provided to narrow to down the set of cells.
+         *
+         * @param notebook
+         * @param selector
+         */
+        // @jrieken REMOVE. p_never
+        // todo@API really needed? we didn't find a user here
+        export function createConcatTextDocument(
+            notebook: NotebookDocument,
+            selector?: DocumentSelector
+        ): NotebookConcatTextDocument;
+    }
+
+    export interface NotebookConcatTextDocument {
+        uri: Uri;
+        isClosed: boolean;
+        dispose(): void;
+        onDidChange: Event<void>;
+        version: number;
+        getText(): string;
+        getText(range: Range): string;
+
+        offsetAt(position: Position): number;
+        positionAt(offset: number): Position;
+        validateRange(range: Range): Range;
+        validatePosition(position: Position): Position;
+
+        locationAt(positionOrRange: Position | Range): Location;
+        positionAt(location: Location): Position;
+        contains(uri: Uri): boolean;
+    }
+
+    //#endregion
 }

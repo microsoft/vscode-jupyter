@@ -2,13 +2,15 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-import { CancellationToken, Event, EventEmitter, Uri } from 'vscode';
 import {
+    CancellationToken,
+    Event,
+    EventEmitter,
+    Uri,
     NotebookCommunication,
     NotebookDocument,
     NotebookKernel as VSCNotebookKernel
-} from '../../../../types/vscode-proposed';
+} from 'vscode';
 import { ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { IConfigurationService, IDisposableRegistry, IExtensionContext } from '../../common/types';

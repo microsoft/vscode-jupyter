@@ -6,8 +6,15 @@
 import type { nbformat } from '@jupyterlab/coreutils';
 import type { KernelMessage } from '@jupyterlab/services';
 import * as fastDeepEqual from 'fast-deep-equal';
-import { workspace, Range, WorkspaceEdit } from 'vscode';
-import type { NotebookCell, NotebookEditor } from '../../../../../types/vscode-proposed';
+import {
+    workspace,
+    Range,
+    WorkspaceEdit,
+    NotebookCellKind,
+    NotebookCellRunState,
+    NotebookCell,
+    NotebookEditor
+} from 'vscode';
 import { createErrorOutput } from '../../../../datascience-ui/common/cellFactory';
 import {
     createIOutputFromCellOutputs,
@@ -16,8 +23,6 @@ import {
     translateErrorOutput
 } from './helpers';
 import { chainWithPendingUpdates } from './notebookUpdater';
-// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
-const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
 // After executing %tensorboard --logdir <log directory> to launch
 // TensorBoard inline, TensorBoard sends back an IFrame to display as output.
@@ -48,7 +53,7 @@ export async function handleUpdateDisplayDataMessage(
     const document = editor.document;
     // Find any cells that have this same display_id
     for (const cell of document.cells) {
-        if (cell.cellKind !== vscodeNotebookEnums.CellKind.Code) {
+        if (cell.cellKind !== NotebookCellKind.Code) {
             continue;
         }
         let updated = false;
@@ -92,7 +97,7 @@ export async function updateCellWithErrorStatus(
         traceCellMessage(cell, 'Update with error state & output');
         edit.replaceNotebookCellMetadata(notebookEditor.document.uri, cell.index, {
             ...cell.metadata,
-            runState: vscodeNotebookEnums.NotebookCellRunState.Error
+            runState: NotebookCellRunState.Error
         });
         edit.replaceNotebookCellOutput(notebookEditor.document.uri, cell.index, [
             translateErrorOutput(createErrorOutput(ex))
@@ -118,9 +123,9 @@ export async function addNewCellAfter(notebookEditor: NotebookEditor, cell: Note
         traceCellMessage(cell, 'Create new cell after current');
         edit.replaceNotebookCells(notebookEditor.document.uri, cell.index + 1, cell.index + 1, [
             {
-                cellKind: vscodeNotebookEnums.CellKind.Code,
+                cellKind: NotebookCellKind.Code,
                 language: cell.language,
-                metadata: { ...cell.metadata, runState: vscodeNotebookEnums.NotebookCellRunState.Success },
+                metadata: { ...cell.metadata, runState: NotebookCellRunState.Success },
                 outputs: [],
                 source: text
             }

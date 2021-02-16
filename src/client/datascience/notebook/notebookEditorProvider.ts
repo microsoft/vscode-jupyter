@@ -4,8 +4,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { Event, EventEmitter, Uri } from 'vscode';
-import type { NotebookDocument, NotebookEditor as VSCodeNotebookEditor } from '../../../../types/vscode-proposed';
+import { Event, EventEmitter, Uri, NotebookDocument, NotebookEditor as VSCodeNotebookEditor } from 'vscode';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import '../../common/extensions';
 import { IFileSystem } from '../../common/platform/types';

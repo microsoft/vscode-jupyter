@@ -9,14 +9,13 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as dedent from 'dedent';
 import * as sinon from 'sinon';
-import { Uri } from 'vscode';
+import { NotebookCell, NotebookCellKind, NotebookCellRunState, Uri } from 'vscode';
 import { Common } from '../../../client/common/utils/localize';
-import { NotebookCell } from '../../../../typings/vscode-proposed';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { traceInfo } from '../../../client/common/logger';
 import { IDisposable, Product } from '../../../client/common/types';
 import { INotebookEditorProvider } from '../../../client/datascience/types';
-import { createEventHandler, IExtensionTestApi, waitForCondition } from '../../common';
+import { createEventHandler, IExtensionTestApi, sleep, waitForCondition } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../initialize';
 import {
     assertHasTextOutputInVSCode,
@@ -51,7 +50,6 @@ import {
 } from '../../../client/datascience/notebook/helpers/helpers';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
-const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 const expectedPromptMessageSuffix = `requires ${ProductNames.get(Product.ipykernel)!} to be installed.`;
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
@@ -151,7 +149,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         await waitForExecutionCompletedSuccessfully(cells[1]);
 
         // Verify empty cell has cell status of idle
-        assert.equal(cells[0].metadata.runState, vscodeNotebookEnums.NotebookCellRunState.Idle);
+        assert.equal(cells[0].metadata.runState, NotebookCellRunState.Idle);
     });
     test('Clear output in empty cells', async () => {
         await closeNotebooks();
@@ -168,7 +166,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         await waitForEmptyCellExecutionCompleted(cells[0]);
 
         // Clear the cell and run the empty cell again & the status should change the idle & output cleared.
-        assert.equal(cells[0].metadata.runState, vscodeNotebookEnums.NotebookCellRunState.Idle);
+        assert.equal(cells[0].metadata.runState, NotebookCellRunState.Idle);
         assert.equal(cells[0].outputs.length, 0, 'Cell output is not empty');
     });
     test('Verify Cell output, execution count and status', async () => {
@@ -215,7 +213,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         expect(cell.metadata.executionOrder).to.be.greaterThan(0, 'Execution count should be > 0');
         expect(cell.metadata.runStartTime).to.be.greaterThan(0, 'Start time should be > 0');
         expect(cell.metadata.lastRunDuration).to.be.greaterThan(0, 'Duration should be > 0');
-        assert.equal(cell.metadata.runState, vscodeNotebookEnums.NotebookCellRunState.Success, 'Incorrect State');
+        assert.equal(cell.metadata.runState, NotebookCellRunState.Success, 'Incorrect State');
         assert.equal(cell.metadata.statusMessage, '', 'Incorrect Status message');
     });
     test('Verify output & metadata for executed cell with errors', async () => {
@@ -236,7 +234,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         expect(cell.metadata.executionOrder).to.be.greaterThan(0, 'Execution count should be > 0');
         expect(cell.metadata.runStartTime).to.be.greaterThan(0, 'Start time should be > 0');
         expect(cell.metadata.lastRunDuration).to.be.greaterThan(0, 'Duration should be > 0');
-        assert.equal(cell.metadata.runState, vscodeNotebookEnums.NotebookCellRunState.Error, 'Incorrect State');
+        assert.equal(cell.metadata.runState, NotebookCellRunState.Error, 'Incorrect State');
         assert.include(cell.metadata.statusMessage!, 'NameError', 'Must contain error message');
         assert.include(cell.metadata.statusMessage!, 'abcd', 'Must contain error message');
     });
@@ -296,7 +294,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
     //     // Wait till previous output gets cleared & we have new output.
     //     await waitForCondition(
     //         async () => assertNotHasTextOutputInVSCode(cell, 'Start', 0, false) && cell.outputs.length > 0,
-    //         //  && cell.outputs[0].outputKind === vscodeNotebookEnums.CellOutputKind.Rich,
+    //         //  && cell.outputs[0].outputKind === CellOutputKind.Rich,
     //         5_000,
     //         'Cell did not get cleared'
     //     );
@@ -348,40 +346,40 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
 
     //     await waitForExecutionCompletedSuccessfully(cell);
     // });
-    // test('Testing streamed output', async () => {
-    //     // Assume you are executing a cell that prints numbers 1-100.
-    //     // When printing number 50, you click clear.
-    //     // Cell output should now start printing output from 51 onwards, & not 1.
-    //     await insertCodeCell(
-    //         dedent`
-    //                 print("Start")
-    //                 import time
-    //                 for i in range(5):
-    //                     time.sleep(0.5)
-    //                     print(i)
+    test('Testing streamed outputxxxx', async () => {
+        // Assume you are executing a cell that prints numbers 1-100.
+        // When printing number 50, you click clear.
+        // Cell output should now start printing output from 51 onwards, & not 1.
+        await insertCodeCell(
+            dedent`
+                    print("Start")
+                    import time
+                    for i in range(5):
+                        time.sleep(0.5)
+                        print(i)
 
-    //                 print("End")`,
-    //         { index: 0 }
-    //     );
-    //     const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
+                    print("End")`,
+            { index: 0 }
+        );
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
 
-    //     await runAllCellsInActiveNotebook();
+        await runAllCellsInActiveNotebook();
+        await sleep(10_000);
 
-    //     await waitForCondition(
-    //         async () =>
-    //             assertHasTextOutputInVSCode(cell, 'Start', 0, false) &&
-    //             assertHasTextOutputInVSCode(cell, '0', 0, false) &&
-    //             assertHasTextOutputInVSCode(cell, '1', 0, false) &&
-    //             assertHasTextOutputInVSCode(cell, '2', 0, false) &&
-    //             assertHasTextOutputInVSCode(cell, '3', 0, false) &&
-    //             assertHasTextOutputInVSCode(cell, '4', 0, false) &&
-    //             assertHasTextOutputInVSCode(cell, 'End', 0, false),
-    //         15_000,
-    //         'Incorrect output'
-    //     );
-
-    //     await waitForExecutionCompletedSuccessfully(cell);
-    // });
+        await waitForCondition(
+            async () =>
+                assertHasTextOutputInVSCode(cell, 'Start', 0, false) &&
+                assertHasTextOutputInVSCode(cell, '0', 0, false) &&
+                assertHasTextOutputInVSCode(cell, '1', 0, false) &&
+                assertHasTextOutputInVSCode(cell, '2', 0, false) &&
+                assertHasTextOutputInVSCode(cell, '3', 0, false) &&
+                assertHasTextOutputInVSCode(cell, '4', 0, false) &&
+                assertHasTextOutputInVSCode(cell, 'End', 0, false),
+            15_000,
+            'Incorrect output'
+        );
+        await waitForExecutionCompletedSuccessfully(cell);
+    });
     test('Verify escaping of output', async () => {
         await insertCodeCell('1');
         await insertCodeCell(dedent`
@@ -472,7 +470,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
 
     //     // Wait for last line to be `iteration 9`
     //     assert.equal(cells[0].outputs.length, 1, 'Incorrect number of output');
-    //     // assert.equal(cells[0].outputs[0].outputKind, vscodeNotebookEnums.CellOutputKind.Rich, 'Incorrect output type');
+    //     // assert.equal(cells[0].outputs[0].outputKind, CellOutputKind.Rich, 'Incorrect output type');
     //     await waitForCondition(
     //         async () => {
     //             const output = cells[0].outputs[0];
@@ -527,7 +525,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
     //     // Wait for last line to be `iteration 9`
     //     assert.equal(cells[0].outputs.length, 1, 'Incorrect number of output');
     //     assert.equal(cells[1].outputs.length, 1, 'Incorrect number of output');
-    //     // assert.equal(cells[0].outputs[0].outputKind, vscodeNotebookEnums.CellOutputKind.Rich, 'Incorrect output type');
+    //     // assert.equal(cells[0].outputs[0].outputKind, CellOutputKind.Rich, 'Incorrect output type');
 
     //     // The background messages from cell 1 will end up in cell 2.
     //     await waitForCondition(
@@ -597,9 +595,9 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
     //     // Line2
     //     // Line3
     //     assert.equal(cells[0].outputs.length, 1, 'Incorrect number of output');
-    //     // assert.equal(cells[0].outputs[0].outputKind, vscodeNotebookEnums.CellOutputKind.Rich, 'Incorrect output type');
+    //     // assert.equal(cells[0].outputs[0].outputKind, CellOutputKind.Rich, 'Incorrect output type');
     //     assert.equal(cells[1].outputs.length, 1, 'Incorrect number of output');
-    //     // assert.equal(cells[1].outputs[0].outputKind, vscodeNotebookEnums.CellOutputKind.Rich, 'Incorrect output type');
+    //     // assert.equal(cells[1].outputs[0].outputKind, CellOutputKind.Rich, 'Incorrect output type');
 
     //     // Confirm the output
     //     const output1Lines: string[] = getTextOutputValue(cells[0].outputs[0]).splitLines({
@@ -737,7 +735,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
     });
     test('Run cells randomly & validate the order of execution', async () => {
         const cells = await insertRandomCells({ count: 15, addMarkdownCells: true });
-        const codeCells = cells.filter((cell) => cell.cell.cellKind === vscodeNotebookEnums.CellKind.Code);
+        const codeCells = cells.filter((cell) => cell.cell.cellKind === NotebookCellKind.Code);
 
         // Run cells at random & keep track of the order in which they were run (to validate execution order later).
         const queuedCells: typeof cells = [];
@@ -801,11 +799,11 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         // Create some code cells & markdown cells.
         cells.push(...(await insertRandomCells({ count: 10, addMarkdownCells: true })));
 
-        const codeCells = cells.filter((cell) => cell.cell.cellKind === vscodeNotebookEnums.CellKind.Code);
+        const codeCells = cells.filter((cell) => cell.cell.cellKind === NotebookCellKind.Code);
         const queuedCells: NotebookCell[] = [];
         for (let index = 0; index < codeCells.length; index++) {
             const cell = codeCells[index].cell;
-            if (cell.cellKind === vscodeNotebookEnums.CellKind.Code) {
+            if (cell.cellKind === NotebookCellKind.Code) {
                 queuedCells.push(cell);
                 await runCell(cell);
                 await waitForQueuedForExecution(cell);
@@ -822,7 +820,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
 
         await runAllCellsInActiveNotebook();
         const queuedCells = cells
-            .filter((item) => item.cell.cellKind === vscodeNotebookEnums.CellKind.Code)
+            .filter((item) => item.cell.cellKind === NotebookCellKind.Code)
             .map((item) => item.cell);
         await Promise.all(queuedCells.map((cell) => waitForQueuedForExecution(cell)));
 
@@ -844,7 +842,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
     });
     test('Run entire notebook then add a new cell & run that as well, ensure this new cell is also executed', async () => {
         const cells = await insertRandomCells({ count: 15, addMarkdownCells: true });
-        const codeCells = cells.filter((cell) => cell.cell.cellKind === vscodeNotebookEnums.CellKind.Code);
+        const codeCells = cells.filter((cell) => cell.cell.cellKind === NotebookCellKind.Code);
 
         // Run entire notebook & verify all cells are queued for execution.
         await runAllCellsInActiveNotebook();

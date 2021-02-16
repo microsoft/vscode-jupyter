@@ -14,7 +14,8 @@ import {
     NotebookData,
     NotebookDocument,
     NotebookEditor,
-    NotebookKernel as VSCNotebookKernel
+    NotebookKernel as VSCNotebookKernel,
+    NotebookCellKind
 } from 'vscode';
 import { concatMultilineString, splitMultilineString } from '../../../../datascience-ui/common';
 import { IVSCodeNotebook } from '../../../common/application/types';
@@ -28,8 +29,6 @@ import { KernelConnectionMetadata } from '../../jupyter/kernels/types';
 import { updateNotebookMetadata } from '../../notebookStorage/baseModel';
 import { CellState, IJupyterKernelSpec } from '../../types';
 import { JupyterNotebookView } from '../constants';
-// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
-const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import { KernelMessage } from '@jupyterlab/services';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -93,7 +92,7 @@ export function getNotebookMetadata(document: NotebookDocument): nbformat.INoteb
     if (!notebookContent?.metadata?.language_info?.name) {
         const content = notebookContent || {};
         const metadata = content.metadata || { orig_nbformat: 3, language_info: {} };
-        const language_info = { ...metadata.language_info, name: document.languages[0] };
+        const language_info = { ...metadata.language_info };
         // Fix nyc compiler not working.
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         notebookContent = { ...content, metadata: { ...metadata, language_info } } as any;
@@ -181,7 +180,7 @@ export function notebookModelToVSCNotebookData(
 
     if (cells.length === 0 && (isUntitledFile(notebookUri) || Object.keys(originalJson).length === 0)) {
         cells.push({
-            cellKind: vscodeNotebookEnums.CellKind.Code,
+            cellKind: NotebookCellKind.Code,
             language: preferredLanguage,
             metadata: {},
             outputs: [],
@@ -190,7 +189,6 @@ export function notebookModelToVSCNotebookData(
     }
     return {
         cells,
-        languages: ['*'],
         metadata: {
             custom: notebookContentWithoutCells, // Include metadata in VSC Model (so that VSC can display these if required)
             cellEditable: isNotebookTrusted,
@@ -219,9 +217,9 @@ export function notebookModelToVSCNotebookData(
 }
 export function cellRunStateToCellState(cellRunState?: NotebookCellRunState): CellState {
     switch (cellRunState) {
-        case vscodeNotebookEnums.NotebookCellRunState.Running:
+        case NotebookCellRunState.Running:
             return CellState.executing;
-        case vscodeNotebookEnums.NotebookCellRunState.Error:
+        case NotebookCellRunState.Error:
             return CellState.error;
         default:
             return CellState.init;
@@ -231,7 +229,7 @@ export function createJupyterCellFromVSCNotebookCell(
     vscCell: NotebookCell
 ): nbformat.IRawCell | nbformat.IMarkdownCell | nbformat.ICodeCell {
     let cell: nbformat.IRawCell | nbformat.IMarkdownCell | nbformat.ICodeCell;
-    if (vscCell.cellKind === vscodeNotebookEnums.CellKind.Markdown) {
+    if (vscCell.cellKind === NotebookCellKind.Markdown) {
         cell = createMarkdownCellFromNotebookCell(vscCell);
     } else if (vscCell.language === 'raw' || vscCell.language === 'plaintext') {
         cell = createRawCellFromNotebookCell(vscCell);
@@ -296,7 +294,7 @@ function createNotebookCellDataFromRawCell(isNbTrusted: boolean, cell: nbformat.
         custom: getNotebookCellMetadata(cell)
     };
     return {
-        cellKind: vscodeNotebookEnums.CellKind.Code,
+        cellKind: NotebookCellKind.Code,
         language: 'raw',
         metadata: notebookCellMetadata,
         outputs: [],
@@ -324,7 +322,7 @@ function createNotebookCellDataFromMarkdownCell(isNbTrusted: boolean, cell: nbfo
         custom: getNotebookCellMetadata(cell)
     };
     return {
-        cellKind: vscodeNotebookEnums.CellKind.Markdown,
+        cellKind: NotebookCellKind.Markdown,
         language: MARKDOWN_LANGUAGE,
         metadata: notebookCellMetadata,
         source: concatMultilineString(cell.source),
@@ -339,7 +337,7 @@ function createNotebookCellDataFromCodeCell(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const cellOutputs: nbformat.IOutput[] = Array.isArray(cell.outputs) ? cell.outputs : [];
     const outputs = createVSCCellOutputsFromOutputs(cellOutputs);
-    const runState = vscodeNotebookEnums.NotebookCellRunState.Idle;
+    const runState = NotebookCellRunState.Idle;
     const hasErrors = outputs.some((output) => output.outputs.some((opit) => opit.mime === CellOutputMimeTypes.error));
     const hasExecutionCount = typeof cell.execution_count === 'number' && cell.execution_count > 0;
     let statusMessage: string | undefined;
@@ -370,7 +368,7 @@ function createNotebookCellDataFromCodeCell(
     const source = concatMultilineString(cell.source);
 
     return {
-        cellKind: vscodeNotebookEnums.CellKind.Code,
+        cellKind: NotebookCellKind.Code,
         language: cellLanguage,
         metadata: notebookCellMetadata,
         source,
@@ -857,7 +855,7 @@ export async function updateVSCNotebookAfterTrustingNotebook(
     originalCells: nbformat.IBaseCell[]
 ) {
     const areAllCellsEditableAndRunnable = document.cells.every((cell) => {
-        if (cell.cellKind === vscodeNotebookEnums.CellKind.Markdown) {
+        if (cell.cellKind === NotebookCellKind.Markdown) {
             return cell.metadata.editable;
         } else {
             return cell.metadata.editable && cell.metadata.runnable;
@@ -883,7 +881,7 @@ export async function updateVSCNotebookAfterTrustingNotebook(
             runnable: true
         });
         document.cells.forEach((cell, index) => {
-            if (cell.cellKind === vscodeNotebookEnums.CellKind.Markdown) {
+            if (cell.cellKind === NotebookCellKind.Markdown) {
                 edit.replaceNotebookCellMetadata(document.uri, index, { ...cell.metadata, editable: true });
             } else {
                 edit.replaceNotebookCellMetadata(document.uri, index, {

@@ -15,7 +15,7 @@ import { IExtensionTestApi, openFile, sleep } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_WEBVIEW_BUILD_SKIPPED } from '../../constants';
 import { initialize } from '../../initialize';
 
-suite('Hover provider', async () => {
+suite('Hover providerxxx', async () => {
     const file = path.join(
         EXTENSION_ROOT_DIR_FOR_TESTS,
         'src',

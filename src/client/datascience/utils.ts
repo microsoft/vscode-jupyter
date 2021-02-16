@@ -3,18 +3,15 @@
 'use strict';
 
 import * as path from 'path';
-import { Uri } from 'vscode';
+import { NotebookCellKind, NotebookCell, NotebookCellRunState, Uri } from 'vscode';
 
 import { IWorkspaceService } from '../common/application/types';
 import { IFileSystem } from '../common/platform/types';
 
 import { nbformat } from '@jupyterlab/coreutils/lib/nbformat';
-import type { NotebookCell, NotebookCellRunState } from '../../../types/vscode-proposed';
 import { concatMultilineString } from '../../datascience-ui/common';
 import { IConfigurationService } from '../common/types';
 import { CellState, ICell } from './types';
-// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
-const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
 export async function calculateWorkingDirectory(
     configService: IConfigurationService,
@@ -72,7 +69,7 @@ export function translateCellToNative(
             },
             uri: Uri.parse(cell.file + query + cell.id),
             outputs: [],
-            cellKind: vscodeNotebookEnums.CellKind.Code,
+            cellKind: NotebookCellKind.Code,
             code: concatMultilineString(cell.data.source)
         };
     }
@@ -91,7 +88,7 @@ export function translateCellFromNative(cell: NotebookCell): ICell {
         file: cell.uri.fsPath,
         line: 0,
         state: translateCellStateFromNative(
-            cell.metadata.runState ? cell.metadata.runState : vscodeNotebookEnums.NotebookCellRunState.Idle
+            cell.metadata.runState ? cell.metadata.runState : NotebookCellRunState.Idle
         ),
         data: data
     };
@@ -100,29 +97,29 @@ export function translateCellFromNative(cell: NotebookCell): ICell {
 export function translateCellStateToNative(state: CellState): NotebookCellRunState {
     switch (state) {
         case CellState.editing:
-            return vscodeNotebookEnums.NotebookCellRunState.Idle;
+            return NotebookCellRunState.Idle;
         case CellState.error:
-            return vscodeNotebookEnums.NotebookCellRunState.Error;
+            return NotebookCellRunState.Error;
         case CellState.executing:
-            return vscodeNotebookEnums.NotebookCellRunState.Running;
+            return NotebookCellRunState.Running;
         case CellState.finished:
-            return vscodeNotebookEnums.NotebookCellRunState.Success;
+            return NotebookCellRunState.Success;
         case CellState.init:
-            return vscodeNotebookEnums.NotebookCellRunState.Idle;
+            return NotebookCellRunState.Idle;
         default:
-            return vscodeNotebookEnums.NotebookCellRunState.Idle;
+            return NotebookCellRunState.Idle;
     }
 }
 
 export function translateCellStateFromNative(state: NotebookCellRunState): CellState {
     switch (state) {
-        case vscodeNotebookEnums.NotebookCellRunState.Error:
+        case NotebookCellRunState.Error:
             return CellState.error;
-        case vscodeNotebookEnums.NotebookCellRunState.Idle:
+        case NotebookCellRunState.Idle:
             return CellState.init;
-        case vscodeNotebookEnums.NotebookCellRunState.Running:
+        case NotebookCellRunState.Running:
             return CellState.executing;
-        case vscodeNotebookEnums.NotebookCellRunState.Success:
+        case NotebookCellRunState.Success:
             return CellState.finished;
         default:
             return CellState.init;

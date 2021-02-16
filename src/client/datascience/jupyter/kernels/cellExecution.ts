@@ -5,12 +5,13 @@
 
 import { nbformat } from '@jupyterlab/coreutils';
 import type { KernelMessage } from '@jupyterlab/services/lib/kernel/messages';
-import { NotebookCellOutput, ExtensionMode } from 'vscode';
 import {
+    NotebookCellOutput,
+    ExtensionMode,
     NotebookCell,
     NotebookCellRunState,
     NotebookEditor as VSCNotebookEditor
-} from '../../../../../types/vscode-proposed';
+} from 'vscode';
 import { concatMultilineString, formatStreamText } from '../../../../datascience-ui/common';
 import { IApplicationShell, IVSCodeNotebook } from '../../../common/application/types';
 import { traceError, traceErrorIf, traceInfoIf, traceWarning } from '../../../common/logger';
@@ -49,8 +50,6 @@ import {
     INotebookExecutionLogger
 } from '../../types';
 import { translateCellFromNative } from '../../utils';
-// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
-const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
 // Helper interface for the set_next_input execute reply payload
 interface ISetNextInputPayload {
@@ -269,9 +268,7 @@ export class CellExecution {
         let statusMessage = '';
         // If we requested a cancellation, then assume it did not even run.
         // If it did, then we'd get an interrupt error in the output.
-        let runState = this.isEmptyCodeCell
-            ? vscodeNotebookEnums.NotebookCellRunState.Idle
-            : vscodeNotebookEnums.NotebookCellRunState.Success;
+        let runState = this.isEmptyCodeCell ? NotebookCellRunState.Idle : NotebookCellRunState.Success;
 
         if (!this.isEmptyCodeCell) {
             await updateCellExecutionTimes(this.editor, this.cell, {
@@ -282,7 +279,7 @@ export class CellExecution {
 
         // If there are any errors in the cell, then change status to error.
         if (hasErrorOutput(this.cell.outputs)) {
-            runState = vscodeNotebookEnums.NotebookCellRunState.Error;
+            runState = NotebookCellRunState.Error;
             statusMessage = getCellStatusMessageBasedOnFirstCellErrorOutput(this.cell.outputs);
         }
 
@@ -308,7 +305,7 @@ export class CellExecution {
                 ...this.cell.metadata,
                 runStartTime: undefined,
                 lastRunDuration: undefined,
-                runState: vscodeNotebookEnums.NotebookCellRunState.Idle,
+                runState: NotebookCellRunState.Idle,
                 statusMessage: ''
             });
         });
@@ -347,7 +344,7 @@ export class CellExecution {
                 statusMessage: '', // We don't want any previous status anymore.
                 runStartTime: undefined, // We don't want any previous counters anymore.
                 lastRunDuration: undefined,
-                runState: vscodeNotebookEnums.NotebookCellRunState.Running
+                runState: NotebookCellRunState.Running
             });
         });
     }

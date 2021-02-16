@@ -2,8 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { CellKind, NotebookCellOutput } from 'vscode';
-import { NotebookDocument, NotebookKernel as VSCNotebookKernel } from '../../../../types/vscode-proposed';
+import { NotebookCellKind, NotebookCellOutput, NotebookDocument, NotebookKernel as VSCNotebookKernel } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IVSCodeNotebook } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
@@ -50,9 +49,9 @@ export class EmptyNotebookCellLanguageService implements IExtensionSingleActivat
         }
         // If we have just empty cells, then update the code cells to use the same language as that of the kernel.
         const emptyCodeCells = document.cells.filter(
-            (cell) => cell.cellKind === CellKind.Code && cell.document.getText().trim().length === 0
+            (cell) => cell.cellKind === NotebookCellKind.Code && cell.document.getText().trim().length === 0
         );
-        const codeCells = document.cells.filter((cell) => cell.cellKind === CellKind.Code).length;
+        const codeCells = document.cells.filter((cell) => cell.cellKind === NotebookCellKind.Code).length;
         // Change language of the cells only if all code cells are empty.
         if (emptyCodeCells.length === 0 || emptyCodeCells.length !== codeCells) {
             return;

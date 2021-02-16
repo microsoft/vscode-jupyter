@@ -12,8 +12,8 @@ import {
     NotebookCellData,
     NotebookCellOutputItem,
     Uri,
-    CellKind,
-    NotebookCellRunState
+    NotebookCellRunState,
+    NotebookCellKind
 } from 'vscode';
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { ReadWrite } from '../../../client/common/types';
@@ -43,7 +43,6 @@ suite('DataScience - VSCode Notebook - helpers', () => {
         const notebook = notebookModelToVSCNotebookData(true, {}, Uri.file(''), cells as any, PYTHON_LANGUAGE, {});
 
         assert.isOk(notebook);
-        assert.deepEqual(notebook.languages, ['*']);
         // ignore metadata we add.
         const cellsWithoutCustomMetadata = notebook.cells.map((cell) => {
             const cellToCompareWith: ReadWrite<NotebookCellData> = cloneDeep(cell);
@@ -52,7 +51,7 @@ suite('DataScience - VSCode Notebook - helpers', () => {
         });
         assert.deepEqual(cellsWithoutCustomMetadata, [
             {
-                cellKind: CellKind.Code,
+                cellKind: NotebookCellKind.Code,
                 language: PYTHON_LANGUAGE,
                 outputs: [],
                 source: 'print(1)',
@@ -66,7 +65,7 @@ suite('DataScience - VSCode Notebook - helpers', () => {
                 }
             },
             {
-                cellKind: CellKind.Markdown,
+                cellKind: NotebookCellKind.Markdown,
                 language: MARKDOWN_LANGUAGE,
                 outputs: [],
                 source: '# HEAD',

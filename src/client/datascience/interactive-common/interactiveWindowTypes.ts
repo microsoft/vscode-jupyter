@@ -2,12 +2,11 @@
 // Licensed under the MIT License.
 'use strict';
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
-import { Uri } from 'vscode';
+import { DebugProtocolVariable, DebugProtocolVariableContainer, Uri } from 'vscode';
 import { DebugState, IServerState } from '../../../datascience-ui/interactive-common/mainState';
 
 import type { KernelMessage } from '@jupyterlab/services';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { DebugProtocolVariable, DebugProtocolVariableContainer } from '../../../../types/vscode-proposed';
 import {
     CommonActionType,
     IAddCellAction,
