@@ -478,7 +478,7 @@ jobs:
   vscodeTests:
     name: VS Code Tests # These tests run with Python extension & real Jupyter
     runs-on: ${{ matrix.os }}
-    if: github.repository == 'microsoft/vscode-jupyter'
+    if: github.repository == 'microsoft/vscode-jupyterss'
     env:
       VSC_FORCE_REAL_JUPYTER: 1
       VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
