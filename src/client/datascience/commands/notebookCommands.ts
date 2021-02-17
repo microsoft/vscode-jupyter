@@ -56,7 +56,10 @@ export class NotebookCommands implements IDisposable {
 
     private keybindSave() {
         if (this.notebookEditorProvider.activeEditor) {
-            void this.commandManager.executeCommand('workbench.action.files.save', this.notebookEditorProvider.activeEditor.file);
+            void this.commandManager.executeCommand(
+                'workbench.action.files.save',
+                this.notebookEditorProvider.activeEditor.file
+            );
         }
     }
 
