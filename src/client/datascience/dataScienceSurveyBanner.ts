@@ -8,13 +8,11 @@ import { Event, EventEmitter, UIKind } from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IApplicationEnvironment, IApplicationShell, IVSCodeNotebook } from '../common/application/types';
 import { UseVSCodeNotebookEditorApi } from '../common/constants';
-import { Experiments } from '../common/experiments/groups';
 import '../common/extensions';
 import { traceError } from '../common/logger';
 import {
     IBrowserService,
     IDisposableRegistry,
-    IExperimentService,
     IJupyterExtensionBanner,
     IPersistentState,
     IPersistentStateFactory,
@@ -115,20 +113,17 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
     public isEnabled(type: BannerType): boolean {
         switch (type) {
             case BannerType.InsidersNotebookSurvey:
-                if (this.useVSCodeNotebookEditorApi && this.applicationEnvironment.channel === 'insiders') {
+                if (this.applicationEnvironment.channel === 'insiders' && this.useVSCodeNotebookEditorApi) {
                     return this.isEnabledInternal(type);
                 }
                 break;
             case BannerType.ExperimentNotebookSurvey:
-                if (
-                    this.applicationEnvironment.channel === 'stable' &&
-                    this.experimentService.inExperiment(Experiments.NativeNotebook)
-                ) {
+                if (this.applicationEnvironment.channel === 'stable' && this.useVSCodeNotebookEditorApi) {
                     return this.isEnabledInternal(type);
                 }
                 break;
             case BannerType.DSSurvey:
-                if (this.applicationEnvironment.channel === 'stable') {
+                if (this.applicationEnvironment.channel === 'stable' && !this.useVSCodeNotebookEditorApi) {
                     return this.isEnabledInternal(type);
                 }
                 break;
@@ -165,8 +160,7 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
         @inject(IVSCodeNotebook) private vscodeNotebook: IVSCodeNotebook,
         @inject(INotebookExtensibility) private notebookExtensibility: INotebookExtensibility,
         @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
-        @inject(UseVSCodeNotebookEditorApi) private useVSCodeNotebookEditorApi: boolean,
-        @inject(IExperimentService) private experimentService: IExperimentService
+        @inject(UseVSCodeNotebookEditorApi) private useVSCodeNotebookEditorApi: boolean
     ) {
         this.setPersistentState(BannerType.DSSurvey, DSSurveyStateKeys.ShowBanner);
         this.setPersistentState(BannerType.InsidersNotebookSurvey, InsidersNotebookSurveyStateKeys.ShowBanner);
