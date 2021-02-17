@@ -126,7 +126,7 @@ export async function addNewCellAfter(notebookEditor: NotebookEditor, cell: Note
                 language: cell.language,
                 metadata: new NotebookCellMetadata()
                     .with(cell.metadata)
-                    .with({ ...cell.metadata, runState: NotebookCellRunState.Success }),
+                    .with({ runState: NotebookCellRunState.Success }),
                 outputs: [],
                 source: text
             }
