@@ -4,8 +4,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { Event, EventEmitter, Uri } from 'vscode';
-import type { NotebookDocument, NotebookEditor as VSCodeNotebookEditor } from '../../../../types/vscode-proposed';
+import { Event, EventEmitter, Uri, NotebookDocument, NotebookEditor as VSCodeNotebookEditor } from 'vscode';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import '../../common/extensions';
 import { IFileSystem } from '../../common/platform/types';
@@ -44,7 +43,13 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         return this._onDidOpenNotebookEditor.event;
     }
     public get activeEditor(): INotebookEditor | undefined {
-        return this.editors.find((e) => e.visible && e.active);
+        // Ask VS code for which one is active. Don't use webview tracking as it seems to be inaccurate
+        return (
+            this.vscodeNotebook.activeNotebookEditor &&
+            this.editors.find(
+                (e) => e.file.toString() === this.vscodeNotebook.activeNotebookEditor?.document.uri.toString()
+            )
+        );
     }
     public get editors(): INotebookEditor[] {
         return [...this.openedEditors];

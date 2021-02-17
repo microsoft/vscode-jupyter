@@ -92,6 +92,8 @@
     "jupyter.command.jupyter.removeallcells.title": "Delete All Interactive Cells",
     "jupyter.command.jupyter.notebookeditor.removeallcells.title": "Delete All Notebook Editor Cells",
     "jupyter.command.jupyter.notebookeditor.addcellbelow.title": "Add Empty Cell to Notebook File",
+    "jupyter.command.jupyter.notebookeditor.keybind.undo.title": "Undo",
+    "jupyter.command.jupyter.notebookeditor.keybind.save.title": "Save",
     "jupyter.command.jupyter.interruptkernel.title": "Interrupt Jupyter Kernel",
     "jupyter.command.jupyter.restartkernel.title": "Restart Jupyter Kernel",
     "jupyter.command.jupyter.expandallcells.title": "Expand All Interactive Cells",

@@ -2,8 +2,7 @@
 // Licensed under the MIT License.
 
 import { anything, instance, mock, verify, when } from 'ts-mockito';
-import { EventEmitter, Extension, ExtensionKind, Uri } from 'vscode';
-import { NotebookDocument } from '../../../../types/vscode-proposed';
+import { EventEmitter, Extension, ExtensionKind, NotebookDocument, Uri } from 'vscode';
 import { IExtensionSingleActivationService } from '../../../client/activation/types';
 import { VSCodeNotebook } from '../../../client/common/application/notebook';
 import { IApplicationEnvironment, IVSCodeNotebook } from '../../../client/common/application/types';
@@ -26,7 +25,6 @@ suite('DataScience - NativeNotebook Renderer Extension', () => {
         uri: Uri.file('one.ipynb'),
         fileName: '',
         isDirty: false,
-        languages: [],
         metadata: {},
         isUntitled: false,
         viewType: JupyterNotebookView,
@@ -55,7 +53,6 @@ suite('DataScience - NativeNotebook Renderer Extension', () => {
         fileName: '',
         isUntitled: false,
         isDirty: false,
-        languages: [],
         metadata: {},
         viewType: 'somethingElse',
         contentOptions: {

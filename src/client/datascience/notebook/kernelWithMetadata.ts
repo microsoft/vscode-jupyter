@@ -3,8 +3,7 @@
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import { join } from 'path';
-import { Uri } from 'vscode';
-import { NotebookCell, NotebookDocument, NotebookKernel as VSCNotebookKernel } from '../../../../types/vscode-proposed';
+import { Uri, NotebookCell, NotebookDocument, NotebookKernel as VSCNotebookKernel } from 'vscode';
 import { ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import { disposeAllDisposables } from '../../common/helpers';
 import { traceInfo } from '../../common/logger';

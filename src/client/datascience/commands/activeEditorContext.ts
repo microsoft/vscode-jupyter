@@ -12,6 +12,7 @@ import { PYTHON_LANGUAGE, UseVSCodeNotebookEditorApi } from '../../common/consta
 import { ContextKey } from '../../common/contextKey';
 import { traceError } from '../../common/logger';
 import { IDisposable, IDisposableRegistry } from '../../common/types';
+import { isNotebookCell } from '../../common/utils/misc';
 import { EditorContexts } from '../constants';
 import { isPythonNotebook } from '../notebook/helpers/helpers';
 import {
@@ -114,9 +115,10 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         if (!this.inNativeNotebookExperiment) {
             return;
         }
-        this.hasNativeNotebookCells
-            .set((this.notebookEditorProvider.activeEditor?.model?.cellCount || 0) > 0)
-            .ignoreErrors();
+
+        // Separate for debugging.
+        const hasNativeCells = (this.vscNotebook.activeNotebookEditor?.document.cells.length || 0) > 0;
+        this.hasNativeNotebookCells.set(hasNativeCells).ignoreErrors();
     }
     private onDidChangeActiveInteractiveWindow(e?: IInteractiveWindow) {
         this.interactiveContext.set(!!e).ignoreErrors();
@@ -134,9 +136,10 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         }
         this.isNotebookTrusted.set(e?.model?.isTrusted === true).ignoreErrors();
         this.isPythonNotebook.set(isPythonNotebook(e?.model?.metadata)).ignoreErrors();
-        this.updateMergedContexts();
         this.updateContextOfActiveNotebookKernel(e);
         this.updateNativeNotebookContext();
+        this.updateNativeNotebookCellContext();
+        this.updateMergedContexts();
     }
     private updateNativeNotebookContext() {
         if (!this.vscNotebook.activeNotebookEditor) {
@@ -189,8 +192,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         this.updateContextOfActiveNotebookKernel(activeEditor);
     }
     private onDidChangeActiveTextEditor(e?: TextEditor) {
-        this.isPythonFileActive =
-            e?.document.languageId === PYTHON_LANGUAGE && !this.notebookEditorProvider.activeEditor;
+        this.isPythonFileActive = e?.document.languageId === PYTHON_LANGUAGE && !isNotebookCell(e.document.uri);
         this.updateNativeNotebookCellContext();
         this.updateMergedContexts();
     }

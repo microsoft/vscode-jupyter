@@ -3,7 +3,14 @@
 
 'use strict';
 
-import { NotebookCell, NotebookDocument, NotebookEditor } from 'vscode';
+import {
+    NotebookCell,
+    NotebookCellKind,
+    NotebookCellRunState,
+    NotebookDocument,
+    NotebookEditor,
+    NotebookRunState
+} from 'vscode';
 import { ServerStatus } from '../../../../datascience-ui/interactive-common/mainState';
 import { IApplicationShell, IVSCodeNotebook } from '../../../common/application/types';
 import { traceInfo, traceWarning } from '../../../common/logger';
@@ -26,8 +33,6 @@ import { CellExecutionFactory } from './cellExecution';
 import { CellExecutionQueue } from './cellExecutionQueue';
 import { isPythonKernelConnection } from './helpers';
 import type { IKernel, IKernelProvider, IKernelSelectionUsage, KernelConnectionMetadata } from './types';
-// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
-const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
 /**
  * Separate class that deals just with kernel execution.
@@ -60,7 +65,7 @@ export class KernelExecution implements IDisposable {
             // No editor, possible it was closed.
             return;
         }
-        if (cell.metadata.runState === vscodeNotebookEnums.NotebookCellRunState.Running) {
+        if (cell.metadata.runState === NotebookCellRunState.Running) {
             // This is an unlikely scenario (UI doesn't allow this).
             // Seen something similar in CI tests when we manually run whole document using the commands.
             traceCellMessage(cell, 'Cell is already running, somehow executeCell called again');
@@ -83,8 +88,8 @@ export class KernelExecution implements IDisposable {
 
         // Only run code cells that are not already running.
         const cellsThatWeCanRun = editor.document.cells
-            .filter((cell) => cell.cellKind === vscodeNotebookEnums.CellKind.Code)
-            .filter((cell) => cell.metadata.runState !== vscodeNotebookEnums.NotebookCellRunState.Running);
+            .filter((cell) => cell.cellKind === NotebookCellKind.Code)
+            .filter((cell) => cell.metadata.runState !== NotebookCellRunState.Running);
         if (cellsThatWeCanRun.length === 0) {
             // This is an unlikely scenario (UI doesn't allow this).
             // Seen this in CI tests when we manually run whole document using the commands.
@@ -96,21 +101,26 @@ export class KernelExecution implements IDisposable {
         try {
             traceInfo('Update notebook execution state as running');
 
-            const updateNotebookStatus = chainWithPendingUpdates(editor, (edit) =>
-                edit.replaceMetadata({
+            const updateNotebookStatus = chainWithPendingUpdates(editor.document, (edit) => {
+                edit.replaceNotebookMetadata(editor.document.uri, {
                     ...document.metadata,
-                    runState: vscodeNotebookEnums.NotebookRunState.Running
-                })
-            );
+                    runState: NotebookRunState.Running
+                });
+                return edit;
+            });
             cellsThatWeCanRun.forEach((cell) => executionQueue.queueCell(cell));
             const runAllCells = executionQueue.waitForCompletion(cellsThatWeCanRun);
 
             await Promise.all([updateNotebookStatus, runAllCells]);
         } finally {
             traceInfo('Restore notebook state to idle after completion');
-            await chainWithPendingUpdates(editor, (edit) =>
-                edit.replaceMetadata({ ...document.metadata, runState: vscodeNotebookEnums.NotebookRunState.Idle })
-            );
+            await chainWithPendingUpdates(editor.document, (edit) => {
+                edit.replaceNotebookMetadata(editor.document.uri, {
+                    ...document.metadata,
+                    runState: NotebookRunState.Idle
+                });
+                return edit;
+            });
         }
     }
     /**

@@ -16,21 +16,21 @@ import { vscUri } from './uri';
 import { generateUuid } from './uuid';
 
 export namespace vscMockExtHostedTypes {
-    export enum CellKind {
+    export enum NotebookCellKind {
         Markdown = 1,
         Code = 2
     }
 
-    export enum CellOutputKind {
-        Text = 1,
-        Error = 2,
-        Rich = 3
-    }
     export enum NotebookCellRunState {
         Running = 1,
         Idle = 2,
         Success = 3,
         Error = 4
+    }
+
+    export enum NotebookRunState {
+        Running = 1,
+        Idle = 2
     }
 
     export interface IRelativePattern {
@@ -547,6 +547,32 @@ export namespace vscMockExtHostedTypes {
     }
 
     export class WorkspaceEdit implements vscode.WorkspaceEdit {
+        replaceNotebookCellOutputItems(
+            _uri: vscode.Uri,
+            _index: number,
+            _outputId: string,
+            _items: vscode.NotebookCellOutputItem[],
+            _metadata?: vscode.WorkspaceEditEntryMetadata
+        ): void {
+            // Noop
+        }
+        appendNotebookCellOutputItems(
+            _uri: vscode.Uri,
+            _index: number,
+            _outputId: string,
+            _items: vscode.NotebookCellOutputItem[],
+            _metadata?: vscode.WorkspaceEditEntryMetadata
+        ): void {
+            // Noop
+        }
+        appendNotebookCellOutput(
+            _uri: vscode.Uri,
+            _index: number,
+            _outputs: vscode.NotebookCellOutput[],
+            _metadata?: vscode.WorkspaceEditEntryMetadata
+        ): void {
+            // Noop
+        }
         replaceNotebookMetadata(_uri: vscode.Uri, _value: vscode.NotebookDocumentMetadata): void {
             //
         }
@@ -563,7 +589,7 @@ export namespace vscMockExtHostedTypes {
         replaceNotebookCellOutput(
             _uri: vscode.Uri,
             _index: number,
-            _outputs: vscode.CellOutput[],
+            _outputs: vscode.NotebookCellOutput[],
             _metadata?: vscode.WorkspaceEditEntryMetadata
         ): void {
             // Noop.
@@ -2143,6 +2169,6 @@ export namespace vscMockExtHostedTypes {
     }
 
     export class QuickInputButtons {
-        static readonly Back: vscode.QuickInputButton = { iconPath: 'back' };
+        static readonly Back: vscode.QuickInputButton = {} as any;
     }
 }

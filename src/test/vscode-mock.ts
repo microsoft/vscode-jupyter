@@ -134,8 +134,8 @@ mockedVSCode.QuickInputButtons = vscodeMocks.vscMockExtHostedTypes.QuickInputBut
 mockedVSCode.FileType = vscodeMocks.vscMock.FileType;
 mockedVSCode.UIKind = vscodeMocks.vscMock.UIKind;
 mockedVSCode.FileSystemError = vscodeMocks.vscMockExtHostedTypes.FileSystemError;
-(mockedVSCode as any).CellKind = vscodeMocks.vscMockExtHostedTypes.CellKind;
-(mockedVSCode as any).CellOutputKind = vscodeMocks.vscMockExtHostedTypes.CellOutputKind;
+(mockedVSCode as any).NotebookCellKind = vscodeMocks.vscMockExtHostedTypes.NotebookCellKind;
+(mockedVSCode as any).NotebookRunState = vscodeMocks.vscMockExtHostedTypes.NotebookRunState;
 (mockedVSCode as any).NotebookCellRunState = vscodeMocks.vscMockExtHostedTypes.NotebookCellRunState;
 
 // This API is used in src/client/telemetry/telemetry.ts

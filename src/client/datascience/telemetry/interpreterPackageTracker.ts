@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
+import { NotebookKernel as VSCNotebookKernel } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IPythonInstaller, IPythonExtensionChecker } from '../../api/types';
 import { IVSCodeNotebook } from '../../common/application/types';
@@ -11,7 +12,6 @@ import { isResource, noop } from '../../common/utils/misc';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { isLocalLaunch } from '../jupyter/kernels/helpers';
 import { InterpreterPackages } from './interpreterPackages';
-import { NotebookKernel as VSCNotebookKernel } from '../../../../types/vscode-proposed';
 import { isJupyterKernel } from '../notebook/helpers/helpers';
 
 @injectable()
