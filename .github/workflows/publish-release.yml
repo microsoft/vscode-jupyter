@@ -5,9 +5,9 @@ on:
   workflow_dispatch:
     inputs:
       confirmation:
-        description: 'Publish to VSCode marketplace?'
+        description: 'Branch for publish?'
         required: true
-        default: 'no'
+        default: 'unknown'
 
 env:
   PYTHON_VERSION: 3.8
@@ -21,13 +21,15 @@ jobs:
     runs-on: ubuntu-latest
     # Extra careful to ensure this happens only in main branch.
     # Also ensure this action gets  executed manually (releases are manual).
-    if: github.repository == 'microsoft/vscode-jupyter' && startsWith(github.ref, 'refs/heads/release') && contains(github.event.inputs.confirmation, 'yes')
+    if: github.repository == 'microsoft/vscode-jupyter' && contains(github.event.inputs.confirmation, 'release')
     env:
       BLOB_CONTAINER_NAME: extension-builds-jupyter
 
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+	with:
+	  ref: github.event.inputs.confirmation
 
       - name: Use Python ${{env.PYTHON_VERSION}}
         uses: actions/setup-python@v2
