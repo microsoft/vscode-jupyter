@@ -155,11 +155,11 @@ export class KernelLauncher implements IKernelLauncher {
 
     private async getConnectionPorts(): Promise<number[]> {
         // Have to wait for static port lookup (it handles case where two VS code instances are running)
-        let processPort = await KernelLauncher.startPortPromise;
-        let startPort = Math.max(processPort, ...KernelLauncher.usedPorts) + 1;
+        const processPort = await KernelLauncher.startPortPromise;
+        const startPort = Math.max(processPort, ...KernelLauncher.usedPorts) + 1;
 
         // Then get the next set starting at that point
-        let ports = await KernelLauncher.getPorts(5, { host: '127.0.0.1', startPort });
+        const ports = await KernelLauncher.getPorts(5, { host: '127.0.0.1', startPort });
 
         // Save ports
         ports.forEach((p) => KernelLauncher.usedPorts.add(p));
