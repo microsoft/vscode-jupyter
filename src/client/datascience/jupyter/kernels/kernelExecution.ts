@@ -8,6 +8,7 @@ import {
     NotebookCellKind,
     NotebookCellRunState,
     NotebookDocument,
+    NotebookDocumentMetadata,
     NotebookEditor,
     NotebookRunState
 } from 'vscode';
@@ -102,10 +103,10 @@ export class KernelExecution implements IDisposable {
             traceInfo('Update notebook execution state as running');
 
             const updateNotebookStatus = chainWithPendingUpdates(editor.document, (edit) => {
-                edit.replaceNotebookMetadata(editor.document.uri, {
-                    ...document.metadata,
+                const metadata = new NotebookDocumentMetadata().with(document.metadata).with({
                     runState: NotebookRunState.Running
                 });
+                edit.replaceNotebookMetadata(editor.document.uri, metadata);
                 return edit;
             });
             cellsThatWeCanRun.forEach((cell) => executionQueue.queueCell(cell));
@@ -115,10 +116,10 @@ export class KernelExecution implements IDisposable {
         } finally {
             traceInfo('Restore notebook state to idle after completion');
             await chainWithPendingUpdates(editor.document, (edit) => {
-                edit.replaceNotebookMetadata(editor.document.uri, {
-                    ...document.metadata,
+                const metadata = new NotebookDocumentMetadata().with(document.metadata).with({
                     runState: NotebookRunState.Idle
                 });
+                edit.replaceNotebookMetadata(editor.document.uri, metadata);
                 return edit;
             });
         }

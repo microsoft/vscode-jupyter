@@ -13,7 +13,8 @@ import {
     NotebookCellKind,
     NotebookCellRunState,
     NotebookCell,
-    NotebookEditor
+    NotebookEditor,
+    NotebookCellMetadata
 } from 'vscode';
 import { createErrorOutput } from '../../../../datascience-ui/common/cellFactory';
 import {
@@ -95,10 +96,8 @@ export async function updateCellWithErrorStatus(
 ) {
     await chainWithPendingUpdates(notebookEditor.document, (edit) => {
         traceCellMessage(cell, 'Update with error state & output');
-        edit.replaceNotebookCellMetadata(notebookEditor.document.uri, cell.index, {
-            ...cell.metadata,
-            runState: NotebookCellRunState.Error
-        });
+        const metadata = new NotebookCellMetadata().with(cell.metadata).with({ runState: NotebookCellRunState.Error });
+        edit.replaceNotebookCellMetadata(notebookEditor.document.uri, cell.index, metadata);
         edit.replaceNotebookCellOutput(notebookEditor.document.uri, cell.index, [
             translateErrorOutput(createErrorOutput(ex))
         ]);
@@ -125,7 +124,9 @@ export async function addNewCellAfter(notebookEditor: NotebookEditor, cell: Note
             {
                 cellKind: NotebookCellKind.Code,
                 language: cell.language,
-                metadata: { ...cell.metadata, runState: NotebookCellRunState.Success },
+                metadata: new NotebookCellMetadata()
+                    .with(cell.metadata)
+                    .with({ ...cell.metadata, runState: NotebookCellRunState.Success }),
                 outputs: [],
                 source: text
             }
@@ -144,10 +145,8 @@ export async function updateCellExecutionCount(
     if (cell.metadata.executionOrder !== executionCount && executionCount) {
         await chainWithPendingUpdates(editor.document, (edit) => {
             traceCellMessage(cell, 'Update execution count');
-            edit.replaceNotebookCellMetadata(editor.document.uri, cell.index, {
-                ...cell.metadata,
-                executionOrder: executionCount
-            });
+            const metadata = new NotebookCellMetadata().with(cell.metadata).with({ executionOrder: executionCount });
+            edit.replaceNotebookCellMetadata(editor.document.uri, cell.index, metadata);
         });
     }
 }

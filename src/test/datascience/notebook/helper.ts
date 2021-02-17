@@ -22,7 +22,9 @@ import {
     NotebookCell,
     NotebookContentProvider as VSCNotebookContentProvider,
     NotebookDocument,
-    NotebookCellKind
+    NotebookCellKind,
+    NotebookCellMetadata,
+    NotebookDocumentMetadata
 } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { IApplicationEnvironment, IApplicationShell, IVSCodeNotebook } from '../../../client/common/application/types';
@@ -94,9 +96,9 @@ export async function insertMarkdownCell(source: string, options?: { index?: num
                 cellKind: NotebookCellKind.Markdown,
                 language: MARKDOWN_LANGUAGE,
                 source,
-                metadata: {
+                metadata: new NotebookCellMetadata().with({
                     hasExecutionOrder: false
-                },
+                }),
                 outputs: []
             }
         ])
@@ -116,9 +118,9 @@ export async function insertCodeCell(source: string, options?: { language?: stri
             cellKind: NotebookCellKind.Code,
             language: options?.language || PYTHON_LANGUAGE,
             source,
-            metadata: {
+            metadata: new NotebookCellMetadata().with({
                 hasExecutionOrder: false
-            },
+            }),
             outputs: []
         }
     ]);
@@ -677,19 +679,19 @@ export function createNotebookDocument(
                 statusMessage: false
             }
         },
-        metadata: {
+        metadata: new NotebookDocumentMetadata().with({
             cellEditable: model.isTrusted,
             cellHasExecutionOrder: true,
             cellRunnable: model.isTrusted,
             editable: model.isTrusted,
             runnable: model.isTrusted
-        }
+        })
     };
     model.getNotebookData().cells.forEach((cell, index) => {
         const vscDocumentCell: NotebookCell = {
             cellKind: cell.cellKind,
             language: cell.language,
-            metadata: cell.metadata || {},
+            metadata: cell.metadata || new NotebookCellMetadata(),
             uri: model.file.with({ fragment: `cell${index}` }),
             notebook: doc,
             index,

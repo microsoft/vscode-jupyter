@@ -14,7 +14,9 @@ import {
     NotebookDocument,
     NotebookDocumentBackup,
     NotebookDocumentBackupContext,
-    NotebookDocumentOpenContext
+    NotebookDocumentOpenContext,
+    NotebookDocumentMetadata,
+    NotebookCellMetadata
 } from 'vscode';
 import { IVSCodeNotebook } from '../../common/application/types';
 import { MARKDOWN_LANGUAGE } from '../../common/constants';
@@ -65,11 +67,11 @@ export class NotebookContentProvider implements VSCNotebookContentProvider {
                         cellKind: NotebookCellKind.Markdown,
                         language: MARKDOWN_LANGUAGE,
                         source: `# ${DataScience.usingPreviewNotebookWithOtherNotebookWarning()}`,
-                        metadata: { editable: false, runnable: false },
+                        metadata: new NotebookCellMetadata().with({ editable: false, runnable: false }),
                         outputs: []
                     }
                 ],
-                metadata: { cellEditable: false, editable: false, runnable: false }
+                metadata: new NotebookDocumentMetadata().with({ cellEditable: false, editable: false, runnable: false })
             };
         }
         // If the model already exists & it has been trusted.

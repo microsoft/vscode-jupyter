@@ -15,7 +15,8 @@ import {
     NotebookDocument,
     NotebookEditor,
     NotebookKernel as VSCNotebookKernel,
-    NotebookCellKind
+    NotebookCellKind,
+    NotebookDocumentMetadata
 } from 'vscode';
 import { concatMultilineString, splitMultilineString } from '../../../../datascience-ui/common';
 import { IVSCodeNotebook } from '../../../common/application/types';
@@ -182,14 +183,14 @@ export function notebookModelToVSCNotebookData(
         cells.push({
             cellKind: NotebookCellKind.Code,
             language: preferredLanguage,
-            metadata: {},
+            metadata: new NotebookCellMetadata(),
             outputs: [],
             source: ''
         });
     }
     return {
         cells,
-        metadata: {
+        metadata: new NotebookDocumentMetadata().with({
             custom: notebookContentWithoutCells, // Include metadata in VSC Model (so that VSC can display these if required)
             cellEditable: isNotebookTrusted,
             cellRunnable: isNotebookTrusted,
@@ -212,7 +213,7 @@ export function notebookModelToVSCNotebookData(
                 'application/json',
                 'text/plain'
             ]
-        }
+        })
     };
 }
 export function cellRunStateToCellState(cellRunState?: NotebookCellRunState): CellState {
@@ -286,13 +287,13 @@ function createCodeCellFromNotebookCell(cell: NotebookCell): nbformat.ICodeCell 
 }
 
 function createNotebookCellDataFromRawCell(isNbTrusted: boolean, cell: nbformat.IRawCell): NotebookCellData {
-    const notebookCellMetadata: NotebookCellMetadata = {
+    const notebookCellMetadata = new NotebookCellMetadata().with({
         editable: isNbTrusted,
         executionOrder: undefined,
         hasExecutionOrder: false,
         runnable: false,
         custom: getNotebookCellMetadata(cell)
-    };
+    });
     return {
         cellKind: NotebookCellKind.Code,
         language: 'raw',
@@ -314,13 +315,13 @@ function createMarkdownCellFromNotebookCell(cell: NotebookCell): nbformat.IMarkd
     return markdownCell;
 }
 function createNotebookCellDataFromMarkdownCell(isNbTrusted: boolean, cell: nbformat.IMarkdownCell): NotebookCellData {
-    const notebookCellMetadata: NotebookCellMetadata = {
+    const notebookCellMetadata = new NotebookCellMetadata().with({
         editable: isNbTrusted,
         executionOrder: undefined,
         hasExecutionOrder: false,
         runnable: false,
         custom: getNotebookCellMetadata(cell)
-    };
+    });
     return {
         cellKind: NotebookCellKind.Markdown,
         language: MARKDOWN_LANGUAGE,
@@ -347,7 +348,7 @@ function createNotebookCellDataFromCodeCell(
         statusMessage = getCellStatusMessageBasedOnFirstErrorOutput(cellOutputs);
     }
 
-    const notebookCellMetadata: NotebookCellMetadata = {
+    const notebookCellMetadata = new NotebookCellMetadata().with({
         editable: isNbTrusted,
         executionOrder: typeof cell.execution_count === 'number' ? cell.execution_count : undefined,
         hasExecutionOrder: true,
@@ -355,7 +356,7 @@ function createNotebookCellDataFromCodeCell(
         runnable: isNbTrusted,
         statusMessage,
         custom: getNotebookCellMetadata(cell)
-    };
+    });
 
     // If not trusted, then clear the output in VSC Cell (for untrusted notebooks we do not display output).
     // At this point we have the original output in the ICell.
@@ -385,13 +386,13 @@ export function createIOutputFromCellOutputs(cellOutputs: readonly NotebookCellO
 
 export async function clearCellForExecution(editor: NotebookEditor, cell: NotebookCell) {
     await chainWithPendingUpdates(editor.document, (edit) => {
-        edit.replaceNotebookCellMetadata(editor.document.uri, cell.index, {
-            ...cell.metadata,
+        const metadata = new NotebookCellMetadata().with(cell.metadata).with({
             statusMessage: undefined,
             executionOrder: undefined,
             lastRunDuration: undefined,
             runStartTime: undefined
         });
+        edit.replaceNotebookCellMetadata(editor.document.uri, cell.index, metadata);
         edit.replaceNotebookCellOutput(editor.document.uri, cell.index, []);
     });
     await updateCellExecutionTimes(editor, cell);
@@ -418,10 +419,8 @@ export async function updateCellExecutionTimes(
     const lastRunDuration = times.lastRunDuration ?? cell.metadata.lastRunDuration;
     await chainWithPendingUpdates(editor.document, (edit) => {
         traceCellMessage(cell, 'Update run duration');
-        edit.replaceNotebookCellMetadata(editor.document.uri, cell.index, {
-            ...cell.metadata,
-            lastRunDuration
-        });
+        const metadata = new NotebookCellMetadata().with(cell.metadata).with({ lastRunDuration });
+        edit.replaceNotebookCellMetadata(editor.document.uri, cell.index, metadata);
     });
 }
 
@@ -873,22 +872,24 @@ export async function updateVSCNotebookAfterTrustingNotebook(
     }
 
     await chainWithPendingUpdates(editor.document, (edit) => {
-        edit.replaceNotebookMetadata(document.uri, {
-            ...document.metadata,
-            cellEditable: true,
-            cellRunnable: true,
-            editable: true,
-            runnable: true
-        });
+        edit.replaceNotebookMetadata(
+            document.uri,
+            new NotebookDocumentMetadata().with(document.metadata).with({
+                cellEditable: true,
+                cellRunnable: true,
+                editable: true,
+                runnable: true
+            })
+        );
         document.cells.forEach((cell, index) => {
             if (cell.cellKind === NotebookCellKind.Markdown) {
-                edit.replaceNotebookCellMetadata(document.uri, index, { ...cell.metadata, editable: true });
+                const metadata = new NotebookCellMetadata().with(cell.metadata).with({ editable: true });
+                edit.replaceNotebookCellMetadata(document.uri, index, metadata);
             } else {
-                edit.replaceNotebookCellMetadata(document.uri, index, {
-                    ...cell.metadata,
-                    editable: true,
-                    runnable: true
-                });
+                const metadata = new NotebookCellMetadata()
+                    .with(cell.metadata)
+                    .with({ editable: true, runnable: true });
+                edit.replaceNotebookCellMetadata(document.uri, index, metadata);
                 // Restore the output once we trust the notebook.
                 edit.replaceNotebookCellOutput(
                     document.uri,

@@ -9,6 +9,7 @@ import {
     EventEmitter,
     NotebookCell,
     NotebookCellKind,
+    NotebookCellMetadata,
     NotebookDocument,
     ProgressLocation,
     Uri,
@@ -156,7 +157,7 @@ export class NotebookEditor implements INotebookEditor {
                     {
                         cellKind: NotebookCellKind.Code,
                         language: defaultLanguage,
-                        metadata: {},
+                        metadata: new NotebookCellMetadata(),
                         outputs: [],
                         source: ''
                     }
@@ -173,11 +174,10 @@ export class NotebookEditor implements INotebookEditor {
         if (editor) {
             chainWithPendingUpdates(editor.document, (edit) => {
                 notebook.cells.forEach((cell, index) => {
-                    edit.replaceNotebookCellMetadata(editor.document.uri, index, {
-                        ...cell.metadata,
-                        inputCollapsed: false,
-                        outputCollapsed: false
-                    });
+                    const metadata = new NotebookCellMetadata()
+                        .with(cell.metadata)
+                        .with({ inputCollapsed: false, outputCollapsed: false });
+                    edit.replaceNotebookCellMetadata(editor.document.uri, index, metadata);
                 });
             }).then(noop, noop);
         }
@@ -191,11 +191,10 @@ export class NotebookEditor implements INotebookEditor {
         if (editor) {
             chainWithPendingUpdates(editor.document, (edit) => {
                 notebook.cells.forEach((cell, index) => {
-                    edit.replaceNotebookCellMetadata(editor.document.uri, index, {
-                        ...cell.metadata,
-                        inputCollapsed: true,
-                        outputCollapsed: true
-                    });
+                    const metadata = new NotebookCellMetadata()
+                        .with(cell.metadata)
+                        .with({ inputCollapsed: true, outputCollapsed: true });
+                    edit.replaceNotebookCellMetadata(editor.document.uri, index, metadata);
                 });
             }).then(noop, noop);
         }
