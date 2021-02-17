@@ -1882,6 +1882,7 @@
         "testSmoke": "node ./out/test/testBootstrap.js ./out/test/smokeTest.js",
         "testSmokeLogged": "cross-env VSC_JUPYTER_FORCE_LOGGING=true VSC_JUPYTER_LOG_FILE=smoke-test.log node --no-force-async-hooks-checks ./out/test/testBootstrap.js ./out/test/smokeTest.js",
         "lint": "eslint -c .eslintrc.js --ext .ts src",
+        "lint:transitional": "eslint --config .eslintrc.diff.yml",
         "prettier-fix": "prettier 'src/**/*.ts*' --write && prettier 'build/**/*.js' --write",
         "clean": "gulp clean",
         "updateBuildNumber": "gulp updateBuildNumber",
