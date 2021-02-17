@@ -110,14 +110,7 @@ export class KernelLauncher implements IKernelLauncher {
             }
 
             // Should be available now, wait with a timeout
-            return await this.launchProcess(
-                kernelConnectionMetadata,
-                resource,
-                workingDirectory,
-                timeout,
-                true,
-                cancelToken
-            );
+            return await this.launchProcess(kernelConnectionMetadata, resource, workingDirectory, timeout, cancelToken);
         })();
         sendKernelTelemetryWhenDone(resource, Telemetry.KernelLauncherPerf, promise);
         return promise;
@@ -128,43 +121,27 @@ export class KernelLauncher implements IKernelLauncher {
         resource: Resource,
         workingDirectory: string,
         timeout: number,
-        allowRetry: boolean,
         cancelToken?: CancellationToken
     ): Promise<IKernelProcess> {
-        try {
-            const connection = await this.getKernelConnection(kernelConnectionMetadata);
-            const kernelProcess = new KernelProcess(
-                this.processExecutionFactory,
-                this.daemonPool,
-                connection,
-                kernelConnectionMetadata,
-                this.fs,
-                resource,
-                this.extensionChecker,
-                this.kernelEnvVarsService
-            );
-            await kernelProcess.launch(workingDirectory, timeout, cancelToken);
+        const connection = await this.getKernelConnection(kernelConnectionMetadata);
+        const kernelProcess = new KernelProcess(
+            this.processExecutionFactory,
+            this.daemonPool,
+            connection,
+            kernelConnectionMetadata,
+            this.fs,
+            resource,
+            this.extensionChecker,
+            this.kernelEnvVarsService
+        );
+        await kernelProcess.launch(workingDirectory, timeout, cancelToken);
 
-            // Double check for cancel
-            if (cancelToken?.isCancellationRequested) {
-                await kernelProcess.dispose();
-                throw new CancellationError();
-            }
-            return kernelProcess;
-        } catch (e) {
-            if (allowRetry && e.toString().contains('zmq.error')) {
-                // Try one more time. Address may be in use.
-                return this.launchProcess(
-                    kernelConnectionMetadata,
-                    resource,
-                    workingDirectory,
-                    timeout,
-                    false,
-                    cancelToken
-                );
-            }
-            throw e;
+        // Double check for cancel
+        if (cancelToken?.isCancellationRequested) {
+            await kernelProcess.dispose();
+            throw new CancellationError();
         }
+        return kernelProcess;
     }
 
     private async chainGetConnectionPorts(): Promise<number[]> {
