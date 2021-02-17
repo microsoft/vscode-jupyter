@@ -11,7 +11,7 @@ Please follow the [Python Extension ReadMe](https://github.com/microsoft/vscode-
 
 ## Working with other Languages
 
-The Jupyter Extension supports other languages such as Julia and R in VS Code Insiders with our latest Native VS Code Notebooks Experience!
+The Jupyter Extension supports other languages in addition to Python such as Julia, R, and C# in VS Code Insiders with our latest Native VS Code Notebooks Experience!
 
 ### Quick Start
 
