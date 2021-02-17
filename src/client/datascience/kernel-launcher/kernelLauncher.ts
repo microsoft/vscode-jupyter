@@ -37,7 +37,7 @@ const PortFormatString = `kernelLauncherPortStart_{0}.tmp`;
 @injectable()
 export class KernelLauncher implements IKernelLauncher {
     private static startPortPromise = KernelLauncher.computeStartPort();
-    private static nextFreePortToTryAndUsePromise = KernelLauncher.computeStartPort();
+    private static usedPorts = new Set<number>();
     private dependencyPromises = new Map<string, Deferred<KernelInterpreterDependencyResponse>>();
     private portChain: Promise<number[]> | undefined;
     constructor(
@@ -179,15 +179,17 @@ export class KernelLauncher implements IKernelLauncher {
         const getPorts = promisify(portfinder.getPorts);
 
         // Have to wait for static port lookup (it handles case where two VS code instances are running)
-        const startPort = await KernelLauncher.nextFreePortToTryAndUsePromise;
+        const startPort = await KernelLauncher.startPortPromise;
 
         // Then get the next set starting at that point
-        const ports = await getPorts(5, { host: '127.0.0.1', startPort });
-        traceInfo(`Kernel launching with ports ${ports.toString()}`);
+        let ports = await getPorts(5, { host: '127.0.0.1', startPort });
+        while (ports.find((p) => KernelLauncher.usedPorts.has(p))) {
+            ports = await getPorts(5, { host: '127.0.0.1', startPort: Math.max(...ports) + 1 });
+        }
 
-        // We launch restart kernels in the background, its possible other session hasn't started.
-        // Ensure we do not use same ports.
-        KernelLauncher.nextFreePortToTryAndUsePromise = Promise.resolve(Math.max(...ports) + 1);
+        // Save ports
+        ports.forEach((p) => KernelLauncher.usedPorts.add(p));
+        traceInfo(`Kernel launching with ports ${ports.toString()}`);
 
         return ports;
     }
