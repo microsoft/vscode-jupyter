@@ -56,7 +56,7 @@ async function run() {
 
         // Run a set of stricter eslint rules against changed files only
         core.debug('Running stricter eslint rules on changed files...');
-        let res = cp.spawnSync(`npm run lint:transitional ${' '.join(changedFiles)}`);
+        let res = cp.spawnSync(`npm run lint:transitional ${changedFiles.join(' ')}`);
         if (res.error) {
             core.setFailed(`Stricter eslint rule checks failed: ${res.stderr}`);
         }
