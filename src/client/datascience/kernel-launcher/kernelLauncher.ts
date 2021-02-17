@@ -37,7 +37,7 @@ const PortFormatString = `kernelLauncherPortStart_{0}.tmp`;
 @injectable()
 export class KernelLauncher implements IKernelLauncher {
     private static startPortPromise = KernelLauncher.computeStartPort();
-    private static nextFreePortToTryAndUsePromise = KernelLauncher.startPortPromise;
+    private static nextFreePortToTryAndUsePromise = KernelLauncher.computeStartPort();
     private dependencyPromises = new Map<string, Deferred<KernelInterpreterDependencyResponse>>();
     private portChain: Promise<number[]> | undefined;
     constructor(
@@ -110,7 +110,14 @@ export class KernelLauncher implements IKernelLauncher {
             }
 
             // Should be available now, wait with a timeout
-            return await this.launchProcess(kernelConnectionMetadata, resource, workingDirectory, timeout, cancelToken);
+            return await this.launchProcess(
+                kernelConnectionMetadata,
+                resource,
+                workingDirectory,
+                timeout,
+                true,
+                cancelToken
+            );
         })();
         sendKernelTelemetryWhenDone(resource, Telemetry.KernelLauncherPerf, promise);
         return promise;
@@ -121,27 +128,43 @@ export class KernelLauncher implements IKernelLauncher {
         resource: Resource,
         workingDirectory: string,
         timeout: number,
+        allowRetry: boolean,
         cancelToken?: CancellationToken
     ): Promise<IKernelProcess> {
-        const connection = await this.getKernelConnection(kernelConnectionMetadata);
-        const kernelProcess = new KernelProcess(
-            this.processExecutionFactory,
-            this.daemonPool,
-            connection,
-            kernelConnectionMetadata,
-            this.fs,
-            resource,
-            this.extensionChecker,
-            this.kernelEnvVarsService
-        );
-        await kernelProcess.launch(workingDirectory, timeout, cancelToken);
+        try {
+            const connection = await this.getKernelConnection(kernelConnectionMetadata);
+            const kernelProcess = new KernelProcess(
+                this.processExecutionFactory,
+                this.daemonPool,
+                connection,
+                kernelConnectionMetadata,
+                this.fs,
+                resource,
+                this.extensionChecker,
+                this.kernelEnvVarsService
+            );
+            await kernelProcess.launch(workingDirectory, timeout, cancelToken);
 
-        // Double check for cancel
-        if (cancelToken?.isCancellationRequested) {
-            await kernelProcess.dispose();
-            throw new CancellationError();
+            // Double check for cancel
+            if (cancelToken?.isCancellationRequested) {
+                await kernelProcess.dispose();
+                throw new CancellationError();
+            }
+            return kernelProcess;
+        } catch (e) {
+            if (allowRetry && e.toString().contains('zmq.error')) {
+                // Try one more time. Address may be in use.
+                return this.launchProcess(
+                    kernelConnectionMetadata,
+                    resource,
+                    workingDirectory,
+                    timeout,
+                    false,
+                    cancelToken
+                );
+            }
+            throw e;
         }
-        return kernelProcess;
     }
 
     private async chainGetConnectionPorts(): Promise<number[]> {
@@ -156,17 +179,10 @@ export class KernelLauncher implements IKernelLauncher {
         const getPorts = promisify(portfinder.getPorts);
 
         // Have to wait for static port lookup (it handles case where two VS code instances are running)
-        const nextFreePort = await KernelLauncher.nextFreePortToTryAndUsePromise;
-        const startPort = await KernelLauncher.startPortPromise;
-
-        // Start the port promise over again
-        KernelLauncher.startPortPromise = Promise.resolve(startPort + 6);
-
-        // Ports may have been freed, hence start from begining.
-        const port = nextFreePort > startPort + 1_000 ? startPort : nextFreePort;
+        const startPort = await KernelLauncher.nextFreePortToTryAndUsePromise;
 
         // Then get the next set starting at that point
-        const ports = await getPorts(5, { host: '127.0.0.1', port });
+        const ports = await getPorts(5, { host: '127.0.0.1', startPort });
         traceInfo(`Kernel launching with ports ${ports.toString()}`);
 
         // We launch restart kernels in the background, its possible other session hasn't started.

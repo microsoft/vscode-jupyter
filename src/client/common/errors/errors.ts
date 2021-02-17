@@ -60,6 +60,10 @@ function tagWithZmqError(stdErr: string, tags: string[] = []) {
         */
         tags.push('zmq.cython');
     }
+    // ZMQ general errors
+    if (stdErr.includes('zmq.error.ZMQError')) {
+        tags.push('zmq.error');
+    }
 }
 function tagWithDllLoadError(stdErr: string, tags: string[] = []) {
     if (stdErr.includes('ImportError: DLL load failed'.toLowerCase())) {
