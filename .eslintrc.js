@@ -1070,6 +1070,7 @@ module.exports = {
         '@typescript-eslint/no-useless-constructor': 'error',
         '@typescript-eslint/no-var-requires': 'off',
         '@typescript-eslint/no-floating-promises': 'error',
+        '@typescript-eslint/no-unnecessary-condition': 'error',
 
         // Other rules
         'class-methods-use-this': 'off',
