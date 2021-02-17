@@ -31,8 +31,6 @@ import { sendKernelTelemetryWhenDone } from '../telemetry/telemetry';
 
 const PortFormatString = `kernelLauncherPortStart_{0}.tmp`;
 
-const usedPorts = new Set<number>();
-const getPorts = promisify(portfinder.getPorts);
 // Launches and returns a kernel process given a resource or python interpreter.
 // If the given interpreter is undefined, it will try to use the selected interpreter.
 // If the selected interpreter doesn't have a kernel, it will find a kernel on disk and use that.
@@ -153,18 +151,10 @@ export class KernelLauncher implements IKernelLauncher {
         this.portChain = this.getConnectionPorts();
         return this.portChain;
     }
-    static async findNextFreePort(port: number): Promise<number[]> {
-        // Then get the next set starting at that point
-        const ports = await getPorts(5, { host: '127.0.0.1', port });
-        if (ports.some((item) => usedPorts.has(item))) {
-            const maxPort = Math.max(...usedPorts, ...ports);
-            return KernelLauncher.findNextFreePort(maxPort);
-        }
-        ports.forEach((item) => usedPorts.add(item));
-        return ports;
-    }
 
     private async getConnectionPorts(): Promise<number[]> {
+        const getPorts = promisify(portfinder.getPorts);
+
         // Have to wait for static port lookup (it handles case where two VS code instances are running)
         const nextFreePort = await KernelLauncher.nextFreePortToTryAndUsePromise;
         const startPort = await KernelLauncher.startPortPromise;
@@ -176,7 +166,7 @@ export class KernelLauncher implements IKernelLauncher {
         const port = nextFreePort > startPort + 1_000 ? startPort : nextFreePort;
 
         // Then get the next set starting at that point
-        const ports = await KernelLauncher.findNextFreePort(port);
+        const ports = await getPorts(5, { host: '127.0.0.1', port });
 
         // We launch restart kernels in the background, its possible other session hasn't started.
         // Ensure we do not use same ports.
