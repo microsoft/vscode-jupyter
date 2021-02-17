@@ -43,7 +43,13 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         return this._onDidOpenNotebookEditor.event;
     }
     public get activeEditor(): INotebookEditor | undefined {
-        return this.editors.find((e) => e.visible && e.active);
+        // Ask VS code for which one is active. Don't use webview tracking as it seems to be inaccurate
+        return (
+            this.vscodeNotebook.activeNotebookEditor &&
+            this.editors.find(
+                (e) => e.file.toString() === this.vscodeNotebook.activeNotebookEditor?.document.uri.toString()
+            )
+        );
     }
     public get editors(): INotebookEditor[] {
         return [...this.openedEditors];
