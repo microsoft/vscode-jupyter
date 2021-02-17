@@ -29,6 +29,8 @@
    ([#4730](https://github.com/Microsoft/vscode-jupyter/issues/4730))
 1. Add survey for the new Notebooks experience experiment.
    ([#4726](https://github.com/microsoft/vscode-jupyter/issues/4726))
+1. Don't overwrite the top level VS Code Save and Undo command keybindings.
+   ([#4527](https://github.com/Microsoft/vscode-jupyter/issues/4527))
 
 ### Fixes
 
