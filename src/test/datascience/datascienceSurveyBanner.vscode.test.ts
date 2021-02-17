@@ -11,7 +11,6 @@ import { anything, instance, mock, when, verify, resetCalls } from 'ts-mockito';
 import { IApplicationEnvironment, IApplicationShell, IVSCodeNotebook } from '../../client/common/application/types';
 import {
     IBrowserService,
-    IExperimentService,
     IPersistentState,
     IPersistentStateFactory
 } from '../../client/common/types';
@@ -45,7 +44,6 @@ import { MillisecondsInADay } from '../../client/constants';
         let appEnv: IApplicationEnvironment;
         let vscodeNotebook: IVSCodeNotebook;
         let notebookExtensibility: INotebookExtensibility;
-        let experimentService: IExperimentService;
         let clock: fakeTimers.InstalledClock;
         teardown(() => {
             sinon.restore();
@@ -62,7 +60,6 @@ import { MillisecondsInADay } from '../../client/constants';
             persistentStateFactory = mock<IPersistentStateFactory>();
             vscodeNotebook = mock<IVSCodeNotebook>();
             notebookExtensibility = mock<INotebookExtensibility>();
-            experimentService = mock<IExperimentService>();
 
             when(appEnv.uiKind).thenReturn(UIKind.Desktop);
             when(appEnv.channel).thenReturn(UseVSCodeNotebookEditorApi ? 'insiders' : 'stable');
@@ -131,8 +128,7 @@ import { MillisecondsInADay } from '../../client/constants';
                 instance(vscodeNotebook),
                 instance(notebookExtensibility),
                 [],
-                UseVSCodeNotebookEditorApi,
-                instance(experimentService)
+                UseVSCodeNotebookEditorApi
             );
         }
         test(type + ' - Confirm prompt is displayed & only once per session', async () => {
