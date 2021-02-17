@@ -1,6 +1,7 @@
 name: Publish Extension
 
 on:
+  # Allow dispatch so can publish from github actions
   workflow_dispatch:
     inputs:
       confirmation:
