@@ -11,7 +11,7 @@ Please follow the [Python Extension ReadMe](https://github.com/microsoft/vscode-
 
 ## Working with other Languages
 
-The Jupyter Extension supports other languages such as Julia and R (as well as Python) in VS Code Insiders with our new Native Notebooks Experience!
+The Jupyter Extension supports other languages such as Julia and R in VS Code Insiders with our latest Native VS Code Notebooks Experience!
 
 ### Quick Start
 
@@ -23,14 +23,10 @@ The Jupyter Extension supports other languages such as Julia and R (as well as P
 
 -   **Step 4.** Open or create a notebook file and start coding!
 
-- **Special Note:**  The Jupyter Extension in VS Code Insiders will include our Native Notebooks experience! To opt out:
+- **Special Note:**  The Jupyter Extension in VS Code Insiders will include our Native Notebooks experience by default! Because we are running in VS Code insiders and this build is updated every day, there may be times when our extension may fail to work at all. We do attempt to ensure that this doesn't happen frequently. If it does we strive to provide an updated extension build by the next business day. However, if you'd like to opt out of the native experience while working in VS Code insiders:
     - Open the command palette (Windows: Ctrl + Shift + P, iOS: Command + Shift + P) and select "Preferences: Open Settings (JSON)"
     - Add the following code to your JSON settings:
      `"jupyter.experiments.optOutFrom": ["NativeNotebookEditor"],`
-
-To use the latest version of the extension:
--  Set the "jupyter.insidersChannel" setting to "daily" or "weekly" based on how often you would like the extension to check for updates
-
 
 ## Notebooks Quick Start
 
