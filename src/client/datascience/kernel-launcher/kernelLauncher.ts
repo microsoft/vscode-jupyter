@@ -38,6 +38,7 @@ const PortFormatString = `kernelLauncherPortStart_{0}.tmp`;
 export class KernelLauncher implements IKernelLauncher {
     private static startPortPromise = KernelLauncher.computeStartPort();
     private static usedPorts = new Set<number>();
+    private static getPorts = promisify(portfinder.getPorts);
     private dependencyPromises = new Map<string, Deferred<KernelInterpreterDependencyResponse>>();
     private portChain: Promise<number[]> | undefined;
     constructor(
@@ -153,20 +154,16 @@ export class KernelLauncher implements IKernelLauncher {
     }
 
     private async getConnectionPorts(): Promise<number[]> {
-        const getPorts = promisify(portfinder.getPorts);
-
         // Have to wait for static port lookup (it handles case where two VS code instances are running)
-        const startPort = await KernelLauncher.startPortPromise;
+        let processPort = await KernelLauncher.startPortPromise;
+        let startPort = Math.max(processPort, ...KernelLauncher.usedPorts) + 1;
 
         // Then get the next set starting at that point
-        let ports = await getPorts(5, { host: '127.0.0.1', startPort });
-        while (ports.find((p) => KernelLauncher.usedPorts.has(p))) {
-            ports = await getPorts(5, { host: '127.0.0.1', startPort: Math.max(...ports) + 1 });
-        }
+        let ports = await KernelLauncher.getPorts(5, { host: '127.0.0.1', startPort });
 
         // Save ports
         ports.forEach((p) => KernelLauncher.usedPorts.add(p));
-        traceInfo(`Kernel launching with ports ${ports.toString()}`);
+        traceInfo(`Kernel launching with ports ${ports.toString()}. Start port is ${startPort}`);
 
         return ports;
     }
