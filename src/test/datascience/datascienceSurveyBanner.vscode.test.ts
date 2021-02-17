@@ -9,11 +9,7 @@ import * as fakeTimers from '@sinonjs/fake-timers';
 import * as sinon from 'sinon';
 import { anything, instance, mock, when, verify, resetCalls } from 'ts-mockito';
 import { IApplicationEnvironment, IApplicationShell, IVSCodeNotebook } from '../../client/common/application/types';
-import {
-    IBrowserService,
-    IPersistentState,
-    IPersistentStateFactory
-} from '../../client/common/types';
+import { IBrowserService, IPersistentState, IPersistentStateFactory } from '../../client/common/types';
 import {
     BannerType,
     DataScienceSurveyBanner,
