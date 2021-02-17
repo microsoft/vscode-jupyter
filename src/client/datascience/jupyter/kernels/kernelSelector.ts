@@ -233,6 +233,7 @@ export class KernelSelector implements IKernelSelectionUsage {
     // eslint-disable-next-line complexity
     @traceDecorators.info('Get preferred remote kernel connection')
     @reportAction(ReportableAction.KernelsGetKernelForRemoteConnection)
+    @captureTelemetry(Telemetry.GetPreferredKernelPerf)
     public async getPreferredKernelForRemoteConnection(
         resource: Resource,
         sessionManager?: IJupyterSessionManager,

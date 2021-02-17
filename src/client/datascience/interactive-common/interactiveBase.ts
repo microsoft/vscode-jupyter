@@ -16,6 +16,7 @@ import {
     Event,
     EventEmitter,
     Memento,
+    NotebookCell,
     Position,
     Range,
     Selection,
@@ -38,7 +39,6 @@ import { EXTENSION_ROOT_DIR, isTestExecution, PYTHON_LANGUAGE } from '../../comm
 import { traceError, traceInfo, traceWarning } from '../../common/logger';
 
 import { isNil } from 'lodash';
-import { NotebookCell } from '../../../../types/vscode-proposed';
 import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';

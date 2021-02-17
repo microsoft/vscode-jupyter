@@ -1,13 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import * as vscode from 'vscode';
 import {
+    CancellationToken,
     NotebookCommunication,
     NotebookDocument,
     NotebookKernel,
     NotebookKernelProvider
-} from '../../../../types/vscode-proposed';
+} from 'vscode';
 
 export const INotebookContentProvider = Symbol('INotebookContentProvider');
 
@@ -21,6 +21,6 @@ export interface INotebookKernelResolver {
         kernel: NotebookKernel,
         document: NotebookDocument,
         webview: NotebookCommunication,
-        token: vscode.CancellationToken
+        token: CancellationToken
     ): Promise<void>;
 }

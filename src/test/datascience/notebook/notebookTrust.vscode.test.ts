@@ -7,7 +7,7 @@ import { assert } from 'chai';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as sinon from 'sinon';
-import { commands, Uri } from 'vscode';
+import { NotebookCellKind, commands, Uri } from 'vscode';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { traceInfo } from '../../../client/common/logger';
@@ -32,8 +32,6 @@ import {
     saveActiveNotebook,
     waitForKernelToGetAutoSelected
 } from './helper';
-// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
-const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this,  */
 suite('DataScience - VSCode Notebook - (Trust) (slow)', function () {
@@ -90,7 +88,7 @@ suite('DataScience - VSCode Notebook - (Trust) (slow)', function () {
 
         document.cells.forEach((cell) => {
             assert.equal(cell.metadata.editable, trusted);
-            if (cell.cellKind === vscodeNotebookEnums.CellKind.Code) {
+            if (cell.cellKind === NotebookCellKind.Code) {
                 assert.equal(cell.metadata.runnable, trusted);
                 if (hasOutput) {
                     // In our test all code cells have outputs.

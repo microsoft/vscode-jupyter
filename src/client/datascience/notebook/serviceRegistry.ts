@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { NotebookContentProvider as VSCNotebookContentProvider } from '../../../../types/vscode-proposed';
+import { NotebookContentProvider as VSCNotebookContentProvider } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IServiceManager } from '../../ioc/types';
 import { GitHubIssueCodeLensProvider } from '../../logging/gitHubIssueCodeLensProvider';

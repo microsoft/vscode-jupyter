@@ -5,8 +5,7 @@
 
 import { assert } from 'chai';
 import * as sinon from 'sinon';
-import { commands } from 'vscode';
-import { NotebookEditor as VSCNotebookEditor } from '../../../../typings/vscode-proposed';
+import { commands, NotebookEditor as VSCNotebookEditor } from 'vscode';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../../client/common/application/types';
 import { traceInfo } from '../../../client/common/logger';
 import { IConfigurationService, IDisposable, IJupyterSettings, ReadWrite } from '../../../client/common/types';

@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { NotebookDocument } from '../../../../types/vscode-proposed';
+import { NotebookDocument } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IApplicationEnvironment, IVSCodeNotebook } from '../../common/application/types';
 import { IDisposableRegistry, IExtensions } from '../../common/types';
