@@ -88,6 +88,7 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     ['vscode.open']: [Uri];
     ['workbench.action.files.saveAs']: [Uri];
     ['workbench.action.files.save']: [Uri];
+    ['undo']: [];
     [DSCommands.ExportFileAndOutputAsNotebook]: [Uri];
     [DSCommands.RunAllCells]: [Uri];
     [DSCommands.RunCell]: [Uri, number, number, number, number];
@@ -151,4 +152,6 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.ClearSavedJupyterUris]: [];
     [DSCommands.SelectJupyterURI]: [undefined, 'toolbar' | 'nativeNotebookStatusBar' | undefined];
     [DSCommands.SelectNativeJupyterUriFromToolBar]: [];
+    [DSCommands.NotebookEditorKeybindSave]: [];
+    [DSCommands.NotebookEditorKeybindUndo]: [];
 }
