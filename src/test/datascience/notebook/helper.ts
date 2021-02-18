@@ -57,7 +57,11 @@ import {
 import { chainWithPendingUpdates } from '../../../client/datascience/notebook/helpers/notebookUpdater';
 import { VSCodeNotebookKernelMetadata } from '../../../client/datascience/notebook/kernelWithMetadata';
 import { NotebookEditor } from '../../../client/datascience/notebook/notebookEditor';
-import { CellOutputMimeTypes, INotebookContentProvider, INotebookKernelProvider } from '../../../client/datascience/notebook/types';
+import {
+    CellOutputMimeTypes,
+    INotebookContentProvider,
+    INotebookKernelProvider
+} from '../../../client/datascience/notebook/types';
 import { VSCodeNotebookModel } from '../../../client/datascience/notebookStorage/vscNotebookModel';
 import { INotebookEditorProvider, INotebookProvider, ITrustService } from '../../../client/datascience/types';
 import { createEventHandler, IExtensionTestApi, sleep, waitForCondition } from '../../common';
@@ -180,7 +184,8 @@ export async function createTemporaryNotebook(templateFile: string, disposables:
 export async function canRunNotebookTests() {
     if (!isInsiders() || !process.env.VSC_JUPYTER_RUN_NB_TEST) {
         console.log(
-            `Can't run native nb tests isInsiders() = ${isInsiders()}, process.env.VSC_JUPYTER_RUN_NB_TEST = ${process.env.VSC_JUPYTER_RUN_NB_TEST
+            `Can't run native nb tests isInsiders() = ${isInsiders()}, process.env.VSC_JUPYTER_RUN_NB_TEST = ${
+                process.env.VSC_JUPYTER_RUN_NB_TEST
             }`
         );
         return false;
@@ -474,9 +479,9 @@ export async function waitForExecutionInProgress(cell: NotebookCell, timeout: nu
         async () => {
             const result =
                 cell.metadata.runState === NotebookCellRunState.Running &&
-                    cell.metadata.runStartTime &&
-                    !cell.metadata.lastRunDuration &&
-                    !cell.metadata.statusMessage
+                cell.metadata.runStartTime &&
+                !cell.metadata.lastRunDuration &&
+                !cell.metadata.statusMessage
                     ? true
                     : false;
             return result;
@@ -492,9 +497,9 @@ export async function waitForQueuedForExecution(cell: NotebookCell, timeout: num
     await waitForCondition(
         async () =>
             cell.metadata.runState === NotebookCellRunState.Running &&
-                !cell.metadata.runStartTime &&
-                !cell.metadata.lastRunDuration &&
-                !cell.metadata.statusMessage
+            !cell.metadata.runStartTime &&
+            !cell.metadata.lastRunDuration &&
+            !cell.metadata.statusMessage
                 ? true
                 : false,
         timeout,
@@ -521,7 +526,11 @@ function assertHasExecutionCompletedWithErrors(cell: NotebookCell) {
     return (cell.metadata.executionOrder ?? 0) > 0 && cell.metadata.runState === NotebookCellRunState.Error;
 }
 function hasTextOutputValue(output: NotebookCellOutputItem, value: string, isExactMatch = true) {
-    if (output.mime !== CellOutputMimeTypes.textStream && output.mime !== 'text/plain' && output.mime !== 'text/markdown') {
+    if (
+        output.mime !== CellOutputMimeTypes.textStream &&
+        output.mime !== 'text/plain' &&
+        output.mime !== 'text/markdown'
+    ) {
         return false;
     }
     const haystack = ((output.value || '') as string).toString().trim();
@@ -530,7 +539,7 @@ function hasTextOutputValue(output: NotebookCellOutputItem, value: string, isExa
 export function assertHasTextOutputInVSCode(cell: NotebookCell, text: string, index: number = 0, isExactMatch = true) {
     const cellOutputs = cell.outputs;
     assert.ok(cellOutputs.length, 'No output');
-    const result = cell.outputs[index].outputs.some(item => hasTextOutputValue(item, text, isExactMatch));
+    const result = cell.outputs[index].outputs.some((item) => hasTextOutputValue(item, text, isExactMatch));
     assert.isTrue(result, `${text} not found in outputs of cell ${cell.index}`);
     return result;
 }
