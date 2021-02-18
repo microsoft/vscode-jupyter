@@ -170,6 +170,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         // Clear the cell and run the empty cell again & the status should change the idle & output cleared.
         assert.equal(cells[0].metadata.runState, NotebookCellRunState.Idle);
         assert.equal(cells[0].outputs.length, 0, 'Cell output is not empty');
+        assert.isUndefined(cells[0].metadata.executionOrder, 'Cell execution order should be undefined');
     });
     test('Verify Cell output, execution count and status', async () => {
         await insertCodeCell('print("Hello World")');
@@ -256,7 +257,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         expect(displayCell.metadata.executionOrder).to.be.greaterThan(0, 'Execution count should be > 0');
         expect(displayCell.metadata.runStartTime).to.be.greaterThan(0, 'Start time should be > 0');
         expect(displayCell.metadata.lastRunDuration).to.be.greaterThan(0, 'Duration should be > 0');
-        expect(displayCell.outputs[0].outputs[0]?.value).to.be.equal('foo', 'Display cell did not update');
+        expect(displayCell.outputs[0].outputs.some(item => (item.value as string).toString().trim() === 'foo'), 'Display cell did not update');
     });
     test('Clearing output while executing will ensure output is cleared', async () => {
         // Assume you are executing a cell that prints numbers 1-100.
@@ -420,7 +421,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         assert.equal(cells[0].outputs.length, 0, 'Incorrect number of output');
         assert.equal(cells[1].outputs.length, 1, 'Incorrect number of output');
 
-        assert.equal(getTextOutputValue(cells[1].outputs[0]), 'foo', 'Incorrect output value');
+        assertHasTextOutputInVSCode(cells[1], 'foo', 0, true);
         const cellOutputMetadata = cells[1].outputs[0].outputs[0]?.metadata as CellOutputMetadata | undefined;
         assert.ok(cellOutputMetadata?.transient?.display_id, 'Display id not present in metadata');
 
@@ -437,7 +438,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         assert.equal(cells[0].outputs.length, 0, 'Incorrect number of output');
         assert.equal(cells[1].outputs.length, 1, 'Incorrect number of output');
         assert.equal(cells[2].outputs.length, 1, 'Incorrect number of output');
-        assert.equal(getTextOutputValue(cells[1].outputs[0]), 'bar', 'Incorrect output value');
+        assertHasTextOutputInVSCode(cells[1], 'bar', 0, true);
         assertHasTextOutputInVSCode(cells[2], 'hello', 0, false);
     });
     test('More messages from background threads', async () => {
@@ -862,7 +863,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         await Promise.all(queuedCells.map((cell) => waitForExecutionCompletedSuccessfully(cell)));
         assertExecutionOrderOfCells(queuedCells);
     });
-    test('Cell failures should not get cached', async () => {
+    test.only('Cell failures should not get cached', async () => {
         // Run 3 cells
         // cell 1 is ok
         // cell 2 has errors
@@ -913,7 +914,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         await waitForExecutionCompletedWithErrors(cell2);
         assert.equal(cell1.metadata.executionOrder, lastExecutionOrder + 1);
         assert.equal(cell2.metadata.executionOrder, lastExecutionOrder + 2);
-        assert.equal(cell3.metadata.executionOrder, lastExecutionOrderOfCell3, 'Cell 3 should not have run again');
+        assert.isUndefined(cell3.metadata.executionOrder, 'Cell 3 should not have run again');
     });
 
     // Check the set next input statements correctly insert or update cells

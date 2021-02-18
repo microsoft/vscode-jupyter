@@ -24,3 +24,8 @@ export interface INotebookKernelResolver {
         token: CancellationToken
     ): Promise<void>;
 }
+
+export enum CellOutputMimeTypes {
+    error = 'application/x.notebook.error-traceback',
+    textStream = 'application/x.notebook.stream'
+}

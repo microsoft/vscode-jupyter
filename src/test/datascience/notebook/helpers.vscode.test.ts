@@ -15,10 +15,8 @@ import {
     NotebookCellMetadata
 } from 'vscode';
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
-import {
-    CellOutputMimeTypes,
-    notebookModelToVSCNotebookData
-} from '../../../client/datascience/notebook/helpers/helpers';
+import { notebookModelToVSCNotebookData } from '../../../client/datascience/notebook/helpers/helpers';
+import { CellOutputMimeTypes } from '../../../client/datascience/notebook/types';
 use(chaiExclude);
 suite('DataScience - VSCode Notebook - helpers', () => {
     test('Convert NotebookModel to VSCode NotebookData', async () => {

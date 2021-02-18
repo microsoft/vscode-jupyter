@@ -174,9 +174,7 @@ export class NotebookEditor implements INotebookEditor {
         if (editor) {
             chainWithPendingUpdates(editor.document, (edit) => {
                 notebook.cells.forEach((cell, index) => {
-                    const metadata = new NotebookCellMetadata()
-                        .with(cell.metadata)
-                        .with({ inputCollapsed: false, outputCollapsed: false });
+                    const metadata = cell.metadata.with({ inputCollapsed: false, outputCollapsed: false });
                     edit.replaceNotebookCellMetadata(editor.document.uri, index, metadata);
                 });
             }).then(noop, noop);
@@ -191,9 +189,7 @@ export class NotebookEditor implements INotebookEditor {
         if (editor) {
             chainWithPendingUpdates(editor.document, (edit) => {
                 notebook.cells.forEach((cell, index) => {
-                    const metadata = new NotebookCellMetadata()
-                        .with(cell.metadata)
-                        .with({ inputCollapsed: true, outputCollapsed: true });
+                    const metadata = cell.metadata.with({ inputCollapsed: true, outputCollapsed: true });
                     edit.replaceNotebookCellMetadata(editor.document.uri, index, metadata);
                 });
             }).then(noop, noop);

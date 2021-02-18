@@ -96,7 +96,7 @@ export async function updateCellWithErrorStatus(
 ) {
     await chainWithPendingUpdates(notebookEditor.document, (edit) => {
         traceCellMessage(cell, 'Update with error state & output');
-        const metadata = new NotebookCellMetadata().with(cell.metadata).with({ runState: NotebookCellRunState.Error });
+        const metadata = cell.metadata.with({ runState: NotebookCellRunState.Error });
         edit.replaceNotebookCellMetadata(notebookEditor.document.uri, cell.index, metadata);
         edit.replaceNotebookCellOutput(notebookEditor.document.uri, cell.index, [
             translateErrorOutput(createErrorOutput(ex))
@@ -124,9 +124,7 @@ export async function addNewCellAfter(notebookEditor: NotebookEditor, cell: Note
             {
                 cellKind: NotebookCellKind.Code,
                 language: cell.language,
-                metadata: new NotebookCellMetadata()
-                    .with(cell.metadata)
-                    .with({ runState: NotebookCellRunState.Success }),
+                metadata: cell.metadata.with({ runState: NotebookCellRunState.Success }),
                 outputs: [],
                 source: text
             }

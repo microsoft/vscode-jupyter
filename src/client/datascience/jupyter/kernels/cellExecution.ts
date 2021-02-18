@@ -11,7 +11,6 @@ import {
     NotebookCell,
     NotebookCellRunState,
     NotebookEditor as VSCNotebookEditor,
-    NotebookCellMetadata
 } from 'vscode';
 import { concatMultilineString, formatStreamText } from '../../../../datascience-ui/common';
 import { IApplicationShell, IVSCodeNotebook } from '../../../common/application/types';
@@ -67,7 +66,7 @@ export class CellExecutionFactory {
         private readonly appShell: IApplicationShell,
         private readonly vscNotebook: IVSCodeNotebook,
         private readonly context: IExtensionContext
-    ) {}
+    ) { }
 
     public create(cell: NotebookCell, isPythonKernelConnection: boolean) {
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
@@ -185,9 +184,7 @@ export class CellExecution {
         await clearCellForExecution(this.editor, this.cell);
         if (!this.isEmptyCodeCell) {
             await chainWithPendingUpdates(this.editor.document, (edit) => {
-                const metadata = new NotebookCellMetadata()
-                    .with(this.cell.metadata)
-                    .with({ runStartTime: new Date().getTime() });
+                const metadata = this.cell.metadata.with({ runStartTime: new Date().getTime() });
                 edit.replaceNotebookCellMetadata(this.cell.notebook.uri, this.cell.index, metadata);
             });
         }
@@ -248,9 +245,7 @@ export class CellExecution {
         if (!this.isEmptyCodeCell) {
             await chainWithPendingUpdates(this.editor.document, (edit) => {
                 traceCellMessage(this.cell, 'Update run run duration');
-                const metadata = new NotebookCellMetadata()
-                    .with(this.cell.metadata)
-                    .with({ lastRunDuration: this.stopWatch.elapsedTime });
+                const metadata = this.cell.metadata.with({ lastRunDuration: this.stopWatch.elapsedTime });
                 edit.replaceNotebookCellMetadata(this.editor.document.uri, this.cell.index, metadata);
             });
         }
@@ -287,7 +282,7 @@ export class CellExecution {
 
         await chainWithPendingUpdates(this.editor.document, (edit) => {
             traceCellMessage(this.cell, `Update cell state ${runState} and message '${statusMessage}'`);
-            const metadata = new NotebookCellMetadata().with(this.cell.metadata).with({ runState, statusMessage });
+            const metadata = this.cell.metadata.with({ runState, statusMessage });
             edit.replaceNotebookCellMetadata(this.editor.document.uri, this.cell.index, metadata);
         });
 
@@ -300,7 +295,7 @@ export class CellExecution {
         traceCellMessage(this.cell, 'Completed due to cancellation');
         await chainWithPendingUpdates(this.editor.document, (edit) => {
             traceCellMessage(this.cell, 'Update cell statue as idle and message as empty');
-            const metadata = new NotebookCellMetadata().with(this.cell.metadata).with({
+            const metadata = this.cell.metadata.with({
                 runStartTime: undefined,
                 lastRunDuration: undefined,
                 runState: NotebookCellRunState.Idle,
@@ -338,10 +333,11 @@ export class CellExecution {
         }
         await chainWithPendingUpdates(this.editor.document, (edit) => {
             traceCellMessage(this.cell, 'Update cell state as it was enqueued');
-            const metadata = new NotebookCellMetadata().with(this.cell.metadata).with({
+            const metadata = this.cell.metadata.with({
                 statusMessage: '', // We don't want any previous status anymore.
                 runStartTime: undefined, // We don't want any previous counters anymore.
                 lastRunDuration: undefined,
+                executionOrder: undefined, // We dont want previous execution order either (e.g empty cell).
                 runState: NotebookCellRunState.Running
             });
             edit.replaceNotebookCellMetadata(this.editor.document.uri, this.cell.index, metadata);
@@ -413,13 +409,13 @@ export class CellExecution {
 
         // Listen to messages & chain each (to process them in the order we get them).
         request.onIOPub = (msg) =>
-            (this.requestHandlerChain = this.requestHandlerChain.then(() =>
-                this.handleIOPub(clearState, loggers, msg).catch(noop)
-            ));
+        (this.requestHandlerChain = this.requestHandlerChain.then(() =>
+            this.handleIOPub(clearState, loggers, msg).catch(noop)
+        ));
         request.onReply = (msg) =>
-            (this.requestHandlerChain = this.requestHandlerChain.then(() =>
-                this.handleReply(clearState, msg).catch(noop)
-            ));
+        (this.requestHandlerChain = this.requestHandlerChain.then(() =>
+            this.handleReply(clearState, msg).catch(noop)
+        ));
         request.onStdin = this.handleInputRequest.bind(this, session);
 
         // WARNING: Do not dispose `request`.
@@ -690,7 +686,6 @@ export class CellExecution {
                     name: msg.content.name,
                     text: formatStreamText(concatMultilineString(msg.content.text))
                 });
-
                 edit.replaceNotebookCellOutput(this.editor.document.uri, this.cell.index, [
                     ...exitingCellOutput,
                     output
