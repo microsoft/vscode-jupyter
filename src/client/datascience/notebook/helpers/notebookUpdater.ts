@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { NotebookDocument, NotebookEditor, NotebookEditorEdit } from '../../../../../types/vscode-proposed';
+import { NotebookDocument, NotebookEditor, workspace, WorkspaceEdit, window } from 'vscode';
 import { createDeferred } from '../../../common/utils/async';
 import { noop } from '../../../common/utils/misc';
 
@@ -22,31 +22,31 @@ import { noop } from '../../../common/utils/misc';
 const pendingCellUpdates = new WeakMap<NotebookDocument, Promise<unknown>>();
 
 export async function chainWithPendingUpdates(
-    editor: NotebookEditor,
-    update: (edit: NotebookEditorEdit) => void
+    document: NotebookDocument,
+    update: (edit: WorkspaceEdit) => void
 ): Promise<boolean> {
-    const notebook = editor.document;
+    const notebook = document;
     const pendingUpdates = pendingCellUpdates.has(notebook) ? pendingCellUpdates.get(notebook)! : Promise.resolve();
     const deferred = createDeferred<boolean>();
     const aggregatedPromise = pendingUpdates
         // We need to ensure the update operation gets invoked after previous updates have been completed.
         // This way, the callback making references to cell metadata will have the latest information.
         // Even if previous update fails, we should not fail this current update.
-        .finally(async () =>
-            editor.edit(update).then(
+        .finally(async () => {
+            const edit = new WorkspaceEdit();
+            update(edit);
+            return workspace.applyEdit(edit).then(
                 (result) => deferred.resolve(result),
                 (ex) => deferred.reject(ex)
-            )
-        )
+            );
+        })
         .catch(noop);
     pendingCellUpdates.set(notebook, aggregatedPromise);
     return deferred.promise;
 }
 
 export function clearPendingChainedUpdatesForTests() {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-require-imports
-    const vsc = require('vscode') as any;
-    const editor: NotebookEditor | undefined = vsc.notebook.activeNotebookEditor;
+    const editor: NotebookEditor | undefined = window.activeNotebookEditor;
     if (editor?.document) {
         pendingCellUpdates.delete(editor.document);
     }

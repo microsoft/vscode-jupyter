@@ -17,7 +17,6 @@ import { IFileSystem } from '../../common/platform/types';
 import { IProcessServiceFactory } from '../../common/process/types';
 import { Resource } from '../../common/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
-import { captureTelemetry } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { KernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../jupyter/kernels/types';
 import { IKernelDependencyService, KernelInterpreterDependencyResponse } from '../types';
@@ -28,6 +27,7 @@ import { IKernelConnection, IKernelLauncher, IKernelProcess, IpyKernelNotInstall
 import * as localize from '../../common/utils/localize';
 import { createDeferredFromPromise, Deferred } from '../../common/utils/async';
 import { CancellationError } from '../../common/cancellation';
+import { sendKernelTelemetryWhenDone } from '../telemetry/telemetry';
 
 const PortFormatString = `kernelLauncherPortStart_{0}.tmp`;
 
@@ -37,7 +37,8 @@ const PortFormatString = `kernelLauncherPortStart_{0}.tmp`;
 @injectable()
 export class KernelLauncher implements IKernelLauncher {
     private static startPortPromise = KernelLauncher.computeStartPort();
-    private static nextFreePortToTryAndUsePromise = KernelLauncher.startPortPromise;
+    private static usedPorts = new Set<number>();
+    private static getPorts = promisify(portfinder.getPorts);
     private dependencyPromises = new Map<string, Deferred<KernelInterpreterDependencyResponse>>();
     private portChain: Promise<number[]> | undefined;
     constructor(
@@ -91,7 +92,6 @@ export class KernelLauncher implements IKernelLauncher {
         }
     }
 
-    @captureTelemetry(Telemetry.KernelLauncherPerf)
     public async launch(
         kernelConnectionMetadata: KernelSpecConnectionMetadata | PythonKernelConnectionMetadata,
         timeout: number,
@@ -100,13 +100,21 @@ export class KernelLauncher implements IKernelLauncher {
         cancelToken?: CancellationToken,
         disableUI?: boolean
     ): Promise<IKernelProcess> {
-        // If this is a python interpreter, make sure it has ipykernel
-        if (kernelConnectionMetadata.interpreter) {
-            await this.installDependenciesIntoInterpreter(kernelConnectionMetadata.interpreter, cancelToken, disableUI);
-        }
+        const promise = (async () => {
+            // If this is a python interpreter, make sure it has ipykernel
+            if (kernelConnectionMetadata.interpreter) {
+                await this.installDependenciesIntoInterpreter(
+                    kernelConnectionMetadata.interpreter,
+                    cancelToken,
+                    disableUI
+                );
+            }
 
-        // Should be available now, wait with a timeout
-        return await this.launchProcess(kernelConnectionMetadata, resource, workingDirectory, timeout, cancelToken);
+            // Should be available now, wait with a timeout
+            return await this.launchProcess(kernelConnectionMetadata, resource, workingDirectory, timeout, cancelToken);
+        })();
+        sendKernelTelemetryWhenDone(resource, Telemetry.KernelLauncherPerf, promise);
+        return promise;
     }
 
     private async launchProcess(
@@ -145,25 +153,24 @@ export class KernelLauncher implements IKernelLauncher {
         return this.portChain;
     }
 
-    private async getConnectionPorts(): Promise<number[]> {
-        const getPorts = promisify(portfinder.getPorts);
+    static async findNextFreePort(port: number): Promise<number[]> {
+        // Then get the next set starting at that point
+        const ports = await KernelLauncher.getPorts(5, { host: '127.0.0.1', port });
+        if (ports.some((item) => KernelLauncher.usedPorts.has(item))) {
+            const maxPort = Math.max(...KernelLauncher.usedPorts, ...ports);
+            return KernelLauncher.findNextFreePort(maxPort);
+        }
+        ports.forEach((item) => KernelLauncher.usedPorts.add(item));
+        return ports;
+    }
 
+    private async getConnectionPorts(): Promise<number[]> {
         // Have to wait for static port lookup (it handles case where two VS code instances are running)
-        const nextFreePort = await KernelLauncher.nextFreePortToTryAndUsePromise;
         const startPort = await KernelLauncher.startPortPromise;
 
-        // Start the port promise over again
-        KernelLauncher.startPortPromise = Promise.resolve(startPort + 6);
-
-        // Ports may have been freed, hence start from begining.
-        const port = nextFreePort > startPort + 1_000 ? startPort : nextFreePort;
-
         // Then get the next set starting at that point
-        const ports = await getPorts(5, { host: '127.0.0.1', port });
-
-        // We launch restart kernels in the background, its possible other session hasn't started.
-        // Ensure we do not use same ports.
-        KernelLauncher.nextFreePortToTryAndUsePromise = Promise.resolve(Math.max(...ports) + 1);
+        const ports = await KernelLauncher.findNextFreePort(startPort);
+        traceInfo(`Kernel launching with ports ${ports.toString()}. Start port is ${startPort}`);
 
         return ports;
     }

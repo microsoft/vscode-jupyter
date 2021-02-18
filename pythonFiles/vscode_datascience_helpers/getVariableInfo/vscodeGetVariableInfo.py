@@ -8,16 +8,24 @@ def _VSCODE_getVariableInfo(var):
     result = {}
     result["shape"] = ""
     result["count"] = 0
+    result["type"] = ""
+
+    typeName = None
+    try:
+        vartype = type(var)
+        if hasattr(vartype, "__name__"):
+            result["type"] = typeName = vartype.__name__
+    except TypeError:
+        pass
 
     # Find shape and count if available
     if hasattr(var, "shape"):
         try:
-            vartype = type(var)
             # Get a bit more restrictive with exactly what we want to count as a shape, since anything can define it
             if (
                 isinstance(var.shape, tuple)
-                or hasattr(vartype, "__name__")
-                and vartype.__name__ == "EagerTensor"
+                or typeName is not None
+                and typeName == "EagerTensor"
             ):
                 _VSCODE_shapeStr = str(var.shape)
                 if (
@@ -40,4 +48,13 @@ def _VSCODE_getVariableInfo(var):
             pass
 
     # return our json object as a string
+    return _VSCODE_json.dumps(result)
+
+
+def _VSCODE_getVariableProperties(var, listOfAttributes):
+    result = {
+        attr: repr(getattr(var, attr))
+        for attr in listOfAttributes
+        if hasattr(var, attr)
+    }
     return _VSCODE_json.dumps(result)

@@ -14,6 +14,7 @@ import {
     GLOBAL_MEMENTO,
     IConfigurationService,
     IExperimentService,
+    IExtensions,
     IJupyterSettings,
     IMemento,
     IOutputChannel
@@ -45,7 +46,8 @@ export class ExperimentService implements IExperimentService {
         @inject(IConfigurationService) readonly configurationService: IConfigurationService,
         @inject(IApplicationEnvironment) private readonly appEnvironment: IApplicationEnvironment,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalState: Memento,
-        @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly output: IOutputChannel
+        @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly output: IOutputChannel,
+        @inject(IExtensions) private readonly extensions: IExtensions
     ) {
         this.settings = configurationService.getSettings(undefined);
 
@@ -93,6 +95,15 @@ export class ExperimentService implements IExperimentService {
             this.getOptInOptOutStatus(ExperimentGroups.NativeNotebook) === 'optIn'
         ) {
             return false;
+        }
+
+        // If user has .NET interactive installed, we HAVE to be in the native experiment. See this issue:
+        // https://github.com/microsoft/vscode-jupyter/issues/4771
+        if (
+            experiment === ExperimentGroups.NativeNotebook &&
+            this.extensions.getExtension('ms-dotnettools.dotnet-interactive-vscode')
+        ) {
+            return true;
         }
 
         // Currently the service doesn't support opting in and out of experiments,
@@ -151,6 +162,11 @@ export class ExperimentService implements IExperimentService {
         // so we need to perform these checks and send the corresponding telemetry manually.
         if (this._optOutFrom.includes('All') || this._optOutFrom.includes(experiment)) {
             return 'optOut';
+        }
+
+        // Users in stable cannot opt into notebook experiment unless we have `__NotebookEditor__` (used for testing).
+        if (this.appEnvironment.channel === 'stable' && experiment === ExperimentGroups.NativeNotebook) {
+            return this._optInto.includes(`__${experiment}__`) ? 'optIn' : undefined;
         }
 
         if (this._optInto.includes('All') || this._optInto.includes(experiment)) {

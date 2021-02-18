@@ -5,10 +5,10 @@
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { CancellationTokenSource, CompletionContext, CompletionTriggerKind, Position } from 'vscode';
-import { CellDisplayOutput } from '../../../../../types/vscode-proposed';
 import { IVSCodeNotebook } from '../../../../client/common/application/types';
 import { traceInfo } from '../../../../client/common/logger';
 import { IDisposable } from '../../../../client/common/types';
+import { getTextOutputValue } from '../../../../client/datascience/notebook/helpers/helpers';
 import { NotebookCompletionProvider } from '../../../../client/datascience/notebook/intellisense/completionProvider';
 import { IExtensionTestApi } from '../../../common';
 import { initialize } from '../../../initialize';
@@ -68,7 +68,7 @@ suite('DataScience - VSCode Notebook - (Code Completion via Jupyter) (slow)', fu
 
         // Wait till execution count changes and status is success.
         await waitForExecutionCompletedSuccessfully(cell);
-        const outputText: string = (cell.outputs[0] as CellDisplayOutput).data['text/plain'].trim();
+        const outputText = getTextOutputValue(cell.outputs[0]).trim();
         traceInfo(`Cell Output ${outputText}`);
         await insertCodeCell('a.', { index: 1 });
         const cell2 = vscodeNotebook.activeNotebookEditor!.document.cells[1];

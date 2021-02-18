@@ -7,53 +7,48 @@ import pandas.io.json as _VSCODE_pd_json
 # PyTorch and TensorFlow tensors which can be converted to numpy arrays
 _VSCODE_allowedTensorTypes = ["Tensor", "EagerTensor"]
 
-# Convert numpy array to DataFrame
+
+def _VSCODE_stringifyElement(element):
+    if isinstance(element, _VSCODE_np.ndarray):
+        # Ensure no rjust or ljust padding is applied to stringified elements
+        stringified = _VSCODE_np.array2string(
+            element, separator=", ", formatter={"all": lambda x: str(x)}
+        )
+    elif isinstance(element, (list, tuple)):
+        # We can't pass lists and tuples to array2string because it expects
+        # the size attribute to be defined
+        stringified = str(element)
+    else:
+        stringified = element
+    return stringified
+
+
 def _VSCODE_convertNumpyArrayToDataFrame(ndarray):
     # Save the user's current setting
     current_options = _VSCODE_np.get_printoptions()
     # Ask for the full string. Without this numpy truncates to 3 leading and 3 trailing by default
     _VSCODE_np.set_printoptions(threshold=99999)
-    temp = ndarray
 
+    flattened = None
     try:
-        x_len = temp.shape[0]
-        y_len = None
-        # Figure out if we're dealing with ragged data
-        # Handle ragged arrays by making a container where the number of
-        # columns is the max length of all rows. Missing elements are
-        # represented as empty strings.
-        y_len = max([len(temp[i]) for i in range(x_len)])
-
-        if y_len:
-            # Figure out what kind of object the rows are
-            flattened = _VSCODE_np.full((x_len, y_len), "", dtype="object")
-            for i in range(x_len):
-                for j in range(len(temp[i])):
-                    element = temp[i][j]
-                    if isinstance(element, _VSCODE_np.ndarray):
-                        # Ensure no rjust or ljust padding is applied to stringified elements
-                        stringified = _VSCODE_np.array2string(
-                            element, separator=", ", formatter={"all": lambda x: str(x)}
-                        )
-                    elif isinstance(element, (list, tuple)):
-                        # We can't pass lists and tuples to array2string because it expects
-                        # the size attribute to be defined
-                        stringified = str(element)
-                    else:
-                        stringified = element
-                    flattened[i][j] = stringified
-            temp = flattened
-    except TypeError:
-        # Ragged as well as 1D ndarrays both have ndim==1, but computing
-        # y_len for 1D ndarray will raise a TypeError
-        pass  # nosec
+        if ndarray.ndim < 3 and str(ndarray.dtype) != "object":
+            pass
+        elif ndarray.ndim == 1 and str(ndarray.dtype) == "object":
+            flattened = _VSCODE_np.empty(ndarray.shape[:2], dtype="object")
+            for i in range(len(flattened)):
+                flattened[i] = _VSCODE_stringifyElement(ndarray[i])
+            ndarray = flattened
+        else:
+            flattened = _VSCODE_np.empty(ndarray.shape[:2], dtype="object")
+            for i in range(len(flattened)):
+                for j in range(len(flattened[i])):
+                    flattened[i][j] = _VSCODE_stringifyElement(ndarray[i][j])
+            ndarray = flattened
     finally:
         # Restore the user's printoptions
         _VSCODE_np.set_printoptions(threshold=current_options["threshold"])
-        temp = _VSCODE_pd.DataFrame(temp)
-        ndarray = temp
-        del temp
-        return ndarray
+        del flattened
+        return _VSCODE_pd.DataFrame(ndarray)
 
 
 # Function that converts tensors to DataFrames
@@ -130,13 +125,16 @@ def _VSCODE_getDataFrameRows(df, start, end):
     df = _VSCODE_convertToDataFrame(df)
     # Turn into JSON using pandas. We use pandas because it's about 3 orders of magnitude faster to turn into JSON
     rows = df.iloc[start:end]
-    rows = rows.replace(
-        {
-            _VSCODE_np.inf: "inf",
-            -_VSCODE_np.inf: "-inf",
-            _VSCODE_np.nan: "nan",
-        }
-    )
+    try:
+        rows = rows.replace(
+            {
+                _VSCODE_np.inf: "inf",
+                -_VSCODE_np.inf: "-inf",
+                _VSCODE_np.nan: "nan",
+            }
+        )
+    except:
+        pass
     return _VSCODE_pd_json.to_json(None, rows, orient="table", date_format="iso")
 
 

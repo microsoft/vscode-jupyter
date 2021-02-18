@@ -33,7 +33,6 @@ import { VSCodeNotebook } from '../../client/common/application/notebook';
 import {
     IApplicationEnvironment,
     IApplicationShell,
-    IAuthenticationService,
     ICommandManager,
     ICustomEditorService,
     IDebugService,
@@ -114,7 +113,7 @@ import { ExportCommands } from '../../client/datascience/commands/exportCommands
 import { NotebookCommands } from '../../client/datascience/commands/notebookCommands';
 import { JupyterServerSelectorCommand } from '../../client/datascience/commands/serverSelector';
 import { DataScienceStartupTime, Identifiers, JUPYTER_OUTPUT_CHANNEL } from '../../client/datascience/constants';
-import { ActiveEditorContextService } from '../../client/datascience/context/activeEditorContext';
+import { ActiveEditorContextService } from '../../client/datascience/commands/activeEditorContext';
 import { DataViewer } from '../../client/datascience/data-viewing/dataViewer';
 import { DataViewerDependencyService } from '../../client/datascience/data-viewing/dataViewerDependencyService';
 import { DataViewerFactory } from '../../client/datascience/data-viewing/dataViewerFactory';
@@ -303,7 +302,6 @@ import {
 import { TestPersistentStateFactory } from './testPersistentStateFactory';
 import { WebBrowserPanelProvider } from './uiTests/webBrowserPanelProvider';
 import { JupyterServerUriStorage } from '../../client/datascience/jupyter/serverUriStorage';
-import { AuthenticationService } from '../../client/common/application/authenticationService';
 import { MockEncryptedStorage } from './mockEncryptedStorage';
 import { WebviewIPyWidgetCoordinator } from '../../client/datascience/ipywidgets/webviewIPyWidgetCoordinator';
 import { WebviewViewProvider } from '../../client/common/application/webviewViews/webviewViewProvider';
@@ -311,6 +309,7 @@ import { SystemPseudoRandomNumberGenerator } from '../../client/datascience/inte
 import { KernelEnvironmentVariablesService } from '../../client/datascience/kernel-launcher/kernelEnvVarsService';
 import { PreferredRemoteKernelIdProvider } from '../../client/datascience/notebookStorage/preferredRemoteKernelIdProvider';
 import { NotebookWatcher } from '../../client/datascience/variablesView/notebookWatcher';
+import { InterpreterPackages } from '../../client/datascience/telemetry/interpreterPackages';
 
 export class DataScienceIocContainer extends UnitTestIocContainer {
     public get workingInterpreter() {
@@ -335,6 +334,9 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
     public get kernelService() {
         return this.kernelServiceMock;
+    }
+    public get kernelFinder() {
+        return this.kernelFinderMock;
     }
     private static jupyterInterpreters: PythonEnvironment[] = [];
     public applicationShell!: ApplicationShell;
@@ -374,6 +376,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     private emptyConfig = new MockWorkspaceConfiguration();
     private workspaceFolders: MockWorkspaceFolder[] = [];
     private kernelServiceMock = mock(KernelService);
+    private kernelFinderMock = mock(KernelFinder);
     private disposed = false;
     private experimentState = new Map<string, boolean>();
     private extensionRootPath: string | undefined;
@@ -492,6 +495,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             NbConvertExportToPythonService
         );
 
+        this.serviceManager.addSingletonInstance<InterpreterPackages>(
+            InterpreterPackages,
+            instance(mock(InterpreterPackages))
+        );
         this.serviceManager.addSingleton<INotebookModelFactory>(INotebookModelFactory, NotebookModelFactory);
         this.serviceManager.addSingleton<IMountedWebViewFactory>(IMountedWebViewFactory, MountedWebViewFactory);
         this.serviceManager.addSingletonInstance<IFileSystem>(IFileSystem, new MockFileSystem());
@@ -544,7 +551,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         });
 
         this.serviceManager.addSingleton<IApplicationEnvironment>(IApplicationEnvironment, ApplicationEnvironment);
-        this.serviceManager.addSingleton<IAuthenticationService>(IAuthenticationService, AuthenticationService);
         this.serviceManager.add<INotebookImporter>(INotebookImporter, JupyterImporter);
         this.serviceManager.add<INotebookExporter>(INotebookExporter, JupyterExporter);
         this.serviceManager.addSingleton<ILiveShareApi>(ILiveShareApi, MockLiveShareApi);
@@ -798,7 +804,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             KernelEnvironmentVariablesService,
             KernelEnvironmentVariablesService
         );
-        this.serviceManager.addSingleton<IKernelFinder>(IKernelFinder, KernelFinder);
 
         this.serviceManager.addSingleton<IJupyterSubCommandExecutionService>(
             IJupyterSubCommandExecutionService,
@@ -821,8 +826,9 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             this.jupyterMock = new MockJupyterManagerFactory(this.serviceManager);
             // When using mocked Jupyter, default to using default kernel.
             when(this.kernelServiceMock.searchAndRegisterKernel(anything(), anything())).thenResolve(undefined);
-            when(this.kernelServiceMock.getKernelSpecs(anything(), anything())).thenResolve([]);
+            when(this.kernelFinderMock.findKernelSpec(anything(), anything())).thenResolve(undefined);
             this.serviceManager.addSingletonInstance<KernelService>(KernelService, instance(this.kernelServiceMock));
+            this.serviceManager.addSingletonInstance<IKernelFinder>(IKernelFinder, instance(this.kernelFinderMock));
 
             this.serviceManager.addSingletonInstance<IInterpreterSelector>(
                 IInterpreterSelector,
@@ -852,6 +858,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
                 EnvironmentActivationService
             );
             this.serviceManager.addSingleton<KernelService>(KernelService, KernelService);
+            this.serviceManager.addSingleton<IKernelFinder>(IKernelFinder, KernelFinder);
             this.serviceManager.addSingleton<IProcessServiceFactory>(IProcessServiceFactory, ProcessServiceFactory);
             this.serviceManager.addSingleton<IPythonExecutionFactory>(IPythonExecutionFactory, PythonExecutionFactory);
 
@@ -1262,6 +1269,9 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         when(workspaceService.workspaceFolders).thenReturn(this.workspaceFolders);
         when(workspaceService.rootPath).thenReturn(testWorkspaceFolder);
         when(workspaceService.getWorkspaceFolder(anything())).thenCall(this.getWorkspaceFolder.bind(this));
+        when(workspaceService.getWorkspaceFolderIdentifier(anything(), anything())).thenCall(
+            this.getWorkspaceFolderIdentifier.bind(this)
+        );
         this.addWorkspaceFolder(testWorkspaceFolder);
         return workspaceService;
     }
@@ -1271,6 +1281,15 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             return this.workspaceFolders.find((w) => w.ownedResources.has(uri.toString()));
         }
         return undefined;
+    }
+    private getWorkspaceFolderIdentifier(uri: Resource, defaultValue: string | undefined): string | undefined {
+        if (uri) {
+            const folder = this.workspaceFolders.find((w) => w.ownedResources.has(uri.toString()));
+            if (folder) {
+                return folder.uri.fsPath;
+            }
+        }
+        return defaultValue;
     }
 
     private getResourceKey(resource: Resource): string {

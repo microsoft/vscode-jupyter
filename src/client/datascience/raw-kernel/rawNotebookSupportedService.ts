@@ -5,7 +5,7 @@ import { inject, injectable } from 'inversify';
 import { IS_NON_RAW_NATIVE_TEST } from '../../../test/constants';
 import { traceError, traceInfo } from '../../common/logger';
 import { IConfigurationService } from '../../common/types';
-import { sendTelemetryEvent } from '../../telemetry';
+import { sendTelemetryEvent, setSharedProperty } from '../../telemetry';
 import { Settings, Telemetry } from '../constants';
 import { IRawNotebookSupportedService } from '../types';
 
@@ -19,11 +19,15 @@ export class RawNotebookSupportedService implements IRawNotebookSupportedService
 
     // Check to see if we have all that we need for supporting raw kernel launch
     public async supported(): Promise<boolean> {
-        // Save the ZMQ support for last, since it's probably the slowest part
-        return this.localLaunch() && (await this.isSupportedForLocalLaunch()) ? true : false;
+        if (!this.localLaunch()) {
+            return false;
+        }
+        const isSupported = await this.isSupportedForLocalLaunch();
+        setSharedProperty('rawKernelSupported', isSupported ? 'true' : 'false');
+        return isSupported;
     }
 
-    public async isSupportedForLocalLaunch(): Promise<boolean> {
+    private async isSupportedForLocalLaunch(): Promise<boolean> {
         // Save the ZMQ support for last, since it's probably the slowest part
         return !this.isZQMDisabled() && (await this.zmqSupported()) ? true : false;
     }

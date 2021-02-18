@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { NotebookDocument, NotebookKernel as VSCNotebookKernel } from '../../../../types/vscode-proposed';
+import { NotebookCellKind, NotebookCellOutput, NotebookDocument, NotebookKernel as VSCNotebookKernel } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IVSCodeNotebook } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
@@ -12,9 +12,6 @@ import { noop } from '../../common/utils/misc';
 import { translateKernelLanguageToMonaco } from '../common';
 import { isJupyterKernel, isJupyterNotebook } from './helpers/helpers';
 import { chainWithPendingUpdates } from './helpers/notebookUpdater';
-// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
-const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
-
 /**
  * If user creates a blank notebook, then they'll mostl likely end up with a blank cell with language, lets assume `Python`.
  * Now if the user changes the kernel to say `Julia`. After this, they need to also change the language of the cell.
@@ -52,9 +49,9 @@ export class EmptyNotebookCellLanguageService implements IExtensionSingleActivat
         }
         // If we have just empty cells, then update the code cells to use the same language as that of the kernel.
         const emptyCodeCells = document.cells.filter(
-            (cell) => cell.cellKind === vscodeNotebookEnums.CellKind.Code && cell.document.getText().trim().length === 0
+            (cell) => cell.cellKind === NotebookCellKind.Code && cell.document.getText().trim().length === 0
         );
-        const codeCells = document.cells.filter((cell) => cell.cellKind === vscodeNotebookEnums.CellKind.Code).length;
+        const codeCells = document.cells.filter((cell) => cell.cellKind === NotebookCellKind.Code).length;
         // Change language of the cells only if all code cells are empty.
         if (emptyCodeCells.length === 0 || emptyCodeCells.length !== codeCells) {
             return;
@@ -85,17 +82,17 @@ export class EmptyNotebookCellLanguageService implements IExtensionSingleActivat
         }
 
         const monacoLanguage = translateKernelLanguageToMonaco(language);
-        chainWithPendingUpdates(editor, (edit) => {
+        chainWithPendingUpdates(editor.document, (edit) => {
             emptyCodeCells.forEach((cell) => {
                 if (monacoLanguage.toLowerCase() === cell.language) {
                     return;
                 }
-                edit.replaceCells(cell.index, cell.index + 1, [
+                edit.replaceNotebookCells(editor.document.uri, cell.index, cell.index + 1, [
                     {
                         cellKind: cell.cellKind,
                         language: monacoLanguage,
                         metadata: cell.metadata,
-                        outputs: cell.outputs,
+                        outputs: cell.outputs.map((op) => new NotebookCellOutput(op.outputs)),
                         source: cell.document.getText()
                     }
                 ]);

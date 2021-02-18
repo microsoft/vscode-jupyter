@@ -7,6 +7,8 @@ export interface ITestData {
     primaryKeys: string[];
     rows: {}[];
     loadingRows: {}[];
+    dataDimensionality: number | undefined;
+    originalVariableShape: number[] | undefined;
 }
 
 /* eslint-disable */
@@ -36,7 +38,9 @@ export function generateTestData(_numberOfRows: number): ITestData {
         rows,
         loadingRows: titanicData.map((_t) => {
             return {};
-        })
+        }),
+        dataDimensionality: 2,
+        originalVariableShape: undefined
     };
 }
 

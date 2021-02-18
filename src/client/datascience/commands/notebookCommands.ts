@@ -33,7 +33,9 @@ export class NotebookCommands implements IDisposable {
             this.commandManager.registerCommand(Commands.SwitchJupyterKernel, this.switchKernel, this),
             this.commandManager.registerCommand(Commands.SetJupyterKernel, this.setKernel, this),
             this.commandManager.registerCommand(Commands.NotebookEditorCollapseAllCells, this.collapseAll, this),
-            this.commandManager.registerCommand(Commands.NotebookEditorExpandAllCells, this.expandAll, this)
+            this.commandManager.registerCommand(Commands.NotebookEditorExpandAllCells, this.expandAll, this),
+            this.commandManager.registerCommand(Commands.NotebookEditorKeybindSave, this.keybindSave, this),
+            this.commandManager.registerCommand(Commands.NotebookEditorKeybindUndo, this.keybindUndo, this)
         );
     }
     public dispose() {
@@ -50,6 +52,19 @@ export class NotebookCommands implements IDisposable {
         if (this.notebookEditorProvider.activeEditor) {
             this.notebookEditorProvider.activeEditor.expandAllCells();
         }
+    }
+
+    private keybindSave() {
+        if (this.notebookEditorProvider.activeEditor) {
+            void this.commandManager.executeCommand(
+                'workbench.action.files.save',
+                this.notebookEditorProvider.activeEditor.file
+            );
+        }
+    }
+
+    private keybindUndo() {
+        void this.commandManager.executeCommand('undo');
     }
 
     private async switchKernel(options: ISwitchKernelOptions | undefined) {
@@ -74,11 +89,15 @@ export class NotebookCommands implements IDisposable {
         }
         if (options.identity) {
             // Make sure we have a connection or we can't get remote kernels.
-            const connection = await this.notebookProvider.connect({ getOnly: false, disableUI: false });
+            const connection = await this.notebookProvider.connect({
+                getOnly: false,
+                disableUI: false,
+                resource: options.resource
+            });
 
             // Select a new kernel using the connection information
             const kernel = await this.kernelSelector.selectJupyterKernel(
-                options.identity,
+                options.resource,
                 connection,
                 connection?.type || this.notebookProvider.type,
                 options.currentKernelDisplayName

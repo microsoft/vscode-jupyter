@@ -163,8 +163,8 @@ export class JupyterSession extends BaseJupyterSession {
         }
     }
 
-    private async createBackingFile(): Promise<Contents.IModel> {
-        let backingFile: Contents.IModel;
+    private async createBackingFile(): Promise<Contents.IModel | undefined> {
+        let backingFile: Contents.IModel | undefined = undefined;
 
         // First make sure the notebook is in the right relative path (jupyter expects a relative path with unix delimiters)
         const relativeDirectory = path.relative(this.connInfo.rootDirectory, this.workingDirectory).replace(/\\/g, '/');
@@ -188,23 +188,24 @@ export class JupyterSession extends BaseJupyterSession {
         } catch (exc) {
             // If it failed for local, try without a relative directory
             if (this.connInfo.localLaunch) {
-                backingFile = await this.contentsManager.newUntitled({ type: 'notebook' });
-                const backingFileDir = path.dirname(backingFile.path);
-                backingFile = await this.contentsManager.rename(
-                    backingFile.path,
-                    backingFileDir.length && backingFileDir !== '.'
-                        ? `${backingFileDir}/t-${uuid()}.ipynb`
-                        : `t-${uuid()}.ipynb` // Note, the docs say the path uses UNIX delimiters.
-                );
+                try {
+                    backingFile = await this.contentsManager.newUntitled({ type: 'notebook' });
+                    const backingFileDir = path.dirname(backingFile.path);
+                    backingFile = await this.contentsManager.rename(
+                        backingFile.path,
+                        backingFileDir.length && backingFileDir !== '.'
+                            ? `${backingFileDir}/t-${uuid()}.ipynb`
+                            : `t-${uuid()}.ipynb` // Note, the docs say the path uses UNIX delimiters.
+                    );
+                } catch (e) {}
             } else {
-                throw exc;
+                traceError(`Backing file not supported: ${exc}`);
             }
         }
 
         if (backingFile) {
             return backingFile;
         }
-        throw new Error(`Backing file cannot be generated for Jupyter connection`);
     }
 
     private async createSession(
@@ -223,7 +224,7 @@ export class JupyterSession extends BaseJupyterSession {
 
         // Create our session options using this temporary notebook and our connection info
         const options: Session.IOptions = {
-            path: backingFile.path,
+            path: backingFile?.path || '.',
             kernelName: getNameOfKernelConnection(kernelConnection) || '',
             name: uuid(), // This is crucial to distinguish this session from any other.
             serverSettings: serverSettings
@@ -253,7 +254,7 @@ export class JupyterSession extends BaseJupyterSession {
                     })
                     .catch((ex) => Promise.reject(new JupyterSessionStartError(ex)))
                     .finally(() => {
-                        if (this.connInfo) {
+                        if (this.connInfo && backingFile) {
                             this.contentsManager.delete(backingFile.path).ignoreErrors();
                         }
                     }),

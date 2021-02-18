@@ -20,7 +20,7 @@ class CellFormatter extends React.Component<ICellFormatterProps> {
 
     public render() {
         // Render based on type
-        if (this.props.value !== null && this.props.columnDef && this.props.columnDef.hasOwnProperty('type')) {
+        if (this.props.value !== undefined && this.props.columnDef && this.props.columnDef.hasOwnProperty('type')) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const columnType = (this.props.columnDef as any).type;
             switch (columnType) {
@@ -34,9 +34,8 @@ class CellFormatter extends React.Component<ICellFormatterProps> {
                     break;
             }
         }
-
         // Otherwise an unknown type or a string
-        const val = this.props.value !== null ? this.props.value.toString() : '';
+        const val = this.props.value?.toString() ?? '';
         return (
             <div className="cell-formatter" role="gridcell" title={val}>
                 <span>{val}</span>

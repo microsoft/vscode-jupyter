@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IExperimentService, IFileDownloader, IHttpClient } from '../common/types';
+import { AmlComputeContext } from './amlContext';
 import { LiveShareApi } from '../datascience/liveshare/liveshare';
 import { INotebookExecutionLogger } from '../datascience/types';
 import { IServiceManager } from '../ioc/types';
@@ -9,7 +10,6 @@ import { ImportTracker } from '../telemetry/importTracker';
 import { IImportTracker } from '../telemetry/types';
 import { ActiveResourceService } from './application/activeResource';
 import { ApplicationEnvironment } from './application/applicationEnvironment';
-import { AuthenticationService } from './application/authenticationService';
 import { ClipboardService } from './application/clipboard';
 import { ReloadVSCodeCommandHandler } from './application/commands/reloadCommand';
 import { CustomEditorService } from './application/customEditorService';
@@ -22,7 +22,6 @@ import { VSCodeNotebook } from './application/notebook';
 import {
     IActiveResourceService,
     IApplicationEnvironment,
-    IAuthenticationService,
     IClipboard,
     ICustomEditorService,
     IDebugService,
@@ -89,7 +88,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IDocumentManager>(IDocumentManager, DocumentManager);
     serviceManager.addSingleton<IDebugService>(IDebugService, DebugService);
     serviceManager.addSingleton<IApplicationEnvironment>(IApplicationEnvironment, ApplicationEnvironment);
-    serviceManager.addSingleton<IAuthenticationService>(IAuthenticationService, AuthenticationService);
     serviceManager.addSingleton<IEncryptedStorage>(IEncryptedStorage, EncryptedStorage);
     serviceManager.addSingleton<ILanguageService>(ILanguageService, LanguageService);
     serviceManager.addSingleton<IBrowserService>(IBrowserService, BrowserService);
@@ -116,6 +114,11 @@ export function registerTypes(serviceManager: IServiceManager) {
         IExtensionSingleActivationService,
         ReloadVSCodeCommandHandler
     );
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        AmlComputeContext
+    );
+    serviceManager.addSingleton<AmlComputeContext>(AmlComputeContext, AmlComputeContext);
     serviceManager.addSingleton<IExtensionChannelService>(IExtensionChannelService, ExtensionChannelService);
     serviceManager.addSingleton<IExtensionChannelRule>(
         IExtensionChannelRule,

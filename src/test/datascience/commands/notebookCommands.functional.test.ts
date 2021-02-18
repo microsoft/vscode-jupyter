@@ -29,6 +29,7 @@ import {
 import { IKernelFinder } from '../../../client/datascience/kernel-launcher/types';
 import { NativeEditorProvider } from '../../../client/datascience/notebookStorage/nativeEditorProvider';
 import { PreferredRemoteKernelIdProvider } from '../../../client/datascience/notebookStorage/preferredRemoteKernelIdProvider';
+import { InterpreterPackages } from '../../../client/datascience/telemetry/interpreterPackages';
 import { IInteractiveWindowProvider, INotebookEditorProvider } from '../../../client/datascience/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 
@@ -103,14 +104,9 @@ suite('DataScience - Notebook Commands', () => {
                 const kernelDependencyService = mock(KernelDependencyService);
                 const kernelService = mock(KernelService);
                 kernelSelectionProvider = mock(KernelSelectionProvider);
-                when(
-                    kernelSelectionProvider.getKernelSelectionsForLocalSession(
-                        anything(),
-                        anything(),
-                        anything(),
-                        anything()
-                    )
-                ).thenResolve(localSelections);
+                when(kernelSelectionProvider.getKernelSelectionsForLocalSession(anything(), anything())).thenResolve(
+                    localSelections
+                );
                 when(
                     kernelSelectionProvider.getKernelSelectionsForRemoteSession(anything(), anything(), anything())
                 ).thenResolve(remoteSelections);
@@ -151,7 +147,8 @@ suite('DataScience - Notebook Commands', () => {
                     instance(jupyterSessionManagerFactory),
                     instance(configService),
                     instance(extensionChecker),
-                    instance(preferredKernelIdProvider)
+                    instance(preferredKernelIdProvider),
+                    instance(mock(InterpreterPackages))
                 );
 
                 const kernelSwitcher = new KernelSwitcher(
@@ -211,14 +208,7 @@ suite('DataScience - Notebook Commands', () => {
                 });
                 test('Should not switch if no identity', async () => {
                     await commandHandler.bind(notebookCommands)();
-                    verify(
-                        kernelSelectionProvider.getKernelSelectionsForLocalSession(
-                            anything(),
-                            anything(),
-                            anything(),
-                            anything()
-                        )
-                    ).never();
+                    verify(kernelSelectionProvider.getKernelSelectionsForLocalSession(anything(), anything())).never();
                 });
                 test('Should switch kernel using the provided notebook', async () => {
                     const notebook = createNotebookMock();

@@ -15,11 +15,11 @@ import { noop } from '../../../common/utils/misc';
 import { IInterpreterSelector } from '../../../interpreter/configuration/types';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { IKernelFinder } from '../../kernel-launcher/types';
-import { IJupyterSessionManager, IJupyterSessionManagerFactory } from '../../types';
+import { IJupyterSessionManager, IJupyterSessionManagerFactory, IRawNotebookSupportedService } from '../../types';
 import { isPythonKernelConnection } from './helpers';
 import { KernelService } from './kernelService';
 import { ActiveJupyterSessionKernelSelectionListProvider } from './providers/activeJupyterSessionKernelProvider';
-import { InstalledRawKernelSelectionListProvider } from './providers/installedRawKernelProvider';
+import { InstalledLocalKernelSelectionListProvider } from './providers/installedLocalKernelProvider';
 import { InstalledJupyterKernelSelectionListProvider } from './providers/installJupyterKernelProvider';
 import { InterpreterKernelSelectionListProvider } from './providers/interpretersAsKernelProvider';
 import {
@@ -64,8 +64,8 @@ export class KernelSelectionProvider {
         @inject(IKernelFinder) private readonly kernelFinder: IKernelFinder,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
-
-        @inject(IJupyterSessionManagerFactory) private jupyterSessionManagerFactory: IJupyterSessionManagerFactory
+        @inject(IJupyterSessionManagerFactory) private jupyterSessionManagerFactory: IJupyterSessionManagerFactory,
+        @inject(IRawNotebookSupportedService) private rawNotebookSupportedService: IRawNotebookSupportedService
     ) {
         disposableRegistry.push(
             this.jupyterSessionManagerFactory.onRestartSessionCreated(this.addKernelToIgnoreList.bind(this))
@@ -95,27 +95,35 @@ export class KernelSelectionProvider {
      */
     public async getKernelSelectionsForRemoteSession(
         resource: Resource,
-        sessionManager: IJupyterSessionManager,
+        sessionManagerCreator: () => Promise<IJupyterSessionManager>,
         cancelToken?: CancellationToken
     ): Promise<IKernelSpecQuickPickItem<LiveKernelConnectionMetadata | KernelSpecConnectionMetadata>[]> {
         const getSelections = async () => {
-            const installedKernelsPromise = new InstalledJupyterKernelSelectionListProvider(
-                this.kernelService,
-                this.pathUtils,
-                this.extensionChecker,
-                this.interpreterService,
-                sessionManager
-            ).getKernelSelections(resource, cancelToken);
-            const liveKernelsPromise = new ActiveJupyterSessionKernelSelectionListProvider(
-                sessionManager,
-                this.pathUtils
-            ).getKernelSelections(resource, cancelToken);
-            const [installedKernels, liveKernels] = await Promise.all([installedKernelsPromise, liveKernelsPromise]);
+            const sessionManager = await sessionManagerCreator();
+            try {
+                const installedKernelsPromise = new InstalledJupyterKernelSelectionListProvider(
+                    this.kernelService,
+                    this.pathUtils,
+                    this.extensionChecker,
+                    this.interpreterService,
+                    sessionManager
+                ).getKernelSelections(resource, cancelToken);
+                const liveKernelsPromise = new ActiveJupyterSessionKernelSelectionListProvider(
+                    sessionManager,
+                    this.pathUtils
+                ).getKernelSelections(resource, cancelToken);
+                const [installedKernels, liveKernels] = await Promise.all([
+                    installedKernelsPromise,
+                    liveKernelsPromise
+                ]);
 
-            // Sort by name.
-            installedKernels.sort((a, b) => (a.label === b.label ? 0 : a.label > b.label ? 1 : -1));
-            liveKernels.sort((a, b) => (a.label === b.label ? 0 : a.label > b.label ? 1 : -1));
-            return [...liveKernels!, ...installedKernels!];
+                // Sort by name.
+                installedKernels.sort((a, b) => (a.label === b.label ? 0 : a.label > b.label ? 1 : -1));
+                liveKernels.sort((a, b) => (a.label === b.label ? 0 : a.label > b.label ? 1 : -1));
+                return [...liveKernels!, ...installedKernels!];
+            } finally {
+                await sessionManager.dispose();
+            }
         };
 
         const liveItems = getSelections().then((items) => (this.remoteSuggestionsCache = items));
@@ -130,37 +138,15 @@ export class KernelSelectionProvider {
      */
     public async getKernelSelectionsForLocalSession(
         resource: Resource,
-        type: 'raw' | 'jupyter' | 'noConnection',
-        sessionManager?: IJupyterSessionManager,
         cancelToken?: CancellationToken
     ): Promise<IKernelSpecQuickPickItem<KernelSpecConnectionMetadata | PythonKernelConnectionMetadata>[]> {
         const getSelections = async () => {
-            // For raw versus jupyter connections we need to use a different method for fetching installed kernelspecs
-            // There is a possible unknown case for if we have a guest jupyter notebook that has not yet connected
-            // in that case we don't use either method
-            let installedKernelsPromise: Promise<
-                IKernelSpecQuickPickItem<KernelSpecConnectionMetadata>[]
-            > = Promise.resolve([]);
-            switch (type) {
-                case 'raw':
-                    installedKernelsPromise = new InstalledRawKernelSelectionListProvider(
-                        this.kernelFinder,
-                        this.pathUtils,
-                        this.kernelService
-                    ).getKernelSelections(resource, cancelToken);
-                    break;
-                case 'jupyter':
-                    installedKernelsPromise = new InstalledJupyterKernelSelectionListProvider(
-                        this.kernelService,
-                        this.pathUtils,
-                        this.extensionChecker,
-                        this.interpreterService,
-                        sessionManager
-                    ).getKernelSelections(resource, cancelToken);
-                    break;
-                default:
-                    break;
-            }
+            const installedKernelsPromise = new InstalledLocalKernelSelectionListProvider(
+                this.kernelFinder,
+                this.pathUtils,
+                this.kernelService,
+                this.rawNotebookSupportedService
+            ).getKernelSelections(resource, cancelToken);
             const interpretersPromise = this.extensionChecker.isPythonExtensionInstalled
                 ? new InterpreterKernelSelectionListProvider(this.interpreterSelector).getKernelSelections(
                       resource,

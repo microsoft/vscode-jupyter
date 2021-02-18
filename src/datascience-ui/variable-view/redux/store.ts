@@ -16,6 +16,7 @@ export function createStore(skipDefault: boolean, baseTheme: string, testMode: b
         false,
         true /* Start with variable view open */,
         reducerMap,
-        postOffice
+        postOffice,
+        () => Promise.resolve()
     );
 }

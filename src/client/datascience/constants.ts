@@ -134,6 +134,8 @@ export namespace Commands {
     export const ShowDataViewer = 'jupyter.showDataViewer';
     export const ClearSavedJupyterUris = 'jupyter.clearSavedJupyterUris';
     export const OpenVariableView = 'jupyter.openVariableView';
+    export const NotebookEditorKeybindSave = 'jupyter.notebookeditor.keybind.save';
+    export const NotebookEditorKeybindUndo = 'jupyter.notebookeditor.keybind.undo';
 }
 
 export namespace CodeLensCommands {
@@ -157,13 +159,16 @@ export namespace EditorContexts {
     export const HaveNative = 'jupyter.havenative';
     export const IsNativeActive = 'jupyter.isnativeactive';
     export const IsInteractiveOrNativeActive = 'jupyter.isinteractiveornativeactive';
+    export const canRunCellsAboveInNativeNotebook = 'jupyter.notebookeditor.canRunCellsAboveInNativeNotebook';
     export const IsPythonOrNativeActive = 'jupyter.ispythonornativeactive';
     export const IsPythonOrInteractiveActive = 'jupyter.ispythonorinteractiveeactive';
     export const IsPythonOrInteractiveOrNativeActive = 'jupyter.ispythonorinteractiveornativeeactive';
     export const HaveCellSelected = 'jupyter.havecellselected';
     export const IsNotebookTrusted = 'jupyter.isnotebooktrusted';
     export const CanRestartNotebookKernel = 'jupyter.notebookeditor.canrestartNotebookkernel';
+    export const CanInterruptNotebookKernel = 'jupyter.notebookeditor.canInterruptNotebookKernel';
     export const IsPythonNotebook = 'jupyter.ispythonnotebook';
+    export const IsVSCodeNotebookActive = 'jupyter.isvscodenotebookactive';
 }
 
 export namespace RegExpValues {
@@ -323,7 +328,7 @@ export enum Telemetry {
     HiddenCellTime = 'DS_INTERNAL.HIDDEN_EXECUTION_TIME',
     RestartJupyterTime = 'DS_INTERNAL.RESTART_JUPYTER_TIME',
     InterruptJupyterTime = 'DS_INTERNAL.INTERRUPT_JUPYTER_TIME',
-    ExecuteCell = 'DATASCIENCE.EXECUTE_CELL_TIME',
+    ExecuteCellTime = 'DATASCIENCE.EXECUTE_CELL_TIME',
     ExecuteCellPerceivedCold = 'DS_INTERNAL.EXECUTE_CELL_PERCEIVED_COLD',
     ExecuteCellPerceivedWarm = 'DS_INTERNAL.EXECUTE_CELL_PERCEIVED_WARM',
     PerceivedJupyterStartupNotebook = 'DS_INTERNAL.PERCEIVED_JUPYTER_STARTUP_NOTEBOOK',
@@ -379,7 +384,6 @@ export enum Telemetry {
     GetPreferredKernelPerf = 'DS_INTERNAL.GET_PREFERRED_KERNEL_PERF',
     KernelFinderPerf = 'DS_INTERNAL.KERNEL_FINDER_PERF',
     KernelListingPerf = 'DS_INTERNAL.KERNEL_LISTING_PERF',
-    NativeNotebookKernelSelectionPerf = 'DS_INTERNAL.NATIVE_NOTEBOOK_KERNEL_SELECTION_PERF',
     JupyterInstallFailed = 'DS_INTERNAL.JUPYTER_INSTALL_FAILED',
     UserInstalledModule = 'DATASCIENCE.USER_INSTALLED_MODULE',
     JupyterCommandLineNonDefault = 'DS_INTERNAL.JUPYTER_CUSTOM_COMMAND_LINE',
@@ -408,6 +412,7 @@ export enum Telemetry {
     RawKernelSessionConnect = 'DS_INTERNAL.RAWKERNEL_SESSION_CONNECT',
     RawKernelStartRawSession = 'DS_INTERNAL.RAWKERNEL_START_RAW_SESSION',
     RawKernelSessionStartSuccess = 'DS_INTERNAL.RAWKERNEL_SESSION_START_SUCCESS',
+    RawKernelSessionStart = 'DS_INTERNAL.RAWKERNEL_SESSION_START',
     RawKernelSessionStartUserCancel = 'DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL',
     RawKernelSessionStartTimeout = 'DS_INTERNAL.RAWKERNEL_SESSION_START_TIMEOUT',
     RawKernelSessionStartException = 'DS_INTERNAL.RAWKERNEL_SESSION_START_EXCEPTION',
@@ -424,7 +429,16 @@ export enum Telemetry {
     NotebookTrustPromptShown = 'DATASCIENCE.NOTEBOOK_TRUST_PROMPT_SHOWN',
     SyncAllCells = 'DS_INTERNAL.SYNC_ALL_CELLS',
     SyncSingleCell = 'DS_INTERNAL.SYNC_SINGLE_CELL',
-    NativeRandomBytesGenerationFailed = 'DS_INTERNAL.NATIVE_RANDOM_BYTES_GENERATION_FAILED'
+    NativeRandomBytesGenerationFailed = 'DS_INTERNAL.NATIVE_RANDOM_BYTES_GENERATION_FAILED',
+    InteractiveFileTooltipsPerf = 'DS_INTERNAL.INTERACTIVE_FILE_TOOLTIPS_PERF',
+    NativeVariableViewLoaded = 'DS_INTERNAL.NATIVE_VARIABLE_VIEW_LOADED',
+    NativeVariableViewMadeVisible = 'DS_INTERNAL.NATIVE_VARIABLE_VIEW_MADE_VISIBLE',
+    NotebookStart = 'DATASCIENCE.NOTEBOOK_START',
+    NotebookInterrupt = 'DATASCIENCE.NOTEBOOK_INTERRUPT',
+    NotebookRestart = 'DATASCIENCE.NOTEBOOK_RESTART',
+    SwitchKernel = 'DS_INTERNAL.SWITCH_KERNEL',
+    KernelCount = 'DS_INTERNAL.KERNEL_COUNT',
+    ExecuteCell = 'DATASCIENCE.EXECUTE_CELL'
 }
 
 export enum NativeKeyboardCommandTelemetry {
@@ -532,6 +546,7 @@ export namespace GetVariableInfo {
     export const GetVariableInfoSysImport = `import sys\nsys.path.append("${SysPath.replace(/\\/g, '\\\\')}")`;
     export const ScriptPath = path.join(SysPath, 'vscodeGetVariableInfo.py');
     export const VariableInfoFunc = '_VSCODE_getVariableInfo';
+    export const VariablePropertiesFunc = '_VSCODE_getVariableProperties';
 
     // Constants for the debugger which imports the script files
     export const VariableInfoImportName = '_VSCODE_VariableImport';

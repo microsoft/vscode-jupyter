@@ -45,12 +45,12 @@ export class InteractiveShiftEnterBanner implements IJupyterExtensionBanner {
         }
         this.initialized = true;
 
-        if (!this.enabled) {
+        if (!this.isEnabled()) {
             return;
         }
     }
 
-    public get enabled(): boolean {
+    public isEnabled(): boolean {
         return this.persistentState.createGlobalPersistentState<boolean>(
             InteractiveShiftEnterStateKeys.ShowBanner,
             true
@@ -58,7 +58,7 @@ export class InteractiveShiftEnterBanner implements IJupyterExtensionBanner {
     }
 
     public async showBanner(): Promise<void> {
-        if (!this.enabled) {
+        if (!this.isEnabled()) {
             return;
         }
 
@@ -96,7 +96,7 @@ export class InteractiveShiftEnterBanner implements IJupyterExtensionBanner {
     public async shouldShowBanner(): Promise<boolean> {
         const settings = this.configuration.getSettings();
         return Promise.resolve(
-            this.enabled && !this.disabledInCurrentSession && !settings.sendSelectionToInteractiveWindow
+            this.isEnabled() && !this.disabledInCurrentSession && !settings.sendSelectionToInteractiveWindow
         );
     }
 

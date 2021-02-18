@@ -2,9 +2,11 @@
 // Licensed under the MIT License.
 
 import type { nbformat } from '@jupyterlab/coreutils';
-import { InterpreterUri } from '../../client/common/installer/types';
+import { CancellationToken } from 'vscode';
+import { Resource } from '../../client/common/types';
 import { IKernelFinder } from '../../client/datascience/kernel-launcher/types';
 import { IJupyterKernelSpec } from '../../client/datascience/types';
+import { PythonEnvironment } from '../../client/pythonEnvironments/info';
 
 export class MockKernelFinder implements IKernelFinder {
     private dummySpecs = new Map<string, IJupyterKernelSpec>();
@@ -12,16 +14,17 @@ export class MockKernelFinder implements IKernelFinder {
     constructor(private readonly realFinder: IKernelFinder) {}
 
     public async findKernelSpec(
-        interpreterUri: InterpreterUri,
-        metadata?: nbformat.INotebookMetadata
+        resource: Resource,
+        option?: nbformat.INotebookMetadata | PythonEnvironment,
+        _cancelToken?: CancellationToken
     ): Promise<IJupyterKernelSpec | undefined> {
-        const spec = interpreterUri?.path
-            ? this.dummySpecs.get(interpreterUri.path)
-            : this.dummySpecs.get((interpreterUri || '').toString());
+        const spec = option?.path
+            ? this.dummySpecs.get(option.path as string)
+            : this.dummySpecs.get(((option?.path as string) || '').toString());
         if (spec) {
             return spec;
         }
-        return this.realFinder.findKernelSpec(interpreterUri, metadata);
+        return this.realFinder.findKernelSpec(resource, option);
     }
 
     public async listKernelSpecs(): Promise<IJupyterKernelSpec[]> {

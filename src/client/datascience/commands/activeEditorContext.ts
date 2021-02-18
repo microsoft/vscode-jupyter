@@ -7,13 +7,12 @@ import { inject, injectable } from 'inversify';
 import { TextEditor } from 'vscode';
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
 import { IExtensionSingleActivationService } from '../../activation/types';
-import { ICommandManager, IDocumentManager } from '../../common/application/types';
-import { PYTHON_LANGUAGE } from '../../common/constants';
+import { ICommandManager, IDocumentManager, IVSCodeNotebook } from '../../common/application/types';
+import { PYTHON_LANGUAGE, UseVSCodeNotebookEditorApi } from '../../common/constants';
 import { ContextKey } from '../../common/contextKey';
-import { Experiments } from '../../common/experiments/groups';
 import { traceError } from '../../common/logger';
-import { IDisposable, IDisposableRegistry, IExperimentService } from '../../common/types';
-import { setSharedProperty } from '../../telemetry';
+import { IDisposable, IDisposableRegistry } from '../../common/types';
+import { isNotebookCell } from '../../common/utils/misc';
 import { EditorContexts } from '../constants';
 import { isPythonNotebook } from '../notebook/helpers/helpers';
 import {
@@ -36,19 +35,22 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
     private pythonOrNativeContext: ContextKey;
     private pythonOrInteractiveOrNativeContext: ContextKey;
     private canRestartNotebookKernelContext: ContextKey;
+    private canInterruptNotebookKernelContext: ContextKey;
+    private canRunCellsAboveInNativeNotebook: ContextKey;
     private hasNativeNotebookCells: ContextKey;
     private isNotebookTrusted: ContextKey;
     private isPythonFileActive: boolean = false;
-    private inNativeNotebookExperiment: boolean = false;
     private isPythonNotebook: ContextKey;
+    private isVSCodeNotebookActive: ContextKey;
     constructor(
         @inject(IInteractiveWindowProvider) private readonly interactiveProvider: IInteractiveWindowProvider,
         @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider,
         @inject(IDocumentManager) private readonly docManager: IDocumentManager,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
-        @inject(IExperimentService) private readonly experimentService: IExperimentService,
+        @inject(UseVSCodeNotebookEditorApi) private readonly inNativeNotebookExperiment: boolean,
         @inject(INotebookProvider) private readonly notebookProvider: INotebookProvider,
+        @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
         @inject(ITrustService) private readonly trustService: ITrustService
     ) {
         disposables.push(this);
@@ -57,9 +59,17 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
             EditorContexts.CanRestartNotebookKernel,
             this.commandManager
         );
+        this.canInterruptNotebookKernelContext = new ContextKey(
+            EditorContexts.CanInterruptNotebookKernel,
+            this.commandManager
+        );
         this.interactiveContext = new ContextKey(EditorContexts.IsInteractiveActive, this.commandManager);
         this.interactiveOrNativeContext = new ContextKey(
             EditorContexts.IsInteractiveOrNativeActive,
+            this.commandManager
+        );
+        this.canRunCellsAboveInNativeNotebook = new ContextKey(
+            EditorContexts.canRunCellsAboveInNativeNotebook,
             this.commandManager
         );
         this.pythonOrNativeContext = new ContextKey(EditorContexts.IsPythonOrNativeActive, this.commandManager);
@@ -74,6 +84,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         this.hasNativeNotebookCells = new ContextKey(EditorContexts.HaveNativeCells, this.commandManager);
         this.isNotebookTrusted = new ContextKey(EditorContexts.IsNotebookTrusted, this.commandManager);
         this.isPythonNotebook = new ContextKey(EditorContexts.IsPythonNotebook, this.commandManager);
+        this.isVSCodeNotebookActive = new ContextKey(EditorContexts.IsVSCodeNotebookActive, this.commandManager);
     }
     public dispose() {
         this.disposables.forEach((item) => item.dispose());
@@ -97,39 +108,66 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         if (this.docManager.activeTextEditor?.document.languageId === PYTHON_LANGUAGE) {
             this.onDidChangeActiveTextEditor(this.docManager.activeTextEditor);
         }
-        this.inNativeNotebookExperiment = await this.experimentService.inExperiment(Experiments.NativeNotebook);
+        this.vscNotebook.onDidChangeNotebookEditorSelection(this.updateNativeNotebookContext, this, this.disposables);
     }
 
     private updateNativeNotebookCellContext() {
         if (!this.inNativeNotebookExperiment) {
             return;
         }
-        this.hasNativeNotebookCells
-            .set((this.notebookEditorProvider.activeEditor?.model?.cellCount || 0) > 0)
-            .ignoreErrors();
+
+        // Separate for debugging.
+        const hasNativeCells = (this.vscNotebook.activeNotebookEditor?.document.cells.length || 0) > 0;
+        this.hasNativeNotebookCells.set(hasNativeCells).ignoreErrors();
     }
     private onDidChangeActiveInteractiveWindow(e?: IInteractiveWindow) {
         this.interactiveContext.set(!!e).ignoreErrors();
         this.updateMergedContexts();
     }
     private onDidChangeActiveNotebookEditor(e?: INotebookEditor) {
-        // This will ensure all subsequent telemetry will get the context of whether it is a custom/native/old notebook editor.
-        // This is temporary, and once we ship native editor this needs to be removed.
-        setSharedProperty('ds_notebookeditor', e?.type);
         this.nativeContext.set(!!e).ignoreErrors();
+
+        // jupyter.isnativeactive is set above, but also set jupyter.isvscodenotebookactive
+        // if the active document is also a vscode document
+        if (e && e.type === 'native') {
+            this.isVSCodeNotebookActive.set(true).ignoreErrors();
+        } else {
+            this.isVSCodeNotebookActive.set(false).ignoreErrors();
+        }
         this.isNotebookTrusted.set(e?.model?.isTrusted === true).ignoreErrors();
         this.isPythonNotebook.set(isPythonNotebook(e?.model?.metadata)).ignoreErrors();
-        this.updateMergedContexts();
         this.updateContextOfActiveNotebookKernel(e);
+        this.updateNativeNotebookContext();
+        this.updateNativeNotebookCellContext();
+        this.updateMergedContexts();
+    }
+    private updateNativeNotebookContext() {
+        if (!this.vscNotebook.activeNotebookEditor) {
+            return;
+        }
+
+        if (this.vscNotebook.activeNotebookEditor) {
+            if (
+                this.vscNotebook.activeNotebookEditor.selection &&
+                this.vscNotebook.activeNotebookEditor.selection.index > 0
+            ) {
+                this.canRunCellsAboveInNativeNotebook.set(true).ignoreErrors();
+            } else {
+                // If a cell isn't selected or if first cell is selected, then we cannot have run above.
+                this.canRunCellsAboveInNativeNotebook.set(false).ignoreErrors();
+            }
+        }
     }
     private updateContextOfActiveNotebookKernel(activeEditor?: INotebookEditor) {
         if (activeEditor) {
             this.notebookProvider
-                .getOrCreateNotebook({ identity: activeEditor.file, getOnly: true })
+                .getOrCreateNotebook({ identity: activeEditor.file, resource: activeEditor.file, getOnly: true })
                 .then((nb) => {
                     if (activeEditor === this.notebookEditorProvider.activeEditor) {
                         const canStart = nb && nb.status !== ServerStatus.NotStarted && activeEditor.model?.isTrusted;
                         this.canRestartNotebookKernelContext.set(!!canStart).ignoreErrors();
+                        const canInterrupt = nb && nb.status === ServerStatus.Busy && activeEditor.model?.isTrusted;
+                        this.canInterruptNotebookKernelContext.set(!!canInterrupt).ignoreErrors();
                     }
                 })
                 .catch(
@@ -137,6 +175,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
                 );
         } else {
             this.canRestartNotebookKernelContext.set(false).ignoreErrors();
+            this.canInterruptNotebookKernelContext.set(false).ignoreErrors();
         }
     }
     private onDidKernelStatusChange({ notebook }: { status: ServerStatus; notebook: INotebook }) {
@@ -153,8 +192,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         this.updateContextOfActiveNotebookKernel(activeEditor);
     }
     private onDidChangeActiveTextEditor(e?: TextEditor) {
-        this.isPythonFileActive =
-            e?.document.languageId === PYTHON_LANGUAGE && !this.notebookEditorProvider.activeEditor;
+        this.isPythonFileActive = e?.document.languageId === PYTHON_LANGUAGE && !isNotebookCell(e.document.uri);
         this.updateNativeNotebookCellContext();
         this.updateMergedContexts();
     }

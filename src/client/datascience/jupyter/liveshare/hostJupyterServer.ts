@@ -234,6 +234,7 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
             // If we switched kernels, try switching the possible session
             if (changedKernel && possibleSession && info.kernelConnectionMetadata) {
                 await possibleSession.changeKernel(
+                    resource,
                     info.kernelConnectionMetadata,
                     this.configService.getSettings(resource).jupyterLaunchTimeout
                 );
@@ -344,7 +345,6 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
                     ? this.kernelSelector.getPreferredKernelForLocalConnection(
                           resource,
                           'jupyter',
-                          sessionManager,
                           notebookMetadata,
                           isTestExecution(),
                           cancelToken

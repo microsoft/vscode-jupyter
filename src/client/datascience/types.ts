@@ -15,7 +15,10 @@ import {
     DebugSession,
     Disposable,
     Event,
+    HoverProvider,
     LanguageConfiguration,
+    NotebookCell,
+    NotebookCellRunState,
     QuickPickItem,
     Range,
     TextDocument,
@@ -25,7 +28,6 @@ import {
 } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import type { Data as WebSocketData } from 'ws';
-import type { NotebookCell, NotebookCellRunState } from '../../../types/vscode-proposed';
 import { ServerStatus } from '../../datascience-ui/interactive-common/mainState';
 import { ICommandManager, IDebugService } from '../common/application/types';
 import { ExecutionResult, ObservableExecutionResult, SpawnOptions } from '../common/process/types';
@@ -84,9 +86,9 @@ export interface IJupyterConnection extends Disposable {
 export type INotebookProviderConnection = IRawConnection | IJupyterConnection;
 
 export enum InterruptResult {
-    Success = 0,
-    TimedOut = 1,
-    Restarted = 2
+    Success = 'success',
+    TimedOut = 'timeout',
+    Restarted = 'restart'
 }
 
 // Information used to execute a notebook
@@ -143,7 +145,6 @@ export interface INotebookServer extends IAsyncDisposable {
 export const IRawNotebookSupportedService = Symbol('IRawNotebookSupportedService');
 export interface IRawNotebookSupportedService {
     supported(): Promise<boolean>;
-    isSupportedForLocalLaunch(): Promise<boolean>;
 }
 
 // Provides notebooks that talk directly to kernels as opposed to a jupyter server
@@ -248,11 +249,14 @@ export type ConnectNotebookProviderOptions = {
     disableUI?: boolean;
     localOnly?: boolean;
     token?: CancellationToken;
+    resource: Resource;
+    metadata?: nbformat.INotebookMetadata;
     onConnectionMade?(): void; // Optional callback for when the first connection is made
 };
 
 export interface INotebookServerOptions {
     uri?: string;
+    resource: Resource;
     usingDarkTheme?: boolean;
     skipUsingDefaultConfig?: boolean;
     workingDir?: string;
@@ -262,6 +266,9 @@ export interface INotebookServerOptions {
     skipSearchingForKernel?: boolean;
     allowUI(): boolean;
 }
+
+export interface IHoverProvider extends HoverProvider {}
+export const IHoverProvider = Symbol('IHoverProvider');
 
 export const INotebookExecutionLogger = Symbol('INotebookExecutionLogger');
 export interface INotebookExecutionLogger extends IDisposable {
@@ -329,7 +336,7 @@ export interface IJupyterSession extends IAsyncDisposable {
         content: KernelMessage.IInspectRequestMsg['content']
     ): Promise<KernelMessage.IInspectReplyMsg | undefined>;
     sendInputReply(content: string): void;
-    changeKernel(kernelConnection: KernelConnectionMetadata, timeoutMS: number): Promise<void>;
+    changeKernel(resource: Resource, kernelConnection: KernelConnectionMetadata, timeoutMS: number): Promise<void>;
     registerCommTarget(
         targetName: string,
         callback: (comm: Kernel.IComm, msg: KernelMessage.ICommOpenMsg) => void | PromiseLike<void>
@@ -863,7 +870,7 @@ export interface IJupyterExtraSettings extends IJupyterSettings {
     };
 }
 
-// Get variables from the currently running active Jupyter server
+// Get variables from the currently running active Jupyter server or debugger
 // Note: This definition is used implicitly by getJupyterVariableValue.py file
 // Changes here may need to be reflected there as well
 export interface IJupyterVariable {
@@ -874,11 +881,13 @@ export interface IJupyterVariable {
     type: string;
     size: number;
     shape: string;
+    dataDimensionality?: number;
     count: number;
     truncated: boolean;
     columns?: { key: string; type: string }[];
     rowCount?: number;
     indexColumn?: string;
+    maximumRowChunkSize?: number;
 }
 
 export const IJupyterVariableDataProvider = Symbol('IJupyterVariableDataProvider');
@@ -895,18 +904,30 @@ export const IJupyterVariables = Symbol('IJupyterVariables');
 export interface IJupyterVariables {
     readonly refreshRequired: Event<void>;
     getVariables(request: IJupyterVariablesRequest, notebook?: INotebook): Promise<IJupyterVariablesResponse>;
-    getDataFrameInfo(targetVariable: IJupyterVariable, notebook?: INotebook): Promise<IJupyterVariable>;
+    getFullVariable(
+        variable: IJupyterVariable,
+        notebook?: INotebook,
+        cancelToken?: CancellationToken
+    ): Promise<IJupyterVariable>;
+    getDataFrameInfo(
+        targetVariable: IJupyterVariable,
+        notebook?: INotebook,
+        sliceExpression?: string
+    ): Promise<IJupyterVariable>;
     getDataFrameRows(
         targetVariable: IJupyterVariable,
         start: number,
         end: number,
-        notebook?: INotebook
+        notebook?: INotebook,
+        sliceExpression?: string
     ): Promise<JSONObject>;
     getMatchingVariable(
         name: string,
         notebook?: INotebook,
         cancelToken?: CancellationToken
     ): Promise<IJupyterVariable | undefined>;
+    // This is currently only defined in kernelVariables.ts
+    getVariableProperties?(name: string, notebook?: INotebook, cancelToken?: CancellationToken): Promise<JSONObject>;
 }
 
 export interface IConditionalJupyterVariables extends IJupyterVariables {
@@ -1162,6 +1183,7 @@ export type GetServerOptions = {
     disableUI?: boolean;
     localOnly?: boolean;
     token?: CancellationToken;
+    resource: Resource;
     metadata?: nbformat.INotebookMetadata;
     kernelConnection?: KernelConnectionMetadata;
     onConnectionMade?(): void; // Optional callback for when the first connection is made
@@ -1171,7 +1193,7 @@ export type GetServerOptions = {
  * Options for getting a notebook
  */
 export type GetNotebookOptions = {
-    resource?: Uri;
+    resource: Resource;
     identity: Uri;
     getOnly?: boolean;
     disableUI?: boolean;

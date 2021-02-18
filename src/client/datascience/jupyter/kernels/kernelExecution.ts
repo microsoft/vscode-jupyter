@@ -3,14 +3,23 @@
 
 'use strict';
 
-import { NotebookCell, NotebookDocument, NotebookEditor } from 'vscode';
+import {
+    NotebookCell,
+    NotebookCellKind,
+    NotebookCellRunState,
+    NotebookDocument,
+    NotebookEditor,
+    NotebookRunState
+} from 'vscode';
 import { ServerStatus } from '../../../../datascience-ui/interactive-common/mainState';
 import { IApplicationShell, IVSCodeNotebook } from '../../../common/application/types';
 import { traceInfo, traceWarning } from '../../../common/logger';
 import { IDisposable, IExtensionContext } from '../../../common/types';
 import { createDeferred, waitForPromise } from '../../../common/utils/async';
+import { StopWatch } from '../../../common/utils/stopWatch';
 import { captureTelemetry } from '../../../telemetry';
 import { Telemetry, VSCodeNativeTelemetry } from '../../constants';
+import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../../telemetry/telemetry';
 import { traceCellMessage } from '../../notebook/helpers/helpers';
 import { chainWithPendingUpdates } from '../../notebook/helpers/notebookUpdater';
 import {
@@ -24,8 +33,6 @@ import { CellExecutionFactory } from './cellExecution';
 import { CellExecutionQueue } from './cellExecutionQueue';
 import { isPythonKernelConnection } from './helpers';
 import type { IKernel, IKernelProvider, IKernelSelectionUsage, KernelConnectionMetadata } from './types';
-// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
-const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
 /**
  * Separate class that deals just with kernel execution.
@@ -58,7 +65,7 @@ export class KernelExecution implements IDisposable {
             // No editor, possible it was closed.
             return;
         }
-        if (cell.metadata.runState === vscodeNotebookEnums.NotebookCellRunState.Running) {
+        if (cell.metadata.runState === NotebookCellRunState.Running) {
             // This is an unlikely scenario (UI doesn't allow this).
             // Seen something similar in CI tests when we manually run whole document using the commands.
             traceCellMessage(cell, 'Cell is already running, somehow executeCell called again');
@@ -81,8 +88,8 @@ export class KernelExecution implements IDisposable {
 
         // Only run code cells that are not already running.
         const cellsThatWeCanRun = editor.document.cells
-            .filter((cell) => cell.cellKind === vscodeNotebookEnums.CellKind.Code)
-            .filter((cell) => cell.metadata.runState !== vscodeNotebookEnums.NotebookCellRunState.Running);
+            .filter((cell) => cell.cellKind === NotebookCellKind.Code)
+            .filter((cell) => cell.metadata.runState !== NotebookCellRunState.Running);
         if (cellsThatWeCanRun.length === 0) {
             // This is an unlikely scenario (UI doesn't allow this).
             // Seen this in CI tests when we manually run whole document using the commands.
@@ -94,21 +101,26 @@ export class KernelExecution implements IDisposable {
         try {
             traceInfo('Update notebook execution state as running');
 
-            const updateNotebookStatus = chainWithPendingUpdates(editor, (edit) =>
-                edit.replaceMetadata({
+            const updateNotebookStatus = chainWithPendingUpdates(editor.document, (edit) => {
+                edit.replaceNotebookMetadata(editor.document.uri, {
                     ...document.metadata,
-                    runState: vscodeNotebookEnums.NotebookRunState.Running
-                })
-            );
+                    runState: NotebookRunState.Running
+                });
+                return edit;
+            });
             cellsThatWeCanRun.forEach((cell) => executionQueue.queueCell(cell));
             const runAllCells = executionQueue.waitForCompletion(cellsThatWeCanRun);
 
             await Promise.all([updateNotebookStatus, runAllCells]);
         } finally {
             traceInfo('Restore notebook state to idle after completion');
-            await chainWithPendingUpdates(editor, (edit) =>
-                edit.replaceMetadata({ ...document.metadata, runState: vscodeNotebookEnums.NotebookRunState.Idle })
-            );
+            await chainWithPendingUpdates(editor.document, (edit) => {
+                edit.replaceNotebookMetadata(editor.document.uri, {
+                    ...document.metadata,
+                    runState: NotebookRunState.Idle
+                });
+                return edit;
+            });
         }
     }
     /**
@@ -116,6 +128,7 @@ export class KernelExecution implements IDisposable {
      * If we don't have a kernel (Jupyter Session) available, then just abort all of the cell executions.
      */
     public async interrupt(document: NotebookDocument, notebookPromise?: Promise<INotebook>): Promise<InterruptResult> {
+        trackKernelResourceInformation(document.uri, { interruptKernel: true });
         const executionQueue = this.documentExecutions.get(document);
         if (!executionQueue) {
             return InterruptResult.Success;
@@ -139,7 +152,7 @@ export class KernelExecution implements IDisposable {
         // Interrupt the active execution
         const result = this._interruptPromise
             ? await this._interruptPromise
-            : await (this._interruptPromise = this.interruptExecution(notebook.session, pendingCells));
+            : await (this._interruptPromise = this.interruptExecution(document, notebook.session, pendingCells));
 
         // Done interrupting, clear interrupt promise
         this._interruptPromise = undefined;
@@ -181,13 +194,15 @@ export class KernelExecution implements IDisposable {
         this.documentExecutions.set(editor.document, newCellExecutionQueue);
         return newCellExecutionQueue;
     }
+    @captureTelemetry(Telemetry.Interrupt)
+    @captureTelemetry(Telemetry.InterruptJupyterTime)
     private async interruptExecution(
+        document: NotebookDocument,
         session: IJupyterSession,
         pendingCells: Promise<unknown>
     ): Promise<InterruptResult> {
-        // Create a deferred promise that resolves if we have a failure
         const restarted = createDeferred<boolean>();
-
+        const stopWatch = new StopWatch();
         // Listen to status change events so we can tell if we're restarting
         const restartHandler = (e: ServerStatus) => {
             if (e === ServerStatus.Restarting) {
@@ -206,34 +221,51 @@ export class KernelExecution implements IDisposable {
             restarted.resolve(true);
         });
 
-        try {
-            // Wait for all of the pending cells to finish or the timeout to fire
-            const result = await waitForPromise(Promise.race([pendingCells, restarted.promise]), this.interruptTimeout);
+        const promise = (async () => {
+            try {
+                // Wait for all of the pending cells to finish or the timeout to fire
+                const result = await waitForPromise(
+                    Promise.race([pendingCells, restarted.promise]),
+                    this.interruptTimeout
+                );
 
-            // See if we restarted or not
-            if (restarted.completed) {
-                return InterruptResult.Restarted;
+                // See if we restarted or not
+                if (restarted.completed) {
+                    return InterruptResult.Restarted;
+                }
+
+                if (result === null) {
+                    // We timed out. You might think we should stop our pending list, but that's not
+                    // up to us. The cells are still executing. The user has to request a restart or try again
+                    return InterruptResult.TimedOut;
+                }
+
+                // Indicate the interrupt worked.
+                return InterruptResult.Success;
+            } catch (exc) {
+                // Something failed. See if we restarted or not.
+                if (restarted.completed) {
+                    return InterruptResult.Restarted;
+                }
+
+                // Otherwise a real error occurred.
+                sendKernelTelemetryEvent(
+                    document.uri,
+                    Telemetry.NotebookInterrupt,
+                    stopWatch.elapsedTime,
+                    undefined,
+                    exc
+                );
+                throw exc;
+            } finally {
+                restartHandlerToken.dispose();
             }
+        })();
 
-            if (result === null) {
-                // We timed out. You might think we should stop our pending list, but that's not
-                // up to us. The cells are still executing. The user has to request a restart or try again
-                return InterruptResult.TimedOut;
-            }
-
-            // Indicate the interrupt worked.
-            return InterruptResult.Success;
-        } catch (exc) {
-            // Something failed. See if we restarted or not.
-            if (restarted.completed) {
-                return InterruptResult.Restarted;
-            }
-
-            // Otherwise a real error occurred.
-            throw exc;
-        } finally {
-            restartHandlerToken.dispose();
-        }
+        return promise.then((result) => {
+            sendKernelTelemetryEvent(document.uri, Telemetry.NotebookInterrupt, stopWatch.elapsedTime, { result });
+            return result;
+        });
     }
     private addKernelRestartHandler(kernel: IKernel, document: NotebookDocument) {
         if (this.kernelRestartHandlerAdded.has(kernel)) {

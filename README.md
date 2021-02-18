@@ -5,13 +5,13 @@ A [Visual Studio Code](https://code.visualstudio.com/) [extension](https://marke
 
 ## Working with Python
 
-Whether you are on VS Code Stable or VS Code Insiders, if you would like to work with Python just make sure you're using the latest version of the [Python Extension](https://marketplace.visualstudio.com/items?itemName=ms-python.python) to enjoy the joint partnership  of the Python and Juypter Extensions!
+Whether you are on VS Code Stable or VS Code Insiders, if you would like to work with Python just make sure you're using the latest version of the [Python Extension](https://marketplace.visualstudio.com/items?itemName=ms-python.python) to enjoy the joint partnership of the Python and Juypter Extensions.
 
 Please follow the [Python Extension ReadMe](https://github.com/microsoft/vscode-python/blob/main/README.md) instructions to get started and visit the [Python Documentation](https://code.visualstudio.com/docs/python/jupyter-support) to learn more about how the Python and Jupyter Extension are working together to provide an optimum Python notebooks experience.
 
 ## Working with other Languages
 
-The Jupyter Extension supports other languages such as Julia and R (as well as Python) in VS Code Insiders with our new Native Notebooks Experience!
+The Jupyter Extension supports other languages in addition to Python such as Julia, R, and C# in VS Code Insiders with our latest Native VS Code Notebooks Experience!
 
 ### Quick Start
 
@@ -23,14 +23,10 @@ The Jupyter Extension supports other languages such as Julia and R (as well as P
 
 -   **Step 4.** Open or create a notebook file and start coding!
 
-- **Special Note:**  The Jupyter Extension in VS Code Insiders will include our Native Notebooks experience! To opt out:
+- **Special Note:**  The Jupyter Extension in VS Code Insiders will include our Native Notebooks experience by default. Because we are running in VS Code Insiders and this build is updated every day, there may be times when our extension may fail to work at all. We do attempt to ensure that this doesn't happen frequently. If it does, we strive to provide an updated extension build by the next business day. However, if you'd like to opt out of the native experience while working in VS Code Insiders:
     - Open the command palette (Windows: Ctrl + Shift + P, iOS: Command + Shift + P) and select "Preferences: Open Settings (JSON)"
     - Add the following code to your JSON settings:
      `"jupyter.experiments.optOutFrom": ["NativeNotebookEditor"],`
-
-To use the latest version of the extension:
--  Set the "jupyter.insidersChannel" setting to "daily" or "weekly" based on how often you would like the extension to check for updates
-
 
 ## Notebooks Quick Start
 
@@ -77,7 +73,7 @@ The extension is available in multiple languages: `de`, `en`, `es`, `fa`, `fr`, 
 
 ## Questions, issues, feature requests, and contributions
 
--   If you have a question about how to accomplish something with the extension, please [ask on Stack Overflow](https://stackoverflow.com/questions/tagged/visual-studio-code+jupyter).
+-   If you have a question about how to accomplish something with the extension, please [ask on Stack Overflow](https://stackoverflow.com/questions/tagged/visual-studio-code+jupyter). Our [wiki](https://github.com/microsoft/vscode-jupyter/wiki) is also updated periodically with useful information.
 -   Any and all feedback is appreciated and welcome! If you come across a problem with the extension, please [file an issue](https://github.com/microsoft/vscode-jupyter).
       - If someone has already [filed an issue](https://github.com/Microsoft/vscode-jupyter) that encompasses your feedback, please leave a 👍/👎 reaction on the issue.
 
