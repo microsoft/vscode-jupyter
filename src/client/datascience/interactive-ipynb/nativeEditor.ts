@@ -146,6 +146,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     private loadedAllCells: boolean = false;
     private executeCancelTokens = new Set<CancellationTokenSource>();
     private loadPromise: Promise<void>;
+    private isDisposing?: boolean;
     private previouslyNotTrusted: boolean = false;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private waitingForMessageResponse = new Map<string, Deferred<any>>();
@@ -241,6 +242,10 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
     @captureTelemetry(Telemetry.SyncAllCells)
     public async syncAllCells(): Promise<void> {
+        // Possible webview has been closed (and we'retrying to save just as user closed the webview editor).
+        if (this.isDisposing) {
+            return;
+        }
         // Ask the UI for all of our all cells
         const result = await this.waitForMessage(
             InteractiveWindowMessages.GetAllCellCode,
@@ -291,10 +296,11 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         await this.loadPromise;
         return super.show(preserveFocus);
     }
-    public dispose(): Promise<void> {
+    public async dispose(): Promise<void> {
+        this.isDisposing = true;
         super.dispose();
+        await this.close();
         this.model?.dispose(); // NOSONAR
-        return this.close();
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
