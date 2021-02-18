@@ -8,7 +8,6 @@ import {
     NotebookCellKind,
     NotebookCellRunState,
     NotebookDocument,
-    NotebookDocumentMetadata,
     NotebookEditor,
     NotebookRunState
 } from 'vscode';
