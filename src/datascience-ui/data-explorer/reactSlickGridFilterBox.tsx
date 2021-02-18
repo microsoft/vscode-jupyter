@@ -34,10 +34,8 @@ export class ReactSlickGridFilterBox extends React.Component<IFilterProps> {
     }
 
     public render() {
-        const placeholder = this.props.column.id === '0' ? 'Filter' : '';
         return (
             <SearchBox
-                placeholder={placeholder}
                 iconProps={filterIcon}
                 onChange={this.updateInputValue}
                 onClear={this.clearInputValue}

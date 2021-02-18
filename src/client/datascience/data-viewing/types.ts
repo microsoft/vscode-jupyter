@@ -68,6 +68,8 @@ export interface IDataFrameInfo {
     maximumRowChunkSize?: number;
     type?: string;
     originalVariableType?: string;
+    name?: string;
+    fileName?: string;
 }
 
 export interface IDataViewerDataProvider {

@@ -32,22 +32,23 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
     }
 
     render() {
-        return (
-            <div className="slice-data-control-container" style={{ display: 'flex', justifyContent: 'space-around' }}>
-                <form onSubmit={this.handleSubmit} style={{ alignSelf: 'center' }}>
-                    <label>
-                        {'Slice data:  '}
-                        <input
-                            type="text"
-                            className="slice-data"
-                            value={this.state.value}
-                            onChange={this.handleChange}
-                            style={{ width: '80px' }}
-                        />
-                    </label>
-                    <input type="submit" value="Slice" />
-                </form>
-            </div>
-        );
+        return '';
+        // return (
+        //     <div className="slice-data-control-container" style={{ display: 'flex', justifyContent: 'space-around' }}>
+        //         <form onSubmit={this.handleSubmit} style={{ alignSelf: 'center' }}>
+        //             <label>
+        //                 {'Slice data:  '}
+        //                 <input
+        //                     type="text"
+        //                     className="slice-data"
+        //                     value={this.state.value}
+        //                     onChange={this.handleChange}
+        //                     style={{ width: '80px' }}
+        //                 />
+        //             </label>
+        //             <input type="submit" value="Slice" />
+        //         </form>
+        //     </div>
+        // );
     }
 }
