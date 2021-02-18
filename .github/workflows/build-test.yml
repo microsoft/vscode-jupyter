@@ -896,7 +896,7 @@ jobs:
           name: ${{ needs.pick_environment.outputs.vsix_name }}
 
       - name: Azure Login
-        uses: azure/login@v1.1.1
+        uses: azure/login@v1.3.0
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
