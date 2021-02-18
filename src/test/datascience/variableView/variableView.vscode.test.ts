@@ -47,7 +47,7 @@ suite('DataScience - VariableView', () => {
             return this.skip();
         }
         await trustAllNotebooks();
-        //await prewarmNotebooks();
+        await prewarmNotebooks();
         sinon.restore();
         commandManager = api.serviceContainer.get<ICommandManager>(ICommandManager);
         const coreVariableViewProvider = api.serviceContainer.get<IVariableViewProvider>(IVariableViewProvider);
@@ -70,7 +70,7 @@ suite('DataScience - VariableView', () => {
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
 
     // Test showing the basic variable view with a value or two
-    test('Can show VariableView (webview-test)', async function () {
+    test('IANHU Can show VariableView (webview-test)', async function () {
         //return this.skip();
         // Add one simple cell and execute it
         await insertCodeCell('test = "MYTESTVALUE"', { index: 0 });
