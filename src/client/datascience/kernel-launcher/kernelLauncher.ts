@@ -50,6 +50,20 @@ export class KernelLauncher implements IKernelLauncher {
         @inject(IKernelDependencyService) private readonly kernelDependencyService: IKernelDependencyService
     ) {}
 
+    public static async cleanupStartPort() {
+        try {
+            // Destroy the file
+            const port = await KernelLauncher.startPortPromise;
+            traceInfo(`Cleaning up port start file : ${port}`);
+
+            const filePath = path.join(os.tmpdir(), PortFormatString.format(port.toString()));
+            await fsextra.remove(filePath);
+        } catch (exc) {
+            // If it fails it doesn't really matter. Just a temp file
+            traceInfo(`Kernel port mutex failed to cleanup: `, exc);
+        }
+    }
+
     private static async computeStartPort(): Promise<number> {
         if (isTestExecution()) {
             // Since multiple instances of a test may be running, write our best guess to a shared file
