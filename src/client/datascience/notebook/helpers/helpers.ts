@@ -836,7 +836,7 @@ export async function updateVSCNotebookAfterTrustingNotebook(
     await chainWithPendingUpdates(editor.document, (edit) => {
         edit.replaceNotebookMetadata(
             document.uri,
-            new NotebookDocumentMetadata().with(document.metadata).with({
+            document.metadata.with({
                 cellEditable: true,
                 cellRunnable: true,
                 editable: true,
