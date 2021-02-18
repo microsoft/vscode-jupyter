@@ -885,36 +885,33 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         assertVSCCellIsNotRunning(cell3);
 
         // Run cell 2 again, & it should fail again & execution count should increase.
-        let lastExecutionOrder = cell2.metadata.executionOrder!;
         await runCell(cell2);
         // Give it time to run & fail, this time execution order is greater than previously
         await waitForCondition(
-            async () => cell2.metadata.executionOrder === lastExecutionOrder + 1,
+            async () => cell2.metadata.executionOrder === 3,
             5_000,
             'Cell did not fail again with a new execution order'
         );
         await waitForExecutionCompletedWithErrors(cell2);
-        lastExecutionOrder += 1;
 
         // Run cell 3 & it should run to completion.
         await runCell(cell3);
         await waitForExecutionCompletedSuccessfully(cell3);
         const lastExecutionOrderOfCell3 = cell3.metadata.executionOrder!;
-        assert.equal(lastExecutionOrderOfCell3, lastExecutionOrder + 1);
-        lastExecutionOrder += 1;
+        assert.equal(lastExecutionOrderOfCell3, 4);
 
         // Run all cells again
         await runAllCellsInActiveNotebook();
         await waitForCondition(
-            async () => cell2.metadata.executionOrder === lastExecutionOrder + 2,
+            async () => cell2.metadata.executionOrder === 6,
             5_000,
             'Cell did not fail again with a new execution order (3rd time)'
         );
         await waitForExecutionCompletedSuccessfully(cell1);
         await waitForExecutionCompletedWithErrors(cell2);
-        assert.equal(cell1.metadata.executionOrder, lastExecutionOrder + 1);
-        assert.equal(cell2.metadata.executionOrder, lastExecutionOrder + 2);
-        assert.isUndefined(cell3.metadata.executionOrder, 'Cell 3 should not have run again');
+        assert.equal(cell1.metadata.executionOrder, 5);
+        assert.equal(cell2.metadata.executionOrder, 6);
+        assert.equal(cell3.metadata.executionOrder, 4, 'Cell 3 should not have run again');
     });
 
     // Check the set next input statements correctly insert or update cells
