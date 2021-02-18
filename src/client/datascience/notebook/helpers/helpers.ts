@@ -367,8 +367,7 @@ function createNotebookCellDataFromCodeCell(
 }
 
 export function createIOutputFromCellOutputs(cellOutputs: readonly NotebookCellOutput[]): nbformat.IOutput[] {
-    return cellOutputs
-        .map(translateCellDisplayOutput);
+    return cellOutputs.map(translateCellDisplayOutput);
 }
 
 export async function clearCellForExecution(editor: NotebookEditor, cell: NotebookCell) {
@@ -551,12 +550,14 @@ function translateDisplayDataOutput(
 }
 
 function translateStreamOutput(output: nbformat.IStream): NotebookCellOutput {
-    return new NotebookCellOutput([
-        new NotebookCellOutputItem(
-            CellOutputMimeTypes.textStream,
-            concatMultilineString(output.text),
-            getOutputMetadata(output)
-        )],
+    return new NotebookCellOutput(
+        [
+            new NotebookCellOutputItem(
+                CellOutputMimeTypes.textStream,
+                concatMultilineString(output.text),
+                getOutputMetadata(output)
+            )
+        ],
         getOutputMetadata(output)
     );
 }
@@ -633,11 +634,10 @@ export function translateCellErrorOutput(output: NotebookCellOutput): nbformat.I
 
 function translateCellDisplayOutput(output: NotebookCellOutput): JupyterOutput {
     const customMetadata = output.metadata as CellOutputMetadata | undefined;
-
     let result: JupyterOutput;
     // Possible some other extension added some output (do best effort to translate & save in ipynb).
     // In which case metadata might not contain `outputType`.
-    const outputType = customMetadata?.outputType as nbformat.OutputType
+    const outputType = customMetadata?.outputType as nbformat.OutputType;
     switch (outputType) {
         case 'error': {
             result = translateCellErrorOutput(output);
@@ -679,7 +679,8 @@ function translateCellDisplayOutput(output: NotebookCellOutput): JupyterOutput {
                     return prev;
                 }, {}),
                 metadata: customMetadata?.metadata || {}, // This can never be undefined.
-                execution_count: typeof customMetadata?.executionCount === 'number' ? customMetadata?.executionCount : null // This can never be undefined, only a number or `null`.
+                execution_count:
+                    typeof customMetadata?.executionCount === 'number' ? customMetadata?.executionCount : null // This can never be undefined, only a number or `null`.
             };
             break;
         }
@@ -733,23 +734,30 @@ function translateCellDisplayOutput(output: NotebookCellOutput): JupyterOutput {
  * Hence remove this.
  */
 export function translateErrorOutput(output: nbformat.IError): NotebookCellOutput {
-    return new NotebookCellOutput([
-        new NotebookCellOutputItem(
-            CellOutputMimeTypes.error,
-            {
-                ename: output.ename,
-                evalue: output.evalue,
-                traceback: output.traceback
-            },
-            getOutputMetadata(output)
-        )],
-        getOutputMetadata(output));
+    return new NotebookCellOutput(
+        [
+            new NotebookCellOutputItem(
+                CellOutputMimeTypes.error,
+                {
+                    ename: output.ename,
+                    evalue: output.evalue,
+                    traceback: output.traceback
+                },
+                getOutputMetadata(output)
+            )
+        ],
+        getOutputMetadata(output)
+    );
 }
 
 export function getTextOutputValue(output: NotebookCellOutput): string {
     return (
-        (output.outputs.find((opit) => opit.mime === CellOutputMimeTypes.textStream || opit.mime === 'text/plain' || opit.mime === 'text/markdown')
-            ?.value as any) || ''
+        (output.outputs.find(
+            (opit) =>
+                opit.mime === CellOutputMimeTypes.textStream ||
+                opit.mime === 'text/plain' ||
+                opit.mime === 'text/markdown'
+        )?.value as any) || ''
     );
 }
 export function getCellStatusMessageBasedOnFirstErrorOutput(outputs?: nbformat.IOutput[]): string {
