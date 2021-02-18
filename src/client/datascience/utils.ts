@@ -3,7 +3,7 @@
 'use strict';
 
 import * as path from 'path';
-import { NotebookCellKind, NotebookCell, NotebookCellRunState, Uri } from 'vscode';
+import { NotebookCellKind, NotebookCell, NotebookCellRunState, Uri, NotebookCellMetadata } from 'vscode';
 
 import { IWorkspaceService } from '../common/application/types';
 import { IFileSystem } from '../common/platform/types';
@@ -62,11 +62,11 @@ export function translateCellToNative(
         return {
             index: 0,
             language: language,
-            metadata: {
+            metadata: new NotebookCellMetadata().with({
                 executionOrder: cell.data.execution_count as number,
                 hasExecutionOrder: true,
                 runState: translateCellStateToNative(cell.state)
-            },
+            }),
             uri: Uri.parse(cell.file + query + cell.id),
             outputs: [],
             cellKind: NotebookCellKind.Code,

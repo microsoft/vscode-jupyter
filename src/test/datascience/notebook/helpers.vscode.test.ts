@@ -6,21 +6,17 @@
 import { nbformat } from '@jupyterlab/coreutils';
 import { assert, use } from 'chai';
 import chaiExclude from 'chai-exclude';
-import { cloneDeep } from 'lodash';
 import {
     NotebookCellOutput,
-    NotebookCellData,
     NotebookCellOutputItem,
     Uri,
     NotebookCellRunState,
-    NotebookCellKind
+    NotebookCellKind,
+    NotebookCellMetadata
 } from 'vscode';
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
-import { ReadWrite } from '../../../client/common/types';
-import {
-    CellOutputMimeTypes,
-    notebookModelToVSCNotebookData
-} from '../../../client/datascience/notebook/helpers/helpers';
+import { notebookModelToVSCNotebookData } from '../../../client/datascience/notebook/helpers/helpers';
+import { CellOutputMimeTypes } from '../../../client/datascience/notebook/types';
 use(chaiExclude);
 suite('DataScience - VSCode Notebook - helpers', () => {
     test('Convert NotebookModel to VSCode NotebookData', async () => {
@@ -43,38 +39,32 @@ suite('DataScience - VSCode Notebook - helpers', () => {
         const notebook = notebookModelToVSCNotebookData(true, {}, Uri.file(''), cells as any, PYTHON_LANGUAGE, {});
 
         assert.isOk(notebook);
-        // ignore metadata we add.
-        const cellsWithoutCustomMetadata = notebook.cells.map((cell) => {
-            const cellToCompareWith: ReadWrite<NotebookCellData> = cloneDeep(cell);
-            delete cellToCompareWith.metadata?.custom;
-            return cellToCompareWith;
-        });
-        assert.deepEqual(cellsWithoutCustomMetadata, [
+        assert.deepEqual(notebook.cells, [
             {
                 cellKind: NotebookCellKind.Code,
                 language: PYTHON_LANGUAGE,
                 outputs: [],
                 source: 'print(1)',
-                metadata: {
+                metadata: new NotebookCellMetadata().with({
                     editable: true,
                     executionOrder: 10,
                     hasExecutionOrder: true,
                     runState: NotebookCellRunState.Idle,
                     runnable: true,
                     statusMessage: undefined
-                }
+                })
             },
             {
                 cellKind: NotebookCellKind.Markdown,
                 language: MARKDOWN_LANGUAGE,
                 outputs: [],
                 source: '# HEAD',
-                metadata: {
+                metadata: new NotebookCellMetadata().with({
                     editable: true,
                     executionOrder: undefined,
                     hasExecutionOrder: false,
                     runnable: false
-                }
+                })
             }
         ]);
     });

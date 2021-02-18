@@ -184,10 +184,8 @@ export class CellExecution {
         await clearCellForExecution(this.editor, this.cell);
         if (!this.isEmptyCodeCell) {
             await chainWithPendingUpdates(this.editor.document, (edit) => {
-                edit.replaceNotebookCellMetadata(this.cell.notebook.uri, this.cell.index, {
-                    ...this.cell.metadata,
-                    runStartTime: new Date().getTime()
-                });
+                const metadata = this.cell.metadata.with({ runStartTime: new Date().getTime() });
+                edit.replaceNotebookCellMetadata(this.cell.notebook.uri, this.cell.index, metadata);
             });
         }
         this.stopWatch.reset();
@@ -247,10 +245,8 @@ export class CellExecution {
         if (!this.isEmptyCodeCell) {
             await chainWithPendingUpdates(this.editor.document, (edit) => {
                 traceCellMessage(this.cell, 'Update run run duration');
-                edit.replaceNotebookCellMetadata(this.editor.document.uri, this.cell.index, {
-                    ...this.cell.metadata,
-                    lastRunDuration: this.stopWatch.elapsedTime
-                });
+                const metadata = this.cell.metadata.with({ lastRunDuration: this.stopWatch.elapsedTime });
+                edit.replaceNotebookCellMetadata(this.editor.document.uri, this.cell.index, metadata);
             });
         }
         await updateCellWithErrorStatus(this.editor, this.cell, error);
@@ -286,11 +282,8 @@ export class CellExecution {
 
         await chainWithPendingUpdates(this.editor.document, (edit) => {
             traceCellMessage(this.cell, `Update cell state ${runState} and message '${statusMessage}'`);
-            edit.replaceNotebookCellMetadata(this.editor.document.uri, this.cell.index, {
-                ...this.cell.metadata,
-                runState,
-                statusMessage
-            });
+            const metadata = this.cell.metadata.with({ runState, statusMessage });
+            edit.replaceNotebookCellMetadata(this.editor.document.uri, this.cell.index, metadata);
         });
 
         this._completed = true;
@@ -302,13 +295,13 @@ export class CellExecution {
         traceCellMessage(this.cell, 'Completed due to cancellation');
         await chainWithPendingUpdates(this.editor.document, (edit) => {
             traceCellMessage(this.cell, 'Update cell statue as idle and message as empty');
-            edit.replaceNotebookCellMetadata(this.editor.document.uri, this.cell.index, {
-                ...this.cell.metadata,
+            const metadata = this.cell.metadata.with({
                 runStartTime: undefined,
                 lastRunDuration: undefined,
                 runState: NotebookCellRunState.Idle,
                 statusMessage: ''
             });
+            edit.replaceNotebookCellMetadata(this.editor.document.uri, this.cell.index, metadata);
         });
 
         this._completed = true;
@@ -340,13 +333,13 @@ export class CellExecution {
         }
         await chainWithPendingUpdates(this.editor.document, (edit) => {
             traceCellMessage(this.cell, 'Update cell state as it was enqueued');
-            edit.replaceNotebookCellMetadata(this.editor.document.uri, this.cell.index, {
-                ...this.cell.metadata,
+            const metadata = this.cell.metadata.with({
                 statusMessage: '', // We don't want any previous status anymore.
                 runStartTime: undefined, // We don't want any previous counters anymore.
                 lastRunDuration: undefined,
                 runState: NotebookCellRunState.Running
             });
+            edit.replaceNotebookCellMetadata(this.editor.document.uri, this.cell.index, metadata);
         });
     }
 
@@ -692,7 +685,6 @@ export class CellExecution {
                     name: msg.content.name,
                     text: formatStreamText(concatMultilineString(msg.content.text))
                 });
-
                 edit.replaceNotebookCellOutput(this.editor.document.uri, this.cell.index, [
                     ...exitingCellOutput,
                     output

@@ -22,7 +22,10 @@ import {
     NotebookCell,
     NotebookContentProvider as VSCNotebookContentProvider,
     NotebookDocument,
-    NotebookCellKind
+    NotebookCellKind,
+    NotebookCellMetadata,
+    NotebookDocumentMetadata,
+    NotebookCellOutputItem
 } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { IApplicationEnvironment, IApplicationShell, IVSCodeNotebook } from '../../../client/common/application/types';
@@ -54,7 +57,11 @@ import {
 import { chainWithPendingUpdates } from '../../../client/datascience/notebook/helpers/notebookUpdater';
 import { VSCodeNotebookKernelMetadata } from '../../../client/datascience/notebook/kernelWithMetadata';
 import { NotebookEditor } from '../../../client/datascience/notebook/notebookEditor';
-import { INotebookContentProvider, INotebookKernelProvider } from '../../../client/datascience/notebook/types';
+import {
+    CellOutputMimeTypes,
+    INotebookContentProvider,
+    INotebookKernelProvider
+} from '../../../client/datascience/notebook/types';
 import { VSCodeNotebookModel } from '../../../client/datascience/notebookStorage/vscNotebookModel';
 import { INotebookEditorProvider, INotebookProvider, ITrustService } from '../../../client/datascience/types';
 import { createEventHandler, IExtensionTestApi, sleep, waitForCondition } from '../../common';
@@ -94,9 +101,9 @@ export async function insertMarkdownCell(source: string, options?: { index?: num
                 cellKind: NotebookCellKind.Markdown,
                 language: MARKDOWN_LANGUAGE,
                 source,
-                metadata: {
+                metadata: new NotebookCellMetadata().with({
                     hasExecutionOrder: false
-                },
+                }),
                 outputs: []
             }
         ])
@@ -116,9 +123,9 @@ export async function insertCodeCell(source: string, options?: { language?: stri
             cellKind: NotebookCellKind.Code,
             language: options?.language || PYTHON_LANGUAGE,
             source,
-            metadata: {
-                hasExecutionOrder: false
-            },
+            metadata: new NotebookCellMetadata().with({
+                hasExecutionOrder: true
+            }),
             outputs: []
         }
     ]);
@@ -460,7 +467,7 @@ export async function waitForExecutionCompletedSuccessfully(cell: NotebookCell, 
     await waitForCondition(
         async () => assertHasExecutionCompletedSuccessfully(cell),
         timeout,
-        `Cell ${cell.index + 1} did not complete successfully`
+        `Cell ${cell.index + 1} did not complete successfully, State = ${cell.metadata.runState}`
     );
     await waitForCellExecutionToComplete(cell);
 }
@@ -503,7 +510,7 @@ export async function waitForEmptyCellExecutionCompleted(cell: NotebookCell, tim
     await waitForCondition(
         async () => assertHasEmptyCellExecutionCompleted(cell),
         timeout,
-        `Cell ${cell.index + 1} did not complete (this is an empty cell)`
+        `Cell ${cell.index + 1} did not complete (this is an empty cell), State = ${cell.metadata.runState}`
     );
     await waitForCellExecutionToComplete(cell);
 }
@@ -511,23 +518,30 @@ export async function waitForExecutionCompletedWithErrors(cell: NotebookCell, ti
     await waitForCondition(
         async () => assertHasExecutionCompletedWithErrors(cell),
         timeout,
-        `Cell ${cell.index + 1} did not fail as expected`
+        `Cell ${cell.index + 1} did not fail as expected, State = ${cell.metadata.runState}`
     );
     await waitForCellExecutionToComplete(cell);
 }
 function assertHasExecutionCompletedWithErrors(cell: NotebookCell) {
     return (cell.metadata.executionOrder ?? 0) > 0 && cell.metadata.runState === NotebookCellRunState.Error;
 }
+function hasTextOutputValue(output: NotebookCellOutputItem, value: string, isExactMatch = true) {
+    if (
+        output.mime !== CellOutputMimeTypes.textStream &&
+        output.mime !== 'text/plain' &&
+        output.mime !== 'text/markdown'
+    ) {
+        return false;
+    }
+    const haystack = ((output.value || '') as string).toString().trim();
+    return isExactMatch ? haystack === value : haystack.includes(value);
+}
 export function assertHasTextOutputInVSCode(cell: NotebookCell, text: string, index: number = 0, isExactMatch = true) {
     const cellOutputs = cell.outputs;
     assert.ok(cellOutputs.length, 'No output');
-    const outputText = getTextOutputValue(cellOutputs[index]).trim();
-    if (isExactMatch) {
-        assert.equal(outputText, text, 'Incorrect output');
-    } else {
-        expect(outputText).to.include(text, 'Output does not contain provided text');
-    }
-    return true;
+    const result = cell.outputs[index].outputs.some((item) => hasTextOutputValue(item, text, isExactMatch));
+    assert.isTrue(result, `${text} not found in outputs of cell ${cell.index}`);
+    return result;
 }
 export async function waitForTextOutputInVSCode(
     cell: NotebookCell,
@@ -677,19 +691,19 @@ export function createNotebookDocument(
                 statusMessage: false
             }
         },
-        metadata: {
+        metadata: new NotebookDocumentMetadata().with({
             cellEditable: model.isTrusted,
             cellHasExecutionOrder: true,
             cellRunnable: model.isTrusted,
             editable: model.isTrusted,
             runnable: model.isTrusted
-        }
+        })
     };
     model.getNotebookData().cells.forEach((cell, index) => {
         const vscDocumentCell: NotebookCell = {
             cellKind: cell.cellKind,
             language: cell.language,
-            metadata: cell.metadata || {},
+            metadata: cell.metadata || new NotebookCellMetadata(),
             uri: model.file.with({ fragment: `cell${index}` }),
             notebook: doc,
             index,

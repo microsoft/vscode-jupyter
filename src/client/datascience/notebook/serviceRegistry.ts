@@ -19,7 +19,6 @@ import { IntroduceNativeNotebookStartPage } from './introStartPage';
 import { VSCodeKernelPickerProvider } from './kernelProvider';
 import { NotebookDisposeService } from './notebookDisposeService';
 import { RemoteSwitcher } from './remoteSwitcher';
-import { RendererExtensionDownloader } from './rendererExtensionDownloader';
 import { INotebookContentProvider, INotebookKernelProvider, INotebookKernelResolver } from './types';
 
 export function registerTypes(serviceManager: IServiceManager) {
@@ -41,7 +40,6 @@ export function registerTypes(serviceManager: IServiceManager) {
         IExtensionSingleActivationService,
         EmptyNotebookCellLanguageService
     );
-    serviceManager.addSingleton<RendererExtensionDownloader>(RendererExtensionDownloader, RendererExtensionDownloader);
     serviceManager.addSingleton<NotebookIntegration>(NotebookIntegration, NotebookIntegration);
     serviceManager.addSingleton<IKernelProvider>(IKernelProvider, KernelProvider);
     serviceManager.addSingleton<INotebookKernelProvider>(INotebookKernelProvider, VSCodeKernelPickerProvider);

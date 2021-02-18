@@ -30,7 +30,6 @@ import { CancellationError } from '../../common/cancellation';
 import { sendKernelTelemetryWhenDone } from '../telemetry/telemetry';
 
 const PortFormatString = `kernelLauncherPortStart_{0}.tmp`;
-
 // Launches and returns a kernel process given a resource or python interpreter.
 // If the given interpreter is undefined, it will try to use the selected interpreter.
 // If the selected interpreter doesn't have a kernel, it will find a kernel on disk and use that.
@@ -51,7 +50,6 @@ export class KernelLauncher implements IKernelLauncher {
         @inject(IKernelDependencyService) private readonly kernelDependencyService: IKernelDependencyService
     ) {}
 
-    // This function is public so it can be called when a test shuts down
     public static async cleanupStartPort() {
         try {
             // Destroy the file

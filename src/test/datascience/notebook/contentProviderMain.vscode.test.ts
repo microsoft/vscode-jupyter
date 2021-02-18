@@ -4,7 +4,6 @@
 'use strict';
 
 import { assert } from 'chai';
-import { cloneDeep } from 'lodash';
 import { IDisposable } from 'monaco-editor';
 import { anything, instance, mock, when } from 'ts-mockito';
 import {
@@ -14,7 +13,8 @@ import {
     NotebookCellRunState,
     Uri,
     NotebookContentProvider as VSCodeNotebookContentProvider,
-    NotebookDocument
+    NotebookDocument,
+    NotebookCellMetadata
 } from 'vscode';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
@@ -78,44 +78,37 @@ suite('DataScience - NativeNotebook ContentProvider', () => {
                 const notebook = await contentProvider.openNotebook(fileUri, {});
 
                 assert.isOk(notebook);
-                // ignore metadata we add.
-                const cellsWithoutCustomMetadata = notebook.cells.map((cell) => {
-                    const cellToCompareWith = cloneDeep(cell);
-                    delete cellToCompareWith.metadata?.custom;
-                    return cellToCompareWith;
-                });
-
                 assert.equal(notebook.metadata.cellEditable, isNotebookTrusted);
                 assert.equal(notebook.metadata.cellRunnable, isNotebookTrusted);
                 assert.equal(notebook.metadata.editable, isNotebookTrusted);
                 assert.equal(notebook.metadata.runnable, isNotebookTrusted);
 
-                assert.deepEqual(cellsWithoutCustomMetadata, [
+                assert.deepEqual(notebook.cells, [
                     {
                         cellKind: NotebookCellKind.Code,
                         language: PYTHON_LANGUAGE,
                         outputs: [],
                         source: 'print(1)',
-                        metadata: {
+                        metadata: new NotebookCellMetadata().with({
                             editable: isNotebookTrusted,
                             executionOrder: 10,
                             hasExecutionOrder: true,
                             runState: NotebookCellRunState.Idle,
                             runnable: isNotebookTrusted,
                             statusMessage: undefined
-                        }
+                        })
                     },
                     {
                         cellKind: NotebookCellKind.Markdown,
                         language: MARKDOWN_LANGUAGE,
                         outputs: [],
                         source: '# HEAD',
-                        metadata: {
+                        metadata: new NotebookCellMetadata().with({
                             editable: isNotebookTrusted,
                             executionOrder: undefined,
                             hasExecutionOrder: false,
                             runnable: false
-                        }
+                        })
                     }
                 ]);
             });
@@ -162,39 +155,32 @@ suite('DataScience - NativeNotebook ContentProvider', () => {
                 assert.equal(notebook.metadata.editable, isNotebookTrusted);
                 assert.equal(notebook.metadata.runnable, isNotebookTrusted);
 
-                // ignore metadata we add.
-                const cellsWithoutCustomMetadata = notebook.cells.map((cell) => {
-                    const cellToCompareWith = cloneDeep(cell);
-                    delete cellToCompareWith.metadata?.custom;
-                    return cellToCompareWith;
-                });
-
-                assert.deepEqual(cellsWithoutCustomMetadata, [
+                assert.deepEqual(notebook.cells, [
                     {
                         cellKind: NotebookCellKind.Code,
                         language: 'csharp',
                         outputs: [],
                         source: 'Console.WriteLine("1")',
-                        metadata: {
+                        metadata: new NotebookCellMetadata().with({
                             editable: isNotebookTrusted,
                             executionOrder: 10,
                             hasExecutionOrder: true,
                             runState: NotebookCellRunState.Idle,
                             runnable: isNotebookTrusted,
                             statusMessage: undefined
-                        }
+                        })
                     },
                     {
                         cellKind: NotebookCellKind.Markdown,
                         language: MARKDOWN_LANGUAGE,
                         outputs: [],
                         source: '# HEAD',
-                        metadata: {
+                        metadata: new NotebookCellMetadata().with({
                             editable: isNotebookTrusted,
                             executionOrder: undefined,
                             hasExecutionOrder: false,
                             runnable: false
-                        }
+                        })
                     }
                 ]);
             });
