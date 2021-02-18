@@ -337,7 +337,6 @@ export class CellExecution {
                 statusMessage: '', // We don't want any previous status anymore.
                 runStartTime: undefined, // We don't want any previous counters anymore.
                 lastRunDuration: undefined,
-                executionOrder: undefined, // We dont want previous execution order either (e.g empty cell).
                 runState: NotebookCellRunState.Running
             });
             edit.replaceNotebookCellMetadata(this.editor.document.uri, this.cell.index, metadata);
