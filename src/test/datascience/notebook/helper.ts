@@ -120,7 +120,7 @@ export async function insertCodeCell(source: string, options?: { language?: stri
             language: options?.language || PYTHON_LANGUAGE,
             source,
             metadata: new NotebookCellMetadata().with({
-                hasExecutionOrder: false
+                hasExecutionOrder: true
             }),
             outputs: []
         }
