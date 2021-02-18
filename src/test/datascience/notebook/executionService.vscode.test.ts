@@ -863,7 +863,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         await Promise.all(queuedCells.map((cell) => waitForExecutionCompletedSuccessfully(cell)));
         assertExecutionOrderOfCells(queuedCells);
     });
-    test.only('Cell failures should not get cached', async () => {
+    test('Cell failures should not get cached', async () => {
         // Run 3 cells
         // cell 1 is ok
         // cell 2 has errors
