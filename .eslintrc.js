@@ -821,7 +821,6 @@ module.exports = {
         'src/client/languageServices/proposeLanguageServerBanner.ts',
         'src/client/telemetry/types.ts',
         'src/client/telemetry/importTracker.ts',
-        'src/client/telemetry/constants.ts',
         'src/client/telemetry/envFileTelemetry.ts',
         'src/client/telemetry/extensionInstallTelemetry.ts',
         'src/client/linters/pydocstyle.ts',
