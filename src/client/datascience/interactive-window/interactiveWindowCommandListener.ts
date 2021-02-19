@@ -156,10 +156,10 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
             if (!(err instanceof CancellationError)) {
                 if (err.message) {
                     traceError(err.message);
-                    this.applicationShell.showErrorMessage(err.message);
+                    void this.applicationShell.showErrorMessage(err.message);
                 } else {
                     traceError(err.toString());
-                    this.applicationShell.showErrorMessage(err.toString());
+                    void this.applicationShell.showErrorMessage(err.toString());
                 }
             } else {
                 traceInfo('Canceled');
@@ -211,20 +211,12 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
                     // When all done, show a notice that it completed.
                     if (uri && uri.fsPath) {
                         const openQuestion1 = localize.DataScience.exportOpenQuestion1();
-                        const openQuestion2 = (await this.jupyterExecution.isSpawnSupported())
-                            ? localize.DataScience.exportOpenQuestion()
-                            : undefined;
-                        const questions = [openQuestion1, ...(openQuestion2 ? [openQuestion2] : [])];
                         const selection = await this.applicationShell.showInformationMessage(
                             localize.DataScience.exportDialogComplete().format(uri.fsPath),
-                            ...questions
+                            openQuestion1
                         );
                         if (selection === openQuestion1) {
                             await this.ipynbProvider.open(uri);
-                        }
-                        if (selection === openQuestion2) {
-                            // If the user wants to, open the notebook they just generated.
-                            this.jupyterExecution.spawnNotebook(uri.fsPath).ignoreErrors();
                         }
                     }
                 }
@@ -265,7 +257,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
                                     );
                                 } catch (err) {
                                     if (!(err instanceof CancellationError)) {
-                                        this.showInformationMessage(
+                                        void this.showInformationMessage(
                                             localize.DataScience.exportDialogFailed().format(err)
                                         );
                                     }
@@ -281,20 +273,12 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
 
                         // When all done, show a notice that it completed.
                         const openQuestion1 = localize.DataScience.exportOpenQuestion1();
-                        const openQuestion2 = (await this.jupyterExecution.isSpawnSupported())
-                            ? localize.DataScience.exportOpenQuestion()
-                            : undefined;
-                        const questions = [openQuestion1, ...(openQuestion2 ? [openQuestion2] : [])];
                         const selection = await this.applicationShell.showInformationMessage(
                             localize.DataScience.exportDialogComplete().format(output.fsPath),
-                            ...questions
+                            openQuestion1
                         );
                         if (selection === openQuestion1) {
                             await this.ipynbProvider.open(output);
-                        }
-                        if (selection === openQuestion2) {
-                            // If the user wants to, open the notebook they just generated.
-                            this.jupyterExecution.spawnNotebook(output.fsPath).ignoreErrors();
                         }
                         return output;
                     }
@@ -320,7 +304,10 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
         try {
             const settings = this.configuration.getSettings(document.uri);
             // Create a new notebook
-            notebook = await this.notebookProvider.getOrCreateNotebook({ identity: createExportInteractiveIdentity() });
+            notebook = await this.notebookProvider.getOrCreateNotebook({
+                identity: createExportInteractiveIdentity(),
+                resource: file
+            });
             // If that works, then execute all of the cells.
             const cells = Array.prototype.concat(
                 ...(await Promise.all(

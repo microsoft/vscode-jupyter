@@ -10,12 +10,12 @@ import '../common/extensions';
 import { IPythonDaemonExecutionService, IPythonExecutionFactory } from '../common/process/types';
 import { IDisposableRegistry } from '../common/types';
 import { debounceAsync, swallowExceptions } from '../common/utils/decorators';
-import { sendTelemetryEvent, setSharedProperty } from '../telemetry';
+import { sendTelemetryEvent } from '../telemetry';
 import { JupyterDaemonModule, Telemetry } from './constants';
-import { ActiveEditorContextService } from './context/activeEditorContext';
+import { ActiveEditorContextService } from './commands/activeEditorContext';
 import { JupyterInterpreterService } from './jupyter/interpreter/jupyterInterpreterService';
 import { KernelDaemonPreWarmer } from './kernel-launcher/kernelDaemonPreWarmer';
-import { INotebookCreationTracker, INotebookEditor, INotebookEditorProvider } from './types';
+import { INotebookCreationTracker, INotebookEditorProvider } from './types';
 
 @injectable()
 export class Activation implements IExtensionSingleActivationService {
@@ -39,10 +39,9 @@ export class Activation implements IExtensionSingleActivationService {
         this.tracker.startTracking();
     }
 
-    private onDidOpenNotebookEditor(e: INotebookEditor) {
+    private onDidOpenNotebookEditor() {
         this.notebookOpened = true;
         this.PreWarmDaemonPool().ignoreErrors();
-        setSharedProperty('ds_notebookeditor', e.type);
         sendTelemetryEvent(Telemetry.OpenNotebookAll);
 
         if (this.extensionChecker.isPythonExtensionInstalled) {

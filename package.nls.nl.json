@@ -26,7 +26,6 @@
     "DataScience.exportDialogFilter": "Jupyter-notebooks",
     "DataScience.exportDialogComplete": "Notebook geschreven naar {0}",
     "DataScience.exportDialogFailed": "Niet gelukt om te exporteren naar Jupyter-notebook. {0}",
-    "DataScience.exportOpenQuestion": "In browser openen",
     "DataScience.collapseInputTooltip": "Invoerblok sluiten",
     "DataScience.importDialogTitle": "Jupyter-notebook importeren",
     "DataScience.importDialogFilter": "Jupyter-notebooks",

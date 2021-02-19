@@ -7,8 +7,7 @@
 import { assert, expect } from 'chai';
 import * as path from 'path';
 import * as sinon from 'sinon';
-import { Uri } from 'vscode';
-import { NotebookCell } from '../../../../typings/vscode-proposed';
+import { NotebookCell, NotebookCellRunState, Uri } from 'vscode';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { IDisposable } from '../../../client/common/types';
 import { IExtensionTestApi, waitForCondition } from '../../common';
@@ -30,8 +29,6 @@ import {
     waitForExecutionCompletedSuccessfully,
     waitForExecutionCompletedWithErrors
 } from './helper';
-// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
-const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - VSCode Notebook - (Saving) (slow)', function () {
@@ -101,26 +98,22 @@ suite('DataScience - VSCode Notebook - (Saving) (slow)', function () {
 
             assert.equal(
                 cell1.metadata.runState,
-                reOpened
-                    ? vscodeNotebookEnums.NotebookCellRunState.Idle
-                    : vscodeNotebookEnums.NotebookCellRunState.Success,
+                reOpened ? NotebookCellRunState.Idle : NotebookCellRunState.Success,
                 'Incorrect state in cell 1'
             );
             assert.equal(
                 cell2.metadata.runState,
-                reOpened
-                    ? vscodeNotebookEnums.NotebookCellRunState.Idle
-                    : vscodeNotebookEnums.NotebookCellRunState.Error,
+                reOpened ? NotebookCellRunState.Idle : NotebookCellRunState.Error,
                 'Incorrect state in cell 2'
             );
             assert.equal(
-                cell3.metadata.runState || vscodeNotebookEnums.NotebookCellRunState.Idle,
-                vscodeNotebookEnums.NotebookCellRunState.Idle,
+                cell3.metadata.runState || NotebookCellRunState.Idle,
+                NotebookCellRunState.Idle,
                 'Incorrect state in cell 3'
             );
             assert.equal(
-                cell4.metadata.runState || vscodeNotebookEnums.NotebookCellRunState.Idle,
-                vscodeNotebookEnums.NotebookCellRunState.Idle,
+                cell4.metadata.runState || NotebookCellRunState.Idle,
+                NotebookCellRunState.Idle,
                 'Incorrect state in cell 4'
             );
 

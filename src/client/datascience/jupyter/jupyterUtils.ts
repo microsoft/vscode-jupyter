@@ -49,6 +49,13 @@ export function createRemoteConnectionInfo(
     let url: URL;
     try {
         url = new URL(uri);
+
+        // Special case for URI's ending with 'lab'. Remove this from the URI. This is not
+        // the location for connecting to jupyterlab
+        if (url.pathname === '/lab') {
+            uri = uri.replace('lab', '');
+        }
+        url = new URL(uri);
     } catch (err) {
         // This should already have been parsed when set, so just throw if it's not right here
         throw err;

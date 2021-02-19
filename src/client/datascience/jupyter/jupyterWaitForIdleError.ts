@@ -2,8 +2,13 @@
 // Licensed under the MIT License.
 'use strict';
 
-export class JupyterWaitForIdleError extends Error {
+import { BaseError } from '../../common/errors/types';
+import { sendTelemetryEvent } from '../../telemetry';
+import { Telemetry } from '../constants';
+
+export class JupyterWaitForIdleError extends BaseError {
     constructor(message: string) {
-        super(message);
+        super('timeout', message);
+        sendTelemetryEvent(Telemetry.SessionIdleTimeout);
     }
 }

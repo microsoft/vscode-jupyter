@@ -9,7 +9,9 @@ import { ReplaySubject } from 'rxjs/ReplaySubject';
 import { Event, EventEmitter } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { ServerStatus } from '../../datascience-ui/interactive-common/mainState';
+import { WrappedError } from '../common/errors/types';
 import { traceError, traceInfo, traceWarning } from '../common/logger';
+import { Resource } from '../common/types';
 import { sleep, waitForPromise } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
 import { noop } from '../common/utils/misc';
@@ -21,6 +23,7 @@ import { kernelConnectionMetadataHasKernelSpec } from './jupyter/kernels/helpers
 import { JupyterKernelPromiseFailedError } from './jupyter/kernels/jupyterKernelPromiseFailedError';
 import { getKernelConnectionId, KernelConnectionMetadata } from './jupyter/kernels/types';
 import { suppressShutdownErrors } from './raw-kernel/rawKernel';
+import { trackKernelResourceInformation } from './telemetry/telemetry';
 import { IJupyterSession, ISessionWithSocket, KernelSocketInformation } from './types';
 
 /**
@@ -30,11 +33,10 @@ import { IJupyterSession, ISessionWithSocket, KernelSocketInformation } from './
  * @class JupyterSessionStartError
  * @extends {Error}
  */
-export class JupyterSessionStartError extends Error {
+export class JupyterSessionStartError extends WrappedError {
     constructor(originalException: Error) {
-        super(originalException.message);
-        this.stack = originalException.stack;
-        sendTelemetryEvent(Telemetry.StartSessionFailedJupyter);
+        super(originalException.message, originalException);
+        sendTelemetryEvent(Telemetry.StartSessionFailedJupyter, undefined, undefined, originalException, true);
     }
 }
 
@@ -145,9 +147,12 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         }
         return this.session.kernel.requestKernelInfo();
     }
-    public async changeKernel(kernelConnection: KernelConnectionMetadata, timeoutMS: number): Promise<void> {
+    public async changeKernel(
+        resource: Resource,
+        kernelConnection: KernelConnectionMetadata,
+        timeoutMS: number
+    ): Promise<void> {
         let newSession: ISessionWithSocket | undefined;
-
         // If we are already using this kernel in an active session just return back
         const currentKernelSpec =
             this.kernelConnectionMetadata && kernelConnectionMetadataHasKernelSpec(this.kernelConnectionMetadata)
@@ -163,6 +168,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
             }
         }
 
+        trackKernelResourceInformation(resource, { kernelConnection });
         newSession = await this.createNewKernelSession(kernelConnection, timeoutMS);
 
         // This is just like doing a restart, kill the old session (and the old restart session), and start new ones

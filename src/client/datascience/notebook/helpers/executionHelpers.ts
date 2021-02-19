@@ -6,7 +6,16 @@
 import type { nbformat } from '@jupyterlab/coreutils';
 import type { KernelMessage } from '@jupyterlab/services';
 import * as fastDeepEqual from 'fast-deep-equal';
-import type { NotebookCell, NotebookEditor } from '../../../../../types/vscode-proposed';
+import {
+    workspace,
+    Range,
+    WorkspaceEdit,
+    NotebookCellKind,
+    NotebookCellRunState,
+    NotebookCell,
+    NotebookEditor,
+    NotebookCellMetadata
+} from 'vscode';
 import { createErrorOutput } from '../../../../datascience-ui/common/cellFactory';
 import {
     createIOutputFromCellOutputs,
@@ -15,8 +24,6 @@ import {
     translateErrorOutput
 } from './helpers';
 import { chainWithPendingUpdates } from './notebookUpdater';
-// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
-const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
 // After executing %tensorboard --logdir <log directory> to launch
 // TensorBoard inline, TensorBoard sends back an IFrame to display as output.
@@ -47,7 +54,7 @@ export async function handleUpdateDisplayDataMessage(
     const document = editor.document;
     // Find any cells that have this same display_id
     for (const cell of document.cells) {
-        if (cell.cellKind !== vscodeNotebookEnums.CellKind.Code) {
+        if (cell.cellKind !== NotebookCellKind.Code) {
             continue;
         }
         let updated = false;
@@ -87,13 +94,41 @@ export async function updateCellWithErrorStatus(
     cell: NotebookCell,
     ex: Partial<Error>
 ) {
-    await chainWithPendingUpdates(notebookEditor, (edit) => {
+    await chainWithPendingUpdates(notebookEditor.document, (edit) => {
         traceCellMessage(cell, 'Update with error state & output');
-        edit.replaceCellMetadata(cell.index, {
-            ...cell.metadata,
-            runState: vscodeNotebookEnums.NotebookCellRunState.Error
-        });
-        edit.replaceCellOutput(cell.index, [translateErrorOutput(createErrorOutput(ex))]);
+        const metadata = cell.metadata.with({ runState: NotebookCellRunState.Error });
+        edit.replaceNotebookCellMetadata(notebookEditor.document.uri, cell.index, metadata);
+        edit.replaceNotebookCellOutput(notebookEditor.document.uri, cell.index, [
+            translateErrorOutput(createErrorOutput(ex))
+        ]);
+    });
+}
+
+// Update the code contents of the cell
+export async function updateCellCode(cell: NotebookCell, text: string) {
+    // Use Workspace edit to apply a replace to the full cell text
+    const edit = new WorkspaceEdit();
+    edit.replace(
+        cell.document.uri,
+        new Range(cell.document.lineAt(0).range.start, cell.document.lineAt(cell.document.lineCount - 1).range.end),
+        text
+    );
+    await workspace.applyEdit(edit);
+}
+
+// Add a new cell with the given contents after the current
+export async function addNewCellAfter(notebookEditor: NotebookEditor, cell: NotebookCell, text: string) {
+    await chainWithPendingUpdates(notebookEditor.document, (edit) => {
+        traceCellMessage(cell, 'Create new cell after current');
+        edit.replaceNotebookCells(notebookEditor.document.uri, cell.index + 1, cell.index + 1, [
+            {
+                cellKind: NotebookCellKind.Code,
+                language: cell.language,
+                metadata: cell.metadata.with({ runState: NotebookCellRunState.Success }),
+                outputs: [],
+                source: text
+            }
+        ]);
     });
 }
 
@@ -106,12 +141,10 @@ export async function updateCellExecutionCount(
     executionCount: number
 ): Promise<void> {
     if (cell.metadata.executionOrder !== executionCount && executionCount) {
-        await chainWithPendingUpdates(editor, (edit) => {
+        await chainWithPendingUpdates(editor.document, (edit) => {
             traceCellMessage(cell, 'Update execution count');
-            edit.replaceCellMetadata(cell.index, {
-                ...cell.metadata,
-                executionOrder: executionCount
-            });
+            const metadata = new NotebookCellMetadata().with(cell.metadata).with({ executionOrder: executionCount });
+            edit.replaceNotebookCellMetadata(editor.document.uri, cell.index, metadata);
         });
     }
 }
@@ -131,5 +164,7 @@ export async function updateCellOutput(editor: NotebookEditor, cell: NotebookCel
     if (cell.outputs.length === newOutput.length && fastDeepEqual(cell.outputs, newOutput)) {
         return;
     }
-    await chainWithPendingUpdates(editor, (edit) => edit.replaceCellOutput(cell.index, newOutput));
+    await chainWithPendingUpdates(editor.document, (edit) =>
+        edit.replaceNotebookCellOutput(editor.document.uri, cell.index, newOutput)
+    );
 }

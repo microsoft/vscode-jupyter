@@ -5,6 +5,7 @@
 import type { nbformat } from '@jupyterlab/coreutils';
 import { SpawnOptions } from 'child_process';
 import { CancellationToken, Event } from 'vscode';
+import { BaseError, WrappedError } from '../../common/errors/types';
 import { ObservableExecutionResult } from '../../common/process/types';
 import { IAsyncDisposable, IDisposable, Resource } from '../../common/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
@@ -66,15 +67,28 @@ export interface IPythonKernelDaemon extends IDisposable {
     start(moduleName: string, args: string[], options: SpawnOptions): Promise<ObservableExecutionResult<string>>;
 }
 
-export class PythonKernelDiedError extends Error {
+export class KernelDiedError extends WrappedError {
+    constructor(message: string, public readonly stdErr: string, originalException?: Error) {
+        super(message, originalException);
+    }
+}
+
+export class KernelProcessExited extends BaseError {
+    constructor(public readonly exitCode: number = -1) {
+        super('kerneldied', 'Kernel process Exited');
+    }
+}
+
+export class PythonKernelDiedError extends BaseError {
     public readonly exitCode: number;
     public readonly reason?: string;
-    constructor(options: { exitCode: number; reason?: string } | { error: Error }) {
+    constructor(options: { exitCode: number; reason?: string; stdErr: string } | { error: Error; stdErr: string }) {
         const message =
             'exitCode' in options
                 ? `Kernel died with exit code ${options.exitCode}. ${options.reason}`
                 : `Kernel died ${options.error.message}`;
-        super(message);
+        super('kerneldied', message);
+        this.stdErr = options.stdErr;
         if ('exitCode' in options) {
             this.exitCode = options.exitCode;
             this.reason = options.reason;
@@ -87,8 +101,8 @@ export class PythonKernelDiedError extends Error {
     }
 }
 
-export class IpyKernelNotInstalledError extends Error {
+export class IpyKernelNotInstalledError extends BaseError {
     constructor(message: string, public reason: KernelInterpreterDependencyResponse) {
-        super(message);
+        super('noipykernel', message);
     }
 }

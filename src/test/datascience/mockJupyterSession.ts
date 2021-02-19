@@ -15,6 +15,7 @@ import { ICell, IJupyterSession, KernelSocketInformation } from '../../client/da
 import { ServerStatus } from '../../datascience-ui/interactive-common/mainState';
 import { sleep } from '../core';
 import { MockJupyterRequest } from './mockJupyterRequest';
+import { Resource } from '../../client/common/types';
 
 const LineFeedRegEx = /(\r\n|\n)/g;
 
@@ -210,7 +211,11 @@ export class MockJupyterSession implements IJupyterSession {
         this.completionTimeout = timeout;
     }
 
-    public changeKernel(kernelConnection: KernelConnectionMetadata, _timeoutMS: number): Promise<void> {
+    public changeKernel(
+        _resource: Resource,
+        kernelConnection: KernelConnectionMetadata,
+        _timeoutMS: number
+    ): Promise<void> {
         if (this.pendingKernelChangeFailure) {
             this.pendingKernelChangeFailure = false;
             return Promise.reject(new JupyterInvalidKernelError(kernelConnection));

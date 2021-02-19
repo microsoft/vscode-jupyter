@@ -10,8 +10,8 @@ import {
     Position,
     TextDocument
 } from 'vscode';
-import { IS_CI_SERVER } from '../../../../test/initialize';
 import { IVSCodeNotebook } from '../../../common/application/types';
+import { isCI } from '../../../common/constants';
 import { traceError, traceInfoIf } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 import { sleep } from '../../../common/utils/async';
@@ -51,7 +51,7 @@ export class NotebookCompletionProvider implements CompletionItemProvider {
             getOnly: true
         });
         if (token.isCancellationRequested) {
-            traceInfoIf(IS_CI_SERVER, `Getting completions cancelled for ${notebookDocument.uri.toString()}`);
+            traceInfoIf(isCI, `Getting completions cancelled for ${notebookDocument.uri.toString()}`);
             return [];
         }
         if (!notebook) {
@@ -65,7 +65,7 @@ export class NotebookCompletionProvider implements CompletionItemProvider {
         const result = await Promise.race([
             notebook.getCompletion(document.getText(), document.offsetAt(position), token),
             sleep(timeout).then(() => {
-                traceInfoIf(IS_CI_SERVER, `Notebook completions request timed out for Cell ${document.uri.toString()}`);
+                traceInfoIf(isCI, `Notebook completions request timed out for Cell ${document.uri.toString()}`);
                 return emptyResult;
             })
         ]);

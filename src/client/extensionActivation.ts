@@ -131,6 +131,7 @@ async function activateLegacy(
 
     const manager = serviceContainer.get<IExtensionActivationManager>(IExtensionActivationManager);
     context.subscriptions.push(manager);
+    manager.activateSync();
     const activationPromise = manager.activate();
 
     // Activate data science features after base features.

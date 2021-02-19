@@ -290,11 +290,12 @@ suite('DataScience notebook tests', () => {
                 // Catch exceptions. Throw a specific assertion if the promise fails
                 try {
                     if (uri) {
-                        ioc.setServerUri(uri);
+                        ioc.setServerUri(uri).catch(noop);
                     }
                     launchingFile = launchingFile || path.join(srcDirectory(), 'foo.py');
                     const notebook = await notebookProvider.getOrCreateNotebook({
-                        identity: getDefaultInteractiveIdentity()
+                        identity: getDefaultInteractiveIdentity(),
+                        resource: undefined
                     });
 
                     if (notebook) {
@@ -1371,7 +1372,8 @@ plt.show()`,
                             usingDarkTheme: false,
                             workingDir: testDir,
                             purpose: '1',
-                            allowUI: () => false
+                            allowUI: () => false,
+                            resource: undefined
                         });
                     } catch (e) {
                         threw = true;

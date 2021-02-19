@@ -16,6 +16,7 @@ import {
     Event,
     EventEmitter,
     Memento,
+    NotebookCell,
     Position,
     Range,
     Selection,
@@ -38,7 +39,6 @@ import { EXTENSION_ROOT_DIR, isTestExecution, PYTHON_LANGUAGE } from '../../comm
 import { traceError, traceInfo, traceWarning } from '../../common/logger';
 
 import { isNil } from 'lodash';
-import { NotebookCell } from '../../../../types/vscode-proposed';
 import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
@@ -108,6 +108,7 @@ import { WebviewPanelHost } from '../webviews/webviewPanelHost';
 import { DataViewerChecker } from './dataViewerChecker';
 import { InteractiveWindowMessageListener } from './interactiveWindowMessageListener';
 import { serializeLanguageConfiguration } from './serialization';
+import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../telemetry/telemetry';
 
 export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindowMapping> implements IInteractiveBase {
     public get notebook(): INotebook | undefined {
@@ -423,6 +424,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
     public async restartKernel(internal: boolean = false): Promise<void> {
         // Only log this if it's user requested restart
         if (!internal) {
+            trackKernelResourceInformation(this._notebook?.resource, { restartKernel: true });
             this.logTelemetry(Telemetry.RestartKernelCommand);
         }
 
@@ -457,6 +459,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
 
     @captureTelemetry(Telemetry.Interrupt)
     public async interruptKernel(): Promise<void> {
+        trackKernelResourceInformation(this._notebook?.resource, { interruptKernel: true });
         if (this._notebook && !this.restartingKernel) {
             const status = this.statusProvider.set(
                 localize.DataScience.interruptKernelStatus(),
@@ -612,6 +615,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         debugInfo?: { runByLine: boolean; hashFileName?: string },
         cancelToken?: CancellationToken
     ): Promise<boolean> {
+        sendKernelTelemetryEvent(this.owningResource, Telemetry.ExecuteCell);
         traceInfo(`Submitting code for ${this.id}`);
         const stopWatch =
             this._notebook && !this.perceivedJupyterStartupTelemetryCaptured ? new StopWatch() : undefined;
@@ -873,6 +877,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         try {
             await this.connectionAndNotebookPromise;
         } catch (e) {
+            sendKernelTelemetryEvent(this.owningResource, Telemetry.NotebookStart, undefined, undefined, e);
             // Reset the load promise. Don't want to keep hitting the same error
             this.connectionAndNotebookPromise = undefined;
             throw e;
@@ -898,7 +903,11 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
 
     protected async createNotebookIfProviderConnectionExists(): Promise<void> {
         // Check to see if we are already connected to our provider
-        const providerConnection = await this.notebookProvider.connect({ getOnly: true });
+        const providerConnection = await this.notebookProvider.connect({
+            getOnly: true,
+            resource: this.owningResource,
+            metadata: this.notebookMetadata
+        });
 
         if (providerConnection) {
             try {
@@ -926,7 +935,11 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
             serverUri !== Settings.JupyterServerLocalLaunch &&
             !this.configService.getSettings(this.owningResource).disableJupyterAutoStart
         ) {
-            serverConnection = await this.notebookProvider.connect({ disableUI: true });
+            serverConnection = await this.notebookProvider.connect({
+                disableUI: true,
+                resource: this.owningResource,
+                metadata: this.notebookMetadata
+            });
         }
         let displayName =
             serverConnection?.displayName ||
@@ -980,7 +993,12 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         // Make sure we're loaded first.
         try {
             traceInfo('Waiting for jupyter server and web panel ...');
-            const serverConnection = await this.notebookProvider.connect({ getOnly: false, disableUI: false });
+            const serverConnection = await this.notebookProvider.connect({
+                getOnly: false,
+                disableUI: false,
+                resource: this.owningResource,
+                metadata: this.notebookMetadata
+            });
             if (serverConnection) {
                 await this.ensureNotebook(serverConnection);
             }

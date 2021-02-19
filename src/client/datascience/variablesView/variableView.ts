@@ -21,7 +21,7 @@ import {
     InteractiveWindowMessages,
     IShowDataViewer
 } from '../../datascience/interactive-common/interactiveWindowTypes';
-import { sendTelemetryEvent } from '../../telemetry';
+import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { IDataViewerFactory } from '../data-viewing/types';
 import { DataViewerChecker } from '../interactive-common/dataViewerChecker';
@@ -82,6 +82,7 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
         this.dataViewerChecker = new DataViewerChecker(configuration, appShell);
     }
 
+    @captureTelemetry(Telemetry.NativeVariableViewLoaded)
     public async load(codeWebview: vscodeWebviewView) {
         await super.loadWebview(process.cwd(), codeWebview).catch(traceError);
 
@@ -140,6 +141,7 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
 
         // I've we've been made visible, make sure that we are updated
         if (visible) {
+            sendTelemetryEvent(Telemetry.NativeVariableViewMadeVisible);
             // If there is an active execution count, update the view with that info
             // Keep the variables up to date if document has run cells while the view was not visible
             if (this.notebookWatcher.activeNotebookExecutionCount !== undefined) {
@@ -182,6 +184,9 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
             const response = await this.variables.getVariables(args, this.notebookWatcher.activeNotebook);
 
             this.postMessage(InteractiveWindowMessages.GetVariablesResponse, response).ignoreErrors();
+            sendTelemetryEvent(Telemetry.VariableExplorerVariableCount, undefined, {
+                variableCount: response.totalCount
+            });
         }
     }
 

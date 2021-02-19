@@ -1,14 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { NotebookCell, NotebookCellRunState } from '../../../../../types/vscode-proposed';
+import { NotebookCell, NotebookCellRunState } from 'vscode';
 import { traceError, traceInfo } from '../../../common/logger';
 import { noop } from '../../../common/utils/misc';
+import { Telemetry } from '../../constants';
+import { sendKernelTelemetryEvent } from '../../telemetry/telemetry';
 import { traceCellMessage } from '../../notebook/helpers/helpers';
 import { INotebook } from '../../types';
 import { CellExecution, CellExecutionFactory } from './cellExecution';
-// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
-const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
 /**
  * A queue responsible for execution of cells.
@@ -41,6 +41,7 @@ export class CellExecutionQueue {
      * Queue the cell for execution & start processing it immediately.
      */
     public queueCell(cell: NotebookCell) {
+        sendKernelTelemetryEvent(cell.document.uri, Telemetry.ExecuteCell);
         const existingCellExecution = this.queueOfCellsToExecute.find((item) => item.cell === cell);
         if (existingCellExecution) {
             traceCellMessage(cell, 'Use existing cell execution');
@@ -125,10 +126,7 @@ export class CellExecutionQueue {
             }
 
             // If a cell has failed the get out.
-            if (
-                this.cancelledOrCompletedWithErrors ||
-                executionResult === vscodeNotebookEnums.NotebookCellRunState.Error
-            ) {
+            if (this.cancelledOrCompletedWithErrors || executionResult === NotebookCellRunState.Error) {
                 this.cancelledOrCompletedWithErrors = true;
                 traceInfo(`Cancel all remaining cells ${this.cancelledOrCompletedWithErrors} || ${executionResult}`);
                 await this.cancel();

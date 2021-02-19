@@ -176,8 +176,7 @@ suite('DataScience - KernelSelections', () => {
         when(sessionManager.getRunningKernels()).thenResolve([]);
         when(sessionManager.getRunningSessions()).thenResolve([]);
 
-        const items = await kernelSelectionProvider.getKernelSelectionsForRemoteSession(
-            undefined,
+        const items = await kernelSelectionProvider.getKernelSelectionsForRemoteSession(undefined, async () =>
             instance(sessionManager)
         );
 
@@ -262,8 +261,7 @@ suite('DataScience - KernelSelections', () => {
         ];
         expectedItems.sort((a, b) => (a.label === b.label ? 0 : a.label > b.label ? 1 : -1));
 
-        const items = await kernelSelectionProvider.getKernelSelectionsForRemoteSession(
-            undefined,
+        const items = await kernelSelectionProvider.getKernelSelectionsForRemoteSession(undefined, async () =>
             instance(sessionManager)
         );
 

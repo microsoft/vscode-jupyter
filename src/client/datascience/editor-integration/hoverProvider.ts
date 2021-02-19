@@ -11,15 +11,25 @@ import { IFileSystem } from '../../common/platform/types';
 
 import { sleep } from '../../common/utils/async';
 import { noop } from '../../common/utils/misc';
-import { Identifiers } from '../constants';
-import { ICell, IInteractiveWindowProvider, IJupyterVariables, INotebook, INotebookExecutionLogger } from '../types';
+import { StopWatch } from '../../common/utils/stopWatch';
+import { sendTelemetryEvent } from '../../telemetry';
+import { Identifiers, Telemetry } from '../constants';
+import {
+    ICell,
+    IHoverProvider,
+    IInteractiveWindowProvider,
+    IJupyterVariables,
+    INotebook,
+    INotebookExecutionLogger
+} from '../types';
 
 // This class provides hashes for debugging jupyter cells. Call getHashes just before starting debugging to compute all of the
 // hashes for cells.
 @injectable()
-export class HoverProvider implements INotebookExecutionLogger, vscode.HoverProvider {
+export class HoverProvider implements INotebookExecutionLogger, IHoverProvider {
     private runFiles = new Set<string>();
     private hoverProviderRegistration: vscode.Disposable | undefined;
+    private stopWatch = new StopWatch();
 
     constructor(
         @inject(IJupyterVariables) @named(Identifiers.KERNEL_VARIABLES) private variableProvider: IJupyterVariables,
@@ -67,10 +77,15 @@ export class HoverProvider implements INotebookExecutionLogger, vscode.HoverProv
         token: vscode.CancellationToken
     ): vscode.ProviderResult<vscode.Hover> {
         const timeoutHandler = async () => {
-            await sleep(100);
+            await sleep(300);
             return null;
         };
-        return Promise.race([timeoutHandler(), this.getVariableHover(document, position, token)]);
+        this.stopWatch.reset();
+        const result = Promise.race([timeoutHandler(), this.getVariableHover(document, position, token)]);
+        sendTelemetryEvent(Telemetry.InteractiveFileTooltipsPerf, this.stopWatch.elapsedTime, {
+            isResultNull: !!result
+        });
+        return result;
     }
 
     private async initializeHoverProvider() {
@@ -94,13 +109,19 @@ export class HoverProvider implements INotebookExecutionLogger, vscode.HoverProv
                     const notebooks = this.getMatchingNotebooks(document);
                     if (notebooks && notebooks.length) {
                         // Just use the first one to reply if more than one.
-                        const match = await Promise.race(
-                            notebooks.map((n) => this.variableProvider.getMatchingVariable(word, n, t))
+                        const attributes = await Promise.race(
+                            // Note, getVariableProperties is non null here because we are specifically
+                            // injecting kernelVariables, which does define this interface method
+                            notebooks.map((n) => this.variableProvider.getVariableProperties!(word, n, t))
                         );
-                        if (match) {
-                            return {
-                                contents: [`${word} = ${match.value}`]
+                        const entries = Object.entries(attributes);
+                        if (entries.length > 0) {
+                            const asMarkdown =
+                                entries.reduce((accum, entry) => accum + `${entry[0]}: ${entry[1]}\n`, '```\n') + '```';
+                            const result = {
+                                contents: [new vscode.MarkdownString(asMarkdown)]
                             };
+                            return result;
                         }
                     }
                 }
