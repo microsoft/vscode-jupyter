@@ -7,7 +7,6 @@ import { NotebookDocument } from '../../../../types/vscode-proposed';
 import { IVSCodeNotebook } from '../../common/application/types';
 import { ICryptoUtils } from '../../common/types';
 import { NotebookModelChange } from '../interactive-common/interactiveWindowTypes';
-import { NotebookCellLanguageService } from '../notebook/defaultCellLanguageService';
 import {
     cellRunStateToCellState,
     createJupyterCellFromVSCNotebookCell,
@@ -69,7 +68,6 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
     private _cells: nbformat.IBaseCell[] = [];
     private _trustedAfterOpeningNotebook? = false;
     private document?: NotebookDocument;
-    private readonly _preferredLanguage?: string;
 
     constructor(
         isTrusted: boolean,
@@ -80,20 +78,19 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
         indentAmount: string = ' ',
         pythonNumber: number = 3,
         private readonly vscodeNotebook: IVSCodeNotebook,
-        private readonly cellLanguageService: NotebookCellLanguageService
+        private readonly preferredLanguage: string
     ) {
         super(isTrusted, file, globalMemento, crypto, originalJson, indentAmount, pythonNumber, false);
         // Do not change this code without changing code in base class.
         // We cannot invoke this in base class as `cellLanguageService` is not available in base class.
         this.ensureNotebookJson();
         this._cells = this.notebookJson.cells || [];
-        this._preferredLanguage = cellLanguageService.getPreferredLanguage(this.metadata);
     }
     public getCellCount() {
         return this.document ? this.document.cells.length : this._cells.length;
     }
     public getNotebookData() {
-        if (!this._preferredLanguage) {
+        if (!this.preferredLanguage) {
             throw new Error('Preferred Language not initialized');
         }
         return notebookModelToVSCNotebookData(
@@ -101,7 +98,7 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
             this.notebookContentWithoutCells,
             this.file,
             this.notebookJson.cells || [],
-            this._preferredLanguage,
+            this.preferredLanguage,
             this.originalJson
         );
     }
@@ -153,7 +150,7 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
             : this.notebookJson.cells || [];
     }
     protected getDefaultNotebookContent() {
-        return getDefaultNotebookContentForNativeNotebooks(this.cellLanguageService?.getPreferredLanguage());
+        return getDefaultNotebookContentForNativeNotebooks(this.preferredLanguage);
     }
     protected generateNotebookJson() {
         const json = super.generateNotebookJson();

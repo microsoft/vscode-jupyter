@@ -3,13 +3,14 @@
 'use strict';
 
 import { assert } from 'chai';
+import * as sinon from 'sinon';
 import { anything, instance, mock, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import * as vscode from 'vscode';
+import { Extensions } from '../../client/common/application/extensions';
 import { FileSystem } from '../../client/common/platform/fileSystem';
 import { JupyterUriProviderRegistration } from '../../client/datascience/jupyterUriProviderRegistration';
 import { IJupyterServerUri, IJupyterUriProvider, JupyterServerUriHandle } from '../../client/datascience/types';
-import { MockExtensions } from './mockExtensions';
 
 class MockProvider implements IJupyterUriProvider {
     public get id() {
@@ -54,11 +55,14 @@ class MockProvider implements IJupyterUriProvider {
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
 suite('DataScience URI Picker', () => {
+    teardown(() => sinon.restore());
     function createRegistration(providerIds: string[]) {
         let registration: JupyterUriProviderRegistration | undefined;
-        const extensions = mock(MockExtensions);
         const extensionList: vscode.Extension<any>[] = [];
         const fileSystem = mock(FileSystem);
+        const allStub = sinon.stub(Extensions.prototype, 'all');
+        allStub.returns(extensionList);
+        const extensions = new Extensions(instance(fileSystem));
         when(fileSystem.localFileExists(anything())).thenResolve(false);
         providerIds.forEach((id) => {
             const extension = TypeMoq.Mock.ofType<vscode.Extension<any>>();
@@ -76,8 +80,7 @@ suite('DataScience URI Picker', () => {
             extension.setup((e) => e.isActive).returns(() => false);
             extensionList.push(extension.object);
         });
-        when(extensions.all).thenReturn(extensionList);
-        registration = new JupyterUriProviderRegistration(instance(extensions), instance(fileSystem));
+        registration = new JupyterUriProviderRegistration(extensions);
         return registration;
     }
 

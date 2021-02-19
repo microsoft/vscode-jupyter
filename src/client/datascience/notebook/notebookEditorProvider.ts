@@ -105,8 +105,8 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         return;
     }
     @captureTelemetry(Telemetry.CreateNewNotebook, undefined, false)
-    public async createNew(contents?: string): Promise<INotebookEditor> {
-        const model = await this.storage.createNew(contents, true);
+    public async createNew(options?: { contents?: string; defaultCellLanguage: string }): Promise<INotebookEditor> {
+        const model = await this.storage.createNew(options, true);
         return this.open(model.file);
     }
     private onEditorOpened(editor: INotebookEditor): void {

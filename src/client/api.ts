@@ -8,11 +8,14 @@ import { NotebookCell, NotebookCellRunState } from '../../types/vscode-proposed'
 import { IPythonApiProvider, PythonApi } from './api/types';
 import { isTestExecution } from './common/constants';
 import { traceError } from './common/logger';
+import { VSCodeNotebookProvider } from './datascience/constants';
 import { IDataViewerDataProvider, IDataViewerFactory } from './datascience/data-viewing/types';
+import { CreationOptionService } from './datascience/notebook/creation/creationOptionsService';
 import { KernelStateEventArgs } from './datascience/notebookExtensibility';
 import {
     IJupyterUriProvider,
     IJupyterUriProviderRegistration,
+    INotebookEditorProvider,
     INotebookExtensibility,
     IWebviewExtensibility
 } from './datascience/types';
@@ -49,6 +52,19 @@ export interface IExtensionApi {
      */
     registerRemoteServerProvider(serverProvider: IJupyterUriProvider): void;
     registerPythonApi(pythonApi: PythonApi): void;
+    /**
+     * When called by other extensions we will display these extensions in a dropdown list when creating a new notebook.
+     */
+    registerNewNotebookContent(options: {
+        /**
+         * Use this language as the language of cells for new notebooks created (when user picks this extension).
+         */
+        defaultCellLanguage: string;
+    }): void;
+    /**
+     * Creates a blank notebook and defaults the empty cell to the language provided.
+     */
+    createBlankNotebook(options: { defaultCellLanguage: string }): Promise<void>;
 }
 
 export function buildApi(
@@ -83,7 +99,14 @@ export function buildApi(
             container.registerProvider(picker);
         },
         onKernelStateChange: notebookExtensibility.onKernelStateChange.bind(notebookExtensibility),
-        registerCellToolbarButton: webviewExtensibility.registerCellToolbarButton.bind(webviewExtensibility)
+        registerCellToolbarButton: webviewExtensibility.registerCellToolbarButton.bind(webviewExtensibility),
+        registerNewNotebookContent(options: { defaultCellLanguage: string }) {
+            serviceContainer.get<CreationOptionService>(CreationOptionService).registerNewNotebookContent(options);
+        },
+        createBlankNotebook: async (options: { defaultCellLanguage: string }): Promise<void> => {
+            const service = serviceContainer.get<INotebookEditorProvider>(VSCodeNotebookProvider);
+            await service.createNew(options);
+        }
     };
 
     // In test environment return the DI Container.
