@@ -3,7 +3,6 @@
 'use strict';
 import '../common/extensions';
 
-import {window} from 'vscode'
 import { IJupyterSettings } from '../common/types';
 import { noop } from '../common/utils/misc';
 import { RegExpValues } from './constants';
@@ -19,15 +18,11 @@ export class CellMatcher {
 
     constructor(settings?: IJupyterSettings, language?: string) {
 
-        if (language) {
-            language = language;
-        } else if (window.activeTextEditor?.document) {
-            language = window.activeTextEditor?.document.languageId;
-        } else {
-            language = 'python';
+        if (!language) {
+            language = 'python'
         }
 
-        let codeLens = settings?.codeLensExpressions
+        const codeLens = settings?.codeLensExpressions
         .find((v) => v.language === language)
 
         this.codeMatchRegEx = this.createRegExp(

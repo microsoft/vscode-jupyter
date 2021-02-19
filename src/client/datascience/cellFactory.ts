@@ -54,12 +54,13 @@ export function generateCells(
     file: string,
     line: number,
     splitMarkdown: boolean,
-    id: string
+    id: string,
+    language: string | undefined
 ): ICell[] {
     // Determine if we have a markdown cell/ markdown and code cell combined/ or just a code cell
     const split = code.splitLines({ trim: false });
     const firstLine = split[0];
-    const matcher = new CellMatcher(settings);
+    const matcher = new CellMatcher(settings, language);
     const { magicCommandsAsComments = false } = settings || {};
     if (matcher.isMarkdown(firstLine)) {
         // We have at least one markdown. We might have to split it if there any lines that don't begin
@@ -97,8 +98,8 @@ export function generateCells(
     }
 }
 
-export function hasCells(document: TextDocument, settings?: IJupyterSettings): boolean {
-    const matcher = new CellMatcher(settings);
+export function hasCells(document: TextDocument, settings?: IJupyterSettings, language?: string): boolean {
+    const matcher = new CellMatcher(settings, language);
     for (let index = 0; index < document.lineCount; index += 1) {
         const line = document.lineAt(index);
         if (matcher.isCell(line.text)) {
@@ -109,11 +110,11 @@ export function hasCells(document: TextDocument, settings?: IJupyterSettings): b
     return false;
 }
 
-export function generateCellsFromString(source: string, settings?: IJupyterSettings): ICell[] {
+export function generateCellsFromString(source: string, settings?: IJupyterSettings, language?: string): ICell[] {
     const lines: string[] = source.splitLines({ trim: false, removeEmptyEntries: false });
 
     // Find all the lines that start a cell
-    const matcher = new CellMatcher(settings);
+    const matcher = new CellMatcher(settings, language);
     const starts: { startLine: number; title: string; code: string; cell_type: string }[] = [];
     let currentCode: string | undefined;
     for (let index = 0; index < lines.length; index += 1) {
@@ -145,14 +146,14 @@ export function generateCellsFromString(source: string, settings?: IJupyterSetti
     // For each one, get its text and turn it into a cell
     return Array.prototype.concat(
         ...starts.map((s) => {
-            return generateCells(settings, s.code, '', s.startLine, false, uuid());
+            return generateCells(settings, s.code, '', s.startLine, false, uuid(), language);
         })
     );
 }
 
-export function generateCellRangesFromDocument(document: TextDocument, settings?: IJupyterSettings): ICellRange[] {
+export function generateCellRangesFromDocument(document: TextDocument, settings?: IJupyterSettings, language?: string): ICellRange[] {
     // Implmentation of getCells here based on Don's Jupyter extension work
-    const matcher = new CellMatcher(settings);
+    const matcher = new CellMatcher(settings, language);
     const cells: ICellRange[] = [];
     for (let index = 0; index < document.lineCount; index += 1) {
         const line = document.lineAt(index);
@@ -189,7 +190,7 @@ export function generateCellsFromDocument(document: TextDocument, settings?: IJu
     return Array.prototype.concat(
         ...ranges.map((cr) => {
             const code = document.getText(cr.range);
-            return generateCells(settings, code, '', cr.range.start.line, false, uuid());
+            return generateCells(settings, code, '', cr.range.start.line, false, uuid(), document.languageId);
         })
     );
 }
