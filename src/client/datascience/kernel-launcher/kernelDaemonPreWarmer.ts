@@ -4,13 +4,14 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { NotebookCell, NotebookDocument } from '../../../../types/vscode-proposed';
+import { NotebookDocument, NotebookCell } from 'vscode';
 import { IPythonExtensionChecker } from '../../api/types';
 import { IVSCodeNotebook } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import '../../common/extensions';
 import { IConfigurationService, IDisposableRegistry, Resource } from '../../common/types';
 import { swallowExceptions } from '../../common/utils/decorators';
+import { isJupyterKernel } from '../notebook/helpers/helpers';
 import {
     IInteractiveWindowProvider,
     INotebookCreationTracker,
@@ -78,8 +79,9 @@ export class KernelDaemonPreWarmer {
 
     // Handle opening of native documents
     private async onDidOpenNotebookDocument(doc: NotebookDocument): Promise<void> {
+        const kernel = this.vscodeNotebook.notebookEditors.find((item) => item.document === doc)?.kernel;
         if (
-            doc.languages.includes(PYTHON_LANGUAGE) ||
+            isJupyterKernel(kernel) ||
             doc.cells.some((cell: NotebookCell) => {
                 return cell.language === PYTHON_LANGUAGE;
             })

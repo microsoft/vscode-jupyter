@@ -26,7 +26,10 @@ import * as chaiAsPromised from 'chai-as-promised';
 import { IPythonExtensionChecker } from '../../client/api/types';
 import { IFileSystem } from '../../client/common/platform/types';
 import { KernelEnvironmentVariablesService } from '../../client/datascience/kernel-launcher/kernelEnvVarsService';
+import { traceInfo } from '../../client/common/logger';
 use(chaiAsPromised);
+
+const test_Timeout = 30_000;
 
 suite('DataScience - Kernel Launcher', () => {
     let ioc: DataScienceIocContainer;
@@ -41,7 +44,8 @@ suite('DataScience - Kernel Launcher', () => {
         snapshot = takeSnapshot();
     });
 
-    setup(async () => {
+    setup(async function () {
+        traceInfo(`Start Test ${this.currentTest?.title}`);
         ioc = new DataScienceIocContainer();
         ioc.registerDataScienceTypes();
         kernelFinder = new MockKernelFinder(ioc.get<IKernelFinder>(IKernelFinder));
@@ -70,8 +74,11 @@ suite('DataScience - Kernel Launcher', () => {
                 env: undefined
             };
         }
+        traceInfo(`Start Test Complete ${this.currentTest?.title}`);
     });
-
+    teardown(function () {
+        traceInfo(`End Test ${this.currentTest?.title}`);
+    });
     suiteTeardown(() => {
         writeDiffSnapshot(snapshot, 'KernelLauncher');
     });
@@ -111,7 +118,7 @@ suite('DataScience - Kernel Launcher', () => {
             await kernel.dispose();
             await deferred.promise;
         }
-    }).timeout(10_000);
+    }).timeout(test_Timeout);
 
     test('Launch with environment', async function () {
         if (!process.env.VSC_FORCE_REAL_JUPYTER || !pythonInterpreter) {
@@ -153,7 +160,7 @@ suite('DataScience - Kernel Launcher', () => {
             // If this happens, then we know a process existed.
             await kernel.dispose();
         }
-    }).timeout(10_000);
+    }).timeout(test_Timeout);
 
     test('Bind with ZMQ', async function () {
         if (!process.env.VSC_FORCE_REAL_JUPYTER) {

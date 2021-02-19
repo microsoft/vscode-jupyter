@@ -42,6 +42,7 @@ import {
 } from '../../../../client/datascience/jupyter/kernels/providers/activeJupyterSessionKernelProvider';
 import { InstalledJupyterKernelSelectionListProvider } from '../../../../client/datascience/jupyter/kernels/providers/installJupyterKernelProvider';
 import { disposeAllDisposables } from '../../../../client/common/helpers';
+import { InterpreterPackages } from '../../../../client/datascience/telemetry/interpreterPackages';
 
 /* eslint-disable , @typescript-eslint/no-unused-expressions, @typescript-eslint/no-explicit-any */
 
@@ -103,7 +104,8 @@ suite('DataScience - KernelSelector', () => {
             instance(jupyterSessionManagerFactory),
             instance(configService),
             instance(extensionChecker),
-            instance(preferredKernelIdProvider)
+            instance(preferredKernelIdProvider),
+            instance(mock(InterpreterPackages))
         );
     });
     teardown(() => {
@@ -113,27 +115,17 @@ suite('DataScience - KernelSelector', () => {
     suite('Select Remote Kernel', () => {
         test('Should display quick pick and return nothing when nothing is selected (remote sessions)', async () => {
             when(
-                kernelSelectionProvider.getKernelSelectionsForRemoteSession(
-                    anything(),
-                    instance(sessionManager),
-                    anything()
-                )
+                kernelSelectionProvider.getKernelSelectionsForRemoteSession(anything(), anything(), anything())
             ).thenResolve([]);
             when(appShell.showQuickPick(anything(), anything(), anything())).thenResolve();
 
-            const kernel = await kernelSelector.selectRemoteKernel(
-                undefined,
-                new StopWatch(),
+            const kernel = await kernelSelector.selectRemoteKernel(undefined, new StopWatch(), async () =>
                 instance(sessionManager)
             );
 
             assert.isUndefined(kernel);
             verify(
-                kernelSelectionProvider.getKernelSelectionsForRemoteSession(
-                    anything(),
-                    instance(sessionManager),
-                    anything()
-                )
+                kernelSelectionProvider.getKernelSelectionsForRemoteSession(anything(), anything(), anything())
             ).once();
             verify(appShell.showQuickPick(anything(), anything(), anything())).once();
         });
@@ -149,31 +141,21 @@ suite('DataScience - KernelSelector', () => {
         });
         test('Should return the selected remote kernelspec along with a matching interpreter', async () => {
             when(
-                kernelSelectionProvider.getKernelSelectionsForRemoteSession(
-                    anything(),
-                    instance(sessionManager),
-                    anything()
-                )
+                kernelSelectionProvider.getKernelSelectionsForRemoteSession(anything(), anything(), anything())
             ).thenResolve([]);
             when(kernelService.findMatchingInterpreter(kernelSpec, anything())).thenResolve(interpreter);
             when(appShell.showQuickPick(anything(), anything(), anything())).thenResolve({
                 selection: { kernelSpec }
             } as any);
 
-            const kernel = await kernelSelector.selectRemoteKernel(
-                undefined,
-                new StopWatch(),
+            const kernel = await kernelSelector.selectRemoteKernel(undefined, new StopWatch(), async () =>
                 instance(sessionManager)
             );
 
             assert.deepEqual((kernel as any)?.kernelSpec, kernelSpec);
             assert.deepEqual(kernel?.interpreter, interpreter);
             verify(
-                kernelSelectionProvider.getKernelSelectionsForRemoteSession(
-                    anything(),
-                    instance(sessionManager),
-                    anything()
-                )
+                kernelSelectionProvider.getKernelSelectionsForRemoteSession(anything(), anything(), anything())
             ).once();
             verify(appShell.showQuickPick(anything(), anything(), anything())).once();
             verify(kernelService.findMatchingInterpreter(kernelSpec, anything())).once();
@@ -246,7 +228,9 @@ suite('DataScience - KernelSelector', () => {
 
             provider.addKernelToIgnoreList({ id: 'id2' } as any);
             provider.addKernelToIgnoreList({ clientId: 'id4' } as any);
-            const suggestions = await provider.getKernelSelectionsForRemoteSession(undefined, instance(sessionManager));
+            const suggestions = await provider.getKernelSelectionsForRemoteSession(undefined, async () =>
+                instance(sessionManager)
+            );
 
             assert.deepEqual(
                 suggestions,

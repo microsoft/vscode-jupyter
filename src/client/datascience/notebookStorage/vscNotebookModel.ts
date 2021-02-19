@@ -2,8 +2,7 @@
 // Licensed under the MIT License.
 
 import type { nbformat } from '@jupyterlab/coreutils';
-import { Memento, Uri } from 'vscode';
-import { NotebookDocument } from '../../../../types/vscode-proposed';
+import { Memento, NotebookDocument, Uri } from 'vscode';
 import { IVSCodeNotebook } from '../../common/application/types';
 import { ICryptoUtils } from '../../common/types';
 import { NotebookModelChange } from '../interactive-common/interactiveWindowTypes';
@@ -148,7 +147,7 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
         return JSON.stringify(this.notebookJson, null, this.indentAmount);
     }
     protected getJupyterCells() {
-        return this.document
+        return this.document && this.isTrusted
             ? this.document.cells.map(createJupyterCellFromVSCNotebookCell.bind(undefined))
             : this.notebookJson.cells || [];
     }
@@ -163,33 +162,6 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
             if (metadata) {
                 json.metadata = metadata;
             }
-        }
-        // if (this.document && !this.isTrusted && Array.isArray(json.cells)) {
-        if (Array.isArray(json.cells)) {
-            // The output can contain custom metadata, we need to remove that.
-            json.cells = json.cells.map((cell) => {
-                const metadata = { ...cell.metadata };
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const outputs: nbformat.IOutput[] = Array.isArray(cell.outputs) ? (cell.outputs as any) : [];
-                outputs.forEach((output: nbformat.IOutput) => {
-                    if (
-                        output &&
-                        output.metadata &&
-                        typeof output.metadata === 'object' &&
-                        'vscode' in output.metadata
-                    ) {
-                        delete output.metadata.vscode;
-                    }
-                });
-                // if ('vscode' in metadata && typeof metadata === 'object') {
-                //     delete metadata.vscode;
-                // }
-                return {
-                    ...cell,
-                    metadata
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                } as any;
-            });
         }
 
         // https://github.com/microsoft/vscode-python/issues/13155

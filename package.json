@@ -1,7 +1,7 @@
 {
     "name": "jupyter",
     "displayName": "Jupyter",
-    "version": "2021.1.0-dev",
+    "version": "2021.3.0-dev",
     "description": "Jupyter notebook support, interactive programming and computing that supports Intellisense, debugging and more.",
     "publisher": "ms-toolsai",
     "enableProposedApi": true,
@@ -24,7 +24,7 @@
         "theme": "light"
     },
     "engines": {
-        "vscode": "^1.49.0"
+        "vscode": "^1.53.0"
     },
     "keywords": [
         "jupyter",
@@ -87,7 +87,7 @@
             {
                 "command": "jupyter.runcurrentcell",
                 "key": "ctrl+enter",
-                "when": "editorTextFocus && !editorHasSelection && jupyter.hascodecells && !notebookEditorFocused"
+                "when": "editorTextFocus && !editorHasSelection && jupyter.hascodecells && !notebookEditorFocused && !jupyter.havenativecells"
             },
             {
                 "command": "jupyter.runcurrentcellandaddbelow",
@@ -148,7 +148,7 @@
                 "linux": "Z",
                 "key": "Z",
                 "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts",
-                "command": "undo"
+                "command": "jupyter.notebookeditor.keybind.undo"
             },
             {
                 "mac": "S",
@@ -156,7 +156,7 @@
                 "linux": "S",
                 "key": "S",
                 "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts",
-                "command": "workbench.action.files.save"
+                "command": "jupyter.notebookeditor.keybind.save"
             },
             {
                 "mac": "C",
@@ -188,6 +188,11 @@
                 "linux": "ctrl+shift+-",
                 "when": "editorTextFocus && inputFocus && notebookEditorFocused && notebookViewType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts",
                 "command": "notebook.cell.split"
+            },
+            {
+                "key": "ctrl+enter",
+                "when": "editorTextFocus && inputFocus && notebookEditorFocused && notebookViewType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts",
+                "command": "notebook.cell.execute"
             },
             {
                 "command": "jupyter.insertCellBelowPosition",
@@ -284,7 +289,7 @@
             {
                 "command": "jupyter.notebookeditor.export",
                 "title": "%DataScience.notebookExportAs%",
-                "category": "Jupyter",
+                "category": "Notebook",
                 "icon": {
                     "light": "resources/light/export_to_python.svg",
                     "dark": "resources/dark/export_to_python.svg"
@@ -294,7 +299,7 @@
             {
                 "command": "jupyter.notebookeditor.runallcellsabove",
                 "title": "%DataScience.runAbove%",
-                "category": "Jupyter",
+                "category": "Notebook",
                 "icon": {
                     "light": "resources/light/runabove.svg",
                     "dark": "resources/dark/runabove-inverse.svg"
@@ -304,7 +309,7 @@
             {
                 "command": "jupyter.notebookeditor.runcellandallbelow",
                 "title": "%DataScience.runBelow%",
-                "category": "Jupyter",
+                "category": "Notebook",
                 "icon": {
                     "light": "resources/light/runbelow.svg",
                     "dark": "resources/dark/runbelow-inverse.svg"
@@ -565,12 +570,24 @@
             {
                 "command": "jupyter.notebookeditor.undocells",
                 "title": "%jupyter.command.jupyter.undocells.title%",
-                "category": "Jupyter"
+                "category": "Notebook"
             },
             {
                 "command": "jupyter.notebookeditor.redocells",
                 "title": "%jupyter.command.jupyter.redocells.title%",
-                "category": "Jupyter"
+                "category": "Notebook"
+            },
+            {
+                "command": "jupyter.notebookeditor.keybind.undo",
+                "title": "%jupyter.command.jupyter.notebookeditor.keybind.undo.title%",
+                "category": "Notebook",
+                "enablement": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts"
+            },
+            {
+                "command": "jupyter.notebookeditor.keybind.save",
+                "title": "%jupyter.command.jupyter.notebookeditor.keybind.save.title%",
+                "category": "Notebook",
+                "enablement": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts"
             },
             {
                 "command": "jupyter.removeallcells",
@@ -588,21 +605,19 @@
                 "category": "Jupyter"
             },
             {
-                "command": "jupyter.notebookeditor.removeallcells",
-                "title": "%jupyter.command.jupyter.notebookeditor.removeallcells.title%",
-                "category": "Jupyter"
-            },
-            {
                 "command": "jupyter.notebookeditor.interruptkernel",
                 "title": "%jupyter.command.jupyter.interruptkernel.title%",
-                "category": "Jupyter",
-                "icon": "$(primitive-square)",
+                "category": "Notebook",
+                "icon": {
+                    "light": "resources/light/interrupt.svg",
+                    "dark": "resources/dark/interrupt.svg"
+                },
                 "enablement": "notebookViewType == 'jupyter-notebook' && jupyter.isnotebooktrusted && jupyter.notebookeditor.canInterruptNotebookKernel"
             },
             {
                 "command": "jupyter.notebookeditor.restartkernel",
                 "title": "%jupyter.command.jupyter.restartkernel.title%",
-                "category": "Jupyter",
+                "category": "Notebook",
                 "icon": {
                     "light": "resources/light/restart-kernel.svg",
                     "dark": "resources/dark/restart-kernel.svg"
@@ -618,7 +633,7 @@
             {
                 "command": "jupyter.notebookeditor.trust",
                 "title": "%DataScience.trustNotebookCommandTitle%",
-                "category": "Jupyter",
+                "category": "Notebook",
                 "icon": {
                     "light": "resources/light/un-trusted.svg",
                     "dark": "resources/dark/un-trusted.svg"
@@ -628,7 +643,7 @@
             {
                 "command": "jupyter.notebookeditor.trusted",
                 "title": "%DataScience.notebookIsTrusted%",
-                "category": "Jupyter",
+                "category": "Notebook",
                 "icon": {
                     "light": "resources/light/trusted.svg",
                     "dark": "resources/dark/trusted.svg"
@@ -636,34 +651,24 @@
                 "enablement": "false"
             },
             {
-                "command": "jupyter.notebookeditor.runallcells",
-                "title": "%jupyter.command.jupyter.notebookeditor.runallcells.title%",
-                "category": "Jupyter"
-            },
-            {
-                "command": "jupyter.notebookeditor.runselectedcell",
-                "title": "%jupyter.command.jupyter.notebookeditor.runselectedcell.title%",
-                "category": "Jupyter"
-            },
-            {
                 "command": "jupyter.notebookeditor.addcellbelow",
                 "title": "%jupyter.command.jupyter.notebookeditor.addcellbelow.title%",
-                "category": "Jupyter"
+                "category": "Notebook"
             },
             {
                 "command": "jupyter.notebookeditor.removeallcells",
                 "title": "%jupyter.command.jupyter.notebookeditor.removeallcells.title%",
-                "category": "Jupyter"
+                "category": "Notebook"
             },
             {
                 "command": "jupyter.notebookeditor.expandallcells",
                 "title": "%jupyter.command.jupyter.notebookeditor.expandallcells.title%",
-                "category": "Jupyter"
+                "category": "Notebook"
             },
             {
                 "command": "jupyter.notebookeditor.collapseallcells",
                 "title": "%jupyter.command.jupyter.notebookeditor.collapseallcells.title%",
-                "category": "Jupyter"
+                "category": "Notebook"
             },
             {
                 "command": "jupyter.expandallcells",
@@ -741,7 +746,7 @@
                     "dark": "resources/dark/variable_explorer.svg"
                 },
                 "category": "Jupyter",
-                "enablement": "!jupyter.variableViewVisible"
+                "enablement": "notebookViewType == jupyter-notebook && !jupyter.variableViewVisible"
             }
         ],
         "menus": {
@@ -801,55 +806,49 @@
                 {
                     "command": "jupyter.notebookeditor.runallcellsabove",
                     "title": "%DataScience.runAbove%",
-                    "group": "navigation@1",
-                    "when": "notebookViewType == 'jupyter-notebook'"
+                    "group": "overflow@1",
+                    "when": "notebookViewType == 'jupyter-notebook' && jupyter.isnotebooktrusted"
                 },
                 {
                     "command": "jupyter.notebookeditor.runcellandallbelow",
                     "title": "%DataScience.runBelow%",
-                    "group": "navigation@2",
-                    "when": "notebookViewType == 'jupyter-notebook'"
+                    "group": "overflow@2",
+                    "when": "notebookViewType == 'jupyter-notebook' && jupyter.isnotebooktrusted"
                 },
                 {
                     "command": "jupyter.notebookeditor.restartkernel",
                     "title": "%jupyter.command.jupyter.restartkernel.title%",
-                    "group": "navigation@3",
-                    "when": "notebookViewType == 'jupyter-notebook'"
+                    "group": "navigation@1",
+                    "when": "notebookViewType == 'jupyter-notebook' && jupyter.isnotebooktrusted && jupyter.notebookeditor.canrestartNotebookkernel"
                 },
                 {
                     "command": "jupyter.notebookeditor.interruptkernel",
                     "title": "%jupyter.command.jupyter.interruptkernel.title%",
-                    "group": "navigation@4",
-                    "when": "notebookViewType == 'jupyter-notebook'"
+                    "group": "overflow@1",
+                    "when": "notebookViewType == 'jupyter-notebook' && jupyter.isnotebooktrusted && jupyter.notebookeditor.canInterruptNotebookKernel"
                 },
                 {
                     "command": "jupyter.openVariableView",
                     "title": "%jupyter.command.jupyter.openVariableView.title%",
-                    "group": "navigation@5",
-                    "when": "notebookViewType == 'jupyter-notebook'"
+                    "group": "navigation@2",
+                    "when": "notebookViewType == 'jupyter-notebook' && jupyter.isnotebooktrusted"
                 },
                 {
                     "command": "jupyter.notebookeditor.export",
                     "title": "%DataScience.notebookExportAs%",
-                    "group": "navigation@6",
-                    "when": "notebookViewType == 'jupyter-notebook'"
+                    "group": "navigation@3",
+                    "when": "notebookViewType == 'jupyter-notebook' && jupyter.isnotebooktrusted"
                 },
                 {
                     "command": "jupyter.notebookeditor.trust",
                     "title": "%DataScience.trustNotebookCommandTitle%",
-                    "group": "navigation@999",
+                    "group": "navigation@1",
                     "when": "notebookViewType == 'jupyter-notebook' && !jupyter.isnotebooktrusted && jupyter.trustfeatureenabled"
-                },
-                {
-                    "command": "jupyter.notebookeditor.trusted",
-                    "title": "%DataScience.notebookIsTrusted%",
-                    "group": "navigation@999",
-                    "when": "notebookViewType == 'jupyter-notebook' && jupyter.isnotebooktrusted && jupyter.trustfeatureenabled"
                 },
                 {
                     "command": "jupyter.selectNativeJupyterUriFromToolBar",
                     "title": "%jupyter.command.jupyter.selectjupyteruri.title%",
-                    "group": "navigation@1000",
+                    "group": "overflow@1000",
                     "when": "notebookViewType == 'jupyter-notebook'"
                 }
             ],
@@ -1000,25 +999,25 @@
                     "command": "jupyter.runcurrentcell",
                     "title": "%jupyter.command.jupyter.runcurrentcell.title%",
                     "category": "Jupyter",
-                    "when": "jupyter.hascodecells && jupyter.ispythonornativeactive"
+                    "when": "jupyter.hascodecells && jupyter.ispythonornativeactive && !jupyter.havenativecells"
                 },
                 {
                     "command": "jupyter.runcurrentcelladvance",
                     "title": "%jupyter.command.jupyter.runcurrentcelladvance.title%",
                     "category": "Jupyter",
-                    "when": "jupyter.hascodecells && jupyter.ispythonornativeactive"
+                    "when": "jupyter.hascodecells && jupyter.ispythonornativeactive && !jupyter.havenativecells"
                 },
                 {
                     "command": "jupyter.runcurrentcellandallbelow.palette",
                     "title": "%jupyter.command.jupyter.runcurrentcellandallbelow.palette.title%",
                     "category": "Jupyter",
-                    "when": "jupyter.hascodecells && jupyter.ispythonornativeactive"
+                    "when": "jupyter.hascodecells && jupyter.ispythonornativeactive && !jupyter.havenativecells"
                 },
                 {
                     "command": "jupyter.runallcellsabove.palette",
                     "title": "%jupyter.command.jupyter.runallcellsabove.palette.title%",
                     "category": "Jupyter",
-                    "when": "jupyter.hascodecells && jupyter.ispythonornativeactive"
+                    "when": "jupyter.hascodecells && jupyter.ispythonornativeactive && !jupyter.havenativecells"
                 },
                 {
                     "command": "jupyter.debugcurrentcell.palette",
@@ -1122,86 +1121,74 @@
                 {
                     "command": "jupyter.notebookeditor.undocells",
                     "title": "%jupyter.command.jupyter.undocells.title%",
-                    "category": "Jupyter",
+                    "category": "Notebook",
                     "when": "jupyter.haveinteractivecells && jupyter.isnativeactive && !notebookEditorFocused && jupyter.isnotebooktrusted"
                 },
                 {
                     "command": "jupyter.notebookeditor.redocells",
                     "title": "%jupyter.command.jupyter.redocells.title%",
-                    "category": "Jupyter",
+                    "category": "Notebook",
                     "when": "jupyter.havenativeredoablecells && jupyter.isnativeactive && !notebookEditorFocused&& jupyter.isnotebooktrusted"
                 },
                 {
                     "command": "jupyter.notebookeditor.removeallcells",
                     "title": "%jupyter.command.jupyter.notebookeditor.removeallcells.title%",
-                    "category": "Jupyter",
+                    "category": "Notebook",
                     "when": "jupyter.havenativecells && jupyter.isnativeactive && jupyter.isnotebooktrusted"
                 },
                 {
                     "command": "jupyter.notebookeditor.interruptkernel",
                     "title": "%jupyter.command.jupyter.interruptkernel.title%",
-                    "category": "Jupyter",
+                    "category": "Notebook",
                     "when": "notebookViewType == 'jupyter-notebook'"
                 },
                 {
                     "command": "jupyter.notebookeditor.restartkernel",
                     "title": "%jupyter.command.jupyter.restartkernel.title%",
-                    "category": "Jupyter",
+                    "category": "Notebook",
                     "when": "jupyter.isnativeactive && jupyter.isnotebooktrusted"
                 },
                 {
                     "command": "jupyter.notebookeditor.trust",
                     "title": "%DataScience.trustNotebookCommandTitle%",
-                    "category": "Jupyter",
+                    "category": "Notebook",
                     "when": "notebookEditorFocused && !jupyter.isnotebooktrusted && jupyter.trustfeatureenabled"
                 },
                 {
                     "command": "jupyter.notebookeditor.trusted",
                     "title": "%DataScience.notebookIsTrusted%",
-                    "category": "Jupyter",
+                    "category": "Notebook",
                     "when": "false"
-                },
-                {
-                    "command": "jupyter.notebookeditor.runallcells",
-                    "title": "%jupyter.command.jupyter.notebookeditor.runallcells.title%",
-                    "category": "Jupyter",
-                    "when": "jupyter.isnativeactive && jupyter.isnotebooktrusted"
-                },
-                {
-                    "command": "jupyter.notebookeditor.runselectedcell",
-                    "title": "%jupyter.command.jupyter.notebookeditor.runselectedcell.title%",
-                    "category": "Jupyter",
-                    "when": "jupyter.isnativeactive && jupyter.havecellselected && !notebookEditorFocused && jupyter.isnotebooktrusted"
-                },
-                {
-                    "command": "jupyter.notebookeditor.runselectedcell",
-                    "title": "%jupyter.command.jupyter.notebookeditor.runselectedcell.title%",
-                    "category": "Jupyter",
-                    "when": "jupyter.isnativeactive && notebookEditorFocused && jupyter.isnotebooktrusted"
                 },
                 {
                     "command": "jupyter.notebookeditor.addcellbelow",
                     "title": "%jupyter.command.jupyter.notebookeditor.addcellbelow.title%",
-                    "category": "Jupyter",
+                    "category": "Notebook",
                     "when": "jupyter.isnativeactive && jupyter.isnotebooktrusted"
-                },
-                {
-                    "command": "jupyter.notebookeditor.removeallcells",
-                    "title": "%jupyter.command.jupyter.removeallcells.title%",
-                    "category": "Jupyter",
-                    "when": "notebookEditorFocused"
                 },
                 {
                     "command": "jupyter.notebookeditor.expandallcells",
                     "title": "%jupyter.command.jupyter.expandallcells.title%",
-                    "category": "Jupyter",
+                    "category": "Notebook",
                     "when": "notebookEditorFocused"
                 },
                 {
                     "command": "jupyter.notebookeditor.collapseallcells",
                     "title": "%jupyter.command.jupyter.collapseallcells.title%",
-                    "category": "Jupyter",
+                    "category": "Notebook",
                     "when": "notebookEditorFocused"
+                },
+                {
+                    "command": "jupyter.notebookeditor.keybind.undo",
+                    "title": "%jupyter.command.jupyter.notebookeditor.keybind.undo.title%",
+                    "category": "Notebook",
+                    "when": "false"
+                },
+                {
+                    "command": "jupyter.notebookeditor.keybind.save",
+                    "title": "%jupyter.command.jupyter.notebookeditor.keybind.save.title%",
+                    "category": "Notebook",
+                    "when": "false"
                 },
                 {
                     "command": "jupyter.expandallcells",
@@ -1298,7 +1285,7 @@
                 {
                     "command": "jupyter.notebookeditor.export",
                     "title": "%DataScience.notebookExportAs%",
-                    "category": "Jupyter",
+                    "category": "Notebook",
                     "when": "false"
                 },
                 {
@@ -1337,7 +1324,7 @@
                     "command": "jupyter.openVariableView",
                     "title": "%jupyter.command.jupyter.openVariableView.title%",
                     "category": "Jupyter",
-                    "when": "jupyter.isnativeactive"
+                    "when": "notebookViewType == jupyter-notebook"
                 },
                 {
                     "command": "jupyter.selectNativeJupyterUriFromToolBar",
@@ -1873,7 +1860,7 @@
                 {
                     "id": "jupyter-variables",
                     "title": "Jupyter",
-                    "icon": "NOICON.svg"
+                    "icon": "$(notebook)"
                 }
             ]
         },
@@ -1883,7 +1870,7 @@
                     "type": "webview",
                     "id": "jupyterViewVariables",
                     "name": "Variables",
-                    "when": "jupyter.isnativeactive"
+                    "when": "jupyter.isvscodenotebookactive"
                 }
             ]
         }
@@ -1910,8 +1897,8 @@
         "test:cover:report": "nyc report --reporter=text --reporter=html --reporter=text-summary --reporter=cobertura",
         "preTestJediLSP": "node ./out/test/languageServers/jedi/lspSetup.js",
         "testJediLSP": "node ./out/test/languageServers/jedi/lspSetup.js && cross-env CODE_TESTS_WORKSPACE=src/test VSC_JUPYTER_CI_TEST_GREP='Language Server:' node ./out/test/testBootstrap.js ./out/test/standardTest.js && node ./out/test/languageServers/jedi/lspTeardown.js",
-        "pretestVSCode": "cross-env VSC_JUPYTER_CI_TEST_VSC_CHANNEL=stable node ./out/test/datascience/dsTestSetup.js",
-        "testVSCode": "cross-env CODE_TESTS_WORKSPACE=src/test/datascience VSC_JUPYTER_CI_TEST_VSC_CHANNEL=stable TEST_FILES_SUFFIX=vscode.test VSC_JUPYTER_FORCE_LOGGING=1 VSC_JUPYTER_LOAD_EXPERIMENTS_FROM_FILE=true node ./out/test/testBootstrap.js ./out/test/standardTest.js",
+        "pretestVSCode": "cross-env VSC_JUPYTER_CI_TEST_VSC_CHANNEL=insiders node ./out/test/datascience/dsTestSetup.js",
+        "testVSCode": "cross-env CODE_TESTS_WORKSPACE=src/test/datascience VSC_JUPYTER_CI_TEST_VSC_CHANNEL=insiders TEST_FILES_SUFFIX=vscode.test VSC_JUPYTER_FORCE_LOGGING=1 VSC_JUPYTER_LOAD_EXPERIMENTS_FROM_FILE=true node ./out/test/testBootstrap.js ./out/test/standardTest.js",
         "pretestNativeNotebooksInVSCode": "cross-env VSC_JUPYTER_CI_TEST_VSC_CHANNEL=insiders VSC_JUPYTER_RUN_NB_TEST=true node ./out/test/datascience/dsTestSetup.js",
         "testNativeNotebooksInVSCode": "cross-env CODE_TESTS_WORKSPACE=src/test/datascience VSC_JUPYTER_CI_TEST_VSC_CHANNEL=insiders VSC_JUPYTER_RUN_NB_TEST=true TEST_FILES_SUFFIX=vscode.test VSC_JUPYTER_FORCE_LOGGING=1 VSC_JUPYTER_LOAD_EXPERIMENTS_FROM_FILE=true node ./out/test/testBootstrap.js ./out/test/standardTest.js",
         "pretestNativeNotebooksWithoutPythonInVSCode": "cross-env VSC_JUPYTER_CI_TEST_VSC_CHANNEL=insiders VSC_JUPYTER_RUN_NB_TEST=true node ./out/test/datascience/dsTestSetup.js",
@@ -2082,7 +2069,7 @@
         "@types/tmp": "0.0.33",
         "@types/untildify": "^3.0.0",
         "@types/uuid": "^3.4.3",
-        "@types/vscode": "^1.49.0",
+        "@types/vscode": "^1.53.0",
         "@types/vscode-notebook-renderer": "^1.48.0",
         "@types/webpack-bundle-analyzer": "^2.13.0",
         "@types/winreg": "^1.2.30",
@@ -2095,9 +2082,10 @@
         "babel-polyfill": "^6.26.0",
         "cache-loader": "^4.1.0",
         "canvas": "^2.6.0",
-        "chai": "^4.1.2",
+        "chai": "^4.3.0",
         "chai-arrays": "^2.0.0",
         "chai-as-promised": "^7.1.1",
+        "chai-exclude": "^2.0.2",
         "codecov": "^3.7.1",
         "colors": "^1.2.1",
         "copy-webpack-plugin": "^6.2.1",

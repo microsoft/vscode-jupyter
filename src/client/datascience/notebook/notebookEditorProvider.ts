@@ -4,16 +4,16 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { Event, EventEmitter, Uri } from 'vscode';
-import type { NotebookDocument, NotebookEditor as VSCodeNotebookEditor } from '../../../../types/vscode-proposed';
+import { Event, EventEmitter, Uri, NotebookDocument, NotebookEditor as VSCodeNotebookEditor } from 'vscode';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import '../../common/extensions';
 import { IFileSystem } from '../../common/platform/types';
 
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
+import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
-import { captureTelemetry, setSharedProperty } from '../../telemetry';
+import { captureTelemetry } from '../../telemetry';
 import { Commands, Telemetry } from '../constants';
 import { IKernelProvider } from '../jupyter/kernels/types';
 import { INotebookStorageProvider } from '../notebookStorage/notebookStorageProvider';
@@ -43,7 +43,13 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         return this._onDidOpenNotebookEditor.event;
     }
     public get activeEditor(): INotebookEditor | undefined {
-        return this.editors.find((e) => e.visible && e.active);
+        // Ask VS code for which one is active. Don't use webview tracking as it seems to be inaccurate
+        return (
+            this.vscodeNotebook.activeNotebookEditor &&
+            this.editors.find(
+                (e) => e.file.toString() === this.vscodeNotebook.activeNotebookEditor?.document.uri.toString()
+            )
+        );
     }
     public get editors(): INotebookEditor[] {
         return [...this.openedEditors];
@@ -75,7 +81,6 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         this.disposables.push(
             this.commandManager.registerCommand(Commands.OpenNotebookInPreviewEditor, async (uri?: Uri) => {
                 if (uri) {
-                    setSharedProperty('ds_notebookeditor', 'native');
                     captureTelemetry(Telemetry.OpenNotebook, { scope: 'command' }, false);
                     this.open(uri).ignoreErrors();
                 }
@@ -84,7 +89,6 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
     }
 
     public async open(file: Uri): Promise<INotebookEditor> {
-        setSharedProperty('ds_notebookeditor', 'native');
         if (this.notebooksWaitingToBeOpenedByUri.get(file.toString())) {
             return this.notebooksWaitingToBeOpenedByUri.get(file.toString())!.promise;
         }
@@ -107,7 +111,6 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
     }
     @captureTelemetry(Telemetry.CreateNewNotebook, undefined, false)
     public async createNew(contents?: string): Promise<INotebookEditor> {
-        setSharedProperty('ds_notebookeditor', 'native');
         const model = await this.storage.createNew(contents, true);
         return this.open(model.file);
     }
@@ -131,7 +134,7 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
 
             // If we have no editors for this file, then dispose the notebook.
             if (otherEditors.length === 0) {
-                editor.notebook?.dispose();
+                editor.notebook?.dispose().catch(noop);
             }
         }
     }
@@ -186,7 +189,6 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
             return;
         }
         this.trackedVSCodeNotebookEditors.add(editor);
-        this.disposables.push(editor.onDidDispose(() => this.onDidDisposeVSCodeNotebookEditor(editor)));
     }
     private async onDidCloseNotebookDocument(document: NotebookDocument) {
         this.disposeResourceRelatedToNotebookEditor(document.uri);
@@ -208,22 +210,5 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         }
         this.notebookEditorsByUri.delete(uri.toString());
         this.notebooksWaitingToBeOpenedByUri.delete(uri.toString());
-    }
-    /**
-     * We know a notebook editor has been closed.
-     * We need to close/dispose all of our resources related to this notebook document.
-     * However we also need to check if there are other notebooks opened, that are associated with this same notebook.
-     * I.e. we may have closed a duplicate editor.
-     */
-    private async onDidDisposeVSCodeNotebookEditor(closedEditor: VSCodeNotebookEditor) {
-        const uri = closedEditor.document.uri;
-        if (
-            this.vscodeNotebook.notebookEditors.some(
-                (item) => item !== closedEditor && item.document.uri.toString() === uri.toString()
-            )
-        ) {
-            return;
-        }
-        this.disposeResourceRelatedToNotebookEditor(closedEditor.document.uri);
     }
 }

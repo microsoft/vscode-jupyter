@@ -183,6 +183,7 @@ export class IPyWidgetScriptSource implements ILocalResourceUriConverter {
         if (!this.notebook) {
             this.notebook = await this.notebookProvider.getOrCreateNotebook({
                 identity: this.identity,
+                resource: this.identity,
                 disableUI: true,
                 getOnly: true
             });

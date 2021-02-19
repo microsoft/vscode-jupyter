@@ -2,8 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable } from 'inversify';
-import { ConfigurationTarget, languages } from 'vscode';
-import { NotebookContentProvider as VSCNotebookContentProvider } from '../../../../types/vscode-proposed';
+import { ConfigurationTarget, languages, NotebookContentProvider as VSCNotebookContentProvider } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import {
     IApplicationEnvironment,
@@ -76,8 +75,8 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
                                 runnable: true,
                                 executionOrder: false,
                                 custom: false,
-                                runState: false,
-                                statusMessage: false
+                                runState: true,
+                                statusMessage: true
                             }
                         }
                     )

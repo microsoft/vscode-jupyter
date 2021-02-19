@@ -3,15 +3,27 @@
 
 'use strict';
 
-import { ConfigurationTarget, Event, EventEmitter, ProgressLocation, Uri, WebviewPanel } from 'vscode';
-import { NotebookCell, NotebookDocument } from '../../../../types/vscode-proposed';
+import {
+    ConfigurationTarget,
+    Event,
+    EventEmitter,
+    NotebookCell,
+    NotebookCellKind,
+    NotebookCellMetadata,
+    NotebookDocument,
+    ProgressLocation,
+    Uri,
+    WebviewPanel
+} from 'vscode';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import { traceError } from '../../common/logger';
 import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../common/types';
 import { DataScience } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
+import { StopWatch } from '../../common/utils/stopWatch';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
+import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../telemetry/telemetry';
 import { JupyterKernelPromiseFailedError } from '../jupyter/kernels/jupyterKernelPromiseFailedError';
 import { IKernel, IKernelProvider } from '../jupyter/kernels/types';
 import {
@@ -24,8 +36,6 @@ import {
 } from '../types';
 import { NotebookCellLanguageService } from './defaultCellLanguageService';
 import { chainWithPendingUpdates } from './helpers/notebookUpdater';
-// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
-const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
 export class NotebookEditor implements INotebookEditor {
     public get onDidChangeViewState(): Event<void> {
@@ -93,7 +103,7 @@ export class NotebookEditor implements INotebookEditor {
                 }
             })
         );
-        disposables.push(model.onDidDispose(this._closed.fire.bind(this._closed, this)));
+        disposables.push(model.onDidDispose(this.dispose.bind(this)));
     }
     @captureTelemetry(Telemetry.SyncAllCells)
     public async syncAllCells(): Promise<void> {
@@ -122,7 +132,9 @@ export class NotebookEditor implements INotebookEditor {
         throw new Error('Method not implemented.');
     }
     public createWebviewCellButton(): IDisposable {
-        throw new Error('Method not implemented.');
+        return {
+            dispose: () => noop()
+        };
     }
     public hasCell(): Promise<boolean> {
         return Promise.resolve(this.document.cells.length > 0);
@@ -140,12 +152,12 @@ export class NotebookEditor implements INotebookEditor {
         const defaultLanguage = this.cellLanguageService.getPreferredLanguage(this.model.metadata);
         const editor = this.vscodeNotebook.notebookEditors.find((item) => item.document === this.document);
         if (editor) {
-            chainWithPendingUpdates(editor, (edit) =>
-                edit.replaceCells(0, this.document.cells.length, [
+            chainWithPendingUpdates(editor.document, (edit) =>
+                edit.replaceNotebookCells(editor.document.uri, 0, this.document.cells.length, [
                     {
-                        cellKind: vscodeNotebookEnums.CellKind.Code,
+                        cellKind: NotebookCellKind.Code,
                         language: defaultLanguage,
-                        metadata: {},
+                        metadata: new NotebookCellMetadata(),
                         outputs: [],
                         source: ''
                     }
@@ -160,13 +172,10 @@ export class NotebookEditor implements INotebookEditor {
         const notebook = this.vscodeNotebook.activeNotebookEditor.document;
         const editor = this.vscodeNotebook.notebookEditors.find((item) => item.document === this.document);
         if (editor) {
-            chainWithPendingUpdates(editor, (edit) => {
+            chainWithPendingUpdates(editor.document, (edit) => {
                 notebook.cells.forEach((cell, index) => {
-                    edit.replaceCellMetadata(index, {
-                        ...cell.metadata,
-                        inputCollapsed: false,
-                        outputCollapsed: false
-                    });
+                    const metadata = cell.metadata.with({ inputCollapsed: false, outputCollapsed: false });
+                    edit.replaceNotebookCellMetadata(editor.document.uri, index, metadata);
                 });
             }).then(noop, noop);
         }
@@ -178,13 +187,10 @@ export class NotebookEditor implements INotebookEditor {
         const notebook = this.vscodeNotebook.activeNotebookEditor.document;
         const editor = this.vscodeNotebook.notebookEditors.find((item) => item.document === this.document);
         if (editor) {
-            chainWithPendingUpdates(editor, (edit) => {
+            chainWithPendingUpdates(editor.document, (edit) => {
                 notebook.cells.forEach((cell, index) => {
-                    edit.replaceCellMetadata(index, {
-                        ...cell.metadata,
-                        inputCollapsed: true,
-                        outputCollapsed: true
-                    });
+                    const metadata = cell.metadata.with({ inputCollapsed: true, outputCollapsed: true });
+                    edit.replaceNotebookCellMetadata(editor.document.uri, index, metadata);
                 });
             }).then(noop, noop);
         }
@@ -195,10 +201,12 @@ export class NotebookEditor implements INotebookEditor {
     }
     public async interruptKernel(): Promise<void> {
         if (this.restartingKernel) {
+            trackKernelResourceInformation(this.document.uri, { interruptKernel: true });
             return;
         }
         const kernel = this.kernelProvider.get(this.file);
         if (!kernel || this.restartingKernel) {
+            trackKernelResourceInformation(this.document.uri, { interruptKernel: true });
             return;
         }
         const status = this.statusProvider.set(DataScience.interruptKernelStatus(), true, undefined, undefined);
@@ -224,8 +232,10 @@ export class NotebookEditor implements INotebookEditor {
     }
 
     public async restartKernel(): Promise<void> {
+        trackKernelResourceInformation(this.document.uri, { restartKernel: true });
         sendTelemetryEvent(Telemetry.RestartKernelCommand);
         if (this.restartingKernel) {
+            trackKernelResourceInformation(this.document.uri, { restartKernel: true });
             return;
         }
         const kernel = this.kernelProvider.get(this.file);
@@ -263,7 +273,7 @@ export class NotebookEditor implements INotebookEditor {
         this._closed.fire(this);
     }
 
-    public runAbove(uri: Uri): void {
+    public runAbove(uri: Uri | undefined): void {
         const cellId = this.getSelectedCellId(uri);
         const index = this.document.cells.findIndex((c) => c.uri.toString() === cellId);
 
@@ -273,7 +283,7 @@ export class NotebookEditor implements INotebookEditor {
             this.runCellRange(cells);
         }
     }
-    public runCellAndBelow(uri: Uri): void {
+    public runCellAndBelow(uri: Uri | undefined): void {
         const cellId = this.getSelectedCellId(uri);
         const index = this.document.cells.findIndex((c) => c.uri.toString() === cellId);
 
@@ -284,8 +294,9 @@ export class NotebookEditor implements INotebookEditor {
         }
     }
 
-    private getSelectedCellId(uri: Uri): string | undefined {
-        const editor = this.vscodeNotebook.notebookEditors.find((nb) => nb.document.uri.toString() === uri.toString());
+    private getSelectedCellId(uri: Uri | undefined): string | undefined {
+        const uriStr = uri ? uri.toString() : this.document.uri.toString();
+        const editor = this.vscodeNotebook.notebookEditors.find((nb) => nb.document.uri.toString() === uriStr);
 
         if (editor && editor.selection) {
             return editor.selection.uri.toString();
@@ -302,7 +313,7 @@ export class NotebookEditor implements INotebookEditor {
         }
 
         cells.forEach(async (cell) => {
-            if (cell.cellKind === vscodeNotebookEnums.CellKind.Code) {
+            if (cell.cellKind === NotebookCellKind.Code) {
                 await kernel.executeCell(cell);
             }
         });
@@ -314,12 +325,18 @@ export class NotebookEditor implements INotebookEditor {
         // Set our status
         const status = this.statusProvider.set(DataScience.restartingKernelStatus(), true, undefined, undefined);
 
+        const stopWatch = new StopWatch();
         try {
             await kernel.restart();
+            sendKernelTelemetryEvent(this.document.uri, Telemetry.NotebookRestart, stopWatch.elapsedTime);
         } catch (exc) {
             // If we get a kernel promise failure, then restarting timed out. Just shutdown and restart the entire server.
             // Note, this code might not be necessary, as such an error is thrown only when interrupting a kernel times out.
             if (exc instanceof JupyterKernelPromiseFailedError && kernel) {
+                sendKernelTelemetryEvent(this.document.uri, Telemetry.NotebookRestart, stopWatch.elapsedTime, {
+                    failed: true,
+                    failureCategory: 'kernelpromisetimeout'
+                });
                 // Old approach (INotebook is not exposed in IKernel, and INotebook will eventually go away).
                 const notebook = await this.notebookProvider.getOrCreateNotebook({
                     resource: this.file,
@@ -329,8 +346,14 @@ export class NotebookEditor implements INotebookEditor {
                 if (notebook) {
                     await notebook.dispose();
                 }
-                await this.notebookProvider.connect({ getOnly: false, disableUI: false });
+                await this.notebookProvider.connect({
+                    getOnly: false,
+                    disableUI: false,
+                    resource: this.file,
+                    metadata: this.model.metadata
+                });
             } else {
+                sendKernelTelemetryEvent(this.document.uri, Telemetry.NotebookRestart, stopWatch.elapsedTime, exc);
                 // Show the error message
                 void this.applicationShell.showErrorMessage(exc);
                 traceError(exc);

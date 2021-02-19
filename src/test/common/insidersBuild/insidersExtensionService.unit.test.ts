@@ -57,6 +57,7 @@ suite('Insiders Extension', () => {
         setup(() => {
             extensionChannelService = mock(ExtensionChannelService);
             appEnvironment = mock(ApplicationEnvironment);
+            when(appEnvironment.channel).thenReturn('insiders');
             cmdManager = mock(CommandManager);
             serviceContainer = mock(ServiceContainer);
             insidersPrompt = mock(InsidersExtensionPrompt);

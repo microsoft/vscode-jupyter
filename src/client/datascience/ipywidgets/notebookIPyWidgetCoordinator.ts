@@ -1,8 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { inject, injectable } from 'inversify';
-import { CancellationToken, Disposable } from 'vscode';
-import { NotebookCommunication, NotebookDocument, NotebookKernel } from '../../../../types/vscode-proposed';
+import { NotebookCommunication, NotebookDocument, NotebookKernel, CancellationToken, Disposable } from 'vscode';
 import { IVSCodeNotebook } from '../../common/application/types';
 import { Cancellation } from '../../common/cancellation';
 import { createDeferred } from '../../common/utils/async';

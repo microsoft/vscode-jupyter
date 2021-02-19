@@ -13,9 +13,16 @@
 
 import { inject, injectable } from 'inversify';
 import { CancellationToken, Disposable, Event, EventEmitter, Uri } from 'vscode';
-import { IApplicationEnvironment, IApplicationShell } from '../common/application/types';
+import { IApplicationShell, ICommandManager } from '../common/application/types';
 import { InterpreterUri } from '../common/installer/types';
-import { IExtensions, InstallerResponse, IPersistentStateFactory, Product, Resource } from '../common/types';
+import {
+    IDisposableRegistry,
+    IExtensions,
+    InstallerResponse,
+    IPersistentStateFactory,
+    Product,
+    Resource
+} from '../common/types';
 import { createDeferred } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
 import { noop } from '../common/utils/misc';
@@ -86,7 +93,7 @@ export class PythonExtensionChecker implements IPythonExtensionChecker {
         @inject(IExtensions) private readonly extensions: IExtensions,
         @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
-        @inject(IApplicationEnvironment) private readonly appEnv: IApplicationEnvironment
+        @inject(ICommandManager) private readonly commandManager: ICommandManager
     ) {
         // If the python extension is not installed listen to see if anything does install it
         if (!this.isPythonExtensionInstalled) {
@@ -145,7 +152,7 @@ export class PythonExtensionChecker implements IPythonExtensionChecker {
 
     private async installPythonExtension() {
         // Have the user install python
-        this.appShell.openUrl(`${this.appEnv.uriScheme}:extension/${this.pythonExtensionId}`);
+        void this.commandManager.executeCommand('extension.open', PythonExtension);
     }
 
     private async extensionsChangeHandler(): Promise<void> {
@@ -201,6 +208,10 @@ const ProductMapping: { [key in Product]: JupyterProductToInstall } = {
 /* eslint-disable max-classes-per-file */
 @injectable()
 export class PythonInstaller implements IPythonInstaller {
+    private readonly _onInstalled = new EventEmitter<{ product: Product; resource?: InterpreterUri }>();
+    public get onInstalled(): Event<{ product: Product; resource?: InterpreterUri }> {
+        return this._onInstalled.event;
+    }
     constructor(@inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider) {}
 
     public install(
@@ -208,7 +219,15 @@ export class PythonInstaller implements IPythonInstaller {
         resource?: InterpreterUri,
         cancel?: CancellationToken
     ): Promise<InstallerResponse> {
-        return this.apiProvider.getApi().then((api) => api.install(ProductMapping[product], resource, cancel));
+        return this.apiProvider
+            .getApi()
+            .then((api) => api.install(ProductMapping[product], resource, cancel))
+            .then((result) => {
+                if (result === InstallerResponse.Installed) {
+                    this._onInstalled.fire({ product, resource });
+                }
+                return result;
+            });
     }
 }
 
@@ -240,10 +259,25 @@ export class InterpreterSelector implements IInterpreterSelector {
 @injectable()
 export class InterpreterService implements IInterpreterService {
     private readonly didChangeInterpreter = new EventEmitter<void>();
-
-    constructor(@inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider) {}
+    private eventHandlerAdded?: boolean;
+    constructor(
+        @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider,
+        @inject(IPythonExtensionChecker) private extensionChecker: IPythonExtensionChecker,
+        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
+    ) {}
 
     public get onDidChangeInterpreter(): Event<void> {
+        if (this.extensionChecker.isPythonExtensionInstalled && !this.eventHandlerAdded) {
+            this.apiProvider
+                .getApi()
+                .then((api) => {
+                    if (!this.eventHandlerAdded) {
+                        this.eventHandlerAdded = true;
+                        api.onDidChangeInterpreter(() => this.didChangeInterpreter.fire(), this, this.disposables);
+                    }
+                })
+                .catch(noop);
+        }
         return this.didChangeInterpreter.event;
     }
 

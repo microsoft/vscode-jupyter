@@ -15,6 +15,8 @@ import {
     Uri,
     WorkspaceEdit
 } from 'vscode';
+import { IExtensionSingleActivationService } from '../activation/types';
+import { BannerType } from '../datascience/dataScienceSurveyBanner';
 import { LogLevel } from '../logging/levels';
 import { CommandsWithoutArgs } from './application/commands';
 import { Experiments } from './experiments/groups';
@@ -161,6 +163,13 @@ export interface IJupyterSettings {
     readonly alwaysScrollOnNewCell: boolean;
     readonly interactiveWindowMode: InteractiveWindowMode;
     readonly disableZMQSupport: boolean;
+    readonly variableTooltipFields: IVariableTooltipFields;
+}
+
+export interface IVariableTooltipFields {
+    [languageKey: string]: {
+        [typeNameKey: string]: string[]; // List of attributes
+    };
 }
 
 export interface IWatchableJupyterSettings extends IJupyterSettings {
@@ -323,11 +332,13 @@ export interface IBrowserService {
 
 export const IJupyterExtensionBanner = Symbol('IJupyterExtensionBanner');
 export interface IJupyterExtensionBanner {
-    enabled: boolean;
-    showBanner(): Promise<void>;
+    isEnabled(type: BannerType): boolean;
+    showBanner(type: BannerType): Promise<void>;
 }
-export const BANNER_NAME_DS_SURVEY: string = 'DSSurveyBanner';
 export const BANNER_NAME_INTERACTIVE_SHIFTENTER: string = 'InteractiveShiftEnterBanner';
+
+export const ISurveyBanner = Symbol('ISurveyBanner');
+export interface ISurveyBanner extends IExtensionSingleActivationService, IJupyterExtensionBanner {}
 
 export type DeprecatedSettingAndValue = {
     setting: string;

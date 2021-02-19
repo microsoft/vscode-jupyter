@@ -29,6 +29,7 @@ import {
 import { IKernelFinder } from '../../../client/datascience/kernel-launcher/types';
 import { NativeEditorProvider } from '../../../client/datascience/notebookStorage/nativeEditorProvider';
 import { PreferredRemoteKernelIdProvider } from '../../../client/datascience/notebookStorage/preferredRemoteKernelIdProvider';
+import { InterpreterPackages } from '../../../client/datascience/telemetry/interpreterPackages';
 import { IInteractiveWindowProvider, INotebookEditorProvider } from '../../../client/datascience/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 
@@ -146,7 +147,8 @@ suite('DataScience - Notebook Commands', () => {
                     instance(jupyterSessionManagerFactory),
                     instance(configService),
                     instance(extensionChecker),
-                    instance(preferredKernelIdProvider)
+                    instance(preferredKernelIdProvider),
+                    instance(mock(InterpreterPackages))
                 );
 
                 const kernelSwitcher = new KernelSwitcher(

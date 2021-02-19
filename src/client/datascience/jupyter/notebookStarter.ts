@@ -10,7 +10,7 @@ import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import { CancellationToken, Disposable } from 'vscode';
 import { CancellationError, createPromiseFromCancellation } from '../../common/cancellation';
-import { WrappedError } from '../../common/errors/errorUtils';
+import { WrappedError } from '../../common/errors/types';
 import { traceInfo } from '../../common/logger';
 import { IFileSystem, TemporaryDirectory } from '../../common/platform/types';
 import { IDisposable, IOutputChannel } from '../../common/types';

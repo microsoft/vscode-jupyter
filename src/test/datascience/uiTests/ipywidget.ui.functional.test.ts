@@ -61,7 +61,7 @@ use(chaiAsPromised);
             // Make sure we force auto start (we wait for kernel idle before running)
             ioc.forceDataScienceSettingsChanged({
                 disableJupyterAutoStart: false,
-                disableZMQSupport: true
+                disableZMQSupport: !useRawKernel
             });
 
             await ioc.activate();

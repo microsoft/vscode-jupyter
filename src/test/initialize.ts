@@ -22,7 +22,7 @@ export async function initializePython() {
 }
 
 export function isInsiders() {
-    return vscode.env.appName.indexOf('Insider') > 0;
+    return vscode.env.appName.indexOf('Insider') > 0 || vscode.env.appName.indexOf('OSS') > 0;
 }
 
 let jupyterServerStarted = false;

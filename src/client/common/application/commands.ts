@@ -49,7 +49,6 @@ interface ICommandNameWithoutArgumentTypeMapping {
     [DSCommands.NotebookEditorInterruptKernel]: [];
     [DSCommands.NotebookEditorRestartKernel]: [];
     [DSCommands.NotebookEditorRunAllCells]: [];
-    [DSCommands.NotebookEditorRunSelectedCell]: [];
     [DSCommands.NotebookEditorAddCellBelow]: [];
     [DSCommands.ExpandAllCells]: [];
     [DSCommands.CollapseAllCells]: [];
@@ -74,6 +73,7 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     ['workbench.extensions.installExtension']: [Uri | 'ms-toolsai.jupyter'];
     ['workbench.action.files.openFolder']: [];
     ['workbench.action.openWorkspace']: [];
+    ['extension.open']: [string];
     ['setContext']: [string, boolean] | ['jupyter.vscode.channel', Channel];
     ['jupyter.reloadVSCode']: [string];
     ['revealLine']: [{ lineNumber: number; at: 'top' | 'center' | 'bottom' }];
@@ -88,6 +88,7 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     ['vscode.open']: [Uri];
     ['workbench.action.files.saveAs']: [Uri];
     ['workbench.action.files.save']: [Uri];
+    ['undo']: [];
     [DSCommands.ExportFileAndOutputAsNotebook]: [Uri];
     [DSCommands.RunAllCells]: [Uri];
     [DSCommands.RunCell]: [Uri, number, number, number, number];
@@ -151,4 +152,6 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.ClearSavedJupyterUris]: [];
     [DSCommands.SelectJupyterURI]: [undefined, 'toolbar' | 'nativeNotebookStatusBar' | undefined];
     [DSCommands.SelectNativeJupyterUriFromToolBar]: [];
+    [DSCommands.NotebookEditorKeybindSave]: [];
+    [DSCommands.NotebookEditorKeybindUndo]: [];
 }

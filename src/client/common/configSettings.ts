@@ -21,6 +21,7 @@ import {
     ILoggingSettings,
     InteractiveWindowMode,
     IVariableQuery,
+    IVariableTooltipFields,
     IWatchableJupyterSettings,
     LoggingLevelSettingType,
     Resource,
@@ -94,6 +95,11 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     // Hidden settings not surfaced in package.json
     public disableZMQSupport: boolean = false;
     public verboseLogging: boolean = false;
+    public variableTooltipFields: IVariableTooltipFields = {
+        python: {
+            Tensor: ['shape', 'dtype', 'device']
+        }
+    };
     // Privates should start with _ so that they are not read from the settings.json
     private _changeEmitter = new EventEmitter<void>();
     private _workspaceRoot: Resource;
@@ -196,8 +202,10 @@ export class JupyterSettings implements IWatchableJupyterSettings {
         keys.forEach((k) => {
             // Replace variables with their actual value.
             const val = systemVariables.resolveAny(jupyterConfig.get(k));
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (<any>this)[k] = val;
+            if (k !== 'variableTooltipFields' || val) {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                (<any>this)[k] = val;
+            }
         });
     }
 

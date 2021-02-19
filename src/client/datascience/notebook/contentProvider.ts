@@ -4,29 +4,30 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { CancellationToken, EventEmitter, Uri } from 'vscode';
-import type {
+import {
+    CancellationToken,
+    NotebookCellKind,
+    Uri,
     NotebookCommunication,
     NotebookContentProvider as VSCNotebookContentProvider,
     NotebookData,
     NotebookDocument,
     NotebookDocumentBackup,
     NotebookDocumentBackupContext,
-    NotebookDocumentContentChangeEvent,
-    NotebookDocumentOpenContext
-} from '../../../../types/vscode-proposed';
+    NotebookDocumentOpenContext,
+    NotebookDocumentMetadata,
+    NotebookCellMetadata
+} from 'vscode';
 import { IVSCodeNotebook } from '../../common/application/types';
 import { MARKDOWN_LANGUAGE } from '../../common/constants';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { DataScience } from '../../common/utils/localize';
-import { captureTelemetry, sendTelemetryEvent, setSharedProperty } from '../../telemetry';
+import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { INotebookStorageProvider } from '../notebookStorage/notebookStorageProvider';
 import { VSCodeNotebookModel } from '../notebookStorage/vscNotebookModel';
 import { INotebookModel } from '../types';
 import { NotebookEditorCompatibilitySupport } from './notebookEditorCompatibilitySupport';
-// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
-const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 /**
  * This class is responsible for reading a notebook file (ipynb or other files) and returning VS Code with the NotebookData.
  * Its up to extension authors to read the files and return it in a format that VSCode understands.
@@ -37,11 +38,7 @@ const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed'
  */
 @injectable()
 export class NotebookContentProvider implements VSCNotebookContentProvider {
-    public get onDidChangeNotebook() {
-        return this.notebookChanged.event;
-    }
     public webviews = new Map<string, NotebookCommunication[]>();
-    private notebookChanged = new EventEmitter<NotebookDocumentContentChangeEvent>();
     private readonly nativeNotebookModelsWaitingToGetReloaded = new WeakMap<INotebookModel, Deferred<void>>();
     constructor(
         @inject(INotebookStorageProvider) private readonly notebookStorage: INotebookStorageProvider,
@@ -67,15 +64,14 @@ export class NotebookContentProvider implements VSCNotebookContentProvider {
             return {
                 cells: [
                     {
-                        cellKind: vscodeNotebookEnums.CellKind.Markdown,
+                        cellKind: NotebookCellKind.Markdown,
                         language: MARKDOWN_LANGUAGE,
                         source: `# ${DataScience.usingPreviewNotebookWithOtherNotebookWarning()}`,
-                        metadata: { editable: false, runnable: false },
+                        metadata: new NotebookCellMetadata().with({ editable: false, runnable: false }),
                         outputs: []
                     }
                 ],
-                languages: [],
-                metadata: { cellEditable: false, editable: false, runnable: false }
+                metadata: new NotebookDocumentMetadata().with({ cellEditable: false, editable: false, runnable: false })
             };
         }
         // If the model already exists & it has been trusted.
@@ -90,7 +86,6 @@ export class NotebookContentProvider implements VSCNotebookContentProvider {
         if (!(model instanceof VSCodeNotebookModel)) {
             throw new Error('Incorrect NotebookModel, expected VSCodeNotebookModel');
         }
-        setSharedProperty('ds_notebookeditor', 'native');
         sendTelemetryEvent(Telemetry.CellCount, undefined, { count: model.cellCount });
         try {
             return model.getNotebookData();

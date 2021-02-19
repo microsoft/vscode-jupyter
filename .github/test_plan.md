@@ -68,6 +68,9 @@
     1. Verify the output from what you added
 -   [ ] Verify dark and light main themes
     1. Repeat the `Start and connect to local server` and `Verify basic outputs` steps using `Default Dark+` and `Default Light+` themes
+-   [ ] Verify tooltips in Python file that has been run in the interactive window
+    1. After manualTestFile.py has been run in the interactive window, place your cursor over the `myTensor` variable.
+    1. Verify that the tooltip that appears contains four lines where the first line says `myTensor: Tensor`, the second line has `shape` information, the third line has `dtype` information, and the fourth line has `device` information.
 -   [ ] Verify Variable Explorer
     1. After manualTestFile.py has been run drop down the Variables section at the top of the Interactive Window
     1. In the Variables list there should be an entry for all variables created. These variables might change as more is added to manualTestFile.py.

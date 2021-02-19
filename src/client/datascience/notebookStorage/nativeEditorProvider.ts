@@ -320,7 +320,7 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
     private onDisposedModel(model: INotebookModel) {
         // When model goes away, dispose of the associated notebook (as all of the editors have closed down)
         this.notebookProvider
-            .getOrCreateNotebook({ identity: model.file, getOnly: true })
+            .getOrCreateNotebook({ identity: model.file, getOnly: true, resource: model.file })
             .then((n) => n?.dispose())
             .ignoreErrors();
         this.models.delete(model);

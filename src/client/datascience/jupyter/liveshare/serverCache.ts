@@ -126,6 +126,7 @@ export class ServerCache implements IAsyncDisposable {
     public async generateDefaultOptions(options?: INotebookServerOptions): Promise<INotebookServerOptions> {
         return {
             uri: options ? options.uri : undefined,
+            resource: options?.resource,
             skipUsingDefaultConfig: options ? options.skipUsingDefaultConfig : false, // Default for this is false
             usingDarkTheme: options ? options.usingDarkTheme : undefined,
             purpose: options ? options.purpose : uuid(),

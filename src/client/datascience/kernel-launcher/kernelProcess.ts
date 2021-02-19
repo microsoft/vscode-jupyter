@@ -6,15 +6,15 @@ import { ChildProcess } from 'child_process';
 import * as fs from 'fs-extra';
 import * as tcpPortUsed from 'tcp-port-used';
 import * as tmp from 'tmp';
-import { CancellationToken, CancellationTokenSource, Event, EventEmitter } from 'vscode';
+import { CancellationToken, Event, EventEmitter } from 'vscode';
 import { IPythonExtensionChecker } from '../../api/types';
-import { createPromiseFromCancellation, wrapCancellationTokens } from '../../common/cancellation';
+import { createPromiseFromCancellation } from '../../common/cancellation';
 import { getErrorMessageFromPythonTraceback } from '../../common/errors/errorUtils';
 import { traceDecorators, traceError, traceInfo, traceWarning } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IProcessServiceFactory, ObservableExecutionResult } from '../../common/process/types';
 import { Resource } from '../../common/types';
-import { TimedOutError } from '../../common/utils/async';
+import { createDeferred, TimedOutError } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop, swallowExceptions } from '../../common/utils/misc';
 import { captureTelemetry } from '../../telemetry';
@@ -29,7 +29,14 @@ import { IJupyterKernelSpec } from '../types';
 import { KernelDaemonPool } from './kernelDaemonPool';
 import { KernelEnvironmentVariablesService } from './kernelEnvVarsService';
 import { PythonKernelLauncherDaemon } from './kernelLauncherDaemon';
-import { IKernelConnection, IKernelProcess, IPythonKernelDaemon, PythonKernelDiedError } from './types';
+import {
+    IKernelConnection,
+    IKernelProcess,
+    IPythonKernelDaemon,
+    KernelDiedError,
+    KernelProcessExited,
+    PythonKernelDiedError
+} from './types';
 
 // Launches and disposes a kernel process given a kernelspec and a resource or python interpreter.
 // Exposes connection information and the process itself.
@@ -89,9 +96,8 @@ export class KernelProcess implements IKernelProcess {
         let stderr = '';
         let stderrProc = '';
         let exitEventFired = false;
-        const cancelWaiting = new CancellationTokenSource();
-        const combinedToken = wrapCancellationTokens(cancelWaiting.token, cancelToken);
         let providedExitCode: number | null;
+        const deferred = createDeferred();
         exeObs.proc!.on('exit', (exitCode) => {
             exitCode = exitCode || providedExitCode;
             traceInfo('KernelProcess Exit', `Exit - ${exitCode}`, stderrProc);
@@ -105,7 +111,7 @@ export class KernelProcess implements IKernelProcess {
                 });
                 exitEventFired = true;
             }
-            cancelWaiting.cancel();
+            deferred.reject(new KernelProcessExited(exitCode || -1));
         });
 
         exeObs.proc!.stdout.on('data', (data: Buffer | string) => {
@@ -142,9 +148,9 @@ export class KernelProcess implements IKernelProcess {
                     } else {
                         traceError('KernelProcess Exit', `Exit - ${error.exitCode}, ${error.reason}`, error);
                     }
-                    if (!stderrProc && (error.reason || error.message)) {
+                    if (!stderrProc && (error.stdErr || error.reason || error.message)) {
                         // This is used when process exits.
-                        stderrProc = error.reason || error.message;
+                        stderrProc = error.stdErr || error.reason || error.message;
                     }
                     if (!exitEventFired) {
                         let reason = error.reason || error.message;
@@ -154,7 +160,7 @@ export class KernelProcess implements IKernelProcess {
                         });
                         exitEventFired = true;
                     }
-                    cancelWaiting.cancel();
+                    deferred.reject(error);
                 }
             },
             () => {
@@ -166,8 +172,9 @@ export class KernelProcess implements IKernelProcess {
         try {
             await Promise.race([
                 tcpPortUsed.waitUntilUsed(this.connection.hb_port, 200, timeout),
+                deferred.promise,
                 createPromiseFromCancellation({
-                    token: combinedToken,
+                    token: cancelToken,
                     cancelAction: 'reject',
                     defaultValue: undefined
                 })
@@ -177,13 +184,22 @@ export class KernelProcess implements IKernelProcess {
             // Make sure to dispose if we never get a heartbeat
             this.dispose().ignoreErrors();
 
-            if (cancelWaiting.token.isCancellationRequested) {
+            if (
+                cancelToken?.isCancellationRequested ||
+                e instanceof KernelProcessExited ||
+                e instanceof PythonKernelDiedError
+            ) {
                 traceError(stderrProc || stderr);
                 // If we have the python error message, display that.
                 const errorMessage =
                     getErrorMessageFromPythonTraceback(stderrProc || stderr) ||
                     (stderrProc || stderr).substring(0, 100);
-                throw new Error(localize.DataScience.kernelDied().format(Commands.ViewJupyterOutput, errorMessage));
+                throw new KernelDiedError(
+                    localize.DataScience.kernelDied().format(Commands.ViewJupyterOutput, errorMessage),
+                    // Include what ever we have as the stderr.
+                    stderrProc + '\n' + stderr + '\n',
+                    e
+                );
             } else {
                 traceError('Timed out waiting to get a heartbeat from kernel process.');
                 throw new TimedOutError(localize.DataScience.kernelTimeout().format(Commands.ViewJupyterOutput));

@@ -73,7 +73,7 @@ suite('DataScience - NotebookServerProvider', () => {
     test('NotebookServerProvider - Get Only - no server', async () => {
         when(jupyterExecution.getServer(anything())).thenResolve(undefined);
 
-        const server = await serverProvider.getOrCreateServer({ getOnly: true });
+        const server = await serverProvider.getOrCreateServer({ getOnly: true, resource: undefined });
         expect(server).to.equal(undefined, 'Server expected to be undefined');
         verify(jupyterExecution.getServer(anything())).once();
     });
@@ -83,7 +83,7 @@ suite('DataScience - NotebookServerProvider', () => {
         when((notebookServer as any).then).thenReturn(undefined);
         when(jupyterExecution.getServer(anything())).thenResolve(instance(notebookServer));
 
-        const server = await serverProvider.getOrCreateServer({ getOnly: true });
+        const server = await serverProvider.getOrCreateServer({ getOnly: true, resource: undefined });
         expect(server).to.not.equal(undefined, 'Server expected to be defined');
         verify(jupyterExecution.getServer(anything())).once();
     });
@@ -94,7 +94,7 @@ suite('DataScience - NotebookServerProvider', () => {
         when(jupyterExecution.connectToNotebookServer(anything(), anything())).thenResolve(notebookServer.object);
 
         // Disable UI just lets us skip mocking the progress reporter
-        const server = await serverProvider.getOrCreateServer({ getOnly: false, disableUI: true });
+        const server = await serverProvider.getOrCreateServer({ getOnly: false, disableUI: true, resource: undefined });
         expect(server).to.not.equal(undefined, 'Server expected to be defined');
     });
 });
