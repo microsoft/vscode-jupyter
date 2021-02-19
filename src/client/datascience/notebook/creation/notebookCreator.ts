@@ -25,7 +25,7 @@ export class NotebookCreator {
             return;
         }
 
-        const options: (QuickPickItem & {
+        const items: (QuickPickItem & {
             extensionId: string;
             defaultCellLanguage: string;
         })[] = this.creationOptionsService.registrations.map((item) => {
@@ -38,14 +38,14 @@ export class NotebookCreator {
         });
 
         // First item is the Jupyter extension.
-        options.splice(0, 0, {
+        items.splice(0, 0, {
             defaultCellLanguage: PYTHON_LANGUAGE,
             detail: JVSC_EXTENSION_ID,
             extensionId: JVSC_EXTENSION_ID,
             label: JVSC_EXTENSION_DisplayName
         });
         const placeHolder = DataScience.placeHolderToSelectOptionForNotebookCreation();
-        const item = await this.appShell.showQuickPick(options, {
+        const item = await this.appShell.showQuickPick(items, {
             matchOnDescription: true,
             matchOnDetail: true,
             placeHolder
