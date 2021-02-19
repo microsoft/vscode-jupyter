@@ -11,9 +11,9 @@ import {
     cellRunStateToCellState,
     createJupyterCellFromVSCNotebookCell,
     getNotebookMetadata,
-    notebookModelToVSCNotebookData,
-    updateVSCNotebookAfterTrustingNotebook
+    notebookModelToVSCNotebookData
 } from '../notebook/helpers/helpers';
+import { chainWithPendingUpdates } from '../notebook/helpers/notebookUpdater';
 import { BaseNotebookModel, getDefaultNotebookContentForNativeNotebooks } from './baseModel';
 
 // https://github.com/microsoft/vscode-python/issues/13155
@@ -39,9 +39,6 @@ export function sortObjectPropertiesRecursively(obj: any): any {
 
 // Exported for test mocks
 export class VSCodeNotebookModel extends BaseNotebookModel {
-    public get trustedAfterOpeningNotebook() {
-        return this._trustedAfterOpeningNotebook === true;
-    }
     public get isDirty(): boolean {
         return this.document?.isDirty === true;
     }
@@ -65,8 +62,6 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
     public get isUntitled(): boolean {
         return this.document ? this.document.isUntitled : super.isUntitled;
     }
-    private _cells: nbformat.IBaseCell[] = [];
-    private _trustedAfterOpeningNotebook? = false;
     private document?: NotebookDocument;
     private readonly _preferredLanguage?: string;
 
@@ -85,11 +80,10 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
         // Do not change this code without changing code in base class.
         // We cannot invoke this in base class as `cellLanguageService` is not available in base class.
         this.ensureNotebookJson();
-        this._cells = this.notebookJson.cells || [];
         this._preferredLanguage = cellLanguageService.getPreferredLanguage(this.metadata);
     }
     public getCellCount() {
-        return this.document ? this.document.cells.length : this._cells.length;
+        return this.document ? this.document.cells.length : this.notebookJson.cells?.length ?? 0;
     }
     public getNotebookData() {
         if (!this._preferredLanguage) {
@@ -103,9 +97,6 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
             this._preferredLanguage,
             this.originalJson
         );
-    }
-    public markAsReloadedAfterTrusting() {
-        this._trustedAfterOpeningNotebook = false;
     }
     public getCellsWithId() {
         if (!this.document) {
@@ -126,28 +117,30 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
     public associateNotebookDocument(document: NotebookDocument) {
         this.document = document;
     }
-    public trust() {
-        // this._doNotUseOldCells = true;
-        super.trust();
-        this._cells = [];
-    }
     public async trustNotebook() {
-        super.trust();
-        if (this.document) {
-            const editor = this.vscodeNotebook?.notebookEditors.find((item) => item.document === this.document);
-            if (editor) {
-                await updateVSCNotebookAfterTrustingNotebook(editor, this.document, this._cells);
-            }
-            // We don't need old cells.
-            this._cells = [];
-            this._trustedAfterOpeningNotebook = true;
+        this.trust();
+        const editor = this.vscodeNotebook?.notebookEditors.find((item) => item.document === this.document);
+        const document = editor?.document;
+        if (editor && document && !document.metadata.trusted) {
+            await chainWithPendingUpdates(editor.document, (edit) => {
+                edit.replaceNotebookMetadata(
+                    document.uri,
+                    document.metadata.with({
+                        cellEditable: true,
+                        cellRunnable: true,
+                        editable: true,
+                        runnable: true,
+                        trusted: true
+                    })
+                );
+            });
         }
     }
     public getOriginalContentOnDisc(): string {
         return JSON.stringify(this.notebookJson, null, this.indentAmount);
     }
     protected getJupyterCells() {
-        return this.document && this.isTrusted
+        return this.document
             ? this.document.cells.map(createJupyterCellFromVSCNotebookCell.bind(undefined))
             : this.notebookJson.cells || [];
     }
@@ -156,7 +149,7 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
     }
     protected generateNotebookJson() {
         const json = super.generateNotebookJson();
-        if (this.document && this.isTrusted) {
+        if (this.document) {
             // The metadata will be in the notebook document.
             const metadata = getNotebookMetadata(this.document);
             if (metadata) {

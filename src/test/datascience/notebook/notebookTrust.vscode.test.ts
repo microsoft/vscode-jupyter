@@ -85,18 +85,14 @@ suite('DataScience - VSCode Notebook - (Trust) (slow)', function () {
         assert.equal(document.metadata.cellRunnable, trusted);
         assert.equal(document.metadata.editable, trusted);
         assert.equal(document.metadata.runnable, trusted);
+        assert.equal(document.metadata.trusted, trusted);
 
         document.cells.forEach((cell) => {
-            assert.equal(cell.metadata.editable, trusted);
+            assert.equal(cell.metadata.editable, true);
             if (cell.cellKind === NotebookCellKind.Code) {
-                assert.equal(cell.metadata.runnable, trusted);
+                assert.equal(cell.metadata.runnable, true);
                 if (hasOutput) {
-                    // In our test all code cells have outputs.
-                    if (trusted) {
-                        assert.ok(cell.outputs.length, 'No output in trusted cell');
-                    } else {
-                        assert.lengthOf(cell.outputs, 0, 'Cannot have output in non-trusted notebook');
-                    }
+                    assert.ok(cell.outputs.length, 'No output in trusted cell (should always exist)');
                 }
             }
         });
