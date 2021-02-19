@@ -275,7 +275,7 @@ suite('Interactive window command listener', async () => {
                 )
             )
             .returns(() => {
-                return Promise.resolve(generateCells(undefined, 'a=1', 'bar.py', 0, false, uuid()));
+                return Promise.resolve(generateCells(undefined, 'a=1', 'bar.py', 0, false, uuid(), doc.languageId));
             });
 
         when(applicationShell.showInformationMessage(anything(), anything())).thenReturn(Promise.resolve('moo'));

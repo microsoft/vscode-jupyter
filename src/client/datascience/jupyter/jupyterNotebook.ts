@@ -818,12 +818,13 @@ export class JupyterNotebookBase implements INotebook {
         file: string,
         line: number,
         id: string,
-        silent?: boolean
+        silent?: boolean,
+        language?: string
     ): Observable<ICell[]> {
         // If we have a session, execute the code now.
         if (this.session) {
             // Generate our cells ahead of time
-            const cells = generateCells(this.configService.getSettings(this.resource), code, file, line, true, id);
+            const cells = generateCells(this.configService.getSettings(this.resource), code, file, line, true, id, language);
 
             // Might have more than one (markdown might be split)
             if (cells.length > 1) {

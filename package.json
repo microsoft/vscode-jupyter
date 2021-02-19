@@ -1567,22 +1567,22 @@
                     "description": "Types to exclude from showing in the Interactive variable explorer",
                     "scope": "resource"
                 },
-                "jupyter.codeLensExpressions" : {
-                    "type" : "array",
+                "jupyter.codeLensExpressions": {
+                    "type": "array",
                     "description": "Language to code lens mapping for identifying markdown and code cells based on different languages or file extensions",
-                    "scope" : "machine",
-                    "default" : [
+                    "scope": "machine",
+                    "default": [
                         {
-                          "language": "python",
-                          "codeExpression": "^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])",
-                          "markdownExpression": "^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)",
-                          "defaultCellMarker" : "# %%"
+                            "language": "python",
+                            "codeExpression": "^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])",
+                            "markdownExpression": "^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)",
+                            "defaultCellMarker": "# %%"
                         },
                         {
-                          "language": "markdown",
-                          "codeExpression": "^(```python|```\\{code-cell\\}\\s+ipython3)",
-                          "markdownExpression": "^(```)",
-                          "defaultCellMarker" : "```python"
+                            "language": "markdown",
+                            "codeExpression": "^(```python|```\\{code-cell\\}\\s+ipython3)",
+                            "markdownExpression": "^(```)",
+                            "defaultCellMarker": "```python"
                         }
                     ]
                 },

@@ -309,7 +309,16 @@ export class MockJupyterManager implements IJupyterSessionManager {
         code: string,
         resultGenerator: (cancelToken: CancellationToken) => Promise<{ result: string; haveMore: boolean }>
     ) {
-        const cells = generateCells(undefined, code, Uri.file('foo.py').fsPath, 1, true, uuid());
+        const file = Uri.file('foo.py');
+        var language = undefined;
+
+        if (file.fsPath.split('.').pop() == 'md') {
+            language = 'markdown';
+        } else {
+            language = 'python';
+        }
+
+        const cells = generateCells(undefined, code, file.fsPath, 1, true, uuid(), language);
         cells.forEach((c) => {
             const key = concatMultilineString(c.data.source).replace(LineFeedRegEx, '').toLowerCase();
             if (c.data.cell_type === 'code') {
@@ -352,7 +361,15 @@ export class MockJupyterManager implements IJupyterSessionManager {
             | nbformat.IError,
         mimeType?: string
     ) {
-        const cells = generateCells(undefined, code, Uri.file('foo.py').fsPath, 1, true, uuid());
+        const file = Uri.file('foo.py');
+        var language = undefined;
+
+        if (file.fsPath.split('.').pop() == 'md') {
+            language = 'markdown';
+        } else {
+            language = 'python';
+        }
+        const cells = generateCells(undefined, code, file.fsPath, 1, true, uuid(), language);
         cells.forEach((c) => {
             const key = concatMultilineString(c.data.source).replace(LineFeedRegEx, '').toLowerCase();
             if (c.data.cell_type === 'code') {
@@ -391,7 +408,15 @@ export class MockJupyterManager implements IJupyterSessionManager {
             | string[],
         mimeType?: string | string[]
     ) {
-        const cells = generateCells(undefined, code, Uri.file('foo.py').fsPath, 1, true, uuid());
+        const file = Uri.file('foo.py');
+        var language = undefined;
+
+        if (file.fsPath.split('.').pop() == 'md') {
+            language = 'markdown';
+        } else {
+            language = 'python';
+        }
+        const cells = generateCells(undefined, code, file.fsPath, 1, true, uuid(), language);
         cells.forEach((c) => {
             const cellMatcher = new CellMatcher();
             const key = cellMatcher

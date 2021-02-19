@@ -99,7 +99,7 @@ suite('Import Tracker', () => {
         const notebook = TypeMoq.Mock.ofType<INotebookEditor>();
         const model = TypeMoq.Mock.ofType<INotebookModel>();
         notebook.setup((n) => n.model).returns(() => model.object);
-        model.setup((m) => m.getCellsWithId()).returns(() => generateCells(undefined, code, 'foo.py', 0, false, '1'));
+        model.setup((m) => m.getCellsWithId()).returns(() => generateCells(undefined, code, 'foo.py', 0, false, '1', 'python'));
         ev.fire(notebook.object);
     }
 
@@ -129,7 +129,7 @@ suite('Import Tracker', () => {
 
     test('Execute notebook', async () => {
         await importTracker.postExecute(
-            generateCells(undefined, 'import pandas\r\n', 'foo.py', 0, false, '1')[0],
+            generateCells(undefined, 'import pandas\r\n', 'foo.py', 0, false, '1', 'python')[0],
             false
         );
         Reporter.expectHashes(pandasHash);
