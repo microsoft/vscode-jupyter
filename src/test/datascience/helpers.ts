@@ -50,12 +50,24 @@ export function defaultDataScienceSettings(): IJupyterSettings {
         errorBackgroundColor: '#FFFFFF',
         sendSelectionToInteractiveWindow: false,
         variableExplorerExclude: 'module;function;builtin_function_or_method',
-        codeRegularExpression: '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])',
-        markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)',
         enablePlotViewer: true,
         runStartupCommands: '',
         debugJustMyCode: true,
         variableQueries: [],
+        codeLensExpressions : [
+            {
+              "language": "python",
+              "codeExpression": "^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])",
+              "markdownExpression": "^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)",
+              "defaultCellMarker" : "# %%"
+            },
+            {
+                "language": "markdown",
+                "codeExpression": "^(```python|```\\{code-cell\\}\\s+ipython3)",
+                "markdownExpression": "^(```)",
+                "defaultCellMarker" : "```python"
+            }
+        ],
         jupyterCommandLineArguments: [],
         widgetScriptSources: [],
         interactiveWindowMode: 'single'

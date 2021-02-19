@@ -6,22 +6,42 @@ import { IJupyterSettings } from '../../client/common/types';
 import { CellMatcher } from '../../client/datascience/cellMatcher';
 import { defaultDataScienceSettings } from './helpers';
 
-suite('DataScience CellMatcher', () => {
+suite('DataScience Python CellMatcher', () => {
     test('CellMatcher', () => {
         const settings: IJupyterSettings = defaultDataScienceSettings();
-        const matcher1 = new CellMatcher(settings);
+        const matcher1 = new CellMatcher(settings, 'python');
         assert.ok(matcher1.isCode('# %%'), 'Base code is wrong');
         assert.ok(matcher1.isMarkdown('# %% [markdown]'), 'Base markdown is wrong');
         assert.equal(matcher1.exec('# %% TITLE'), 'TITLE', 'Title not found');
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (<any>settings).defaultCellMarker = '# %% CODE HERE';
-        const matcher2 = new CellMatcher(settings);
+        settings.codeLensExpressions.forEach((t) => t.defaultCellMarker = '# %% CODE HERE')
+        const matcher2 = new CellMatcher(settings, 'python');
         assert.ok(matcher2.isCode('# %%'), 'Code not found');
         assert.ok(matcher2.isCode('# %% CODE HERE'), 'Code not found');
         assert.ok(matcher2.isCode('# %% CODE HERE TOO'), 'Code not found');
         assert.ok(matcher2.isMarkdown('# %% [markdown]'), 'Base markdown is wrong');
         assert.equal(matcher2.exec('# %% CODE HERE'), '', 'Should not have a title');
         assert.equal(matcher2.exec('# %% CODE HERE FOO'), 'FOO', 'Should have a title');
+    });
+});
+
+suite('DataScience Markdown CellMatcher', () => {
+    test('CellMatcher', () => {
+        const settings: IJupyterSettings = defaultDataScienceSettings();
+        const matcher1 = new CellMatcher(settings, 'markdown');
+        assert.ok(matcher1.isCode('```python'), 'Base code is wrong');
+        assert.ok(matcher1.isMarkdown('```'), 'Base markdown is wrong');
+        assert.equal(matcher1.exec('```python TITLE'), 'TITLE', 'Title not found');
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        settings.codeLensExpressions.forEach((t) => t.defaultCellMarker = '```python CODE HERE')
+        const matcher2 = new CellMatcher(settings, 'markdown');
+        assert.ok(matcher2.isCode('```python'), 'Code not found');
+        assert.ok(matcher2.isCode('```python CODE HERE'), 'Code not found');
+        assert.ok(matcher2.isCode('```python CODE HERE TOO'), 'Code not found');
+        assert.ok(matcher2.isMarkdown('```'), 'Base markdown is wrong');
+        assert.equal(matcher2.exec('```python CODE HERE'), '', 'Should not have a title');
+        assert.equal(matcher2.exec('```python CODE HERE FOO'), 'FOO', 'Should have a title');
     });
 });

@@ -41,9 +41,12 @@ export class DataScience implements IDataScience {
     public async activate(): Promise<void> {
         this.commandRegistry.register();
 
-        this.extensionContext.subscriptions.push(
-            vscode.languages.registerCodeLensProvider(PYTHON_ALLFILES, this.dataScienceCodeLensProvider)
-        );
+        const codeLensExpressions = this.configuration.getSettings(undefined).codeLensExpressions;
+        codeLensExpressions.forEach(c => {
+            this.extensionContext.subscriptions.push(
+                 vscode.languages.registerCodeLensProvider({ language: c.language }, this.dataScienceCodeLensProvider)
+             );
+        });
 
         // Set our initial settings and sign up for changes
         this.onSettingsChanged();

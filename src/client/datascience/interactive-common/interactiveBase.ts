@@ -1341,7 +1341,8 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
             const line = editor.selection.start.line;
             const revealLine = line + 1;
             const defaultCellMarker =
-                this.configService.getSettings(this.owningResource).defaultCellMarker ||
+                this.configService.getSettings(this.owningResource).codeLensExpressions.find((v) => v.language === editor?.document.languageId)
+                ?.defaultCellMarker ||
                 Identifiers.DefaultCodeCellMarker;
             let newCode = `${source}${os.EOL}`;
             if (hasCellsAlready) {

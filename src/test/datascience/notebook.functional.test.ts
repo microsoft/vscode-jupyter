@@ -245,7 +245,12 @@ suite('DataScience notebook tests', () => {
                     if (server) {
                         for (let i = 0; i < types.length; i += 1) {
                             const markdownRegex = types[i].markdownRegEx ? types[i].markdownRegEx : '';
-                            ioc.forceDataScienceSettingsChanged({ markdownRegularExpression: markdownRegex });
+                            // Get settings for codeLensExpressions
+                            const markdownRegexSettings = ioc.getSettings().codeLensExpressions;
+
+                            markdownRegexSettings.forEach((t) => t.markdownExpression = markdownRegex!);
+
+                            ioc.forceDataScienceSettingsChanged({ codeLensExpressions: markdownRegexSettings });
                             await verifyCell(
                                 server,
                                 i,

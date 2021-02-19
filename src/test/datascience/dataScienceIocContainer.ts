@@ -1200,8 +1200,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             enableScrollingForCellOutputs: true,
             errorBackgroundColor: '#FFFFFF',
             sendSelectionToInteractiveWindow: false,
-            codeRegularExpression: '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])',
-            markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)',
             variableExplorerExclude: 'module;function;builtin_function_or_method',
             liveShareConnectionTimeout: 100,
             enablePlotViewer: true,

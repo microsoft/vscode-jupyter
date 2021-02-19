@@ -31,8 +31,6 @@ export function getDefaultSettings(): IJupyterExtraSettings {
         enableScrollingForCellOutputs: true,
         errorBackgroundColor: '#FFFFFF',
         sendSelectionToInteractiveWindow: false,
-        markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)',
-        codeRegularExpression: '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])',
         variableExplorerExclude: 'module;function;builtin_function_or_method',
         enablePlotViewer: true,
         interactiveWindowMode: 'multiple',
@@ -74,6 +72,20 @@ export function getDefaultSettings(): IJupyterExtraSettings {
         runStartupCommands: '',
         debugJustMyCode: true,
         variableQueries: [],
+        codeLensExpressions: [
+            {
+              "language": "python",
+              "codeExpression": "^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])",
+              "markdownExpression": "^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)",
+              "defaultCellMarker" : "# %%"
+            },
+            {
+                "language": "markdown",
+                "codeExpression": "^(```python|```\\{code-cell\\}\\s+ipython3)",
+                "markdownExpression": "^(```)",
+                "defaultCellMarker" : "```python"
+            }
+        ],
         jupyterCommandLineArguments: [],
         widgetScriptSources: []
     };

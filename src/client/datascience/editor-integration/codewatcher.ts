@@ -949,7 +949,8 @@ export class CodeWatcher implements ICodeWatcher {
     }
 
     private getDefaultCellMarker(resource: Resource): string {
-        return this.configService.getSettings(resource).defaultCellMarker || Identifiers.DefaultCodeCellMarker;
+        return this.configService.getSettings(resource)
+                .codeLensExpressions.find((v) => v.language === this.document?.languageId)?.defaultCellMarker || Identifiers.DefaultCodeCellMarker;
     }
 
     private onCodeLensFactoryUpdated(): void {

@@ -113,8 +113,6 @@ suite('DataScience Code Watcher Unit Tests', () => {
             errorBackgroundColor: '#FFFFFF',
             sendSelectionToInteractiveWindow: false,
             variableExplorerExclude: 'module;function;builtin_function_or_method',
-            codeRegularExpression: '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])',
-            markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)',
             enableCellCodeLens: true,
             enablePlotViewer: true,
             runStartupCommands: '',
@@ -362,9 +360,13 @@ fourth line
 
 # <mymarkdown>
 # fifth line`;
-        jupyterSettings.codeRegularExpression = '(#\\s*\\<foobar\\>|#\\s*\\<baz\\>)';
-        jupyterSettings.markdownRegularExpression = '(#\\s*\\<markdowncell\\>|#\\s*\\<mymarkdown\\>)';
-
+        jupyterSettings.codeLensExpressions.forEach(
+            function (v) {
+                if (v.language == 'python') {
+                    v.codeExpression = '(#\\s*\\<foobar\\>|#\\s*\\<baz\\>)';
+                    v.markdownExpression = '(#\\s*\\<markdowncell\\>|#\\s*\\<mymarkdown\\>)';
+                }
+            });
         const document = createDocument(inputText, fileName, version, TypeMoq.Times.atLeastOnce(), true);
 
         codeWatcher.setDocument(document.object);
@@ -399,8 +401,14 @@ fourth line
 
 # <mymarkdown>
 # fifth line`;
-        jupyterSettings.codeRegularExpression = '# * code cell)';
-        jupyterSettings.markdownRegularExpression = '(#\\s*\\<markdowncell\\>|#\\s*\\<mymarkdown\\>)';
+
+        jupyterSettings.codeLensExpressions.forEach(
+            function (v) {
+                if (v.language == 'python') {
+                    v.codeExpression = '(# * code cell)';
+                    v.markdownExpression = '(#\\s*\\<markdowncell\\>|#\\s*\\<mymarkdown\\>)';
+                }
+            });
 
         const document = createDocument(inputText, fileName, version, TypeMoq.Times.atLeastOnce(), true);
 
@@ -932,7 +940,12 @@ testing2`;
         expect(contexts.get(EditorContexts.HasCodeCells)).to.be.equal(true, 'Code cells context not set');
 
         // Change settings
-        jupyterSettings.codeRegularExpression = '#%%%.*dude';
+        jupyterSettings.codeLensExpressions.forEach(
+            function (v) {
+                if (v.language == 'python') {
+                    v.codeExpression = '#%%%.*dude';
+                }
+            });
         jupyterSettings.fireChangeEvent();
         result = codeLensProvider.provideCodeLenses(document.object, tokenSource.token);
         expect(result, 'result not okay').to.be.ok;
@@ -942,7 +955,12 @@ testing2`;
         expect(contexts.get(EditorContexts.HasCodeCells)).to.be.equal(false, 'Code cells context not set');
 
         // Change settings to empty
-        jupyterSettings.codeRegularExpression = '';
+        jupyterSettings.codeLensExpressions.forEach(
+            function (v) {
+                if (v.language == 'python') {
+                    v.codeExpression = '';
+                }
+            });
         jupyterSettings.fireChangeEvent();
         result = codeLensProvider.provideCodeLenses(document.object, tokenSource.token);
         expect(result, 'result not okay').to.be.ok;
