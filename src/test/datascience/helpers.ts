@@ -63,7 +63,7 @@ export function defaultDataScienceSettings(): IJupyterSettings {
             },
             {
                 "language": "markdown",
-                "codeExpression": "^(```python|```\\{code-cell\\}\\s+ipython3)",
+                "codeExpression": "^(```python|```\\{code-cell\\}\\s+ipython)",
                 "markdownExpression": "^(```)",
                 "defaultCellMarker" : "```python"
             }

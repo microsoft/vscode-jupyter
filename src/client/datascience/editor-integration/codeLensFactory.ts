@@ -148,7 +148,7 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
 
         // If the document version doesn't match, our cell ranges are out of date
         if (cache.cachedDocumentVersion !== document.version) {
-            cache.cellRanges = generateCellRangesFromDocument(document, this.configService.getSettings(document.uri));
+            cache.cellRanges = generateCellRangesFromDocument(document, this.configService.getSettings(document.uri), document.languageId);
 
             // Because we have all new ranges, we need to recompute ALL of our code lenses.
             cache.documentLenses = [];
