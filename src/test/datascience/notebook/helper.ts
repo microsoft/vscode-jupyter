@@ -158,7 +158,10 @@ export async function createTemporaryNotebook(templateFile: string, disposables:
 }
 
 export async function canRunNotebookTests() {
-    if (!isInsiders() || !process.env.VSC_JUPYTER_RUN_NB_TEST) {
+    if (
+        //isInsiders() ||
+        !process.env.VSC_JUPYTER_RUN_NB_TEST
+    ) {
         console.log(
             `Can't run native nb tests isInsiders() = ${isInsiders()}, process.env.VSC_JUPYTER_RUN_NB_TEST = ${
                 process.env.VSC_JUPYTER_RUN_NB_TEST
@@ -168,9 +171,9 @@ export async function canRunNotebookTests() {
     }
     const api = await initialize();
     const appEnv = api.serviceContainer.get<IApplicationEnvironment>(IApplicationEnvironment);
-    const canRunTests = appEnv.extensionChannel !== 'stable';
+    const canRunTests = appEnv.channel === 'stable';
     if (!canRunTests) {
-        console.log(`Can't run native nb tests appEnv.extensionChannel = ${appEnv.extensionChannel}`);
+        console.log(`Can't run native nb tests appEnv.extensionChannel = ${appEnv.channel}`);
     }
     return canRunTests;
 }
@@ -202,9 +205,6 @@ export async function closeNotebooksAndCleanUpAfterTests(disposables: IDisposabl
         const configSettings = await import('../../../client/common/configSettings');
         // Dispose any cached python settings (used only in test env).
         configSettings.JupyterSettings.dispose();
-    }
-    if (!isInsiders()) {
-        return false;
     }
     await closeActiveWindows();
     disposeAllDisposables(disposables);

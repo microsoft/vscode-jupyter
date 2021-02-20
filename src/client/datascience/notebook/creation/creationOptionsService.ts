@@ -8,7 +8,7 @@ import { Telemetry } from '../../constants';
 
 @injectable()
 export class CreationOptionService {
-    private _registrations: { extensionId: string; displayName: string; defaultCellLanguage: string }[] = [];
+    private readonly _registrations: { extensionId: string; displayName: string; defaultCellLanguage: string }[] = [];
     constructor(@inject(IExtensions) private readonly extensions: IExtensions) {}
     public async registerNewNotebookContent(options: { defaultCellLanguage: string }): Promise<void> {
         const info = await this.extensions.determineExtensionFromCallStack();
@@ -18,8 +18,14 @@ export class CreationOptionService {
         sendTelemetryEvent(Telemetry.OpenNotebookSelectionRegistered, undefined, { extensionId: info.extensionId });
         this._registrations.push({ ...info, ...options });
     }
-
     public get registrations() {
         return this._registrations;
+    }
+
+    /**
+     * Only used during test.
+     */
+    public clear() {
+        this._registrations.splice(0, this._registrations.length);
     }
 }
