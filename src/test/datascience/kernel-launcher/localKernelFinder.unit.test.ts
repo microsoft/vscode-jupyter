@@ -15,7 +15,7 @@ import { PythonExecutionFactory } from '../../../client/common/process/pythonExe
 import { IExtensionContext, IPathUtils, Resource } from '../../../client/common/types';
 import { IEnvironmentVariablesProvider } from '../../../client/common/variables/types';
 import { JupyterKernelSpec } from '../../../client/datascience/jupyter/kernels/jupyterKernelSpec';
-import { KernelFinder } from '../../../client/datascience/kernel-launcher/localKernelFinder';
+import { LocalKernelFinder } from '../../../client/datascience/kernel-launcher/localKernelFinder';
 import { ILocalKernelFinder } from '../../../client/datascience/kernel-launcher/types';
 import { IJupyterKernelSpec } from '../../../client/datascience/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
@@ -30,7 +30,7 @@ suite('Kernel Finder', () => {
     let context: typemoq.IMock<IExtensionContext>;
     let envVarsProvider: typemoq.IMock<IEnvironmentVariablesProvider>;
     let workspaceService: IWorkspaceService;
-    let kernelFinder: IKernelFinder;
+    let kernelFinder: ILocalKernelFinder;
     let activeInterpreter: PythonEnvironment;
     let interpreters: PythonEnvironment[] = [];
     let resource: Resource;
@@ -310,7 +310,7 @@ suite('Kernel Finder', () => {
             const extensionChecker = mock(PythonExtensionChecker);
             when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
 
-            kernelFinder = new KernelFinder(
+            kernelFinder = new LocalKernelFinder(
                 interpreterService.object,
                 platformService.object,
                 fileSystem.object,
@@ -327,7 +327,7 @@ suite('Kernel Finder', () => {
         test('Basic listKernelSpecs', async () => {
             setupFileSystem();
             setupFindFileSystem();
-            const specs = await kernelFinder.listKernelSpecs(resource);
+            const specs = await kernelFinder.listKernels(resource);
             expect(specs[0]).to.deep.include(activeKernelA);
             expect(specs[1]).to.deep.include(activeKernelB);
             expect(specs[2]).to.deep.include(interpreter0Kernel);
@@ -342,7 +342,7 @@ suite('Kernel Finder', () => {
             setupFileSystem();
             setupFindFileSystem();
             loadError = true;
-            const specs = await kernelFinder.listKernelSpecs(resource);
+            const specs = await kernelFinder.listKernels(resource);
             expect(specs[0]).to.deep.include(activeKernelB);
             expect(specs[1]).to.deep.include(interpreter0Kernel);
             expect(specs[2]).to.deep.include(interpreter1Kernel);
@@ -389,7 +389,7 @@ suite('Kernel Finder', () => {
             const extensionChecker = mock(PythonExtensionChecker);
             when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
 
-            kernelFinder = new KernelFinder(
+            kernelFinder = new LocalKernelFinder(
                 interpreterService.object,
                 platformService.object,
                 fileSystem.object,
@@ -413,7 +413,7 @@ suite('Kernel Finder', () => {
                     }
                     return Promise.resolve(JSON.stringify(kernel));
                 });
-            const spec = await kernelFinder.findKernelSpec(resource, {
+            const spec = await kernelFinder.findKernel(resource, {
                 kernelspec: testKernelMetadata,
                 orig_nbformat: 4
             });
@@ -436,7 +436,7 @@ suite('Kernel Finder', () => {
                     }
                     return Promise.resolve(JSON.stringify(kernel));
                 });
-            const spec = await kernelFinder.findKernelSpec(resource, {
+            const spec = await kernelFinder.findKernel(resource, {
                 kernelspec: testKernelMetadata,
                 orig_nbformat: 4
             });
@@ -468,7 +468,7 @@ suite('Kernel Finder', () => {
                     }
                     return Promise.resolve(JSON.stringify(kernel));
                 });
-            const spec = await kernelFinder.findKernelSpec(resource);
+            const spec = await kernelFinder.findKernel(resource);
             assert.isUndefined(spec);
             fileSystem.reset();
         });
@@ -486,7 +486,7 @@ suite('Kernel Finder', () => {
                     }
                     return Promise.resolve(JSON.stringify(kernel));
                 });
-            const spec = await kernelFinder.findKernelSpec(undefined, {
+            const spec = await kernelFinder.findKernel(undefined, {
                 kernelspec: testKernelMetadata,
                 orig_nbformat: 4
             });
@@ -510,7 +510,7 @@ suite('Kernel Finder', () => {
             interpreterService
                 .setup((is) => is.getActiveInterpreter(typemoq.It.isAny()))
                 .returns(() => Promise.resolve(undefined));
-            const spec = await kernelFinder.findKernelSpec(undefined, {
+            const spec = await kernelFinder.findKernel(undefined, {
                 kernelspec: testKernelMetadata,
                 orig_nbformat: 4
             });
@@ -529,7 +529,7 @@ suite('Kernel Finder', () => {
                     return Promise.resolve('{}');
                 });
             // get default kernel
-            const spec = await kernelFinder.findKernelSpec(resource);
+            const spec = await kernelFinder.findKernel(resource);
             assert.isUndefined(spec);
             fileSystem.reset();
         });
@@ -551,7 +551,7 @@ suite('Kernel Finder', () => {
                     return Promise.resolve('');
                 });
 
-            const spec = await kernelFinder.findKernelSpec(resource, {
+            const spec = await kernelFinder.findKernel(resource, {
                 kernelspec: { name: 'kernelA', display_name: '' },
                 orig_nbformat: 4
             });
