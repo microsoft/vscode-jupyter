@@ -12,7 +12,6 @@ export const IS_SMOKE_TEST = process.env.VSC_JUPYTER_SMOKE_TEST === '1';
 export const IS_PERF_TEST = process.env.VSC_JUPYTER_PERF_TEST === '1';
 export const IS_REMOTE_NATIVE_TEST = (process.env.VSC_JUPYTER_REMOTE_NATIVE_TEST || '').toLowerCase() === 'true';
 export const IS_NON_RAW_NATIVE_TEST = (process.env.VSC_JUPYTER_NON_RAW_NATIVE_TEST || '').toLowerCase() === 'true';
-export const IS_3RD_PARTY_INTEGRATION_TEST = (process.env.VSC_JUPYTER_3RD_PARTY_INTEGRATION_TEST || '').toLowerCase() === 'true';
 export const IS_WEBVIEW_BUILD_SKIPPED = (process.env.VSC_JUPYTER_SKIP_WEBVIEW_BUILD || '').toLowerCase() === 'true';
 export const IS_MULTI_ROOT_TEST = isMultirootTest();
 

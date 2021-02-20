@@ -212,7 +212,6 @@
                 "TEST_FILES_SUFFIX": "vscode.test",
                 "VSC_JUPYTER_REMOTE_NATIVE_TEST": "false", // Change to `true` to run the Native Notebook tests with remote jupyter connections.
                 "VSC_JUPYTER_NON_RAW_NATIVE_TEST": "false", // Change to `true` to run the Native Notebook tests with non-raw kernels (i.e. local jupyter server).
-                "VSC_JUPYTER_3RD_PARTY_INTEGRATION_TEST": "false", // Change to `true` to run tests where other extensions integrate with ours.
                 "XVSC_JUPYTER_INSTRUMENT_CODE_FOR_COVERAGE": "1",
                 "XVSC_JUPYTER_INSTRUMENT_CODE_FOR_COVERAGE_HTML": "1" //Enable to get full coverage repor (in coverage folder).
             },
