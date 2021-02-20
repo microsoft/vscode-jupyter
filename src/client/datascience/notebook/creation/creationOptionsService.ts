@@ -10,13 +10,13 @@ import { Telemetry } from '../../constants';
 export class CreationOptionService {
     private readonly _registrations: { extensionId: string; displayName: string; defaultCellLanguage: string }[] = [];
     constructor(@inject(IExtensions) private readonly extensions: IExtensions) {}
-    public async registerNewNotebookContent(options: { defaultCellLanguage: string }): Promise<void> {
+    public async registerNewNotebookContent(options: { defaultCellLanguage: string; label?: string }): Promise<void> {
         const info = await this.extensions.determineExtensionFromCallStack();
         if (this._registrations.find((item) => item.extensionId.toLowerCase() === info.extensionId)) {
             return;
         }
         sendTelemetryEvent(Telemetry.OpenNotebookSelectionRegistered, undefined, { extensionId: info.extensionId });
-        this._registrations.push({ ...info, ...options });
+        this._registrations.push({ ...info, ...options, displayName: options.label || info.displayName });
     }
     public get registrations() {
         return this._registrations;

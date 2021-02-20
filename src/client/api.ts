@@ -60,6 +60,10 @@ export interface IExtensionApi {
          * Use this language as the language of cells for new notebooks created (when user picks this extension).
          */
         defaultCellLanguage: string;
+        /**
+         * Value in the quickpick (if not provided, will use the displayName of the extension).
+         */
+        label: string;
     }): void;
     /**
      * Creates a blank notebook and defaults the empty cell to the language provided.
@@ -100,7 +104,7 @@ export function buildApi(
         },
         onKernelStateChange: notebookExtensibility.onKernelStateChange.bind(notebookExtensibility),
         registerCellToolbarButton: webviewExtensibility.registerCellToolbarButton.bind(webviewExtensibility),
-        registerNewNotebookContent(options: { defaultCellLanguage: string }) {
+        registerNewNotebookContent(options: { defaultCellLanguage: string; label?: string }) {
             serviceContainer.get<CreationOptionService>(CreationOptionService).registerNewNotebookContent(options);
         },
         createBlankNotebook: async (options: { defaultCellLanguage: string }): Promise<void> => {
