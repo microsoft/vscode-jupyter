@@ -19,6 +19,7 @@ import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { JupyterSessionStartError } from '../baseJupyterSession';
 import { Commands, Identifiers, Telemetry } from '../constants';
+import { ILocalKernelFinder, IRemoteKernelFinder } from '../kernel-launcher/types';
 import { trackKernelResourceInformation } from '../telemetry/telemetry';
 import {
     IJupyterConnection,
@@ -150,14 +151,13 @@ export class JupyterExecutionBase implements IJupyterExecution {
             const isLocalConnection = !options || !options.uri;
 
             if (isLocalConnection && !options?.kernelConnection) {
+                const kernelFinder = this.serviceContainer.get<ILocalKernelFinder>(ILocalKernelFinder);
                 // Get hold of the kernelspec and corresponding (matching) interpreter that'll be used as the spec.
                 // We can do this in parallel, while starting the server (faster).
                 traceInfo(`Getting kernel specs for ${options ? options.purpose : 'unknown type of'} server`);
-                kernelConnectionMetadataPromise = this.kernelSelector.getPreferredKernelForLocalConnection(
+                kernelConnectionMetadataPromise = kernelFinder.findKernel(
                     undefined,
-                    'jupyter',
                     options?.metadata,
-                    !allowUI,
                     kernelSpecCancelSource.token
                 );
             }
@@ -187,20 +187,13 @@ export class JupyterExecutionBase implements IJupyterExecution {
                         connection &&
                         !options?.skipSearchingForKernel
                     ) {
-                        const sessionManagerFactory = this.serviceContainer.get<IJupyterSessionManagerFactory>(
-                            IJupyterSessionManagerFactory
+                        const kernelFinder = this.serviceContainer.get<IRemoteKernelFinder>(IRemoteKernelFinder);
+                        kernelConnectionMetadata = await kernelFinder.findKernel(
+                            options?.resource,
+                            connection,
+                            options?.metadata,
+                            cancelToken
                         );
-                        const sessionManager = await sessionManagerFactory.create(connection);
-                        try {
-                            kernelConnectionMetadata = await this.kernelSelector.getPreferredKernelForRemoteConnection(
-                                options?.resource,
-                                sessionManager,
-                                options?.metadata,
-                                cancelToken
-                            );
-                        } finally {
-                            await sessionManager.dispose();
-                        }
                     }
 
                     // Populate the launch info that we are starting our server with
@@ -245,8 +238,8 @@ export class JupyterExecutionBase implements IJupyterExecution {
                                 if (selection === selectKernel) {
                                     const kernelInterpreter = await this.kernelSelector.selectLocalKernel(
                                         options?.resource,
-                                        'jupyter',
                                         new StopWatch(),
+                                        connection,
                                         cancelToken,
                                         getDisplayNameOrNameOfKernelConnection(launchInfo.kernelConnectionMetadata)
                                     );

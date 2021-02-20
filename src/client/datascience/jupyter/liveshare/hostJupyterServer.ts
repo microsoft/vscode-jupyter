@@ -16,7 +16,6 @@ import {
     IVSCodeNotebook,
     IWorkspaceService
 } from '../../../common/application/types';
-import { isTestExecution } from '../../../common/constants';
 import { traceInfo } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 import {
@@ -46,11 +45,11 @@ import {
 import { JupyterServerBase } from '../jupyterServer';
 import { computeWorkingDirectory } from '../jupyterUtils';
 import { getDisplayNameOrNameOfKernelConnection } from '../kernels/helpers';
-import { KernelSelector } from '../kernels/kernelSelector';
 import { KernelConnectionMetadata } from '../kernels/types';
 import { HostJupyterNotebook } from './hostJupyterNotebook';
 import { LiveShareParticipantHost } from './liveShareParticipantMixin';
 import { IRoleBasedObject } from './roleBasedFactory';
+import { ILocalKernelFinder, IRemoteKernelFinder } from '../../kernel-launcher/types';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBase, LiveShare.JupyterServerSharedService)
@@ -69,7 +68,8 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
         serviceContainer: IServiceContainer,
         private appService: IApplicationShell,
         private fs: IFileSystem,
-        private readonly kernelSelector: KernelSelector,
+        private readonly localKernelFinder: ILocalKernelFinder,
+        private readonly remoteKernelFinder: IRemoteKernelFinder,
         private readonly interpreterService: IInterpreterService,
         outputChannel: IOutputChannel,
         private readonly progressReporter: ProgressReporter,
@@ -219,7 +219,6 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
         const getExistingSession = async () => {
             const { info, changedKernel } = await this.computeLaunchInfo(
                 resource,
-                sessionManager,
                 notebookMetadata,
                 kernelConnection,
                 cancelToken
@@ -300,7 +299,6 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
 
     private async computeLaunchInfo(
         resource: Resource,
-        sessionManager: IJupyterSessionManager,
         notebookMetadata?: nbformat.INotebookMetadata,
         kernelConnection?: KernelConnectionMetadata,
         cancelToken?: CancellationToken
@@ -342,16 +340,10 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
                 kernelInfo = kernelConnection;
             } else {
                 kernelInfo = await (launchInfo.connectionInfo.localLaunch
-                    ? this.kernelSelector.getPreferredKernelForLocalConnection(
+                    ? this.localKernelFinder.findKernel(resource, notebookMetadata, cancelToken)
+                    : this.remoteKernelFinder.findKernel(
                           resource,
-                          'jupyter',
-                          notebookMetadata,
-                          isTestExecution(),
-                          cancelToken
-                      )
-                    : this.kernelSelector.getPreferredKernelForRemoteConnection(
-                          resource,
-                          sessionManager,
+                          launchInfo.connectionInfo,
                           notebookMetadata,
                           cancelToken
                       ));

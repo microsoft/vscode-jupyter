@@ -52,7 +52,7 @@ export class KernelSwitcher {
                     // At this point we have a valid jupyter server.
                     const potential = await this.selector.askForLocalKernel(
                         notebook.resource,
-                        notebook.connection?.type || 'noConnection',
+                        notebook.connection,
                         kernel
                     );
                     if (potential && Object.keys(potential).length > 0) {

@@ -11,7 +11,7 @@ import { createDeferred } from '../../client/common/utils/async';
 import { JupyterZMQBinariesNotFoundError } from '../../client/datascience/jupyter/jupyterZMQBinariesNotFoundError';
 import { KernelDaemonPool } from '../../client/datascience/kernel-launcher/kernelDaemonPool';
 import { KernelLauncher } from '../../client/datascience/kernel-launcher/kernelLauncher';
-import { IKernelConnection, IKernelFinder } from '../../client/datascience/kernel-launcher/types';
+import { IKernelConnection, ILocalKernelFinder } from '../../client/datascience/kernel-launcher/types';
 import { createRawKernel } from '../../client/datascience/raw-kernel/rawKernel';
 import { IJupyterKernelSpec, IKernelDependencyService } from '../../client/datascience/types';
 import { PythonEnvironment } from '../../client/pythonEnvironments/info';
@@ -48,7 +48,7 @@ suite('DataScience - Kernel Launcher', () => {
         traceInfo(`Start Test ${this.currentTest?.title}`);
         ioc = new DataScienceIocContainer();
         ioc.registerDataScienceTypes();
-        kernelFinder = new MockKernelFinder(ioc.get<IKernelFinder>(IKernelFinder));
+        kernelFinder = new MockKernelFinder(ioc.get<ILocalKernelFinder>(ILocalKernelFinder));
         const processServiceFactory = ioc.get<IProcessServiceFactory>(IProcessServiceFactory);
         const daemonPool = ioc.get<KernelDaemonPool>(KernelDaemonPool);
         const fileSystem = ioc.get<IFileSystem>(IFileSystem);

@@ -25,7 +25,7 @@ import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
 import { getRealPath } from '../../common';
 import { Telemetry } from '../../constants';
-import { IKernelFinder } from '../../kernel-launcher/types';
+import { ILocalKernelFinder } from '../../kernel-launcher/types';
 import { reportAction } from '../../progress/decorator';
 import { ReportableAction } from '../../progress/types';
 import {
@@ -59,7 +59,7 @@ export class KernelService {
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IEnvironmentActivationService) private readonly activationHelper: IEnvironmentActivationService,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
-        @inject(IKernelFinder) private readonly kernelFinder: IKernelFinder
+        @inject(ILocalKernelFinder) private readonly kernelFinder: ILocalKernelFinder
     ) {}
 
     /**
@@ -204,15 +204,15 @@ export class KernelService {
         cancelToken?: CancellationToken
     ): Promise<IJupyterKernelSpec | undefined> {
         // If a kernelspec already exists for this, then use that.
-        const found = await this.kernelFinder.findKernelSpec(resource, interpreter, cancelToken);
-        if (found) {
+        const found = await this.kernelFinder.findKernel(resource, interpreter, cancelToken);
+        if (found && found.kind !== 'connectToLiveKernel' && found.kernelSpec) {
             sendTelemetryEvent(Telemetry.UseExistingKernel);
 
             // Make sure the kernel is up to date with the current environment before
             // we return it.
-            await this.updateKernelEnvironment(interpreter, found, cancelToken);
+            await this.updateKernelEnvironment(interpreter, found.kernelSpec, cancelToken);
 
-            return found;
+            return found.kernelSpec;
         }
 
         // Othewise register the interpreter as a new kernel
@@ -291,7 +291,14 @@ export class KernelService {
             return;
         }
 
-        let kernel = await this.kernelFinder.findKernelSpec(resource, interpreter, cancelToken);
+        const findKernelSpec = async () => {
+            const metadata = await this.kernelFinder.findKernel(resource, interpreter, cancelToken);
+            if (metadata && metadata.kind !== 'connectToLiveKernel') {
+                return metadata.kernelSpec;
+            }
+        };
+
+        let kernel = await findKernelSpec();
         // Wait for at least 5s. We know launching a python (conda env) process on windows can sometimes take around 4s.
         for (let counter = 0; counter < 10; counter += 1) {
             if (Cancellation.isCanceled(cancelToken)) {
@@ -303,7 +310,12 @@ export class KernelService {
             traceWarning('Waiting for 500ms for registered kernel to get detected');
             // Wait for jupyter server to get updated with the new kernel information.
             await sleep(500);
-            kernel = await this.kernelFinder.findKernelSpec(resource, interpreter, cancelToken);
+
+            // Clear our finder cache
+            this.kernelFinder.clearCache(resource);
+
+            // Look again
+            kernel = await findKernelSpec();
         }
         if (!kernel) {
             // Possible user doesn't have kernelspec installed.

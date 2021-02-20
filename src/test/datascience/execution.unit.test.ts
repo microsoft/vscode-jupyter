@@ -16,7 +16,6 @@ import { ApplicationShell } from '../../client/common/application/applicationShe
 import { IApplicationShell, IWorkspaceService } from '../../client/common/application/types';
 import { WorkspaceService } from '../../client/common/application/workspace';
 import { ConfigurationService } from '../../client/common/configuration/service';
-import { PYTHON_LANGUAGE } from '../../client/common/constants';
 import { PersistentState, PersistentStateFactory } from '../../client/common/persistentState';
 import { FileSystem } from '../../client/common/platform/fileSystem';
 import { IFileSystem } from '../../client/common/platform/types';
@@ -48,11 +47,7 @@ import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyte
 import { KernelSelector } from '../../client/datascience/jupyter/kernels/kernelSelector';
 import { NotebookStarter } from '../../client/datascience/jupyter/notebookStarter';
 import { LiveShareApi } from '../../client/datascience/liveshare/liveshare';
-import {
-    IJupyterKernelSpec,
-    IJupyterSubCommandExecutionService,
-    INotebookServer
-} from '../../client/datascience/types';
+import { IJupyterSubCommandExecutionService, INotebookServer } from '../../client/datascience/types';
 import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { ServiceContainer } from '../../client/ioc/container';
@@ -936,27 +931,6 @@ suite('Jupyter Execution', async () => {
             instance(executionFactory)
         );
         kernelSelector = mock(KernelSelector);
-        const kernelSpec: IJupyterKernelSpec = {
-            argv: [],
-            display_name: 'hello',
-            language: PYTHON_LANGUAGE,
-            name: 'hello',
-            path: '',
-            env: undefined
-        };
-        when(
-            kernelSelector.getPreferredKernelForLocalConnection(
-                anything(),
-                anything(),
-                anything(),
-                anything(),
-                anything()
-            )
-        ).thenResolve({
-            kernelSpec,
-            kind: 'startUsingKernelSpec'
-        });
-
         const dependencyService = mock(JupyterInterpreterDependencyService);
         when(dependencyService.areDependenciesInstalled(anything(), anything())).thenCall(
             async (interpreter: PythonEnvironment) => {

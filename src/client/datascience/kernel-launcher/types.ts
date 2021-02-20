@@ -9,8 +9,17 @@ import { BaseError, WrappedError } from '../../common/errors/types';
 import { ObservableExecutionResult } from '../../common/process/types';
 import { IAsyncDisposable, IDisposable, Resource } from '../../common/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
-import { KernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../jupyter/kernels/types';
-import { IJupyterKernelSpec, KernelInterpreterDependencyResponse } from '../types';
+import {
+    KernelConnectionMetadata,
+    KernelSpecConnectionMetadata,
+    PythonKernelConnectionMetadata
+} from '../jupyter/kernels/types';
+import {
+    IJupyterConnection,
+    IJupyterKernelSpec,
+    INotebookProviderConnection,
+    KernelInterpreterDependencyResponse
+} from '../types';
 
 export const IKernelLauncher = Symbol('IKernelLauncher');
 export interface IKernelLauncher {
@@ -47,16 +56,30 @@ export interface IKernelProcess extends IAsyncDisposable {
     interrupt(): Promise<void>;
 }
 
-export const IKernelFinder = Symbol('IKernelFinder');
-export interface IKernelFinder {
-    findKernelSpec(
+export const ILocalKernelFinder = Symbol('ILocalKernelFinder');
+export interface ILocalKernelFinder {
+    findKernel(
         resource: Resource,
         option?: nbformat.INotebookMetadata | PythonEnvironment,
         _cancelToken?: CancellationToken
-    ): Promise<IJupyterKernelSpec | undefined>;
-    listKernelSpecs(resource: Resource): Promise<IJupyterKernelSpec[]>;
+    ): Promise<KernelConnectionMetadata | undefined>;
+    listKernels(resource: Resource): Promise<KernelConnectionMetadata[]>;
+    clearCache(resource: Resource): void;
 }
 
+export const IRemoteKernelFinder = Symbol('IRemoteKernelFinder');
+export interface IRemoteKernelFinder {
+    findKernel(
+        resource: Resource,
+        connInfo: INotebookProviderConnection | undefined,
+        option?: nbformat.INotebookMetadata | PythonEnvironment,
+        _cancelToken?: CancellationToken
+    ): Promise<KernelConnectionMetadata | undefined>;
+    listKernels(
+        resource: Resource,
+        connInfo: INotebookProviderConnection | undefined
+    ): Promise<KernelConnectionMetadata[]>;
+}
 /**
  * The daemon responsible for the Python Kernel.
  */

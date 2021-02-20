@@ -6,7 +6,7 @@
 import { assert } from 'chai';
 import { Uri, workspace } from 'vscode';
 import { PYTHON_LANGUAGE } from '../../../client/common/constants';
-import { IKernelFinder } from '../../../client/datascience/kernel-launcher/types';
+import { ILocalKernelFinder } from '../../../client/datascience/kernel-launcher/types';
 import { IExtensionTestApi } from '../../common';
 import { initialize } from '../../initialize';
 
@@ -17,7 +17,7 @@ suite('DataScience - Kernels Finder', () => {
     let resourceToUse: Uri;
     suiteSetup(async () => {
         api = await initialize();
-        kernelFinder = api.serviceContainer.get<IKernelFinder>(IKernelFinder);
+        kernelFinder = api.serviceContainer.get<IKernelFinder>(ILocalKernelFinder);
         resourceToUse = workspace.workspaceFolders![0].uri;
     });
     test('Can list all kernels', async () => {

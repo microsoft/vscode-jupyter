@@ -6,7 +6,7 @@
 import type { Kernel } from '@jupyterlab/services';
 import { assert } from 'chai';
 import { teardown } from 'mocha';
-import { anything, instance, mock, verify, when } from 'ts-mockito';
+import { anything, instance, mock, when } from 'ts-mockito';
 import { EventEmitter } from 'vscode';
 import { PythonExtensionChecker } from '../../../../client/api/pythonApi';
 import { PYTHON_LANGUAGE } from '../../../../client/common/constants';
@@ -20,8 +20,12 @@ import { JupyterSessionManager } from '../../../../client/datascience/jupyter/ju
 import { JupyterSessionManagerFactory } from '../../../../client/datascience/jupyter/jupyterSessionManagerFactory';
 import { KernelSelectionProvider } from '../../../../client/datascience/jupyter/kernels/kernelSelections';
 import { KernelService } from '../../../../client/datascience/jupyter/kernels/kernelService';
-import { IKernelSpecQuickPickItem } from '../../../../client/datascience/jupyter/kernels/types';
-import { IKernelFinder } from '../../../../client/datascience/kernel-launcher/types';
+import {
+    IKernelSpecQuickPickItem,
+    KernelConnectionMetadata,
+    KernelSpecConnectionMetadata
+} from '../../../../client/datascience/jupyter/kernels/types';
+import { ILocalKernelFinder, IRemoteKernelFinder } from '../../../../client/datascience/kernel-launcher/types';
 import {
     IJupyterKernel,
     IJupyterKernelSpec,
@@ -35,7 +39,8 @@ import { IInterpreterService } from '../../../../client/interpreter/contracts';
 suite('DataScience - KernelSelections', () => {
     let kernelSelectionProvider: KernelSelectionProvider;
     let kernelService: KernelService;
-    let kernelFinder: IKernelFinder;
+    let kernelFinder: ILocalKernelFinder;
+    let remoteKernelFinder: IRemoteKernelFinder;
     let interpreterSelector: IInterpreterSelector;
     let pathUtils: IPathUtils;
     let fs: IFileSystem;
@@ -94,6 +99,14 @@ suite('DataScience - KernelSelections', () => {
         rKernelSpecModel
     ];
 
+    const allMetadata: KernelConnectionMetadata[] = allSpecs.map((s) => {
+        const result: KernelSpecConnectionMetadata = {
+            kind: 'startUsingKernelSpec',
+            kernelSpec: s
+        };
+        return result;
+    });
+
     const allInterpreters: IInterpreterQuickPickItem[] = [
         {
             label: 'Hello1',
@@ -144,7 +157,8 @@ suite('DataScience - KernelSelections', () => {
         when(jupyterSessionManagerFactory.onRestartSessionCreated).thenReturn(eventEmitter.event);
         when(jupyterSessionManagerFactory.onRestartSessionUsed).thenReturn(eventEmitter.event);
         kernelService = mock(KernelService);
-        kernelFinder = mock<IKernelFinder>();
+        kernelFinder = mock<ILocalKernelFinder>();
+        remoteKernelFinder = mock<IRemoteKernelFinder>();
         fs = mock(FileSystem);
         pathUtils = mock(PathUtils);
         when(pathUtils.getDisplayName(anything())).thenReturn('<user friendly path>');
@@ -157,31 +171,17 @@ suite('DataScience - KernelSelections', () => {
         const rawSupportedService = mock<IRawNotebookSupportedService>();
         when(rawSupportedService.supported()).thenResolve(true);
         kernelSelectionProvider = new KernelSelectionProvider(
-            instance(kernelService),
             instance(interpreterSelector),
-            instance(interpreterService),
             instance(fs),
-            instance(pathUtils),
             instance(kernelFinder),
+            instance(remoteKernelFinder),
             instance(extensionChecker),
             disposableRegistry,
-            instance(jupyterSessionManagerFactory),
-            instance(rawSupportedService)
+            instance(jupyterSessionManagerFactory)
         );
     });
     teardown(() => disposeAllDisposables(disposableRegistry));
 
-    test('Should return an empty list for remote kernels if there are none', async () => {
-        when(kernelService.getKernelSpecs(instance(sessionManager), anything())).thenResolve([]);
-        when(sessionManager.getRunningKernels()).thenResolve([]);
-        when(sessionManager.getRunningSessions()).thenResolve([]);
-
-        const items = await kernelSelectionProvider.getKernelSelectionsForRemoteSession(undefined, async () =>
-            instance(sessionManager)
-        );
-
-        assert.equal(items.length, 0);
-    });
     test('Should return a list with the proper details in the quick pick for remote connections', async () => {
         const activeKernels: IJupyterKernel[] = [activePython1KernelModel, activeJuliaKernelModel];
         const sessions = activeKernels.map((item, index) => {
@@ -261,16 +261,11 @@ suite('DataScience - KernelSelections', () => {
         ];
         expectedItems.sort((a, b) => (a.label === b.label ? 0 : a.label > b.label ? 1 : -1));
 
-        const items = await kernelSelectionProvider.getKernelSelectionsForRemoteSession(undefined, async () =>
-            instance(sessionManager)
-        );
-
-        verify(sessionManager.getRunningKernels()).once();
-        verify(sessionManager.getKernelSpecs()).once();
+        const items = await kernelSelectionProvider.getKernelSelections(undefined, undefined, undefined);
         assert.deepEqual(items, expectedItems);
     });
     test('Should return a list of Local Kernels + Interpreters for local raw connection', async () => {
-        when(kernelFinder.listKernelSpecs(anything())).thenResolve(allSpecs);
+        when(kernelFinder.listKernels(anything())).thenResolve(allMetadata);
         when(interpreterSelector.getSuggestions(undefined)).thenResolve(allInterpreters);
 
         // Quick pick must contain
@@ -306,7 +301,7 @@ suite('DataScience - KernelSelections', () => {
         const expectedList = [...expectedKernelItems, ...expectedInterpreterItems];
         expectedList.sort((a, b) => (a.label === b.label ? 0 : a.label > b.label ? 1 : -1));
 
-        const items = await kernelSelectionProvider.getKernelSelectionsForLocalSession(undefined);
+        const items = await kernelSelectionProvider.getKernelSelections(undefined, undefined);
 
         // Ensure interpreter property is set when comparing.
         items.map((item) => {
@@ -318,7 +313,7 @@ suite('DataScience - KernelSelections', () => {
     test('Should return a list of Local Kernels + Interpreters for local jupyter connection', async () => {
         when(sessionManager.getKernelSpecs()).thenResolve(allSpecs);
         when(kernelService.getKernelSpecs(anything(), anything())).thenResolve(allSpecs);
-        when(kernelFinder.listKernelSpecs(anything())).thenResolve(allSpecs);
+        when(kernelFinder.listKernels(anything())).thenResolve(allMetadata);
         when(interpreterSelector.getSuggestions(undefined)).thenResolve(allInterpreters);
 
         // Quick pick must contain
@@ -354,7 +349,7 @@ suite('DataScience - KernelSelections', () => {
         const expectedList = [...expectedKernelItems, ...expectedInterpreterItems];
         expectedList.sort((a, b) => (a.label === b.label ? 0 : a.label > b.label ? 1 : -1));
 
-        const items = await kernelSelectionProvider.getKernelSelectionsForLocalSession(undefined);
+        const items = await kernelSelectionProvider.getKernelSelections(undefined, undefined);
 
         assert.deepEqual(items, expectedList);
     });

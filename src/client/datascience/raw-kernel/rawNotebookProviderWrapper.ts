@@ -20,12 +20,11 @@ import {
 } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import { DataScienceStartupTime, JUPYTER_OUTPUT_CHANNEL } from '../constants';
-import { KernelSelector } from '../jupyter/kernels/kernelSelector';
 import { KernelService } from '../jupyter/kernels/kernelService';
 import { KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { IRoleBasedObject, RoleBasedFactory } from '../jupyter/liveshare/roleBasedFactory';
 import { ILiveShareHasRole } from '../jupyter/liveshare/types';
-import { IKernelLauncher } from '../kernel-launcher/types';
+import { IKernelLauncher, ILocalKernelFinder } from '../kernel-launcher/types';
 import { ProgressReporter } from '../progress/progressReporter';
 import {
     ConnectNotebookProviderOptions,
@@ -53,7 +52,7 @@ type RawNotebookProviderClassType = {
         fs: IFileSystem,
         serviceContainer: IServiceContainer,
         kernelLauncher: IKernelLauncher,
-        kernelSelector: KernelSelector,
+        localKernelFinder: ILocalKernelFinder,
         progressReporter: ProgressReporter,
         outputChannel: IOutputChannel,
         rawKernelSupported: IRawNotebookSupportedService,
@@ -82,7 +81,7 @@ export class RawNotebookProviderWrapper implements IRawNotebookProvider, ILiveSh
         @inject(IFileSystem) fs: IFileSystem,
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
         @inject(IKernelLauncher) kernelLauncher: IKernelLauncher,
-        @inject(KernelSelector) kernelSelector: KernelSelector,
+        @inject(ILocalKernelFinder) kernelFinder: ILocalKernelFinder,
         @inject(ProgressReporter) progressReporter: ProgressReporter,
         @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) outputChannel: IOutputChannel,
         @inject(IRawNotebookSupportedService) rawNotebookSupported: IRawNotebookSupportedService,
@@ -107,7 +106,7 @@ export class RawNotebookProviderWrapper implements IRawNotebookProvider, ILiveSh
             fs,
             serviceContainer,
             kernelLauncher,
-            kernelSelector,
+            kernelFinder,
             progressReporter,
             outputChannel,
             rawNotebookSupported,

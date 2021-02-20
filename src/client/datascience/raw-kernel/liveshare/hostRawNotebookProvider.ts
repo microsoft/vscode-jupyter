@@ -34,13 +34,12 @@ import { sendTelemetryEvent } from '../../../telemetry';
 import { Identifiers, LiveShare, LiveShareCommands, Settings, Telemetry } from '../../constants';
 import { computeWorkingDirectory } from '../../jupyter/jupyterUtils';
 import { getDisplayNameOrNameOfKernelConnection, isPythonKernelConnection } from '../../jupyter/kernels/helpers';
-import { KernelSelector } from '../../jupyter/kernels/kernelSelector';
 import { KernelService } from '../../jupyter/kernels/kernelService';
 import { KernelConnectionMetadata } from '../../jupyter/kernels/types';
 import { HostJupyterNotebook } from '../../jupyter/liveshare/hostJupyterNotebook';
 import { LiveShareParticipantHost } from '../../jupyter/liveshare/liveShareParticipantMixin';
 import { IRoleBasedObject } from '../../jupyter/liveshare/roleBasedFactory';
-import { IKernelLauncher, IpyKernelNotInstalledError } from '../../kernel-launcher/types';
+import { IKernelLauncher, ILocalKernelFinder, IpyKernelNotInstalledError } from '../../kernel-launcher/types';
 import { ProgressReporter } from '../../progress/progressReporter';
 import {
     IKernelDependencyService,
@@ -74,7 +73,7 @@ export class HostRawNotebookProvider
         private fs: IFileSystem,
         private serviceContainer: IServiceContainer,
         private kernelLauncher: IKernelLauncher,
-        private kernelSelector: KernelSelector,
+        private localKernelFinder: ILocalKernelFinder,
         private progressReporter: ProgressReporter,
         private outputChannel: IOutputChannel,
         rawNotebookSupported: IRawNotebookSupportedService,
@@ -197,14 +196,7 @@ export class HostRawNotebookProvider
             }
             // We need to locate kernelspec and possible interpreter for this launch based on resource and notebook metadata
             const kernelConnectionMetadata =
-                kernelConnection ||
-                (await this.kernelSelector.getPreferredKernelForLocalConnection(
-                    resource,
-                    'raw',
-                    notebookMetadata,
-                    disableUI,
-                    cancelToken
-                ));
+                kernelConnection || (await this.localKernelFinder.findKernel(resource, notebookMetadata, cancelToken));
 
             const displayName = getDisplayNameOrNameOfKernelConnection(kernelConnectionMetadata);
 

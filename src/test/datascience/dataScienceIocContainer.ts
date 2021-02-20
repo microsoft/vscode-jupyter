@@ -182,9 +182,13 @@ import { JupyterServerSelector } from '../../client/datascience/jupyter/serverSe
 import { JupyterDebugService } from '../../client/datascience/jupyterDebugService';
 import { JupyterUriProviderRegistration } from '../../client/datascience/jupyterUriProviderRegistration';
 import { KernelDaemonPreWarmer } from '../../client/datascience/kernel-launcher/kernelDaemonPreWarmer';
-import { KernelFinder } from '../../client/datascience/kernel-launcher/kernelFinder';
+import { LocalKernelFinder } from '../../client/datascience/kernel-launcher/localKernelFinder';
 import { KernelLauncher } from '../../client/datascience/kernel-launcher/kernelLauncher';
-import { IKernelFinder, IKernelLauncher } from '../../client/datascience/kernel-launcher/types';
+import {
+    ILocalKernelFinder,
+    IKernelLauncher,
+    IRemoteKernelFinder
+} from '../../client/datascience/kernel-launcher/types';
 import { NotebookCellLanguageService } from '../../client/datascience/notebook/defaultCellLanguageService';
 import { NotebookCreationTracker } from '../../client/datascience/notebookAndInteractiveTracker';
 import { NotebookExtensibility } from '../../client/datascience/notebookExtensibility';
@@ -310,6 +314,7 @@ import { KernelEnvironmentVariablesService } from '../../client/datascience/kern
 import { PreferredRemoteKernelIdProvider } from '../../client/datascience/notebookStorage/preferredRemoteKernelIdProvider';
 import { NotebookWatcher } from '../../client/datascience/variablesView/notebookWatcher';
 import { InterpreterPackages } from '../../client/datascience/telemetry/interpreterPackages';
+import { RemoteKernelFinder } from '../../client/datascience/kernel-launcher/remoteKernelFinder';
 
 export class DataScienceIocContainer extends UnitTestIocContainer {
     public get workingInterpreter() {
@@ -376,7 +381,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     private emptyConfig = new MockWorkspaceConfiguration();
     private workspaceFolders: MockWorkspaceFolder[] = [];
     private kernelServiceMock = mock(KernelService);
-    private kernelFinderMock = mock(KernelFinder);
+    private kernelFinderMock = mock(LocalKernelFinder);
     private disposed = false;
     private experimentState = new Map<string, boolean>();
     private extensionRootPath: string | undefined;
@@ -826,9 +831,12 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             this.jupyterMock = new MockJupyterManagerFactory(this.serviceManager);
             // When using mocked Jupyter, default to using default kernel.
             when(this.kernelServiceMock.searchAndRegisterKernel(anything(), anything())).thenResolve(undefined);
-            when(this.kernelFinderMock.findKernelSpec(anything(), anything())).thenResolve(undefined);
+            when(this.kernelFinderMock.findKernel(anything(), anything(), anything())).thenResolve(undefined);
             this.serviceManager.addSingletonInstance<KernelService>(KernelService, instance(this.kernelServiceMock));
-            this.serviceManager.addSingletonInstance<IKernelFinder>(IKernelFinder, instance(this.kernelFinderMock));
+            this.serviceManager.addSingletonInstance<ILocalKernelFinder>(
+                ILocalKernelFinder,
+                instance(this.kernelFinderMock)
+            );
 
             this.serviceManager.addSingletonInstance<IInterpreterSelector>(
                 IInterpreterSelector,
@@ -858,7 +866,8 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
                 EnvironmentActivationService
             );
             this.serviceManager.addSingleton<KernelService>(KernelService, KernelService);
-            this.serviceManager.addSingleton<IKernelFinder>(IKernelFinder, KernelFinder);
+            this.serviceManager.addSingleton<ILocalKernelFinder>(ILocalKernelFinder, LocalKernelFinder);
+            this.serviceManager.addSingleton<IRemoteKernelFinder>(IRemoteKernelFinder, RemoteKernelFinder);
             this.serviceManager.addSingleton<IProcessServiceFactory>(IProcessServiceFactory, ProcessServiceFactory);
             this.serviceManager.addSingleton<IPythonExecutionFactory>(IPythonExecutionFactory, PythonExecutionFactory);
 

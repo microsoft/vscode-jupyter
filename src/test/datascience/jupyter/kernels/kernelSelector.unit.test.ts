@@ -24,7 +24,7 @@ import { KernelSelectionProvider } from '../../../../client/datascience/jupyter/
 import { KernelSelector } from '../../../../client/datascience/jupyter/kernels/kernelSelector';
 import { KernelService } from '../../../../client/datascience/jupyter/kernels/kernelService';
 import { LiveKernelModel } from '../../../../client/datascience/jupyter/kernels/types';
-import { IKernelFinder } from '../../../../client/datascience/kernel-launcher/types';
+import { ILocalKernelFinder } from '../../../../client/datascience/kernel-launcher/types';
 import {
     IJupyterSessionManager,
     IRawNotebookSupportedService,

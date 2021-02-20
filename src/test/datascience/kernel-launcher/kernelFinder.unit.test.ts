@@ -15,11 +15,12 @@ import { PythonExecutionFactory } from '../../../client/common/process/pythonExe
 import { IExtensionContext, IPathUtils, Resource } from '../../../client/common/types';
 import { IEnvironmentVariablesProvider } from '../../../client/common/variables/types';
 import { JupyterKernelSpec } from '../../../client/datascience/jupyter/kernels/jupyterKernelSpec';
-import { KernelFinder } from '../../../client/datascience/kernel-launcher/kernelFinder';
-import { IKernelFinder } from '../../../client/datascience/kernel-launcher/types';
+import { KernelFinder } from '../../../client/datascience/kernel-launcher/localKernelFinder';
+import { ILocalKernelFinder } from '../../../client/datascience/kernel-launcher/types';
 import { IJupyterKernelSpec } from '../../../client/datascience/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
+import { MockExtensions } from '../mockExtensions';
 
 suite('Kernel Finder', () => {
     let interpreterService: typemoq.IMock<IInterpreterService>;
@@ -33,6 +34,7 @@ suite('Kernel Finder', () => {
     let activeInterpreter: PythonEnvironment;
     let interpreters: PythonEnvironment[] = [];
     let resource: Resource;
+    let extensions = new MockExtensions();
     const kernelName = 'testKernel';
     const testKernelMetadata = { name: 'testKernel', display_name: 'Test Display Name' };
     const cacheFile = 'kernelSpecPathCache.json';
@@ -317,7 +319,8 @@ suite('Kernel Finder', () => {
                 instance(workspaceService),
                 instance(executionFactory),
                 envVarsProvider.object,
-                instance(extensionChecker)
+                instance(extensionChecker),
+                extensions
             );
         });
 
@@ -395,7 +398,8 @@ suite('Kernel Finder', () => {
                 instance(workspaceService),
                 instance(executionFactory),
                 envVarsProvider.object,
-                instance(extensionChecker)
+                instance(extensionChecker),
+                extensions
             );
         });
 

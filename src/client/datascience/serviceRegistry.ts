@@ -110,9 +110,9 @@ import { JupyterUriProviderRegistration } from './jupyterUriProviderRegistration
 import { KernelDaemonPool } from './kernel-launcher/kernelDaemonPool';
 import { KernelDaemonPreWarmer } from './kernel-launcher/kernelDaemonPreWarmer';
 import { KernelEnvironmentVariablesService } from './kernel-launcher/kernelEnvVarsService';
-import { KernelFinder } from './kernel-launcher/kernelFinder';
+import { LocalKernelFinder } from './kernel-launcher/localKernelFinder';
 import { KernelLauncher } from './kernel-launcher/kernelLauncher';
-import { IKernelFinder, IKernelLauncher } from './kernel-launcher/types';
+import { ILocalKernelFinder, IKernelLauncher, IRemoteKernelFinder } from './kernel-launcher/types';
 import { MultiplexingDebugService } from './multiplexingDebugService';
 import { NotebookEditorCompatibilitySupport } from './notebook/notebookEditorCompatibilitySupport';
 import { NotebookEditorProvider } from './notebook/notebookEditorProvider';
@@ -196,6 +196,7 @@ import { INotebookWatcher, IVariableViewProvider } from './variablesView/types';
 import { VariableViewActivationService } from './variablesView/variableViewActivationService';
 import { VariableViewProvider } from './variablesView/variableViewProvider';
 import { WebviewExtensibility } from './webviewExtensibility';
+import { RemoteKernelFinder } from './kernel-launcher/remoteKernelFinder';
 
 // README: Did you make sure "dataScienceIocContainer.ts" has also been updated appropriately?
 
@@ -258,7 +259,8 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     serviceManager.add<IPlotViewer>(IPlotViewer, PlotViewer);
     serviceManager.addSingleton<IKernelLauncher>(IKernelLauncher, KernelLauncher);
     serviceManager.addSingleton<KernelEnvironmentVariablesService>(KernelEnvironmentVariablesService, KernelEnvironmentVariablesService);
-    serviceManager.addSingleton<IKernelFinder>(IKernelFinder, KernelFinder);
+    serviceManager.addSingleton<ILocalKernelFinder>(ILocalKernelFinder, LocalKernelFinder);
+    serviceManager.addSingleton<IRemoteKernelFinder>(IRemoteKernelFinder, RemoteKernelFinder);
     serviceManager.addSingleton<CellOutputMimeTypeTracker>(CellOutputMimeTypeTracker, CellOutputMimeTypeTracker, undefined, [IExtensionSingleActivationService, INotebookExecutionLogger]);
     serviceManager.addSingleton<CommandRegistry>(CommandRegistry, CommandRegistry);
     serviceManager.addSingleton<DataViewerDependencyService>(DataViewerDependencyService, DataViewerDependencyService);

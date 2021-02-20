@@ -4,7 +4,7 @@
 
 import type { Kernel } from '@jupyterlab/services';
 import * as fastDeepEqual from 'fast-deep-equal';
-import { IJupyterKernelSpec } from '../../types';
+import { IJupyterKernelSpec, IJupyterSessionManager } from '../../types';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const NamedRegexp = require('named-js-regexp') as typeof import('named-js-regexp');
@@ -12,7 +12,7 @@ import { nbformat } from '@jupyterlab/coreutils';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
 import { PYTHON_LANGUAGE } from '../../../common/constants';
-import { IConfigurationService, ReadWrite } from '../../../common/types';
+import { IConfigurationService, ReadWrite, Resource } from '../../../common/types';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import {
     DefaultKernelConnectionMetadata,
@@ -23,6 +23,8 @@ import {
     PythonKernelConnectionMetadata
 } from './types';
 import { Settings } from '../../constants';
+import { PreferredRemoteKernelIdProvider } from '../../notebookStorage/preferredRemoteKernelIdProvider';
+import { isPythonNotebook } from '../../notebook/helpers/helpers';
 
 // Helper functions for dealing with kernels and kernelspecs
 
@@ -277,4 +279,93 @@ export function isLocalLaunch(configuration: IConfigurationService) {
     }
 
     return false;
+}
+
+export function findPreferredKernelIndex(
+    kernels: KernelConnectionMetadata[],
+    resource: Resource,
+    languages: string[],
+    notebookMetadata: nbformat.INotebookMetadata | undefined,
+    interpreter: PythonEnvironment | undefined,
+    remoteKernelPreferredProvider: PreferredRemoteKernelIdProvider | undefined
+) {
+    let index = -1;
+
+    // First try remote
+    if (index < 0 && resource && remoteKernelPreferredProvider) {
+        const preferredKernelId = remoteKernelPreferredProvider.getPreferredRemoteKernelId(resource);
+        if (preferredKernelId) {
+            // Find the kernel that matches
+            index = kernels.findIndex(
+                (k) => k.kind === 'connectToLiveKernel' && k.kernelModel.id === preferredKernelId
+            );
+        }
+    }
+
+    // If still not found, look for a match based on notebook metadata and interpreter
+    if (index < 0 && notebookMetadata) {
+        let bestScore = -1;
+        for (let i = 0; kernels && i < kernels?.length; i = i + 1) {
+            const metadata = kernels[i];
+            const spec =
+                metadata.kind === 'startUsingKernelSpec' || metadata.kind === 'startUsingDefaultKernel'
+                    ? metadata.kernelSpec
+                    : undefined;
+            let score = 0;
+
+            if (spec) {
+                // See if the path matches.
+                if (spec && spec.path && spec.path.length > 0 && interpreter && spec.path === interpreter.path) {
+                    // Path match
+                    score += 8;
+                }
+
+                // See if the version is the same
+                if (interpreter && interpreter.version && spec && spec.name) {
+                    // Search for a digit on the end of the name. It should match our major version
+                    const match = /\D+(\d+)/.exec(spec.name);
+                    if (match && match !== null && match.length > 0) {
+                        // See if the version number matches
+                        const nameVersion = parseInt(match[1][0], 10);
+                        if (nameVersion && nameVersion === interpreter.version.major) {
+                            score += 4;
+                        }
+                    }
+                }
+
+                // See if the display name already matches.
+                if (spec.display_name && spec.display_name === notebookMetadata?.kernelspec?.display_name) {
+                    score += 16;
+                }
+
+                // Find a kernel spec that matches the language in the notebook metadata.
+                const nbMetadataLanguage = isPythonNotebook(notebookMetadata)
+                    ? PYTHON_LANGUAGE
+                    : (notebookMetadata?.kernelspec?.language as string) || notebookMetadata?.language_info?.name;
+                if (score === 0 && spec.language?.toLowerCase() === (nbMetadataLanguage || '').toLowerCase()) {
+                    score = 1;
+                }
+            }
+
+            if (score > bestScore) {
+                index = i;
+                bestScore = score;
+            }
+        }
+    }
+
+    // If still not found, try languages
+    if (index < 0) {
+        index = kernels.findIndex((k) => {
+            const kernelSpecConnection = k;
+            if (kernelSpecConnection.kind === 'startUsingKernelSpec') {
+                return languages.find((l) => l === kernelSpecConnection.kernelSpec.language);
+            } else if (kernelSpecConnection.kind === 'connectToLiveKernel') {
+                return languages.find((l) => l === kernelSpecConnection.kernelModel.language);
+            } else {
+                return false;
+            }
+        });
+    }
+    return index;
 }

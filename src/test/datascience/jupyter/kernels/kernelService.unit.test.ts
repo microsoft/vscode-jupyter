@@ -19,8 +19,8 @@ import { ReadWrite } from '../../../../client/common/types';
 import { JupyterKernelSpec } from '../../../../client/datascience/jupyter/kernels/jupyterKernelSpec';
 import { KernelDependencyService } from '../../../../client/datascience/jupyter/kernels/kernelDependencyService';
 import { KernelService } from '../../../../client/datascience/jupyter/kernels/kernelService';
-import { KernelFinder } from '../../../../client/datascience/kernel-launcher/kernelFinder';
-import { IKernelFinder } from '../../../../client/datascience/kernel-launcher/types';
+import { KernelFinder } from '../../../../client/datascience/kernel-launcher/localKernelFinder';
+import { ILocalKernelFinder } from '../../../../client/datascience/kernel-launcher/types';
 import {
     IJupyterSubCommandExecutionService,
     KernelInterpreterDependencyResponse

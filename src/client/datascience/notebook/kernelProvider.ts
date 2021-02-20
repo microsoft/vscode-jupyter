@@ -12,8 +12,9 @@ import {
     NotebookKernel as VSCNotebookKernel
 } from 'vscode';
 import { ICommandManager, IVSCodeNotebook } from '../../common/application/types';
+import * as fastDeepEqual from 'fast-deep-equal';
 import { PYTHON_LANGUAGE } from '../../common/constants';
-import { IConfigurationService, IDisposableRegistry, IExtensionContext } from '../../common/types';
+import { IConfigurationService, IDisposableRegistry, IExtensionContext, IExtensions } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { captureTelemetry } from '../../telemetry';
@@ -21,35 +22,30 @@ import { sendNotebookOrKernelLanguageTelemetry } from '../common';
 import { Telemetry } from '../constants';
 import { sendKernelListTelemetry } from '../telemetry/kernelTelemetry';
 import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../telemetry/telemetry';
-import { areKernelConnectionsEqual, isLocalLaunch } from '../jupyter/kernels/helpers';
-import { KernelSelectionProvider } from '../jupyter/kernels/kernelSelections';
-import { KernelSelector } from '../jupyter/kernels/kernelSelector';
-import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
 import {
-    IKernelProvider,
-    IKernelSpecQuickPickItem,
-    KernelConnectionMetadata,
-    KernelSpecConnectionMetadata,
-    LiveKernelConnectionMetadata,
-    PythonKernelConnectionMetadata
-} from '../jupyter/kernels/types';
+    areKernelConnectionsEqual,
+    getDisplayNameOrNameOfKernelConnection,
+    isLocalLaunch
+} from '../jupyter/kernels/helpers';
+import { KernelSelectionProvider } from '../jupyter/kernels/kernelSelections';
+import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
+import { IKernelProvider, IKernelSpecQuickPickItem, KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { INotebookStorageProvider } from '../notebookStorage/notebookStorageProvider';
 import { PreferredRemoteKernelIdProvider } from '../notebookStorage/preferredRemoteKernelIdProvider';
-import {
-    IJupyterSessionManager,
-    IJupyterSessionManagerFactory,
-    INotebook,
-    INotebookProvider,
-    IRawNotebookSupportedService
-} from '../types';
+import { IJupyterSessionManagerFactory, INotebook, INotebookProvider } from '../types';
 import {
     getNotebookMetadata,
     isJupyterKernel,
     isJupyterNotebook,
+    isPythonNotebook,
     trackKernelInNotebookMetadata
 } from './helpers/helpers';
 import { VSCodeNotebookKernelMetadata } from './kernelWithMetadata';
 import { INotebookKernelProvider, INotebookKernelResolver } from './types';
+import { IPythonExtensionChecker } from '../../api/types';
+import { IInterpreterService } from '../../interpreter/contracts';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
+import { ILocalKernelFinder, IRemoteKernelFinder } from '../kernel-launcher/types';
 
 @injectable()
 export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
@@ -61,7 +57,6 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
     private readonly isLocalLaunch: boolean;
     constructor(
         @inject(KernelSelectionProvider) private readonly kernelSelectionProvider: KernelSelectionProvider,
-        @inject(KernelSelector) private readonly kernelSelector: KernelSelector,
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
         @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
         @inject(INotebookStorageProvider) private readonly storageProvider: INotebookStorageProvider,
@@ -69,30 +64,20 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
         @inject(KernelSwitcher) private readonly kernelSwitcher: KernelSwitcher,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IExtensionContext) private readonly context: IExtensionContext,
-        @inject(IRawNotebookSupportedService) private readonly rawNotebookSupported: IRawNotebookSupportedService,
         @inject(INotebookKernelResolver) private readonly kernelResolver: INotebookKernelResolver,
         @inject(IConfigurationService) private readonly configuration: IConfigurationService,
         @inject(IJupyterSessionManagerFactory)
         private readonly jupyterSessionManagerFactory: IJupyterSessionManagerFactory,
         @inject(PreferredRemoteKernelIdProvider)
         private readonly preferredRemoteKernelIdProvider: PreferredRemoteKernelIdProvider,
-        @inject(ICommandManager) private readonly commandManager: ICommandManager
+        @inject(ICommandManager) private readonly commandManager: ICommandManager,
+        @inject(IExtensions) private readonly extensions: IExtensions,
+        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
+        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
+        @inject(ILocalKernelFinder) private readonly localKernelFinder: ILocalKernelFinder,
+        @inject(IRemoteKernelFinder) private readonly remoteKernelFinder: IRemoteKernelFinder
     ) {
         this.isLocalLaunch = isLocalLaunch(this.configuration);
-
-        this.kernelSelectionProvider.onDidChangeSelections(
-            (e) => {
-                if (e) {
-                    const doc = this.notebook.notebookDocuments.find((d) => d.uri.fsPath === e.fsPath);
-                    if (doc) {
-                        return this._onDidChangeKernels.fire(doc);
-                    }
-                }
-                this._onDidChangeKernels.fire(undefined);
-            },
-            this,
-            disposables
-        );
         this.notebook.onDidChangeActiveNotebookKernel(this.onDidChangeActiveNotebookKernel, this, disposables);
     }
 
@@ -110,85 +95,22 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
         token: CancellationToken
     ): Promise<VSCodeNotebookKernelMetadata[]> {
         const stopWatch = new StopWatch();
-        const sessionManager = await this.getJupyterSessionManager(document.uri);
-        if (token.isCancellationRequested) {
-            if (sessionManager) {
-                await sessionManager.dispose();
-            }
-            return [];
-        }
-        const [preferredKernel, kernels] = await Promise.all([
-            this.getPreferredKernel(document, token, sessionManager),
-            this.getKernelSelections(document, token)
-        ]).finally(() => (sessionManager ? sessionManager.dispose() : undefined));
+        const kernels = await this.getKernels(document, token);
         if (token.isCancellationRequested) {
             return [];
         }
 
-        // Turn this into our preferred list.
+        // Go through the kernels, removing any dupes
         const existingItem = new Set<string>();
-        const mapped = kernels
-            .map((kernel) => {
-                return new VSCodeNotebookKernelMetadata(
-                    kernel.label,
-                    kernel.description || '',
-                    kernel.detail || '',
-                    kernel.selection,
-                    areKernelConnectionsEqual(kernel.selection, preferredKernel),
-                    this.kernelProvider,
-                    this.notebook,
-                    this.context,
-                    this.preferredRemoteKernelIdProvider,
-                    this.commandManager
-                );
-            })
-            .filter((item) => {
-                if (existingItem.has(item.id)) {
-                    return false;
-                }
-                existingItem.add(item.id);
-                return true;
-            });
-
-        // If no preferred kernel set but we have a language, use that to set preferred instead.
-        if (!mapped.find((v) => v.isPreferred)) {
-            const languages = Array.from(new Set<string>(document.cells.map((c) => c.language)));
-            // Find the first that matches on language
-            const indexOfKernelMatchingDocumentLanguage = kernels.findIndex((k) => {
-                const kernelSpecConnection = k.selection;
-                if (kernelSpecConnection.kind === 'startUsingKernelSpec') {
-                    return languages.find((l) => l === kernelSpecConnection.kernelSpec.language);
-                } else if (kernelSpecConnection.kind === 'connectToLiveKernel') {
-                    return languages.find((l) => l === kernelSpecConnection.kernelModel.language);
-                } else {
-                    return false;
-                }
-            });
-            // If we have a preferred kernel, then add that to the list, & put it on top of the list.
-            const preferredKernelMetadata = this.createNotebookKernelMetadataFromPreferredKernel(preferredKernel);
-            if (preferredKernelMetadata) {
-                mapped.splice(0, 0, preferredKernelMetadata);
-            } else if (indexOfKernelMatchingDocumentLanguage >= 0) {
-                const kernel = kernels[indexOfKernelMatchingDocumentLanguage];
-                mapped.splice(
-                    indexOfKernelMatchingDocumentLanguage,
-                    1,
-                    new VSCodeNotebookKernelMetadata(
-                        kernel.label,
-                        kernel.description || '',
-                        kernel.detail || '',
-                        kernel.selection,
-                        true,
-                        this.kernelProvider,
-                        this.notebook,
-                        this.context,
-                        this.preferredRemoteKernelIdProvider,
-                        this.commandManager
-                    )
-                );
+        const mapped = kernels.filter((item) => {
+            if (existingItem.has(item.id)) {
+                return false;
             }
-        }
+            existingItem.add(item.id);
+            return true;
+        });
 
+        // Send telemetry related to the list
         sendKernelListTelemetry(document.uri, mapped, stopWatch);
 
         mapped.sort((a, b) => {
@@ -202,146 +124,74 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
         });
         return mapped;
     }
-    private async getKernelSelections(
+    private async getKernels(
         document: NotebookDocument,
         token: CancellationToken
-    ): Promise<
-        IKernelSpecQuickPickItem<
-            | LiveKernelConnectionMetadata
-            | KernelSpecConnectionMetadata
-            | KernelSpecConnectionMetadata
-            | PythonKernelConnectionMetadata
-        >[]
-    > {
+    ): Promise<VSCodeNotebookKernelMetadata[]> {
+        let kernels: KernelConnectionMetadata[] = [];
+        let preferred: KernelConnectionMetadata | undefined;
         if (this.isLocalLaunch) {
-            return this.kernelSelectionProvider.getKernelSelectionsForLocalSession(document.uri, token);
-        } else {
-            return this.kernelSelectionProvider.getKernelSelectionsForRemoteSession(
-                document.uri,
-                async () => {
-                    const sessionManager = await this.getJupyterSessionManager(document.uri);
-                    if (!sessionManager) {
-                        throw new Error('Session Manager not available');
+            kernels = await this.localKernelFinder.listKernels(document.uri);
+            preferred = await this.localKernelFinder.findKernel(document.uri, getNotebookMetadata(document), token);
+
+            // We need to filter out those items that are for other extensions.
+            kernels = kernels.filter((r) => {
+                if (r.kind !== 'connectToLiveKernel' && r.kernelSpec) {
+                    if (
+                        r.kernelSpec.metadata?.vscode?.extension_id &&
+                        this.extensions.getExtension(r.kernelSpec.metadata?.vscode?.extension_id)
+                    ) {
+                        return false;
                     }
-                    return sessionManager;
-                },
-                token
-            );
-        }
-    }
-    private async getJupyterSessionManager(resource: Uri) {
-        if (this.isLocalLaunch) {
-            return;
-        }
-        try {
-            // Make sure we have a connection or we can't get remote kernels.
+                }
+                return true;
+            });
+        } else {
             const connection = await this.notebookProvider.connect({
                 getOnly: false,
-                resource,
+                resource: document.uri,
                 disableUI: false,
                 localOnly: false
             });
-            if (!connection) {
-                throw new Error('Using remote connection but connection is undefined');
-            } else if (connection?.type === 'raw') {
-                throw new Error('Using remote connection but connection type is raw');
-            } else {
-                return this.jupyterSessionManagerFactory.create(connection);
-            }
-        } catch (ex) {
-            // This condition is met when remote Uri is invalid.
-            // User cannot even run a cell, as kernel list is invalid (we can't get it).
-            sendKernelTelemetryEvent(resource, Telemetry.NotebookStart, undefined, undefined, ex);
-            throw ex;
-        }
-    }
-    private createNotebookKernelMetadataFromPreferredKernel(
-        preferredKernel?: KernelConnectionMetadata
-    ): VSCodeNotebookKernelMetadata | undefined {
-        if (!preferredKernel) {
-            return;
-        } else if (preferredKernel.kind === 'startUsingDefaultKernel') {
-            return;
-        } else if (preferredKernel.kind === 'startUsingPythonInterpreter') {
-            return new VSCodeNotebookKernelMetadata(
-                preferredKernel.interpreter.displayName || preferredKernel.interpreter.path,
-                '',
-                preferredKernel.interpreter.path,
-                preferredKernel,
-                true,
-                this.kernelProvider,
-                this.notebook,
-                this.context,
-                this.preferredRemoteKernelIdProvider,
-                this.commandManager
-            );
-        } else if (preferredKernel.kind === 'connectToLiveKernel') {
-            return new VSCodeNotebookKernelMetadata(
-                preferredKernel.kernelModel.display_name || preferredKernel.kernelModel.name,
-                '',
-                preferredKernel.kernelModel.name,
-                preferredKernel,
-                true,
-                this.kernelProvider,
-                this.notebook,
-                this.context,
-                this.preferredRemoteKernelIdProvider,
-                this.commandManager
-            );
-        } else {
-            return new VSCodeNotebookKernelMetadata(
-                preferredKernel.kernelSpec.display_name,
-                '',
-                preferredKernel.kernelSpec.name,
-                preferredKernel,
-                true,
-                this.kernelProvider,
-                this.notebook,
-                this.context,
-                this.preferredRemoteKernelIdProvider,
-                this.commandManager
+
+            kernels = await this.remoteKernelFinder.listKernels(document.uri, connection);
+            preferred = await this.remoteKernelFinder.findKernel(
+                document.uri,
+                connection,
+                getNotebookMetadata(document),
+                token
             );
         }
-    }
-    @captureTelemetry(Telemetry.KernelProviderPerf)
-    private async getPreferredKernel(
-        document: NotebookDocument,
-        token: CancellationToken,
-        sessionManager?: IJupyterSessionManager
-    ): Promise<KernelConnectionMetadata | undefined> {
-        // If we already have a kernel selected, then return that.
+
+        // If we already have a kernel selected, then set that one as preferred
         const editor =
             this.notebook.notebookEditors.find((e) => e.document === document) ||
             (this.notebook.activeNotebookEditor?.document === document
                 ? this.notebook.activeNotebookEditor
                 : undefined);
         if (editor && isJupyterKernel(editor.kernel)) {
-            return editor.kernel.selection;
-        }
-
-        if (this.isLocalLaunch) {
-            const rawSupported = await this.rawNotebookSupported.supported();
-            if (token.isCancellationRequested) {
-                return;
-            }
-
-            return this.kernelSelector.getPreferredKernelForLocalConnection(
-                document.uri,
-                rawSupported ? 'raw' : 'jupyter',
-                getNotebookMetadata(document),
-                true,
-                token,
-                true
-            );
-        } else {
-            return this.kernelSelector.getPreferredKernelForRemoteConnection(
-                document.uri,
-                sessionManager,
-                getNotebookMetadata(document),
-                token
+            preferred = kernels.find((k) =>
+                fastDeepEqual(k, (editor.kernel as VSCodeNotebookKernelMetadata).selection)
             );
         }
+
+        // Map kernels into result type
+        return kernels.map((k) => {
+            return new VSCodeNotebookKernelMetadata(
+                getDisplayNameOrNameOfKernelConnection(k),
+                '',
+                '',
+                k,
+                areKernelConnectionsEqual(k, preferred),
+                this.kernelProvider,
+                this.notebook,
+                this.context,
+                this.preferredRemoteKernelIdProvider,
+                this.commandManager
+            );
+        });
     }
+
     /**
      * The new kernel is started only when the user attempts to do something with it (like run a cell)
      * This is enforced by the current VS Code UX/workflow.

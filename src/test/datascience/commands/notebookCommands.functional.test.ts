@@ -26,12 +26,11 @@ import {
     LiveKernelConnectionMetadata,
     PythonKernelConnectionMetadata
 } from '../../../client/datascience/jupyter/kernels/types';
-import { IKernelFinder } from '../../../client/datascience/kernel-launcher/types';
+import { ILocalKernelFinder } from '../../../client/datascience/kernel-launcher/types';
 import { NativeEditorProvider } from '../../../client/datascience/notebookStorage/nativeEditorProvider';
 import { PreferredRemoteKernelIdProvider } from '../../../client/datascience/notebookStorage/preferredRemoteKernelIdProvider';
 import { InterpreterPackages } from '../../../client/datascience/telemetry/interpreterPackages';
 import { IInteractiveWindowProvider, INotebookEditorProvider } from '../../../client/datascience/types';
-import { IInterpreterService } from '../../../client/interpreter/contracts';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
 suite('DataScience - Notebook Commands', () => {
@@ -104,16 +103,17 @@ suite('DataScience - Notebook Commands', () => {
                 const kernelDependencyService = mock(KernelDependencyService);
                 const kernelService = mock(KernelService);
                 kernelSelectionProvider = mock(KernelSelectionProvider);
-                when(kernelSelectionProvider.getKernelSelectionsForLocalSession(anything(), anything())).thenResolve(
-                    localSelections
+                when(kernelSelectionProvider.getKernelSelections(anything(), anything(), anything())).thenCall(
+                    (_a, b, _c) => {
+                        if (!b || b.localLaunch) {
+                            return localSelections;
+                        }
+                        return remoteSelections;
+                    }
                 );
-                when(
-                    kernelSelectionProvider.getKernelSelectionsForRemoteSession(anything(), anything(), anything())
-                ).thenResolve(remoteSelections);
                 const appShell = mock(ApplicationShell);
                 const dependencyService = mock(KernelDependencyService);
-                const interpreterService = mock<IInterpreterService>();
-                const kernelFinder = mock<IKernelFinder>();
+                const kernelFinder = mock<ILocalKernelFinder>();
                 const jupyterSessionManagerFactory = mock(JupyterSessionManagerFactory);
                 const dummySessionEvent = new EventEmitter<Kernel.IKernelConnection>();
                 const preferredKernelIdProvider = mock(PreferredRemoteKernelIdProvider);
@@ -141,13 +141,10 @@ suite('DataScience - Notebook Commands', () => {
                     instance(kernelSelectionProvider),
                     instance(appShell),
                     instance(kernelService),
-                    instance(interpreterService),
                     instance(dependencyService),
                     instance(kernelFinder),
-                    instance(jupyterSessionManagerFactory),
                     instance(configService),
                     instance(extensionChecker),
-                    instance(preferredKernelIdProvider),
                     instance(mock(InterpreterPackages))
                 );
 
@@ -208,7 +205,7 @@ suite('DataScience - Notebook Commands', () => {
                 });
                 test('Should not switch if no identity', async () => {
                     await commandHandler.bind(notebookCommands)();
-                    verify(kernelSelectionProvider.getKernelSelectionsForLocalSession(anything(), anything())).never();
+                    verify(kernelSelectionProvider.getKernelSelections(anything(), anything())).never();
                 });
                 test('Should switch kernel using the provided notebook', async () => {
                     const notebook = createNotebookMock();

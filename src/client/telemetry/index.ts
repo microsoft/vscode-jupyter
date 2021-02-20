@@ -375,7 +375,7 @@ export interface IEventNamePropertyMapping {
         hashedName: string;
     };
     [Telemetry.HashedCellOutputMimeTypePerf]: never | undefined;
-    [Telemetry.KernelListingPerf]: never | undefined;
+    [Telemetry.KernelListingPerf]: { type: 'remote' | 'local' };
     [Telemetry.NumberOfLocalKernelSpecs]: {
         /**
          * Number of kernel specs.
@@ -844,9 +844,9 @@ export interface IEventNamePropertyMapping {
      */
     [Telemetry.KernelLauncherPerf]: undefined | never | TelemetryErrorProperties;
     /**
-     * Total time taken to find a kernel on disc.
+     * Total time taken to find a kernel on disc or on a remote machine.
      */
-    [Telemetry.KernelFinderPerf]: undefined | never;
+    [Telemetry.KernelFinderPerf]: { type: 'remote' | 'local' };
     /**
      * Total time taken to list kernels for VS Code.
      */
