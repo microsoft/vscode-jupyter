@@ -302,24 +302,24 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
 
         return (
             <div className="outer-container">
-                <div className="control-container" style={{ display: 'flex', justifyContent: 'start', flexDirection: 'row' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-around' }}>
-                        {this.renderTemporarySliceIndicator()}
-                    </div>
-                </div>
+                {this.renderSliceControls()}
                 <div className="react-grid-container" style={style} ref={this.containerRef}></div>
                 <div className="react-grid-measure" ref={this.measureRef} />
             </div>
         );
     }
 
-    public renderTemporarySliceIndicator = () => {
+    public renderSliceControls = () => {
         if (this.props.isSliceDataEnabled && this.props.originalVariableShape) {
             return (
-                <SliceControl
-                    originalVariableShape={this.props.originalVariableShape}
-                    handleSliceRequest={this.props.handleSliceRequest}
-                />
+                <div className="control-container" style={{ display: 'flex', justifyContent: 'start', flexDirection: 'row' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-around' }}>
+                        <SliceControl
+                            originalVariableShape={this.props.originalVariableShape}
+                            handleSliceRequest={this.props.handleSliceRequest}
+                        />
+                    </div>
+                </div>
             );
         }
     };
