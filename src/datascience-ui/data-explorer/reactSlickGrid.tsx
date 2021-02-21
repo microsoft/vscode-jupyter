@@ -302,7 +302,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
 
         return (
             <div className="outer-container">
-                <div style={{ display: 'flex', justifyContent: 'start', flexDirection: 'row' }}>
+                <div className="control-container" style={{ display: 'flex', justifyContent: 'start', flexDirection: 'row' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-around' }}>
                         {this.renderTemporarySliceIndicator()}
                     </div>

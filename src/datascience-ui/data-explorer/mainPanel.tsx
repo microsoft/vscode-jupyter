@@ -168,7 +168,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 breadcrumbText += " (" + this.state.originalVariableShape?.join(', ') + ")";
             }
             return (
-                <div className='breadcrumb-container'>
+                <div className='breadcrumb-container control-container'>
                     <div className='breadcrumb'>
                         <div className="icon-python breadcrumb-file-icon" />
                         <span>{this.state.fileName}</span>

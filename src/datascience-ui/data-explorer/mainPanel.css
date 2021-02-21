@@ -13,7 +13,6 @@
 .breadcrumb-container {
     display: flex;
     align-items: flex-start;
-    padding: 6px;
     padding-left: 16px;
 }
 
@@ -37,4 +36,11 @@
     color: #519aba;
     font-size: 18px;
     padding-right: 2px;
+}
+
+.control-container {
+    border-bottom-color: var(--vscode-editor-inactiveSelectionBackground);
+    border-bottom-style: solid;
+    border-bottom-width: 1px;
+    padding: 6px;
 }

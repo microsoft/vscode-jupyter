@@ -123,11 +123,94 @@ input.editor-text {
     margin: 0;
 }
 
-input.slice-data {
-    background-color: var(--vscode-editor-background);
+.slice-data {
+    background-color: var(--vscode-input-background);
+    color: var(--vscode-input-foreground);
+    padding: 4px;
+    /* input does not inherit font from body */
+    font-family: var(--vscode-font-family);
+    font-weight: var(--vscode-font-weight);
+    font-size: var(--vscode-font-size);
+    height: 30px;
+}
+
+[class*='ms-Dropdown is-disabled'],
+.submit-slice-button:disabled,
+.slice-data:disabled {
+    color: #cccccc;
+    opacity: 0.4;
+}
+
+.slicing-control {
+    font-family: var(--vscode-font-family);
+    font-weight: var(--vscode-font-weight);
+    font-size: var(--vscode-font-size);
+}
+
+details > summary {
+    list-style-type: none;
+    display: flex;
+}
+
+details > summary::-webkit-details-marker {
+    display: none;
+}
+
+details > summary::before {
+    font: normal normal normal 16px/1 codicon;
+    content: '\eab6';
+}
+
+details[open] > summary::before {
+    font: normal normal normal 16px/1 codicon;
+    content: '\eab4';
+}
+
+.submit-slice-button {
+    color: var(--vscode-button-foreground);
+    background-color: var(--vscode-button-background);
+    border: none;
+    margin-left: 10px;
+    padding: 4px 8px;
+    height: 30px;
+    font-family: var(--vscode-font-family);
+    font-weight: var(--vscode-font-weight);
+    font-size: var(--vscode-font-size);
+}
+
+:focus {
+    outline: none;
+}
+
+/* Overrides for Fluent UI controls */
+[class*='fieldGroup'] {
+    border: 0 none;
+    background: none;
+}
+
+[class*='text'] {
     color: var(--vscode-editor-foreground);
-    border-style: solid;
-    border-radius: 1pt;
-    border-color: var(--vscode-editor-inactiveSelectionBackground);
-    outline: 0 none;
+    font-family: var(--vscode-font-family);
+    font-weight: var(--vscode-font-weight);
+    font-size: var(--vscode-font-size);
+}
+
+[class*='ms-Dropdown-label'] {
+    color: var(--vscode-editor-foreground);
+    font-family: var(--vscode-font-family);
+    font-weight: var(--vscode-font-weight);
+    font-size: var(--vscode-font-size);
+}
+
+[class*='ms-Dropdown-title'] {
+    font-family: var(--vscode-font-family);
+    font-weight: var(--vscode-font-weight);
+    font-size: var(--vscode-font-size);
+    background-color: var(--vscode-dropdown-background);
+    border: var(--vscode-dropdown-border);
+    color: var(--vscode-dropdown-foreground);
+}
+
+[class*='ms-Dropdown-caretDown'] {
+    color: var(--vscode-dropdown-foreground);
 }
