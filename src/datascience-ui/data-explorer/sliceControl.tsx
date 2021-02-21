@@ -125,7 +125,7 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
                         }
                     });
                 const state = {};
-                if (dropdowns.length === this.props.originalVariableShape.length - 2) {
+                if (dropdowns.length === this.props.originalVariableShape.length - 2 || (dropdowns.length === 1 && this.props.originalVariableShape.length === 2)) {
                     // Apply values to dropdowns
                     for (let i = 0; i < dropdowns.length; i++) {
                         const selection = dropdowns[i];
