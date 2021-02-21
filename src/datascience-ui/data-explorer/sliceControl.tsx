@@ -9,6 +9,7 @@ interface ISliceControlProps {
 
 interface ISliceControlState {
     sliceExpression: string;
+    inputValue: string;
     isExpanded: boolean;
     isActive: boolean;
     selectedAxis0?: number;
@@ -20,22 +21,24 @@ interface ISliceControlState {
 export class SliceControl extends React.Component<ISliceControlProps, ISliceControlState> {
     constructor(props: ISliceControlProps) {
         super(props);
-        this.state = { isExpanded: false, isActive: false, sliceExpression: this.preselectedSliceExpression() };
+        const initialSlice = this.preselectedSliceExpression();
+        this.state = { isExpanded: false, isActive: false, sliceExpression: initialSlice, inputValue: initialSlice };
 
         this.handleChange = this.handleChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
     }
 
     public handleChange = (_event: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue: string | undefined) => {
-        this.setState({ sliceExpression: newValue ?? '' });
+        this.setState({ inputValue: newValue ?? '' });
     }
 
     public handleSubmit = (event: React.SyntheticEvent) => {
         event.preventDefault();
+        this.setState({ sliceExpression: this.state.inputValue });
         // Update axis and index dropdown selections
         this.applyInputBoxToDropdowns();
         this.props.handleSliceRequest({
-            slice: this.state.sliceExpression
+            slice: this.state.inputValue
         });
     }
 
@@ -81,7 +84,7 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'row', marginLeft: '30px', marginTop: '10px' }}>
                         <TextField 
-                            value={this.state.sliceExpression}
+                            value={this.state.inputValue}
                             onGetErrorMessage={this.validateSliceExpression}
                             onChange={this.handleChange}
                             autoComplete="on"
@@ -99,8 +102,8 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
     }
 
     private validateSliceExpression = () => {
-        const { sliceExpression } = this.state;
-        const parsedExpression = parseShape(sliceExpression);
+        const { inputValue } = this.state;
+        const parsedExpression = parseShape(inputValue);
         if (parsedExpression && parsedExpression.length !== this.props.originalVariableShape.length) {
             return 'Invalid slice expression';
         }
@@ -108,38 +111,40 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
     }
 
     private applyInputBoxToDropdowns = () => {
-        const shape = this.state.sliceExpression;
-        if (shape.startsWith('[') && shape.endsWith(']')) {
-            const dropdowns: { axis: number, index: number }[] = [];
-            shape.substring(1, shape.length - 1)
-                .split(',')
-                .forEach((shapeEl, idx) => {
-                    const val = parseInt(shapeEl);
-                    const isNumber = Number.isInteger(val);
-                    if (isNumber) {
-                        dropdowns.push({ axis: idx, index: val })
-                    }
-                });
-            const state = {};
-            if (dropdowns.length === this.props.originalVariableShape.length - 2) {
-                // Apply values to dropdowns
-                for (let i = 0; i < dropdowns.length; i++) {
-                    const selection = dropdowns[i];
-                    (state as any)[`selectedAxis${i.toString()}`] = selection.axis;
-                    (state as any)[`selectedIndex${i.toString()}`] = selection.index;
-                }
-            } else {
-                // Unset dropdowns
+        setTimeout(() => {
+            const shape = this.state.sliceExpression;
+            if (shape.startsWith('[') && shape.endsWith(']')) {
+                const dropdowns: { axis: number, index: number }[] = [];
+                shape.substring(1, shape.length - 1)
+                    .split(',')
+                    .forEach((shapeEl, idx) => {
+                        const val = parseInt(shapeEl);
+                        const isNumber = Number.isInteger(val);
+                        if (isNumber) {
+                            dropdowns.push({ axis: idx, index: val })
+                        }
+                    });
                 const state = {};
-                for (const key in this.state) {
-                    if (key.startsWith('selected')) {
-                        console.log('match', key);
-                        (state as any)[key] = null; // This isn't working
+                if (dropdowns.length === this.props.originalVariableShape.length - 2) {
+                    // Apply values to dropdowns
+                    for (let i = 0; i < dropdowns.length; i++) {
+                        const selection = dropdowns[i];
+                        (state as any)[`selectedAxis${i.toString()}`] = selection.axis;
+                        (state as any)[`selectedIndex${i.toString()}`] = selection.index;
+                    }
+                } else {
+                    // Unset dropdowns
+                    const state = {};
+                    for (const key in this.state) {
+                        if (key.startsWith('selected')) {
+                            console.log('match', key);
+                            (state as any)[key] = null; // This isn't working
+                        }
                     }
                 }
+                this.setState(state);
             }
-            this.setState(state);
-        }
+        });
     }
 
     private applyDropdownsToInputBox = () => {
@@ -152,7 +157,7 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
                     }
                     return ':';
                 }).join(', ') + ']';
-                this.setState({ sliceExpression: newSliceExpression });
+                this.setState({ sliceExpression: newSliceExpression, inputValue: newSliceExpression });
                 // Submit slice request
                 this.props.handleSliceRequest({ slice: newSliceExpression });
             }
