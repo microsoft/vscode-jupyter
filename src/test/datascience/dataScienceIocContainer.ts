@@ -312,6 +312,8 @@ import { PreferredRemoteKernelIdProvider } from '../../client/datascience/notebo
 import { NotebookWatcher } from '../../client/datascience/variablesView/notebookWatcher';
 import { InterpreterPackages } from '../../client/datascience/telemetry/interpreterPackages';
 import { Extensions } from '../../client/common/application/extensions';
+import { NotebookCreator } from '../../client/datascience/notebook/creation/notebookCreator';
+import { CreationOptionService } from '../../client/datascience/notebook/creation/creationOptionsService';
 
 export class DataScienceIocContainer extends UnitTestIocContainer {
     public get workingInterpreter() {
@@ -656,6 +658,15 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingletonInstance<JupyterServerSelector>(
             JupyterServerSelector,
             instance(mockServerSelector)
+        );
+
+        this.serviceManager.addSingletonInstance<NotebookCreator>(NotebookCreator, instance(mock(NotebookCreator)));
+        const creationService = mock<CreationOptionService>();
+        when(creationService.registerNewNotebookContent(anything())).thenResolve();
+        when(creationService.registrations).thenReturn([]);
+        this.serviceManager.addSingletonInstance<CreationOptionService>(
+            CreationOptionService,
+            instance(creationService)
         );
 
         this.serviceManager.addSingleton<INotebookProvider>(INotebookProvider, NotebookProvider);
