@@ -105,7 +105,9 @@ export function buildApi(
         onKernelStateChange: notebookExtensibility.onKernelStateChange.bind(notebookExtensibility),
         registerCellToolbarButton: webviewExtensibility.registerCellToolbarButton.bind(webviewExtensibility),
         registerNewNotebookContent(options: { defaultCellLanguage: string; label?: string }) {
-            return serviceContainer.get<CreationOptionService>(CreationOptionService).registerNewNotebookContent(options);
+            return serviceContainer
+                .get<CreationOptionService>(CreationOptionService)
+                .registerNewNotebookContent(options);
         },
         createBlankNotebook: async (options: { defaultCellLanguage: string }): Promise<void> => {
             const service = serviceContainer.get<INotebookEditorProvider>(VSCodeNotebookProvider);
