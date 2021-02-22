@@ -266,10 +266,22 @@ export class NativeEditorStorage implements INotebookStorage {
                 : await this.getStoredContents(options.file, backupId);
             if (dirtyContents) {
                 // This means we're dirty. Indicate dirty and load from this content
-                return this.loadContents(options.file, dirtyContents, true, options.isNative);
+                return this.loadContents(
+                    options.file,
+                    dirtyContents,
+                    true,
+                    options.isNative,
+                    options.defaultCellLanguage
+                );
             } else {
                 // Load without setting dirty
-                return this.loadContents(options.file, contents, undefined, options.isNative);
+                return this.loadContents(
+                    options.file,
+                    contents,
+                    undefined,
+                    options.isNative,
+                    options.defaultCellLanguage
+                );
             }
         } catch (ex) {
             // May not exist at this time. Should always have a single cell though
@@ -280,6 +292,7 @@ export class NativeEditorStorage implements INotebookStorage {
                     file: options.file,
                     cells: [],
                     crypto: this.crypto,
+                    defaultCellLanguage: options?.defaultCellLanguage,
                     globalMemento: this.globalStorage
                 },
                 options.isNative
@@ -315,7 +328,8 @@ export class NativeEditorStorage implements INotebookStorage {
         file: Uri,
         contents: string | undefined,
         isInitiallyDirty = false,
-        forVSCodeNotebook?: boolean
+        forVSCodeNotebook?: boolean,
+        defaultCellLanguage?: string
     ) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const json = contents ? (JSON.parse(contents) as Partial<nbformat.INotebookContent>) : undefined;
@@ -366,6 +380,7 @@ export class NativeEditorStorage implements INotebookStorage {
                 pythonNumber,
                 initiallyDirty: isInitiallyDirty,
                 crypto: this.crypto,
+                defaultCellLanguage,
                 globalMemento: this.globalStorage
             },
             forVSCodeNotebook
@@ -464,7 +479,7 @@ export class NativeEditorStorage implements INotebookStorage {
         const workspaceData = this.localStorage.get<string>(key);
         if (workspaceData) {
             // Make sure to clear so we don't use this again.
-            this.localStorage.update(key, undefined);
+            void this.localStorage.update(key, undefined);
 
             return workspaceData;
         }

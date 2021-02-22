@@ -8,6 +8,7 @@ import * as sinon from 'sinon';
 import { anything, instance, mock, when } from 'ts-mockito';
 import * as tasClient from 'vscode-tas-client';
 import { ApplicationEnvironment } from '../../../client/common/application/applicationEnvironment';
+import { Extensions } from '../../../client/common/application/extensions';
 import { Channel, IApplicationEnvironment } from '../../../client/common/application/types';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import { ExperimentService } from '../../../client/common/experiments/service';
@@ -16,7 +17,6 @@ import { Experiments } from '../../../client/common/utils/localize';
 import * as Telemetry from '../../../client/telemetry';
 import { EventName } from '../../../client/telemetry/constants';
 import { JVSC_EXTENSION_ID_FOR_TESTS } from '../../constants';
-import { MockExtensions } from '../../datascience/mockExtensions';
 import { MockOutputChannel } from '../../mockClasses';
 import { MockMemento } from '../../mocks/mementos';
 
@@ -34,7 +34,7 @@ suite('Experimentation service', () => {
         appEnvironment = mock(ApplicationEnvironment);
         globalMemento = new MockMemento();
         outputChannel = new MockOutputChannel('');
-        extensionService = new MockExtensions();
+        extensionService = instance(mock(Extensions));
     });
 
     teardown(() => {
