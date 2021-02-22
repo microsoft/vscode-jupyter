@@ -68,6 +68,7 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
     ) {
         this.isLocalLaunch = isLocalLaunch(this.configuration);
         this.notebook.onDidChangeActiveNotebookKernel(this.onDidChangeActiveNotebookKernel, this, disposables);
+        this.extensions.onDidChange(this.onDidChangeExtensions, this, disposables);
     }
 
     public async resolveKernel?(
@@ -113,6 +114,11 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
         });
         return mapped;
     }
+
+    private onDidChangeExtensions() {
+        this._onDidChangeKernels.fire(undefined);
+    }
+
     private async getKernels(
         document: NotebookDocument,
         token: CancellationToken
