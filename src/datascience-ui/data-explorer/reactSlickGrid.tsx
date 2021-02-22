@@ -30,6 +30,7 @@ import 'slickgrid/slick.editors';
 // Adding comments to ensure order of imports does not change due to auto formatters.
 // eslint-disable-next-line import/order
 import 'slickgrid/plugins/slick.autotooltips';
+import 'slickgrid/plugins/slick.headerbuttons';
 // Adding comments to ensure order of imports does not change due to auto formatters.
 // eslint-disable-next-line import/order
 import 'slickgrid/slick.grid.css';
@@ -206,7 +207,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
             // Create the grid
             const grid = new Slick.Grid<ISlickRow>(this.containerRef.current, this.dataView, columns, options);
             grid.registerPlugin(new Slick.AutoTooltips({ enableForCells: true, enableForHeaderCells: true }));
-
+            grid.registerPlugin(new Slick.Plugins.HeaderButtons());
             // Setup our dataview
             this.dataView.beginUpdate();
             this.dataView.setFilter(this.filter.bind(this));
@@ -285,6 +286,11 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
     };
 
     public componentDidUpdate = (_prevProps: ISlickGridProps) => {
+        if (this.state.showingFilters && this.state.grid) {	
+            this.state.grid.setHeaderRowVisibility(true);	
+        } else if (this.state.showingFilters === false && this.state.grid) {	
+            this.state.grid.setHeaderRowVisibility(false);	
+        }
         // Dynamically modify the styles that the slickGrid generates for the rows.
         // It's eliminating some of the height
         if (this.state.grid && this.containerRef.current) {
@@ -312,16 +318,11 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
     public renderSliceControls = () => {
         if (this.props.isSliceDataEnabled && this.props.originalVariableShape) {
             return (
-                <div
-                    className="control-container"
-                    style={{ display: 'flex', justifyContent: 'start', flexDirection: 'row' }}
-                >
-                    <div style={{ display: 'flex', justifyContent: 'space-around' }}>
-                        <SliceControl
-                            originalVariableShape={this.props.originalVariableShape}
-                            handleSliceRequest={this.props.handleSliceRequest}
-                        />
-                    </div>
+                <div className="control-container">
+                    <SliceControl
+                        originalVariableShape={this.props.originalVariableShape}
+                        handleSliceRequest={this.props.handleSliceRequest}
+                    />
                 </div>
             );
         }
@@ -342,6 +343,11 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
             this.dataView.refresh();
         }
     };
+
+    private clearAllFilters = () => {
+        this.columnFilters = new Map();
+        this.dataView.refresh();
+    }
 
     private styleColumns(columns: Slick.Column<ISlickRow>[]) {
         // Transform columns so they are sortable and stylable
@@ -475,7 +481,20 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
             const placeholder = '99999999999';
             const maxFieldWidth = measureText(placeholder, fontString);
             columns.forEach((c) => {
-                c.width = maxFieldWidth;
+                if (c.name !== this.props.idProperty) {
+                    c.width = maxFieldWidth;
+                } else {
+                    c.width = maxFieldWidth / 2;
+                    c.name = '';
+                    c.header = {
+                        buttons: [
+                            {
+                                cssClass: 'codicon codicon-filter codicon-button',
+                                handler: this.clickFilterButton
+                            }
+                        ]
+                    }
+                }
             });
             this.state.grid.setColumns(columns);
 
@@ -485,6 +504,10 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
                 this.updateCssStyles();
             }, 0);
         }
+    }
+
+    private clickFilterButton = () => {
+        this.setState({ showingFilters: !this.state.showingFilters });
     }
 
     private computeFont(): string | null {
@@ -498,14 +521,23 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
     private resetGrid = (_e: Slick.EventData, data: ISlickGridSlice) => {
         this.dataView.setItems([]);
         const styledColumns = this.styleColumns(data.columns);
-        this.state.grid?.setColumns(styledColumns);
+        this.setColumns(styledColumns);
         this.autoResizeColumns();
     };
 
     private updateColumns = (_e: Slick.EventData, newColumns: Slick.Column<Slick.SlickData>[]) => {
-        this.state.grid?.setColumns(newColumns);
+        this.setColumns(newColumns);
         this.state.grid?.render(); // We might be able to skip this rerender?
     };
+
+    private setColumns = (newColumns: Slick.Column<Slick.SlickData>[]) => {
+        // HACK: SlickGrid header row does not rerender if its visibility is false when columns	
+        // are updated, and this causes the header to simply not show up when clicking the	
+        // filter button after we update the grid column headers on receiving a slice response.	
+        // The solution is to force the header row to become visible just before sending our slice request.	
+        this.state.grid?.setHeaderRowVisibility(true);
+        this.state.grid?.setColumns(newColumns);
+    }
 
     private addedRows = (_e: Slick.EventData, data: ISlickGridAdd) => {
         // Add all of these new rows into our data.
@@ -543,14 +575,18 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
     }
 
     private renderFilterCell = (_e: Slick.EventData, args: Slick.OnHeaderRowCellRenderedEventArgs<Slick.SlickData>) => {
-        ReactDOM.render(
-            <ReactSlickGridFilterBox
-                column={args.column}
-                onChange={this.filterChanged}
-                fontSize={this.state.fontSize}
-            />,
-            args.node
-        );
+        if (args.column.id === '0') {
+            ReactDOM.render(<div className='codicon codicon-clear-all codicon-button' onClick={this.clearAllFilters} />, args.node);
+        } else {
+            ReactDOM.render(
+                <ReactSlickGridFilterBox
+                    column={args.column}
+                    onChange={this.filterChanged}
+                    fontSize={this.state.fontSize}
+                />,
+                args.node
+            );
+        }
     };
 
     private compareElements(a: any, b: any, col?: Slick.Column<Slick.SlickData>): number {
@@ -584,6 +620,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         return -1;
     }
 }
+
 
 // Modified version of https://github.com/6pac/SlickGrid/blob/master/slick.editors.js#L24
 // with some fixes to get things working in our context

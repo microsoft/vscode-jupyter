@@ -61,7 +61,7 @@
     padding-left: 3px;
     padding-right: 3px;
     padding-bottom: 3px;
-    padding-top: 0px;
+    padding-top: 1px;
 }
 
 .slick-header-column.ui-state-default,
@@ -82,13 +82,15 @@
 
 .react-grid-header-cell > .slick-sort-indicator-asc::before {
     background: none;
-    content: '▲';
+    font: normal normal normal 16px/1 codicon;
+    content: '\eaa1'; /* VS Code arrow-up codicon */
     align-items: center;
 }
 
 .react-grid-header-cell > .slick-sort-indicator-desc::before {
     background: none;
-    content: '▼';
+    font: normal normal normal 16px/1 codicon;
+    content: '\ea9a'; /* VS Code arrow-down codicon */
     align-items: center;
 }
 
@@ -121,4 +123,18 @@ input.editor-text {
     border: 0;
     padding: 0;
     margin: 0;
+}
+
+.control-container {
+    border-bottom-color: var(--vscode-editor-inactiveSelectionBackground);
+    border-bottom-style: solid;
+    border-bottom-width: 1px;
+    padding: 6px;
+    display: flex;
+    justify-content: start;
+    flex-direction: row;
+}
+
+.codicon-button {
+    cursor: pointer;
 }
