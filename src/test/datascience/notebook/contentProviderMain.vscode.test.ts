@@ -83,6 +83,8 @@ suite('DataScience - NativeNotebook ContentProvider', () => {
                 assert.equal(notebook.metadata.editable, isNotebookTrusted);
                 assert.equal(notebook.metadata.runnable, isNotebookTrusted);
 
+                // With Native Notebooks, the editable and runnable properties in cells don't matter
+                // as long as the metadata is correct (checked above) there is no way to run untrusted notebooks
                 assert.deepEqual(notebook.cells, [
                     {
                         cellKind: NotebookCellKind.Code,
@@ -93,11 +95,11 @@ suite('DataScience - NativeNotebook ContentProvider', () => {
                             custom: {
                                 metadata: {}
                             },
-                            editable: isNotebookTrusted,
+                            editable: true,
                             executionOrder: 10,
                             hasExecutionOrder: true,
                             runState: NotebookCellRunState.Idle,
-                            runnable: isNotebookTrusted,
+                            runnable: true,
                             statusMessage: undefined
                         })
                     },
@@ -110,7 +112,7 @@ suite('DataScience - NativeNotebook ContentProvider', () => {
                             custom: {
                                 metadata: {}
                             },
-                            editable: isNotebookTrusted,
+                            editable: true,
                             executionOrder: undefined,
                             hasExecutionOrder: false,
                             runnable: false
@@ -161,6 +163,8 @@ suite('DataScience - NativeNotebook ContentProvider', () => {
                 assert.equal(notebook.metadata.editable, isNotebookTrusted);
                 assert.equal(notebook.metadata.runnable, isNotebookTrusted);
 
+                // With Native Notebooks, the editable and runnable properties in cells don't matter
+                // as long as the metadata is correct (checked above) there is no way to run untrusted notebooks
                 assert.deepEqual(notebook.cells, [
                     {
                         cellKind: NotebookCellKind.Code,
@@ -171,11 +175,11 @@ suite('DataScience - NativeNotebook ContentProvider', () => {
                             custom: {
                                 metadata: {}
                             },
-                            editable: isNotebookTrusted,
+                            editable: true,
                             executionOrder: 10,
                             hasExecutionOrder: true,
                             runState: NotebookCellRunState.Idle,
-                            runnable: isNotebookTrusted,
+                            runnable: true,
                             statusMessage: undefined
                         })
                     },
@@ -188,7 +192,7 @@ suite('DataScience - NativeNotebook ContentProvider', () => {
                             custom: {
                                 metadata: {}
                             },
-                            editable: isNotebookTrusted,
+                            editable: true,
                             executionOrder: undefined,
                             hasExecutionOrder: false,
                             runnable: false
