@@ -56,14 +56,16 @@ class MockProvider implements IJupyterUriProvider {
 /* eslint-disable , @typescript-eslint/no-explicit-any */
 suite('DataScience URI Picker', () => {
     teardown(() => sinon.restore());
+    suiteSetup(() => sinon.restore());
     function createRegistration(providerIds: string[]) {
         let registration: JupyterUriProviderRegistration | undefined;
         const extensionList: vscode.Extension<any>[] = [];
         const fileSystem = mock(FileSystem);
         const allStub = sinon.stub(Extensions.prototype, 'all');
-        allStub.returns(extensionList);
+        allStub.callsFake(() => extensionList);
         const extensions = new Extensions(instance(fileSystem));
         when(fileSystem.localFileExists(anything())).thenResolve(false);
+        registration = new JupyterUriProviderRegistration(extensions);
         providerIds.forEach((id) => {
             const extension = TypeMoq.Mock.ofType<vscode.Extension<any>>();
             const packageJson = TypeMoq.Mock.ofType<any>();
@@ -74,13 +76,12 @@ suite('DataScience URI Picker', () => {
             extension
                 .setup((e) => e.activate())
                 .returns(() => {
-                    registration?.registerProvider(new MockProvider(id));
                     return Promise.resolve();
                 });
             extension.setup((e) => e.isActive).returns(() => false);
             extensionList.push(extension.object);
+            registration?.registerProvider(new MockProvider(id));
         });
-        registration = new JupyterUriProviderRegistration(extensions);
         return registration;
     }
 
@@ -136,8 +137,8 @@ suite('DataScience URI Picker', () => {
         assert.equal(uri.baseUrl, 'http://foobar:3000', 'Base URL not found');
     });
     test('Two pickers with same id', async () => {
-        const registration = createRegistration(['1', '1']);
         try {
+            const registration = createRegistration(['1', '1']);
             await registration.getJupyterServerUri('1', '1');
             // eslint-disable-next-line
             assert.fail('Should have failed if calling with same picker');
