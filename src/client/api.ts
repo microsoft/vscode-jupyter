@@ -64,7 +64,7 @@ export interface IExtensionApi {
          * Value in the quickpick (if not provided, will use the displayName of the extension).
          */
         label: string;
-    }): void;
+    }): Promise<void>;
     /**
      * Creates a blank notebook and defaults the empty cell to the language provided.
      */
@@ -105,7 +105,7 @@ export function buildApi(
         onKernelStateChange: notebookExtensibility.onKernelStateChange.bind(notebookExtensibility),
         registerCellToolbarButton: webviewExtensibility.registerCellToolbarButton.bind(webviewExtensibility),
         registerNewNotebookContent(options: { defaultCellLanguage: string; label?: string }) {
-            serviceContainer.get<CreationOptionService>(CreationOptionService).registerNewNotebookContent(options);
+            return serviceContainer.get<CreationOptionService>(CreationOptionService).registerNewNotebookContent(options);
         },
         createBlankNotebook: async (options: { defaultCellLanguage: string }): Promise<void> => {
             const service = serviceContainer.get<INotebookEditorProvider>(VSCodeNotebookProvider);
@@ -114,7 +114,7 @@ export function buildApi(
     };
 
     // In test environment return the DI Container.
-    if (isTestExecution()) {
+    if (isTestExecution() || process.env.VSC_JUPYTER_EXPOSE_SVC) {
         /* eslint-disable @typescript-eslint/no-explicit-any */
         (api as any).serviceContainer = serviceContainer;
         (api as any).serviceManager = serviceManager;
