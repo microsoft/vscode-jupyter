@@ -209,7 +209,7 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
 
     // This will ensure all subsequent telemetry will get the context of whether it is a custom/native/old notebook editor.
     // This is temporary, and once we ship native editor this needs to be removed.
-    setSharedProperty('ds_notebookeditor', useVSCodeNotebookAPI ? 'native' : UseCustomEditorApi ? 'custom' : 'old');
+    setSharedProperty('ds_notebookeditor', useVSCodeNotebookAPI ? 'native' : usingCustomEditor ? 'custom' : 'old');
     const isLocalConnection = isLocalLaunch(serviceManager.get<IConfigurationService>(IConfigurationService));
     setSharedProperty('localOrRemoteConnection', isLocalConnection ? 'local' : 'remote');
     const isPythonExtensionInstalled = serviceManager.get<IPythonExtensionChecker>(IPythonExtensionChecker);
