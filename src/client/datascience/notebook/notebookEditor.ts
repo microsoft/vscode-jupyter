@@ -229,6 +229,7 @@ export class NotebookEditor implements INotebookEditor {
             traceError('Failed to interrupt kernel', err);
             void this.applicationShell.showErrorMessage(err);
         } finally {
+            this.kernelInterruptedDontAskToRestart = false;
             status.dispose();
         }
     }
@@ -367,7 +368,6 @@ export class NotebookEditor implements INotebookEditor {
     }
     private async shouldAskForRestart(): Promise<boolean> {
         if (this.kernelInterruptedDontAskToRestart) {
-            this.kernelInterruptedDontAskToRestart = false;
             return false;
         }
         const settings = this.configurationService.getSettings(this.file);
