@@ -24,7 +24,7 @@
         "theme": "light"
     },
     "engines": {
-        "vscode": "^1.49.0"
+        "vscode": "1.54.0-insider"
     },
     "keywords": [
         "jupyter",
@@ -147,7 +147,7 @@
                 "linux": "Z",
                 "key": "Z",
                 "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts",
-                "command": "undo"
+                "command": "jupyter.notebookeditor.keybind.undo"
             },
             {
                 "mac": "S",
@@ -155,7 +155,7 @@
                 "linux": "S",
                 "key": "S",
                 "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts",
-                "command": "workbench.action.files.save"
+                "command": "jupyter.notebookeditor.keybind.save"
             },
             {
                 "mac": "C",
@@ -575,6 +575,18 @@
                 "command": "jupyter.notebookeditor.redocells",
                 "title": "%jupyter.command.jupyter.redocells.title%",
                 "category": "Notebook"
+            },
+            {
+                "command": "jupyter.notebookeditor.keybind.undo",
+                "title": "%jupyter.command.jupyter.notebookeditor.keybind.undo.title%",
+                "category": "Notebook",
+                "enablement": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts"
+            },
+            {
+                "command": "jupyter.notebookeditor.keybind.save",
+                "title": "%jupyter.command.jupyter.notebookeditor.keybind.save.title%",
+                "category": "Notebook",
+                "enablement": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts"
             },
             {
                 "command": "jupyter.removeallcells",
@@ -1164,6 +1176,18 @@
                     "title": "%jupyter.command.jupyter.collapseallcells.title%",
                     "category": "Notebook",
                     "when": "notebookEditorFocused"
+                },
+                {
+                    "command": "jupyter.notebookeditor.keybind.undo",
+                    "title": "%jupyter.command.jupyter.notebookeditor.keybind.undo.title%",
+                    "category": "Notebook",
+                    "when": "false"
+                },
+                {
+                    "command": "jupyter.notebookeditor.keybind.save",
+                    "title": "%jupyter.command.jupyter.notebookeditor.keybind.save.title%",
+                    "category": "Notebook",
+                    "when": "false"
                 },
                 {
                     "command": "jupyter.expandallcells",
@@ -1871,8 +1895,8 @@
         "test:cover:report": "nyc report --reporter=text --reporter=html --reporter=text-summary --reporter=cobertura",
         "preTestJediLSP": "node ./out/test/languageServers/jedi/lspSetup.js",
         "testJediLSP": "node ./out/test/languageServers/jedi/lspSetup.js && cross-env CODE_TESTS_WORKSPACE=src/test VSC_JUPYTER_CI_TEST_GREP='Language Server:' node ./out/test/testBootstrap.js ./out/test/standardTest.js && node ./out/test/languageServers/jedi/lspTeardown.js",
-        "pretestVSCode": "cross-env VSC_JUPYTER_CI_TEST_VSC_CHANNEL=stable node ./out/test/datascience/dsTestSetup.js",
-        "testVSCode": "cross-env CODE_TESTS_WORKSPACE=src/test/datascience VSC_JUPYTER_CI_TEST_VSC_CHANNEL=stable TEST_FILES_SUFFIX=vscode.test VSC_JUPYTER_FORCE_LOGGING=1 VSC_JUPYTER_LOAD_EXPERIMENTS_FROM_FILE=true node ./out/test/testBootstrap.js ./out/test/standardTest.js",
+        "pretestVSCode": "cross-env VSC_JUPYTER_CI_TEST_VSC_CHANNEL=insiders node ./out/test/datascience/dsTestSetup.js",
+        "testVSCode": "cross-env CODE_TESTS_WORKSPACE=src/test/datascience VSC_JUPYTER_CI_TEST_VSC_CHANNEL=insiders TEST_FILES_SUFFIX=vscode.test VSC_JUPYTER_FORCE_LOGGING=1 VSC_JUPYTER_LOAD_EXPERIMENTS_FROM_FILE=true node ./out/test/testBootstrap.js ./out/test/standardTest.js",
         "pretestNativeNotebooksInVSCode": "cross-env VSC_JUPYTER_CI_TEST_VSC_CHANNEL=insiders VSC_JUPYTER_RUN_NB_TEST=true node ./out/test/datascience/dsTestSetup.js",
         "testNativeNotebooksInVSCode": "cross-env CODE_TESTS_WORKSPACE=src/test/datascience VSC_JUPYTER_CI_TEST_VSC_CHANNEL=insiders VSC_JUPYTER_RUN_NB_TEST=true TEST_FILES_SUFFIX=vscode.test VSC_JUPYTER_FORCE_LOGGING=1 VSC_JUPYTER_LOAD_EXPERIMENTS_FROM_FILE=true node ./out/test/testBootstrap.js ./out/test/standardTest.js",
         "pretestNativeNotebooksWithoutPythonInVSCode": "cross-env VSC_JUPYTER_CI_TEST_VSC_CHANNEL=insiders VSC_JUPYTER_RUN_NB_TEST=true node ./out/test/datascience/dsTestSetup.js",
@@ -2044,7 +2068,7 @@
         "@types/tmp": "0.0.33",
         "@types/untildify": "^3.0.0",
         "@types/uuid": "^3.4.3",
-        "@types/vscode": "^1.49.0",
+        "@types/vscode": "^1.53.0",
         "@types/vscode-notebook-renderer": "^1.48.0",
         "@types/webpack-bundle-analyzer": "^2.13.0",
         "@types/winreg": "^1.2.30",
@@ -2057,9 +2081,10 @@
         "babel-polyfill": "^6.26.0",
         "cache-loader": "^4.1.0",
         "canvas": "^2.6.0",
-        "chai": "^4.1.2",
+        "chai": "^4.3.0",
         "chai-arrays": "^2.0.0",
         "chai-as-promised": "^7.1.1",
+        "chai-exclude": "^2.0.2",
         "codecov": "^3.7.1",
         "colors": "^1.2.1",
         "copy-webpack-plugin": "^6.2.1",

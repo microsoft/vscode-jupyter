@@ -1,9 +1,9 @@
 name: Publish For Insiders
 
 on:
-  schedule:
+#  schedule:
     # Every day at midnight
-    - cron:  '0 0 * * *'
+#    - cron:  '0 0 * * *'
   workflow_dispatch:
     inputs:
       confirmation:
@@ -38,12 +38,12 @@ jobs:
           python-version: ${{env.PYTHON_VERSION}}
 
       - name: Use Node ${{env.NODE_VERSION}}
-        uses: actions/setup-node@v2.1.2
+        uses: actions/setup-node@v2.1.4
         with:
           node-version: ${{env.NODE_VERSION}}
 
       - name: Azure Login
-        uses: azure/login@v1.1.1
+        uses: azure/login@v1.3.0
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
@@ -67,5 +67,5 @@ jobs:
           python -c "import os; os.rename('${{env.VSIX_ROOT_NAME}}.zip', '${{env.VSIX_NAME_TO_PUBLISH}}')"
 
       - name: Publish
-        run: vsce_ publish --packagePath ${{env.VSIX_NAME_TO_PUBLISH}} --pat ${{secrets.VSCE_TOKEN}} --noVerify
+        run: vsce publish --packagePath ${{env.VSIX_NAME_TO_PUBLISH}} --pat ${{secrets.VSCE_TOKEN}} --noVerify
 

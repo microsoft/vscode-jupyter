@@ -134,6 +134,8 @@ export namespace Commands {
     export const ShowDataViewer = 'jupyter.showDataViewer';
     export const ClearSavedJupyterUris = 'jupyter.clearSavedJupyterUris';
     export const OpenVariableView = 'jupyter.openVariableView';
+    export const NotebookEditorKeybindSave = 'jupyter.notebookeditor.keybind.save';
+    export const NotebookEditorKeybindUndo = 'jupyter.notebookeditor.keybind.undo';
 }
 
 export namespace CodeLensCommands {
@@ -382,7 +384,6 @@ export enum Telemetry {
     GetPreferredKernelPerf = 'DS_INTERNAL.GET_PREFERRED_KERNEL_PERF',
     KernelFinderPerf = 'DS_INTERNAL.KERNEL_FINDER_PERF',
     KernelListingPerf = 'DS_INTERNAL.KERNEL_LISTING_PERF',
-    NativeNotebookKernelSelectionPerf = 'DS_INTERNAL.NATIVE_NOTEBOOK_KERNEL_SELECTION_PERF',
     JupyterInstallFailed = 'DS_INTERNAL.JUPYTER_INSTALL_FAILED',
     UserInstalledModule = 'DATASCIENCE.USER_INSTALLED_MODULE',
     JupyterCommandLineNonDefault = 'DS_INTERNAL.JUPYTER_CUSTOM_COMMAND_LINE',

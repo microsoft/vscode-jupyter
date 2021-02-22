@@ -5,8 +5,7 @@
 
 import type { nbformat } from '@jupyterlab/coreutils/lib/nbformat';
 import { inject, injectable, named } from 'inversify';
-import { Memento } from 'vscode';
-import { NotebookDocument } from '../../../../types/vscode-proposed';
+import { Memento, NotebookCellKind, NotebookDocument } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IVSCodeNotebook } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
@@ -17,8 +16,6 @@ import { translateKernelLanguageToMonaco } from '../common';
 import { getLanguageInNotebookMetadata } from '../jupyter/kernels/helpers';
 import { IJupyterKernelSpec } from '../types';
 import { getNotebookMetadata } from './helpers/helpers';
-// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
-const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
 export const LastSavedNotebookCellLanguage = 'DATASCIENCE.LAST_SAVED_CELL_LANGUAGE';
 /**
@@ -63,7 +60,7 @@ export class NotebookCellLanguageService implements IExtensionSingleActivationSe
             // Give preference to the language information in the metadata.
             const language = getLanguageInNotebookMetadata(getNotebookMetadata(doc));
             // Fall back to the language of the first code cell in the notebook.
-            return language || doc.cells.find((cell) => cell.cellKind === vscodeNotebookEnums.CellKind.Code)?.language;
+            return language || doc.cells.find((cell) => cell.cellKind === NotebookCellKind.Code)?.language;
         } catch (ex) {
             traceWarning('Failed to determine language of first cell', ex);
         }

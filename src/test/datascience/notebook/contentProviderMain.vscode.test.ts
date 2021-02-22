@@ -4,16 +4,18 @@
 'use strict';
 
 import { assert } from 'chai';
-import { cloneDeep } from 'lodash';
 import { IDisposable } from 'monaco-editor';
 import { anything, instance, mock, when } from 'ts-mockito';
-import { EventEmitter, Memento, Uri } from 'vscode';
-// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
-const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
-import type {
+import {
+    EventEmitter,
+    Memento,
+    NotebookCellKind,
+    NotebookCellRunState,
+    Uri,
     NotebookContentProvider as VSCodeNotebookContentProvider,
-    NotebookDocument
-} from '../../../../types/vscode-proposed';
+    NotebookDocument,
+    NotebookCellMetadata
+} from 'vscode';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { disposeAllDisposables } from '../../../client/common/helpers';
@@ -76,45 +78,37 @@ suite('DataScience - NativeNotebook ContentProvider', () => {
                 const notebook = await contentProvider.openNotebook(fileUri, {});
 
                 assert.isOk(notebook);
-                assert.deepEqual(notebook.languages, ['*']);
-                // ignore metadata we add.
-                const cellsWithoutCustomMetadata = notebook.cells.map((cell) => {
-                    const cellToCompareWith = cloneDeep(cell);
-                    delete cellToCompareWith.metadata?.custom;
-                    return cellToCompareWith;
-                });
-
                 assert.equal(notebook.metadata.cellEditable, isNotebookTrusted);
                 assert.equal(notebook.metadata.cellRunnable, isNotebookTrusted);
                 assert.equal(notebook.metadata.editable, isNotebookTrusted);
                 assert.equal(notebook.metadata.runnable, isNotebookTrusted);
 
-                assert.deepEqual(cellsWithoutCustomMetadata, [
+                assert.deepEqual(notebook.cells, [
                     {
-                        cellKind: vscodeNotebookEnums.CellKind.Code,
+                        cellKind: NotebookCellKind.Code,
                         language: PYTHON_LANGUAGE,
                         outputs: [],
                         source: 'print(1)',
-                        metadata: {
+                        metadata: new NotebookCellMetadata().with({
                             editable: isNotebookTrusted,
                             executionOrder: 10,
                             hasExecutionOrder: true,
-                            runState: vscodeNotebookEnums.NotebookCellRunState.Idle,
+                            runState: NotebookCellRunState.Idle,
                             runnable: isNotebookTrusted,
                             statusMessage: undefined
-                        }
+                        })
                     },
                     {
-                        cellKind: vscodeNotebookEnums.CellKind.Markdown,
+                        cellKind: NotebookCellKind.Markdown,
                         language: MARKDOWN_LANGUAGE,
                         outputs: [],
                         source: '# HEAD',
-                        metadata: {
+                        metadata: new NotebookCellMetadata().with({
                             editable: isNotebookTrusted,
                             executionOrder: undefined,
                             hasExecutionOrder: false,
                             runnable: false
-                        }
+                        })
                     }
                 ]);
             });
@@ -155,46 +149,38 @@ suite('DataScience - NativeNotebook ContentProvider', () => {
                 const notebook = await contentProvider.openNotebook(fileUri, {});
 
                 assert.isOk(notebook);
-                assert.deepEqual(notebook.languages, ['*']);
 
                 assert.equal(notebook.metadata.cellEditable, isNotebookTrusted);
                 assert.equal(notebook.metadata.cellRunnable, isNotebookTrusted);
                 assert.equal(notebook.metadata.editable, isNotebookTrusted);
                 assert.equal(notebook.metadata.runnable, isNotebookTrusted);
 
-                // ignore metadata we add.
-                const cellsWithoutCustomMetadata = notebook.cells.map((cell) => {
-                    const cellToCompareWith = cloneDeep(cell);
-                    delete cellToCompareWith.metadata?.custom;
-                    return cellToCompareWith;
-                });
-
-                assert.deepEqual(cellsWithoutCustomMetadata, [
+                assert.deepEqual(notebook.cells, [
                     {
-                        cellKind: vscodeNotebookEnums.CellKind.Code,
+                        cellKind: NotebookCellKind.Code,
                         language: 'csharp',
                         outputs: [],
                         source: 'Console.WriteLine("1")',
-                        metadata: {
+                        metadata: new NotebookCellMetadata().with({
                             editable: isNotebookTrusted,
                             executionOrder: 10,
                             hasExecutionOrder: true,
-                            runState: vscodeNotebookEnums.NotebookCellRunState.Idle,
+                            runState: NotebookCellRunState.Idle,
                             runnable: isNotebookTrusted,
                             statusMessage: undefined
-                        }
+                        })
                     },
                     {
-                        cellKind: vscodeNotebookEnums.CellKind.Markdown,
+                        cellKind: NotebookCellKind.Markdown,
                         language: MARKDOWN_LANGUAGE,
                         outputs: [],
                         source: '# HEAD',
-                        metadata: {
+                        metadata: new NotebookCellMetadata().with({
                             editable: isNotebookTrusted,
                             executionOrder: undefined,
                             hasExecutionOrder: false,
                             runnable: false
-                        }
+                        })
                     }
                 ]);
             });

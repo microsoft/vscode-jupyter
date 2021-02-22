@@ -2,8 +2,10 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { Disposable, Event, EventEmitter } from 'vscode';
-import type {
+import {
+    Disposable,
+    Event,
+    EventEmitter,
     notebook,
     NotebookCellMetadata,
     NotebookCellsChangeEvent as VSCNotebookCellsChangeEvent,
@@ -14,8 +16,8 @@ import type {
     NotebookEditorSelectionChangeEvent,
     NotebookKernel,
     NotebookKernelProvider,
-    window as notebookWindow
-} from '../../../../types/vscode-proposed';
+    window
+} from 'vscode';
 import { UseVSCodeNotebookEditorApi } from '../constants';
 import { IDisposableRegistry } from '../types';
 import { IApplicationEnvironment, IVSCodeNotebook, NotebookCellChangedEvent } from './types';
@@ -33,39 +35,23 @@ export class VSCodeNotebook implements IVSCodeNotebook {
     public readonly onDidSaveNotebookDocument: Event<NotebookDocument>;
     public readonly onDidChangeNotebookDocument: Event<NotebookCellChangedEvent>;
     public get notebookDocuments(): ReadonlyArray<NotebookDocument> {
-        return this.canUseNotebookApi ? this.notebook.notebookDocuments : [];
+        return this.canUseNotebookApi ? notebook.notebookDocuments : [];
     }
     public get notebookEditors() {
-        return this.canUseNotebookApi ? this.window.visibleNotebookEditors : [];
+        return this.canUseNotebookApi ? window.visibleNotebookEditors : [];
     }
     public get activeNotebookEditor(): NotebookEditor | undefined {
         if (!this.useNativeNb) {
             return;
         }
         try {
-            return this.window.activeNotebookEditor;
+            return window.activeNotebookEditor;
         } catch {
             return undefined;
         }
     }
-    private get notebook() {
-        if (!this._notebook) {
-            // eslint-disable-next-line @typescript-eslint/no-require-imports
-            this._notebook = require('vscode').notebook;
-        }
-        return this._notebook!;
-    }
-    private get window() {
-        if (!this._window) {
-            // eslint-disable-next-line @typescript-eslint/no-require-imports
-            this._window = require('vscode').window;
-        }
-        return this._window!;
-    }
     private readonly _onDidChangeNotebookDocument = new EventEmitter<NotebookCellChangedEvent>();
     private addedEventHandlers?: boolean;
-    private _notebook?: typeof notebook;
-    private _window?: typeof notebookWindow;
     private readonly canUseNotebookApi?: boolean;
     private readonly handledCellChanges = new WeakSet<VSCNotebookCellsChangeEvent>();
     constructor(
@@ -76,12 +62,12 @@ export class VSCodeNotebook implements IVSCodeNotebook {
         if (this.useNativeNb) {
             this.addEventHandlers();
             this.canUseNotebookApi = true;
-            this.onDidChangeActiveNotebookKernel = this.notebook.onDidChangeActiveNotebookKernel;
-            this.onDidChangeNotebookEditorSelection = this.window.onDidChangeNotebookEditorSelection;
-            this.onDidChangeActiveNotebookEditor = this.window.onDidChangeActiveNotebookEditor;
-            this.onDidOpenNotebookDocument = this.notebook.onDidOpenNotebookDocument;
-            this.onDidCloseNotebookDocument = this.notebook.onDidCloseNotebookDocument;
-            this.onDidSaveNotebookDocument = this.notebook.onDidSaveNotebookDocument;
+            this.onDidChangeActiveNotebookKernel = notebook.onDidChangeActiveNotebookKernel;
+            this.onDidChangeNotebookEditorSelection = window.onDidChangeNotebookEditorSelection;
+            this.onDidChangeActiveNotebookEditor = window.onDidChangeActiveNotebookEditor;
+            this.onDidOpenNotebookDocument = notebook.onDidOpenNotebookDocument;
+            this.onDidCloseNotebookDocument = notebook.onDidCloseNotebookDocument;
+            this.onDidSaveNotebookDocument = notebook.onDidSaveNotebookDocument;
             this.onDidChangeNotebookDocument = this._onDidChangeNotebookDocument.event;
         } else {
             this.onDidChangeActiveNotebookKernel = this.createDisposableEventEmitter<{
@@ -106,13 +92,13 @@ export class VSCodeNotebook implements IVSCodeNotebook {
             transientMetadata: { [K in keyof NotebookCellMetadata]?: boolean };
         }
     ): Disposable {
-        return this.notebook.registerNotebookContentProvider(notebookType, provider, options);
+        return notebook.registerNotebookContentProvider(notebookType, provider, options);
     }
     public registerNotebookKernelProvider(
         selector: NotebookDocumentFilter,
         provider: NotebookKernelProvider
     ): Disposable {
-        return this.notebook.registerNotebookKernelProvider(selector, provider);
+        return notebook.registerNotebookKernelProvider(selector, provider);
     }
     private createDisposableEventEmitter<T>() {
         const eventEmitter = new EventEmitter<T>();
@@ -126,19 +112,19 @@ export class VSCodeNotebook implements IVSCodeNotebook {
         this.addedEventHandlers = true;
         this.disposables.push(
             ...[
-                this.notebook.onDidChangeCellLanguage((e) =>
+                notebook.onDidChangeCellLanguage((e) =>
                     this._onDidChangeNotebookDocument.fire({ ...e, type: 'changeCellLanguage' })
                 ),
-                this.notebook.onDidChangeCellMetadata((e) =>
+                notebook.onDidChangeCellMetadata((e) =>
                     this._onDidChangeNotebookDocument.fire({ ...e, type: 'changeCellMetadata' })
                 ),
-                this.notebook.onDidChangeNotebookDocumentMetadata((e) =>
+                notebook.onDidChangeNotebookDocumentMetadata((e) =>
                     this._onDidChangeNotebookDocument.fire({ ...e, type: 'changeNotebookMetadata' })
                 ),
-                this.notebook.onDidChangeCellOutputs((e) =>
+                notebook.onDidChangeCellOutputs((e) =>
                     this._onDidChangeNotebookDocument.fire({ ...e, type: 'changeCellOutputs' })
                 ),
-                this.notebook.onDidChangeNotebookCells((e) => {
+                notebook.onDidChangeNotebookCells((e) => {
                     if (this.handledCellChanges.has(e)) {
                         return;
                     }

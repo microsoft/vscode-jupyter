@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 import * as React from 'react';
 import { connect } from 'react-redux';
+import { buildSettingsCss } from '../interactive-common/buildSettingsCss';
 import { handleLinkClick } from '../interactive-common/handlers';
 import { IMainWithVariables, IStore } from '../interactive-common/redux/store';
 import { IVariablePanelProps, VariablePanel } from '../interactive-common/variablePanel';
@@ -60,6 +61,10 @@ export class VariableViewPanel extends React.Component<IVariableViewPanelProps> 
         // we can size and host it differently from the variable panel in the interactive window or native editor
         return (
             <div id="variable-view-main-panel" role="Main" ref={this.panelRef} style={dynamicFont}>
+                <div className="styleSetter">
+                    <style>{`${this.props.rootCss ? this.props.rootCss : ''}
+${buildSettingsCss(this.props.settings)}`}</style>
+                </div>
                 {this.renderVariablePanel(this.props.baseTheme)}
             </div>
         );

@@ -49,6 +49,8 @@ webpack.datascience-*.config.js
 .nvm/**
 .nyc_output
 .prettierrc.js
+.*ignore
+**/*.so
 .sonarcloud.properties
 .venv/**
 .vscode/**

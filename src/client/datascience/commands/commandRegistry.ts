@@ -515,7 +515,7 @@ export class CommandRegistry implements IDisposable {
                     sendTelemetryEvent(EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_SUCCESS);
                 }
             } catch (e) {
-                sendTelemetryEvent(EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_ERROR, undefined, e);
+                sendTelemetryEvent(EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_ERROR, undefined, undefined, e);
                 traceError(e);
                 void this.appShell.showErrorMessage(e.toString());
             }
