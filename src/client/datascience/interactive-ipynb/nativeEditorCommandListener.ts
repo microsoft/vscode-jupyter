@@ -112,7 +112,7 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
     }
 
     @captureTelemetry(Telemetry.OpenNotebook, { scope: 'command' }, false)
-    private async openNotebook(file?: Uri, content?: string): Promise<void> {
+    private async openNotebook(file?: Uri, contents?: string): Promise<void> {
         if (file && path.extname(file.fsPath).toLocaleLowerCase() === '.ipynb') {
             try {
                 // Then take the contents and load it.
@@ -120,9 +120,9 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
             } catch (e) {
                 await this.dataScienceErrorHandler.handleError(e);
             }
-        } else if (content) {
+        } else if (contents) {
             try {
-                await this.provider.createNew(content);
+                await this.provider.createNew({ contents });
             } catch (e) {
                 await this.dataScienceErrorHandler.handleError(e);
             }

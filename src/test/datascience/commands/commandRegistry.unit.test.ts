@@ -19,6 +19,7 @@ import { JupyterVariableDataProviderFactory } from '../../../client/datascience/
 import { DataScienceCodeLensProvider } from '../../../client/datascience/editor-integration/codelensprovider';
 import { JupyterVariables } from '../../../client/datascience/jupyter/jupyterVariables';
 import { JupyterServerUriStorage } from '../../../client/datascience/jupyter/serverUriStorage';
+import { NotebookCreator } from '../../../client/datascience/notebook/creation/notebookCreator';
 import { NativeEditorProvider } from '../../../client/datascience/notebookStorage/nativeEditorProvider';
 import { MockOutputChannel } from '../../mockClasses';
 
@@ -66,7 +67,9 @@ suite('DataScience - Commands', () => {
             instance(jupyterVariableDataProviderFactory),
             instance(dataViewerFactory),
             instance(serverUriStorage),
-            instance(jupyterVariables)
+            instance(jupyterVariables),
+            false,
+            instance(mock(NotebookCreator))
         );
     });
 
