@@ -100,7 +100,7 @@
     "jupyter.command.jupyter.collapseallcells.title": "Collapse All Interactive Cells",
     "jupyter.command.jupyter.addcellbelow.title": "Add Empty Cell to File",
     "jupyter.command.jupyter.scrolltocell.title": "Scroll Cell Into View",
-    "jupyter.command.jupyter.createnewnotebook.title": "Create New Blank Jupyter Notebook",
+    "jupyter.command.jupyter.createnewnotebook.title": "Create New Blank Notebook",
     "jupyter.command.jupyter.selectJupyterInterpreter.title": "Select Interpreter to start Jupyter server",
     "jupyter.command.jupyter.createGitHubIssue.title": "Create GitHub Issue",
     "jupyter.command.jupyter.submitGitHubIssue.title": "Submit GitHub Issue",
