@@ -196,7 +196,6 @@ module.exports = {
         'src/test/datascience/mockCustomEditorService.ts',
         'src/test/datascience/mockInputBox.ts',
         'src/test/datascience/reactHelpers.ts',
-        'src/test/datascience/jupyterUriProviderRegistration.unit.test.ts',
         'src/test/datascience/mockDocumentManager.ts',
         'src/test/datascience/cellMatcher.unit.test.ts',
         'src/test/datascience/crossProcessLock.unit.test.ts',
