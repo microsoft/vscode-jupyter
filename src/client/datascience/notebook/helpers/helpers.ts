@@ -363,7 +363,7 @@ export async function clearCellForExecution(editor: NotebookEditor, cell: Notebo
     await chainWithPendingUpdates(editor.document, (edit) => {
         const metadata = cell.metadata.with({
             statusMessage: undefined,
-            executionOrder: null,
+            executionOrder: null as any,
             lastRunDuration: undefined,
             runStartTime: undefined
         });
