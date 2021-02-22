@@ -82,6 +82,7 @@ export class NotebookEditor implements INotebookEditor {
     private _modified = new EventEmitter<INotebookEditor>();
     private executedCode = new EventEmitter<string>();
     private restartingKernel?: boolean;
+    private kernelInterruptedDontAskToRestart: boolean = false;
     constructor(
         public readonly model: INotebookModel,
         public readonly document: NotebookDocument,
@@ -220,6 +221,7 @@ export class NotebookEditor implements INotebookEditor {
                 const v = await this.applicationShell.showInformationMessage(message, yes, no);
                 if (v === yes) {
                     this.restartingKernel = false;
+                    this.kernelInterruptedDontAskToRestart = true;
                     await this.restartKernel();
                 }
             }
@@ -364,6 +366,10 @@ export class NotebookEditor implements INotebookEditor {
         }
     }
     private async shouldAskForRestart(): Promise<boolean> {
+        if (this.kernelInterruptedDontAskToRestart) {
+            this.kernelInterruptedDontAskToRestart = false;
+            return false;
+        }
         const settings = this.configurationService.getSettings(this.file);
         return settings && settings.askForKernelRestart === true;
     }
