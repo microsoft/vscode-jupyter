@@ -13,7 +13,7 @@ import {
 } from 'vscode';
 import { ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
-import { IConfigurationService, IDisposableRegistry, IExtensionContext } from '../../common/types';
+import { IConfigurationService, IDisposableRegistry, IExtensionContext, IExtensions } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { captureTelemetry } from '../../telemetry';
@@ -76,7 +76,8 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
         private readonly jupyterSessionManagerFactory: IJupyterSessionManagerFactory,
         @inject(PreferredRemoteKernelIdProvider)
         private readonly preferredRemoteKernelIdProvider: PreferredRemoteKernelIdProvider,
-        @inject(ICommandManager) private readonly commandManager: ICommandManager
+        @inject(ICommandManager) private readonly commandManager: ICommandManager,
+        @inject(IExtensions) private readonly extensions: IExtensions
     ) {
         this.isLocalLaunch = isLocalLaunch(this.configuration);
 
@@ -127,7 +128,7 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
 
         // Turn this into our preferred list.
         const existingItem = new Set<string>();
-        const mapped = kernels
+        let mapped = kernels
             .map((kernel) => {
                 return new VSCodeNotebookKernelMetadata(
                     kernel.label,
@@ -149,6 +150,21 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
                 existingItem.add(item.id);
                 return true;
             });
+
+        // Temporary fix for https://github.com/microsoft/vscode-jupyter/issues/4423
+        // Remove any kernelspecs that are the property of other extensions.
+        mapped = mapped.filter((k) => {
+            if (
+                k.selection.kind !== 'connectToLiveKernel' &&
+                k.selection.kernelSpec &&
+                k.selection.kernelSpec.metadata?.vscode?.extension_id
+            ) {
+                return (
+                    this.extensions.getExtension(k.selection.kernelSpec.metadata?.vscode?.extension_id) === undefined
+                );
+            }
+            return true;
+        });
 
         // If no preferred kernel set but we have a language, use that to set preferred instead.
         if (!mapped.find((v) => v.isPreferred)) {
