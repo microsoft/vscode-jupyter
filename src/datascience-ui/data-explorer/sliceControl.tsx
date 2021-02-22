@@ -1,4 +1,4 @@
-import { Dropdown, IDropdownOption, ResponsiveMode, TextField } from 'office-ui-fabric-react';
+import { Dropdown, IDropdownOption, ResponsiveMode, TextField } from '@fluentui/react';
 import * as React from 'react';
 import { IGetSliceRequest } from '../../client/datascience/data-viewing/types';
 

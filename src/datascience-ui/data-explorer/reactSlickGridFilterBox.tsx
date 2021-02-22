@@ -3,9 +3,7 @@
 'use strict';
 
 import * as React from 'react';
-import { SearchBox } from 'office-ui-fabric-react/lib/SearchBox';
-import { IIconProps } from 'office-ui-fabric-react/lib/Icon';
-import { initializeIcons } from '@fluentui/react';
+import { IIconProps, initializeIcons, SearchBox } from '@fluentui/react';
 
 initializeIcons();
 
