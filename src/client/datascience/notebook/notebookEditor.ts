@@ -330,11 +330,14 @@ export class NotebookEditor implements INotebookEditor {
         } catch (exc) {
             // If we get a kernel promise failure, then restarting timed out. Just shutdown and restart the entire server.
             // Note, this code might not be necessary, as such an error is thrown only when interrupting a kernel times out.
+            sendKernelTelemetryEvent(
+                this.document.uri,
+                Telemetry.NotebookRestart,
+                stopWatch.elapsedTime,
+                undefined,
+                exc
+            );
             if (exc instanceof JupyterKernelPromiseFailedError && kernel) {
-                sendKernelTelemetryEvent(this.document.uri, Telemetry.NotebookRestart, stopWatch.elapsedTime, {
-                    failed: true,
-                    failureCategory: 'kernelpromisetimeout'
-                });
                 // Old approach (INotebook is not exposed in IKernel, and INotebook will eventually go away).
                 const notebook = await this.notebookProvider.getOrCreateNotebook({
                     resource: this.file,
@@ -351,7 +354,6 @@ export class NotebookEditor implements INotebookEditor {
                     metadata: this.model.metadata
                 });
             } else {
-                sendKernelTelemetryEvent(this.document.uri, Telemetry.NotebookRestart, stopWatch.elapsedTime, exc);
                 // Show the error message
                 void this.applicationShell.showErrorMessage(exc);
                 traceError(exc);
