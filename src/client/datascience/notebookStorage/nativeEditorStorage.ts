@@ -479,7 +479,7 @@ export class NativeEditorStorage implements INotebookStorage {
         const workspaceData = this.localStorage.get<string>(key);
         if (workspaceData) {
             // Make sure to clear so we don't use this again.
-            this.localStorage.update(key, undefined);
+            void this.localStorage.update(key, undefined);
 
             return workspaceData;
         }
