@@ -145,7 +145,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
         const progressBar = this.state.totalRowCount > this.state.fetchedRowCount ? <Progress /> : undefined;
 
-        // TODO ensure only render breadcrumbs when info is available
         return (
             <div className="main-panel" ref={this.container}>
                 <StyleInjector
@@ -165,17 +164,23 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         if (this.state.fileName) {
             let breadcrumbText = this.state.variableName;
             if (this.state.originalVariableShape) {
-                breadcrumbText += " (" + this.state.originalVariableShape?.join(', ') + ")";
+                breadcrumbText += ' (' + this.state.originalVariableShape?.join(', ') + ')';
             }
             return (
-                <div className='breadcrumb-container control-container'>
-                    <div className='breadcrumb'>
+                <div className="breadcrumb-container control-container">
+                    <div className="breadcrumb">
                         <div className="icon-python breadcrumb-file-icon" />
                         <span>{this.state.fileName}</span>
-                        <Image baseTheme={this.props.baseTheme} class="image-button-image" codicon="chevron-right" image={ImageName.Cancel} />
+                        <Image
+                            baseTheme={this.props.baseTheme}
+                            class="image-button-image"
+                            codicon="chevron-right"
+                            image={ImageName.Cancel}
+                        />
                         <span>{breadcrumbText}</span>
                     </div>
-                </div>);
+                </div>
+            );
         }
     }
 
