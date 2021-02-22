@@ -25,7 +25,7 @@ import { NotebookEditorCompatibilitySupport } from '../../../client/datascience/
 import { INotebookStorageProvider } from '../../../client/datascience/notebookStorage/notebookStorageProvider';
 import { createNotebookModel } from './helper';
 /* eslint-disable @typescript-eslint/no-explicit-any */
-suite('DataScience - NativeNotebook ContentProvider', () => {
+suite('DataScience - VSCode Notebook ContentProvider', () => {
     let storageProvider: INotebookStorageProvider;
     let contentProvider: VSCodeNotebookContentProvider;
     const fileUri = Uri.file('a.ipynb');
@@ -90,12 +90,15 @@ suite('DataScience - NativeNotebook ContentProvider', () => {
                         outputs: [],
                         source: 'print(1)',
                         metadata: new NotebookCellMetadata().with({
-                            editable: isNotebookTrusted,
+                            editable: true,
                             executionOrder: 10,
                             hasExecutionOrder: true,
                             runState: NotebookCellRunState.Idle,
-                            runnable: isNotebookTrusted,
-                            statusMessage: undefined
+                            runnable: true,
+                            statusMessage: undefined,
+                            custom: {
+                                metadata: {}
+                            }
                         })
                     },
                     {
@@ -104,10 +107,13 @@ suite('DataScience - NativeNotebook ContentProvider', () => {
                         outputs: [],
                         source: '# HEAD',
                         metadata: new NotebookCellMetadata().with({
-                            editable: isNotebookTrusted,
+                            editable: true,
                             executionOrder: undefined,
                             hasExecutionOrder: false,
-                            runnable: false
+                            runnable: false,
+                            custom: {
+                                metadata: {}
+                            }
                         })
                     }
                 ]);
@@ -162,12 +168,15 @@ suite('DataScience - NativeNotebook ContentProvider', () => {
                         outputs: [],
                         source: 'Console.WriteLine("1")',
                         metadata: new NotebookCellMetadata().with({
-                            editable: isNotebookTrusted,
+                            editable: true,
                             executionOrder: 10,
                             hasExecutionOrder: true,
                             runState: NotebookCellRunState.Idle,
-                            runnable: isNotebookTrusted,
-                            statusMessage: undefined
+                            runnable: true,
+                            statusMessage: undefined,
+                            custom: {
+                                metadata: {}
+                            }
                         })
                     },
                     {
@@ -176,10 +185,13 @@ suite('DataScience - NativeNotebook ContentProvider', () => {
                         outputs: [],
                         source: '# HEAD',
                         metadata: new NotebookCellMetadata().with({
-                            editable: isNotebookTrusted,
+                            editable: true,
                             executionOrder: undefined,
                             hasExecutionOrder: false,
-                            runnable: false
+                            runnable: false,
+                            custom: {
+                                metadata: {}
+                            }
                         })
                     }
                 ]);
