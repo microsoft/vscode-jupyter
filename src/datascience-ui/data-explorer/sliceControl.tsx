@@ -4,6 +4,8 @@ import { IGetSliceRequest } from '../../client/datascience/data-viewing/types';
 
 import './sliceControl.css';
 
+const sliceRegEx = /^\s*(?<Start>-?\d+)(?::(?<Stop>-?\d+))?(?::(?<Step>-?\d+))?\s*$/;
+
 interface ISliceControlProps {
     originalVariableShape: number[];
     handleSliceRequest(slice: IGetSliceRequest): void;
@@ -66,13 +68,13 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
 
     public toggleEnablement = () => {
         const isActive = !this.state.isActive;
-        const state = { isActive };
+        const newState = { isActive };
         const slice = isActive
             ? this.state.sliceExpression
             : '[' + this.props.originalVariableShape.map(() => ':').join(', ') + ']';
         this.props.handleSliceRequest({ slice });
         this.applyInputBoxToDropdowns();
-        this.setState(state);
+        this.setState(newState);
     };
 
     private renderReadonlyIndicator = () => {
@@ -158,9 +160,33 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
 
     private validateSliceExpression = () => {
         const { inputValue } = this.state;
-        const parsedExpression = parseShape(inputValue);
-        if (parsedExpression && parsedExpression.length !== this.props.originalVariableShape.length) {
-            return 'Invalid slice expression';
+        if (inputValue.startsWith('[') && inputValue.endsWith(']')) {
+            let hasOutOfRangeIndex = false;
+            const parsedExpression = inputValue
+                .substring(1, inputValue.length - 1)
+                .split(',')
+                .map((shapeEl, shapeIndex) => {
+                    // Validate IndexErrors
+                    const match = sliceRegEx.exec(shapeEl);
+                    if (match?.groups?.Start && !match.groups.Stop) {
+                        const value = parseInt(match.groups.Start);
+                        const numberOfElementsAlongAxis = this.props.originalVariableShape[shapeIndex];
+                        if (
+                            (value >= 0 && value >= numberOfElementsAlongAxis) ||
+                            // Python allows negative index values
+                            (value < 0 && value < -numberOfElementsAlongAxis)
+                        ) {
+                            hasOutOfRangeIndex = true;
+                        }
+                        return value;
+                    }
+                });
+            if (
+                hasOutOfRangeIndex ||
+                (parsedExpression && parsedExpression.length !== this.props.originalVariableShape.length)
+            ) {
+                return 'Invalid slice expression';
+            }
         }
         return '';
     };
@@ -174,10 +200,10 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
                     .substring(1, shape.length - 1)
                     .split(',')
                     .forEach((shapeEl, idx) => {
-                        const val = parseInt(shapeEl);
-                        const isNumber = Number.isInteger(val);
-                        if (isNumber) {
-                            dropdowns.push({ axis: idx, index: val });
+                        // Validate the slice object
+                        const match = sliceRegEx.exec(shapeEl);
+                        if (match?.groups?.Start && !match.groups.Stop) {
+                            dropdowns.push({ axis: idx, index: parseInt(match.groups.Start) });
                         }
                     });
                 const state = {};
@@ -193,11 +219,9 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
                     }
                 } else {
                     // Unset dropdowns
-                    const state = {};
                     for (const key in this.state) {
                         if (key.startsWith('selected')) {
-                            console.log('match', key);
-                            (state as any)[key] = null; // This isn't working
+                            (state as any)[key] = null;
                         }
                     }
                 }
@@ -255,15 +279,4 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
         }
         return [];
     };
-}
-
-// Parse a string of the form (1, 2, 3)
-function parseShape(shape: string) {
-    if (shape.startsWith('[') && shape.endsWith(']')) {
-        return shape
-            .substring(1, shape.length - 1)
-            .split(',')
-            .map((shapeEl) => parseInt(shapeEl));
-    }
-    return undefined;
 }
