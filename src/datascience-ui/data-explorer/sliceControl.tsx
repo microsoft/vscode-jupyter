@@ -106,7 +106,7 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
             </details>
         );
     }
-    
+
     private renderReadonlyIndicator = () => {
         if (this.state.isActive) {
             return <span className="slice-summary-detail current-slice">{this.state.sliceExpression}</span>;

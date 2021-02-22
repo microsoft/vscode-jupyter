@@ -286,10 +286,10 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
     };
 
     public componentDidUpdate = (_prevProps: ISlickGridProps) => {
-        if (this.state.showingFilters && this.state.grid) {	
-            this.state.grid.setHeaderRowVisibility(true);	
-        } else if (this.state.showingFilters === false && this.state.grid) {	
-            this.state.grid.setHeaderRowVisibility(false);	
+        if (this.state.showingFilters && this.state.grid) {
+            this.state.grid.setHeaderRowVisibility(true);
+        } else if (this.state.showingFilters === false && this.state.grid) {
+            this.state.grid.setHeaderRowVisibility(false);
         }
         // Dynamically modify the styles that the slickGrid generates for the rows.
         // It's eliminating some of the height
@@ -347,7 +347,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
     private clearAllFilters = () => {
         this.columnFilters = new Map();
         this.dataView.refresh();
-    }
+    };
 
     private styleColumns(columns: Slick.Column<ISlickRow>[]) {
         // Transform columns so they are sortable and stylable
@@ -493,7 +493,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
                                 handler: this.clickFilterButton
                             }
                         ]
-                    }
+                    };
                 }
             });
             this.state.grid.setColumns(columns);
@@ -508,7 +508,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
 
     private clickFilterButton = () => {
         this.setState({ showingFilters: !this.state.showingFilters });
-    }
+    };
 
     private computeFont(): string | null {
         if (this.containerRef.current) {
@@ -531,13 +531,13 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
     };
 
     private setColumns = (newColumns: Slick.Column<Slick.SlickData>[]) => {
-        // HACK: SlickGrid header row does not rerender if its visibility is false when columns	
-        // are updated, and this causes the header to simply not show up when clicking the	
-        // filter button after we update the grid column headers on receiving a slice response.	
-        // The solution is to force the header row to become visible just before sending our slice request.	
+        // HACK: SlickGrid header row does not rerender if its visibility is false when columns
+        // are updated, and this causes the header to simply not show up when clicking the
+        // filter button after we update the grid column headers on receiving a slice response.
+        // The solution is to force the header row to become visible just before sending our slice request.
         this.state.grid?.setHeaderRowVisibility(true);
         this.state.grid?.setColumns(newColumns);
-    }
+    };
 
     private addedRows = (_e: Slick.EventData, data: ISlickGridAdd) => {
         // Add all of these new rows into our data.
@@ -576,7 +576,10 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
 
     private renderFilterCell = (_e: Slick.EventData, args: Slick.OnHeaderRowCellRenderedEventArgs<Slick.SlickData>) => {
         if (args.column.id === '0') {
-            ReactDOM.render(<div className='codicon codicon-clear-all codicon-button' onClick={this.clearAllFilters} />, args.node);
+            ReactDOM.render(
+                <div className="codicon codicon-clear-all codicon-button" onClick={this.clearAllFilters} />,
+                args.node
+            );
         } else {
             ReactDOM.render(
                 <ReactSlickGridFilterBox
@@ -620,7 +623,6 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         return -1;
     }
 }
-
 
 // Modified version of https://github.com/6pac/SlickGrid/blob/master/slick.editors.js#L24
 // with some fixes to get things working in our context
