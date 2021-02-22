@@ -90,6 +90,9 @@ suite('DataScience - NativeNotebook ContentProvider', () => {
                         outputs: [],
                         source: 'print(1)',
                         metadata: new NotebookCellMetadata().with({
+                            custom: {
+                                metadata: {}
+                            },
                             editable: isNotebookTrusted,
                             executionOrder: 10,
                             hasExecutionOrder: true,
@@ -104,6 +107,9 @@ suite('DataScience - NativeNotebook ContentProvider', () => {
                         outputs: [],
                         source: '# HEAD',
                         metadata: new NotebookCellMetadata().with({
+                            custom: {
+                                metadata: {}
+                            },
                             editable: isNotebookTrusted,
                             executionOrder: undefined,
                             hasExecutionOrder: false,
@@ -162,6 +168,9 @@ suite('DataScience - NativeNotebook ContentProvider', () => {
                         outputs: [],
                         source: 'Console.WriteLine("1")',
                         metadata: new NotebookCellMetadata().with({
+                            custom: {
+                                metadata: {}
+                            },
                             editable: isNotebookTrusted,
                             executionOrder: 10,
                             hasExecutionOrder: true,
@@ -176,6 +185,9 @@ suite('DataScience - NativeNotebook ContentProvider', () => {
                         outputs: [],
                         source: '# HEAD',
                         metadata: new NotebookCellMetadata().with({
+                            custom: {
+                                metadata: {}
+                            },
                             editable: isNotebookTrusted,
                             executionOrder: undefined,
                             hasExecutionOrder: false,
