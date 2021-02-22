@@ -16,6 +16,7 @@ import { IPythonExecutionFactory } from '../../common/process/types';
 import { IExtensionContext, IExtensions, IPathUtils, Resource } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
+import { IInterpreterSelector } from '../../interpreter/configuration/types';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry } from '../../telemetry';
@@ -55,6 +56,8 @@ export function isInterpreter(item: nbformat.INotebookMetadata | PythonEnvironme
     return !!(item as PythonEnvironment).path && !(item as nbformat.INotebookMetadata).kernelspec?.display_name;
 }
 
+const isSimplePythonDisplayName = /python\s?\d?\.?\d?/;
+
 // This class searches for a kernel that matches the given kernel name.
 // First it searches on a global persistent state, then on the installed python interpreters,
 // and finally on the default locations that jupyter installs kernels on.
@@ -64,7 +67,7 @@ export class LocalKernelFinder implements ILocalKernelFinder {
     private cacheDirty = false;
 
     // Store our results when listing all possible kernelspecs for a resource
-    private workspaceToKernels = new Map<string, Promise<IJupyterKernelSpec[]>>();
+    private workspaceToMetadata = new Map<string, Promise<KernelConnectionMetadata[]>>();
 
     // Store any json file that we have loaded from disk before
     private pathToKernelSpec = new Map<string, Promise<IJupyterKernelSpec | undefined>>();
@@ -79,7 +82,8 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         @inject(IPythonExecutionFactory) private readonly exeFactory: IPythonExecutionFactory,
         @inject(IEnvironmentVariablesProvider) private readonly envVarsProvider: IEnvironmentVariablesProvider,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
-        @inject(IExtensions) private readonly extensions: IExtensions
+        @inject(IExtensions) private readonly extensions: IExtensions,
+        @inject(IInterpreterSelector) private readonly interpreterSelector: IInterpreterSelector
     ) {}
     @traceDecorators.verbose('Find kernel spec')
     @captureTelemetry(Telemetry.KernelFinderPerf)
@@ -117,28 +121,20 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         );
 
         // If we have not already searched for this resource, then generate the search
-        if (workspaceFolderId && !this.workspaceToKernels.has(workspaceFolderId)) {
-            this.workspaceToKernels.set(workspaceFolderId, this.findResourceKernelSpecs(resource));
+        if (workspaceFolderId && !this.workspaceToMetadata.has(workspaceFolderId)) {
+            this.workspaceToMetadata.set(workspaceFolderId, this.findResourceKernelMetadata(resource));
         }
 
         this.writeCache().ignoreErrors();
 
         // ! as the has and set above verify that we have a return here
-        const promise = this.workspaceToKernels.get(workspaceFolderId)!;
+        const promise = this.workspaceToMetadata.get(workspaceFolderId)!;
         return promise.then((items) => {
             traceInfoIf(
                 !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
                 `Kernel specs for ${resource?.toString() || 'undefined'} are \n ${JSON.stringify(items)}`
             );
-
-            // Translate specs into kernel specs metadata
-            return items.map((i) => {
-                const result: KernelSpecConnectionMetadata = {
-                    kind: 'startUsingKernelSpec',
-                    kernelSpec: i
-                };
-                return result;
-            });
+            return items;
         });
     }
 
@@ -150,7 +146,76 @@ export class LocalKernelFinder implements ILocalKernelFinder {
             resource,
             resource?.fsPath || this.workspaceService.rootPath
         );
-        this.workspaceToKernels.delete(workspaceFolderId);
+        this.workspaceToMetadata.delete(workspaceFolderId);
+    }
+
+    private async findResourceKernelMetadata(resource: Resource): Promise<KernelConnectionMetadata[]> {
+        // First find the on disk kernel specs and interpreters
+        let [kernelSpecs, interpreters] = await Promise.all([
+            this.findResourceKernelSpecs(resource),
+            this.findResourceInterpreters(resource)
+        ]);
+
+        // Filter interpreters using the kernel specs
+        interpreters = interpreters.filter((interpreter) => {
+            // If the interpreter is registered as a kernel then don't inlcude it.
+            if (
+                kernelSpecs.find((installedKernel) => {
+                    const kernelDisplayName = installedKernel.display_name || installedKernel.name || '';
+                    // Possible user has a kernel named `Python` or `Python 3`.
+                    // & if we have such a kernel, we should not display the corresponding interpreter.
+                    if (
+                        kernelDisplayName !== interpreter?.displayName &&
+                        !isSimplePythonDisplayName.test(kernelDisplayName.toLowerCase())
+                    ) {
+                        return false;
+                    }
+
+                    // If the python kernel belongs to an existing interpreter with the same path,
+                    // Or if the python kernel has the exact same path as the interpreter, then its a duplicate.
+                    // Paths on windows can either contain \ or / Both work.
+                    // Thus, C:\Python.exe is the same as C:/Python.exe
+                    // In the kernelspec.json we could have paths in argv such as C:\\Python.exe or C:/Python.exe.
+                    const interpreterPathToCheck = (interpreter?.path || '').replace(/\\/g, '/');
+                    return (
+                        this.fs.areLocalPathsSame(
+                            ((installedKernel.argv || [])[0] || '').replace(/\\/g, '/'),
+                            interpreterPathToCheck
+                        ) ||
+                        this.fs.areLocalPathsSame(
+                            (
+                                installedKernel.interpreterPath ||
+                                installedKernel.metadata?.interpreter?.path ||
+                                ''
+                            ).replace(/\\/g, '/'),
+                            interpreterPathToCheck
+                        )
+                    );
+                })
+            ) {
+                return false;
+            }
+            return true;
+        });
+
+        // Combine the two into our list
+        return [
+            ...kernelSpecs.map((k) => {
+                const result: KernelSpecConnectionMetadata = {
+                    kind: 'startUsingKernelSpec',
+                    kernelSpec: k
+                };
+                return result;
+            }),
+            ...interpreters.map((i) => {
+                const result: PythonKernelConnectionMetadata = {
+                    kind: 'startUsingPythonInterpreter',
+                    kernelSpec: undefined,
+                    interpreter: i
+                };
+                return result;
+            })
+        ];
     }
 
     private async findResourceKernelSpecs(resource: Resource): Promise<IJupyterKernelSpec[]> {
@@ -173,6 +238,15 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         );
 
         return results;
+    }
+
+    private async findResourceInterpreters(resource: Resource): Promise<PythonEnvironment[]> {
+        // Find all available interpreters
+        const interpreters = this.extensionChecker.isPythonExtensionInstalled
+            ? await this.interpreterSelector.getSuggestions(resource)
+            : [];
+
+        return interpreters.map((i) => i.interpreter);
     }
 
     // Load the IJupyterKernelSpec for a given spec path, check the ones that we have already loaded first
