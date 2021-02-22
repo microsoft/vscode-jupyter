@@ -32,58 +32,7 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
         this.handleSubmit = this.handleSubmit.bind(this);
     }
 
-    public handleChange = (
-        _event: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>,
-        newValue: string | undefined
-    ) => {
-        this.setState({ inputValue: newValue ?? '' });
-    };
-
-    public handleSubmit = (event: React.SyntheticEvent) => {
-        event.preventDefault();
-        this.setState({ sliceExpression: this.state.inputValue });
-        // Update axis and index dropdown selections
-        this.applyInputBoxToDropdowns();
-        this.props.handleSliceRequest({
-            slice: this.state.inputValue
-        });
-    };
-
-    private preselectedSliceExpression() {
-        let numDimensionsToPreselect = this.props.originalVariableShape.length - 2;
-        return (
-            '[' +
-            this.props.originalVariableShape
-                .map(() => {
-                    if (numDimensionsToPreselect > 0) {
-                        numDimensionsToPreselect -= 1;
-                        return '0';
-                    }
-                    return ':';
-                })
-                .join(', ') +
-            ']'
-        );
-    }
-
-    public toggleEnablement = () => {
-        const isActive = !this.state.isActive;
-        const newState = { isActive };
-        const slice = isActive
-            ? this.state.sliceExpression
-            : '[' + this.props.originalVariableShape.map(() => ':').join(', ') + ']';
-        this.props.handleSliceRequest({ slice });
-        this.applyInputBoxToDropdowns();
-        this.setState(newState);
-    };
-
-    private renderReadonlyIndicator = () => {
-        if (this.state.isActive) {
-            return <span className="slice-summary-detail current-slice">{this.state.sliceExpression}</span>;
-        }
-    };
-
-    render() {
+    public render() {
         const indexOptions = this.generateIndexDropdownOptions();
         const axisOptions = this.generateAxisDropdownOptions();
 
@@ -155,6 +104,57 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
                     </div>
                 </form>
             </details>
+        );
+    }
+    
+    private renderReadonlyIndicator = () => {
+        if (this.state.isActive) {
+            return <span className="slice-summary-detail current-slice">{this.state.sliceExpression}</span>;
+        }
+    };
+
+    private toggleEnablement = () => {
+        const isActive = !this.state.isActive;
+        const newState = { isActive };
+        const slice = isActive
+            ? this.state.sliceExpression
+            : '[' + this.props.originalVariableShape.map(() => ':').join(', ') + ']';
+        this.props.handleSliceRequest({ slice });
+        this.applyInputBoxToDropdowns();
+        this.setState(newState);
+    };
+
+    private handleChange = (
+        _event: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>,
+        newValue: string | undefined
+    ) => {
+        this.setState({ inputValue: newValue ?? '' });
+    };
+
+    private handleSubmit = (event: React.SyntheticEvent) => {
+        event.preventDefault();
+        this.setState({ sliceExpression: this.state.inputValue });
+        // Update axis and index dropdown selections
+        this.applyInputBoxToDropdowns();
+        this.props.handleSliceRequest({
+            slice: this.state.inputValue
+        });
+    };
+
+    private preselectedSliceExpression() {
+        let numDimensionsToPreselect = this.props.originalVariableShape.length - 2;
+        return (
+            '[' +
+            this.props.originalVariableShape
+                .map(() => {
+                    if (numDimensionsToPreselect > 0) {
+                        numDimensionsToPreselect -= 1;
+                        return '0';
+                    }
+                    return ':';
+                })
+                .join(', ') +
+            ']'
         );
     }
 
@@ -246,7 +246,6 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
                         .join(', ') +
                     ']';
                 this.setState({ sliceExpression: newSliceExpression, inputValue: newSliceExpression });
-                // Submit slice request
                 this.props.handleSliceRequest({ slice: newSliceExpression });
             }
         });
