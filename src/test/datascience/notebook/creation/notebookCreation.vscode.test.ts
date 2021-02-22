@@ -19,7 +19,7 @@ import { closeActiveWindows, initialize } from '../../../initialize';
 import { canRunNotebookTests, closeNotebooksAndCleanUpAfterTests, ensureNewNotebooksHavePythonCells } from '../helper';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite('DataScience - VSCode Notebook - (Creation Integration)xxx', function () {
+suite('DataScience - VSCode Notebook - (Creation Integration)', function () {
     this.timeout(15_000);
     let api: IExtensionTestApi;
     let vscodeNotebook: IVSCodeNotebook;
@@ -53,7 +53,7 @@ suite('DataScience - VSCode Notebook - (Creation Integration)xxx', function () {
             expectedLanguage
         );
     }
-    test.only('With 3rd party integration, display quick pick when selecting create blank notebook command', async function () {
+    test('With 3rd party integration, display quick pick when selecting create blank notebook command', async function () {
         await creationOptions.registerNewNotebookContent({ defaultCellLanguage: 'julia' });
         assert.equal(creationOptions.registrations.length, 1);
         assert.isUndefined(vscodeNotebook.activeNotebookEditor);
@@ -83,11 +83,24 @@ suite('DataScience - VSCode Notebook - (Creation Integration)xxx', function () {
         await createNotebookAndValidateLanguageOfFirstCell(PYTHON_LANGUAGE.toLowerCase());
         assert.equal(stub.callCount, 2);
     });
-    test.only('Without 3rd party integration, do not display quick pick when selecting create blank notebook command', async function () {
+    test('Without 3rd party integration, do not display quick pick when selecting create blank notebook command', async function () {
         assert.equal(creationOptions.registrations.length, 0);
         assert.isUndefined(vscodeNotebook.activeNotebookEditor);
 
         // Create a blank notebook & it should just work.
         await createNotebookAndValidateLanguageOfFirstCell(PYTHON_LANGUAGE.toLowerCase());
+    });
+    test('Create Java & Julia Notebook using API', async function () {
+        await api.createBlankNotebook({ defaultCellLanguage: 'java' });
+
+        await waitForCondition(async () => !!vscodeNotebook.activeNotebookEditor, 10_000, 'New Notebook not created');
+        assert.strictEqual(vscodeNotebook.activeNotebookEditor!.document.cells[0].language.toLowerCase(), 'java');
+
+        await closeActiveWindows();
+
+        await api.createBlankNotebook({ defaultCellLanguage: 'julia' });
+
+        await waitForCondition(async () => !!vscodeNotebook.activeNotebookEditor, 10_000, 'New Notebook not created');
+        assert.strictEqual(vscodeNotebook.activeNotebookEditor!.document.cells[0].language.toLowerCase(), 'julia');
     });
 });
