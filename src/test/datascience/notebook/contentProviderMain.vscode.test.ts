@@ -25,7 +25,7 @@ import { NotebookEditorCompatibilitySupport } from '../../../client/datascience/
 import { INotebookStorageProvider } from '../../../client/datascience/notebookStorage/notebookStorageProvider';
 import { createNotebookModel } from './helper';
 /* eslint-disable @typescript-eslint/no-explicit-any */
-suite('DataScience - NativeNotebook ContentProvider', () => {
+suite('DataScience - VSCode Notebook ContentProvider', () => {
     let storageProvider: INotebookStorageProvider;
     let contentProvider: VSCodeNotebookContentProvider;
     const fileUri = Uri.file('a.ipynb');
@@ -83,8 +83,6 @@ suite('DataScience - NativeNotebook ContentProvider', () => {
                 assert.equal(notebook.metadata.editable, isNotebookTrusted);
                 assert.equal(notebook.metadata.runnable, isNotebookTrusted);
 
-                // With Native Notebooks, the editable and runnable properties in cells don't matter
-                // as long as the metadata is correct (checked above) there is no way to run untrusted notebooks
                 assert.deepEqual(notebook.cells, [
                     {
                         cellKind: NotebookCellKind.Code,
@@ -163,8 +161,6 @@ suite('DataScience - NativeNotebook ContentProvider', () => {
                 assert.equal(notebook.metadata.editable, isNotebookTrusted);
                 assert.equal(notebook.metadata.runnable, isNotebookTrusted);
 
-                // With Native Notebooks, the editable and runnable properties in cells don't matter
-                // as long as the metadata is correct (checked above) there is no way to run untrusted notebooks
                 assert.deepEqual(notebook.cells, [
                     {
                         cellKind: NotebookCellKind.Code,
