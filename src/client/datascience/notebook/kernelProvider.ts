@@ -151,21 +151,6 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
                 return true;
             });
 
-        // Temporary fix for https://github.com/microsoft/vscode-jupyter/issues/4423
-        // Remove any kernelspecs that are the property of other extensions.
-        mapped = mapped.filter((k) => {
-            if (
-                k.selection.kind !== 'connectToLiveKernel' &&
-                k.selection.kernelSpec &&
-                k.selection.kernelSpec.metadata?.vscode?.extension_id
-            ) {
-                return (
-                    this.extensions.getExtension(k.selection.kernelSpec.metadata?.vscode?.extension_id) === undefined
-                );
-            }
-            return true;
-        });
-
         // If no preferred kernel set but we have a language, use that to set preferred instead.
         if (!mapped.find((v) => v.isPreferred)) {
             const languages = Array.from(new Set<string>(document.cells.map((c) => c.language)));
@@ -204,6 +189,21 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
                 );
             }
         }
+
+        // Temporary fix for https://github.com/microsoft/vscode-jupyter/issues/4423
+        // Remove any kernelspecs that are the property of other extensions.
+        mapped = mapped.filter((k) => {
+            if (
+                k.selection.kind !== 'connectToLiveKernel' &&
+                k.selection.kernelSpec &&
+                k.selection.kernelSpec.metadata?.vscode?.extension_id
+            ) {
+                return (
+                    this.extensions.getExtension(k.selection.kernelSpec.metadata?.vscode?.extension_id) === undefined
+                );
+            }
+            return true;
+        });
 
         sendKernelListTelemetry(document.uri, mapped, stopWatch);
 
