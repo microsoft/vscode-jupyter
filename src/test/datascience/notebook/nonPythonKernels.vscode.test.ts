@@ -148,7 +148,7 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         await waitForCondition(
             async () => languageService.getPreferredLanguage().toLowerCase() === 'julia',
             10_000,
-            'Default cell language is not Julia'
+            `Default cell language is not Julia, it is ${languageService.getPreferredLanguage().toLowerCase()}`
         );
         // Create a blank notebook & confirm we have a julia code cell & julia kernel.
         await editorProvider.createNew();
@@ -156,7 +156,7 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         await waitForCondition(
             async () => vscodeNotebook.activeNotebookEditor?.document.cells[0].language.toLowerCase() === 'julia',
             5_000,
-            'First cell is not julia'
+            `First cell is not julia, it is ${vscodeNotebook.activeNotebookEditor?.document.cells[0].language.toLowerCase()}`
         );
         await waitForKernelToGetAutoSelected('julia');
 
