@@ -24,7 +24,7 @@ import { KernelSelectionProvider } from '../../../../client/datascience/jupyter/
 import { KernelSelector } from '../../../../client/datascience/jupyter/kernels/kernelSelector';
 import { KernelService } from '../../../../client/datascience/jupyter/kernels/kernelService';
 import { LiveKernelModel } from '../../../../client/datascience/jupyter/kernels/types';
-import { ILocalKernelFinder } from '../../../../client/datascience/kernel-launcher/types';
+import { ILocalKernelFinder, IRemoteKernelFinder } from '../../../../client/datascience/kernel-launcher/types';
 import {
     IJupyterSessionManager,
     IRawNotebookSupportedService,
@@ -50,6 +50,7 @@ suite('DataScience - KernelSelector', () => {
     let appShell: IApplicationShell;
     let dependencyService: KernelDependencyService;
     let kernelFinder: ILocalKernelFinder;
+    let remoteFinder: IRemoteKernelFinder;
     let jupyterSessionManagerFactory: JupyterSessionManagerFactory;
     const kernelSpec = {
         argv: [],
@@ -79,6 +80,7 @@ suite('DataScience - KernelSelector', () => {
         );
         interpreterService = mock<IInterpreterService>();
         kernelFinder = mock<ILocalKernelFinder>();
+        remoteFinder = mock<IRemoteKernelFinder>();
         jupyterSessionManagerFactory = mock(JupyterSessionManagerFactory);
         const dummySessionEvent = new EventEmitter<Kernel.IKernelConnection>();
         when(jupyterSessionManagerFactory.onRestartSessionCreated).thenReturn(dummySessionEvent.event);
@@ -179,31 +181,13 @@ suite('DataScience - KernelSelector', () => {
             ];
             const pathUtils = mock<IPathUtils>();
             when(pathUtils.getDisplayName(anything())).thenCall((v) => v);
-            sinon.stub(InstalledJupyterKernelSelectionListProvider.prototype, 'getKernelSelections').resolves([]);
+            const rawSupportedService = mock<IRawNotebookSupportedService>();
+            when(rawSupportedService.supported()).thenResolve(true);
+            const provider = new KernelSelectionProvider(instance(kernelFinder), instance(remoteFinder));
             const quickPickItems = kernelModels.map((item) =>
                 getQuickPickItemForActiveKernel(item, instance(pathUtils))
             );
-            sinon
-                .stub(ActiveJupyterSessionKernelSelectionListProvider.prototype, 'getKernelSelections')
-                .resolves(quickPickItems);
-            const rawSupportedService = mock<IRawNotebookSupportedService>();
-            when(rawSupportedService.supported()).thenResolve(true);
-            const provider = new KernelSelectionProvider(
-                instance(kernelService),
-                instance(mock<IInterpreterSelector>()),
-                instance(interpreterService),
-                instance(mock<IFileSystem>()),
-                instance(pathUtils),
-                instance(kernelFinder),
-                instance(mock<IPythonExtensionChecker>()),
-                disposableRegistry,
-                instance(jupyterSessionManagerFactory),
-                instance(rawSupportedService)
-            );
             when(appShell.showQuickPick(anything(), anything(), anything())).thenResolve(undefined);
-
-            provider.addKernelToIgnoreList({ id: 'id2' } as any);
-            provider.addKernelToIgnoreList({ clientId: 'id4' } as any);
             const suggestions = await provider.getKernelSelections(undefined, undefined);
 
             assert.deepEqual(

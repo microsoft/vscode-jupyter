@@ -1,11 +1,12 @@
 // This class searches for a kernel that matches the given kernel name.
 // First it searches on a global persistent state, then on the installed python interpreters,
 
+import { Kernel } from '@jupyterlab/services';
 import { nbformat } from '@jupyterlab/coreutils';
 import { injectable, inject } from 'inversify';
 import { CancellationToken } from 'vscode';
 import { IPythonExtensionChecker } from '../../api/types';
-import { Resource } from '../../common/types';
+import { IDisposableRegistry, Resource } from '../../common/types';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { traceDecorators } from '../../logging';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
@@ -30,13 +31,25 @@ import { IRemoteKernelFinder } from './types';
 // and finally on the default locations that jupyter installs kernels on.
 @injectable()
 export class RemoteKernelFinder implements IRemoteKernelFinder {
+    /**
+     * List of ids of kernels that should be hidden from the kernel picker.
+     */
+    private readonly kernelIdsToHide = new Set<string>();
     constructor(
         @inject(IInterpreterService) private interpreterService: IInterpreterService,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
+        @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
         @inject(PreferredRemoteKernelIdProvider)
         private readonly preferredRemoteKernelIdProvider: PreferredRemoteKernelIdProvider,
         @inject(IJupyterSessionManagerFactory) private jupyterSessionManagerFactory: IJupyterSessionManagerFactory
-    ) {}
+    ) {
+        disposableRegistry.push(
+            this.jupyterSessionManagerFactory.onRestartSessionCreated(this.addKernelToIgnoreList.bind(this))
+        );
+        disposableRegistry.push(
+            this.jupyterSessionManagerFactory.onRestartSessionUsed(this.removeKernelFromIgnoreList.bind(this))
+        );
+    }
     @traceDecorators.verbose('Find kernel spec')
     @captureTelemetry(Telemetry.KernelFinderPerf, { type: 'remote' })
     public async findKernel(
@@ -125,7 +138,13 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
                     };
                     return kernel;
                 });
-                return [...mappedLive, ...mappedSpecs];
+
+                // Filter out excluded ids
+                const filtered = mappedLive.filter(
+                    (k) => k.kind !== 'connectToLiveKernel' || !this.kernelIdsToHide.has(k.kernelModel.id || '')
+                );
+
+                return [...filtered, ...mappedSpecs];
             } finally {
                 if (sessionManager) {
                     sessionManager.dispose();
@@ -133,5 +152,20 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
             }
         }
         return [];
+    }
+
+    /**
+     * Ensure kernels such as those associated with the restart session are not displayed in the kernel picker.
+     */
+    private addKernelToIgnoreList(kernel: Kernel.IKernelConnection): void {
+        this.kernelIdsToHide.add(kernel.id);
+        this.kernelIdsToHide.add(kernel.clientId);
+    }
+    /**
+     * Opposite of the add counterpart.
+     */
+    private removeKernelFromIgnoreList(kernel: Kernel.IKernelConnection): void {
+        this.kernelIdsToHide.delete(kernel.id);
+        this.kernelIdsToHide.delete(kernel.clientId);
     }
 }

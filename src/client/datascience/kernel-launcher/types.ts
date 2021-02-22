@@ -14,12 +14,7 @@ import {
     KernelSpecConnectionMetadata,
     PythonKernelConnectionMetadata
 } from '../jupyter/kernels/types';
-import {
-    IJupyterConnection,
-    IJupyterKernelSpec,
-    INotebookProviderConnection,
-    KernelInterpreterDependencyResponse
-} from '../types';
+import { INotebookProviderConnection, KernelInterpreterDependencyResponse } from '../types';
 
 export const IKernelLauncher = Symbol('IKernelLauncher');
 export interface IKernelLauncher {

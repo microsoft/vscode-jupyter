@@ -25,7 +25,6 @@ import {
     IJupyterConnection,
     IJupyterExecution,
     IJupyterServerUri,
-    IJupyterSessionManagerFactory,
     IJupyterSubCommandExecutionService,
     IJupyterUriProviderRegistration,
     INotebookServer,

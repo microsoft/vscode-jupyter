@@ -3,12 +3,11 @@
 
 'use strict';
 
-import { Kernel } from '@jupyterlab/services';
 import { inject, injectable } from 'inversify';
 import { CancellationToken } from 'vscode';
-import { IDisposableRegistry, Resource } from '../../../common/types';
+import { Resource } from '../../../common/types';
 import { ILocalKernelFinder, IRemoteKernelFinder } from '../../kernel-launcher/types';
-import { IJupyterSessionManagerFactory, INotebookProviderConnection } from '../../types';
+import { INotebookProviderConnection } from '../../types';
 import { getDisplayNameOrNameOfKernelConnection } from './helpers';
 import { IKernelSpecQuickPickItem, KernelConnectionMetadata } from './types';
 
@@ -21,38 +20,10 @@ import { IKernelSpecQuickPickItem, KernelConnectionMetadata } from './types';
 @injectable()
 export class KernelSelectionProvider {
     private suggestionsCache: IKernelSpecQuickPickItem<KernelConnectionMetadata>[] = [];
-    /**
-     * List of ids of kernels that should be hidden from the kernel picker.
-     */
-    private readonly kernelIdsToHide = new Set<string>();
     constructor(
         @inject(ILocalKernelFinder) private readonly localKernelFinder: ILocalKernelFinder,
-        @inject(IRemoteKernelFinder) private readonly remoteKernelFinder: IRemoteKernelFinder,
-        @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
-        @inject(IJupyterSessionManagerFactory) private jupyterSessionManagerFactory: IJupyterSessionManagerFactory
-    ) {
-        disposableRegistry.push(
-            this.jupyterSessionManagerFactory.onRestartSessionCreated(this.addKernelToIgnoreList.bind(this))
-        );
-        disposableRegistry.push(
-            this.jupyterSessionManagerFactory.onRestartSessionUsed(this.removeKernelFromIgnoreList.bind(this))
-        );
-    }
-
-    /**
-     * Ensure kernels such as those associated with the restart session are not displayed in the kernel picker.
-     */
-    public addKernelToIgnoreList(kernel: Kernel.IKernelConnection): void {
-        this.kernelIdsToHide.add(kernel.id);
-        this.kernelIdsToHide.add(kernel.clientId);
-    }
-    /**
-     * Opposite of the add counterpart.
-     */
-    public removeKernelFromIgnoreList(kernel: Kernel.IKernelConnection): void {
-        this.kernelIdsToHide.delete(kernel.id);
-        this.kernelIdsToHide.delete(kernel.clientId);
-    }
+        @inject(IRemoteKernelFinder) private readonly remoteKernelFinder: IRemoteKernelFinder
+    ) {}
 
     /**
      * Gets a selection of kernel specs from a remote session.
@@ -81,13 +52,8 @@ export class KernelSelectionProvider {
                 ? await this.localKernelFinder.listKernels(resource)
                 : await this.remoteKernelFinder.listKernels(resource, connInfo);
 
-        // Filter out excluded ids
-        const filtered = kernels.filter(
-            (k) => k.kind !== 'connectToLiveKernel' || !this.kernelIdsToHide.has(k.kernelModel.id || '')
-        );
-
         // Convert to a quick pick list.
-        return filtered.map(this.mapKernelToSelection);
+        return kernels.map(this.mapKernelToSelection);
     }
 
     private mapKernelToSelection(kernel: KernelConnectionMetadata): IKernelSpecQuickPickItem<KernelConnectionMetadata> {

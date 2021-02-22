@@ -11,9 +11,7 @@ import { EventEmitter } from 'vscode';
 import { PythonExtensionChecker } from '../../../../client/api/pythonApi';
 import { PYTHON_LANGUAGE } from '../../../../client/common/constants';
 import { disposeAllDisposables } from '../../../../client/common/helpers';
-import { FileSystem } from '../../../../client/common/platform/fileSystem';
 import { PathUtils } from '../../../../client/common/platform/pathUtils';
-import { IFileSystem } from '../../../../client/common/platform/types';
 import { IDisposable, IPathUtils } from '../../../../client/common/types';
 import * as localize from '../../../../client/common/utils/localize';
 import { JupyterSessionManager } from '../../../../client/datascience/jupyter/jupyterSessionManager';
@@ -43,7 +41,6 @@ suite('DataScience - KernelSelections', () => {
     let remoteKernelFinder: IRemoteKernelFinder;
     let interpreterSelector: IInterpreterSelector;
     let pathUtils: IPathUtils;
-    let fs: IFileSystem;
     let sessionManager: IJupyterSessionManager;
     const activePython1KernelModel = {
         lastActivityTime: new Date(2011, 11, 10, 12, 15, 0, 0),
@@ -159,7 +156,6 @@ suite('DataScience - KernelSelections', () => {
         kernelService = mock(KernelService);
         kernelFinder = mock<ILocalKernelFinder>();
         remoteKernelFinder = mock<IRemoteKernelFinder>();
-        fs = mock(FileSystem);
         pathUtils = mock(PathUtils);
         when(pathUtils.getDisplayName(anything())).thenReturn('<user friendly path>');
         when(pathUtils.getDisplayName(anything(), anything())).thenReturn('<user friendly path>');
@@ -170,15 +166,7 @@ suite('DataScience - KernelSelections', () => {
         when(interpreterService.getActiveInterpreter(anything())).thenResolve();
         const rawSupportedService = mock<IRawNotebookSupportedService>();
         when(rawSupportedService.supported()).thenResolve(true);
-        kernelSelectionProvider = new KernelSelectionProvider(
-            instance(interpreterSelector),
-            instance(fs),
-            instance(kernelFinder),
-            instance(remoteKernelFinder),
-            instance(extensionChecker),
-            disposableRegistry,
-            instance(jupyterSessionManagerFactory)
-        );
+        kernelSelectionProvider = new KernelSelectionProvider(instance(kernelFinder), instance(remoteKernelFinder));
     });
     teardown(() => disposeAllDisposables(disposableRegistry));
 

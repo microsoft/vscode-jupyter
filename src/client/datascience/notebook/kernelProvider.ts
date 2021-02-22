@@ -6,7 +6,6 @@ import {
     CancellationToken,
     Event,
     EventEmitter,
-    Uri,
     NotebookCommunication,
     NotebookDocument,
     NotebookKernel as VSCNotebookKernel
@@ -27,24 +26,19 @@ import {
     getDisplayNameOrNameOfKernelConnection,
     isLocalLaunch
 } from '../jupyter/kernels/helpers';
-import { KernelSelectionProvider } from '../jupyter/kernels/kernelSelections';
 import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
-import { IKernelProvider, IKernelSpecQuickPickItem, KernelConnectionMetadata } from '../jupyter/kernels/types';
+import { IKernelProvider, KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { INotebookStorageProvider } from '../notebookStorage/notebookStorageProvider';
 import { PreferredRemoteKernelIdProvider } from '../notebookStorage/preferredRemoteKernelIdProvider';
-import { IJupyterSessionManagerFactory, INotebook, INotebookProvider } from '../types';
+import { INotebook, INotebookProvider } from '../types';
 import {
     getNotebookMetadata,
     isJupyterKernel,
     isJupyterNotebook,
-    isPythonNotebook,
     trackKernelInNotebookMetadata
 } from './helpers/helpers';
 import { VSCodeNotebookKernelMetadata } from './kernelWithMetadata';
 import { INotebookKernelProvider, INotebookKernelResolver } from './types';
-import { IPythonExtensionChecker } from '../../api/types';
-import { IInterpreterService } from '../../interpreter/contracts';
-import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { ILocalKernelFinder, IRemoteKernelFinder } from '../kernel-launcher/types';
 
 @injectable()
@@ -56,7 +50,6 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
     private notebookKernelChangeHandled = new WeakSet<INotebook>();
     private readonly isLocalLaunch: boolean;
     constructor(
-        @inject(KernelSelectionProvider) private readonly kernelSelectionProvider: KernelSelectionProvider,
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
         @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
         @inject(INotebookStorageProvider) private readonly storageProvider: INotebookStorageProvider,
@@ -66,14 +59,10 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
         @inject(IExtensionContext) private readonly context: IExtensionContext,
         @inject(INotebookKernelResolver) private readonly kernelResolver: INotebookKernelResolver,
         @inject(IConfigurationService) private readonly configuration: IConfigurationService,
-        @inject(IJupyterSessionManagerFactory)
-        private readonly jupyterSessionManagerFactory: IJupyterSessionManagerFactory,
         @inject(PreferredRemoteKernelIdProvider)
         private readonly preferredRemoteKernelIdProvider: PreferredRemoteKernelIdProvider,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IExtensions) private readonly extensions: IExtensions,
-        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
-        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(ILocalKernelFinder) private readonly localKernelFinder: ILocalKernelFinder,
         @inject(IRemoteKernelFinder) private readonly remoteKernelFinder: IRemoteKernelFinder
     ) {

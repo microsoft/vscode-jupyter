@@ -3,18 +3,15 @@
 'use strict';
 
 import type { nbformat } from '@jupyterlab/coreutils';
-import { sha256 } from 'hash.js';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { CancellationToken } from 'vscode';
 import { IPythonExtensionChecker } from '../../api/types';
 import { IWorkspaceService } from '../../common/application/types';
-import { PYTHON_LANGUAGE } from '../../common/constants';
-import { traceDecorators, traceError, traceInfo, traceInfoIf, traceWarning } from '../../common/logger';
+import { traceDecorators, traceError, traceInfo, traceInfoIf } from '../../common/logger';
 import { IFileSystem, IPlatformService } from '../../common/platform/types';
 import { IPythonExecutionFactory } from '../../common/process/types';
 import { IExtensionContext, IExtensions, IPathUtils, Resource } from '../../common/types';
-import { noop } from '../../common/utils/misc';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { IInterpreterSelector } from '../../interpreter/configuration/types';
 import { IInterpreterService } from '../../interpreter/contracts';
@@ -25,12 +22,10 @@ import { Telemetry } from '../constants';
 import { findPreferredKernelIndex } from '../jupyter/kernels/helpers';
 import { JupyterKernelSpec } from '../jupyter/kernels/jupyterKernelSpec';
 import {
-    DefaultKernelConnectionMetadata,
     KernelConnectionMetadata,
     KernelSpecConnectionMetadata,
     PythonKernelConnectionMetadata
 } from '../jupyter/kernels/types';
-import { getInterpreterInfoStoredInMetadata } from '../notebookStorage/baseModel';
 import { IJupyterKernelSpec } from '../types';
 import { ILocalKernelFinder } from './types';
 
