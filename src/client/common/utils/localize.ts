@@ -43,39 +43,6 @@ export namespace Http {
 export namespace Experiments {
     export const inGroup = localize('Experiments.inGroup', "User belongs to experiment group '{0}'");
 }
-export namespace ExtensionChannels {
-    export const yesWeekly = localize('ExtensionChannels.yesWeekly', 'Yes, weekly');
-    export const yesDaily = localize('ExtensionChannels.yesDaily', 'Yes, daily');
-    export const promptMessage = localize(
-        'ExtensionChannels.promptMessage',
-        'We noticed you are using Visual Studio Code Insiders. Would you like to use the Insiders build of the Jupyter extension?'
-    );
-    export const reloadToUseInsidersMessage = localize(
-        'ExtensionChannels.reloadToUseInsidersMessage',
-        'Please reload Visual Studio Code to use the insiders build of the Jupyter extension.'
-    );
-    export const downloadCompletedOutputMessage = localize(
-        'ExtensionChannels.downloadCompletedOutputMessage',
-        'Insiders build download complete.'
-    );
-    export const startingDownloadOutputMessage = localize(
-        'ExtensionChannels.startingDownloadOutputMessage',
-        'Starting download for Insiders build.'
-    );
-    export const downloadingInsidersMessage = localize(
-        'ExtensionChannels.downloadingInsidersMessage',
-        'Downloading Insiders Extension... '
-    );
-    export const installingInsidersMessage = localize(
-        'ExtensionChannels.installingInsidersMessage',
-        'Installing Insiders build of extension... '
-    );
-    export const installingStableMessage = localize(
-        'ExtensionChannels.installingStableMessage',
-        'Installing Stable build of extension... '
-    );
-    export const installationCompleteMessage = localize('ExtensionChannels.installationCompleteMessage', 'complete.');
-}
 export namespace OutputChannelNames {
     export const jupyter = localize('OutputChannelNames.jupyter', 'Jupyter');
 }

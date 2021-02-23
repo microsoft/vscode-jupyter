@@ -456,31 +456,6 @@ export interface IEventNamePropertyMapping {
         activatedByWrapper?: boolean;
     };
     /**
-     * Telemetry event sent with details when user clicks a button in the following prompt
-     * `Prompt message` :- 'We noticed you are using Visual Studio Code Insiders. Would you like to use the Insiders build of the Jupyter extension?'
-     */
-    [EventName.INSIDERS_PROMPT]: {
-        /**
-         * `Yes, weekly` When user selects to use "weekly" as extension channel in insiders prompt
-         * `Yes, daily` When user selects to use "daily" as extension channel in insiders prompt
-         * `No, thanks` When user decides to keep using the same extension channel as before
-         */
-        selection: 'Yes, weekly' | 'Yes, daily' | 'No, thanks' | undefined;
-    };
-    /**
-     * Telemetry event sent with details when user clicks a button in the 'Reload to install insiders prompt'.
-     * `Prompt message` :- 'Please reload Visual Studio Code to use the insiders build of the extension'
-     */
-    [EventName.INSIDERS_RELOAD_PROMPT]: {
-        /**
-         * `Reload` When 'Reload' option is clicked
-         * `undefined` When prompt is closed
-         *
-         * @type {('Reload' | undefined)}
-         */
-        selection: 'Reload' | undefined;
-    };
-    /**
      * Telemetry event sent with details when a user has requested to opt it or out of an experiment group
      */
     [EventName.JUPYTER_EXPERIMENTS_OPT_IN_OUT]: {

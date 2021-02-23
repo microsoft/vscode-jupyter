@@ -25,7 +25,6 @@ export function defaultDataScienceSettings(): IJupyterSettings {
         logging: {
             level: 'off'
         },
-        insidersChannel: 'off',
         experiments: {
             enabled: false,
             optOutFrom: [],

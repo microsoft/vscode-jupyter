@@ -192,9 +192,9 @@ export async function canRunNotebookTests() {
     }
     const api = await initialize();
     const appEnv = api.serviceContainer.get<IApplicationEnvironment>(IApplicationEnvironment);
-    const canRunTests = appEnv.extensionChannel !== 'stable';
+    const canRunTests = appEnv.channel === 'insiders';
     if (!canRunTests) {
-        console.log(`Can't run native nb tests appEnv.extensionChannel = ${appEnv.extensionChannel}`);
+        console.log(`Can't run native nb tests appEnv.channel = ${appEnv.channel}`);
     }
     return canRunTests;
 }

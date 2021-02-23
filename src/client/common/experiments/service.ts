@@ -65,7 +65,7 @@ export class ExperimentService implements IExperimentService {
 
         let targetPopulation: TargetPopulation;
 
-        if (this.appEnvironment.extensionChannel === 'insiders') {
+        if (this.appEnvironment.channel === 'insiders') {
             targetPopulation = TargetPopulation.Insiders;
         } else {
             targetPopulation = TargetPopulation.Public;

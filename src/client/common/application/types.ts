@@ -1013,13 +1013,6 @@ export interface IApplicationEnvironment {
      */
     readonly channel: Channel;
     /**
-     * Gets the extension channel (whether 'insiders' or 'stable').
-     *
-     * @type {string}
-     * @memberof IApplicationShell
-     */
-    readonly extensionChannel: Channel;
-    /**
      * The version of the editor.
      */
     readonly vscodeVersion: string;
