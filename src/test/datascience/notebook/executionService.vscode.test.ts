@@ -612,7 +612,8 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         assert.equal(output1Lines.length, 4);
         assert.equal(output2Lines.length, 3);
     });
-    test('Stderr & stdout outputs should go into separate outputs', async () => {
+    test('Stderr & stdout outputs should go into separate outputs', async function () {
+        return this.skip();
         await insertCodeCell(
             dedent`
             import sys
@@ -631,7 +632,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
             throw new Error('No active document');
         }
         process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT = 'true';
-        const cells = vscodeNotebook.activeNotebookEditor.document.cells;
+        const cells = vscodeNotebook.activeNotebookEditor!.document.cells;
         traceInfo('1. Start execution for test of Stderr & stdout outputs');
         await runAllCellsInActiveNotebook();
         traceInfo('2. Start execution for test of Stderr & stdout outputs');

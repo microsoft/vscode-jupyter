@@ -53,6 +53,7 @@ suite('DataScience - VSCode Notebook (Editor Provider)', function () {
     });
     setup(async () => {
         sinon.restore();
+        await closeActiveWindows();
         await trustAllNotebooks();
         // Don't use same file (due to dirty handling, we might save in dirty.)
         // Coz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
