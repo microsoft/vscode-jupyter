@@ -90,15 +90,15 @@ suite('DataScience - VSCode Notebook ContentProvider', () => {
                         outputs: [],
                         source: 'print(1)',
                         metadata: new NotebookCellMetadata().with({
+                            custom: {
+                                metadata: {}
+                            },
                             editable: true,
                             executionOrder: 10,
                             hasExecutionOrder: true,
                             runState: NotebookCellRunState.Idle,
                             runnable: true,
-                            statusMessage: undefined,
-                            custom: {
-                                metadata: {}
-                            }
+                            statusMessage: undefined
                         })
                     },
                     {
@@ -107,13 +107,13 @@ suite('DataScience - VSCode Notebook ContentProvider', () => {
                         outputs: [],
                         source: '# HEAD',
                         metadata: new NotebookCellMetadata().with({
+                            custom: {
+                                metadata: {}
+                            },
                             editable: true,
                             executionOrder: undefined,
                             hasExecutionOrder: false,
-                            runnable: false,
-                            custom: {
-                                metadata: {}
-                            }
+                            runnable: false
                         })
                     }
                 ]);
@@ -168,15 +168,15 @@ suite('DataScience - VSCode Notebook ContentProvider', () => {
                         outputs: [],
                         source: 'Console.WriteLine("1")',
                         metadata: new NotebookCellMetadata().with({
+                            custom: {
+                                metadata: {}
+                            },
                             editable: true,
                             executionOrder: 10,
                             hasExecutionOrder: true,
                             runState: NotebookCellRunState.Idle,
                             runnable: true,
-                            statusMessage: undefined,
-                            custom: {
-                                metadata: {}
-                            }
+                            statusMessage: undefined
                         })
                     },
                     {
@@ -185,13 +185,13 @@ suite('DataScience - VSCode Notebook ContentProvider', () => {
                         outputs: [],
                         source: '# HEAD',
                         metadata: new NotebookCellMetadata().with({
+                            custom: {
+                                metadata: {}
+                            },
                             editable: true,
                             executionOrder: undefined,
                             hasExecutionOrder: false,
-                            runnable: false,
-                            custom: {
-                                metadata: {}
-                            }
+                            runnable: false
                         })
                     }
                 ]);
