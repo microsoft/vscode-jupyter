@@ -10,9 +10,8 @@
     -   [ ] Manually add any repository dependencies
 -   [ ] Create new release branch with format `release-YYYY.MM`
     -   [ ] Create a pull request against `release-YYYY.MM` for changes
-    -   [ ] Change the version in [`package.json`](https://github.com/Microsoft/vscode-jupyter/blob/main/package.json) from a `-dev` suffix to `-rc` 
-    -   [ ] Run `npm install` to make sure [`package-lock.json`](https://github.com/Microsoft/vscode-jupyter/blob/main/package.json) is up-to-date 
-    -   [ ] Update [`CHANGELOG.md`](https://github.com/Microsoft/vscode-jupyter/blob/main/CHANGELOG.md) 
+    -   [ ] Run `npm install` to make sure [`package-lock.json`](https://github.com/Microsoft/vscode-jupyter/blob/main/package.json) is up-to-date
+    -   [ ] Update [`CHANGELOG.md`](https://github.com/Microsoft/vscode-jupyter/blob/main/CHANGELOG.md)
         -   [ ] Run [`news`](https://github.com/Microsoft/vscode-jupyter/tree/main/news) (typically `python news --final --update CHANGELOG.md | code-insiders -`)
         -   [ ] Copy over the "Thanks" section from the previous release into the "Thanks" section for the new release
         -   [ ] Make sure the "Thanks" section is up-to-date (e.g. compare to versions in [`requirements.txt`](https://github.com/microsoft/vscode-jupyter/blob/main/requirements.txt))
@@ -24,7 +23,7 @@
 -   [ ] Update the [`release` branch](https://github.com/microsoft/vscode-jupyter/branches)
     -   [ ] If there are `release` branches that are two versions old (e.g. release-2020.[current month - 2]) you can delete them at this time
 -   [ ] Update `main` post-release
-    -   [ ] Bump the version number to the next monthly ("YYYY.MM.0-dev") release in the `main` branch
+    -   [ ] Bump the version number to the next monthly ("YYYY.MM.0") release in the `main` branch
         -   [ ] `package.json`
         -   [ ] `package-lock.json`
     -   [ ] Create a pull request against `main`
@@ -58,7 +57,7 @@
 
 ## Release
 
--   [ ] Publish the release 
+-   [ ] Publish the release
     -   [ ] For manual
         -   [ ] Download the [Release VSIX](https://pvsc.blob.core.windows.net/extension-builds-jupyter/ms-toolsai-jupyter-release.vsix) & Make sure no extraneous files are being included in the `.vsix` file (make sure to check for hidden files)
         -   [ ] Go to https://marketplace.visualstudio.com/manage/publishers/ms-toolsai?noPrompt=true and upload the VSIX
@@ -75,7 +74,7 @@
 -   [ ] Publish [documentation changes](https://github.com/Microsoft/vscode-docs/pulls?q=is%3Apr+is%3Aopen+label%3Apython)
 -   [ ] Publish the [blog](http://aka.ms/pythonblog) post
 -   [ ] Determine if a hotfix is needed
--   [ ] Merge `release-YYYY.MM` back into `main`. Don't overwrite the `-dev` version in package.json. (🤖)
+-   [ ] Merge `release-YYYY.MM` back into `main`. Don't overwrite the version in package.json. (🤖)
 
 ## Clean up after _this_ release
 
