@@ -15,7 +15,7 @@ const filterIcon: IIconProps = {
         root: {
             fontSize: 'var(--vscode-font-size)',
             width: 'var(--vscode-font-size)',
-            color: 'var(--vscode-editor-inactiveSelectionBackground)'
+            color: 'var(--vscode-settings-textInputForeground)'
         }
     }
 };

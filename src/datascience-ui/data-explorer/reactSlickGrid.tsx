@@ -481,7 +481,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
             const placeholder = '99999999999';
             const maxFieldWidth = measureText(placeholder, fontString);
             columns.forEach((c) => {
-                if (c.name !== this.props.idProperty) {
+                if (c.id !== '0') {
                     c.width = maxFieldWidth;
                 } else {
                     c.width = maxFieldWidth / 2;

@@ -2,8 +2,8 @@
     font-family: var(--vscode-font-family);
     font-weight: var(--vscode-font-weight);
     font-size: var(--vscode-font-size);
-    color: var(--vscode-editor-foreground);
-    background-color: var(--vscode-editor-background);
+    color: var(--vscode-settings-textInputForeground);
+    background-color: var(--vscode-settings-textInputBackground);
     box-sizing: border-box;
     height: 100%;
     border: 0px none;
