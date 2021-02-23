@@ -959,7 +959,6 @@ module.exports = {
         'src/client/datascience/jupyter/interpreter/jupyterInterpreterStateStore.ts',
         'src/client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService.ts',
         'src/client/datascience/jupyter/interpreter/jupyterInterpreterOldCacheStateStore.ts',
-        'src/client/datascience/jupyter/interpreter/jupyterInterpreterSubCommandExecutionService.ts',
         'src/client/datascience/jupyter/interpreter/jupyterInterpreterSelector.ts',
         'src/client/datascience/jupyter/interpreter/jupyterInterpreterService.ts',
         'src/client/datascience/jupyter/kernels/jupyterKernelSpec.ts',

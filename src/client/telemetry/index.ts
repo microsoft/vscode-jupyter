@@ -681,6 +681,7 @@ export interface IEventNamePropertyMapping {
          */
         result?: 'notSelected' | 'selected' | 'installationCancelled';
     };
+    [Telemetry.SelectJupyterInterpreterMessageDisplayed]: undefined | never;
     [NativeKeyboardCommandTelemetry.ArrowDown]: never | undefined;
     [NativeKeyboardCommandTelemetry.ArrowUp]: never | undefined;
     [NativeKeyboardCommandTelemetry.ChangeToCode]: never | undefined;
