@@ -318,6 +318,7 @@ export enum Telemetry {
      * Telemetry sent when user selects an interpreter to be used for starting of Jupyter server.
      */
     SelectJupyterInterpreter = 'DS_INTERNAL.SELECT_JUPYTER_INTERPRETER',
+    SelectJupyterInterpreterMessageDisplayed = 'DS_INTERNAL.SELECT_JUPYTER_INTERPRETER_MESSAGE_DISPLAYED',
     /**
      * User used command to select an intrepreter for the jupyter server.
      */
