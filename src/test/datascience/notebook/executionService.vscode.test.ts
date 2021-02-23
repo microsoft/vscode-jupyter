@@ -612,8 +612,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         assert.equal(output1Lines.length, 4);
         assert.equal(output2Lines.length, 3);
     });
-    test('Stderr & stdout outputs should go into separate outputs', async function () {
-        return this.skip();
+    test('Stderr & stdout outputs should go into separate outputs', async () => {
         await insertCodeCell(
             dedent`
             import sys
