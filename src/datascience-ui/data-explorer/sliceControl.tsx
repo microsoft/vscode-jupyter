@@ -161,7 +161,7 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
     private validateSliceExpression = () => {
         const { inputValue } = this.state;
         if (inputValue.startsWith('[') && inputValue.endsWith(']')) {
-            let hasOutOfRangeIndex: [shapeIndex: number, value: number] | undefined;
+            let hasOutOfRangeIndex: { shapeIndex: number; value: number } | undefined;
             const parsedExpression = inputValue
                 .substring(1, inputValue.length - 1)
                 .split(',')
@@ -176,14 +176,14 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
                             // Python allows negative index values
                             (value < 0 && value < -numberOfElementsAlongAxis)
                         ) {
-                            hasOutOfRangeIndex = [shapeIndex, value];
+                            hasOutOfRangeIndex = { shapeIndex, value };
                         }
                         return value;
                     }
                 });
 
             if (hasOutOfRangeIndex) {
-                const [shapeIndex, value] = hasOutOfRangeIndex;
+                const { shapeIndex, value } = hasOutOfRangeIndex;
                 return `IndexError at axis ${shapeIndex}, index ${value}`;
             } else if (parsedExpression && parsedExpression.length !== this.props.originalVariableShape.length) {
                 return 'Invalid slice expression';
