@@ -236,7 +236,7 @@ function getAllowedWarningsForWebPack(buildConfig) {
 
 gulp.task('includeBCryptGenRandomExe', async () => {
     const src = path.join(ExtensionRootDir, 'src', 'BCryptGenRandom', 'BCryptGenRandom.exe');
-    const dest = path.join(ExtensionRootDir, 'out', 'BCryptGenRandom', 'BcryptGenRandom.exe');
+    const dest = path.join(ExtensionRootDir, 'out', 'BCryptGenRandom', 'BCryptGenRandom.exe');
     if (fs.existsSync(dest)) {
         return;
     }
