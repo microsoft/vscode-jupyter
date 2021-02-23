@@ -18,7 +18,6 @@ import { Experiments } from '../../../client/common/utils/localize';
 import * as Telemetry from '../../../client/telemetry';
 import { EventName } from '../../../client/telemetry/constants';
 import { JVSC_EXTENSION_ID_FOR_TESTS } from '../../constants';
-import { MockExtensions } from '../../datascience/mockExtensions';
 import { MockOutputChannel } from '../../mockClasses';
 import { MockMemento } from '../../mocks/mementos';
 
