@@ -12,6 +12,8 @@
    ([#4423](https://github.com/Microsoft/vscode-jupyter/issues/4423)
 1. Enable native notebook if sync'd settings is forcing it.
    ([#4845](https://github.com/Microsoft/vscode-jupyter/issues/4845)
+1. Fix 'Export as Notebook' not working after opening a notebook on a python file.
+   ([#4869](https://github.com/Microsoft/vscode-jupyter/issues/4869)
 
 ## 2021.2.0 (17 February 2021)
 
