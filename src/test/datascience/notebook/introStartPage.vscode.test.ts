@@ -90,6 +90,9 @@ suite('DataScience - VSCode Notebook - Native Notebook Experiment', function () 
         await sleep(1_000);
 
         assert.isUndefined(notebookEditorProvider.activeEditor);
+        notebookEditorProvider.editors.map((item) => {
+            assert.fail(item, undefined, `There should be no document - ${item.file.fsPath}`);
+        });
         assert.equal(notebookEditorProvider.editors.length, 0);
     });
     test('Do not display start page for Stable VS Code Not in experiment', async () => {
