@@ -385,12 +385,12 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         // Set of columns to update based on this batch of rows
         const columnsToUpdate = new Set<string>();
         // Make sure we have an index field and all rows have an item
-        const normalizedRows = rows.map((r: any | undefined) => {
+        const normalizedRows = rows.map((r: any | undefined, idx: number) => {
             if (!r) {
                 r = {};
             }
             if (!r.hasOwnProperty(this.state.indexColumn)) {
-                r[this.state.indexColumn] = uuid();
+                r[this.state.indexColumn] = this.state.fetchedRowCount + idx;
             }
             for (let [key, value] of Object.entries(r)) {
                 switch (value) {
