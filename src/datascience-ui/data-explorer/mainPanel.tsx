@@ -5,7 +5,6 @@ import './mainPanel.css';
 
 import { JSONArray } from '@phosphor/coreutils';
 import * as React from 'react';
-import * as uuid from 'uuid/v4';
 
 import {
     CellFetchAllLimit,
@@ -361,7 +360,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         const indexColumn = {
             key: this.state.indexColumn,
             type: ColumnType.Number
-        }
+        };
         if (variable.columns) {
             const columns = [indexColumn].concat(variable.columns);
             return columns.map((c: { key: string; type: ColumnType }, i: number) => {

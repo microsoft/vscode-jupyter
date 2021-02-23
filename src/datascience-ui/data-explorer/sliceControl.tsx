@@ -4,7 +4,7 @@ import { IGetSliceRequest } from '../../client/datascience/data-viewing/types';
 
 import './sliceControl.css';
 
-const sliceRegEx = /^\s*(?<Start>-?\d+)(?::(?<Stop>-?\d+))?(?::(?<Step>-?\d+))?\s*$/;
+const sliceRegEx = /^\s*(?<StartRange>\d+:)|(?<StopRange>:\d+)|(?:(?<Start>-?\d+)(?::(?<Stop>-?\d+))?(?::(?<Step>-?\d+))?)\s*$/;
 
 interface ISliceControlProps {
     originalVariableShape: number[];
@@ -196,6 +196,7 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
             const shape = this.state.sliceExpression;
             if (shape.startsWith('[') && shape.endsWith(']')) {
                 const dropdowns: { axis: number; index: number }[] = [];
+                let numRangeObjects = 0;
                 shape
                     .substring(1, shape.length - 1)
                     .split(',')
@@ -203,13 +204,18 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
                         // Validate the slice object
                         const match = sliceRegEx.exec(shapeEl);
                         if (match?.groups?.Start && !match.groups.Stop) {
+                            // Can map index expressions like [2, :, :] to dropdowns
                             dropdowns.push({ axis: idx, index: parseInt(match.groups.Start) });
+                        } else if (match?.groups?.StopRange !== undefined || match?.groups?.StartRange !== undefined) {
+                            // Can't map expressions like [0:, :] to dropdown
+                            numRangeObjects += 1;
                         }
                     });
                 const state = {};
+                const ndim = this.props.originalVariableShape.length;
                 if (
-                    dropdowns.length === this.props.originalVariableShape.length - 2 ||
-                    (dropdowns.length === 1 && this.props.originalVariableShape.length === 2)
+                    numRangeObjects === 0 &&
+                    ((ndim === 2 && dropdowns.length === 1) || (ndim > 2 && dropdowns.length === ndim - 2))
                 ) {
                     // Apply values to dropdowns
                     for (let i = 0; i < dropdowns.length; i++) {

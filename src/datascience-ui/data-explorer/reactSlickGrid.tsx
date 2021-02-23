@@ -316,7 +316,11 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
     }
 
     public renderSliceControls = () => {
-        if (this.props.isSliceDataEnabled && this.props.originalVariableShape && this.props.originalVariableShape.filter((v) => !!v).length > 1) {
+        if (
+            this.props.isSliceDataEnabled &&
+            this.props.originalVariableShape &&
+            this.props.originalVariableShape.filter((v) => !!v).length > 1
+        ) {
             return (
                 <div className="control-container">
                     <SliceControl
