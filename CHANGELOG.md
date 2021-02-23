@@ -10,6 +10,8 @@
    ([#4779](https://github.com/Microsoft/vscode-jupyter/issues/4779))
 1. Allow kernels to not be handled by the jupyter extension.
    ([#4423](https://github.com/Microsoft/vscode-jupyter/issues/4423)
+1. Enable native notebook if sync'd settings is forcing it.
+   ([#4845](https://github.com/Microsoft/vscode-jupyter/issues/4845)
 
 ## 2021.2.0 (17 February 2021)
 
