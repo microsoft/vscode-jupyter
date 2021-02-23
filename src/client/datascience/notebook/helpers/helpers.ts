@@ -596,6 +596,7 @@ export type CellOutputMetadata = {
          * We don't know of others properties, but this is definitely used.
          */
         display_id?: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } & any;
     /**
      * Original cell output type
@@ -745,6 +746,7 @@ export function getTextOutputValue(output: NotebookCellOutput): string {
                 opit.mime === CellOutputMimeTypes.textStream ||
                 opit.mime === 'text/plain' ||
                 opit.mime === 'text/markdown'
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         )?.value as any) || ''
     );
 }
