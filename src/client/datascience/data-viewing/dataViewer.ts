@@ -3,21 +3,28 @@
 'use strict';
 import '../../common/extensions';
 
-import { inject, injectable } from 'inversify';
+import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
-import { ViewColumn } from 'vscode';
+import { Memento, ViewColumn } from 'vscode';
 
 import { IApplicationShell, IWebviewPanelProvider, IWorkspaceService } from '../../common/application/types';
 import { EXTENSION_ROOT_DIR, UseCustomEditorApi } from '../../common/constants';
 import { traceError } from '../../common/logger';
-import { IConfigurationService, IDisposable, IExperimentService, Resource } from '../../common/types';
+import {
+    GLOBAL_MEMENTO,
+    IConfigurationService,
+    IDisposable,
+    IExperimentService,
+    IMemento,
+    Resource
+} from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { sendTelemetryEvent } from '../../telemetry';
 import { HelpLinks, Telemetry } from '../constants';
 import { JupyterDataRateLimitError } from '../jupyter/jupyterDataRateLimitError';
-import { ICodeCssGenerator, IThemeFinder } from '../types';
+import { ICodeCssGenerator, IThemeFinder, WebViewViewChangeEventArgs } from '../types';
 import { WebviewPanelHost } from '../webviews/webviewPanelHost';
 import { DataViewerMessageListener } from './dataViewerMessageListener';
 import {
@@ -31,6 +38,7 @@ import {
 } from './types';
 import { Experiments } from '../../common/experiments/groups';
 
+const PREFERRED_VIEWGROUP = 'JupyterDataViewerPreferredViewColumn';
 const dataExplorerDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'viewers');
 @injectable()
 export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements IDataViewer, IDisposable {
@@ -48,7 +56,8 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
         @inject(UseCustomEditorApi) useCustomEditorApi: boolean,
-        @inject(IExperimentService) private experimentService: IExperimentService
+        @inject(IExperimentService) private experimentService: IExperimentService,
+        @inject(IMemento) @named(GLOBAL_MEMENTO) readonly globalMemento: Memento
     ) {
         super(
             configuration,
@@ -60,7 +69,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
             dataExplorerDir,
             [path.join(dataExplorerDir, 'commons.initial.bundle.js'), path.join(dataExplorerDir, 'dataExplorer.js')],
             localize.DataScience.dataExplorerTitle(),
-            ViewColumn.One,
+            globalMemento.get(PREFERRED_VIEWGROUP) ?? ViewColumn.One,
             useCustomEditorApi
         );
     }
@@ -97,6 +106,12 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
             // Call dispose on the data provider
             this.dataProvider.dispose();
             this.dataProvider = undefined;
+        }
+    }
+
+    protected async onViewStateChanged(args: WebViewViewChangeEventArgs) {
+        if (args.current.active && args.current.visible && args.previous.active && args.current.visible) {
+            await this.globalMemento.update(PREFERRED_VIEWGROUP, this.webPanel?.viewColumn);
         }
     }
 

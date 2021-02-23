@@ -162,6 +162,9 @@ export class WebBrowserPanel implements IWebviewPanel, IDisposable {
     private server?: IWebServer;
     private serverUrl: string | undefined;
     private loadFailedEmitter = new EventEmitter<void>();
+    public get viewColumn() {
+        return this.panel?.viewColumn;
+    }
     constructor(
         private readonly disposableRegistry: IDisposableRegistry,
         private readonly options: IWebviewPanelOptions

@@ -5,7 +5,6 @@ import './mainPanel.css';
 
 import { JSONArray } from '@phosphor/coreutils';
 import * as React from 'react';
-import * as uuid from 'uuid/v4';
 
 import {
     CellFetchAllLimit,
@@ -28,6 +27,10 @@ import { StyleInjector } from '../react-common/styleInjector';
 import { cellFormatterFunc } from './cellFormatter';
 import { ISlickGridAdd, ISlickGridSlice, ISlickRow, ReactSlickGrid } from './reactSlickGrid';
 import { generateTestData } from './testData';
+import { Image, ImageName } from '../react-common/image';
+
+import '../react-common/codicon/codicon.css';
+import '../react-common/seti/seti.less';
 
 const SliceableTypes: Set<string> = new Set<string>(['ndarray', 'Tensor', 'EagerTensor']);
 
@@ -52,6 +55,8 @@ interface IMainPanelState {
     originalVariableType?: string;
     isSliceDataEnabled: boolean;
     maximumRowChunkSize?: number;
+    variableName?: string;
+    fileName?: string;
 }
 
 export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState> implements IMessageHandler {
@@ -148,10 +153,35 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                     postOffice={this.postOffice}
                 />
                 {progressBar}
+                {this.renderBreadcrumb()}
                 {this.state.totalRowCount > 0 && this.state.styleReady && this.renderGrid()}
             </div>
         );
     };
+
+    private renderBreadcrumb() {
+        if (this.state.fileName) {
+            let breadcrumbText = this.state.variableName;
+            if (this.state.originalVariableShape) {
+                breadcrumbText += ' (' + this.state.originalVariableShape?.join(', ') + ')';
+            }
+            return (
+                <div className="breadcrumb-container control-container">
+                    <div className="breadcrumb">
+                        <div className="icon-python breadcrumb-file-icon" />
+                        <span>{this.state.fileName}</span>
+                        <Image
+                            baseTheme={this.props.baseTheme}
+                            class="image-button-image"
+                            codicon="chevron-right"
+                            image={ImageName.Cancel}
+                        />
+                        <span>{breadcrumbText}</span>
+                    </div>
+                </div>
+            );
+        }
+    }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public handleMessage = (msg: string, payload?: any) => {
@@ -233,6 +263,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 const indexColumn = variable.indexColumn ? variable.indexColumn : 'index';
                 const originalVariableType = this.state.originalVariableType ?? variable.type;
                 const originalVariableShape = this.state.originalVariableShape ?? variable.shape;
+                const variableName = this.state.variableName ?? variable.name;
+                const fileName = this.state.fileName ?? variable.fileName;
                 const isSliceDataEnabled = payload.isSliceDataEnabled && SliceableTypes.has(originalVariableType || '');
 
                 // New data coming in, so reset everything and clear our cache of columns
@@ -249,6 +281,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                     originalVariableShape,
                     dataDimensionality: variable.dataDimensionality ?? 2,
                     isSliceDataEnabled,
+                    variableName,
+                    fileName,
                     // Maximum number of rows is 100 if evaluating in debugger, undefined otherwise
                     maximumRowChunkSize: variable.maximumRowChunkSize ?? this.state.maximumRowChunkSize
                 });
@@ -322,8 +356,14 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     }
 
     private generateColumns(variable: IDataFrameInfo): Slick.Column<Slick.SlickData>[] {
+        // Generate an index column
+        const indexColumn = {
+            key: this.state.indexColumn,
+            type: ColumnType.Number
+        };
         if (variable.columns) {
-            return variable.columns.map((c: { key: string; type: ColumnType }, i: number) => {
+            const columns = [indexColumn].concat(variable.columns);
+            return columns.map((c: { key: string; type: ColumnType }, i: number) => {
                 return {
                     type: c.type,
                     field: c.key.toString(),
@@ -344,12 +384,12 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         // Set of columns to update based on this batch of rows
         const columnsToUpdate = new Set<string>();
         // Make sure we have an index field and all rows have an item
-        const normalizedRows = rows.map((r: any | undefined) => {
+        const normalizedRows = rows.map((r: any | undefined, idx: number) => {
             if (!r) {
                 r = {};
             }
             if (!r.hasOwnProperty(this.state.indexColumn)) {
-                r[this.state.indexColumn] = uuid();
+                r[this.state.indexColumn] = this.state.fetchedRowCount + idx;
             }
             for (let [key, value] of Object.entries(r)) {
                 switch (value) {

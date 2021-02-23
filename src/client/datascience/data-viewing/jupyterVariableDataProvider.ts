@@ -96,7 +96,9 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
                 shape: JupyterVariableDataProvider.parseShape(variable.shape),
                 sliceExpression,
                 type: variable.type,
-                maximumRowChunkSize: variable.maximumRowChunkSize
+                maximumRowChunkSize: variable.maximumRowChunkSize,
+                name: variable.name,
+                fileName: variable.fileName
             };
         }
         return dataFrameInfo;

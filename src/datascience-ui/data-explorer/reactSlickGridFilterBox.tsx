@@ -3,11 +3,24 @@
 'use strict';
 
 import * as React from 'react';
+import { IIconProps, SearchBox } from '@fluentui/react';
 
 import './reactSlickGridFilterBox.css';
 
+const filterIcon: IIconProps = {
+    iconName: 'Filter',
+    styles: {
+        root: {
+            fontSize: 'var(--vscode-font-size)',
+            width: 'var(--vscode-font-size)',
+            color: 'var(--vscode-settings-textInputForeground)'
+        }
+    }
+};
+
 interface IFilterProps {
     column: Slick.Column<Slick.SlickData>;
+    fontSize: number;
     onChange(val: string, column: Slick.Column<Slick.SlickData>): void;
 }
 
@@ -18,20 +31,27 @@ export class ReactSlickGridFilterBox extends React.Component<IFilterProps> {
 
     public render() {
         return (
-            <input
-                type="text"
-                tabIndex={0}
-                aria-label={this.props.column.name}
-                className="filter-box"
+            <SearchBox
+                iconProps={filterIcon}
                 onChange={this.updateInputValue}
+                onClear={this.clearInputValue}
+                tabIndex={0}
+                ariaLabel={this.props.column.name}
+                className="filter-box"
             />
         );
     }
 
-    private updateInputValue = (evt: React.SyntheticEvent) => {
-        const element = evt.currentTarget as HTMLInputElement;
-        if (element) {
-            this.props.onChange(element.value, this.props.column);
+    private clearInputValue = () => {
+        this.props.onChange('', this.props.column);
+    };
+
+    private updateInputValue = (
+        _event?: React.ChangeEvent<HTMLInputElement> | undefined,
+        newValue?: string | undefined
+    ) => {
+        if (newValue !== undefined) {
+            this.props.onChange(newValue, this.props.column);
         }
     };
 }

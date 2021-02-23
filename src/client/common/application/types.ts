@@ -1109,6 +1109,11 @@ export interface IWebviewViewOptions extends IWebviewOptions {
 // Wraps the VS Code webview panel
 export const IWebviewPanel = Symbol('IWebviewPanel');
 export interface IWebviewPanel extends IWebview {
+    /**
+     * Editor position of the panel. This property is only set if the webview is in
+     * one of the editor view columns.
+     */
+    viewColumn: ViewColumn | undefined;
     setTitle(val: string): void;
     /**
      * Makes the webpanel show up.
