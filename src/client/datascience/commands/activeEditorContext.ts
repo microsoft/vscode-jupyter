@@ -12,6 +12,7 @@ import { PYTHON_LANGUAGE, UseVSCodeNotebookEditorApi } from '../../common/consta
 import { ContextKey } from '../../common/contextKey';
 import { traceError } from '../../common/logger';
 import { IDisposable, IDisposableRegistry } from '../../common/types';
+import { isNotebookCell } from '../../common/utils/misc';
 import { EditorContexts } from '../constants';
 import { isPythonNotebook } from '../notebook/helpers/helpers';
 import {
@@ -189,8 +190,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         this.updateContextOfActiveNotebookKernel(activeEditor);
     }
     private onDidChangeActiveTextEditor(e?: TextEditor) {
-        this.isPythonFileActive =
-            e?.document.languageId === PYTHON_LANGUAGE && !this.notebookEditorProvider.activeEditor;
+        this.isPythonFileActive = e?.document.languageId === PYTHON_LANGUAGE && !isNotebookCell(e?.document);
         this.updateNativeNotebookCellContext();
         this.updateMergedContexts();
     }
