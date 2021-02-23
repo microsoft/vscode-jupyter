@@ -51,9 +51,6 @@
         "onCommand:jupyter.exportToHTML",
         "onCommand:jupyter.exportToPDF",
         "onCommand:jupyter.notebookeditor.export",
-        "onCommand:jupyter.switchOffInsidersChannel",
-        "onCommand:jupyter.switchToDailyChannel",
-        "onCommand:jupyter.switchToWeeklyChannel",
         "onCommand:jupyter.createnewnotebook",
         "onCommand:jupyter.createnewinteractive",
         "onCommand:jupyter.importnotebook",
@@ -265,21 +262,6 @@
             }
         ],
         "commands": [
-            {
-                "command": "jupyter.switchOffInsidersChannel",
-                "title": "%jupyter.command.jupyter.switchOffInsidersChannel.title%",
-                "category": "Jupyter"
-            },
-            {
-                "command": "jupyter.switchToDailyChannel",
-                "title": "%jupyter.command.jupyter.switchToDailyChannel.title%",
-                "category": "Jupyter"
-            },
-            {
-                "command": "jupyter.switchToWeeklyChannel",
-                "title": "%jupyter.command.jupyter.switchToWeeklyChannel.title%",
-                "category": "Jupyter"
-            },
             {
                 "command": "jupyter.viewOutput",
                 "title": "%jupyter.command.jupyter.viewOutput.title%",
@@ -891,24 +873,6 @@
                     "title": "%jupyter.command.jupyter.exportToPDF.title%",
                     "category": "Jupyter",
                     "when": "jupyter.isnativeactive && jupyter.isnotebooktrusted"
-                },
-                {
-                    "command": "jupyter.switchOffInsidersChannel",
-                    "title": "%jupyter.command.jupyter.switchOffInsidersChannel.title%",
-                    "category": "Jupyter",
-                    "when": "config.jupyter.insidersChannel != 'default'"
-                },
-                {
-                    "command": "jupyter.switchToDailyChannel",
-                    "title": "%jupyter.command.jupyter.switchToDailyChannel.title%",
-                    "category": "Jupyter",
-                    "when": "config.jupyter.insidersChannel != 'daily'"
-                },
-                {
-                    "command": "jupyter.switchToWeeklyChannel",
-                    "title": "%jupyter.command.jupyter.switchToWeeklyChannel.title%",
-                    "category": "Jupyter",
-                    "when": "config.jupyter.insidersChannel != 'weekly'"
                 },
                 {
                     "command": "jupyter.insertCellBelowPosition",
@@ -1758,17 +1722,6 @@
                     "default": false,
                     "markdownDescription": "Enabling this setting will automatically trust any opened notebook and therefore display markdown and render code cells. You will no longer be prompted to trust individual notebooks and harmful code could automatically run. \n\n[Learn more.](https://aka.ms/trusted-notebooks)",
                     "scope": "machine"
-                },
-                "jupyter.insidersChannel": {
-                    "type": "string",
-                    "default": "off",
-                    "description": "Set to \"weekly\" or \"daily\" to automatically download and install the latest Insiders builds of the Jupyter extension, which include upcoming features and bug fixes.",
-                    "enum": [
-                        "off",
-                        "weekly",
-                        "daily"
-                    ],
-                    "scope": "application"
                 }
             }
         },
@@ -1844,7 +1797,7 @@
         "customEditors": [
             {
                 "viewType": "jupyter.notebook.ipynb",
-                "displayName": "Jupyter Notebook",
+                "displayName": "Jupyter Notebook (custom)",
                 "selector": [
                     {
                         "filenamePattern": "*.ipynb"
