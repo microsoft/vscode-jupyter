@@ -725,7 +725,6 @@ jobs:
           VSC_JUPYTER_FORCE_LOGGING: 1
           VSC_PYTHON_FORCE_LOGGING: 1
           VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
-          VSC_JUPYTER_RUN_NB_TEST: 1
           VSC_JUPYTER_REMOTE_NATIVE_TEST: ${{ contains(matrix.test-suite, 'remote') }}
           VSC_JUPYTER_NON_RAW_NATIVE_TEST: ${{ contains(matrix.test-suite, 'nonRawNotebook') }}
           VSC_JUPYTER_CI_RUN_JAVA_NB_TEST: ${{ contains(matrix.test-suite, 'conda') }}
@@ -747,7 +746,6 @@ jobs:
           run: ${{ env.xvfbCommand }} npm run testNativeNotebooksWithoutPythonInVSCode
         env:
           VSC_FORCE_REAL_JUPYTER: 1
-          VSC_JUPYTER_RUN_NB_TEST: 1
           VSC_JUPYTER_FORCE_LOGGING: 1
           VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
           VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
@@ -771,7 +769,6 @@ jobs:
         env:
           VSC_FORCE_REAL_JUPYTER: 1
           VSC_JUPYTER_FORCE_LOGGING: 1
-          VSC_JUPYTER_RUN_NB_TEST: 1
           VSC_PYTHON_FORCE_LOGGING: 1
           VSC_JUPYTER_WEBVIEW_TEST_MIDDLEWARE: 'true'
           VSC_JUPYTER_REMOTE_NATIVE_TEST: 'false'
