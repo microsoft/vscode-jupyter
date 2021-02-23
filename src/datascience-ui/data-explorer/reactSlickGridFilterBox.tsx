@@ -3,9 +3,7 @@
 'use strict';
 
 import * as React from 'react';
-import { IIconProps, initializeIcons, SearchBox } from '@fluentui/react';
-
-initializeIcons();
+import { IIconProps, SearchBox } from '@fluentui/react';
 
 import './reactSlickGridFilterBox.css';
 

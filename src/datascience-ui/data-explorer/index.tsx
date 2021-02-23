@@ -11,6 +11,7 @@ import '../common/index.css';
 
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
+import { initializeIcons } from '@fluentui/react';
 
 import { IVsCodeApi } from '../react-common/postOffice';
 import { detectBaseTheme } from '../react-common/themeDetector';
@@ -20,6 +21,7 @@ import { MainPanel } from './mainPanel';
 export declare function acquireVsCodeApi(): IVsCodeApi;
 
 const baseTheme = detectBaseTheme();
+initializeIcons();
 
 /* eslint-disable  */
 ReactDOM.render(
