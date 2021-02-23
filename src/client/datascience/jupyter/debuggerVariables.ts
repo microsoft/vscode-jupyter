@@ -133,7 +133,13 @@ export class DebuggerVariables extends DebugLocationTracker
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (targetVariable as any).frameId
         );
-        const fileName = this.debugLocation?.fileName ? path.basename(this.debugLocation?.fileName) : undefined;
+
+        let fileName;
+        if (notebook) {
+            fileName = path.basename(notebook.identity.path);
+        } else if (this.debugLocation?.fileName) {
+            fileName = path.basename(this.debugLocation.fileName);
+        }
         // Results should be the updated variable.
         return results
             ? {
