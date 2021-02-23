@@ -357,8 +357,14 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     }
 
     private generateColumns(variable: IDataFrameInfo): Slick.Column<Slick.SlickData>[] {
+        // Generate an index column
+        const indexColumn = {
+            key: this.state.indexColumn,
+            type: ColumnType.Number
+        }
         if (variable.columns) {
-            return variable.columns.map((c: { key: string; type: ColumnType }, i: number) => {
+            const columns = [indexColumn].concat(variable.columns);
+            return columns.map((c: { key: string; type: ColumnType }, i: number) => {
                 return {
                     type: c.type,
                     field: c.key.toString(),
