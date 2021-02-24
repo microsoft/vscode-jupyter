@@ -66,7 +66,7 @@ export class CellExecutionFactory {
         private readonly appShell: IApplicationShell,
         private readonly vscNotebook: IVSCodeNotebook,
         private readonly context: IExtensionContext
-    ) {}
+    ) { }
 
     public create(cell: NotebookCell, isPythonKernelConnection: boolean) {
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
@@ -408,13 +408,13 @@ export class CellExecution {
 
         // Listen to messages & chain each (to process them in the order we get them).
         request.onIOPub = (msg) =>
-            (this.requestHandlerChain = this.requestHandlerChain.then(() =>
-                this.handleIOPub(clearState, loggers, msg).catch(noop)
-            ));
+        (this.requestHandlerChain = this.requestHandlerChain.then(() =>
+            this.handleIOPub(clearState, loggers, msg).catch(noop)
+        ));
         request.onReply = (msg) =>
-            (this.requestHandlerChain = this.requestHandlerChain.then(() =>
-                this.handleReply(clearState, msg).catch(noop)
-            ));
+        (this.requestHandlerChain = this.requestHandlerChain.then(() =>
+            this.handleReply(clearState, msg).catch(noop)
+        ));
         request.onStdin = this.handleInputRequest.bind(this, session);
 
         // WARNING: Do not dispose `request`.
@@ -633,6 +633,7 @@ export class CellExecution {
         await chainWithPendingUpdates(this.editor.document, (edit) => {
             traceCellMessage(this.cell, 'Update streamed output');
             let exitingCellOutputs = this.cell.outputs;
+            const clearOutput = clearState.value;
             // Clear output if waiting for a clear
             if (clearState.value) {
                 exitingCellOutputs = [];
@@ -681,6 +682,14 @@ export class CellExecution {
                     existingOutputToAppendTo.id,
                     output.outputs
                 );
+            } else if (clearOutput) {
+                // Replace the current outputs with a single new output.
+                const output = cellOutputToVSCCellOutput({
+                    output_type: 'stream',
+                    name: msg.content.name,
+                    text: formatStreamText(concatMultilineString(msg.content.text))
+                });
+                edit.replaceNotebookCellOutput(this.editor.document.uri, this.cell.index, [output]);
             } else {
                 // Create a new output
                 const output = cellOutputToVSCCellOutput({
