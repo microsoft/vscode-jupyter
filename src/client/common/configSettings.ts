@@ -14,7 +14,6 @@ import { LogLevel } from '../logging/levels';
 import { IWorkspaceService } from './application/types';
 import { WorkspaceService } from './application/workspace';
 import { isTestExecution } from './constants';
-import { ExtensionChannels } from './insidersBuild/types';
 import {
     IExperiments,
     ILoggingSettings,
@@ -40,7 +39,6 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     private static jupyterSettings: Map<string, JupyterSettings> = new Map<string, JupyterSettings>();
     public experiments!: IExperiments;
     public logging: ILoggingSettings = { level: LogLevel.Error };
-    public insidersChannel: ExtensionChannels = 'off';
     public allowImportFromNotebook: boolean = false;
     public allowUnauthorizedRemoteConnection: boolean = false;
     public alwaysTrustNotebooks: boolean = false;

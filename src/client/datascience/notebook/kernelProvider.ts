@@ -125,9 +125,20 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
     ): Promise<VSCodeNotebookKernelMetadata[]> {
         let kernels: KernelConnectionMetadata[] = [];
         let preferred: KernelConnectionMetadata | undefined;
+
+        // If we already have a kernel selected, then set that one as preferred
+        const editor =
+            this.notebook.notebookEditors.find((e) => e.document === document) ||
+            (this.notebook.activeNotebookEditor?.document === document
+                ? this.notebook.activeNotebookEditor
+                : undefined);
+        if (editor && isJupyterKernel(editor.kernel)) {
+            preferred = (editor.kernel as VSCodeNotebookKernelMetadata).selection;
+        }
+
         if (this.isLocalLaunch) {
             kernels = await this.localKernelFinder.listKernels(document.uri);
-            preferred = await this.localKernelFinder.findKernel(document.uri, getNotebookMetadata(document), token);
+            preferred = preferred ?? await this.localKernelFinder.findKernel(document.uri, getNotebookMetadata(document), token);
 
             // We need to filter out those items that are for other extensions.
             kernels = kernels.filter((r) => {
@@ -150,7 +161,7 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
             });
 
             kernels = await this.remoteKernelFinder.listKernels(document.uri, connection);
-            preferred = await this.remoteKernelFinder.findKernel(
+            preferred = preferred ?? await this.remoteKernelFinder.findKernel(
                 document.uri,
                 connection,
                 getNotebookMetadata(document),
@@ -158,17 +169,6 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
             );
         }
 
-        // If we already have a kernel selected, then set that one as preferred
-        const editor =
-            this.notebook.notebookEditors.find((e) => e.document === document) ||
-            (this.notebook.activeNotebookEditor?.document === document
-                ? this.notebook.activeNotebookEditor
-                : undefined);
-        if (editor && isJupyterKernel(editor.kernel)) {
-            preferred = kernels.find((k) =>
-                fastDeepEqual(k, (editor.kernel as VSCodeNotebookKernelMetadata).selection)
-            );
-        }
 
         // Map kernels into result type
         return kernels.map((k) => {

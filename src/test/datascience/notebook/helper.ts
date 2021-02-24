@@ -9,7 +9,7 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as sinon from 'sinon';
 import * as tmp from 'tmp';
-import { anything, instance, mock, when } from 'ts-mockito';
+import { instance, mock, when } from 'ts-mockito';
 import {
     NotebookCellRunState,
     WorkspaceEdit,
@@ -25,9 +25,9 @@ import {
     NotebookCellKind,
     NotebookCellMetadata,
     NotebookDocumentMetadata,
-    NotebookCellOutputItem
+    NotebookCellOutputItem,
+    CancellationTokenSource
 } from 'vscode';
-import { CancellationToken } from 'vscode-jsonrpc';
 import { IApplicationEnvironment, IApplicationShell, IVSCodeNotebook } from '../../../client/common/application/types';
 import { JVSC_EXTENSION_ID, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { disposeAllDisposables } from '../../../client/common/helpers';
@@ -46,14 +46,11 @@ import { IKernelProvider } from '../../../client/datascience/jupyter/kernels/typ
 import { JupyterServerSelector } from '../../../client/datascience/jupyter/serverSelector';
 import { JupyterNotebookView } from '../../../client/datascience/notebook/constants';
 import {
-    LastSavedNotebookCellLanguage,
-    NotebookCellLanguageService
-} from '../../../client/datascience/notebook/defaultCellLanguageService';
-import {
     getTextOutputValue,
     hasErrorOutput,
     isJupyterKernel
 } from '../../../client/datascience/notebook/helpers/helpers';
+import { LastSavedNotebookCellLanguage } from '../../../client/datascience/notebook/defaultCellLanguageService';
 import { chainWithPendingUpdates } from '../../../client/datascience/notebook/helpers/notebookUpdater';
 import { VSCodeNotebookKernelMetadata } from '../../../client/datascience/notebook/kernelWithMetadata';
 import { NotebookEditor } from '../../../client/datascience/notebook/notebookEditor';
@@ -182,7 +179,10 @@ export async function createTemporaryNotebook(templateFile: string, disposables:
 }
 
 export async function canRunNotebookTests() {
-    if (!isInsiders() || !process.env.VSC_JUPYTER_RUN_NB_TEST) {
+    if (
+        //isInsiders() ||
+        !process.env.VSC_JUPYTER_RUN_NB_TEST
+    ) {
         console.log(
             `Can't run native nb tests isInsiders() = ${isInsiders()}, process.env.VSC_JUPYTER_RUN_NB_TEST = ${
                 process.env.VSC_JUPYTER_RUN_NB_TEST
@@ -192,9 +192,9 @@ export async function canRunNotebookTests() {
     }
     const api = await initialize();
     const appEnv = api.serviceContainer.get<IApplicationEnvironment>(IApplicationEnvironment);
-    const canRunTests = appEnv.extensionChannel !== 'stable';
+    const canRunTests = appEnv.channel === 'insiders';
     if (!canRunTests) {
-        console.log(`Can't run native nb tests appEnv.extensionChannel = ${appEnv.extensionChannel}`);
+        console.log(`Can't run native nb tests appEnv.channel = ${appEnv.channel}`);
     }
     return canRunTests;
 }
@@ -227,9 +227,6 @@ export async function closeNotebooksAndCleanUpAfterTests(disposables: IDisposabl
         // Dispose any cached python settings (used only in test env).
         configSettings.JupyterSettings.dispose();
     }
-    if (!isInsiders()) {
-        return false;
-    }
     await closeActiveWindows();
     disposeAllDisposables(disposables);
     await shutdownAllNotebooks();
@@ -261,7 +258,7 @@ export async function waitForKernelToChange(criteria: { labelOrId?: string; inte
     // Get the list of kernels possible
     const kernels = (await kernelProvider.provideKernels(
         vscodeNotebook.activeNotebookEditor!.document,
-        CancellationToken.None
+        new CancellationTokenSource().token
     )) as VSCodeNotebookKernelMetadata[];
 
     traceInfo(`Kernels found for wait search: ${kernels?.map((k) => k.label).join('\n')}`);
@@ -618,10 +615,6 @@ export function createNotebookModel(
     const mockVSC = mock<IVSCodeNotebook>();
     when(mockVSC.notebookEditors).thenReturn([]);
     when(mockVSC.notebookDocuments).thenReturn([]);
-    const cellLanguageService = mock<NotebookCellLanguageService>();
-    when(cellLanguageService.getPreferredLanguage(anything())).thenReturn(
-        nb?.metadata?.language_info?.name || PYTHON_LANGUAGE
-    );
 
     return new VSCodeNotebookModel(
         trusted,
@@ -632,7 +625,7 @@ export function createNotebookModel(
         ' ',
         3,
         instance(mockVSC),
-        instance(cellLanguageService)
+        nb?.metadata?.language_info?.name || PYTHON_LANGUAGE
     );
 }
 export async function runCell(cell: NotebookCell) {

@@ -5,7 +5,7 @@ import type { nbformat } from '@jupyterlab/coreutils';
 import { inject, injectable } from 'inversify';
 import stripAnsi from 'strip-ansi';
 import * as uuid from 'uuid/v4';
-
+import * as path from 'path';
 import { CancellationToken, Event, EventEmitter, Uri } from 'vscode';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { Experiments } from '../../common/experiments/groups';
@@ -139,10 +139,13 @@ export class KernelVariables implements IJupyterVariables {
             true
         );
 
+        const fileName = path.basename(notebook.identity.path);
+
         // Combine with the original result (the call only returns the new fields)
         return {
             ...targetVariable,
-            ...this.deserializeJupyterResult(results)
+            ...this.deserializeJupyterResult(results),
+            fileName
         };
     }
 

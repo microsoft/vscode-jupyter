@@ -20,7 +20,6 @@ import { BannerType } from '../datascience/dataScienceSurveyBanner';
 import { LogLevel } from '../logging/levels';
 import { CommandsWithoutArgs } from './application/commands';
 import { Experiments } from './experiments/groups';
-import { ExtensionChannels } from './insidersBuild/types';
 import { InterpreterUri } from './installer/types';
 export const IOutputChannel = Symbol('IOutputChannel');
 export interface IOutputChannel extends OutputChannel {}
@@ -108,7 +107,6 @@ export interface IRandom {
 }
 
 export interface IJupyterSettings {
-    readonly insidersChannel: ExtensionChannels;
     readonly experiments: IExperiments;
     readonly logging: ILoggingSettings;
     readonly allowUnauthorizedRemoteConnection: boolean;
@@ -318,6 +316,7 @@ export interface IExtensions {
      * @return An extension or `undefined`.
      */
     getExtension<T>(extensionId: string): Extension<T> | undefined;
+    determineExtensionFromCallStack(): Promise<{ extensionId: string; displayName: string }>;
 }
 
 export const IBrowserService = Symbol('IBrowserService');

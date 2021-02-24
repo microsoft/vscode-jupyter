@@ -14,13 +14,9 @@ export const PYTHON_ALLFILES = [{ language: PYTHON_LANGUAGE }];
 export const GITHUB_ISSUE_MARKDOWN_FILE = [{ language: MARKDOWN_LANGUAGE, scheme: 'untitled', pattern: '**/issue.md' }];
 
 export const JVSC_EXTENSION_ID = 'ms-toolsai.jupyter';
+export const JVSC_EXTENSION_DisplayName = 'Jupyter';
 export const AppinsightsKey = 'AIF-d9b70cd4-b9f9-4d70-929b-a071c400b217';
 
-export namespace Commands {
-    export const SwitchOffInsidersChannel = 'jupyter.switchOffInsidersChannel';
-    export const SwitchToInsidersDaily = 'jupyter.switchToDailyChannel';
-    export const SwitchToInsidersWeekly = 'jupyter.switchToWeeklyChannel';
-}
 export namespace Octicons {
     export const Downloading = '$(cloud-download)';
     export const Installing = '$(desktop-download)';

@@ -1,17 +1,26 @@
 .filter-box {
-    border-color: var(--vscode-editor-inactiveSelectionBackground);
-    border-style: solid;
-    border-width: 1px;
-    display: block;
-    position: relative;
-    left: -2px;
-    top: -3px;
-    width: 98%;
-    padding: 1px;
-    margin: 0px;
+    font-family: var(--vscode-font-family);
+    font-weight: var(--vscode-font-weight);
+    font-size: var(--vscode-font-size);
+    color: var(--vscode-settings-textInputForeground);
+    background-color: var(--vscode-settings-textInputBackground);
+    box-sizing: border-box;
+    height: 100%;
+    border: 0px none;
+    border-radius: 0px;
 }
 
-.filter-box:focus {
-    border-color: var(--vscode-editor-selectionBackground);
+input {
     outline: none;
+    color: var(--vscode-editor-foreground);
+}
+
+input:focus {
+    outline: none;
+    color: var(--vscode-editor-foreground);
+}
+
+.iconContainer-41 {
+    width: auto;
+    padding-right: 3px;
 }

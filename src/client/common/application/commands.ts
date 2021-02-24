@@ -10,7 +10,6 @@ import { KernelConnectionMetadata } from '../../datascience/jupyter/kernels/type
 import { INotebookModel, ISwitchKernelOptions } from '../../datascience/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { CommandSource } from '../../testing/common/constants';
-import { Commands } from '../constants';
 import { Channel } from './types';
 
 export type CommandsWithoutArgs = keyof ICommandNameWithoutArgumentTypeMapping;
@@ -21,9 +20,6 @@ export type CommandsWithoutArgs = keyof ICommandNameWithoutArgumentTypeMapping;
  * @interface ICommandNameWithoutArgumentTypeMapping
  */
 interface ICommandNameWithoutArgumentTypeMapping {
-    [Commands.SwitchToInsidersDaily]: [];
-    [Commands.SwitchToInsidersWeekly]: [];
-    [Commands.SwitchOffInsidersChannel]: [];
     ['workbench.action.showCommands']: [];
     ['workbench.action.debug.continue']: [];
     ['workbench.action.debug.stepOver']: [];

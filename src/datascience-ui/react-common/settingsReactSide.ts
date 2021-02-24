@@ -8,7 +8,6 @@ export function getDefaultSettings(): IJupyterExtraSettings {
     // Default settings for tests
     // eslint-disable-next-line
     const result: Partial<IJupyterExtraSettings> = {
-        insidersChannel: 'off',
         experiments: { enabled: true, optInto: [], optOutFrom: [] },
         logging: {
             level: 'off'

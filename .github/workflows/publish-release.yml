@@ -37,7 +37,7 @@ jobs:
           python-version: ${{env.PYTHON_VERSION}}
 
       - name: Use Node ${{env.NODE_VERSION}}
-        uses: actions/setup-node@v2.1.4
+        uses: actions/setup-node@v2.1.5
         with:
           node-version: ${{env.NODE_VERSION}}
 

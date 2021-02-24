@@ -318,6 +318,7 @@ export enum Telemetry {
      * Telemetry sent when user selects an interpreter to be used for starting of Jupyter server.
      */
     SelectJupyterInterpreter = 'DS_INTERNAL.SELECT_JUPYTER_INTERPRETER',
+    SelectJupyterInterpreterMessageDisplayed = 'DS_INTERNAL.SELECT_JUPYTER_INTERPRETER_MESSAGE_DISPLAYED',
     /**
      * User used command to select an intrepreter for the jupyter server.
      */
@@ -354,6 +355,8 @@ export enum Telemetry {
     DebugStop = 'DATASCIENCE.DEBUG_STOP',
     OpenNotebook = 'DATASCIENCE.NATIVE.OPEN_NOTEBOOK',
     OpenNotebookAll = 'DATASCIENCE.NATIVE.OPEN_NOTEBOOK_ALL',
+    OpenNotebookSelection = 'DATASCIENCE.NATIVE.OPEN_NOTEBOOK_SELECTION',
+    OpenNotebookSelectionRegistered = 'DATASCIENCE.NATIVE.OPEN_NOTEBOOK_SELECTION_REGISTERED',
     ConvertToPythonFile = 'DATASCIENCE.NATIVE.CONVERT_NOTEBOOK_TO_PYTHON',
     NotebookWorkspaceCount = 'DS_INTERNAL.NATIVE.WORKSPACE_NOTEBOOK_COUNT',
     NotebookRunCount = 'DS_INTERNAL.NATIVE.NOTEBOOK_RUN_COUNT',

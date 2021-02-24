@@ -456,31 +456,6 @@ export interface IEventNamePropertyMapping {
         activatedByWrapper?: boolean;
     };
     /**
-     * Telemetry event sent with details when user clicks a button in the following prompt
-     * `Prompt message` :- 'We noticed you are using Visual Studio Code Insiders. Would you like to use the Insiders build of the Jupyter extension?'
-     */
-    [EventName.INSIDERS_PROMPT]: {
-        /**
-         * `Yes, weekly` When user selects to use "weekly" as extension channel in insiders prompt
-         * `Yes, daily` When user selects to use "daily" as extension channel in insiders prompt
-         * `No, thanks` When user decides to keep using the same extension channel as before
-         */
-        selection: 'Yes, weekly' | 'Yes, daily' | 'No, thanks' | undefined;
-    };
-    /**
-     * Telemetry event sent with details when user clicks a button in the 'Reload to install insiders prompt'.
-     * `Prompt message` :- 'Please reload Visual Studio Code to use the insiders build of the extension'
-     */
-    [EventName.INSIDERS_RELOAD_PROMPT]: {
-        /**
-         * `Reload` When 'Reload' option is clicked
-         * `undefined` When prompt is closed
-         *
-         * @type {('Reload' | undefined)}
-         */
-        selection: 'Reload' | undefined;
-    };
-    /**
      * Telemetry event sent with details when a user has requested to opt it or out of an experiment group
      */
     [EventName.JUPYTER_EXPERIMENTS_OPT_IN_OUT]: {
@@ -577,6 +552,23 @@ export interface IEventNamePropertyMapping {
     [Telemetry.DebugpySuccessfullyInstalled]: never | undefined;
     [Telemetry.OpenNotebook]: { scope: 'command' | 'file' };
     [Telemetry.OpenNotebookAll]: never | undefined;
+    /**
+     * Telemetry sent with details of the selection of the quick pick for when user creates new notebook.
+     * This only applies with other extensions like .NET registers with us.
+     */
+    [Telemetry.OpenNotebookSelection]: {
+        /**
+         * The id of the extension selected from the dropdown list.
+         * If empty, the user didn't select anything & didn't create a new notebook.
+         */
+        extensionId?: string;
+    };
+    [Telemetry.OpenNotebookSelectionRegistered]: {
+        /**
+         * The id of the extension registering with us to be displayed the dropdown list for notebook creation.
+         */
+        extensionId: string;
+    };
     [Telemetry.OpenedInteractiveWindow]: never | undefined;
     [Telemetry.OpenPlotViewer]: never | undefined;
     [Telemetry.Redo]: never | undefined;
@@ -706,6 +698,7 @@ export interface IEventNamePropertyMapping {
          */
         result?: 'notSelected' | 'selected' | 'installationCancelled';
     };
+    [Telemetry.SelectJupyterInterpreterMessageDisplayed]: undefined | never;
     [NativeKeyboardCommandTelemetry.ArrowDown]: never | undefined;
     [NativeKeyboardCommandTelemetry.ArrowUp]: never | undefined;
     [NativeKeyboardCommandTelemetry.ChangeToCode]: never | undefined;

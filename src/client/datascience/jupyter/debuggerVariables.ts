@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable, named } from 'inversify';
+import * as path from 'path';
 
 import { DebugAdapterTracker, Disposable, Event, EventEmitter } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
@@ -133,12 +134,19 @@ export class DebuggerVariables extends DebugLocationTracker
             (targetVariable as any).frameId
         );
 
+        let fileName;
+        if (notebook) {
+            fileName = path.basename(notebook.identity.path);
+        } else if (this.debugLocation?.fileName) {
+            fileName = path.basename(this.debugLocation.fileName);
+        }
         // Results should be the updated variable.
         return results
             ? {
                   ...targetVariable,
                   ...JSON.parse(results.result),
-                  maximumRowChunkSize: MaximumRowChunkSizeForDebugger
+                  maximumRowChunkSize: MaximumRowChunkSizeForDebugger,
+                  fileName
               }
             : targetVariable;
     }

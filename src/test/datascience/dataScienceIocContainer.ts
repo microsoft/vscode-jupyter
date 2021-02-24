@@ -285,7 +285,6 @@ import { MockCommandManager } from './mockCommandManager';
 import { MockCustomEditorService } from './mockCustomEditorService';
 import { MockDebuggerService } from './mockDebugService';
 import { MockDocumentManager } from './mockDocumentManager';
-import { MockExtensions } from './mockExtensions';
 import { MockFileSystem } from './mockFileSystem';
 import { MockJupyterManager, SupportedCommands } from './mockJupyterManager';
 import { MockJupyterManagerFactory } from './mockJupyterManagerFactory';
@@ -315,6 +314,9 @@ import { PreferredRemoteKernelIdProvider } from '../../client/datascience/notebo
 import { NotebookWatcher } from '../../client/datascience/variablesView/notebookWatcher';
 import { InterpreterPackages } from '../../client/datascience/telemetry/interpreterPackages';
 import { RemoteKernelFinder } from '../../client/datascience/kernel-launcher/remoteKernelFinder';
+import { Extensions } from '../../client/common/application/extensions';
+import { NotebookCreator } from '../../client/datascience/notebook/creation/notebookCreator';
+import { CreationOptionService } from '../../client/datascience/notebook/creation/creationOptionsService';
 
 export class DataScienceIocContainer extends UnitTestIocContainer {
     public get workingInterpreter() {
@@ -559,7 +561,11 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.add<INotebookImporter>(INotebookImporter, JupyterImporter);
         this.serviceManager.add<INotebookExporter>(INotebookExporter, JupyterExporter);
         this.serviceManager.addSingleton<ILiveShareApi>(ILiveShareApi, MockLiveShareApi);
-        this.serviceManager.addSingleton<IExtensions>(IExtensions, MockExtensions);
+        const mockExtension = mock(Extensions);
+        when(mockExtension.all).thenReturn([]);
+        when(mockExtension.getExtension(anything())).thenReturn();
+        when(mockExtension.onDidChange).thenReturn(new EventEmitter<void>().event);
+        this.serviceManager.addSingletonInstance<IExtensions>(IExtensions, instance(mockExtension));
         this.serviceManager.add<INotebookServer>(INotebookServer, JupyterServerWrapper);
         this.serviceManager.add<IJupyterCommandFactory>(IJupyterCommandFactory, JupyterCommandFactory);
         this.serviceManager.addSingleton<IRawNotebookProvider>(IRawNotebookProvider, RawNotebookProviderWrapper);
@@ -654,6 +660,15 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingletonInstance<JupyterServerSelector>(
             JupyterServerSelector,
             instance(mockServerSelector)
+        );
+
+        this.serviceManager.addSingletonInstance<NotebookCreator>(NotebookCreator, instance(mock(NotebookCreator)));
+        const creationService = mock<CreationOptionService>();
+        when(creationService.registerNewNotebookContent(anything())).thenResolve();
+        when(creationService.registrations).thenReturn([]);
+        this.serviceManager.addSingletonInstance<CreationOptionService>(
+            CreationOptionService,
+            instance(creationService)
         );
 
         this.serviceManager.addSingleton<INotebookProvider>(INotebookProvider, NotebookProvider);

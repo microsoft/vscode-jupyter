@@ -1,0 +1,656 @@
+@font-face {
+    font-family: 'seti';
+    src: // url('atom://seti-ui/styles/_fonts/seti/seti.eot?#iefix') format('eot'),
+        // url('atom://seti-ui/styles/_fonts/seti/seti.woff2') format('woff2'),
+        url('./seti.ttf') format('truetype');
+}
+
+.icon-base-pseudo {
+    font-family: 'seti';
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-style: normal;
+    font-variant: normal;
+    font-weight: normal;
+    text-decoration: none;
+    text-transform: none;
+}
+
+.icon-char(@filename) {
+    @R: '\E001';
+    @apple: '\E002';
+    @argdown: '\E003';
+    @asm: '\E004';
+    @audio: '\E005';
+    @babel: '\E006';
+    @bower: '\E007';
+    @bsl: '\E008';
+    @c-sharp: '\E009';
+    @c: '\E00A';
+    @cake: '\E00B';
+    @cake_php: '\E00C';
+    @checkbox-unchecked: '\E00D';
+    @checkbox: '\E00E';
+    @cjsx: '\E00F';
+    @clock: '\E010';
+    @clojure: '\E011';
+    @code-climate: '\E012';
+    @code-search: '\E013';
+    @coffee: '\E014';
+    @coffee_erb: '\E015';
+    @coldfusion: '\E016';
+    @config: '\E017';
+    @cpp: '\E018';
+    @crystal: '\E019';
+    @crystal_embedded: '\E01A';
+    @css: '\E01B';
+    @csv: '\E01C';
+    @cu: '\E01D';
+    @d: '\E01E';
+    @dart: '\E01F';
+    @db: '\E020';
+    @default: '\E021';
+    @deprecation-cop: '\E022';
+    @docker: '\E023';
+    @editorconfig: '\E024';
+    @ejs: '\E025';
+    @elixir: '\E026';
+    @elixir_script: '\E027';
+    @elm: '\E028';
+    @error: '\E029';
+    @eslint: '\E02A';
+    @ethereum: '\E02B';
+    @f-sharp: '\E02C';
+    @favicon: '\E02D';
+    @firebase: '\E02E';
+    @firefox: '\E02F';
+    @folder: '\E030';
+    @font: '\E031';
+    @git: '\E032';
+    @git_folder: '\E033';
+    @git_ignore: '\E034';
+    @github: '\E035';
+    @go: '\E036';
+    @go2: '\E037';
+    @gradle: '\E038';
+    @grails: '\E039';
+    @graphql: '\E03A';
+    @grunt: '\E03B';
+    @gulp: '\E03C';
+    @hacklang: '\E03D';
+    @haml: '\E03E';
+    @happenings: '\E03F';
+    @haskell: '\E040';
+    @haxe: '\E041';
+    @heroku: '\E042';
+    @hex: '\E043';
+    @html: '\E044';
+    @html_erb: '\E045';
+    @ignored: '\E046';
+    @illustrator: '\E047';
+    @image: '\E048';
+    @info: '\E049';
+    @ionic: '\E04A';
+    @jade: '\E04B';
+    @java: '\E04C';
+    @javascript: '\E04D';
+    @jenkins: '\E04E';
+    @jinja: '\E04F';
+    @js_erb: '\E050';
+    @json: '\E051';
+    @julia: '\E052';
+    @karma: '\E053';
+    @kotlin: '\E054';
+    @less: '\E055';
+    @license: '\E056';
+    @liquid: '\E057';
+    @livescript: '\E058';
+    @lock: '\E059';
+    @lua: '\E05A';
+    @makefile: '\E05B';
+    @markdown: '\E05C';
+    @maven: '\E05D';
+    @mdo: '\E05E';
+    @mustache: '\E05F';
+    @new-file: '\E060';
+    @npm: '\E061';
+    @npm_ignored: '\E062';
+    @nunjucks: '\E063';
+    @ocaml: '\E064';
+    @odata: '\E065';
+    @pddl: '\E066';
+    @pdf: '\E067';
+    @perl: '\E068';
+    @photoshop: '\E069';
+    @php: '\E06A';
+    @plan: '\E06B';
+    @platformio: '\E06C';
+    @powershell: '\E06D';
+    @project: '\E06E';
+    @prolog: '\E06F';
+    @pug: '\E070';
+    @puppet: '\E071';
+    @python: '\E072';
+    @rails: '\E073';
+    @react: '\E074';
+    @reasonml: '\E075';
+    @rollup: '\E076';
+    @ruby: '\E077';
+    @rust: '\E078';
+    @salesforce: '\E079';
+    @sass: '\E07A';
+    @sbt: '\E07B';
+    @scala: '\E07C';
+    @search: '\E07D';
+    @settings: '\E07E';
+    @shell: '\E07F';
+    @slim: '\E080';
+    @smarty: '\E081';
+    @spring: '\E082';
+    @stylelint: '\E083';
+    @stylus: '\E084';
+    @sublime: '\E085';
+    @svg: '\E086';
+    @swift: '\E087';
+    @terraform: '\E088';
+    @tex: '\E089';
+    @time-cop: '\E08A';
+    @todo: '\E08B';
+    @tsconfig: '\E08C';
+    @twig: '\E08D';
+    @typescript: '\E08E';
+    @vala: '\E08F';
+    @video: '\E090';
+    @vue: '\E091';
+    @wasm: '\E092';
+    @wat: '\E093';
+    @webpack: '\E094';
+    @wgt: '\E095';
+    @windows: '\E096';
+    @word: '\E097';
+    @xls: '\E098';
+    @xml: '\E099';
+    @yarn: '\E09A';
+    @yml: '\E09B';
+    @zip: '\E09C';
+
+    content: @@filename;
+}
+
+.icon(@filename, @insert: before) {
+    @pseudo-selector: ~':@{insert}';
+
+    &@{pseudo-selector} {
+        &:extend(.icon-base-pseudo);
+        .icon-char(@filename);
+    }
+}
+
+.icon-R {
+    .icon(R);
+}
+.icon-apple {
+    .icon(apple);
+}
+.icon-argdown {
+    .icon(argdown);
+}
+.icon-asm {
+    .icon(asm);
+}
+.icon-audio {
+    .icon(audio);
+}
+.icon-babel {
+    .icon(babel);
+}
+.icon-bower {
+    .icon(bower);
+}
+.icon-bsl {
+    .icon(bsl);
+}
+.icon-c-sharp {
+    .icon(c-sharp);
+}
+.icon-c {
+    .icon(c);
+}
+.icon-cake {
+    .icon(cake);
+}
+.icon-cake_php {
+    .icon(cake_php);
+}
+.icon-checkbox-unchecked {
+    .icon(checkbox-unchecked);
+}
+.icon-checkbox {
+    .icon(checkbox);
+}
+.icon-cjsx {
+    .icon(cjsx);
+}
+.icon-clock {
+    .icon(clock);
+}
+.icon-clojure {
+    .icon(clojure);
+}
+.icon-code-climate {
+    .icon(code-climate);
+}
+.icon-code-search {
+    .icon(code-search);
+}
+.icon-coffee {
+    .icon(coffee);
+}
+.icon-coffee_erb {
+    .icon(coffee_erb);
+}
+.icon-coldfusion {
+    .icon(coldfusion);
+}
+.icon-config {
+    .icon(config);
+}
+.icon-cpp {
+    .icon(cpp);
+}
+.icon-crystal {
+    .icon(crystal);
+}
+.icon-crystal_embedded {
+    .icon(crystal_embedded);
+}
+.icon-css {
+    .icon(css);
+}
+.icon-csv {
+    .icon(csv);
+}
+.icon-cu {
+    .icon(cu);
+}
+.icon-d {
+    .icon(d);
+}
+.icon-dart {
+    .icon(dart);
+}
+.icon-db {
+    .icon(db);
+}
+.icon-default {
+    .icon(default);
+}
+.icon-deprecation-cop {
+    .icon(deprecation-cop);
+}
+.icon-docker {
+    .icon(docker);
+}
+.icon-editorconfig {
+    .icon(editorconfig);
+}
+.icon-ejs {
+    .icon(ejs);
+}
+.icon-elixir {
+    .icon(elixir);
+}
+.icon-elixir_script {
+    .icon(elixir_script);
+}
+.icon-elm {
+    .icon(elm);
+}
+.icon-error {
+    .icon(error);
+}
+.icon-eslint {
+    .icon(eslint);
+}
+.icon-ethereum {
+    .icon(ethereum);
+}
+.icon-f-sharp {
+    .icon(f-sharp);
+}
+.icon-favicon {
+    .icon(favicon);
+}
+.icon-firebase {
+    .icon(firebase);
+}
+.icon-firefox {
+    .icon(firefox);
+}
+.icon-folder {
+    .icon(folder);
+}
+.icon-font {
+    .icon(font);
+}
+.icon-git {
+    .icon(git);
+}
+.icon-git_folder {
+    .icon(git_folder);
+}
+.icon-git_ignore {
+    .icon(git_ignore);
+}
+.icon-github {
+    .icon(github);
+}
+.icon-go {
+    .icon(go);
+}
+.icon-go2 {
+    .icon(go2);
+}
+.icon-gradle {
+    .icon(gradle);
+}
+.icon-grails {
+    .icon(grails);
+}
+.icon-graphql {
+    .icon(graphql);
+}
+.icon-grunt {
+    .icon(grunt);
+}
+.icon-gulp {
+    .icon(gulp);
+}
+.icon-hacklang {
+    .icon(hacklang);
+}
+.icon-haml {
+    .icon(haml);
+}
+.icon-happenings {
+    .icon(happenings);
+}
+.icon-haskell {
+    .icon(haskell);
+}
+.icon-haxe {
+    .icon(haxe);
+}
+.icon-heroku {
+    .icon(heroku);
+}
+.icon-hex {
+    .icon(hex);
+}
+.icon-html {
+    .icon(html);
+}
+.icon-html_erb {
+    .icon(html_erb);
+}
+.icon-ignored {
+    .icon(ignored);
+}
+.icon-illustrator {
+    .icon(illustrator);
+}
+.icon-image {
+    .icon(image);
+}
+.icon-info {
+    .icon(info);
+}
+.icon-ionic {
+    .icon(ionic);
+}
+.icon-jade {
+    .icon(jade);
+}
+.icon-java {
+    .icon(java);
+}
+.icon-javascript {
+    .icon(javascript);
+}
+.icon-jenkins {
+    .icon(jenkins);
+}
+.icon-jinja {
+    .icon(jinja);
+}
+.icon-js_erb {
+    .icon(js_erb);
+}
+.icon-json {
+    .icon(json);
+}
+.icon-julia {
+    .icon(julia);
+}
+.icon-karma {
+    .icon(karma);
+}
+.icon-kotlin {
+    .icon(kotlin);
+}
+.icon-less {
+    .icon(less);
+}
+.icon-license {
+    .icon(license);
+}
+.icon-liquid {
+    .icon(liquid);
+}
+.icon-livescript {
+    .icon(livescript);
+}
+.icon-lock {
+    .icon(lock);
+}
+.icon-lua {
+    .icon(lua);
+}
+.icon-makefile {
+    .icon(makefile);
+}
+.icon-markdown {
+    .icon(markdown);
+}
+.icon-maven {
+    .icon(maven);
+}
+.icon-mdo {
+    .icon(mdo);
+}
+.icon-mustache {
+    .icon(mustache);
+}
+.icon-new-file {
+    .icon(new-file);
+}
+.icon-npm {
+    .icon(npm);
+}
+.icon-npm_ignored {
+    .icon(npm_ignored);
+}
+.icon-nunjucks {
+    .icon(nunjucks);
+}
+.icon-ocaml {
+    .icon(ocaml);
+}
+.icon-odata {
+    .icon(odata);
+}
+.icon-pddl {
+    .icon(pddl);
+}
+.icon-pdf {
+    .icon(pdf);
+}
+.icon-perl {
+    .icon(perl);
+}
+.icon-photoshop {
+    .icon(photoshop);
+}
+.icon-php {
+    .icon(php);
+}
+.icon-plan {
+    .icon(plan);
+}
+.icon-platformio {
+    .icon(platformio);
+}
+.icon-powershell {
+    .icon(powershell);
+}
+.icon-project {
+    .icon(project);
+}
+.icon-prolog {
+    .icon(prolog);
+}
+.icon-pug {
+    .icon(pug);
+}
+.icon-puppet {
+    .icon(puppet);
+}
+.icon-python {
+    .icon(python);
+}
+.icon-rails {
+    .icon(rails);
+}
+.icon-react {
+    .icon(react);
+}
+.icon-reasonml {
+    .icon(reasonml);
+}
+.icon-rollup {
+    .icon(rollup);
+}
+.icon-ruby {
+    .icon(ruby);
+}
+.icon-rust {
+    .icon(rust);
+}
+.icon-salesforce {
+    .icon(salesforce);
+}
+.icon-sass {
+    .icon(sass);
+}
+.icon-sbt {
+    .icon(sbt);
+}
+.icon-scala {
+    .icon(scala);
+}
+.icon-search {
+    .icon(search);
+}
+.icon-settings {
+    .icon(settings);
+}
+.icon-shell {
+    .icon(shell);
+}
+.icon-slim {
+    .icon(slim);
+}
+.icon-smarty {
+    .icon(smarty);
+}
+.icon-spring {
+    .icon(spring);
+}
+.icon-stylelint {
+    .icon(stylelint);
+}
+.icon-stylus {
+    .icon(stylus);
+}
+.icon-sublime {
+    .icon(sublime);
+}
+.icon-svg {
+    .icon(svg);
+}
+.icon-swift {
+    .icon(swift);
+}
+.icon-terraform {
+    .icon(terraform);
+}
+.icon-tex {
+    .icon(tex);
+}
+.icon-time-cop {
+    .icon(time-cop);
+}
+.icon-todo {
+    .icon(todo);
+}
+.icon-tsconfig {
+    .icon(tsconfig);
+}
+.icon-twig {
+    .icon(twig);
+}
+.icon-typescript {
+    .icon(typescript);
+}
+.icon-vala {
+    .icon(vala);
+}
+.icon-video {
+    .icon(video);
+}
+.icon-vue {
+    .icon(vue);
+}
+.icon-wasm {
+    .icon(wasm);
+}
+.icon-wat {
+    .icon(wat);
+}
+.icon-webpack {
+    .icon(webpack);
+}
+.icon-wgt {
+    .icon(wgt);
+}
+.icon-windows {
+    .icon(windows);
+}
+.icon-word {
+    .icon(word);
+}
+.icon-xls {
+    .icon(xls);
+}
+.icon-xml {
+    .icon(xml);
+}
+.icon-yarn {
+    .icon(yarn);
+}
+.icon-yml {
+    .icon(yml);
+}
+.icon-zip {
+    .icon(zip);
+}

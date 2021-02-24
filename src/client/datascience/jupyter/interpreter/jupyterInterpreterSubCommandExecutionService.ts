@@ -79,6 +79,7 @@ export class JupyterInterpreterSubCommandExecutionService
             if (!interpreter) {
                 // Unlikely scenario, user hasn't selected python, python extension will fall over.
                 // Get user to select something.
+                sendTelemetryEvent(Telemetry.SelectJupyterInterpreterMessageDisplayed);
                 return DataScience.selectJupyterInterpreter();
             }
         }

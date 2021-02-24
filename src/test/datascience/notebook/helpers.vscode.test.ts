@@ -51,7 +51,8 @@ suite('DataScience - VSCode Notebook - helpers', () => {
                     hasExecutionOrder: true,
                     runState: NotebookCellRunState.Idle,
                     runnable: true,
-                    statusMessage: undefined
+                    statusMessage: undefined,
+                    custom: { metadata: {} }
                 })
             },
             {
@@ -63,7 +64,8 @@ suite('DataScience - VSCode Notebook - helpers', () => {
                     editable: true,
                     executionOrder: undefined,
                     hasExecutionOrder: false,
-                    runnable: false
+                    runnable: false,
+                    custom: { metadata: {} }
                 })
             }
         ]);
@@ -110,18 +112,30 @@ suite('DataScience - VSCode Notebook - helpers', () => {
                     }
                 ],
                 [
-                    new NotebookCellOutput([
-                        new NotebookCellOutputItem(CellOutputMimeTypes.textStream, 'Error', {
+                    new NotebookCellOutput(
+                        [
+                            new NotebookCellOutputItem(CellOutputMimeTypes.textStream, 'Error', {
+                                streamName: 'stderr',
+                                outputType: 'stream'
+                            })
+                        ],
+                        {
                             streamName: 'stderr',
                             outputType: 'stream'
-                        })
-                    ]),
-                    new NotebookCellOutput([
-                        new NotebookCellOutputItem(CellOutputMimeTypes.textStream, 'NoError', {
+                        }
+                    ),
+                    new NotebookCellOutput(
+                        [
+                            new NotebookCellOutputItem(CellOutputMimeTypes.textStream, 'NoError', {
+                                streamName: 'stdout',
+                                outputType: 'stream'
+                            })
+                        ],
+                        {
                             streamName: 'stdout',
                             outputType: 'stream'
-                        })
-                    ])
+                        }
+                    )
                 ]
             );
         });
@@ -135,16 +149,22 @@ suite('DataScience - VSCode Notebook - helpers', () => {
                     }
                 ],
                 [
-                    new NotebookCellOutput([
-                        new NotebookCellOutputItem(
-                            CellOutputMimeTypes.textStream,
-                            '\u001b[K\u001b[33m✅ \u001b[0m Loading\n',
-                            {
-                                streamName: 'stderr',
-                                outputType: 'stream'
-                            }
-                        )
-                    ])
+                    new NotebookCellOutput(
+                        [
+                            new NotebookCellOutputItem(
+                                CellOutputMimeTypes.textStream,
+                                '\u001b[K\u001b[33m✅ \u001b[0m Loading\n',
+                                {
+                                    streamName: 'stderr',
+                                    outputType: 'stream'
+                                }
+                            )
+                        ],
+                        {
+                            streamName: 'stderr',
+                            outputType: 'stream'
+                        }
+                    )
                 ]
             );
         });
@@ -158,12 +178,18 @@ suite('DataScience - VSCode Notebook - helpers', () => {
                     }
                 ],
                 [
-                    new NotebookCellOutput([
-                        new NotebookCellOutputItem(CellOutputMimeTypes.textStream, '1 is < 2', {
+                    new NotebookCellOutput(
+                        [
+                            new NotebookCellOutputItem(CellOutputMimeTypes.textStream, '1 is < 2', {
+                                streamName: 'stderr',
+                                outputType: 'stream'
+                            })
+                        ],
+                        {
                             streamName: 'stderr',
                             outputType: 'stream'
-                        })
-                    ])
+                        }
+                    )
                 ]
             );
         });
@@ -177,16 +203,22 @@ suite('DataScience - VSCode Notebook - helpers', () => {
                     }
                 ],
                 [
-                    new NotebookCellOutput([
-                        new NotebookCellOutputItem(
-                            CellOutputMimeTypes.textStream,
-                            '1 is < 2\u001b[K\u001b[33m✅ \u001b[0m Loading\n',
-                            {
-                                streamName: 'stderr',
-                                outputType: 'stream'
-                            }
-                        )
-                    ])
+                    new NotebookCellOutput(
+                        [
+                            new NotebookCellOutputItem(
+                                CellOutputMimeTypes.textStream,
+                                '1 is < 2\u001b[K\u001b[33m✅ \u001b[0m Loading\n',
+                                {
+                                    streamName: 'stderr',
+                                    outputType: 'stream'
+                                }
+                            )
+                        ],
+                        {
+                            streamName: 'stderr',
+                            outputType: 'stream'
+                        }
+                    )
                 ]
             );
         });
@@ -201,17 +233,20 @@ suite('DataScience - VSCode Notebook - helpers', () => {
                     }
                 ],
                 [
-                    new NotebookCellOutput([
-                        new NotebookCellOutputItem(
-                            CellOutputMimeTypes.error,
-                            {
-                                ename: 'Error Name',
-                                evalue: 'Error Value',
-                                traceback: ['stack1', 'stack2', 'stack3']
-                            },
-                            { outputType: 'error' }
-                        )
-                    ])
+                    new NotebookCellOutput(
+                        [
+                            new NotebookCellOutputItem(
+                                CellOutputMimeTypes.error,
+                                {
+                                    ename: 'Error Name',
+                                    evalue: 'Error Value',
+                                    traceback: ['stack1', 'stack2', 'stack3']
+                                },
+                                { outputType: 'error' }
+                            )
+                        ],
+                        { outputType: 'error' }
+                    )
                 ]
             );
         });
@@ -241,13 +276,20 @@ suite('DataScience - VSCode Notebook - helpers', () => {
                             }
                         ],
                         [
-                            new NotebookCellOutput([
-                                new NotebookCellOutputItem('text/plain', 'Hello World!', {
+                            new NotebookCellOutput(
+                                [
+                                    new NotebookCellOutputItem('text/plain', 'Hello World!', {
+                                        outputType: output_type,
+                                        metadata: {}, // display_data & execute_result always have metadata.
+                                        executionCount: 1
+                                    })
+                                ],
+                                {
                                     outputType: output_type,
                                     metadata: {}, // display_data & execute_result always have metadata.
                                     executionCount: 1
-                                })
-                            ])
+                                }
+                            )
                         ],
                         propertiesToExcludeFromComparison
                     );
@@ -267,18 +309,25 @@ suite('DataScience - VSCode Notebook - helpers', () => {
                             }
                         ],
                         [
-                            new NotebookCellOutput([
-                                new NotebookCellOutputItem('image/png', 'base64PNG', {
+                            new NotebookCellOutput(
+                                [
+                                    new NotebookCellOutputItem('image/png', 'base64PNG', {
+                                        executionCount: 1,
+                                        outputType: output_type,
+                                        metadata: {} // display_data & execute_result always have metadata.
+                                    }),
+                                    new NotebookCellOutputItem('image/jpeg', 'base64JPEG', {
+                                        executionCount: 1,
+                                        outputType: output_type,
+                                        metadata: {} // display_data & execute_result always have metadata.
+                                    })
+                                ],
+                                {
                                     executionCount: 1,
                                     outputType: output_type,
                                     metadata: {} // display_data & execute_result always have metadata.
-                                }),
-                                new NotebookCellOutputItem('image/jpeg', 'base64JPEG', {
-                                    executionCount: 1,
-                                    outputType: output_type,
-                                    metadata: {} // display_data & execute_result always have metadata.
-                                })
-                            ])
+                                }
+                            )
                         ],
                         propertiesToExcludeFromComparison
                     );
@@ -298,15 +347,24 @@ suite('DataScience - VSCode Notebook - helpers', () => {
                             }
                         ],
                         [
-                            new NotebookCellOutput([
-                                new NotebookCellOutputItem('image/png', 'base64PNG', {
+                            new NotebookCellOutput(
+                                [
+                                    new NotebookCellOutputItem('image/png', 'base64PNG', {
+                                        executionCount: 1,
+                                        metadata: {
+                                            needs_background: 'light'
+                                        },
+                                        outputType: output_type
+                                    })
+                                ],
+                                {
                                     executionCount: 1,
                                     metadata: {
                                         needs_background: 'light'
                                     },
                                     outputType: output_type
-                                })
-                            ])
+                                }
+                            )
                         ],
                         propertiesToExcludeFromComparison
                     );
@@ -326,15 +384,24 @@ suite('DataScience - VSCode Notebook - helpers', () => {
                             }
                         ],
                         [
-                            new NotebookCellOutput([
-                                new NotebookCellOutputItem('image/png', 'base64PNG', {
+                            new NotebookCellOutput(
+                                [
+                                    new NotebookCellOutputItem('image/png', 'base64PNG', {
+                                        executionCount: 1,
+                                        metadata: {
+                                            needs_background: 'dark'
+                                        },
+                                        outputType: output_type
+                                    })
+                                ],
+                                {
                                     executionCount: 1,
                                     metadata: {
                                         needs_background: 'dark'
                                     },
                                     outputType: output_type
-                                })
-                            ])
+                                }
+                            )
                         ],
                         propertiesToExcludeFromComparison
                     );
@@ -354,15 +421,24 @@ suite('DataScience - VSCode Notebook - helpers', () => {
                             }
                         ],
                         [
-                            new NotebookCellOutput([
-                                new NotebookCellOutputItem('image/png', 'base64PNG', {
+                            new NotebookCellOutput(
+                                [
+                                    new NotebookCellOutputItem('image/png', 'base64PNG', {
+                                        executionCount: 1,
+                                        metadata: {
+                                            'image/png': { height: '111px', width: '999px' }
+                                        },
+                                        outputType: output_type
+                                    })
+                                ],
+                                {
                                     executionCount: 1,
                                     metadata: {
                                         'image/png': { height: '111px', width: '999px' }
                                     },
                                     outputType: output_type
-                                })
-                            ])
+                                }
+                            )
                         ],
                         propertiesToExcludeFromComparison
                     );
@@ -383,16 +459,26 @@ suite('DataScience - VSCode Notebook - helpers', () => {
                             }
                         ],
                         [
-                            new NotebookCellOutput([
-                                new NotebookCellOutputItem('image/png', 'base64PNG', {
+                            new NotebookCellOutput(
+                                [
+                                    new NotebookCellOutputItem('image/png', 'base64PNG', {
+                                        executionCount: 1,
+                                        metadata: {
+                                            unconfined: true,
+                                            'image/png': { width: '999px' }
+                                        },
+                                        outputType: output_type
+                                    })
+                                ],
+                                {
                                     executionCount: 1,
                                     metadata: {
                                         unconfined: true,
                                         'image/png': { width: '999px' }
                                     },
                                     outputType: output_type
-                                })
-                            ])
+                                }
+                            )
                         ],
                         propertiesToExcludeFromComparison
                     );
