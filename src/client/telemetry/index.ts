@@ -656,6 +656,10 @@ export interface IEventNamePropertyMapping {
     [Telemetry.UserInstalledPandas]: never | undefined;
     [Telemetry.UserDidNotInstallJupyter]: never | undefined;
     [Telemetry.UserDidNotInstallPandas]: never | undefined;
+    [Telemetry.PythonModuleInstal]: {
+        moduleName: string;
+        action: 'displayed' | 'installed' | 'ignored' | 'disabled' | 'failed';
+    };
     /**
      * This telemetry tracks the display of the Picker for Jupyter Remote servers.
      */

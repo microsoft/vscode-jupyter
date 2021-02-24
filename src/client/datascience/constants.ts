@@ -390,6 +390,7 @@ export enum Telemetry {
     NativeNotebookKernelSelectionPerf = 'DS_INTERNAL.NATIVE_NOTEBOOK_KERNEL_SELECTION_PERF',
     JupyterInstallFailed = 'DS_INTERNAL.JUPYTER_INSTALL_FAILED',
     UserInstalledModule = 'DATASCIENCE.USER_INSTALLED_MODULE',
+    PythonModuleInstal = 'DS_INTERNAL.PYTHON_MODULE_INSTALL',
     JupyterCommandLineNonDefault = 'DS_INTERNAL.JUPYTER_CUSTOM_COMMAND_LINE',
     NewFileForInteractiveWindow = 'DS_INTERNAL.NEW_FILE_USED_IN_INTERACTIVE',
     KernelInvalid = 'DS_INTERNAL.INVALID_KERNEL_USED',

@@ -17,7 +17,11 @@ export function populateTelemetryWithErrorInfo(props: Partial<TelemetryErrorProp
         props.failureCategory = 'fetcherror';
     }
     props.stackTrace = serializeStackTrace(error);
-    const stdErr = error instanceof BaseError ? error.stdErr : '';
+    if (typeof error === 'string') {
+        // Helps us determine that we are rejecting with errors in some places, in which case we aren't getting meaningful errors/data.
+        props.failureSubCategory = 'errorisstring';
+    }
+    const stdErr =( error instanceof BaseError ? error.stdErr : error.stack) || '';
     if (!stdErr) {
         return;
     }

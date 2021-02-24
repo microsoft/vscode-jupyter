@@ -47,6 +47,7 @@ export type ErrorCategory =
     | 'noipykernel'
     | 'fetcherror'
     | 'notinstalled'
+    | 'kernelspecnotfound'
     | 'unknown';
 
 // If there are errors, then the are added to the telementry properties.
