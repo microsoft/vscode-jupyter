@@ -108,7 +108,7 @@ input.editor-text {
     margin: 0;
     outline: 0 none;
     border-style: solid;
-    background-color: var(--vscode-list-focusBackground);
+    background-color: var(--vscode-list-activeSelectionBackground);
     color: var(--vscode-button-foreground);
     text-align: left;
     /* input does not inherit font from body */

@@ -136,6 +136,7 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
                     styles={dropdownStyles}
                     disabled={!this.state.isActive}
                     selectedKey={axisKey}
+                    key={`axis${i}`}
                     options={axisOptions}
                     onChange={updateAxisHandler}
                 />
@@ -145,6 +146,7 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
                     styles={dropdownStyles}
                     disabled={!this.state.isActive || (this.state as any)[`selectedAxis${i}`] === undefined}
                     selectedKey={indexKey}
+                    key={`index${i}`}
                     options={indexOptions}
                     onChange={updateIndexHandler}
                 />
