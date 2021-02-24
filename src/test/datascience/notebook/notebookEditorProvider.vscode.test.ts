@@ -268,7 +268,7 @@ suite('DataScience - VSCode Notebook (Editor Provider)', function () {
         assert.equal(vscodeNotebook.notebookEditors.length, 2, 'Should have two editors');
         assert.lengthOf(editorProvider.editors, 1);
     });
-    test('Closing one of the duplicate notebooks will not dispose (our) INotebookEditor until all VSC Editors are closedxxx', async () => {
+    test('Closing one of the duplicate notebooks will not dispose (our) INotebookEditor until all VSC Editors are closed', async () => {
         await commandManager.executeCommand('vscode.openWith', Uri.file(templateIPynb), JupyterNotebookView);
         await waitForCondition(async () => !!editorProvider.activeEditor, 2_000, 'Editor not created');
 
