@@ -206,13 +206,17 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
     }
 
     @captureTelemetry(Telemetry.CreateNewNotebook, undefined, false)
-    public async createNew(possibleContents?: string, title?: string): Promise<INotebookEditor> {
+    public async createNew(options?: { contents?: string; defaultCellLanguage: string }): Promise<INotebookEditor> {
         // Create a new URI for the dummy file using our root workspace path
-        const uri = this.getNextNewNotebookUri(title);
+        const uri = this.getNextNewNotebookUri();
 
         // Set these contents into the storage before the file opens. Make sure not
         // load from the memento storage though as this is an entirely brand new file.
-        await this.loadModel({ file: uri, possibleContents, skipLoadingDirtyContents: true });
+        await this.loadModel({
+            file: uri,
+            possibleContents: options?.contents,
+            skipLoadingDirtyContents: true
+        });
 
         return this.open(uri);
     }
@@ -330,7 +334,7 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
         this._onDidChangeActiveNotebookEditor.fire(this.activeEditor);
     }
 
-    private getNextNewNotebookUri(title?: string): Uri {
-        return generateNewNotebookUri(this.untitledCounter, this.workspace.rootPath, title);
+    private getNextNewNotebookUri(): Uri {
+        return generateNewNotebookUri(this.untitledCounter, this.workspace.rootPath);
     }
 }

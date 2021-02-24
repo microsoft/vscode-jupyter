@@ -6,13 +6,18 @@ import { IJupyterExtensionApi } from './typings/jupyter';
 
 // Register our URI picker
 export async function activate(_context: vscode.ExtensionContext) {
-    const python = vscode.extensions.getExtension<IJupyterExtensionApi>('ms-toolsai.jupyter');
-    if (python) {
-        if (!python.isActive) {
-            await python.activate();
-            await python.exports.ready;
+    const jupyter = vscode.extensions.getExtension<IJupyterExtensionApi>('ms-toolsai.jupyter');
+    if (jupyter) {
+        if (!jupyter.isActive) {
+            await jupyter.activate();
+            await jupyter.exports.ready;
         }
-        python.exports.registerRemoteServerProvider(new RemoteServerPickerExample());
+        jupyter.exports.registerRemoteServerProvider(new RemoteServerPickerExample());
+        jupyter.exports.registerNewNotebookContent({ defaultCellLanguage: 'julia' });
+        vscode.commands.registerCommand(
+            'ms-toolsai-test.createBlankNotebook',
+            () => void jupyter.exports.createBlankNotebook({ defaultCellLanguage: 'julia' })
+        );
     }
 }
 

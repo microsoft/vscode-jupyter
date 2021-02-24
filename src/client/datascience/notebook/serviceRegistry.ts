@@ -11,6 +11,8 @@ import { NotebookIPyWidgetCoordinator } from '../ipywidgets/notebookIPyWidgetCoo
 import { KernelProvider } from '../jupyter/kernels/kernelProvider';
 import { IKernelProvider } from '../jupyter/kernels/types';
 import { NotebookContentProvider } from './contentProvider';
+import { CreationOptionService } from './creation/creationOptionsService';
+import { NotebookCreator } from './creation/notebookCreator';
 import { NotebookCellLanguageService } from './defaultCellLanguageService';
 import { EmptyNotebookCellLanguageService } from './emptyNotebookCellLanguageService';
 import { NotebookIntegration } from './integration';
@@ -54,4 +56,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<INotebookKernelResolver>(INotebookKernelResolver, NotebookIPyWidgetCoordinator);
     serviceManager.addSingleton<NotebookCellLanguageService>(NotebookCellLanguageService, NotebookCellLanguageService);
     serviceManager.addSingleton<NotebookCompletionProvider>(NotebookCompletionProvider, NotebookCompletionProvider);
+    serviceManager.addSingleton<CreationOptionService>(CreationOptionService, CreationOptionService);
+    serviceManager.addSingleton<NotebookCreator>(NotebookCreator, NotebookCreator);
 }
