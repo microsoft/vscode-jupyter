@@ -1,11 +1,18 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-const taggers = [tagWithWin32Error, tagWithZmqError, tagWithDllLoadError, tagWithOldIPyKernel, tagWithOldIPython];
-export function getErrorTags(stdErr: string) {
+const taggers = [
+    tagWithWin32Error,
+    tagWithZmqError,
+    tagWithDllLoadError,
+    tagWithOldIPyKernel,
+    tagWithOldIPython,
+    tagWithChildProcessExited
+];
+export function getErrorTags(stdErrOrStackTrace: string) {
     const tags: string[] = [];
-    stdErr = stdErr.toLowerCase();
-    taggers.forEach((tagger) => tagger(stdErr, tags));
+    stdErrOrStackTrace = stdErrOrStackTrace.toLowerCase();
+    taggers.forEach((tagger) => tagger(stdErrOrStackTrace, tags));
 
     return Array.from(new Set(tags)).join(',');
 }
@@ -36,6 +43,13 @@ function tagWithWin32Error(stdErr: string, tags: string[] = []) {
             ImportError: No module named 'win32api'
         */
         tags.push('win32api');
+    }
+}
+function tagWithChildProcessExited(stdErrOrStackTrace: string, tags: string[] = []) {
+    // StackTrace = at ChildProcess.exithandler child_process.js:312:12\n\tat ChildProcess.emit events.js:315:20\n\tat maybeClose <REDACTED: user-file-path>:1021:16\n\tat Process.ChildProcess._handle.onexit <REDACTED: user-file-path>:286:5"
+    // StackTrace = at ChildProcess.exithandler child_process.js:312:12\n\tat ChildProcess.emit events.js:315:20\n\tat ChildProcess.EventEmitter.emit domain.js:483:12\n\tat maybeClose <REDACTED: user-file-path>:1021:16\n\tat Socket <REDACTED: user-file-path>:443:11\n\tat Socket.emit events.js:315:20\n\tat Socket.EventEmitter.emit domain.js:483:12\n\tat Pipe net.js:674:12"
+    if (stdErrOrStackTrace.includes('ChildProcess.exithandler'.toLowerCase())) {
+        tags.push('childproc.exit');
     }
 }
 function tagWithZmqError(stdErr: string, tags: string[] = []) {
