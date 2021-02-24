@@ -618,11 +618,15 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
             import sys
             sys.stdout.write("1")
             sys.stdout.flush()
-            sys.stderr.write("a")
-            sys.stderr.flush()
             sys.stdout.write("2")
             sys.stdout.flush()
+            sys.stderr.write("a")
+            sys.stderr.flush()
             sys.stderr.write("b")
+            sys.stderr.flush()
+            sys.stdout.write("3")
+            sys.stdout.flush()
+            sys.stderr.write("c")
             sys.stderr.flush()
                         `,
             { index: 0 }
@@ -639,28 +643,48 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         traceInfo('2. completed execution for test of Stderr & stdout outputs');
 
         // In cell 1 we should have the output
-        // 12
-        // ab
-        // Basically have one output for stderr & a separate output for stdout.
-        assert.equal(cells[0].outputs.length, 2, 'Incorrect number of output');
-        const output1 = cells[0].outputs[0];
-        const output2 = cells[0].outputs[1];
-        assert.equal(
-            (output1.outputs[0].metadata as any)?.custom?.vscode?.outputType,
-            'stream',
-            'Incorrect output type'
-        );
-        assert.equal(
-            (output2.outputs[0].metadata as any)?.custom?.vscode?.outputType,
-            'stream',
-            'Incorrect output type'
-        );
-        assert.equal((output1.outputs[0].metadata as any)?.custom?.vscode?.name, 'stdout', 'Incorrect stream name');
-        assert.equal((output2.outputs[0].metadata as any)?.custom?.vscode?.name, 'stderr', 'Incorrect stream name');
-
-        // Confirm the output
-        assert.equal(getTextOutputValue(output1), '12');
-        assert.equal(getTextOutputValue(output2), 'ab');
+        // 1
+        // a
+        // 2
+        // b
+        assert.equal(cells[0].outputs.length, 4, 'Incorrect number of output');
+        // All output items should be of type stream
+        const expectedOutput = [
+            {
+                metadata: {
+                    outputType: 'stream',
+                    streamName: 'stdout'
+                },
+                text: '12'
+            },
+            {
+                metadata: {
+                    outputType: 'stream',
+                    streamName: 'stderr'
+                },
+                text: 'ab'
+            },
+            {
+                metadata: {
+                    outputType: 'stream',
+                    streamName: 'stdout'
+                },
+                text: '3'
+            },
+            {
+                metadata: {
+                    outputType: 'stream',
+                    streamName: 'stderr'
+                },
+                text: 'c'
+            }
+        ]
+        for (let index = 0; index < 4; index++) {
+            const expected = expectedOutput[index];
+            const output = cells[0].outputs[index];
+            assert.deepEqual(output.metadata, expected.metadata, `Metadata is incorrect for cell ${index}`);
+            assert.deepEqual(getTextOutputValue(output), expected.text, `Text is incorrect for cell ${index}`);
+        }
     });
 
     test('Execute all cells and run after error', async () => {
