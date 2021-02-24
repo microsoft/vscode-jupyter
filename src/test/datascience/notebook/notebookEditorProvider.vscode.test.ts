@@ -66,7 +66,7 @@ suite('DataScience - VSCode Notebook (Editor Provider)', function () {
         assert.isUndefined(vscodeNotebook.activeNotebookEditor);
         assert.isUndefined(editorProvider.activeEditor);
         editorProvider.editors.map((item) =>
-            assert.fail(item.file.fsPath, undefined, 'There should be no document open')
+            assert.fail(item.file.fsPath, undefined, `There should be no document open ${item.file.fsPath}`)
         );
         assert.equal(editorProvider.editors.length, 0, 'Should not have any notebooks open');
         assert.equal(vscodeNotebook.notebookEditors.length, 0, 'Should not have any vsc notebooks');
@@ -268,7 +268,7 @@ suite('DataScience - VSCode Notebook (Editor Provider)', function () {
         assert.equal(vscodeNotebook.notebookEditors.length, 2, 'Should have two editors');
         assert.lengthOf(editorProvider.editors, 1);
     });
-    test('Closing one of the duplicate notebooks will not dispose (our) INotebookEditor until all VSC Editors are closed', async () => {
+    test('Closing one of the duplicate notebooks will not dispose (our) INotebookEditor until all VSC Editors are closedxxx', async () => {
         await commandManager.executeCommand('vscode.openWith', Uri.file(templateIPynb), JupyterNotebookView);
         await waitForCondition(async () => !!editorProvider.activeEditor, 2_000, 'Editor not created');
 

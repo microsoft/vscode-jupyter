@@ -91,7 +91,7 @@ suite('DataScience - VSCode Notebook - Native Notebook Experiment', function () 
 
         assert.isUndefined(notebookEditorProvider.activeEditor);
         notebookEditorProvider.editors.map((item) =>
-            assert.fail(item.file.fsPath, undefined, 'There should be no document open')
+            assert.fail(item.file.fsPath, undefined, `There should be no document open ${item.file.fsPath}`)
         );
         assert.equal(notebookEditorProvider.editors.length, 0);
     });
@@ -114,7 +114,7 @@ suite('DataScience - VSCode Notebook - Native Notebook Experiment', function () 
 
         assert.isUndefined(notebookEditorProvider.activeEditor);
         notebookEditorProvider.editors.map((item) =>
-            assert.fail(item.file.fsPath, undefined, 'There should be no document open')
+            assert.fail(item.file.fsPath, undefined, `There should be no document open ${item.file.fsPath}`)
         );
         assert.equal(notebookEditorProvider.editors.length, 0);
     });
@@ -162,7 +162,7 @@ suite('DataScience - VSCode Notebook - Native Notebook Experiment', function () 
 
         assert.isUndefined(notebookEditorProvider.activeEditor);
         notebookEditorProvider.editors.map((item) =>
-            assert.fail(item.file.fsPath, undefined, 'There should be no document open')
+            assert.fail(item.file.fsPath, undefined, `There should be no document open ${item.file.fsPath}`)
         );
         assert.equal(notebookEditorProvider.editors.length, 0);
     });
@@ -205,7 +205,7 @@ suite('DataScience - VSCode Notebook - Native Notebook Experiment', function () 
 
         assert.isUndefined(notebookEditorProvider.activeEditor);
         notebookEditorProvider.editors.map((item) =>
-            assert.fail(item.file.fsPath, undefined, 'There should be no document open')
+            assert.fail(item.file.fsPath, undefined, `There should be no document open ${item.file.fsPath}`)
         );
         assert.equal(notebookEditorProvider.editors.length, 0);
     });
