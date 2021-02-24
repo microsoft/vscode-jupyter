@@ -5,6 +5,34 @@ import { IGetSliceRequest } from '../../client/datascience/data-viewing/types';
 import './sliceControl.css';
 
 const sliceRegEx = /^\s*(?<StartRange>\d+:)|(?<StopRange>:\d+)|(?:(?<Start>-?\d+)(?::(?<Stop>-?\d+))?(?::(?<Step>-?\d+))?)\s*$/;
+const dropdownStyles = {
+    dropdownItem: {
+        color: 'var(--vscode-dropdown-foreground)',
+        fontFamily: 'var(--vscode-font-family)',
+        fontWeight: 'var(--vscode-font-weight)',
+        fontSize: 'var(--vscode-font-size)',
+        backgroundColor: 'var(--vscode-dropdown-background)'
+    },
+    dropdownItemDisabled: {
+        color: 'var(--vscode-dropdown-foreground)',
+        fontFamily: 'var(--vscode-font-family)',
+        fontWeight: 'var(--vscode-font-weight)',
+        fontSize: 'var(--vscode-font-size)',
+        backgroundColor: 'var(--vscode-dropdown-background)',
+        opacity: '0.3'
+    },
+    dropdownItemSelectedAndDisabled: {
+        color: 'var(--vscode-dropdown-foreground)',
+        fontFamily: 'var(--vscode-font-family)',
+        fontWeight: 'var(--vscode-font-weight)',
+        fontSize: 'var(--vscode-font-size)',
+        backgroundColor: 'var(--vscode-dropdown-background)',
+        opacity: '0.3'
+    },
+    caretDown: {
+        color: 'var(--vscode-dropdown-foreground)'
+    }
+};
 
 interface ISliceControlProps {
     originalVariableShape: number[];
@@ -70,12 +98,12 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
 
     private generateIndexHandler = (index: number) => {
         return (_data: React.FormEvent, option: IDropdownOption | undefined) => {
-            const state: { [key: string]: number } = {}; 
+            const state: { [key: string]: number } = {};
             state[`selectedIndex${index}`] = option?.key as number;
             this.setState(state);
             this.applyDropdownsToInputBox();
         };
-    }
+    };
 
     private generateAxisHandler = (index: number) => {
         return (_data: React.FormEvent, option: IDropdownOption | undefined) => {
@@ -84,42 +112,13 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
             this.setState(state);
             this.applyDropdownsToInputBox();
         };
-    }
+    };
 
     private generateDropdowns = () => {
         const ndim = this.props.originalVariableShape.length;
         const numDropdowns = Math.max(ndim - 2, 1); // Ensure at least 1 set of dropdowns for 2D data
         const dropdowns = [];
 
-        const dropdownStyles = {
-            dropdownItem: {
-                color: 'var(--vscode-dropdown-foreground)',
-                fontFamily: 'var(--vscode-font-family)',
-                fontWeight: 'var(--vscode-font-weight)',
-                fontSize: 'var(--vscode-font-size)',
-                backgroundColor: 'var(--vscode-dropdown-background)'
-            },
-            dropdownItemDisabled: {
-                color: 'var(--vscode-dropdown-foreground)',
-                fontFamily: 'var(--vscode-font-family)',
-                fontWeight: 'var(--vscode-font-weight)',
-                fontSize: 'var(--vscode-font-size)',
-                backgroundColor: 'var(--vscode-dropdown-background)',
-                opacity: '0.3',
-            },
-            dropdownItemSelectedAndDisabled: {
-                color: 'var(--vscode-dropdown-foreground)',
-                fontFamily: 'var(--vscode-font-family)',
-                fontWeight: 'var(--vscode-font-weight)',
-                fontSize: 'var(--vscode-font-size)',
-                backgroundColor: 'var(--vscode-dropdown-background)',
-                opacity: '0.3',
-            },
-            caretDown: {
-                color: 'var(--vscode-dropdown-foreground)'
-            }
-        };
-    
         for (let i = 0; i < numDropdowns; i++) {
             const updateIndexHandler = this.generateIndexHandler(i);
             const updateAxisHandler = this.generateAxisHandler(i);
@@ -128,32 +127,38 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
             const axisKey = this.state[`selectedAxis${i}`] as number;
             const indexKey = this.state[`selectedIndex${i}`] as number;
 
-            dropdowns.push(<div className="slice-control-row">
-                <Dropdown
-                    responsiveMode={ResponsiveMode.xxxLarge}
-                    label="Axis"
-                    style={{ marginRight: '10px' }}
-                    styles={dropdownStyles}
-                    disabled={!this.state.isActive}
-                    selectedKey={axisKey}
-                    key={`axis${i}`}
-                    options={axisOptions}
-                    onChange={updateAxisHandler}
-                />
-                <Dropdown
-                    responsiveMode={ResponsiveMode.xxxLarge}
-                    label="Index"
-                    styles={dropdownStyles}
-                    disabled={!this.state.isActive || (this.state as any)[`selectedAxis${i}`] === undefined}
-                    selectedKey={indexKey}
-                    key={`index${i}`}
-                    options={indexOptions}
-                    onChange={updateIndexHandler}
-                />
-            </div>);
+            dropdowns.push(
+                <div className="slice-control-row">
+                    <Dropdown
+                        responsiveMode={ResponsiveMode.xxxLarge}
+                        label="Axis"
+                        style={{ marginRight: '10px' }}
+                        styles={dropdownStyles}
+                        disabled={!this.state.isActive}
+                        selectedKey={axisKey}
+                        key={`axis${i}`}
+                        options={axisOptions}
+                        onChange={updateAxisHandler}
+                    />
+                    <Dropdown
+                        responsiveMode={ResponsiveMode.xxxLarge}
+                        label="Index"
+                        styles={dropdownStyles}
+                        disabled={
+                            !this.state.isActive ||
+                            this.state[`selectedAxis${i}`] === undefined ||
+                            this.state[`selectedAxis${i}`] === null
+                        }
+                        selectedKey={indexKey}
+                        key={`index${i}`}
+                        options={indexOptions}
+                        onChange={updateIndexHandler}
+                    />
+                </div>
+            );
         }
         return dropdowns;
-    }
+    };
 
     private renderReadonlyIndicator = () => {
         if (this.state.isActive) {
@@ -162,12 +167,14 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
     };
 
     private toggleEnablement = () => {
-        const isActive = !this.state.isActive;
-        const newState = { isActive };
-        const slice = isActive
-            ? this.state.sliceExpression
-            : '[' + this.props.originalVariableShape.map(() => ':').join(', ') + ']';
-        this.props.handleSliceRequest({ slice });
+        const willBeActive = !this.state.isActive;
+        const newState = { isActive: willBeActive };
+        const fullVariableSlice = '[' + this.props.originalVariableShape.map(() => ':').join(', ') + ']';
+        // Don't send slice request unless necessary
+        if (this.state.sliceExpression !== fullVariableSlice) {
+            const slice = willBeActive ? this.state.sliceExpression : fullVariableSlice;
+            this.props.handleSliceRequest({ slice });
+        }
         this.applyInputBoxToDropdowns();
         this.setState(newState);
     };
@@ -181,12 +188,14 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
 
     private handleSubmit = (event: React.SyntheticEvent) => {
         event.preventDefault();
-        this.setState({ sliceExpression: this.state.inputValue });
-        // Update axis and index dropdown selections
-        this.applyInputBoxToDropdowns();
-        this.props.handleSliceRequest({
-            slice: this.state.inputValue
-        });
+        if (this.state.inputValue !== this.state.sliceExpression) {
+            this.setState({ sliceExpression: this.state.inputValue });
+            // Update axis and index dropdown selections
+            this.applyInputBoxToDropdowns();
+            this.props.handleSliceRequest({
+                slice: this.state.inputValue
+            });
+        }
     };
 
     private preselectedSliceExpression() {
@@ -262,9 +271,7 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
                     });
                 const state = {};
                 const ndim = this.props.originalVariableShape.length;
-                if (
-                    numRangeObjects === 0 && dropdowns.length === Math.max(1, ndim - 2)
-                ) {
+                if (numRangeObjects === 0 && dropdowns.length === Math.max(1, ndim - 2)) {
                     // Apply values to dropdowns
                     for (let i = 0; i < dropdowns.length; i++) {
                         const selection = dropdowns[i];
@@ -293,15 +300,21 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
             for (let i = 0; i < numDropdowns; i++) {
                 const selectedAxisKey = this.state[`selectedAxis${i}`] as number;
                 const selectedIndexKey = this.state[`selectedIndex${i}`] as number;
-                if (!!selectedAxisKey && !!selectedIndexKey) {
+                if (
+                    selectedAxisKey !== null &&
+                    selectedAxisKey !== undefined &&
+                    selectedIndexKey !== null &&
+                    selectedIndexKey !== undefined
+                ) {
                     shape[selectedAxisKey] = selectedIndexKey.toString();
                 }
             }
 
             const newSliceExpression = '[' + shape.join(', ') + ']';
-            this.setState({ sliceExpression: newSliceExpression, inputValue: newSliceExpression });
-            this.props.handleSliceRequest({ slice: newSliceExpression });
-
+            if (newSliceExpression !== this.state.sliceExpression) {
+                this.setState({ sliceExpression: newSliceExpression, inputValue: newSliceExpression });
+                this.props.handleSliceRequest({ slice: newSliceExpression });
+            }
         });
     };
 
