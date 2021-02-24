@@ -135,12 +135,11 @@ export function translateKernelLanguageToMonaco(kernelLanguage: string): string 
 export function generateNewNotebookUri(
     counter: number,
     rootFolder: string | undefined,
-    title?: string,
     forVSCodeNotebooks?: boolean
 ): Uri {
     // However if there are files already on disk, we should be able to overwrite them because
     // they will only ever be used by 'open' editors. So just use the current counter for our untitled count.
-    const fileName = title ? `${title}-${counter}.ipynb` : `${DataScience.untitledNotebookFileName()}-${counter}.ipynb`;
+    const fileName = `${DataScience.untitledNotebookFileName()}-${counter}.ipynb`;
     // Turn this back into an untitled
     if (forVSCodeNotebooks) {
         return Uri.file(fileName).with({ scheme: 'untitled', path: fileName });

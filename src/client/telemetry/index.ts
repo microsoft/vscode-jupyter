@@ -552,6 +552,23 @@ export interface IEventNamePropertyMapping {
     [Telemetry.DebugpySuccessfullyInstalled]: never | undefined;
     [Telemetry.OpenNotebook]: { scope: 'command' | 'file' };
     [Telemetry.OpenNotebookAll]: never | undefined;
+    /**
+     * Telemetry sent with details of the selection of the quick pick for when user creates new notebook.
+     * This only applies with other extensions like .NET registers with us.
+     */
+    [Telemetry.OpenNotebookSelection]: {
+        /**
+         * The id of the extension selected from the dropdown list.
+         * If empty, the user didn't select anything & didn't create a new notebook.
+         */
+        extensionId?: string;
+    };
+    [Telemetry.OpenNotebookSelectionRegistered]: {
+        /**
+         * The id of the extension registering with us to be displayed the dropdown list for notebook creation.
+         */
+        extensionId: string;
+    };
     [Telemetry.OpenedInteractiveWindow]: never | undefined;
     [Telemetry.OpenPlotViewer]: never | undefined;
     [Telemetry.Redo]: never | undefined;
@@ -681,6 +698,7 @@ export interface IEventNamePropertyMapping {
          */
         result?: 'notSelected' | 'selected' | 'installationCancelled';
     };
+    [Telemetry.SelectJupyterInterpreterMessageDisplayed]: undefined | never;
     [NativeKeyboardCommandTelemetry.ArrowDown]: never | undefined;
     [NativeKeyboardCommandTelemetry.ArrowUp]: never | undefined;
     [NativeKeyboardCommandTelemetry.ChangeToCode]: never | undefined;

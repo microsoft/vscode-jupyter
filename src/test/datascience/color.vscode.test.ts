@@ -25,8 +25,8 @@ suite('Theme colors', () => {
     const settings: MockJupyterSettings = new MockJupyterSettings(undefined);
 
     setup(() => {
-        extensions = new Extensions();
         const fs = new FileSystem();
+        extensions = new Extensions(fs);
         themeFinder = new ThemeFinder(extensions, fs);
 
         workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();

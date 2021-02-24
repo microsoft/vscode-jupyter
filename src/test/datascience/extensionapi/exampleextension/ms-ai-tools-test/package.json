@@ -20,12 +20,19 @@
 	"categories": [
 		"Other"
 	],
-	"activationEvents": [],
+	"activationEvents": ["*"],
 	"main": "./dist/extension",
 	"contributes": {
 		"pythonRemoteServerProvider": [
 			{
 				"id": "RemoteServerPickerExample"
+			}
+		],
+		"commands": [
+			{
+				"command": "ms-toolsai-test.createBlankNotebook",
+				"title": "Create new blank Julia notebook",
+				"category": "Notebook"
 			}
 		]
 	},
