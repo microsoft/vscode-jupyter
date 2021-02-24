@@ -90,7 +90,9 @@ suite('DataScience - VSCode Notebook - Native Notebook Experiment', function () 
         await sleep(1_000);
 
         assert.isUndefined(notebookEditorProvider.activeEditor);
-        notebookEditorProvider.editors.map(item => assert.fail(item.file.fsPath, undefined, 'There should be no document open'));
+        notebookEditorProvider.editors.map((item) =>
+            assert.fail(item.file.fsPath, undefined, 'There should be no document open')
+        );
         assert.equal(notebookEditorProvider.editors.length, 0);
     });
     test('Do not display start page for Stable VS Code Not in experiment', async () => {
@@ -111,7 +113,9 @@ suite('DataScience - VSCode Notebook - Native Notebook Experiment', function () 
         await sleep(1_000);
 
         assert.isUndefined(notebookEditorProvider.activeEditor);
-        notebookEditorProvider.editors.map(item => assert.fail(item.file.fsPath, undefined, 'There should be no document open'));
+        notebookEditorProvider.editors.map((item) =>
+            assert.fail(item.file.fsPath, undefined, 'There should be no document open')
+        );
         assert.equal(notebookEditorProvider.editors.length, 0);
     });
     test('Display start page for Stable VS Code in experiment', async () => {
@@ -157,7 +161,9 @@ suite('DataScience - VSCode Notebook - Native Notebook Experiment', function () 
         await sleep(1_000);
 
         assert.isUndefined(notebookEditorProvider.activeEditor);
-        notebookEditorProvider.editors.map(item => assert.fail(item.file.fsPath, undefined, 'There should be no document open'));
+        notebookEditorProvider.editors.map((item) =>
+            assert.fail(item.file.fsPath, undefined, 'There should be no document open')
+        );
         assert.equal(notebookEditorProvider.editors.length, 0);
     });
     test('Display start page for Insider VS Code in experiment only once', async () => {
@@ -198,7 +204,9 @@ suite('DataScience - VSCode Notebook - Native Notebook Experiment', function () 
         await sleep(1_000);
 
         assert.isUndefined(notebookEditorProvider.activeEditor);
-        notebookEditorProvider.editors.map(item => assert.fail(item.file.fsPath, undefined, 'There should be no document open'));
+        notebookEditorProvider.editors.map((item) =>
+            assert.fail(item.file.fsPath, undefined, 'There should be no document open')
+        );
         assert.equal(notebookEditorProvider.editors.length, 0);
     });
 });

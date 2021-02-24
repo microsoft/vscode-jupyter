@@ -678,7 +678,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
                 },
                 text: 'c'
             }
-        ]
+        ];
         for (let index = 0; index < 4; index++) {
             const expected = expectedOutput[index];
             const output = cells[0].outputs[index];
