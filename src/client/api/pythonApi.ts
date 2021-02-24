@@ -14,6 +14,7 @@
 import { inject, injectable } from 'inversify';
 import { CancellationToken, Disposable, Event, EventEmitter, Uri } from 'vscode';
 import { IApplicationShell, ICommandManager } from '../common/application/types';
+import { ProductNames } from '../common/installer/productNames';
 import { InterpreterUri } from '../common/installer/types';
 import {
     IDisposableRegistry,
@@ -26,12 +27,13 @@ import {
 import { createDeferred } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
 import { noop } from '../common/utils/misc';
-import { PythonExtension } from '../datascience/constants';
+import { PythonExtension, Telemetry } from '../datascience/constants';
 import { IEnvironmentActivationService } from '../interpreter/activation/types';
 import { IInterpreterQuickPickItem, IInterpreterSelector } from '../interpreter/configuration/types';
 import { IInterpreterService } from '../interpreter/contracts';
 import { IWindowsStoreInterpreter } from '../interpreter/locators/types';
 import { PythonEnvironment } from '../pythonEnvironments/info';
+import { sendTelemetryEvent } from '../telemetry';
 import {
     ILanguageServer,
     ILanguageServerProvider,
@@ -214,20 +216,42 @@ export class PythonInstaller implements IPythonInstaller {
     }
     constructor(@inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider) {}
 
-    public install(
+    public async install(
         product: Product,
         resource?: InterpreterUri,
         cancel?: CancellationToken
     ): Promise<InstallerResponse> {
-        return this.apiProvider
-            .getApi()
-            .then((api) => api.install(ProductMapping[product], resource, cancel))
-            .then((result) => {
-                if (result === InstallerResponse.Installed) {
-                    this._onInstalled.fire({ product, resource });
-                }
-                return result;
+        let action: 'installed' | 'failed' | 'disabled' | 'ignored' = 'installed';
+        try {
+            const api = await this.apiProvider.getApi();
+            const result = await api.install(ProductMapping[product], resource, cancel);
+            if (result === InstallerResponse.Installed) {
+                this._onInstalled.fire({ product, resource });
+            }
+            switch (result) {
+                case InstallerResponse.Installed:
+                    action = 'installed';
+                    break;
+                case InstallerResponse.Ignore:
+                    action = 'ignored';
+                    break;
+                case InstallerResponse.Disabled:
+                    action = 'disabled';
+                    break;
+                default:
+                    break;
+            }
+            return result;
+        } catch (ex) {
+            action = 'failed';
+            throw ex;
+        } finally {
+            product;
+            sendTelemetryEvent(Telemetry.PythonModuleInstal, undefined, {
+                action,
+                moduleName: ProductNames.get(product)!
             });
+        }
     }
 }
 
