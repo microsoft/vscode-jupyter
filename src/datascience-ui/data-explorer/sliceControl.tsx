@@ -16,10 +16,7 @@ interface ISliceControlState {
     inputValue: string;
     isExpanded: boolean;
     isActive: boolean;
-    selectedAxis0?: number;
-    selectedIndex0?: number;
-    selectedAxis1?: number;
-    selectedIndex1?: number;
+    [key: string]: number | boolean | string;
 }
 
 export class SliceControl extends React.Component<ISliceControlProps, ISliceControlState> {
@@ -33,22 +30,6 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
     }
 
     public render() {
-        const indexOptions = this.generateIndexDropdownOptions();
-        const axisOptions = this.generateAxisDropdownOptions();
-
-        const dropdownStyles = {
-            dropdownItem: {
-                color: 'var(--vscode-dropdown-foreground)',
-                fontFamily: 'var(--vscode-font-family)',
-                fontWeight: 'var(--vscode-font-weight)',
-                fontSize: 'var(--vscode-font-size)',
-                backgroundColor: 'var(--vscode-dropdown-background)'
-            },
-            caretDown: {
-                color: 'var(--vscode-dropdown-foreground)'
-            }
-        };
-
         return (
             <details className="slicing-control">
                 <summary className="slice-summary">
@@ -81,30 +62,95 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
                             value="Apply"
                         />
                     </div>
-                    <div className="slice-control-row">
-                        <Dropdown
-                            responsiveMode={ResponsiveMode.xxxLarge}
-                            label="Axis"
-                            style={{ marginRight: '10px' }}
-                            styles={dropdownStyles}
-                            disabled={!this.state.isActive}
-                            selectedKey={this.state.selectedAxis0}
-                            options={axisOptions}
-                            onChange={this.updateAxis}
-                        />
-                        <Dropdown
-                            responsiveMode={ResponsiveMode.xxxLarge}
-                            label="Index"
-                            styles={dropdownStyles}
-                            disabled={!this.state.isActive || this.state.selectedAxis0 === undefined}
-                            selectedKey={this.state.selectedIndex0}
-                            options={indexOptions}
-                            onChange={this.updateIndex}
-                        />
-                    </div>
+                    {this.generateDropdowns()}
                 </form>
             </details>
         );
+    }
+
+    private generateIndexHandler = (index: number) => {
+        return (_data: React.FormEvent, option: IDropdownOption | undefined) => {
+            const state: { [key: string]: number } = {}; 
+            state[`selectedIndex${index}`] = option?.key as number;
+            this.setState(state);
+            this.applyDropdownsToInputBox();
+        };
+    }
+
+    private generateAxisHandler = (index: number) => {
+        return (_data: React.FormEvent, option: IDropdownOption | undefined) => {
+            const state: { [key: string]: number } = {};
+            state[`selectedAxis${index}`] = option?.key as number;
+            this.setState(state);
+            this.applyDropdownsToInputBox();
+        };
+    }
+
+    private generateDropdowns = () => {
+        const ndim = this.props.originalVariableShape.length;
+        const numDropdowns = Math.max(ndim - 2, 1); // Ensure at least 1 set of dropdowns for 2D data
+        const dropdowns = [];
+
+        const dropdownStyles = {
+            dropdownItem: {
+                color: 'var(--vscode-dropdown-foreground)',
+                fontFamily: 'var(--vscode-font-family)',
+                fontWeight: 'var(--vscode-font-weight)',
+                fontSize: 'var(--vscode-font-size)',
+                backgroundColor: 'var(--vscode-dropdown-background)'
+            },
+            dropdownItemDisabled: {
+                color: 'var(--vscode-dropdown-foreground)',
+                fontFamily: 'var(--vscode-font-family)',
+                fontWeight: 'var(--vscode-font-weight)',
+                fontSize: 'var(--vscode-font-size)',
+                backgroundColor: 'var(--vscode-dropdown-background)',
+                opacity: '0.3',
+            },
+            dropdownItemSelectedAndDisabled: {
+                color: 'var(--vscode-dropdown-foreground)',
+                fontFamily: 'var(--vscode-font-family)',
+                fontWeight: 'var(--vscode-font-weight)',
+                fontSize: 'var(--vscode-font-size)',
+                backgroundColor: 'var(--vscode-dropdown-background)',
+                opacity: '0.3',
+            },
+            caretDown: {
+                color: 'var(--vscode-dropdown-foreground)'
+            }
+        };
+    
+        for (let i = 0; i < numDropdowns; i++) {
+            const updateIndexHandler = this.generateIndexHandler(i);
+            const updateAxisHandler = this.generateAxisHandler(i);
+            const axisOptions = this.generateAxisDropdownOptions();
+            const indexOptions = this.generateIndexDropdownOptions(i);
+            const axisKey = this.state[`selectedAxis${i}`] as number;
+            const indexKey = this.state[`selectedIndex${i}`] as number;
+
+            dropdowns.push(<div className="slice-control-row">
+                <Dropdown
+                    responsiveMode={ResponsiveMode.xxxLarge}
+                    label="Axis"
+                    style={{ marginRight: '10px' }}
+                    styles={dropdownStyles}
+                    disabled={!this.state.isActive}
+                    selectedKey={axisKey}
+                    options={axisOptions}
+                    onChange={updateAxisHandler}
+                />
+                <Dropdown
+                    responsiveMode={ResponsiveMode.xxxLarge}
+                    label="Index"
+                    styles={dropdownStyles}
+                    disabled={!this.state.isActive || (this.state as any)[`selectedAxis${i}`] === undefined}
+                    selectedKey={indexKey}
+                    options={indexOptions}
+                    onChange={updateIndexHandler}
+                />
+            </div>);
+        }
+        return dropdowns;
     }
 
     private renderReadonlyIndicator = () => {
@@ -215,8 +261,7 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
                 const state = {};
                 const ndim = this.props.originalVariableShape.length;
                 if (
-                    numRangeObjects === 0 &&
-                    ((ndim === 2 && dropdowns.length === 1) || (ndim > 2 && dropdowns.length === ndim - 2))
+                    numRangeObjects === 0 && dropdowns.length === Math.max(1, ndim - 2)
                 ) {
                     // Apply values to dropdowns
                     for (let i = 0; i < dropdowns.length; i++) {
@@ -239,44 +284,43 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
 
     private applyDropdownsToInputBox = () => {
         setTimeout(() => {
-            if (this.state.selectedAxis0 !== undefined && this.state.selectedIndex0 !== undefined) {
-                // Calculate new slice expression from dropdown values
-                const newSliceExpression =
-                    '[' +
-                    this.props.originalVariableShape
-                        .map((_val, idx) => {
-                            if (idx === this.state.selectedAxis0) {
-                                return this.state.selectedIndex0;
-                            }
-                            return ':';
-                        })
-                        .join(', ') +
-                    ']';
-                this.setState({ sliceExpression: newSliceExpression, inputValue: newSliceExpression });
-                this.props.handleSliceRequest({ slice: newSliceExpression });
+            const shape = this.props.originalVariableShape.map(() => ':');
+            const ndim = this.props.originalVariableShape.length;
+            const numDropdowns = Math.max(ndim - 2, 1); // Ensure at least 1 set of dropdowns for 2D data
+
+            for (let i = 0; i < numDropdowns; i++) {
+                const selectedAxisKey = this.state[`selectedAxis${i}`] as number;
+                const selectedIndexKey = this.state[`selectedIndex${i}`] as number;
+                if (!!selectedAxisKey && !!selectedIndexKey) {
+                    shape[selectedAxisKey] = selectedIndexKey.toString();
+                }
             }
+
+            const newSliceExpression = '[' + shape.join(', ') + ']';
+            this.setState({ sliceExpression: newSliceExpression, inputValue: newSliceExpression });
+            this.props.handleSliceRequest({ slice: newSliceExpression });
+
         });
-    };
-
-    private updateAxis = (_data: React.FormEvent, option: IDropdownOption | undefined) => {
-        this.setState({ selectedAxis0: option?.key as number });
-        this.applyDropdownsToInputBox();
-    };
-
-    private updateIndex = (_data: React.FormEvent, option: IDropdownOption | undefined) => {
-        this.setState({ selectedIndex0: option?.key as number });
-        this.applyDropdownsToInputBox();
     };
 
     private generateAxisDropdownOptions = () => {
+        const selectedAxes = new Set();
+        for (const key in this.state) {
+            if (key.startsWith('selectedAxis')) {
+                selectedAxes.add(this.state[key]);
+            }
+        }
+        // Disable axes which are already selected in other dropdowns
+        // in order to prevent users from selecting the same axis twice
         return this.props.originalVariableShape.map((_val, idx) => {
-            return { key: idx, text: idx.toString() };
+            return { key: idx, text: idx.toString(), disabled: selectedAxes.has(idx) };
         });
     };
 
-    private generateIndexDropdownOptions = () => {
-        if (this.state.selectedAxis0 !== undefined) {
-            const range = this.props.originalVariableShape[this.state.selectedAxis0];
+    private generateIndexDropdownOptions = (dropdownIndex: number) => {
+        const axisSelection = this.state[`selectedAxis${dropdownIndex}`];
+        if (axisSelection !== undefined) {
+            const range = this.props.originalVariableShape[axisSelection as number];
             const result = [];
             for (let i = 0; i < range; i++) {
                 result.push({ key: i, text: i.toString() });
