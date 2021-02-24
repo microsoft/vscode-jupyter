@@ -11,7 +11,6 @@ import {
     NotebookKernel as VSCNotebookKernel
 } from 'vscode';
 import { ICommandManager, IVSCodeNotebook } from '../../common/application/types';
-import * as fastDeepEqual from 'fast-deep-equal';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { IConfigurationService, IDisposableRegistry, IExtensionContext, IExtensions } from '../../common/types';
 import { noop } from '../../common/utils/misc';

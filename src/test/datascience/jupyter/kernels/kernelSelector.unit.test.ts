@@ -33,9 +33,6 @@ import {
 import { IInterpreterService } from '../../../../client/interpreter/contracts';
 import { PythonEnvironment } from '../../../../client/pythonEnvironments/info';
 import { PreferredRemoteKernelIdProvider } from '../../../../client/datascience/notebookStorage/preferredRemoteKernelIdProvider';
-import { IInterpreterSelector } from '../../../../client/interpreter/configuration/types';
-import { IFileSystem } from '../../../../client/common/platform/types';
-import { IPythonExtensionChecker } from '../../../../client/api/types';
 import { disposeAllDisposables } from '../../../../client/common/helpers';
 import { InterpreterPackages } from '../../../../client/datascience/telemetry/interpreterPackages';
 
