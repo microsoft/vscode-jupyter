@@ -24,7 +24,6 @@ import { LocalKernelFinder } from '../../../../client/datascience/kernel-launche
 import { ILocalKernelFinder } from '../../../../client/datascience/kernel-launcher/types';
 import {
     IJupyterSubCommandExecutionService,
-    KernelInterpreterDependencyResponse
 } from '../../../../client/datascience/types';
 import { IEnvironmentActivationService } from '../../../../client/interpreter/activation/types';
 import { IInterpreterService } from '../../../../client/interpreter/contracts';
@@ -154,9 +153,7 @@ suite('DataScience - KernelService', () => {
         test('If ipykernel is not installed, then prompt to install ipykernel', async () => {
             when(execService.execModule('ipykernel', anything(), anything())).thenResolve({ stdout: '' });
             when(dependencyService.areDependenciesInstalled(interpreter, anything())).thenResolve(false);
-            when(dependencyService.installMissingDependencies(anything(), anything())).thenResolve(
-                KernelInterpreterDependencyResponse.ok
-            );
+            when(dependencyService.installMissingDependencies(anything(), anything())).thenResolve();
             fakeTimer.install();
 
             const promise = kernelService.registerKernel(undefined, interpreter);
@@ -183,9 +180,7 @@ suite('DataScience - KernelService', () => {
         test('If ipykernel is not installed, and ipykerne installation is canclled, then do not reigster kernel', async () => {
             when(execService.execModule('ipykernel', anything(), anything())).thenResolve({ stdout: '' });
             when(dependencyService.areDependenciesInstalled(interpreter, anything())).thenResolve(false);
-            when(dependencyService.installMissingDependencies(anything(), anything())).thenResolve(
-                KernelInterpreterDependencyResponse.cancel
-            );
+            when(dependencyService.installMissingDependencies(anything(), anything())).thenResolve();
 
             const kernel = await kernelService.registerKernel(undefined, interpreter);
 
@@ -313,7 +308,7 @@ suite('DataScience - KernelService', () => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             expectedKernelJsonContent.env = envVariables as any;
 
-            const installedKernel = await kernelService.searchAndRegisterKernel(undefined, interpreter, true);
+            const installedKernel = await kernelService.registerKernel(undefined, interpreter, true);
 
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             assert.deepEqual(kernel, installedKernel as any);
@@ -340,7 +335,7 @@ suite('DataScience - KernelService', () => {
             when(activationHelper.getActivatedEnvironmentVariables(undefined, interpreter, true)).thenResolve(
                 envVariables
             );
-            const installedKernel = await kernelService.searchAndRegisterKernel(undefined, interpreter, true);
+            const installedKernel = await kernelService.registerKernel(undefined, interpreter, true);
 
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             assert.deepEqual(kernel, installedKernel as any);

@@ -11,9 +11,8 @@ import { IWorkspaceService } from '../../common/application/types';
 import { traceDecorators, traceError, traceInfo, traceInfoIf } from '../../common/logger';
 import { IFileSystem, IPlatformService } from '../../common/platform/types';
 import { IPythonExecutionFactory } from '../../common/process/types';
-import { IExtensionContext, IExtensions, IPathUtils, Resource } from '../../common/types';
+import { IExtensionContext, IPathUtils, Resource } from '../../common/types';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
-import { IInterpreterSelector } from '../../interpreter/configuration/types';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry } from '../../telemetry';
@@ -77,8 +76,6 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         @inject(IPythonExecutionFactory) private readonly exeFactory: IPythonExecutionFactory,
         @inject(IEnvironmentVariablesProvider) private readonly envVarsProvider: IEnvironmentVariablesProvider,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
-        @inject(IExtensions) private readonly extensions: IExtensions,
-        @inject(IInterpreterSelector) private readonly interpreterSelector: IInterpreterSelector
     ) {}
     @traceDecorators.verbose('Find kernel spec')
     @captureTelemetry(Telemetry.KernelFinderPerf)
@@ -238,10 +235,10 @@ export class LocalKernelFinder implements ILocalKernelFinder {
     private async findResourceInterpreters(resource: Resource): Promise<PythonEnvironment[]> {
         // Find all available interpreters
         const interpreters = this.extensionChecker.isPythonExtensionInstalled
-            ? await this.interpreterSelector.getSuggestions(resource)
+            ? await this.interpreterService.getInterpreters(resource)
             : [];
 
-        return interpreters.map((i) => i.interpreter);
+        return interpreters;
     }
 
     // Load the IJupyterKernelSpec for a given spec path, check the ones that we have already loaded first
@@ -254,16 +251,6 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         // ! as the has and set above verify that we have a return here
         return this.pathToKernelSpec.get(specPath)!.then((value) => {
             if (value) {
-                // Special case. Look at the kernel spec metadata. If it has an vscode.extension_id metadata and this
-                // extension is installed, skip it. It means this kernel is owned by that other extension
-                if (
-                    value.metadata?.vscode?.extension_id &&
-                    this.extensions.getExtension(value.metadata.vscode.extension_id)
-                ) {
-                    return undefined;
-                }
-
-                // Otherwise this is a valid value.
                 return value;
             }
 

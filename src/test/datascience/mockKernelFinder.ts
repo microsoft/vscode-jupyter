@@ -6,7 +6,6 @@ import { CancellationToken } from 'vscode';
 import { Resource } from '../../client/common/types';
 import { KernelConnectionMetadata } from '../../client/datascience/jupyter/kernels/types';
 import { ILocalKernelFinder } from '../../client/datascience/kernel-launcher/types';
-import { IJupyterKernelSpec } from '../../client/datascience/types';
 import { PythonEnvironment } from '../../client/pythonEnvironments/info';
 
 export class MockKernelFinder implements ILocalKernelFinder {

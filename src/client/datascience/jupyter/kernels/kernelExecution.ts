@@ -32,7 +32,7 @@ import {
 import { CellExecutionFactory } from './cellExecution';
 import { CellExecutionQueue } from './cellExecutionQueue';
 import { isPythonKernelConnection } from './helpers';
-import type { IKernel, IKernelProvider, IKernelSelectionUsage, KernelConnectionMetadata } from './types';
+import type { IKernel, IKernelProvider, KernelConnectionMetadata } from './types';
 
 /**
  * Separate class that deals just with kernel execution.
@@ -48,7 +48,6 @@ export class KernelExecution implements IDisposable {
         private readonly kernelProvider: IKernelProvider,
         errorHandler: IDataScienceErrorHandler,
         editorProvider: INotebookEditorProvider,
-        readonly kernelSelectionUsage: IKernelSelectionUsage,
         appShell: IApplicationShell,
         readonly vscNotebook: IVSCodeNotebook,
         readonly metadata: Readonly<KernelConnectionMetadata>,

@@ -15,21 +15,16 @@ import { CancellationToken } from 'vscode-jsonrpc';
 import { Cancellation } from '../../common/cancellation';
 import { traceError, traceInfo } from '../../common/logger';
 import { IOutputChannel } from '../../common/types';
-import { Deferred, createDeferredFromPromise } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
-import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry } from '../../telemetry';
 import { BaseJupyterSession, JupyterSessionStartError } from '../baseJupyterSession';
 import { Telemetry } from '../constants';
-import { IpyKernelNotInstalledError } from '../kernel-launcher/types';
 import { reportAction } from '../progress/decorator';
 import { ReportableAction } from '../progress/types';
 import {
     IJupyterConnection,
     IKernelDependencyService,
-    ISessionWithSocket,
-    KernelInterpreterDependencyResponse
-} from '../types';
+    ISessionWithSocket} from '../types';
 import { JupyterInvalidKernelError } from './jupyterInvalidKernelError';
 import { JupyterWaitForIdleError } from './jupyterWaitForIdleError';
 import { JupyterWebSockets } from './jupyterWebSocket';
@@ -37,8 +32,6 @@ import { getNameOfKernelConnection } from './kernels/helpers';
 import { KernelConnectionMetadata } from './kernels/types';
 
 export class JupyterSession extends BaseJupyterSession {
-    private dependencyPromises = new Map<string, Deferred<KernelInterpreterDependencyResponse>>();
-
     constructor(
         private connInfo: IJupyterConnection,
         private serverSettings: ServerConnection.ISettings,
@@ -219,7 +212,11 @@ export class JupyterSession extends BaseJupyterSession {
 
         // Make sure the kernel has ipykernel installed if on a local machine.
         if (kernelConnection?.interpreter && this.connInfo.localLaunch) {
-            await this.installDependenciesIntoInterpreter(kernelConnection.interpreter, cancelToken, disableUI);
+            await this.kernelDependencyService.installMissingDependencies(
+                kernelConnection.interpreter,
+                cancelToken,
+                disableUI
+            );
         }
 
         // Create our session options using this temporary notebook and our connection info
@@ -265,39 +262,6 @@ export class JupyterSession extends BaseJupyterSession {
     private logRemoteOutput(output: string) {
         if (this.connInfo && !this.connInfo.localLaunch) {
             this.outputChannel.appendLine(output);
-        }
-    }
-
-    private async installDependenciesIntoInterpreter(
-        interpreter: PythonEnvironment,
-        cancelToken?: CancellationToken,
-        disableUI?: boolean
-    ) {
-        // TODO: On next submission move this code into a common location.
-
-        // Cache the install question so when two kernels start at the same time for the same interpreter we don't ask twice
-        let deferred = this.dependencyPromises.get(interpreter.path);
-        if (!deferred) {
-            deferred = createDeferredFromPromise(
-                this.kernelDependencyService.installMissingDependencies(interpreter, cancelToken, disableUI)
-            );
-            this.dependencyPromises.set(interpreter.path, deferred);
-        }
-
-        // Get the result of the question
-        try {
-            const result = await deferred.promise;
-            if (result !== KernelInterpreterDependencyResponse.ok) {
-                throw new IpyKernelNotInstalledError(
-                    localize.DataScience.ipykernelNotInstalled().format(
-                        `${interpreter.displayName || interpreter.path}:${interpreter.path}`
-                    ),
-                    result
-                );
-            }
-        } finally {
-            // Don't need to cache anymore
-            this.dependencyPromises.delete(interpreter.path);
         }
     }
 }

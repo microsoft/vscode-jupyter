@@ -33,7 +33,6 @@ import {
     IJupyterSessionManager,
     IJupyterSubCommandExecutionService,
     IKernelDependencyService,
-    KernelInterpreterDependencyResponse
 } from '../../types';
 import { cleanEnvironment, detectDefaultKernelName } from './helpers';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
@@ -197,27 +196,6 @@ export class KernelService {
             }
         }
     }
-    public async searchAndRegisterKernel(
-        resource: Resource,
-        interpreter: PythonEnvironment,
-        disableUI?: boolean,
-        cancelToken?: CancellationToken
-    ): Promise<IJupyterKernelSpec | undefined> {
-        // If a kernelspec already exists for this, then use that.
-        const found = await this.kernelFinder.findKernel(resource, interpreter, cancelToken);
-        if (found && found.kind !== 'connectToLiveKernel' && found.kernelSpec) {
-            sendTelemetryEvent(Telemetry.UseExistingKernel);
-
-            // Make sure the kernel is up to date with the current environment before
-            // we return it.
-            await this.updateKernelEnvironment(interpreter, found.kernelSpec, cancelToken);
-
-            return found.kernelSpec;
-        }
-
-        // Othewise register the interpreter as a new kernel
-        return this.registerKernel(resource, interpreter, disableUI, cancelToken);
-    }
 
     /**
      * Registers an interpreter as a kernel.
@@ -261,16 +239,10 @@ export class KernelService {
         if (!(await this.kernelDependencyService.areDependenciesInstalled(interpreter, cancelToken)) && !disableUI) {
             // If we wish to wait for installation to complete, we must provide a cancel token.
             const token = new CancellationTokenSource();
-            const response = await this.kernelDependencyService.installMissingDependencies(
+            await this.kernelDependencyService.installMissingDependencies(
                 interpreter,
                 wrapCancellationTokens(cancelToken, token.token)
             );
-            if (response !== KernelInterpreterDependencyResponse.ok) {
-                traceWarning(
-                    `Prompted to install ipykernel, however ipykernel not installed in the interpreter ${interpreter.path}. Response ${response}`
-                );
-                return;
-            }
         }
 
         if (Cancellation.isCanceled(cancelToken)) {

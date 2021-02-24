@@ -28,7 +28,7 @@ import { noop } from '../../client/common/utils/misc';
 import { Commands, Identifiers } from '../../client/datascience/constants';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { NativeEditor as NativeEditorWebView } from '../../client/datascience/interactive-ipynb/nativeEditor';
-import { IKernelSpecQuickPickItem } from '../../client/datascience/jupyter/kernels/types';
+import { IKernelSpecQuickPickItem, KernelSpecConnectionMetadata } from '../../client/datascience/jupyter/kernels/types';
 import { KeyPrefix } from '../../client/datascience/notebookStorage/nativeEditorStorage';
 import { NativeEditorNotebookModel } from '../../client/datascience/notebookStorage/notebookModel';
 import {
@@ -418,12 +418,16 @@ suite('DataScience Native Editor', () => {
                             argv: [],
                             env: undefined
                         };
+                        const invalidMetadata: KernelSpecConnectionMetadata = {
+                            kind: 'startUsingKernelSpec',
+                            kernelSpec: invalidKernel
+                        }
 
                         // Allow the invalid kernel to be used
                         const kernelFinderMock = ioc.kernelFinder;
                         when(
-                            kernelFinderMock.findKernelSpec(objectContaining(kernelDesc), anything(), anything())
-                        ).thenResolve(invalidKernel);
+                            kernelFinderMock.findKernel(objectContaining(kernelDesc), anything(), anything())
+                        ).thenResolve(invalidMetadata);
 
                         // Can only do this with the mock. Have to force the first call to changeKernel on the
                         // the jupyter session to fail

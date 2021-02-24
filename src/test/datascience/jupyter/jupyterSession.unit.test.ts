@@ -26,7 +26,6 @@ import { KernelConnectionMetadata, LiveKernelModel } from '../../../client/datas
 import {
     IJupyterConnection,
     IJupyterKernelSpec,
-    KernelInterpreterDependencyResponse
 } from '../../../client/datascience/types';
 import { MockOutputChannel } from '../../mockClasses';
 
@@ -85,9 +84,7 @@ suite('DataScience - JupyterSession', () => {
         const channel = new MockOutputChannel('JUPYTER');
         const kernelDependencyService = mock(KernelDependencyService);
         when(kernelDependencyService.areDependenciesInstalled(anything(), anything())).thenResolve(true);
-        when(kernelDependencyService.installMissingDependencies(anything(), anything(), anything())).thenResolve(
-            KernelInterpreterDependencyResponse.ok
-        );
+        when(kernelDependencyService.installMissingDependencies(anything(), anything(), anything())).thenResolve();
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (instance(session) as any).then = undefined;
         sessionManager = mock(SessionManager);

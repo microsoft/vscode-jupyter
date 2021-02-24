@@ -132,20 +132,6 @@ export interface IKernelSelectionListProvider<T extends KernelConnectionMetadata
     getKernelSelections(resource: Resource, cancelToken?: CancellationToken): Promise<IKernelSpecQuickPickItem<T>[]>;
 }
 
-export interface IKernelSelectionUsage {
-    /**
-     * Given a kernel selection, this method will attempt to use that kernel and return the corresponding Interpreter, Kernel Spec and the like.
-     * This method will also check if required dependencies are installed or not, and will install them if required.
-     */
-    useSelectedKernel(
-        selection: KernelConnectionMetadata,
-        resource: Resource,
-        type: 'raw' | 'jupyter' | 'noConnection',
-        cancelToken?: CancellationToken,
-        disableUI?: boolean
-    ): Promise<KernelConnectionMetadata | undefined>;
-}
-
 export interface IKernel extends IAsyncDisposable {
     readonly uri: Uri;
     readonly kernelConnectionMetadata: Readonly<KernelConnectionMetadata>;

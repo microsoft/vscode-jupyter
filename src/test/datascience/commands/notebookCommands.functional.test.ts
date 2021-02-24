@@ -15,7 +15,6 @@ import { NotebookProvider } from '../../../client/datascience/interactive-common
 import { InteractiveWindowProvider } from '../../../client/datascience/interactive-window/interactiveWindowProvider';
 import { JupyterNotebookBase } from '../../../client/datascience/jupyter/jupyterNotebook';
 import { JupyterSessionManagerFactory } from '../../../client/datascience/jupyter/jupyterSessionManagerFactory';
-import { KernelDependencyService } from '../../../client/datascience/jupyter/kernels/kernelDependencyService';
 import { KernelSelectionProvider } from '../../../client/datascience/jupyter/kernels/kernelSelections';
 import { KernelSelector } from '../../../client/datascience/jupyter/kernels/kernelSelector';
 import { KernelService } from '../../../client/datascience/jupyter/kernels/kernelService';
@@ -26,7 +25,6 @@ import {
     LiveKernelConnectionMetadata,
     PythonKernelConnectionMetadata
 } from '../../../client/datascience/jupyter/kernels/types';
-import { ILocalKernelFinder } from '../../../client/datascience/kernel-launcher/types';
 import { NativeEditorProvider } from '../../../client/datascience/notebookStorage/nativeEditorProvider';
 import { PreferredRemoteKernelIdProvider } from '../../../client/datascience/notebookStorage/preferredRemoteKernelIdProvider';
 import { InterpreterPackages } from '../../../client/datascience/telemetry/interpreterPackages';
@@ -100,7 +98,6 @@ suite('DataScience - Notebook Commands', () => {
                 notebookProvider = mock(NotebookProvider);
                 commandManager = mock(CommandManager);
 
-                const kernelDependencyService = mock(KernelDependencyService);
                 const kernelService = mock(KernelService);
                 kernelSelectionProvider = mock(KernelSelectionProvider);
                 when(kernelSelectionProvider.getKernelSelections(anything(), anything(), anything())).thenCall(
@@ -112,8 +109,6 @@ suite('DataScience - Notebook Commands', () => {
                     }
                 );
                 const appShell = mock(ApplicationShell);
-                const dependencyService = mock(KernelDependencyService);
-                const kernelFinder = mock<ILocalKernelFinder>();
                 const jupyterSessionManagerFactory = mock(JupyterSessionManagerFactory);
                 const dummySessionEvent = new EventEmitter<Kernel.IKernelConnection>();
                 const preferredKernelIdProvider = mock(PreferredRemoteKernelIdProvider);
@@ -141,8 +136,6 @@ suite('DataScience - Notebook Commands', () => {
                     instance(kernelSelectionProvider),
                     instance(appShell),
                     instance(kernelService),
-                    instance(dependencyService),
-                    instance(kernelFinder),
                     instance(configService),
                     instance(extensionChecker),
                     instance(mock(InterpreterPackages))
@@ -151,7 +144,6 @@ suite('DataScience - Notebook Commands', () => {
                 const kernelSwitcher = new KernelSwitcher(
                     instance(configService),
                     instance(appShell),
-                    instance(kernelDependencyService),
                     kernelSelector
                 );
 

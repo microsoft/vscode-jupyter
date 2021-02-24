@@ -72,9 +72,7 @@ suite('DataScience - KernelSelector', () => {
         kernelSelectionProvider = mock(KernelSelectionProvider);
         appShell = mock(ApplicationShell);
         dependencyService = mock(KernelDependencyService);
-        when(dependencyService.installMissingDependencies(anything(), anything())).thenResolve(
-            KernelInterpreterDependencyResponse.ok
-        );
+        when(dependencyService.installMissingDependencies(anything(), anything())).thenResolve();
         interpreterService = mock<IInterpreterService>();
         kernelFinder = mock<ILocalKernelFinder>();
         remoteFinder = mock<IRemoteKernelFinder>();

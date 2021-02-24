@@ -9,7 +9,6 @@ import { IApplicationShell } from '../../../../client/common/application/types';
 import { IInstaller, InstallerResponse, Product } from '../../../../client/common/types';
 import { Common } from '../../../../client/common/utils/localize';
 import { KernelDependencyService } from '../../../../client/datascience/jupyter/kernels/kernelDependencyService';
-import { KernelInterpreterDependencyResponse } from '../../../../client/datascience/types';
 import { createPythonInterpreter } from '../../../utils/interpreters';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -28,27 +27,27 @@ suite('DataScience - Kernel Dependency Service', () => {
     test('Check if ipykernel is installed', async () => {
         when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(true);
 
-        const response = await dependencyService.installMissingDependencies(interpreter);
+        await dependencyService.installMissingDependencies(interpreter);
 
-        assert.equal(response, KernelInterpreterDependencyResponse.ok);
         verify(installer.isInstalled(Product.ipykernel, interpreter)).once();
         verify(installer.isInstalled(anything(), anything())).once();
     });
     test('Do not prompt if if ipykernel is installed', async () => {
         when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(true);
 
-        const response = await dependencyService.installMissingDependencies(interpreter);
+        await dependencyService.installMissingDependencies(interpreter);
 
-        assert.equal(response, KernelInterpreterDependencyResponse.ok);
         verify(appShell.showErrorMessage(anything(), anything(), anything())).never();
     });
     test('Prompt if if ipykernel is not installed', async () => {
         when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(false);
         when(appShell.showErrorMessage(anything(), anything())).thenResolve(Common.install() as any);
 
-        const response = await dependencyService.installMissingDependencies(interpreter);
+        await assert.isRejected(
+            dependencyService.installMissingDependencies(interpreter),
+            'Install should fail because of cancel'
+        );
 
-        assert.equal(response, KernelInterpreterDependencyResponse.cancel);
         verify(appShell.showErrorMessage(anything(), anything(), anything())).never();
     });
     test('Install ipykernel', async () => {
@@ -56,9 +55,7 @@ suite('DataScience - Kernel Dependency Service', () => {
         when(installer.install(Product.ipykernel, interpreter, anything())).thenResolve(InstallerResponse.Installed);
         when(appShell.showErrorMessage(anything(), anything())).thenResolve(Common.install() as any);
 
-        const response = await dependencyService.installMissingDependencies(interpreter);
-
-        assert.equal(response, KernelInterpreterDependencyResponse.ok);
+        await dependencyService.installMissingDependencies(interpreter);
     });
     test('Bubble installation errors', async () => {
         when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(false);

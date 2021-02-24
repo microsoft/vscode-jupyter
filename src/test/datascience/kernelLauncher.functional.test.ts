@@ -27,6 +27,7 @@ import { IPythonExtensionChecker } from '../../client/api/types';
 import { IFileSystem } from '../../client/common/platform/types';
 import { KernelEnvironmentVariablesService } from '../../client/datascience/kernel-launcher/kernelEnvVarsService';
 import { traceInfo } from '../../client/common/logger';
+import { KernelSpecConnectionMetadata } from '../../client/datascience/jupyter/kernels/types';
 use(chaiAsPromised);
 
 const test_Timeout = 30_000;
@@ -135,7 +136,11 @@ suite('DataScience - Kernel Launcher', () => {
                     TEST_VAR: '1'
                 }
             };
-            kernelFinder.addKernelSpec(pythonInterpreter.path, spec);
+            const metadata: KernelSpecConnectionMetadata = {
+                kind: 'startUsingKernelSpec',
+                kernelSpec: spec
+            }
+            kernelFinder.addKernelSpec(pythonInterpreter.path, metadata);
 
             const kernel = await kernelLauncher.launch(
                 { kernelSpec: spec, kind: 'startUsingKernelSpec' },

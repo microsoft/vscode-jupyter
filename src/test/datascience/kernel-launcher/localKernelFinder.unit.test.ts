@@ -20,7 +20,6 @@ import { ILocalKernelFinder } from '../../../client/datascience/kernel-launcher/
 import { IJupyterKernelSpec } from '../../../client/datascience/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
-import { MockExtensions } from '../mockExtensions';
 
 suite('Kernel Finder', () => {
     let interpreterService: typemoq.IMock<IInterpreterService>;
@@ -34,7 +33,6 @@ suite('Kernel Finder', () => {
     let activeInterpreter: PythonEnvironment;
     let interpreters: PythonEnvironment[] = [];
     let resource: Resource;
-    let extensions = new MockExtensions();
     const kernelName = 'testKernel';
     const testKernelMetadata = { name: 'testKernel', display_name: 'Test Display Name' };
     const cacheFile = 'kernelSpecPathCache.json';
@@ -319,8 +317,7 @@ suite('Kernel Finder', () => {
                 instance(workspaceService),
                 instance(executionFactory),
                 envVarsProvider.object,
-                instance(extensionChecker),
-                extensions
+                instance(extensionChecker)
             );
         });
 
@@ -398,8 +395,7 @@ suite('Kernel Finder', () => {
                 instance(workspaceService),
                 instance(executionFactory),
                 envVarsProvider.object,
-                instance(extensionChecker),
-                extensions
+                instance(extensionChecker)
             );
         });
 
@@ -555,7 +551,8 @@ suite('Kernel Finder', () => {
                 kernelspec: { name: 'kernelA', display_name: '' },
                 orig_nbformat: 4
             });
-            assert.equal(spec!.name.includes('kernelA'), true);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            assert.equal((spec as any).kernelSpec.name.includes('kernelA'), true);
             fileSystem.reset();
 
             setupFileSystem();
@@ -582,11 +579,12 @@ suite('Kernel Finder', () => {
                     }
                     return Promise.resolve('{}');
                 });
-            const spec2 = await kernelFinder.findKernelSpec(resource, {
+            const spec2 = await kernelFinder.findKernel(resource, {
                 kernelspec: { name: 'kernelB', display_name: '' },
                 orig_nbformat: 4
             });
-            assert.equal(spec2!.name.includes('kernelB'), true);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            assert.equal((spec2 as any).kernelSpec.name.includes('kernelB'), true);
         });
     });
 });

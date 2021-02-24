@@ -10,9 +10,11 @@ import { createPromiseFromCancellation, wrapCancellationTokens } from '../../../
 import { ProductNames } from '../../../common/installer/productNames';
 import { traceDecorators, traceInfo } from '../../../common/logger';
 import { IInstaller, InstallerResponse, Product } from '../../../common/types';
+import { createDeferredFromPromise, Deferred } from '../../../common/utils/async';
 import { Common, DataScience } from '../../../common/utils/localize';
 import { TraceOptions } from '../../../logging/trace';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
+import { IpyKernelNotInstalledError } from '../../kernel-launcher/types';
 import { IKernelDependencyService, KernelInterpreterDependencyResponse } from '../../types';
 
 /**
@@ -21,6 +23,7 @@ import { IKernelDependencyService, KernelInterpreterDependencyResponse } from '.
  */
 @injectable()
 export class KernelDependencyService implements IKernelDependencyService {
+    private installPromises = new Map<string, Deferred<KernelInterpreterDependencyResponse>>();
     constructor(
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IInstaller) private readonly installer: IInstaller
@@ -34,12 +37,44 @@ export class KernelDependencyService implements IKernelDependencyService {
         interpreter: PythonEnvironment,
         token?: CancellationToken,
         disableUI?: boolean
-    ): Promise<KernelInterpreterDependencyResponse> {
+    ): Promise<void> {
         traceInfo(`installMissingDependencies ${interpreter.path}`);
         if (await this.areDependenciesInstalled(interpreter, token)) {
-            return KernelInterpreterDependencyResponse.ok;
+            return;
         }
 
+        // Cache the install run
+        let deferred = this.installPromises.get(interpreter.path);
+        if (!deferred) {
+            deferred = createDeferredFromPromise(this.runInstaller(interpreter, token, disableUI));
+            this.installPromises.set(interpreter.path, deferred);
+        }
+
+        // Get the result of the question
+        try {
+            const result = await deferred.promise;
+            if (result !== KernelInterpreterDependencyResponse.ok) {
+                throw new IpyKernelNotInstalledError(
+                    DataScience.ipykernelNotInstalled().format(
+                        `${interpreter.displayName || interpreter.path}:${interpreter.path}`
+                    ),
+                    result
+                );
+            }
+        } finally {
+            // Don't need to cache anymore
+            this.installPromises.delete(interpreter.path);
+        }
+    }
+    public areDependenciesInstalled(interpreter: PythonEnvironment, _token?: CancellationToken): Promise<boolean> {
+        return this.installer.isInstalled(Product.ipykernel, interpreter).then((installed) => installed === true);
+    }
+
+    private async runInstaller(
+        interpreter: PythonEnvironment,
+        token?: CancellationToken,
+        disableUI?: boolean
+    ): Promise<KernelInterpreterDependencyResponse> {
         const promptCancellationPromise = createPromiseFromCancellation({
             cancelAction: 'resolve',
             defaultValue: undefined,
@@ -80,8 +115,5 @@ export class KernelDependencyService implements IKernelDependencyService {
             }
         }
         return KernelInterpreterDependencyResponse.cancel;
-    }
-    public areDependenciesInstalled(interpreter: PythonEnvironment, _token?: CancellationToken): Promise<boolean> {
-        return this.installer.isInstalled(Product.ipykernel, interpreter).then((installed) => installed === true);
     }
 }

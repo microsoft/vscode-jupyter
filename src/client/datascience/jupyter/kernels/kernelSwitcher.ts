@@ -10,7 +10,7 @@ import { IConfigurationService } from '../../../common/types';
 import { DataScience } from '../../../common/utils/localize';
 import { JupyterSessionStartError } from '../../baseJupyterSession';
 import { RawKernelSessionStartError } from '../../raw-kernel/rawJupyterSession';
-import { IKernelDependencyService, INotebook, KernelInterpreterDependencyResponse } from '../../types';
+import { INotebook } from '../../types';
 import { JupyterInvalidKernelError } from '../jupyterInvalidKernelError';
 import { getDisplayNameOrNameOfKernelConnection, isLocalLaunch } from './helpers';
 import { KernelSelector } from './kernelSelector';
@@ -21,7 +21,6 @@ export class KernelSwitcher {
     constructor(
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IApplicationShell) private appShell: IApplicationShell,
-        @inject(IKernelDependencyService) private readonly kernelDependencyService: IKernelDependencyService,
         @inject(KernelSelector) private readonly selector: KernelSelector
     ) {}
 
@@ -65,15 +64,6 @@ export class KernelSwitcher {
         }
     }
     private async switchToKernel(notebook: INotebook, kernelConnection: KernelConnectionMetadata): Promise<void> {
-        if (notebook.connection?.type === 'raw' && kernelConnection.interpreter) {
-            const response = await this.kernelDependencyService.installMissingDependencies(
-                kernelConnection.interpreter
-            );
-            if (response === KernelInterpreterDependencyResponse.cancel) {
-                return;
-            }
-        }
-
         const switchKernel = async (newKernelConnection: KernelConnectionMetadata) => {
             // Change the kernel. A status update should fire that changes our display
             await notebook.setKernelConnection(

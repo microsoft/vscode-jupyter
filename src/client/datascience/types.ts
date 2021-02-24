@@ -1339,7 +1339,7 @@ export interface IKernelDependencyService {
         interpreter: PythonEnvironment,
         token?: CancellationToken,
         disableUI?: boolean
-    ): Promise<KernelInterpreterDependencyResponse>;
+    ): Promise<void>;
     areDependenciesInstalled(interpreter: PythonEnvironment, _token?: CancellationToken): Promise<boolean>;
 }
 

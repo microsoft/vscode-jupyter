@@ -29,7 +29,6 @@ import { createDeferred } from '../../../common/utils/async';
 import * as localize from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
 import { IServiceContainer } from '../../../ioc/types';
-import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Identifiers, LiveShare, LiveShareCommands, Settings, Telemetry } from '../../constants';
 import { computeWorkingDirectory } from '../../jupyter/jupyterUtils';
@@ -39,7 +38,7 @@ import { KernelConnectionMetadata } from '../../jupyter/kernels/types';
 import { HostJupyterNotebook } from '../../jupyter/liveshare/hostJupyterNotebook';
 import { LiveShareParticipantHost } from '../../jupyter/liveshare/liveShareParticipantMixin';
 import { IRoleBasedObject } from '../../jupyter/liveshare/roleBasedFactory';
-import { IKernelLauncher, ILocalKernelFinder, IpyKernelNotInstalledError } from '../../kernel-launcher/types';
+import { IKernelLauncher, ILocalKernelFinder } from '../../kernel-launcher/types';
 import { ProgressReporter } from '../../progress/progressReporter';
 import {
     IKernelDependencyService,
@@ -47,9 +46,7 @@ import {
     INotebookExecutionInfo,
     INotebookExecutionLogger,
     IRawNotebookProvider,
-    IRawNotebookSupportedService,
-    KernelInterpreterDependencyResponse
-} from '../../types';
+    IRawNotebookSupportedService} from '../../types';
 import { calculateWorkingDirectory } from '../../utils';
 import { RawJupyterSession } from '../rawJupyterSession';
 import { RawNotebookProviderBase } from '../rawNotebookProvider';
@@ -189,7 +186,7 @@ export class HostRawNotebookProvider
                 }
                 if (kernelConnection.interpreter) {
                     // Install missing dependencies only if we're dealing with a Python kernel.
-                    await this.installDependenciesIntoInterpreter(kernelConnection.interpreter, cancelToken, disableUI);
+                    await this.kernelDependencyService.installMissingDependencies(kernelConnection.interpreter, cancelToken, disableUI);
                 } else {
                     traceError('No interpreter fetched to start a raw kernel');
                 }
@@ -282,28 +279,6 @@ export class HostRawNotebookProvider
         }
 
         return notebookPromise.promise;
-    }
-
-    // If we need to install our dependencies now (for non-native scenarios)
-    // then install ipykernel into the interpreter or throw error
-    private async installDependenciesIntoInterpreter(
-        interpreter: PythonEnvironment,
-        cancelToken?: CancellationToken,
-        disableUI?: boolean
-    ) {
-        const response = await this.kernelDependencyService.installMissingDependencies(
-            interpreter,
-            cancelToken,
-            disableUI
-        );
-        if (response !== KernelInterpreterDependencyResponse.ok) {
-            throw new IpyKernelNotInstalledError(
-                localize.DataScience.ipykernelNotInstalled().format(
-                    `${interpreter.displayName || interpreter.path}:${interpreter.path}`
-                ),
-                response
-            );
-        }
     }
 
     // Get the notebook execution info for this raw session instance

@@ -16,7 +16,6 @@ import { EXTENSION_ROOT_DIR } from '../../../../client/constants';
 import { JupyterSessionStartError } from '../../../../client/datascience/baseJupyterSession';
 import { NotebookProvider } from '../../../../client/datascience/interactive-common/notebookProvider';
 import { JupyterNotebookBase } from '../../../../client/datascience/jupyter/jupyterNotebook';
-import { KernelDependencyService } from '../../../../client/datascience/jupyter/kernels/kernelDependencyService';
 import { KernelSelector } from '../../../../client/datascience/jupyter/kernels/kernelSelector';
 import { KernelSwitcher } from '../../../../client/datascience/jupyter/kernels/kernelSwitcher';
 import { KernelConnectionMetadata, LiveKernelModel } from '../../../../client/datascience/jupyter/kernels/types';
@@ -69,7 +68,6 @@ suite('DataScience - Kernel Switcher', () => {
         kernelSwitcher = new KernelSwitcher(
             instance(configService),
             instance(appShell),
-            instance(mock(KernelDependencyService)),
             instance(kernelSelector)
         );
         when(appShell.withProgress(anything(), anything())).thenCall(async (_, cb: () => Promise<void>) => {
