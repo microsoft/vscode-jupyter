@@ -34,52 +34,6 @@ export class KernelSelector {
         @inject(InterpreterPackages) private readonly interpreterPackages: InterpreterPackages
     ) {}
 
-    /**
-     * Selects a kernel from a remote session.
-     */
-    public async selectRemoteKernel(
-        resource: Resource,
-        stopWatch: StopWatch,
-        connInfo: INotebookProviderConnection | undefined,
-        cancelToken?: CancellationToken,
-        currentKernelDisplayName?: string
-    ): Promise<KernelConnectionMetadata | undefined> {
-        const suggestions = await this.selectionProvider.getKernelSelections(resource, connInfo, cancelToken);
-        const selection = await this.selectKernel(
-            resource,
-            stopWatch,
-            Telemetry.SelectRemoteJupyterKernel,
-            suggestions,
-            cancelToken,
-            currentKernelDisplayName
-        );
-        return cloneDeep(selection);
-    }
-    /**
-     * Select a kernel from a local session.
-     */
-    public async selectLocalKernel(
-        resource: Resource,
-        stopWatch: StopWatch,
-        connInfo: INotebookProviderConnection | undefined,
-        cancelToken?: CancellationToken,
-        currentKernelDisplayName?: string
-    ): Promise<KernelConnectionMetadata | undefined> {
-        const suggestions = await this.selectionProvider.getKernelSelections(resource, connInfo, cancelToken);
-        const selection = await this.selectKernel(
-            resource,
-            stopWatch,
-            Telemetry.SelectLocalJupyterKernel,
-            suggestions,
-            cancelToken,
-            currentKernelDisplayName
-        );
-        if (selection?.interpreter) {
-            this.interpreterPackages.trackPackages(selection.interpreter);
-        }
-        return cloneDeep(selection);
-    }
-
     public async askForLocalKernel(
         resource: Resource,
         connection: INotebookProviderConnection | undefined,
@@ -94,41 +48,70 @@ export class KernelSelector {
         const cancel = localize.Common.cancel();
         const selection = await this.applicationShell.showErrorMessage(message, selectKernel, cancel);
         if (selection === selectKernel) {
-            const item = await this.selectLocalJupyterKernel(resource, connection, displayName);
+            const item = await this.selectJupyterKernel(resource, connection, undefined, displayName);
             return cloneDeep(item);
         }
     }
     public async selectJupyterKernel(
         resource: Resource,
         connection: INotebookProviderConnection | undefined,
+        cancelToken: CancellationToken | undefined,
         currentKernelDisplayName: string | undefined
     ): Promise<KernelConnectionMetadata | undefined> {
         let kernelConnection: KernelConnectionMetadata | undefined;
         const isLocalConnection = connection?.localLaunch ?? isLocalLaunch(this.configService);
 
         if (isLocalConnection) {
-            kernelConnection = await this.selectLocalJupyterKernel(resource, connection, currentKernelDisplayName);
-        } else if (connection && connection.type === 'jupyter') {
-            kernelConnection = await this.selectRemoteJupyterKernel(resource, connection, currentKernelDisplayName);
+            kernelConnection = await this.selectLocalKernel(resource, connection, cancelToken, currentKernelDisplayName);
+        } else {
+            kernelConnection = await this.selectRemoteKernel(resource, connection, cancelToken, currentKernelDisplayName);
         }
         return cloneDeep(kernelConnection);
     }
-
-    private async selectLocalJupyterKernel(
+    /**
+     * Select a kernel from a local session.
+     */
+     private async selectLocalKernel(
         resource: Resource,
         connInfo: INotebookProviderConnection | undefined,
-        currentKernelDisplayName: string | undefined
-    ): Promise<KernelConnectionMetadata | undefined> {
-        return this.selectLocalKernel(resource, new StopWatch(), connInfo, undefined, currentKernelDisplayName);
-    }
-
-    private async selectRemoteJupyterKernel(
-        resource: Resource,
-        connInfo: INotebookProviderConnection | undefined,
+        cancelToken?: CancellationToken,
         currentKernelDisplayName?: string
     ): Promise<KernelConnectionMetadata | undefined> {
         const stopWatch = new StopWatch();
-        return this.selectRemoteKernel(resource, stopWatch, connInfo, undefined, currentKernelDisplayName);
+        const suggestions = await this.selectionProvider.getKernelSelections(resource, connInfo, cancelToken);
+        const selection = await this.selectKernel(
+            resource,
+            stopWatch,
+            Telemetry.SelectLocalJupyterKernel,
+            suggestions,
+            cancelToken,
+            currentKernelDisplayName
+        );
+        if (selection?.interpreter) {
+            this.interpreterPackages.trackPackages(selection.interpreter);
+        }
+        return cloneDeep(selection);
+    }
+    /**
+     * Selects a kernel from a remote session.
+     */
+     private async selectRemoteKernel(
+        resource: Resource,
+        connInfo: INotebookProviderConnection | undefined,
+        cancelToken?: CancellationToken,
+        currentKernelDisplayName?: string
+    ): Promise<KernelConnectionMetadata | undefined> {
+        const stopWatch = new StopWatch();
+        const suggestions = await this.selectionProvider.getKernelSelections(resource, connInfo, cancelToken);
+        const selection = await this.selectKernel(
+            resource,
+            stopWatch,
+            Telemetry.SelectRemoteJupyterKernel,
+            suggestions,
+            cancelToken,
+            currentKernelDisplayName
+        );
+        return cloneDeep(selection);
     }
 
     private async selectKernel<T extends KernelConnectionMetadata>(

@@ -18,7 +18,7 @@ import { IServiceContainer } from '../../ioc/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { JupyterSessionStartError } from '../baseJupyterSession';
-import { Commands, Identifiers, Telemetry } from '../constants';
+import { Identifiers, Telemetry } from '../constants';
 import { ILocalKernelFinder, IRemoteKernelFinder } from '../kernel-launcher/types';
 import { trackKernelResourceInformation } from '../telemetry/telemetry';
 import {
@@ -35,7 +35,7 @@ import {
 import { JupyterSelfCertsError } from './jupyterSelfCertsError';
 import { createRemoteConnectionInfo, expandWorkingDir } from './jupyterUtils';
 import { JupyterWaitForIdleError } from './jupyterWaitForIdleError';
-import { getDisplayNameOrNameOfKernelConnection, kernelConnectionMetadataHasKernelSpec } from './kernels/helpers';
+import { kernelConnectionMetadataHasKernelSpec } from './kernels/helpers';
 import { KernelSelector } from './kernels/kernelSelector';
 import { KernelConnectionMetadata } from './kernels/types';
 import { NotebookStarter } from './notebookStarter';
@@ -225,30 +225,17 @@ export class JupyterExecutionBase implements IJupyterExecution {
                             traceError('Failed to connect to server', ex);
                             if (ex instanceof JupyterSessionStartError && isLocalConnection && allowUI) {
                                 // Keep retrying, until it works or user cancels.
-                                // Sometimes if a bad kernel is selected, starting a session can fail.
-                                // In such cases we need to let the user know about this and prompt them to select another kernel.
-                                const message = localize.DataScience.sessionStartFailedWithKernel().format(
-                                    getDisplayNameOrNameOfKernelConnection(launchInfo.kernelConnectionMetadata),
-                                    Commands.ViewJupyterOutput
+                                const kernelInterpreter = await this.kernelSelector.askForLocalKernel(
+                                    options?.resource,
+                                    connection,
+                                    launchInfo.kernelConnectionMetadata
                                 );
-                                const selectKernel = localize.DataScience.selectDifferentKernel();
-                                const cancel = localize.Common.cancel();
-                                const selection = await this.appShell.showErrorMessage(message, selectKernel, cancel);
-                                if (selection === selectKernel) {
-                                    const kernelInterpreter = await this.kernelSelector.selectLocalKernel(
-                                        options?.resource,
-                                        new StopWatch(),
-                                        connection,
-                                        cancelToken,
-                                        getDisplayNameOrNameOfKernelConnection(launchInfo.kernelConnectionMetadata)
-                                    );
-                                    if (kernelInterpreter) {
-                                        launchInfo.kernelConnectionMetadata = kernelInterpreter;
-                                        trackKernelResourceInformation(options?.resource, {
-                                            kernelConnection: launchInfo.kernelConnectionMetadata
-                                        });
-                                        continue;
-                                    }
+                                if (kernelInterpreter) {
+                                    launchInfo.kernelConnectionMetadata = kernelInterpreter;
+                                    trackKernelResourceInformation(options?.resource, {
+                                        kernelConnection: launchInfo.kernelConnectionMetadata
+                                    });
+                                    continue;
                                 }
                             }
                             throw ex;

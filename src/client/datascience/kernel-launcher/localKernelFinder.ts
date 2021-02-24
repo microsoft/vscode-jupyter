@@ -6,8 +6,10 @@ import type { nbformat } from '@jupyterlab/coreutils';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { CancellationToken } from 'vscode';
+import { arePathsSame } from '../../../datascience-ui/react-common/arePathsSame';
 import { IPythonExtensionChecker } from '../../api/types';
 import { IWorkspaceService } from '../../common/application/types';
+import { PYTHON_LANGUAGE } from '../../common/constants';
 import { traceDecorators, traceError, traceInfo, traceInfoIf } from '../../common/logger';
 import { IFileSystem, IPlatformService } from '../../common/platform/types';
 import { IPythonExecutionFactory } from '../../common/process/types';
@@ -50,8 +52,6 @@ export function isInterpreter(item: nbformat.INotebookMetadata | PythonEnvironme
     return !!(item as PythonEnvironment).path && !(item as nbformat.INotebookMetadata).kernelspec?.display_name;
 }
 
-const isSimplePythonDisplayName = /python\s?\d?\.?\d?/;
-
 // This class searches for a kernel that matches the given kernel name.
 // First it searches on a global persistent state, then on the installed python interpreters,
 // and finally on the default locations that jupyter installs kernels on.
@@ -75,7 +75,7 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IPythonExecutionFactory) private readonly exeFactory: IPythonExecutionFactory,
         @inject(IEnvironmentVariablesProvider) private readonly envVarsProvider: IEnvironmentVariablesProvider,
-        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
+        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker
     ) {}
     @traceDecorators.verbose('Find kernel spec')
     @captureTelemetry(Telemetry.KernelFinderPerf)
@@ -148,57 +148,36 @@ export class LocalKernelFinder implements ILocalKernelFinder {
             this.findResourceInterpreters(resource)
         ]);
 
-        // Filter interpreters using the kernel specs
-        interpreters = interpreters.filter((interpreter) => {
-            // If the interpreter is registered as a kernel then don't inlcude it.
-            if (
-                kernelSpecs.find((installedKernel) => {
-                    const kernelDisplayName = installedKernel.display_name || installedKernel.name || '';
-                    // Possible user has a kernel named `Python` or `Python 3`.
-                    // & if we have such a kernel, we should not display the corresponding interpreter.
-                    if (
-                        kernelDisplayName !== interpreter?.displayName &&
-                        !isSimplePythonDisplayName.test(kernelDisplayName.toLowerCase())
-                    ) {
-                        return false;
-                    }
+        // Then go through all of the kernels and generate their metadata
+        const kernelMetadata = kernelSpecs.map((k) => {
+            // Find the interpreter that matches. If we find one, we want to use
+            // this to start the kernel.
+            const matchingInterpreter = this.findMatchingInterpreter(k, interpreters);
+            if (matchingInterpreter) {
+                const result: PythonKernelConnectionMetadata = {
+                    kind: 'startUsingPythonInterpreter',
+                    kernelSpec: k,
+                    interpreter: matchingInterpreter
+                };
 
-                    // If the python kernel belongs to an existing interpreter with the same path,
-                    // Or if the python kernel has the exact same path as the interpreter, then its a duplicate.
-                    // Paths on windows can either contain \ or / Both work.
-                    // Thus, C:\Python.exe is the same as C:/Python.exe
-                    // In the kernelspec.json we could have paths in argv such as C:\\Python.exe or C:/Python.exe.
-                    const interpreterPathToCheck = (interpreter?.path || '').replace(/\\/g, '/');
-                    return (
-                        this.fs.areLocalPathsSame(
-                            ((installedKernel.argv || [])[0] || '').replace(/\\/g, '/'),
-                            interpreterPathToCheck
-                        ) ||
-                        this.fs.areLocalPathsSame(
-                            (
-                                installedKernel.interpreterPath ||
-                                installedKernel.metadata?.interpreter?.path ||
-                                ''
-                            ).replace(/\\/g, '/'),
-                            interpreterPathToCheck
-                        )
-                    );
-                })
-            ) {
-                return false;
-            }
-            return true;
-        });
+                // If an interpreter was found, remove this item from the interpreter list
+                interpreters = interpreters.filter((i) => i === matchingInterpreter);
 
-        // Combine the two into our list
-        return [
-            ...kernelSpecs.map((k) => {
+                // Return our metadata that uses an interpreter to start
+                return result;
+            } else {
+                // No interpreter found
                 const result: KernelSpecConnectionMetadata = {
                     kind: 'startUsingKernelSpec',
                     kernelSpec: k
                 };
                 return result;
-            }),
+            }
+        });
+
+        // Combine the two into our list
+        return [
+            ...kernelMetadata,
             ...interpreters.map((i) => {
                 const result: PythonKernelConnectionMetadata = {
                     kind: 'startUsingPythonInterpreter',
@@ -208,6 +187,45 @@ export class LocalKernelFinder implements ILocalKernelFinder {
                 return result;
             })
         ];
+    }
+
+    private findMatchingInterpreter(
+        kernelSpec: IJupyterKernelSpec,
+        interpreters: PythonEnvironment[]
+    ): PythonEnvironment | undefined {
+        return interpreters.find((i) => {
+            // If we know for a fact that the kernel spec is a Non-Python kernel, then return nothing.
+            if (kernelSpec.language && kernelSpec.language !== PYTHON_LANGUAGE) {
+                return false;
+            }
+
+            // 1. Check if current interpreter has the same path
+            if (
+                kernelSpec.metadata?.interpreter?.path &&
+                arePathsSame(kernelSpec.metadata?.interpreter?.path, i.path)
+            ) {
+                return true;
+            }
+            
+            // 2. Check if we have a fully qualified path in `argv`
+            const pathInArgv =
+                kernelSpec && Array.isArray(kernelSpec.argv) && kernelSpec.argv.length > 0
+                    ? kernelSpec.argv[0]
+                    : undefined;
+            if (pathInArgv && path.basename(pathInArgv) !== pathInArgv && arePathsSame(pathInArgv, i.path)) {
+                return true;
+            }
+            
+            // 3. Check display name
+            if (kernelSpec.display_name === i.displayName) {
+                return true;
+            }            
+
+            // We used to use Python 2 or Python 3 to match an interpreter based on version
+            // but this seems too ambitious. The kernel spec should just launch with the default
+            // python and no environment. Otherwise how do we know which interpreter is the best
+            // match?
+        });
     }
 
     private async findResourceKernelSpecs(resource: Resource): Promise<IJupyterKernelSpec[]> {
