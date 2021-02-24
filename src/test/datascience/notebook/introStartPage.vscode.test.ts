@@ -5,7 +5,7 @@ import { assert } from 'chai';
 import * as sinon from 'sinon';
 import * as path from 'path';
 import { instance, mock, when } from 'ts-mockito';
-import { Memento } from 'vscode';
+import { Memento, window } from 'vscode';
 import { IApplicationEnvironment, ICommandManager } from '../../../client/common/application/types';
 import { traceInfo } from '../../../client/common/logger';
 import { GLOBAL_MEMENTO, IDisposable, IExtensionContext, IMemento } from '../../../client/common/types';
@@ -73,6 +73,12 @@ suite('DataScience - VSCode Notebook - Native Notebook Experiment', function () 
     });
 
     test('Do not display start page for VS Code Insiders', async () => {
+        console.log(`# of open editos ${assert.equal(notebookEditorProvider.editors.length, 0)}`);
+        console.log(`# of open editos2 ${assert.equal(window.visibleNotebookEditors.length, 0)}`);
+        console.log(`Close all`);
+        await closeActiveWindows();
+        console.log(`# of open editos ${assert.equal(notebookEditorProvider.editors.length, 0)}`);
+        console.log(`# of open editos2 ${assert.equal(window.visibleNotebookEditors.length, 0)}`);
         when(appEnv.channel).thenReturn('insiders');
 
         const startPage = new IntroduceNativeNotebookStartPage(
