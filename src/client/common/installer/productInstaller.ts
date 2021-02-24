@@ -141,6 +141,10 @@ export class DataScienceInstaller extends BaseInstaller {
         cancel?: CancellationToken
     ): Promise<InstallerResponse> {
         const productName = ProductNames.get(product)!;
+        sendTelemetryEvent(Telemetry.PythonModuleInstal, undefined, {
+            action: 'displayed',
+            moduleName: productName
+        });
         const item = await this.appShell.showErrorMessage(
             localize.DataScience.libraryNotInstalled().format(productName),
             'Yes',
