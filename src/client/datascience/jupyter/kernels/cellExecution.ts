@@ -66,7 +66,7 @@ export class CellExecutionFactory {
         private readonly appShell: IApplicationShell,
         private readonly vscNotebook: IVSCodeNotebook,
         private readonly context: IExtensionContext
-    ) { }
+    ) {}
 
     public create(cell: NotebookCell, isPythonKernelConnection: boolean) {
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
@@ -408,13 +408,13 @@ export class CellExecution {
 
         // Listen to messages & chain each (to process them in the order we get them).
         request.onIOPub = (msg) =>
-        (this.requestHandlerChain = this.requestHandlerChain.then(() =>
-            this.handleIOPub(clearState, loggers, msg).catch(noop)
-        ));
+            (this.requestHandlerChain = this.requestHandlerChain.then(() =>
+                this.handleIOPub(clearState, loggers, msg).catch(noop)
+            ));
         request.onReply = (msg) =>
-        (this.requestHandlerChain = this.requestHandlerChain.then(() =>
-            this.handleReply(clearState, msg).catch(noop)
-        ));
+            (this.requestHandlerChain = this.requestHandlerChain.then(() =>
+                this.handleReply(clearState, msg).catch(noop)
+            ));
         request.onStdin = this.handleInputRequest.bind(this, session);
 
         // WARNING: Do not dispose `request`.
