@@ -17,7 +17,6 @@ import * as localize from '../../../../client/common/utils/localize';
 import { JupyterSessionManager } from '../../../../client/datascience/jupyter/jupyterSessionManager';
 import { JupyterSessionManagerFactory } from '../../../../client/datascience/jupyter/jupyterSessionManagerFactory';
 import { KernelSelectionProvider } from '../../../../client/datascience/jupyter/kernels/kernelSelections';
-import { KernelService } from '../../../../client/datascience/jupyter/kernels/kernelService';
 import {
     IKernelSpecQuickPickItem,
     KernelConnectionMetadata,
@@ -36,7 +35,6 @@ import { IInterpreterService } from '../../../../client/interpreter/contracts';
 // eslint-disable-next-line
 suite('DataScience - KernelSelections', () => {
     let kernelSelectionProvider: KernelSelectionProvider;
-    let kernelService: KernelService;
     let kernelFinder: ILocalKernelFinder;
     let remoteKernelFinder: IRemoteKernelFinder;
     let interpreterSelector: IInterpreterSelector;
@@ -153,13 +151,11 @@ suite('DataScience - KernelSelections', () => {
         disposableRegistry.push(eventEmitter);
         when(jupyterSessionManagerFactory.onRestartSessionCreated).thenReturn(eventEmitter.event);
         when(jupyterSessionManagerFactory.onRestartSessionUsed).thenReturn(eventEmitter.event);
-        kernelService = mock(KernelService);
         kernelFinder = mock<ILocalKernelFinder>();
         remoteKernelFinder = mock<IRemoteKernelFinder>();
         pathUtils = mock(PathUtils);
         when(pathUtils.getDisplayName(anything())).thenReturn('<user friendly path>');
         when(pathUtils.getDisplayName(anything(), anything())).thenReturn('<user friendly path>');
-        when(kernelService.findMatchingInterpreter(anything(), anything())).thenResolve(undefined);
         const extensionChecker = mock(PythonExtensionChecker);
         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
         const interpreterService = mock<IInterpreterService>();
@@ -182,7 +178,6 @@ suite('DataScience - KernelSelections', () => {
                 path: ''
             };
         });
-        when(kernelService.getKernelSpecs(instance(sessionManager), anything())).thenResolve([]);
         when(sessionManager.getRunningKernels()).thenResolve(activeKernels);
         when(sessionManager.getRunningSessions()).thenResolve(sessions);
         when(sessionManager.getKernelSpecs()).thenResolve(allSpecs);
@@ -300,7 +295,6 @@ suite('DataScience - KernelSelections', () => {
     });
     test('Should return a list of Local Kernels + Interpreters for local jupyter connection', async () => {
         when(sessionManager.getKernelSpecs()).thenResolve(allSpecs);
-        when(kernelService.getKernelSpecs(anything(), anything())).thenResolve(allSpecs);
         when(kernelFinder.listKernels(anything())).thenResolve(allMetadata);
         when(interpreterSelector.getSuggestions(undefined)).thenResolve(allInterpreters);
 

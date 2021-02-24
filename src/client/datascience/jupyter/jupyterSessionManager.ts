@@ -19,13 +19,13 @@ import {
     IJupyterKernelSpec,
     IJupyterPasswordConnect,
     IJupyterSession,
-    IJupyterSessionManager,
-    IKernelDependencyService
+    IJupyterSessionManager
 } from '../types';
 import { createAuthorizingRequest } from './jupyterRequest';
 import { JupyterSession } from './jupyterSession';
 import { createJupyterWebSocket } from './jupyterWebSocket';
 import { createDefaultKernelSpec } from './kernels/helpers';
+import { JupyterKernelService } from './kernels/jupyterKernelService';
 import { JupyterKernelSpec } from './kernels/jupyterKernelSpec';
 import { KernelConnectionMetadata } from './kernels/types';
 
@@ -59,7 +59,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         private configService: IConfigurationService,
         private readonly appShell: IApplicationShell,
         private readonly stateFactory: IPersistentStateFactory,
-        private readonly kernelDependencyService: IKernelDependencyService
+        private readonly kernelService: JupyterKernelService
     ) {
         this.userAllowsInsecureConnections = this.stateFactory.createGlobalPersistentState<boolean>(
             GlobalStateUserAllowsInsecureConnections,
@@ -187,7 +187,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             this.restartSessionUsedEvent.fire.bind(this.restartSessionUsedEvent),
             workingDirectory,
             this.configService.getSettings().jupyterLaunchTimeout,
-            this.kernelDependencyService
+            this.kernelService
         );
         try {
             await session.connect(this.configService.getSettings().jupyterLaunchTimeout, cancelToken, disableUI);

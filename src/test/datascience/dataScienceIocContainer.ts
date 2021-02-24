@@ -173,7 +173,7 @@ import { JupyterVariables } from '../../client/datascience/jupyter/jupyterVariab
 import { KernelDependencyService } from '../../client/datascience/jupyter/kernels/kernelDependencyService';
 import { KernelSelectionProvider } from '../../client/datascience/jupyter/kernels/kernelSelections';
 import { KernelSelector } from '../../client/datascience/jupyter/kernels/kernelSelector';
-import { KernelService } from '../../client/datascience/jupyter/kernels/kernelService';
+import { JupyterKernelService } from '../../client/datascience/jupyter/kernels/jupyterKernelService';
 import { KernelSwitcher } from '../../client/datascience/jupyter/kernels/kernelSwitcher';
 import { KernelVariables } from '../../client/datascience/jupyter/kernelVariables';
 import { NotebookStarter } from '../../client/datascience/jupyter/notebookStarter';
@@ -382,7 +382,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     private configMap = new Map<string, MockWorkspaceConfiguration>();
     private emptyConfig = new MockWorkspaceConfiguration();
     private workspaceFolders: MockWorkspaceFolder[] = [];
-    private kernelServiceMock = mock(KernelService);
+    private kernelServiceMock = mock(JupyterKernelService);
     private kernelFinderMock = mock(LocalKernelFinder);
     private disposed = false;
     private experimentState = new Map<string, boolean>();
@@ -846,7 +846,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             this.jupyterMock = new MockJupyterManagerFactory(this.serviceManager);
             // When using mocked Jupyter, default to using default kernel.
             when(this.kernelFinderMock.findKernel(anything(), anything(), anything())).thenResolve(undefined);
-            this.serviceManager.addSingletonInstance<KernelService>(KernelService, instance(this.kernelServiceMock));
+            this.serviceManager.addSingletonInstance<JupyterKernelService>(JupyterKernelService, instance(this.kernelServiceMock));
             this.serviceManager.addSingletonInstance<ILocalKernelFinder>(
                 ILocalKernelFinder,
                 instance(this.kernelFinderMock)
@@ -879,7 +879,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
                 IEnvironmentActivationService,
                 EnvironmentActivationService
             );
-            this.serviceManager.addSingleton<KernelService>(KernelService, KernelService);
+            this.serviceManager.addSingleton<JupyterKernelService>(JupyterKernelService, JupyterKernelService);
             this.serviceManager.addSingleton<ILocalKernelFinder>(ILocalKernelFinder, LocalKernelFinder);
             this.serviceManager.addSingleton<IRemoteKernelFinder>(IRemoteKernelFinder, RemoteKernelFinder);
             this.serviceManager.addSingleton<IProcessServiceFactory>(IProcessServiceFactory, ProcessServiceFactory);

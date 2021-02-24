@@ -22,7 +22,6 @@ import {
     IConfigurationService,
     IDisposableRegistry,
     IOutputChannel,
-    ReadWrite,
     Resource
 } from '../../../common/types';
 import { createDeferred } from '../../../common/utils/async';
@@ -33,7 +32,6 @@ import { sendTelemetryEvent } from '../../../telemetry';
 import { Identifiers, LiveShare, LiveShareCommands, Settings, Telemetry } from '../../constants';
 import { computeWorkingDirectory } from '../../jupyter/jupyterUtils';
 import { getDisplayNameOrNameOfKernelConnection, isPythonKernelConnection } from '../../jupyter/kernels/helpers';
-import { KernelService } from '../../jupyter/kernels/kernelService';
 import { KernelConnectionMetadata } from '../../jupyter/kernels/types';
 import { HostJupyterNotebook } from '../../jupyter/liveshare/hostJupyterNotebook';
 import { LiveShareParticipantHost } from '../../jupyter/liveshare/liveShareParticipantMixin';
@@ -41,7 +39,6 @@ import { IRoleBasedObject } from '../../jupyter/liveshare/roleBasedFactory';
 import { IKernelLauncher, ILocalKernelFinder } from '../../kernel-launcher/types';
 import { ProgressReporter } from '../../progress/progressReporter';
 import {
-    IKernelDependencyService,
     INotebook,
     INotebookExecutionInfo,
     INotebookExecutionLogger,
@@ -74,8 +71,6 @@ export class HostRawNotebookProvider
         private progressReporter: ProgressReporter,
         private outputChannel: IOutputChannel,
         rawNotebookSupported: IRawNotebookSupportedService,
-        private readonly kernelDependencyService: IKernelDependencyService,
-        private readonly kernelService: KernelService,
         private readonly extensionChecker: IPythonExtensionChecker,
         private readonly vscodeNotebook: IVSCodeNotebook
     ) {
@@ -170,25 +165,6 @@ export class HostRawNotebookProvider
                     sendTelemetryEvent(Telemetry.AttemptedToLaunchRawKernelWithoutInterpreter, undefined, {
                         pythonExtensionInstalled: this.extensionChecker.isPythonExtensionInstalled
                     });
-                    // Temporary, if there's no telemetry for this, then its safe to remove
-                    // this code as well as the code where we initialize the interpreter via a hack.
-                    // This is used to check if there are situations under which this is possible & to safeguard against it.
-                    // The only real world scenario is when users do not install Python (which we cannot prevent).
-                    const readWriteConnection = kernelConnection as ReadWrite<KernelConnectionMetadata>;
-                    readWriteConnection.interpreter = await this.kernelService.findMatchingInterpreter(
-                        kernelConnection.kernelSpec,
-                        cancelToken
-                    );
-                    if (readWriteConnection.kind === 'startUsingKernelSpec') {
-                        readWriteConnection.kernelSpec.interpreterPath =
-                            readWriteConnection.kernelSpec.interpreterPath || readWriteConnection.interpreter?.path;
-                    }
-                }
-                if (kernelConnection.interpreter) {
-                    // Install missing dependencies only if we're dealing with a Python kernel.
-                    await this.kernelDependencyService.installMissingDependencies(kernelConnection.interpreter, cancelToken, disableUI);
-                } else {
-                    traceError('No interpreter fetched to start a raw kernel');
                 }
             }
             // We need to locate kernelspec and possible interpreter for this launch based on resource and notebook metadata

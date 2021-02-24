@@ -17,7 +17,6 @@ import { JupyterNotebookBase } from '../../../client/datascience/jupyter/jupyter
 import { JupyterSessionManagerFactory } from '../../../client/datascience/jupyter/jupyterSessionManagerFactory';
 import { KernelSelectionProvider } from '../../../client/datascience/jupyter/kernels/kernelSelections';
 import { KernelSelector } from '../../../client/datascience/jupyter/kernels/kernelSelector';
-import { KernelService } from '../../../client/datascience/jupyter/kernels/kernelService';
 import { KernelSwitcher } from '../../../client/datascience/jupyter/kernels/kernelSwitcher';
 import {
     IKernelSpecQuickPickItem,
@@ -98,7 +97,6 @@ suite('DataScience - Notebook Commands', () => {
                 notebookProvider = mock(NotebookProvider);
                 commandManager = mock(CommandManager);
 
-                const kernelService = mock(KernelService);
                 kernelSelectionProvider = mock(KernelSelectionProvider);
                 when(kernelSelectionProvider.getKernelSelections(anything(), anything(), anything())).thenCall(
                     (_a, b, _c) => {
@@ -135,9 +133,7 @@ suite('DataScience - Notebook Commands', () => {
                 const kernelSelector = new KernelSelector(
                     instance(kernelSelectionProvider),
                     instance(appShell),
-                    instance(kernelService),
                     instance(configService),
-                    instance(extensionChecker),
                     instance(mock(InterpreterPackages))
                 );
 

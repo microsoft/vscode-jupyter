@@ -20,7 +20,6 @@ import {
 } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import { DataScienceStartupTime, JUPYTER_OUTPUT_CHANNEL } from '../constants';
-import { KernelService } from '../jupyter/kernels/kernelService';
 import { KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { IRoleBasedObject, RoleBasedFactory } from '../jupyter/liveshare/roleBasedFactory';
 import { ILiveShareHasRole } from '../jupyter/liveshare/types';
@@ -28,7 +27,6 @@ import { IKernelLauncher, ILocalKernelFinder } from '../kernel-launcher/types';
 import { ProgressReporter } from '../progress/progressReporter';
 import {
     ConnectNotebookProviderOptions,
-    IKernelDependencyService,
     INotebook,
     IRawConnection,
     IRawNotebookProvider,
@@ -56,8 +54,6 @@ type RawNotebookProviderClassType = {
         progressReporter: ProgressReporter,
         outputChannel: IOutputChannel,
         rawKernelSupported: IRawNotebookSupportedService,
-        kernelDependencyService: IKernelDependencyService,
-        kernelService: KernelService,
         extensionChecker: IPythonExtensionChecker,
         vscNotebook: IVSCodeNotebook
     ): IRawNotebookProviderInterface;
@@ -85,8 +81,6 @@ export class RawNotebookProviderWrapper implements IRawNotebookProvider, ILiveSh
         @inject(ProgressReporter) progressReporter: ProgressReporter,
         @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) outputChannel: IOutputChannel,
         @inject(IRawNotebookSupportedService) rawNotebookSupported: IRawNotebookSupportedService,
-        @inject(IKernelDependencyService) kernelDependencyService: IKernelDependencyService,
-        @inject(KernelService) kernelService: KernelService,
         @inject(IPythonExtensionChecker) extensionChecker: IPythonExtensionChecker,
         @inject(IVSCodeNotebook) vscNotebook: IVSCodeNotebook
     ) {
@@ -110,8 +104,6 @@ export class RawNotebookProviderWrapper implements IRawNotebookProvider, ILiveSh
             progressReporter,
             outputChannel,
             rawNotebookSupported,
-            kernelDependencyService,
-            kernelService,
             extensionChecker,
             vscNotebook
         );

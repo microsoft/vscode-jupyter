@@ -23,12 +23,12 @@ import { reportAction } from '../progress/decorator';
 import { ReportableAction } from '../progress/types';
 import {
     IJupyterConnection,
-    IKernelDependencyService,
     ISessionWithSocket} from '../types';
 import { JupyterInvalidKernelError } from './jupyterInvalidKernelError';
 import { JupyterWaitForIdleError } from './jupyterWaitForIdleError';
 import { JupyterWebSockets } from './jupyterWebSocket';
 import { getNameOfKernelConnection } from './kernels/helpers';
+import { JupyterKernelService } from './kernels/jupyterKernelService';
 import { KernelConnectionMetadata } from './kernels/types';
 
 export class JupyterSession extends BaseJupyterSession {
@@ -43,7 +43,7 @@ export class JupyterSession extends BaseJupyterSession {
         restartSessionUsed: (id: Kernel.IKernelConnection) => void,
         readonly workingDirectory: string,
         private readonly idleTimeout: number,
-        private readonly kernelDependencyService: IKernelDependencyService
+        private readonly kernelService: JupyterKernelService
     ) {
         super(restartSessionUsed, workingDirectory, idleTimeout);
         this.kernelConnectionMetadata = kernelSpec;
@@ -212,11 +212,8 @@ export class JupyterSession extends BaseJupyterSession {
 
         // Make sure the kernel has ipykernel installed if on a local machine.
         if (kernelConnection?.interpreter && this.connInfo.localLaunch) {
-            await this.kernelDependencyService.installMissingDependencies(
-                kernelConnection.interpreter,
-                cancelToken,
-                disableUI
-            );
+            // Make sure the kernel actually exists and is up to date.
+            await this.kernelService.ensureKernelIsUsable(undefined, kernelConnection, cancelToken, disableUI);
         }
 
         // Create our session options using this temporary notebook and our connection info

@@ -8,11 +8,10 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import { CancellationToken, CancellationTokenSource } from 'vscode';
-import { IPythonExtensionChecker } from '../../../api/types';
 import { Cancellation, wrapCancellationTokens } from '../../../common/cancellation';
-import { PYTHON_LANGUAGE, PYTHON_WARNINGS } from '../../../common/constants';
+import { PYTHON_WARNINGS } from '../../../common/constants';
 import '../../../common/extensions';
-import { traceDecorators, traceError, traceInfo, traceVerbose, traceWarning } from '../../../common/logger';
+import { traceDecorators, traceError, traceInfo, traceWarning } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 
 import { IPythonExecutionFactory } from '../../../common/process/types';
@@ -20,7 +19,6 @@ import { ReadWrite, Resource } from '../../../common/types';
 import { sleep } from '../../../common/utils/async';
 import { noop } from '../../../common/utils/misc';
 import { IEnvironmentActivationService } from '../../../interpreter/activation/types';
-import { IInterpreterService } from '../../../interpreter/contracts';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
 import { getRealPath } from '../../common';
@@ -30,170 +28,62 @@ import { reportAction } from '../../progress/decorator';
 import { ReportableAction } from '../../progress/types';
 import {
     IJupyterKernelSpec,
-    IJupyterSessionManager,
-    IJupyterSubCommandExecutionService,
-    IKernelDependencyService,
+    IKernelDependencyService
 } from '../../types';
-import { cleanEnvironment, detectDefaultKernelName } from './helpers';
+import { cleanEnvironment } from './helpers';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
-import { LiveKernelModel } from './types';
+import { KernelConnectionMetadata } from './types';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const NamedRegexp = require('named-js-regexp') as typeof import('named-js-regexp');
 
 /**
- * Responsible for kernel management and the like.
+ * Responsible for registering and updating kernels
  *
  * @export
- * @class KernelService
+ * @class JupyterKernelService
  */
 @injectable()
-export class KernelService {
+export class JupyterKernelService {
     constructor(
-        @inject(IJupyterSubCommandExecutionService)
-        private readonly jupyterInterpreterExecService: IJupyterSubCommandExecutionService,
         @inject(IPythonExecutionFactory) private readonly execFactory: IPythonExecutionFactory,
-        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IKernelDependencyService) private readonly kernelDependencyService: IKernelDependencyService,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IEnvironmentActivationService) private readonly activationHelper: IEnvironmentActivationService,
-        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(ILocalKernelFinder) private readonly kernelFinder: ILocalKernelFinder
     ) {}
 
     /**
-     * Given a kernel, this will find an interpreter that matches the kernel spec.
-     * Note: When we create our own kernels on behalf of the user, the meta data contains the interpreter information.
-     *
-     * @param {IJupyterKernelSpec} kernelSpec
-     * @param {CancellationToken} [cancelToken]
-     * @returns {(Promise<PythonEnvironment | undefined>)}
-     * @memberof KernelService
+     * Makes sure that the kernel pointed to is a valid jupyter kernel (it registers it) and
+     * that is up to date relative to the interpreter that it might contain
+     * @param resource
+     * @param kernel
      */
-    // eslint-disable-next-line complexity
-    @traceDecorators.verbose('Find matching interpreter for a given kernel spec')
-    public async findMatchingInterpreter(
-        kernelSpec: IJupyterKernelSpec | LiveKernelModel,
-        cancelToken?: CancellationToken
-    ): Promise<PythonEnvironment | undefined> {
-        // If we know for a fact that the kernel spec is a Non-Python kernel, then return nothing.
-        if (kernelSpec?.language && kernelSpec.language !== PYTHON_LANGUAGE) {
-            return;
-        }
-        if (!this.extensionChecker.isPythonExtensionInstalled) {
-            return;
-        }
-        const activeInterpreterPromise = this.interpreterService.getActiveInterpreter(undefined);
-        const allInterpretersPromise = this.interpreterService.getInterpreters(undefined);
-        // Ensure we handle errors if any (this is required to ensure we do not exit this function without using this promise).
-        // If promise is rejected and we do not use it, then ignore errors.
-        activeInterpreterPromise.ignoreErrors();
-        // Ensure we handle errors if any (this is required to ensure we do not exit this function without using this promise).
-        // If promise is rejected and we do not use it, then ignore errors.
-        allInterpretersPromise.ignoreErrors();
+    public async ensureKernelIsUsable(
+        resource: Resource,
+        kernel: KernelConnectionMetadata,
+        cancelToken?: CancellationToken,
+        disableUI?: boolean
+    ): Promise<void> {
+        // If we wish to wait for installation to complete, we must provide a cancel token.
+        const tokenSource = new CancellationTokenSource();
+        const token = wrapCancellationTokens(cancelToken, tokenSource.token);
 
-        // 1. Check if current interpreter has the same path
-        const interpreterPath = kernelSpec.metadata?.interpreter?.path || kernelSpec.interpreterPath;
-        if (interpreterPath) {
-            const interpreter = await this.interpreterService.getInterpreterDetails(interpreterPath);
-            if (interpreter) {
-                traceInfo(
-                    `Found matching interpreter based on interpreter or interpreterPath in metadata, for the kernel ${kernelSpec.name}, ${kernelSpec.display_name}, ${interpreterPath}`
-                );
-                return interpreter;
-            }
-            traceError(
-                `KernelSpec has interpreter information, however a matching interpreter could not be found for ${interpreterPath}`
-            );
+        // If we have an interpreter, make sure it has the correct dependencies installed
+        if (kernel.kind !== 'connectToLiveKernel' && kernel.interpreter) {
+            await this.kernelDependencyService.installMissingDependencies(kernel.interpreter, token, disableUI);
         }
 
-        // 2. Check if we have a fully qualified path in `argv`
-        const pathInArgv =
-            Array.isArray(kernelSpec.argv) && kernelSpec.argv.length > 0 ? kernelSpec.argv[0] : undefined;
-        if (pathInArgv && path.basename(pathInArgv) !== pathInArgv) {
-            const interpreter = await this.interpreterService.getInterpreterDetails(pathInArgv).catch((ex) => {
-                traceError(
-                    `Failed to get interpreter information for python defined in kernel ${kernelSpec.name}, ${
-                        kernelSpec.display_name
-                    } with argv: ${(kernelSpec.argv || [])?.join(',')}`,
-                    ex
-                );
-                return;
-            });
-            if (interpreter) {
-                traceInfo(
-                    `Found matching interpreter based on argv in metadata, for the kernel ${kernelSpec.name}, ${kernelSpec.display_name}, ${pathInArgv}`
-                );
-                return interpreter;
+        // If the spec file doesn't exist or is not defined, we need to register this kernel
+        if (kernel.kind !== 'connectToLiveKernel' && kernel.kernelSpec && kernel.interpreter) {
+            if (!kernel.kernelSpec.specFile || !(await this.fs.localFileExists(kernel.kernelSpec.specFile))) {
+                await this.registerKernel(resource, kernel.interpreter, token);
             }
-            traceError(
-                `KernelSpec has path information, however a matching interpreter could not be found for ${kernelSpec.metadata?.interpreter?.path}`
-            );
-        }
-        if (Cancellation.isCanceled(cancelToken)) {
-            return;
         }
 
-        // 3. Check if current interpreter has the same display name
-        const activeInterpreter = await activeInterpreterPromise;
-        // If the display name matches the active interpreter then use that.
-        if (kernelSpec.display_name === activeInterpreter?.displayName) {
-            return activeInterpreter;
-        }
-
-        // Check if kernel is `Python2` or `Python3` or a similar generic kernel.
-        const match = detectDefaultKernelName(kernelSpec.name);
-        if (match && match.groups()) {
-            // 3. Look for interpreter with same major version
-
-            const majorVersion = parseInt(match.groups()!.version, 10) || 0;
-            // If the major versions match, that's sufficient.
-            if (!majorVersion || (activeInterpreter?.version && activeInterpreter.version.major === majorVersion)) {
-                traceInfo(
-                    `Using current interpreter for kernel ${kernelSpec.name}, ${kernelSpec.display_name}, (interpreter is ${activeInterpreter?.displayName} # ${activeInterpreter?.path})`
-                );
-                return activeInterpreter;
-            }
-
-            // Find an interpreter that matches the
-            const allInterpreters = await allInterpretersPromise;
-            const found = allInterpreters.find((item) => item.version?.major === majorVersion);
-
-            // If we cannot find a matching one, then use the current interpreter.
-            if (found) {
-                traceVerbose(
-                    `Using interpreter ${found.path} for the kernel ${kernelSpec.name}, ${kernelSpec.display_name}`
-                );
-                return found;
-            }
-
-            traceWarning(
-                `Unable to find an interpreter that matches the kernel ${kernelSpec.name}, ${kernelSpec.display_name}, some features might not work , (interpreter is ${activeInterpreter?.displayName} # ${activeInterpreter?.path}).`
-            );
-            return activeInterpreter;
-        } else {
-            // 5. Look for interpreter with same display name across all interpreters.
-
-            // If the display name matches the active interpreter then use that.
-            // Look in all of our interpreters if we have something that matches this.
-            const allInterpreters = await allInterpretersPromise;
-            if (Cancellation.isCanceled(cancelToken)) {
-                return;
-            }
-
-            const found = allInterpreters.find((item) => item.displayName === kernelSpec.display_name);
-
-            if (found) {
-                traceVerbose(
-                    `Found an interpreter that has the same display name as kernelspec ${kernelSpec.display_name}, matches interpreter ${found.displayName} # ${found.path}`
-                );
-                return found;
-            } else {
-                traceWarning(
-                    `Unable to determine version of Python interpreter to use for kernel ${kernelSpec.name}, ${kernelSpec.display_name}, some features might not work , (interpreter is ${activeInterpreter?.displayName} # ${activeInterpreter?.path}).`
-                );
-                return activeInterpreter;
-            }
+        // Update the kernel environment to use the interpreter's latest
+        if (kernel.kind !== 'connectToLiveKernel' && kernel.kernelSpec && kernel.interpreter) {
+            await this.updateKernelEnvironment(kernel.interpreter, kernel.kernelSpec, token);
         }
     }
 
@@ -217,10 +107,9 @@ export class KernelService {
     @traceDecorators.error('Failed to register an interpreter as a kernel')
     @reportAction(ReportableAction.KernelsRegisterKernel)
     // eslint-disable-next-line
-    public async registerKernel(
+    private async registerKernel(
         resource: Resource,
         interpreter: PythonEnvironment,
-        disableUI?: boolean,
         cancelToken?: CancellationToken
     ): Promise<IJupyterKernelSpec | undefined> {
         if (!interpreter.displayName) {
@@ -235,20 +124,6 @@ export class KernelService {
         // Swallow errors if we get out of here and not resolve this.
         execServicePromise.ignoreErrors();
         const name = this.generateKernelNameForInterpreter(interpreter);
-        // If ipykernel is not installed, prompt to install it.
-        if (!(await this.kernelDependencyService.areDependenciesInstalled(interpreter, cancelToken)) && !disableUI) {
-            // If we wish to wait for installation to complete, we must provide a cancel token.
-            const token = new CancellationTokenSource();
-            await this.kernelDependencyService.installMissingDependencies(
-                interpreter,
-                wrapCancellationTokens(cancelToken, token.token)
-            );
-        }
-
-        if (Cancellation.isCanceled(cancelToken)) {
-            return;
-        }
-
         const execService = await execServicePromise;
         const output = await execService.execModule(
             'ipykernel',
@@ -311,16 +186,13 @@ export class KernelService {
             throw new Error(error);
         }
 
-        // Update the json with our environment.
-        await this.updateKernelEnvironment(interpreter, kernel, cancelToken, true);
-
         sendTelemetryEvent(Telemetry.RegisterAndUseInterpreterAsKernel);
         traceInfo(
             `Kernel successfully registered for ${interpreter.path} with the name=${name} and spec can be found here ${kernel.specFile}`
         );
         return kernel;
     }
-    public async updateKernelEnvironment(
+    private async updateKernelEnvironment(
         interpreter: PythonEnvironment | undefined,
         kernel: IJupyterKernelSpec,
         cancelToken?: CancellationToken,
@@ -391,40 +263,7 @@ export class KernelService {
             specedKernel.metadata = specModel.metadata;
         }
     }
-    /**
-     * Gets a list of all kernel specs.
-     *
-     * @param {IJupyterSessionManager} [sessionManager]
-     * @param {CancellationToken} [cancelToken]
-     * @returns {Promise<IJupyterKernelSpec[]>}
-     * @memberof KernelService
-     */
-    @reportAction(ReportableAction.KernelsGetKernelSpecs)
-    public async getKernelSpecs(
-        sessionManager?: IJupyterSessionManager,
-        cancelToken?: CancellationToken
-    ): Promise<IJupyterKernelSpec[]> {
-        const enumerator = sessionManager
-            ? sessionManager.getKernelSpecs()
-            : this.jupyterInterpreterExecService.getKernelSpecs(cancelToken);
-        if (Cancellation.isCanceled(cancelToken)) {
-            return [];
-        }
-        traceInfo('Enumerating kernel specs...');
-        const specs: IJupyterKernelSpec[] = await enumerator;
-        const result = specs.filter((item) => !!item);
-        traceInfo(`Found ${result.length} kernelspecs`);
 
-        // Send telemetry on this enumeration.
-        const anyPython = result.find((k) => k.language === 'python') !== undefined;
-        sendTelemetryEvent(Telemetry.KernelEnumeration, undefined, {
-            count: result.length,
-            isPython: anyPython,
-            source: sessionManager ? 'connection' : 'cli'
-        });
-
-        return result;
-    }
     /**
      * Not all characters are allowed in a kernel name.
      * This method will generate a name for a kernel based on display name and path.

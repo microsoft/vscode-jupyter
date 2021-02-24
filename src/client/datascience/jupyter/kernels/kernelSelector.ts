@@ -4,24 +4,19 @@ import { inject, injectable } from 'inversify';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
 import { CancellationToken } from 'vscode-jsonrpc';
-import { IPythonExtensionChecker } from '../../../api/types';
 import { IApplicationShell } from '../../../common/application/types';
 import '../../../common/extensions';
 import { IConfigurationService, Resource } from '../../../common/types';
 import * as localize from '../../../common/utils/localize';
 import { StopWatch } from '../../../common/utils/stopWatch';
 import { sendTelemetryEvent } from '../../../telemetry';
-import { sendNotebookOrKernelLanguageTelemetry } from '../../common';
 import { Commands, Telemetry } from '../../constants';
 import { sendKernelListTelemetry } from '../../telemetry/kernelTelemetry';
 import { sendKernelTelemetryEvent } from '../../telemetry/telemetry';
 import { INotebookProviderConnection } from '../../types';
-import { createDefaultKernelSpec, getDisplayNameOrNameOfKernelConnection, isLocalLaunch } from './helpers';
+import { getDisplayNameOrNameOfKernelConnection, isLocalLaunch } from './helpers';
 import { KernelSelectionProvider } from './kernelSelections';
-import { KernelService } from './kernelService';
-import {
-    IKernelSpecQuickPickItem,
-    KernelConnectionMetadata} from './types';
+import { IKernelSpecQuickPickItem, KernelConnectionMetadata } from './types';
 import { InterpreterPackages } from '../../telemetry/interpreterPackages';
 
 /**
@@ -35,9 +30,7 @@ export class KernelSelector {
     constructor(
         @inject(KernelSelectionProvider) private readonly selectionProvider: KernelSelectionProvider,
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
-        @inject(KernelService) private readonly kernelService: KernelService,
         @inject(IConfigurationService) private configService: IConfigurationService,
-        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(InterpreterPackages) private readonly interpreterPackages: InterpreterPackages
     ) {}
 
@@ -159,42 +152,6 @@ export class KernelSelector {
             this.interpreterPackages.trackPackages(selection.selection.interpreter);
         }
         sendKernelTelemetryEvent(resource, Telemetry.SwitchKernel);
-        return (this.useSelectedKernel(selection.selection, cancelToken) as unknown) as T | undefined;
-    }
-
-    private async useSelectedKernel(
-        selection: KernelConnectionMetadata,
-        cancelToken?: CancellationToken
-    ): Promise<KernelConnectionMetadata | undefined> {
-        // Check if ipykernel is installed in this kernel.
-        if (selection.kind === 'connectToLiveKernel') {
-            sendNotebookOrKernelLanguageTelemetry(Telemetry.SwitchToExistingKernel, selection.kernelModel.language);
-            const interpreter = selection.interpreter
-                ? selection.interpreter
-                : selection.kernelModel && this.extensionChecker.isPythonExtensionInstalled
-                ? await this.kernelService.findMatchingInterpreter(selection.kernelModel, cancelToken)
-                : undefined;
-            return cloneDeep({
-                interpreter,
-                kernelModel: selection.kernelModel,
-                kind: 'connectToLiveKernel'
-            });
-        } else if (selection.kernelSpec) {
-            sendNotebookOrKernelLanguageTelemetry(Telemetry.SwitchToExistingKernel, selection.kernelSpec.language);
-            const interpreter = selection.interpreter
-                ? selection.interpreter
-                : selection.kernelSpec && this.extensionChecker.isPythonExtensionInstalled
-                ? await this.kernelService.findMatchingInterpreter(selection.kernelSpec, cancelToken)
-                : undefined;
-            await this.kernelService.updateKernelEnvironment(interpreter, selection.kernelSpec, cancelToken);
-            return cloneDeep({ kernelSpec: selection.kernelSpec, interpreter, kind: 'startUsingKernelSpec' });
-        } else if (selection.interpreter) {
-            sendTelemetryEvent(Telemetry.SwitchToInterpreterAsKernel);
-            // No kernelspec just create a dummy one
-            const kernelSpec = createDefaultKernelSpec(selection.interpreter);
-            return { kernelSpec, interpreter: selection.interpreter, kind: 'startUsingPythonInterpreter' };
-        } else {
-            return;
-        }
+        return selection.selection;
     }
 }
