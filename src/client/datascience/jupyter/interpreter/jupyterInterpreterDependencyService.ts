@@ -138,7 +138,7 @@ export class JupyterInterpreterDependencyService {
 
         const message = getMessageForLibrariesNotInstalled(missingProducts, interpreter.displayName);
         sendTelemetryEvent(Telemetry.PythonModuleInstal, undefined, {
-            action:'displayed',
+            action: 'displayed',
             moduleName: ProductNames.get(Product.jupyter)!
         });
         sendTelemetryEvent(Telemetry.JupyterNotInstalledErrorShown);

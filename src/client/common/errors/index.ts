@@ -21,7 +21,7 @@ export function populateTelemetryWithErrorInfo(props: Partial<TelemetryErrorProp
         // Helps us determine that we are rejecting with errors in some places, in which case we aren't getting meaningful errors/data.
         props.failureSubCategory = 'errorisstring';
     }
-    const stdErr =( error instanceof BaseError ? error.stdErr : error.stack) || '';
+    const stdErr = (error instanceof BaseError ? error.stdErr : error.stack) || '';
     if (!stdErr) {
         return;
     }

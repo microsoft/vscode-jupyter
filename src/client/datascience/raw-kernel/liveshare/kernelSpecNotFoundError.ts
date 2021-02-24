@@ -4,7 +4,7 @@
 import { BaseError } from '../../../common/errors/types';
 
 export class KernelSpecNotFoundError extends BaseError {
-    constructor(){
+    constructor() {
         super('kernelspecnotfound', 'Failed to find a kernelspec to use for ipykernel launch');
     }
 }
