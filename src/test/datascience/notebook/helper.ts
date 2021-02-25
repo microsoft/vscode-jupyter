@@ -208,7 +208,7 @@ export async function shutdownAllNotebooks() {
         ...notebookProvider.activeNotebooks.map(async (item) => (await item).dispose()),
         kernelProvider.dispose()
     ]);
-    NativeEditorProvider.clear();
+    NativeEditorProvider.clearAndDisposeAll();
 }
 
 export async function ensureNewNotebooksHavePythonCells() {

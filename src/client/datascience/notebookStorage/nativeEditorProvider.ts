@@ -36,6 +36,7 @@ import {
     WORKSPACE_MEMENTO
 } from '../../common/types';
 import { createDeferred } from '../../common/utils/async';
+import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { generateNewNotebookUri } from '../common';
@@ -167,7 +168,23 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
             delete: () => this.storage.deleteBackup(model, id).ignoreErrors() // This cleans up after save has happened.
         };
     }
-    public static clear() {
+    /**
+     * Clear and dispose everything in tests.
+     */
+    public static clearAndDisposeAll() {
+        const items = Array.from(NativeEditorProvider.instance.openedEditors.keys());
+        items.map((item) => {
+            try {
+                item.dispose();
+            } catch (ex) {
+                noop;
+            }
+            try {
+                item.model.dispose();
+            } catch (ex) {
+                noop;
+            }
+        });
         NativeEditorProvider.instance.openedEditors.clear();
     }
     public async resolveCustomEditor(document: CustomDocument, panel: WebviewPanel) {
