@@ -166,7 +166,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
 
     constructor(props: ISlickGridProps) {
         super(props);
-        this.state = { fontSize: 15 };
+        this.state = { fontSize: 15, showingFilters: true };
         this.containerRef = React.createRef<HTMLDivElement>();
         this.measureRef = React.createRef<HTMLDivElement>();
         this.props.rowsAdded.subscribe(this.addedRows);
@@ -385,7 +385,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
     private slickgridFocus = (_e: any): void => {
         if (this.state.grid) {
             if (!this.state.grid.getActiveCell()) {
-                this.state.grid.setActiveCell(0, 0);
+                this.state.grid.setActiveCell(0, 1);
             }
         }
     };
