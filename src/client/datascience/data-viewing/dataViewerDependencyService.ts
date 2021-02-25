@@ -8,6 +8,7 @@ import { SemVer } from 'semver';
 import { CancellationToken } from 'vscode';
 import { IApplicationShell } from '../../common/application/types';
 import { Cancellation, createPromiseFromCancellation, wrapCancellationTokens } from '../../common/cancellation';
+import { ProductNames } from '../../common/installer/productNames';
 import { traceWarning } from '../../common/logger';
 import { IPythonExecutionFactory } from '../../common/process/types';
 import { IInstaller, InstallerResponse, Product } from '../../common/types';
@@ -63,6 +64,10 @@ export class DataViewerDependencyService {
         interpreter?: PythonEnvironment,
         token?: CancellationToken
     ): Promise<void> {
+        sendTelemetryEvent(Telemetry.PythonModuleInstal, undefined, {
+            action: 'displayed',
+            moduleName: ProductNames.get(Product.pandas)!
+        });
         const selection = await this.applicationShell.showErrorMessage(
             DataScience.pandasRequiredForViewing(),
             Common.install()

@@ -60,6 +60,7 @@ export class KernelExecution implements IDisposable {
 
     @captureTelemetry(Telemetry.ExecuteNativeCell, undefined, true)
     public async executeCell(notebookPromise: Promise<INotebook>, cell: NotebookCell): Promise<void> {
+        sendKernelTelemetryEvent(cell.notebook.uri, Telemetry.ExecuteNativeCell);
         const editor = this.vscNotebook.notebookEditors.find((item) => item.document === cell.notebook);
         if (!editor) {
             // No editor, possible it was closed.
@@ -80,6 +81,7 @@ export class KernelExecution implements IDisposable {
     @captureTelemetry(Telemetry.ExecuteNativeCell, undefined, true)
     @captureTelemetry(VSCodeNativeTelemetry.RunAllCells, undefined, true)
     public async executeAllCells(notebookPromise: Promise<INotebook>, document: NotebookDocument): Promise<void> {
+        sendKernelTelemetryEvent(document.uri, Telemetry.ExecuteNativeCell);
         const editor = this.vscNotebook.notebookEditors.find((item) => item.document === document);
         if (!editor) {
             // No editor, possible it was closed.

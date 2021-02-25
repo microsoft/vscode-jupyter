@@ -15,7 +15,7 @@ import {
 } from '../../../client/datascience/notebook/introStartPage';
 import { INotebookEditorProvider, ITrustService } from '../../../client/datascience/types';
 import { IExtensionTestApi, sleep, waitForCondition } from '../../common';
-import { closeActiveWindows, initialize } from '../../initialize';
+import { initialize } from '../../initialize';
 import { canRunNotebookTests, closeNotebooksAndCleanUpAfterTests } from './helper';
 import { InsidersNotebookSurveyStateKeys } from '../../../client/datascience/dataScienceSurveyBanner';
 
@@ -54,11 +54,11 @@ suite('DataScience - VSCode Notebook - Native Notebook Experiment', function () 
     });
     setup(async function () {
         traceInfo(`Start Test ${this.currentTest?.title}`);
-        appEnv = mock<IApplicationEnvironment>();
         sinon.restore();
+        appEnv = mock<IApplicationEnvironment>();
         await memento.update(IntroduceNativeNotebookDisplayed, false);
+        await closeNotebooksAndCleanUpAfterTests();
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
-        await closeActiveWindows();
     });
     teardown(async function () {
         traceInfo(`End Test ${this.currentTest?.title}`);

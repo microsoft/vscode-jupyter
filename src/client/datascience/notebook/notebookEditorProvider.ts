@@ -73,6 +73,7 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(NotebookCellLanguageService) private readonly cellLanguageService: NotebookCellLanguageService
     ) {
+        disposables.push(this);
         this.disposables.push(this.vscodeNotebook.onDidOpenNotebookDocument(this.onDidOpenNotebookDocument, this));
         this.disposables.push(this.vscodeNotebook.onDidCloseNotebookDocument(this.onDidCloseNotebookDocument, this));
         this.disposables.push(
@@ -86,6 +87,22 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
                 }
             })
         );
+    }
+    public dispose() {
+        const items = Array.from(this.openedEditors.keys());
+        items.map((item) => {
+            try {
+                item.dispose();
+            } catch (ex) {
+                noop;
+            }
+            try {
+                item.model.dispose();
+            } catch (ex) {
+                noop;
+            }
+        });
+        this.openedEditors.clear();
     }
 
     public async open(file: Uri): Promise<INotebookEditor> {

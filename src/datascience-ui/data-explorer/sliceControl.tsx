@@ -5,6 +5,7 @@ import { IGetSliceRequest } from '../../client/datascience/data-viewing/types';
 import './sliceControl.css';
 
 const sliceRegEx = /^\s*((?<StartRange>-?\d+:)|(?<StopRange>-?:\d+)|(?:(?<Start>-?\d+)(?::(?<Stop>-?\d+))?(?::(?<Step>-?\d+))?))\s*$/;
+// These styles are passed to the FluentUI dropdown controls
 const textFieldStyles = {
     errorMessage: {
         border: '1px solid var(--vscode-inputValidation-errorBorder)',
