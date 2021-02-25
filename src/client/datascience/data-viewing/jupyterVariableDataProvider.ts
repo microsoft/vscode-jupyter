@@ -83,9 +83,7 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
         await this.ensureInitialized();
         let variable = this.variable;
         if (variable) {
-            if (sliceExpression) {
-                variable = await this.variableManager.getDataFrameInfo(variable, this.notebook, sliceExpression);
-            }
+            variable = await this.variableManager.getDataFrameInfo(variable, this.notebook, sliceExpression);
             dataFrameInfo = {
                 columns: variable.columns
                     ? JupyterVariableDataProvider.getNormalizedColumns(variable.columns)

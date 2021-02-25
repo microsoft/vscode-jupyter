@@ -77,8 +77,7 @@ interface ISliceControlProps {
 interface ISliceControlState {
     sliceExpression: string;
     inputValue: string;
-    isExpanded: boolean;
-    isActive: boolean;
+    isEnabled: boolean;
     [key: string]: number | boolean | string;
 }
 
@@ -86,10 +85,28 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
     constructor(props: ISliceControlProps) {
         super(props);
         const initialSlice = this.preselectedSliceExpression();
-        this.state = { isExpanded: false, isActive: false, sliceExpression: initialSlice, inputValue: initialSlice };
+        this.state = { isEnabled: false, sliceExpression: initialSlice, inputValue: initialSlice };
 
         this.handleChange = this.handleChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
+    }
+
+    public componentDidUpdate(prevProps: ISliceControlProps) {
+        console.log('prevprops', prevProps);
+        console.log('currentprops', this.props.originalVariableShape);
+        if (this.props.originalVariableShape !== prevProps.originalVariableShape) {
+            let slice = this.preselectedSliceExpression();
+            if (this.state.isEnabled) {
+                // TODO Check if the current slice expression would be valid relative to the new shape
+                // If it would still be valid, use that instead of the preselected one
+                slice = this.state.sliceExpression;
+            } else {
+                // Slicing not enabled anyway, so no slice
+                slice = this.fullSliceExpression();
+            }
+            console.log('submitting slice request', slice);
+            this.props.handleSliceRequest({ slice });
+        }
     }
 
     public render() {
@@ -117,12 +134,12 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
                             onChange={this.handleChange}
                             autoComplete="on"
                             inputClassName="slice-data"
-                            disabled={!this.state.isActive}
+                            disabled={!this.state.isEnabled}
                         />
                         <input
                             className="submit-slice-button"
                             type="submit"
-                            disabled={!this.state.isActive}
+                            disabled={!this.state.isEnabled}
                             value="Apply"
                         />
                     </div>
@@ -170,7 +187,7 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
                         label="Axis"
                         style={{ marginRight: '10px' }}
                         styles={dropdownStyles}
-                        disabled={!this.state.isActive}
+                        disabled={!this.state.isEnabled}
                         selectedKey={axisKey}
                         key={`axis${i}`}
                         options={axisOptions}
@@ -181,7 +198,7 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
                         label="Index"
                         styles={dropdownStyles}
                         disabled={
-                            !this.state.isActive ||
+                            !this.state.isEnabled ||
                             this.state[`selectedAxis${i}`] === undefined ||
                             this.state[`selectedAxis${i}`] === null
                         }
@@ -197,18 +214,18 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
     };
 
     private renderReadonlyIndicator = () => {
-        if (this.state.isActive) {
+        if (this.state.isEnabled) {
             return <span className="slice-summary-detail current-slice">{this.state.sliceExpression}</span>;
         }
     };
 
     private toggleEnablement = () => {
-        const willBeActive = !this.state.isActive;
-        const newState = { isActive: willBeActive };
-        const fullVariableSlice = '[' + this.props.originalVariableShape.map(() => ':').join(', ') + ']';
+        const willBeEnabled = !this.state.isEnabled;
+        const newState = { isEnabled: willBeEnabled };
+        const fullVariableSlice = this.fullSliceExpression();
         // Don't send slice request unless necessary
         if (this.state.sliceExpression !== fullVariableSlice) {
-            const slice = willBeActive ? this.state.sliceExpression : fullVariableSlice;
+            const slice = willBeEnabled ? this.state.sliceExpression : fullVariableSlice;
             this.props.handleSliceRequest({ slice });
         }
         this.applyInputBoxToDropdowns();
@@ -249,6 +266,10 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
                 .join(', ') +
             ']'
         );
+    }
+
+    private fullSliceExpression() {
+        return '[' + this.props.originalVariableShape.map(() => ':').join(', ') + ']';
     }
 
     private validateSliceExpression = () => {

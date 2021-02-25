@@ -7,7 +7,7 @@ import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
 import { Memento, ViewColumn } from 'vscode';
 
-import { IApplicationShell, IWebviewPanelProvider, IWorkspaceService } from '../../common/application/types';
+import { IApplicationShell, ICommandManager, IWebviewPanelProvider, IWorkspaceService } from '../../common/application/types';
 import { EXTENSION_ROOT_DIR, UseCustomEditorApi } from '../../common/constants';
 import { traceError } from '../../common/logger';
 import {
@@ -37,6 +37,7 @@ import {
     IGetSliceRequest
 } from './types';
 import { Experiments } from '../../common/experiments/groups';
+import { ContextKey } from '../../common/contextKey';
 
 const PREFERRED_VIEWGROUP = 'JupyterDataViewerPreferredViewColumn';
 const dataExplorerDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'viewers');
@@ -47,6 +48,11 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
     private pendingRowsCount: number = 0;
     private dataFrameInfoPromise: Promise<IDataFrameInfo> | undefined;
     private currentSliceExpression: string | undefined;
+    private viewContext: ContextKey;
+
+    public get active() {
+        return !!this.webPanel?.isActive;
+    }
 
     constructor(
         @inject(IWebviewPanelProvider) provider: IWebviewPanelProvider,
@@ -57,7 +63,8 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
         @inject(UseCustomEditorApi) useCustomEditorApi: boolean,
         @inject(IExperimentService) private experimentService: IExperimentService,
-        @inject(IMemento) @named(GLOBAL_MEMENTO) readonly globalMemento: Memento
+        @inject(IMemento) @named(GLOBAL_MEMENTO) readonly globalMemento: Memento,
+        @inject(ICommandManager) private commandManager: ICommandManager
     ) {
         super(
             configuration,
@@ -72,6 +79,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
             globalMemento.get(PREFERRED_VIEWGROUP) ?? ViewColumn.One,
             useCustomEditorApi
         );
+        this.viewContext = new ContextKey('jupyter.dataViewerActive', this.commandManager);
     }
 
     public async showData(dataProvider: IDataViewerDataProvider, title: string): Promise<void> {
@@ -99,6 +107,19 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
         }
     }
 
+    public async refreshData() {
+        // Clear our cached info promise
+        this.dataFrameInfoPromise = undefined;
+        // Then send a refresh data payload 
+        const dataFrameInfo = await this.prepDataFrameInfo(); // TODO what if the associated kernel or debug session has been terminated?
+        const isSliceDataEnabled = await this.experimentService.inExperiment(Experiments.SliceDataViewer);
+        // Send a message with our data
+        this.postMessage(DataViewerMessages.RefreshDataResponse, {
+            ...dataFrameInfo,
+            isSliceDataEnabled
+        }).ignoreErrors();
+    }
+
     public dispose(): void {
         super.dispose();
 
@@ -113,6 +134,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
         if (args.current.active && args.current.visible && args.previous.active && args.current.visible) {
             await this.globalMemento.update(PREFERRED_VIEWGROUP, this.webPanel?.viewColumn);
         }
+        await this.viewContext.set(args.current.active); // Really we should track this all in the factory
     }
 
     protected get owningResource(): Resource {

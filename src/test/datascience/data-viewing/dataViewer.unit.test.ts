@@ -6,7 +6,8 @@
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { ConfigurationChangeEvent, EventEmitter } from 'vscode';
 import { ApplicationShell } from '../../../client/common/application/applicationShell';
-import { IApplicationShell, IWebviewPanelProvider, IWorkspaceService } from '../../../client/common/application/types';
+import { CommandManager } from '../../../client/common/application/commandManager';
+import { IApplicationShell, ICommandManager, IWebviewPanelProvider, IWorkspaceService } from '../../../client/common/application/types';
 import { WebviewPanelProvider } from '../../../client/common/application/webviewPanels/webviewPanelProvider';
 import { WorkspaceService } from '../../../client/common/application/workspace';
 import { JupyterSettings } from '../../../client/common/configSettings';
@@ -31,6 +32,7 @@ suite('DataScience - DataViewer', () => {
     let applicationShell: IApplicationShell;
     let dataProvider: IDataViewerDataProvider;
     let experimentService: ExperimentService;
+    let commandManager: ICommandManager;
     const title: string = 'Data Viewer - Title';
 
     setup(async () => {
@@ -42,6 +44,7 @@ suite('DataScience - DataViewer', () => {
         applicationShell = mock(ApplicationShell);
         dataProvider = mock(JupyterVariableDataProvider);
         experimentService = mock(ExperimentService);
+        commandManager = mock(CommandManager);
         const settings = mock(JupyterSettings);
         const settingsChangedEvent = new EventEmitter<void>();
 
@@ -60,7 +63,8 @@ suite('DataScience - DataViewer', () => {
             instance(applicationShell),
             false,
             instance(experimentService),
-            new MockMemento()
+            new MockMemento(),
+            commandManager
         );
     });
     test('Data viewer showData calls gets dataFrame info from data provider', async () => {

@@ -20,6 +20,7 @@ export namespace DataViewerMessages {
     export const Started = SharedMessages.Started;
     export const UpdateSettings = SharedMessages.UpdateSettings;
     export const InitializeData = 'init';
+    export const RefreshDataResponse = 'refresh_data_response';
     export const GetAllRowsRequest = 'get_all_rows_request';
     export const GetAllRowsResponse = 'get_all_rows_response';
     export const GetRowsRequest = 'get_rows_request';
@@ -55,6 +56,7 @@ export type IDataViewerMapping = {
     [DataViewerMessages.GetRowsResponse]: IGetRowsResponse;
     [DataViewerMessages.CompletedData]: never | undefined;
     [DataViewerMessages.GetSliceRequest]: IGetSliceRequest;
+    [DataViewerMessages.RefreshDataResponse]: IDataFrameInfo & { isSliceDataEnabled: boolean };
 };
 
 export interface IDataFrameInfo {
@@ -98,5 +100,7 @@ export interface IDataViewerFactory {
 
 export const IDataViewer = Symbol('IDataViewer');
 export interface IDataViewer extends IDisposable {
+    active: boolean;
     showData(dataProvider: IDataViewerDataProvider, title: string): Promise<void>;
+    refreshData(): Promise<void>;
 }

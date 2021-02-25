@@ -24,7 +24,7 @@
         "theme": "light"
     },
     "engines": {
-        "vscode": "1.54.0-insider"
+        "vscode": "^1.53.0"
     },
     "keywords": [
         "jupyter",
@@ -728,6 +728,13 @@
                 },
                 "category": "Jupyter",
                 "enablement": "notebookViewType == jupyter-notebook && !jupyter.variableViewVisible"
+            },
+            {
+                "command": "jupyter.refreshDataViewer",
+                "title": "Refresh Data Viewer",
+                "category": "Jupyter",
+                "enablement": "jupyter.dataViewerActive",
+                "icon": "$(refresh)"
             }
         ],
         "menus": {
@@ -813,6 +820,12 @@
                     "title": "%jupyter.command.jupyter.openVariableView.title%",
                     "group": "navigation@2",
                     "when": "notebookViewType == 'jupyter-notebook' && jupyter.isnotebooktrusted"
+                },
+                {
+                    "command": "jupyter.refreshDataViewer",
+                    "title": "Refresh Data Viewer",
+                    "group": "navigation@0",
+                    "icon": "$(refresh)"
                 },
                 {
                     "command": "jupyter.notebookeditor.export",

@@ -114,6 +114,7 @@ export class DebuggerVariables extends DebugLocationTracker
             // No active server just return the unchanged target variable
             return targetVariable;
         }
+        targetVariable = await this.getFullVariable(targetVariable); // getDataFrameInfo does not refetch full variable
         // Listen to notebook events if we haven't already
         if (notebook) {
             this.watchNotebook(notebook);
