@@ -5,7 +5,7 @@ import { assert } from 'chai';
 import * as sinon from 'sinon';
 import * as path from 'path';
 import { instance, mock, when } from 'ts-mockito';
-import { Memento, window } from 'vscode';
+import { Memento } from 'vscode';
 import { IApplicationEnvironment, ICommandManager } from '../../../client/common/application/types';
 import { traceInfo } from '../../../client/common/logger';
 import { GLOBAL_MEMENTO, IDisposable, IExtensionContext, IMemento } from '../../../client/common/types';
