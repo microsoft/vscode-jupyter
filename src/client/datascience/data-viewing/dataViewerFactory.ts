@@ -8,13 +8,16 @@ import { inject, injectable } from 'inversify';
 import { IAsyncDisposable, IAsyncDisposableRegistry, IDisposableRegistry } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry } from '../../telemetry';
-import { Commands, Telemetry } from '../constants';
+import { Commands, EditorContexts, Telemetry } from '../constants';
 import { IDataViewer, IDataViewerDataProvider, IDataViewerFactory } from './types';
 import { ICommandManager } from '../../common/application/types';
+import { ContextKey } from '../../common/contextKey';
 
 @injectable()
 export class DataViewerFactory implements IDataViewerFactory, IAsyncDisposable {
-    private activeExplorers: IDataViewer[] = [];
+    private knownViewers = new Set<IDataViewer>();
+    private viewContext: ContextKey;
+
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
@@ -22,11 +25,14 @@ export class DataViewerFactory implements IDataViewerFactory, IAsyncDisposable {
         @inject(ICommandManager) private commandManager: ICommandManager
     ) {
         asyncRegistry.push(this);
+        this.viewContext = new ContextKey(EditorContexts.IsDataViewerActive, this.commandManager);
         this.disposables.push(this.commandManager.registerCommand(Commands.RefreshDataViewer, this.refreshDataViewer, this));
     }
 
     public async dispose() {
-        await Promise.all(this.activeExplorers.map((d) => d.dispose()));
+        for (const viewer of this.knownViewers) {
+            viewer.dispose();
+        }
     }
 
     @captureTelemetry(Telemetry.StartShowDataViewer)
@@ -37,7 +43,9 @@ export class DataViewerFactory implements IDataViewerFactory, IAsyncDisposable {
         const dataExplorer = this.serviceContainer.get<IDataViewer>(IDataViewer);
         try {
             // Then load the data.
-            this.activeExplorers.push(dataExplorer);
+            this.knownViewers.add(dataExplorer);
+            dataExplorer.onDidDisposeDataViewer(this.updateOpenDataViewers, this, this.disposables);
+            dataExplorer.onDidChangeDataViewerViewState(this.updateViewStateContext, this, this.disposables);
 
             // Show the window and the data
             await dataExplorer.showData(dataProvider, title);
@@ -51,9 +59,27 @@ export class DataViewerFactory implements IDataViewerFactory, IAsyncDisposable {
         return result;
     }
 
+    private updateOpenDataViewers(viewer: IDataViewer) {
+        this.knownViewers.delete(viewer);
+    }
+
+    private async updateViewStateContext() {
+        // A data viewer's view state has changed. Look through our known viewers to see if any are active
+        let hasActiveViewer = false;
+        this.knownViewers.forEach((viewer) => {
+            if (viewer.active) {
+                hasActiveViewer = true;
+            }
+        })
+        await this.viewContext.set(hasActiveViewer);
+    }
+
     private refreshDataViewer() {
         // Find the data viewer which is currently active
-        const activeDataViewer = this.activeExplorers.find((viewer) => !(viewer as any).isDisposed && viewer.active);
-        void activeDataViewer?.refreshData();
+        for (const viewer of this.knownViewers) {
+            if (viewer.active) { // There should only be one of these
+                void viewer.refreshData();
+            }
+        }
     }
 }

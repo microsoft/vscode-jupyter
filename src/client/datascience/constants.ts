@@ -170,6 +170,7 @@ export namespace EditorContexts {
     export const CanInterruptNotebookKernel = 'jupyter.notebookeditor.canInterruptNotebookKernel';
     export const IsPythonNotebook = 'jupyter.ispythonnotebook';
     export const IsVSCodeNotebookActive = 'jupyter.isvscodenotebookactive';
+    export const IsDataViewerActive = 'jupyter.dataViewerActive';
 }
 
 export namespace RegExpValues {

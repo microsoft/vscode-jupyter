@@ -8,6 +8,7 @@ import '../../common/extensions';
 import { injectable, unmanaged } from 'inversify';
 import {
     ConfigurationChangeEvent,
+    EventEmitter,
     extensions,
     Uri,
     WebviewPanel as vscodeWebviewPanel,
@@ -52,6 +53,12 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
     // tslint:disable-next-line:no-any
     private onMessageListeners: ((message: string, payload: any) => void)[] = [];
 
+    protected get onDidDispose() {
+        return this._onDidDisposeWebviewPanel.event;
+    }
+
+    protected _onDidDisposeWebviewPanel = new EventEmitter<void>();
+
     constructor(
         @unmanaged() protected configService: IConfigurationService,
         @unmanaged() private cssGenerator: ICodeCssGenerator,
@@ -78,6 +85,7 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
         }
 
         this.webviewInit = undefined;
+        this._onDidDisposeWebviewPanel.fire();
     }
 
     public setTheme(isDark: boolean) {

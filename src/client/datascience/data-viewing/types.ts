@@ -4,6 +4,7 @@
 
 import { IDisposable } from '../../common/types';
 import { SharedMessages } from '../messages';
+import { Event } from 'vscode';
 
 export const CellFetchAllLimit = 100000;
 export const CellFetchSizeFirst = 100000;
@@ -101,6 +102,8 @@ export interface IDataViewerFactory {
 export const IDataViewer = Symbol('IDataViewer');
 export interface IDataViewer extends IDisposable {
     active: boolean;
+    readonly onDidDisposeDataViewer: Event<IDataViewer>;
+    readonly onDidChangeDataViewerViewState: Event<void>;
     showData(dataProvider: IDataViewerDataProvider, title: string): Promise<void>;
     refreshData(): Promise<void>;
 }
