@@ -643,10 +643,10 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         traceInfo('2. completed execution for test of Stderr & stdout outputs');
 
         // In cell 1 we should have the output
-        // 1
-        // a
-        // 2
-        // b
+        // 12
+        // ab
+        // 3
+        // c
         assert.equal(cells[0].outputs.length, 4, 'Incorrect number of output');
         // All output items should be of type stream
         const expectedOutput = [
