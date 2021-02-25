@@ -15,7 +15,7 @@ import {
 } from '../../../client/datascience/notebook/introStartPage';
 import { INotebookEditorProvider, ITrustService } from '../../../client/datascience/types';
 import { IExtensionTestApi, sleep, waitForCondition } from '../../common';
-import { closeActiveWindows, initialize } from '../../initialize';
+import { initialize } from '../../initialize';
 import { canRunNotebookTests, closeNotebooksAndCleanUpAfterTests } from './helper';
 import { InsidersNotebookSurveyStateKeys } from '../../../client/datascience/dataScienceSurveyBanner';
 
