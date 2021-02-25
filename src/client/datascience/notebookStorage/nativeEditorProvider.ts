@@ -104,7 +104,7 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
     private models = new Set<INotebookModel>();
     private _id = uuid();
     private untitledCounter = 1;
-    private static instance: NativeEditorProvider;
+    private static instance?: NativeEditorProvider;
     constructor(
         @inject(IServiceContainer) protected readonly serviceContainer: IServiceContainer,
         @inject(IAsyncDisposableRegistry) protected readonly asyncRegistry: IAsyncDisposableRegistry,
@@ -172,6 +172,9 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
      * Clear and dispose everything in tests.
      */
     public static clearAndDisposeAll() {
+        if (!NativeEditorProvider.instance) {
+            return;
+        }
         const items = Array.from(NativeEditorProvider.instance.openedEditors.keys());
         items.map((item) => {
             try {
