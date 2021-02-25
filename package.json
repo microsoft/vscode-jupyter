@@ -259,6 +259,12 @@
                 "command": "jupyter.selectCell",
                 "key": "ctrl+alt+shift+\\",
                 "when": "editorTextFocus && jupyter.hascodecells && !notebookEditorFocused"
+            },
+            {
+                "command": "jupyter.refreshDataViewer",
+                "key": "ctrl+r",
+                "mac": "cmd+r",
+                "when": "jupyter.dataViewerActive"
             }
         ],
         "commands": [
@@ -731,7 +737,7 @@
             },
             {
                 "command": "jupyter.refreshDataViewer",
-                "title": "Refresh Data Viewer",
+                "title": "%DataScience.refreshDataViewer%",
                 "category": "Jupyter",
                 "enablement": "jupyter.dataViewerActive",
                 "icon": "$(refresh)"
@@ -823,9 +829,8 @@
                 },
                 {
                     "command": "jupyter.refreshDataViewer",
-                    "title": "Refresh Data Viewer",
-                    "group": "navigation@0",
-                    "icon": "$(refresh)"
+                    "when": "jupyter.dataViewerActive",
+                    "group": "navigation@0"
                 },
                 {
                     "command": "jupyter.notebookeditor.export",
@@ -874,6 +879,10 @@
                     "title": "%jupyter.command.jupyter.exportAsPythonScript.title%",
                     "category": "Jupyter",
                     "when": "jupyter.isnativeactive && jupyter.isnotebooktrusted && jupyter.ispythonnotebook"
+                },
+                {
+                    "command": "jupyter.refreshDataViewer",
+                    "category": "Jupyter"
                 },
                 {
                     "command": "jupyter.exportToHTML",
