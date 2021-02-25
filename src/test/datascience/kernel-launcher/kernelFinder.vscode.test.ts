@@ -6,6 +6,7 @@
 import { assert } from 'chai';
 import { Uri, workspace } from 'vscode';
 import { PYTHON_LANGUAGE } from '../../../client/common/constants';
+import { getKernelConnectionLanguage } from '../../../client/datascience/jupyter/kernels/helpers';
 import { ILocalKernelFinder } from '../../../client/datascience/kernel-launcher/types';
 import { IExtensionTestApi } from '../../common';
 import { initialize } from '../../initialize';
@@ -56,7 +57,7 @@ suite('DataScience - Kernels Finder', () => {
             orig_nbformat: 4
         });
         assert.ok(kernelSpec);
-        const language = kernelSpec?.kind === 'connectToLiveKernel' ? undefined : kernelSpec?.kernelSpec?.language
+        const language = getKernelConnectionLanguage(kernelSpec);
         assert.equal(language, PYTHON_LANGUAGE);
     });
     test('Can find a Python kernel based on language (non-python-kernel)', async function () {
@@ -69,7 +70,7 @@ suite('DataScience - Kernels Finder', () => {
             orig_nbformat: 4
         });
         assert.ok(kernelSpec);
-        const language = kernelSpec?.kind === 'connectToLiveKernel' ? undefined : kernelSpec?.kernelSpec?.language
+        const language = getKernelConnectionLanguage(kernelSpec);
         assert.equal(language, 'julia');
     });
     test('Can find a Julia kernel based on kernelspec (non-python-kernel)', async function () {

@@ -58,55 +58,14 @@ export class KernelSelector {
         cancelToken: CancellationToken | undefined,
         currentKernelDisplayName: string | undefined
     ): Promise<KernelConnectionMetadata | undefined> {
-        let kernelConnection: KernelConnectionMetadata | undefined;
         const isLocalConnection = connection?.localLaunch ?? isLocalLaunch(this.configService);
-
-        if (isLocalConnection) {
-            kernelConnection = await this.selectLocalKernel(resource, connection, cancelToken, currentKernelDisplayName);
-        } else {
-            kernelConnection = await this.selectRemoteKernel(resource, connection, cancelToken, currentKernelDisplayName);
-        }
-        return cloneDeep(kernelConnection);
-    }
-    /**
-     * Select a kernel from a local session.
-     */
-     private async selectLocalKernel(
-        resource: Resource,
-        connInfo: INotebookProviderConnection | undefined,
-        cancelToken?: CancellationToken,
-        currentKernelDisplayName?: string
-    ): Promise<KernelConnectionMetadata | undefined> {
+        const telemetryEvent = isLocalConnection ? Telemetry.SelectLocalJupyterKernel : Telemetry.SelectRemoteJupyterKernel;
         const stopWatch = new StopWatch();
-        const suggestions = await this.selectionProvider.getKernelSelections(resource, connInfo, cancelToken);
+        const suggestions = await this.selectionProvider.getKernelSelections(resource, connection, cancelToken);
         const selection = await this.selectKernel(
             resource,
             stopWatch,
-            Telemetry.SelectLocalJupyterKernel,
-            suggestions,
-            cancelToken,
-            currentKernelDisplayName
-        );
-        if (selection?.interpreter) {
-            this.interpreterPackages.trackPackages(selection.interpreter);
-        }
-        return cloneDeep(selection);
-    }
-    /**
-     * Selects a kernel from a remote session.
-     */
-     private async selectRemoteKernel(
-        resource: Resource,
-        connInfo: INotebookProviderConnection | undefined,
-        cancelToken?: CancellationToken,
-        currentKernelDisplayName?: string
-    ): Promise<KernelConnectionMetadata | undefined> {
-        const stopWatch = new StopWatch();
-        const suggestions = await this.selectionProvider.getKernelSelections(resource, connInfo, cancelToken);
-        const selection = await this.selectKernel(
-            resource,
-            stopWatch,
-            Telemetry.SelectRemoteJupyterKernel,
+            telemetryEvent,
             suggestions,
             cancelToken,
             currentKernelDisplayName
