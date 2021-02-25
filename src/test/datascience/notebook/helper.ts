@@ -66,7 +66,7 @@ import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST, IS_SMOKE_TEST } fr
 import { noop } from '../../core';
 import { closeActiveWindows, initialize, isInsiders } from '../../initialize';
 import { JupyterServer } from '../jupyterServer';
-import { NativeEditorProvider } from '../../../client/datascience/notebookStorage/nativeEditorProvider';
+import { NotebookEditorProvider } from '../../../client/datascience/notebook/notebookEditorProvider';
 const defaultTimeout = 15_000;
 
 async function getServices() {
@@ -208,7 +208,7 @@ export async function shutdownAllNotebooks() {
         ...notebookProvider.activeNotebooks.map(async (item) => (await item).dispose()),
         kernelProvider.dispose()
     ]);
-    NativeEditorProvider.clearAndDisposeAll();
+    NotebookEditorProvider.clearAndDisposeAll();
 }
 
 export async function ensureNewNotebooksHavePythonCells() {
