@@ -57,7 +57,7 @@ suite('DataScience - VSCode Notebook - Native Notebook Experiment', function () 
         sinon.restore();
         appEnv = mock<IApplicationEnvironment>();
         await memento.update(IntroduceNativeNotebookDisplayed, false);
-        await closeActiveWindows();
+        await closeNotebooksAndCleanUpAfterTests();
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
     });
     teardown(async function () {
@@ -76,7 +76,7 @@ suite('DataScience - VSCode Notebook - Native Notebook Experiment', function () 
         console.log(`# of open editos ${notebookEditorProvider.editors.length}`);
         console.log(`# of open editos2 ${window.visibleNotebookEditors.length}`);
         console.log(`Close all`);
-        await closeActiveWindows();
+        await closeNotebooksAndCleanUpAfterTests();
         console.log(`# of open editos ${notebookEditorProvider.editors.length}`);
         console.log(`# of open editos2 ${window.visibleNotebookEditors.length}`);
         when(appEnv.channel).thenReturn('insiders');
