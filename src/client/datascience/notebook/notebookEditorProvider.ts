@@ -61,7 +61,6 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
     private readonly trackedVSCodeNotebookEditors = new Set<VSCodeNotebookEditor>();
     private readonly notebookEditorsByUri = new Map<string, INotebookEditor>();
     private readonly notebooksWaitingToBeOpenedByUri = new Map<string, Deferred<INotebookEditor>>();
-    private static instance?: NotebookEditorProvider;
     constructor(
         @inject(IVSCodeNotebook) private readonly vscodeNotebook: IVSCodeNotebook,
         @inject(INotebookStorageProvider) private readonly storage: INotebookStorageProvider,
@@ -74,7 +73,7 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(NotebookCellLanguageService) private readonly cellLanguageService: NotebookCellLanguageService
     ) {
-        NotebookEditorProvider.instance = this;
+        disposables.push(this);
         this.disposables.push(this.vscodeNotebook.onDidOpenNotebookDocument(this.onDidOpenNotebookDocument, this));
         this.disposables.push(this.vscodeNotebook.onDidCloseNotebookDocument(this.onDidCloseNotebookDocument, this));
         this.disposables.push(
@@ -89,14 +88,8 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
             })
         );
     }
-    /**
-     * Clear and dispose everything in tests.
-     */
-    public static clearAndDisposeAll() {
-        if (!NotebookEditorProvider.instance) {
-            return;
-        }
-        const items = Array.from(NotebookEditorProvider.instance.openedEditors.keys());
+    public dispose() {
+        const items = Array.from(this.openedEditors.keys());
         items.map((item) => {
             try {
                 item.dispose();
@@ -109,7 +102,7 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
                 noop;
             }
         });
-        NotebookEditorProvider.instance.openedEditors.clear();
+        this.openedEditors.clear();
     }
 
     public async open(file: Uri): Promise<INotebookEditor> {

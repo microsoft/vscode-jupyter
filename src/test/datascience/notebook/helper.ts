@@ -67,6 +67,7 @@ import { noop } from '../../core';
 import { closeActiveWindows, initialize, isInsiders } from '../../initialize';
 import { JupyterServer } from '../jupyterServer';
 import { NotebookEditorProvider } from '../../../client/datascience/notebook/notebookEditorProvider';
+import { VSCodeNotebookProvider } from '../../../client/datascience/constants';
 const defaultTimeout = 15_000;
 
 async function getServices() {
@@ -208,7 +209,8 @@ export async function shutdownAllNotebooks() {
         ...notebookProvider.activeNotebooks.map(async (item) => (await item).dispose()),
         kernelProvider.dispose()
     ]);
-    NotebookEditorProvider.clearAndDisposeAll();
+    const notebookEditorProvider = api.serviceContainer.get<NotebookEditorProvider>(NotebookEditorProvider, VSCodeNotebookProvider);
+    notebookEditorProvider.dispose();
 }
 
 export async function ensureNewNotebooksHavePythonCells() {
