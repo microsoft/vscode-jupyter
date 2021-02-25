@@ -13,6 +13,8 @@ import { IInstaller, InstallerResponse, Product } from '../../../common/types';
 import { Common, DataScience } from '../../../common/utils/localize';
 import { TraceOptions } from '../../../logging/trace';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
+import { sendTelemetryEvent } from '../../../telemetry';
+import { Telemetry } from '../../constants';
 import { IKernelDependencyService, KernelInterpreterDependencyResponse } from '../../types';
 
 /**
@@ -54,6 +56,10 @@ export class KernelDependencyService implements IKernelDependencyService {
         if (disableUI) {
             return KernelInterpreterDependencyResponse.cancel;
         }
+        sendTelemetryEvent(Telemetry.PythonModuleInstal, undefined, {
+            action: 'displayed',
+            moduleName: ProductNames.get(Product.ipykernel)!
+        });
         const selection = await Promise.race([
             this.appShell.showErrorMessage(message, Common.install()),
             promptCancellationPromise

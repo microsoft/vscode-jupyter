@@ -364,8 +364,8 @@ export async function clearCellForExecution(editor: NotebookEditor, cell: Notebo
         const metadata = cell.metadata.with({
             statusMessage: undefined,
             executionOrder: null,
-            lastRunDuration: undefined,
-            runStartTime: undefined
+            lastRunDuration: null,
+            runStartTime: null
         });
         edit.replaceNotebookCellMetadata(editor.document.uri, cell.index, metadata);
         edit.replaceNotebookCellOutput(editor.document.uri, cell.index, []);
