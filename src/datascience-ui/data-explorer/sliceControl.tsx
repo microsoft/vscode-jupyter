@@ -71,6 +71,7 @@ const dropdownStyles = {
 };
 
 interface ISliceControlProps {
+    loadingData: boolean;
     originalVariableShape: number[];
     handleSliceRequest(slice: IGetSliceRequest): void;
 }
@@ -132,12 +133,12 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
                             onChange={this.handleChange}
                             autoComplete="on"
                             inputClassName="slice-data"
-                            disabled={!this.state.isEnabled}
+                            disabled={!this.state.isEnabled || this.props.loadingData}
                         />
                         <input
                             className="submit-slice-button"
                             type="submit"
-                            disabled={!this.state.isEnabled}
+                            disabled={!this.state.isEnabled || this.props.loadingData}
                             value="Apply"
                         />
                     </div>
@@ -185,7 +186,7 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
                         label="Axis"
                         style={{ marginRight: '10px' }}
                         styles={dropdownStyles}
-                        disabled={!this.state.isEnabled}
+                        disabled={!this.state.isEnabled || this.props.loadingData}
                         selectedKey={axisKey}
                         key={`axis${i}`}
                         options={axisOptions}
@@ -198,7 +199,8 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
                         disabled={
                             !this.state.isEnabled ||
                             this.state[`selectedAxis${i}`] === undefined ||
-                            this.state[`selectedAxis${i}`] === null
+                            this.state[`selectedAxis${i}`] === null ||
+                            this.props.loadingData
                         }
                         selectedKey={indexKey}
                         key={`index${i}`}

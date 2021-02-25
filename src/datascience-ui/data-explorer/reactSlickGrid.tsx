@@ -69,6 +69,7 @@ export interface ISlickGridProps {
     dataDimensionality: number;
     originalVariableShape: number[] | undefined;
     isSliceDataEnabled: boolean; // Feature flag. This should eventually be removed
+    loadingData: boolean;
     handleSliceRequest(args: IGetSliceRequest): void;
 }
 
@@ -324,6 +325,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
             return (
                 <div className="control-container">
                     <SliceControl
+                        loadingData={this.props.loadingData}
                         originalVariableShape={this.props.originalVariableShape}
                         handleSliceRequest={this.props.handleSliceRequest}
                     />

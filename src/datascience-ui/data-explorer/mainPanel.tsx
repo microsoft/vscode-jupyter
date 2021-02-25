@@ -252,6 +252,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 originalVariableShape={this.state.originalVariableShape}
                 isSliceDataEnabled={this.state.isSliceDataEnabled}
                 handleSliceRequest={this.handleSliceRequest}
+                loadingData={this.state.totalRowCount > this.state.fetchedRowCount}
             />
         );
     }
