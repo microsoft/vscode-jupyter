@@ -297,8 +297,8 @@ export class NotebookEditor implements INotebookEditor {
             this.runCellRange(cells);
         }
     }
-    private onClosedDocument(e?: NotebookDocument){
-        if (this.document === e){
+    private onClosedDocument(e?: NotebookDocument) {
+        if (this.document === e) {
             this._closed.fire(this);
         }
     }

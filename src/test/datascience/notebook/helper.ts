@@ -185,7 +185,8 @@ export async function canRunNotebookTests() {
         !process.env.VSC_JUPYTER_RUN_NB_TEST
     ) {
         console.log(
-            `Can't run native nb tests isInsiders() = ${isInsiders()}, process.env.VSC_JUPYTER_RUN_NB_TEST = ${process.env.VSC_JUPYTER_RUN_NB_TEST
+            `Can't run native nb tests isInsiders() = ${isInsiders()}, process.env.VSC_JUPYTER_RUN_NB_TEST = ${
+                process.env.VSC_JUPYTER_RUN_NB_TEST
             }`
         );
         return false;
@@ -477,9 +478,9 @@ export async function waitForExecutionInProgress(cell: NotebookCell, timeout: nu
         async () => {
             const result =
                 cell.metadata.runState === NotebookCellRunState.Running &&
-                    cell.metadata.runStartTime &&
-                    !cell.metadata.lastRunDuration &&
-                    !cell.metadata.statusMessage
+                cell.metadata.runStartTime &&
+                !cell.metadata.lastRunDuration &&
+                !cell.metadata.statusMessage
                     ? true
                     : false;
             return result;
@@ -495,9 +496,9 @@ export async function waitForQueuedForExecution(cell: NotebookCell, timeout: num
     await waitForCondition(
         async () =>
             cell.metadata.runState === NotebookCellRunState.Running &&
-                !cell.metadata.runStartTime &&
-                !cell.metadata.lastRunDuration &&
-                !cell.metadata.statusMessage
+            !cell.metadata.runStartTime &&
+            !cell.metadata.lastRunDuration &&
+            !cell.metadata.statusMessage
                 ? true
                 : false,
         timeout,
