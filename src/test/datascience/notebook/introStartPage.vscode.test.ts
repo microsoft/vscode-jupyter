@@ -73,17 +73,6 @@ suite('DataScience - VSCode Notebook - Native Notebook Experiment', function () 
     });
 
     test('Do not display start page for VS Code Insiders', async () => {
-        console.log(`# of open editos ${notebookEditorProvider.editors.length}`);
-        if (notebookEditorProvider.editors.length) {
-            console.log(`# of open editos ${(notebookEditorProvider.editors[0] as Object).constructor.name}`);
-        }
-        console.log(`# of open editos ${notebookEditorProvider.toString()}`);
-        console.log(`# of open editos ${(notebookEditorProvider as Object).constructor.name}`);
-        console.log(`# of open editos2 ${window.visibleNotebookEditors.length}`);
-        console.log(`Close all`);
-        await closeNotebooksAndCleanUpAfterTests();
-        console.log(`# of open editos ${notebookEditorProvider.editors.length}`);
-        console.log(`# of open editos2 ${window.visibleNotebookEditors.length}`);
         when(appEnv.channel).thenReturn('insiders');
 
         const startPage = new IntroduceNativeNotebookStartPage(
@@ -101,9 +90,6 @@ suite('DataScience - VSCode Notebook - Native Notebook Experiment', function () 
         await sleep(1_000);
 
         assert.isUndefined(notebookEditorProvider.activeEditor);
-        notebookEditorProvider.editors.map((item) =>
-            assert.fail(item.file.fsPath, undefined, `There should be no document open ${item.file.fsPath}`)
-        );
         assert.equal(notebookEditorProvider.editors.length, 0);
     });
     test('Do not display start page for Stable VS Code Not in experiment', async () => {
@@ -124,9 +110,6 @@ suite('DataScience - VSCode Notebook - Native Notebook Experiment', function () 
         await sleep(1_000);
 
         assert.isUndefined(notebookEditorProvider.activeEditor);
-        notebookEditorProvider.editors.map((item) =>
-            assert.fail(item.file.fsPath, undefined, `There should be no document open ${item.file.fsPath}`)
-        );
         assert.equal(notebookEditorProvider.editors.length, 0);
     });
     test('Display start page for Stable VS Code in experiment', async () => {
@@ -172,9 +155,6 @@ suite('DataScience - VSCode Notebook - Native Notebook Experiment', function () 
         await sleep(1_000);
 
         assert.isUndefined(notebookEditorProvider.activeEditor);
-        notebookEditorProvider.editors.map((item) =>
-            assert.fail(item.file.fsPath, undefined, `There should be no document open ${item.file.fsPath}`)
-        );
         assert.equal(notebookEditorProvider.editors.length, 0);
     });
     test('Display start page for Insider VS Code in experiment only once', async () => {
@@ -215,9 +195,6 @@ suite('DataScience - VSCode Notebook - Native Notebook Experiment', function () 
         await sleep(1_000);
 
         assert.isUndefined(notebookEditorProvider.activeEditor);
-        notebookEditorProvider.editors.map((item) =>
-            assert.fail(item.file.fsPath, undefined, `There should be no document open ${item.file.fsPath}`)
-        );
         assert.equal(notebookEditorProvider.editors.length, 0);
     });
 });

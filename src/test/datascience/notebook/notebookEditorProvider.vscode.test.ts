@@ -65,9 +65,6 @@ suite('DataScience - VSCode Notebook (Editor Provider)', function () {
     test('No notebooks when opening VSC', async () => {
         assert.isUndefined(vscodeNotebook.activeNotebookEditor);
         assert.isUndefined(editorProvider.activeEditor);
-        editorProvider.editors.map((item) =>
-            assert.fail(item.file.fsPath, undefined, `There should be no document open ${item.file.fsPath}`)
-        );
         assert.equal(editorProvider.editors.length, 0, 'Should not have any notebooks open');
         assert.equal(vscodeNotebook.notebookEditors.length, 0, 'Should not have any vsc notebooks');
     });
