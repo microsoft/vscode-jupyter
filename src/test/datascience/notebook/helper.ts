@@ -66,6 +66,7 @@ import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST, IS_SMOKE_TEST } fr
 import { noop } from '../../core';
 import { closeActiveWindows, initialize, isInsiders } from '../../initialize';
 import { JupyterServer } from '../jupyterServer';
+import { NativeEditorProvider } from '../../../client/datascience/notebookStorage/nativeEditorProvider';
 const defaultTimeout = 15_000;
 
 async function getServices() {
@@ -184,8 +185,7 @@ export async function canRunNotebookTests() {
         !process.env.VSC_JUPYTER_RUN_NB_TEST
     ) {
         console.log(
-            `Can't run native nb tests isInsiders() = ${isInsiders()}, process.env.VSC_JUPYTER_RUN_NB_TEST = ${
-                process.env.VSC_JUPYTER_RUN_NB_TEST
+            `Can't run native nb tests isInsiders() = ${isInsiders()}, process.env.VSC_JUPYTER_RUN_NB_TEST = ${process.env.VSC_JUPYTER_RUN_NB_TEST
             }`
         );
         return false;
@@ -207,6 +207,7 @@ export async function shutdownAllNotebooks() {
         ...notebookProvider.activeNotebooks.map(async (item) => (await item).dispose()),
         kernelProvider.dispose()
     ]);
+    NativeEditorProvider.clear();
 }
 
 export async function ensureNewNotebooksHavePythonCells() {
@@ -476,9 +477,9 @@ export async function waitForExecutionInProgress(cell: NotebookCell, timeout: nu
         async () => {
             const result =
                 cell.metadata.runState === NotebookCellRunState.Running &&
-                cell.metadata.runStartTime &&
-                !cell.metadata.lastRunDuration &&
-                !cell.metadata.statusMessage
+                    cell.metadata.runStartTime &&
+                    !cell.metadata.lastRunDuration &&
+                    !cell.metadata.statusMessage
                     ? true
                     : false;
             return result;
@@ -494,9 +495,9 @@ export async function waitForQueuedForExecution(cell: NotebookCell, timeout: num
     await waitForCondition(
         async () =>
             cell.metadata.runState === NotebookCellRunState.Running &&
-            !cell.metadata.runStartTime &&
-            !cell.metadata.lastRunDuration &&
-            !cell.metadata.statusMessage
+                !cell.metadata.runStartTime &&
+                !cell.metadata.lastRunDuration &&
+                !cell.metadata.statusMessage
                 ? true
                 : false,
         timeout,

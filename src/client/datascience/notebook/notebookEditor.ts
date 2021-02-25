@@ -105,6 +105,7 @@ export class NotebookEditor implements INotebookEditor {
             })
         );
         disposables.push(model.onDidDispose(this.dispose.bind(this)));
+        vscodeNotebook.onDidCloseNotebookDocument(this.onClosedDocument, this, disposables);
     }
     @captureTelemetry(Telemetry.SyncAllCells)
     public async syncAllCells(): Promise<void> {
@@ -296,7 +297,11 @@ export class NotebookEditor implements INotebookEditor {
             this.runCellRange(cells);
         }
     }
-
+    private onClosedDocument(e?: NotebookDocument){
+        if (this.document === e){
+            this._closed.fire(this);
+        }
+    }
     private getSelectedCellId(uri: Uri | undefined): string | undefined {
         const uriStr = uri ? uri.toString() : this.document.uri.toString();
         const editor = this.vscodeNotebook.notebookEditors.find((nb) => nb.document.uri.toString() === uriStr);

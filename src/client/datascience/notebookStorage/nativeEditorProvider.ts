@@ -103,6 +103,7 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
     private models = new Set<INotebookModel>();
     private _id = uuid();
     private untitledCounter = 1;
+    private static instance: NativeEditorProvider;
     constructor(
         @inject(IServiceContainer) protected readonly serviceContainer: IServiceContainer,
         @inject(IAsyncDisposableRegistry) protected readonly asyncRegistry: IAsyncDisposableRegistry,
@@ -115,7 +116,7 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
         @inject(IFileSystem) protected readonly fs: IFileSystem
     ) {
         traceInfo(`id is ${this._id}`);
-
+        NativeEditorProvider.instance = this;
         // Register for the custom editor service.
         customEditorService.registerCustomEditorProvider(NativeEditorProvider.customEditorViewType, this, {
             webviewOptions: {
@@ -166,7 +167,9 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
             delete: () => this.storage.deleteBackup(model, id).ignoreErrors() // This cleans up after save has happened.
         };
     }
-
+    public static clear() {
+        NativeEditorProvider.instance.openedEditors.clear();
+    }
     public async resolveCustomEditor(document: CustomDocument, panel: WebviewPanel) {
         this.customDocuments.set(document.uri.fsPath, document);
         await this.loadNotebookEditor(document.uri, panel);
