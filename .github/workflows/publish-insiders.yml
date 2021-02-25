@@ -1,4 +1,4 @@
-name: Publish For Insiders
+name: Publish Insiders
 
 on:
 #  schedule:
