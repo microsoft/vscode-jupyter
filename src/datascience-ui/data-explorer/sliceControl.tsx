@@ -92,8 +92,6 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
     }
 
     public componentDidUpdate(prevProps: ISliceControlProps) {
-        console.log('prevprops', prevProps);
-        console.log('currentprops', this.props.originalVariableShape);
         if (this.props.originalVariableShape !== prevProps.originalVariableShape) {
             let slice = this.preselectedSliceExpression();
             if (this.state.isEnabled) {
@@ -104,7 +102,6 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
                 // Slicing not enabled anyway, so no slice
                 slice = this.fullSliceExpression();
             }
-            console.log('submitting slice request', slice);
             this.props.handleSliceRequest({ slice });
         }
     }

@@ -260,8 +260,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private initializeData(payload: any) {
         if (payload) {
             const variable = payload as IDataFrameInfo & { isSliceDataEnabled: boolean };
-            console.log('init data current state', this.state.originalVariableShape);
-            console.log('init data variable shape', variable.shape);
             if (variable) {
                 const columns = this.generateColumns(variable);
                 const totalRowCount = variable.rowCount ? variable.rowCount : 0;
