@@ -209,10 +209,7 @@ export async function shutdownAllNotebooks() {
         ...notebookProvider.activeNotebooks.map(async (item) => (await item).dispose()),
         kernelProvider.dispose()
     ]);
-    const notebookEditorProvider = api.serviceContainer.get<NotebookEditorProvider>(
-        NotebookEditorProvider,
-        VSCodeNotebookProvider
-    );
+    const notebookEditorProvider = api.serviceContainer.get<NotebookEditorProvider>(VSCodeNotebookProvider);
     notebookEditorProvider.dispose();
 }
 
