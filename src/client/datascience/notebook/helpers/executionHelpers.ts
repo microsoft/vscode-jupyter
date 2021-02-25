@@ -153,7 +153,7 @@ export async function updateCellExecutionCount(
  * Updates our Cell Model with the cell output.
  * As we execute a cell we get output from jupyter. This code will ensure the cell is updated with the output.
  */
-export async function updateCellOutput(editor: NotebookEditor, cell: NotebookCell, outputs: nbformat.IOutput[]) {
+async function updateCellOutput(editor: NotebookEditor, cell: NotebookCell, outputs: nbformat.IOutput[]) {
     const newOutput = createVSCCellOutputsFromOutputs(outputs);
     // If there was no output and still no output, then nothing to do.
     if (cell.outputs.length === 0 && newOutput.length === 0) {
