@@ -175,6 +175,7 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
         if (!NativeEditorProvider.instance) {
             return;
         }
+        traceInfo('Manually disposing items in native editor provider');
         const items = Array.from(NativeEditorProvider.instance.openedEditors.keys());
         items.map((item) => {
             try {
