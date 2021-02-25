@@ -4,15 +4,53 @@ import { IGetSliceRequest } from '../../client/datascience/data-viewing/types';
 
 import './sliceControl.css';
 
-const sliceRegEx = /^\s*(?<StartRange>\d+:)|(?<StopRange>:\d+)|(?:(?<Start>-?\d+)(?::(?<Stop>-?\d+))?(?::(?<Step>-?\d+))?)\s*$/;
-const dropdownStyles = {
-    dropdownItem: {
-        color: 'var(--vscode-dropdown-foreground)',
+const sliceRegEx = /^\s*((?<StartRange>-?\d+:)|(?<StopRange>-?:\d+)|(?:(?<Start>-?\d+)(?::(?<Stop>-?\d+))?(?::(?<Step>-?\d+))?))\s*$/;
+const textFieldStyles = {
+    errorMessage: {
+        border: '1px solid var(--vscode-inputValidation-errorBorder)',
+        backgroundColor: 'var(--vscode-inputValidation-errorBackground)',
+        color: 'var(--vscode-settings-textInputForeground)',
+        alignItems: 'center',
+        padding: '5px 3px',
         fontFamily: 'var(--vscode-font-family)',
         fontWeight: 'var(--vscode-font-weight)',
-        fontSize: 'var(--vscode-font-size)',
-        backgroundColor: 'var(--vscode-dropdown-background)'
+        fontSize: 'var(--vscode-font-size)'
     },
+    fieldGroup: {
+        background: 'none',
+        '::after': {
+            inset: 'none',
+            border: 'none'
+        }
+    }
+};
+const styleOverrides = {
+    color: 'var(--vscode-dropdown-foreground)',
+    backgroundColor: 'var(--vscode-dropdown-background)',
+    fontFamily: 'var(--vscode-font-family)',
+    fontWeight: 'var(--vscode-font-weight)',
+    fontSize: 'var(--vscode-font-size)',
+    ':focus': {
+        color: 'var(--vscode-dropdown-foreground)'
+    },
+    ':active': {
+        color: 'var(--vscode-dropdown-foreground)'
+    },
+    ':hover': {
+        color: 'var(--vscode-dropdown-foreground)',
+        backgroundColor: 'var(--vscode-dropdown-background)'
+    }
+};
+const dropdownStyles = {
+    root: {
+        ':hover': {
+            color: 'var(--vscode-dropdown-foreground)'
+        }
+    },
+    dropdownItems: styleOverrides,
+    callout: styleOverrides,
+    dropdownItem: styleOverrides,
+    dropdownItemSelected: styleOverrides,
     dropdownItemDisabled: {
         color: 'var(--vscode-dropdown-foreground)',
         fontFamily: 'var(--vscode-font-family)',
@@ -28,9 +66,6 @@ const dropdownStyles = {
         fontSize: 'var(--vscode-font-size)',
         backgroundColor: 'var(--vscode-dropdown-background)',
         opacity: '0.3'
-    },
-    caretDown: {
-        color: 'var(--vscode-dropdown-foreground)'
     }
 };
 
@@ -77,6 +112,7 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
                     <div className="slice-control-row" style={{ marginTop: '10px' }}>
                         <TextField
                             value={this.state.inputValue}
+                            styles={textFieldStyles}
                             onGetErrorMessage={this.validateSliceExpression}
                             onChange={this.handleChange}
                             autoComplete="on"
