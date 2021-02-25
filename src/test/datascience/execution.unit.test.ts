@@ -956,7 +956,6 @@ suite('Jupyter Execution', async () => {
             instance(jupyterInterpreterService),
             instance(interpreterService),
             instance(dependencyService),
-            instance(fileSystem),
             instance(executionFactory),
             instance(mock<IOutputChannel>()),
             instance(mock<IPathUtils>())

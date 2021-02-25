@@ -166,7 +166,7 @@ export class JupyterKernelService {
         }
         if (!kernel) {
             // Possible user doesn't have kernelspec installed.
-            kernel = await this.getKernelSpecFromStdOut(await execService.getExecutablePath(), output.stdout).catch(
+            kernel = await this.getKernelSpecFromStdOut(output.stdout).catch(
                 (ex) => {
                     traceError('Failed to get kernelspec from stdout', ex);
                     return undefined;
@@ -287,7 +287,7 @@ export class JupyterKernelService {
      * @memberof KernelService
      */
     @traceDecorators.error('Failed to parse kernel creation stdout')
-    private async getKernelSpecFromStdOut(pythonPath: string, output: string): Promise<JupyterKernelSpec | undefined> {
+    private async getKernelSpecFromStdOut(output: string): Promise<JupyterKernelSpec | undefined> {
         if (!output) {
             return;
         }
@@ -309,9 +309,6 @@ export class JupyterKernelService {
         }
 
         const specFile = await getRealPath(
-            this.fs,
-            this.execFactory,
-            pythonPath,
             path.join(groups.path, 'kernel.json')
         );
         if (!specFile) {

@@ -3,12 +3,11 @@
 'use strict';
 import type { nbformat } from '@jupyterlab/coreutils';
 import * as os from 'os';
+import * as fs from 'fs-extra';
 import { parse, SemVer } from 'semver';
 import { Uri } from 'vscode';
 import { splitMultilineString } from '../../datascience-ui/common';
 import { traceError, traceInfo } from '../common/logger';
-import { IFileSystem } from '../common/platform/types';
-import { IPythonExecutionFactory } from '../common/process/types';
 import { DataScience } from '../common/utils/localize';
 import { sendTelemetryEvent } from '../telemetry';
 import { KnownKernelLanguageAliases, KnownNotebookLanguages, Telemetry } from './constants';
@@ -151,36 +150,9 @@ export function generateNewNotebookUri(
 }
 
 export async function getRealPath(
-    fs: IFileSystem,
-    execFactory: IPythonExecutionFactory,
-    pythonPath: string,
     expectedPath: string
 ): Promise<string | undefined> {
-    if (await fs.localDirectoryExists(expectedPath)) {
-        return expectedPath;
-    }
-    if (await fs.localFileExists(expectedPath)) {
-        return expectedPath;
-    }
-
-    // If can't find the path, try turning it into a real path.
-    const pythonRunner = await execFactory.create({ pythonPath });
-    const result = await pythonRunner.exec(
-        ['-c', `import os;print(os.path.realpath("${expectedPath.replace(/\\/g, '\\\\')}"))`],
-        {
-            throwOnStdErr: false,
-            encoding: 'utf-8'
-        }
-    );
-    if (result && result.stdout) {
-        const trimmed = result.stdout.trim();
-        if (await fs.localDirectoryExists(trimmed)) {
-            return trimmed;
-        }
-        if (await fs.localFileExists(trimmed)) {
-            return trimmed;
-        }
-    }
+    return fs.realpath(expectedPath);
 }
 
 // For the given string parse it out to a SemVer or return undefined

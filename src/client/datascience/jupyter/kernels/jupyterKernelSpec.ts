@@ -6,9 +6,7 @@ import * as path from 'path';
 import { CancellationToken } from 'vscode';
 import { createPromiseFromCancellation } from '../../../common/cancellation';
 import { traceInfo } from '../../../common/logger';
-import { IFileSystem } from '../../../common/platform/types';
 
-import { IPythonExecutionFactory } from '../../../common/process/types';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { getRealPath } from '../../common';
 import { IJupyterKernelSpec } from '../../types';
@@ -53,8 +51,6 @@ export class JupyterKernelSpec implements IJupyterKernelSpec {
  */
 export async function parseKernelSpecs(
     stdout: string,
-    fs: IFileSystem,
-    execFactory: IPythonExecutionFactory,
     token?: CancellationToken
 ) {
     traceInfo('Parsing kernelspecs from jupyter');
@@ -74,9 +70,6 @@ export async function parseKernelSpecs(
                     name: kernelName
                 };
                 const specFile = await getRealPath(
-                    fs,
-                    execFactory,
-                    spec.argv[0],
                     path.join(kernelSpecs[kernelName].resource_dir, 'kernel.json')
                 );
                 if (specFile) {

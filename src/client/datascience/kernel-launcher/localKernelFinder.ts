@@ -12,7 +12,6 @@ import { IWorkspaceService } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { traceDecorators, traceError, traceInfo, traceInfoIf } from '../../common/logger';
 import { IFileSystem, IPlatformService } from '../../common/platform/types';
-import { IPythonExecutionFactory } from '../../common/process/types';
 import { IExtensionContext, IPathUtils, Resource } from '../../common/types';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { IInterpreterService } from '../../interpreter/contracts';
@@ -73,7 +72,6 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         @inject(IPathUtils) private readonly pathUtils: IPathUtils,
         @inject(IExtensionContext) private readonly context: IExtensionContext,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
-        @inject(IPythonExecutionFactory) private readonly exeFactory: IPythonExecutionFactory,
         @inject(IEnvironmentVariablesProvider) private readonly envVarsProvider: IEnvironmentVariablesProvider,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker
     ) {}
@@ -206,7 +204,7 @@ export class LocalKernelFinder implements ILocalKernelFinder {
             ) {
                 return true;
             }
-            
+
             // 2. Check if we have a fully qualified path in `argv`
             const pathInArgv =
                 kernelSpec && Array.isArray(kernelSpec.argv) && kernelSpec.argv.length > 0
@@ -215,11 +213,11 @@ export class LocalKernelFinder implements ILocalKernelFinder {
             if (pathInArgv && path.basename(pathInArgv) !== pathInArgv && arePathsSame(pathInArgv, i.path)) {
                 return true;
             }
-            
+
             // 3. Check display name
             if (kernelSpec.display_name === i.displayName) {
                 return true;
-            }            
+            }
 
             // We used to use Python 2 or Python 3 to match an interpreter based on version
             // but this seems too ambitious. The kernel spec should just launch with the default
@@ -383,28 +381,13 @@ export class LocalKernelFinder implements ILocalKernelFinder {
             : [];
 
         if (jupyterPathVars.length > 0) {
-            if (this.platformService.isWindows) {
-                const activeInterpreter = await this.getActiveInterpreter();
-                if (activeInterpreter) {
-                    jupyterPathVars.forEach(async (jupyterPath) => {
-                        const jupyterWinPath = await getRealPath(
-                            this.fs,
-                            this.exeFactory,
-                            activeInterpreter.path,
-                            jupyterPath
-                        );
+            jupyterPathVars.forEach(async (jupyterPath) => {
+                const realPath = await getRealPath(jupyterPath);
 
-                        if (jupyterWinPath) {
-                            paths.push(jupyterWinPath);
-                        }
-                    });
-                } else {
-                    paths.push(...jupyterPathVars);
+                if (realPath) {
+                    paths.push(realPath);
                 }
-            } else {
-                // Unix based
-                paths.push(...jupyterPathVars);
-            }
+            });
         }
 
         return paths;
@@ -422,19 +405,9 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         const paths: string[] = await this.getJupyterPathPaths();
 
         if (this.platformService.isWindows) {
-            const activeInterpreter = await this.getActiveInterpreter();
-            if (activeInterpreter) {
-                const winPath = await getRealPath(
-                    this.fs,
-                    this.exeFactory,
-                    activeInterpreter.path,
-                    path.join(this.pathUtils.home, winJupyterPath)
-                );
-                if (winPath) {
-                    paths.push(winPath);
-                }
-            } else {
-                paths.push(path.join(this.pathUtils.home, winJupyterPath));
+            const winPath = await getRealPath(path.join(this.pathUtils.home, winJupyterPath));
+            if (winPath) {
+                paths.push(winPath);
             }
 
             if (process.env.ALLUSERSPROFILE) {

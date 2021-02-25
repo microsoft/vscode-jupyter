@@ -8,7 +8,6 @@ import * as path from 'path';
 import { CancellationToken } from 'vscode';
 import { Cancellation } from '../../../common/cancellation';
 import { traceError, traceInfo, traceWarning } from '../../../common/logger';
-import { IFileSystem } from '../../../common/platform/types';
 
 import {
     IPythonDaemonExecutionService,
@@ -49,7 +48,6 @@ export class JupyterInterpreterSubCommandExecutionService
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(JupyterInterpreterDependencyService)
         private readonly jupyterDependencyService: JupyterInterpreterDependencyService,
-        @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IPythonExecutionFactory) private readonly pythonExecutionFactory: IPythonExecutionFactory,
         @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) private readonly jupyterOutputChannel: IOutputChannel,
         @inject(IPathUtils) private readonly pathUtils: IPathUtils
@@ -204,8 +202,6 @@ export class JupyterInterpreterSubCommandExecutionService
 
             return parseKernelSpecs(
                 stdoutFromDaemon || stdoutFromFileExec,
-                this.fs,
-                this.pythonExecutionFactory,
                 token
             ).catch((parserError) => {
                 traceError('Failed to parse kernelspecs', parserError);

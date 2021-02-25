@@ -71,7 +71,6 @@ suite('DataScience - Jupyter InterpreterSubCommandExecutionService', () => {
             instance(jupyterInterpreter),
             instance(interperterService),
             instance(jupyterDependencyService),
-            instance(fs),
             instance(execFactory),
             output,
             instance(pathUtils)

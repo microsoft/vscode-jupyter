@@ -2,13 +2,17 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { assert } from 'chai';
-import * as sinon from 'sinon';
-import { anything, instance, mock, when } from 'ts-mockito';
-
 suite('Remote Kernel Finder', () => {
-    setup(() => {});
-    test('Kernels found', async () => {});
-    test('Active sessions found', async () => {});
-    test('Can match based on notebook metadata', async () => {});
+    setup(() => {
+        // Do nothing yet
+    });
+    test('Kernels found', async () => {
+        await Promise.resolve();
+    });
+    test('Active sessions found', async () => {
+        await Promise.resolve();
+    });
+    test('Can match based on notebook metadata', async () => {
+        await Promise.resolve();
+    });
 });
