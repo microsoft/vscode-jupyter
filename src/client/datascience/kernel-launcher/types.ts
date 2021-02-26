@@ -12,6 +12,7 @@ import { PythonEnvironment } from '../../pythonEnvironments/info';
 import {
     KernelConnectionMetadata,
     KernelSpecConnectionMetadata,
+    LocalKernelConnectionMetadata,
     PythonKernelConnectionMetadata
 } from '../jupyter/kernels/types';
 import { INotebookProviderConnection, KernelInterpreterDependencyResponse } from '../types';
@@ -57,8 +58,8 @@ export interface ILocalKernelFinder {
         resource: Resource,
         option?: nbformat.INotebookMetadata | PythonEnvironment,
         _cancelToken?: CancellationToken
-    ): Promise<KernelConnectionMetadata | undefined>;
-    listKernels(resource: Resource): Promise<KernelConnectionMetadata[]>;
+    ): Promise<LocalKernelConnectionMetadata | undefined>;
+    listKernels(resource: Resource): Promise<LocalKernelConnectionMetadata[]>;
     clearCache(resource: Resource): void;
 }
 

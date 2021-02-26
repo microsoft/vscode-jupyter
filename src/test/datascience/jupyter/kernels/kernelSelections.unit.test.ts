@@ -19,8 +19,8 @@ import { JupyterSessionManagerFactory } from '../../../../client/datascience/jup
 import { KernelSelectionProvider } from '../../../../client/datascience/jupyter/kernels/kernelSelections';
 import {
     IKernelSpecQuickPickItem,
-    KernelConnectionMetadata,
-    KernelSpecConnectionMetadata
+    KernelSpecConnectionMetadata,
+    LocalKernelConnectionMetadata
 } from '../../../../client/datascience/jupyter/kernels/types';
 import { ILocalKernelFinder, IRemoteKernelFinder } from '../../../../client/datascience/kernel-launcher/types';
 import {
@@ -94,7 +94,7 @@ suite('DataScience - KernelSelections', () => {
         rKernelSpecModel
     ];
 
-    const allMetadata: KernelConnectionMetadata[] = allSpecs.map((s) => {
+    const allMetadata: LocalKernelConnectionMetadata[] = allSpecs.map((s) => {
         const result: KernelSpecConnectionMetadata = {
             kind: 'startUsingKernelSpec',
             kernelSpec: s

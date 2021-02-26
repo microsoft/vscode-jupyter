@@ -82,6 +82,14 @@ export type KernelConnectionMetadata =
     | Readonly<DefaultKernelConnectionMetadata>;
 
 /**
+  * Connection metadata for local kernels. Makes it easier to not have to check for the live connection type. 
+  */
+export type LocalKernelConnectionMetadata = 
+    | Readonly<KernelSpecConnectionMetadata>
+    | Readonly<PythonKernelConnectionMetadata>
+    | Readonly<DefaultKernelConnectionMetadata>;
+
+/**
  * Returns a string that can be used to uniquely identify a Kernel Connection.
  */
 export function getKernelConnectionId(kernelConnection: KernelConnectionMetadata) {

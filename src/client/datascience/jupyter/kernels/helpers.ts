@@ -25,6 +25,7 @@ import {
 import { Settings } from '../../constants';
 import { PreferredRemoteKernelIdProvider } from '../../notebookStorage/preferredRemoteKernelIdProvider';
 import { isPythonNotebook } from '../../notebook/helpers/helpers';
+import { sha256 } from 'hash.js';
 
 // Helper functions for dealing with kernels and kernelspecs
 
@@ -155,12 +156,18 @@ export function getLanguageInNotebookMetadata(metadata?: nbformat.INotebookMetad
     }
     return metadata.language_info?.name;
 }
+
+export function getInterpreterKernelSpecName(interpreter?: PythonEnvironment): string {
+    // Generate a name from a hash of the interpreter name and path    
+    return interpreter ? sha256().update(`${interpreter.path}${interpreter.displayName}`).digest('hex') : 'python3';
+}
+
 // Create a default kernelspec with the given display name
-export function createDefaultKernelSpec(interpreter?: PythonEnvironment): IJupyterKernelSpec {
-    // This creates a default kernel spec. When launched, 'python' argument will map to using the interpreter
+export function createIntepreterKernelSpec(interpreter?: PythonEnvironment): IJupyterKernelSpec {
+    // This creates a kernel spec for an interpreter. When launched, 'python' argument will map to using the interpreter
     // associated with the current resource for launching.
     const defaultSpec: Kernel.ISpecModel = {
-        name: 'python3', // Don't use display name here. It's supposed to match the relative path on disk
+        name: getInterpreterKernelSpecName(interpreter),
         language: 'python',
         display_name: interpreter?.displayName || 'Python 3',
         metadata: {},

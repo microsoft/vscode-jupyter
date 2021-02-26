@@ -78,7 +78,7 @@ suite('DataScience - Kernels Finder', () => {
             return this.skip();
         }
         const kernelSpecs = await kernelFinder.listKernels(resourceToUse);
-        const juliaKernelSpec = kernelSpecs.find((item) => item.kind !== 'connectToLiveKernel' && item.kernelSpec?.language === 'julia');
+        const juliaKernelSpec = kernelSpecs.find((item) => item.kernelSpec?.language === 'julia');
         assert.ok(juliaKernelSpec);
 
         const kernelSpec = await kernelFinder.findKernel(resourceToUse, {

@@ -20,7 +20,6 @@ import { noop, swallowExceptions } from '../../common/utils/misc';
 import { captureTelemetry } from '../../telemetry';
 import { Commands, Telemetry } from '../constants';
 import {
-    createDefaultKernelSpec,
     findIndexOfConnectionFile,
     isPythonKernelConnection
 } from '../jupyter/kernels/helpers';
@@ -231,16 +230,6 @@ export class KernelProcess implements IKernelProcess {
         }
 
         let kernelSpec = this._kernelConnectionMetadata.kernelSpec;
-        // If there is no kernelspec & when launching a Python process, generate a dummy `kernelSpec`
-        if (!kernelSpec && this._kernelConnectionMetadata.kind === 'startUsingPythonInterpreter') {
-            traceInfo(
-                `Creating a default kernel spec for use with interpreter ${this._kernelConnectionMetadata.interpreter.displayName} # ${this._kernelConnectionMetadata.interpreter.path}`
-            );
-            kernelSpec = createDefaultKernelSpec(this._kernelConnectionMetadata.interpreter);
-            traceInfo(
-                `Created a default kernel spec for use with interpreter ${kernelSpec.display_name} # ${kernelSpec.interpreterPath}`
-            );
-        }
         // We always expect a kernel spec.
         if (!kernelSpec) {
             throw new Error('KernelSpec cannot be empty in KernelProcess.ts');

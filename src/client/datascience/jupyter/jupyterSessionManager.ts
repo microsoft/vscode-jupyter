@@ -24,7 +24,7 @@ import {
 import { createAuthorizingRequest } from './jupyterRequest';
 import { JupyterSession } from './jupyterSession';
 import { createJupyterWebSocket } from './jupyterWebSocket';
-import { createDefaultKernelSpec } from './kernels/helpers';
+import { createIntepreterKernelSpec } from './kernels/helpers';
 import { JupyterKernelService } from './kernels/jupyterKernelService';
 import { JupyterKernelSpec } from './kernels/jupyterKernelSpec';
 import { KernelConnectionMetadata } from './kernels/types';
@@ -234,7 +234,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
                 );
                 // If for some reason the session manager refuses to communicate, fall
                 // back to a default. This may not exist, but it's likely.
-                return [createDefaultKernelSpec()];
+                return [createIntepreterKernelSpec()];
             }
         } catch (e) {
             traceError(`SessionManager:getKernelSpecs failure: `, e);

@@ -77,7 +77,18 @@ export class JupyterKernelService {
         // If the spec file doesn't exist or is not defined, we need to register this kernel
         if (kernel.kind !== 'connectToLiveKernel' && kernel.kernelSpec && kernel.interpreter) {
             if (!kernel.kernelSpec.specFile || !(await this.fs.localFileExists(kernel.kernelSpec.specFile))) {
-                await this.registerKernel(resource, kernel.interpreter, token);
+                await this.registerKernel(resource, kernel.interpreter, kernel.kernelSpec.name, token);
+            }
+            // Special case. If the original spec file came from an interpreter, we may need to register a kernel
+            else if (!kernel.interpreter && kernel.kernelSpec.specFile) {
+                // See if the specfile we started with (which might be the one registered in the interpreter)
+                // doesn't match the name of the spec file
+                if (!kernel.kernelSpec.specFile.includes(kernel.kernelSpec.name)) {
+                    // This means the specfile for the kernelspec will not be found by jupyter. We need to
+                    // register it
+                    await this.registerKernel(resource, kernel.interpreter, kernel.kernelSpec.name, token);
+                }
+
             }
         }
 
@@ -110,6 +121,7 @@ export class JupyterKernelService {
     private async registerKernel(
         resource: Resource,
         interpreter: PythonEnvironment,
+        name: string,
         cancelToken?: CancellationToken
     ): Promise<IJupyterKernelSpec | undefined> {
         if (!interpreter.displayName) {
@@ -123,7 +135,6 @@ export class JupyterKernelService {
         });
         // Swallow errors if we get out of here and not resolve this.
         execServicePromise.ignoreErrors();
-        const name = this.generateKernelNameForInterpreter(interpreter);
         const execService = await execServicePromise;
         const output = await execService.execModule(
             'ipykernel',
@@ -140,7 +151,7 @@ export class JupyterKernelService {
 
         const findKernelSpec = async () => {
             const metadata = await this.kernelFinder.findKernel(resource, interpreter, cancelToken);
-            if (metadata && metadata.kind !== 'connectToLiveKernel') {
+            if (metadata) {
                 return metadata.kernelSpec;
             }
         };
@@ -262,20 +273,6 @@ export class JupyterKernelService {
             // Always update the metadata for the original kernel.
             specedKernel.metadata = specModel.metadata;
         }
-    }
-
-    /**
-     * Not all characters are allowed in a kernel name.
-     * This method will generate a name for a kernel based on display name and path.
-     * Algorithm = <displayname - invalid characters> + <hash of path>
-     *
-     * @private
-     * @param {PythonEnvironment} interpreter
-     * @memberof KernelService
-     */
-    private generateKernelNameForInterpreter(interpreter: PythonEnvironment): string {
-        // Never change this logic, this is used in other places to determine the format of names we have generated.
-        return `${interpreter.displayName || ''}${uuid()}`.replace(/[^A-Za-z0-9]/g, '').toLowerCase();
     }
 
     /**

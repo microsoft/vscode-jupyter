@@ -19,11 +19,15 @@ import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry } from '../../telemetry';
 import { getRealPath } from '../common';
 import { Telemetry } from '../constants';
-import { findPreferredKernelIndex } from '../jupyter/kernels/helpers';
+import {
+    createIntepreterKernelSpec,
+    findPreferredKernelIndex,
+    getInterpreterKernelSpecName
+} from '../jupyter/kernels/helpers';
 import { JupyterKernelSpec } from '../jupyter/kernels/jupyterKernelSpec';
 import {
-    KernelConnectionMetadata,
     KernelSpecConnectionMetadata,
+    LocalKernelConnectionMetadata,
     PythonKernelConnectionMetadata
 } from '../jupyter/kernels/types';
 import { IJupyterKernelSpec } from '../types';
@@ -36,7 +40,7 @@ const baseKernelPath = path.join('share', 'jupyter', 'kernels');
 
 const cacheFile = 'kernelSpecPaths.json';
 
-type KernelSpecFileWithContainingInterpreter = { interpreterPath?: string; kernelSpecFile: string };
+type KernelSpecFileWithContainingInterpreter = { interpreter?: PythonEnvironment; kernelSpecFile: string };
 
 /**
  * Helper to ensure we can differentiate between two types in union types, keeping typing information.
@@ -60,7 +64,7 @@ export class LocalKernelFinder implements ILocalKernelFinder {
     private cacheDirty = false;
 
     // Store our results when listing all possible kernelspecs for a resource
-    private workspaceToMetadata = new Map<string, Promise<KernelConnectionMetadata[]>>();
+    private workspaceToMetadata = new Map<string, Promise<LocalKernelConnectionMetadata[]>>();
 
     // Store any json file that we have loaded from disk before
     private pathToKernelSpec = new Map<string, Promise<IJupyterKernelSpec | undefined>>();
@@ -81,7 +85,7 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         resource: Resource,
         option?: nbformat.INotebookMetadata | PythonEnvironment,
         _cancelToken?: CancellationToken
-    ): Promise<KernelConnectionMetadata | undefined> {
+    ): Promise<LocalKernelConnectionMetadata | undefined> {
         // Get list of all of the specs
         const kernels = await this.listKernels(resource);
 
@@ -103,7 +107,7 @@ export class LocalKernelFinder implements ILocalKernelFinder {
 
     // Search all our local file system locations for installed kernel specs and return them
     @captureTelemetry(Telemetry.KernelListingPerf)
-    public async listKernels(resource: Resource): Promise<KernelConnectionMetadata[]> {
+    public async listKernels(resource: Resource): Promise<LocalKernelConnectionMetadata[]> {
         // Get an id for the workspace folder, if we don't have one, use the fsPath of the resource
         const workspaceFolderId = this.workspaceService.getWorkspaceFolderIdentifier(
             resource,
@@ -139,27 +143,32 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         this.workspaceToMetadata.delete(workspaceFolderId);
     }
 
-    private async findResourceKernelMetadata(resource: Resource): Promise<KernelConnectionMetadata[]> {
+    private async findResourceKernelMetadata(resource: Resource): Promise<LocalKernelConnectionMetadata[]> {
         // First find the on disk kernel specs and interpreters
-        let [kernelSpecs, interpreters] = await Promise.all([
+        const [kernelSpecs, interpreters] = await Promise.all([
             this.findResourceKernelSpecs(resource),
             this.findResourceInterpreters(resource)
         ]);
+
+        // Copy the interpreter list. We need to filter out those items
+        // which have matched one or more kernelspecs
+        let filteredInterpreters = [...interpreters];
 
         // Then go through all of the kernels and generate their metadata
         const kernelMetadata = kernelSpecs.map((k) => {
             // Find the interpreter that matches. If we find one, we want to use
             // this to start the kernel.
-            const matchingInterpreter = this.findMatchingInterpreter(k, interpreters);
-            if (matchingInterpreter) {
+            const matchingInterpreters = this.findMatchingInterpreters(k, interpreters);
+            if (matchingInterpreters && matchingInterpreters.length) {
                 const result: PythonKernelConnectionMetadata = {
                     kind: 'startUsingPythonInterpreter',
                     kernelSpec: k,
-                    interpreter: matchingInterpreter
+                    interpreter: matchingInterpreters[0]
                 };
 
-                // If an interpreter was found, remove this item from the interpreter list
-                interpreters = interpreters.filter((i) => i === matchingInterpreter);
+                // If interpreters were found, remove them from the interpreter list we'll eventually
+                // return as interpreter only items
+                filteredInterpreters = filteredInterpreters.filter((i) => !matchingInterpreters.includes(i));
 
                 // Return our metadata that uses an interpreter to start
                 return result;
@@ -176,10 +185,10 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         // Combine the two into our list
         return [
             ...kernelMetadata,
-            ...interpreters.map((i) => {
+            ...filteredInterpreters.map((i) => {
                 const result: PythonKernelConnectionMetadata = {
                     kind: 'startUsingPythonInterpreter',
-                    kernelSpec: undefined,
+                    kernelSpec: createIntepreterKernelSpec(i),
                     interpreter: i
                 };
                 return result;
@@ -187,11 +196,11 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         ];
     }
 
-    private findMatchingInterpreter(
+    private findMatchingInterpreters(
         kernelSpec: IJupyterKernelSpec,
         interpreters: PythonEnvironment[]
-    ): PythonEnvironment | undefined {
-        return interpreters.find((i) => {
+    ): PythonEnvironment[] | undefined {
+        return interpreters.filter((i) => {
             // If we know for a fact that the kernel spec is a Non-Python kernel, then return nothing.
             if (kernelSpec.language && kernelSpec.language !== PYTHON_LANGUAGE) {
                 return false;
@@ -223,6 +232,7 @@ export class LocalKernelFinder implements ILocalKernelFinder {
             // but this seems too ambitious. The kernel spec should just launch with the default
             // python and no environment. Otherwise how do we know which interpreter is the best
             // match?
+            return false;
         });
     }
 
@@ -237,7 +247,7 @@ export class LocalKernelFinder implements ILocalKernelFinder {
             searchResults.map(async (resultPath) => {
                 // Add these into our path cache to speed up later finds
                 this.updateCache(resultPath);
-                const kernelspec = await this.getKernelSpec(resultPath.kernelSpecFile, resultPath.interpreterPath);
+                const kernelspec = await this.getKernelSpec(resultPath.kernelSpecFile, resultPath.interpreter);
 
                 if (kernelspec) {
                     results.push(kernelspec);
@@ -258,10 +268,13 @@ export class LocalKernelFinder implements ILocalKernelFinder {
     }
 
     // Load the IJupyterKernelSpec for a given spec path, check the ones that we have already loaded first
-    private async getKernelSpec(specPath: string, interpreterPath?: string): Promise<IJupyterKernelSpec | undefined> {
+    private async getKernelSpec(
+        specPath: string,
+        interpreter?: PythonEnvironment
+    ): Promise<IJupyterKernelSpec | undefined> {
         // If we have not already loaded this kernel spec, then load it
         if (!this.pathToKernelSpec.has(specPath)) {
-            this.pathToKernelSpec.set(specPath, this.loadKernelSpec(specPath, interpreterPath));
+            this.pathToKernelSpec.set(specPath, this.loadKernelSpec(specPath, interpreter));
         }
 
         // ! as the has and set above verify that we have a return here
@@ -278,16 +291,31 @@ export class LocalKernelFinder implements ILocalKernelFinder {
     }
 
     // Load kernelspec json from disk
-    private async loadKernelSpec(specPath: string, interpreterPath?: string): Promise<IJupyterKernelSpec | undefined> {
+    private async loadKernelSpec(
+        specPath: string,
+        interpreter?: PythonEnvironment
+    ): Promise<IJupyterKernelSpec | undefined> {
         let kernelJson;
         try {
-            traceInfo(`Loading kernelspec from ${specPath} for ${interpreterPath}`);
+            traceInfo(`Loading kernelspec from ${specPath} for ${interpreter?.path}`);
             kernelJson = JSON.parse(await this.fs.readLocalFile(specPath));
         } catch {
             traceError(`Failed to parse kernelspec ${specPath}`);
             return undefined;
         }
-        const kernelSpec: IJupyterKernelSpec = new JupyterKernelSpec(kernelJson, specPath, interpreterPath);
+
+        // Special case. If we have an interpreter path this means this spec file came
+        // from an interpreter location (like a conda environment). Modify the name to make sure it fits
+        // the kernel instead
+        kernelJson.name = interpreter ? getInterpreterKernelSpecName(interpreter) : kernelJson.name;
+
+        // Update the display name too if the original name is ambiguous (like Python 3)
+        kernelJson.display_name =
+            kernelJson.language === PYTHON_LANGUAGE && kernelJson.display_name === 'Python 3'
+                ? interpreter?.displayName || kernelJson.display_name
+                : kernelJson.display_name;
+
+        const kernelSpec: IJupyterKernelSpec = new JupyterKernelSpec(kernelJson, specPath, interpreter?.path);
 
         // Some registered kernel specs do not have a name, in this case use the last part of the path
         kernelSpec.name = kernelJson?.name || path.basename(path.dirname(specPath));
@@ -445,7 +473,7 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         const kernelSpecFiles: KernelSpecFileWithContainingInterpreter[] = [];
         searchResults.forEach((item) => {
             for (const kernelSpecFile of item.kernelSpecFiles) {
-                kernelSpecFiles.push({ interpreterPath: item.interpreter?.path, kernelSpecFile });
+                kernelSpecFiles.push({ interpreter: item.interpreter, kernelSpecFile });
             }
         });
 
@@ -457,7 +485,8 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         if (
             !this.cache.find(
                 (item) =>
-                    item.interpreterPath === newPath.interpreterPath && item.kernelSpecFile === newPath.kernelSpecFile
+                    item.interpreter?.path === newPath.interpreter?.path &&
+                    item.kernelSpecFile === newPath.kernelSpecFile
             )
         ) {
             this.cache.push(newPath);
