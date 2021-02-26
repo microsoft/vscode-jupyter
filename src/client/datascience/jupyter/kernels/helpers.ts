@@ -341,6 +341,9 @@ export function findPreferredKernelIndex(
                 if (spec.display_name && spec.display_name === notebookMetadata?.kernelspec?.display_name) {
                     score += 16;
                 }
+                if (spec.display_name && spec.display_name === interpreter?.displayName) {
+                    score += 10;
+                }
 
                 // Find a kernel spec that matches the language in the notebook metadata.
                 const nbMetadataLanguage = isPythonNotebook(notebookMetadata)

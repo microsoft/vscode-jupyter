@@ -218,7 +218,11 @@ export class LocalKernelFinder implements ILocalKernelFinder {
                 kernelSpec && Array.isArray(kernelSpec.argv) && kernelSpec.argv.length > 0
                     ? kernelSpec.argv[0]
                     : undefined;
-            if (pathInArgv && path.basename(pathInArgv) !== pathInArgv && this.fs.areLocalPathsSame(pathInArgv, i.path)) {
+            if (
+                pathInArgv &&
+                path.basename(pathInArgv) !== pathInArgv &&
+                this.fs.areLocalPathsSame(pathInArgv, i.path)
+            ) {
                 return true;
             }
 
@@ -320,9 +324,9 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         // the kernel instead
         kernelJson.name = interpreter ? getInterpreterKernelSpecName(interpreter) : kernelJson.name;
 
-        // Update the display name too if the original name is ambiguous (like Python 3)
+        // Update the display name too if we have an interpreter.
         kernelJson.display_name =
-            kernelJson.language === PYTHON_LANGUAGE && kernelJson.display_name === 'Python 3'
+            kernelJson.language === PYTHON_LANGUAGE
                 ? interpreter?.displayName || kernelJson.display_name
                 : kernelJson.display_name;
 

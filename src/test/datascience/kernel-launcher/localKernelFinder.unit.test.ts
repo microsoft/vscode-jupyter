@@ -30,7 +30,7 @@ import { PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { arePathsSame } from '../../common';
 
 [false, true].forEach((isWindows) => {
-    suite('Local Kernel Finder', () => {
+    suite(`Local Kernel Finder ${isWindows ? 'Windows' : 'Unix'}`, () => {
         let kernelFinder: ILocalKernelFinder;
         let interpreterService: IInterpreterService;
         let platformService: IPlatformService;
@@ -389,13 +389,13 @@ import { arePathsSame } from '../../common';
                 python3Interpreter.displayName,
                 'Kernel found does not match python 3 interpreter name'
             );
-            assert.ok(kernel?.interpreter, 'No interpreter for matching based on interpreter')
+            assert.ok(kernel?.interpreter, 'No interpreter for matching based on interpreter');
             kernel = await kernelFinder.findKernel(undefined, python2Interpreter);
             assert.ok(kernel, 'No python 2 kernel found matching interpreter');
             assert.equal(
-                kernel?.kernelSpec?.display_name,
-                python2Interpreter.displayName,
-                'Kernel found does not match python 2 interpreter name'
+                kernel?.interpreter?.path,
+                python2Interpreter.path,
+                'Kernel found does not match python 2 path'
             );
             kernel = await kernelFinder.findKernel(undefined, condaEnvironment);
             assert.ok(kernel, 'No conda kernel found matching interpreter');
