@@ -199,7 +199,8 @@ import { WebviewExtensibility } from './webviewExtensibility';
 // eslint-disable-next-line
 export function registerTypes(serviceManager: IServiceManager, inNotebookApiExperiment: boolean) {
     const useVSCodeNotebookAPI = inNotebookApiExperiment;
-    serviceManager.addSingletonInstance<boolean>(UseCustomEditorApi, !vscode.env.appName.includes('Insider'));
+    const usingCustomEditor = !useVSCodeNotebookAPI && !vscode.env.appName.includes('Insider');
+    serviceManager.addSingletonInstance<boolean>(UseCustomEditorApi, usingCustomEditor);
     serviceManager.addSingletonInstance<boolean>(UseVSCodeNotebookEditorApi, useVSCodeNotebookAPI);
     serviceManager.addSingletonInstance<number>(DataScienceStartupTime, Date.now());
 
