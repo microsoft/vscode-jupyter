@@ -155,12 +155,6 @@ def _VSCODE_getDataFrameInfo(df):
     else:
         columnNames = list(df)
 
-    # Compute the index column. It may have been renamed
-    try:
-        indexColumn = df.index.name if df.index.name else "index"
-    except AttributeError:
-        indexColumn = "index"        
-
     columnTypes = _VSCODE_builtins.list(df.dtypes)
 
     # Then loop and generate our output json
@@ -177,8 +171,6 @@ def _VSCODE_getDataFrameInfo(df):
     # Save this in our target
     target = {}
     target["columns"] = columns
-    if df.index.name:
-        target["indexColumn"] = indexColumn
     target["rowCount"] = rowCount
 
     # return our json object as a string

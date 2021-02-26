@@ -366,7 +366,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         const after = response.end < this.state.gridRows.length ? this.state.gridRows.slice(response.end) : [];
         const newActual = before.concat(normalized.concat(after));
 
-        console.log(`this.state.fetchedRowCount = ${this.state.fetchedRowCount}, newFetched = ${newFetched}`)
         // Apply this to our state
         this.setState({
             fetchedRowCount: newFetched,
