@@ -461,7 +461,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     }
 
     private sendMessage<M extends IDataViewerMapping, T extends keyof M>(type: T, payload?: M[T]) {
-        console.log('sending message', type, payload);
         this.postOffice.sendMessage<M, T>(type, payload);
     }
 
