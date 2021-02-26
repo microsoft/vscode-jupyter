@@ -105,14 +105,17 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
         if (this.props.originalVariableShape !== prevProps.originalVariableShape) {
             let slice = this.preselectedSliceExpression();
             if (this.state.isEnabled) {
-                // TODO Check if the current slice expression would be valid relative to the new shape
-                // If it would still be valid, use that instead of the preselected one
-                slice = this.state.sliceExpression;
+                if (this.validateSliceExpression(this.state.sliceExpression) === '') {
+                    // Check if the current slice expression would be valid relative to the new shape
+                    // If it would still be valid, use that instead of the preselected one
+                    slice = this.state.sliceExpression;
+                }
             } else {
                 // Slicing not enabled anyway, so no slice
                 slice = this.fullSliceExpression();
             }
             this.props.handleSliceRequest({ slice });
+            this.setState({ sliceExpression: slice, inputValue: slice });
         }
     }
 
@@ -262,6 +265,12 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
         }
     };
 
+    /**
+     * 
+     * @returns A Python slice expression with the 0th index preselected along 
+     * the first ndim - 2 axes. For example, for a 5D array with shape
+     * (10, 20, 30, 40, 50), the preselected slice expression is [0, 0, 0, :, :].
+     */
     private preselectedSliceExpression() {
         let numDimensionsToPreselect = this.props.originalVariableShape.length - 2;
         return (
@@ -283,12 +292,11 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
         return '[' + this.props.originalVariableShape.map(() => ':').join(', ') + ']';
     }
 
-    private validateSliceExpression = () => {
-        const { inputValue } = this.state;
-        if (inputValue.startsWith('[') && inputValue.endsWith(']')) {
+    private validateSliceExpression = (sliceExpression: string) => {
+        if (sliceExpression.startsWith('[') && sliceExpression.endsWith(']')) {
             let hasOutOfRangeIndex: { shapeIndex: number; value: number } | undefined;
-            const parsedExpression = inputValue
-                .substring(1, inputValue.length - 1)
+            const parsedExpression = sliceExpression
+                .substring(1, sliceExpression.length - 1)
                 .split(',')
                 .map((shapeEl, shapeIndex) => {
                     // Validate IndexErrors
