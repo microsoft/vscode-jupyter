@@ -1,6 +1,7 @@
 import { Dropdown, IDropdownOption, ResponsiveMode, TextField } from '@fluentui/react';
 import * as React from 'react';
 import { IGetSliceRequest } from '../../client/datascience/data-viewing/types';
+import { measureText } from '../react-common/textMeasure';
 
 import './sliceControl.css';
 
@@ -45,9 +46,6 @@ const styleOverrides = {
 const dropdownStyles = {
     root: {
         color: 'var(--vscode-dropdown-foreground)'
-    },
-    dropdown: {
-        width: 50 // TODO this should change based on the length of the longest option
     },
     dropdownItems: {
         ...styleOverrides,
@@ -182,6 +180,12 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
         const ndim = this.props.originalVariableShape.length;
         const numDropdowns = Math.max(ndim - 2, 1); // Ensure at least 1 set of dropdowns for 2D data
         const dropdowns = [];
+        const styles = {
+            ...dropdownStyles,
+            dropdown: {
+                width: measureText(Math.max(...this.props.originalVariableShape).toString(), null) + 40
+            }
+        }
 
         for (let i = 0; i < numDropdowns; i++) {
             const updateIndexHandler = this.generateIndexHandler(i);
@@ -197,7 +201,7 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
                         responsiveMode={ResponsiveMode.xxxLarge}
                         label="Axis"
                         style={{ marginRight: '10px' }}
-                        styles={dropdownStyles}
+                        styles={styles}
                         disabled={!this.state.isEnabled || this.props.loadingData}
                         selectedKey={axisKey}
                         key={`axis${i}`}
@@ -208,7 +212,7 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
                     <Dropdown
                         responsiveMode={ResponsiveMode.xxxLarge}
                         label="Index"
-                        styles={dropdownStyles}
+                        styles={styles}
                         disabled={
                             !this.state.isEnabled ||
                             this.state[`selectedAxis${i}`] === undefined ||

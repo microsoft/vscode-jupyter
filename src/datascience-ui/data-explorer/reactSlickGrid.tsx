@@ -475,7 +475,8 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
                         buttons: [
                             {
                                 cssClass: 'codicon codicon-filter codicon-button',
-                                handler: this.clickFilterButton
+                                handler: this.clickFilterButton,
+                                tooltip: this.state.showingFilters ? 'Hide filters' : 'Show filters'
                             }
                         ]
                     };
