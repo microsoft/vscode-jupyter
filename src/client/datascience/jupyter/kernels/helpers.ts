@@ -158,7 +158,7 @@ export function getLanguageInNotebookMetadata(metadata?: nbformat.INotebookMetad
 }
 
 export function getInterpreterKernelSpecName(interpreter?: PythonEnvironment): string {
-    // Generate a name from a hash of the interpreter name and path    
+    // Generate a name from a hash of the interpreter name and path
     return interpreter ? sha256().update(`${interpreter.path}${interpreter.displayName}`).digest('hex') : 'python3';
 }
 
@@ -310,14 +310,11 @@ export function findPreferredKernelIndex(
     }
 
     // If still not found, look for a match based on notebook metadata and interpreter
-    if (index < 0 && notebookMetadata) {
+    if (index < 0 && (notebookMetadata || interpreter)) {
         let bestScore = -1;
         for (let i = 0; kernels && i < kernels?.length; i = i + 1) {
             const metadata = kernels[i];
-            const spec =
-                metadata.kind === 'startUsingKernelSpec' || metadata.kind === 'startUsingDefaultKernel'
-                    ? metadata.kernelSpec
-                    : undefined;
+            const spec = metadata.kind !== 'connectToLiveKernel' ? metadata.kernelSpec : undefined;
             let score = 0;
 
             if (spec) {

@@ -213,7 +213,7 @@ export class JupyterSession extends BaseJupyterSession {
         // Make sure the kernel has ipykernel installed if on a local machine.
         if (kernelConnection?.interpreter && this.connInfo.localLaunch) {
             // Make sure the kernel actually exists and is up to date.
-            await this.kernelService.ensureKernelIsUsable(undefined, kernelConnection, cancelToken, disableUI);
+            await this.kernelService.ensureKernelIsUsable(kernelConnection, cancelToken, disableUI);
         }
 
         // Create our session options using this temporary notebook and our connection info

@@ -10,31 +10,22 @@ import { CancellationToken, CancellationTokenSource } from 'vscode';
 import { Cancellation, wrapCancellationTokens } from '../../../common/cancellation';
 import { PYTHON_WARNINGS } from '../../../common/constants';
 import '../../../common/extensions';
-import { traceDecorators, traceError, traceInfo, traceWarning } from '../../../common/logger';
+import { traceDecorators, traceInfo } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 
-import { IPythonExecutionFactory } from '../../../common/process/types';
-import { ReadWrite, Resource } from '../../../common/types';
-import { sleep } from '../../../common/utils/async';
+import { ReadWrite } from '../../../common/types';
 import { noop } from '../../../common/utils/misc';
 import { IEnvironmentActivationService } from '../../../interpreter/activation/types';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
-import { getRealPath } from '../../common';
 import { Telemetry } from '../../constants';
 import { ILocalKernelFinder } from '../../kernel-launcher/types';
 import { reportAction } from '../../progress/decorator';
 import { ReportableAction } from '../../progress/types';
-import {
-    IJupyterKernelSpec,
-    IKernelDependencyService
-} from '../../types';
+import { IJupyterKernelSpec, IKernelDependencyService } from '../../types';
 import { cleanEnvironment } from './helpers';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
-import { KernelConnectionMetadata } from './types';
-
-// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
-const NamedRegexp = require('named-js-regexp') as typeof import('named-js-regexp');
+import { KernelConnectionMetadata, LocalKernelConnectionMetadata } from './types';
 
 /**
  * Responsible for registering and updating kernels
@@ -45,7 +36,6 @@ const NamedRegexp = require('named-js-regexp') as typeof import('named-js-regexp
 @injectable()
 export class JupyterKernelService {
     constructor(
-        @inject(IPythonExecutionFactory) private readonly execFactory: IPythonExecutionFactory,
         @inject(IKernelDependencyService) private readonly kernelDependencyService: IKernelDependencyService,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IEnvironmentActivationService) private readonly activationHelper: IEnvironmentActivationService,
@@ -59,7 +49,6 @@ export class JupyterKernelService {
      * @param kernel
      */
     public async ensureKernelIsUsable(
-        resource: Resource,
         kernel: KernelConnectionMetadata,
         cancelToken?: CancellationToken,
         disableUI?: boolean
@@ -76,7 +65,7 @@ export class JupyterKernelService {
         // If the spec file doesn't exist or is not defined, we need to register this kernel
         if (kernel.kind !== 'connectToLiveKernel' && kernel.kernelSpec && kernel.interpreter) {
             if (!kernel.kernelSpec.specFile || !(await this.fs.localFileExists(kernel.kernelSpec.specFile))) {
-                await this.registerKernel(resource, kernel.interpreter, kernel.kernelSpec.name, token);
+                await this.registerKernel(kernel, token);
             }
             // Special case. If the original spec file came from an interpreter, we may need to register a kernel
             else if (!kernel.interpreter && kernel.kernelSpec.specFile) {
@@ -85,9 +74,8 @@ export class JupyterKernelService {
                 if (!kernel.kernelSpec.specFile.includes(kernel.kernelSpec.name)) {
                     // This means the specfile for the kernelspec will not be found by jupyter. We need to
                     // register it
-                    await this.registerKernel(resource, kernel.interpreter, kernel.kernelSpec.name, token);
+                    await this.registerKernel(kernel, token);
                 }
-
             }
         }
 
@@ -118,89 +106,64 @@ export class JupyterKernelService {
     @reportAction(ReportableAction.KernelsRegisterKernel)
     // eslint-disable-next-line
     private async registerKernel(
-        resource: Resource,
-        interpreter: PythonEnvironment,
-        name: string,
+        kernel: LocalKernelConnectionMetadata,
         cancelToken?: CancellationToken
-    ): Promise<IJupyterKernelSpec | undefined> {
-        if (!interpreter.displayName) {
-            throw new Error('Interpreter does not have a display name');
-        }
+    ): Promise<void> {
+        // Get the global kernel location
+        const root = await this.kernelFinder.getKernelSpecRootPath();
 
-        const execServicePromise = this.execFactory.createActivatedEnvironment({
-            interpreter,
-            allowEnvironmentFetchExceptions: true,
-            bypassCondaExecution: true
-        });
-        // Swallow errors if we get out of here and not resolve this.
-        execServicePromise.ignoreErrors();
-        const execService = await execServicePromise;
-        const output = await execService.execModule(
-            'ipykernel',
-            ['install', '--user', '--name', name, '--display-name', interpreter.displayName],
-            {
-                throwOnStdErr: false,
-                encoding: 'utf8',
-                token: cancelToken
-            }
-        );
-        if (Cancellation.isCanceled(cancelToken)) {
+        // If that didn't work, we can't continue
+        if (!root || !kernel.kernelSpec || cancelToken?.isCancellationRequested) {
             return;
         }
 
-        const findKernelSpec = async () => {
-            const metadata = await this.kernelFinder.findKernel(resource, interpreter, cancelToken);
-            if (metadata) {
-                return metadata.kernelSpec;
-            }
-        };
+        // Compute a new path for the kernelspec
+        const kernelSpecFilePath = path.join(root, kernel.kernelSpec.name, 'kernel.json');
 
-        let kernel = await findKernelSpec();
-        // Wait for at least 5s. We know launching a python (conda env) process on windows can sometimes take around 4s.
-        for (let counter = 0; counter < 10; counter += 1) {
-            if (Cancellation.isCanceled(cancelToken)) {
-                return;
-            }
-            if (kernel) {
-                break;
-            }
-            traceWarning('Waiting for 500ms for registered kernel to get detected');
-            // Wait for jupyter server to get updated with the new kernel information.
-            await sleep(500);
-
-            // Clear our finder cache
-            this.kernelFinder.clearCache(resource);
-
-            // Look again
-            kernel = await findKernelSpec();
+        // If this file already exists, we can just exit
+        if (await this.fs.localFileExists(kernelSpecFilePath)) {
+            return;
         }
-        if (!kernel) {
-            // Possible user doesn't have kernelspec installed.
-            kernel = await this.getKernelSpecFromStdOut(output.stdout).catch(
-                (ex) => {
-                    traceError('Failed to get kernelspec from stdout', ex);
-                    return undefined;
-                }
+
+        // If it doesn't exist, see if we had an original spec file that's different.
+        const contents = { ...kernel.kernelSpec };
+        if (kernel.kernelSpec.specFile && !this.fs.areLocalPathsSame(kernelSpecFilePath, kernel.kernelSpec.specFile)) {
+            // Add extra metadata onto the contents. We'll use this
+            // when searching for kernels later to remove duplicates.
+            contents.metadata = {
+                ...contents.metadata,
+                originalSpecFile: kernel.kernelSpec.specFile
+            };
+        }
+        // Make sure interpreter is in the metadata
+        if (kernel.interpreter) {
+            contents.metadata = {
+                ...contents.metadata,
+                interpreter: kernel.interpreter
+            };
+        }
+
+        // Write out the contents into the new spec file
+        await this.fs.writeLocalFile(kernelSpecFilePath, JSON.stringify(contents, undefined, 4));
+        if (cancelToken?.isCancellationRequested) {
+            return;
+        }
+
+        // Copy any other files over from the original directory (images most likely)
+        if (contents.metadata?.originalSpecFile) {
+            const originalSpecDir = path.dirname(contents.metadata?.originalSpecFile);
+            const newSpecDir = path.dirname(kernelSpecFilePath);
+            const otherFiles = await this.fs.searchLocal('.*[^json]', originalSpecDir);
+            await Promise.all(
+                otherFiles.map(async (f) => {
+                    const oldPath = path.join(originalSpecDir, f);
+                    const newPath = path.join(newSpecDir, f);
+                    await this.fs.copyLocal(oldPath, newPath);
+                })
             );
-        }
-        if (!kernel) {
-            const error = `Kernel not created with the name ${name}, display_name ${interpreter.displayName}. Output is ${output.stdout}`;
-            throw new Error(error);
-        }
-        if (!(kernel instanceof JupyterKernelSpec)) {
-            const error = `Kernel not registered locally, created with the name ${name}, display_name ${interpreter.displayName}. Output is ${output.stdout}`;
-            throw new Error(error);
-        }
-        if (!kernel.specFile) {
-            const error = `kernel.json not created with the name ${name}, display_name ${interpreter.displayName}. Output is ${output.stdout}`;
-            throw new Error(error);
         }
 
         sendTelemetryEvent(Telemetry.RegisterAndUseInterpreterAsKernel);
-        traceInfo(
-            `Kernel successfully registered for ${interpreter.path} with the name=${name} and spec can be found here ${kernel.specFile}`
-        );
-        return kernel;
     }
     private async updateKernelEnvironment(
         interpreter: PythonEnvironment | undefined,
@@ -272,47 +235,5 @@ export class JupyterKernelService {
             // Always update the metadata for the original kernel.
             specedKernel.metadata = specModel.metadata;
         }
-    }
-
-    /**
-     * Will scrape kernelspec info from the output when a new kernel is created.
-     *
-     * @private
-     * @param {string} output
-     * @returns {JupyterKernelSpec}
-     * @memberof KernelService
-     */
-    @traceDecorators.error('Failed to parse kernel creation stdout')
-    private async getKernelSpecFromStdOut(output: string): Promise<JupyterKernelSpec | undefined> {
-        if (!output) {
-            return;
-        }
-
-        // Output should be of the form
-        // `Installed kernel <kernelname> in <path>`
-        const regEx = NamedRegexp('Installed\\skernelspec\\s(?<name>\\w*)\\sin\\s(?<path>.*)', 'g');
-        const match = regEx.exec(output);
-        if (!match || !match.groups()) {
-            return;
-        }
-
-        type RegExGroup = { name: string; path: string };
-        const groups = match.groups() as RegExGroup | undefined;
-
-        if (!groups || !groups.name || !groups.path) {
-            traceError('Kernel Output not parsed', output);
-            throw new Error('Unable to parse output to get the kernel info');
-        }
-
-        const specFile = await getRealPath(
-            path.join(groups.path, 'kernel.json')
-        );
-        if (!specFile) {
-            throw new Error('KernelSpec file not found');
-        }
-
-        const kernelModel = JSON.parse(await this.fs.readLocalFile(specFile));
-        kernelModel.name = groups.name;
-        return new JupyterKernelSpec(kernelModel as Kernel.ISpecModel, specFile);
     }
 }

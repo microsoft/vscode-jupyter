@@ -30,11 +30,11 @@ export class MockKernelFinder implements ILocalKernelFinder {
     public async listKernels(_resource: Resource): Promise<LocalKernelConnectionMetadata[]> {
         throw new Error('Not yet implemented');
     }
+    public getKernelSpecRootPath(): Promise<string | undefined> {
+        return this.realFinder.getKernelSpecRootPath();
+    }
 
     public addKernelSpec(pythonPathOrResource: string, spec: LocalKernelConnectionMetadata) {
         this.dummySpecs.set(pythonPathOrResource, spec);
-    }
-    public clearCache(_resource: Resource): void {
-        // Do nothing.
     }
 }

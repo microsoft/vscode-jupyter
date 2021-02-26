@@ -60,7 +60,7 @@ export interface ILocalKernelFinder {
         _cancelToken?: CancellationToken
     ): Promise<LocalKernelConnectionMetadata | undefined>;
     listKernels(resource: Resource): Promise<LocalKernelConnectionMetadata[]>;
-    clearCache(resource: Resource): void;
+    getKernelSpecRootPath(): Promise<string | undefined>;
 }
 
 export const IRemoteKernelFinder = Symbol('IRemoteKernelFinder');

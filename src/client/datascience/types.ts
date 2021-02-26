@@ -427,7 +427,7 @@ export interface IJupyterKernelSpec {
      * Optionally storing the interpreter information in the metadata (helping extension search for kernels that match an interpereter).
      */
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    readonly metadata?: Record<string, any> & { interpreter?: Partial<PythonEnvironment> };
+    readonly metadata?: Record<string, any> & { interpreter?: Partial<PythonEnvironment>; originalSpecFile?: string };
     readonly argv: string[];
     /**
      * Optionally where this kernel spec json is located on the local FS.

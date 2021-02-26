@@ -6,7 +6,6 @@ import type { nbformat } from '@jupyterlab/coreutils';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { CancellationToken } from 'vscode';
-import { arePathsSame } from '../../../datascience-ui/react-common/arePathsSame';
 import { IPythonExtensionChecker } from '../../api/types';
 import { IWorkspaceService } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
@@ -132,15 +131,12 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         });
     }
 
-    public clearCache(resource: Resource) {
-        // Ideally we'd put a filewatcher on all of the kernel locations instead of this.
-
-        // Get an id for the workspace folder, if we don't have one, use the fsPath of the resource
-        const workspaceFolderId = this.workspaceService.getWorkspaceFolderIdentifier(
-            resource,
-            resource?.fsPath || this.workspaceService.rootPath
-        );
-        this.workspaceToMetadata.delete(workspaceFolderId);
+    public async getKernelSpecRootPath(): Promise<string | undefined> {
+        if (this.platformService.isWindows) {
+            return getRealPath(path.join(this.pathUtils.home, winJupyterPath));
+        } else {
+            return path.join('/', 'usr', 'share', 'jupyter', 'kernels');
+        }
     }
 
     private async findResourceKernelMetadata(resource: Resource): Promise<LocalKernelConnectionMetadata[]> {
@@ -209,8 +205,11 @@ export class LocalKernelFinder implements ILocalKernelFinder {
             // 1. Check if current interpreter has the same path
             if (
                 kernelSpec.metadata?.interpreter?.path &&
-                arePathsSame(kernelSpec.metadata?.interpreter?.path, i.path)
+                this.fs.areLocalPathsSame(kernelSpec.metadata?.interpreter?.path, i.path)
             ) {
+                return true;
+            }
+            if (kernelSpec.interpreterPath && this.fs.areLocalPathsSame(kernelSpec.interpreterPath, i.path)) {
                 return true;
             }
 
@@ -219,7 +218,7 @@ export class LocalKernelFinder implements ILocalKernelFinder {
                 kernelSpec && Array.isArray(kernelSpec.argv) && kernelSpec.argv.length > 0
                     ? kernelSpec.argv[0]
                     : undefined;
-            if (pathInArgv && path.basename(pathInArgv) !== pathInArgv && arePathsSame(pathInArgv, i.path)) {
+            if (pathInArgv && path.basename(pathInArgv) !== pathInArgv && this.fs.areLocalPathsSame(pathInArgv, i.path)) {
                 return true;
             }
 
@@ -237,7 +236,7 @@ export class LocalKernelFinder implements ILocalKernelFinder {
     }
 
     private async findResourceKernelSpecs(resource: Resource): Promise<IJupyterKernelSpec[]> {
-        const results: IJupyterKernelSpec[] = [];
+        let results: IJupyterKernelSpec[] = [];
 
         // Find all the possible places to look for this resource
         const paths = await this.findAllResourcePossibleKernelPaths(resource);
@@ -254,6 +253,18 @@ export class LocalKernelFinder implements ILocalKernelFinder {
                 }
             })
         );
+
+        // Filter out duplicates. This can happen when
+        // 1) Conda installs kernel
+        // 2) Same kernel is registered in the global location
+        // We should have extra metadata on the global location pointing to the original
+        const originalSpecFiles = new Set<string>();
+        results.forEach((r) => {
+            if (r.metadata?.originalSpecFile) {
+                originalSpecFiles.add(r.metadata?.originalSpecFile);
+            }
+        });
+        results = results.filter((r) => !r.specFile || !originalSpecFiles.has(r.specFile));
 
         return results;
     }
@@ -433,7 +444,7 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         const paths: string[] = await this.getJupyterPathPaths();
 
         if (this.platformService.isWindows) {
-            const winPath = await getRealPath(path.join(this.pathUtils.home, winJupyterPath));
+            const winPath = await this.getKernelSpecRootPath();
             if (winPath) {
                 paths.push(winPath);
             }

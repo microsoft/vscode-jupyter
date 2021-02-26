@@ -83,7 +83,7 @@ suite('DataScience - JupyterSession', () => {
         when(connection.rootDirectory).thenReturn('');
         const channel = new MockOutputChannel('JUPYTER');
         const kernelService = mock(JupyterKernelService);
-        when(kernelService.ensureKernelIsUsable(anything(), anything(), anything(), anything())).thenResolve();
+        when(kernelService.ensureKernelIsUsable(anything(), anything(), anything())).thenResolve();
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (instance(session) as any).then = undefined;
         sessionManager = mock(SessionManager);
