@@ -113,17 +113,21 @@ details[open] > summary::before {
     font-size: var(--vscode-font-size);
 }
 
-[class*='ms-Dropdown-title'] {
+[class*='fieldGroup-78'],
+[class*='fieldGroup-42'] {
+    border: none;
+    background: none;
+}
+
+.dropdownTitleOverrides .ms-Dropdown-title {
+    /* Usually want to avoid !important but in this case
+       it's necessary to ensure that when the dropdown
+       has focus, the default dropdown :focus color (black)
+       is not applied */
+    color: var(--vscode-dropdown-foreground) !important; 
     font-family: var(--vscode-font-family);
     font-weight: var(--vscode-font-weight);
     font-size: var(--vscode-font-size);
     background-color: var(--vscode-dropdown-background);
     border: var(--vscode-dropdown-border);
-    color: var(--vscode-dropdown-foreground);
-}
-
-[class*='fieldGroup-78'],
-[class*='fieldGroup-42'] {
-    border: none;
-    background: none;
 }

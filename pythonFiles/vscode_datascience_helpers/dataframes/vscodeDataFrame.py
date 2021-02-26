@@ -122,11 +122,10 @@ def _VSCODE_getRowCount(var):
 
 # Function to retrieve a set of rows for a data frame
 def _VSCODE_getDataFrameRows(df, start, end):
-    df = _VSCODE_convertToDataFrame(df)
+    df = _VSCODE_convertToDataFrame(df[start:end])
     # Turn into JSON using pandas. We use pandas because it's about 3 orders of magnitude faster to turn into JSON
-    rows = df.iloc[start:end]
     try:
-        rows = rows.replace(
+        df = df.replace(
             {
                 _VSCODE_np.inf: "inf",
                 -_VSCODE_np.inf: "-inf",
@@ -135,7 +134,7 @@ def _VSCODE_getDataFrameRows(df, start, end):
         )
     except:
         pass
-    return _VSCODE_pd_json.to_json(None, rows, orient="table", date_format="iso")
+    return _VSCODE_pd_json.to_json(None, df, orient="table", date_format="iso")
 
 
 # Function to get info on the passed in data frame
@@ -160,7 +159,7 @@ def _VSCODE_getDataFrameInfo(df):
     try:
         indexColumn = df.index.name if df.index.name else "index"
     except AttributeError:
-        indexColumn = "index"
+        indexColumn = "index"        
 
     columnTypes = _VSCODE_builtins.list(df.dtypes)
 
@@ -178,7 +177,8 @@ def _VSCODE_getDataFrameInfo(df):
     # Save this in our target
     target = {}
     target["columns"] = columns
-    target["indexColumn"] = indexColumn
+    if df.index.name:
+        target["indexColumn"] = indexColumn
     target["rowCount"] = rowCount
 
     # return our json object as a string

@@ -37,7 +37,6 @@ import 'slickgrid/slick.grid.css';
 // Make sure our css comes after the slick grid css. We override some of its styles.
 // eslint-disable-next-line import/order
 import './reactSlickGrid.css';
-import { SliceControl } from './sliceControl';
 import { generateDisplayValue } from './cellFormatter';
 /*
 WARNING: Do not change the order of these imports.
@@ -69,7 +68,6 @@ export interface ISlickGridProps {
     dataDimensionality: number;
     originalVariableShape: number[] | undefined;
     isSliceDataEnabled: boolean; // Feature flag. This should eventually be removed
-    loadingData: boolean;
     handleSliceRequest(args: IGetSliceRequest): void;
 }
 
@@ -309,30 +307,11 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
 
         return (
             <div className="outer-container">
-                {this.renderSliceControls()}
                 <div className="react-grid-container" style={style} ref={this.containerRef}></div>
                 <div className="react-grid-measure" ref={this.measureRef} />
             </div>
         );
     }
-
-    public renderSliceControls = () => {
-        if (
-            this.props.isSliceDataEnabled &&
-            this.props.originalVariableShape &&
-            this.props.originalVariableShape.filter((v) => !!v).length > 1
-        ) {
-            return (
-                <div className="control-container">
-                    <SliceControl
-                        loadingData={this.props.loadingData}
-                        originalVariableShape={this.props.originalVariableShape}
-                        handleSliceRequest={this.props.handleSliceRequest}
-                    />
-                </div>
-            );
-        }
-    };
 
     // public for testing
     public sort = (_e: Slick.EventData, args: Slick.OnSortEventArgs<Slick.SlickData>) => {

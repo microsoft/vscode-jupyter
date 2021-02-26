@@ -31,6 +31,7 @@ import { Image, ImageName } from '../react-common/image';
 
 import '../react-common/codicon/codicon.css';
 import '../react-common/seti/seti.less';
+import { SliceControl } from './sliceControl';
 
 const SliceableTypes: Set<string> = new Set<string>(['ndarray', 'Tensor', 'EagerTensor']);
 
@@ -154,9 +155,28 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 />
                 {progressBar}
                 {this.renderBreadcrumb()}
+                {this.renderSliceControls()}
                 {this.state.totalRowCount > 0 && this.state.styleReady && this.renderGrid()}
             </div>
         );
+    };
+
+    public renderSliceControls = () => {
+        if (
+            this.state.isSliceDataEnabled &&
+            this.state.originalVariableShape &&
+            this.state.originalVariableShape.filter((v) => !!v).length > 1
+        ) {
+            return (
+                <div className="control-container">
+                    <SliceControl
+                        loadingData={this.state.totalRowCount > this.state.fetchedRowCount}
+                        originalVariableShape={this.state.originalVariableShape}
+                        handleSliceRequest={this.handleSliceRequest}
+                    />
+                </div>
+            );
+        }
     };
 
     private renderBreadcrumb() {
@@ -252,7 +272,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 originalVariableShape={this.state.originalVariableShape}
                 isSliceDataEnabled={this.state.isSliceDataEnabled}
                 handleSliceRequest={this.handleSliceRequest}
-                loadingData={this.state.totalRowCount > this.state.fetchedRowCount}
             />
         );
     }
@@ -347,6 +366,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         const after = response.end < this.state.gridRows.length ? this.state.gridRows.slice(response.end) : [];
         const newActual = before.concat(normalized.concat(after));
 
+        console.log(`this.state.fetchedRowCount = ${this.state.fetchedRowCount}, newFetched = ${newFetched}`)
         // Apply this to our state
         this.setState({
             fetchedRowCount: newFetched,
@@ -397,9 +417,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             if (!r) {
                 r = {};
             }
-            if (!r.hasOwnProperty(this.state.indexColumn)) {
-                r[this.state.indexColumn] = this.state.fetchedRowCount + idx;
-            }
+            r[this.state.indexColumn] = this.state.fetchedRowCount + idx;
             for (let [key, value] of Object.entries(r)) {
                 switch (value) {
                     case 'nan':
@@ -460,6 +478,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     }
 
     private handleSliceRequest = (args: IGetSliceRequest) => {
+        // TODO debounce this
         this.sendMessage(DataViewerMessages.GetSliceRequest, args);
     };
 

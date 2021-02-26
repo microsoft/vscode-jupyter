@@ -44,11 +44,19 @@ const styleOverrides = {
 };
 const dropdownStyles = {
     root: {
-        ':hover': {
-            color: 'var(--vscode-dropdown-foreground)'
+        color: 'var(--vscode-dropdown-foreground)'
+    },
+    dropdown: {
+        width: 50, // TODO this should change based on the length of the longest option
+    },
+    dropdownItems: { 
+        ...styleOverrides,
+        selectors: {
+            "@media(min-width: 300px)": {
+              maxHeight: 100
+            }
         }
     },
-    dropdownItems: styleOverrides,
     callout: styleOverrides,
     dropdownItem: styleOverrides,
     dropdownItemSelected: styleOverrides,
@@ -122,6 +130,7 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
                             id="slice-enablement-checkbox"
                             className="slice-enablement-checkbox"
                             onChange={this.toggleEnablement}
+                            disabled={this.props.loadingData}
                         />
                         <label htmlFor="slice-enablement-checkbox">Slice Data</label>
                     </div>
@@ -190,6 +199,7 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
                         selectedKey={axisKey}
                         key={`axis${i}`}
                         options={axisOptions}
+                        className="dropdownTitleOverrides"
                         onChange={updateAxisHandler}
                     />
                     <Dropdown
@@ -205,6 +215,7 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
                         selectedKey={indexKey}
                         key={`index${i}`}
                         options={indexOptions}
+                        className="dropdownTitleOverrides"
                         onChange={updateIndexHandler}
                     />
                 </div>
