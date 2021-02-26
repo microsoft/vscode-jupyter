@@ -6,7 +6,6 @@
 import type { Kernel } from '@jupyterlab/services';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import * as uuid from 'uuid/v4';
 import { CancellationToken, CancellationTokenSource } from 'vscode';
 import { Cancellation, wrapCancellationTokens } from '../../../common/cancellation';
 import { PYTHON_WARNINGS } from '../../../common/constants';
