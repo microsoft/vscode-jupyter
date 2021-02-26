@@ -54,12 +54,9 @@ import { NotebookProvider } from './interactive-common/notebookProvider';
 import { NotebookServerProvider } from './interactive-common/notebookServerProvider';
 import { NotebookUsageTracker } from './interactive-common/notebookUsageTracker';
 import { ShowPlotListener } from './interactive-common/showPlotListener';
-import { AutoSaveService } from './interactive-ipynb/autoSaveService';
 import { DigestStorage } from './interactive-ipynb/digestStorage';
 import { NativeEditor } from './interactive-ipynb/nativeEditor';
 import { NativeEditorCommandListener } from './interactive-ipynb/nativeEditorCommandListener';
-import { NativeEditorOldWebView } from './interactive-ipynb/nativeEditorOldWebView';
-import { NativeEditorProviderOld } from './interactive-ipynb/nativeEditorProviderOld';
 import { NativeEditorRunByLineListener } from './interactive-ipynb/nativeEditorRunByLineListener';
 import { NativeEditorSynchronizer } from './interactive-ipynb/nativeEditorSynchronizer';
 import { NativeEditorViewTracker } from './interactive-ipynb/nativeEditorViewTracker';
@@ -200,16 +197,15 @@ import { WebviewExtensibility } from './webviewExtensibility';
 // README: Did you make sure "dataScienceIocContainer.ts" has also been updated appropriately?
 
 // eslint-disable-next-line
-export function registerTypes(serviceManager: IServiceManager, inNotebookApiExperiment: boolean, inCustomEditorApiExperiment: boolean) {
-    const usingCustomEditor = inCustomEditorApiExperiment && !vscode.env.appName.includes('Insider'); // Don't use app manager in case it's not available yet.
-    const useVSCodeNotebookAPI = inNotebookApiExperiment && !usingCustomEditor;
-    serviceManager.addSingletonInstance<boolean>(UseCustomEditorApi, usingCustomEditor);
+export function registerTypes(serviceManager: IServiceManager, inNotebookApiExperiment: boolean) {
+    const useVSCodeNotebookAPI = inNotebookApiExperiment;
+    serviceManager.addSingletonInstance<boolean>(UseCustomEditorApi, !vscode.env.appName.includes('Insider'));
     serviceManager.addSingletonInstance<boolean>(UseVSCodeNotebookEditorApi, useVSCodeNotebookAPI);
     serviceManager.addSingletonInstance<number>(DataScienceStartupTime, Date.now());
 
     // This will ensure all subsequent telemetry will get the context of whether it is a custom/native/old notebook editor.
     // This is temporary, and once we ship native editor this needs to be removed.
-    setSharedProperty('ds_notebookeditor', useVSCodeNotebookAPI ? 'native' : usingCustomEditor ? 'custom' : 'old');
+    setSharedProperty('ds_notebookeditor', useVSCodeNotebookAPI ? 'native' : 'custom');
     const isLocalConnection = isLocalLaunch(serviceManager.get<IConfigurationService>(IConfigurationService));
     setSharedProperty('localOrRemoteConnection', isLocalConnection ? 'local' : 'remote');
     const isPythonExtensionInstalled = serviceManager.get<IPythonExtensionChecker>(IPythonExtensionChecker);
@@ -217,16 +213,12 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
 
     // This condition is temporary.
     serviceManager.addSingleton<INotebookEditorProvider>(VSCodeNotebookProvider, NotebookEditorProvider);
-    serviceManager.addSingleton<INotebookEditorProvider>(OurNotebookProvider, usingCustomEditor ? NativeEditorProvider : NativeEditorProviderOld);
+    serviceManager.addSingleton<INotebookEditorProvider>(OurNotebookProvider, NativeEditorProvider);
     serviceManager.addSingleton<INotebookEditorProvider>(INotebookEditorProvider, NotebookEditorProviderWrapper);
     serviceManager.add<IExtensionSingleActivationService>(IExtensionSingleActivationService, NotebookEditorCompatibilitySupport);
     serviceManager.add<NotebookEditorCompatibilitySupport>(NotebookEditorCompatibilitySupport, NotebookEditorCompatibilitySupport);
     if (!useVSCodeNotebookAPI) {
-        serviceManager.add<INotebookEditor>(INotebookEditor, usingCustomEditor ? NativeEditor : NativeEditorOldWebView);
-        // These are never going to be required for new VSC NB.
-        if (!usingCustomEditor) {
-            serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, AutoSaveService);
-        }
+        serviceManager.add<INotebookEditor>(INotebookEditor, NativeEditor);
         serviceManager.addSingleton<NativeEditorSynchronizer>(NativeEditorSynchronizer, NativeEditorSynchronizer);
     }
 
