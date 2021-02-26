@@ -12,7 +12,8 @@ export const KeyCodes = {
     End: 35,
     Home: 36,
     Insert: 45,
-    Delete: 46
+    Delete: 46,
+    X: 88
 };
 
 export function getOSType() {

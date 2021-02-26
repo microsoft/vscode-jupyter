@@ -666,7 +666,8 @@ function readonlyCellEditor(this: any, args: any) {
         // to move their cursor within the focused input element
         if (
             (e.keyCode === KeyCodes.LeftArrow && cursorPosition > 0) ||
-            (e.keyCode === KeyCodes.RightArrow && cursorPosition < textLength - 1)
+            (e.keyCode === KeyCodes.RightArrow && cursorPosition < textLength - 1) ||
+            (e.ctrlKey && e.keyCode === KeyCodes.X)
         ) {
             e.stopImmediatePropagation();
         }
