@@ -185,7 +185,7 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
             dropdown: {
                 width: measureText(Math.max(...this.props.originalVariableShape).toString(), null) + 40
             }
-        }
+        };
 
         for (let i = 0; i < numDropdowns; i++) {
             const updateIndexHandler = this.generateIndexHandler(i);
