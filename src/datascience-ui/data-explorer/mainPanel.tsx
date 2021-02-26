@@ -32,6 +32,7 @@ import { Image, ImageName } from '../react-common/image';
 import '../react-common/codicon/codicon.css';
 import '../react-common/seti/seti.less';
 import { SliceControl } from './sliceControl';
+import { debounce } from 'lodash';
 
 const SliceableTypes: Set<string> = new Set<string>(['ndarray', 'Tensor', 'EagerTensor']);
 
@@ -460,6 +461,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     }
 
     private sendMessage<M extends IDataViewerMapping, T extends keyof M>(type: T, payload?: M[T]) {
+        console.log('sending message', type, payload);
         this.postOffice.sendMessage<M, T>(type, payload);
     }
 
@@ -476,9 +478,10 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         }
     }
 
+    private debounceSliceRequest = debounce(this.sendMessage, 400);
     private handleSliceRequest = (args: IGetSliceRequest) => {
-        // TODO debounce this
-        this.sendMessage(DataViewerMessages.GetSliceRequest, args);
+        // Fetching a slice is expensive so debounce requests
+        this.debounceSliceRequest(DataViewerMessages.GetSliceRequest, args);
     };
 
     private updateColumns(newColumns: Slick.Column<Slick.SlickData>[]) {
