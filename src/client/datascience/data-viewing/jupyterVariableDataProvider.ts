@@ -84,7 +84,12 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
         let variable = this.variable;
         if (variable) {
             if (sliceExpression || shouldUpdateCachedInfo) {
-                variable = await this.variableManager.getDataFrameInfo(variable, this.notebook, sliceExpression, shouldUpdateCachedInfo);
+                variable = await this.variableManager.getDataFrameInfo(
+                    variable,
+                    this.notebook,
+                    sliceExpression,
+                    shouldUpdateCachedInfo
+                );
             }
             dataFrameInfo = {
                 columns: variable.columns

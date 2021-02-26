@@ -189,12 +189,14 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 <div className="breadcrumb">
                     <div className="icon-python breadcrumb-file-icon" />
                     <span>{this.state.fileName}</span>
-                    {this.state.fileName ? <Image
-                        baseTheme={this.props.baseTheme}
-                        class="image-button-image"
-                        codicon="chevron-right"
-                        image={ImageName.Cancel}
-                    /> : undefined}
+                    {this.state.fileName ? (
+                        <Image
+                            baseTheme={this.props.baseTheme}
+                            class="image-button-image"
+                            codicon="chevron-right"
+                            image={ImageName.Cancel}
+                        />
+                    ) : undefined}
                     <span>{breadcrumbText}</span>
                 </div>
             </div>

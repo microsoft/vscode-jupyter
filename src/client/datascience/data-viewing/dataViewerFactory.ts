@@ -26,7 +26,9 @@ export class DataViewerFactory implements IDataViewerFactory, IAsyncDisposable {
     ) {
         asyncRegistry.push(this);
         this.viewContext = new ContextKey(EditorContexts.IsDataViewerActive, this.commandManager);
-        this.disposables.push(this.commandManager.registerCommand(Commands.RefreshDataViewer, this.refreshDataViewer, this));
+        this.disposables.push(
+            this.commandManager.registerCommand(Commands.RefreshDataViewer, this.refreshDataViewer, this)
+        );
     }
 
     public async dispose() {
@@ -70,14 +72,15 @@ export class DataViewerFactory implements IDataViewerFactory, IAsyncDisposable {
             if (viewer.active) {
                 hasActiveViewer = true;
             }
-        })
+        });
         await this.viewContext.set(hasActiveViewer);
     }
 
     private refreshDataViewer() {
         // Find the data viewer which is currently active
         for (const viewer of this.knownViewers) {
-            if (viewer.active) { // There should only be one of these
+            if (viewer.active) {
+                // There should only be one of these
                 void viewer.refreshData();
             }
         }

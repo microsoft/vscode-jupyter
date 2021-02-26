@@ -68,7 +68,12 @@ export class JupyterVariables implements IJupyterVariables {
         sliceExpression?: string,
         shouldUpdateCachedInfoCachedInfo?: boolean
     ): Promise<IJupyterVariable> {
-        return (await this.getVariableHandler(notebook)).getDataFrameInfo(targetVariable, notebook, sliceExpression, shouldUpdateCachedInfoCachedInfo);
+        return (await this.getVariableHandler(notebook)).getDataFrameInfo(
+            targetVariable,
+            notebook,
+            sliceExpression,
+            shouldUpdateCachedInfoCachedInfo
+        );
     }
 
     public async getDataFrameRows(

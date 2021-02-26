@@ -47,13 +47,13 @@ const dropdownStyles = {
         color: 'var(--vscode-dropdown-foreground)'
     },
     dropdown: {
-        width: 50, // TODO this should change based on the length of the longest option
+        width: 50 // TODO this should change based on the length of the longest option
     },
-    dropdownItems: { 
+    dropdownItems: {
         ...styleOverrides,
         selectors: {
-            "@media(min-width: 300px)": {
-              maxHeight: 100
+            '@media(min-width: 300px)': {
+                maxHeight: 100
             }
         }
     },
@@ -266,8 +266,8 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
     };
 
     /**
-     * 
-     * @returns A Python slice expression with the 0th index preselected along 
+     *
+     * @returns A Python slice expression with the 0th index preselected along
      * the first ndim - 2 axes. For example, for a 5D array with shape
      * (10, 20, 30, 40, 50), the preselected slice expression is [0, 0, 0, :, :].
      */

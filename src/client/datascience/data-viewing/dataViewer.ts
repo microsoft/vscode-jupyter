@@ -122,7 +122,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
     public async refreshData() {
         // Clear our cached info promise
         this.dataFrameInfoPromise = undefined;
-        // Then send a refresh data payload 
+        // Then send a refresh data payload
         const dataFrameInfo = await this.getDataFrameInfo(undefined, true);
         const isSliceDataEnabled = await this.experimentService.inExperiment(Experiments.SliceDataViewer);
         // Send a message with our data
