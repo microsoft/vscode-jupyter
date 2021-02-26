@@ -80,7 +80,7 @@ export interface IDataFrameInfo {
 
 export interface IDataViewerDataProvider {
     dispose(): void;
-    getDataFrameInfo(sliceExpression?: string): Promise<IDataFrameInfo>;
+    getDataFrameInfo(sliceExpression?: string, shouldUpdateCachedInfo?: boolean): Promise<IDataFrameInfo>;
     getAllRows(sliceExpression?: string): Promise<IRowsResponse>;
     getRows(start: number, end: number, sliceExpression?: string): Promise<IRowsResponse>;
 }
@@ -101,7 +101,7 @@ export interface IDataViewerFactory {
 
 export const IDataViewer = Symbol('IDataViewer');
 export interface IDataViewer extends IDisposable {
-    active: boolean;
+    readonly active: boolean;
     readonly onDidDisposeDataViewer: Event<IDataViewer>;
     readonly onDidChangeDataViewerViewState: Event<void>;
     showData(dataProvider: IDataViewerDataProvider, title: string): Promise<void>;

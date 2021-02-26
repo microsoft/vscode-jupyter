@@ -913,7 +913,8 @@ export interface IJupyterVariables {
     getDataFrameInfo(
         targetVariable: IJupyterVariable,
         notebook?: INotebook,
-        sliceExpression?: string
+        sliceExpression?: string,
+        shouldUpdateCachedInfo?: boolean
     ): Promise<IJupyterVariable>;
     getDataFrameRows(
         targetVariable: IJupyterVariable,

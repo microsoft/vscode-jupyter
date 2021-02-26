@@ -123,7 +123,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
         // Clear our cached info promise
         this.dataFrameInfoPromise = undefined;
         // Then send a refresh data payload 
-        const dataFrameInfo = await this.prepDataFrameInfo(); // TODO what if the associated kernel or debug session has been terminated?
+        const dataFrameInfo = await this.getDataFrameInfo(undefined, true);
         const isSliceDataEnabled = await this.experimentService.inExperiment(Experiments.SliceDataViewer);
         // Send a message with our data
         this.postMessage(DataViewerMessages.RefreshDataResponse, {
@@ -175,11 +175,11 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
         super.onMessage(message, payload);
     }
 
-    private getDataFrameInfo(sliceExpression?: string): Promise<IDataFrameInfo> {
+    private getDataFrameInfo(sliceExpression?: string, shouldUpdateCachedInfo?: boolean): Promise<IDataFrameInfo> {
         // If requesting a new slice, refresh our cached info promise
         if (!this.dataFrameInfoPromise || sliceExpression !== this.currentSliceExpression) {
             this.dataFrameInfoPromise = this.dataProvider
-                ? this.dataProvider.getDataFrameInfo(sliceExpression)
+                ? this.dataProvider.getDataFrameInfo(sliceExpression, shouldUpdateCachedInfo)
                 : Promise.resolve({});
             this.currentSliceExpression = sliceExpression;
         }

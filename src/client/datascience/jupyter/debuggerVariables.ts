@@ -108,13 +108,16 @@ export class DebuggerVariables extends DebugLocationTracker
     public async getDataFrameInfo(
         targetVariable: IJupyterVariable,
         notebook?: INotebook,
-        sliceExpression?: string
+        sliceExpression?: string,
+        shouldUpdateCachedInfo?: boolean
     ): Promise<IJupyterVariable> {
         if (!this.active) {
             // No active server just return the unchanged target variable
             return targetVariable;
         }
-        targetVariable = await this.getFullVariable(targetVariable); // getDataFrameInfo does not refetch full variable
+        if (shouldUpdateCachedInfo) {
+            targetVariable = await this.getFullVariable(targetVariable);
+        }
         // Listen to notebook events if we haven't already
         if (notebook) {
             this.watchNotebook(notebook);
@@ -135,10 +138,8 @@ export class DebuggerVariables extends DebugLocationTracker
             (targetVariable as any).frameId
         );
 
-        let fileName;
-        if (notebook) {
-            fileName = path.basename(notebook.identity.path);
-        } else if (this.debugLocation?.fileName) {
+        let fileName = notebook ? path.basename(notebook.identity.path) : '';
+        if (!fileName && this.debugLocation?.fileName) {
             fileName = path.basename(this.debugLocation.fileName);
         }
         // Results should be the updated variable.

@@ -78,12 +78,14 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
         this.variable = variable;
     }
 
-    public async getDataFrameInfo(sliceExpression?: string): Promise<IDataFrameInfo> {
+    public async getDataFrameInfo(sliceExpression?: string, shouldUpdateCachedInfo?: boolean): Promise<IDataFrameInfo> {
         let dataFrameInfo: IDataFrameInfo = {};
         await this.ensureInitialized();
         let variable = this.variable;
         if (variable) {
-            variable = await this.variableManager.getDataFrameInfo(variable, this.notebook, sliceExpression);
+            if (sliceExpression || shouldUpdateCachedInfo) {
+                variable = await this.variableManager.getDataFrameInfo(variable, this.notebook, sliceExpression, shouldUpdateCachedInfo);
+            }
             dataFrameInfo = {
                 columns: variable.columns
                     ? JupyterVariableDataProvider.getNormalizedColumns(variable.columns)
@@ -98,6 +100,9 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
                 name: variable.name,
                 fileName: variable.fileName
             };
+        }
+        if (shouldUpdateCachedInfo) {
+            this.variable = variable;
         }
         return dataFrameInfo;
     }
