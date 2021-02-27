@@ -89,7 +89,7 @@ class ColumnFilter {
     private greaterThanEqualRegEx = /^\s*>=\s*((?<Number>\d+.*)|(?<NaN>nan)|(?<Inf>inf)|(?<NegInf>-inf)).*/i;
     private equalToRegEx = /^\s*(?:=|==)\s*((?<Number>\d+.*)|(?<NaN>nan)|(?<Inf>inf)|(?<NegInf>-inf)).*/i;
 
-    constructor(text: string, column: Slick.Column<Slick.SlickData>) {
+    constructor(public text: string, column: Slick.Column<Slick.SlickData>) {
         if (text && text.length > 0) {
             const columnType = (column as any).type;
             switch (columnType) {
@@ -333,6 +333,8 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
     private clearAllFilters = () => {
         this.columnFilters = new Map();
         this.dataView.refresh();
+        // Force column headers to rerender by setting columns
+        this.state.grid?.setColumns(this.state.grid.getColumns());
     };
 
     private styleColumns(columns: Slick.Column<ISlickRow>[]) {
@@ -570,8 +572,10 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
                 args.node
             );
         } else {
+            const filter = args.column.field ? this.columnFilters.get(args.column.field)?.text : '';
             ReactDOM.render(
                 <ReactSlickGridFilterBox
+                    filter={filter ?? ''}
                     column={args.column}
                     onChange={this.filterChanged}
                     fontSize={this.state.fontSize}
