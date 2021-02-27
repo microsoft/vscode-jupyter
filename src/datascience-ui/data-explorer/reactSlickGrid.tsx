@@ -38,6 +38,7 @@ import 'slickgrid/slick.grid.css';
 // eslint-disable-next-line import/order
 import './reactSlickGrid.css';
 import { generateDisplayValue } from './cellFormatter';
+import { getLocString } from '../react-common/locReactSide';
 /*
 WARNING: Do not change the order of these imports.
 Slick grid MUST be imported after we load jQuery and other stuff from `./globalJQueryImports`
@@ -476,7 +477,9 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
                             {
                                 cssClass: 'codicon codicon-filter codicon-button',
                                 handler: this.clickFilterButton,
-                                tooltip: this.state.showingFilters ? 'Hide filters' : 'Show filters'
+                                tooltip: this.state.showingFilters
+                                    ? getLocString('DataScience.dataViewerHideFilters', 'Hide filters')
+                                    : getLocString('DataScience.dataViewerShowFilters', 'Show filters')
                             }
                         ]
                     };

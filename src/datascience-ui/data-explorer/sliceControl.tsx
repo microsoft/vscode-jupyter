@@ -1,6 +1,7 @@
 import { Dropdown, IDropdownOption, ResponsiveMode, TextField } from '@fluentui/react';
 import * as React from 'react';
 import { IGetSliceRequest } from '../../client/datascience/data-viewing/types';
+import { getLocString } from '../react-common/locReactSide';
 import { measureText } from '../react-common/textMeasure';
 
 import './sliceControl.css';
@@ -121,7 +122,9 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
         return (
             <details className="slicing-control">
                 <summary className="slice-summary">
-                    <span className="slice-summary-detail">SLICING</span>
+                    <span className="slice-summary-detail">
+                        {getLocString('DataScience.sliceSummaryTitle', 'SLICING')}
+                    </span>
                     {this.renderReadonlyIndicator()}
                 </summary>
                 <form onSubmit={this.handleSubmit} className="slice-form">
@@ -149,7 +152,7 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
                             className="submit-slice-button"
                             type="submit"
                             disabled={!this.state.isEnabled || this.props.loadingData}
-                            value="Apply"
+                            value={getLocString('DataScience.sliceSubmitButton', 'Apply')}
                         />
                     </div>
                     {this.generateDropdowns()}
@@ -199,7 +202,7 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
                 <div className="slice-control-row">
                     <Dropdown
                         responsiveMode={ResponsiveMode.xxxLarge}
-                        label="Axis"
+                        label={getLocString('DataScience.sliceDropdownAxisLabel', 'Axis')}
                         style={{ marginRight: '10px' }}
                         styles={styles}
                         disabled={!this.state.isEnabled || this.props.loadingData}
@@ -211,7 +214,7 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
                     />
                     <Dropdown
                         responsiveMode={ResponsiveMode.xxxLarge}
-                        label="Index"
+                        label={getLocString('DataScience.sliceDropdownIndexLabel', 'Index')}
                         styles={styles}
                         disabled={
                             !this.state.isEnabled ||
