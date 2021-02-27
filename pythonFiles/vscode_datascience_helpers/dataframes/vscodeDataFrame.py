@@ -67,7 +67,8 @@ def _VSCODE_convertTensorToDataFrame(tensor, start, end):
             temp = temp.to_dense()
         # Two step conversion process required to convert tensors to DataFrames
         # tensor --> numpy array --> dataframe
-        temp = temp.data.cpu().detach().numpy()
+        # See https://discuss.pytorch.org/t/should-it-really-be-necessary-to-do-var-detach-cpu-numpy/35489
+        temp = temp.data.detach().cpu().numpy() 
         temp = _VSCODE_convertNumpyArrayToDataFrame(temp)
         tensor = temp
         del temp
