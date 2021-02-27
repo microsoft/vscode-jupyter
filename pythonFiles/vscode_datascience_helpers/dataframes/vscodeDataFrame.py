@@ -23,7 +23,7 @@ def _VSCODE_stringifyElement(element):
     return stringified
 
 
-def _VSCODE_convertNumpyArrayToDataFrame(ndarray):
+def _VSCODE_convertNumpyArrayToDataFrame(ndarray, start, end):
     # Save the user's current setting
     current_options = _VSCODE_np.get_printoptions()
     # Ask for the full string. Without this numpy truncates to 3 leading and 3 trailing by default
@@ -31,6 +31,8 @@ def _VSCODE_convertNumpyArrayToDataFrame(ndarray):
 
     flattened = None
     try:
+        if start is not None and end is not None:
+            ndarray = ndarray[start:end]
         if ndarray.ndim < 3 and str(ndarray.dtype) != "object":
             pass
         elif ndarray.ndim == 1 and str(ndarray.dtype) == "object":
@@ -52,9 +54,11 @@ def _VSCODE_convertNumpyArrayToDataFrame(ndarray):
 
 
 # Function that converts tensors to DataFrames
-def _VSCODE_convertTensorToDataFrame(tensor):
+def _VSCODE_convertTensorToDataFrame(tensor, start, end):
     try:
         temp = tensor
+        if start is not None and end is not None:
+            temp = temp[start:end]
         # Can't directly convert sparse tensors to numpy arrays
         # so first convert them to dense tensors
         if hasattr(temp, "is_sparse") and temp.is_sparse:
@@ -63,7 +67,7 @@ def _VSCODE_convertTensorToDataFrame(tensor):
             temp = temp.to_dense()
         # Two step conversion process required to convert tensors to DataFrames
         # tensor --> numpy array --> dataframe
-        temp = temp.numpy()
+        temp = temp.data.detach().numpy()
         temp = _VSCODE_convertNumpyArrayToDataFrame(temp)
         tensor = temp
         del temp
@@ -75,7 +79,7 @@ def _VSCODE_convertTensorToDataFrame(tensor):
 
 
 # Function that converts the var passed in into a pandas data frame if possible
-def _VSCODE_convertToDataFrame(df):
+def _VSCODE_convertToDataFrame(df, start=None, end=None):
     vartype = type(df)
     if isinstance(df, list):
         df = _VSCODE_pd.DataFrame(df)
@@ -89,9 +93,9 @@ def _VSCODE_convertToDataFrame(df):
     elif (
         hasattr(vartype, "__name__") and vartype.__name__ in _VSCODE_allowedTensorTypes
     ):
-        df = _VSCODE_convertTensorToDataFrame(df)
+        df = _VSCODE_convertTensorToDataFrame(df, start, end)
     elif hasattr(vartype, "__name__") and vartype.__name__ == "ndarray":
-        df = _VSCODE_convertNumpyArrayToDataFrame(df)
+        df = _VSCODE_convertNumpyArrayToDataFrame(df, start, end)
     else:
         """Disabling bandit warning for try, except, pass. We want to swallow all exceptions here to not crash on
         variable fetching"""
@@ -122,7 +126,7 @@ def _VSCODE_getRowCount(var):
 
 # Function to retrieve a set of rows for a data frame
 def _VSCODE_getDataFrameRows(df, start, end):
-    df = _VSCODE_convertToDataFrame(df[start:end])
+    df = _VSCODE_convertToDataFrame(df, start, end)
     # Turn into JSON using pandas. We use pandas because it's about 3 orders of magnitude faster to turn into JSON
     try:
         df = df.replace(
