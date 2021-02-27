@@ -5,9 +5,7 @@ import { Kernel } from '@jupyterlab/services';
 import { nbformat } from '@jupyterlab/coreutils';
 import { injectable, inject } from 'inversify';
 import { CancellationToken } from 'vscode';
-import { IPythonExtensionChecker } from '../../api/types';
 import { IDisposableRegistry, Resource } from '../../common/types';
-import { IInterpreterService } from '../../interpreter/contracts';
 import { traceDecorators } from '../../logging';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry } from '../../telemetry';
@@ -36,8 +34,6 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
      */
     private readonly kernelIdsToHide = new Set<string>();
     constructor(
-        @inject(IInterpreterService) private interpreterService: IInterpreterService,
-        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
         @inject(PreferredRemoteKernelIdProvider)
         private readonly preferredRemoteKernelIdProvider: PreferredRemoteKernelIdProvider,
@@ -50,8 +46,8 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
             this.jupyterSessionManagerFactory.onRestartSessionUsed(this.removeKernelFromIgnoreList.bind(this))
         );
     }
-    @traceDecorators.verbose('Find kernel spec')
-    @captureTelemetry(Telemetry.KernelFinderPerf, { type: 'remote' })
+    @traceDecorators.verbose('Find remote kernel spec')
+    @captureTelemetry(Telemetry.KernelFinderPerf)
     public async findKernel(
         resource: Resource,
         connInfo: INotebookProviderConnection | undefined,
@@ -61,14 +57,6 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
         // Get list of all of the specs
         const kernels = await this.listKernels(resource, connInfo);
 
-        // Always include the interpreter in the search if we can
-        const interpreter =
-            option && isInterpreter(option)
-                ? option
-                : resource && this.extensionChecker.isPythonExtensionInstalled
-                ? await this.interpreterService.getActiveInterpreter(resource)
-                : undefined;
-
         // Find the preferred kernel index from the list.
         const notebookMetadata = option && !isInterpreter(option) ? option : undefined;
         const preferred = findPreferredKernelIndex(
@@ -76,7 +64,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
             resource,
             [],
             notebookMetadata,
-            interpreter,
+            undefined,
             this.preferredRemoteKernelIdProvider
         );
         if (preferred >= 0) {
@@ -85,7 +73,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
     }
 
     // Talk to the remote server to determine sessions
-    @captureTelemetry(Telemetry.KernelListingPerf, { type: 'remote' })
+    @captureTelemetry(Telemetry.KernelListingPerf)
     public async listKernels(
         _resource: Resource,
         connInfo: INotebookProviderConnection | undefined
@@ -114,6 +102,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
                     return kernel;
                 });
                 const mappedLive = sessions.map((s) => {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     const liveKernel = s.kernel as any;
                     const lastActivityTime = liveKernel.last_activity
                         ? new Date(Date.parse(liveKernel.last_activity.toString()))
@@ -147,7 +136,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
                 return [...filtered, ...mappedSpecs];
             } finally {
                 if (sessionManager) {
-                    sessionManager.dispose();
+                    await sessionManager.dispose();
                 }
             }
         }
