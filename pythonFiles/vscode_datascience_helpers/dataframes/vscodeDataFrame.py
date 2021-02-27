@@ -23,7 +23,7 @@ def _VSCODE_stringifyElement(element):
     return stringified
 
 
-def _VSCODE_convertNumpyArrayToDataFrame(ndarray, start, end):
+def _VSCODE_convertNumpyArrayToDataFrame(ndarray, start=None, end=None):
     # Save the user's current setting
     current_options = _VSCODE_np.get_printoptions()
     # Ask for the full string. Without this numpy truncates to 3 leading and 3 trailing by default
@@ -54,7 +54,7 @@ def _VSCODE_convertNumpyArrayToDataFrame(ndarray, start, end):
 
 
 # Function that converts tensors to DataFrames
-def _VSCODE_convertTensorToDataFrame(tensor, start, end):
+def _VSCODE_convertTensorToDataFrame(tensor, start=None, end=None):
     try:
         temp = tensor
         if start is not None and end is not None:
@@ -68,7 +68,7 @@ def _VSCODE_convertTensorToDataFrame(tensor, start, end):
         # Two step conversion process required to convert tensors to DataFrames
         # tensor --> numpy array --> dataframe
         # See https://discuss.pytorch.org/t/should-it-really-be-necessary-to-do-var-detach-cpu-numpy/35489
-        temp = temp.data.detach().cpu().numpy() 
+        temp = temp.data.detach().cpu().numpy()
         temp = _VSCODE_convertNumpyArrayToDataFrame(temp)
         tensor = temp
         del temp
