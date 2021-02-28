@@ -279,14 +279,14 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             const variable = payload as IDataFrameInfo & { isSliceDataEnabled: boolean };
             if (variable) {
                 const columns = this.generateColumns(variable);
-                const totalRowCount = variable.rowCount ? variable.rowCount : 0;
+                const totalRowCount = variable.rowCount ?? 0;
                 const initialRows: ISlickRow[] = [];
-                const indexColumn = variable.indexColumn ? variable.indexColumn : 'index';
-                const originalVariableType = this.state.originalVariableType ?? variable.type;
-                const originalVariableShape = this.state.originalVariableShape ?? variable.shape;
+                const indexColumn = variable.indexColumn ?? 'index';
+                const originalVariableType = variable.type ?? this.state.originalVariableType;
+                const originalVariableShape = variable.shape ?? this.state.originalVariableShape;
                 const variableName = this.state.variableName ?? variable.name;
                 const fileName = this.state.fileName ?? variable.fileName;
-                const isSliceDataEnabled = payload.isSliceDataEnabled && SliceableTypes.has(originalVariableType || '');
+                const isSliceDataEnabled = variable.isSliceDataEnabled && SliceableTypes.has(originalVariableType || '');
                 const sliceExpression = variable.sliceExpression;
 
                 // New data coming in, so reset everything and clear our cache of columns
