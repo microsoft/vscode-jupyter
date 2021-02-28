@@ -21,7 +21,6 @@ export namespace DataViewerMessages {
     export const Started = SharedMessages.Started;
     export const UpdateSettings = SharedMessages.UpdateSettings;
     export const InitializeData = 'init';
-    export const RefreshDataResponse = 'refresh_data_response';
     export const GetAllRowsRequest = 'get_all_rows_request';
     export const GetAllRowsResponse = 'get_all_rows_response';
     export const GetRowsRequest = 'get_rows_request';
@@ -43,7 +42,7 @@ export interface IGetRowsResponse {
 }
 
 export interface IGetSliceRequest {
-    slice: string;
+    slice: string | undefined;
 }
 
 // Map all messages to specific payloads
@@ -57,7 +56,6 @@ export type IDataViewerMapping = {
     [DataViewerMessages.GetRowsResponse]: IGetRowsResponse;
     [DataViewerMessages.CompletedData]: never | undefined;
     [DataViewerMessages.GetSliceRequest]: IGetSliceRequest;
-    [DataViewerMessages.RefreshDataResponse]: IDataFrameInfo & { isSliceDataEnabled: boolean };
 };
 
 export interface IDataFrameInfo {

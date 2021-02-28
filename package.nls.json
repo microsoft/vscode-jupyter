@@ -479,5 +479,6 @@
     "DataScience.sliceSubmitButton": "Apply",
     "DataScience.sliceSummaryTitle": "SLICING",
     "DataScience.dataViewerShowFilters": "Show filters",
-    "DataScience.dataViewerHideFilters": "Hide filters"
+    "DataScience.dataViewerHideFilters": "Hide filters",
+    "DataScience.sliceData": "Slice Data"
 }

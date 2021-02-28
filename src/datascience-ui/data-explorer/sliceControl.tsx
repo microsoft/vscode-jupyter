@@ -3,10 +3,16 @@ import * as React from 'react';
 import { IGetSliceRequest } from '../../client/datascience/data-viewing/types';
 import { getLocString } from '../react-common/locReactSide';
 import { measureText } from '../react-common/textMeasure';
+import {
+    fullSliceExpression,
+    isValidSliceExpression,
+    preselectedSliceExpression,
+    sliceRegEx,
+    validateSliceExpression as getErrorMessage
+} from './helpers';
 
 import './sliceControl.css';
 
-const sliceRegEx = /^\s*((?<StartRange>-?\d+:)|(?<StopRange>-?:\d+)|(?:(?<Start>-?\d+)(?::(?<Stop>-?\d+))?(?::(?<Step>-?\d+))?))\s*$/;
 // These styles are passed to the FluentUI dropdown controls
 const textFieldStyles = {
     errorMessage: {
@@ -58,7 +64,14 @@ const dropdownStyles = {
     },
     callout: styleOverrides,
     dropdownItem: styleOverrides,
-    dropdownItemSelected: styleOverrides,
+    dropdownItemSelected: {
+        color: 'var(--vscode-dropdown-foreground)',
+        fontFamily: 'var(--vscode-font-family)',
+        fontWeight: 'var(--vscode-font-weight)',
+        fontSize: 'var(--vscode-font-size)',
+        backgroundColor: 'var(--vscode-dropdown-background)',
+        opacity: '0.3'
+    },
     dropdownItemDisabled: {
         color: 'var(--vscode-dropdown-foreground)',
         fontFamily: 'var(--vscode-font-family)',
@@ -80,11 +93,11 @@ const dropdownStyles = {
 interface ISliceControlProps {
     loadingData: boolean;
     originalVariableShape: number[];
+    sliceExpression: string | undefined;
     handleSliceRequest(slice: IGetSliceRequest): void;
 }
 
 interface ISliceControlState {
-    sliceExpression: string;
     inputValue: string;
     isEnabled: boolean;
     [key: string]: number | boolean | string;
@@ -93,71 +106,57 @@ interface ISliceControlState {
 export class SliceControl extends React.Component<ISliceControlProps, ISliceControlState> {
     constructor(props: ISliceControlProps) {
         super(props);
-        const initialSlice = this.preselectedSliceExpression();
-        this.state = { isEnabled: false, sliceExpression: initialSlice, inputValue: initialSlice };
+        const initialSlice = preselectedSliceExpression(this.props.originalVariableShape);
+        this.state = { isEnabled: false, inputValue: initialSlice };
 
         this.handleChange = this.handleChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
     }
 
-    public componentDidUpdate(prevProps: ISliceControlProps) {
-        if (this.props.originalVariableShape !== prevProps.originalVariableShape) {
-            let slice = this.preselectedSliceExpression();
-            if (this.state.isEnabled) {
-                if (this.validateSliceExpression(this.state.sliceExpression) === '') {
-                    // Check if the current slice expression would be valid relative to the new shape
-                    // If it would still be valid, use that instead of the preselected one
-                    slice = this.state.sliceExpression;
-                }
-            } else {
-                // Slicing not enabled anyway, so no slice
-                slice = this.fullSliceExpression();
-            }
-            this.props.handleSliceRequest({ slice });
-            this.setState({ sliceExpression: slice, inputValue: slice });
-        }
-    }
-
     public render() {
         return (
-            <details className="slicing-control">
-                <summary className="slice-summary">
-                    <span className="slice-summary-detail">
-                        {getLocString('DataScience.sliceSummaryTitle', 'SLICING')}
-                    </span>
-                    {this.renderReadonlyIndicator()}
-                </summary>
-                <form onSubmit={this.handleSubmit} className="slice-form">
-                    <div className="slice-enablement-checkbox-container">
-                        <input
-                            type="checkbox"
-                            id="slice-enablement-checkbox"
-                            className="slice-enablement-checkbox"
-                            onChange={this.toggleEnablement}
-                            disabled={this.props.loadingData}
-                        />
-                        <label htmlFor="slice-enablement-checkbox">Slice Data</label>
-                    </div>
-                    <div className="slice-control-row" style={{ marginTop: '10px' }}>
-                        <TextField
-                            value={this.state.inputValue}
-                            styles={textFieldStyles}
-                            onGetErrorMessage={this.validateSliceExpression}
-                            onChange={this.handleChange}
-                            autoComplete="on"
-                            inputClassName="slice-data"
-                            disabled={!this.state.isEnabled || this.props.loadingData}
-                        />
-                        <input
-                            className="submit-slice-button"
-                            type="submit"
-                            disabled={!this.state.isEnabled || this.props.loadingData}
-                            value={getLocString('DataScience.sliceSubmitButton', 'Apply')}
-                        />
-                    </div>
-                    {this.generateDropdowns()}
-                </form>
-            </details>
+            <div className="control-container">
+                <details className="slicing-control">
+                    <summary className="slice-summary">
+                        <span className="slice-summary-detail">
+                            {getLocString('DataScience.sliceSummaryTitle', 'SLICING')}
+                        </span>
+                        {this.renderReadonlyIndicator()}
+                    </summary>
+                    <form onSubmit={this.handleSubmit} className="slice-form">
+                        <div className="slice-enablement-checkbox-container">
+                            <input
+                                type="checkbox"
+                                id="slice-enablement-checkbox"
+                                className="slice-enablement-checkbox"
+                                onChange={this.toggleEnablement}
+                                disabled={this.props.loadingData}
+                            />
+                            <label htmlFor="slice-enablement-checkbox">
+                                {getLocString('DataScience.sliceData', 'Slice Data')}
+                            </label>
+                        </div>
+                        <div className="slice-control-row" style={{ marginTop: '10px' }}>
+                            <TextField
+                                value={this.state.inputValue}
+                                styles={textFieldStyles}
+                                onGetErrorMessage={this.handleGetErrorMessage}
+                                onChange={this.handleChange}
+                                autoComplete="on"
+                                inputClassName="slice-data"
+                                disabled={!this.state.isEnabled || this.props.loadingData}
+                            />
+                            <input
+                                className="submit-slice-button"
+                                type="submit"
+                                disabled={!this.state.isEnabled || this.props.loadingData}
+                                value={getLocString('DataScience.sliceSubmitButton', 'Apply')}
+                            />
+                        </div>
+                        {this.generateDropdowns()}
+                    </form>
+                </details>
+            </div>
         );
     }
 
@@ -235,19 +234,26 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
     };
 
     private renderReadonlyIndicator = () => {
-        if (this.state.isEnabled) {
-            return <span className="slice-summary-detail current-slice">{this.state.sliceExpression}</span>;
+        if (this.state.isEnabled && this.props.sliceExpression) {
+            return <span className="slice-summary-detail current-slice">{this.props.sliceExpression}</span>;
         }
     };
 
     private toggleEnablement = () => {
         const willBeEnabled = !this.state.isEnabled;
         const newState = { isEnabled: willBeEnabled };
-        const fullVariableSlice = this.fullSliceExpression();
+        const fullSlice = fullSliceExpression(this.props.originalVariableShape);
         // Don't send slice request unless necessary
-        if (this.state.sliceExpression !== fullVariableSlice) {
-            const slice = willBeEnabled ? this.state.sliceExpression : fullVariableSlice;
-            this.props.handleSliceRequest({ slice });
+        if (willBeEnabled) {
+            // Enabling slicing
+            if (this.state.inputValue !== this.props.sliceExpression && this.state.inputValue !== fullSlice) {
+                this.props.handleSliceRequest({ slice: this.state.inputValue });
+            }
+        } else {
+            // Disabling slicing
+            if (this.state.inputValue !== fullSlice) {
+                this.props.handleSliceRequest({ slice: undefined });
+            }
         }
         this.applyInputBoxToDropdowns();
         this.setState(newState);
@@ -262,8 +268,10 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
 
     private handleSubmit = (event: React.SyntheticEvent) => {
         event.preventDefault();
-        if (this.state.inputValue !== this.state.sliceExpression) {
-            this.setState({ sliceExpression: this.state.inputValue });
+        if (
+            this.state.inputValue !== this.props.sliceExpression &&
+            isValidSliceExpression(this.state.inputValue, this.props.originalVariableShape)
+        ) {
             // Update axis and index dropdown selections
             this.applyInputBoxToDropdowns();
             this.props.handleSliceRequest({
@@ -272,69 +280,13 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
         }
     };
 
-    /**
-     *
-     * @returns A Python slice expression with the 0th index preselected along
-     * the first ndim - 2 axes. For example, for a 5D array with shape
-     * (10, 20, 30, 40, 50), the preselected slice expression is [0, 0, 0, :, :].
-     */
-    private preselectedSliceExpression() {
-        let numDimensionsToPreselect = this.props.originalVariableShape.length - 2;
-        return (
-            '[' +
-            this.props.originalVariableShape
-                .map(() => {
-                    if (numDimensionsToPreselect > 0) {
-                        numDimensionsToPreselect -= 1;
-                        return '0';
-                    }
-                    return ':';
-                })
-                .join(', ') +
-            ']'
-        );
-    }
-
-    private fullSliceExpression() {
-        return '[' + this.props.originalVariableShape.map(() => ':').join(', ') + ']';
-    }
-
-    private validateSliceExpression = (sliceExpression: string) => {
-        if (sliceExpression.startsWith('[') && sliceExpression.endsWith(']')) {
-            let hasOutOfRangeIndex: { shapeIndex: number; value: number } | undefined;
-            const parsedExpression = sliceExpression
-                .substring(1, sliceExpression.length - 1)
-                .split(',')
-                .map((shapeEl, shapeIndex) => {
-                    // Validate IndexErrors
-                    const match = sliceRegEx.exec(shapeEl);
-                    if (match?.groups?.Start && !match.groups.Stop) {
-                        const value = parseInt(match.groups.Start);
-                        const numberOfElementsAlongAxis = this.props.originalVariableShape[shapeIndex];
-                        if (
-                            (value >= 0 && value >= numberOfElementsAlongAxis) ||
-                            // Python allows negative index values
-                            (value < 0 && value < -numberOfElementsAlongAxis)
-                        ) {
-                            hasOutOfRangeIndex = { shapeIndex, value };
-                        }
-                        return value;
-                    }
-                });
-
-            if (hasOutOfRangeIndex) {
-                const { shapeIndex, value } = hasOutOfRangeIndex;
-                return `IndexError at axis ${shapeIndex}, index ${value}`;
-            } else if (parsedExpression && parsedExpression.length !== this.props.originalVariableShape.length) {
-                return 'Invalid slice expression';
-            }
-        }
-        return '';
+    private handleGetErrorMessage = (sliceExpression: string) => {
+        return getErrorMessage(sliceExpression, this.props.originalVariableShape);
     };
 
     private applyInputBoxToDropdowns = () => {
         setTimeout(() => {
-            const shape = this.state.sliceExpression;
+            const shape = this.state.inputValue;
             if (shape.startsWith('[') && shape.endsWith(']')) {
                 const dropdowns: { axis: number; index: number }[] = [];
                 let numRangeObjects = 0;
@@ -394,8 +346,9 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
             }
 
             const newSliceExpression = '[' + shape.join(', ') + ']';
-            if (newSliceExpression !== this.state.sliceExpression) {
-                this.setState({ sliceExpression: newSliceExpression, inputValue: newSliceExpression });
+            const fullSlice = fullSliceExpression(this.props.originalVariableShape);
+            if (newSliceExpression !== this.props.sliceExpression && newSliceExpression !== fullSlice) {
+                this.setState({ inputValue: newSliceExpression });
                 this.props.handleSliceRequest({ slice: newSliceExpression });
             }
         });

@@ -59,6 +59,7 @@ interface IMainPanelState {
     maximumRowChunkSize?: number;
     variableName?: string;
     fileName?: string;
+    sliceExpression?: string;
 }
 
 export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState> implements IMessageHandler {
@@ -169,13 +170,12 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             this.state.originalVariableShape.filter((v) => !!v).length > 1
         ) {
             return (
-                <div className="control-container">
-                    <SliceControl
-                        loadingData={this.state.totalRowCount > this.state.fetchedRowCount}
-                        originalVariableShape={this.state.originalVariableShape}
-                        handleSliceRequest={this.handleSliceRequest}
-                    />
-                </div>
+                <SliceControl
+                    sliceExpression={this.state.sliceExpression}
+                    loadingData={this.state.totalRowCount > this.state.fetchedRowCount}
+                    originalVariableShape={this.state.originalVariableShape}
+                    handleSliceRequest={this.handleSliceRequest}
+                />
             );
         }
     };
@@ -225,10 +225,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
             case SharedMessages.LocInit:
                 this.initializeLoc(payload);
-                break;
-
-            case DataViewerMessages.RefreshDataResponse:
-                this.handleRefreshDataResponse(payload);
                 break;
 
             default:
@@ -291,6 +287,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 const variableName = this.state.variableName ?? variable.name;
                 const fileName = this.state.fileName ?? variable.fileName;
                 const isSliceDataEnabled = payload.isSliceDataEnabled && SliceableTypes.has(originalVariableType || '');
+                const sliceExpression = variable.sliceExpression;
 
                 // New data coming in, so reset everything and clear our cache of columns
                 this.columnsContainingInfOrNaN.clear();
@@ -308,6 +305,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                     isSliceDataEnabled,
                     variableName,
                     fileName,
+                    sliceExpression,
                     // Maximum number of rows is 100 if evaluating in debugger, undefined otherwise
                     maximumRowChunkSize: variable.maximumRowChunkSize ?? this.state.maximumRowChunkSize
                 });
@@ -328,10 +326,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 }
             }
         }
-    }
-
-    private handleRefreshDataResponse(payload: IDataFrameInfo & { isSliceDataEnabled: boolean }) {
-        this.setState({ originalVariableShape: payload.shape, originalVariableType: payload.type });
     }
 
     private getRowsInChunks(startIndex: number, endIndex: number, sliceExpression?: string) {
@@ -380,7 +374,11 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         if (newFetched < this.state.totalRowCount) {
             const chunkStart = response.end;
             const chunkEnd = Math.min(chunkStart + this.rowFetchSizeSubsequent, this.state.totalRowCount);
-            this.sendMessage(DataViewerMessages.GetRowsRequest, { start: chunkStart, end: chunkEnd });
+            this.sendMessage(DataViewerMessages.GetRowsRequest, {
+                start: chunkStart,
+                end: chunkEnd,
+                sliceExpression: this.state.sliceExpression
+            });
         }
     }
 

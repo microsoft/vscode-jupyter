@@ -37,6 +37,7 @@ import {
     IGetSliceRequest
 } from './types';
 import { Experiments } from '../../common/experiments/groups';
+import { isValidSliceExpression, preselectedSliceExpression } from '../../../datascience-ui/data-explorer/helpers';
 
 const PREFERRED_VIEWGROUP = 'JupyterDataViewerPreferredViewColumn';
 const dataExplorerDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'viewers');
@@ -120,14 +121,28 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
     }
 
     public async refreshData() {
+        const currentSliceExpression = this.currentSliceExpression;
         // Clear our cached info promise
         this.dataFrameInfoPromise = undefined;
         // Then send a refresh data payload
-        const dataFrameInfo = await this.getDataFrameInfo(undefined, true);
+        // At this point, variable shape or type may have changed
+        // such that previous slice expression is no longer valid
+        let dataFrameInfo = await this.getDataFrameInfo(undefined, true);
+        // Check whether the previous slice expression is valid WRT the new shape
+        if (currentSliceExpression !== undefined && dataFrameInfo.shape !== undefined) {
+            if (isValidSliceExpression(currentSliceExpression, dataFrameInfo.shape)) {
+                dataFrameInfo = await this.getDataFrameInfo(currentSliceExpression);
+            } else {
+                // Previously applied slice expression isn't valid anymore
+                // Generate a preselected slice
+                const newSlice = preselectedSliceExpression(dataFrameInfo.shape);
+                dataFrameInfo = await this.getDataFrameInfo(newSlice);
+            }
+        }
         traceInfo(`Refreshing data viewer for variable ${dataFrameInfo.name}`);
         const isSliceDataEnabled = await this.experimentService.inExperiment(Experiments.SliceDataViewer);
         // Send a message with our data
-        this.postMessage(DataViewerMessages.RefreshDataResponse, {
+        this.postMessage(DataViewerMessages.InitializeData, {
             ...dataFrameInfo,
             isSliceDataEnabled
         }).ignoreErrors();
@@ -221,7 +236,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
     private getSlice(request: IGetSliceRequest) {
         return this.wrapRequest(async () => {
             if (this.dataProvider) {
-                const payload = await this.dataProvider.getDataFrameInfo(request.slice);
+                const payload = await this.getDataFrameInfo(request.slice);
                 return this.postMessage(DataViewerMessages.InitializeData, { ...payload, isSliceDataEnabled: true });
             }
         });
