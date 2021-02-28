@@ -656,6 +656,10 @@ export interface IEventNamePropertyMapping {
     [Telemetry.StartShowDataViewer]: never | undefined;
     [Telemetry.ShowDataViewer]: { rows: number | undefined; columns: number | undefined };
     [Telemetry.FailedShowDataViewer]: never | undefined;
+    /**
+     * Sent when the jupyter.refreshDataViewer command is invoked
+     */
+    [Telemetry.RefreshDataViewer]: never | undefined;
     [Telemetry.CreateNewInteractive]: never | undefined;
     [Telemetry.StartJupyter]: never | undefined;
     [Telemetry.StartJupyterProcess]: never | undefined;

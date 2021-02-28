@@ -7,11 +7,12 @@ import { inject, injectable } from 'inversify';
 
 import { IAsyncDisposable, IAsyncDisposableRegistry, IDisposableRegistry } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
-import { captureTelemetry } from '../../telemetry';
+import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Commands, EditorContexts, Telemetry } from '../constants';
 import { IDataViewer, IDataViewerDataProvider, IDataViewerFactory } from './types';
 import { ICommandManager } from '../../common/application/types';
 import { ContextKey } from '../../common/contextKey';
+import { debounce } from 'lodash';
 
 @injectable()
 export class DataViewerFactory implements IDataViewerFactory, IAsyncDisposable {
@@ -76,7 +77,10 @@ export class DataViewerFactory implements IDataViewerFactory, IAsyncDisposable {
         await this.viewContext.set(hasActiveViewer);
     }
 
-    private refreshDataViewer() {
+    // Refresh command is mapped to a keybinding. Refresh
+    // is expensive. Ensure we debounce refresh requests
+    // in case the user is mashing the refresh shortcut.
+    private refreshDataViewer = debounce(() => {
         // Find the data viewer which is currently active
         for (const viewer of this.knownViewers) {
             if (viewer.active) {
@@ -84,5 +88,6 @@ export class DataViewerFactory implements IDataViewerFactory, IAsyncDisposable {
                 void viewer.refreshData();
             }
         }
-    }
+        void sendTelemetryEvent(Telemetry.RefreshDataViewer);
+    }, 1000);
 }

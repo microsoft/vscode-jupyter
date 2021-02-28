@@ -9,7 +9,7 @@ import { EventEmitter, Memento, ViewColumn } from 'vscode';
 
 import { IApplicationShell, IWebviewPanelProvider, IWorkspaceService } from '../../common/application/types';
 import { EXTENSION_ROOT_DIR, UseCustomEditorApi } from '../../common/constants';
-import { traceError } from '../../common/logger';
+import { traceError, traceInfo } from '../../common/logger';
 import {
     GLOBAL_MEMENTO,
     IConfigurationService,
@@ -124,6 +124,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
         this.dataFrameInfoPromise = undefined;
         // Then send a refresh data payload
         const dataFrameInfo = await this.getDataFrameInfo(undefined, true);
+        traceInfo(`Refreshing data viewer for variable ${dataFrameInfo.name}`);
         const isSliceDataEnabled = await this.experimentService.inExperiment(Experiments.SliceDataViewer);
         // Send a message with our data
         this.postMessage(DataViewerMessages.RefreshDataResponse, {
