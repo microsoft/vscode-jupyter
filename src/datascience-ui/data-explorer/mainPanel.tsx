@@ -286,12 +286,14 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 const originalVariableShape = variable.shape ?? this.state.originalVariableShape;
                 const variableName = this.state.variableName ?? variable.name;
                 const fileName = this.state.fileName ?? variable.fileName;
-                const isSliceDataEnabled = variable.isSliceDataEnabled && SliceableTypes.has(originalVariableType || '');
+                const isSliceDataEnabled =
+                    variable.isSliceDataEnabled && SliceableTypes.has(originalVariableType || '');
                 const sliceExpression = variable.sliceExpression;
 
                 // New data coming in, so reset everything and clear our cache of columns
                 this.columnsContainingInfOrNaN.clear();
                 this.resetGridEvent.notify({ columns });
+                this.sentDone = false;
 
                 this.setState({
                     gridColumns: columns,

@@ -331,6 +331,7 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
             const shape = this.props.originalVariableShape.map(() => ':');
             const ndim = this.props.originalVariableShape.length;
             const numDropdowns = Math.max(ndim - 2, 1); // Ensure at least 1 set of dropdowns for 2D data
+            let numSpecifiedIndices = 0; // Ensure enough dropdowns have been specified
 
             for (let i = 0; i < numDropdowns; i++) {
                 const selectedAxisKey = this.state[`selectedAxis${i}`] as number;
@@ -342,12 +343,17 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
                     selectedIndexKey !== undefined
                 ) {
                     shape[selectedAxisKey] = selectedIndexKey.toString();
+                    numSpecifiedIndices += 1;
                 }
             }
 
             const newSliceExpression = '[' + shape.join(', ') + ']';
             const fullSlice = fullSliceExpression(this.props.originalVariableShape);
-            if (newSliceExpression !== this.props.sliceExpression && newSliceExpression !== fullSlice) {
+            if (
+                numSpecifiedIndices === numDropdowns &&
+                newSliceExpression !== this.props.sliceExpression &&
+                newSliceExpression !== fullSlice
+            ) {
                 this.setState({ inputValue: newSliceExpression });
                 this.props.handleSliceRequest({ slice: newSliceExpression });
             }
