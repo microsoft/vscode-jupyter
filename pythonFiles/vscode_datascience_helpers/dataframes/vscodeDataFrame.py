@@ -57,7 +57,9 @@ def _VSCODE_convertNumpyArrayToDataFrame(ndarray, start=None, end=None):
 def _VSCODE_convertTensorToDataFrame(tensor, start=None, end=None):
     try:
         temp = tensor
-        if start is not None and end is not None:
+        # We were only asked for start:end rows, so don't
+        # waste cycles computing the rest
+        if temp.ndim > 0 and start is not None and end is not None:
             temp = temp[start:end]
         # Can't directly convert sparse tensors to numpy arrays
         # so first convert them to dense tensors
@@ -65,14 +67,16 @@ def _VSCODE_convertTensorToDataFrame(tensor, start=None, end=None):
             # This guard is needed because to_dense exists on all PyTorch
             # tensors and throws an error if the tensor is already strided
             temp = temp.to_dense()
-        # Two step conversion process required to convert tensors to DataFrames
-        # tensor --> numpy array --> dataframe
         # See https://discuss.pytorch.org/t/should-it-really-be-necessary-to-do-var-detach-cpu-numpy/35489
         if hasattr(temp, "data"):
             # PyTorch tensors need to be explicitly detached
             # from the computation graph and copied to CPU
             temp = temp.data.detach().cpu()
+        # Two step conversion process required to convert tensors to DataFrames
+        # tensor --> numpy array --> dataframe
         temp = temp.numpy()
+        if temp.ndim == 0:
+            temp = [temp]
         temp = _VSCODE_convertNumpyArrayToDataFrame(temp)
         tensor = temp
         del temp
