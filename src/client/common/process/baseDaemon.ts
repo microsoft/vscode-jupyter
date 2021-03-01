@@ -172,8 +172,7 @@ export abstract class BasePythonDaemon {
             'throwOnStdErr',
             'token',
             'encoding',
-            'mergeStdOutErr',
-            'extraVariables'
+            'mergeStdOutErr'
         ];
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         return Object.keys(options).every((item) => daemonSupportedSpawnOptions.indexOf(item as any) >= 0);

@@ -131,7 +131,7 @@ class InterpreterJupyterCommand implements IJupyterCommand {
     }
 
     public async execObservable(args: string[], options: SpawnOptions): Promise<ObservableExecutionResult<string>> {
-        const newOptions = { ...options, extraVariables: { PYTHONWARNINGS: 'ignore' } };
+        const newOptions = { ...options };
         const launcher = await this.pythonLauncher;
         const newArgs = [...this.args, ...args];
         const moduleName = newArgs[1];
@@ -141,7 +141,7 @@ class InterpreterJupyterCommand implements IJupyterCommand {
     }
 
     public async exec(args: string[], options: SpawnOptions): Promise<ExecutionResult<string>> {
-        const newOptions = { ...options, extraVariables: { PYTHONWARNINGS: 'ignore' } };
+        const newOptions = { ...options };
         const launcher = await this.pythonLauncher;
         const newArgs = [...this.args, ...args];
         const moduleName = newArgs[1];
