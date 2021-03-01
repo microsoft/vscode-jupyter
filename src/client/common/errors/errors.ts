@@ -52,6 +52,18 @@ function tagWithChildProcessExited(stdErrOrStackTrace: string, tags: string[] = 
         tags.push('childproc.exit');
     }
 }
+function tagWithKernelRestarterFailed(stdErrOrStackTrace: string, tags: string[] = []) {
+    /*
+    [I 14:48:13.999 NotebookApp] KernelRestarter: restarting kernel (1/5), new random ports
+    [I 14:48:17.011 NotebookApp] KernelRestarter: restarting kernel (2/5), new random ports
+    [I 14:48:20.023 NotebookApp] KernelRestarter: restarting kernel (3/5), new random ports
+    [I 14:48:23.031 NotebookApp] KernelRestarter: restarting kernel (4/5), new random ports
+    [W 14:48:26.040 NotebookApp] KernelRestarter: restart failed
+    */
+    if (stdErrOrStackTrace.includes('KernelRestarter: restart failed'.toLowerCase())) {
+        tags.push('KernelRestarter.failed');
+    }
+}
 function tagWithZmqError(stdErr: string, tags: string[] = []) {
     if (
         stdErr.includes('ImportError: cannot import name'.toLowerCase()) &&
