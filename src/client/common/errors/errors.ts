@@ -7,7 +7,8 @@ const taggers = [
     tagWithDllLoadError,
     tagWithOldIPyKernel,
     tagWithOldIPython,
-    tagWithChildProcessExited
+    tagWithChildProcessExited,
+    tagWithKernelRestarterFailed
 ];
 export function getErrorTags(stdErrOrStackTrace: string) {
     const tags: string[] = [];
