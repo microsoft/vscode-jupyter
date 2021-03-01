@@ -58,8 +58,15 @@ export function sendKernelTelemetryEvent<P extends IEventNamePropertyMapping, E 
     const addOnTelemetry = getContextualPropsForTelemetry(resource);
     const props = properties || {};
     Object.assign(props, addOnTelemetry || {});
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    sendTelemetryEvent(eventName as any, durationMs, props, ex, true);
+    sendTelemetryEvent(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        eventName as any,
+        durationMs,
+        props,
+        ex,
+        true,
+        addOnTelemetry?.waitForCompletionBeforeSendingTelemetry
+    );
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resetData(resource, eventName as any, props);
@@ -89,8 +96,17 @@ export function sendKernelTelemetryWhenDone<P extends IEventNamePropertyMapping,
                 (data) => {
                     const addOnTelemetry = getContextualPropsForTelemetry(resource);
                     Object.assign(props, addOnTelemetry);
-                    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-explicit-any
-                    sendTelemetryEvent(eventName as any, stopWatch!.elapsedTime, props as any);
+                    sendTelemetryEvent(
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        eventName as any,
+                        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                        stopWatch!.elapsedTime,
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        props as any,
+                        undefined,
+                        undefined,
+                        addOnTelemetry?.waitForCompletionBeforeSendingTelemetry
+                    );
                     return data;
                     // eslint-disable-next-line @typescript-eslint/promise-function-async
                 },
@@ -98,8 +114,17 @@ export function sendKernelTelemetryWhenDone<P extends IEventNamePropertyMapping,
                     const addOnTelemetry = getContextualPropsForTelemetry(resource);
                     Object.assign(props, addOnTelemetry);
                     populateTelemetryWithErrorInfo(props, ex);
-                    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-explicit-any
-                    sendTelemetryEvent(eventName as any, stopWatch!.elapsedTime, props as any, ex, true);
+                    sendTelemetryEvent(
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        eventName as any,
+                        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                        stopWatch!.elapsedTime,
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        props as any,
+                        ex,
+                        true,
+                        addOnTelemetry?.waitForCompletionBeforeSendingTelemetry
+                    );
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     incrementStartFailureCount(resource, eventName as any, props);
                     return Promise.reject(ex);
@@ -190,7 +215,7 @@ export function trackKernelResourceInformation(resource: Resource, information: 
                 currentData.pythonEnvironmentVersion = undefined;
             }
 
-            currentData.pythonEnvironmentPackages = getPythonEnvironmentPackages({ interpreter });
+            updatePythonPackages(currentData);
         }
 
         currentData.kernelConnectionType = currentData.kernelConnectionType || kernelConnection?.kind;
@@ -206,18 +231,29 @@ export function trackKernelResourceInformation(resource: Resource, information: 
  * Its possible the information is available at a later time.
  * Use this to update with the latest information (if available)
  */
-function updatePythonPackages(currentData: ResourceSpecificTelemetryProperties) {
+function updatePythonPackages(
+    currentData: ResourceSpecificTelemetryProperties & { waitForCompletionBeforeSendingTelemetry?: Promise<void> }
+) {
     // Possible the Python package information is now available, update the properties accordingly.
+    if (!currentData.pythonEnvironmentPath) {
+        return;
+    }
     if (currentData.pythonEnvironmentPath) {
-        currentData.pythonEnvironmentPackages =
-            getPythonEnvironmentPackages({ interpreterHash: currentData.pythonEnvironmentPath }) ||
-            currentData.pythonEnvironmentPackages;
+        // Getting package information is async, hence update property to indicate that a promise is pending.
+        currentData.waitForCompletionBeforeSendingTelemetry = getPythonEnvironmentPackages({
+            interpreterHash: currentData.pythonEnvironmentPath
+        })
+            .then((packages) => {
+                currentData.pythonEnvironmentPackages = packages || currentData.pythonEnvironmentPackages;
+            })
+            .catch(() => undefined)
+            .finally(() => (currentData.waitForCompletionBeforeSendingTelemetry = undefined));
     }
 }
 /**
  * Gets a JSON with hashed keys of some python packages along with their versions.
  */
-function getPythonEnvironmentPackages(options: { interpreter: PythonEnvironment } | { interpreterHash: string }) {
+async function getPythonEnvironmentPackages(options: { interpreter: PythonEnvironment } | { interpreterHash: string }) {
     let interpreter: PythonEnvironment | undefined;
     if ('interpreter' in options) {
         interpreter = options.interpreter;
@@ -227,7 +263,7 @@ function getPythonEnvironmentPackages(options: { interpreter: PythonEnvironment 
     if (!interpreter) {
         return '{}';
     }
-    const packages = InterpreterPackages.getPackageVersions(interpreter);
+    const packages = await InterpreterPackages.getPackageVersions(interpreter).catch(() => new Map<string, string>());
     if (!packages || packages.size === 0) {
         return '{}';
     }
@@ -241,7 +277,9 @@ function getUriKey(uri: Uri) {
     return currentOSType ? uri.fsPath.toLowerCase() : uri.fsPath;
 }
 
-function getContextualPropsForTelemetry(resource: Resource): ResourceSpecificTelemetryProperties | undefined {
+function getContextualPropsForTelemetry(
+    resource: Resource
+): (ResourceSpecificTelemetryProperties & { waitForCompletionBeforeSendingTelemetry?: Promise<void> }) | undefined {
     if (!resource) {
         return;
     }

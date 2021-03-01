@@ -5,6 +5,7 @@ import { inject, injectable } from 'inversify';
 import { IPythonExtensionChecker } from '../../api/types';
 import { InterpreterUri } from '../../common/installer/types';
 import { IPythonExecutionFactory } from '../../common/process/types';
+import { createDeferred, Deferred } from '../../common/utils/async';
 import { isResource, noop } from '../../common/utils/misc';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
@@ -29,15 +30,25 @@ const interestedPackages = new Set(
 
 @injectable()
 export class InterpreterPackages {
-    private static interpreterInformation = new Map<string, Map<string, string>>();
+    private static interpreterInformation = new Map<string, Deferred<Map<string, string>>>();
     private static pendingInterpreterInformation = new Map<string, Promise<void>>();
+    private static instance?: InterpreterPackages;
     constructor(
         @inject(IPythonExtensionChecker) private readonly pythonExtensionChecker: IPythonExtensionChecker,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IPythonExecutionFactory) private readonly executionFactory: IPythonExecutionFactory
     ) {}
-    public static getPackageVersions(interpreter: PythonEnvironment): Map<string, string> | undefined {
-        return InterpreterPackages.interpreterInformation.get(interpreter.path);
+    public static getPackageVersions(interpreter: PythonEnvironment): Promise<Map<string, string>> {
+        let deferred = InterpreterPackages.interpreterInformation.get(interpreter.path);
+        if (!deferred) {
+            deferred = createDeferred<Map<string, string>>();
+            InterpreterPackages.interpreterInformation.set(interpreter.path, deferred);
+
+            if (InterpreterPackages.instance) {
+                InterpreterPackages.instance.trackInterpreterPackages(interpreter).catch(noop);
+            }
+        }
+        return deferred.promise;
     }
     public trackPackages(interpreterUri: InterpreterUri, ignoreCache?: boolean) {
         this.trackPackagesInternal(interpreterUri, ignoreCache).catch(noop);
@@ -88,7 +99,6 @@ export class InterpreterPackages {
         interestedPackages.forEach((item) => {
             packageAndVersions.set(getTelemetrySafeHashedString(item), 'NOT INSTALLED');
         });
-        InterpreterPackages.interpreterInformation.set(interpreter.path, packageAndVersions);
         output.stdout
             .split('\n')
             .map((line) => line.trim().toLowerCase())
@@ -105,5 +115,11 @@ export class InterpreterPackages {
                 const version = getTelemetrySafeVersion(rawVersion);
                 packageAndVersions.set(getTelemetrySafeHashedString(packageName), version || '');
             });
+        let deferred = InterpreterPackages.interpreterInformation.get(interpreter.path);
+        if (!deferred) {
+            deferred = createDeferred<Map<string, string>>();
+            InterpreterPackages.interpreterInformation.set(interpreter.path, deferred);
+        }
+        deferred.resolve(packageAndVersions);
     }
 }

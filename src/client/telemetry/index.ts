@@ -22,6 +22,7 @@ import { InterruptResult } from '../datascience/types';
 import { EventName, PlatformErrors } from './constants';
 import { populateTelemetryWithErrorInfo } from '../common/errors';
 import { ErrorCategory, TelemetryErrorProperties } from '../common/errors/types';
+import { noop } from '../common/utils/misc';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -52,7 +53,7 @@ export function isTelemetryDisabled(workspaceService: IWorkspaceService): boolea
     return settings.globalValue === false ? true : false;
 }
 
-const sharedProperties: Record<string, any> = {};
+const sharedProperties: Partial<ISharedPropertyMapping> = {};
 /**
  * Set shared properties for all telemetry events.
  */
@@ -63,9 +64,9 @@ export function setSharedProperty<P extends ISharedPropertyMapping, E extends ke
         return;
     }
     if (value === undefined) {
-        delete sharedProperties[propertyName];
+        delete (sharedProperties as any)[propertyName];
     } else {
-        sharedProperties[propertyName] = value;
+        (sharedProperties as any)[propertyName] = value;
     }
 }
 
@@ -74,7 +75,7 @@ export function setSharedProperty<P extends ISharedPropertyMapping, E extends ke
  */
 export function _resetSharedProperties(): void {
     for (const key of Object.keys(sharedProperties)) {
-        delete sharedProperties[key];
+        delete (sharedProperties as any)[key];
     }
 }
 
@@ -119,16 +120,82 @@ function stringifyProperties(eventName: string, data: Record<string, any>) {
     });
     return customProperties;
 }
+
+const queuedTelemetry: {
+    eventName: string;
+    durationMs?: Record<string, number> | number;
+    properties?: Record<string, any>;
+    ex?: Error;
+    sendOriginalEventWithErrors?: boolean;
+    queueEverythingUntilCompleted?: Promise<any>;
+}[] = [];
+
+/**
+ * @param {Promise<any>} [queueEverythingUntilCompleted]
+ * Send this & subsequent telemetry only after this promise has been resolved.
+ * We have a default timeout of 30s.
+ */
 export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extends keyof P>(
+    eventName: E,
+    durationMs?: Record<string, number> | number,
+    properties?: P[E],
+    ex?: Error,
+    sendOriginalEventWithErrors?: boolean,
+    queueEverythingUntilCompleted?: Promise<any>
+) {
+    if (isTestExecution() || !isTelemetrySupported()) {
+        return;
+    }
+    if (queueEverythingUntilCompleted) {
+        queuedTelemetry.push({
+            eventName: eventName as string,
+            durationMs,
+            properties,
+            ex,
+            sendOriginalEventWithErrors
+        });
+    }
+
+    sendNextTelemetryItem();
+}
+
+function sendNextTelemetryItem(): void {
+    if (queuedTelemetry.length === 0) {
+        return;
+    }
+    const nextItem = queuedTelemetry[0];
+    function sendThisTelemetryItem() {
+        // Possible already sent out by another event handler.
+        if (queuedTelemetry.length === 0 || queuedTelemetry[0] !== nextItem) {
+            return;
+        }
+        queuedTelemetry.shift();
+        sendTelemetryEventInternal(
+            nextItem.eventName as any,
+            nextItem.durationMs,
+            nextItem.properties,
+            nextItem.ex,
+            nextItem.sendOriginalEventWithErrors
+        );
+        sendNextTelemetryItem();
+    }
+
+    if (sharedProperties['installSource'] ==='true' && nextItem.queueEverythingUntilCompleted) {
+        setTimeout(() => sendThisTelemetryItem(), 30_000);
+        // Wait for the promise & then send it.
+        nextItem.queueEverythingUntilCompleted.finally(() => sendThisTelemetryItem).catch(noop);
+    } else {
+        return sendThisTelemetryItem();
+    }
+}
+
+function sendTelemetryEventInternal<P extends IEventNamePropertyMapping, E extends keyof P>(
     eventName: E,
     durationMs?: Record<string, number> | number,
     properties?: P[E],
     ex?: Error,
     sendOriginalEventWithErrors?: boolean
 ) {
-    if (isTestExecution() || !isTelemetrySupported()) {
-        return;
-    }
     const reporter = getTelemetryReporter();
     const measures = typeof durationMs === 'number' ? { duration: durationMs } : durationMs ? durationMs : undefined;
     let customProperties: Record<string, string> = {};
