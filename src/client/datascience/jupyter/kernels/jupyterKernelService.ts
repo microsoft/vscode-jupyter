@@ -68,7 +68,7 @@ export class JupyterKernelService {
                 await this.registerKernel(kernel, token);
             }
             // Special case. If the original spec file came from an interpreter, we may need to register a kernel
-            else if (!kernel.interpreter && kernel.kernelSpec.specFile) {
+            else if (kernel.interpreter && kernel.kernelSpec.specFile) {
                 // See if the specfile we started with (which might be the one registered in the interpreter)
                 // doesn't match the name of the spec file
                 if (!kernel.kernelSpec.specFile.includes(kernel.kernelSpec.name)) {

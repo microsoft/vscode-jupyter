@@ -8,7 +8,7 @@ import { CancellationToken } from 'vscode';
 import { Resource } from '../../../common/types';
 import { ILocalKernelFinder, IRemoteKernelFinder } from '../../kernel-launcher/types';
 import { INotebookProviderConnection } from '../../types';
-import { getDisplayNameOrNameOfKernelConnection } from './helpers';
+import { getDisplayNameOrNameOfKernelConnection, getKernelPathFromKernelConnection } from './helpers';
 import { IKernelSpecQuickPickItem, KernelConnectionMetadata } from './types';
 
 /**
@@ -61,8 +61,7 @@ export class KernelSelectionProvider {
         return {
             label: displayName,
             ...kernel,
-            // We don't want descriptions.
-            description: '',
+            description: getKernelPathFromKernelConnection(kernel),
             selection: kernel
         };
     }

@@ -332,9 +332,7 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
             resourceInterpreter?.displayName !== launchInfo.kernelConnectionMetadata?.interpreter?.displayName
         ) {
             let kernelInfo: KernelConnectionMetadata | undefined;
-            if (launchInfo.connectionInfo.localLaunch && kernelConnection?.kind !== 'connectToLiveKernel') {
-                kernelInfo = kernelConnection;
-            } else if (!launchInfo.connectionInfo.localLaunch && kernelConnection?.kind === 'connectToLiveKernel') {
+            if (!launchInfo.connectionInfo.localLaunch && kernelConnection?.kind === 'connectToLiveKernel') {
                 kernelInfo = kernelConnection;
             } else if (!launchInfo.connectionInfo.localLaunch && kernelConnection?.kind === 'startUsingKernelSpec') {
                 kernelInfo = kernelConnection;
