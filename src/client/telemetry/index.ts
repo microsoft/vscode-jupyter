@@ -147,7 +147,11 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
         return;
     }
     // If stuff is already queued, then queue the rest.
-    if (queueEverythingUntilCompleted || queuedTelemetry.length) {
+    // Queue telemetry for now only in insiders.
+    if (
+        sharedProperties['isInsiderExtension'] === 'true' &&
+        (queueEverythingUntilCompleted || queuedTelemetry.length)
+    ) {
         queuedTelemetry.push({
             eventName: eventName as string,
             durationMs,
@@ -188,7 +192,7 @@ function sendNextTelemetryItem(): void {
         sendNextTelemetryItem();
     }
 
-    if (sharedProperties['isInsiderExtension'] && nextItem.queueEverythingUntilCompleted) {
+    if (nextItem.queueEverythingUntilCompleted) {
         timer = setTimeout(() => sendThisTelemetryItem(), 30_000);
         // Wait for the promise & then send it.
         nextItem.queueEverythingUntilCompleted.finally(() => sendThisTelemetryItem()).catch(noop);
