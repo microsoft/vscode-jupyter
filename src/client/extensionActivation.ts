@@ -10,7 +10,7 @@ import { registerTypes as activationRegisterTypes } from './activation/serviceRe
 import { IExtensionActivationManager } from './activation/types';
 import { registerTypes as registerApiTypes } from './api/serviceRegistry';
 import { AmlComputeContext } from './common/amlContext';
-import { IApplicationEnvironment, IApplicationShell, ICommandManager } from './common/application/types';
+import { IApplicationEnvironment, ICommandManager } from './common/application/types';
 import { STANDARD_OUTPUT_CHANNEL, UseProposedApi } from './common/constants';
 import { Experiments } from './common/experiments/groups';
 import { registerTypes as installerRegisterTypes } from './common/installer/serviceRegistry';
@@ -92,15 +92,6 @@ async function activateLegacy(
 
     let useVSCodeNotebookAPI =
         amlCompute.isAmlCompute || (await experimentService.inExperiment(Experiments.NativeNotebook));
-    let inCustomEditorApiExperiment = await experimentService.inExperiment(Experiments.CustomEditor);
-
-    // These should be mutually exclusive, but if someone opts into both, notify them and disable both
-    if (useVSCodeNotebookAPI && inCustomEditorApiExperiment) {
-        const appShell = serviceContainer.get<IApplicationShell>(IApplicationShell);
-        appShell.showErrorMessage(localize.DataScience.illegalEditorConfig()).then(noop, noop);
-        useVSCodeNotebookAPI = false;
-        inCustomEditorApiExperiment = false;
-    }
 
     const applicationEnv = serviceManager.get<IApplicationEnvironment>(IApplicationEnvironment);
     const enableProposedApi = applicationEnv.packageJson.enableProposedApi || useVSCodeNotebookAPI;
@@ -118,7 +109,7 @@ async function activateLegacy(
 
     // Register datascience types after experiments have loaded.
     // To ensure we can register types based on experiments.
-    dataScienceRegisterTypes(serviceManager, useVSCodeNotebookAPI, inCustomEditorApiExperiment);
+    dataScienceRegisterTypes(serviceManager, useVSCodeNotebookAPI);
 
     // Language feature registrations.
     activationRegisterTypes(serviceManager);

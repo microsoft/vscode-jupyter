@@ -132,6 +132,7 @@ export namespace Commands {
     export const CreateGitHubIssue = 'jupyter.createGitHubIssue';
     export const SubmitGitHubIssue = 'jupyter.submitGitHubIssue';
     export const ShowDataViewer = 'jupyter.showDataViewer';
+    export const RefreshDataViewer = 'jupyter.refreshDataViewer';
     export const ClearSavedJupyterUris = 'jupyter.clearSavedJupyterUris';
     export const OpenVariableView = 'jupyter.openVariableView';
     export const NotebookEditorKeybindSave = 'jupyter.notebookeditor.keybind.save';
@@ -169,6 +170,7 @@ export namespace EditorContexts {
     export const CanInterruptNotebookKernel = 'jupyter.notebookeditor.canInterruptNotebookKernel';
     export const IsPythonNotebook = 'jupyter.ispythonnotebook';
     export const IsVSCodeNotebookActive = 'jupyter.isvscodenotebookactive';
+    export const IsDataViewerActive = 'jupyter.dataViewerActive';
 }
 
 export namespace RegExpValues {
@@ -299,6 +301,7 @@ export enum Telemetry {
     StartShowDataViewer = 'DATASCIENCE.START_SHOW_DATA_EXPLORER', // Called by the factory when attempting to load the data viewer
     ShowDataViewer = 'DATASCIENCE.SHOW_DATA_EXPLORER', // Called by the data viewer itself when it is actually loaded
     FailedShowDataViewer = 'DATASCIENCE.FAILED_SHOW_DATA_EXPLORER', // Called by the factory when the data viewer fails to load
+    RefreshDataViewer = 'DATASCIENCE.REFRESH_DATA_VIEWER',
     RunFileInteractive = 'DATASCIENCE.RUN_FILE_INTERACTIVE',
     DebugFileInteractive = 'DATASCIENCE.DEBUG_FILE_INTERACTIVE',
     PandasNotInstalled = 'DS_INTERNAL.SHOW_DATA_NO_PANDAS',

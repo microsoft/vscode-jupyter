@@ -100,14 +100,6 @@ export class ExperimentService implements IExperimentService {
             return false;
         }
 
-        // If user is already in Native Notebook experiment, then they cannot be in Custom Editor experiment.
-        if (
-            experiment === ExperimentGroups.CustomEditor &&
-            this.getOptInOptOutStatus(ExperimentGroups.NativeNotebook) === 'optIn'
-        ) {
-            return false;
-        }
-
         // If user has .NET interactive installed, we HAVE to be in the native experiment. See this issue:
         // https://github.com/microsoft/vscode-jupyter/issues/4771
         if (

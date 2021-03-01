@@ -119,10 +119,15 @@ export class KernelVariables implements IJupyterVariables {
     public async getDataFrameInfo(
         targetVariable: IJupyterVariable,
         notebook: INotebook,
-        sliceExpression?: string
+        sliceExpression?: string,
+        isRefresh?: boolean
     ): Promise<IJupyterVariable> {
         // Import the data frame script directory if we haven't already
         await this.importDataFrameScripts(notebook);
+
+        if (isRefresh) {
+            targetVariable = await this.getFullVariable(targetVariable, notebook);
+        }
 
         let expression = targetVariable.name;
         if (sliceExpression) {

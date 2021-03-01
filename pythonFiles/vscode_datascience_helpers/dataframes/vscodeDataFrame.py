@@ -23,7 +23,7 @@ def _VSCODE_stringifyElement(element):
     return stringified
 
 
-def _VSCODE_convertNumpyArrayToDataFrame(ndarray):
+def _VSCODE_convertNumpyArrayToDataFrame(ndarray, start=None, end=None):
     # Save the user's current setting
     current_options = _VSCODE_np.get_printoptions()
     # Ask for the full string. Without this numpy truncates to 3 leading and 3 trailing by default
@@ -31,6 +31,8 @@ def _VSCODE_convertNumpyArrayToDataFrame(ndarray):
 
     flattened = None
     try:
+        if start is not None and end is not None:
+            ndarray = ndarray[start:end]
         if ndarray.ndim < 3 and str(ndarray.dtype) != "object":
             pass
         elif ndarray.ndim == 1 and str(ndarray.dtype) == "object":
@@ -52,18 +54,29 @@ def _VSCODE_convertNumpyArrayToDataFrame(ndarray):
 
 
 # Function that converts tensors to DataFrames
-def _VSCODE_convertTensorToDataFrame(tensor):
+def _VSCODE_convertTensorToDataFrame(tensor, start=None, end=None):
     try:
         temp = tensor
+        # We were only asked for start:end rows, so don't
+        # waste cycles computing the rest
+        if temp.ndim > 0 and start is not None and end is not None:
+            temp = temp[start:end]
         # Can't directly convert sparse tensors to numpy arrays
         # so first convert them to dense tensors
         if hasattr(temp, "is_sparse") and temp.is_sparse:
             # This guard is needed because to_dense exists on all PyTorch
             # tensors and throws an error if the tensor is already strided
             temp = temp.to_dense()
+        # See https://discuss.pytorch.org/t/should-it-really-be-necessary-to-do-var-detach-cpu-numpy/35489
+        if hasattr(temp, "data"):
+            # PyTorch tensors need to be explicitly detached
+            # from the computation graph and copied to CPU
+            temp = temp.data.detach().cpu()
         # Two step conversion process required to convert tensors to DataFrames
         # tensor --> numpy array --> dataframe
         temp = temp.numpy()
+        if temp.ndim == 0:
+            temp = [temp]
         temp = _VSCODE_convertNumpyArrayToDataFrame(temp)
         tensor = temp
         del temp
@@ -75,7 +88,7 @@ def _VSCODE_convertTensorToDataFrame(tensor):
 
 
 # Function that converts the var passed in into a pandas data frame if possible
-def _VSCODE_convertToDataFrame(df):
+def _VSCODE_convertToDataFrame(df, start=None, end=None):
     vartype = type(df)
     if isinstance(df, list):
         df = _VSCODE_pd.DataFrame(df)
@@ -89,9 +102,9 @@ def _VSCODE_convertToDataFrame(df):
     elif (
         hasattr(vartype, "__name__") and vartype.__name__ in _VSCODE_allowedTensorTypes
     ):
-        df = _VSCODE_convertTensorToDataFrame(df)
+        df = _VSCODE_convertTensorToDataFrame(df, start, end)
     elif hasattr(vartype, "__name__") and vartype.__name__ == "ndarray":
-        df = _VSCODE_convertNumpyArrayToDataFrame(df)
+        df = _VSCODE_convertNumpyArrayToDataFrame(df, start, end)
     else:
         """Disabling bandit warning for try, except, pass. We want to swallow all exceptions here to not crash on
         variable fetching"""
@@ -122,11 +135,10 @@ def _VSCODE_getRowCount(var):
 
 # Function to retrieve a set of rows for a data frame
 def _VSCODE_getDataFrameRows(df, start, end):
-    df = _VSCODE_convertToDataFrame(df)
+    df = _VSCODE_convertToDataFrame(df, start, end)
     # Turn into JSON using pandas. We use pandas because it's about 3 orders of magnitude faster to turn into JSON
-    rows = df.iloc[start:end]
     try:
-        rows = rows.replace(
+        df = df.replace(
             {
                 _VSCODE_np.inf: "inf",
                 -_VSCODE_np.inf: "-inf",
@@ -135,7 +147,7 @@ def _VSCODE_getDataFrameRows(df, start, end):
         )
     except:
         pass
-    return _VSCODE_pd_json.to_json(None, rows, orient="table", date_format="iso")
+    return _VSCODE_pd_json.to_json(None, df, orient="table", date_format="iso")
 
 
 # Function to get info on the passed in data frame
@@ -156,12 +168,6 @@ def _VSCODE_getDataFrameInfo(df):
     else:
         columnNames = list(df)
 
-    # Compute the index column. It may have been renamed
-    try:
-        indexColumn = df.index.name if df.index.name else "index"
-    except AttributeError:
-        indexColumn = "index"
-
     columnTypes = _VSCODE_builtins.list(df.dtypes)
 
     # Then loop and generate our output json
@@ -178,7 +184,6 @@ def _VSCODE_getDataFrameInfo(df):
     # Save this in our target
     target = {}
     target["columns"] = columns
-    target["indexColumn"] = indexColumn
     target["rowCount"] = rowCount
 
     # return our json object as a string
