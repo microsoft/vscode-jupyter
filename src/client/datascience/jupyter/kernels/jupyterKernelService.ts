@@ -113,7 +113,7 @@ export class JupyterKernelService {
         const root = await this.kernelFinder.getKernelSpecRootPath();
 
         // If that didn't work, we can't continue
-        if (!root || !kernel.kernelSpec || cancelToken?.isCancellationRequested) {
+        if (!root || !kernel.kernelSpec || cancelToken?.isCancellationRequested || !kernel.kernelSpec.name) {
             return;
         }
 

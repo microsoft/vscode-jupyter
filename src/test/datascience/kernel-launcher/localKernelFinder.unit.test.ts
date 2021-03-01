@@ -38,27 +38,6 @@ import { arePathsSame } from '../../common';
         let context: typemoq.IMock<IExtensionContext>;
         let extensionChecker: IPythonExtensionChecker;
         const defaultPython3Name = 'python3';
-        const python3spec: Kernel.ISpecModel = {
-            display_name: 'Python 3 on Disk',
-            name: defaultPython3Name,
-            argv: ['/usr/bin/python3'],
-            language: 'python',
-            resources: {}
-        };
-        const python2spec: Kernel.ISpecModel = {
-            display_name: 'Python 2 on Disk',
-            name: 'python2',
-            argv: ['/usr/bin/python'],
-            language: 'python',
-            resources: {}
-        };
-        const juliaSpec: Kernel.ISpecModel = {
-            display_name: 'Julia on Disk',
-            name: 'julia',
-            argv: ['/usr/bin/julia'],
-            language: 'julia',
-            resources: {}
-        };
         const python3Interpreter: PythonEnvironment = {
             displayName: 'Python 3 Environment',
             path: '/usr/bin/python3',
@@ -92,6 +71,30 @@ import { arePathsSame } from '../../common';
             sysPrefix: 'conda',
             envType: EnvironmentType.Conda
         };
+        const python3spec: Kernel.ISpecModel = {
+            display_name: 'Python 3 on Disk',
+            name: defaultPython3Name,
+            argv: ['/usr/bin/python3'],
+            language: 'python',
+            resources: {},
+            metadata: {
+                interpreter: python3Interpreter
+            }
+        };
+        const python2spec: Kernel.ISpecModel = {
+            display_name: 'Python 2 on Disk',
+            name: 'python2',
+            argv: ['/usr/bin/python'],
+            language: 'python',
+            resources: {}
+        };
+        const juliaSpec: Kernel.ISpecModel = {
+            display_name: 'Julia on Disk',
+            name: 'julia',
+            argv: ['/usr/bin/julia'],
+            language: 'julia',
+            resources: {}
+        };
         const interpreterSpec: Kernel.ISpecModel = {
             display_name: 'Conda interpreter kernel',
             name: defaultPython3Name,
@@ -101,7 +104,7 @@ import { arePathsSame } from '../../common';
         };
         const condaEnvironmentBase: PythonEnvironment = {
             displayName: 'Conda base environment',
-            path: '/usr/bin/python3',
+            path: '/usr/conda/envs/base/python',
             sysPrefix: 'conda',
             envType: EnvironmentType.Conda
         };
@@ -302,6 +305,23 @@ import { arePathsSame } from '../../common';
             assert.ok(
                 interpretersKernels.length,
                 'Kernels from interpreter paths should have their name changed (so jupyter can create a spec for them)'
+            );
+        });
+        test('All kernels have a spec file', async () => {
+            when(interpreterService.getActiveInterpreter(anything())).thenResolve(activeInterpreter);
+            when(interpreterService.getInterpreters(anything())).thenResolve([
+                python3Interpreter,
+                condaEnvironment,
+                python2Interpreter,
+                condaEnvironmentBase
+            ]);
+            when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
+            const kernels = await kernelFinder.listKernels(undefined);
+            const kernelsWithoutSpec = kernels.filter((k) => !k.kernelSpec?.specFile);
+            assert.equal(
+                kernelsWithoutSpec.length,
+                0,
+                'All kernels should have a spec file (otherwise spec file would make them mutable)'
             );
         });
         test('Can match based on notebook metadata', async () => {

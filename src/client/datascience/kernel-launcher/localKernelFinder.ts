@@ -141,9 +141,10 @@ export class LocalKernelFinder implements ILocalKernelFinder {
 
     private async findResourceKernelMetadata(resource: Resource): Promise<LocalKernelConnectionMetadata[]> {
         // First find the on disk kernel specs and interpreters
-        const [kernelSpecs, interpreters] = await Promise.all([
+        const [kernelSpecs, interpreters, rootSpecPath] = await Promise.all([
             this.findResourceKernelSpecs(resource),
-            this.findResourceInterpreters(resource)
+            this.findResourceInterpreters(resource),
+            this.getKernelSpecRootPath()
         ]);
 
         // Copy the interpreter list. We need to filter out those items
@@ -182,9 +183,10 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         return [
             ...kernelMetadata,
             ...filteredInterpreters.map((i) => {
+                // Update spec to have a default spec file
                 const result: PythonKernelConnectionMetadata = {
                     kind: 'startUsingPythonInterpreter',
-                    kernelSpec: createIntepreterKernelSpec(i),
+                    kernelSpec: createIntepreterKernelSpec(i, rootSpecPath) ,
                     interpreter: i
                 };
                 return result;

@@ -3,30 +3,35 @@
 
 'use strict';
 
-import { instance, mock } from 'ts-mockito';
+import { assert } from 'chai';
+import { anything, instance, mock, when, verify } from 'ts-mockito';
 import { FileSystem } from '../../../../client/common/platform/fileSystem';
 import { IFileSystem } from '../../../../client/common/platform/types';
 import { KernelDependencyService } from '../../../../client/datascience/jupyter/kernels/kernelDependencyService';
 import { JupyterKernelService } from '../../../../client/datascience/jupyter/kernels/jupyterKernelService';
-import { KernelConnectionMetadata } from '../../../../client/datascience/jupyter/kernels/types';
+import { LocalKernelConnectionMetadata } from '../../../../client/datascience/jupyter/kernels/types';
 import { LocalKernelFinder } from '../../../../client/datascience/kernel-launcher/localKernelFinder';
 import { ILocalKernelFinder } from '../../../../client/datascience/kernel-launcher/types';
 import { IEnvironmentActivationService } from '../../../../client/interpreter/activation/types';
 import { IKernelDependencyService } from '../../../../client/datascience/types';
 import { EnvironmentActivationService } from '../../../../client/api/pythonApi';
 import { EnvironmentType } from '../../../../client/pythonEnvironments/info';
+import { EXTENSION_ROOT_DIR } from '../../../../client/constants';
+import * as path from 'path';
+import { arePathsSame } from '../../../common';
 
 // eslint-disable-next-line
-suite('DataScience - KernelService', () => {
+suite('DataScience - JupyterKernelService', () => {
     let kernelService: JupyterKernelService;
     let kernelDependencyService: IKernelDependencyService;
     let fs: IFileSystem;
     let appEnv: IEnvironmentActivationService;
     let kernelFinder: ILocalKernelFinder;
+    let testWorkspaceFolder: string;
 
     // Set of kernels. Generated this by running the localKernelFinder unit test and stringifying
     // the results returned.
-    const kernels: KernelConnectionMetadata[] = [
+    const kernels: LocalKernelConnectionMetadata[] = [
         {
             kind: 'startUsingPythonInterpreter',
             kernelSpec: {
@@ -71,7 +76,15 @@ suite('DataScience - KernelService', () => {
                 argv: ['/usr/bin/python3'],
                 language: 'python',
                 path: '/usr/bin/python3',
-                display_name: 'Python 3 on Disk'
+                display_name: 'Python 3 on Disk',
+                metadata: {
+                    interpreter: {
+                        displayName: 'Python 3 Environment',
+                        path: '/usr/bin/python3',
+                        sysPrefix: 'python',
+                        version: { major: 3, minor: 8, raw: '3.8', build: ['0'], patch: 0, prerelease: ['0'] }
+                    }
+                }
             },
             interpreter: {
                 displayName: 'Python 3 Environment',
@@ -116,7 +129,15 @@ suite('DataScience - KernelService', () => {
                 argv: ['/usr/bin/python3'],
                 language: 'python',
                 path: '/usr/bin/python3',
-                display_name: 'Python 3 on Disk'
+                display_name: 'Python 3 on Disk',
+                metadata: {
+                    interpreter: {
+                        displayName: 'Python 3 Environment',
+                        path: '/usr/bin/python3',
+                        sysPrefix: 'python',
+                        version: { major: 3, minor: 8, raw: '3.8', build: ['0'], patch: 0, prerelease: ['0'] }
+                    }
+                }
             },
             interpreter: {
                 displayName: 'Python 3 Environment',
@@ -161,7 +182,15 @@ suite('DataScience - KernelService', () => {
                 argv: ['/usr/bin/python3'],
                 language: 'python',
                 path: '/usr/bin/python3',
-                display_name: 'Python 3 on Disk'
+                display_name: 'Python 3 on Disk',
+                metadata: {
+                    interpreter: {
+                        displayName: 'Python 3 Environment',
+                        path: '/usr/bin/python3',
+                        sysPrefix: 'python',
+                        version: { major: 3, minor: 8, raw: '3.8', build: ['0'], patch: 0, prerelease: ['0'] }
+                    }
+                }
             },
             interpreter: {
                 displayName: 'Python 3 Environment',
@@ -197,13 +226,52 @@ suite('DataScience - KernelService', () => {
                 sysPrefix: 'python',
                 version: { major: 2, minor: 7, raw: '2.7', build: ['0'], patch: 0, prerelease: ['0'] }
             }
+        },
+        {
+            kind: 'startUsingPythonInterpreter',
+            kernelSpec: {
+                interpreterPath: '/usr/conda/envs/base/python',
+                name: 'e10e222d04b8ec3cc7034c3de1b1269b088e2bcd875030a8acab068e59af3990',
+                argv: ['python', '-m', 'ipykernel_launcher', '-f', '{connection_file}'],
+                language: 'python',
+                path: 'python',
+                display_name: 'Conda base environment',
+                metadata: {
+                    interpreter: {
+                        displayName: 'Conda base environment',
+                        path: '/usr/conda/envs/base/python',
+                        sysPrefix: 'conda',
+                        envType:  EnvironmentType.Conda
+                    }
+                },
+                env: {},
+                specFile: "/usr/share/jupyter/kernels/e10e222d04b8ec3cc7034c3de1b1269b088e2bcd875030a8acab068e59af3990/kernel.json"
+            },
+            interpreter: {
+                displayName: 'Conda base environment',
+                path: '/usr/conda/envs/base/python',
+                sysPrefix: 'conda',
+                envType:  EnvironmentType.Conda
+            }
         }
     ];
     setup(() => {
         kernelDependencyService = mock(KernelDependencyService);
         fs = mock(FileSystem);
+        when(fs.readLocalFile(anything())).thenCall((p) => {
+            const match = kernels.find((k) => k.kernelSpec?.specFile?.endsWith(p));
+            if (match) {
+                return Promise.resolve(JSON.stringify(match.kernelSpec));
+            }
+            return Promise.reject('Invalid file');
+        });
+        when(fs.areLocalPathsSame(anything(), anything())).thenCall((a, b) => arePathsSame(a, b));
+        when(fs.searchLocal(anything(), anything())).thenResolve([]);
         appEnv = mock(EnvironmentActivationService);
+        when(appEnv.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve({});
         kernelFinder = mock(LocalKernelFinder);
+        testWorkspaceFolder = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience');
+        when(kernelFinder.getKernelSpecRootPath()).thenResolve(testWorkspaceFolder);
         kernelService = new JupyterKernelService(
             instance(kernelDependencyService),
             instance(fs),
@@ -211,24 +279,71 @@ suite('DataScience - KernelService', () => {
             instance(kernelFinder)
         );
     });
-    test('Dependencies checked on all kernels', async () => {
+    test('Dependencies checked on all kernels with interpreters', async () => {
         await Promise.all(
             kernels.map(async (k) => {
                 await kernelService.ensureKernelIsUsable(k, undefined, true);
             })
         );
-    });
-    test('Kernel installed when no spec file', async () => {
-        await kernelService.ensureKernelIsUsable(kernels[0], undefined, true);
+        verify(kernelDependencyService.installMissingDependencies(anything(), anything(), anything())).times(
+            kernels.filter((k) => k.interpreter).length
+        );
     });
     test('Kernel installed when spec comes from interpreter', async () => {
-        await kernelService.ensureKernelIsUsable(kernels[0], undefined, true);
+        const kernelsWithInvalidName = kernels.filter(
+            (k) => k.kernelSpec?.specFile && (k.kernelSpec?.name.length || 0) > 30
+        );
+        assert.ok(kernelsWithInvalidName.length, 'No kernels found with invalid name');
+        assert.ok(kernelsWithInvalidName[0].kernelSpec?.name, 'first kernel does not have a name');
+        const kernelSpecPath = path.join(
+            testWorkspaceFolder,
+            kernelsWithInvalidName[0].kernelSpec?.name!,
+            'kernel.json'
+        );
+        await kernelService.ensureKernelIsUsable(kernelsWithInvalidName[0], undefined, true);
+        verify(fs.writeLocalFile(kernelSpecPath, anything())).once();
     });
 
     test('Kernel environment updated with interpreter environment', async () => {
-        await kernelService.ensureKernelIsUsable(kernels[0], undefined, true);
+        const kernelsWithInterpreters = kernels.filter((k) => k.interpreter && k.kernelSpec?.metadata?.interpreter);
+        let updateCount = 0;
+        when(fs.localFileExists(anything())).thenResolve(true);
+        when(appEnv.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve({ foo: 'bar' });
+        when(fs.writeLocalFile(anything(), anything())).thenCall((f, c) => {
+            if (f.endsWith('.json')) {
+                const obj = JSON.parse(c);
+                if (obj.env.foo && obj.env.foo === 'bar') {
+                    updateCount += 1;
+                }
+            }
+            return Promise.resolve();
+        });
+        await Promise.all(
+            kernelsWithInterpreters.map(async (k) => {
+                await kernelService.ensureKernelIsUsable(k, undefined, true);
+            })
+        );
+        assert.equal(updateCount, kernelsWithInterpreters.length, 'Updates to spec files did not occur');
     });
     test('Kernel environment not updated when not custom interpreter', async () => {
-        await kernelService.ensureKernelIsUsable(kernels[0], undefined, true);
+        const kernelsWithoutInterpreters = kernels.filter((k) => k.interpreter && !k.kernelSpec?.metadata?.interpreter);
+        let updateCount = 0;
+        when(appEnv.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve({ foo: 'bar' });
+        when(fs.localFileExists(anything())).thenResolve(true);
+        when(fs.writeLocalFile(anything(), anything())).thenCall((f, c) => {
+            if (f.endsWith('.json')) {
+                const obj = JSON.parse(c);
+                if (obj.env.foo && obj.env.foo === 'bar') {
+                    updateCount += 1;
+                }
+            }
+            return Promise.resolve();
+        });
+        await Promise.all(
+            kernelsWithoutInterpreters.map(async (k) => {
+                await kernelService.ensureKernelIsUsable(k, undefined, true);
+            })
+        );
+        assert.equal(updateCount, 0, 'Should not have updated spec files when no interpreter metadata');
     });
 });

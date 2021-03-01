@@ -4,6 +4,7 @@
 
 import type { Kernel } from '@jupyterlab/services';
 import * as fastDeepEqual from 'fast-deep-equal';
+import * as path from 'path';
 import { IJupyterKernelSpec } from '../../types';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
@@ -163,20 +164,31 @@ export function getInterpreterKernelSpecName(interpreter?: PythonEnvironment): s
 }
 
 // Create a default kernelspec with the given display name
-export function createIntepreterKernelSpec(interpreter?: PythonEnvironment): IJupyterKernelSpec {
+export function createIntepreterKernelSpec(
+    interpreter?: PythonEnvironment,
+    rootKernelFilePath?: string
+): IJupyterKernelSpec {
     // This creates a kernel spec for an interpreter. When launched, 'python' argument will map to using the interpreter
     // associated with the current resource for launching.
     const defaultSpec: Kernel.ISpecModel = {
         name: getInterpreterKernelSpecName(interpreter),
         language: 'python',
         display_name: interpreter?.displayName || 'Python 3',
-        metadata: {},
+        metadata: {
+            interpreter
+        },
         argv: ['python', '-m', 'ipykernel_launcher', '-f', connectionFilePlaceholder],
         env: {},
         resources: {}
     };
 
-    return new JupyterKernelSpec(defaultSpec, undefined, interpreter?.path);
+    // Generate spec file path if we know where kernel files will go
+    const specFile =
+        rootKernelFilePath && defaultSpec.name
+            ? path.join(rootKernelFilePath, defaultSpec.name, 'kernel.json')
+            : undefined;
+
+    return new JupyterKernelSpec(defaultSpec, specFile, interpreter?.path);
 }
 
 export function areKernelConnectionsEqual(

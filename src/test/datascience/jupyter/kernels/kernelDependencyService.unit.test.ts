@@ -45,7 +45,7 @@ suite('DataScience - Kernel Dependency Service', () => {
 
         await assert.isRejected(
             dependencyService.installMissingDependencies(interpreter),
-            'Install should fail because of cancel'
+            'IPyKernel not installed into interpreter'
         );
 
         verify(appShell.showErrorMessage(anything(), anything(), anything())).never();
