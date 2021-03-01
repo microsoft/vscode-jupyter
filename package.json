@@ -680,7 +680,7 @@
                 "command": "jupyter.switchKernel",
                 "title": "%DataScience.selectKernel%",
                 "category": "Jupyter",
-                "enablement": "jupyter.isnativeactive"
+                "enablement": "jupyter.isinteractiveactive"
             },
             {
                 "command": "jupyter.latestExtension",
@@ -1231,7 +1231,7 @@
                     "command": "jupyter.switchKernel",
                     "title": "%DataScience.selectKernel%",
                     "category": "Jupyter",
-                    "when": "jupyter.isnativeactive && !notebookEditorFocused"
+                    "when": "jupyter.isinteractiveactive"
                 },
                 {
                     "command": "jupyter.latestExtension",
