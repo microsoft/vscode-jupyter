@@ -11,7 +11,7 @@ import { Cancellation, createPromiseFromCancellation, wrapCancellationTokens } f
 import { ProductNames } from '../../common/installer/productNames';
 import { traceWarning } from '../../common/logger';
 import { IPythonExecutionFactory } from '../../common/process/types';
-import { IInstaller, InstallerResponse, Product } from '../../common/types';
+import { IInstaller, InstallerResponse, IsCodeSpace, Product } from '../../common/types';
 import { Common, DataScience } from '../../common/utils/localize';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
@@ -34,7 +34,8 @@ export class DataViewerDependencyService {
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
         @inject(IInstaller) private readonly installer: IInstaller,
         @inject(IPythonExecutionFactory) private pythonFactory: IPythonExecutionFactory,
-        @inject(IInterpreterService) private interpreterService: IInterpreterService
+        @inject(IInterpreterService) private interpreterService: IInterpreterService,
+        @inject(IsCodeSpace) private isCodeSpace: boolean
     ) {}
 
     public async checkAndInstallMissingDependencies(
@@ -68,10 +69,9 @@ export class DataViewerDependencyService {
             action: 'displayed',
             moduleName: ProductNames.get(Product.pandas)!
         });
-        const selection = await this.applicationShell.showErrorMessage(
-            DataScience.pandasRequiredForViewing(),
-            Common.install()
-        );
+        const selection = this.isCodeSpace
+            ? Common.install()
+            : await this.applicationShell.showErrorMessage(DataScience.pandasRequiredForViewing(), Common.install());
 
         // All data science dependencies require an interpreter to be passed in
         // Default to the active interpreter if no interpreter is available
