@@ -143,14 +143,14 @@ export class DataScienceInstaller extends BaseInstaller {
             moduleName: productName
         });
         const item = this.serviceContainer.get<boolean>(IsCodeSpace)
-            ? 'Yes'
+            ? localize.Common.bannerLabelYes()
             : await this.appShell.showErrorMessage(
                   localize.DataScience.libraryNotInstalled().format(productName),
-                  'Yes',
-                  'No'
+                  localize.Common.bannerLabelYes(),
+                  localize.Common.bannerLabelNo()
               );
 
-        if (item === 'Yes') {
+        if (item === localize.Common.bannerLabelYes()) {
             const stopWatch = new StopWatch();
             try {
                 const response = await this.install(product, resource, cancel);
