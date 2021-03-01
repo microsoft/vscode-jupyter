@@ -4,14 +4,15 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { TextEditor } from 'vscode';
+import { TextEditor, env } from 'vscode';
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { ICommandManager, IDocumentManager, IVSCodeNotebook } from '../../common/application/types';
 import { PYTHON_LANGUAGE, UseVSCodeNotebookEditorApi } from '../../common/constants';
 import { ContextKey } from '../../common/contextKey';
+import { Experiments } from '../../common/experiments/groups';
 import { traceError } from '../../common/logger';
-import { IDisposable, IDisposableRegistry } from '../../common/types';
+import { IDisposable, IDisposableRegistry, IExperimentService } from '../../common/types';
 import { isNotebookCell } from '../../common/utils/misc';
 import { EditorContexts } from '../constants';
 import { isPythonNotebook } from '../notebook/helpers/helpers';
@@ -42,6 +43,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
     private isPythonFileActive: boolean = false;
     private isPythonNotebook: ContextKey;
     private isVSCodeNotebookActive: ContextKey;
+    private usingWebViewNotebook: ContextKey;
     constructor(
         @inject(IInteractiveWindowProvider) private readonly interactiveProvider: IInteractiveWindowProvider,
         @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider,
@@ -51,7 +53,8 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         @inject(UseVSCodeNotebookEditorApi) private readonly inNativeNotebookExperiment: boolean,
         @inject(INotebookProvider) private readonly notebookProvider: INotebookProvider,
         @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
-        @inject(ITrustService) private readonly trustService: ITrustService
+        @inject(ITrustService) private readonly trustService: ITrustService,
+        @inject(IExperimentService) private readonly experimentService: IExperimentService
     ) {
         disposables.push(this);
         this.nativeContext = new ContextKey(EditorContexts.IsNativeActive, this.commandManager);
@@ -85,6 +88,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         this.isNotebookTrusted = new ContextKey(EditorContexts.IsNotebookTrusted, this.commandManager);
         this.isPythonNotebook = new ContextKey(EditorContexts.IsPythonNotebook, this.commandManager);
         this.isVSCodeNotebookActive = new ContextKey(EditorContexts.IsVSCodeNotebookActive, this.commandManager);
+        this.usingWebViewNotebook = new ContextKey(EditorContexts.UsingWebviewNotebook, this.commandManager);
     }
     public dispose() {
         this.disposables.forEach((item) => item.dispose());
@@ -109,6 +113,11 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
             this.onDidChangeActiveTextEditor(this.docManager.activeTextEditor);
         }
         this.vscNotebook.onDidChangeNotebookEditorSelection(this.updateNativeNotebookContext, this, this.disposables);
+
+        const usingWebview =
+            !env.appName.includes('Insider') &&
+            !(await this.experimentService.inExperiment(Experiments.NativeNotebook));
+        this.usingWebViewNotebook.set(usingWebview).ignoreErrors();
     }
 
     private updateNativeNotebookCellContext() {
