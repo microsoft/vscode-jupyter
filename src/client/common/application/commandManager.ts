@@ -5,6 +5,8 @@
 
 import { injectable } from 'inversify';
 import { commands, Disposable, TextEditor, TextEditorEdit } from 'vscode';
+import { Telemetry } from '../../datascience/constants';
+import { sendTelemetryEvent } from '../../telemetry';
 import { ICommandNameArgumentTypeMapping } from './commands';
 import { ICommandManager } from './types';
 
@@ -70,6 +72,7 @@ export class CommandManager implements ICommandManager {
         E extends keyof ICommandNameArgumentTypeMapping,
         U extends ICommandNameArgumentTypeMapping[E]
     >(command: E, ...rest: U): Thenable<T | undefined> {
+        sendTelemetryEvent(Telemetry.CommandExecuted, undefined, { command: command as string });
         return commands.executeCommand<T>(command, ...rest);
     }
 
