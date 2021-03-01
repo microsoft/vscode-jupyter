@@ -45,9 +45,12 @@ import { JupyterInterpreterService } from '../../client/datascience/jupyter/inte
 import { JupyterInterpreterSubCommandExecutionService } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterSubCommandExecutionService';
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
 import { KernelSelector } from '../../client/datascience/jupyter/kernels/kernelSelector';
+import { LocalKernelConnectionMetadata } from '../../client/datascience/jupyter/kernels/types';
 import { NotebookStarter } from '../../client/datascience/jupyter/notebookStarter';
+import { LocalKernelFinder } from '../../client/datascience/kernel-launcher/localKernelFinder';
+import { ILocalKernelFinder } from '../../client/datascience/kernel-launcher/types';
 import { LiveShareApi } from '../../client/datascience/liveshare/liveshare';
-import { IJupyterSubCommandExecutionService, INotebookServer } from '../../client/datascience/types';
+import { IJupyterKernelSpec, IJupyterSubCommandExecutionService, INotebookServer } from '../../client/datascience/types';
 import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { ServiceContainer } from '../../client/ioc/container';
@@ -969,8 +972,23 @@ suite('Jupyter Execution', async () => {
             instance(serviceContainer),
             instance(jupyterOutputChannel)
         );
+        const kernelFinder = mock(LocalKernelFinder);
+        const kernelSpec: IJupyterKernelSpec = {
+            name: 'somename',
+            path: 'python',
+            argv: ['python'],
+            display_name: 'somename'
+        }
+        const kernelMetadata: LocalKernelConnectionMetadata = 
+            {
+                kind: 'startUsingKernelSpec',
+                kernelSpec
+            }
+        ;
+        when(kernelFinder.findKernel(anything(), anything(), anything())).thenResolve(kernelMetadata);
         when(serviceContainer.get<KernelSelector>(KernelSelector)).thenReturn(instance(kernelSelector));
         when(serviceContainer.get<NotebookStarter>(NotebookStarter)).thenReturn(notebookStarter);
+        when(serviceContainer.get<ILocalKernelFinder>(ILocalKernelFinder)).thenReturn(instance(kernelFinder));
         return {
             executionService: activeService.object,
             jupyterExecutionFactory: new JupyterExecutionFactory(
