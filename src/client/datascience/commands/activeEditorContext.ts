@@ -4,15 +4,14 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { TextEditor, env } from 'vscode';
+import { TextEditor } from 'vscode';
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { ICommandManager, IDocumentManager, IVSCodeNotebook } from '../../common/application/types';
 import { PYTHON_LANGUAGE, UseVSCodeNotebookEditorApi } from '../../common/constants';
 import { ContextKey } from '../../common/contextKey';
-import { Experiments } from '../../common/experiments/groups';
 import { traceError } from '../../common/logger';
-import { IDisposable, IDisposableRegistry, IExperimentService } from '../../common/types';
+import { IDisposable, IDisposableRegistry } from '../../common/types';
 import { isNotebookCell } from '../../common/utils/misc';
 import { EditorContexts } from '../constants';
 import { isPythonNotebook } from '../notebook/helpers/helpers';
@@ -53,8 +52,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         @inject(UseVSCodeNotebookEditorApi) private readonly inNativeNotebookExperiment: boolean,
         @inject(INotebookProvider) private readonly notebookProvider: INotebookProvider,
         @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
-        @inject(ITrustService) private readonly trustService: ITrustService,
-        @inject(IExperimentService) private readonly experimentService: IExperimentService
+        @inject(ITrustService) private readonly trustService: ITrustService
     ) {
         disposables.push(this);
         this.nativeContext = new ContextKey(EditorContexts.IsNativeActive, this.commandManager);
@@ -114,10 +112,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         }
         this.vscNotebook.onDidChangeNotebookEditorSelection(this.updateNativeNotebookContext, this, this.disposables);
 
-        const usingWebview =
-            !env.appName.includes('Insider') &&
-            !(await this.experimentService.inExperiment(Experiments.NativeNotebook));
-        this.usingWebViewNotebook.set(usingWebview).ignoreErrors();
+        this.usingWebViewNotebook.set(!this.inNativeNotebookExperiment).ignoreErrors();
     }
 
     private updateNativeNotebookCellContext() {
