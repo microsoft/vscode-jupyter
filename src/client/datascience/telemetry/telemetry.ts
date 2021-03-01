@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+import cloneDeep = require('lodash/cloneDeep');
 import { Uri } from 'vscode';
 import { getOSType } from '../../common/utils/platform';
 import { getKernelConnectionId, KernelConnectionMetadata } from '../jupyter/kernels/types';
@@ -290,11 +292,15 @@ function getContextualPropsForTelemetry(
             resourceType
         };
     }
-    if (data) {
-        // Possible the Python package information is now available, update the properties accordingly.
-        updatePythonPackages(data[0]);
+    if (!data) {
+        return;
     }
-    return data ? data[0] : undefined;
+    // Create a copy of this data as it gets updated later asynchronously for other events.
+    // At the point of sending this telemetry we don't want it to change again.
+    const clonedData = cloneDeep(data[0]);
+    // Possible the Python package information is now available, update the properties accordingly.
+    updatePythonPackages(clonedData);
+    return clonedData;
 }
 /**
  * Some information such as interrupt counters & restart counters need to be reset
