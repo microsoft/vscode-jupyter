@@ -58,8 +58,10 @@ export class KernelSelector {
         cancelToken: CancellationToken | undefined,
         currentKernelDisplayName: string | undefined
     ): Promise<KernelConnectionMetadata | undefined> {
-        const isLocalConnection = connection?.localLaunch ?? isLocalLaunch(this.configService);
-        const telemetryEvent = isLocalConnection ? Telemetry.SelectLocalJupyterKernel : Telemetry.SelectRemoteJupyterKernel;
+        const isLocalConnection = !connection || connection?.localLaunch ? true : isLocalLaunch(this.configService);
+        const telemetryEvent = isLocalConnection
+            ? Telemetry.SelectLocalJupyterKernel
+            : Telemetry.SelectRemoteJupyterKernel;
         const stopWatch = new StopWatch();
         const suggestions = await this.selectionProvider.getKernelSelections(resource, connection, cancelToken);
         const selection = await this.selectKernel(

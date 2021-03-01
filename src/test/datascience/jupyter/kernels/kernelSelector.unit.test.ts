@@ -9,8 +9,7 @@ import { ApplicationShell } from '../../../../client/common/application/applicat
 import { IApplicationShell } from '../../../../client/common/application/types';
 import { ConfigurationService } from '../../../../client/common/configuration/service';
 import { PYTHON_LANGUAGE } from '../../../../client/common/constants';
-import { IDisposable } from '../../../../client/common/types';
-import * as localize from '../../../../client/common/utils/localize';
+import { IConfigurationService, IDisposable } from '../../../../client/common/types';
 import { noop } from '../../../../client/common/utils/misc';
 import { KernelSelectionProvider } from '../../../../client/datascience/jupyter/kernels/kernelSelections';
 import { KernelSelector } from '../../../../client/datascience/jupyter/kernels/kernelSelector';
@@ -30,6 +29,7 @@ suite('DataScience - KernelSelector', () => {
     let kernelSelectionProvider: KernelSelectionProvider;
     let kernelSelector: KernelSelector;
     let appShell: IApplicationShell;
+    let configService: IConfigurationService;
     const dummyEvent = new EventEmitter<number>();
     const kernelSpec = {
         argv: [],
@@ -77,12 +77,13 @@ suite('DataScience - KernelSelector', () => {
     setup(() => {
         kernelSelectionProvider = mock(KernelSelectionProvider);
         appShell = mock(ApplicationShell);
-        when(appShell.showErrorMessage(anything(), anything(), anything())).thenResolve(localize.DataScience.selectKernel() as any)
+        when(appShell.showErrorMessage(anything(), anything(), anything())).thenCall((_a, b, _c) => Promise.resolve(b))
         when(appShell.showQuickPick(anything(), anything(), anything())).thenCall((a, _b, _c) => {
             return Promise.resolve(a[0]);
         })
 
-        const configService = mock(ConfigurationService);
+        configService = mock(ConfigurationService);
+        when(configService.getSettings(anything())).thenReturn({jupyterServerType: 'local'} as any);
         kernelSelector = new KernelSelector(
             instance(kernelSelectionProvider),
             instance(appShell),
@@ -95,6 +96,7 @@ suite('DataScience - KernelSelector', () => {
         disposeAllDisposables(disposableRegistry);
     });
     test('Remote kernels are asked for', async () => {
+        when(configService.getSettings(anything())).thenReturn({jupyterServerType: 'remote'} as any);
         when(kernelSelectionProvider.getKernelSelections(anything(), connection, anything())).thenResolve([
              {   label: '',
                 ...remoteKernelMetadata,
@@ -115,6 +117,5 @@ suite('DataScience - KernelSelector', () => {
        ]);
        const result = await kernelSelector.askForLocalKernel(undefined, undefined, kernelMetadata);
        assert.deepEqual(result, kernelMetadata);
-
     });
 });
