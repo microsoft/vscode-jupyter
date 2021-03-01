@@ -180,7 +180,7 @@ function sendNextTelemetryItem(): void {
         sendNextTelemetryItem();
     }
 
-    if (sharedProperties['installSource'] ==='true' && nextItem.queueEverythingUntilCompleted) {
+    if (sharedProperties['isInsiderExtension'] && nextItem.queueEverythingUntilCompleted) {
         setTimeout(() => sendThisTelemetryItem(), 30_000);
         // Wait for the promise & then send it.
         nextItem.queueEverythingUntilCompleted.finally(() => sendThisTelemetryItem).catch(noop);
