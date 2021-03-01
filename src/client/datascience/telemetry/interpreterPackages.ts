@@ -37,7 +37,9 @@ export class InterpreterPackages {
         @inject(IPythonExtensionChecker) private readonly pythonExtensionChecker: IPythonExtensionChecker,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IPythonExecutionFactory) private readonly executionFactory: IPythonExecutionFactory
-    ) {}
+    ) {
+        InterpreterPackages.instance = this;
+    }
     public static getPackageVersions(interpreter: PythonEnvironment): Promise<Map<string, string>> {
         let deferred = InterpreterPackages.interpreterInformation.get(interpreter.path);
         if (!deferred) {

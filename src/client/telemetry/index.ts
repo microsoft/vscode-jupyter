@@ -146,25 +146,33 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
     if (isTestExecution() || !isTelemetrySupported()) {
         return;
     }
-    if (queueEverythingUntilCompleted) {
+    // If stuff is already queued, then queue the rest.
+    if (queueEverythingUntilCompleted || queuedTelemetry.length) {
         queuedTelemetry.push({
             eventName: eventName as string,
             durationMs,
             properties,
             ex,
-            sendOriginalEventWithErrors
+            sendOriginalEventWithErrors,
+            queueEverythingUntilCompleted
         });
+        sendNextTelemetryItem();
+    } else {
+        sendTelemetryEventInternal(eventName, durationMs, properties, ex, sendOriginalEventWithErrors);
     }
-
-    sendNextTelemetryItem();
 }
 
 function sendNextTelemetryItem(): void {
     if (queuedTelemetry.length === 0) {
         return;
     }
+    // Take the first item to be sent.
     const nextItem = queuedTelemetry[0];
+    let timer: NodeJS.Timeout | undefined | number;
     function sendThisTelemetryItem() {
+        if (timer) {
+            clearTimeout(timer as any);
+        }
         // Possible already sent out by another event handler.
         if (queuedTelemetry.length === 0 || queuedTelemetry[0] !== nextItem) {
             return;
@@ -181,9 +189,9 @@ function sendNextTelemetryItem(): void {
     }
 
     if (sharedProperties['isInsiderExtension'] && nextItem.queueEverythingUntilCompleted) {
-        setTimeout(() => sendThisTelemetryItem(), 30_000);
+        timer = setTimeout(() => sendThisTelemetryItem(), 30_000);
         // Wait for the promise & then send it.
-        nextItem.queueEverythingUntilCompleted.finally(() => sendThisTelemetryItem).catch(noop);
+        nextItem.queueEverythingUntilCompleted.finally(() => sendThisTelemetryItem()).catch(noop);
     } else {
         return sendThisTelemetryItem();
     }

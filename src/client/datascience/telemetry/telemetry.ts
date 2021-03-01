@@ -20,6 +20,7 @@ import { getTelemetrySafeHashedString, getTelemetrySafeLanguage } from '../../te
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { InterpreterPackages } from './interpreterPackages';
 import { populateTelemetryWithErrorInfo } from '../../common/errors';
+import { createDeferred } from '../../common/utils/async';
 
 type ContextualTelemetryProps = {
     kernelConnection: KernelConnectionMetadata;
@@ -57,9 +58,8 @@ export function sendKernelTelemetryEvent<P extends IEventNamePropertyMapping, E 
         setSharedProperty('userExecutedCell', 'true');
     }
 
-    const addOnTelemetry = getContextualPropsForTelemetry(resource);
-    const props = properties || {};
-    Object.assign(props, addOnTelemetry || {});
+    const props = getContextualPropsForTelemetry(resource);
+    Object.assign(props, properties || {});
     sendTelemetryEvent(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         eventName as any,
@@ -67,7 +67,7 @@ export function sendKernelTelemetryEvent<P extends IEventNamePropertyMapping, E 
         props,
         ex,
         true,
-        addOnTelemetry?.waitForCompletionBeforeSendingTelemetry
+        props?.waitBeforeSendingTelemetry
     );
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -96,8 +96,8 @@ export function sendKernelTelemetryWhenDone<P extends IEventNamePropertyMapping,
         (promise as Promise<any>)
             .then(
                 (data) => {
-                    const addOnTelemetry = getContextualPropsForTelemetry(resource);
-                    Object.assign(props, addOnTelemetry);
+                    const props = getContextualPropsForTelemetry(resource);
+                    Object.assign(props, properties || {});
                     sendTelemetryEvent(
                         // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         eventName as any,
@@ -107,15 +107,16 @@ export function sendKernelTelemetryWhenDone<P extends IEventNamePropertyMapping,
                         props as any,
                         undefined,
                         undefined,
-                        addOnTelemetry?.waitForCompletionBeforeSendingTelemetry
+                        props?.waitBeforeSendingTelemetry
                     );
                     return data;
                     // eslint-disable-next-line @typescript-eslint/promise-function-async
                 },
                 (ex) => {
-                    const addOnTelemetry = getContextualPropsForTelemetry(resource);
-                    Object.assign(props, addOnTelemetry);
-                    populateTelemetryWithErrorInfo(props, ex);
+                    const props = getContextualPropsForTelemetry(resource);
+                    Object.assign(props, properties || {});
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    populateTelemetryWithErrorInfo(props as any, ex);
                     sendTelemetryEvent(
                         // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         eventName as any,
@@ -125,7 +126,7 @@ export function sendKernelTelemetryWhenDone<P extends IEventNamePropertyMapping,
                         props as any,
                         ex,
                         true,
-                        addOnTelemetry?.waitForCompletionBeforeSendingTelemetry
+                        props?.waitBeforeSendingTelemetry
                     );
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     incrementStartFailureCount(resource, eventName as any, props);
@@ -234,23 +235,38 @@ export function trackKernelResourceInformation(resource: Resource, information: 
  * Use this to update with the latest information (if available)
  */
 function updatePythonPackages(
-    currentData: ResourceSpecificTelemetryProperties & { waitForCompletionBeforeSendingTelemetry?: Promise<void> }
+    currentData: ResourceSpecificTelemetryProperties & { waitBeforeSendingTelemetry?: Promise<void> },
+    clonedCurrentData?: ResourceSpecificTelemetryProperties & {
+        waitBeforeSendingTelemetry?: Promise<void>;
+    }
 ) {
-    // Possible the Python package information is now available, update the properties accordingly.
     if (!currentData.pythonEnvironmentPath) {
         return;
     }
-    if (currentData.pythonEnvironmentPath) {
-        // Getting package information is async, hence update property to indicate that a promise is pending.
-        currentData.waitForCompletionBeforeSendingTelemetry = getPythonEnvironmentPackages({
-            interpreterHash: currentData.pythonEnvironmentPath
-        })
-            .then((packages) => {
-                currentData.pythonEnvironmentPackages = packages || currentData.pythonEnvironmentPackages;
-            })
-            .catch(() => undefined)
-            .finally(() => (currentData.waitForCompletionBeforeSendingTelemetry = undefined));
+    // Getting package information is async, hence update property to indicate that a promise is pending.
+    const deferred = createDeferred<void>();
+    // Hold sending of telemetry until we have updated the props with package information.
+    currentData.waitBeforeSendingTelemetry = deferred.promise;
+    if (clonedCurrentData) {
+        clonedCurrentData.waitBeforeSendingTelemetry = deferred.promise;
     }
+    getPythonEnvironmentPackages({
+        interpreterHash: currentData.pythonEnvironmentPath
+    })
+        .then((packages) => {
+            currentData.pythonEnvironmentPackages = packages || currentData.pythonEnvironmentPackages;
+            if (clonedCurrentData) {
+                clonedCurrentData.pythonEnvironmentPackages = packages || clonedCurrentData.pythonEnvironmentPackages;
+            }
+        })
+        .catch(() => undefined)
+        .finally(() => {
+            deferred.resolve();
+            currentData.waitBeforeSendingTelemetry = undefined;
+            if (clonedCurrentData) {
+                clonedCurrentData.waitBeforeSendingTelemetry = undefined;
+            }
+        });
 }
 /**
  * Gets a JSON with hashed keys of some python packages along with their versions.
@@ -279,11 +295,15 @@ function getUriKey(uri: Uri) {
     return currentOSType ? uri.fsPath.toLowerCase() : uri.fsPath;
 }
 
+/**
+ * Always return a clone of the properties.
+ * We will be using a reference of this object elsewhere & adding properties to the object.
+ */
 function getContextualPropsForTelemetry(
     resource: Resource
-): (ResourceSpecificTelemetryProperties & { waitForCompletionBeforeSendingTelemetry?: Promise<void> }) | undefined {
+): ResourceSpecificTelemetryProperties & { waitBeforeSendingTelemetry?: Promise<void> } {
     if (!resource) {
-        return;
+        return {};
     }
     const data = trackedInfo.get(getUriKey(resource));
     const resourceType = getResourceType(resource);
@@ -293,13 +313,16 @@ function getContextualPropsForTelemetry(
         };
     }
     if (!data) {
-        return;
+        return {};
     }
     // Create a copy of this data as it gets updated later asynchronously for other events.
     // At the point of sending this telemetry we don't want it to change again.
     const clonedData = cloneDeep(data[0]);
     // Possible the Python package information is now available, update the properties accordingly.
-    updatePythonPackages(clonedData);
+    // We want to update both the data items with package information
+    // 1. Data we track against the Uri.
+    // 2. Data that is returned & sent via telemetry now
+    updatePythonPackages(data[0], clonedData);
     return clonedData;
 }
 /**
