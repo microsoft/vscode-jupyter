@@ -6,6 +6,7 @@
 import { assert, expect, use } from 'chai';
 import * as chaiPromise from 'chai-as-promised';
 import * as path from 'path';
+import * as sinon from 'sinon';
 import { Subject } from 'rxjs/Subject';
 import { anything, capture, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import { PYTHON_LANGUAGE } from '../../../../client/common/constants';
@@ -31,6 +32,7 @@ import { JupyterServerInfo } from '../../../../client/datascience/jupyter/jupyte
 import { IInterpreterService } from '../../../../client/interpreter/contracts';
 import { MockOutputChannel } from '../../../mockClasses';
 import { createPythonInterpreter } from '../../../utils/interpreters';
+import * as common from './../../../../client/datascience/common'
 use(chaiPromise);
 
 /* eslint-disable  */
@@ -50,6 +52,11 @@ suite('DataScience - Jupyter InterpreterSubCommandExecutionService', () => {
         jupyterInterpreter = mock(JupyterInterpreterService);
         jupyterDependencyService = mock(JupyterInterpreterDependencyService);
         fs = mock(FileSystem);
+        const getRealPathStub = sinon.stub(
+            common,
+            'getRealPath'
+        );
+        getRealPathStub.returns(Promise.resolve('foo'));
         const execFactory = mock(PythonExecutionFactory);
         execService = mock<IPythonDaemonExecutionService>();
         when(
@@ -82,6 +89,9 @@ suite('DataScience - Jupyter InterpreterSubCommandExecutionService', () => {
         );
         when(interperterService.getActiveInterpreter()).thenResolve(activePythonInterpreter);
         when(interperterService.getActiveInterpreter(undefined)).thenResolve(activePythonInterpreter);
+    });
+    teardown(() => {
+        sinon.restore();
     });
     // eslint-disable-next-line
     suite('Interpreter is not selected', () => {
