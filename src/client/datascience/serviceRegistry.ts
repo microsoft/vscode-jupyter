@@ -203,14 +203,14 @@ import { IApplicationEnvironment } from '../common/application/types';
 // eslint-disable-next-line
 export function registerTypes(serviceManager: IServiceManager, inNotebookApiExperiment: boolean, inCustomEditorApiExperiment: boolean) {
     const isVSCInsiders = serviceManager.get<IApplicationEnvironment>(IApplicationEnvironment).channel === 'insiders';
-    const usingCustomEditor = inCustomEditorApiExperiment && !isVSCInsiders; // Don't use app manager in case it's not available yet.
+    const usingCustomEditor = inCustomEditorApiExperiment && !isVSCInsiders;
     const useVSCodeNotebookAPI = inNotebookApiExperiment && !usingCustomEditor;
     serviceManager.addSingletonInstance<boolean>(UseCustomEditorApi, usingCustomEditor);
     serviceManager.addSingletonInstance<boolean>(UseVSCodeNotebookEditorApi, useVSCodeNotebookAPI);
     serviceManager.addSingletonInstance<number>(DataScienceStartupTime, Date.now());
 
     const packageJson: { engines: { vscode: string } } | undefined = vscode.extensions.getExtension(JVSC_EXTENSION_ID)?.packageJSON;
-    const isInsiderVersion = packageJson?.engines?.vscode?.toLowerCase()?.endsWith('insider')
+    const isInsiderVersion = packageJson?.engines?.vscode?.toLowerCase()?.endsWith('insider');
     setSharedProperty('isInsiderExtension', isVSCInsiders && isInsiderVersion ? 'true' : 'false');
 
     // This will ensure all subsequent telemetry will get the context of whether it is a custom/native/old notebook editor.
