@@ -25,7 +25,7 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         @inject(IMultiStepInputFactory) private readonly multiStepFactory: IMultiStepInputFactory,
         @inject(IAsyncDisposableRegistry) private readonly asyncDisposableRegistry: IAsyncDisposableRegistry,
         @inject(IConfigurationService) private readonly configService: IConfigurationService
-    ) {}
+    ) { }
 
     @captureTelemetry(Telemetry.GetPasswordAttempt)
     public getPasswordConnectionInfo(
@@ -223,13 +223,18 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
             let userPassword = await this.getUserPassword();
 
             if (userPassword) {
-                xsrfCookie = await this.getXSRFToken(url);
+                xsrfCookie = await this.getXSRFToken(url, '');
 
                 // Then get the session cookie by hitting that same page with the xsrftoken and the password
                 if (xsrfCookie) {
                     const sessionResult = await this.getSessionCookie(url, xsrfCookie, userPassword);
                     sessionCookieName = sessionResult.sessionCookieName;
                     sessionCookieValue = sessionResult.sessionCookieValue;
+                } else { // get xsrf cookie with session cookie
+                    sessionCookieName = "authservice_session";
+                    sessionCookieValue = userPassword;
+
+                    xsrfCookie = await this.getXSRFToken(url, `${sessionCookieName}=${sessionCookieValue}`);
                 }
             } else {
                 // If userPassword is undefined or '' then the user didn't pick a password. In this case return back that we should just try to connect
@@ -315,13 +320,23 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         });
     }
 
-    private async getXSRFToken(url: string): Promise<string | undefined> {
+    private async getXSRFToken(url: string, sessionCookie: string): Promise<string | undefined> {
         let xsrfCookie: string | undefined;
+        let headers = {
+            Connection: 'keep-alive',
+            Cookie: ''
+        };
+        let tokenUrl = `${url}login?`;
 
-        const response = await this.makeRequest(`${url}login?`, {
+        if (sessionCookie != '') {
+            tokenUrl = `${url}tree`;
+            headers.Cookie = sessionCookie;
+        }
+
+        const response = await this.makeRequest(tokenUrl, {
             method: 'get',
             redirect: 'manual',
-            headers: { Connection: 'keep-alive' }
+            headers,
         });
 
         if (response.ok) {
