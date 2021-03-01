@@ -312,6 +312,11 @@ export interface ISharedPropertyMapping {
      */
     ['ds_notebookeditor']: undefined | 'old' | 'custom' | 'native';
     /**
+     * Whether this is the Insider version of the Jupyter extension or not.
+     */
+    ['isInsiderExtension']: 'true' | 'false';
+
+    /**
      * For every DS telemetry we would like to know whether the this is from AML compute or not.
      * If not in AML compute, then do not send this telemetry.
      */
