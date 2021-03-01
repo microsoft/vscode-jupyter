@@ -4,7 +4,7 @@
 import * as vscode from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IPythonExtensionChecker } from '../api/types';
-import { UseCustomEditorApi, UseVSCodeNotebookEditorApi } from '../common/constants';
+import { JVSC_EXTENSION_ID, UseCustomEditorApi, UseVSCodeNotebookEditorApi } from '../common/constants';
 import { FileSystemPathUtils } from '../common/platform/fs-paths';
 import { IFileSystemPathUtils } from '../common/platform/types';
 import { IConfigurationService } from '../common/types';
@@ -196,16 +196,22 @@ import { INotebookWatcher, IVariableViewProvider } from './variablesView/types';
 import { VariableViewActivationService } from './variablesView/variableViewActivationService';
 import { VariableViewProvider } from './variablesView/variableViewProvider';
 import { WebviewExtensibility } from './webviewExtensibility';
+import { IApplicationEnvironment } from '../common/application/types';
 
 // README: Did you make sure "dataScienceIocContainer.ts" has also been updated appropriately?
 
 // eslint-disable-next-line
 export function registerTypes(serviceManager: IServiceManager, inNotebookApiExperiment: boolean, inCustomEditorApiExperiment: boolean) {
-    const usingCustomEditor = inCustomEditorApiExperiment && !vscode.env.appName.includes('Insider'); // Don't use app manager in case it's not available yet.
+    const isVSCInsiders = serviceManager.get<IApplicationEnvironment>(IApplicationEnvironment).channel === 'insiders';
+    const usingCustomEditor = inCustomEditorApiExperiment && !isVSCInsiders; // Don't use app manager in case it's not available yet.
     const useVSCodeNotebookAPI = inNotebookApiExperiment && !usingCustomEditor;
     serviceManager.addSingletonInstance<boolean>(UseCustomEditorApi, usingCustomEditor);
     serviceManager.addSingletonInstance<boolean>(UseVSCodeNotebookEditorApi, useVSCodeNotebookAPI);
     serviceManager.addSingletonInstance<number>(DataScienceStartupTime, Date.now());
+
+    const packageJson: { engines: { vscode: string } } | undefined = vscode.extensions.getExtension(JVSC_EXTENSION_ID)?.packageJSON;
+    const isInsiderVersion = packageJson?.engines?.vscode?.toLowerCase()?.endsWith('insider')
+    setSharedProperty('isInsiderExtension', isVSCInsiders && isInsiderVersion ? 'true' : 'false');
 
     // This will ensure all subsequent telemetry will get the context of whether it is a custom/native/old notebook editor.
     // This is temporary, and once we ship native editor this needs to be removed.
