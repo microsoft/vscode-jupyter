@@ -126,22 +126,27 @@ suite('DataScience DataViewer tests', () => {
         return createDataViewer(jupyterVariableDataProvider, jupyterVariable.name);
     }
 
-    async function injectCode(code: string): Promise<void> {
+    async function injectCode(code: string): Promise<INotebook | undefined> {
         const notebookProvider = ioc.get<INotebookProvider>(INotebookProvider);
         notebook = await notebookProvider.getOrCreateNotebook({
             identity: getDefaultInteractiveIdentity(),
             resource: undefined
         });
         if (notebook) {
-            const cells = await notebook.execute(code, Identifiers.EmptyFileName, 0, uuid());
-            assert.equal(cells.length, 1, `Wrong number of cells returned`);
-            assert.equal(cells[0].data.cell_type, 'code', `Wrong type of cell returned`);
-            const cell = cells[0].data as nbformat.ICodeCell;
-            if (cell.outputs.length > 0) {
-                const error = cell.outputs[0].evalue;
-                if (error) {
-                    assert.fail(`Unexpected error: ${error}`);
-                }
+            await executeCode(code, notebook);
+            return notebook;
+        }
+    }
+
+    async function executeCode(code: string, notebook: INotebook) {
+        const cells = await notebook.execute(code, Identifiers.EmptyFileName, 0, uuid());
+        assert.equal(cells.length, 1, `Wrong number of cells returned`);
+        assert.equal(cells[0].data.cell_type, 'code', `Wrong type of cell returned`);
+        const cell = cells[0].data as nbformat.ICodeCell;
+        if (cell.outputs.length > 0) {
+            const error = cell.outputs[0].evalue;
+            if (error) {
+                assert.fail(`Unexpected error: ${error}`);
             }
         }
     }
@@ -486,6 +491,28 @@ suite('DataScience DataViewer tests', () => {
         assert.ok(dv, 'DataViewer not created');
         await gotAllRows;
         verifyRows(wrapper.wrapper, [0, `[[1, 2, 3], [4, 5]]`, 1, '[[6, 7, 8, 9]]']);
+    });
+
+    runMountedTest('Simple refresh', async (wrapper) => {
+        // Run some code
+        const notebook = await injectCode('import numpy as np\r\na = np.array([0, 1, 2, 3])');
+        // Open the data viewer
+        const gotAllRows = getCompletedPromise(wrapper);
+        const dv = await createJupyterVariableDataViewer('a', 'ndarray');
+        assert.ok(dv, 'DataViewer not created');
+        await gotAllRows;
+        verifyRows(wrapper.wrapper, [0, 0, 1, 1, 2, 2, 3, 3]);
+
+        // Run code that updates the previous variable
+        const gotAllRows2 = getCompletedPromise(wrapper);
+        await executeCode('a = np.array([[4, 5, 6]])', notebook!);
+        // Ideally we'd execute the refresh command but this test doesn't run in vscode,
+        // so this test doesn't verify that command execution results in the correct
+        // data viewer being refreshed
+        await dv.refreshData();
+        await gotAllRows2;
+        // Verify that the data viewer's contents have updated
+        verifyRows(wrapper.wrapper, [0, 4, 5, 6]);
     });
 
     // https://github.com/microsoft/vscode-jupyter/issues/4706

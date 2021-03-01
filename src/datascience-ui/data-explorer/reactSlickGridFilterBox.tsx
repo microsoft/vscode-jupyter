@@ -21,6 +21,7 @@ const filterIcon: IIconProps = {
 interface IFilterProps {
     column: Slick.Column<Slick.SlickData>;
     fontSize: number;
+    filter: string;
     onChange(val: string, column: Slick.Column<Slick.SlickData>): void;
 }
 
@@ -38,6 +39,7 @@ export class ReactSlickGridFilterBox extends React.Component<IFilterProps> {
                 tabIndex={0}
                 ariaLabel={this.props.column.name}
                 className="filter-box"
+                value={this.props.filter}
             />
         );
     }
@@ -50,8 +52,6 @@ export class ReactSlickGridFilterBox extends React.Component<IFilterProps> {
         _event?: React.ChangeEvent<HTMLInputElement> | undefined,
         newValue?: string | undefined
     ) => {
-        if (newValue !== undefined) {
-            this.props.onChange(newValue, this.props.column);
-        }
+        this.props.onChange(newValue ?? '', this.props.column);
     };
 }

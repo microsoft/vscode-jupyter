@@ -472,5 +472,13 @@
     "DataScience.invalidCustomEditor": "Using the Jupyter notebook editor requires the stable version of VS code and the CustomEditor experiment to be enabled.",
     "DataScience.showDataViewerFail": "Failed to create the Data Viewer. Check the Jupyter tab of the Output window for more info.",
     "DataScience.kernelTipMessage": "Tip: Change kernels using the status bar below.",
-    "DataScience.notebookCreationPickerPlaceHolder": "Select an option to create a blank notebook"
+    "DataScience.notebookCreationPickerPlaceHolder": "Select an option to create a blank notebook",
+    "DataScience.refreshDataViewer": "Refresh Data Viewer",
+    "DataScience.sliceDropdownAxisLabel": "Axis",
+    "DataScience.sliceDropdownIndexLabel": "Index",
+    "DataScience.sliceSubmitButton": "Apply",
+    "DataScience.sliceSummaryTitle": "SLICING",
+    "DataScience.dataViewerShowFilters": "Show filters",
+    "DataScience.dataViewerHideFilters": "Hide filters",
+    "DataScience.sliceData": "Slice Data"
 }
