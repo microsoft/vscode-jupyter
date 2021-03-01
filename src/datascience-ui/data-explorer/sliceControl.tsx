@@ -248,7 +248,7 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
     };
 
     private handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const newValue = event.target.value ?? '';
+        const newValue = event.currentTarget.value ?? '';
         const errorMessage = getErrorMessage(newValue, this.props.originalVariableShape);
         this.setState({ inputValue: newValue ?? '', errorMessage });
     };
