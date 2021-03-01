@@ -205,7 +205,6 @@ module.exports = {
         'src/test/datascience/progress/progressReporter.unit.test.ts',
         'src/test/datascience/progress/decorators.unit.test.ts',
         'src/test/datascience/kernel-launcher/kernelDaemonPool.unit.test.ts',
-        'src/test/datascience/kernel-launcher/kernelDaemonPoolPreWarmer.unit.test.ts',
         'src/test/datascience/kernel-launcher/kernelLauncherDaemon.unit.test.ts',
         'src/test/datascience/ipywidgets/ipyWidgetScriptSourceProvider.unit.test.ts',
         'src/test/datascience/ipywidgets/cdnWidgetScriptSourceProvider.unit.test.ts',
