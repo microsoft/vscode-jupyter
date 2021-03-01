@@ -109,13 +109,13 @@ export class DebuggerVariables extends DebugLocationTracker
         targetVariable: IJupyterVariable,
         notebook?: INotebook,
         sliceExpression?: string,
-        shouldUpdateCachedInfo?: boolean
+        isRefresh?: boolean
     ): Promise<IJupyterVariable> {
         if (!this.active) {
             // No active server just return the unchanged target variable
             return targetVariable;
         }
-        if (shouldUpdateCachedInfo) {
+        if (isRefresh) {
             targetVariable = await this.getFullVariable(targetVariable);
         }
         // Listen to notebook events if we haven't already

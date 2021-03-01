@@ -191,11 +191,11 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
         super.onMessage(message, payload);
     }
 
-    private getDataFrameInfo(sliceExpression?: string, shouldUpdateCachedInfo?: boolean): Promise<IDataFrameInfo> {
+    private getDataFrameInfo(sliceExpression?: string, isRefresh?: boolean): Promise<IDataFrameInfo> {
         // If requesting a new slice, refresh our cached info promise
         if (!this.dataFrameInfoPromise || sliceExpression !== this.currentSliceExpression) {
             this.dataFrameInfoPromise = this.dataProvider
-                ? this.dataProvider.getDataFrameInfo(sliceExpression, shouldUpdateCachedInfo)
+                ? this.dataProvider.getDataFrameInfo(sliceExpression, isRefresh)
                 : Promise.resolve({});
             this.currentSliceExpression = sliceExpression;
         }

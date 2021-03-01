@@ -120,12 +120,12 @@ export class KernelVariables implements IJupyterVariables {
         targetVariable: IJupyterVariable,
         notebook: INotebook,
         sliceExpression?: string,
-        shouldUpdateCachedInfo?: boolean
+        isRefresh?: boolean
     ): Promise<IJupyterVariable> {
         // Import the data frame script directory if we haven't already
         await this.importDataFrameScripts(notebook);
 
-        if (shouldUpdateCachedInfo) {
+        if (isRefresh) {
             targetVariable = await this.getFullVariable(targetVariable, notebook);
         }
 

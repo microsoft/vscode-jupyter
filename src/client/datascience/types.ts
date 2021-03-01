@@ -914,7 +914,7 @@ export interface IJupyterVariables {
         targetVariable: IJupyterVariable,
         notebook?: INotebook,
         sliceExpression?: string,
-        shouldUpdateCachedInfo?: boolean
+        isRefresh?: boolean
     ): Promise<IJupyterVariable>;
     getDataFrameRows(
         targetVariable: IJupyterVariable,

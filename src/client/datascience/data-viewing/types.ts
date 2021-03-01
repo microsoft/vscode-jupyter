@@ -78,7 +78,7 @@ export interface IDataFrameInfo {
 
 export interface IDataViewerDataProvider {
     dispose(): void;
-    getDataFrameInfo(sliceExpression?: string, shouldUpdateCachedInfo?: boolean): Promise<IDataFrameInfo>;
+    getDataFrameInfo(sliceExpression?: string, isRefresh?: boolean): Promise<IDataFrameInfo>;
     getAllRows(sliceExpression?: string): Promise<IRowsResponse>;
     getRows(start: number, end: number, sliceExpression?: string): Promise<IRowsResponse>;
 }

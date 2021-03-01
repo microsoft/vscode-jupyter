@@ -78,17 +78,17 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
         this.variable = variable;
     }
 
-    public async getDataFrameInfo(sliceExpression?: string, shouldUpdateCachedInfo?: boolean): Promise<IDataFrameInfo> {
+    public async getDataFrameInfo(sliceExpression?: string, isRefresh?: boolean): Promise<IDataFrameInfo> {
         let dataFrameInfo: IDataFrameInfo = {};
         await this.ensureInitialized();
         let variable = this.variable;
         if (variable) {
-            if (sliceExpression || shouldUpdateCachedInfo) {
+            if (sliceExpression || isRefresh) {
                 variable = await this.variableManager.getDataFrameInfo(
                     variable,
                     this.notebook,
                     sliceExpression,
-                    shouldUpdateCachedInfo
+                    isRefresh
                 );
             }
             dataFrameInfo = {
@@ -106,7 +106,7 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
                 fileName: variable.fileName
             };
         }
-        if (shouldUpdateCachedInfo) {
+        if (isRefresh) {
             this.variable = variable;
         }
         return dataFrameInfo;
