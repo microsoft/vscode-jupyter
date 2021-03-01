@@ -211,7 +211,7 @@ suite('DataScience - KernelSelector', () => {
                 .stub(ActiveJupyterSessionKernelSelectionListProvider.prototype, 'getKernelSelections')
                 .resolves(quickPickItems);
             const rawSupportedService = mock<IRawNotebookSupportedService>();
-            when(rawSupportedService.supported()).thenResolve(true);
+            when(rawSupportedService.supported()).thenReturn(true);
             const provider = new KernelSelectionProvider(
                 instance(kernelService),
                 instance(mock<IInterpreterSelector>()),
