@@ -1,4 +1,4 @@
-import { Dropdown, IDropdownOption, ResponsiveMode, TextField } from '@fluentui/react';
+import { Dropdown, IDropdownOption, ResponsiveMode } from '@fluentui/react';
 import * as React from 'react';
 import { IGetSliceRequest } from '../../client/datascience/data-viewing/types';
 import { getLocString } from '../react-common/locReactSide';
@@ -14,25 +14,6 @@ import {
 import './sliceControl.css';
 
 // These styles are passed to the FluentUI dropdown controls
-const textFieldStyles = {
-    errorMessage: {
-        border: '1px solid var(--vscode-inputValidation-errorBorder)',
-        backgroundColor: 'var(--vscode-inputValidation-errorBackground)',
-        color: 'var(--vscode-settings-textInputForeground)',
-        alignItems: 'center',
-        padding: '5px 3px',
-        fontFamily: 'var(--vscode-font-family)',
-        fontWeight: 'var(--vscode-font-weight)',
-        fontSize: 'var(--vscode-font-size)'
-    },
-    fieldGroup: {
-        background: 'none',
-        '::after': {
-            inset: 'none',
-            border: 'none'
-        }
-    }
-};
 const styleOverrides = {
     color: 'var(--vscode-dropdown-foreground)',
     backgroundColor: 'var(--vscode-dropdown-background)',
@@ -100,6 +81,7 @@ interface ISliceControlProps {
 interface ISliceControlState {
     inputValue: string;
     isEnabled: boolean;
+    errorMessage: string;
     [key: string]: number | boolean | string;
 }
 
@@ -107,13 +89,14 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
     constructor(props: ISliceControlProps) {
         super(props);
         const initialSlice = preselectedSliceExpression(this.props.originalVariableShape);
-        this.state = { isEnabled: false, inputValue: initialSlice };
+        this.state = { isEnabled: false, inputValue: initialSlice, errorMessage: '' };
 
         this.handleChange = this.handleChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
     }
 
     public render() {
+        const isDisabled = !this.state.isEnabled || this.props.loadingData;
         return (
             <div className="control-container">
                 <details className="slicing-control">
@@ -137,19 +120,24 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
                             </label>
                         </div>
                         <div className="slice-control-row" style={{ marginTop: '10px' }}>
-                            <TextField
-                                value={this.state.inputValue}
-                                styles={textFieldStyles}
-                                onGetErrorMessage={this.handleGetErrorMessage}
-                                onChange={this.handleChange}
-                                autoComplete="on"
-                                inputClassName="slice-data"
-                                disabled={!this.state.isEnabled || this.props.loadingData}
-                            />
+                            <div className="slice-control-column">
+                                <input
+                                    value={this.state.inputValue}
+                                    onChange={this.handleChange}
+                                    className={this.state.errorMessage ? 'slice-data input-invalid' : 'slice-data'}
+                                    autoComplete="on"
+                                    disabled={isDisabled}
+                                />
+                                {this.state.errorMessage ? (
+                                    <div className={`error-message${isDisabled ? ' disabled' : ''}`}>
+                                        {this.state.errorMessage}
+                                    </div>
+                                ) : null}
+                            </div>
                             <input
                                 className="submit-slice-button"
                                 type="submit"
-                                disabled={!this.state.isEnabled || this.props.loadingData}
+                                disabled={isDisabled}
                                 value={getLocString('DataScience.sliceSubmitButton', 'Apply')}
                             />
                         </div>
@@ -259,11 +247,10 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
         this.setState(newState);
     };
 
-    private handleChange = (
-        _event: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>,
-        newValue: string | undefined
-    ) => {
-        this.setState({ inputValue: newValue ?? '' });
+    private handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const newValue = event.target.value ?? '';
+        const errorMessage = getErrorMessage(newValue, this.props.originalVariableShape);
+        this.setState({ inputValue: newValue ?? '', errorMessage });
     };
 
     private handleSubmit = (event: React.SyntheticEvent) => {
@@ -278,10 +265,6 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
                 slice: this.state.inputValue
             });
         }
-    };
-
-    private handleGetErrorMessage = (sliceExpression: string) => {
-        return getErrorMessage(sliceExpression, this.props.originalVariableShape);
     };
 
     private applyInputBoxToDropdowns = () => {
