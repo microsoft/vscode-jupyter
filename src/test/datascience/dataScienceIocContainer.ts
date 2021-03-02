@@ -510,6 +510,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             TestInteractiveWindowProvider
         );
         this.serviceManager.addSingletonInstance(UseProposedApi, false);
+        this.serviceManager.addSingletonInstance(IsCodeSpace, false);
         this.serviceManager.addSingletonInstance(UseCustomEditorApi, useCustomEditor);
         this.serviceManager.addSingletonInstance(UseVSCodeNotebookEditorApi, false);
         this.serviceManager.addSingleton<IDataViewerFactory>(IDataViewerFactory, DataViewerFactory);
@@ -1347,3 +1348,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         }
     }
 }
+function IsCodeSpace(IsCodeSpace: any, arg1: boolean) {
+    throw new Error('Function not implemented.');
+}
+
