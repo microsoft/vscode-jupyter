@@ -5,6 +5,8 @@
 
 import { assert } from 'chai';
 import * as path from 'path';
+import * as fsExtra from 'fs-extra';
+import * as sinon from 'sinon';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { PathUtils } from '../../../client/common/platform/pathUtils';
 import { IFileSystem, IPlatformService } from '../../../client/common/platform/types';
@@ -120,6 +122,8 @@ import { arePathsSame } from '../../common';
         };
 
         setup(() => {
+            const getRealPathStub = sinon.stub(fsExtra, 'realpath');
+            getRealPathStub.returnsArg(0);
             interpreterService = mock(InterpreterService);
             when(interpreterService.getInterpreters(anything())).thenResolve([]);
             platformService = mock(PlatformService);
@@ -182,6 +186,9 @@ import { arePathsSame } from '../../common';
                 instance(envVarsProvider),
                 instance(extensionChecker)
             );
+        });
+        teardown(() => {
+            sinon.restore();
         });
         test('Kernels found on disk', async () => {
             const kernels = await kernelFinder.listKernels(undefined);
