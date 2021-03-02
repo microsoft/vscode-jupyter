@@ -447,7 +447,11 @@ export enum Telemetry {
     SwitchKernel = 'DS_INTERNAL.SWITCH_KERNEL',
     KernelCount = 'DS_INTERNAL.KERNEL_COUNT',
     ExecuteCell = 'DATASCIENCE.EXECUTE_CELL',
-    PythonKerneExecutableMatches = 'DS_INTERNAL.PYTHON_KERNEL_EXECUTABLE_MATCHES'
+    PythonKerneExecutableMatches = 'DS_INTERNAL.PYTHON_KERNEL_EXECUTABLE_MATCHES',
+    /**
+     * Sent when a jupyter kernel cannot start for some reason and we're asking the user to pick another.
+     */
+    AskUserForNewJupyterKernel = 'DS_INTERNAL.ASK_USER_FOR_NEW_KERNEL_JUPYTER'
 }
 
 export enum NativeKeyboardCommandTelemetry {

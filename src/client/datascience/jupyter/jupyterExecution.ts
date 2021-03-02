@@ -224,6 +224,8 @@ export class JupyterExecutionBase implements IJupyterExecution {
                         } catch (ex) {
                             traceError('Failed to connect to server', ex);
                             if (ex instanceof JupyterSessionStartError && isLocalConnection && allowUI) {
+                                sendTelemetryEvent(Telemetry.AskUserForNewJupyterKernel);
+
                                 // Keep retrying, until it works or user cancels.
                                 const kernelInterpreter = await this.kernelSelector.askForLocalKernel(
                                     options?.resource,

@@ -389,6 +389,10 @@ export interface IEventNamePropertyMapping {
         match: 'true' | 'false';
         kernelConnectionType: 'startUsingKernelSpec' | 'startUsingPythonInterpreter';
     };
+    /**
+     * Sent when a jupyter session fails to start and we ask the user for a new kernel
+     */
+    [Telemetry.AskUserForNewJupyterKernel]: never | undefined;
     [Telemetry.KernelListingPerf]: never | undefined;
     [Telemetry.NumberOfLocalKernelSpecs]: {
         /**
