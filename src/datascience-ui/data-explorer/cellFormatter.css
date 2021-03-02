@@ -1,13 +1,18 @@
-.number-formatter {
+.formatter {
     text-align: left;
     text-overflow: ellipsis;
     overflow: hidden;
+    /* Note: This is impacted by the RowHeightAdjustment in reactSlickGrid.tsx */
+    margin: 0px 0px 0px 0px;
+}
+.number-formatter {
+    font-family: var(--vscode-editor-font-family);
+    font-size: var(--vscode-editor-font-size);
+    font-weight: var(--vscode-editor-font-weight);
 }
 
 .cell-formatter {
-    /* Note: This is impacted by the RowHeightAdjustment in reactSlickGrid.tsx */
-    margin: 0px 0px 0px 0px;
-    text-align: left;
-    text-overflow: ellipsis;
-    overflow: hidden;
+    font-family: var(--vscode-font-family);
+    font-size: var(--vscode-font-size);
+    font-weight: var(--vscode-font-weight);
 }

@@ -32,6 +32,9 @@
     text-align: left;
     font-weight: bold;
     border-right-color: var(--vscode-editor-inactiveSelectionBackground);
+    font-family: var(--vscode-font-family);
+    font-size: var(--vscode-font-size);
+    font-weight: var(--vscode-font-weight);
 }
 
 .react-grid-cell {

@@ -45,7 +45,7 @@ class CellFormatter extends React.Component<ICellFormatterProps> {
 
     private renderBool(value: boolean) {
         return (
-            <div className="cell-formatter" role="gridcell" title={value.toString()}>
+            <div className="formatter cell-formatter" role="gridcell" title={value.toString()}>
                 <span>{value.toString()}</span>
             </div>
         );
@@ -54,7 +54,7 @@ class CellFormatter extends React.Component<ICellFormatterProps> {
     private renderNumber(value: number) {
         let val = generateDisplayValue(value);
         return (
-            <div className="number-formatter cell-formatter" role="gridcell" title={val}>
+            <div className="formatter number-formatter" role="gridcell" title={val}>
                 <span>{val}</span>
             </div>
         );
