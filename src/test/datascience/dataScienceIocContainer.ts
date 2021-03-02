@@ -95,6 +95,7 @@ import {
     IOutputChannel,
     IPathUtils,
     IPersistentStateFactory,
+    IsCodeSpace,
     IsWindows,
     IWatchableJupyterSettings,
     Resource,
@@ -1348,7 +1349,3 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         }
     }
 }
-function IsCodeSpace(IsCodeSpace: any, arg1: boolean) {
-    throw new Error('Function not implemented.');
-}
-
