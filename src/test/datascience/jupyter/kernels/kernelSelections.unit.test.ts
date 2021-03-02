@@ -155,7 +155,7 @@ suite('DataScience - KernelSelections', () => {
         const interpreterService = mock<IInterpreterService>();
         when(interpreterService.getActiveInterpreter(anything())).thenResolve();
         const rawSupportedService = mock<IRawNotebookSupportedService>();
-        when(rawSupportedService.supported()).thenResolve(true);
+        when(rawSupportedService.supported()).thenReturn(true);
         kernelSelectionProvider = new KernelSelectionProvider(
             instance(kernelService),
             instance(interpreterSelector),

@@ -263,26 +263,24 @@ export class Kernel implements IKernel {
         const key = uri.toString();
         if (!this.kernelValidated.get(key)) {
             const promise = new Promise<void>((resolve) =>
-                this.rawNotebookSupported.supported().then((isRawNotebookSupported) =>
-                    this.kernelSelectionUsage
-                        .useSelectedKernel(
-                            kernel?.kernelConnectionMetadata,
-                            uri,
-                            isRawNotebookSupported ? 'raw' : 'jupyter',
-                            undefined,
-                            true // Disable UI when validating.
-                        )
-                        .finally(() => {
-                            // If still using the same promise, then remove the exception information.
-                            // Basically if there's an exception, then we cannot use the kernel and a message would have been displayed.
-                            // We don't want to cache such a promise, as its possible the user later installs the dependencies.
-                            if (this.kernelValidated.get(key)?.kernel === kernel) {
-                                this.kernelValidated.delete(key);
-                            }
-                        })
-                        .finally(resolve)
-                        .catch(noop)
-                )
+                this.kernelSelectionUsage
+                    .useSelectedKernel(
+                        kernel?.kernelConnectionMetadata,
+                        uri,
+                        this.rawNotebookSupported.supported() ? 'raw' : 'jupyter',
+                        undefined,
+                        true // Disable UI when validating.
+                    )
+                    .finally(() => {
+                        // If still using the same promise, then remove the exception information.
+                        // Basically if there's an exception, then we cannot use the kernel and a message would have been displayed.
+                        // We don't want to cache such a promise, as its possible the user later installs the dependencies.
+                        if (this.kernelValidated.get(key)?.kernel === kernel) {
+                            this.kernelValidated.delete(key);
+                        }
+                    })
+                    .finally(resolve)
+                    .catch(noop)
             );
 
             this.kernelValidated.set(key, { kernel, promise });
