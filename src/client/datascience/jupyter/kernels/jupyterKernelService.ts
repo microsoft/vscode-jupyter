@@ -153,7 +153,7 @@ export class JupyterKernelService {
         if (contents.metadata?.originalSpecFile) {
             const originalSpecDir = path.dirname(contents.metadata?.originalSpecFile);
             const newSpecDir = path.dirname(kernelSpecFilePath);
-            const otherFiles = await this.fs.searchLocal('.*[^json]', originalSpecDir);
+            const otherFiles = await this.fs.searchLocal('*.*[^json]', originalSpecDir);
             await Promise.all(
                 otherFiles.map(async (f) => {
                     const oldPath = path.join(originalSpecDir, f);
@@ -171,11 +171,14 @@ export class JupyterKernelService {
         cancelToken?: CancellationToken,
         forceWrite?: boolean
     ) {
+        const kernelSpecRootPath = await this.kernelFinder.getKernelSpecRootPath();
         const specedKernel = kernel as JupyterKernelSpec;
-        if (specedKernel.specFile) {
-            let specModel: ReadWrite<Kernel.ISpecModel> = JSON.parse(
-                await this.fs.readLocalFile(specedKernel.specFile)
-            );
+        if (specedKernel.specFile && kernelSpecRootPath) {
+            // Spec file may not be the same as the original spec file path.
+            const kernelSpecFilePath = specedKernel.specFile.includes(specedKernel.name)
+                ? specedKernel.specFile
+                : path.join(kernelSpecRootPath, specedKernel.name, 'kernel.json');
+            let specModel: ReadWrite<Kernel.ISpecModel> = JSON.parse(await this.fs.readLocalFile(kernelSpecFilePath));
             let shouldUpdate = false;
 
             // Make sure the specmodel has an interpreter or already in the metadata or we
@@ -229,7 +232,7 @@ export class JupyterKernelService {
 
             // Update the kernel.json with our new stuff.
             if (shouldUpdate) {
-                await this.fs.writeLocalFile(specedKernel.specFile, JSON.stringify(specModel, undefined, 2));
+                await this.fs.writeLocalFile(kernelSpecFilePath, JSON.stringify(specModel, undefined, 2));
             }
 
             // Always update the metadata for the original kernel.

@@ -192,7 +192,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                             connection,
                             options?.metadata,
                             cancelToken
-                        );
+                    );
                     }
 
                     // Populate the launch info that we are starting our server with

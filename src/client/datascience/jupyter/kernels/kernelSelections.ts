@@ -5,10 +5,10 @@
 
 import { inject, injectable } from 'inversify';
 import { CancellationToken } from 'vscode';
-import { Resource } from '../../../common/types';
+import { IPathUtils, Resource } from '../../../common/types';
 import { ILocalKernelFinder, IRemoteKernelFinder } from '../../kernel-launcher/types';
 import { INotebookProviderConnection } from '../../types';
-import { getDisplayNameOrNameOfKernelConnection, getKernelPathFromKernelConnection } from './helpers';
+import { getDescriptionOfKernelConnection, getDetailOfKernelConnection, getDisplayNameOrNameOfKernelConnection } from './helpers';
 import { IKernelSpecQuickPickItem, KernelConnectionMetadata } from './types';
 
 /**
@@ -22,7 +22,8 @@ export class KernelSelectionProvider {
     private suggestionsCache: IKernelSpecQuickPickItem<KernelConnectionMetadata>[] = [];
     constructor(
         @inject(ILocalKernelFinder) private readonly localKernelFinder: ILocalKernelFinder,
-        @inject(IRemoteKernelFinder) private readonly remoteKernelFinder: IRemoteKernelFinder
+        @inject(IRemoteKernelFinder) private readonly remoteKernelFinder: IRemoteKernelFinder,
+        @inject(IPathUtils) private readonly pathUtils: IPathUtils
     ) {}
 
     /**
@@ -53,15 +54,14 @@ export class KernelSelectionProvider {
                 : await this.remoteKernelFinder.listKernels(resource, connInfo);
 
         // Convert to a quick pick list.
-        return kernels.map(this.mapKernelToSelection);
+        return kernels.map(this.mapKernelToSelection.bind(this));
     }
 
     private mapKernelToSelection(kernel: KernelConnectionMetadata): IKernelSpecQuickPickItem<KernelConnectionMetadata> {
-        const displayName = getDisplayNameOrNameOfKernelConnection(kernel);
         return {
-            label: displayName,
-            ...kernel,
-            description: getKernelPathFromKernelConnection(kernel),
+            label: getDisplayNameOrNameOfKernelConnection(kernel),
+            detail: getDetailOfKernelConnection(kernel, this.pathUtils),
+            description: getDescriptionOfKernelConnection(kernel),
             selection: kernel
         };
     }

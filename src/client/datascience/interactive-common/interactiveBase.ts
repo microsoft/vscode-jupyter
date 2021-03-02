@@ -1195,7 +1195,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
             .then(noop, noop);
     }
 
-    private async createNotebook(serverConnection: INotebookProviderConnection): Promise<INotebook> {
+    private async createNotebook(serverConnection: INotebookProviderConnection): Promise<INotebook | undefined> {
         let notebook: INotebook | undefined;
         while (!notebook) {
             try {
@@ -1230,6 +1230,8 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
                                 this.owningResource
                             )
                             .then(noop, noop);
+                    } else {
+                        break;
                     }
                 } else {
                     throw e;

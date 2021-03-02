@@ -12,7 +12,7 @@ import {
 } from 'vscode';
 import { ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
-import { IConfigurationService, IDisposableRegistry, IExtensionContext, IExtensions } from '../../common/types';
+import { IConfigurationService, IDisposableRegistry, IExtensionContext, IExtensions, IPathUtils } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { captureTelemetry } from '../../telemetry';
@@ -22,6 +22,8 @@ import { sendKernelListTelemetry } from '../telemetry/kernelTelemetry';
 import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../telemetry/telemetry';
 import {
     areKernelConnectionsEqual,
+    getDescriptionOfKernelConnection,
+    getDetailOfKernelConnection,
     getDisplayNameOrNameOfKernelConnection,
     isLocalLaunch
 } from '../jupyter/kernels/helpers';
@@ -63,7 +65,8 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IExtensions) private readonly extensions: IExtensions,
         @inject(ILocalKernelFinder) private readonly localKernelFinder: ILocalKernelFinder,
-        @inject(IRemoteKernelFinder) private readonly remoteKernelFinder: IRemoteKernelFinder
+        @inject(IRemoteKernelFinder) private readonly remoteKernelFinder: IRemoteKernelFinder,
+        @inject(IPathUtils) private readonly pathUtils: IPathUtils
     ) {
         this.isLocalLaunch = isLocalLaunch(this.configuration);
         this.notebook.onDidChangeActiveNotebookKernel(this.onDidChangeActiveNotebookKernel, this, disposables);
@@ -173,8 +176,8 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
         return kernels.map((k) => {
             return new VSCodeNotebookKernelMetadata(
                 getDisplayNameOrNameOfKernelConnection(k),
-                '',
-                '',
+                getDescriptionOfKernelConnection(k),
+                getDetailOfKernelConnection(k, this.pathUtils),
                 k,
                 areKernelConnectionsEqual(k, preferred),
                 this.kernelProvider,

@@ -13,7 +13,7 @@ import { nbformat } from '@jupyterlab/coreutils';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
 import { PYTHON_LANGUAGE } from '../../../common/constants';
-import { IConfigurationService, ReadWrite, Resource } from '../../../common/types';
+import { IConfigurationService, IPathUtils, ReadWrite, Resource } from '../../../common/types';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import {
     DefaultKernelConnectionMetadata,
@@ -27,6 +27,7 @@ import { Settings } from '../../constants';
 import { PreferredRemoteKernelIdProvider } from '../../notebookStorage/preferredRemoteKernelIdProvider';
 import { isPythonNotebook } from '../../notebook/helpers/helpers';
 import { sha256 } from 'hash.js';
+import { DataScience } from '../../../common/utils/localize';
 
 // Helper functions for dealing with kernels and kernelspecs
 
@@ -95,8 +96,29 @@ export function getKernelPathFromKernelConnection(kernelConnection?: KernelConne
     const kernelSpec = kernelConnectionMetadataHasKernelSpec(kernelConnection)
         ? kernelConnection.kernelSpec
         : undefined;
-    return model?.path || kernelSpec?.path;
+    return model?.path || kernelSpec?.metadata?.interpreter?.path || kernelSpec?.interpreterPath || kernelSpec?.path;
 }
+
+export function getDescriptionOfKernelConnection(
+    kernelConnection: KernelConnectionMetadata | undefined,
+    defaultValue: string = ''): string {
+    if (kernelConnection?.kind === 'connectToLiveKernel') {
+        return DataScience.jupyterSelectURIRunningDetailFormat().format(
+            kernelConnection.kernelModel.lastActivityTime.toLocaleString(),
+            kernelConnection.kernelModel.numberOfConnections.toString()
+        );        
+    } 
+    return defaultValue;
+}
+
+export function getDetailOfKernelConnection(
+    kernelConnection: KernelConnectionMetadata | undefined,
+    pathUtils: IPathUtils,
+    defaultValue: string = ''): string {
+    const kernelPath = getKernelPathFromKernelConnection(kernelConnection);
+    return kernelPath ? pathUtils.getDisplayName(kernelPath) : defaultValue;
+}
+
 export function getInterpreterFromKernelConnectionMetadata(
     kernelConnection?: KernelConnectionMetadata
 ): Partial<PythonEnvironment> | undefined {
