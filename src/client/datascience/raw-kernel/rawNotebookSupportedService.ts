@@ -46,7 +46,7 @@ export class RawNotebookSupportedService implements IRawNotebookSupportedService
 
     // Check to see if this machine supports our local ZMQ launching
     private zmqSupported(): boolean {
-        if (typeof this.isSupported ==='boolean'){
+        if (typeof this.isSupported === 'boolean') {
             return this.isSupported;
         }
         if (IS_NON_RAW_NATIVE_TEST) {
