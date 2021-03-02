@@ -848,7 +848,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             this.jupyterMock = new MockJupyterManagerFactory(this.serviceManager);
             // When using mocked Jupyter, default to using default kernel.
             when(this.kernelFinderMock.findKernel(anything(), anything(), anything())).thenResolve(undefined);
-            this.serviceManager.addSingletonInstance<JupyterKernelService>(JupyterKernelService, instance(this.kernelServiceMock));
+            this.serviceManager.addSingletonInstance<JupyterKernelService>(
+                JupyterKernelService,
+                instance(this.kernelServiceMock)
+            );
             this.serviceManager.addSingletonInstance<ILocalKernelFinder>(
                 ILocalKernelFinder,
                 instance(this.kernelFinderMock)

@@ -12,7 +12,13 @@ import {
 } from 'vscode';
 import { ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
-import { IConfigurationService, IDisposableRegistry, IExtensionContext, IExtensions, IPathUtils } from '../../common/types';
+import {
+    IConfigurationService,
+    IDisposableRegistry,
+    IExtensionContext,
+    IExtensions,
+    IPathUtils
+} from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { captureTelemetry } from '../../telemetry';
@@ -140,7 +146,9 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
 
         if (this.isLocalLaunch) {
             kernels = await this.localKernelFinder.listKernels(document.uri);
-            preferred = preferred ?? await this.localKernelFinder.findKernel(document.uri, getNotebookMetadata(document), token);
+            preferred =
+                preferred ??
+                (await this.localKernelFinder.findKernel(document.uri, getNotebookMetadata(document), token));
 
             // We need to filter out those items that are for other extensions.
             kernels = kernels.filter((r) => {
@@ -163,14 +171,15 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
             });
 
             kernels = await this.remoteKernelFinder.listKernels(document.uri, connection);
-            preferred = preferred ?? await this.remoteKernelFinder.findKernel(
-                document.uri,
-                connection,
-                getNotebookMetadata(document),
-                token
-            );
+            preferred =
+                preferred ??
+                (await this.remoteKernelFinder.findKernel(
+                    document.uri,
+                    connection,
+                    getNotebookMetadata(document),
+                    token
+                ));
         }
-
 
         // Map kernels into result type
         return kernels.map((k) => {

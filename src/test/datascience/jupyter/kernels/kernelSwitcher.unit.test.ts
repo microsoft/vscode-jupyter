@@ -65,11 +65,7 @@ suite('DataScience - Kernel Switcher', () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         when(notebook.connection).thenReturn(instance(connection));
         when(configService.getSettings(anything())).thenReturn(instance(settings));
-        kernelSwitcher = new KernelSwitcher(
-            instance(configService),
-            instance(appShell),
-            instance(kernelSelector)
-        );
+        kernelSwitcher = new KernelSwitcher(instance(configService), instance(appShell), instance(kernelSelector));
         when(appShell.withProgress(anything(), anything())).thenCall(async (_, cb: () => Promise<void>) => {
             await cb();
         });

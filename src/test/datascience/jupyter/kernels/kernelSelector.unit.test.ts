@@ -14,14 +14,10 @@ import { noop } from '../../../../client/common/utils/misc';
 import { KernelSelectionProvider } from '../../../../client/datascience/jupyter/kernels/kernelSelections';
 import { KernelSelector } from '../../../../client/datascience/jupyter/kernels/kernelSelector';
 import { KernelConnectionMetadata } from '../../../../client/datascience/jupyter/kernels/types';
-import {
-    IJupyterConnection,
-} from '../../../../client/datascience/types';
+import { IJupyterConnection } from '../../../../client/datascience/types';
 import { PythonEnvironment } from '../../../../client/pythonEnvironments/info';
 import { disposeAllDisposables } from '../../../../client/common/helpers';
 import { InterpreterPackages } from '../../../../client/datascience/telemetry/interpreterPackages';
-
-
 
 /* eslint-disable , @typescript-eslint/no-unused-expressions, @typescript-eslint/no-explicit-any */
 
@@ -59,7 +55,7 @@ suite('DataScience - KernelSelector', () => {
             ...kernelSpec,
             display_name: 'My remote kernel'
         }
-    }
+    };
     const connection: IJupyterConnection = {
         baseUrl: 'http://remotehost:9999',
         valid: true,
@@ -72,18 +68,18 @@ suite('DataScience - KernelSelector', () => {
         localProcExitCode: 0,
         rootDirectory: '',
         dispose: noop
-    }
+    };
     const disposableRegistry: IDisposable[] = [];
     setup(() => {
         kernelSelectionProvider = mock(KernelSelectionProvider);
         appShell = mock(ApplicationShell);
-        when(appShell.showErrorMessage(anything(), anything(), anything())).thenCall((_a, b, _c) => Promise.resolve(b))
+        when(appShell.showErrorMessage(anything(), anything(), anything())).thenCall((_a, b, _c) => Promise.resolve(b));
         when(appShell.showQuickPick(anything(), anything(), anything())).thenCall((a, _b, _c) => {
             return Promise.resolve(a[0]);
-        })
+        });
 
         configService = mock(ConfigurationService);
-        when(configService.getSettings(anything())).thenReturn({jupyterServerType: 'local'} as any);
+        when(configService.getSettings(anything())).thenReturn({ jupyterServerType: 'local' } as any);
         kernelSelector = new KernelSelector(
             instance(kernelSelectionProvider),
             instance(appShell),
@@ -96,26 +92,18 @@ suite('DataScience - KernelSelector', () => {
         disposeAllDisposables(disposableRegistry);
     });
     test('Remote kernels are asked for', async () => {
-        when(configService.getSettings(anything())).thenReturn({jupyterServerType: 'remote'} as any);
+        when(configService.getSettings(anything())).thenReturn({ jupyterServerType: 'remote' } as any);
         when(kernelSelectionProvider.getKernelSelections(anything(), connection, anything())).thenResolve([
-             {   label: '',
-                ...remoteKernelMetadata,
-                description: '',
-                selection: remoteKernelMetadata
-            }
+            { label: '', ...remoteKernelMetadata, description: '', selection: remoteKernelMetadata }
         ]);
         const result = await kernelSelector.selectJupyterKernel(undefined, connection, undefined, 'foo');
         assert.deepEqual(result, remoteKernelMetadata);
     });
     test('Local kernels are asked for', async () => {
         when(kernelSelectionProvider.getKernelSelections(anything(), anything(), anything())).thenResolve([
-            {   label: '',
-               ...kernelMetadata,
-               description: '',
-               selection: kernelMetadata
-           }
-       ]);
-       const result = await kernelSelector.askForLocalKernel(undefined, undefined, kernelMetadata);
-       assert.deepEqual(result, kernelMetadata);
+            { label: '', ...kernelMetadata, description: '', selection: kernelMetadata }
+        ]);
+        const result = await kernelSelector.askForLocalKernel(undefined, undefined, kernelMetadata);
+        assert.deepEqual(result, kernelMetadata);
     });
 });

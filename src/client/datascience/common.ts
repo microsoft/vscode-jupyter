@@ -149,9 +149,7 @@ export function generateNewNotebookUri(
     }
 }
 
-export async function getRealPath(
-    expectedPath: string
-): Promise<string | undefined> {
+export async function getRealPath(expectedPath: string): Promise<string | undefined> {
     return fs.realpath(expectedPath);
 }
 

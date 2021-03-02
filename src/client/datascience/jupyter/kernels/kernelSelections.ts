@@ -8,7 +8,11 @@ import { CancellationToken } from 'vscode';
 import { IPathUtils, Resource } from '../../../common/types';
 import { ILocalKernelFinder, IRemoteKernelFinder } from '../../kernel-launcher/types';
 import { INotebookProviderConnection } from '../../types';
-import { getDescriptionOfKernelConnection, getDetailOfKernelConnection, getDisplayNameOrNameOfKernelConnection } from './helpers';
+import {
+    getDescriptionOfKernelConnection,
+    getDetailOfKernelConnection,
+    getDisplayNameOrNameOfKernelConnection
+} from './helpers';
 import { IKernelSpecQuickPickItem, KernelConnectionMetadata } from './types';
 
 /**

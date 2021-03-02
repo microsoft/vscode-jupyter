@@ -32,7 +32,7 @@ import { JupyterServerInfo } from '../../../../client/datascience/jupyter/jupyte
 import { IInterpreterService } from '../../../../client/interpreter/contracts';
 import { MockOutputChannel } from '../../../mockClasses';
 import { createPythonInterpreter } from '../../../utils/interpreters';
-import * as common from './../../../../client/datascience/common'
+import * as common from './../../../../client/datascience/common';
 use(chaiPromise);
 
 /* eslint-disable  */
@@ -52,10 +52,7 @@ suite('DataScience - Jupyter InterpreterSubCommandExecutionService', () => {
         jupyterInterpreter = mock(JupyterInterpreterService);
         jupyterDependencyService = mock(JupyterInterpreterDependencyService);
         fs = mock(FileSystem);
-        const getRealPathStub = sinon.stub(
-            common,
-            'getRealPath'
-        );
+        const getRealPathStub = sinon.stub(common, 'getRealPath');
         getRealPathStub.returns(Promise.resolve('foo'));
         const execFactory = mock(PythonExecutionFactory);
         execService = mock<IPythonDaemonExecutionService>();

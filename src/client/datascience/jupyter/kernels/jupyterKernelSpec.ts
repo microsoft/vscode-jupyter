@@ -49,10 +49,7 @@ export class JupyterKernelSpec implements IJupyterKernelSpec {
  * @param {CancellationToken} [token]
  * @returns
  */
-export async function parseKernelSpecs(
-    stdout: string,
-    token?: CancellationToken
-) {
+export async function parseKernelSpecs(stdout: string, token?: CancellationToken) {
     traceInfo('Parsing kernelspecs from jupyter');
     // This should give us back a key value pair we can parse
     const jsOut = JSON.parse(stdout.trim()) as {
@@ -69,9 +66,7 @@ export async function parseKernelSpecs(
                     ...spec,
                     name: kernelName
                 };
-                const specFile = await getRealPath(
-                    path.join(kernelSpecs[kernelName].resource_dir, 'kernel.json')
-                );
+                const specFile = await getRealPath(path.join(kernelSpecs[kernelName].resource_dir, 'kernel.json'));
                 if (specFile) {
                     return new JupyterKernelSpec(model as Kernel.ISpecModel, specFile);
                 }

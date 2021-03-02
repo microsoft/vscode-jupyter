@@ -50,7 +50,11 @@ import { NotebookStarter } from '../../client/datascience/jupyter/notebookStarte
 import { LocalKernelFinder } from '../../client/datascience/kernel-launcher/localKernelFinder';
 import { ILocalKernelFinder } from '../../client/datascience/kernel-launcher/types';
 import { LiveShareApi } from '../../client/datascience/liveshare/liveshare';
-import { IJupyterKernelSpec, IJupyterSubCommandExecutionService, INotebookServer } from '../../client/datascience/types';
+import {
+    IJupyterKernelSpec,
+    IJupyterSubCommandExecutionService,
+    INotebookServer
+} from '../../client/datascience/types';
 import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { ServiceContainer } from '../../client/ioc/container';
@@ -978,13 +982,11 @@ suite('Jupyter Execution', async () => {
             path: 'python',
             argv: ['python'],
             display_name: 'somename'
-        }
-        const kernelMetadata: LocalKernelConnectionMetadata = 
-            {
-                kind: 'startUsingKernelSpec',
-                kernelSpec
-            }
-        ;
+        };
+        const kernelMetadata: LocalKernelConnectionMetadata = {
+            kind: 'startUsingKernelSpec',
+            kernelSpec
+        };
         when(kernelFinder.findKernel(anything(), anything(), anything())).thenResolve(kernelMetadata);
         when(serviceContainer.get<KernelSelector>(KernelSelector)).thenReturn(instance(kernelSelector));
         when(serviceContainer.get<NotebookStarter>(NotebookStarter)).thenReturn(notebookStarter);

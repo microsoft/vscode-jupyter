@@ -184,7 +184,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                         (!kernelConnectionMetadata ||
                             !kernelConnectionMetadataHasKernelSpec(kernelConnectionMetadata)) &&
                         connection &&
-                        !options?.skipSearchingForKernel
+                        !options?.skipSearchingForKernel        
                     ) {
                         const kernelFinder = this.serviceContainer.get<IRemoteKernelFinder>(IRemoteKernelFinder);
                         kernelConnectionMetadata = await kernelFinder.findKernel(
@@ -192,7 +192,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                             connection,
                             options?.metadata,
                             cancelToken
-                    );
+                        );
                     }
 
                     // Populate the launch info that we are starting our server with

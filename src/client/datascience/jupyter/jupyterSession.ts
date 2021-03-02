@@ -21,9 +21,7 @@ import { BaseJupyterSession, JupyterSessionStartError } from '../baseJupyterSess
 import { Telemetry } from '../constants';
 import { reportAction } from '../progress/decorator';
 import { ReportableAction } from '../progress/types';
-import {
-    IJupyterConnection,
-    ISessionWithSocket} from '../types';
+import { IJupyterConnection, ISessionWithSocket } from '../types';
 import { JupyterInvalidKernelError } from './jupyterInvalidKernelError';
 import { JupyterWaitForIdleError } from './jupyterWaitForIdleError';
 import { JupyterWebSockets } from './jupyterWebSocket';

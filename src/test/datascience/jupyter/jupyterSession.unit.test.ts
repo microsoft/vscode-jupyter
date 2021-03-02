@@ -23,10 +23,7 @@ import { noop } from '../../../client/common/utils/misc';
 import { JupyterSession } from '../../../client/datascience/jupyter/jupyterSession';
 import { JupyterKernelService } from '../../../client/datascience/jupyter/kernels/jupyterKernelService';
 import { KernelConnectionMetadata, LiveKernelModel } from '../../../client/datascience/jupyter/kernels/types';
-import {
-    IJupyterConnection,
-    IJupyterKernelSpec,
-} from '../../../client/datascience/types';
+import { IJupyterConnection, IJupyterKernelSpec } from '../../../client/datascience/types';
 import { MockOutputChannel } from '../../mockClasses';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */

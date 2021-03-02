@@ -43,7 +43,8 @@ import {
     INotebookExecutionInfo,
     INotebookExecutionLogger,
     IRawNotebookProvider,
-    IRawNotebookSupportedService} from '../../types';
+    IRawNotebookSupportedService
+} from '../../types';
 import { calculateWorkingDirectory } from '../../utils';
 import { RawJupyterSession } from '../rawJupyterSession';
 import { RawNotebookProviderBase } from '../rawNotebookProvider';

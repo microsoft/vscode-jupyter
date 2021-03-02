@@ -82,9 +82,9 @@ export type KernelConnectionMetadata =
     | Readonly<DefaultKernelConnectionMetadata>;
 
 /**
-  * Connection metadata for local kernels. Makes it easier to not have to check for the live connection type. 
-  */
-export type LocalKernelConnectionMetadata = 
+ * Connection metadata for local kernels. Makes it easier to not have to check for the live connection type.
+ */
+export type LocalKernelConnectionMetadata =
     | Readonly<KernelSpecConnectionMetadata>
     | Readonly<PythonKernelConnectionMetadata>
     | Readonly<DefaultKernelConnectionMetadata>;

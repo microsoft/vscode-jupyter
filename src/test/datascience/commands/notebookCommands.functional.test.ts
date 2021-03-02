@@ -137,11 +137,7 @@ suite('DataScience - Notebook Commands', () => {
                     instance(mock(InterpreterPackages))
                 );
 
-                const kernelSwitcher = new KernelSwitcher(
-                    instance(configService),
-                    instance(appShell),
-                    kernelSelector
-                );
+                const kernelSwitcher = new KernelSwitcher(instance(configService), instance(appShell), kernelSelector);
 
                 notebookCommands = new NotebookCommands(
                     instance(commandManager),

@@ -19,10 +19,7 @@ import * as localize from '../../common/utils/localize';
 import { noop, swallowExceptions } from '../../common/utils/misc';
 import { captureTelemetry } from '../../telemetry';
 import { Commands, Telemetry } from '../constants';
-import {
-    findIndexOfConnectionFile,
-    isPythonKernelConnection
-} from '../jupyter/kernels/helpers';
+import { findIndexOfConnectionFile, isPythonKernelConnection } from '../jupyter/kernels/helpers';
 import { KernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../jupyter/kernels/types';
 import { IJupyterKernelSpec } from '../types';
 import { KernelDaemonPool } from './kernelDaemonPool';

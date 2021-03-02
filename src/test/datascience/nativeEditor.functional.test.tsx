@@ -421,7 +421,7 @@ suite('DataScience Native Editor', () => {
                         const invalidMetadata: KernelSpecConnectionMetadata = {
                             kind: 'startUsingKernelSpec',
                             kernelSpec: invalidKernel
-                        }
+                        };
 
                         // Allow the invalid kernel to be used
                         const kernelFinderMock = ioc.kernelFinder;

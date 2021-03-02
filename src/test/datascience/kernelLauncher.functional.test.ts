@@ -139,7 +139,7 @@ suite('DataScience - Kernel Launcher', () => {
             const metadata: KernelSpecConnectionMetadata = {
                 kind: 'startUsingKernelSpec',
                 kernelSpec: spec
-            }
+            };
             kernelFinder.addKernelSpec(pythonInterpreter.path, metadata);
 
             const kernel = await kernelLauncher.launch(

@@ -101,20 +101,22 @@ export function getKernelPathFromKernelConnection(kernelConnection?: KernelConne
 
 export function getDescriptionOfKernelConnection(
     kernelConnection: KernelConnectionMetadata | undefined,
-    defaultValue: string = ''): string {
+    defaultValue: string = ''
+): string {
     if (kernelConnection?.kind === 'connectToLiveKernel') {
         return DataScience.jupyterSelectURIRunningDetailFormat().format(
             kernelConnection.kernelModel.lastActivityTime.toLocaleString(),
             kernelConnection.kernelModel.numberOfConnections.toString()
-        );        
-    } 
+        );
+    }
     return defaultValue;
 }
 
 export function getDetailOfKernelConnection(
     kernelConnection: KernelConnectionMetadata | undefined,
     pathUtils: IPathUtils,
-    defaultValue: string = ''): string {
+    defaultValue: string = ''
+): string {
     const kernelPath = getKernelPathFromKernelConnection(kernelConnection);
     return kernelPath ? pathUtils.getDisplayName(kernelPath) : defaultValue;
 }
