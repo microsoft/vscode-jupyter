@@ -159,6 +159,7 @@ class InterpreterJupyterCommand implements IJupyterCommand {
  * @implements {IJupyterCommand}
  */
 export class InterpreterJupyterNotebookCommand extends InterpreterJupyterCommand {
+    // eslint-disable-next-line @typescript-eslint/no-useless-constructor
     constructor(
         moduleName: string,
         args: string[],
@@ -179,6 +180,7 @@ export class InterpreterJupyterNotebookCommand extends InterpreterJupyterCommand
  */
 // eslint-disable-next-line max-classes-per-file
 export class InterpreterJupyterKernelSpecCommand extends InterpreterJupyterCommand {
+    // eslint-disable-next-line @typescript-eslint/no-useless-constructor
     constructor(
         moduleName: string,
         args: string[],
