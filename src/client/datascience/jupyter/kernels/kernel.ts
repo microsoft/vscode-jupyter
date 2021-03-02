@@ -188,8 +188,8 @@ export class Kernel implements IKernel {
         if (!this._notebookPromise) {
             this.startCancellation = new CancellationTokenSource();
             this._notebookPromise = new Promise<INotebook>(async (resolve, reject) => {
+                const stopWatch = new StopWatch();
                 try {
-                    const stopWatch = new StopWatch();
                     await this.validate(this.uri);
                     try {
                         this.notebook = await this.notebookProvider.getOrCreateNotebook({
@@ -207,17 +207,7 @@ export class Kernel implements IKernel {
                             throw new Error('Kernel has not been started');
                         }
                     } catch (ex) {
-                        traceError('failed to create INotebook in kernel', ex);
-                        sendKernelTelemetryEvent(
-                            options.document.uri,
-                            Telemetry.NotebookStart,
-                            stopWatch.elapsedTime,
-                            undefined,
-                            ex
-                        );
-                        if (!options.disableUI) {
-                            this.errorHandler.handleError(ex).ignoreErrors(); // Just a notification, so don't await this
-                        }
+                        traceError(`failed to create INotebook in kernel, UI Disabled = ${options.disableUI}`, ex);
                         throw ex;
                     }
                     await this.initializeAfterStart();
@@ -231,10 +221,19 @@ export class Kernel implements IKernel {
                     }
                     resolve(this.notebook);
                 } catch (ex) {
+                    sendKernelTelemetryEvent(
+                        options.document.uri,
+                        Telemetry.NotebookStart,
+                        stopWatch.elapsedTime,
+                        undefined,
+                        ex
+                    );
                     if (options.disableUI) {
                         sendTelemetryEvent(Telemetry.KernelStartFailedAndUIDisabled);
+                    } else {
+                        this.errorHandler.handleError(ex).ignoreErrors(); // Just a notification, so don't await this
                     }
-                    traceError('failed to start INotebook in kernel', ex);
+                    traceError(`failed to start INotebook in kernel, UI Disabled = ${options.disableUI}`, ex);
                     this.startCancellation.cancel();
                     this._notebookPromise = undefined;
                     reject(ex);
