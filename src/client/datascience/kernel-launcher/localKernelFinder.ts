@@ -5,6 +5,7 @@
 import type { nbformat } from '@jupyterlab/coreutils';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
+import * as fsExtra from 'fs-extra';
 import { CancellationToken } from 'vscode';
 import { IPythonExtensionChecker } from '../../api/types';
 import { IWorkspaceService } from '../../common/application/types';
@@ -16,7 +17,6 @@ import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry } from '../../telemetry';
-import { getRealPath } from '../common';
 import { Telemetry } from '../constants';
 import {
     createIntepreterKernelSpec,
@@ -133,7 +133,7 @@ export class LocalKernelFinder implements ILocalKernelFinder {
 
     public async getKernelSpecRootPath(): Promise<string | undefined> {
         if (this.platformService.isWindows) {
-            return getRealPath(path.join(this.pathUtils.home, winJupyterPath));
+            return fsExtra.realpath(path.join(this.pathUtils.home, winJupyterPath));
         } else {
             return path.join('/', 'usr', 'share', 'jupyter', 'kernels');
         }
@@ -442,7 +442,7 @@ export class LocalKernelFinder implements ILocalKernelFinder {
 
         if (jupyterPathVars.length > 0) {
             jupyterPathVars.forEach(async (jupyterPath) => {
-                const realPath = await getRealPath(jupyterPath);
+                const realPath = await fsExtra.realpath(jupyterPath);
 
                 if (realPath) {
                     paths.push(realPath);

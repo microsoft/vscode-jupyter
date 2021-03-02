@@ -184,7 +184,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                         (!kernelConnectionMetadata ||
                             !kernelConnectionMetadataHasKernelSpec(kernelConnectionMetadata)) &&
                         connection &&
-                        !options?.skipSearchingForKernel        
+                        !options?.skipSearchingForKernel
                     ) {
                         const kernelFinder = this.serviceContainer.get<IRemoteKernelFinder>(IRemoteKernelFinder);
                         kernelConnectionMetadata = await kernelFinder.findKernel(

@@ -3,7 +3,6 @@
 'use strict';
 import type { nbformat } from '@jupyterlab/coreutils';
 import * as os from 'os';
-import * as fs from 'fs-extra';
 import { parse, SemVer } from 'semver';
 import { Uri } from 'vscode';
 import { splitMultilineString } from '../../datascience-ui/common';
@@ -147,10 +146,6 @@ export function generateNewNotebookUri(
             scheme: 'untitled'
         });
     }
-}
-
-export async function getRealPath(expectedPath: string): Promise<string | undefined> {
-    return fs.realpath(expectedPath);
 }
 
 // For the given string parse it out to a SemVer or return undefined

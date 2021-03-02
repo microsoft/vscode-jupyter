@@ -10,7 +10,6 @@ import { createPromiseFromCancellation, wrapCancellationTokens } from '../../../
 import { ProductNames } from '../../../common/installer/productNames';
 import { traceDecorators, traceInfo } from '../../../common/logger';
 import { IInstaller, InstallerResponse, IsCodeSpace, Product } from '../../../common/types';
-import { createDeferredFromPromise, Deferred } from '../../../common/utils/async';
 import { Common, DataScience } from '../../../common/utils/localize';
 import { TraceOptions } from '../../../logging/trace';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
@@ -25,7 +24,7 @@ import { IKernelDependencyService, KernelInterpreterDependencyResponse } from '.
  */
 @injectable()
 export class KernelDependencyService implements IKernelDependencyService {
-    private installPromises = new Map<string, Deferred<KernelInterpreterDependencyResponse>>();
+    private installPromises = new Map<string, Promise<KernelInterpreterDependencyResponse>>();
     constructor(
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IInstaller) private readonly installer: IInstaller,
@@ -47,15 +46,15 @@ export class KernelDependencyService implements IKernelDependencyService {
         }
 
         // Cache the install run
-        let deferred = this.installPromises.get(interpreter.path);
-        if (!deferred) {
-            deferred = createDeferredFromPromise(this.runInstaller(interpreter, token, disableUI));
-            this.installPromises.set(interpreter.path, deferred);
+        let promise = this.installPromises.get(interpreter.path);
+        if (!promise) {
+            promise = this.runInstaller(interpreter, token, disableUI);
+            this.installPromises.set(interpreter.path, promise);
         }
 
         // Get the result of the question
         try {
-            const result = await deferred.promise;
+            const result = await promise;
             if (result !== KernelInterpreterDependencyResponse.ok) {
                 throw new IpyKernelNotInstalledError(
                     DataScience.ipykernelNotInstalled().format(
