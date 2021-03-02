@@ -331,10 +331,14 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
     };
 
     private clearAllFilters = () => {
-        this.columnFilters = new Map();
-        this.dataView.refresh();
-        // Force column headers to rerender by setting columns
-        this.state.grid?.setColumns(this.state.grid.getColumns());
+        // Avoid rerendering if there are no filters
+        if (this.columnFilters.size > 0) {
+            this.columnFilters = new Map();
+            this.dataView.refresh();
+            // Force column headers to rerender by setting columns
+            // and ensure styles don't get messed up after rerender
+            this.autoResizeColumns();
+        }
     };
 
     private styleColumns(columns: Slick.Column<ISlickRow>[]) {
@@ -499,6 +503,9 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
 
     private clickFilterButton = () => {
         this.setState({ showingFilters: !this.state.showingFilters });
+        // Force column headers to rerender by setting columns
+        // and ensure styles don't get messed up after rerender
+        this.autoResizeColumns();
     };
 
     private computeFont(): string | null {
