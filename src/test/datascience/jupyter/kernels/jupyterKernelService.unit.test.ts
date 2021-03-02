@@ -241,25 +241,33 @@ suite('DataScience - JupyterKernelService', () => {
                         displayName: 'Conda base environment',
                         path: '/usr/conda/envs/base/python',
                         sysPrefix: 'conda',
-                        envType:  EnvironmentType.Conda
+                        envType: EnvironmentType.Conda
                     }
                 },
                 env: {},
-                specFile: "/usr/share/jupyter/kernels/e10e222d04b8ec3cc7034c3de1b1269b088e2bcd875030a8acab068e59af3990/kernel.json"
+                specFile:
+                    '/usr/share/jupyter/kernels/e10e222d04b8ec3cc7034c3de1b1269b088e2bcd875030a8acab068e59af3990/kernel.json'
             },
             interpreter: {
                 displayName: 'Conda base environment',
                 path: '/usr/conda/envs/base/python',
                 sysPrefix: 'conda',
-                envType:  EnvironmentType.Conda
+                envType: EnvironmentType.Conda
             }
         }
     ];
     setup(() => {
         kernelDependencyService = mock(KernelDependencyService);
         fs = mock(FileSystem);
+        when(fs.localFileExists(anything())).thenCall((p) => {
+            const match = kernels.find((k) => p.includes(k.kernelSpec?.name));
+            if (match) {
+                return Promise.resolve(true);
+            }
+            return Promise.resolve(false);
+        });
         when(fs.readLocalFile(anything())).thenCall((p) => {
-            const match = kernels.find((k) => k.kernelSpec?.specFile?.endsWith(p));
+            const match = kernels.find((k) => p.includes(k.kernelSpec?.name));
             if (match) {
                 return Promise.resolve(JSON.stringify(match.kernelSpec));
             }
@@ -300,6 +308,7 @@ suite('DataScience - JupyterKernelService', () => {
             kernelsWithInvalidName[0].kernelSpec?.name!,
             'kernel.json'
         );
+        when(fs.localFileExists(anything())).thenResolve(false);
         await kernelService.ensureKernelIsUsable(kernelsWithInvalidName[0], undefined, true);
         verify(fs.writeLocalFile(kernelSpecPath, anything())).once();
     });

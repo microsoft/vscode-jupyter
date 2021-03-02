@@ -186,7 +186,7 @@ export class LocalKernelFinder implements ILocalKernelFinder {
                 // Update spec to have a default spec file
                 const result: PythonKernelConnectionMetadata = {
                     kind: 'startUsingPythonInterpreter',
-                    kernelSpec: createIntepreterKernelSpec(i, rootSpecPath) ,
+                    kernelSpec: createIntepreterKernelSpec(i, rootSpecPath),
                     interpreter: i
                 };
                 return result;
@@ -272,7 +272,22 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         });
         results = results.filter((r) => !r.specFile || !originalSpecFiles.has(r.specFile));
 
-        return results;
+        // There was also an old bug where the same item would be registered more than once. Eliminate these dupes
+        // too.
+        const unique: IJupyterKernelSpec[] = [];
+        const byDisplayName = new Map<string, IJupyterKernelSpec>();
+        results.forEach((r) => {
+            const existing = byDisplayName.get(r.display_name);
+            if (existing && existing.path !== r.path) {
+                // This item is a dupe but has a different path to start the exe
+                unique.push(r);
+            } else if (!existing) {
+                unique.push(r);
+                byDisplayName.set(r.display_name, r);
+            }
+        });
+
+        return unique;
     }
 
     private async findResourceInterpreters(resource: Resource): Promise<PythonEnvironment[]> {

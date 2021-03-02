@@ -81,6 +81,16 @@ import { arePathsSame } from '../../common';
                 interpreter: python3Interpreter
             }
         };
+        const python3DupeSpec: Kernel.ISpecModel = {
+            display_name: 'Python 3 on Disk',
+            name: defaultPython3Name,
+            argv: ['/usr/bin/python3'],
+            language: 'python',
+            resources: {},
+            metadata: {
+                interpreter: python3Interpreter
+            }
+        };
         const python2spec: Kernel.ISpecModel = {
             display_name: 'Python 2 on Disk',
             name: 'python2',
@@ -138,11 +148,14 @@ import { arePathsSame } from '../../common';
                 if (c.startsWith('conda')) {
                     return Promise.resolve(['interpreter.json']);
                 }
-                return Promise.resolve(['python3.json', 'julia.json', 'python2.json']);
+                return Promise.resolve(['python3.json', 'python3dupe.json', 'julia.json', 'python2.json']);
             });
             when(fs.readLocalFile(anything())).thenCall((f) => {
                 if (f.endsWith('python3.json')) {
                     return Promise.resolve(JSON.stringify(python3spec));
+                }
+                if (f.endsWith('python3dupe.json')) {
+                    return Promise.resolve(JSON.stringify(python3DupeSpec));
                 }
                 if (f.endsWith('julia.json')) {
                     return Promise.resolve(JSON.stringify(juliaSpec));
@@ -172,7 +185,7 @@ import { arePathsSame } from '../../common';
         });
         test('Kernels found on disk', async () => {
             const kernels = await kernelFinder.listKernels(undefined);
-            assert.ok(kernels.length > 3, 'Not enough kernels returned');
+            assert.ok(kernels.length >= 3, 'Not enough kernels returned');
             assert.equal(
                 getDisplayNameOrNameOfKernelConnection(kernels[0]),
                 'Python 3 on Disk',

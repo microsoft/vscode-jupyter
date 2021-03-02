@@ -178,6 +178,13 @@ export class JupyterKernelService {
             const kernelSpecFilePath = specedKernel.specFile.includes(specedKernel.name)
                 ? specedKernel.specFile
                 : path.join(kernelSpecRootPath, specedKernel.name, 'kernel.json');
+            
+            // Make sure the file exists
+            if (!(await this.fs.localFileExists(kernelSpecFilePath))) {
+                return;
+            }
+
+            // Read spec from the file.
             let specModel: ReadWrite<Kernel.ISpecModel> = JSON.parse(await this.fs.readLocalFile(kernelSpecFilePath));
             let shouldUpdate = false;
 
