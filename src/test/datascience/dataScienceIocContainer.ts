@@ -95,6 +95,7 @@ import {
     IOutputChannel,
     IPathUtils,
     IPersistentStateFactory,
+    IsCodeSpace,
     IsWindows,
     IWatchableJupyterSettings,
     Resource,
@@ -510,6 +511,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             TestInteractiveWindowProvider
         );
         this.serviceManager.addSingletonInstance(UseProposedApi, false);
+        this.serviceManager.addSingletonInstance(IsCodeSpace, false);
         this.serviceManager.addSingletonInstance(UseCustomEditorApi, useCustomEditor);
         this.serviceManager.addSingletonInstance(UseVSCodeNotebookEditorApi, false);
         this.serviceManager.addSingleton<IDataViewerFactory>(IDataViewerFactory, DataViewerFactory);

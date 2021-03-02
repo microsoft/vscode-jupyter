@@ -45,7 +45,8 @@ suite('DataScience - DataViewerDependencyService', () => {
             instance(appShell),
             instance(installer),
             instance(pythonExecFactory),
-            instance(interpreterService)
+            instance(interpreterService),
+            false
         );
 
         when(interpreterService.getActiveInterpreter()).thenResolve(interpreter);

@@ -4,7 +4,7 @@
 'use strict';
 
 /* eslint-disable  */
-import { OutputChannel, window } from 'vscode';
+import { env, OutputChannel, UIKind, window } from 'vscode';
 
 import { registerTypes as activationRegisterTypes } from './activation/serviceRegistry';
 import { IExtensionActivationManager } from './activation/types';
@@ -23,7 +23,8 @@ import {
     IExperimentService,
     IExtensionContext,
     IFeatureDeprecationManager,
-    IOutputChannel
+    IOutputChannel,
+    IsCodeSpace
 } from './common/types';
 import * as localize from './common/utils/localize';
 import { noop } from './common/utils/misc';
@@ -68,6 +69,7 @@ async function activateLegacy(
     addOutputChannelLogging(standardOutputChannel);
     serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, standardOutputChannel, STANDARD_OUTPUT_CHANNEL);
     serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, jupyterOutputChannel, JUPYTER_OUTPUT_CHANNEL);
+    serviceManager.addSingletonInstance<boolean>(IsCodeSpace, env.uiKind == UIKind.Web);
 
     // Initialize logging to file if necessary as early as possible
     registerLoggerTypes(serviceManager);
