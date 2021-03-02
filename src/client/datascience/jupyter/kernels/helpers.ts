@@ -3,6 +3,7 @@
 'use strict';
 
 import * as uuid from 'uuid/v4';
+import * as path from 'path';
 import type { Kernel } from '@jupyterlab/services';
 import * as fastDeepEqual from 'fast-deep-equal';
 import { IJupyterKernelSpec, INotebook } from '../../types';
@@ -413,6 +414,8 @@ export function findPreferredKernelIndex(
         });
     }
     return index;
+}
+
 export async function sendTelemetryForPythonKernelExecutable(
     notebook: INotebook,
     file: string,
