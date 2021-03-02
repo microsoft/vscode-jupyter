@@ -159,6 +159,7 @@ export namespace EditorContexts {
     export const HaveNativeRedoableCells = 'jupyter.havenativeredoablecells';
     export const HaveNative = 'jupyter.havenative';
     export const IsNativeActive = 'jupyter.isnativeactive';
+    export const UsingWebviewNotebook = 'jupyter.usingwebviewnotebook';
     export const IsInteractiveOrNativeActive = 'jupyter.isinteractiveornativeactive';
     export const canRunCellsAboveInNativeNotebook = 'jupyter.notebookeditor.canRunCellsAboveInNativeNotebook';
     export const IsPythonOrNativeActive = 'jupyter.ispythonornativeactive';
