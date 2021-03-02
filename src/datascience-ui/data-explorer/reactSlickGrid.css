@@ -14,17 +14,6 @@
     bottom: 5px;
 }
 
-.react-grid-filter-button {
-    background: var(--vscode-button-background);
-    color: var(--vscode-button-foreground);
-    padding: 10px 15px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    margin: 8px 4px;
-    margin-right: 18px;
-}
-
 .react-grid-header-cell {
     padding: 0px 4px;
     background-color: var(--vscode-menu-background);
@@ -45,8 +34,8 @@
 }
 
 .react-grid-cell.active {
-    background-color: var(--vscode-list-focusBackground);
-    color: var(--vscode-button-foreground);
+    background-color: var(--vscode-list-activeSelectionBackground);
+    color: var(--vscode-list-activeSelectionForeground);
 }
 
 /* Some overrides necessary to get the colors we want */
