@@ -10,7 +10,7 @@ import * as uuid from 'uuid/v4';
 import { CancellationToken, CancellationTokenSource } from 'vscode';
 import { IPythonExtensionChecker } from '../../../api/types';
 import { Cancellation, wrapCancellationTokens } from '../../../common/cancellation';
-import { PYTHON_LANGUAGE, PYTHON_WARNINGS } from '../../../common/constants';
+import { PYTHON_LANGUAGE } from '../../../common/constants';
 import '../../../common/extensions';
 import { traceDecorators, traceError, traceInfo, traceVerbose, traceWarning } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
@@ -372,14 +372,6 @@ export class KernelService {
                     return;
                 }
 
-                // Special case, modify the PYTHONWARNINGS env to the global value.
-                // otherwise it's forced to 'ignore' because activated variables are cached.
-                if (specModel.env && process.env[PYTHON_WARNINGS]) {
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    specModel.env[PYTHON_WARNINGS] = process.env[PYTHON_WARNINGS] as any;
-                } else if (specModel.env && specModel.env[PYTHON_WARNINGS]) {
-                    delete specModel.env[PYTHON_WARNINGS];
-                }
                 // Ensure we update the metadata to include interpreter stuff as well (we'll use this to search kernels that match an interpreter).
                 // We'll need information such as interpreter type, display name, path, etc...
                 // Its just a JSON file, and the information is small, hence might as well store everything.

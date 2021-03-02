@@ -2,8 +2,6 @@ export const PYTHON_LANGUAGE = 'python';
 export const MARKDOWN_LANGUAGE = 'markdown';
 export const JUPYTER_LANGUAGE = 'jupyter';
 
-export const PYTHON_WARNINGS = 'PYTHONWARNINGS';
-
 export const NotebookCellScheme = 'vscode-notebook-cell';
 export const PYTHON = [
     { scheme: 'file', language: PYTHON_LANGUAGE },

@@ -33,7 +33,6 @@ export type SpawnOptions = ChildProcessSpawnOptions & {
     token?: CancellationToken;
     mergeStdOutErr?: boolean;
     throwOnStdErr?: boolean;
-    extraVariables?: NodeJS.ProcessEnv;
 };
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
