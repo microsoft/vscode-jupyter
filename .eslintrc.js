@@ -392,7 +392,6 @@ module.exports = {
         'src/datascience-ui/react-common/flyout.tsx',
         'src/datascience-ui/react-common/logger.ts',
         'src/datascience-ui/react-common/svgList.tsx',
-        'src/datascience-ui/react-common/locReactSide.ts',
         'src/datascience-ui/react-common/button.tsx',
         'src/datascience-ui/react-common/themeDetector.ts',
         'src/datascience-ui/react-common/event.ts',

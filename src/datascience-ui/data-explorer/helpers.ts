@@ -1,4 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
+
+import { format, getLocString } from '../react-common/locReactSide';
+
 // Licensed under the MIT License.
 export const sliceRegEx = /^\s*((?<StartRange>-?\d+:)|(?<StopRange>-?:\d+)|(?:(?<Start>-?\d+)(?::(?<Stop>-?\d+))?(?::(?<Step>-?\d+))?))\s*$/;
 
@@ -54,9 +57,17 @@ export function validateSliceExpression(sliceExpression: string, shape: number[]
 
         if (hasOutOfRangeIndex) {
             const { shapeIndex, value } = hasOutOfRangeIndex;
-            return `IndexError at axis ${shapeIndex}, index ${value}`;
+            const localized = getLocString(
+                'DataScience.sliceIndexError',
+                'Index {0} out of range for axis {1} with {2} elements'
+            );
+            return format(localized, value.toString(), shapeIndex.toString(), shape[shapeIndex].toString());
         } else if (parsedExpression && parsedExpression.length !== shape.length) {
-            return 'Invalid slice expression';
+            const localized = getLocString(
+                'DataScience.sliceMismatchedAxesError',
+                'Expected {0} axes, got {1} in slice expression'
+            );
+            return format(localized, shape.length.toString(), parsedExpression.length.toString());
         }
     }
     return '';

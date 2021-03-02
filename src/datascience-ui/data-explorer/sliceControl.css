@@ -87,6 +87,7 @@ details[open] > summary::before {
     font-family: var(--vscode-font-family);
     font-weight: var(--vscode-font-weight);
     font-size: var(--vscode-font-size);
+    max-width: fit-content;
 }
 
 .slice-enablement-checkbox {
@@ -152,4 +153,5 @@ details[open] > summary::before {
     font-size: var(--vscode-font-size);
     padding: 5px 3px;
     align-items: center;
+    max-width: fit-content;
 }
