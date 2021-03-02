@@ -95,6 +95,11 @@ export class ExperimentService implements IExperimentService {
         this.logExperiments();
     }
 
+    public async activate() {
+        if (this.experimentationService) {
+            await this.experimentationService.initializePromise;
+        }
+    }
     public async inExperiment(experiment: ExperimentGroups): Promise<boolean> {
         if (!this.experimentationService) {
             return false;
