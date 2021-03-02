@@ -147,10 +147,11 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         cancelToken?: CancellationToken
     ): Promise<LocalKernelConnectionMetadata[]> {
         // First find the on disk kernel specs and interpreters
-        const [kernelSpecs, interpreters, rootSpecPath] = await Promise.all([
+        const [kernelSpecs, interpreters, rootSpecPath, activeInterpreter] = await Promise.all([
             this.findResourceKernelSpecs(resource, cancelToken),
             this.findResourceInterpreters(resource, cancelToken),
-            this.getKernelSpecRootPath()
+            this.getKernelSpecRootPath(),
+            this.getActiveInterpreter(resource)
         ]);
 
         // Copy the interpreter list. We need to filter out those items
@@ -176,10 +177,11 @@ export class LocalKernelFinder implements ILocalKernelFinder {
                 // Return our metadata that uses an interpreter to start
                 return result;
             } else {
-                // No interpreter found
+                // No interpreter found. If python, use the active interpreter anyway
                 const result: KernelSpecConnectionMetadata = {
                     kind: 'startUsingKernelSpec',
-                    kernelSpec: k
+                    kernelSpec: k,
+                    interpreter: k.language === PYTHON_LANGUAGE ? activeInterpreter : undefined
                 };
                 return result;
             }
