@@ -48,7 +48,8 @@ import { handleTensorBoardDisplayDataOutput } from '../notebook/helpers/executio
 import {
     getInterpreterFromKernelConnectionMetadata,
     getKernelConnectionLanguage,
-    isPythonKernelConnection
+    isPythonKernelConnection,
+    sendTelemetryForPythonKernelExecutable
 } from './kernels/helpers';
 import { isResourceNativeNotebook } from '../notebook/helpers/helpers';
 import { sendKernelTelemetryEvent } from '../telemetry/telemetry';
@@ -330,7 +331,17 @@ export class JupyterNotebookBase implements INotebook {
                     await this.executeSilently(configInit, cancelToken);
                 }
             }
-
+            if (
+                !isDefinitelyNotAPythonKernel &&
+                this._executionInfo.connectionInfo.localLaunch &&
+                this._executionInfo.kernelConnectionMetadata
+            ) {
+                await sendTelemetryForPythonKernelExecutable(
+                    this,
+                    this._resource?.fsPath || this._identity.fsPath,
+                    this._executionInfo.kernelConnectionMetadata
+                );
+            }
             // Run any startup commands that we specified. Support the old form too
             let setting = settings.runStartupCommands || settings.runMagicCommands;
 

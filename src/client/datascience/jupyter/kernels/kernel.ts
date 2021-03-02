@@ -31,7 +31,7 @@ import {
     IRawNotebookSupportedService,
     KernelSocketInformation
 } from '../../types';
-import { isPythonKernelConnection } from './helpers';
+import { isPythonKernelConnection, sendTelemetryForPythonKernelExecutable } from './helpers';
 import { KernelExecution } from './kernelExecution';
 import type { IKernel, IKernelProvider, IKernelSelectionUsage, KernelConnectionMetadata } from './types';
 
@@ -89,7 +89,8 @@ export class Kernel implements IKernel {
         private readonly rawNotebookSupported: IRawNotebookSupportedService,
         private readonly fs: IFileSystem,
         context: IExtensionContext,
-        private readonly serverStorage: IJupyterServerUriStorage
+        private readonly serverStorage: IJupyterServerUriStorage,
+        private readonly isLocalConnection: boolean = false
     ) {
         this.kernelExecution = new KernelExecution(
             kernelProvider,
@@ -326,12 +327,18 @@ export class Kernel implements IKernel {
             .requestKernelInfo()
             .then((item) => (this._info = item.content))
             .catch(traceWarning.bind('Failed to request KernelInfo'));
+        await this.trackKernelSysPath();
         await this.notebook.waitForIdle(this.launchTimeout);
     }
 
     private disableJedi() {
         if (isPythonKernelConnection(this.kernelConnectionMetadata) && this.notebook) {
             this.notebook.executeObservable(CodeSnippets.disableJedi, this.uri.fsPath, 0, uuid(), true);
+        }
+    }
+    private async trackKernelSysPath() {
+        if (this.isLocalConnection && this.notebook) {
+            await sendTelemetryForPythonKernelExecutable(this.notebook, this.uri.fsPath, this.kernelConnectionMetadata);
         }
     }
 }
