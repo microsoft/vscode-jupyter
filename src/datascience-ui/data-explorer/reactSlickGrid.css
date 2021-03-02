@@ -67,6 +67,14 @@
 .slick-header-column.ui-state-default,
 .slick-group-header-column.ui-state-default {
     border-right-color: var(--vscode-editor-inactiveSelectionBackground);
+    display: flex;
+}
+
+.slick-column-name {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .slick-sort-indicator {
@@ -74,6 +82,8 @@
     width: 0px;
     margin-right: 12px;
     margin-top: 1px;
+    flex: 0 0 auto;
+    cursor: pointer;
 }
 
 .react-grid-header-cell:hover {
@@ -137,4 +147,8 @@ input.editor-text {
 
 .codicon-button {
     cursor: pointer;
+}
+
+.header-cell-button {
+    position: absolute;
 }

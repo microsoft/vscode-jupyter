@@ -185,23 +185,25 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         if (this.state.originalVariableShape) {
             breadcrumbText += ' (' + this.state.originalVariableShape?.join(', ') + ')';
         }
-        return (
-            <div className="breadcrumb-container control-container">
-                <div className="breadcrumb">
-                    <div className="icon-python breadcrumb-file-icon" />
-                    <span>{this.state.fileName}</span>
-                    {this.state.fileName ? (
-                        <Image
-                            baseTheme={this.props.baseTheme}
-                            class="image-button-image"
-                            codicon="chevron-right"
-                            image={ImageName.Cancel}
-                        />
-                    ) : undefined}
-                    <span>{breadcrumbText}</span>
+        if (breadcrumbText) {
+            return (
+                <div className="breadcrumb-container control-container">
+                    <div className="breadcrumb">
+                        <div className="icon-python breadcrumb-file-icon" />
+                        <span>{this.state.fileName}</span>
+                        {this.state.fileName ? (
+                            <Image
+                                baseTheme={this.props.baseTheme}
+                                class="image-button-image"
+                                codicon="chevron-right"
+                                image={ImageName.Cancel}
+                            />
+                        ) : undefined}
+                        <span>{breadcrumbText}</span>
+                    </div>
                 </div>
-            </div>
-        );
+            );
+        }
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -477,7 +477,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
                     c.header = {
                         buttons: [
                             {
-                                cssClass: 'codicon codicon-filter codicon-button',
+                                cssClass: 'codicon codicon-filter codicon-button header-cell-button',
                                 handler: this.clickFilterButton,
                                 tooltip: this.state.showingFilters
                                     ? getLocString('DataScience.dataViewerHideFilters', 'Hide filters')
