@@ -567,8 +567,13 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
 
     private renderFilterCell = (_e: Slick.EventData, args: Slick.OnHeaderRowCellRenderedEventArgs<Slick.SlickData>) => {
         if (args.column.id === '0') {
+            const tooltipText = getLocString('DataScience.clearFilters', 'Clear all filters');
             ReactDOM.render(
-                <div className="codicon codicon-clear-all codicon-button" onClick={this.clearAllFilters} />,
+                <div
+                    className="codicon codicon-clear-all codicon-button"
+                    onClick={this.clearAllFilters}
+                    title={tooltipText}
+                />,
                 args.node
             );
         } else {
