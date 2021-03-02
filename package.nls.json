@@ -481,5 +481,7 @@
     "DataScience.dataViewerShowFilters": "Show filters",
     "DataScience.dataViewerHideFilters": "Hide filters",
     "DataScience.sliceData": "Slice Data",
+    "DataScience.sliceIndexError": "Index {0} out of range for axis {1} with {2} elements",
+    "DataScience.sliceMismatchedAxesError": "Expected {0} axes, got {1} in slice expression",
     "DataScience.clearFilters": "Clear all filters"
 }
