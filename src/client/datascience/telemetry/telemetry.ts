@@ -7,7 +7,7 @@ import { Uri } from 'vscode';
 import { getOSType } from '../../common/utils/platform';
 import { getKernelConnectionId, KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { Resource } from '../../common/types';
-import { IEventNamePropertyMapping, sendTelemetryEvent, setSharedProperty } from '../../telemetry';
+import { IEventNamePropertyMapping, sendTelemetryEvent, setSharedProperty, waitBeforeSending } from '../../telemetry';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { ResourceSpecificTelemetryProperties } from './types';
 import { Telemetry } from '../constants';
@@ -47,11 +47,16 @@ const trackedInfo = new Map<string, [ResourceSpecificTelemetryProperties, Contex
 const currentOSType = getOSType();
 const pythonEnvironmentsByHash = new Map<string, PythonEnvironment>();
 
+/**
+ * @param {(P[E] & { waitBeforeSending: Promise<void> })} [properties]
+ * Can optionally contain a property `waitBeforeSending` referencing a promise.
+ * Which must be awaited before sending the telemetry.
+ */
 export function sendKernelTelemetryEvent<P extends IEventNamePropertyMapping, E extends keyof P>(
     resource: Resource,
     eventName: E,
     durationMs?: Record<string, number> | number,
-    properties?: P[E],
+    properties?: P[E] & { waitBeforeSending?: Promise<void> },
     ex?: Error
 ) {
     if (eventName === Telemetry.ExecuteCell || eventName === Telemetry.ExecuteNativeCell) {
@@ -66,8 +71,7 @@ export function sendKernelTelemetryEvent<P extends IEventNamePropertyMapping, E 
         durationMs,
         props,
         ex,
-        true,
-        props?.waitBeforeSendingTelemetry
+        true
     );
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -77,13 +81,20 @@ export function sendKernelTelemetryEvent<P extends IEventNamePropertyMapping, E 
     incrementStartFailureCount(resource, eventName as any, props);
 }
 
+/**
+ * Send this & subsequent telemetry only after this promise has been resolved.
+ * We have a default timeout of 30s.
+ * @param {P[E]} [properties]
+ * Can optionally contain a property `waitBeforeSending` referencing a promise.
+ * Which must be awaited before sending the telemetry.
+ */
 export function sendKernelTelemetryWhenDone<P extends IEventNamePropertyMapping, E extends keyof P>(
     resource: Resource,
     eventName: E,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     promise: Promise<any> | Thenable<any>,
     stopWatch?: StopWatch,
-    properties?: P[E]
+    properties?: P[E] & { [waitBeforeSending]?: Promise<void> }
 ) {
     if (eventName === Telemetry.ExecuteCell || eventName === Telemetry.ExecuteNativeCell) {
         setSharedProperty('userExecutedCell', 'true');
@@ -104,10 +115,7 @@ export function sendKernelTelemetryWhenDone<P extends IEventNamePropertyMapping,
                         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                         stopWatch!.elapsedTime,
                         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        props as any,
-                        undefined,
-                        undefined,
-                        props?.waitBeforeSendingTelemetry
+                        props as any
                     );
                     return data;
                     // eslint-disable-next-line @typescript-eslint/promise-function-async
@@ -125,8 +133,7 @@ export function sendKernelTelemetryWhenDone<P extends IEventNamePropertyMapping,
                         // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         props as any,
                         ex,
-                        true,
-                        props?.waitBeforeSendingTelemetry
+                        true
                     );
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     incrementStartFailureCount(resource, eventName as any, props);
@@ -235,9 +242,9 @@ export function trackKernelResourceInformation(resource: Resource, information: 
  * Use this to update with the latest information (if available)
  */
 function updatePythonPackages(
-    currentData: ResourceSpecificTelemetryProperties & { waitBeforeSendingTelemetry?: Promise<void> },
+    currentData: ResourceSpecificTelemetryProperties & { waitBeforeSending?: Promise<void> },
     clonedCurrentData?: ResourceSpecificTelemetryProperties & {
-        waitBeforeSendingTelemetry?: Promise<void>;
+        waitBeforeSending?: Promise<void>;
     }
 ) {
     if (!currentData.pythonEnvironmentPath) {
@@ -246,9 +253,9 @@ function updatePythonPackages(
     // Getting package information is async, hence update property to indicate that a promise is pending.
     const deferred = createDeferred<void>();
     // Hold sending of telemetry until we have updated the props with package information.
-    currentData.waitBeforeSendingTelemetry = deferred.promise;
+    currentData.waitBeforeSending = deferred.promise;
     if (clonedCurrentData) {
-        clonedCurrentData.waitBeforeSendingTelemetry = deferred.promise;
+        clonedCurrentData.waitBeforeSending = deferred.promise;
     }
     getPythonEnvironmentPackages({
         interpreterHash: currentData.pythonEnvironmentPath
@@ -262,9 +269,9 @@ function updatePythonPackages(
         .catch(() => undefined)
         .finally(() => {
             deferred.resolve();
-            currentData.waitBeforeSendingTelemetry = undefined;
+            currentData.waitBeforeSending = undefined;
             if (clonedCurrentData) {
-                clonedCurrentData.waitBeforeSendingTelemetry = undefined;
+                clonedCurrentData.waitBeforeSending = undefined;
             }
         });
 }
