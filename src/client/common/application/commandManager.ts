@@ -36,9 +36,9 @@ export class CommandManager implements ICommandManager {
             (...args: U) => {
                 sendTelemetryEvent(Telemetry.CommandExecuted, undefined, { command: command as string });
                 if (thisArg) {
-                    callback.call(thisArg, ...args);
+                    return callback.call(thisArg, ...args);
                 } else {
-                    callback(...args);
+                    return callback(...args);
                 }
             },
             thisArg
@@ -70,9 +70,9 @@ export class CommandManager implements ICommandManager {
             (textEditor: TextEditor, edit: TextEditorEdit, ...args: any[]) => {
                 sendTelemetryEvent(Telemetry.CommandExecuted, undefined, { command: command as string });
                 if (thisArg) {
-                    callback.call(thisArg, textEditor, edit, ...args);
+                    return callback.call(thisArg, textEditor, edit, ...args);
                 } else {
-                    callback(textEditor, edit, ...args);
+                    return callback(textEditor, edit, ...args);
                 }
             },
             thisArg
