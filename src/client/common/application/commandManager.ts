@@ -10,6 +10,7 @@ import { sendTelemetryEvent } from '../../telemetry';
 import { ICommandNameArgumentTypeMapping } from './commands';
 import { ICommandManager } from './types';
 
+// This contains a list of commands to be ignored when sending telemetry in the command handler.
 const commandsToIgnore = new Set<string>(['setContext']);
 @injectable()
 export class CommandManager implements ICommandManager {
