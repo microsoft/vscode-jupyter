@@ -2,10 +2,10 @@
 // Licensed under the MIT License.
 'use strict';
 
+import * as uuid from 'uuid/v4';
 import type { Kernel } from '@jupyterlab/services';
 import * as fastDeepEqual from 'fast-deep-equal';
-import * as path from 'path';
-import { IJupyterKernelSpec } from '../../types';
+import { IJupyterKernelSpec, INotebook } from '../../types';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const NamedRegexp = require('named-js-regexp') as typeof import('named-js-regexp');
@@ -23,11 +23,13 @@ import {
     LiveKernelModel,
     PythonKernelConnectionMetadata
 } from './types';
-import { Settings } from '../../constants';
 import { PreferredRemoteKernelIdProvider } from '../../notebookStorage/preferredRemoteKernelIdProvider';
 import { isPythonNotebook } from '../../notebook/helpers/helpers';
 import { sha256 } from 'hash.js';
 import { DataScience } from '../../../common/utils/localize';
+import { Settings, Telemetry } from '../../constants';
+import { concatMultilineString } from '../../../../datascience-ui/common';
+import { sendTelemetryEvent } from '../../../telemetry';
 
 // Helper functions for dealing with kernels and kernelspecs
 
@@ -411,4 +413,34 @@ export function findPreferredKernelIndex(
         });
     }
     return index;
+export async function sendTelemetryForPythonKernelExecutable(
+    notebook: INotebook,
+    file: string,
+    kernelConnection: KernelConnectionMetadata
+) {
+    if (!kernelConnection.interpreter || !isPythonKernelConnection(kernelConnection)) {
+        return;
+    }
+    if (kernelConnection.kind !== 'startUsingKernelSpec' && kernelConnection.kind !== 'startUsingPythonInterpreter') {
+        return;
+    }
+    try {
+        const cells = await notebook.execute('import sys\nprint(sys.executable)', file, 0, uuid(), undefined, true);
+        if (cells.length === 0 || !Array.isArray(cells[0].data.outputs) || cells[0].data.outputs.length === 0) {
+            return;
+        }
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const output: nbformat.IStream = cells[0].data.outputs[0] as any;
+        if (output.name !== 'stdout' && output.output_type !== 'stream') {
+            return;
+        }
+        const sysExecutable = concatMultilineString(output.text).trim().toLowerCase();
+        const match = kernelConnection.interpreter.path.toLowerCase() === sysExecutable;
+        sendTelemetryEvent(Telemetry.PythonKerneExecutableMatches, undefined, {
+            match: match ? 'true' : 'false',
+            kernelConnectionType: kernelConnection.kind
+        });
+    } catch (ex) {
+        // Noop.
+    }
 }
