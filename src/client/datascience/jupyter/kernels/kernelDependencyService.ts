@@ -9,11 +9,13 @@ import { IApplicationShell } from '../../../common/application/types';
 import { createPromiseFromCancellation, wrapCancellationTokens } from '../../../common/cancellation';
 import { ProductNames } from '../../../common/installer/productNames';
 import { traceDecorators, traceInfo } from '../../../common/logger';
-import { IInstaller, InstallerResponse, Product } from '../../../common/types';
+import { IInstaller, InstallerResponse, IsCodeSpace, Product } from '../../../common/types';
 import { createDeferredFromPromise, Deferred } from '../../../common/utils/async';
 import { Common, DataScience } from '../../../common/utils/localize';
 import { TraceOptions } from '../../../logging/trace';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
+import { sendTelemetryEvent } from '../../../telemetry';
+import { Telemetry } from '../../constants';
 import { IpyKernelNotInstalledError } from '../../kernel-launcher/types';
 import { IKernelDependencyService, KernelInterpreterDependencyResponse } from '../../types';
 
@@ -26,7 +28,8 @@ export class KernelDependencyService implements IKernelDependencyService {
     private installPromises = new Map<string, Deferred<KernelInterpreterDependencyResponse>>();
     constructor(
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
-        @inject(IInstaller) private readonly installer: IInstaller
+        @inject(IInstaller) private readonly installer: IInstaller,
+        @inject(IsCodeSpace) private readonly isCodeSpace: boolean
     ) {}
     /**
      * Configures the python interpreter to ensure it can run a Jupyter Kernel by installing any missing dependencies.
@@ -89,10 +92,16 @@ export class KernelDependencyService implements IKernelDependencyService {
         if (disableUI) {
             return KernelInterpreterDependencyResponse.cancel;
         }
-        const selection = await Promise.race([
-            this.appShell.showErrorMessage(message, Common.install()),
-            promptCancellationPromise
-        ]);
+        sendTelemetryEvent(Telemetry.PythonModuleInstal, undefined, {
+            action: 'displayed',
+            moduleName: ProductNames.get(Product.ipykernel)!
+        });
+        const selection = this.isCodeSpace
+            ? Common.install()
+            : await Promise.race([
+                  this.appShell.showErrorMessage(message, Common.install()),
+                  promptCancellationPromise
+              ]);
         if (installerToken.isCancellationRequested) {
             return KernelInterpreterDependencyResponse.cancel;
         }

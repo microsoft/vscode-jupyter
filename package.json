@@ -259,6 +259,12 @@
                 "command": "jupyter.selectCell",
                 "key": "ctrl+alt+shift+\\",
                 "when": "editorTextFocus && jupyter.hascodecells && !notebookEditorFocused"
+            },
+            {
+                "command": "jupyter.refreshDataViewer",
+                "key": "ctrl+r",
+                "mac": "cmd+r",
+                "when": "jupyter.dataViewerActive"
             }
         ],
         "commands": [
@@ -680,7 +686,7 @@
                 "command": "jupyter.switchKernel",
                 "title": "%DataScience.selectKernel%",
                 "category": "Jupyter",
-                "enablement": "jupyter.isnativeactive"
+                "enablement": "jupyter.isinteractiveactive || jupyter.isnativeactive && jupyter.usingwebviewnotebook"
             },
             {
                 "command": "jupyter.latestExtension",
@@ -728,6 +734,13 @@
                 },
                 "category": "Jupyter",
                 "enablement": "notebookViewType == jupyter-notebook && !jupyter.variableViewVisible"
+            },
+            {
+                "command": "jupyter.refreshDataViewer",
+                "title": "%DataScience.refreshDataViewer%",
+                "category": "Jupyter",
+                "enablement": "jupyter.dataViewerActive",
+                "icon": "$(refresh)"
             }
         ],
         "menus": {
@@ -815,6 +828,11 @@
                     "when": "notebookViewType == 'jupyter-notebook' && jupyter.isnotebooktrusted"
                 },
                 {
+                    "command": "jupyter.refreshDataViewer",
+                    "when": "jupyter.dataViewerActive",
+                    "group": "navigation@0"
+                },
+                {
                     "command": "jupyter.notebookeditor.export",
                     "title": "%DataScience.notebookExportAs%",
                     "group": "navigation@3",
@@ -861,6 +879,10 @@
                     "title": "%jupyter.command.jupyter.exportAsPythonScript.title%",
                     "category": "Jupyter",
                     "when": "jupyter.isnativeactive && jupyter.isnotebooktrusted && jupyter.ispythonnotebook"
+                },
+                {
+                    "command": "jupyter.refreshDataViewer",
+                    "category": "Jupyter"
                 },
                 {
                     "command": "jupyter.exportToHTML",
@@ -1231,7 +1253,7 @@
                     "command": "jupyter.switchKernel",
                     "title": "%DataScience.selectKernel%",
                     "category": "Jupyter",
-                    "when": "jupyter.isnativeactive && !notebookEditorFocused"
+                    "when": "jupyter.isinteractiveactive || jupyter.isnativeactive && jupyter.usingwebviewnotebook"
                 },
                 {
                     "command": "jupyter.latestExtension",

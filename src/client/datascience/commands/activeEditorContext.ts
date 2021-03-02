@@ -42,6 +42,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
     private isPythonFileActive: boolean = false;
     private isPythonNotebook: ContextKey;
     private isVSCodeNotebookActive: ContextKey;
+    private usingWebViewNotebook: ContextKey;
     constructor(
         @inject(IInteractiveWindowProvider) private readonly interactiveProvider: IInteractiveWindowProvider,
         @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider,
@@ -85,6 +86,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         this.isNotebookTrusted = new ContextKey(EditorContexts.IsNotebookTrusted, this.commandManager);
         this.isPythonNotebook = new ContextKey(EditorContexts.IsPythonNotebook, this.commandManager);
         this.isVSCodeNotebookActive = new ContextKey(EditorContexts.IsVSCodeNotebookActive, this.commandManager);
+        this.usingWebViewNotebook = new ContextKey(EditorContexts.UsingWebviewNotebook, this.commandManager);
     }
     public dispose() {
         this.disposables.forEach((item) => item.dispose());
@@ -109,6 +111,8 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
             this.onDidChangeActiveTextEditor(this.docManager.activeTextEditor);
         }
         this.vscNotebook.onDidChangeNotebookEditorSelection(this.updateNativeNotebookContext, this, this.disposables);
+
+        this.usingWebViewNotebook.set(!this.inNativeNotebookExperiment).ignoreErrors();
     }
 
     private updateNativeNotebookCellContext() {

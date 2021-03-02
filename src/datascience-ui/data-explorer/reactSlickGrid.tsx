@@ -37,8 +37,8 @@ import 'slickgrid/slick.grid.css';
 // Make sure our css comes after the slick grid css. We override some of its styles.
 // eslint-disable-next-line import/order
 import './reactSlickGrid.css';
-import { SliceControl } from './sliceControl';
 import { generateDisplayValue } from './cellFormatter';
+import { getLocString } from '../react-common/locReactSide';
 /*
 WARNING: Do not change the order of these imports.
 Slick grid MUST be imported after we load jQuery and other stuff from `./globalJQueryImports`
@@ -89,7 +89,7 @@ class ColumnFilter {
     private greaterThanEqualRegEx = /^\s*>=\s*((?<Number>\d+.*)|(?<NaN>nan)|(?<Inf>inf)|(?<NegInf>-inf)).*/i;
     private equalToRegEx = /^\s*(?:=|==)\s*((?<Number>\d+.*)|(?<NaN>nan)|(?<Inf>inf)|(?<NegInf>-inf)).*/i;
 
-    constructor(text: string, column: Slick.Column<Slick.SlickData>) {
+    constructor(public text: string, column: Slick.Column<Slick.SlickData>) {
         if (text && text.length > 0) {
             const columnType = (column as any).type;
             switch (columnType) {
@@ -166,7 +166,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
 
     constructor(props: ISlickGridProps) {
         super(props);
-        this.state = { fontSize: 15 };
+        this.state = { fontSize: 15, showingFilters: true };
         this.containerRef = React.createRef<HTMLDivElement>();
         this.measureRef = React.createRef<HTMLDivElement>();
         this.props.rowsAdded.subscribe(this.addedRows);
@@ -308,29 +308,11 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
 
         return (
             <div className="outer-container">
-                {this.renderSliceControls()}
                 <div className="react-grid-container" style={style} ref={this.containerRef}></div>
                 <div className="react-grid-measure" ref={this.measureRef} />
             </div>
         );
     }
-
-    public renderSliceControls = () => {
-        if (
-            this.props.isSliceDataEnabled &&
-            this.props.originalVariableShape &&
-            this.props.originalVariableShape.filter((v) => !!v).length > 1
-        ) {
-            return (
-                <div className="control-container">
-                    <SliceControl
-                        originalVariableShape={this.props.originalVariableShape}
-                        handleSliceRequest={this.props.handleSliceRequest}
-                    />
-                </div>
-            );
-        }
-    };
 
     // public for testing
     public sort = (_e: Slick.EventData, args: Slick.OnSortEventArgs<Slick.SlickData>) => {
@@ -349,8 +331,14 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
     };
 
     private clearAllFilters = () => {
-        this.columnFilters = new Map();
-        this.dataView.refresh();
+        // Avoid rerendering if there are no filters
+        if (this.columnFilters.size > 0) {
+            this.columnFilters = new Map();
+            this.dataView.refresh();
+            // Force column headers to rerender by setting columns
+            // and ensure styles don't get messed up after rerender
+            this.autoResizeColumns();
+        }
     };
 
     private styleColumns(columns: Slick.Column<ISlickRow>[]) {
@@ -385,7 +373,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
     private slickgridFocus = (_e: any): void => {
         if (this.state.grid) {
             if (!this.state.grid.getActiveCell()) {
-                this.state.grid.setActiveCell(0, 0);
+                this.state.grid.setActiveCell(0, 1);
             }
         }
     };
@@ -493,8 +481,11 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
                     c.header = {
                         buttons: [
                             {
-                                cssClass: 'codicon codicon-filter codicon-button',
-                                handler: this.clickFilterButton
+                                cssClass: 'codicon codicon-filter codicon-button header-cell-button',
+                                handler: this.clickFilterButton,
+                                tooltip: this.state.showingFilters
+                                    ? getLocString('DataScience.dataViewerHideFilters', 'Hide filters')
+                                    : getLocString('DataScience.dataViewerShowFilters', 'Show filters')
                             }
                         ]
                     };
@@ -512,6 +503,9 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
 
     private clickFilterButton = () => {
         this.setState({ showingFilters: !this.state.showingFilters });
+        // Force column headers to rerender by setting columns
+        // and ensure styles don't get messed up after rerender
+        this.autoResizeColumns();
     };
 
     private computeFont(): string | null {
@@ -580,13 +574,20 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
 
     private renderFilterCell = (_e: Slick.EventData, args: Slick.OnHeaderRowCellRenderedEventArgs<Slick.SlickData>) => {
         if (args.column.id === '0') {
+            const tooltipText = getLocString('DataScience.clearFilters', 'Clear all filters');
             ReactDOM.render(
-                <div className="codicon codicon-clear-all codicon-button" onClick={this.clearAllFilters} />,
+                <div
+                    className="codicon codicon-clear-all codicon-button"
+                    onClick={this.clearAllFilters}
+                    title={tooltipText}
+                />,
                 args.node
             );
         } else {
+            const filter = args.column.field ? this.columnFilters.get(args.column.field)?.text : '';
             ReactDOM.render(
                 <ReactSlickGridFilterBox
+                    filter={filter ?? ''}
                     column={args.column}
                     onChange={this.filterChanged}
                     fontSize={this.state.fontSize}
@@ -685,7 +686,8 @@ function readonlyCellEditor(this: any, args: any) {
         // to move their cursor within the focused input element
         if (
             (e.keyCode === KeyCodes.LeftArrow && cursorPosition > 0) ||
-            (e.keyCode === KeyCodes.RightArrow && cursorPosition < textLength - 1)
+            (e.keyCode === KeyCodes.RightArrow && cursorPosition < textLength - 1) ||
+            (e.ctrlKey && e.keyCode === KeyCodes.X)
         ) {
             e.stopImmediatePropagation();
         }

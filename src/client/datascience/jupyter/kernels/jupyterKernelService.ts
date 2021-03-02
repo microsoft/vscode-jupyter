@@ -8,7 +8,6 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { CancellationToken, CancellationTokenSource } from 'vscode';
 import { Cancellation, wrapCancellationTokens } from '../../../common/cancellation';
-import { PYTHON_WARNINGS } from '../../../common/constants';
 import '../../../common/extensions';
 import { traceDecorators, traceInfo } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
@@ -178,7 +177,7 @@ export class JupyterKernelService {
             const kernelSpecFilePath = specedKernel.specFile.includes(specedKernel.name)
                 ? specedKernel.specFile
                 : path.join(kernelSpecRootPath, specedKernel.name, 'kernel.json');
-            
+
             // Make sure the file exists
             if (!(await this.fs.localFileExists(kernelSpecFilePath))) {
                 return;
@@ -211,14 +210,6 @@ export class JupyterKernelService {
                     return;
                 }
 
-                // Special case, modify the PYTHONWARNINGS env to the global value.
-                // otherwise it's forced to 'ignore' because activated variables are cached.
-                if (specModel.env && process.env[PYTHON_WARNINGS]) {
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    specModel.env[PYTHON_WARNINGS] = process.env[PYTHON_WARNINGS] as any;
-                } else if (specModel.env && specModel.env[PYTHON_WARNINGS]) {
-                    delete specModel.env[PYTHON_WARNINGS];
-                }
                 // Ensure we update the metadata to include interpreter stuff as well (we'll use this to search kernels that match an interpreter).
                 // We'll need information such as interpreter type, display name, path, etc...
                 // Its just a JSON file, and the information is small, hence might as well store everything.

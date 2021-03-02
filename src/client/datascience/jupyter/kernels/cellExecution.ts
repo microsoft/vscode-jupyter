@@ -296,8 +296,8 @@ export class CellExecution {
         await chainWithPendingUpdates(this.editor.document, (edit) => {
             traceCellMessage(this.cell, 'Update cell statue as idle and message as empty');
             const metadata = this.cell.metadata.with({
-                runStartTime: undefined,
-                lastRunDuration: undefined,
+                runStartTime: null,
+                lastRunDuration: null,
                 runState: NotebookCellRunState.Idle,
                 statusMessage: ''
             });
@@ -335,8 +335,8 @@ export class CellExecution {
             traceCellMessage(this.cell, 'Update cell state as it was enqueued');
             const metadata = this.cell.metadata.with({
                 statusMessage: '', // We don't want any previous status anymore.
-                runStartTime: undefined, // We don't want any previous counters anymore.
-                lastRunDuration: undefined,
+                runStartTime: null, // We don't want any previous counters anymore.
+                lastRunDuration: null,
                 runState: NotebookCellRunState.Running
             });
             edit.replaceNotebookCellMetadata(this.editor.document.uri, this.cell.index, metadata);
@@ -632,25 +632,28 @@ export class CellExecution {
         // eslint-disable-next-line complexity
         await chainWithPendingUpdates(this.editor.document, (edit) => {
             traceCellMessage(this.cell, 'Update streamed output');
-            let exitingCellOutput = this.cell.outputs;
+            let exitingCellOutputs = this.cell.outputs;
+            const clearOutput = clearState.value;
             // Clear output if waiting for a clear
             if (clearState.value) {
-                exitingCellOutput = [];
+                exitingCellOutputs = [];
                 clearState.update(false);
             }
 
-            // Ensure we append to previous output, only if the streams as the same.
-            // Possible we have stderr first, then later we get output from stdout.
-            // Basically have one output for stderr & a separate output for stdout.
-            // If we output stderr first, then stdout & then stderr, we should append the new stderr to the previous stderr output.
-            // Might already have a stream message. If so, just add on to it.
-            const existingItemToBeReplaced = exitingCellOutput.find(
-                (item) => item && isStreamOutput(item, msg.content.name)
-            );
-            // Get the jupyter output from the vs code output (so we can concatenate the text ourselves).
-            const outputs = existingItemToBeReplaced ? createIOutputFromCellOutputs([existingItemToBeReplaced]) : [];
-            if (existingItemToBeReplaced && outputs.length === 1 && nbformat.isStream(outputs[0])) {
-                let existingOutputText: string = concatMultilineString((outputs[0] as nbformat.IStream).text);
+            // Ensure we append to previous output, only if the streams as the same &
+            // If the last output is the desired stream type.
+            const lastOutput =
+                exitingCellOutputs.length > 0 ? exitingCellOutputs[exitingCellOutputs.length - 1] : undefined;
+            const existingOutputToAppendTo =
+                lastOutput && isStreamOutput(lastOutput, msg.content.name) ? lastOutput : undefined;
+            if (existingOutputToAppendTo) {
+                // Get the jupyter output from the vs code output (so we can concatenate the text ourselves).
+                const outputs = existingOutputToAppendTo
+                    ? createIOutputFromCellOutputs([existingOutputToAppendTo])
+                    : [];
+                let existingOutputText: string = outputs.length
+                    ? concatMultilineString((outputs[0] as nbformat.IStream).text)
+                    : '';
                 let newContent = msg.content.text;
                 // Look for the ansi code `<char27>[A`. (this means move up)
                 // Not going to support `[2A` (not for now).
@@ -673,11 +676,20 @@ export class CellExecution {
                     name: msg.content.name,
                     text: formatStreamText(concatMultilineString(`${existingOutputText}${newContent}`))
                 });
-
-                edit.replaceNotebookCellOutput(this.editor.document.uri, this.cell.index, [
-                    // Replace the existing output with a new output item (with concatenated strings...)
-                    ...exitingCellOutput.map((item) => (item === existingItemToBeReplaced ? output : item))
-                ]);
+                edit.replaceNotebookCellOutputItems(
+                    this.editor.document.uri,
+                    this.cell.index,
+                    existingOutputToAppendTo.id,
+                    output.outputs
+                );
+            } else if (clearOutput) {
+                // Replace the current outputs with a single new output.
+                const output = cellOutputToVSCCellOutput({
+                    output_type: 'stream',
+                    name: msg.content.name,
+                    text: formatStreamText(concatMultilineString(msg.content.text))
+                });
+                edit.replaceNotebookCellOutput(this.editor.document.uri, this.cell.index, [output]);
             } else {
                 // Create a new output
                 const output = cellOutputToVSCCellOutput({
@@ -685,10 +697,7 @@ export class CellExecution {
                     name: msg.content.name,
                     text: formatStreamText(concatMultilineString(msg.content.text))
                 });
-                edit.replaceNotebookCellOutput(this.editor.document.uri, this.cell.index, [
-                    ...exitingCellOutput,
-                    output
-                ]);
+                edit.appendNotebookCellOutput(this.editor.document.uri, this.cell.index, [output]);
             }
             return edit;
         });

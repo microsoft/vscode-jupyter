@@ -11,7 +11,6 @@ import {
 } from 'vscode-jsonrpc/node';
 
 import { EXTENSION_ROOT_DIR } from '../../constants';
-import { PYTHON_WARNINGS } from '../constants';
 import { traceDecorators, traceError } from '../logger';
 import { IPlatformService } from '../platform/types';
 import { IDisposable, IDisposableRegistry } from '../types';
@@ -48,9 +47,6 @@ export class PythonDaemonFactory {
             ? `${this.envVariables.PYTHONPATH}${path.delimiter}${envPythonPath}`
             : envPythonPath;
         this.envVariables.PYTHONUNBUFFERED = '1';
-
-        // Always ignore warnings as the user should never see the output of the daemon running
-        this.envVariables[PYTHON_WARNINGS] = 'ignore';
     }
     @traceDecorators.error('Failed to create daemon')
     public async createDaemonService<T extends IPythonDaemonExecutionService | IDisposable>(): Promise<T> {

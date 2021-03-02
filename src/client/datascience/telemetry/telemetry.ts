@@ -51,7 +51,7 @@ export function sendKernelTelemetryEvent<P extends IEventNamePropertyMapping, E 
     properties?: P[E],
     ex?: Error
 ) {
-    if (eventName === Telemetry.ExecuteCell) {
+    if (eventName === Telemetry.ExecuteCell || eventName === Telemetry.ExecuteNativeCell) {
         setSharedProperty('userExecutedCell', 'true');
     }
 
@@ -76,7 +76,7 @@ export function sendKernelTelemetryWhenDone<P extends IEventNamePropertyMapping,
     stopWatch?: StopWatch,
     properties?: P[E]
 ) {
-    if (eventName === Telemetry.ExecuteCell) {
+    if (eventName === Telemetry.ExecuteCell || eventName === Telemetry.ExecuteNativeCell) {
         setSharedProperty('userExecutedCell', 'true');
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

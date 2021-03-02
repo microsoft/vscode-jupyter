@@ -312,6 +312,11 @@ export interface ISharedPropertyMapping {
      */
     ['ds_notebookeditor']: undefined | 'old' | 'custom' | 'native';
     /**
+     * Whether this is the Insider version of the Jupyter extension or not.
+     */
+    ['isInsiderExtension']: 'true' | 'false';
+
+    /**
      * For every DS telemetry we would like to know whether the this is from AML compute or not.
      * If not in AML compute, then do not send this telemetry.
      */
@@ -630,6 +635,10 @@ export interface IEventNamePropertyMapping {
     [Telemetry.UserInstalledPandas]: never | undefined;
     [Telemetry.UserDidNotInstallJupyter]: never | undefined;
     [Telemetry.UserDidNotInstallPandas]: never | undefined;
+    [Telemetry.PythonModuleInstal]: {
+        moduleName: string;
+        action: 'displayed' | 'installed' | 'ignored' | 'disabled' | 'failed';
+    };
     /**
      * This telemetry tracks the display of the Picker for Jupyter Remote servers.
      */
@@ -652,6 +661,10 @@ export interface IEventNamePropertyMapping {
     [Telemetry.StartShowDataViewer]: never | undefined;
     [Telemetry.ShowDataViewer]: { rows: number | undefined; columns: number | undefined };
     [Telemetry.FailedShowDataViewer]: never | undefined;
+    /**
+     * Sent when the jupyter.refreshDataViewer command is invoked
+     */
+    [Telemetry.RefreshDataViewer]: never | undefined;
     [Telemetry.CreateNewInteractive]: never | undefined;
     [Telemetry.StartJupyter]: never | undefined;
     [Telemetry.StartJupyterProcess]: never | undefined;

@@ -65,9 +65,15 @@ export class JupyterVariables implements IJupyterVariables {
     public async getDataFrameInfo(
         targetVariable: IJupyterVariable,
         notebook?: INotebook,
-        sliceExpression?: string
+        sliceExpression?: string,
+        isRefresh?: boolean
     ): Promise<IJupyterVariable> {
-        return (await this.getVariableHandler(notebook)).getDataFrameInfo(targetVariable, notebook, sliceExpression);
+        return (await this.getVariableHandler(notebook)).getDataFrameInfo(
+            targetVariable,
+            notebook,
+            sliceExpression,
+            isRefresh
+        );
     }
 
     public async getDataFrameRows(

@@ -132,6 +132,7 @@ export namespace Commands {
     export const CreateGitHubIssue = 'jupyter.createGitHubIssue';
     export const SubmitGitHubIssue = 'jupyter.submitGitHubIssue';
     export const ShowDataViewer = 'jupyter.showDataViewer';
+    export const RefreshDataViewer = 'jupyter.refreshDataViewer';
     export const ClearSavedJupyterUris = 'jupyter.clearSavedJupyterUris';
     export const OpenVariableView = 'jupyter.openVariableView';
     export const NotebookEditorKeybindSave = 'jupyter.notebookeditor.keybind.save';
@@ -158,6 +159,7 @@ export namespace EditorContexts {
     export const HaveNativeRedoableCells = 'jupyter.havenativeredoablecells';
     export const HaveNative = 'jupyter.havenative';
     export const IsNativeActive = 'jupyter.isnativeactive';
+    export const UsingWebviewNotebook = 'jupyter.usingwebviewnotebook';
     export const IsInteractiveOrNativeActive = 'jupyter.isinteractiveornativeactive';
     export const canRunCellsAboveInNativeNotebook = 'jupyter.notebookeditor.canRunCellsAboveInNativeNotebook';
     export const IsPythonOrNativeActive = 'jupyter.ispythonornativeactive';
@@ -169,6 +171,7 @@ export namespace EditorContexts {
     export const CanInterruptNotebookKernel = 'jupyter.notebookeditor.canInterruptNotebookKernel';
     export const IsPythonNotebook = 'jupyter.ispythonnotebook';
     export const IsVSCodeNotebookActive = 'jupyter.isvscodenotebookactive';
+    export const IsDataViewerActive = 'jupyter.dataViewerActive';
 }
 
 export namespace RegExpValues {
@@ -299,6 +302,7 @@ export enum Telemetry {
     StartShowDataViewer = 'DATASCIENCE.START_SHOW_DATA_EXPLORER', // Called by the factory when attempting to load the data viewer
     ShowDataViewer = 'DATASCIENCE.SHOW_DATA_EXPLORER', // Called by the data viewer itself when it is actually loaded
     FailedShowDataViewer = 'DATASCIENCE.FAILED_SHOW_DATA_EXPLORER', // Called by the factory when the data viewer fails to load
+    RefreshDataViewer = 'DATASCIENCE.REFRESH_DATA_VIEWER',
     RunFileInteractive = 'DATASCIENCE.RUN_FILE_INTERACTIVE',
     DebugFileInteractive = 'DATASCIENCE.DEBUG_FILE_INTERACTIVE',
     PandasNotInstalled = 'DS_INTERNAL.SHOW_DATA_NO_PANDAS',
@@ -389,6 +393,7 @@ export enum Telemetry {
     KernelListingPerf = 'DS_INTERNAL.KERNEL_LISTING_PERF',
     JupyterInstallFailed = 'DS_INTERNAL.JUPYTER_INSTALL_FAILED',
     UserInstalledModule = 'DATASCIENCE.USER_INSTALLED_MODULE',
+    PythonModuleInstal = 'DS_INTERNAL.PYTHON_MODULE_INSTALL',
     JupyterCommandLineNonDefault = 'DS_INTERNAL.JUPYTER_CUSTOM_COMMAND_LINE',
     NewFileForInteractiveWindow = 'DS_INTERNAL.NEW_FILE_USED_IN_INTERACTIVE',
     KernelInvalid = 'DS_INTERNAL.INVALID_KERNEL_USED',

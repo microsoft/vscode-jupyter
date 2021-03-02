@@ -22,7 +22,7 @@ suite('DataScience - Kernel Dependency Service', () => {
     setup(() => {
         appShell = mock<IApplicationShell>();
         installer = mock<IInstaller>();
-        dependencyService = new KernelDependencyService(instance(appShell), instance(installer));
+        dependencyService = new KernelDependencyService(instance(appShell), instance(installer), false);
     });
     test('Check if ipykernel is installed', async () => {
         when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(true);
