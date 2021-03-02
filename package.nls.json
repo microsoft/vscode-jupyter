@@ -480,5 +480,6 @@
     "DataScience.sliceSummaryTitle": "SLICING",
     "DataScience.dataViewerShowFilters": "Show filters",
     "DataScience.dataViewerHideFilters": "Hide filters",
-    "DataScience.sliceData": "Slice Data"
+    "DataScience.sliceData": "Slice Data",
+    "DataScience.clearFilters": "Clear all filters"
 }
