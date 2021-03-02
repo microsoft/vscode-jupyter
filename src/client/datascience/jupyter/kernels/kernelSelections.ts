@@ -49,13 +49,13 @@ export class KernelSelectionProvider {
     private async getNonCachedSelections(
         resource: Resource,
         connInfo: INotebookProviderConnection | undefined,
-        _cancelToken?: CancellationToken
+        cancelToken?: CancellationToken
     ): Promise<IKernelSpecQuickPickItem<KernelConnectionMetadata>[]> {
         // Use either the local or remote kernel finder
         const kernels =
             !connInfo || connInfo.localLaunch
-                ? await this.localKernelFinder.listKernels(resource)
-                : await this.remoteKernelFinder.listKernels(resource, connInfo);
+                ? await this.localKernelFinder.listKernels(resource, cancelToken)
+                : await this.remoteKernelFinder.listKernels(resource, connInfo, cancelToken);
 
         // Convert to a quick pick list.
         return kernels.map(this.mapKernelToSelection.bind(this));

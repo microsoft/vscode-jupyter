@@ -145,7 +145,7 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
         }
 
         if (this.isLocalLaunch) {
-            kernels = await this.localKernelFinder.listKernels(document.uri);
+            kernels = await this.localKernelFinder.listKernels(document.uri, token);
             preferred =
                 preferred ??
                 (await this.localKernelFinder.findKernel(document.uri, getNotebookMetadata(document), token));
@@ -170,7 +170,7 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
                 localOnly: false
             });
 
-            kernels = await this.remoteKernelFinder.listKernels(document.uri, connection);
+            kernels = await this.remoteKernelFinder.listKernels(document.uri, connection, token);
             preferred =
                 preferred ??
                 (await this.remoteKernelFinder.findKernel(

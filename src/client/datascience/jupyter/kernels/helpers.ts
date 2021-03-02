@@ -186,8 +186,13 @@ export function getLanguageInNotebookMetadata(metadata?: nbformat.INotebookMetad
 }
 
 export function getInterpreterKernelSpecName(interpreter?: PythonEnvironment): string {
-    // Generate a name from a hash of the interpreter name and path
-    return interpreter ? sha256().update(`${interpreter.path}${interpreter.displayName}`).digest('hex') : 'python3';
+    // Generate a name from a hash of the interpreter name and path.
+    // Note it must be prefixed with 'python' and the version number.
+    return interpreter
+        ? `python${interpreter.sysVersion || '3'}${sha256()
+              .update(`${interpreter.path}${interpreter.displayName}`)
+              .digest('hex')}`
+        : 'python3';
 }
 
 // Create a default kernelspec with the given display name
@@ -359,8 +364,9 @@ export function findPreferredKernelIndex(
             if (spec) {
                 // See if the path matches.
                 if (spec && spec.path && spec.path.length > 0 && interpreter && spec.path === interpreter.path) {
-                    // Path match
-                    score += 8;
+                    // Path match. This is worth more if no notebook metadata as that should
+                    // match first.
+                    score += notebookMetadata ? 1 : 8;
                 }
 
                 // See if the version is the same
@@ -402,8 +408,7 @@ export function findPreferredKernelIndex(
 
     // If still not found, try languages
     if (index < 0) {
-        index = kernels.findIndex((k) => {
-            const kernelSpecConnection = k;
+        index = kernels.findIndex((kernelSpecConnection) => {
             if (kernelSpecConnection.kind === 'startUsingKernelSpec') {
                 return languages.find((l) => l === kernelSpecConnection.kernelSpec.language);
             } else if (kernelSpecConnection.kind === 'connectToLiveKernel') {

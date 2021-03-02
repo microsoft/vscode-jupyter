@@ -57,9 +57,9 @@ export interface ILocalKernelFinder {
     findKernel(
         resource: Resource,
         option?: nbformat.INotebookMetadata | PythonEnvironment,
-        _cancelToken?: CancellationToken
+        cancelToken?: CancellationToken
     ): Promise<LocalKernelConnectionMetadata | undefined>;
-    listKernels(resource: Resource): Promise<LocalKernelConnectionMetadata[]>;
+    listKernels(resource: Resource, cancelToken?: CancellationToken): Promise<LocalKernelConnectionMetadata[]>;
     getKernelSpecRootPath(): Promise<string | undefined>;
 }
 
@@ -69,11 +69,12 @@ export interface IRemoteKernelFinder {
         resource: Resource,
         connInfo: INotebookProviderConnection | undefined,
         option?: nbformat.INotebookMetadata | PythonEnvironment,
-        _cancelToken?: CancellationToken
+        cancelToken?: CancellationToken
     ): Promise<KernelConnectionMetadata | undefined>;
     listKernels(
         resource: Resource,
-        connInfo: INotebookProviderConnection | undefined
+        connInfo: INotebookProviderConnection | undefined,
+        cancelToken?: CancellationToken
     ): Promise<KernelConnectionMetadata[]>;
 }
 /**

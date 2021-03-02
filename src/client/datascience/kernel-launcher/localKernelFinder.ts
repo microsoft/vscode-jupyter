@@ -83,10 +83,10 @@ export class LocalKernelFinder implements ILocalKernelFinder {
     public async findKernel(
         resource: Resource,
         option?: nbformat.INotebookMetadata | PythonEnvironment,
-        _cancelToken?: CancellationToken
+        cancelToken?: CancellationToken
     ): Promise<LocalKernelConnectionMetadata | undefined> {
         // Get list of all of the specs
-        const kernels = await this.listKernels(resource);
+        const kernels = await this.listKernels(resource, cancelToken);
 
         // Always include the interpreter in the search if we can
         const interpreter =
@@ -106,7 +106,10 @@ export class LocalKernelFinder implements ILocalKernelFinder {
 
     // Search all our local file system locations for installed kernel specs and return them
     @captureTelemetry(Telemetry.KernelListingPerf)
-    public async listKernels(resource: Resource): Promise<LocalKernelConnectionMetadata[]> {
+    public async listKernels(
+        resource: Resource,
+        cancelToken?: CancellationToken
+    ): Promise<LocalKernelConnectionMetadata[]> {
         // Get an id for the workspace folder, if we don't have one, use the fsPath of the resource
         const workspaceFolderId = this.workspaceService.getWorkspaceFolderIdentifier(
             resource,
@@ -115,7 +118,7 @@ export class LocalKernelFinder implements ILocalKernelFinder {
 
         // If we have not already searched for this resource, then generate the search
         if (workspaceFolderId && !this.workspaceToMetadata.has(workspaceFolderId)) {
-            this.workspaceToMetadata.set(workspaceFolderId, this.findResourceKernelMetadata(resource));
+            this.workspaceToMetadata.set(workspaceFolderId, this.findResourceKernelMetadata(resource, cancelToken));
         }
 
         this.writeCache().ignoreErrors();
@@ -139,11 +142,14 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         }
     }
 
-    private async findResourceKernelMetadata(resource: Resource): Promise<LocalKernelConnectionMetadata[]> {
+    private async findResourceKernelMetadata(
+        resource: Resource,
+        cancelToken?: CancellationToken
+    ): Promise<LocalKernelConnectionMetadata[]> {
         // First find the on disk kernel specs and interpreters
         const [kernelSpecs, interpreters, rootSpecPath] = await Promise.all([
-            this.findResourceKernelSpecs(resource),
-            this.findResourceInterpreters(resource),
+            this.findResourceKernelSpecs(resource, cancelToken),
+            this.findResourceInterpreters(resource, cancelToken),
             this.getKernelSpecRootPath()
         ]);
 
@@ -241,18 +247,25 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         });
     }
 
-    private async findResourceKernelSpecs(resource: Resource): Promise<IJupyterKernelSpec[]> {
+    private async findResourceKernelSpecs(
+        resource: Resource,
+        cancelToken?: CancellationToken
+    ): Promise<IJupyterKernelSpec[]> {
         let results: IJupyterKernelSpec[] = [];
 
         // Find all the possible places to look for this resource
-        const paths = await this.findAllResourcePossibleKernelPaths(resource);
-        const searchResults = await this.kernelGlobSearch(paths);
+        const paths = await this.findAllResourcePossibleKernelPaths(resource, cancelToken);
+        const searchResults = await this.kernelGlobSearch(paths, cancelToken);
 
         await Promise.all(
             searchResults.map(async (resultPath) => {
                 // Add these into our path cache to speed up later finds
                 this.updateCache(resultPath);
-                const kernelspec = await this.getKernelSpec(resultPath.kernelSpecFile, resultPath.interpreter);
+                const kernelspec = await this.getKernelSpec(
+                    resultPath.kernelSpecFile,
+                    resultPath.interpreter,
+                    cancelToken
+                );
 
                 if (kernelspec) {
                     results.push(kernelspec);
@@ -290,23 +303,29 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         return unique;
     }
 
-    private async findResourceInterpreters(resource: Resource): Promise<PythonEnvironment[]> {
+    private async findResourceInterpreters(
+        resource: Resource,
+        cancelToken?: CancellationToken
+    ): Promise<PythonEnvironment[]> {
         // Find all available interpreters
         const interpreters = this.extensionChecker.isPythonExtensionInstalled
             ? await this.interpreterService.getInterpreters(resource)
             : [];
-
+        if (cancelToken?.isCancellationRequested) {
+            return [];
+        }
         return interpreters;
     }
 
     // Load the IJupyterKernelSpec for a given spec path, check the ones that we have already loaded first
     private async getKernelSpec(
         specPath: string,
-        interpreter?: PythonEnvironment
+        interpreter?: PythonEnvironment,
+        cancelToken?: CancellationToken
     ): Promise<IJupyterKernelSpec | undefined> {
         // If we have not already loaded this kernel spec, then load it
         if (!this.pathToKernelSpec.has(specPath)) {
-            this.pathToKernelSpec.set(specPath, this.loadKernelSpec(specPath, interpreter));
+            this.pathToKernelSpec.set(specPath, this.loadKernelSpec(specPath, interpreter, cancelToken));
         }
 
         // ! as the has and set above verify that we have a return here
@@ -325,7 +344,8 @@ export class LocalKernelFinder implements ILocalKernelFinder {
     // Load kernelspec json from disk
     private async loadKernelSpec(
         specPath: string,
-        interpreter?: PythonEnvironment
+        interpreter?: PythonEnvironment,
+        cancelToken?: CancellationToken
     ): Promise<IJupyterKernelSpec | undefined> {
         let kernelJson;
         try {
@@ -333,6 +353,9 @@ export class LocalKernelFinder implements ILocalKernelFinder {
             kernelJson = JSON.parse(await this.fs.readLocalFile(specPath));
         } catch {
             traceError(`Failed to parse kernelspec ${specPath}`);
+            return undefined;
+        }
+        if (cancelToken?.isCancellationRequested) {
             return undefined;
         }
 
@@ -357,12 +380,12 @@ export class LocalKernelFinder implements ILocalKernelFinder {
     // For the given resource, find atll the file paths for kernel specs that wewant to associate with this
     private async findAllResourcePossibleKernelPaths(
         resource: Resource,
-        _cancelToken?: CancellationToken
+        cancelToken?: CancellationToken
     ): Promise<(string | { interpreter: PythonEnvironment; kernelSearchPath: string })[]> {
         const [activeInterpreterPath, interpreterPaths, diskPaths] = await Promise.all([
             this.getActiveInterpreterPath(resource),
-            this.getInterpreterPaths(resource),
-            this.getDiskPaths()
+            this.getInterpreterPaths(resource, cancelToken),
+            this.getDiskPaths(cancelToken)
         ]);
 
         const kernelSpecPathsAlreadyListed = new Set<string>();
@@ -404,10 +427,14 @@ export class LocalKernelFinder implements ILocalKernelFinder {
     }
 
     private async getInterpreterPaths(
-        resource: Resource
+        resource: Resource,
+        cancelToken?: CancellationToken
     ): Promise<{ interpreter: PythonEnvironment; kernelSearchPath: string }[]> {
         if (this.extensionChecker.isPythonExtensionInstalled) {
             const interpreters = await this.interpreterService.getInterpreters(resource);
+            if (cancelToken?.isCancellationRequested) {
+                return [];
+            }
             traceInfo(`Search all interpreters ${interpreters.map((item) => item.path).join(', ')}`);
             const interpreterPaths = new Set<string>();
             return interpreters
@@ -431,9 +458,12 @@ export class LocalKernelFinder implements ILocalKernelFinder {
     // Find any paths associated with the JUPYTER_PATH env var. Can be a list of dirs.
     // We need to look at the 'kernels' sub-directory and these paths are supposed to come first in the searching
     // https://jupyter.readthedocs.io/en/latest/projects/jupyter-directories.html#envvar-JUPYTER_PATH
-    private async getJupyterPathPaths(): Promise<string[]> {
+    private async getJupyterPathPaths(cancelToken?: CancellationToken): Promise<string[]> {
         const paths: string[] = [];
         const vars = await this.envVarsProvider.getEnvironmentVariables();
+        if (cancelToken?.isCancellationRequested) {
+            return [];
+        }
         const jupyterPathVars = vars.JUPYTER_PATH
             ? vars.JUPYTER_PATH.split(path.delimiter).map((jupyterPath) => {
                   return path.join(jupyterPath, 'kernels');
@@ -460,9 +490,9 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         return undefined;
     }
 
-    private async getDiskPaths(): Promise<string[]> {
+    private async getDiskPaths(cancelToken?: CancellationToken): Promise<string[]> {
         // Paths specified in JUPYTER_PATH are supposed to come first in searching
-        const paths: string[] = await this.getJupyterPathPaths();
+        const paths: string[] = await this.getJupyterPathPaths(cancelToken);
 
         if (this.platformService.isWindows) {
             const winPath = await this.getKernelSpecRootPath();
@@ -489,7 +519,8 @@ export class LocalKernelFinder implements ILocalKernelFinder {
 
     // Given a set of paths, search for kernel.json files and return back the full paths of all of them that we find
     private async kernelGlobSearch(
-        paths: (string | { interpreter: PythonEnvironment; kernelSearchPath: string })[]
+        paths: (string | { interpreter: PythonEnvironment; kernelSearchPath: string })[],
+        cancelToken?: CancellationToken
     ): Promise<KernelSpecFileWithContainingInterpreter[]> {
         const searchResults = await Promise.all(
             paths.map((searchItem) => {
@@ -502,6 +533,9 @@ export class LocalKernelFinder implements ILocalKernelFinder {
                 });
             })
         );
+        if (cancelToken?.isCancellationRequested) {
+            return [];
+        }
         const kernelSpecFiles: KernelSpecFileWithContainingInterpreter[] = [];
         searchResults.forEach((item) => {
             for (const kernelSpecFile of item.kernelSpecFiles) {
