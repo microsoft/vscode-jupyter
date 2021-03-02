@@ -287,7 +287,6 @@ module.exports = {
         'src/test/datascience/jupyter/interpreter/jupyterInterpreterSelectionCommand.unit.test.ts',
         'src/test/datascience/jupyter/interpreter/jupyterInterpreterSelector.unit.test.ts',
         'src/test/datascience/jupyter/serverSelector.unit.test.ts',
-        'src/test/datascience/jupyter/kernels/kernelDependencyService.unit.test.ts',
         'src/test/datascience/jupyter/kernels/kernelSwitcher.unit.test.ts',
         'src/test/datascience/jupyter/jupyterCellOutputMimeTypeTracker.unit.test.ts',
         'src/test/datascience/jupyter/jupyterConnection.unit.test.ts',
