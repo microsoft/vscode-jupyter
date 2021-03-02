@@ -118,7 +118,6 @@ export class ExperimentService implements IExperimentService {
         // so we need to perform these checks and send the corresponding telemetry manually.
         switch (this.getOptInOptOutStatus(experiment)) {
             case 'optOut': {
-                await this.experimentationService.isCachedFlightEnabled(experiment);
                 sendTelemetryEvent(EventName.JUPYTER_EXPERIMENTS_OPT_IN_OUT, undefined, {
                     expNameOptedOutOf: experiment
                 });
