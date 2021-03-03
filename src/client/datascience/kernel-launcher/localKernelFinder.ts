@@ -188,7 +188,7 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         });
 
         // Combine the two into our list
-        return [
+        const results = [
             ...kernelMetadata,
             ...filteredInterpreters.map((i) => {
                 // Update spec to have a default spec file
@@ -200,6 +200,18 @@ export class LocalKernelFinder implements ILocalKernelFinder {
                 return result;
             })
         ];
+
+        // Sort them so that the active interpreter comes first (if we have one for it).
+        // This allows searches to prioritize this kernel first.
+        return results.sort((a, b) => {
+            if (a.kernelSpec?.display_name === b.kernelSpec?.display_name) {
+                return 0;
+            } else if (a.interpreter?.path === activeInterpreter?.path) {
+                return -1;
+            } else {
+                return 1;
+            }
+        });
     }
 
     private findMatchingInterpreters(

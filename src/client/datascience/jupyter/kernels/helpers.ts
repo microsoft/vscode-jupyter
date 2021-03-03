@@ -355,22 +355,36 @@ export function findPreferredKernelIndex(
 
     // If still not found, look for a match based on notebook metadata and interpreter
     if (index < 0 && (notebookMetadata || interpreter)) {
+        const nbMetadataLanguage =
+            !notebookMetadata || isPythonNotebook(notebookMetadata)
+                ? PYTHON_LANGUAGE
+                : (
+                      (notebookMetadata?.kernelspec?.language as string) || notebookMetadata?.language_info?.name
+                  )?.toLowerCase();
         let bestScore = -1;
         for (let i = 0; kernels && i < kernels?.length; i = i + 1) {
             const metadata = kernels[i];
             const spec = metadata.kind !== 'connectToLiveKernel' ? metadata.kernelSpec : undefined;
-            let score = 0;
+            const speclanguage = getKernelConnectionLanguage(metadata);
+            let score = -1;
 
             if (spec) {
                 // See if the path matches.
-                if (spec && spec.path && spec.path.length > 0 && interpreter && spec.path === interpreter.path) {
+                if (
+                    spec &&
+                    spec.path &&
+                    spec.path.length > 0 &&
+                    interpreter &&
+                    spec.path === interpreter.path &&
+                    nbMetadataLanguage === PYTHON_LANGUAGE
+                ) {
                     // Path match. This is worth more if no notebook metadata as that should
                     // match first.
                     score += notebookMetadata ? 1 : 8;
                 }
 
                 // See if the version is the same
-                if (interpreter && interpreter.version && spec && spec.name) {
+                if (interpreter && interpreter.version && spec && spec.name && nbMetadataLanguage === PYTHON_LANGUAGE) {
                     // Search for a digit on the end of the name. It should match our major version
                     const match = /\D+(\d+)/.exec(spec.name);
                     if (match && match !== null && match.length > 0) {
@@ -386,15 +400,19 @@ export function findPreferredKernelIndex(
                 if (spec.display_name && spec.display_name === notebookMetadata?.kernelspec?.display_name) {
                     score += 16;
                 }
-                if (spec.display_name && spec.display_name === interpreter?.displayName) {
+
+                // See if interpreter should be tried instead.
+                if (
+                    spec.display_name &&
+                    spec.display_name === interpreter?.displayName &&
+                    !notebookMetadata?.kernelspec?.display_name &&
+                    nbMetadataLanguage === PYTHON_LANGUAGE
+                ) {
                     score += 10;
                 }
 
                 // Find a kernel spec that matches the language in the notebook metadata.
-                const nbMetadataLanguage = isPythonNotebook(notebookMetadata)
-                    ? PYTHON_LANGUAGE
-                    : (notebookMetadata?.kernelspec?.language as string) || notebookMetadata?.language_info?.name;
-                if (score === 0 && spec.language?.toLowerCase() === (nbMetadataLanguage || '').toLowerCase()) {
+                if (score <= 0 && speclanguage === (nbMetadataLanguage || '')) {
                     score = 1;
                 }
             }

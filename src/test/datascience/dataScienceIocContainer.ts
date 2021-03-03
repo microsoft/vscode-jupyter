@@ -848,6 +848,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             this.jupyterMock = new MockJupyterManagerFactory(this.serviceManager);
             // When using mocked Jupyter, default to using default kernel.
             when(this.kernelFinderMock.findKernel(anything(), anything(), anything())).thenResolve(undefined);
+
             this.serviceManager.addSingletonInstance<JupyterKernelService>(
                 JupyterKernelService,
                 instance(this.kernelServiceMock)
@@ -855,6 +856,11 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             this.serviceManager.addSingletonInstance<ILocalKernelFinder>(
                 ILocalKernelFinder,
                 instance(this.kernelFinderMock)
+            );
+            const remoteKernelFinderMock = mock(RemoteKernelFinder);
+            this.serviceManager.addSingletonInstance<IRemoteKernelFinder>(
+                IRemoteKernelFinder,
+                instance(remoteKernelFinderMock)
             );
 
             this.serviceManager.addSingletonInstance<IInterpreterSelector>(

@@ -359,14 +359,14 @@ import { arePathsSame } from '../../common';
                 language_info: { name: PYTHON_LANGUAGE },
                 orig_nbformat: 4
             });
-            assert.ok(kernel, 'No python kernel found matching notebook metadata');
+            assert.equal(kernel?.kernelSpec?.language, 'python', 'No python kernel found matching notebook metadata');
 
             // Julia
             kernel = await kernelFinder.findKernel(undefined, {
                 language_info: { name: 'julia' },
                 orig_nbformat: 4
             });
-            assert.ok(kernel, 'No julia kernel found matching notebook metadata');
+            assert.equal(kernel?.kernelSpec?.language, 'julia', 'No julia kernel found matching notebook metadata');
 
             // Python 2
             kernel = await kernelFinder.findKernel(undefined, {
@@ -377,7 +377,7 @@ import { arePathsSame } from '../../common';
                 language_info: { name: PYTHON_LANGUAGE },
                 orig_nbformat: 4
             });
-            assert.ok(kernel, 'No python2 kernel found matching notebook metadata');
+            assert.equal(kernel?.kernelSpec?.language, 'python', 'No python2 kernel found matching notebook metadata');
 
             // Interpreter name
             kernel = await kernelFinder.findKernel(undefined, {
@@ -399,7 +399,7 @@ import { arePathsSame } from '../../common';
                 language_info: { name: PYTHON_LANGUAGE },
                 orig_nbformat: 4
             });
-            assert.ok(kernel, 'No kernel found matching default notebook metadata');
+            assert.equal(kernel?.kernelSpec?.language, 'python', 'No kernel found matching default notebook metadata');
 
             // Unknown case (same as using active interpreter)
             kernel = await kernelFinder.findKernel(undefined, {

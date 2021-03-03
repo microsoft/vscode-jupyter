@@ -313,7 +313,12 @@ export class InterpreterService implements IInterpreterService {
         return this.apiProvider.getApi().then((api) => api.getActiveInterpreter(resource));
     }
 
-    public getInterpreterDetails(pythonPath: string, resource?: Uri): Promise<undefined | PythonEnvironment> {
-        return this.apiProvider.getApi().then((api) => api.getInterpreterDetails(pythonPath, resource));
+    public async getInterpreterDetails(pythonPath: string, resource?: Uri): Promise<undefined | PythonEnvironment> {
+        try {
+            return await this.apiProvider.getApi().then((api) => api.getInterpreterDetails(pythonPath, resource));
+        } catch {
+            // If the python extension cannot get the details here, don't fail. Just don't use them.
+            return undefined;
+        }
     }
 }
