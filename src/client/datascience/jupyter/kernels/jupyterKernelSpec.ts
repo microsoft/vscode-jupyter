@@ -3,13 +3,13 @@
 'use strict';
 import type { Kernel } from '@jupyterlab/services';
 import * as path from 'path';
-import * as fs from 'fs-extra';
 import { CancellationToken } from 'vscode';
 import { createPromiseFromCancellation } from '../../../common/cancellation';
 import { traceInfo } from '../../../common/logger';
 
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { IJupyterKernelSpec } from '../../types';
+import { tryGetRealPath } from '../../common';
 
 export class JupyterKernelSpec implements IJupyterKernelSpec {
     public name: string;
@@ -66,7 +66,7 @@ export async function parseKernelSpecs(stdout: string, token?: CancellationToken
                     ...spec,
                     name: kernelName
                 };
-                const specFile = await fs.realpath(path.join(kernelSpecs[kernelName].resource_dir, 'kernel.json'));
+                const specFile = await tryGetRealPath(path.join(kernelSpecs[kernelName].resource_dir, 'kernel.json'));
                 if (specFile) {
                     return new JupyterKernelSpec(model as Kernel.ISpecModel, specFile);
                 }

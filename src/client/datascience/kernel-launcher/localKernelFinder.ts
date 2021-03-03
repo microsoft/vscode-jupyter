@@ -5,7 +5,6 @@
 import type { nbformat } from '@jupyterlab/coreutils';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import * as fsExtra from 'fs-extra';
 import { CancellationToken } from 'vscode';
 import { IPythonExtensionChecker } from '../../api/types';
 import { IWorkspaceService } from '../../common/application/types';
@@ -31,6 +30,7 @@ import {
 } from '../jupyter/kernels/types';
 import { IJupyterKernelSpec } from '../types';
 import { ILocalKernelFinder } from './types';
+import { tryGetRealPath } from '../common';
 
 const winJupyterPath = path.join('AppData', 'Roaming', 'jupyter', 'kernels');
 const linuxJupyterPath = path.join('.local', 'share', 'jupyter', 'kernels');
@@ -146,11 +146,11 @@ export class LocalKernelFinder implements ILocalKernelFinder {
     // here: https://jupyter-client.readthedocs.io/en/stable/kernels.html#kernel-specs
     public async getKernelSpecRootPath(): Promise<string | undefined> {
         if (this.platformService.isWindows) {
-            return fsExtra.realpath(path.join(this.pathUtils.home, winJupyterPath));
+            return tryGetRealPath(path.join(this.pathUtils.home, winJupyterPath));
         } else if (this.platformService.isMac) {
-            return fsExtra.realpath(path.join(this.pathUtils.home, macJupyterPath));
+            return tryGetRealPath(path.join(this.pathUtils.home, macJupyterPath));
         } else {
-            return fsExtra.realpath(path.join(this.pathUtils.home, linuxJupyterPath));
+            return tryGetRealPath(path.join(this.pathUtils.home, linuxJupyterPath));
         }
     }
 
@@ -501,8 +501,7 @@ export class LocalKernelFinder implements ILocalKernelFinder {
 
         if (jupyterPathVars.length > 0) {
             jupyterPathVars.forEach(async (jupyterPath) => {
-                const realPath = await fsExtra.realpath(jupyterPath);
-
+                const realPath = await tryGetRealPath(jupyterPath);
                 if (realPath) {
                     paths.push(realPath);
                 }
@@ -554,14 +553,15 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         cancelToken?: CancellationToken
     ): Promise<KernelSpecFileWithContainingInterpreter[]> {
         const searchResults = await Promise.all(
-            paths.map((searchItem) => {
+            paths.map(async (searchItem) => {
                 const searchPath = typeof searchItem === 'string' ? searchItem : searchItem.kernelSearchPath;
-                return this.fs.searchLocal(`**/kernel.json`, searchPath, true).then((kernelSpecFilesFound) => {
+                if (await this.fs.localDirectoryExists(searchPath)) {
+                    const files = await this.fs.searchLocal(`**/kernel.json`, searchPath, true);
                     return {
                         interpreter: typeof searchItem === 'string' ? undefined : searchItem.interpreter,
-                        kernelSpecFiles: kernelSpecFilesFound.map((item) => path.join(searchPath, item))
+                        kernelSpecFiles: files.map((item) => path.join(searchPath, item))
                     };
-                });
+                }
             })
         );
         if (cancelToken?.isCancellationRequested) {
@@ -569,8 +569,10 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         }
         const kernelSpecFiles: KernelSpecFileWithContainingInterpreter[] = [];
         searchResults.forEach((item) => {
-            for (const kernelSpecFile of item.kernelSpecFiles) {
-                kernelSpecFiles.push({ interpreter: item.interpreter, kernelSpecFile });
+            if (item) {
+                for (const kernelSpecFile of item.kernelSpecFiles) {
+                    kernelSpecFiles.push({ interpreter: item.interpreter, kernelSpecFile });
+                }
             }
         });
 

@@ -3,6 +3,7 @@
 'use strict';
 import type { nbformat } from '@jupyterlab/coreutils';
 import * as os from 'os';
+import * as fsExtra from 'fs-extra';
 import { parse, SemVer } from 'semver';
 import { Uri } from 'vscode';
 import { splitMultilineString } from '../../datascience-ui/common';
@@ -145,6 +146,16 @@ export function generateNewNotebookUri(
         return Uri.joinPath(rootFolder ? Uri.file(rootFolder) : Uri.file(os.tmpdir()), fileName).with({
             scheme: 'untitled'
         });
+    }
+}
+
+export async function tryGetRealPath(expectedPath: string): Promise<string | undefined> {
+    try {
+        // Real path throws if the expected path is not actually created yet.
+        return fsExtra.realpath(expectedPath);
+    } catch {
+        // So if that happens, just return the original path.
+        return expectedPath;
     }
 }
 
