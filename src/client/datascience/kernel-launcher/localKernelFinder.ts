@@ -139,8 +139,10 @@ export class LocalKernelFinder implements ILocalKernelFinder {
     public async getKernelSpecRootPath(): Promise<string | undefined> {
         if (this.platformService.isWindows) {
             return fsExtra.realpath(path.join(this.pathUtils.home, winJupyterPath));
+        } else if (this.platformService.isMac) {
+            return fsExtra.realpath(path.join(this.pathUtils.home, macJupyterPath));
         } else {
-            return path.join('/', 'usr', 'share', 'jupyter', 'kernels');
+            return fsExtra.realpath(path.join(this.pathUtils.home, linuxJupyterPath));
         }
     }
 
