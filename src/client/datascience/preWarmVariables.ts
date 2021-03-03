@@ -11,6 +11,7 @@ import { IDisposableRegistry } from '../common/types';
 import { noop } from '../common/utils/misc';
 import { IEnvironmentActivationService } from '../interpreter/activation/types';
 import { JupyterInterpreterService } from './jupyter/interpreter/jupyterInterpreterService';
+import { IRawNotebookSupportedService } from './types';
 
 @injectable()
 export class PreWarmActivatedJupyterEnvironmentVariables implements IExtensionSingleActivationService {
@@ -18,13 +19,18 @@ export class PreWarmActivatedJupyterEnvironmentVariables implements IExtensionSi
         @inject(IEnvironmentActivationService) private readonly activationService: IEnvironmentActivationService,
         @inject(JupyterInterpreterService) private readonly jupyterInterpreterService: JupyterInterpreterService,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker
+        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
+        @inject(IRawNotebookSupportedService) private readonly rawNotebookSupported: IRawNotebookSupportedService
     ) {}
     public async activate(): Promise<void> {
-        this.disposables.push(
-            this.jupyterInterpreterService.onDidChangeInterpreter(() => this.preWarmInterpreterVariables().catch(noop))
-        );
-        this.preWarmInterpreterVariables().ignoreErrors();
+        if (!this.rawNotebookSupported.supported()) {
+            this.disposables.push(
+                this.jupyterInterpreterService.onDidChangeInterpreter(() =>
+                    this.preWarmInterpreterVariables().catch(noop)
+                )
+            );
+            this.preWarmInterpreterVariables().ignoreErrors();
+        }
     }
 
     private async preWarmInterpreterVariables() {
