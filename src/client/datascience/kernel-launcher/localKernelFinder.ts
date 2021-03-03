@@ -134,7 +134,7 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         });
     }
 
-    // This should return the first place that jupyter will look for a kernel as documented
+    // This should return a WRITABLE place that jupyter will look for a kernel as documented
     // here: https://jupyter-client.readthedocs.io/en/stable/kernels.html#kernel-specs
     public async getKernelSpecRootPath(): Promise<string | undefined> {
         if (this.platformService.isWindows) {
