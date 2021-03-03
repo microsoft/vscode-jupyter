@@ -88,9 +88,8 @@ async function createSettings(): Promise<string> {
         defaultSettings['jupyter.alwaysTrustNotebooks'] = true;
     }
     if (channel !== 'insiders') {
-        // When in Stable, ensure we don't end up using Native Notebooks in CI tests.
-        // I.e. ensure we have predictable state/experiments.
-        defaultSettings['jupyter.experiments.optOutFrom'] = ['NativeNotebookEditor'];
+        // When in Stable, ensure we use native for tests
+        defaultSettings['jupyter.experiments.optIn'] = ['__NativeNotebookEditor__'];
     }
     if (IS_REMOTE_NATIVE_TEST) {
         // Make this a remote instance.
