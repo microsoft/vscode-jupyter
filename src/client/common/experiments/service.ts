@@ -42,7 +42,7 @@ export class ExperimentService implements IExperimentService {
     private readonly settings: IJupyterSettings;
     private logged?: boolean;
 
-    private get enabled(){
+    private get enabled() {
         return this._optOutFrom.includes('All') || this.settings.experiments.enabled;
     }
     constructor(
