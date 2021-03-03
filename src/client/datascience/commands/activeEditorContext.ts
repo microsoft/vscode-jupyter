@@ -43,6 +43,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
     private isPythonNotebook: ContextKey;
     private isVSCodeNotebookActive: ContextKey;
     private usingWebViewNotebook: ContextKey;
+    private hasNativeNotebookOpen: ContextKey;
     constructor(
         @inject(IInteractiveWindowProvider) private readonly interactiveProvider: IInteractiveWindowProvider,
         @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider,
@@ -87,6 +88,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         this.isPythonNotebook = new ContextKey(EditorContexts.IsPythonNotebook, this.commandManager);
         this.isVSCodeNotebookActive = new ContextKey(EditorContexts.IsVSCodeNotebookActive, this.commandManager);
         this.usingWebViewNotebook = new ContextKey(EditorContexts.UsingWebviewNotebook, this.commandManager);
+        this.hasNativeNotebookOpen = new ContextKey(EditorContexts.HasNativeNotebookOpen, this.commandManager);
     }
     public dispose() {
         this.disposables.forEach((item) => item.dispose());
@@ -146,6 +148,8 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         this.updateMergedContexts();
     }
     private updateNativeNotebookContext() {
+        this.hasNativeNotebookOpen.set(this.vscNotebook.notebookDocuments.length > 0).ignoreErrors();
+
         if (!this.vscNotebook.activeNotebookEditor) {
             return;
         }
