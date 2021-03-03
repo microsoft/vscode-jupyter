@@ -261,7 +261,7 @@ suite('Experimentation service', () => {
                 eventName: EventName.JUPYTER_EXPERIMENTS_OPT_IN_OUT,
                 properties: { expNameOptedInto: experiment }
             });
-            sinon.assert.notCalled(isCachedFlightEnabledStub);
+            sinon.assert.calledOnce(isCachedFlightEnabledStub);
         });
 
         test('If the opt-in setting contains the experiment name, inExperiment should return true', async () => {
@@ -283,7 +283,7 @@ suite('Experimentation service', () => {
                 eventName: EventName.JUPYTER_EXPERIMENTS_OPT_IN_OUT,
                 properties: { expNameOptedInto: experiment }
             });
-            sinon.assert.notCalled(isCachedFlightEnabledStub);
+            sinon.assert.calledOnce(isCachedFlightEnabledStub);
         });
 
         test('If the opt-out setting contains "All", inExperiment should return false', async () => {

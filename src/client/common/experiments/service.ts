@@ -42,6 +42,9 @@ export class ExperimentService implements IExperimentService {
     private readonly settings: IJupyterSettings;
     private logged?: boolean;
 
+    private get enabled() {
+        return this._optOutFrom.includes('All') || this.settings.experiments.enabled;
+    }
     constructor(
         @inject(IConfigurationService) readonly configurationService: IConfigurationService,
         @inject(IApplicationEnvironment) private readonly appEnvironment: IApplicationEnvironment,
@@ -69,8 +72,7 @@ export class ExperimentService implements IExperimentService {
         }
 
         // Don't initialize the experiment service if the extension's experiments setting is disabled.
-        const enabled = this.settings.experiments.enabled;
-        if (!enabled) {
+        if (!this.enabled) {
             return;
         }
 
@@ -95,6 +97,11 @@ export class ExperimentService implements IExperimentService {
         this.logExperiments();
     }
 
+    public async activate() {
+        if (this.experimentationService) {
+            await this.experimentationService.initializePromise;
+        }
+    }
     public async inExperiment(experiment: ExperimentGroups): Promise<boolean> {
         if (!this.experimentationService) {
             return false;
@@ -120,6 +127,7 @@ export class ExperimentService implements IExperimentService {
                 return false;
             }
             case 'optIn': {
+                await this.experimentationService.isCachedFlightEnabled(experiment);
                 sendTelemetryEvent(EventName.JUPYTER_EXPERIMENTS_OPT_IN_OUT, undefined, {
                     expNameOptedInto: experiment
                 });
@@ -155,7 +163,6 @@ export class ExperimentService implements IExperimentService {
             this.output.appendLine(Experiments.inGroup().format(exp));
         });
     }
-
     private getOptInOptOutStatus(experiment: ExperimentGroups): 'optOut' | 'optIn' | undefined {
         if (!this.experimentationService) {
             return;
