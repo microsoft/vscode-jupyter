@@ -1354,7 +1354,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
                         interpreter,
                         allowEnvironmentFetchExceptions: true
                     });
-                const result = pythonProcess.isModuleInstalled('livelossplot'); // Should we check all dependencies?
+                const result = await pythonProcess.isModuleInstalled('livelossplot'); // Should we check all dependencies?
                 traceInfo(`${interpreter.path} has jupyter with livelossplot indicating : ${result}`);
                 return result;
             } else {

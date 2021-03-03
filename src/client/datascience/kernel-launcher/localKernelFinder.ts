@@ -134,6 +134,8 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         });
     }
 
+    // This should return the first place that jupyter will look for a kernel as documented
+    // here: https://jupyter-client.readthedocs.io/en/stable/kernels.html#kernel-specs
     public async getKernelSpecRootPath(): Promise<string | undefined> {
         if (this.platformService.isWindows) {
             return fsExtra.realpath(path.join(this.pathUtils.home, winJupyterPath));
@@ -504,6 +506,8 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         return undefined;
     }
 
+    // This list comes from the docs here:
+    // https://jupyter-client.readthedocs.io/en/stable/kernels.html#kernel-specs
     private async getDiskPaths(cancelToken?: CancellationToken): Promise<string[]> {
         // Paths specified in JUPYTER_PATH are supposed to come first in searching
         const paths: string[] = await this.getJupyterPathPaths(cancelToken);

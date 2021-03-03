@@ -8,5 +8,6 @@ obj = {}
 obj["versionInfo"] = tuple(sys.version_info)
 obj["sysPrefix"] = sys.prefix
 obj["version"] = sys.version
+obj["exe"] = sys.executable
 
 print(json.dumps(obj))
