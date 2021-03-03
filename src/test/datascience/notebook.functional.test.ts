@@ -63,7 +63,6 @@ suite('DataScience notebook tests', () => {
 
             let ioc: DataScienceIocContainer;
             let modifiedConfig = false;
-            const baseUri = Uri.file('foo.py');
 
             // eslint-disable-next-line
             setup(async function () {
