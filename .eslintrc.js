@@ -876,7 +876,6 @@ module.exports = {
         'src/client/datascience/raw-kernel/rawSocket.ts',
         'src/client/datascience/crossProcessLock.ts',
         'src/client/datascience/debugLocationTrackerFactory.ts',
-        'src/client/datascience/preWarmVariables.ts',
         'src/client/datascience/kernelSocketWrapper.ts',
         'src/client/datascience/jupyterDebugService.ts',
         'src/client/datascience/interactive-common/serialization.ts',
