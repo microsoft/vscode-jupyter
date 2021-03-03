@@ -208,7 +208,10 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         return results.sort((a, b) => {
             if (a.kernelSpec?.display_name === b.kernelSpec?.display_name) {
                 return 0;
-            } else if (a.interpreter?.path === activeInterpreter?.path) {
+            } else if (
+                a.interpreter?.path === activeInterpreter?.path &&
+                a.kernelSpec?.display_name === activeInterpreter?.displayName
+            ) {
                 return -1;
             } else {
                 return 1;

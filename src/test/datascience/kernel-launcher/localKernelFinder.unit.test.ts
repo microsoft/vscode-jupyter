@@ -193,20 +193,17 @@ import { arePathsSame } from '../../common';
         test('Kernels found on disk', async () => {
             const kernels = await kernelFinder.listKernels(undefined);
             assert.ok(kernels.length >= 3, 'Not enough kernels returned');
-            assert.equal(
-                getDisplayNameOrNameOfKernelConnection(kernels[0]),
-                'Python 3 on Disk',
-                'Did not find correct python kernel'
+            assert.ok(
+                kernels.find((k) => getDisplayNameOrNameOfKernelConnection(k) === 'Python 3 on Disk'),
+                'Python 3 kernel not found'
             );
-            assert.equal(
-                getDisplayNameOrNameOfKernelConnection(kernels[1]),
-                'Julia on Disk',
-                'Did not find correct julia kernel'
+            assert.ok(
+                kernels.find((k) => getDisplayNameOrNameOfKernelConnection(k) === 'Python 2 on Disk'),
+                'Python 2 kernel not found'
             );
-            assert.equal(
-                getDisplayNameOrNameOfKernelConnection(kernels[2]),
-                'Python 2 on Disk',
-                'Did not find correct python 2 kernel'
+            assert.ok(
+                kernels.find((k) => getDisplayNameOrNameOfKernelConnection(k) === 'Julia on Disk'),
+                'Julia kernel not found'
             );
         });
         test('No interpreters used when no python extension', async () => {
@@ -407,7 +404,7 @@ import { arePathsSame } from '../../common';
                     display_name: 'notagoodname',
                     name: 'notagoodname'
                 },
-                language_info: { name: 'unknown' },
+                language_info: { name: 'python' },
                 orig_nbformat: 4
             });
             const activeKernel = await kernelFinder.findKernel(undefined, activeInterpreter);
