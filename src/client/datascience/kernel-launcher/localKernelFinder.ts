@@ -148,9 +148,9 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         if (this.platformService.isWindows) {
             return tryGetRealPath(path.join(this.pathUtils.home, winJupyterPath));
         } else if (this.platformService.isMac) {
-            return tryGetRealPath(path.join(this.pathUtils.home, macJupyterPath));
+            return path.join(this.pathUtils.home, macJupyterPath);
         } else {
-            return tryGetRealPath(path.join(this.pathUtils.home, linuxJupyterPath));
+            return path.join(this.pathUtils.home, linuxJupyterPath);
         }
     }
 
