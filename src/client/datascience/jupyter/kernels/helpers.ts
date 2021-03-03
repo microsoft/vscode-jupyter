@@ -354,7 +354,7 @@ export function findPreferredKernelIndex(
     }
 
     // If still not found, look for a match based on notebook metadata and interpreter
-    if (index < 0 && (notebookMetadata || interpreter)) {
+    if (index < 0) {
         const nbMetadataLanguage =
             !notebookMetadata || isPythonNotebook(notebookMetadata)
                 ? PYTHON_LANGUAGE
