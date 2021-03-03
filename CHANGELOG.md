@@ -1,5 +1,53 @@
 # Changelog
 
+## 2021.3.0 (3 March 2021)
+
+### Enhancements
+
+1. Add ability to view a slice of the current variable in the data viewer using either axis/index dropdowns or a slice expression input field.
+   ([#305](https://github.com/Microsoft/vscode-jupyter/issues/305))
+1. Enable refreshing active data viewer contents using Jupyter: Refresh Data Viewer command in the command palette, Cmd+R or Ctrl+R, or the refresh button in the editor title menu.
+   ([#1143](https://github.com/Microsoft/vscode-jupyter/issues/1143))
+1. Always open the data viewer in the last view group that it was moved to.
+   ([#4689](https://github.com/Microsoft/vscode-jupyter/issues/4689))
+1. Support for other extensions to provide a default language when creating new notebooks.
+   ([#4859](https://github.com/Microsoft/vscode-jupyter/issues/4859))
+
+### Fixes
+
+1. Remove special casing to ignore warnings.
+   ([#1312](https://github.com/Microsoft/vscode-jupyter/issues/1312))
+1. Allow jupyter kernels to not be handled by the jupyter extension.
+   ([#4423](https://github.com/Microsoft/vscode-jupyter/issues/4423))
+1. Restore the 'Select a Kernel' command on the interactive window.
+   ([#4479](https://github.com/Microsoft/vscode-jupyter/issues/4479))
+1. Correctly syntax color items in native variable view.
+   ([#4499](https://github.com/Microsoft/vscode-jupyter/issues/4499))
+1. Don't ask for a kernel restart if the kernel was interrupted in native notebooks.
+   ([#4669](https://github.com/Microsoft/vscode-jupyter/issues/4669))
+1. Popup a tip when opening a notebook for the first time.
+   ([#4775](https://github.com/Microsoft/vscode-jupyter/issues/4775))
+1. Ensure we save the contents when closing a (webview based) notebook.
+   ([#4779](https://github.com/Microsoft/vscode-jupyter/issues/4779))
+1. Stop sending cells executed silently to other extensions.
+   ([#4867](https://github.com/Microsoft/vscode-jupyter/issues/4867))
+1. Do not prompt to install missing dependencies on GitHub Codespaces.
+   ([#4882](https://github.com/Microsoft/vscode-jupyter/issues/4882))
+
+### Code Health
+
+1. Synchronously check if `zmq` is supported.
+   ([#4764](https://github.com/Microsoft/vscode-jupyter/issues/4764))
+1. Telemetry to track the commands executed using ICommandManager.
+   ([#4926](https://github.com/Microsoft/vscode-jupyter/issues/4926))
+1. More telemetry to track kernel failure reasons.
+   ([#4940](https://github.com/Microsoft/vscode-jupyter/issues/4940))
+1. Add telemetry flag to differentiate between stable vs insider builds of the extension.
+   ([#4959](https://github.com/Microsoft/vscode-jupyter/issues/4959))
+1. Add telemetry to check if we have started the right local Python kernel.
+   ([#4999](https://github.com/Microsoft/vscode-jupyter/issues/4999))
+
+
 ## 2021.2.1 (28 February 2021)
 
 ### Fixes
