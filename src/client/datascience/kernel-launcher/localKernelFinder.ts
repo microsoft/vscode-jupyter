@@ -85,22 +85,27 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         option?: nbformat.INotebookMetadata | PythonEnvironment,
         cancelToken?: CancellationToken
     ): Promise<LocalKernelConnectionMetadata | undefined> {
-        // Get list of all of the specs
-        const kernels = await this.listKernels(resource, cancelToken);
+        try {
+            // Get list of all of the specs
+            const kernels = await this.listKernels(resource, cancelToken);
 
-        // Always include the interpreter in the search if we can
-        const interpreter =
-            option && isInterpreter(option)
-                ? option
-                : resource && this.extensionChecker.isPythonExtensionInstalled
-                ? await this.interpreterService.getActiveInterpreter(resource)
-                : undefined;
+            // Always include the interpreter in the search if we can
+            const interpreter =
+                option && isInterpreter(option)
+                    ? option
+                    : resource && this.extensionChecker.isPythonExtensionInstalled
+                    ? await this.interpreterService.getActiveInterpreter(resource)
+                    : undefined;
 
-        // Find the preferred kernel index from the list.
-        const notebookMetadata = option && !isInterpreter(option) ? option : undefined;
-        const preferred = findPreferredKernelIndex(kernels, resource, [], notebookMetadata, interpreter, undefined);
-        if (preferred >= 0) {
-            return kernels[preferred];
+            // Find the preferred kernel index from the list.
+            const notebookMetadata = option && !isInterpreter(option) ? option : undefined;
+            const preferred = findPreferredKernelIndex(kernels, resource, [], notebookMetadata, interpreter, undefined);
+            if (preferred >= 0) {
+                return kernels[preferred];
+            }
+        } catch (e) {
+            traceError(`findKernel crashed: ${e} ${e.stackTrace}`);
+            return undefined;
         }
     }
 
