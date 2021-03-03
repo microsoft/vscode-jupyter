@@ -1321,7 +1321,7 @@
                 {
                     "command": "jupyter.showDataViewer",
                     "group": "1_view",
-                    "when": "python.isDebuggerDataViewerExperimentEnabled && debugProtocolVariableMenuContext == 'viewableInDataViewer'"
+                    "when": "debugProtocolVariableMenuContext == 'viewableInDataViewer'"
                 }
             ]
         },

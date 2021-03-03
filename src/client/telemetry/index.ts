@@ -1126,4 +1126,13 @@ export interface IEventNamePropertyMapping {
     // Native variable view events
     [Telemetry.NativeVariableViewLoaded]: never | undefined;
     [Telemetry.NativeVariableViewMadeVisible]: never | undefined;
+    /**
+     * Telemetry sent when a command is executed.
+     */
+    [Telemetry.CommandExecuted]: {
+        /**
+         * Name of the command executed.
+         */
+        command: string;
+    };
 }

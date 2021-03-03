@@ -451,7 +451,11 @@ export enum Telemetry {
     /**
      * Sent when a jupyter kernel cannot start for some reason and we're asking the user to pick another.
      */
-    AskUserForNewJupyterKernel = 'DS_INTERNAL.ASK_USER_FOR_NEW_KERNEL_JUPYTER'
+    AskUserForNewJupyterKernel = 'DS_INTERNAL.ASK_USER_FOR_NEW_KERNEL_JUPYTER',
+    /**
+     * Sent when a command we register is executed.
+     */
+    CommandExecuted = 'DS_INTERNAL.COMMAND_EXECUTED'
 }
 
 export enum NativeKeyboardCommandTelemetry {
