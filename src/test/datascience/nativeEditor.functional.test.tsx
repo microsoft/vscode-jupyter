@@ -33,8 +33,6 @@ import { KeyPrefix } from '../../client/datascience/notebookStorage/nativeEditor
 import { NativeEditorNotebookModel } from '../../client/datascience/notebookStorage/notebookModel';
 import {
     ICell,
-    IDataScienceErrorHandler,
-    IJupyterExecution,
     INotebookEditor,
     INotebookEditorProvider,
     INotebookExporter,
