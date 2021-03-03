@@ -46,8 +46,8 @@ suite('DataScience LiveShare tests', () => {
         this.skip();
         return;
 
-        // hostContainer = createContainer(vsls.Role.Host);
-        // guestContainer = createContainer(vsls.Role.Guest);
+        hostContainer = createContainer(vsls.Role.Host);
+        guestContainer = createContainer(vsls.Role.Guest);
         // return Promise.all([hostContainer.activate(), guestContainer.activate()]);
     });
 
