@@ -541,7 +541,12 @@ export function assertHasTextOutputInVSCode(cell: NotebookCell, text: string, in
     const cellOutputs = cell.outputs;
     assert.ok(cellOutputs.length, 'No output');
     const result = cell.outputs[index].outputs.some((item) => hasTextOutputValue(item, text, isExactMatch));
-    assert.isTrue(result, `${text} not found in outputs of cell ${cell.index}`);
+    assert.isTrue(
+        result,
+        `${text} not found in outputs of cell ${cell.index} ${cell.outputs[index].outputs
+            .map((o) => o.value)
+            .join(' ')}`
+    );
     return result;
 }
 export async function waitForTextOutputInVSCode(

@@ -175,6 +175,7 @@ import { arePathsSame } from '../../common';
             when(fs.areLocalPathsSame(anything(), anything())).thenCall((a, b) => {
                 return arePathsSame(a, b);
             });
+            when(fs.localDirectoryExists(anything())).thenResolve(true);
 
             kernelFinder = new LocalKernelFinder(
                 instance(interpreterService),
