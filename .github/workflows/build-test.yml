@@ -888,7 +888,7 @@ jobs:
     runs-on: ubuntu-latest
     # This should happen in the release and insiders branch
     if: github.repository == 'microsoft/vscode-jupyter' && github.event_name == 'push' && (github.ref == 'refs/heads/main' || contains(github.ref, 'refs/heads/release'))
-    needs: [build-vsix, pick_environment, lint, ts_tests, vscodeTests, smoke-tests]
+    needs: [build-vsix]
     env:
       BLOB_CONTAINER_NAME: extension-builds-jupyter
 
