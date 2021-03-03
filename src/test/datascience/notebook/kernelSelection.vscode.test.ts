@@ -70,7 +70,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
             !fs.pathExistsSync(venvNoRegPath)
         ) {
             // Virtual env does not exist.
-            //return this.skip();
+            return this.skip();
         }
         api = await initialize();
         if (!(await canRunNotebookTests())) {
