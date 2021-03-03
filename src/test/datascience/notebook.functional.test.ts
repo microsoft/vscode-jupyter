@@ -56,7 +56,7 @@ import { createPythonService, startRemoteServer } from './remoteTestHelpers';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-multi-str, , no-console, max-classes-per-file, comma-dangle */
 suite('DataScience notebook tests', () => {
-    [false, true].forEach((useRawKernel) => {
+    [true].forEach((useRawKernel) => {
         suite(`${useRawKernel ? 'With Direct Kernel' : 'With Jupyter Server'}`, () => {
             const disposables: Disposable[] = [];
             let notebookProvider: INotebookProvider;

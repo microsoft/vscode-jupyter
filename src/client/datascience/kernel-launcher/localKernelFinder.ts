@@ -104,7 +104,7 @@ export class LocalKernelFinder implements ILocalKernelFinder {
                 return kernels[preferred];
             }
         } catch (e) {
-            traceError(`findKernel crashed: ${e} ${e.stackTrace}`);
+            traceError(`findKernel crashed: ${e} ${e.stack}`);
             return undefined;
         }
     }
@@ -115,28 +115,31 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         resource: Resource,
         cancelToken?: CancellationToken
     ): Promise<LocalKernelConnectionMetadata[]> {
-        // Get an id for the workspace folder, if we don't have one, use the fsPath of the resource
-        const workspaceFolderId = this.workspaceService.getWorkspaceFolderIdentifier(
-            resource,
-            resource?.fsPath || this.workspaceService.rootPath
-        );
+        try {
+            // Get an id for the workspace folder, if we don't have one, use the fsPath of the resource
+            const workspaceFolderId = this.workspaceService.getWorkspaceFolderIdentifier(
+                resource,
+                resource?.fsPath || this.workspaceService.rootPath
+            );
 
-        // If we have not already searched for this resource, then generate the search
-        if (workspaceFolderId && !this.workspaceToMetadata.has(workspaceFolderId)) {
-            this.workspaceToMetadata.set(workspaceFolderId, this.findResourceKernelMetadata(resource, cancelToken));
-        }
+            // If we have not already searched for this resource, then generate the search
+            if (workspaceFolderId && !this.workspaceToMetadata.has(workspaceFolderId)) {
+                this.workspaceToMetadata.set(workspaceFolderId, this.findResourceKernelMetadata(resource, cancelToken));
+            }
 
-        this.writeCache().ignoreErrors();
+            this.writeCache().ignoreErrors();
 
-        // ! as the has and set above verify that we have a return here
-        const promise = this.workspaceToMetadata.get(workspaceFolderId)!;
-        return promise.then((items) => {
+            // ! as the has and set above verify that we have a return here
+            const items = await this.workspaceToMetadata.get(workspaceFolderId)!;
             traceInfoIf(
                 !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
                 `Kernel specs for ${resource?.toString() || 'undefined'} are \n ${JSON.stringify(items)}`
             );
             return items;
-        });
+        } catch (e) {
+            traceError(`List kernels failed: ${e} ${e.stack}`);
+            throw e;
+        }
     }
 
     // This should return a WRITABLE place that jupyter will look for a kernel as documented
