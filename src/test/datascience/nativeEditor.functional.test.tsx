@@ -332,7 +332,7 @@ suite('DataScience Native Editor', () => {
                     const context = ioc.get<IExtensionContext>(IExtensionContext);
                     const key = `${KeyPrefix}${file.toString()}`;
                     const name = `${crypto.createHash(key, 'string')}.ipynb`;
-                    return path.join(context.globalStoragePath, name);
+                    return path.join(context.globalStorageUri.fsPath, name);
                 }
 
                 runMountedTest('Save on shutdown', async (context) => {

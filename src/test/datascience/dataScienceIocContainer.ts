@@ -638,12 +638,12 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         );
         this.serviceManager.addSingletonInstance<IOutputChannel>(
             IOutputChannel,
-            mock(MockOutputChannel),
+            instance(mock(MockOutputChannel)),
             JUPYTER_OUTPUT_CHANNEL
         );
         this.serviceManager.addSingletonInstance<IOutputChannel>(
             IOutputChannel,
-            mock(MockOutputChannel),
+            instance(mock(MockOutputChannel)),
             STANDARD_OUTPUT_CHANNEL
         );
         this.serviceManager.addSingleton<ICryptoUtils>(ICryptoUtils, CryptoUtils);
@@ -656,7 +656,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             ServerPreload
         );
         const mockExtensionContext = TypeMoq.Mock.ofType<IExtensionContext>();
-        mockExtensionContext.setup((m) => m.globalStoragePath).returns(() => os.tmpdir());
+        mockExtensionContext.setup((m) => m.globalStorageUri).returns(() => Uri.file(os.tmpdir()));
         const globalState = new MockMemento();
         globalState.update(trustDirectoryMigrated, true);
         mockExtensionContext.setup((m) => m.globalState).returns(() => globalState);
