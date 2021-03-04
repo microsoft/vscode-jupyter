@@ -14,7 +14,7 @@ import { IDisposable } from '../../../client/common/types';
 import { getTextOutputValue } from '../../../client/datascience/notebook/helpers/helpers';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { getOSType, IExtensionTestApi, OSType, waitForCondition } from '../../common';
-import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_NON_RAW_NATIVE_TEST, IS_REMOTE_NATIVE_TEST } from '../../constants';
+import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST } from '../../constants';
 import { closeActiveWindows, initialize, IS_CI_SERVER } from '../../initialize';
 import { openNotebook } from '../helpers';
 import {
@@ -127,7 +127,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
     });
 
     test('Ensure we select active interpreter as kernel (when Raw Kernels)', async function () {
-        if (IS_NON_RAW_NATIVE_TEST || IS_REMOTE_NATIVE_TEST) {
+        if (IS_REMOTE_NATIVE_TEST) {
             return this.skip();
         }
         await createEmptyPythonNotebook(disposables);
@@ -193,8 +193,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         assertHasTextOutputInVSCode(cell, venvKernelPythonPath, 0, false);
     });
     test('Switch kernel to an interpreter that is registered as a kernel', async function () {
-        // Test only applies for Raw notebooks.
-        if (IS_REMOTE_NATIVE_TEST || IS_NON_RAW_NATIVE_TEST) {
+        if (IS_REMOTE_NATIVE_TEST) {
             return this.skip();
         }
         await createEmptyPythonNotebook(disposables);
@@ -223,8 +222,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         assertHasTextOutputInVSCode(cell, venvKernelPythonPath, 0, false);
     });
     test('Switch kernel to an interpreter that is not registered as a kernel', async function () {
-        // Test only applies for raw notebooks.
-        if (IS_NON_RAW_NATIVE_TEST || IS_REMOTE_NATIVE_TEST) {
+        if (IS_REMOTE_NATIVE_TEST) {
             return this.skip();
         }
         await createEmptyPythonNotebook(disposables);
