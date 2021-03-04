@@ -148,16 +148,17 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         this.updateMergedContexts();
     }
     private updateNativeNotebookContext() {
-        this.hasNativeNotebookOpen.set(this.vscNotebook.notebookDocuments.length > 0).ignoreErrors();
+        const nativeNotebooks = this.notebookEditorProvider.editors.filter((e) => e.type == 'native');
+        this.hasNativeNotebookOpen.set(nativeNotebooks.length > 0).ignoreErrors();
 
-        if (!this.vscNotebook.activeNotebookEditor) {
+        if (!this.notebookEditorProvider.activeEditor) {
             return;
         }
 
-        if (this.vscNotebook.activeNotebookEditor) {
+        if (this.notebookEditorProvider.activeEditor && this.notebookEditorProvider.activeEditor.type == 'native') {
             if (
-                this.vscNotebook.activeNotebookEditor.selection &&
-                this.vscNotebook.activeNotebookEditor.selection.index > 0
+                this.notebookEditorProvider.activeEditor.selection &&
+                this.notebookEditorProvider.activeEditor.selection.index > 0
             ) {
                 this.canRunCellsAboveInNativeNotebook.set(true).ignoreErrors();
             } else {

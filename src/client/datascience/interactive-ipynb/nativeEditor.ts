@@ -101,6 +101,10 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         return this.viewState.active;
     }
 
+    public get selection() {
+        return undefined;
+    }
+
     public get file(): Uri {
         if (this.model) {
             return this.model.file;

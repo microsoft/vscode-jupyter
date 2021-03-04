@@ -1842,7 +1842,7 @@
                 {
                     "type": "webview",
                     "id": "jupyterViewVariables",
-                    "name": "Jupyter: Variables",
+                    "name": "Jupyter Variables",
                     "when": "jupyter.hasNativeNotebookOpen"
                 }
             ]
