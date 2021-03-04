@@ -11,14 +11,13 @@ import { IDocumentManager } from '../../client/common/application/types';
 import { generateCells } from '../../client/datascience/cellFactory';
 import { INotebookEditor, INotebookEditorProvider, INotebookModel } from '../../client/datascience/types';
 import { EventName } from '../../client/telemetry/constants';
+import { getTelemetrySafeHashedString } from '../../client/telemetry/helpers';
 import { ImportTracker } from '../../client/telemetry/importTracker';
 import { createDocument } from '../datascience/editor-integration/helpers';
 
 suite('Import Tracker', () => {
     const oldValueOfVSC_JUPYTER_UNIT_TEST = process.env.VSC_JUPYTER_UNIT_TEST;
     const oldValueOfVSC_JUPYTER_CI_TEST = process.env.VSC_JUPYTER_CI_TEST;
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const hashJs = require('hash.js');
     let importTracker: ImportTracker;
     let documentManager: TypeMoq.IMock<IDocumentManager>;
     let nativeProvider: TypeMoq.IMock<INotebookEditorProvider>;
@@ -26,15 +25,15 @@ suite('Import Tracker', () => {
     let savedEventEmitter: EventEmitter<TextDocument>;
     let openedNotebookEmitter: EventEmitter<INotebookEditor>;
     let closedNotebookEmitter: EventEmitter<INotebookEditor>;
-    const pandasHash: string = hashJs.sha256().update('pandas').digest('hex');
-    const elephasHash: string = hashJs.sha256().update('elephas').digest('hex');
-    const kerasHash: string = hashJs.sha256().update('keras').digest('hex');
-    const pysparkHash: string = hashJs.sha256().update('pyspark').digest('hex');
-    const sparkdlHash: string = hashJs.sha256().update('sparkdl').digest('hex');
-    const numpyHash: string = hashJs.sha256().update('numpy').digest('hex');
-    const scipyHash: string = hashJs.sha256().update('scipy').digest('hex');
-    const sklearnHash: string = hashJs.sha256().update('sklearn').digest('hex');
-    const randomHash: string = hashJs.sha256().update('random').digest('hex');
+    const pandasHash: string = getTelemetrySafeHashedString('pandas');
+    const elephasHash: string = getTelemetrySafeHashedString('elephas');
+    const kerasHash: string = getTelemetrySafeHashedString('keras');
+    const pysparkHash: string = getTelemetrySafeHashedString('pyspark');
+    const sparkdlHash: string = getTelemetrySafeHashedString('sparkdl');
+    const numpyHash: string = getTelemetrySafeHashedString('numpy');
+    const scipyHash: string = getTelemetrySafeHashedString('scipy');
+    const sklearnHash: string = getTelemetrySafeHashedString('sklearn');
+    const randomHash: string = getTelemetrySafeHashedString('random');
 
     class Reporter {
         public static eventNames: string[] = [];

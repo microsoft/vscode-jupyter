@@ -52,6 +52,7 @@ import { AsyncDisposableRegistry } from '../../client/common/asyncDisposableRegi
 import { JupyterSettings } from '../../client/common/configSettings';
 import {
     EXTENSION_ROOT_DIR,
+    STANDARD_OUTPUT_CHANNEL,
     UseCustomEditorApi,
     UseProposedApi,
     UseVSCodeNotebookEditorApi
@@ -639,6 +640,11 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             IOutputChannel,
             mock(MockOutputChannel),
             JUPYTER_OUTPUT_CHANNEL
+        );
+        this.serviceManager.addSingletonInstance<IOutputChannel>(
+            IOutputChannel,
+            mock(MockOutputChannel),
+            STANDARD_OUTPUT_CHANNEL
         );
         this.serviceManager.addSingleton<ICryptoUtils>(ICryptoUtils, CryptoUtils);
         this.serviceManager.addSingleton<IExtensionSingleActivationService>(

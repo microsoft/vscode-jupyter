@@ -336,6 +336,8 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
                 kernelInfo = kernelConnection;
             } else if (!launchInfo.connectionInfo.localLaunch && kernelConnection?.kind === 'startUsingKernelSpec') {
                 kernelInfo = kernelConnection;
+            } else if (launchInfo.connectionInfo.localLaunch && kernelConnection) {
+                kernelInfo = kernelConnection;
             } else {
                 kernelInfo = await (launchInfo.connectionInfo.localLaunch
                     ? this.localKernelFinder.findKernel(resource, notebookMetadata, cancelToken)
