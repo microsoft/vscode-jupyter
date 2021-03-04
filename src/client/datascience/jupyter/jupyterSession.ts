@@ -14,7 +14,7 @@ import * as uuid from 'uuid/v4';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { Cancellation } from '../../common/cancellation';
 import { traceError, traceInfo } from '../../common/logger';
-import { IOutputChannel } from '../../common/types';
+import { IOutputChannel, Resource } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { captureTelemetry } from '../../telemetry';
 import { BaseJupyterSession, JupyterSessionStartError } from '../baseJupyterSession';
@@ -31,6 +31,7 @@ import { KernelConnectionMetadata } from './kernels/types';
 
 export class JupyterSession extends BaseJupyterSession {
     constructor(
+        private resource: Resource,
         private connInfo: IJupyterConnection,
         private serverSettings: ServerConnection.ISettings,
         kernelSpec: KernelConnectionMetadata | undefined,
@@ -61,7 +62,13 @@ export class JupyterSession extends BaseJupyterSession {
 
         // Start a new session
         this.setSession(
-            await this.createNewKernelSession(this.kernelConnectionMetadata, timeoutMs, cancelToken, disableUI)
+            await this.createNewKernelSession(
+                this.resource,
+                this.kernelConnectionMetadata,
+                timeoutMs,
+                cancelToken,
+                disableUI
+            )
         );
 
         // Listen for session status changes
@@ -72,6 +79,7 @@ export class JupyterSession extends BaseJupyterSession {
     }
 
     public async createNewKernelSession(
+        resource: Resource,
         kernelConnection: KernelConnectionMetadata | undefined,
         timeoutMS: number,
         cancelToken?: CancellationToken,
@@ -79,6 +87,8 @@ export class JupyterSession extends BaseJupyterSession {
     ): Promise<ISessionWithSocket> {
         let newSession: ISessionWithSocket | undefined;
 
+        // update resource as we know it now.
+        this.resource = resource;
         try {
             // Don't immediately assume this kernel is valid. Try creating a session with it first.
             if (
@@ -166,15 +176,18 @@ export class JupyterSession extends BaseJupyterSession {
                 ? { type: 'notebook', path: relativeDirectory }
                 : { type: 'notebook' };
 
+        // Generate a more descriptive name
+        const newName = this.resource
+            ? `${path.basename(this.resource.fsPath, '.ipynb')}-${uuid()}.ipynb`
+            : `t-${uuid()}.ipynb`;
+
         try {
             // Create a temporary notebook for this session. Each needs a unique name (otherwise we get the same session every time)
             backingFile = await this.contentsManager.newUntitled(backingFileOptions);
             const backingFileDir = path.dirname(backingFile.path);
             backingFile = await this.contentsManager.rename(
                 backingFile.path,
-                backingFileDir.length && backingFileDir !== '.'
-                    ? `${backingFileDir}/t-${uuid()}.ipynb`
-                    : `t-${uuid()}.ipynb` // Note, the docs say the path uses UNIX delimiters.
+                backingFileDir.length && backingFileDir !== '.' ? `${backingFileDir}/${newName}` : newName // Note, the docs say the path uses UNIX delimiters.
             );
         } catch (exc) {
             // If it failed for local, try without a relative directory
@@ -184,9 +197,7 @@ export class JupyterSession extends BaseJupyterSession {
                     const backingFileDir = path.dirname(backingFile.path);
                     backingFile = await this.contentsManager.rename(
                         backingFile.path,
-                        backingFileDir.length && backingFileDir !== '.'
-                            ? `${backingFileDir}/t-${uuid()}.ipynb`
-                            : `t-${uuid()}.ipynb` // Note, the docs say the path uses UNIX delimiters.
+                        backingFileDir.length && backingFileDir !== '.' ? `${backingFileDir}/${newName}` : newName // Note, the docs say the path uses UNIX delimiters.
                     );
                 } catch (e) {}
             } else {

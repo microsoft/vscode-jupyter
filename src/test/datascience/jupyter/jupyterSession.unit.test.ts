@@ -86,6 +86,7 @@ suite('DataScience - JupyterSession', () => {
         sessionManager = mock(SessionManager);
         contentsManager = mock(ContentsManager);
         jupyterSession = new JupyterSession(
+            undefined,
             instance(connection),
             serverSettings.object,
             mockKernelSpec.object,

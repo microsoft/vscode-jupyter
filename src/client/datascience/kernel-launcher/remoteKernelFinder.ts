@@ -129,9 +129,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
                 });
 
                 // Filter out excluded ids
-                const filtered = mappedLive.filter(
-                    (k) => k.kind !== 'connectToLiveKernel' || !this.kernelIdsToHide.has(k.kernelModel.id || '')
-                );
+                const filtered = mappedLive.filter((k) => !this.kernelIdsToHide.has(k.kernelModel.id || ''));
 
                 return [...filtered, ...mappedSpecs];
             } finally {

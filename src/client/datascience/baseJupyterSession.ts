@@ -167,9 +167,8 @@ export abstract class BaseJupyterSession implements IJupyterSession {
                 return;
             }
         }
-
         trackKernelResourceInformation(resource, { kernelConnection });
-        newSession = await this.createNewKernelSession(kernelConnection, timeoutMS);
+        newSession = await this.createNewKernelSession(resource, kernelConnection, timeoutMS);
 
         // This is just like doing a restart, kill the old session (and the old restart session), and start new ones
         if (this.session) {
@@ -355,6 +354,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
 
     // Sub classes need to implement their own kernel change specific code
     protected abstract createNewKernelSession(
+        resource: Resource,
         kernelConnection: KernelConnectionMetadata,
         timeoutMS: number
     ): Promise<ISessionWithSocket>;

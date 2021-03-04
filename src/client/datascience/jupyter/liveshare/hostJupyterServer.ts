@@ -4,7 +4,6 @@
 import '../../../common/extensions';
 
 import { nbformat } from '@jupyterlab/coreutils';
-import { cloneDeep } from 'lodash';
 import * as os from 'os';
 import * as vscode from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
@@ -23,7 +22,6 @@ import {
     IConfigurationService,
     IDisposableRegistry,
     IOutputChannel,
-    ReadWrite,
     Resource
 } from '../../../common/types';
 import { createDeferred } from '../../../common/utils/async';
@@ -239,14 +237,25 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
                 );
             }
 
-            // Figure out the working directory we need for our new notebook.
-            const workingDirectory = await computeWorkingDirectory(resource, this.workspaceService);
+            // Figure out the working directory we need for our new notebook. This is only necessary for local.
+            const workingDirectory = info.connectionInfo.localLaunch
+                ? await computeWorkingDirectory(resource, this.workspaceService)
+                : '';
+            const sessionDirectoryMatches =
+                info.connectionInfo.localLaunch && possibleSession
+                    ? this.fs.areLocalPathsSame(possibleSession.workingDirectory, workingDirectory)
+                    : true;
 
             // Start a session (or use the existing one if allowed)
             const session =
-                possibleSession && this.fs.areLocalPathsSame(possibleSession.workingDirectory, workingDirectory)
+                possibleSession && sessionDirectoryMatches
                     ? possibleSession
-                    : await sessionManager.startNew(info.kernelConnectionMetadata, workingDirectory, cancelToken);
+                    : await sessionManager.startNew(
+                          resource,
+                          info.kernelConnectionMetadata,
+                          workingDirectory,
+                          cancelToken
+                      );
             traceInfo(`Started session ${this.id}`);
             return { info, session };
         };
@@ -315,10 +324,11 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
             ...launchInfo
         };
 
-        // Determine the interpreter for our resource. If different, we need a different kernel.
-        const resourceInterpreter = this.extensionChecker.isPythonExtensionInstalled
-            ? await this.interpreterService.getActiveInterpreter(resource)
-            : undefined;
+        // Determine the interpreter for our resource. If different, we need a different kernel. This is unnecessary in remote
+        const resourceInterpreter =
+            this.extensionChecker.isPythonExtensionInstalled && launchInfo.connectionInfo.localLaunch
+                ? await this.interpreterService.getActiveInterpreter(resource)
+                : undefined;
 
         // Find a kernel that can be used.
         // Do this only if we don't have any kernel connection information, or the resource's interpreter is different.
@@ -346,12 +356,9 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
                           cancelToken
                       ));
             }
-            if (kernelInfo) {
-                // For the interpreter, make sure to select the one matching the kernel.
-                const interpreter = kernelInfo.interpreter || resourceInterpreter;
-                const readWriteKernelInfo = cloneDeep(kernelInfo) as ReadWrite<KernelConnectionMetadata>;
-                readWriteKernelInfo.interpreter = interpreter;
-                launchInfo.kernelConnectionMetadata = readWriteKernelInfo;
+            if (kernelInfo && kernelInfo !== kernelConnection) {
+                // Update kernel info if we found a new one.
+                launchInfo.kernelConnectionMetadata = kernelInfo;
                 changedKernel = true;
             }
         }

@@ -97,6 +97,7 @@ export class JupyterServerBase implements INotebookServer {
         // is running and connectable.
         let session: IJupyterSession | undefined;
         session = await this.sessionManager.startNew(
+            undefined,
             launchInfo.kernelConnectionMetadata,
             launchInfo.connectionInfo.rootDirectory,
             cancelToken,

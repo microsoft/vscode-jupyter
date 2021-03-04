@@ -179,6 +179,7 @@ export class RawJupyterSession extends BaseJupyterSession {
     }
 
     public async createNewKernelSession(
+        _resource: Resource,
         kernelConnection: KernelConnectionMetadata,
         timeoutMS: number,
         cancelToken?: CancellationToken,

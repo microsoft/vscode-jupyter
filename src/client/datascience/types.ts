@@ -379,6 +379,7 @@ export interface IJupyterSessionManager extends IAsyncDisposable {
     readonly onRestartSessionCreated: Event<Kernel.IKernelConnection>;
     readonly onRestartSessionUsed: Event<Kernel.IKernelConnection>;
     startNew(
+        resource: Resource,
         kernelConnection: KernelConnectionMetadata | undefined,
         workingDirectory: string,
         cancelToken?: CancellationToken,

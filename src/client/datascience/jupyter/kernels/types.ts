@@ -97,7 +97,7 @@ export function getKernelConnectionId(kernelConnection: KernelConnectionMetadata
         case 'connectToLiveKernel':
             return `${kernelConnection.kind}#${kernelConnection.kernelModel.name}.${kernelConnection.kernelModel.session.id}.${kernelConnection.kernelModel.session.name}`;
         case 'startUsingDefaultKernel':
-            return `${kernelConnection.kind}#${kernelConnection}`;
+            return `${kernelConnection.kind}#${JSON.stringify(kernelConnection.kernelSpec || '')}`;
         case 'startUsingKernelSpec':
             // 1. kernelSpec.interpreterPath added by kernel finder.
             // Helps us identify what interpreter a kernel belongs to.

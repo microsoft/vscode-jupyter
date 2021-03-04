@@ -9,7 +9,13 @@ import { CancellationToken } from 'vscode-jsonrpc';
 import { IApplicationShell } from '../../common/application/types';
 
 import { traceError, traceInfo } from '../../common/logger';
-import { IConfigurationService, IOutputChannel, IPersistentState, IPersistentStateFactory } from '../../common/types';
+import {
+    IConfigurationService,
+    IOutputChannel,
+    IPersistentState,
+    IPersistentStateFactory,
+    Resource
+} from '../../common/types';
 import { sleep } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
@@ -167,6 +173,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
     }
 
     public async startNew(
+        resource: Resource,
         kernelConnection: KernelConnectionMetadata | undefined,
         workingDirectory: string,
         cancelToken?: CancellationToken,
@@ -177,6 +184,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         }
         // Create a new session and attempt to connect to it
         const session = new JupyterSession(
+            resource,
             this.connInfo,
             this.serverSettings,
             kernelConnection,

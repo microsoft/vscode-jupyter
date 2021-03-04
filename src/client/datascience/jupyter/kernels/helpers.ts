@@ -121,7 +121,9 @@ export function getDetailOfKernelConnection(
     defaultValue: string = ''
 ): string {
     const kernelPath = getKernelPathFromKernelConnection(kernelConnection);
-    return kernelPath ? pathUtils.getDisplayName(kernelPath) : defaultValue;
+    const notebookPath =
+        kernelConnection?.kind === 'connectToLiveKernel' ? `(${kernelConnection.kernelModel.session.path})` : '';
+    return `${kernelPath ? pathUtils.getDisplayName(kernelPath) : defaultValue} ${notebookPath}`;
 }
 
 export function getInterpreterFromKernelConnectionMetadata(
