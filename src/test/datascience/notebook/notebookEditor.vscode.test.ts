@@ -13,6 +13,7 @@ import { IDisposable, Product } from '../../../client/common/types';
 import { Common } from '../../../client/common/utils/localize';
 import { Commands } from '../../../client/datascience/constants';
 import { getTextOutputValue } from '../../../client/datascience/notebook/helpers/helpers';
+import { VSCodeNotebookKernelMetadata } from '../../../client/datascience/notebook/kernelWithMetadata';
 import { INotebookKernelProvider } from '../../../client/datascience/notebook/types';
 import { IExtensionTestApi } from '../../common';
 import { initialize } from '../../initialize';
@@ -139,10 +140,11 @@ suite('Notebook Editor tests', () => {
         const originalSysPath = getTextOutputValue(cell.outputs[0]);
 
         // Switch kernels to the other kernel
-        const kernels = await kernelProvider.provideKernels(
+        const kernels = (await kernelProvider.provideKernels(
             vscodeNotebook.activeNotebookEditor!.document,
             CancellationToken.None
-        );
+        )) as VSCodeNotebookKernelMetadata[];
+
         traceInfo(`Kernels found for switch kernel: ${kernels?.map((k) => k.label).join('\n')}`);
         // Find another kernel other than the preferred kernel that is also python based
         const preferredKernel = kernels?.find((k) => k.isPreferred && k.label.toLowerCase().includes('python 3'));
@@ -151,7 +153,8 @@ suite('Notebook Editor tests', () => {
                 !k.isPreferred &&
                 k.label.toLowerCase().includes('python 3') &&
                 k.label !== preferredKernel?.label &&
-                k.label !== 'Python 3'
+                k.label !== 'Python 3' &&
+                k.selection.interpreter?.path !== preferredKernel?.selection.interpreter?.path
         );
         if (anotherKernel) {
             // We have multiple kernels. Try switching

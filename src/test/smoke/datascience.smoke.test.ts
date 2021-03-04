@@ -10,19 +10,23 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { ISystemPseudoRandomNumberGenerator } from '../../client/datascience/types';
+import { IServiceContainer } from '../../client/ioc/types';
 import { IExtensionTestApi, openFile, setAutoSaveDelayInWorkspaceRoot, waitForCondition } from '../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_SMOKE_TEST } from '../constants';
 import { noop, sleep } from '../core';
+import { openNotebook } from '../datascience/helpers';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
 
 const timeoutForCellToRun = 3 * 60 * 1_000;
 suite('Smoke Tests', () => {
     let api: IExtensionTestApi;
+    let serviceContainer: IServiceContainer;
     suiteSetup(async function () {
         if (!IS_SMOKE_TEST) {
             return this.skip();
         }
         api = await initialize();
+        serviceContainer = api.serviceContainer;
         await setAutoSaveDelayInWorkspaceRoot(1);
     });
     setup(initializeTest);
@@ -88,7 +92,7 @@ suite('Smoke Tests', () => {
             await fs.unlink(outputFile);
         }
         // Ignore exceptions (as native editor closes the document as soon as its opened);
-        await openFile(file).catch(noop);
+        await openNotebook(serviceContainer, file).catch(noop);
 
         // Wait for 15 seconds for notebook to launch.
         // Unfortunately there's no way to know for sure it has completely loaded.

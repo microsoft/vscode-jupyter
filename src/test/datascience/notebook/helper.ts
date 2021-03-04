@@ -302,10 +302,10 @@ export async function waitForKernelToChange(criteria: { labelOrId?: string; inte
             return false;
         }
         if (vscodeNotebook.activeNotebookEditor.kernel.id === id) {
-            traceInfo(`Found selected kernel ${vscodeNotebook.activeNotebookEditor.kernel.id}`);
+            traceInfo(`Found selected kernel ${vscodeNotebook.activeNotebookEditor.kernel.label}`);
             return true;
         }
-        traceInfo(`Active kernel is ${vscodeNotebook.activeNotebookEditor.kernel.id}`);
+        traceInfo(`Active kernel is ${vscodeNotebook.activeNotebookEditor.kernel.label}`);
         return false;
     };
     await waitForCondition(
@@ -328,6 +328,8 @@ export async function waitForKernelToGetAutoSelected(expectedLanguage?: string, 
         if (!vscodeNotebook.activeNotebookEditor.kernel) {
             return false;
         }
+        traceInfo(`Waiting for kernel and active is ${vscodeNotebook.activeNotebookEditor.kernel.label}`);
+
         if (isJupyterKernel(vscodeNotebook.activeNotebookEditor.kernel)) {
             if (!expectedLanguage) {
                 kernelInfo = `<No specific kernel expected> ${JSON.stringify(
