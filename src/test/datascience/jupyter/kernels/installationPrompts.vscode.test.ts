@@ -167,6 +167,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         }
 
         // Confirm message is displayed & then dismiss the message (so that execution stops due to missing dependency).
+        console.log('Start1');
         const prompt = await hijackPrompt(
             'showErrorMessage',
             { endsWith: expectedPromptMessageSuffix },
@@ -175,20 +176,26 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         );
 
         await openNotebook(api.serviceContainer, nbFile);
+        console.log('Start2');
         await waitForKernelToGetAutoSelected();
         const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
         assert.equal(cell.outputs.length, 0);
 
         // The prompt should be displayed when we run a cell.
+        console.log('Start3');
         await runAllCellsInActiveNotebook();
+        console.log('Start4');
         await waitForCondition(async () => prompt.displayed.then(() => true), delayForUITest, 'Prompt not displayed');
 
         // Once ipykernel prompt has been dismissed, execution should stop due to missing dependencies.
+        console.log('Start5');
         await waitForCellExecutionToComplete(cell);
 
         // Execute notebook once again & we should get another prompted to install ipykernel.
+        console.log('Start6');
         let previousPromptDisplayCount = prompt.getDisplayCount();
         await runAllCellsInActiveNotebook();
+        console.log('Start7');
         await waitForCondition(
             async () => prompt.getDisplayCount() > previousPromptDisplayCount,
             delayForUITest,
@@ -196,11 +203,14 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         );
 
         // Once ipykernel prompt has been dismissed, execution should stop due to missing dependencies.
+        console.log('Start8');
         await waitForCellExecutionToComplete(cell);
 
         // Execute a cell this time & we should get yet another prompted to install ipykernel.
         previousPromptDisplayCount = prompt.getDisplayCount();
+        console.log('Start9');
         await runAllCellsInActiveNotebook();
+        console.log('Start10');
         await waitForCondition(
             async () => prompt.getDisplayCount() > previousPromptDisplayCount,
             delayForUITest,
@@ -208,6 +218,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         );
 
         // Once ipykernel prompt has been dismissed, execution should stop due to missing dependencies.
+        console.log('Start11');
         await waitForCellExecutionToComplete(cell);
     });
 });
