@@ -54,6 +54,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
     let venvNoKernelPythonPath: string;
     let venvKernelPythonPath: string;
     let venvNoRegPythonPath: string;
+    let venvNoKernelDisplayName: string;
     let vscodeNotebook: IVSCodeNotebook;
     this.timeout(60_000); // Slow test, we need to uninstall/install ipykernel.
     /*
@@ -98,6 +99,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         venvNoKernelPythonPath = interpreter1.path;
         venvKernelPythonPath = interpreter2.path;
         venvNoRegPythonPath = interpreter3.path;
+        venvNoKernelDisplayName = interpreter1.displayName || '.venvnokernel';
 
         await trustAllNotebooks();
         await startJupyterServer();
@@ -108,7 +110,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         console.log(`Start test ${this.currentTest?.title}`);
         // Don't use same file (due to dirty handling, we might save in dirty.)
         // Coz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
-        nbFile1 = await createTemporaryNotebook(templateIPynbFile, disposables);
+        nbFile1 = await createTemporaryNotebook(templateIPynbFile, disposables, venvNoKernelDisplayName);
         // Ensure IPykernel is in all environments.
         const proc = new ProcessService(new BufferDecoder());
         await Promise.all([
