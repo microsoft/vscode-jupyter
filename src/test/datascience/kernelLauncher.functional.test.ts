@@ -84,8 +84,6 @@ suite('DataScience - Kernel Launcher', () => {
     });
 
     test('Launch from kernelspec', async function () {
-        // https://github.com/microsoft/vscode-jupyter/issues/5015
-        return this.skip();
         if (!process.env.VSC_FORCE_REAL_JUPYTER) {
             // eslint-disable-next-line no-invalid-this
             this.skip();
