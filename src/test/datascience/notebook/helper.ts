@@ -179,9 +179,13 @@ export async function createTemporaryNotebook(
         dir: path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'tmp'),
         prefix: path.basename(templateFile, '.ipynb')
     });
-    const contents = JSON.parse(await fs.readFile(templateFile, { encoding: 'utf-8' }));
-    contents.kernel.display_name = kernelName;
-    await fs.writeFile(tempFile, JSON.stringify(contents, undefined, 4));
+    if (await fs.pathExists(templateFile)) {
+        const contents = JSON.parse(await fs.readFile(templateFile, { encoding: 'utf-8' }));
+        if (contents.kernel) {
+            contents.kernel.display_name = kernelName;
+        }
+        await fs.writeFile(tempFile, JSON.stringify(contents, undefined, 4));
+    }
 
     disposables.push({ dispose: () => swallowExceptions(() => fs.unlinkSync(tempFile)) });
     return tempFile;
