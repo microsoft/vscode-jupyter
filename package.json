@@ -1,7 +1,7 @@
 {
     "name": "jupyter",
     "displayName": "Jupyter",
-    "version": "2021.3.0",
+    "version": "2021.4.0",
     "description": "Jupyter notebook support, interactive programming and computing that supports Intellisense, debugging and more.",
     "publisher": "ms-toolsai",
     "enableProposedApi": true,
@@ -1321,7 +1321,7 @@
                 {
                     "command": "jupyter.showDataViewer",
                     "group": "1_view",
-                    "when": "python.isDebuggerDataViewerExperimentEnabled && debugProtocolVariableMenuContext == 'viewableInDataViewer'"
+                    "when": "debugProtocolVariableMenuContext == 'viewableInDataViewer'"
                 }
             ]
         },
