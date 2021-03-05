@@ -41,21 +41,26 @@ gulp.task('compile', async (done) => {
 
 gulp.task('output:clean', () => del(['coverage']));
 gulp.task('copyCPUProfileFiles', (done) => {
-    const files = glob.sync('/tmp/*.cpuprofile');
-    if (files.length === 0) {
-        return;
-    }
-    const uploadDir = path.join(__dirname, 'uploadcpuprofiles');
-    fs.ensureDirSync(uploadDir);
-    files.forEach((item) => {
-        const targetFile = path.join(uploadDir, path.basename(item));
-        try {
-            fs.copyFileSync(item, targetFile);
-        } catch (ex) {
-            console.error('Failed to copy cpu profile file');
+    try {
+        const files = glob.sync('/tmp/*.cpuprofile');
+        if (files.length === 0) {
+            return;
         }
-    });
-    done()
+        const uploadDir = path.join(__dirname, 'uploadcpuprofiles');
+        fs.ensureDirSync(uploadDir);
+        files.forEach((item) => {
+            const targetFile = path.join(uploadDir, path.basename(item));
+            try {
+                fs.copyFileSync(item, targetFile);
+            } catch (ex) {
+                console.error('Failed to copy cpu profile file');
+            }
+        });
+    } catch (ex) {
+        console.error('Falied to copy CPU profile files', ex);
+    } finally {
+        done();
+    }
 });
 
 gulp.task('clean:cleanExceptTests', () => del(['clean:vsix', 'out/client', 'out/datascience-ui', 'out/server']));
