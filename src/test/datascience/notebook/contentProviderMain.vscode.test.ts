@@ -78,14 +78,14 @@ suite('DataScience - VSCode Notebook ContentProvider', () => {
                 const notebook = await contentProvider.openNotebook(fileUri, {});
 
                 assert.isOk(notebook);
-                assert.equal(notebook.metadata.cellEditable, isNotebookTrusted);
-                assert.equal(notebook.metadata.cellRunnable, isNotebookTrusted);
-                assert.equal(notebook.metadata.editable, isNotebookTrusted);
-                assert.equal(notebook.metadata.runnable, isNotebookTrusted);
+                assert.equal(notebook.metadata?.cellEditable, isNotebookTrusted);
+                assert.equal(notebook.metadata?.cellRunnable, isNotebookTrusted);
+                assert.equal(notebook.metadata?.editable, isNotebookTrusted);
+                assert.equal(notebook.metadata?.runnable, isNotebookTrusted);
 
                 assert.deepEqual(notebook.cells, [
                     {
-                        cellKind: NotebookCellKind.Code,
+                        kind: NotebookCellKind.Code,
                         language: PYTHON_LANGUAGE,
                         outputs: [],
                         source: 'print(1)',
@@ -102,7 +102,7 @@ suite('DataScience - VSCode Notebook ContentProvider', () => {
                         })
                     },
                     {
-                        cellKind: NotebookCellKind.Markdown,
+                        kind: NotebookCellKind.Markdown,
                         language: MARKDOWN_LANGUAGE,
                         outputs: [],
                         source: '# HEAD',
@@ -156,14 +156,14 @@ suite('DataScience - VSCode Notebook ContentProvider', () => {
 
                 assert.isOk(notebook);
 
-                assert.equal(notebook.metadata.cellEditable, isNotebookTrusted);
-                assert.equal(notebook.metadata.cellRunnable, isNotebookTrusted);
-                assert.equal(notebook.metadata.editable, isNotebookTrusted);
-                assert.equal(notebook.metadata.runnable, isNotebookTrusted);
+                assert.equal(notebook.metadata?.cellEditable, isNotebookTrusted);
+                assert.equal(notebook.metadata?.cellRunnable, isNotebookTrusted);
+                assert.equal(notebook.metadata?.editable, isNotebookTrusted);
+                assert.equal(notebook.metadata?.runnable, isNotebookTrusted);
 
                 assert.deepEqual(notebook.cells, [
                     {
-                        cellKind: NotebookCellKind.Code,
+                        kind: NotebookCellKind.Code,
                         language: 'csharp',
                         outputs: [],
                         source: 'Console.WriteLine("1")',
@@ -180,7 +180,7 @@ suite('DataScience - VSCode Notebook ContentProvider', () => {
                         })
                     },
                     {
-                        cellKind: NotebookCellKind.Markdown,
+                        kind: NotebookCellKind.Markdown,
                         language: MARKDOWN_LANGUAGE,
                         outputs: [],
                         source: '# HEAD',

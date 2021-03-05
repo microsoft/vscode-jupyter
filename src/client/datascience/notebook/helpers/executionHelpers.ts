@@ -122,7 +122,7 @@ export async function addNewCellAfter(notebookEditor: NotebookEditor, cell: Note
         traceCellMessage(cell, 'Create new cell after current');
         edit.replaceNotebookCells(notebookEditor.document.uri, cell.index + 1, cell.index + 1, [
             {
-                cellKind: NotebookCellKind.Code,
+                kind: NotebookCellKind.Code,
                 language: cell.language,
                 metadata: cell.metadata.with({ runState: NotebookCellRunState.Success }),
                 outputs: [],
