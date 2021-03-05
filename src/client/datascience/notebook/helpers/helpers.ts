@@ -170,7 +170,7 @@ export function notebookModelToVSCNotebookData(
 
     if (cells.length === 0 && (isUntitledFile(notebookUri) || Object.keys(originalJson).length === 0)) {
         cells.push({
-            cellKind: NotebookCellKind.Code,
+            kind: NotebookCellKind.Code,
             language: preferredLanguage,
             metadata: new NotebookCellMetadata(),
             outputs: [],
@@ -186,23 +186,7 @@ export function notebookModelToVSCNotebookData(
             editable: isNotebookTrusted,
             cellHasExecutionOrder: true,
             runnable: isNotebookTrusted,
-            trusted: isNotebookTrusted,
-            displayOrder: [
-                'application/vnd.*',
-                'application/vdom.*',
-                'application/geo+json',
-                'application/x-nteract-model-debug+json',
-                'text/html',
-                'application/javascript',
-                'image/gif',
-                'text/latex',
-                'text/markdown',
-                'image/svg+xml',
-                'image/png',
-                'image/jpeg',
-                'application/json',
-                'text/plain'
-            ]
+            trusted: isNotebookTrusted
         })
     };
 }
@@ -285,7 +269,7 @@ function createNotebookCellDataFromRawCell(cell: nbformat.IRawCell): NotebookCel
         custom: getNotebookCellMetadata(cell)
     });
     return {
-        cellKind: NotebookCellKind.Code,
+        kind: NotebookCellKind.Code,
         language: 'raw',
         metadata: notebookCellMetadata,
         outputs: [],
@@ -313,7 +297,7 @@ function createNotebookCellDataFromMarkdownCell(cell: nbformat.IMarkdownCell): N
         custom: getNotebookCellMetadata(cell)
     });
     return {
-        cellKind: NotebookCellKind.Markdown,
+        kind: NotebookCellKind.Markdown,
         language: MARKDOWN_LANGUAGE,
         metadata: notebookCellMetadata,
         source: concatMultilineString(cell.source),
@@ -347,12 +331,44 @@ function createNotebookCellDataFromCodeCell(cell: nbformat.ICodeCell, cellLangua
     const source = concatMultilineString(cell.source);
 
     return {
-        cellKind: NotebookCellKind.Code,
+        kind: NotebookCellKind.Code,
         language: cellLanguage,
         metadata: notebookCellMetadata,
         source,
         outputs
     };
+}
+const orderOfMimeTypes = [
+    'application/vnd.*',
+    'application/vdom.*',
+    'application/geo+json',
+    'application/x-nteract-model-debug+json',
+    'text/html',
+    'application/javascript',
+    'image/gif',
+    'text/latex',
+    'text/markdown',
+    'image/svg+xml',
+    'image/png',
+    'image/jpeg',
+    'application/json',
+    'text/plain'
+];
+function sortOutputItemsBasedOnDisplayOrder(outputItems: NotebookCellOutputItem[]): NotebookCellOutputItem[] {
+    return outputItems.sort((outputItemA, outputItemB) => {
+        const isMimeTypeMatch = (value: string, compareWith: string) => {
+            if (value.endsWith('.*')) {
+                value = value.substr(0, value.indexOf('.*'));
+            }
+            return compareWith.startsWith(value);
+        };
+        const indexOfMimeTypeA = orderOfMimeTypes.findIndex((mime) => isMimeTypeMatch(outputItemA.mime, mime));
+        const indexOfMimeTypeB = orderOfMimeTypes.findIndex((mime) => isMimeTypeMatch(outputItemB.mime, mime));
+        if (indexOfMimeTypeA === indexOfMimeTypeB) {
+            return 0;
+        }
+        return indexOfMimeTypeA > indexOfMimeTypeB ? 1 : -1;
+    });
 }
 
 export function createIOutputFromCellOutputs(cellOutputs: readonly NotebookCellOutput[]): nbformat.IOutput[] {
@@ -534,7 +550,7 @@ function translateDisplayDataOutput(
         items.push(new NotebookCellOutputItem(key, data[key], metadata));
     }
 
-    return new NotebookCellOutput(items, metadata);
+    return new NotebookCellOutput(sortOutputItemsBasedOnDisplayOrder(items), metadata);
 }
 
 function translateStreamOutput(output: nbformat.IStream): NotebookCellOutput {
