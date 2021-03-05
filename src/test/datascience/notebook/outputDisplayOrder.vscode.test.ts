@@ -45,7 +45,6 @@ suite('DataScience - VSCode Notebook - (Validate Output order)', function () {
         await openNotebook(api.serviceContainer, templateIPynb);
         const cells = window.activeNotebookEditor?.document?.cells!;
 
-        // Cell 1 has html and text
         const expectedOutputItemMimeTypes = [
             [['text/html', 'text/plain']],
             [['application/javascript', 'text/plain']],
@@ -55,21 +54,22 @@ suite('DataScience - VSCode Notebook - (Validate Output order)', function () {
             [['application/vnd.jupyter.widget-view+json', 'text/plain'], ['text/plain']],
             [['image/png', 'text/plain']],
             [['text/html', 'text/plain']],
+            [['text/plain']],
             [['application/vnd.vegalite.v4+json', 'text/plain']]
         ];
 
         expectedOutputItemMimeTypes.forEach((outputs, index) => {
             const cell = cells[index];
             assert.equal(cell.outputs.length, outputs.length, `Cell ${index} must have an output`);
-            outputs.forEach((outputItems, index) => {
+            outputs.forEach((outputItems, outputIndex) => {
                 assert.equal(
-                    cell.outputs[0].outputs.length,
+                    cell.outputs[outputIndex].outputs.length,
                     outputItems.length,
                     `Cell ${index} output must have ${outputItems.length} output items`
                 );
                 outputItems.forEach((outputItemMimeType, outputItemIndex) => {
                     assert.equal(
-                        cell.outputs[0].outputs[outputItemIndex].mime,
+                        cell.outputs[outputIndex].outputs[outputItemIndex].mime,
                         outputItemMimeType,
                         `Cell ${index} output item ${outputItemIndex} not ${outputItemMimeType}`
                     );
