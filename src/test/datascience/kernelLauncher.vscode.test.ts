@@ -8,7 +8,6 @@ import { KernelMessage } from '@jupyterlab/services';
 import * as uuid from 'uuid/v4';
 import { createDeferred } from '../../client/common/utils/async';
 import { JupyterZMQBinariesNotFoundError } from '../../client/datascience/jupyter/jupyterZMQBinariesNotFoundError';
-import { KernelLauncher } from '../../client/datascience/kernel-launcher/kernelLauncher';
 import { IKernelConnection, IKernelLauncher } from '../../client/datascience/kernel-launcher/types';
 import { createRawKernel } from '../../client/datascience/raw-kernel/rawKernel';
 import { IJupyterKernelSpec } from '../../client/datascience/types';
@@ -34,7 +33,7 @@ suite('DataScience - Kernel Launcher', () => {
             return this.skip();
         }
         const api = await initialize();
-        kernelLauncher = api.serviceContainer.get<IKernelLauncher>(KernelLauncher);
+        kernelLauncher = api.serviceContainer.get<IKernelLauncher>(IKernelLauncher);
     });
 
     setup(async function () {
