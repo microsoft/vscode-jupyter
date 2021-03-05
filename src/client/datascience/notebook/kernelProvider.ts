@@ -47,7 +47,7 @@ import {
 import { VSCodeNotebookKernelMetadata } from './kernelWithMetadata';
 import { INotebookKernelProvider, INotebookKernelResolver } from './types';
 import { ILocalKernelFinder, IRemoteKernelFinder } from '../kernel-launcher/types';
-import { traceInfo } from '../../common/logger';
+import { traceInfo, traceInfoIf } from '../../common/logger';
 
 @injectable()
 export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
@@ -121,6 +121,11 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
                 return -1;
             }
         });
+
+        traceInfoIf(
+            !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
+            `Providing kernels with length ${mapped.length}. Preferred is ${mapped.find((m) => m.isPreferred)?.label}`
+        );
         return mapped;
     }
 

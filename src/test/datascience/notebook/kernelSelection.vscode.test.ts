@@ -103,6 +103,14 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         venvNoKernelDisplayName = IS_REMOTE_NATIVE_TEST ? interpreter1.displayName || '.venvnokernel' : '.venvnokernel';
         venvKernelDisplayName = IS_REMOTE_NATIVE_TEST ? interpreter2.displayName || '.venvkernel' : '.venvkernel';
 
+        // Ensure IPykernel is in all environments.
+        const proc = new ProcessService(new BufferDecoder());
+        await Promise.all([
+            proc.exec(venvNoKernelPython, ['-m', 'pip', 'install', 'ipykernel']),
+            proc.exec(venvKernelPython, ['-m', 'pip', 'install', 'ipykernel']),
+            proc.exec(venvNoRegPythonPath, ['-m', 'pip', 'install', 'ipykernel'])
+        ]);
+
         await trustAllNotebooks();
         await startJupyterServer();
         sinon.restore();
@@ -113,14 +121,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         // Don't use same file (due to dirty handling, we might save in dirty.)
         // Coz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
         nbFile1 = await createTemporaryNotebook(templateIPynbFile, disposables, venvNoKernelDisplayName);
-        // Ensure IPykernel is in all environments.
-        const proc = new ProcessService(new BufferDecoder());
-        await Promise.all([
-            proc.exec(venvNoKernelPython, ['-m', 'pip', 'install', 'ipykernel']),
-            proc.exec(venvKernelPython, ['-m', 'pip', 'install', 'ipykernel']),
-            proc.exec(venvNoRegPythonPath, ['-m', 'pip', 'install', 'ipykernel']),
-            closeActiveWindows()
-        ]);
+        await closeActiveWindows();
         sinon.restore();
         console.log(`Start Test completed ${this.currentTest?.title}`);
     });
