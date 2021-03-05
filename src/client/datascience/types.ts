@@ -603,7 +603,6 @@ export interface INotebookEditor extends Disposable, IInteractiveBase {
     readonly visible: boolean;
     readonly active: boolean;
     readonly model: INotebookModel;
-    readonly selection: NotebookCell | undefined;
     onExecutedCode: Event<string>;
     notebook?: INotebook;
     show(): Promise<void>;

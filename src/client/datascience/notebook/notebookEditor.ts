@@ -69,9 +69,6 @@ export class NotebookEditor implements INotebookEditor {
     public get active(): boolean {
         return this.vscodeNotebook.activeNotebookEditor?.document.uri.toString() === this.model.file.toString();
     }
-    public get selection(): NotebookCell | undefined {
-        return this.vscodeNotebook.activeNotebookEditor?.selection;
-    }
     public get onExecutedCode(): Event<string> {
         return this.executedCode.event;
     }
