@@ -9,6 +9,7 @@
 'use strict';
 
 const gulp = require('gulp');
+const glob = require('glob');
 const ts = require('gulp-typescript');
 const spawn = require('cross-spawn');
 const colors = require('colors/safe');
@@ -23,6 +24,7 @@ const os = require('os');
 const { ExtensionRootDir } = require('./build/util');
 const isCI = process.env.TF_BUILD !== undefined || process.env.GITHUB_ACTIONS === 'true';
 const { downloadRendererExtension } = require('./build/ci/downloadRenderer');
+const { file } = require('tmp');
 
 gulp.task('compile', async (done) => {
     // Use tsc so we can generate source maps that look just like tsc does (gulp-sourcemap does not generate them the same way)
@@ -38,6 +40,22 @@ gulp.task('compile', async (done) => {
 });
 
 gulp.task('output:clean', () => del(['coverage']));
+gulp.task('copyCPUProfileFiles', () => {
+    const files = glob.sync('/tmp/*.cpuprofile');
+    if (files.length === 0) {
+        return;
+    }
+    const uploadDir = path.join(__dirname, 'uploadcpuprofiles');
+    fs.ensureDirSync(uploadDir);
+    files.forEach((item) => {
+        const targetFile = path.join(uploadDir, path.basename(item));
+        try {
+            fs.copyFileSync(item, targetFile);
+        } catch (ex) {
+            console.error('Failed to copy cpu profile file');
+        }
+    });
+});
 
 gulp.task('clean:cleanExceptTests', () => del(['clean:vsix', 'out/client', 'out/datascience-ui', 'out/server']));
 gulp.task('clean:vsix', () => del(['*.vsix']));
