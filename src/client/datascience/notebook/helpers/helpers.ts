@@ -358,10 +358,7 @@ function sortOutputItemsBasedOnDisplayOrder(outputItems: NotebookCellOutputItem[
         };
         const indexOfMimeTypeA = orderOfMimeTypes.findIndex((mime) => isMimeTypeMatch(outputItemA.mime, mime));
         const indexOfMimeTypeB = orderOfMimeTypes.findIndex((mime) => isMimeTypeMatch(outputItemB.mime, mime));
-        if (indexOfMimeTypeA === indexOfMimeTypeB) {
-            return 0;
-        }
-        return indexOfMimeTypeA > indexOfMimeTypeB ? 1 : -1;
+        return indexOfMimeTypeA - indexOfMimeTypeB;
     });
 }
 
