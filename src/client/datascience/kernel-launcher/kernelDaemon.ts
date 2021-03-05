@@ -142,6 +142,12 @@ export class PythonKernelDaemon extends BasePythonDaemon implements IPythonKerne
         );
 
         // If the daemon dies, then kernel is also dead.
-        this.closed.catch((error) => this.subject.error(new PythonKernelDiedError({ error, stdErr })));
+        this.closed.catch((error) => {
+            // If we have requested for kernel to be killed, don't raise kernel died error.
+            if (this.killed) {
+                return;
+            }
+            this.subject.error(new PythonKernelDiedError({ error, stdErr }));
+        });
     }
 }
