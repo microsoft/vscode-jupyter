@@ -25,7 +25,6 @@ suite('DataScience - VSCode Notebook - (Validate Output order)', function () {
         'notebook',
         'withMixedMimeTypeOutput.ipynb'
     );
-    this.timeout(120_000);
     suiteSetup(async function () {
         if (!(await canRunNotebookTests())) {
             return this.skip();
