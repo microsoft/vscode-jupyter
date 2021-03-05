@@ -40,7 +40,7 @@ gulp.task('compile', async (done) => {
 });
 
 gulp.task('output:clean', () => del(['coverage']));
-gulp.task('copyCPUProfileFiles', () => {
+gulp.task('copyCPUProfileFiles', (done) => {
     const files = glob.sync('/tmp/*.cpuprofile');
     if (files.length === 0) {
         return;
@@ -55,6 +55,7 @@ gulp.task('copyCPUProfileFiles', () => {
             console.error('Failed to copy cpu profile file');
         }
     });
+    done()
 });
 
 gulp.task('clean:cleanExceptTests', () => del(['clean:vsix', 'out/client', 'out/datascience-ui', 'out/server']));
