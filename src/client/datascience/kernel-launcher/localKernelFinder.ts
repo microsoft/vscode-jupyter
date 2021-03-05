@@ -20,6 +20,7 @@ import { Telemetry } from '../constants';
 import {
     createIntepreterKernelSpec,
     findPreferredKernelIndex,
+    getDisplayNameOrNameOfKernelConnection,
     getInterpreterKernelSpecName
 } from '../jupyter/kernels/helpers';
 import { JupyterKernelSpec } from '../jupyter/kernels/jupyterKernelSpec';
@@ -101,6 +102,10 @@ export class LocalKernelFinder implements ILocalKernelFinder {
             const notebookMetadata = option && !isInterpreter(option) ? option : undefined;
             const preferred = findPreferredKernelIndex(kernels, resource, [], notebookMetadata, interpreter, undefined);
             if (preferred >= 0) {
+                traceInfoIf(
+                    !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
+                    `findKernel found ${getDisplayNameOrNameOfKernelConnection(kernels[preferred])}`
+                );
                 return kernels[preferred];
             }
         } catch (e) {
@@ -117,25 +122,34 @@ export class LocalKernelFinder implements ILocalKernelFinder {
     ): Promise<LocalKernelConnectionMetadata[]> {
         try {
             // Get an id for the workspace folder, if we don't have one, use the fsPath of the resource
-            const workspaceFolderId = this.workspaceService.getWorkspaceFolderIdentifier(
-                resource,
-                resource?.fsPath || this.workspaceService.rootPath
-            );
+            const workspaceFolderId =
+                this.workspaceService.getWorkspaceFolderIdentifier(
+                    resource,
+                    resource?.fsPath || this.workspaceService.rootPath
+                ) || 'root';
 
             // If we have not already searched for this resource, then generate the search
             if (workspaceFolderId && !this.workspaceToMetadata.has(workspaceFolderId)) {
-                this.workspaceToMetadata.set(workspaceFolderId, this.findResourceKernelMetadata(resource, cancelToken));
+                this.workspaceToMetadata.set(
+                    workspaceFolderId,
+                    this.findResourceKernelMetadata(resource, cancelToken).then((items) => {
+                        traceInfoIf(
+                            !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
+                            `Kernel specs for ${resource?.toString() || 'undefined'} are \n ${JSON.stringify(
+                                items,
+                                undefined,
+                                4
+                            )}`
+                        );
+                        return items;
+                    })
+                );
             }
 
             this.writeCache().ignoreErrors();
 
             // ! as the has and set above verify that we have a return here
-            const items = await this.workspaceToMetadata.get(workspaceFolderId)!;
-            traceInfoIf(
-                !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
-                `Kernel specs for ${resource?.toString() || 'undefined'} are \n ${JSON.stringify(items, undefined, 4)}`
-            );
-            return items;
+            return await this.workspaceToMetadata.get(workspaceFolderId)!;
         } catch (e) {
             traceError(`List kernels failed: ${e} ${e.stack}`);
             throw e;

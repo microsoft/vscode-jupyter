@@ -191,7 +191,7 @@ export function getInterpreterKernelSpecName(interpreter?: PythonEnvironment): s
     // Generate a name from a hash of the interpreter name and path.
     // Note it must be prefixed with 'python' and the version number.
     return interpreter
-        ? `python${interpreter.sysVersion || '3'}${sha256()
+        ? `python${interpreter.version?.major || '3'}${sha256()
               .update(`${interpreter.path}${interpreter.displayName}`)
               .digest('hex')}`
         : 'python3';
