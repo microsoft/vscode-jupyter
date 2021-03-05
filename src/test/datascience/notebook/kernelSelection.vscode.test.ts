@@ -100,8 +100,8 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         venvNoKernelPythonPath = interpreter1.path;
         venvKernelPythonPath = interpreter2.path;
         venvNoRegPythonPath = interpreter3.path;
-        venvNoKernelDisplayName = interpreter1.displayName || '.venvnokernel';
-        venvKernelDisplayName = interpreter2.displayName || '.venvkernel';
+        venvNoKernelDisplayName = IS_REMOTE_NATIVE_TEST ? interpreter1.displayName || '.venvnokernel' : '.venvnokernel';
+        venvKernelDisplayName = IS_REMOTE_NATIVE_TEST ? interpreter2.displayName || '.venvkernel' : '.venvkernel';
 
         await trustAllNotebooks();
         await startJupyterServer();

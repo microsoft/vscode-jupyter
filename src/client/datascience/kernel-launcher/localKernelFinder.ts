@@ -133,7 +133,7 @@ export class LocalKernelFinder implements ILocalKernelFinder {
             const items = await this.workspaceToMetadata.get(workspaceFolderId)!;
             traceInfoIf(
                 !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
-                `Kernel specs for ${resource?.toString() || 'undefined'} are \n ${JSON.stringify(items)}`
+                `Kernel specs for ${resource?.toString() || 'undefined'} are \n ${JSON.stringify(items, undefined, 4)}`
             );
             return items;
         } catch (e) {

@@ -13,8 +13,8 @@ import { Telemetry } from '../constants';
 import { findPreferredKernelIndex } from '../jupyter/kernels/helpers';
 import {
     KernelConnectionMetadata,
-    DefaultKernelConnectionMetadata,
-    LiveKernelConnectionMetadata
+    LiveKernelConnectionMetadata,
+    KernelSpecConnectionMetadata
 } from '../jupyter/kernels/types';
 import { PreferredRemoteKernelIdProvider } from '../notebookStorage/preferredRemoteKernelIdProvider';
 import {
@@ -95,8 +95,8 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
 
                 // Turn them both into a combined list
                 const mappedSpecs = specs.map((s) => {
-                    const kernel: DefaultKernelConnectionMetadata = {
-                        kind: 'startUsingDefaultKernel',
+                    const kernel: KernelSpecConnectionMetadata = {
+                        kind: 'startUsingKernelSpec',
                         kernelSpec: s
                     };
                     return kernel;

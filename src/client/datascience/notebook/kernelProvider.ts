@@ -47,6 +47,7 @@ import {
 import { VSCodeNotebookKernelMetadata } from './kernelWithMetadata';
 import { INotebookKernelProvider, INotebookKernelResolver } from './types';
 import { ILocalKernelFinder, IRemoteKernelFinder } from '../kernel-launcher/types';
+import { traceInfo } from '../../common/logger';
 
 @injectable()
 export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
@@ -230,6 +231,7 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
             existingKernel &&
             areKernelConnectionsEqual(existingKernel.kernelConnectionMetadata, selectedKernelConnectionMetadata)
         ) {
+            traceInfo('Switch kernel did not change kernel.');
             return;
         }
         switch (kernel.selection.kind) {
