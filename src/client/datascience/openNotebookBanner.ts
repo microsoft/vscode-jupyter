@@ -6,6 +6,7 @@ import { IApplicationEnvironment, IApplicationShell } from '../common/applicatio
 import { UseVSCodeNotebookEditorApi } from '../common/constants';
 import { GLOBAL_MEMENTO, IMemento } from '../common/types';
 import { DataScience } from '../common/utils/localize';
+import { isUntitledFile } from '../common/utils/misc';
 import { isPythonNotebook } from './notebook/helpers/helpers';
 import { INotebookEditor, INotebookEditorProvider } from './types';
 
@@ -30,7 +31,8 @@ export class OpenNotebookBanner implements IExtensionSingleActivationService {
         if (
             !this.pythonExtensionChecker.isPythonExtensionInstalled &&
             editor.model.metadata &&
-            isPythonNotebook(editor.model.metadata)
+            isPythonNotebook(editor.model.metadata) &&
+            !isUntitledFile(editor.file)
         ) {
             await this.pythonExtensionChecker.showPythonExtensionInstallRecommendedPrompt();
         } else if (
