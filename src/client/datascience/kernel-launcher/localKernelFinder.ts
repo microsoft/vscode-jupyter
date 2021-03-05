@@ -233,7 +233,8 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         ];
 
         // Sort them so that the active interpreter comes first (if we have one for it).
-        // This allows searches to prioritize this kernel first.
+        // This allows searches to prioritize this kernel first. If you sort for
+        // a UI do it after this function is called.
         return results.sort((a, b) => {
             if (a.kernelSpec?.display_name === b.kernelSpec?.display_name) {
                 return 0;
