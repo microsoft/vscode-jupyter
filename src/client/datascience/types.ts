@@ -697,7 +697,7 @@ export interface ICodeWatcher {
     debugCell(range: Range): Promise<void>;
     runCurrentCell(): Promise<void>;
     runCurrentCellAndAdvance(): Promise<void>;
-    runSelectionOrLine(activeEditor: TextEditor | undefined): Promise<void>;
+    runSelectionOrLine(activeEditor: TextEditor | undefined, text: string | null): Promise<void>;
     runToLine(targetLine: number): Promise<void>;
     runFromLine(targetLine: number): Promise<void>;
     runAllCellsAbove(stopLine: number, stopCharacter: number): Promise<void>;
