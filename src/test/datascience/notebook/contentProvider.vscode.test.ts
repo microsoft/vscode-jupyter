@@ -168,7 +168,7 @@ suite('DataScience - VSCode Notebook - (Open)', function () {
         const richOutput = notebook.cells[4].outputs[0];
         assert.deepEqual(
             richOutput.outputs.map((op) => op.mime),
-            ['image/png', 'image/svg+xml', 'text/plain'],
+            ['image/svg+xml', 'image/png', 'text/plain'],
             'Cell5, output'
         );
 

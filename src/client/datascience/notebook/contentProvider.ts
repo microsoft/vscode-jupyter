@@ -61,7 +61,7 @@ export class NotebookContentProvider implements VSCNotebookContentProvider {
             return {
                 cells: [
                     {
-                        cellKind: NotebookCellKind.Markdown,
+                        kind: NotebookCellKind.Markdown,
                         language: MARKDOWN_LANGUAGE,
                         source: `# ${DataScience.usingPreviewNotebookWithOtherNotebookWarning()}`,
                         metadata: new NotebookCellMetadata().with({ editable: false, runnable: false }),

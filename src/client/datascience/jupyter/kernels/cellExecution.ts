@@ -5,13 +5,7 @@
 
 import { nbformat } from '@jupyterlab/coreutils';
 import type { KernelMessage } from '@jupyterlab/services/lib/kernel/messages';
-import {
-    NotebookCellOutput,
-    ExtensionMode,
-    NotebookCell,
-    NotebookCellRunState,
-    NotebookEditor as VSCNotebookEditor
-} from 'vscode';
+import { ExtensionMode, NotebookCell, NotebookCellRunState, NotebookEditor as VSCNotebookEditor } from 'vscode';
 import { concatMultilineString, formatStreamText } from '../../../../datascience-ui/common';
 import { IApplicationShell, IVSCodeNotebook } from '../../../common/application/types';
 import { traceError, traceErrorIf, traceInfoIf, traceWarning } from '../../../common/logger';
@@ -535,11 +529,7 @@ export class CellExecution {
             }
 
             // Append to the data (we would push here but VS code requires a recreation of the array)
-            edit.replaceNotebookCellOutput(
-                this.editor.document.uri,
-                this.cell.index,
-                existingOutput.concat(converted as NotebookCellOutput)
-            );
+            edit.replaceNotebookCellOutput(this.editor.document.uri, this.cell.index, existingOutput.concat(converted));
             return edit;
         });
     }
