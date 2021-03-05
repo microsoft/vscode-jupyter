@@ -1832,7 +1832,7 @@
             "panel": [
                 {
                     "id": "jupyter-variables",
-                    "title": "Jupyter",
+                    "title": "",
                     "icon": "$(notebook)"
                 }
             ]
@@ -1842,8 +1842,8 @@
                 {
                     "type": "webview",
                     "id": "jupyterViewVariables",
-                    "name": "Variables",
-                    "when": "jupyter.isvscodenotebookactive"
+                    "name": "Jupyter Variables",
+                    "when": "jupyter.hasNativeNotebookOpen"
                 }
             ]
         }
