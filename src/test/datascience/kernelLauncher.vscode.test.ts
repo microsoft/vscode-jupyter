@@ -6,22 +6,17 @@ import { assert, use } from 'chai';
 
 import { KernelMessage } from '@jupyterlab/services';
 import * as uuid from 'uuid/v4';
-import { IProcessServiceFactory } from '../../client/common/process/types';
 import { createDeferred } from '../../client/common/utils/async';
 import { JupyterZMQBinariesNotFoundError } from '../../client/datascience/jupyter/jupyterZMQBinariesNotFoundError';
-import { KernelDaemonPool } from '../../client/datascience/kernel-launcher/kernelDaemonPool';
 import { KernelLauncher } from '../../client/datascience/kernel-launcher/kernelLauncher';
-import { IKernelConnection } from '../../client/datascience/kernel-launcher/types';
+import { IKernelConnection, IKernelLauncher } from '../../client/datascience/kernel-launcher/types';
 import { createRawKernel } from '../../client/datascience/raw-kernel/rawKernel';
-import { IJupyterKernelSpec, IKernelDependencyService } from '../../client/datascience/types';
+import { IJupyterKernelSpec } from '../../client/datascience/types';
 import { sleep, waitForCondition } from '../common';
 import { requestExecute } from './raw-kernel/rawKernelTestHelpers';
 
 // Chai as promised is not part of this file
 import * as chaiAsPromised from 'chai-as-promised';
-import { IPythonExtensionChecker } from '../../client/api/types';
-import { IFileSystem } from '../../client/common/platform/types';
-import { KernelEnvironmentVariablesService } from '../../client/datascience/kernel-launcher/kernelEnvVarsService';
 import { traceInfo } from '../../client/common/logger';
 import { IS_REMOTE_NATIVE_TEST } from '../constants';
 import { initialize } from '../initialize';
@@ -31,34 +26,19 @@ use(chaiAsPromised);
 const test_Timeout = 30_000;
 
 suite('DataScience - Kernel Launcher', () => {
-    let kernelLauncher: KernelLauncher;
+    let kernelLauncher: IKernelLauncher;
     const kernelSpec = createDefaultKernelSpec();
     suiteSetup(async function () {
         // These are slow tests, hence lets run only on linux on CI.
         if (IS_REMOTE_NATIVE_TEST) {
             return this.skip();
         }
-        await initialize();
+        const api = await initialize();
+        kernelLauncher = api.serviceContainer.get<IKernelLauncher>(KernelLauncher);
     });
 
     setup(async function () {
         traceInfo(`Start Test ${this.currentTest?.title}`);
-        const api = await initialize();
-        const ioc = api.serviceContainer;
-        const processServiceFactory = ioc.get<IProcessServiceFactory>(IProcessServiceFactory);
-        const daemonPool = ioc.get<KernelDaemonPool>(KernelDaemonPool);
-        const fileSystem = ioc.get<IFileSystem>(IFileSystem);
-        const extensionChecker = ioc.get<IPythonExtensionChecker>(IPythonExtensionChecker);
-        kernelLauncher = new KernelLauncher(
-            processServiceFactory,
-            fileSystem,
-            daemonPool,
-            extensionChecker,
-            ioc.get<KernelEnvironmentVariablesService>(KernelEnvironmentVariablesService),
-            ioc.get<IKernelDependencyService>(IKernelDependencyService)
-        );
-
-        traceInfo(`Start Test Complete ${this.currentTest?.title}`);
     });
     teardown(function () {
         traceInfo(`End Test Complete ${this.currentTest?.title}`);
