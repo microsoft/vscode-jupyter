@@ -177,9 +177,9 @@ export function notebookModelToVSCNotebookData(
             source: ''
         });
     }
-    return {
+    return new NotebookData(
         cells,
-        metadata: new NotebookDocumentMetadata().with({
+        new NotebookDocumentMetadata().with({
             custom: notebookContentWithoutCells, // Include metadata in VSC Model (so that VSC can display these if required)
             cellEditable: isNotebookTrusted,
             cellRunnable: isNotebookTrusted,
@@ -188,7 +188,7 @@ export function notebookModelToVSCNotebookData(
             runnable: isNotebookTrusted,
             trusted: isNotebookTrusted
         })
-    };
+    );
 }
 export function cellRunStateToCellState(cellRunState?: NotebookCellRunState): CellState {
     switch (cellRunState) {
