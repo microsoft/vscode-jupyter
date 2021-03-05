@@ -21,7 +21,8 @@ import {
     createIntepreterKernelSpec,
     findPreferredKernelIndex,
     getDisplayNameOrNameOfKernelConnection,
-    getInterpreterKernelSpecName
+    getInterpreterKernelSpecName,
+    getKernelId
 } from '../jupyter/kernels/helpers';
 import { JupyterKernelSpec } from '../jupyter/kernels/jupyterKernelSpec';
 import {
@@ -193,7 +194,8 @@ export class LocalKernelFinder implements ILocalKernelFinder {
                 const result: PythonKernelConnectionMetadata = {
                     kind: 'startUsingPythonInterpreter',
                     kernelSpec: k,
-                    interpreter: matchingInterpreters[0]
+                    interpreter: matchingInterpreters[0],
+                    id: getKernelId(k, matchingInterpreters[0])
                 };
 
                 // If interpreters were found, remove them from the interpreter list we'll eventually
@@ -207,7 +209,8 @@ export class LocalKernelFinder implements ILocalKernelFinder {
                 const result: KernelSpecConnectionMetadata = {
                     kind: 'startUsingKernelSpec',
                     kernelSpec: k,
-                    interpreter: k.language === PYTHON_LANGUAGE ? activeInterpreter : undefined
+                    interpreter: k.language === PYTHON_LANGUAGE ? activeInterpreter : undefined,
+                    id: getKernelId(k, activeInterpreter)
                 };
                 return result;
             }
@@ -218,10 +221,12 @@ export class LocalKernelFinder implements ILocalKernelFinder {
             ...kernelMetadata,
             ...filteredInterpreters.map((i) => {
                 // Update spec to have a default spec file
+                const spec = createIntepreterKernelSpec(i, rootSpecPath);
                 const result: PythonKernelConnectionMetadata = {
                     kind: 'startUsingPythonInterpreter',
-                    kernelSpec: createIntepreterKernelSpec(i, rootSpecPath),
-                    interpreter: i
+                    kernelSpec: spec,
+                    interpreter: i,
+                    id: getKernelId(spec, i)
                 };
                 return result;
             })

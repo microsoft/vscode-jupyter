@@ -49,7 +49,8 @@ suite('DataScience - Notebook Storage', () => {
             kernelConnection: {
                 kernelModel,
                 interpreter: undefined,
-                kind: 'connectToLiveKernel'
+                kind: 'connectToLiveKernel',
+                id: '2'
             },
             oldDirty: false,
             newDirty: true,

@@ -48,7 +48,8 @@ suite('DataScience - JupyterKernelService', () => {
                 path: '/usr/bin/python3',
                 sysPrefix: 'python',
                 version: { major: 3, minor: 8, raw: '3.8', build: ['0'], patch: 0, prerelease: ['0'] }
-            }
+            },
+            id: '0'
         },
         {
             kind: 'startUsingPythonInterpreter',
@@ -66,7 +67,8 @@ suite('DataScience - JupyterKernelService', () => {
                 path: '/usr/bin/conda/python3',
                 sysPrefix: 'conda',
                 envType: EnvironmentType.Conda
-            }
+            },
+            id: '1'
         },
         {
             kind: 'startUsingPythonInterpreter',
@@ -91,7 +93,8 @@ suite('DataScience - JupyterKernelService', () => {
                 path: '/usr/bin/python3',
                 sysPrefix: 'python',
                 version: { major: 3, minor: 8, raw: '3.8', build: ['0'], patch: 0, prerelease: ['0'] }
-            }
+            },
+            id: '2'
         },
         {
             kind: 'startUsingKernelSpec',
@@ -102,7 +105,8 @@ suite('DataScience - JupyterKernelService', () => {
                 language: 'julia',
                 path: '/usr/bin/julia',
                 display_name: 'Julia on Disk'
-            }
+            },
+            id: '3'
         },
         {
             kind: 'startUsingPythonInterpreter',
@@ -119,7 +123,8 @@ suite('DataScience - JupyterKernelService', () => {
                 path: '/usr/bin/python',
                 sysPrefix: 'python',
                 version: { major: 2, minor: 7, raw: '2.7', build: ['0'], patch: 0, prerelease: ['0'] }
-            }
+            },
+            id: '4'
         },
         {
             kind: 'startUsingPythonInterpreter',
@@ -144,7 +149,8 @@ suite('DataScience - JupyterKernelService', () => {
                 path: '/usr/bin/python3',
                 sysPrefix: 'python',
                 version: { major: 3, minor: 8, raw: '3.8', build: ['0'], patch: 0, prerelease: ['0'] }
-            }
+            },
+            id: '5'
         },
         {
             kind: 'startUsingKernelSpec',
@@ -155,7 +161,8 @@ suite('DataScience - JupyterKernelService', () => {
                 language: 'julia',
                 path: '/usr/bin/julia',
                 display_name: 'Julia on Disk'
-            }
+            },
+            id: '6'
         },
         {
             kind: 'startUsingPythonInterpreter',
@@ -172,7 +179,8 @@ suite('DataScience - JupyterKernelService', () => {
                 path: '/usr/bin/python',
                 sysPrefix: 'python',
                 version: { major: 2, minor: 7, raw: '2.7', build: ['0'], patch: 0, prerelease: ['0'] }
-            }
+            },
+            id: '7'
         },
         {
             kind: 'startUsingPythonInterpreter',
@@ -197,7 +205,8 @@ suite('DataScience - JupyterKernelService', () => {
                 path: '/usr/bin/python3',
                 sysPrefix: 'python',
                 version: { major: 3, minor: 8, raw: '3.8', build: ['0'], patch: 0, prerelease: ['0'] }
-            }
+            },
+            id: '8'
         },
         {
             kind: 'startUsingKernelSpec',
@@ -208,7 +217,8 @@ suite('DataScience - JupyterKernelService', () => {
                 language: 'julia',
                 path: '/usr/bin/julia',
                 display_name: 'Julia on Disk'
-            }
+            },
+            id: '9'
         },
         {
             kind: 'startUsingPythonInterpreter',
@@ -225,7 +235,8 @@ suite('DataScience - JupyterKernelService', () => {
                 path: '/usr/bin/python',
                 sysPrefix: 'python',
                 version: { major: 2, minor: 7, raw: '2.7', build: ['0'], patch: 0, prerelease: ['0'] }
-            }
+            },
+            id: '10'
         },
         {
             kind: 'startUsingPythonInterpreter',
@@ -253,7 +264,8 @@ suite('DataScience - JupyterKernelService', () => {
                 path: '/usr/conda/envs/base/python',
                 sysPrefix: 'conda',
                 envType: EnvironmentType.Conda
-            }
+            },
+            id: '11'
         }
     ];
     setup(() => {

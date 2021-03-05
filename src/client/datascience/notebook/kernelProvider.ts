@@ -99,20 +99,10 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
             return [];
         }
 
-        // Go through the kernels, removing any dupes
-        const existingItem = new Set<string>();
-        const mapped = kernels.filter((item) => {
-            if (existingItem.has(item.id)) {
-                return false;
-            }
-            existingItem.add(item.id);
-            return true;
-        });
-
         // Send telemetry related to the list
-        sendKernelListTelemetry(document.uri, mapped, stopWatch);
+        sendKernelListTelemetry(document.uri, kernels, stopWatch);
 
-        mapped.sort((a, b) => {
+        kernels.sort((a, b) => {
             if (a.label > b.label) {
                 return 1;
             } else if (a.label === b.label) {
@@ -124,9 +114,9 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
 
         traceInfoIf(
             !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
-            `Providing kernels with length ${mapped.length}. Preferred is ${mapped.find((m) => m.isPreferred)?.label}`
+            `Providing kernels with length ${kernels.length}. Preferred is ${kernels.find((m) => m.isPreferred)?.label}`
         );
-        return mapped;
+        return kernels;
     }
 
     private onDidChangeExtensions() {

@@ -18,6 +18,7 @@ import { IJupyterConnection } from '../../../../client/datascience/types';
 import { PythonEnvironment } from '../../../../client/pythonEnvironments/info';
 import { disposeAllDisposables } from '../../../../client/common/helpers';
 import { InterpreterPackages } from '../../../../client/datascience/telemetry/interpreterPackages';
+import { getKernelId } from '../../../../client/datascience/jupyter/kernels/helpers';
 
 /* eslint-disable , @typescript-eslint/no-unused-expressions, @typescript-eslint/no-explicit-any */
 
@@ -46,7 +47,8 @@ suite('DataScience - KernelSelector', () => {
     const kernelMetadata: KernelConnectionMetadata = {
         kind: 'startUsingPythonInterpreter',
         kernelSpec,
-        interpreter
+        interpreter,
+        id: getKernelId(kernelSpec, interpreter)
     };
 
     const remoteKernelMetadata: KernelConnectionMetadata = {
@@ -54,7 +56,8 @@ suite('DataScience - KernelSelector', () => {
         kernelSpec: {
             ...kernelSpec,
             display_name: 'My remote kernel'
-        }
+        },
+        id: '0'
     };
     const connection: IJupyterConnection = {
         baseUrl: 'http://remotehost:9999',

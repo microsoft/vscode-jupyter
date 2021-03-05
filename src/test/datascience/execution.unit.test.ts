@@ -44,6 +44,7 @@ import { JupyterInterpreterOldCacheStateStore } from '../../client/datascience/j
 import { JupyterInterpreterService } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterService';
 import { JupyterInterpreterSubCommandExecutionService } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterSubCommandExecutionService';
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
+import { getKernelId } from '../../client/datascience/jupyter/kernels/helpers';
 import { KernelSelector } from '../../client/datascience/jupyter/kernels/kernelSelector';
 import { LocalKernelConnectionMetadata } from '../../client/datascience/jupyter/kernels/types';
 import { NotebookStarter } from '../../client/datascience/jupyter/notebookStarter';
@@ -985,7 +986,8 @@ suite('Jupyter Execution', async () => {
         };
         const kernelMetadata: LocalKernelConnectionMetadata = {
             kind: 'startUsingKernelSpec',
-            kernelSpec
+            kernelSpec,
+            id: getKernelId(kernelSpec)
         };
         when(kernelFinder.findKernel(anything(), anything(), anything())).thenResolve(kernelMetadata);
         when(serviceContainer.get<KernelSelector>(KernelSelector)).thenReturn(instance(kernelSelector));

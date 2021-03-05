@@ -94,7 +94,7 @@ suite('DataScience - Kernel Launcher', () => {
             let exitExpected = false;
             const deferred = createDeferred<boolean>();
             const kernel = await kernelLauncher.launch(
-                { kernelSpec, kind: 'startUsingKernelSpec' },
+                { kernelSpec, kind: 'startUsingKernelSpec', id: '1' },
                 -1,
                 undefined,
                 process.cwd()
@@ -140,12 +140,13 @@ suite('DataScience - Kernel Launcher', () => {
             };
             const metadata: KernelSpecConnectionMetadata = {
                 kind: 'startUsingKernelSpec',
-                kernelSpec: spec
+                kernelSpec: spec,
+                id: '1'
             };
             kernelFinder.addKernelSpec(pythonInterpreter.path, metadata);
 
             const kernel = await kernelLauncher.launch(
-                { kernelSpec: spec, kind: 'startUsingKernelSpec' },
+                { kernelSpec: spec, kind: 'startUsingKernelSpec', id: '1' },
                 30_000,
                 undefined,
                 process.cwd()
@@ -175,7 +176,7 @@ suite('DataScience - Kernel Launcher', () => {
             this.skip();
         } else {
             const kernel = await kernelLauncher.launch(
-                { kernelSpec, kind: 'startUsingKernelSpec' },
+                { kernelSpec, kind: 'startUsingKernelSpec', id: '1' },
                 -1,
                 undefined,
                 process.cwd()

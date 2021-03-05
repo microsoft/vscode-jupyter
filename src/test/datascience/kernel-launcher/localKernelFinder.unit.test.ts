@@ -281,6 +281,20 @@ import { arePathsSame } from '../../common';
             // Non python 3 kernels should include other kernels too (julia and python 2)
             assert.ok(nonPython3Kernels.length - 2 > 0, 'No other kernelspec kernels besides python 3 ones');
         });
+        test('No kernels with same id', async () => {
+            // Setup interpreters to match
+            when(interpreterService.getActiveInterpreter(anything())).thenResolve(activeInterpreter);
+            when(interpreterService.getInterpreters(anything())).thenResolve([
+                python3Interpreter,
+                condaEnvironment,
+                python2Interpreter,
+                condaEnvironmentBase
+            ]);
+            when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
+            const kernels = await kernelFinder.listKernels(undefined);
+            const existing = new Set<string>(kernels.map((k) => k.id));
+            assert.equal(existing.size, kernels.length, 'Dupe kernels found');
+        });
         test('Kernel spec name should be different if from interpreter but not if normal', async () => {
             when(interpreterService.getActiveInterpreter(anything())).thenResolve(activeInterpreter);
             when(interpreterService.getInterpreters(anything())).thenResolve([

@@ -10,7 +10,7 @@ import { traceDecorators } from '../../logging';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry } from '../../telemetry';
 import { Telemetry } from '../constants';
-import { findPreferredKernelIndex } from '../jupyter/kernels/helpers';
+import { findPreferredKernelIndex, getKernelId } from '../jupyter/kernels/helpers';
 import {
     KernelConnectionMetadata,
     LiveKernelConnectionMetadata,
@@ -97,7 +97,8 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
                 const mappedSpecs = specs.map((s) => {
                     const kernel: KernelSpecConnectionMetadata = {
                         kind: 'startUsingKernelSpec',
-                        kernelSpec: s
+                        kernelSpec: s,
+                        id: getKernelId(s, undefined)
                     };
                     return kernel;
                 });
@@ -123,7 +124,8 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
                             lastActivityTime,
                             numberOfConnections,
                             session: s
-                        }
+                        },
+                        id: s.kernel.id
                     };
                     return kernel;
                 });

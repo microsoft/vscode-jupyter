@@ -256,7 +256,7 @@ suite('DataScience - JupyterSession', () => {
                     assert.isFalse(remoteSessionInstance.isRemoteSession);
                     await jupyterSession.changeKernel(
                         undefined,
-                        { kernelModel: newActiveRemoteKernel, kind: 'connectToLiveKernel' },
+                        { kernelModel: newActiveRemoteKernel, kind: 'connectToLiveKernel', id: '0' },
                         10000
                     );
                 });
@@ -333,7 +333,7 @@ suite('DataScience - JupyterSession', () => {
 
                 await jupyterSession.changeKernel(
                     undefined,
-                    { kernelSpec: newKernel, kind: 'startUsingKernelSpec' },
+                    { kernelSpec: newKernel, kind: 'startUsingKernelSpec', id: '1' },
                     10000
                 );
 

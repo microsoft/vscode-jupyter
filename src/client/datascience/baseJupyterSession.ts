@@ -21,7 +21,7 @@ import { JupyterInvalidKernelError } from './jupyter/jupyterInvalidKernelError';
 import { JupyterWaitForIdleError } from './jupyter/jupyterWaitForIdleError';
 import { kernelConnectionMetadataHasKernelSpec } from './jupyter/kernels/helpers';
 import { JupyterKernelPromiseFailedError } from './jupyter/kernels/jupyterKernelPromiseFailedError';
-import { getKernelConnectionId, KernelConnectionMetadata } from './jupyter/kernels/types';
+import { KernelConnectionMetadata } from './jupyter/kernels/types';
 import { suppressShutdownErrors } from './raw-kernel/rawKernel';
 import { trackKernelResourceInformation } from './telemetry/telemetry';
 import { IJupyterSession, ISessionWithSocket, KernelSocketInformation } from './types';
@@ -163,7 +163,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
             : undefined;
         if (this.session && currentKernelSpec && kernelSpecToUse && this.kernelConnectionMetadata) {
             // If we have selected the same kernel connection, then nothing to do.
-            if (getKernelConnectionId(this.kernelConnectionMetadata) === getKernelConnectionId(kernelConnection)) {
+            if (this.kernelConnectionMetadata.id === kernelConnection.id) {
                 return;
             }
         }
@@ -379,7 +379,8 @@ export abstract class BaseJupyterSession implements IJupyterSession {
                     reject(
                         new JupyterInvalidKernelError({
                             kernelModel,
-                            kind: 'connectToLiveKernel'
+                            kind: 'connectToLiveKernel',
+                            id: kernelModel.id
                         })
                     );
                 }

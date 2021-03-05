@@ -10,7 +10,6 @@ import type { ServerStatus } from '../../../../datascience-ui/interactive-common
 import type { IAsyncDisposable, Resource } from '../../../common/types';
 import type { PythonEnvironment } from '../../../pythonEnvironments/info';
 import type { IJupyterKernel, IJupyterKernelSpec, InterruptResult, KernelSocketInformation } from '../../types';
-import { isPythonKernelConnection } from './helpers';
 
 export type LiveKernelModel = IJupyterKernel & Partial<IJupyterKernelSpec> & { session: Session.IModel };
 
@@ -25,6 +24,7 @@ export type LiveKernelConnectionMetadata = Readonly<{
      */
     interpreter?: PythonEnvironment;
     kind: 'connectToLiveKernel';
+    id: string;
 }>;
 /**
  * Connection metadata for Kernels started using kernelspec (JSON).
@@ -41,6 +41,7 @@ export type KernelSpecConnectionMetadata = Readonly<{
      */
     interpreter?: PythonEnvironment;
     kind: 'startUsingKernelSpec';
+    id: string;
 }>;
 /**
  * Connection metadata for Kernels started using default kernel.
@@ -58,6 +59,7 @@ export type DefaultKernelConnectionMetadata = Readonly<{
      */
     interpreter?: PythonEnvironment;
     kind: 'startUsingDefaultKernel';
+    id: string;
 }>;
 /**
  * Connection metadata for Kernels started using Python interpreter.
@@ -69,6 +71,7 @@ export type PythonKernelConnectionMetadata = Readonly<{
     kernelSpec?: IJupyterKernelSpec;
     interpreter: PythonEnvironment;
     kind: 'startUsingPythonInterpreter';
+    id: string;
 }>;
 /**
  * Readonly to ensure these are immutable, if we need to make changes then create a new one.
@@ -88,49 +91,6 @@ export type LocalKernelConnectionMetadata =
     | Readonly<KernelSpecConnectionMetadata>
     | Readonly<PythonKernelConnectionMetadata>
     | Readonly<DefaultKernelConnectionMetadata>;
-
-/**
- * Returns a string that can be used to uniquely identify a Kernel Connection.
- */
-export function getKernelConnectionId(kernelConnection: KernelConnectionMetadata) {
-    switch (kernelConnection.kind) {
-        case 'connectToLiveKernel':
-            return `${kernelConnection.kind}#${kernelConnection.kernelModel.name}.${kernelConnection.kernelModel.session.id}.${kernelConnection.kernelModel.session.name}`;
-        case 'startUsingDefaultKernel':
-            return `${kernelConnection.kind}#${JSON.stringify(kernelConnection.kernelSpec || '')}`;
-        case 'startUsingKernelSpec':
-            // 1. kernelSpec.interpreterPath added by kernel finder.
-            // Helps us identify what interpreter a kernel belongs to.
-            // 2. kernelSpec.metadata?.interpreter?.path added by old approach of starting kernels (jupyter).
-            // When we register an interpreter as a kernel, then we store that interpreter info into metadata.
-            // 3. kernelConnection.interpreter
-            // This contains the resolved interpreter (using 1 & 2).
-
-            // We need to take the interpreter path into account, as its possible
-            // a user has registered a kernel with the same name in two different interpreters.
-            let interpreterPath = isPythonKernelConnection(kernelConnection)
-                ? kernelConnection.interpreter?.path ||
-                  kernelConnection.kernelSpec.interpreterPath ||
-                  kernelConnection.kernelSpec.metadata?.interpreter?.path ||
-                  ''
-                : '';
-
-            // Paths on windows can either contain \ or / Both work.
-            // Thus, C:\Python.exe is the same as C:/Python.exe
-            // In the kernelspec.json we could have paths in argv such as C:\\Python.exe or C:/Python.exe.
-            interpreterPath = interpreterPath.replace(/\\/g, '/');
-
-            return `${kernelConnection.kind}#${kernelConnection.kernelSpec.name}.${
-                kernelConnection.kernelSpec.display_name
-            }${(kernelConnection.kernelSpec.argv || []).join(' ').replace(/\\/g, '/')}${interpreterPath}`;
-        case 'startUsingPythonInterpreter':
-            // Paths on windows can either contain \ or / Both work.
-            // Thus, C:\Python.exe is the same as C:/Python.exe
-            return `${kernelConnection.kind}#${kernelConnection.interpreter.path.replace(/\\/g, '/')}`;
-        default:
-            throw new Error(`Unsupported Kernel Connection ${kernelConnection}`);
-    }
-}
 
 export interface IKernelSpecQuickPickItem<T extends KernelConnectionMetadata = KernelConnectionMetadata>
     extends QuickPickItem {

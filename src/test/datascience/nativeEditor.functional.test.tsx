@@ -418,7 +418,8 @@ suite('DataScience Native Editor', () => {
                         };
                         const invalidMetadata: KernelSpecConnectionMetadata = {
                             kind: 'startUsingKernelSpec',
-                            kernelSpec: invalidKernel
+                            kernelSpec: invalidKernel,
+                            id: '1'
                         };
 
                         // Allow the invalid kernel to be used
@@ -436,7 +437,11 @@ suite('DataScience Native Editor', () => {
 
                         // Force an update to the editor so that it has a new kernel
                         const editor = (ne.editor as any) as NativeEditorWebView;
-                        await editor.updateNotebookOptions({ kernelSpec: invalidKernel, kind: 'startUsingKernelSpec' });
+                        await editor.updateNotebookOptions({
+                            kernelSpec: invalidKernel,
+                            kind: 'startUsingKernelSpec',
+                            id: '1'
+                        });
 
                         // Run the first cell. Should fail but then ask for another
                         await addCell(ne.mount, 'a=1\na');

@@ -5,7 +5,7 @@
 import cloneDeep = require('lodash/cloneDeep');
 import { Uri } from 'vscode';
 import { getOSType } from '../../common/utils/platform';
-import { getKernelConnectionId, KernelConnectionMetadata } from '../jupyter/kernels/types';
+import { KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { Resource } from '../../common/types';
 import { IEventNamePropertyMapping, sendTelemetryEvent, setSharedProperty, waitBeforeSending } from '../../telemetry';
 import { StopWatch } from '../../common/utils/stopWatch';
@@ -175,7 +175,7 @@ export function trackKernelResourceInformation(resource: Resource, information: 
 
     const kernelConnection = information.kernelConnection;
     if (kernelConnection) {
-        const newKernelConnectionId = getKernelConnectionId(kernelConnection);
+        const newKernelConnectionId = kernelConnection.id;
         // If we have selected a whole new kernel connection for this,
         // Then reset some of the data
         if (context.previouslySelectedKernelConnectionId !== newKernelConnectionId) {
@@ -207,7 +207,7 @@ export function trackKernelResourceInformation(resource: Resource, information: 
         }
         currentData.kernelLanguage = getTelemetrySafeLanguage(language);
         // Keep track of the kernel that was last selected.
-        context.previouslySelectedKernelConnectionId = getKernelConnectionId(kernelConnection);
+        context.previouslySelectedKernelConnectionId = kernelConnection.id;
 
         const interpreter = kernelConnection.interpreter;
         if (interpreter) {

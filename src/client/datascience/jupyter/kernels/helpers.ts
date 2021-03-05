@@ -56,6 +56,9 @@ export function kernelConnectionMetadataHasKernelModel(
 ): connectionMetadata is LiveKernelConnectionMetadata {
     return connectionMetadata.kind === 'connectToLiveKernel';
 }
+export function getKernelId(spec: IJupyterKernelSpec, interpreter?: PythonEnvironment) {
+    return `${spec.id}.${spec.name}.${spec.path}.${interpreter?.path}.${spec.display_name || interpreter?.displayName}`;
+}
 export function getDisplayNameOrNameOfKernelConnection(
     kernelConnection: KernelConnectionMetadata | undefined,
     defaultValue: string = ''

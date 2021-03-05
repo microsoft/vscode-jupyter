@@ -53,7 +53,8 @@ suite('DataScience - Kernel Switcher', () => {
         newKernelConnection = {
             kernelModel: currentKernel,
             interpreter: selectedInterpreter,
-            kind: 'connectToLiveKernel'
+            kind: 'connectToLiveKernel',
+            id: '10'
         };
         notebook = mock(JupyterNotebookBase);
         configService = mock(ConfigurationService);
@@ -106,7 +107,8 @@ suite('DataScience - Kernel Switcher', () => {
                     setup(() => {
                         when(notebook.getKernelConnection()).thenReturn({
                             kernelSpec: currentKernelInfo.currentKernel as any,
-                            kind: 'startUsingKernelSpec'
+                            kind: 'startUsingKernelSpec',
+                            id: '1'
                         });
                     });
 
