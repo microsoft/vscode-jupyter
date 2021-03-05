@@ -64,7 +64,7 @@ suite('DataScience - Kernel Launcher', () => {
         traceInfo(`End Test Complete ${this.currentTest?.title}`);
     });
 
-    test('Launch from kernelspecxxx', async function () {
+    test('Launch from kernelspec', async function () {
         let exitExpected = false;
         const deferred = createDeferred<boolean>();
         const kernel = await kernelLauncher.launch(
