@@ -172,6 +172,7 @@ export namespace EditorContexts {
     export const IsPythonNotebook = 'jupyter.ispythonnotebook';
     export const IsVSCodeNotebookActive = 'jupyter.isvscodenotebookactive';
     export const IsDataViewerActive = 'jupyter.dataViewerActive';
+    export const HasNativeNotebookOpen = 'jupyter.hasNativeNotebookOpen';
 }
 
 export namespace RegExpValues {

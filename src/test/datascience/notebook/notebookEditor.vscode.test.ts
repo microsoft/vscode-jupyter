@@ -70,6 +70,7 @@ suite('Notebook Editor tests', () => {
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
 
     test('Run cells above', async function () {
+        return this.skip();
         // add some cells
         await insertCodeCell('print("0")', { index: 0 });
         await insertCodeCell('print("1")', { index: 1 });
@@ -96,6 +97,7 @@ suite('Notebook Editor tests', () => {
     });
 
     test('Run cells below', async function () {
+        return this.skip();
         // add some cells
         await insertCodeCell('print("0")', { index: 0 });
         await insertCodeCell('print("1")', { index: 1 });

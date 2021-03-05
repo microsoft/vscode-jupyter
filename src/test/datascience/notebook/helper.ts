@@ -15,7 +15,6 @@ import {
     WorkspaceEdit,
     commands,
     Memento,
-    TextDocument,
     Uri,
     window,
     workspace,
@@ -24,7 +23,6 @@ import {
     NotebookDocument,
     NotebookCellKind,
     NotebookCellMetadata,
-    NotebookDocumentMetadata,
     NotebookCellOutputItem,
     CancellationTokenSource
 } from 'vscode';
@@ -44,7 +42,6 @@ import { swallowExceptions } from '../../../client/common/utils/misc';
 import { CellExecution } from '../../../client/datascience/jupyter/kernels/cellExecution';
 import { IKernelProvider } from '../../../client/datascience/jupyter/kernels/types';
 import { JupyterServerSelector } from '../../../client/datascience/jupyter/serverSelector';
-import { JupyterNotebookView } from '../../../client/datascience/notebook/constants';
 import {
     getTextOutputValue,
     hasErrorOutput,
@@ -97,7 +94,7 @@ export async function insertMarkdownCell(source: string, options?: { index?: num
     await chainWithPendingUpdates(activeEditor.document, (edit) =>
         edit.replaceNotebookCells(activeEditor.document.uri, startNumber, 0, [
             {
-                cellKind: NotebookCellKind.Markdown,
+                kind: NotebookCellKind.Markdown,
                 language: MARKDOWN_LANGUAGE,
                 source,
                 metadata: new NotebookCellMetadata().with({
@@ -119,7 +116,7 @@ export async function insertCodeCell(source: string, options?: { language?: stri
     const edit = new WorkspaceEdit();
     edit.replaceNotebookCells(activeEditor.document.uri, startNumber, 0, [
         {
-            cellKind: NotebookCellKind.Code,
+            kind: NotebookCellKind.Code,
             language: options?.language || PYTHON_LANGUAGE,
             source,
             metadata: new NotebookCellMetadata().with({
@@ -682,60 +679,6 @@ export async function runAllCellsInActiveNotebook() {
         throw new Error('No notebook or kernel');
     }
     vscodeNotebook.activeNotebookEditor.kernel.executeAllCells(vscodeNotebook.activeNotebookEditor.document);
-}
-export function createNotebookDocument(
-    model: VSCodeNotebookModel,
-    viewType: string = JupyterNotebookView
-): NotebookDocument {
-    const cells: NotebookCell[] = [];
-    const doc: NotebookDocument = {
-        cells,
-        version: 1,
-        fileName: model.file.fsPath,
-        isDirty: false,
-        uri: model.file,
-        isUntitled: false,
-        viewType,
-        contentOptions: {
-            transientOutputs: false,
-            transientMetadata: {
-                breakpointMargin: true,
-                editable: true,
-                hasExecutionOrder: true,
-                inputCollapsed: true,
-                lastRunDuration: true,
-                outputCollapsed: true,
-                runStartTime: true,
-                runnable: true,
-                executionOrder: false,
-                custom: false,
-                runState: false,
-                statusMessage: false
-            }
-        },
-        metadata: new NotebookDocumentMetadata().with({
-            cellEditable: model.isTrusted,
-            cellHasExecutionOrder: true,
-            cellRunnable: model.isTrusted,
-            editable: model.isTrusted,
-            runnable: model.isTrusted
-        })
-    };
-    model.getNotebookData().cells.forEach((cell, index) => {
-        const vscDocumentCell: NotebookCell = {
-            cellKind: cell.cellKind,
-            language: cell.language,
-            metadata: cell.metadata || new NotebookCellMetadata(),
-            uri: model.file.with({ fragment: `cell${index}` }),
-            notebook: doc,
-            index,
-            document: instance(mock<TextDocument>()),
-            outputs: cell.outputs
-        };
-        cells.push(vscDocumentCell);
-    });
-    model.associateNotebookDocument(doc);
-    return doc;
 }
 
 /**

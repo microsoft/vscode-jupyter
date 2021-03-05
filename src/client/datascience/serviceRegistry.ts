@@ -202,7 +202,7 @@ import { IApplicationEnvironment } from '../common/application/types';
 export function registerTypes(serviceManager: IServiceManager, inNotebookApiExperiment: boolean) {
     const isVSCInsiders = serviceManager.get<IApplicationEnvironment>(IApplicationEnvironment).channel === 'insiders';
     const useVSCodeNotebookAPI = inNotebookApiExperiment;
-    const usingCustomEditor = !useVSCodeNotebookAPI && !isVSCInsiders;
+    const usingCustomEditor = !useVSCodeNotebookAPI;
     serviceManager.addSingletonInstance<boolean>(UseCustomEditorApi, usingCustomEditor);
     serviceManager.addSingletonInstance<boolean>(UseVSCodeNotebookEditorApi, useVSCodeNotebookAPI);
     serviceManager.addSingletonInstance<number>(DataScienceStartupTime, Date.now());

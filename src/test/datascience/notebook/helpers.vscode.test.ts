@@ -41,7 +41,7 @@ suite('DataScience - VSCode Notebook - helpers', () => {
         assert.isOk(notebook);
         assert.deepEqual(notebook.cells, [
             {
-                cellKind: NotebookCellKind.Code,
+                kind: NotebookCellKind.Code,
                 language: PYTHON_LANGUAGE,
                 outputs: [],
                 source: 'print(1)',
@@ -56,7 +56,7 @@ suite('DataScience - VSCode Notebook - helpers', () => {
                 })
             },
             {
-                cellKind: NotebookCellKind.Markdown,
+                kind: NotebookCellKind.Markdown,
                 language: MARKDOWN_LANGUAGE,
                 outputs: [],
                 source: '# HEAD',
