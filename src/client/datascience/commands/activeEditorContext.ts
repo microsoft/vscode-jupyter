@@ -14,7 +14,7 @@ import { traceError } from '../../common/logger';
 import { IDisposable, IDisposableRegistry } from '../../common/types';
 import { isNotebookCell } from '../../common/utils/misc';
 import { EditorContexts } from '../constants';
-import { isPythonNotebook } from '../notebook/helpers/helpers';
+import { isJupyterNotebook, isPythonNotebook } from '../notebook/helpers/helpers';
 import {
     IInteractiveWindow,
     IInteractiveWindowProvider,
@@ -148,17 +148,19 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         this.updateMergedContexts();
     }
     private updateNativeNotebookContext() {
-        const nativeNotebooks = this.notebookEditorProvider.editors.filter((e) => e.type == 'native');
-        this.hasNativeNotebookOpen.set(nativeNotebooks.length > 0).ignoreErrors();
+        this.hasNativeNotebookOpen.set(this.vscNotebook.notebookDocuments.some(isJupyterNotebook)).ignoreErrors();
 
-        if (!this.notebookEditorProvider.activeEditor) {
+        if (!this.vscNotebook.activeNotebookEditor) {
             return;
         }
 
-        if (this.notebookEditorProvider.activeEditor && this.notebookEditorProvider.activeEditor.type == 'native') {
+        if (
+            this.vscNotebook.activeNotebookEditor &&
+            isJupyterNotebook(this.vscNotebook.activeNotebookEditor.document)
+        ) {
             if (
-                this.notebookEditorProvider.activeEditor.selection &&
-                this.notebookEditorProvider.activeEditor.selection.index > 0
+                this.vscNotebook.activeNotebookEditor.selection &&
+                this.vscNotebook.activeNotebookEditor.selection.index > 0
             ) {
                 this.canRunCellsAboveInNativeNotebook.set(true).ignoreErrors();
             } else {
