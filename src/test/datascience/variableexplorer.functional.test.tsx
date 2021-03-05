@@ -257,7 +257,9 @@ value = 'hello world'`;
         // Test our display of basic types. We render 8 rows by default so only 8 values per test
         runInteractiveTest(
             'Variable explorer - Types A',
-            async () => {
+            async function () {
+                // https://github.com/microsoft/vscode-jupyter/issues/5016
+                return this.skip();
                 const basicCode: string = `myList = [1, 2, 3]
 mySet = set([42])
 myDict = {'a': 1}
