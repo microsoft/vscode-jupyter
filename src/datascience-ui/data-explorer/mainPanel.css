@@ -16,6 +16,9 @@
     padding-left: 16px;
     overflow: auto;
     white-space: nowrap;
+    border-bottom-color: var(--vscode-editor-inactiveSelectionBackground);
+    border-bottom-style: solid;
+    border-bottom-width: 1px;
 }
 
 .breadcrumb {

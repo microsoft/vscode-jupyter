@@ -1,6 +1,6 @@
 .slice-data {
-    background-color: var(--vscode-input-background);
-    color: var(--vscode-input-foreground);
+    background-color: var(--vscode-settings-textInputBackground);
+    color: var(--vscode-settings-textInputForeground) !important;
     padding: 0px 4px;
     /* input does not inherit font from body */
     font-family: var(--vscode-font-family);
@@ -27,10 +27,12 @@
 .slice-summary {
     display: flex;
     flex-direction: row;
+    cursor: pointer;
 }
 
 .slice-summary-detail {
     padding-bottom: 2px;
+    padding-left: 2px;
 }
 
 .current-slice {
@@ -39,13 +41,14 @@
     padding-right: 5px;
     padding-top: 0px;
     background-color: var(--vscode-input-background);
+    border-radius: 2px;
 }
 
 .slice-form {
     align-self: center;
     flex-direction: column;
     justify-content: space-between;
-    padding: 4px;
+    padding: 4px 14px;
 }
 
 .slice-control-row {
@@ -78,7 +81,7 @@ details[open] > summary::before {
 }
 
 .submit-slice-button {
-    color: var(--vscode-button-foreground);
+    color: var(--vscode-button-foreground) !important;
     background-color: var(--vscode-button-background);
     border: none;
     margin-left: 10px;
@@ -88,16 +91,11 @@ details[open] > summary::before {
     font-weight: var(--vscode-font-weight);
     font-size: var(--vscode-font-size);
     max-width: fit-content;
-}
-
-.slice-enablement-checkbox {
-    margin-right: 6px;
-    width: 20px;
+    cursor: pointer;
 }
 
 .slice-enablement-checkbox-container {
     padding-top: 4px;
-    padding-bottom: 4px;
 }
 
 :focus {
@@ -105,13 +103,6 @@ details[open] > summary::before {
 }
 
 /* Overrides for Fluent UI controls */
-[class*='text'] {
-    color: var(--vscode-editor-foreground);
-    font-family: var(--vscode-font-family);
-    font-weight: var(--vscode-font-weight);
-    font-size: var(--vscode-font-size);
-}
-
 [class*='ms-Dropdown-label'] {
     color: var(--vscode-editor-foreground);
     font-family: var(--vscode-font-family);
