@@ -16,6 +16,7 @@ import { Cancellation } from '../../common/cancellation';
 import { traceError, traceInfo } from '../../common/logger';
 import { IOutputChannel, Resource } from '../../common/types';
 import * as localize from '../../common/utils/localize';
+import { DataScience } from '../../common/utils/localize';
 import { captureTelemetry } from '../../telemetry';
 import { BaseJupyterSession, JupyterSessionStartError } from '../baseJupyterSession';
 import { Telemetry } from '../constants';
@@ -145,7 +146,7 @@ export class JupyterSession extends BaseJupyterSession {
                 traceInfo(`Error waiting for restart session: ${exc}`);
                 tryCount += 1;
                 if (result) {
-                    this.shutdownSession(result, undefined).ignoreErrors();
+                    this.shutdownSession(result, undefined, true).ignoreErrors();
                 }
                 result = undefined;
                 exception = exc;
@@ -179,7 +180,7 @@ export class JupyterSession extends BaseJupyterSession {
         // Generate a more descriptive name
         const newName = this.resource
             ? `${path.basename(this.resource.fsPath, '.ipynb')}-${uuid()}.ipynb`
-            : `t-${uuid()}.ipynb`;
+            : `${DataScience.defaultNotebookName()}-${uuid()}.ipynb`;
 
         try {
             // Create a temporary notebook for this session. Each needs a unique name (otherwise we get the same session every time)

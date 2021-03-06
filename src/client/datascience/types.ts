@@ -359,6 +359,7 @@ export interface IJupyterSession extends IAsyncDisposable {
     ): void;
     removeMessageHook(msgId: string, hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>): void;
     requestKernelInfo(): Promise<KernelMessage.IInfoReplyMsg>;
+    shutdown(force?: boolean): Promise<void>;
 }
 
 export type ISessionWithSocket = Session.ISession & {
