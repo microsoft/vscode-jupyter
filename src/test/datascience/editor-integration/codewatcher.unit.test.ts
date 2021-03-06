@@ -847,6 +847,55 @@ testing2`;
         document.verifyAll();
     });
 
+    test('Test the RunSelection command with text argument', async () => {
+        const fileName = Uri.file('test.py');
+        const version = 1;
+        const inputText = `#%%
+testing1
+#%%
+testing2`;
+        const document = createDocument(inputText, fileName.fsPath, version, TypeMoq.Times.atLeastOnce(), true);
+
+        codeWatcher.setDocument(document.object);
+        helper
+            .setup((h) =>
+                h.getSelectedTextToExecute(
+                    TypeMoq.It.is((ed: TextEditor) => {
+                        return textEditor.object === ed;
+                    })
+                )
+            )
+            .returns(() => Promise.resolve('testing2'));
+        helper.setup((h) => h.normalizeLines(TypeMoq.It.isAny())).returns((x: string) => Promise.resolve(x));
+
+        // Set up our expected calls to add code
+        activeInteractiveWindow
+            .setup((h) =>
+                h.addCode(
+                    TypeMoq.It.isValue('text arg'),
+                    TypeMoq.It.isValue(fileName),
+                    TypeMoq.It.isValue(3),
+                    TypeMoq.It.is((ed: TextEditor) => {
+                        return textEditor.object === ed;
+                    }),
+                    TypeMoq.It.isAny()
+                )
+            )
+            .returns(() => Promise.resolve(true))
+            .verifiable(TypeMoq.Times.once());
+
+        // For this test we need to set up a document selection point
+        textEditor.setup((te) => te.document).returns(() => document.object);
+        textEditor.setup((te) => te.selection).returns(() => new Selection(3, 0, 3, 0));
+
+        // Try our RunCell command with text argument
+        await codeWatcher.runSelectionOrLine(textEditor.object, 'text arg');
+
+        // Verify function calls
+        activeInteractiveWindow.verifyAll();
+        document.verifyAll();
+    });
+
     test('Test the RunCellAndAdvance command with next cell', async () => {
         const fileName = Uri.file('test.py');
         const version = 1;
