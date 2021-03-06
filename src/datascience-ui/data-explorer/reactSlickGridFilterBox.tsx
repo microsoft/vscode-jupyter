@@ -14,10 +14,18 @@ const filterIcon: IIconProps = {
             fontSize: 'var(--vscode-font-size)',
             width: 'var(--vscode-font-size)',
             color: 'var(--vscode-settings-textInputForeground)',
-            opacity: 0.4
         }
     }
 };
+
+const styles = {
+    iconContainer: {
+        opacity: 0.4,
+        ':active': {
+            opacity: 0
+        }
+    }
+}
 
 interface IFilterProps {
     column: Slick.Column<Slick.SlickData>;
@@ -40,6 +48,7 @@ export class ReactSlickGridFilterBox extends React.Component<IFilterProps> {
                 tabIndex={0}
                 ariaLabel={this.props.column.name}
                 className="filter-box"
+                styles={styles}
                 value={this.props.filter}
             />
         );
