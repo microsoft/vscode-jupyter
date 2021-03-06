@@ -22,7 +22,10 @@ import { InterruptResult } from '../datascience/types';
 import { EventName, PlatformErrors } from './constants';
 import { populateTelemetryWithErrorInfo } from '../common/errors';
 import { ErrorCategory, TelemetryErrorProperties } from '../common/errors/types';
+import { noop } from '../common/utils/misc';
+import { isPromise } from 'rxjs/internal-compatibility';
 
+export const waitBeforeSending = 'waitBeforeSending';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 /**
@@ -52,7 +55,7 @@ export function isTelemetryDisabled(workspaceService: IWorkspaceService): boolea
     return settings.globalValue === false ? true : false;
 }
 
-const sharedProperties: Record<string, any> = {};
+const sharedProperties: Partial<ISharedPropertyMapping> = {};
 /**
  * Set shared properties for all telemetry events.
  */
@@ -63,9 +66,9 @@ export function setSharedProperty<P extends ISharedPropertyMapping, E extends ke
         return;
     }
     if (value === undefined) {
-        delete sharedProperties[propertyName];
+        delete (sharedProperties as any)[propertyName];
     } else {
-        sharedProperties[propertyName] = value;
+        (sharedProperties as any)[propertyName] = value;
     }
 }
 
@@ -74,7 +77,7 @@ export function setSharedProperty<P extends ISharedPropertyMapping, E extends ke
  */
 export function _resetSharedProperties(): void {
     for (const key of Object.keys(sharedProperties)) {
-        delete sharedProperties[key];
+        delete (sharedProperties as any)[key];
     }
 }
 
@@ -98,10 +101,13 @@ export function clearTelemetryReporter() {
     telemetryReporter = undefined;
 }
 
-function stringifyProperties(eventName: string, data: Record<string, any>) {
+function sanitizeProperties(eventName: string, data: Record<string, any>) {
     let customProperties: Record<string, string> = {};
     Object.getOwnPropertyNames(data).forEach((prop) => {
         if (data[prop] === undefined || data[prop] === null) {
+            return;
+        }
+        if (prop === waitBeforeSending) {
             return;
         }
         try {
@@ -119,16 +125,95 @@ function stringifyProperties(eventName: string, data: Record<string, any>) {
     });
     return customProperties;
 }
+
+const queuedTelemetry: {
+    eventName: string;
+    durationMs?: Record<string, number> | number;
+    properties?: Record<string, any>;
+    ex?: Error;
+    sendOriginalEventWithErrors?: boolean;
+    queueEverythingUntilCompleted?: Promise<any>;
+}[] = [];
+
+/**
+ * Send this & subsequent telemetry only after this promise has been resolved.
+ * We have a default timeout of 30s.
+ * @param {P[E]} [properties]
+ * Can optionally contain a property `waitBeforeSending` referencing a promise.
+ * Which must be awaited before sending the telemetry.
+ */
 export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extends keyof P>(
     eventName: E,
     durationMs?: Record<string, number> | number,
-    properties?: P[E],
+    properties?: P[E] & { [waitBeforeSending]?: Promise<void> },
     ex?: Error,
     sendOriginalEventWithErrors?: boolean
 ) {
     if (isTestExecution() || !isTelemetrySupported()) {
         return;
     }
+    // If stuff is already queued, then queue the rest.
+    // Queue telemetry for now only in insiders.
+    if (
+        sharedProperties['isInsiderExtension'] === 'true' &&
+        isPromise(properties?.waitBeforeSending || queuedTelemetry.length)
+    ) {
+        queuedTelemetry.push({
+            eventName: eventName as string,
+            durationMs,
+            properties,
+            ex,
+            sendOriginalEventWithErrors,
+            queueEverythingUntilCompleted: properties?.waitBeforeSending
+        });
+        sendNextTelemetryItem();
+    } else {
+        sendTelemetryEventInternal(eventName as any, durationMs, properties, ex, sendOriginalEventWithErrors);
+    }
+}
+
+function sendNextTelemetryItem(): void {
+    if (queuedTelemetry.length === 0) {
+        return;
+    }
+    // Take the first item to be sent.
+    const nextItem = queuedTelemetry[0];
+    let timer: NodeJS.Timeout | undefined | number;
+    function sendThisTelemetryItem() {
+        if (timer) {
+            clearTimeout(timer as any);
+        }
+        // Possible already sent out by another event handler.
+        if (queuedTelemetry.length === 0 || queuedTelemetry[0] !== nextItem) {
+            return;
+        }
+        queuedTelemetry.shift();
+        sendTelemetryEventInternal(
+            nextItem.eventName as any,
+            nextItem.durationMs,
+            nextItem.properties,
+            nextItem.ex,
+            nextItem.sendOriginalEventWithErrors
+        );
+        sendNextTelemetryItem();
+    }
+
+    if (nextItem.queueEverythingUntilCompleted) {
+        timer = setTimeout(() => sendThisTelemetryItem(), 30_000);
+        // Wait for the promise & then send it.
+        nextItem.queueEverythingUntilCompleted.finally(() => sendThisTelemetryItem()).catch(noop);
+    } else {
+        return sendThisTelemetryItem();
+    }
+}
+
+function sendTelemetryEventInternal<P extends IEventNamePropertyMapping, E extends keyof P>(
+    eventName: E,
+    durationMs?: Record<string, number> | number,
+    properties?: P[E],
+    ex?: Error,
+    sendOriginalEventWithErrors?: boolean
+) {
     const reporter = getTelemetryReporter();
     const measures = typeof durationMs === 'number' ? { duration: durationMs } : durationMs ? durationMs : undefined;
     let customProperties: Record<string, string> = {};
@@ -148,7 +233,7 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
             // Add shared properties to telemetry props (we may overwrite existing ones).
             Object.assign(customProperties, sharedProperties);
             populateTelemetryWithErrorInfo(customProperties, ex);
-            customProperties = stringifyProperties(eventNameSent, customProperties);
+            customProperties = sanitizeProperties(eventNameSent, customProperties);
             reporter.sendTelemetryErrorEvent(eventNameSent, customProperties, measures, []);
         } else {
             // Include a property failed, to indicate there are errors.
@@ -158,12 +243,12 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
             Object.assign(customProperties, sharedProperties);
             Object.assign(customProperties, properties || {});
             populateTelemetryWithErrorInfo(customProperties, ex);
-            customProperties = stringifyProperties(eventNameSent, customProperties);
+            customProperties = sanitizeProperties(eventNameSent, customProperties);
             reporter.sendTelemetryEvent(eventNameSent, customProperties, measures);
         }
     } else {
         if (properties) {
-            customProperties = stringifyProperties(eventNameSent, properties);
+            customProperties = sanitizeProperties(eventNameSent, properties);
         }
 
         // Add shared properties to telemetry props (we may overwrite existing ones).
@@ -1122,4 +1207,13 @@ export interface IEventNamePropertyMapping {
     // Native variable view events
     [Telemetry.NativeVariableViewLoaded]: never | undefined;
     [Telemetry.NativeVariableViewMadeVisible]: never | undefined;
+    /**
+     * Telemetry sent when a command is executed.
+     */
+    [Telemetry.CommandExecuted]: {
+        /**
+         * Name of the command executed.
+         */
+        command: string;
+    };
 }

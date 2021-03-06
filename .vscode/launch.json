@@ -96,11 +96,10 @@
             "request": "launch",
             "runtimeExecutable": "${execPath}",
             "args": [
-                "${workspaceFolder:vscode-jupyter}/src/testMultiRootWkspc/smokeTests",
+                "${workspaceFolder}/src/testMultiRootWkspc/smokeTests",
                 "--enable-proposed-api",
-                "--extensionDevelopmentPath=${workspaceFolder:vscode-python}",
-                "--extensionDevelopmentPath=${workspaceFolder:vscode-jupyter}",
-                "--extensionTestsPath=${workspaceFolder:vscode-jupyter}/out/test"
+                "--extensionDevelopmentPath=${workspaceFolder}",
+                "--extensionTestsPath=${workspaceFolder}/out/test"
             ],
             "env": {
                 "CI_PYTHON_PATH": "<Python Path>",
@@ -110,10 +109,8 @@
             "stopOnEntry": false,
             "sourceMaps": true,
             "outFiles": [
-                "${workspaceFolder:vscode-python}/out/**/*.js",
-                "!${workspaceFolder:vscode-python}/**/node_modules**/*",
-                "${workspaceFolder:vscode-jupyter}/out/**/*.js",
-                "!${workspaceFolder:vscode-jupyter}/**/node_modules**/*"
+                "${workspaceFolder}/out/**/*.js",
+                "!${workspaceFolder}/**/node_modules**/*"
             ],
             "preLaunchTask": "Compile",
             "skipFiles": [

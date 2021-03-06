@@ -89,6 +89,8 @@ async function activateLegacy(
     // Load the two data science experiments that we need to register types
     // Await here to keep the register method sync
     const experimentService = serviceContainer.get<IExperimentService>(IExperimentService);
+    // This must be done first, this guarantees all experiment information has loaded & all telemetry will contain experiment info.
+    await experimentService.activate();
     const amlCompute = serviceContainer.get<AmlComputeContext>(AmlComputeContext);
     experimentService.logExperiments();
 

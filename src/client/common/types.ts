@@ -404,6 +404,7 @@ export interface IAsyncDisposableRegistry extends IAsyncDisposable {
  */
 export const IExperimentService = Symbol('IExperimentService');
 export interface IExperimentService {
+    activate(): Promise<void>;
     inExperiment(experimentName: Experiments): Promise<boolean>;
     getExperimentValue<T extends boolean | number | string>(experimentName: string): Promise<T | undefined>;
     logExperiments(): void;

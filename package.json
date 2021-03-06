@@ -1,7 +1,7 @@
 {
     "name": "jupyter",
     "displayName": "Jupyter",
-    "version": "2021.3.0",
+    "version": "2021.4.0",
     "description": "Jupyter notebook support, interactive programming and computing that supports Intellisense, debugging and more.",
     "publisher": "ms-toolsai",
     "enableProposedApi": true,
@@ -24,7 +24,7 @@
         "theme": "light"
     },
     "engines": {
-        "vscode": "1.54.0-insider"
+        "vscode": "1.55.0-insider"
     },
     "keywords": [
         "jupyter",
@@ -1321,7 +1321,7 @@
                 {
                     "command": "jupyter.showDataViewer",
                     "group": "1_view",
-                    "when": "python.isDebuggerDataViewerExperimentEnabled && debugProtocolVariableMenuContext == 'viewableInDataViewer'"
+                    "when": "debugProtocolVariableMenuContext == 'viewableInDataViewer'"
                 }
             ]
         },
@@ -1832,7 +1832,7 @@
             "panel": [
                 {
                     "id": "jupyter-variables",
-                    "title": "Jupyter",
+                    "title": "",
                     "icon": "$(notebook)"
                 }
             ]
@@ -1842,8 +1842,8 @@
                 {
                     "type": "webview",
                     "id": "jupyterViewVariables",
-                    "name": "Variables",
-                    "when": "jupyter.isvscodenotebookactive"
+                    "name": "Jupyter Variables",
+                    "when": "jupyter.hasNativeNotebookOpen"
                 }
             ]
         }

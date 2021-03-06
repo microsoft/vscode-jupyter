@@ -8,6 +8,7 @@ import * as path from 'path';
 import * as sinon from 'sinon';
 import { commands, Uri } from 'vscode';
 import { ICommandManager, IVSCodeNotebook } from '../../../client/common/application/types';
+import { traceInfo } from '../../../client/common/logger';
 import { IDisposable } from '../../../client/common/types';
 import { JupyterNotebookView } from '../../../client/datascience/notebook/constants';
 import { NotebookEditor } from '../../../client/datascience/notebook/notebookEditor';
@@ -25,7 +26,7 @@ import {
 
 suite('DataScience - VSCode Notebook (Editor Provider)', function () {
     /* eslint-disable no-invalid-this, @typescript-eslint/no-explicit-any */
-    this.timeout(5_000);
+    this.timeout(15_000);
 
     let api: IExtensionTestApi;
     let vscodeNotebook: IVSCodeNotebook;
@@ -51,13 +52,15 @@ suite('DataScience - VSCode Notebook (Editor Provider)', function () {
         editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
         commandManager = api.serviceContainer.get<ICommandManager>(ICommandManager);
     });
-    setup(async () => {
+    setup(async function () {
+        traceInfo(`Start Test ${this.currentTest?.title}`);
         sinon.restore();
         await closeActiveWindows();
         await trustAllNotebooks();
         // Don't use same file (due to dirty handling, we might save in dirty.)
         // Coz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
         testIPynb = Uri.file(await createTemporaryNotebook(templateIPynb, disposables));
+        traceInfo(`Start Test (Completed) ${this.currentTest?.title}`);
     });
     teardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));

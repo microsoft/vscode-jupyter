@@ -172,6 +172,7 @@ export namespace EditorContexts {
     export const IsPythonNotebook = 'jupyter.ispythonnotebook';
     export const IsVSCodeNotebookActive = 'jupyter.isvscodenotebookactive';
     export const IsDataViewerActive = 'jupyter.dataViewerActive';
+    export const HasNativeNotebookOpen = 'jupyter.hasNativeNotebookOpen';
 }
 
 export namespace RegExpValues {
@@ -447,7 +448,8 @@ export enum Telemetry {
     SwitchKernel = 'DS_INTERNAL.SWITCH_KERNEL',
     KernelCount = 'DS_INTERNAL.KERNEL_COUNT',
     ExecuteCell = 'DATASCIENCE.EXECUTE_CELL',
-    PythonKerneExecutableMatches = 'DS_INTERNAL.PYTHON_KERNEL_EXECUTABLE_MATCHES'
+    PythonKerneExecutableMatches = 'DS_INTERNAL.PYTHON_KERNEL_EXECUTABLE_MATCHES',
+    CommandExecuted = 'DS_INTERNAL.COMMAND_EXECUTED'
 }
 
 export enum NativeKeyboardCommandTelemetry {

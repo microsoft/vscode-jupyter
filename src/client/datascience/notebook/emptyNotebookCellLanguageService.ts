@@ -89,7 +89,7 @@ export class EmptyNotebookCellLanguageService implements IExtensionSingleActivat
                 }
                 edit.replaceNotebookCells(editor.document.uri, cell.index, cell.index + 1, [
                     {
-                        cellKind: cell.cellKind,
+                        kind: cell.cellKind,
                         language: monacoLanguage,
                         metadata: cell.metadata,
                         outputs: cell.outputs.map((op) => new NotebookCellOutput(op.outputs)),

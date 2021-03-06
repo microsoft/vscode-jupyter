@@ -157,7 +157,7 @@ export class NotebookEditor implements INotebookEditor {
             chainWithPendingUpdates(editor.document, (edit) =>
                 edit.replaceNotebookCells(editor.document.uri, 0, this.document.cells.length, [
                     {
-                        cellKind: NotebookCellKind.Code,
+                        kind: NotebookCellKind.Code,
                         language: defaultLanguage,
                         metadata: new NotebookCellMetadata(),
                         outputs: [],
