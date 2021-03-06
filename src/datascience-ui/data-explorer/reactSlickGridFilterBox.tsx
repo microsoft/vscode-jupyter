@@ -13,7 +13,7 @@ const filterIcon: IIconProps = {
         root: {
             fontSize: 'var(--vscode-font-size)',
             width: 'var(--vscode-font-size)',
-            color: 'var(--vscode-settings-textInputForeground)',
+            color: 'var(--vscode-settings-textInputForeground)'
         }
     }
 };
@@ -25,7 +25,7 @@ const styles = {
             opacity: 0
         }
     }
-}
+};
 
 interface IFilterProps {
     column: Slick.Column<Slick.SlickData>;
