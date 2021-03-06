@@ -24,7 +24,7 @@ const checkboxStyles = {
         fontWeight: 'var(--vscode-font-weight)',
         fontSize: 'var(--vscode-font-size)',
         color: 'var(--vscode-editor-foreground) !important',
-        paddingLeft: 2,
+        paddingLeft: 2
     }
 };
 
