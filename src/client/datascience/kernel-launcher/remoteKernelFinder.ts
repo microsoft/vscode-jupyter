@@ -25,6 +25,7 @@ import {
 } from '../types';
 import { isInterpreter } from './localKernelFinder';
 import { IRemoteKernelFinder } from './types';
+import { traceInfoIf } from '../../common/logger';
 
 // and finally on the default locations that jupyter installs kernels on.
 @injectable()
@@ -75,7 +76,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
     // Talk to the remote server to determine sessions
     @captureTelemetry(Telemetry.KernelListingPerf)
     public async listKernels(
-        _resource: Resource,
+        resource: Resource,
         connInfo: INotebookProviderConnection | undefined
     ): Promise<KernelConnectionMetadata[]> {
         // Get a jupyter session manager to talk to
@@ -132,8 +133,17 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
 
                 // Filter out excluded ids
                 const filtered = mappedLive.filter((k) => !this.kernelIdsToHide.has(k.kernelModel.id || ''));
+                const items = [...filtered, ...mappedSpecs];
+                traceInfoIf(
+                    !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
+                    `Kernel specs for ${resource?.toString() || 'undefined'} are \n ${JSON.stringify(
+                        items,
+                        undefined,
+                        4
+                    )}`
+                );
 
-                return [...filtered, ...mappedSpecs];
+                return items;
             } finally {
                 if (sessionManager) {
                     await sessionManager.dispose();

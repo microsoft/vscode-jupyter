@@ -156,7 +156,10 @@ suite('Notebook Editor tests', () => {
                 k.label.toLowerCase().includes('python 3') &&
                 k.label !== preferredKernel?.label &&
                 k.label !== 'Python 3' &&
-                k.selection.interpreter?.path !== preferredKernel?.selection.interpreter?.path
+                preferredKernel?.selection.kind !== 'connectToLiveKernel' &&
+                k.selection.kind !== 'connectToLiveKernel' &&
+                k.selection.interpreter?.path !== preferredKernel?.selection.interpreter?.path &&
+                k.selection.kernelSpec?.path !== preferredKernel?.selection.kernelSpec?.path
         );
         if (anotherKernel) {
             // We have multiple kernels. Try switching
