@@ -72,7 +72,7 @@ suite('DataScience - Kernel Launcher', () => {
 
         // It should not exit.
         await assert.isRejected(
-            waitForCondition(() => deferred.promise, 2_000, 'Timeout'),
+            waitForCondition(() => deferred.promise, 15_000, 'Timeout'),
             'Timeout'
         );
 

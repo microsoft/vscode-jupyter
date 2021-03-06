@@ -3,7 +3,6 @@
 
 'use strict';
 
-import * as fastDeepEqual from 'fast-deep-equal';
 import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
 import { IApplicationShell, IVSCodeNotebook } from '../../../common/application/types';
@@ -56,21 +55,8 @@ export class KernelProvider implements IKernelProvider {
     }
     public getOrCreate(uri: Uri, options: KernelOptions): IKernel | undefined {
         const existingKernelInfo = this.kernelsByUri.get(uri.toString());
-        if (existingKernelInfo) {
-            if (
-                existingKernelInfo.options.metadata.kind === 'startUsingKernelSpec' &&
-                options.metadata.kind === 'startUsingKernelSpec'
-            ) {
-                // When using a specific kernelspec, just compare the actual kernel specs
-                if (fastDeepEqual(existingKernelInfo.options.metadata.kernelSpec, options.metadata.kernelSpec)) {
-                    return existingKernelInfo.kernel;
-                }
-            } else {
-                // If not launching via kernelspec, compare the entire metadata
-                if (fastDeepEqual(existingKernelInfo.options.metadata, options.metadata)) {
-                    return existingKernelInfo.kernel;
-                }
-            }
+        if (existingKernelInfo && existingKernelInfo.options.metadata.id === options.metadata.id) {
+            return existingKernelInfo.kernel;
         }
 
         this.disposeOldKernel(uri);

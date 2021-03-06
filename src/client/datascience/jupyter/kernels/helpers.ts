@@ -5,7 +5,6 @@
 import * as uuid from 'uuid/v4';
 import * as path from 'path';
 import type { Kernel } from '@jupyterlab/services';
-import * as fastDeepEqual from 'fast-deep-equal';
 import { IJupyterKernelSpec, INotebook } from '../../types';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
@@ -14,14 +13,13 @@ import { nbformat } from '@jupyterlab/coreutils';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
 import { PYTHON_LANGUAGE } from '../../../common/constants';
-import { IConfigurationService, IPathUtils, ReadWrite, Resource } from '../../../common/types';
+import { IConfigurationService, IPathUtils, Resource } from '../../../common/types';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import {
     DefaultKernelConnectionMetadata,
     KernelConnectionMetadata,
     KernelSpecConnectionMetadata,
     LiveKernelConnectionMetadata,
-    LiveKernelModel,
     PythonKernelConnectionMetadata
 } from './types';
 import { PreferredRemoteKernelIdProvider } from '../../notebookStorage/preferredRemoteKernelIdProvider';
@@ -241,63 +239,7 @@ export function areKernelConnectionsEqual(
     if (connection1 && !connection2) {
         return false;
     }
-    if (connection1?.kind !== connection2?.kind) {
-        return false;
-    }
-    if (connection1?.kind === 'connectToLiveKernel' && connection2?.kind === 'connectToLiveKernel') {
-        return areKernelModelsEqual(connection1.kernelModel, connection2.kernelModel);
-    } else if (
-        connection1 &&
-        connection1.kind !== 'connectToLiveKernel' &&
-        connection2 &&
-        connection2.kind !== 'connectToLiveKernel'
-    ) {
-        const kernelSpecsAreTheSame = areKernelSpecsEqual(connection1?.kernelSpec, connection2?.kernelSpec);
-        // If both are launching interpreters, compare interpreter paths.
-        const interpretersAreSame =
-            connection1.kind === 'startUsingPythonInterpreter'
-                ? connection1.interpreter.path === connection2.interpreter?.path
-                : true;
-
-        return kernelSpecsAreTheSame && interpretersAreSame;
-    }
-    return false;
-}
-function areKernelSpecsEqual(kernelSpec1?: IJupyterKernelSpec, kernelSpec2?: IJupyterKernelSpec) {
-    if (kernelSpec1 && kernelSpec2) {
-        const spec1 = cloneDeep(kernelSpec1) as ReadWrite<IJupyterKernelSpec>;
-        spec1.env = spec1.env || {};
-        spec1.metadata = spec1.metadata || {};
-        const spec2 = cloneDeep(kernelSpec2) as ReadWrite<IJupyterKernelSpec>;
-        spec2.env = spec1.env || {};
-        spec2.metadata = spec1.metadata || {};
-
-        return fastDeepEqual(spec1, spec2);
-    } else if (!kernelSpec1 && !kernelSpec2) {
-        return true;
-    } else {
-        return false;
-    }
-}
-function areKernelModelsEqual(kernelModel1?: LiveKernelModel, kernelModel2?: LiveKernelModel) {
-    if (kernelModel1 && kernelModel2) {
-        // When comparing kernel models, just compare the id. nothing else matters.
-        if (typeof kernelModel1.id === 'string' || typeof kernelModel2.id === 'string') {
-            return kernelModel1.id === kernelModel2.id;
-        }
-        // If we don't have ids, then compare the rest of the data (backwards compatibility).
-        const model1 = cloneDeep(kernelModel1) as ReadWrite<LiveKernelModel>;
-        model1.env = model1.env || {};
-        model1.metadata = model1.metadata || {};
-        const model2 = cloneDeep(kernelModel2) as ReadWrite<LiveKernelModel>;
-        model2.env = model1.env || {};
-        model2.metadata = model1.metadata || {};
-        return fastDeepEqual(model1, model2);
-    } else if (!kernelModel1 && !kernelModel2) {
-        return true;
-    } else {
-        return false;
-    }
+    return connection1?.id === connection2?.id;
 }
 // Check if a name is a default python kernel name and pull the version
 export function detectDefaultKernelName(name: string) {
