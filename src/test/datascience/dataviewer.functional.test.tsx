@@ -182,9 +182,6 @@ suite('DataScience DataViewer tests', () => {
         const sliceControlWrapper = wrapper.find(SliceControl);
         sliceControlWrapper.update();
         assert.ok(sliceControlWrapper && sliceControlWrapper.length > 0, 'Slice control not found');
-        // sliceControlWrapper.simulate('click');
-        // await sleep(1000);
-        // sliceControlWrapper.update();
         return sliceControlWrapper;
     }
 
