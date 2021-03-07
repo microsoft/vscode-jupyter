@@ -21,6 +21,9 @@ import { SvgViewer } from '../react-common/svgViewer';
 import { TestSvg } from './testSvg';
 import { Toolbar } from './toolbar';
 
+import { initializeIcons } from '@fluentui/react';
+initializeIcons();
+
 // Our css has to come after in order to override body styles
 export interface IMainPanelProps {
     skipDefault?: boolean;

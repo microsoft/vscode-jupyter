@@ -37,6 +37,7 @@ import { Dropdown } from '@fluentui/react';
 
 interface ISliceControlTestInterface {
     toggleEnablement: () => void;
+    applyDropdownsToInputBox: () => void;
 }
 
 // import { asyncDump } from '../common/asyncDump';
@@ -176,13 +177,6 @@ suite('DataScience DataViewer tests', () => {
                 wrapper.dispose();
             }
         });
-    }
-
-    function findSliceControlPanel(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) {
-        const sliceControlWrapper = wrapper.find(SliceControl);
-        sliceControlWrapper.update();
-        assert.ok(sliceControlWrapper && sliceControlWrapper.length > 0, 'Slice control not found');
-        return sliceControlWrapper;
     }
 
     function findGrid(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) {
@@ -533,6 +527,13 @@ suite('DataScience DataViewer tests', () => {
     });
 
     suite('Data viewer slice data', async () => {
+        function findSliceControlPanel(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) {
+            const sliceControlWrapper = wrapper.find(SliceControl);
+            sliceControlWrapper.update();
+            assert.ok(sliceControlWrapper && sliceControlWrapper.length > 0, 'Slice control not found');
+            return sliceControlWrapper;
+        }
+
         function verifyReadonlyIndicator(
             wrapper: ReactWrapper<any, Readonly<{}>, React.Component>,
             currentSlice: string
@@ -551,14 +552,14 @@ suite('DataScience DataViewer tests', () => {
             const html = sliceControl.html();
             const root = parse(html) as any;
             const cells = root.querySelectorAll('.ms-Dropdown-title');
-            assert.ok(cells.length >= rows.length, 'Not enough cells found');
-            // Cells should be an array that matches up to the values we expect.
+            assert.ok(cells.length >= rows.length, 'Not enough dropdowns found');
+            // Now verify the list of dropdowns have the expected values
             for (let i = 0; i < rows.length; i += 1) {
-                // Span should have our value (based on the CellFormatter's output)
+                // Span reflects the dropdown's current selection
                 const span = cells[i] as HTMLSpanElement;
                 assert.ok(span, `Span ${i} not found`);
                 const val = rows[i].toString();
-                assert.equal(span.innerHTML, val, `Row ${i} not matching. ${span.innerHTML} !== ${val}`);
+                assert.equal(span.innerHTML, val, `Dropdown ${i} selection not matching. ${span.innerHTML} !== ${val}`);
             }
         }
 
@@ -606,19 +607,38 @@ suite('DataScience DataViewer tests', () => {
             verifyReadonlyIndicator(wrapper.wrapper, slice);
         }
 
+        async function changeDropdown(
+            wrapper: IMountedWebView,
+            dropdownType: 'Axis' | 'Index',
+            dropdownRow: number,
+            newValue: number | string
+        ) {
+            const gotSlice = getCompletedPromise(wrapper);
+            const sliceControl = findSliceControlPanel(wrapper.wrapper);
+            // Do a setstate because we don't have direct access to the dropdown selection change handler
+            const newState = { [`selected${dropdownType}${dropdownRow}`]: newValue };
+            sliceControl.setState(newState);
+            const instance = (sliceControl.instance() as any) as ISliceControlTestInterface;
+            // This is what gets called in the dropdown change handler. Manually call it because
+            // simulating a change event on the Dropdown node doesn't seem to do anything
+            instance.applyDropdownsToInputBox();
+            wrapper.wrapper.render();
+            await gotSlice;
+        }
+
         runMountedTest('Slice 2D', async (wrapper) => {
             const code = `import torch
 import numpy as np
-arr = np.arange(9).reshape(3,3)
+arr = np.arange(6).reshape(2, 3)
 foo = torch.tensor(arr)`;
 
             // Create data viewer
             await injectCode(code);
             const gotAllRows = getCompletedPromise(wrapper);
-            const dv = await createJupyterVariableDataViewer('foo', 'Tensor', '(3, 3)');
+            const dv = await createJupyterVariableDataViewer('foo', 'Tensor', '(2, 3)');
             assert.ok(dv, 'DataViewer not created');
             await gotAllRows;
-            verifyRows(wrapper.wrapper, [0, 0, 1, 2, 1, 3, 4, 5, 2, 6, 7, 8]);
+            verifyRows(wrapper.wrapper, [0, 0, 1, 2, 1, 3, 4, 5]);
             verifyControlsDisabled(wrapper.wrapper, 2, '');
 
             // Apply a slice via input box and verify that dropdowns update
@@ -627,23 +647,33 @@ foo = torch.tensor(arr)`;
             verifyRows(wrapper.wrapper, [0, 3, 1, 4, 2, 5]);
             verifyDropdowns(wrapper.wrapper, [0, 1]); // Axis 0, index 1
 
+            // Change the dropdowns and verify that the slice expression updates
+            await changeDropdown(wrapper, 'Axis', 0, 1);
+            verifyReadonlyIndicator(wrapper.wrapper, '[:, 1]');
+            verifyDropdowns(wrapper.wrapper, [1, 1]);
+            verifyRows(wrapper.wrapper, [0, 1, 1, 4]);
+            assert.ok(
+                (wrapper.wrapper.find('.slice-data').getDOMNode() as HTMLInputElement).value === '[:, 1]',
+                'Input box did not update to match slice'
+            );
+
             // Apply a slice with no corresponding dropdown
-            await applySliceAndVerifyReadonlyIndicator(wrapper, '[:2, :]');
-            verifyRows(wrapper.wrapper, [0, 0, 1, 2, 1, 3, 4, 5]);
+            await applySliceAndVerifyReadonlyIndicator(wrapper, '[:, :2]');
+            verifyRows(wrapper.wrapper, [0, 0, 1, 1, 3, 4]);
             verifyDropdowns(wrapper.wrapper, ['', '']); // Dropdowns should be unset
 
             // Uncheck slice checkbox and verify original contents are restored
             const disableSlicing = getCompletedPromise(wrapper);
             toggleCheckbox(wrapper.wrapper);
             await disableSlicing;
-            verifyRows(wrapper.wrapper, [0, 0, 1, 2, 1, 3, 4, 5, 2, 6, 7, 8]);
+            verifyRows(wrapper.wrapper, [0, 0, 1, 2, 1, 3, 4, 5]);
             verifyControlsDisabled(wrapper.wrapper, 2, '');
 
             // Recheck slice checkbox and verify slice expression is restored
             const reenableSlicing = getCompletedPromise(wrapper);
             toggleCheckbox(wrapper.wrapper);
             await reenableSlicing;
-            verifyRows(wrapper.wrapper, [0, 0, 1, 2, 1, 3, 4, 5]);
+            verifyRows(wrapper.wrapper, [0, 0, 1, 1, 3, 4]);
 
             // Enter an invalid slice expression and verify error message is rendered
             editInputValue(wrapper, '[:]');
@@ -656,12 +686,12 @@ foo = torch.tensor(arr)`;
         runMountedTest('Slice 3D', async (wrapper) => {
             const code = `import torch
 import numpy as np
-arr = np.arange(27).reshape(3,3,3)
+arr = np.arange(24).reshape(2,4,3)
 foo = torch.tensor(arr)`;
             // Create data viewer
             await injectCode(code);
             const gotAllRows = getCompletedPromise(wrapper);
-            const dv = await createJupyterVariableDataViewer('foo', 'Tensor', '(3, 3, 3)');
+            const dv = await createJupyterVariableDataViewer('foo', 'Tensor', '(2, 4, 3)');
             assert.ok(dv, 'DataViewer not created');
             await gotAllRows;
             verifyRows(wrapper.wrapper, [
@@ -669,14 +699,12 @@ foo = torch.tensor(arr)`;
                 '[0, 1, 2]',
                 '[3, 4, 5]',
                 '[6, 7, 8]',
-                1,
                 '[9, 10, 11]',
+                1,
                 '[12, 13, 14]',
                 '[15, 16, 17]',
-                2,
                 '[18, 19, 20]',
-                '[21, 22, 23]',
-                '[24, 25, 26]'
+                '[21, 22, 23]'
             ]);
             verifyControlsDisabled(wrapper.wrapper, 2, '');
 
@@ -685,16 +713,26 @@ foo = torch.tensor(arr)`;
             toggleCheckbox(wrapper.wrapper);
             await enableSlicing;
             verifyReadonlyIndicator(wrapper.wrapper, '[0, :, :]');
-            verifyRows(wrapper.wrapper, [0, 0, 1, 2, 1, 3, 4, 5, 2, 6, 7, 8]);
+            verifyRows(wrapper.wrapper, [0, 0, 1, 2, 1, 3, 4, 5, 2, 6, 7, 8, 3, 9, 10, 11]);
+
+            // Change the dropdowns and verify that the slice expression updates
+            await changeDropdown(wrapper, 'Axis', 0, 1);
+            verifyReadonlyIndicator(wrapper.wrapper, '[:, 0, :]');
+            verifyDropdowns(wrapper.wrapper, [1, 0]);
+            verifyRows(wrapper.wrapper, [0, 0, 1, 2, 1, 12, 13, 14]);
+            assert.ok(
+                (wrapper.wrapper.find('.slice-data').getDOMNode() as HTMLInputElement).value === '[:, 0, :]',
+                'Input box did not update to match slice'
+            );
 
             // Apply a slice via input box and verify that dropdowns update
             await applySliceAndVerifyReadonlyIndicator(wrapper, '[:, :, 2]');
-            verifyRows(wrapper.wrapper, [0, 2, 5, 8, 1, 11, 14, 17, 2, 20, 23, 26]);
+            verifyRows(wrapper.wrapper, [0, 2, 5, 8, 11, 1, 14, 17, 20, 23]);
             verifyDropdowns(wrapper.wrapper, [2, 2]); // Axis 2, index 2
 
             // Apply a slice with no corresponding dropdown
             await applySliceAndVerifyReadonlyIndicator(wrapper, '[:, :1, :]');
-            verifyRows(wrapper.wrapper, [0, '[0, 1, 2]', 1, '[9, 10, 11]', 2, '[18, 19, 20]']);
+            verifyRows(wrapper.wrapper, [0, '[0, 1, 2]', 1, '[12, 13, 14]']);
             verifyDropdowns(wrapper.wrapper, ['', '']); // Dropdowns should be unset
 
             // Uncheck slice checkbox and verify original contents are restored
@@ -706,14 +744,12 @@ foo = torch.tensor(arr)`;
                 '[0, 1, 2]',
                 '[3, 4, 5]',
                 '[6, 7, 8]',
-                1,
                 '[9, 10, 11]',
+                1,
                 '[12, 13, 14]',
                 '[15, 16, 17]',
-                2,
                 '[18, 19, 20]',
-                '[21, 22, 23]',
-                '[24, 25, 26]'
+                '[21, 22, 23]'
             ]);
             verifyControlsDisabled(wrapper.wrapper, 2, '');
 
@@ -721,7 +757,7 @@ foo = torch.tensor(arr)`;
             const reenableSlicing = getCompletedPromise(wrapper);
             toggleCheckbox(wrapper.wrapper);
             await reenableSlicing;
-            verifyRows(wrapper.wrapper, [0, '[0, 1, 2]', 1, '[9, 10, 11]', 2, '[18, 19, 20]']);
+            verifyRows(wrapper.wrapper, [0, '[0, 1, 2]', 1, '[12, 13, 14]']);
             verifyReadonlyIndicator(wrapper.wrapper, '[:, :1, :]');
 
             // Enter an invalid slice expression and verify error message is rendered
@@ -735,27 +771,33 @@ foo = torch.tensor(arr)`;
         runMountedTest('Slice 4D', async (wrapper) => {
             const code = `import torch
 import numpy as np
-arr = np.arange(81).reshape(3,3,3,3)
+arr = np.arange(30).reshape(3, 5, 1, 2)
 foo = torch.tensor(arr)`;
             // Create data viewer
             await injectCode(code);
             const gotAllRows = getCompletedPromise(wrapper);
-            const dv = await createJupyterVariableDataViewer('foo', 'Tensor', '(3, 3, 3, 3)');
+            const dv = await createJupyterVariableDataViewer('foo', 'Tensor', '(3, 5, 1, 2)');
             assert.ok(dv, 'DataViewer not created');
             await gotAllRows;
             verifyRows(wrapper.wrapper, [
                 0,
-                `[[0, 1, 2],\n [3, 4, 5],\n [6, 7, 8]]`,
-                '[[9, 10, 11],\n [12, 13, 14],\n [15, 16, 17]]',
-                '[[18, 19, 20],\n [21, 22, 23],\n [24, 25, 26]]',
+                '[[0, 1]]',
+                `[[2, 3]]`,
+                '[[4, 5]]',
+                '[[6, 7]]',
+                '[[8, 9]]',
                 1,
-                '[[27, 28, 29],\n [30, 31, 32],\n [33, 34, 35]]',
-                '[[36, 37, 38],\n [39, 40, 41],\n [42, 43, 44]]',
-                '[[45, 46, 47],\n [48, 49, 50],\n [51, 52, 53]]',
+                '[[10, 11]]',
+                '[[12, 13]]',
+                '[[14, 15]]',
+                '[[16, 17]]',
+                '[[18, 19]]',
                 2,
-                '[[54, 55, 56],\n [57, 58, 59],\n [60, 61, 62]]',
-                '[[63, 64, 65],\n [66, 67, 68],\n [69, 70, 71]]',
-                '[[72, 73, 74],\n [75, 76, 77],\n [78, 79, 80]]'
+                '[[20, 21]]',
+                '[[22, 23]]',
+                '[[24, 25]]',
+                '[[26, 27]]',
+                '[[28, 29]]'
             ]);
             verifyControlsDisabled(wrapper.wrapper, 4, '');
 
@@ -764,16 +806,26 @@ foo = torch.tensor(arr)`;
             toggleCheckbox(wrapper.wrapper);
             await enableSlicing;
             verifyReadonlyIndicator(wrapper.wrapper, '[0, 0, :, :]');
-            verifyRows(wrapper.wrapper, [0, 0, 1, 2, 1, 3, 4, 5, 2, 6, 7, 8]);
+            verifyRows(wrapper.wrapper, [0, 0, 1]);
+
+            // Change the dropdowns and verify that the slice expression updates
+            await changeDropdown(wrapper, 'Index', 1, 2);
+            verifyReadonlyIndicator(wrapper.wrapper, '[0, 2, :, :]');
+            verifyDropdowns(wrapper.wrapper, [0, 0, 1, 2]);
+            verifyRows(wrapper.wrapper, [0, 4, 5]);
+            assert.ok(
+                (wrapper.wrapper.find('.slice-data').getDOMNode() as HTMLInputElement).value === '[0, 2, :, :]',
+                'Input box did not update to match slice'
+            );
 
             // Apply a slice via input box and verify that dropdowns update
-            await applySliceAndVerifyReadonlyIndicator(wrapper, '[:, 0, :, 2]');
-            verifyRows(wrapper.wrapper, [0, 2, 5, 8, 1, 29, 32, 35, 2, 56, 59, 62]);
-            verifyDropdowns(wrapper.wrapper, [1, 0, 3, 2]); // Axis 1 index 0, axis 3 index 2
+            await applySliceAndVerifyReadonlyIndicator(wrapper, '[:, 4, :, 1]');
+            verifyRows(wrapper.wrapper, [0, 9, 1, 19, 2, 29]);
+            verifyDropdowns(wrapper.wrapper, [1, 4, 3, 1]); // Axis 1 index 4, axis 3 index 1
 
             // Apply a slice with no corresponding dropdown
             await applySliceAndVerifyReadonlyIndicator(wrapper, '[1, 2, 0, :]');
-            verifyRows(wrapper.wrapper, [0, 45, 1, 46, 2, 47]);
+            verifyRows(wrapper.wrapper, [0, 14, 1, 15]);
             verifyDropdowns(wrapper.wrapper, ['', '', '', '']); // Dropdowns should be unset
 
             // Uncheck slice checkbox and verify original contents are restored
@@ -782,17 +834,23 @@ foo = torch.tensor(arr)`;
             await disableSlicing;
             verifyRows(wrapper.wrapper, [
                 0,
-                `[[0, 1, 2],\n [3, 4, 5],\n [6, 7, 8]]`,
-                '[[9, 10, 11],\n [12, 13, 14],\n [15, 16, 17]]',
-                '[[18, 19, 20],\n [21, 22, 23],\n [24, 25, 26]]',
+                '[[0, 1]]',
+                `[[2, 3]]`,
+                '[[4, 5]]',
+                '[[6, 7]]',
+                '[[8, 9]]',
                 1,
-                '[[27, 28, 29],\n [30, 31, 32],\n [33, 34, 35]]',
-                '[[36, 37, 38],\n [39, 40, 41],\n [42, 43, 44]]',
-                '[[45, 46, 47],\n [48, 49, 50],\n [51, 52, 53]]',
+                '[[10, 11]]',
+                '[[12, 13]]',
+                '[[14, 15]]',
+                '[[16, 17]]',
+                '[[18, 19]]',
                 2,
-                '[[54, 55, 56],\n [57, 58, 59],\n [60, 61, 62]]',
-                '[[63, 64, 65],\n [66, 67, 68],\n [69, 70, 71]]',
-                '[[72, 73, 74],\n [75, 76, 77],\n [78, 79, 80]]'
+                '[[20, 21]]',
+                '[[22, 23]]',
+                '[[24, 25]]',
+                '[[26, 27]]',
+                '[[28, 29]]'
             ]);
             verifyControlsDisabled(wrapper.wrapper, 4, '');
 
@@ -800,8 +858,8 @@ foo = torch.tensor(arr)`;
             const reenableSlicing = getCompletedPromise(wrapper);
             toggleCheckbox(wrapper.wrapper);
             await reenableSlicing;
-            verifyRows(wrapper.wrapper, [0, 45, 1, 46, 2, 47]);
-            verifyReadonlyIndicator(wrapper.wrapper, '[1, 2, 0, :]');
+            verifyRows(wrapper.wrapper, [0, 14, 1, 15]);
+            verifyDropdowns(wrapper.wrapper, ['', '', '', '']); // Dropdowns should be unset
 
             // Enter an invalid slice expression and verify error message is rendered
             editInputValue(wrapper, '[:]');
