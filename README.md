@@ -24,13 +24,13 @@ The Jupyter Extension supports other languages in addition to Python such as Jul
 -   **Step 4.** Open or create a notebook file and start coding!
 
 - **Special Note:**  The Jupyter Extension in VS Code Insiders will include our Native Notebooks experience by default. Because we are running in VS Code Insiders and this build is updated every day, there may be times when our extension may fail to work at all. We do attempt to ensure that this doesn't happen frequently. If it does, we strive to provide an updated extension build by the next business day. However, if you'd like to opt out of the native experience while working in VS Code Insiders:
-    - Open the command palette (Windows: Ctrl + Shift + P, iOS: Command + Shift + P) and select "Preferences: Open Settings (JSON)"
+    - Open the command palette (Windows: Ctrl + Shift + P, macOS: Command + Shift + P) and select "Preferences: Open Settings (JSON)"
     - Add the following code to your JSON settings:
      `"jupyter.experiments.optOutFrom": ["NativeNotebookEditor"],`
 
 ## Notebooks Quick Start
 
-- To create a new notebook open the command palette (Windows: Ctrl + Shift + P, iOS: Command + Shift + P) and select the command `"Jupyter: Create New Blank Notebook"`
+- To create a new notebook open the command palette (Windows: Ctrl + Shift + P, macOS: Command + Shift + P) and select the command `"Jupyter: Create New Blank Notebook"`
 
      <img src=https://raw.githubusercontent.com/microsoft/vscode-jupyter/main/images/Jupyter%20README/CreateNewNotebook.png>
 
