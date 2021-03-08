@@ -282,19 +282,18 @@ export async function waitForKernelToChange(criteria: { labelOrId?: string; inte
     if (criteria.labelOrId) {
         const labelOrId = criteria.labelOrId;
         id = kernels?.find((k) => (labelOrId && k.label === labelOrId) || (k.id && k.id == labelOrId))?.id;
-        traceInfo(`Kernel id searching for ${id}`);
         if (!id) {
             // Try includes instead
             id = kernels?.find((k) => (labelOrId && k.label.includes(labelOrId)) || (k.id && k.id == labelOrId))?.id;
         }
     }
-
     if (criteria.interpreterPath && !id) {
         id = kernels
             ?.filter((k) => k.selection.interpreter)
             .find((k) => k.selection.interpreter!.path.toLowerCase().includes(criteria.interpreterPath!.toLowerCase()))
             ?.id;
     }
+    traceInfo(`Kernel id searching for ${id}`);
 
     // Send a select kernel on the active notebook editor
     void commands.executeCommand('notebook.selectKernel', { id, extension: JVSC_EXTENSION_ID });

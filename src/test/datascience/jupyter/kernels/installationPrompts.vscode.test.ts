@@ -40,16 +40,14 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         'src/test/datascience/jupyter/kernels/nbWithKernel.ipynb'
     );
     const executable = getOSType() === OSType.Windows ? 'Scripts/python.exe' : 'bin/python'; // If running locally on Windows box.
-    const venvPythonPath = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src/test/datascience/.venvnokernel', executable);
-    const venvNoRegPath = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src/test/datascience/.venvnoreg', executable);
+    let venvPythonPath = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src/test/datascience/.venvnokernel', executable);
+    let venvNoRegPath = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src/test/datascience/.venvnoreg', executable);
     const expectedPromptMessageSuffix = `requires ${ProductNames.get(Product.ipykernel)!} to be installed.`;
 
     let api: IExtensionTestApi;
     let editorProvider: INotebookEditorProvider;
     let installer: IInstaller;
     let vscodeNotebook: IVSCodeNotebook;
-    let venvPythonKernelName: string = '';
-    let venvNoRegKernelName: string = '';
     const delayForUITest = 30_000;
     this.timeout(60_000); // Slow test, we need to uninstall/install ipykernel.
     /*
@@ -82,8 +80,8 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         if (!interpreter1 || !interpreter2) {
             throw new Error('Unable to get information for interpreter 1');
         }
-        venvPythonKernelName = interpreter1.displayName || '.venvnokernel';
-        venvNoRegKernelName = interpreter2.displayName || '.venvnoreg';
+        venvPythonPath = interpreter1.path;
+        venvNoRegPath = interpreter2.path;
     });
 
     setup(async function () {
@@ -124,8 +122,8 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
                 disposables
             );
             const installed = createDeferred();
-            const kName = which ? venvPythonKernelName : venvNoRegKernelName;
-            console.log(`Running ensure prompt and looking for kernel ${kName}`);
+            const interpreterPath = which ? venvPythonPath : venvNoRegPath;
+            console.log(`Running ensure prompt and looking for kernel ${interpreterPath}`);
 
             // Confirm it is installed.
             const showInformationMessage = sinon
@@ -146,7 +144,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
                 await openNotebook(api.serviceContainer, nbFile);
                 // If this is a native notebook, then wait for kernel to get selected.
                 if (editorProvider.activeEditor?.type === 'native') {
-                    await waitForKernelToChange({ labelOrId: kName });
+                    await waitForKernelToChange({ interpreterPath });
                 }
 
                 // Run all cells
