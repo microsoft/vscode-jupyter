@@ -59,6 +59,9 @@ const dropdownStyles = {
             }
         }
     },
+    caretDown: {
+        visibility: 'hidden' // Override the FluentUI caret and use ::after selector on the caretDownWrapper in order to match VS Code. See sliceContro.css
+    },
     callout: styleOverrides,
     dropdownItem: styleOverrides,
     dropdownItemSelected: {

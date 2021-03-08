@@ -15,7 +15,7 @@
 .react-grid-header-cell {
     padding: 0px 4px;
     background-color: var(--vscode-menu-background);
-    color: var(--vscode-editor-foreground);
+    color: var(--vscode-menu-foreground);
     text-align: left;
     font-weight: bold;
     border-right: 1px solid transparent;
@@ -37,6 +37,7 @@
 /* Some overrides necessary to get the colors we want */
 .slick-headerrow-column {
     background-color: var(--vscode-menu-background);
+    color: var(--vscode-menu-foreground);
     border-right: 1px solid transparent;
 }
 
@@ -81,7 +82,7 @@
     text-align: right;
     display: flex;
     padding: 3px;
-    color: var(--vscode-settings-textInputForeground);
+    color: var(--vscode-menu-foreground);
     opacity: 0.4;
 }
 
@@ -93,7 +94,7 @@
     text-align: right;
     display: flex;
     padding: 3px;
-    color: var(--vscode-settings-textInputForeground);
+    color: var(--vscode-menu-foreground);
     opacity: 0.4;
 }
 
@@ -112,7 +113,7 @@ input.editor-text {
     outline: 0 none;
     border-style: solid;
     background-color: var(--vscode-list-activeSelectionBackground);
-    color: var(--vscode-button-foreground);
+    color: var(--vscode-list-activeSelectionForeground);
     text-align: left;
     /* input does not inherit font from body */
     font-family: var(--vscode-editor-font-family);
@@ -143,7 +144,7 @@ input.editor-text {
     cursor: pointer;
     padding-left: 3px;
     padding-top: 3px;
-    color: var(--vscode-settings-textInputForeground);
+    color: var(--vscode-menu-foreground);
 }
 
 .header-cell-button {
