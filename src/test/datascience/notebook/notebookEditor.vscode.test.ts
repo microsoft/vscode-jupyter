@@ -163,7 +163,7 @@ suite('Notebook Editor tests', () => {
         );
         if (anotherKernel) {
             // We have multiple kernels. Try switching
-            await waitForKernelToChange({ labelOrId: anotherKernel.id });
+            await waitForKernelToChange({ labelOrId: anotherKernel.label });
         }
 
         // Execute cell and verify output

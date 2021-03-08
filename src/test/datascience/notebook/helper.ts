@@ -273,13 +273,14 @@ export async function waitForKernelToChange(criteria: { labelOrId?: string; inte
         new CancellationTokenSource().token
     )) as VSCodeNotebookKernelMetadata[];
 
-    traceInfo(`Kernels found for wait search: ${kernels?.map((k) => k.label).join('\n')}`);
+    traceInfo(`Kernels found for wait search: ${kernels?.map((k) => `${k.label}:${k.id}`).join('\n')}`);
 
     // Find the kernel id that matches the name we want
     let id: string | undefined;
     if (criteria.labelOrId) {
         const labelOrId = criteria.labelOrId;
-        id = kernels?.find((k) => (labelOrId && k.label.includes(labelOrId)) || (k.id && k.id == labelOrId))?.id;
+        id = kernels?.find((k) => (labelOrId && k.label === labelOrId) || (k.id && k.id == labelOrId))?.id;
+        traceInfo(`Kernel id searching for ${id}`);
     }
 
     if (criteria.interpreterPath) {
