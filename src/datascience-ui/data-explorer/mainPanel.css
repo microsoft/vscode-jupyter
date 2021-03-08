@@ -16,6 +16,9 @@
     padding-left: 16px;
     overflow: auto;
     white-space: nowrap;
+    border-bottom-color: var(--vscode-editor-inactiveSelectionBackground);
+    border-bottom-style: solid;
+    border-bottom-width: 1px;
 }
 
 .breadcrumb {
@@ -38,4 +41,8 @@
     color: #519aba;
     font-size: 18px;
     padding-right: 2px;
+}
+
+.breadcrumb-codicon {
+    color: var(--vscode-breadcrumb-foreground);
 }

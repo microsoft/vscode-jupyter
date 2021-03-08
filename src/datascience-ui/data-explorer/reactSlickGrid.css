@@ -4,9 +4,7 @@
 }
 
 .react-grid-container {
-    border-color: var(--vscode-editor-inactiveSelectionBackground);
-    border-style: solid;
-    border-width: 1px;
+    border: none;
 }
 
 .react-grid-measure {
@@ -17,19 +15,17 @@
 .react-grid-header-cell {
     padding: 0px 4px;
     background-color: var(--vscode-menu-background);
-    color: var(--vscode-editor-foreground);
+    color: var(--vscode-menu-foreground);
     text-align: left;
     font-weight: bold;
-    border-right-color: var(--vscode-editor-inactiveSelectionBackground);
+    border-right: 1px solid transparent;
 }
 
 .react-grid-cell {
     padding: 4px;
     background-color: var(--vscode-editor-background);
     color: var(--vscode-editor-foreground);
-    border-bottom-color: var(--vscode-editor-inactiveSelectionBackground);
-    border-right-color: var(--vscode-editor-inactiveSelectionBackground);
-    border-right-style: solid;
+    border-right: 1px solid transparent;
     box-sizing: border-box;
 }
 
@@ -41,9 +37,8 @@
 /* Some overrides necessary to get the colors we want */
 .slick-headerrow-column {
     background-color: var(--vscode-menu-background);
-    border-right-color: var(--vscode-editor-inactiveSelectionBackground);
-    border-right-style: solid;
-    border-bottom-color: var(--vscode-menu-background);
+    color: var(--vscode-menu-foreground);
+    border-right: 1px solid transparent;
 }
 
 .slick-headerrow-column.ui-state-default {
@@ -55,7 +50,7 @@
 
 .slick-header-column.ui-state-default,
 .slick-group-header-column.ui-state-default {
-    border-right-color: var(--vscode-editor-inactiveSelectionBackground);
+    border-right: 1px solid transparent;
     display: flex;
 }
 
@@ -76,21 +71,31 @@
 }
 
 .react-grid-header-cell:hover {
-    background-color: var(--vscode-editor-inactiveSelectionBackground);
+    background-color: var(--override-selection-background, var(--vscode-list-hoverBackground));
 }
 
 .react-grid-header-cell > .slick-sort-indicator-asc::before {
     background: none;
-    font: normal normal normal 16px/1 codicon;
+    font: normal normal normal 10px/1 codicon;
     content: '\eaa1'; /* VS Code arrow-up codicon */
     align-items: center;
+    text-align: right;
+    display: flex;
+    padding: 3px;
+    color: var(--vscode-menu-foreground);
+    opacity: 0.4;
 }
 
 .react-grid-header-cell > .slick-sort-indicator-desc::before {
     background: none;
-    font: normal normal normal 16px/1 codicon;
+    font: normal normal normal 10px/1 codicon;
     content: '\ea9a'; /* VS Code arrow-down codicon */
     align-items: center;
+    text-align: right;
+    display: flex;
+    padding: 3px;
+    color: var(--vscode-menu-foreground);
+    opacity: 0.4;
 }
 
 .slick-row:hover > .react-grid-cell {
@@ -108,12 +113,16 @@ input.editor-text {
     outline: 0 none;
     border-style: solid;
     background-color: var(--vscode-list-activeSelectionBackground);
-    color: var(--vscode-button-foreground);
+    color: var(--vscode-list-activeSelectionForeground);
     text-align: left;
     /* input does not inherit font from body */
     font-family: var(--vscode-editor-font-family);
     font-weight: var(--vscode-editor-font-weight);
     font-size: var(--vscode-editor-font-size);
+}
+
+.slick-cell {
+    border: 1px solid var(--vscode-editor-lineHighlightBorder);
 }
 
 .slick-cell.editable {
@@ -125,9 +134,6 @@ input.editor-text {
 }
 
 .control-container {
-    border-bottom-color: var(--vscode-editor-inactiveSelectionBackground);
-    border-bottom-style: solid;
-    border-bottom-width: 1px;
     padding: 6px;
     display: flex;
     justify-content: start;
@@ -136,6 +142,9 @@ input.editor-text {
 
 .codicon-button {
     cursor: pointer;
+    padding-left: 3px;
+    padding-top: 3px;
+    color: var(--vscode-menu-foreground);
 }
 
 .header-cell-button {

@@ -11,3 +11,7 @@
     text-overflow: ellipsis;
     overflow: hidden;
 }
+
+.index-column-formatter {
+    text-align: right;
+}
