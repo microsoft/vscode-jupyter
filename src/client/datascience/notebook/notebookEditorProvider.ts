@@ -197,7 +197,7 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
     }
     private onDidChangeActiveVsCodeNotebookEditor(editor: VSCodeNotebookEditor | undefined) {
         if (!editor) {
-            this._onDidChangeActiveNotebookEditor.fire(undefined);
+            // this._onDidChangeActiveNotebookEditor.fire(undefined);
             return;
         }
         if (this.trackedVSCodeNotebookEditors.has(editor)) {
