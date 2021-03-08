@@ -65,7 +65,9 @@ import { closeActiveWindows, initialize, isInsiders } from '../../initialize';
 import { JupyterServer } from '../jupyterServer';
 import { NotebookEditorProvider } from '../../../client/datascience/notebook/notebookEditorProvider';
 import { VSCodeNotebookProvider } from '../../../client/datascience/constants';
-const defaultTimeout = 15_000;
+
+// Running in Conda environments, things can be a little slower.
+const defaultTimeout = process.env.VSC_JUPYTER_CI_IS_CONDA === 'true' ? 30_000 : 15_000;
 
 async function getServices() {
     const api = await initialize();
