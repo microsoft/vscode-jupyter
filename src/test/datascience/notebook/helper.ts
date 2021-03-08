@@ -283,6 +283,10 @@ export async function waitForKernelToChange(criteria: { labelOrId?: string; inte
         const labelOrId = criteria.labelOrId;
         id = kernels?.find((k) => (labelOrId && k.label === labelOrId) || (k.id && k.id == labelOrId))?.id;
         traceInfo(`Kernel id searching for ${id}`);
+        if (!id) {
+            // Try includes instead
+            id = kernels?.find((k) => (labelOrId && k.label.includes(labelOrId)) || (k.id && k.id == labelOrId))?.id;
+        }
     }
 
     if (criteria.interpreterPath && !id) {

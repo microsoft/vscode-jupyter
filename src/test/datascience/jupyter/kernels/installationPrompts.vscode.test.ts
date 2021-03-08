@@ -75,16 +75,15 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
 
         const interpreterService = api.serviceContainer.get<IInterpreterService>(IInterpreterService);
-        const [activeInterpreter, interpreter1, interpreter2] = await Promise.all([
-            interpreterService.getActiveInterpreter(),
+        const [interpreter1, interpreter2] = await Promise.all([
             interpreterService.getInterpreterDetails(venvPythonPath),
             interpreterService.getInterpreterDetails(venvNoRegPath)
         ]);
-        if (!activeInterpreter || !interpreter1 || !interpreter2) {
+        if (!interpreter1 || !interpreter2) {
             throw new Error('Unable to get information for interpreter 1');
         }
-        venvPythonKernelName = IS_REMOTE_NATIVE_TEST ? interpreter1.displayName || '.venvnokernel' : '.venvnokernel';
-        venvNoRegKernelName = IS_REMOTE_NATIVE_TEST ? interpreter2.displayName || '.venvnoreg' : '.venvnoreg';
+        venvPythonKernelName = interpreter1.displayName || '.venvnokernel';
+        venvNoRegKernelName = interpreter2.displayName || '.venvnoreg';
     });
 
     setup(async function () {
@@ -126,6 +125,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
             );
             const installed = createDeferred();
             const kName = which ? venvPythonKernelName : venvNoRegKernelName;
+            console.log(`Running ensure prompt and looking for kernel ${kName}`);
 
             // Confirm it is installed.
             const showInformationMessage = sinon
