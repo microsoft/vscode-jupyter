@@ -16,7 +16,7 @@ import { getTextOutputValue } from '../../../client/datascience/notebook/helpers
 import { VSCodeNotebookKernelMetadata } from '../../../client/datascience/notebook/kernelWithMetadata';
 import { INotebookKernelProvider } from '../../../client/datascience/notebook/types';
 import { IExtensionTestApi } from '../../common';
-import { initialize } from '../../initialize';
+import { closeActiveWindows, initialize } from '../../initialize';
 import {
     canRunNotebookTests,
     closeNotebooksAndCleanUpAfterTests,
@@ -57,6 +57,7 @@ suite('Notebook Editor tests', () => {
         traceInfo(`Start Test ${this.currentTest?.title}`);
         await startJupyterServer();
         await trustAllNotebooks();
+        await closeActiveWindows();
         await createEmptyPythonNotebook(disposables);
         assert.isOk(vscodeNotebook.activeNotebookEditor, 'No active notebook');
         traceInfo(`Start Test Completed ${this.currentTest?.title}`);

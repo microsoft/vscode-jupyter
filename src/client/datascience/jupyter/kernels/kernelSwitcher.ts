@@ -38,6 +38,11 @@ export class KernelSwitcher {
         // eslint-disable-next-line no-constant-condition
         while (true) {
             try {
+                traceInfoIf(
+                    !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
+                    `KernelSwitcher: Attempting switch to ${kernel.id}`
+                );
+
                 await this.switchToKernel(notebook, kernel);
                 return;
             } catch (ex) {

@@ -305,7 +305,7 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
             // We need to handle these exceptions in `siwthKernelWithRetry`.
             // We shouldn't handle them here, as we're already handling some errors in the `siwthKernelWithRetry` method.
             // Adding comment here, so we have context for the requirement.
-            this.kernelSwitcher.switchKernelWithRetry(notebook, selectedKernelConnectionMetadata).catch(noop);
+            await this.kernelSwitcher.switchKernelWithRetry(notebook, selectedKernelConnectionMetadata).catch(noop);
         } else {
             trackKernelInNotebookMetadata(document, selectedKernelConnectionMetadata);
         }
