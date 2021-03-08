@@ -84,7 +84,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
             throw new Error('Unable to get information for interpreter 1');
         }
         venvPythonKernelName = IS_REMOTE_NATIVE_TEST ? interpreter1.displayName || '.venvnokernel' : '.venvnokernel';
-        venvNoRegKernelName = IS_REMOTE_NATIVE_TEST ? interpreter2.displayName || '.venvkernel' : '.venvkernel';
+        venvNoRegKernelName = IS_REMOTE_NATIVE_TEST ? interpreter2.displayName || '.venvnoreg' : '.venvnoreg';
     });
 
     setup(async function () {
