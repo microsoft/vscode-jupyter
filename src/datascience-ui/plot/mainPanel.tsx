@@ -21,7 +21,6 @@ import { SvgViewer } from '../react-common/svgViewer';
 import { TestSvg } from './testSvg';
 import { Toolbar } from './toolbar';
 
-
 // Our css has to come after in order to override body styles
 export interface IMainPanelProps {
     skipDefault?: boolean;
