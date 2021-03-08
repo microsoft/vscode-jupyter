@@ -197,7 +197,9 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
     }
     private onDidChangeActiveVsCodeNotebookEditor(editor: VSCodeNotebookEditor | undefined) {
         if (!editor) {
-            this._onDidChangeActiveNotebookEditor.fire(undefined);
+            // https://github.com/microsoft/vscode-jupyter/issues/5071
+            // Temporary hack to get around VS Code issue.
+            // this._onDidChangeActiveNotebookEditor.fire(undefined);
             return;
         }
         if (this.trackedVSCodeNotebookEditors.has(editor)) {
