@@ -356,7 +356,7 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
                           cancelToken
                       ));
             }
-            if (kernelInfo && kernelInfo !== kernelConnection) {
+            if (kernelInfo && kernelInfo !== launchInfo.kernelConnectionMetadata) {
                 // Update kernel info if we found a new one.
                 launchInfo.kernelConnectionMetadata = kernelInfo;
                 changedKernel = true;
