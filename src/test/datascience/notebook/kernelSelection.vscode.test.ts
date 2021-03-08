@@ -147,6 +147,10 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         assertHasTextOutputInVSCode(cell, activeInterpreterPath, 0, false);
     });
     test('Ensure kernel is auto selected and interpreter is as expected', async function () {
+        // Test only applies for Raw notebooks.
+        if (IS_REMOTE_NATIVE_TEST || IS_NON_RAW_NATIVE_TEST) {
+            return this.skip();
+        }
         await openNotebook(api.serviceContainer, nbFile1);
         await waitForKernelToGetAutoSelected(undefined);
 
@@ -159,6 +163,10 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         assertHasTextOutputInVSCode(cell, venvNoKernelPythonPath, 0, false);
     });
     test('Ensure we select a Python kernel for a nb with python language information', async function () {
+        // Test only applies for Raw notebooks.
+        if (IS_REMOTE_NATIVE_TEST || IS_NON_RAW_NATIVE_TEST) {
+            return this.skip();
+        }
         await createEmptyPythonNotebook(disposables);
 
         // Run all cells
@@ -174,6 +182,10 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         assertHasTextOutputInVSCode(cell2, 'Hello World', 0, false);
     });
     test('User kernelspec in notebook metadata', async function () {
+        // Test only applies for Raw notebooks.
+        if (IS_REMOTE_NATIVE_TEST || IS_NON_RAW_NATIVE_TEST) {
+            return this.skip();
+        }
         await openNotebook(api.serviceContainer, nbFile1);
         await waitForKernelToGetAutoSelected(undefined);
 

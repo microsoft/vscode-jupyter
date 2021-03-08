@@ -16,7 +16,7 @@ import { getTextOutputValue } from '../../../client/datascience/notebook/helpers
 import { VSCodeNotebookKernelMetadata } from '../../../client/datascience/notebook/kernelWithMetadata';
 import { INotebookKernelProvider } from '../../../client/datascience/notebook/types';
 import { IExtensionTestApi } from '../../common';
-import { closeActiveWindows, initialize } from '../../initialize';
+import { closeActiveWindows, initialize, IS_NON_RAW_NATIVE_TEST, IS_REMOTE_NATIVE_TEST } from '../../initialize';
 import {
     canRunNotebookTests,
     closeNotebooksAndCleanUpAfterTests,
@@ -125,6 +125,10 @@ suite('Notebook Editor tests', () => {
     });
 
     test('Switch kernels', async function () {
+        // Test only applies for Raw notebooks.
+        if (IS_REMOTE_NATIVE_TEST || IS_NON_RAW_NATIVE_TEST) {
+            return this.skip();
+        }
         await hijackPrompt(
             'showErrorMessage',
             { endsWith: expectedPromptMessageSuffix },
