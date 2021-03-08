@@ -114,7 +114,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         );
     });
 
-    [venvPythonKernelName, venvNoRegKernelName].forEach((kName, i) => {
+    [true, false].forEach((which, i) => {
         // Use index on test name as it messes up regex matching
         test(`Ensure prompt is displayed when ipykernel module is not found and it gets installed ${i}`, async function () {
             // Confirm message is displayed & we click 'Install` button.
@@ -125,6 +125,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
                 disposables
             );
             const installed = createDeferred();
+            const kName = which ? venvPythonKernelName : venvNoRegKernelName;
 
             // Confirm it is installed.
             const showInformationMessage = sinon
