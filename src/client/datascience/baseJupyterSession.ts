@@ -10,7 +10,7 @@ import { Event, EventEmitter } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { ServerStatus } from '../../datascience-ui/interactive-common/mainState';
 import { WrappedError } from '../common/errors/types';
-import { traceError, traceInfo, traceWarning } from '../common/logger';
+import { traceError, traceInfo, traceInfoIf, traceWarning } from '../common/logger';
 import { Resource } from '../common/types';
 import { sleep, waitForPromise } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
@@ -164,6 +164,10 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         if (this.session && currentKernelSpec && kernelSpecToUse && this.kernelConnectionMetadata) {
             // If we have selected the same kernel connection, then nothing to do.
             if (this.kernelConnectionMetadata.id === kernelConnection.id) {
+                traceInfoIf(
+                    !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
+                    `Kernels are the same, no switching necessary.`
+                );
                 return;
             }
         }
@@ -175,6 +179,11 @@ export abstract class BaseJupyterSession implements IJupyterSession {
             this.shutdownSession(this.session, this.statusHandler, false).ignoreErrors();
             this.restartSessionPromise?.then((r) => this.shutdownSession(r, undefined, true)).ignoreErrors(); // NOSONAR
         }
+
+        traceInfoIf(
+            !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
+            `Switched notebook kernel to ${kernelSpecToUse?.display_name}`
+        );
 
         // Update our kernel connection metadata.
         this.kernelConnectionMetadata = kernelConnection;

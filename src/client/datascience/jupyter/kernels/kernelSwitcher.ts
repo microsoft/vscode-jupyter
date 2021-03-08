@@ -6,6 +6,7 @@
 import { inject, injectable } from 'inversify';
 import { ProgressLocation, ProgressOptions } from 'vscode';
 import { IApplicationShell } from '../../../common/application/types';
+import { traceInfoIf } from '../../../common/logger';
 import { IConfigurationService } from '../../../common/types';
 import { DataScience } from '../../../common/utils/localize';
 import { JupyterSessionStartError } from '../../baseJupyterSession';
@@ -65,6 +66,11 @@ export class KernelSwitcher {
     }
     private async switchToKernel(notebook: INotebook, kernelConnection: KernelConnectionMetadata): Promise<void> {
         const switchKernel = async (newKernelConnection: KernelConnectionMetadata) => {
+            traceInfoIf(
+                !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
+                `Switching notebook kernel to ${kernelConnection.id}`
+            );
+
             // Change the kernel. A status update should fire that changes our display
             await notebook.setKernelConnection(
                 newKernelConnection,

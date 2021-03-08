@@ -218,6 +218,7 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
             // TODO: https://github.com/microsoft/vscode-python/issues/13476
             // If a model is not trusted, we cannot change the kernel (this results in changes to notebook metadata).
             // This is because we store selected kernel in the notebook metadata.
+            traceInfoIf(!!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT, 'Kernel not switched, model not trusted');
             return;
         }
 
@@ -266,6 +267,10 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
         const newKernel = this.kernelProvider.getOrCreate(document.uri, {
             metadata: selectedKernelConnectionMetadata
         });
+        traceInfoIf(
+            !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
+            `KernelProvider switched kernel to ${newKernel?.kernelConnectionMetadata.id}`
+        );
 
         // Auto start the local kernels.
         if (newKernel && !this.configuration.getSettings(undefined).disableJupyterAutoStart && this.isLocalLaunch) {
