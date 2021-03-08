@@ -278,6 +278,9 @@ export class RawJupyterSession extends BaseJupyterSession {
         ) {
             throw new Error(`Unable to start Raw Kernels for Kernel Connection of type ${kernelConnection.kind}`);
         }
+
+        traceInfo(`Starting raw kernel ${getDisplayNameOrNameOfKernelConnection(kernelConnection)}`);
+
         const process = await this.kernelLauncher.launch(
             kernelConnection,
             timeout,
