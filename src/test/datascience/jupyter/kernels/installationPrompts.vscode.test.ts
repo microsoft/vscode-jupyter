@@ -55,7 +55,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
     */
     suiteSetup(async function () {
         // These are slow tests, hence lets run only on linux on CI.
-        if (IS_REMOTE_NATIVE_TEST) {
+        if (IS_REMOTE_NATIVE_TEST || IS_NON_RAW_NATIVE_TEST) {
             return this.skip();
         }
         if (
