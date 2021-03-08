@@ -1,12 +1,12 @@
 .slice-data {
     background-color: var(--vscode-settings-textInputBackground);
     color: var(--vscode-settings-textInputForeground) !important;
-    padding: 0px 4px;
+    padding: 0px 4px 0px 6px;
     /* input does not inherit font from body */
     font-family: var(--vscode-font-family);
     font-weight: var(--vscode-font-weight);
     font-size: var(--vscode-font-size);
-    height: 30px;
+    height: 26px;
     margin: 0px;
     border: none;
 }
@@ -86,7 +86,7 @@ details[open] > summary::before {
     border: none;
     margin-left: 10px;
     padding: 4px 8px;
-    height: 30px;
+    height: 26px;
     font-family: var(--vscode-font-family);
     font-weight: var(--vscode-font-weight);
     font-size: var(--vscode-font-size);
@@ -110,6 +110,7 @@ details[open] > summary::before {
     font-size: var(--vscode-font-size);
 }
 
+/* This needs to match VS Code settings dropdowns */
 .dropdownTitleOverrides .ms-Dropdown-title {
     /* Usually want to avoid !important but in this case
        it's necessary to ensure that when the dropdown
@@ -121,6 +122,34 @@ details[open] > summary::before {
     font-size: var(--vscode-font-size);
     background-color: var(--vscode-dropdown-background);
     border: var(--vscode-dropdown-border);
+    border-radius: 0px;
+    height: 26px;
+    line-height: 26px;
+}
+
+[class*='dropdown'] {
+    border: 1px solid var(--vscode-dropdown-border),
+}
+
+[class*='dropdown']:active {
+    border: 1px solid var(--vscode-dropdown-border),
+}
+
+[class*='dropdown']:focus::after {
+    border-radius: 0px;
+    border: 1px solid var(--vscode-focusBorder) !important;
+}
+
+[class*='ms-Dropdown-caretDownWrapper']::after {
+    color: var(--vscode-dropdown-foreground);
+    content: "\eab4";
+    pointer-events: none;
+    font-family: codicon;
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+    line-height: 26px;
+    opacity: 0.8;
 }
 
 .slice-data.input-invalid {
@@ -132,13 +161,13 @@ details[open] > summary::before {
 }
 
 .slice-data:focus {
-    outline: 1px solid var(--vscode-button-background)
+    outline: 1px solid var(--vscode-button-background);
 }
 
 .error-message {
     outline: 1px solid var(--vscode-inputValidation-errorBorder);
     background-color: var(--vscode-inputValidation-errorBackground);
-    color: var(--vscode-settings-textInputForeground);
+    color: var(--vscode-inputValidation-errorForeground);
     font-family: var(--vscode-font-family);
     font-weight: var(--vscode-font-weight);
     font-size: var(--vscode-font-size);
