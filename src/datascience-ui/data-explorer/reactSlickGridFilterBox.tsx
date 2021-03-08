@@ -24,6 +24,12 @@ const styles = {
         ':active': {
             opacity: 0
         }
+    },
+    root: {
+        '::after': {
+            borderRadius: '0px',
+            border: '1px solid var(--vscode-focusBorder)'
+        }
     }
 };
 

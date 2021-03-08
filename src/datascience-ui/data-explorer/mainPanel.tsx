@@ -191,7 +191,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                         <div className="icon-python breadcrumb-file-icon" />
                         <span>{this.state.fileName}</span>
                         {this.state.fileName ? (
-                            <div className="codicon codicon-chevron-right breadcrumb-codicon"/>
+                            <div className="codicon codicon-chevron-right breadcrumb-codicon" />
                         ) : undefined}
                         <span>{breadcrumbText}</span>
                     </div>
