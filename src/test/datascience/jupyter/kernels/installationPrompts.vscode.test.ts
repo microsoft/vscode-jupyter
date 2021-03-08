@@ -13,6 +13,7 @@ import { IDisposable, IInstaller, InstallerResponse, Product } from '../../../..
 import { createDeferred } from '../../../../client/common/utils/async';
 import { Common, DataScience } from '../../../../client/common/utils/localize';
 import { INotebookEditorProvider } from '../../../../client/datascience/types';
+import { IInterpreterService } from '../../../../client/interpreter/contracts';
 import { IS_CI_SERVER } from '../../../ciConstants';
 import { getOSType, IExtensionTestApi, OSType, waitForCondition } from '../../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_NON_RAW_NATIVE_TEST, IS_REMOTE_NATIVE_TEST } from '../../../constants';
@@ -47,6 +48,8 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
     let editorProvider: INotebookEditorProvider;
     let installer: IInstaller;
     let vscodeNotebook: IVSCodeNotebook;
+    let venvPythonKernelName: string = '';
+    let venvNoRegKernelName: string = '';
     const delayForUITest = 30_000;
     this.timeout(60_000); // Slow test, we need to uninstall/install ipykernel.
     /*
@@ -70,6 +73,18 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         installer = api.serviceContainer.get<IInstaller>(IInstaller);
         editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
+
+        const interpreterService = api.serviceContainer.get<IInterpreterService>(IInterpreterService);
+        const [activeInterpreter, interpreter1, interpreter2] = await Promise.all([
+            interpreterService.getActiveInterpreter(),
+            interpreterService.getInterpreterDetails(venvPythonPath),
+            interpreterService.getInterpreterDetails(venvNoRegPath)
+        ]);
+        if (!activeInterpreter || !interpreter1 || !interpreter2) {
+            throw new Error('Unable to get information for interpreter 1');
+        }
+        venvPythonKernelName = IS_REMOTE_NATIVE_TEST ? interpreter1.displayName || '.venvnokernel' : '.venvnokernel';
+        venvNoRegKernelName = IS_REMOTE_NATIVE_TEST ? interpreter2.displayName || '.venvkernel' : '.venvkernel';
     });
 
     setup(async function () {
@@ -99,8 +114,9 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         );
     });
 
-    ['.venvnokernel', '.venvnoreg'].forEach((kName) => {
-        test(`Ensure prompt is displayed when ipykernel module is not found and it gets installed (${kName})`, async function () {
+    [venvPythonKernelName, venvNoRegKernelName].forEach((kName, i) => {
+        // Use index on test name as it messes up regex matching
+        test(`Ensure prompt is displayed when ipykernel module is not found and it gets installed ${i}`, async function () {
             // Confirm message is displayed & we click 'Install` button.
             const prompt = await hijackPrompt(
                 'showErrorMessage',
