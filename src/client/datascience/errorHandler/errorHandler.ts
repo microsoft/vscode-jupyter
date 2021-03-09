@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 import { inject, injectable } from 'inversify';
 import { IApplicationShell } from '../../common/application/types';
+import { BaseError, WrappedError } from '../../common/errors/types';
 import { traceError } from '../../common/logger';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
@@ -20,6 +21,10 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
     ) {}
 
     public async handleError(err: Error): Promise<void> {
+        // Unwrap the errors.
+        if (err instanceof WrappedError && err.originalException && err.originalException instanceof BaseError) {
+            err = err.originalException;
+        }
         if (err instanceof JupyterInstallError) {
             await this.dependencyManager.installMissingDependencies(err);
         } else if (err instanceof JupyterZMQBinariesNotFoundError) {

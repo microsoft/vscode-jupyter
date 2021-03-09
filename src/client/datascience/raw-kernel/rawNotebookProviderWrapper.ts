@@ -8,6 +8,7 @@ import { CancellationToken } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
 import { IPythonExtensionChecker } from '../../api/types';
 import { IApplicationShell, ILiveShareApi, IVSCodeNotebook, IWorkspaceService } from '../../common/application/types';
+import { STANDARD_OUTPUT_CHANNEL } from '../../common/constants';
 import '../../common/extensions';
 import { IFileSystem } from '../../common/platform/types';
 
@@ -19,7 +20,7 @@ import {
     Resource
 } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
-import { DataScienceStartupTime, JUPYTER_OUTPUT_CHANNEL } from '../constants';
+import { DataScienceStartupTime } from '../constants';
 import { KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { IRoleBasedObject, RoleBasedFactory } from '../jupyter/liveshare/roleBasedFactory';
 import { ILiveShareHasRole } from '../jupyter/liveshare/types';
@@ -79,7 +80,7 @@ export class RawNotebookProviderWrapper implements IRawNotebookProvider, ILiveSh
         @inject(IKernelLauncher) kernelLauncher: IKernelLauncher,
         @inject(ILocalKernelFinder) kernelFinder: ILocalKernelFinder,
         @inject(ProgressReporter) progressReporter: ProgressReporter,
-        @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) outputChannel: IOutputChannel,
+        @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) outputChannel: IOutputChannel,
         @inject(IRawNotebookSupportedService) rawNotebookSupported: IRawNotebookSupportedService,
         @inject(IPythonExtensionChecker) extensionChecker: IPythonExtensionChecker,
         @inject(IVSCodeNotebook) vscNotebook: IVSCodeNotebook

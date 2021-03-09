@@ -42,7 +42,7 @@ export class ApplicationEnvironment implements IApplicationEnvironment {
         }
     }
     public get userCustomKeybindingsFile(): string | undefined {
-        return path.resolve(this.extensionContext.globalStoragePath, '..', '..', 'keybindings.json');
+        return path.resolve(this.extensionContext.globalStorageUri.fsPath, '..', '..', 'keybindings.json');
     }
     public get appName(): string {
         return vscode.env.appName;

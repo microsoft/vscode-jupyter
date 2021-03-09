@@ -120,6 +120,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         console.log(`Start test ${this.currentTest?.title}`);
         // Don't use same file (due to dirty handling, we might save in dirty.)
         // Coz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
+        await trustAllNotebooks();
         nbFile1 = await createTemporaryNotebook(templateIPynbFile, disposables, venvNoKernelDisplayName);
         await closeActiveWindows();
         sinon.restore();
@@ -132,7 +133,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
     });
 
     test('Ensure we select active interpreter as kernel (when Raw Kernels)', async function () {
-        if (IS_NON_RAW_NATIVE_TEST || IS_REMOTE_NATIVE_TEST) {
+        if (IS_REMOTE_NATIVE_TEST) {
             return this.skip();
         }
         await createEmptyPythonNotebook(disposables);
@@ -163,8 +164,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         assertHasTextOutputInVSCode(cell, venvNoKernelPythonPath, 0, false);
     });
     test('Ensure we select a Python kernel for a nb with python language information', async function () {
-        // Test only applies for Raw notebooks.
-        if (IS_REMOTE_NATIVE_TEST || IS_NON_RAW_NATIVE_TEST) {
+        if (IS_REMOTE_NATIVE_TEST) {
             return this.skip();
         }
         await createEmptyPythonNotebook(disposables);
@@ -210,8 +210,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         assertHasTextOutputInVSCode(cell, venvKernelPythonPath, 0, false);
     });
     test('Switch kernel to an interpreter that is registered as a kernel', async function () {
-        // Test only applies for Raw notebooks.
-        if (IS_REMOTE_NATIVE_TEST || IS_NON_RAW_NATIVE_TEST) {
+        if (IS_REMOTE_NATIVE_TEST) {
             return this.skip();
         }
         await createEmptyPythonNotebook(disposables);
@@ -240,8 +239,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         assertHasTextOutputInVSCode(cell, venvKernelPythonPath, 0, false);
     });
     test('Switch kernel to an interpreter that is not registered as a kernel', async function () {
-        // Test only applies for raw notebooks.
-        if (IS_NON_RAW_NATIVE_TEST || IS_REMOTE_NATIVE_TEST) {
+        if (IS_REMOTE_NATIVE_TEST) {
             return this.skip();
         }
         await createEmptyPythonNotebook(disposables);

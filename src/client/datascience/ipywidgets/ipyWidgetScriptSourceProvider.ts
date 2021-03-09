@@ -3,7 +3,6 @@
 
 'use strict';
 
-import { sha256 } from 'hash.js';
 import { ConfigurationChangeEvent, ConfigurationTarget } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
 import '../../common/extensions';
@@ -22,6 +21,7 @@ import { Common, DataScience } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { sendTelemetryEvent } from '../../telemetry';
+import { getTelemetrySafeHashedString } from '../../telemetry/helpers';
 import { Telemetry } from '../constants';
 import { ILocalResourceUriConverter, INotebook } from '../types';
 import { CDNWidgetScriptSourceProvider } from './cdnWidgetScriptSourceProvider';
@@ -103,7 +103,7 @@ export class IPyWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         }
 
         sendTelemetryEvent(Telemetry.HashedIPyWidgetNameUsed, undefined, {
-            hashedName: sha256().update(found.moduleName).digest('hex'),
+            hashedName: getTelemetrySafeHashedString(found.moduleName),
             source: found.source,
             cdnSearched: this.configuredScriptSources.length > 0
         });
