@@ -133,8 +133,6 @@ export class PythonKernelDaemon extends BasePythonDaemon implements IPythonKerne
                     if (!this.killed) {
                         traceWarning(`Kernel ${this.proc.pid} as possibly died, StdErr from Kernel Process ${out.out}`);
                     }
-                } else {
-                    this.subject.next(out);
                 }
                 this.subject.next(out);
             },
