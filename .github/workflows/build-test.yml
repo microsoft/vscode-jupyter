@@ -632,6 +632,7 @@ jobs:
           python -m pip install --upgrade -r ./build/conda-functional-requirements.txt
           python -m pip uninstall jedi --yes
           python -m pip install jedi==0.17.2
+          beakerx_kernel_java install
           conda install pytorch torchvision torchaudio cpuonly -c pytorch
 
       # Install PyTorch with pip

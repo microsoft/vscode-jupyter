@@ -24,7 +24,8 @@ import {
     NotebookCellKind,
     NotebookCellMetadata,
     NotebookCellOutputItem,
-    CancellationTokenSource
+    CancellationTokenSource,
+    NotebookCellRange
 } from 'vscode';
 import { IApplicationEnvironment, IApplicationShell, IVSCodeNotebook } from '../../../client/common/application/types';
 import { JVSC_EXTENSION_ID, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
@@ -82,7 +83,7 @@ async function getServices() {
 
 export async function selectCell(notebook: NotebookDocument, start: number, end: number) {
     await window.showNotebookDocument(notebook, {
-        selection: { start, end }
+        selection: new NotebookCellRange(start, end)
     });
 }
 
