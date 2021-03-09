@@ -8,7 +8,6 @@ import { CancellationToken, Event } from 'vscode';
 import { BaseError, WrappedError } from '../../common/errors/types';
 import { ObservableExecutionResult } from '../../common/process/types';
 import { IAsyncDisposable, IDisposable, Resource } from '../../common/types';
-import { PythonEnvironment } from '../../pythonEnvironments/info';
 import {
     KernelConnectionMetadata,
     KernelSpecConnectionMetadata,
@@ -56,7 +55,7 @@ export const ILocalKernelFinder = Symbol('ILocalKernelFinder');
 export interface ILocalKernelFinder {
     findKernel(
         resource: Resource,
-        option?: nbformat.INotebookMetadata | PythonEnvironment,
+        option?: nbformat.INotebookMetadata,
         cancelToken?: CancellationToken
     ): Promise<LocalKernelConnectionMetadata | undefined>;
     listKernels(resource: Resource, cancelToken?: CancellationToken): Promise<LocalKernelConnectionMetadata[]>;
@@ -68,7 +67,7 @@ export interface IRemoteKernelFinder {
     findKernel(
         resource: Resource,
         connInfo: INotebookProviderConnection | undefined,
-        option?: nbformat.INotebookMetadata | PythonEnvironment,
+        option?: nbformat.INotebookMetadata,
         cancelToken?: CancellationToken
     ): Promise<KernelConnectionMetadata | undefined>;
     listKernels(

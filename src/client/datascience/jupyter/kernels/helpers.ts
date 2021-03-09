@@ -29,6 +29,7 @@ import { DataScience } from '../../../common/utils/localize';
 import { Settings, Telemetry } from '../../constants';
 import { concatMultilineString } from '../../../../datascience-ui/common';
 import { sendTelemetryEvent } from '../../../telemetry';
+import { traceInfo } from '../../../common/logger';
 
 // Helper functions for dealing with kernels and kernelspecs
 
@@ -279,14 +280,14 @@ export function isLocalLaunch(configuration: IConfigurationService) {
     return false;
 }
 
-export function findPreferredKernelIndex(
+export function findPreferredKernel(
     kernels: KernelConnectionMetadata[],
     resource: Resource,
     languages: string[],
     notebookMetadata: nbformat.INotebookMetadata | undefined,
     interpreter: PythonEnvironment | undefined,
     remoteKernelPreferredProvider: PreferredRemoteKernelIdProvider | undefined
-) {
+): KernelConnectionMetadata | undefined {
     let index = -1;
 
     // First try remote
@@ -364,6 +365,9 @@ export function findPreferredKernelIndex(
                 }
             }
 
+            // Trace score for kernel
+            traceInfo(`findPreferredKernel score for ${getDisplayNameOrNameOfKernelConnection(metadata)} is ${score}`);
+
             if (score > bestScore) {
                 index = i;
                 bestScore = score;
@@ -383,7 +387,7 @@ export function findPreferredKernelIndex(
             }
         });
     }
-    return index;
+    return index >= 0 ? kernels[index] : undefined;
 }
 
 export async function sendTelemetryForPythonKernelExecutable(

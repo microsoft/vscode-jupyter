@@ -10,7 +10,7 @@ import { traceDecorators } from '../../logging';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry } from '../../telemetry';
 import { Telemetry } from '../constants';
-import { findPreferredKernelIndex, getKernelId } from '../jupyter/kernels/helpers';
+import { findPreferredKernel, getKernelId } from '../jupyter/kernels/helpers';
 import {
     KernelConnectionMetadata,
     LiveKernelConnectionMetadata,
@@ -60,7 +60,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
 
         // Find the preferred kernel index from the list.
         const notebookMetadata = option && !isInterpreter(option) ? option : undefined;
-        const preferred = findPreferredKernelIndex(
+        return findPreferredKernel(
             kernels,
             resource,
             [],
@@ -68,9 +68,6 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
             undefined,
             this.preferredRemoteKernelIdProvider
         );
-        if (preferred >= 0) {
-            return kernels[preferred];
-        }
     }
 
     // Talk to the remote server to determine sessions

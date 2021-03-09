@@ -6,7 +6,6 @@ import { CancellationToken } from 'vscode';
 import { Resource } from '../../client/common/types';
 import { LocalKernelConnectionMetadata } from '../../client/datascience/jupyter/kernels/types';
 import { ILocalKernelFinder } from '../../client/datascience/kernel-launcher/types';
-import { PythonEnvironment } from '../../client/pythonEnvironments/info';
 
 export class MockKernelFinder implements ILocalKernelFinder {
     private dummySpecs = new Map<string, LocalKernelConnectionMetadata>();
@@ -15,7 +14,7 @@ export class MockKernelFinder implements ILocalKernelFinder {
 
     public async findKernel(
         resource: Resource,
-        option?: nbformat.INotebookMetadata | PythonEnvironment,
+        option?: nbformat.INotebookMetadata,
         _cancelToken?: CancellationToken
     ): Promise<LocalKernelConnectionMetadata | undefined> {
         const spec = option?.path

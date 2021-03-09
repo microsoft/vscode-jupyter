@@ -70,7 +70,10 @@ export class JupyterKernelService {
             else if (kernel.interpreter && kernel.kernelSpec.specFile) {
                 // See if the specfile we started with (which might be the one registered in the interpreter)
                 // doesn't match the name of the spec file
-                if (!path.dirname(kernel.kernelSpec.specFile).endsWith(kernel.kernelSpec.name)) {
+                if (
+                    path.basename(path.dirname(kernel.kernelSpec.specFile)).toLowerCase() !=
+                    kernel.kernelSpec.name.toLowerCase()
+                ) {
                     // This means the specfile for the kernelspec will not be found by jupyter. We need to
                     // register it
                     await this.registerKernel(kernel, token);

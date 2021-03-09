@@ -412,50 +412,6 @@ import { arePathsSame } from '../../common';
                 orig_nbformat: 4
             });
             assert.equal(kernel?.kernelSpec?.language, 'python', 'No kernel found matching default notebook metadata');
-
-            // Unknown case (same as using active interpreter)
-            kernel = await kernelFinder.findKernel(undefined, {
-                kernelspec: {
-                    display_name: 'notagoodname',
-                    name: 'notagoodname'
-                },
-                language_info: { name: 'python' },
-                orig_nbformat: 4
-            });
-            const activeKernel = await kernelFinder.findKernel(undefined, activeInterpreter);
-            assert.deepEqual(kernel, activeKernel, 'Active kernel not found');
-        });
-        test('Can match based on interpreter', async () => {
-            when(interpreterService.getActiveInterpreter(anything())).thenResolve(activeInterpreter);
-            when(interpreterService.getInterpreters(anything())).thenResolve([
-                python3Interpreter,
-                condaEnvironment,
-                python2Interpreter,
-                condaEnvironmentBase
-            ]);
-            when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
-            let kernel = await kernelFinder.findKernel(undefined, python3Interpreter);
-            assert.ok(kernel, 'No python 3 kernel found matching interpreter');
-            assert.equal(
-                kernel?.kernelSpec?.display_name,
-                python3Interpreter.displayName,
-                'Kernel found does not match python 3 interpreter name'
-            );
-            assert.ok(kernel?.interpreter, 'No interpreter for matching based on interpreter');
-            kernel = await kernelFinder.findKernel(undefined, python2Interpreter);
-            assert.ok(kernel, 'No python 2 kernel found matching interpreter');
-            assert.equal(
-                kernel?.interpreter?.path,
-                python2Interpreter.path,
-                'Kernel found does not match python 2 path'
-            );
-            kernel = await kernelFinder.findKernel(undefined, condaEnvironment);
-            assert.ok(kernel, 'No conda kernel found matching interpreter');
-            assert.equal(
-                kernel?.kernelSpec?.display_name,
-                condaEnvironment.displayName,
-                'Kernel found does not match conda interpreter name'
-            );
         });
     });
 });

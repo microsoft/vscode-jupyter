@@ -19,7 +19,7 @@ import { captureTelemetry } from '../../telemetry';
 import { Telemetry } from '../constants';
 import {
     createIntepreterKernelSpec,
-    findPreferredKernelIndex,
+    findPreferredKernel,
     getDisplayNameOrNameOfKernelConnection,
     getInterpreterKernelSpecName,
     getKernelId
@@ -84,7 +84,7 @@ export class LocalKernelFinder implements ILocalKernelFinder {
     @captureTelemetry(Telemetry.KernelFinderPerf)
     public async findKernel(
         resource: Resource,
-        option?: nbformat.INotebookMetadata | PythonEnvironment,
+        option?: nbformat.INotebookMetadata,
         cancelToken?: CancellationToken
     ): Promise<LocalKernelConnectionMetadata | undefined> {
         try {
@@ -101,13 +101,13 @@ export class LocalKernelFinder implements ILocalKernelFinder {
 
             // Find the preferred kernel index from the list.
             const notebookMetadata = option && !isInterpreter(option) ? option : undefined;
-            const preferred = findPreferredKernelIndex(kernels, resource, [], notebookMetadata, interpreter, undefined);
-            if (preferred >= 0) {
+            const preferred = findPreferredKernel(kernels, resource, [], notebookMetadata, interpreter, undefined);
+            if (preferred) {
                 traceInfoIf(
                     !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
-                    `findKernel found ${getDisplayNameOrNameOfKernelConnection(kernels[preferred])}`
+                    `findKernel found ${getDisplayNameOrNameOfKernelConnection(preferred)}`
                 );
-                return kernels[preferred];
+                return preferred as LocalKernelConnectionMetadata;
             }
         } catch (e) {
             traceError(`findKernel crashed: ${e} ${e.stack}`);
@@ -256,6 +256,10 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         return interpreters.filter((i) => {
             // If we know for a fact that the kernel spec is a Non-Python kernel, then return nothing.
             if (kernelSpec.language && kernelSpec.language !== PYTHON_LANGUAGE) {
+                traceInfoIf(
+                    !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
+                    `Kernel ${kernelSpec.name} is not python based so does not have an interpreter.`
+                );
                 return false;
             }
 
@@ -264,9 +268,17 @@ export class LocalKernelFinder implements ILocalKernelFinder {
                 kernelSpec.metadata?.interpreter?.path &&
                 this.fs.areLocalPathsSame(kernelSpec.metadata?.interpreter?.path, i.path)
             ) {
+                traceInfoIf(
+                    !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
+                    `Kernel ${kernelSpec.name} matches ${i.displayName} based on metadata path.`
+                );
                 return true;
             }
             if (kernelSpec.interpreterPath && this.fs.areLocalPathsSame(kernelSpec.interpreterPath, i.path)) {
+                traceInfoIf(
+                    !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
+                    `Kernel ${kernelSpec.name} matches ${i.displayName} based on interpreter path.`
+                );
                 return true;
             }
 
@@ -280,11 +292,19 @@ export class LocalKernelFinder implements ILocalKernelFinder {
                 path.basename(pathInArgv) !== pathInArgv &&
                 this.fs.areLocalPathsSame(pathInArgv, i.path)
             ) {
+                traceInfoIf(
+                    !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
+                    `Kernel ${kernelSpec.name} matches ${i.displayName} based on path in argv.`
+                );
                 return true;
             }
 
             // 3. Check display name
             if (kernelSpec.display_name === i.displayName) {
+                traceInfoIf(
+                    !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
+                    `Kernel ${kernelSpec.name} matches ${i.displayName} based on display name.`
+                );
                 return true;
             }
 
@@ -292,6 +312,11 @@ export class LocalKernelFinder implements ILocalKernelFinder {
             // but this seems too ambitious. The kernel spec should just launch with the default
             // python and no environment. Otherwise how do we know which interpreter is the best
             // match?
+            traceInfoIf(
+                !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
+                `Kernel ${kernelSpec.name} does not match ${i.displayName} interpreter.`
+            );
+
             return false;
         });
     }
