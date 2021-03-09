@@ -79,11 +79,10 @@ export class PythonApiProvider implements IPythonApiProvider {
         const pythonExtension = this.extensions.getExtension<{ jupyter: { registerHooks(): void } }>(PythonExtension);
         if (!pythonExtension) {
             const installed = await this.extensionChecker.showPythonExtensionInstallRequiredPrompt();
-            if (installed === true) {
-                return true;
+            if (!installed) {
+                this.initialized = false;
             }
-            this.initialized = false;
-            return false;
+            return installed;
         } else {
             if (!pythonExtension.isActive) {
                 await pythonExtension.activate();
