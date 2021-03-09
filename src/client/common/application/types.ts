@@ -58,7 +58,6 @@ import {
     WorkspaceFolder,
     WorkspaceFolderPickOptions,
     WorkspaceFoldersChangeEvent,
-    NotebookCellLanguageChangeEvent as VSCNotebookCellLanguageChangeEvent,
     NotebookCellMetadata,
     NotebookCellMetadataChangeEvent as VSCNotebookCellMetadataChangeEvent,
     NotebookCellOutputsChangeEvent as VSCNotebookCellOutputsChangeEvent,
@@ -1547,7 +1546,6 @@ export interface IClipboard {
 export type NotebookCellsChangeEvent = { type: 'changeCells' } & VSCNotebookCellsChangeEvent;
 export type NotebookCellOutputsChangeEvent = { type: 'changeCellOutputs' } & VSCNotebookCellOutputsChangeEvent;
 export type NotebookCellMetadataChangeEvent = { type: 'changeCellMetadata' } & VSCNotebookCellMetadataChangeEvent;
-export type NotebookCellLanguageChangeEvent = { type: 'changeCellLanguage' } & VSCNotebookCellLanguageChangeEvent;
 export type NotebookDocumentMetadataChangeEvent = {
     type: 'changeNotebookMetadata';
 } & VSCNotebookDocumentMetadataChangeEvent;
@@ -1555,8 +1553,7 @@ export type NotebookCellChangedEvent =
     | NotebookCellsChangeEvent
     | NotebookCellOutputsChangeEvent
     | NotebookCellMetadataChangeEvent
-    | NotebookDocumentMetadataChangeEvent
-    | NotebookCellLanguageChangeEvent;
+    | NotebookDocumentMetadataChangeEvent;
 export const IVSCodeNotebook = Symbol('IVSCodeNotebook');
 export interface IVSCodeNotebook {
     readonly onDidChangeActiveNotebookKernel: Event<{

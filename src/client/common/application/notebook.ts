@@ -112,9 +112,6 @@ export class VSCodeNotebook implements IVSCodeNotebook {
         this.addedEventHandlers = true;
         this.disposables.push(
             ...[
-                notebook.onDidChangeCellLanguage((e) =>
-                    this._onDidChangeNotebookDocument.fire({ ...e, type: 'changeCellLanguage' })
-                ),
                 notebook.onDidChangeCellMetadata((e) =>
                     this._onDidChangeNotebookDocument.fire({ ...e, type: 'changeCellMetadata' })
                 ),

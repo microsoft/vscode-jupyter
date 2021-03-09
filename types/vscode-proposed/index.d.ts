@@ -438,10 +438,6 @@ export namespace notebook {
     export const onDidChangeNotebookDocumentMetadata: Event<NotebookDocumentMetadataChangeEvent>;
     export const onDidChangeNotebookCells: Event<NotebookCellsChangeEvent>;
     export const onDidChangeCellOutputs: Event<NotebookCellOutputsChangeEvent>;
-
-    // todo@API we send document close and open events when the language of a document changes and
-    // I believe we should stick that for cells as well
-    export const onDidChangeCellLanguage: Event<NotebookCellLanguageChangeEvent>;
     export const onDidChangeCellMetadata: Event<NotebookCellMetadataChangeEvent>;
 }
 
