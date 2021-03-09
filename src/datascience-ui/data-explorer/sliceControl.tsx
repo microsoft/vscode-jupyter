@@ -35,6 +35,7 @@ const styleOverrides = {
     fontFamily: 'var(--vscode-font-family)',
     fontWeight: 'var(--vscode-font-weight)',
     fontSize: 'var(--vscode-font-size)',
+    border: 'var(--vscode-dropdown-border)',
     ':focus': {
         color: 'var(--vscode-dropdown-foreground)'
     },
