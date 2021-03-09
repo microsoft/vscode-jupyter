@@ -42,3 +42,4 @@ debugpy*.log
 pydevd*.log
 nodeLanguageServer/**
 nodeLanguageServer.*/**
+src/test/datascience/.venv*

@@ -28,12 +28,11 @@ import {
     INotebookProvider,
     INotebookProviderConnection,
     InterruptResult,
-    IRawNotebookSupportedService,
     KernelSocketInformation
 } from '../../types';
 import { isPythonKernelConnection } from './helpers';
 import { KernelExecution } from './kernelExecution';
-import type { IKernel, IKernelProvider, IKernelSelectionUsage, KernelConnectionMetadata } from './types';
+import type { IKernel, IKernelProvider, KernelConnectionMetadata } from './types';
 
 export class Kernel implements IKernel {
     get connection(): INotebookProviderConnection | undefined {
@@ -70,7 +69,6 @@ export class Kernel implements IKernel {
     private _notebookPromise?: Promise<INotebook>;
     private readonly hookedNotebookForEvents = new WeakSet<INotebook>();
     private restarting?: Deferred<void>;
-    private readonly kernelValidated = new Map<string, { kernel: IKernel; promise: Promise<void> }>();
     private readonly kernelExecution: KernelExecution;
     private startCancellation = new CancellationTokenSource();
     constructor(
@@ -82,11 +80,9 @@ export class Kernel implements IKernel {
         interruptTimeout: number,
         private readonly errorHandler: IDataScienceErrorHandler,
         private readonly editorProvider: INotebookEditorProvider,
-        private readonly kernelProvider: IKernelProvider,
-        private readonly kernelSelectionUsage: IKernelSelectionUsage,
+        kernelProvider: IKernelProvider,
         appShell: IApplicationShell,
         vscNotebook: IVSCodeNotebook,
-        private readonly rawNotebookSupported: IRawNotebookSupportedService,
         private readonly fs: IFileSystem,
         context: IExtensionContext,
         private readonly serverStorage: IJupyterServerUriStorage
@@ -95,7 +91,6 @@ export class Kernel implements IKernel {
             kernelProvider,
             errorHandler,
             editorProvider,
-            kernelSelectionUsage,
             appShell,
             vscNotebook,
             kernelConnectionMetadata,
@@ -190,7 +185,6 @@ export class Kernel implements IKernel {
             this._notebookPromise = new Promise<INotebook>(async (resolve, reject) => {
                 const stopWatch = new StopWatch();
                 try {
-                    await this.validate(this.uri);
                     try {
                         this.notebook = await this.notebookProvider.getOrCreateNotebook({
                             identity: this.uri,
@@ -254,38 +248,6 @@ export class Kernel implements IKernel {
         );
     }
 
-    private async validate(uri: Uri): Promise<void> {
-        const kernel = this.kernelProvider.get(uri);
-        if (!kernel) {
-            return;
-        }
-        const key = uri.toString();
-        if (!this.kernelValidated.get(key)) {
-            const promise = new Promise<void>((resolve) =>
-                this.kernelSelectionUsage
-                    .useSelectedKernel(
-                        kernel?.kernelConnectionMetadata,
-                        uri,
-                        this.rawNotebookSupported.supported() ? 'raw' : 'jupyter',
-                        undefined,
-                        true // Disable UI when validating.
-                    )
-                    .finally(() => {
-                        // If still using the same promise, then remove the exception information.
-                        // Basically if there's an exception, then we cannot use the kernel and a message would have been displayed.
-                        // We don't want to cache such a promise, as its possible the user later installs the dependencies.
-                        if (this.kernelValidated.get(key)?.kernel === kernel) {
-                            this.kernelValidated.delete(key);
-                        }
-                    })
-                    .finally(resolve)
-                    .catch(noop)
-            );
-
-            this.kernelValidated.set(key, { kernel, promise });
-        }
-        await this.kernelValidated.get(key)!.promise;
-    }
     private async initializeAfterStart() {
         if (!this.notebook) {
             return;

@@ -166,7 +166,11 @@ export async function createTemporaryFile(options: {
     return { file: tempFile, dispose: () => swallowExceptions(() => fs.unlinkSync(tempFile)) };
 }
 
-export async function createTemporaryNotebook(templateFile: string, disposables: IDisposable[]): Promise<string> {
+export async function createTemporaryNotebook(
+    templateFile: string,
+    disposables: IDisposable[],
+    kernelName: string = 'Python 3'
+): Promise<string> {
     const extension = path.extname(templateFile);
     fs.ensureDirSync(path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'tmp'));
     const tempFile = tmp.tmpNameSync({
@@ -174,7 +178,14 @@ export async function createTemporaryNotebook(templateFile: string, disposables:
         dir: path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'tmp'),
         prefix: path.basename(templateFile, '.ipynb')
     });
-    await fs.copyFile(templateFile, tempFile);
+    if (await fs.pathExists(templateFile)) {
+        const contents = JSON.parse(await fs.readFile(templateFile, { encoding: 'utf-8' }));
+        if (contents.kernel) {
+            contents.kernel.display_name = kernelName;
+        }
+        await fs.writeFile(tempFile, JSON.stringify(contents, undefined, 4));
+    }
+
     disposables.push({ dispose: () => swallowExceptions(() => fs.unlinkSync(tempFile)) });
     return tempFile;
 }
@@ -264,21 +275,25 @@ export async function waitForKernelToChange(criteria: { labelOrId?: string; inte
         new CancellationTokenSource().token
     )) as VSCodeNotebookKernelMetadata[];
 
-    traceInfo(`Kernels found for wait search: ${kernels?.map((k) => k.label).join('\n')}`);
+    traceInfo(`Kernels found for wait search: ${kernels?.map((k) => `${k.label}:${k.id}`).join('\n')}`);
 
     // Find the kernel id that matches the name we want
     let id: string | undefined;
     if (criteria.labelOrId) {
         const labelOrId = criteria.labelOrId;
-        id = kernels?.find((k) => (labelOrId && k.label.includes(labelOrId)) || (k.id && k.id == labelOrId))?.id;
+        id = kernels?.find((k) => (labelOrId && k.label === labelOrId) || (k.id && k.id == labelOrId))?.id;
+        if (!id) {
+            // Try includes instead
+            id = kernels?.find((k) => (labelOrId && k.label.includes(labelOrId)) || (k.id && k.id == labelOrId))?.id;
+        }
     }
-
-    if (criteria.interpreterPath) {
+    if (criteria.interpreterPath && !id) {
         id = kernels
             ?.filter((k) => k.selection.interpreter)
             .find((k) => k.selection.interpreter!.path.toLowerCase().includes(criteria.interpreterPath!.toLowerCase()))
             ?.id;
     }
+    traceInfo(`Kernel id searching for ${id}`);
 
     // Send a select kernel on the active notebook editor
     void commands.executeCommand('notebook.selectKernel', { id, extension: JVSC_EXTENSION_ID });
@@ -290,10 +305,10 @@ export async function waitForKernelToChange(criteria: { labelOrId?: string; inte
             return false;
         }
         if (vscodeNotebook.activeNotebookEditor.kernel.id === id) {
-            traceInfo(`Found selected kernel ${vscodeNotebook.activeNotebookEditor.kernel.id}`);
+            traceInfo(`Found selected kernel ${vscodeNotebook.activeNotebookEditor.kernel.label}`);
             return true;
         }
-        traceInfo(`Active kernel is ${vscodeNotebook.activeNotebookEditor.kernel.id}`);
+        traceInfo(`Active kernel is ${vscodeNotebook.activeNotebookEditor.kernel.label}`);
         return false;
     };
     await waitForCondition(
@@ -301,6 +316,8 @@ export async function waitForKernelToChange(criteria: { labelOrId?: string; inte
         defaultTimeout,
         `Kernel with criteria ${JSON.stringify(criteria)} not selected`
     );
+    // Make sure the kernel is actually in use before returning (switching is async)
+    await sleep(500);
 }
 
 export async function waitForKernelToGetAutoSelected(expectedLanguage?: string, time = 100_000) {
@@ -316,6 +333,8 @@ export async function waitForKernelToGetAutoSelected(expectedLanguage?: string, 
         if (!vscodeNotebook.activeNotebookEditor.kernel) {
             return false;
         }
+        traceInfo(`Waiting for kernel and active is ${vscodeNotebook.activeNotebookEditor.kernel.label}`);
+
         if (isJupyterKernel(vscodeNotebook.activeNotebookEditor.kernel)) {
             if (!expectedLanguage) {
                 kernelInfo = `<No specific kernel expected> ${JSON.stringify(
@@ -324,12 +343,13 @@ export async function waitForKernelToGetAutoSelected(expectedLanguage?: string, 
                 return true;
             }
             switch (vscodeNotebook.activeNotebookEditor.kernel.selection.kind) {
+                case 'startUsingDefaultKernel':
                 case 'startUsingKernelSpec':
                     kernelInfo = `<startUsingKernelSpec>${JSON.stringify(
                         vscodeNotebook.activeNotebookEditor.kernel.selection.kernelSpec || {}
                     )}`;
                     return (
-                        vscodeNotebook.activeNotebookEditor.kernel.selection.kernelSpec.language?.toLowerCase() ===
+                        vscodeNotebook.activeNotebookEditor.kernel.selection.kernelSpec?.language?.toLowerCase() ===
                         expectedLanguage.toLowerCase()
                     );
                 case 'startUsingPythonInterpreter':
@@ -354,6 +374,10 @@ export async function waitForKernelToGetAutoSelected(expectedLanguage?: string, 
     // Wait for the active kernel to be a julia kernel.
     const errorMessage = expectedLanguage ? `${expectedLanguage} kernel not auto selected` : 'Kernel not auto selected';
     await waitForCondition(async () => isRightKernel(), defaultTimeout, errorMessage);
+
+    // If it works, make sure kernel has enough time to actually switch the active notebook to this
+    // kernel (kernel changes are async)
+    await sleep(500);
     traceInfo(`Preferred kernel auto selected for Native Notebook for ${kernelInfo}.`);
 }
 export async function trustNotebook(ipynbFile: string | Uri) {
@@ -540,7 +564,12 @@ export function assertHasTextOutputInVSCode(cell: NotebookCell, text: string, in
     const cellOutputs = cell.outputs;
     assert.ok(cellOutputs.length, 'No output');
     const result = cell.outputs[index].outputs.some((item) => hasTextOutputValue(item, text, isExactMatch));
-    assert.isTrue(result, `${text} not found in outputs of cell ${cell.index}`);
+    assert.isTrue(
+        result,
+        `${text} not found in outputs of cell ${cell.index} ${cell.outputs[index].outputs
+            .map((o) => o.value)
+            .join(' ')}`
+    );
     return result;
 }
 export async function waitForTextOutputInVSCode(

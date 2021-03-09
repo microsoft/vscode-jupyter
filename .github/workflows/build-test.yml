@@ -2,7 +2,7 @@
 # We use the github.event_name to determine what started the workflow to determine which
 # situation we are in.
 
-name: Main
+name: Build and Test
 
 on:
   pull_request:

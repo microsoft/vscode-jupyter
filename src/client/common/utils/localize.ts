@@ -951,6 +951,8 @@ export namespace DataScience {
         'DataScience.notebookCreationPickerPlaceHolder',
         'Select an option to create a blank notebook'
     );
+
+    export const defaultNotebookName = localize('DataScience.defaultNotebookName', 'default');
 }
 
 // Skip using vscode-nls and instead just compute our strings based on key values. Key values

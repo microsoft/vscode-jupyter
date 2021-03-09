@@ -97,6 +97,7 @@ export class JupyterServerBase implements INotebookServer {
         // is running and connectable.
         let session: IJupyterSession | undefined;
         session = await this.sessionManager.startNew(
+            undefined,
             launchInfo.kernelConnectionMetadata,
             launchInfo.connectionInfo.rootDirectory,
             cancelToken,
@@ -105,8 +106,14 @@ export class JupyterServerBase implements INotebookServer {
         const idleTimeout = this.configService.getSettings().jupyterLaunchTimeout;
         // The wait for idle should throw if we can't connect.
         await session.waitForIdle(idleTimeout);
-        // If that works, save this session for the next notebook to use
-        this.savedSession = session;
+
+        // For local we want to save this for the next notebook to use.
+        if (this.launchInfo.connectionInfo.localLaunch) {
+            this.savedSession = session;
+        } else {
+            // Otherwise for remote, just get rid of it.
+            await session.shutdown(true);
+        }
     }
 
     public async createNotebook(

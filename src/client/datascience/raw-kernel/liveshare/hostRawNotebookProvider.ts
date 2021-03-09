@@ -22,34 +22,28 @@ import {
     IConfigurationService,
     IDisposableRegistry,
     IOutputChannel,
-    ReadWrite,
     Resource
 } from '../../../common/types';
 import { createDeferred } from '../../../common/utils/async';
 import * as localize from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
 import { IServiceContainer } from '../../../ioc/types';
-import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Identifiers, LiveShare, LiveShareCommands, Settings, Telemetry } from '../../constants';
 import { computeWorkingDirectory } from '../../jupyter/jupyterUtils';
 import { getDisplayNameOrNameOfKernelConnection, isPythonKernelConnection } from '../../jupyter/kernels/helpers';
-import { KernelSelector } from '../../jupyter/kernels/kernelSelector';
-import { KernelService } from '../../jupyter/kernels/kernelService';
 import { KernelConnectionMetadata } from '../../jupyter/kernels/types';
 import { HostJupyterNotebook } from '../../jupyter/liveshare/hostJupyterNotebook';
 import { LiveShareParticipantHost } from '../../jupyter/liveshare/liveShareParticipantMixin';
 import { IRoleBasedObject } from '../../jupyter/liveshare/roleBasedFactory';
-import { IKernelLauncher, IpyKernelNotInstalledError } from '../../kernel-launcher/types';
+import { IKernelLauncher, ILocalKernelFinder } from '../../kernel-launcher/types';
 import { ProgressReporter } from '../../progress/progressReporter';
 import {
-    IKernelDependencyService,
     INotebook,
     INotebookExecutionInfo,
     INotebookExecutionLogger,
     IRawNotebookProvider,
-    IRawNotebookSupportedService,
-    KernelInterpreterDependencyResponse
+    IRawNotebookSupportedService
 } from '../../types';
 import { calculateWorkingDirectory } from '../../utils';
 import { RawJupyterSession } from '../rawJupyterSession';
@@ -75,12 +69,10 @@ export class HostRawNotebookProvider
         private fs: IFileSystem,
         private serviceContainer: IServiceContainer,
         private kernelLauncher: IKernelLauncher,
-        private kernelSelector: KernelSelector,
+        private localKernelFinder: ILocalKernelFinder,
         private progressReporter: ProgressReporter,
         private outputChannel: IOutputChannel,
         rawNotebookSupported: IRawNotebookSupportedService,
-        private readonly kernelDependencyService: IKernelDependencyService,
-        private readonly kernelService: KernelService,
         private readonly extensionChecker: IPythonExtensionChecker,
         private readonly vscodeNotebook: IVSCodeNotebook
     ) {
@@ -175,37 +167,11 @@ export class HostRawNotebookProvider
                     sendTelemetryEvent(Telemetry.AttemptedToLaunchRawKernelWithoutInterpreter, undefined, {
                         pythonExtensionInstalled: this.extensionChecker.isPythonExtensionInstalled
                     });
-                    // Temporary, if there's no telemetry for this, then its safe to remove
-                    // this code as well as the code where we initialize the interpreter via a hack.
-                    // This is used to check if there are situations under which this is possible & to safeguard against it.
-                    // The only real world scenario is when users do not install Python (which we cannot prevent).
-                    const readWriteConnection = kernelConnection as ReadWrite<KernelConnectionMetadata>;
-                    readWriteConnection.interpreter = await this.kernelService.findMatchingInterpreter(
-                        kernelConnection.kernelSpec,
-                        cancelToken
-                    );
-                    if (readWriteConnection.kind === 'startUsingKernelSpec') {
-                        readWriteConnection.kernelSpec.interpreterPath =
-                            readWriteConnection.kernelSpec.interpreterPath || readWriteConnection.interpreter?.path;
-                    }
-                }
-                if (kernelConnection.interpreter) {
-                    // Install missing dependencies only if we're dealing with a Python kernel.
-                    await this.installDependenciesIntoInterpreter(kernelConnection.interpreter, cancelToken, disableUI);
-                } else {
-                    traceError('No interpreter fetched to start a raw kernel');
                 }
             }
             // We need to locate kernelspec and possible interpreter for this launch based on resource and notebook metadata
             const kernelConnectionMetadata =
-                kernelConnection ||
-                (await this.kernelSelector.getPreferredKernelForLocalConnection(
-                    resource,
-                    'raw',
-                    notebookMetadata,
-                    disableUI,
-                    cancelToken
-                ));
+                kernelConnection || (await this.localKernelFinder.findKernel(resource, notebookMetadata, cancelToken));
 
             const displayName = getDisplayNameOrNameOfKernelConnection(kernelConnectionMetadata);
 
@@ -291,28 +257,6 @@ export class HostRawNotebookProvider
         }
 
         return notebookPromise.promise;
-    }
-
-    // If we need to install our dependencies now (for non-native scenarios)
-    // then install ipykernel into the interpreter or throw error
-    private async installDependenciesIntoInterpreter(
-        interpreter: PythonEnvironment,
-        cancelToken?: CancellationToken,
-        disableUI?: boolean
-    ) {
-        const response = await this.kernelDependencyService.installMissingDependencies(
-            interpreter,
-            cancelToken,
-            disableUI
-        );
-        if (response !== KernelInterpreterDependencyResponse.ok) {
-            throw new IpyKernelNotInstalledError(
-                localize.DataScience.ipykernelNotInstalled().format(
-                    `${interpreter.displayName || interpreter.path}:${interpreter.path}`
-                ),
-                response
-            );
-        }
     }
 
     // Get the notebook execution info for this raw session instance

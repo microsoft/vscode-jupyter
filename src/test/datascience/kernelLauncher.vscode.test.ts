@@ -19,14 +19,22 @@ import * as chaiAsPromised from 'chai-as-promised';
 import { traceInfo } from '../../client/common/logger';
 import { IS_REMOTE_NATIVE_TEST } from '../constants';
 import { initialize } from '../initialize';
-import { createDefaultKernelSpec } from '../../client/datascience/jupyter/kernels/helpers';
 use(chaiAsPromised);
 
 const test_Timeout = 30_000;
 
 suite('DataScience - Kernel Launcher', () => {
     let kernelLauncher: IKernelLauncher;
-    const kernelSpec = createDefaultKernelSpec();
+    const kernelSpec = {
+        name: 'python3',
+        language: 'python',
+        display_name: 'Python 3',
+        metadata: {},
+        argv: ['python', '-m', 'ipykernel_launcher', '-f', `{connection_file}`],
+        env: {},
+        resources: {},
+        path: ''
+    };
     suiteSetup(async function () {
         // These are slow tests, hence lets run only on linux on CI.
         if (IS_REMOTE_NATIVE_TEST) {
@@ -47,7 +55,7 @@ suite('DataScience - Kernel Launcher', () => {
         let exitExpected = false;
         const deferred = createDeferred<boolean>();
         const kernel = await kernelLauncher.launch(
-            { kernelSpec, kind: 'startUsingKernelSpec' },
+            { kernelSpec, kind: 'startUsingKernelSpec', id: '1' },
             -1,
             undefined,
             process.cwd()
@@ -64,7 +72,7 @@ suite('DataScience - Kernel Launcher', () => {
 
         // It should not exit.
         await assert.isRejected(
-            waitForCondition(() => deferred.promise, 2_000, 'Timeout'),
+            waitForCondition(() => deferred.promise, 15_000, 'Timeout'),
             'Timeout'
         );
 
@@ -88,7 +96,7 @@ suite('DataScience - Kernel Launcher', () => {
         };
 
         const kernel = await kernelLauncher.launch(
-            { kernelSpec: spec, kind: 'startUsingKernelSpec' },
+            { kernelSpec: spec, kind: 'startUsingKernelSpec', id: '1' },
             30_000,
             undefined,
             process.cwd()
@@ -113,7 +121,7 @@ suite('DataScience - Kernel Launcher', () => {
 
     test('Bind with ZMQ', async function () {
         const kernel = await kernelLauncher.launch(
-            { kernelSpec, kind: 'startUsingKernelSpec' },
+            { kernelSpec, kind: 'startUsingKernelSpec', id: '1' },
             -1,
             undefined,
             process.cwd()

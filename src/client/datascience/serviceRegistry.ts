@@ -95,7 +95,7 @@ import { isLocalLaunch } from './jupyter/kernels/helpers';
 import { KernelDependencyService } from './jupyter/kernels/kernelDependencyService';
 import { KernelSelectionProvider } from './jupyter/kernels/kernelSelections';
 import { KernelSelector } from './jupyter/kernels/kernelSelector';
-import { KernelService } from './jupyter/kernels/kernelService';
+import { JupyterKernelService } from './jupyter/kernels/jupyterKernelService';
 import { KernelSwitcher } from './jupyter/kernels/kernelSwitcher';
 import { KernelVariables } from './jupyter/kernelVariables';
 import { NotebookStarter } from './jupyter/notebookStarter';
@@ -107,9 +107,9 @@ import { JupyterUriProviderRegistration } from './jupyterUriProviderRegistration
 import { KernelDaemonPool } from './kernel-launcher/kernelDaemonPool';
 import { KernelDaemonPreWarmer } from './kernel-launcher/kernelDaemonPreWarmer';
 import { KernelEnvironmentVariablesService } from './kernel-launcher/kernelEnvVarsService';
-import { KernelFinder } from './kernel-launcher/kernelFinder';
+import { LocalKernelFinder } from './kernel-launcher/localKernelFinder';
 import { KernelLauncher } from './kernel-launcher/kernelLauncher';
-import { IKernelFinder, IKernelLauncher } from './kernel-launcher/types';
+import { ILocalKernelFinder, IKernelLauncher, IRemoteKernelFinder } from './kernel-launcher/types';
 import { MultiplexingDebugService } from './multiplexingDebugService';
 import { NotebookEditorCompatibilitySupport } from './notebook/notebookEditorCompatibilitySupport';
 import { NotebookEditorProvider } from './notebook/notebookEditorProvider';
@@ -193,6 +193,7 @@ import { INotebookWatcher, IVariableViewProvider } from './variablesView/types';
 import { VariableViewActivationService } from './variablesView/variableViewActivationService';
 import { VariableViewProvider } from './variablesView/variableViewProvider';
 import { WebviewExtensibility } from './webviewExtensibility';
+import { RemoteKernelFinder } from './kernel-launcher/remoteKernelFinder';
 import { IApplicationEnvironment } from '../common/application/types';
 
 // README: Did you make sure "dataScienceIocContainer.ts" has also been updated appropriately?
@@ -261,7 +262,8 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     serviceManager.add<IPlotViewer>(IPlotViewer, PlotViewer);
     serviceManager.addSingleton<IKernelLauncher>(IKernelLauncher, KernelLauncher);
     serviceManager.addSingleton<KernelEnvironmentVariablesService>(KernelEnvironmentVariablesService, KernelEnvironmentVariablesService);
-    serviceManager.addSingleton<IKernelFinder>(IKernelFinder, KernelFinder);
+    serviceManager.addSingleton<ILocalKernelFinder>(ILocalKernelFinder, LocalKernelFinder);
+    serviceManager.addSingleton<IRemoteKernelFinder>(IRemoteKernelFinder, RemoteKernelFinder);
     serviceManager.addSingleton<CellOutputMimeTypeTracker>(CellOutputMimeTypeTracker, CellOutputMimeTypeTracker, undefined, [IExtensionSingleActivationService, INotebookExecutionLogger]);
     serviceManager.addSingleton<CommandRegistry>(CommandRegistry, CommandRegistry);
     serviceManager.addSingleton<DataViewerDependencyService>(DataViewerDependencyService, DataViewerDependencyService);
@@ -311,7 +313,7 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     serviceManager.addSingleton<JupyterServerSelectorCommand>(JupyterServerSelectorCommand, JupyterServerSelectorCommand);
     serviceManager.addSingleton<KernelSelectionProvider>(KernelSelectionProvider, KernelSelectionProvider);
     serviceManager.addSingleton<KernelSelector>(KernelSelector, KernelSelector);
-    serviceManager.addSingleton<KernelService>(KernelService, KernelService);
+    serviceManager.addSingleton<JupyterKernelService>(JupyterKernelService, JupyterKernelService);
     serviceManager.addSingleton<KernelSwitcher>(KernelSwitcher, KernelSwitcher);
     serviceManager.addSingleton<NotebookCommands>(NotebookCommands, NotebookCommands);
     serviceManager.addSingleton<NotebookStarter>(NotebookStarter, NotebookStarter);

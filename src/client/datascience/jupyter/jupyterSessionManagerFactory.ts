@@ -17,10 +17,10 @@ import {
     IJupyterConnection,
     IJupyterPasswordConnect,
     IJupyterSessionManager,
-    IJupyterSessionManagerFactory,
-    IKernelDependencyService
+    IJupyterSessionManagerFactory
 } from '../types';
 import { JupyterSessionManager } from './jupyterSessionManager';
+import { JupyterKernelService } from './kernels/jupyterKernelService';
 
 @injectable()
 export class JupyterSessionManagerFactory implements IJupyterSessionManagerFactory {
@@ -33,7 +33,7 @@ export class JupyterSessionManagerFactory implements IJupyterSessionManagerFacto
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IPersistentStateFactory) private readonly stateFactory: IPersistentStateFactory,
         @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry,
-        @inject(IKernelDependencyService) private readonly kernelDependencyService: IKernelDependencyService
+        @inject(JupyterKernelService) private readonly kernelService: JupyterKernelService
     ) {}
 
     /**
@@ -50,7 +50,7 @@ export class JupyterSessionManagerFactory implements IJupyterSessionManagerFacto
             this.config,
             this.appShell,
             this.stateFactory,
-            this.kernelDependencyService
+            this.kernelService
         );
         await result.initialize(connInfo);
         this.disposableRegistry.push(

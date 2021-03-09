@@ -22,7 +22,7 @@ import { concatMultilineString, splitMultilineString } from '../../../../datasci
 import { IVSCodeNotebook } from '../../../common/application/types';
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../common/constants';
 import '../../../common/extensions';
-import { traceError, traceInfo, traceWarning } from '../../../common/logger';
+import { traceError, traceInfo, traceInfoIf, traceWarning } from '../../../common/logger';
 import { isUntitledFile } from '../../../common/utils/misc';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../constants';
@@ -92,6 +92,11 @@ export function getNotebookMetadata(document: NotebookDocument): nbformat.INoteb
     if (data && data.metadata) {
         updateNotebookMetadata(notebookContent.metadata, data.metadata, data.kernelInfo);
     }
+
+    traceInfoIf(
+        !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
+        `Notebook metadata for ${document.fileName} is ${data?.metadata?.id}`
+    );
 
     return notebookContent.metadata;
 }

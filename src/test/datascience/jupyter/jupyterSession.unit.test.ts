@@ -21,13 +21,9 @@ import { createDeferred, Deferred } from '../../../client/common/utils/async';
 import { DataScience } from '../../../client/common/utils/localize';
 import { noop } from '../../../client/common/utils/misc';
 import { JupyterSession } from '../../../client/datascience/jupyter/jupyterSession';
-import { KernelDependencyService } from '../../../client/datascience/jupyter/kernels/kernelDependencyService';
+import { JupyterKernelService } from '../../../client/datascience/jupyter/kernels/jupyterKernelService';
 import { KernelConnectionMetadata, LiveKernelModel } from '../../../client/datascience/jupyter/kernels/types';
-import {
-    IJupyterConnection,
-    IJupyterKernelSpec,
-    KernelInterpreterDependencyResponse
-} from '../../../client/datascience/types';
+import { IJupyterConnection, IJupyterKernelSpec } from '../../../client/datascience/types';
 import { MockOutputChannel } from '../../mockClasses';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
@@ -83,16 +79,14 @@ suite('DataScience - JupyterSession', () => {
         when(kernel.status).thenReturn('idle');
         when(connection.rootDirectory).thenReturn('');
         const channel = new MockOutputChannel('JUPYTER');
-        const kernelDependencyService = mock(KernelDependencyService);
-        when(kernelDependencyService.areDependenciesInstalled(anything(), anything())).thenResolve(true);
-        when(kernelDependencyService.installMissingDependencies(anything(), anything(), anything())).thenResolve(
-            KernelInterpreterDependencyResponse.ok
-        );
+        const kernelService = mock(JupyterKernelService);
+        when(kernelService.ensureKernelIsUsable(anything(), anything(), anything())).thenResolve();
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (instance(session) as any).then = undefined;
         sessionManager = mock(SessionManager);
         contentsManager = mock(ContentsManager);
         jupyterSession = new JupyterSession(
+            undefined,
             instance(connection),
             serverSettings.object,
             mockKernelSpec.object,
@@ -107,7 +101,7 @@ suite('DataScience - JupyterSession', () => {
             },
             '',
             60_000,
-            instance(kernelDependencyService)
+            instance(kernelService)
         );
     });
 
@@ -262,7 +256,7 @@ suite('DataScience - JupyterSession', () => {
                     assert.isFalse(remoteSessionInstance.isRemoteSession);
                     await jupyterSession.changeKernel(
                         undefined,
-                        { kernelModel: newActiveRemoteKernel, kind: 'connectToLiveKernel' },
+                        { kernelModel: newActiveRemoteKernel, kind: 'connectToLiveKernel', id: '0' },
                         10000
                     );
                 });
@@ -339,7 +333,7 @@ suite('DataScience - JupyterSession', () => {
 
                 await jupyterSession.changeKernel(
                     undefined,
-                    { kernelSpec: newKernel, kind: 'startUsingKernelSpec' },
+                    { kernelSpec: newKernel, kind: 'startUsingKernelSpec', id: '1' },
                     10000
                 );
 

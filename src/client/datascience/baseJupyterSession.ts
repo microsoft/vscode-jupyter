@@ -10,7 +10,7 @@ import { Event, EventEmitter } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { ServerStatus } from '../../datascience-ui/interactive-common/mainState';
 import { WrappedError } from '../common/errors/types';
-import { traceError, traceInfo, traceWarning } from '../common/logger';
+import { traceError, traceInfo, traceInfoIf, traceWarning } from '../common/logger';
 import { Resource } from '../common/types';
 import { sleep, waitForPromise } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
@@ -21,7 +21,7 @@ import { JupyterInvalidKernelError } from './jupyter/jupyterInvalidKernelError';
 import { JupyterWaitForIdleError } from './jupyter/jupyterWaitForIdleError';
 import { kernelConnectionMetadataHasKernelSpec } from './jupyter/kernels/helpers';
 import { JupyterKernelPromiseFailedError } from './jupyter/kernels/jupyterKernelPromiseFailedError';
-import { getKernelConnectionId, KernelConnectionMetadata } from './jupyter/kernels/types';
+import { KernelConnectionMetadata } from './jupyter/kernels/types';
 import { suppressShutdownErrors } from './raw-kernel/rawKernel';
 import { trackKernelResourceInformation } from './telemetry/telemetry';
 import { IJupyterSession, ISessionWithSocket, KernelSocketInformation } from './types';
@@ -94,16 +94,16 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     // Abstracts for each Session type to implement
     public abstract waitForIdle(timeout: number): Promise<void>;
 
-    public async shutdown(): Promise<void> {
+    public async shutdown(force?: boolean): Promise<void> {
         if (this.session) {
             try {
                 traceInfo('Shutdown session - current session');
-                await this.shutdownSession(this.session, this.statusHandler);
+                await this.shutdownSession(this.session, this.statusHandler, force);
                 traceInfo('Shutdown session - get restart session');
                 if (this.restartSessionPromise) {
                     const restartSession = await this.restartSessionPromise;
                     traceInfo('Shutdown session - shutdown restart session');
-                    await this.shutdownSession(restartSession, undefined);
+                    await this.shutdownSession(restartSession, undefined, force);
                 }
             } catch {
                 noop();
@@ -163,19 +163,27 @@ export abstract class BaseJupyterSession implements IJupyterSession {
             : undefined;
         if (this.session && currentKernelSpec && kernelSpecToUse && this.kernelConnectionMetadata) {
             // If we have selected the same kernel connection, then nothing to do.
-            if (getKernelConnectionId(this.kernelConnectionMetadata) === getKernelConnectionId(kernelConnection)) {
+            if (this.kernelConnectionMetadata.id === kernelConnection.id) {
+                traceInfoIf(
+                    !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
+                    `Kernels are the same, no switching necessary.`
+                );
                 return;
             }
         }
-
         trackKernelResourceInformation(resource, { kernelConnection });
-        newSession = await this.createNewKernelSession(kernelConnection, timeoutMS);
+        newSession = await this.createNewKernelSession(resource, kernelConnection, timeoutMS);
 
         // This is just like doing a restart, kill the old session (and the old restart session), and start new ones
         if (this.session) {
-            this.shutdownSession(this.session, this.statusHandler).ignoreErrors();
-            this.restartSessionPromise?.then((r) => this.shutdownSession(r, undefined)).ignoreErrors(); // NOSONAR
+            this.shutdownSession(this.session, this.statusHandler, false).ignoreErrors();
+            this.restartSessionPromise?.then((r) => this.shutdownSession(r, undefined, true)).ignoreErrors(); // NOSONAR
         }
+
+        traceInfoIf(
+            !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
+            `Switched notebook kernel to ${kernelSpecToUse?.display_name}`
+        );
 
         // Update our kernel connection metadata.
         this.kernelConnectionMetadata = kernelConnection;
@@ -226,7 +234,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
             if (oldStatusHandler) {
                 oldSession.statusChanged.disconnect(oldStatusHandler);
             }
-            this.shutdownSession(oldSession, undefined).ignoreErrors();
+            this.shutdownSession(oldSession, undefined, true).ignoreErrors();
         } else {
             throw new Error(localize.DataScience.sessionDisposed());
         }
@@ -355,6 +363,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
 
     // Sub classes need to implement their own kernel change specific code
     protected abstract createNewKernelSession(
+        resource: Resource,
         kernelConnection: KernelConnectionMetadata,
         timeoutMS: number
     ): Promise<ISessionWithSocket>;
@@ -369,7 +378,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
                 } else if (e === 'dead') {
                     traceError('Kernel died while waiting for idle');
                     // If we throw an exception, make sure to shutdown the session as it's not usable anymore
-                    this.shutdownSession(session, this.statusHandler).ignoreErrors();
+                    this.shutdownSession(session, this.statusHandler, true).ignoreErrors();
                     const kernelModel = {
                         ...session.kernel,
                         lastActivityTime: new Date(),
@@ -379,7 +388,8 @@ export abstract class BaseJupyterSession implements IJupyterSession {
                     reject(
                         new JupyterInvalidKernelError({
                             kernelModel,
-                            kind: 'connectToLiveKernel'
+                            kind: 'connectToLiveKernel',
+                            id: kernelModel.id
                         })
                     );
                 }
@@ -431,7 +441,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
             }
 
             // If we throw an exception, make sure to shutdown the session as it's not usable anymore
-            this.shutdownSession(session, this.statusHandler).ignoreErrors();
+            this.shutdownSession(session, this.statusHandler, true).ignoreErrors();
             throw new JupyterWaitForIdleError(localize.DataScience.jupyterLaunchTimedOut());
         }
     }
@@ -467,7 +477,8 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     }
     protected async shutdownSession(
         session: ISessionWithSocket | undefined,
-        statusHandler: Slot<ISessionWithSocket, Kernel.Status> | undefined
+        statusHandler: Slot<ISessionWithSocket, Kernel.Status> | undefined,
+        force: boolean | undefined
     ): Promise<void> {
         if (session && session.kernel) {
             const kernelId = session.kernel.id;
@@ -477,7 +488,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
                     session.statusChanged.disconnect(statusHandler);
                 }
                 // Do not shutdown remote sessions.
-                if (session.isRemoteSession) {
+                if (session.isRemoteSession && !force) {
                     session.dispose();
                     return;
                 }

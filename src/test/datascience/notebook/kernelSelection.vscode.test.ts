@@ -54,6 +54,8 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
     let venvNoKernelPythonPath: string;
     let venvKernelPythonPath: string;
     let venvNoRegPythonPath: string;
+    let venvNoKernelDisplayName: string;
+    let venvKernelDisplayName: string;
     let vscodeNotebook: IVSCodeNotebook;
     this.timeout(60_000); // Slow test, we need to uninstall/install ipykernel.
     /*
@@ -98,6 +100,16 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         venvNoKernelPythonPath = interpreter1.path;
         venvKernelPythonPath = interpreter2.path;
         venvNoRegPythonPath = interpreter3.path;
+        venvNoKernelDisplayName = IS_REMOTE_NATIVE_TEST ? interpreter1.displayName || '.venvnokernel' : '.venvnokernel';
+        venvKernelDisplayName = IS_REMOTE_NATIVE_TEST ? interpreter2.displayName || '.venvkernel' : '.venvkernel';
+
+        // Ensure IPykernel is in all environments.
+        const proc = new ProcessService(new BufferDecoder());
+        await Promise.all([
+            proc.exec(venvNoKernelPython, ['-m', 'pip', 'install', 'ipykernel']),
+            proc.exec(venvKernelPython, ['-m', 'pip', 'install', 'ipykernel']),
+            proc.exec(venvNoRegPythonPath, ['-m', 'pip', 'install', 'ipykernel'])
+        ]);
 
         await trustAllNotebooks();
         await startJupyterServer();
@@ -108,15 +120,8 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         console.log(`Start test ${this.currentTest?.title}`);
         // Don't use same file (due to dirty handling, we might save in dirty.)
         // Coz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
-        nbFile1 = await createTemporaryNotebook(templateIPynbFile, disposables);
-        // Ensure IPykernel is in all environments.
-        const proc = new ProcessService(new BufferDecoder());
-        await Promise.all([
-            proc.exec(venvNoKernelPython, ['-m', 'pip', 'install', 'ipykernel']),
-            proc.exec(venvKernelPython, ['-m', 'pip', 'install', 'ipykernel']),
-            proc.exec(venvNoRegPythonPath, ['-m', 'pip', 'install', 'ipykernel']),
-            closeActiveWindows()
-        ]);
+        nbFile1 = await createTemporaryNotebook(templateIPynbFile, disposables, venvNoKernelDisplayName);
+        await closeActiveWindows();
         sinon.restore();
         console.log(`Start Test completed ${this.currentTest?.title}`);
     });
@@ -142,6 +147,10 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         assertHasTextOutputInVSCode(cell, activeInterpreterPath, 0, false);
     });
     test('Ensure kernel is auto selected and interpreter is as expected', async function () {
+        // Test only applies for Raw notebooks.
+        if (IS_REMOTE_NATIVE_TEST || IS_NON_RAW_NATIVE_TEST) {
+            return this.skip();
+        }
         await openNotebook(api.serviceContainer, nbFile1);
         await waitForKernelToGetAutoSelected(undefined);
 
@@ -154,6 +163,10 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         assertHasTextOutputInVSCode(cell, venvNoKernelPythonPath, 0, false);
     });
     test('Ensure we select a Python kernel for a nb with python language information', async function () {
+        // Test only applies for Raw notebooks.
+        if (IS_REMOTE_NATIVE_TEST || IS_NON_RAW_NATIVE_TEST) {
+            return this.skip();
+        }
         await createEmptyPythonNotebook(disposables);
 
         // Run all cells
@@ -169,6 +182,10 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         assertHasTextOutputInVSCode(cell2, 'Hello World', 0, false);
     });
     test('User kernelspec in notebook metadata', async function () {
+        // Test only applies for Raw notebooks.
+        if (IS_REMOTE_NATIVE_TEST || IS_NON_RAW_NATIVE_TEST) {
+            return this.skip();
+        }
         await openNotebook(api.serviceContainer, nbFile1);
         await waitForKernelToGetAutoSelected(undefined);
 
@@ -181,7 +198,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         assertHasTextOutputInVSCode(cell, venvNoKernelPythonPath, 0, false);
 
         // Change kernel
-        await waitForKernelToChange({ labelOrId: '.venvkernel' });
+        await waitForKernelToChange({ labelOrId: venvKernelDisplayName });
 
         // Clear the cells & execute again
         await commands.executeCommand('notebook.clearAllCellsOutputs');

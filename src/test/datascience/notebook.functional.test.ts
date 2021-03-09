@@ -13,10 +13,10 @@ import { Readable, Writable } from 'stream';
 import { anything, instance, mock, when } from 'ts-mockito';
 import * as uuid from 'uuid/v4';
 import { Disposable, Uri } from 'vscode';
-import { CancellationToken, CancellationTokenSource } from 'vscode-jsonrpc';
+import { CancellationToken } from 'vscode-jsonrpc';
 import { ApplicationShell } from '../../client/common/application/applicationShell';
 import { IApplicationShell, IWorkspaceService } from '../../client/common/application/types';
-import { Cancellation, CancellationError } from '../../client/common/cancellation';
+import { Cancellation } from '../../client/common/cancellation';
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import { traceError, traceInfo } from '../../client/common/logger';
 import { IFileSystem } from '../../client/common/platform/types';
@@ -49,7 +49,6 @@ import { PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { concatMultilineString } from '../../datascience-ui/common';
 import { generateTestState, ICellViewModel } from '../../datascience-ui/interactive-common/mainState';
 import { sleep } from '../core';
-import { InterpreterService } from '../interpreters/interpreterService';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { SupportedCommands } from './mockJupyterManager';
 import { MockPythonService } from './mockPythonService';
@@ -57,14 +56,13 @@ import { createPythonService, startRemoteServer } from './remoteTestHelpers';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-multi-str, , no-console, max-classes-per-file, comma-dangle */
 suite('DataScience notebook tests', () => {
-    [false, true].forEach((useRawKernel) => {
+    [true].forEach((useRawKernel) => {
         suite(`${useRawKernel ? 'With Direct Kernel' : 'With Jupyter Server'}`, () => {
             const disposables: Disposable[] = [];
             let notebookProvider: INotebookProvider;
 
             let ioc: DataScienceIocContainer;
             let modifiedConfig = false;
-            const baseUri = Uri.file('foo.py');
 
             // eslint-disable-next-line
             setup(async function () {
@@ -725,115 +723,6 @@ suite('DataScience notebook tests', () => {
                 }
             });
 
-            class TaggedCancellationTokenSource extends CancellationTokenSource {
-                public tag: string;
-                constructor(tag: string) {
-                    super();
-                    this.tag = tag;
-                }
-            }
-
-            async function testCancelableCall<T>(
-                method: (t: CancellationToken) => Promise<T>,
-                messageFormat: string,
-                timeout: number
-            ): Promise<boolean> {
-                const tokenSource = new TaggedCancellationTokenSource(messageFormat.format(timeout.toString()));
-                const disp = setTimeout(
-                    (_s) => {
-                        tokenSource.cancel();
-                    },
-                    timeout,
-                    tokenSource.tag
-                );
-
-                try {
-                    // eslint-disable-next-line @typescript-eslint/dot-notation
-                    (tokenSource.token as any)['tag'] = messageFormat.format(timeout.toString());
-                    await method(tokenSource.token);
-                } catch (exc) {
-                    // This should happen. This means it was canceled.
-                    assert.ok(exc instanceof CancellationError, `Non cancellation error found : ${exc.stack}`);
-                } finally {
-                    clearTimeout(disp);
-                    tokenSource.dispose();
-                }
-
-                return true;
-            }
-
-            async function testCancelableMethod<T>(
-                method: (t: CancellationToken) => Promise<T>,
-                messageFormat: string,
-                short?: boolean
-            ): Promise<boolean> {
-                const timeouts = short ? [10, 20, 30, 100] : [300, 400, 500, 1000];
-                // eslint-disable-next-line @typescript-eslint/prefer-for-of
-                for (let i = 0; i < timeouts.length; i += 1) {
-                    await testCancelableCall(method, messageFormat, timeouts[i]);
-                }
-
-                return true;
-            }
-
-            runTest('Cancel execution', async (_this: Mocha.Context) => {
-                if (useRawKernel) {
-                    // Not cancellable at the moment. Just starts a process
-                    _this.skip();
-                    return;
-                }
-                if (ioc.mockJupyter) {
-                    ioc.mockJupyter.setProcessDelay(2000);
-                    addMockData(`a=1${os.EOL}a`, 1);
-                }
-                const jupyterExecution = ioc.get<IJupyterExecution>(IJupyterExecution);
-
-                // Try different timeouts, canceling after the timeout on each
-                assert.ok(
-                    await testCancelableMethod(
-                        (t: CancellationToken) => jupyterExecution.connectToNotebookServer(undefined, t),
-                        'Cancel did not cancel start after {0}ms'
-                    )
-                );
-
-                if (ioc.mockJupyter) {
-                    ioc.mockJupyter.setProcessDelay(undefined);
-                }
-
-                // Make sure doing normal start still works
-                const nonCancelSource = new CancellationTokenSource();
-                const server = await jupyterExecution.connectToNotebookServer(undefined, nonCancelSource.token);
-                const notebook = server
-                    ? await server.createNotebook(baseUri, getDefaultInteractiveIdentity())
-                    : undefined;
-                assert.ok(notebook, 'Server not found with a cancel token that does not cancel');
-
-                // Make sure can run some code too
-                await verifySimple(notebook, `a=1${os.EOL}a`, 1);
-
-                if (ioc.mockJupyter) {
-                    ioc.mockJupyter.setProcessDelay(200);
-                }
-
-                // Force a settings changed so that all of the cached data is cleared
-                ioc.get<InterpreterService>(IInterpreterService).updateInterpreter(undefined, 'bogus');
-
-                assert.ok(
-                    await testCancelableMethod(
-                        (t: CancellationToken) => jupyterExecution.getUsableJupyterPython(t),
-                        'Cancel did not cancel getusable after {0}ms',
-                        true
-                    )
-                );
-                assert.ok(
-                    await testCancelableMethod(
-                        (t: CancellationToken) => jupyterExecution.isNotebookSupported(t),
-                        'Cancel did not cancel isNotebook after {0}ms',
-                        true
-                    )
-                );
-            });
-
             async function interruptExecute(
                 notebook: INotebook | undefined,
                 code: string,
@@ -1415,7 +1304,11 @@ plt.show()`,
                 await verifySimple(notebook, `a`, 1);
                 await verifySimple(notebook, `b`, 2);
             });
-            runTest('Current directory', async () => {
+            runTest('Current directory', async (_this: Mocha.Context) => {
+                if (!useRawKernel) {
+                    _this.skip();
+                    return;
+                }
                 const rootFolder = ioc.get<IWorkspaceService>(IWorkspaceService).rootPath!;
                 const escapedPath = `'${rootFolder.replace(/\\/g, '\\\\')}'`;
                 addMockData(`import os\nos.getcwd()`, escapedPath);

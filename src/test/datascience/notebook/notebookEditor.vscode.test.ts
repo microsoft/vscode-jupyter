@@ -13,9 +13,10 @@ import { IDisposable, Product } from '../../../client/common/types';
 import { Common } from '../../../client/common/utils/localize';
 import { Commands } from '../../../client/datascience/constants';
 import { getTextOutputValue } from '../../../client/datascience/notebook/helpers/helpers';
+import { VSCodeNotebookKernelMetadata } from '../../../client/datascience/notebook/kernelWithMetadata';
 import { INotebookKernelProvider } from '../../../client/datascience/notebook/types';
 import { IExtensionTestApi } from '../../common';
-import { initialize } from '../../initialize';
+import { closeActiveWindows, initialize, IS_NON_RAW_NATIVE_TEST, IS_REMOTE_NATIVE_TEST } from '../../initialize';
 import {
     canRunNotebookTests,
     closeNotebooksAndCleanUpAfterTests,
@@ -56,6 +57,7 @@ suite('Notebook Editor tests', () => {
         traceInfo(`Start Test ${this.currentTest?.title}`);
         await startJupyterServer();
         await trustAllNotebooks();
+        await closeActiveWindows();
         await createEmptyPythonNotebook(disposables);
         assert.isOk(vscodeNotebook.activeNotebookEditor, 'No active notebook');
         traceInfo(`Start Test Completed ${this.currentTest?.title}`);
@@ -123,6 +125,10 @@ suite('Notebook Editor tests', () => {
     });
 
     test('Switch kernels', async function () {
+        // Test only applies for Raw notebooks.
+        if (IS_REMOTE_NATIVE_TEST || IS_NON_RAW_NATIVE_TEST) {
+            return this.skip();
+        }
         await hijackPrompt(
             'showErrorMessage',
             { endsWith: expectedPromptMessageSuffix },
@@ -141,10 +147,11 @@ suite('Notebook Editor tests', () => {
         const originalSysPath = getTextOutputValue(cell.outputs[0]);
 
         // Switch kernels to the other kernel
-        const kernels = await kernelProvider.provideKernels(
+        const kernels = (await kernelProvider.provideKernels(
             vscodeNotebook.activeNotebookEditor!.document,
             CancellationToken.None
-        );
+        )) as VSCodeNotebookKernelMetadata[];
+
         traceInfo(`Kernels found for switch kernel: ${kernels?.map((k) => k.label).join('\n')}`);
         // Find another kernel other than the preferred kernel that is also python based
         const preferredKernel = kernels?.find((k) => k.isPreferred && k.label.toLowerCase().includes('python 3'));
@@ -153,11 +160,15 @@ suite('Notebook Editor tests', () => {
                 !k.isPreferred &&
                 k.label.toLowerCase().includes('python 3') &&
                 k.label !== preferredKernel?.label &&
-                k.label !== 'Python 3'
+                k.label !== 'Python 3' &&
+                preferredKernel?.selection.kind !== 'connectToLiveKernel' &&
+                k.selection.kind !== 'connectToLiveKernel' &&
+                k.selection.interpreter?.path !== preferredKernel?.selection.interpreter?.path &&
+                k.selection.kernelSpec?.path !== preferredKernel?.selection.kernelSpec?.path
         );
         if (anotherKernel) {
             // We have multiple kernels. Try switching
-            await waitForKernelToChange({ labelOrId: anotherKernel.id });
+            await waitForKernelToChange({ labelOrId: anotherKernel.label });
         }
 
         // Execute cell and verify output
