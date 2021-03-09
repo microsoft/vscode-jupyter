@@ -110,7 +110,6 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
     });
     teardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
     test('Automatically pick java kernel when opening a Java Notebook', async function () {
-        return this.skip(); // Remove this when https://github.com/microsoft/vscode-jupyter/issues/4372 is fixed
         if (!testJavaKernels) {
             return this.skip();
         }
@@ -134,7 +133,6 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         await waitForKernelToGetAutoSelected('c#');
     });
     test('New notebook will have a Julia cell if last notebook was a julia nb', async function () {
-        return this.skip();
         await openNotebook(api.serviceContainer, testJuliaNb.fsPath);
         await waitForKernelToGetAutoSelected();
         await insertMarkdownCell('# Hello');
@@ -215,7 +213,6 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         // Disabled, as activation of conda environments doesn't work on CI in Python extension.
         // As a result we cannot get env variables of conda environments.
         // This test requires PATH be set to conda environment that owns the jupyter kernel.
-        return this.skip();
         if (!testJavaKernels) {
             return this.skip();
         }
