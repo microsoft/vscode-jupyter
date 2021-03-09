@@ -115,6 +115,9 @@ export class PythonExtensionChecker implements IPythonExtensionChecker {
         return this.extensions.getExtension(this.pythonExtensionId) !== undefined;
     }
 
+    // Return type meaning:
+    // void: waiting on install prompt
+    // boolean: the extension was or wans't installed
     public async showPythonExtensionInstallRequiredPrompt(): Promise<boolean | void> {
         if (this.waitingOnInstallPrompt) {
             return this.waitingOnInstallPrompt;
