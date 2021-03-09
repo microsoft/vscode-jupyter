@@ -98,7 +98,7 @@ export class PythonApiProvider implements IPythonApiProvider {
 export class PythonExtensionChecker implements IPythonExtensionChecker {
     private extensionChangeHandler: Disposable | undefined;
     private pythonExtensionId = PythonExtension;
-    private waitingOnInstallPrompt?: Promise<void>;
+    private waitingOnInstallPrompt?: Promise<boolean>;
     constructor(
         @inject(IExtensions) private readonly extensions: IExtensions,
         @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory,
@@ -115,10 +115,7 @@ export class PythonExtensionChecker implements IPythonExtensionChecker {
         return this.extensions.getExtension(this.pythonExtensionId) !== undefined;
     }
 
-    // Return type meaning:
-    // void: waiting on install prompt
-    // boolean: the extension was or wans't installed
-    public async showPythonExtensionInstallRequiredPrompt(): Promise<boolean | void> {
+    public async showPythonExtensionInstallRequiredPrompt(): Promise<boolean> {
         if (this.waitingOnInstallPrompt) {
             return this.waitingOnInstallPrompt;
         }
@@ -141,7 +138,7 @@ export class PythonExtensionChecker implements IPythonExtensionChecker {
             const no = localize.Common.bannerLabelNo();
             const doNotShowAgain = localize.Common.doNotShowAgain();
 
-            const promise = (this.waitingOnInstallPrompt = new Promise<void>(async (resolve) => {
+            const promise = (this.waitingOnInstallPrompt = new Promise<boolean>(async (resolve) => {
                 const answer = await this.appShell.showWarningMessage(
                     localize.DataScience.pythonExtensionRecommended(),
                     yes,
@@ -158,7 +155,7 @@ export class PythonExtensionChecker implements IPythonExtensionChecker {
                     default:
                         break;
                 }
-                resolve();
+                resolve(answer === yes);
             }));
             await promise;
             this.waitingOnInstallPrompt = undefined;
