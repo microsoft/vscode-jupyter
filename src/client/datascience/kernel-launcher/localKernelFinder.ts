@@ -130,7 +130,7 @@ export class LocalKernelFinder implements ILocalKernelFinder {
                 ) || 'root';
 
             // If we have not already searched for this resource, then generate the search
-            if (workspaceFolderId && !this.workspaceToMetadata.has(workspaceFolderId)) {
+            if (!this.workspaceToMetadata.has(workspaceFolderId)) {
                 this.workspaceToMetadata.set(
                     workspaceFolderId,
                     this.findResourceKernelMetadata(resource, cancelToken).then((items) => {
