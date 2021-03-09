@@ -13,6 +13,7 @@ import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { Cancellation } from '../../common/cancellation';
+import { BaseError } from '../../common/errors/types';
 import { traceError, traceInfo } from '../../common/logger';
 import { IOutputChannel, Resource } from '../../common/types';
 import * as localize from '../../common/utils/localize';
@@ -24,7 +25,6 @@ import { reportAction } from '../progress/decorator';
 import { ReportableAction } from '../progress/types';
 import { IJupyterConnection, ISessionWithSocket } from '../types';
 import { JupyterInvalidKernelError } from './jupyterInvalidKernelError';
-import { JupyterWaitForIdleError } from './jupyterWaitForIdleError';
 import { JupyterWebSockets } from './jupyterWebSocket';
 import { getNameOfKernelConnection } from './kernels/helpers';
 import { JupyterKernelService } from './kernels/jupyterKernelService';
@@ -110,7 +110,9 @@ export class JupyterSession extends BaseJupyterSession {
             // Make sure it is idle before we return
             await this.waitForIdleOnSession(newSession, timeoutMS);
         } catch (exc) {
-            if (exc instanceof JupyterWaitForIdleError) {
+            // Don't swallow known exceptions.
+            if (exc instanceof BaseError) {
+                traceError('Failed to change kernel, re-throwing', exc);
                 throw exc;
             } else {
                 traceError('Failed to change kernel', exc);
@@ -234,6 +236,7 @@ export class JupyterSession extends BaseJupyterSession {
             serverSettings: serverSettings
         };
 
+        traceInfo(`Starting a new session for kernel id = ${kernelConnection?.id}, name = ${options.kernelName}`);
         return Cancellation.race(
             () =>
                 this.sessionManager!.startNew(options)

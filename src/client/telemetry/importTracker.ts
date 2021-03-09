@@ -15,6 +15,7 @@ import '../common/extensions';
 import { noop } from '../common/utils/misc';
 import { ICell, INotebookEditor, INotebookEditorProvider, INotebookExecutionLogger } from '../datascience/types';
 import { EventName } from './constants';
+import { getTelemetrySafeHashedString } from './helpers';
 
 /*
 Python has a fairly rich import statement. Originally the matching regexp was kept simple for
@@ -48,9 +49,6 @@ const testExecution = isTestExecution();
 export class ImportTracker implements IExtensionSingleActivationService, INotebookExecutionLogger {
     private pendingChecks = new Map<string, NodeJS.Timer | number>();
     private sentMatches: Set<string> = new Set<string>();
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    private hashFn = require('hash.js').sha256;
-
     constructor(
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(INotebookEditorProvider) private notebookEditorProvider: INotebookEditorProvider
@@ -194,7 +192,7 @@ export class ImportTracker implements IExtensionSingleActivationService, INotebo
         this.sentMatches.add(packageName);
         // Hash the package name so that we will never accidentally see a
         // user's private package name.
-        const hash = this.hashFn().update(packageName).digest('hex');
+        const hash = getTelemetrySafeHashedString(packageName);
         sendTelemetryEvent(EventName.HASHED_PACKAGE_NAME, undefined, { hashedName: hash });
     }
 

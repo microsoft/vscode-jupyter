@@ -13,6 +13,7 @@ import {
     NotifyIPyWidgeWidgetVersionNotSupportedAction
 } from '../../../datascience-ui/interactive-common/redux/reducers/types';
 import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
+import { STANDARD_OUTPUT_CHANNEL } from '../../common/constants';
 import { traceError, traceInfo } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import {
@@ -27,7 +28,8 @@ import * as localize from '../../common/utils/localize';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
-import { JUPYTER_OUTPUT_CHANNEL, Telemetry } from '../constants';
+import { getTelemetrySafeHashedString } from '../../telemetry/helpers';
+import { Telemetry } from '../constants';
 import { InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
 import { INotebookProvider } from '../types';
 import { IPyWidgetMessageDispatcherFactory } from './ipyWidgetMessageDispatcherFactory';
@@ -48,8 +50,6 @@ export class CommonMessageCoordinator {
     private ipyWidgetScriptSource?: IPyWidgetScriptSource;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private postEmitter: EventEmitter<{ message: string; payload: any }>;
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    private hashFn = require('hash.js').sha256;
     private disposables: IDisposableRegistry;
     private jupyterOutput: IOutputChannel;
 
@@ -67,7 +67,7 @@ export class CommonMessageCoordinator {
                 payload: any;
             }>();
         this.disposables = this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
-        this.jupyterOutput = this.serviceContainer.get<IOutputChannel>(IOutputChannel, JUPYTER_OUTPUT_CHANNEL);
+        this.jupyterOutput = this.serviceContainer.get<IOutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
     }
 
     public static async create(
@@ -114,14 +114,10 @@ export class CommonMessageCoordinator {
         ]);
     }
 
-    private hash(s: string): string {
-        return this.hashFn().update(s).digest('hex');
-    }
-
     private sendLoadSucceededTelemetry(payload: LoadIPyWidgetClassLoadAction) {
         try {
             sendTelemetryEvent(Telemetry.IPyWidgetLoadSuccess, 0, {
-                moduleHash: this.hash(payload.moduleName),
+                moduleHash: getTelemetrySafeHashedString(payload.moduleName),
                 moduleVersion: payload.moduleVersion
             });
         } catch {
@@ -133,7 +129,7 @@ export class CommonMessageCoordinator {
         try {
             sendTelemetryEvent(Telemetry.IPyWidgetLoadFailure, 0, {
                 isOnline: payload.isOnline,
-                moduleHash: this.hash(payload.moduleName),
+                moduleHash: getTelemetrySafeHashedString(payload.moduleName),
                 moduleVersion: payload.moduleVersion,
                 timedout: payload.timedout
             });
@@ -144,7 +140,7 @@ export class CommonMessageCoordinator {
     private sendUnsupportedWidgetVersionFailureTelemetry(payload: NotifyIPyWidgeWidgetVersionNotSupportedAction) {
         try {
             sendTelemetryEvent(Telemetry.IPyWidgetWidgetVersionNotSupportedLoadFailure, 0, {
-                moduleHash: this.hash(payload.moduleName),
+                moduleHash: getTelemetrySafeHashedString(payload.moduleName),
                 moduleVersion: payload.moduleVersion
             });
         } catch {

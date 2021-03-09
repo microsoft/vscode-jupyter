@@ -4,14 +4,14 @@
 'use strict';
 
 /* eslint-disable  */
-import { env, OutputChannel, UIKind, window } from 'vscode';
+import { env, ExtensionMode, OutputChannel, UIKind, window, workspace } from 'vscode';
 
 import { registerTypes as activationRegisterTypes } from './activation/serviceRegistry';
 import { IExtensionActivationManager } from './activation/types';
 import { registerTypes as registerApiTypes } from './api/serviceRegistry';
 import { AmlComputeContext } from './common/amlContext';
 import { IApplicationEnvironment, ICommandManager } from './common/application/types';
-import { STANDARD_OUTPUT_CHANNEL, UseProposedApi } from './common/constants';
+import { isTestExecution, STANDARD_OUTPUT_CHANNEL, UseProposedApi } from './common/constants';
 import { Experiments } from './common/experiments/groups';
 import { registerTypes as installerRegisterTypes } from './common/installer/serviceRegistry';
 import { registerTypes as platformRegisterTypes } from './common/platform/serviceRegistry';
@@ -24,12 +24,14 @@ import {
     IExtensionContext,
     IFeatureDeprecationManager,
     IOutputChannel,
-    IsCodeSpace
+    IsCodeSpace,
+    IsDevMode
 } from './common/types';
 import * as localize from './common/utils/localize';
 import { noop } from './common/utils/misc';
 import { registerTypes as variableRegisterTypes } from './common/variables/serviceRegistry';
 import { JUPYTER_OUTPUT_CHANNEL } from './datascience/constants';
+import { getJupyterOutputChannel } from './datascience/devTools/jupyterOutputChannel';
 import { registerTypes as dataScienceRegisterTypes } from './datascience/serviceRegistry';
 import { IDataScience, IDebugLoggingManager } from './datascience/types';
 import { IServiceContainer, IServiceManager } from './ioc/types';
@@ -64,11 +66,20 @@ async function activateLegacy(
     serviceContainer: IServiceContainer
 ) {
     // register "services"
-    const jupyterOutputChannel = window.createOutputChannel(localize.OutputChannelNames.jupyter());
-    const standardOutputChannel = jupyterOutputChannel;
+    const isDevMode =
+        !isTestExecution() &&
+        (context.extensionMode === ExtensionMode.Development ||
+            workspace.getConfiguration('jupyter').get<boolean>('development', false));
+    serviceManager.addSingletonInstance<boolean>(IsDevMode, isDevMode);
+
+    const standardOutputChannel = window.createOutputChannel(localize.OutputChannelNames.jupyter());
     addOutputChannelLogging(standardOutputChannel);
     serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, standardOutputChannel, STANDARD_OUTPUT_CHANNEL);
-    serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, jupyterOutputChannel, JUPYTER_OUTPUT_CHANNEL);
+    serviceManager.addSingletonInstance<OutputChannel>(
+        IOutputChannel,
+        getJupyterOutputChannel(isDevMode, standardOutputChannel),
+        JUPYTER_OUTPUT_CHANNEL
+    );
     serviceManager.addSingletonInstance<boolean>(IsCodeSpace, env.uiKind == UIKind.Web);
 
     // Initialize logging to file if necessary as early as possible

@@ -65,10 +65,10 @@ export type DefaultKernelConnectionMetadata = Readonly<{
  * Connection metadata for Kernels started using Python interpreter.
  * These are not necessarily raw (it could be plain old Jupyter Kernels, where we register Python interpreter as a kernel).
  * We can have KernelSpec information here as well, however that is totally optional.
- * We will always start this kernel using old Jupyter style (provided we first register this intrepreter as a kernel) or raw.
+ * We will always start this kernel using old Jupyter style (provided we first register this interpreter as a kernel) or raw.
  */
 export type PythonKernelConnectionMetadata = Readonly<{
-    kernelSpec?: IJupyterKernelSpec;
+    kernelSpec: IJupyterKernelSpec;
     interpreter: PythonEnvironment;
     kind: 'startUsingPythonInterpreter';
     id: string;

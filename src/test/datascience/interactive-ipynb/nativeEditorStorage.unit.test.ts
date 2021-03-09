@@ -261,8 +261,8 @@ suite('DataScience - Native Editor Storage', () => {
         const settingsChangedEvent = new EventEmitter<void>();
 
         context
-            .setup((c) => c.globalStoragePath)
-            .returns(() => path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience', 'WorkspaceDir'));
+            .setup((c) => c.globalStorageUri)
+            .returns(() => Uri.file(path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience', 'WorkspaceDir')));
 
         when(settings.onDidChange).thenReturn(settingsChangedEvent.event);
         when(configService.getSettings()).thenReturn(instance(settings));

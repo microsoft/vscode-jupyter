@@ -515,6 +515,6 @@ export class NativeEditorStorage implements INotebookStorage {
 
     private getHashedFileName(key: string): string {
         const file = `${this.crypto.createHash(key, 'string')}.ipynb`;
-        return path.join(this.context.globalStoragePath, file);
+        return path.join(this.context.globalStorageUri.fsPath, file);
     }
 }
