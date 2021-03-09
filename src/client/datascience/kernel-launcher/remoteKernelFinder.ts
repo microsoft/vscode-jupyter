@@ -1,5 +1,6 @@
-// This class searches for a kernel that matches the given kernel name.
-// First it searches on a global persistent state, then on the installed python interpreters,
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+'use strict';
 
 import { Kernel } from '@jupyterlab/services';
 import { nbformat } from '@jupyterlab/coreutils';
@@ -27,6 +28,8 @@ import { isInterpreter } from './localKernelFinder';
 import { IRemoteKernelFinder } from './types';
 import { traceInfoIf } from '../../common/logger';
 
+// This class searches for a kernel that matches the given kernel name.
+// First it searches on a global persistent state, then on the installed python interpreters,
 // and finally on the default locations that jupyter installs kernels on.
 @injectable()
 export class RemoteKernelFinder implements IRemoteKernelFinder {
