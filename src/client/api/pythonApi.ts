@@ -98,7 +98,7 @@ export class PythonApiProvider implements IPythonApiProvider {
 export class PythonExtensionChecker implements IPythonExtensionChecker {
     private extensionChangeHandler: Disposable | undefined;
     private pythonExtensionId = PythonExtension;
-    private waitingOnInstallPrompt?: Promise<void>;
+    private waitingOnInstallPrompt?: Promise<InstallerResponse>;
     constructor(
         @inject(IExtensions) private readonly extensions: IExtensions,
         @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory,
@@ -117,7 +117,7 @@ export class PythonExtensionChecker implements IPythonExtensionChecker {
 
     public async showPythonExtensionInstallRequiredPrompt(): Promise<InstallerResponse> {
         if (this.waitingOnInstallPrompt) {
-            return InstallerResponse.Waiting;
+            return this.waitingOnInstallPrompt;
         }
         // Ask user if they want to install and then wait for them to actually install it.
         const yes = localize.Common.bannerLabelYes();
@@ -138,24 +138,29 @@ export class PythonExtensionChecker implements IPythonExtensionChecker {
             const no = localize.Common.bannerLabelNo();
             const doNotShowAgain = localize.Common.doNotShowAgain();
 
-            const promise = (this.waitingOnInstallPrompt = new Promise<void>(async (resolve) => {
+            const promise = (this.waitingOnInstallPrompt = new Promise<InstallerResponse>(async (resolve) => {
                 const answer = await this.appShell.showWarningMessage(
                     localize.DataScience.pythonExtensionRecommended(),
                     yes,
                     no,
                     doNotShowAgain
                 );
+                let resolveValue: InstallerResponse;
                 switch (answer) {
                     case yes:
                         await this.installPythonExtension();
+                        resolveValue = InstallerResponse.Installed;
                         break;
                     case doNotShowAgain:
                         await surveyPrompt.updateValue(false);
+                        resolveValue = InstallerResponse.Disabled;
                         break;
+                    case no:
                     default:
+                        resolveValue = InstallerResponse.Ignore;
                         break;
                 }
-                resolve();
+                resolve(resolveValue);
             }));
             await promise;
             this.waitingOnInstallPrompt = undefined;

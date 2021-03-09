@@ -59,8 +59,7 @@ export type ExecutionInfo = {
 export enum InstallerResponse {
     Installed,
     Disabled,
-    Ignore,
-    Waiting
+    Ignore
 }
 
 export enum Product {
