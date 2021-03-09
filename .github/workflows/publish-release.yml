@@ -1,4 +1,4 @@
-name: Publish Extension
+name: Publish Release
 
 on:
   # Allow dispatch so can publish from github actions

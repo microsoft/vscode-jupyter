@@ -46,6 +46,10 @@ export class MockJupyterSession implements IJupyterSession {
         setTimeout(() => this.changeStatus(ServerStatus.Idle), 100);
     }
 
+    public shutdown(_force?: boolean): Promise<void> {
+        return Promise.resolve();
+    }
+
     public get onRestarted(): Event<void> {
         return this.restartedEvent.event;
     }

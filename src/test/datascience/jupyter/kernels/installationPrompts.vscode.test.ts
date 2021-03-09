@@ -13,6 +13,7 @@ import { IDisposable, IInstaller, InstallerResponse, Product } from '../../../..
 import { createDeferred } from '../../../../client/common/utils/async';
 import { Common, DataScience } from '../../../../client/common/utils/localize';
 import { INotebookEditorProvider } from '../../../../client/datascience/types';
+import { IInterpreterService } from '../../../../client/interpreter/contracts';
 import { IS_CI_SERVER } from '../../../ciConstants';
 import { getOSType, IExtensionTestApi, OSType, waitForCondition } from '../../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_NON_RAW_NATIVE_TEST, IS_REMOTE_NATIVE_TEST } from '../../../constants';
@@ -39,8 +40,8 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         'src/test/datascience/jupyter/kernels/nbWithKernel.ipynb'
     );
     const executable = getOSType() === OSType.Windows ? 'Scripts/python.exe' : 'bin/python'; // If running locally on Windows box.
-    const venvPythonPath = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src/test/datascience/.venvnokernel', executable);
-    const venvNoRegPath = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src/test/datascience/.venvnoreg', executable);
+    let venvPythonPath = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src/test/datascience/.venvnokernel', executable);
+    let venvNoRegPath = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src/test/datascience/.venvnoreg', executable);
     const expectedPromptMessageSuffix = `requires ${ProductNames.get(Product.ipykernel)!} to be installed.`;
 
     let api: IExtensionTestApi;
@@ -55,7 +56,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
     */
     suiteSetup(async function () {
         // These are slow tests, hence lets run only on linux on CI.
-        if (IS_REMOTE_NATIVE_TEST) {
+        if (IS_REMOTE_NATIVE_TEST || IS_NON_RAW_NATIVE_TEST) {
             return this.skip();
         }
         if (
@@ -70,6 +71,17 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         installer = api.serviceContainer.get<IInstaller>(IInstaller);
         editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
+
+        const interpreterService = api.serviceContainer.get<IInterpreterService>(IInterpreterService);
+        const [interpreter1, interpreter2] = await Promise.all([
+            interpreterService.getInterpreterDetails(venvPythonPath),
+            interpreterService.getInterpreterDetails(venvNoRegPath)
+        ]);
+        if (!interpreter1 || !interpreter2) {
+            throw new Error('Unable to get information for interpreter 1');
+        }
+        venvPythonPath = interpreter1.path;
+        venvNoRegPath = interpreter2.path;
     });
 
     setup(async function () {
@@ -99,8 +111,9 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         );
     });
 
-    ['.venvnokernel', '.venvnoreg'].forEach((kName) => {
-        test(`Ensure prompt is displayed when ipykernel module is not found and it gets installed (${kName})`, async function () {
+    [true, false].forEach((which, i) => {
+        // Use index on test name as it messes up regex matching
+        test(`Ensure prompt is displayed when ipykernel module is not found and it gets installed ${i}`, async function () {
             // Confirm message is displayed & we click 'Install` button.
             const prompt = await hijackPrompt(
                 'showErrorMessage',
@@ -109,6 +122,8 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
                 disposables
             );
             const installed = createDeferred();
+            const interpreterPath = which ? venvPythonPath : venvNoRegPath;
+            console.log(`Running ensure prompt and looking for kernel ${interpreterPath}`);
 
             // Confirm it is installed.
             const showInformationMessage = sinon
@@ -129,7 +144,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
                 await openNotebook(api.serviceContainer, nbFile);
                 // If this is a native notebook, then wait for kernel to get selected.
                 if (editorProvider.activeEditor?.type === 'native') {
-                    await waitForKernelToChange({ labelOrId: kName });
+                    await waitForKernelToChange({ interpreterPath });
                 }
 
                 // Run all cells

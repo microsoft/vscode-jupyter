@@ -33,6 +33,7 @@ export class FakeVSCodeFileSystemAPI {
         return fsextra.readFile(uri.fsPath);
     }
     public async writeFile(uri: Uri, content: Uint8Array): Promise<void> {
+        await fsextra.mkdirs(path.dirname(uri.fsPath));
         return fsextra.writeFile(uri.fsPath, Buffer.from(content));
     }
     public async delete(uri: Uri, _options?: { recursive: boolean; useTrash: boolean }): Promise<void> {

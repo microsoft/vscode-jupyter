@@ -359,6 +359,7 @@ export interface IJupyterSession extends IAsyncDisposable {
     ): void;
     removeMessageHook(msgId: string, hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>): void;
     requestKernelInfo(): Promise<KernelMessage.IInfoReplyMsg>;
+    shutdown(force?: boolean): Promise<void>;
 }
 
 export type ISessionWithSocket = Session.ISession & {
@@ -379,6 +380,7 @@ export interface IJupyterSessionManager extends IAsyncDisposable {
     readonly onRestartSessionCreated: Event<Kernel.IKernelConnection>;
     readonly onRestartSessionUsed: Event<Kernel.IKernelConnection>;
     startNew(
+        resource: Resource,
         kernelConnection: KernelConnectionMetadata | undefined,
         workingDirectory: string,
         cancelToken?: CancellationToken,
@@ -427,7 +429,7 @@ export interface IJupyterKernelSpec {
      * Optionally storing the interpreter information in the metadata (helping extension search for kernels that match an interpereter).
      */
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    readonly metadata?: Record<string, any> & { interpreter?: Partial<PythonEnvironment> };
+    readonly metadata?: Record<string, any> & { interpreter?: Partial<PythonEnvironment>; originalSpecFile?: string };
     readonly argv: string[];
     /**
      * Optionally where this kernel spec json is located on the local FS.
@@ -1340,7 +1342,7 @@ export interface IKernelDependencyService {
         interpreter: PythonEnvironment,
         token?: CancellationToken,
         disableUI?: boolean
-    ): Promise<KernelInterpreterDependencyResponse>;
+    ): Promise<void>;
     areDependenciesInstalled(interpreter: PythonEnvironment, _token?: CancellationToken): Promise<boolean>;
 }
 

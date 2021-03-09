@@ -389,6 +389,10 @@ export interface IEventNamePropertyMapping {
         match: 'true' | 'false';
         kernelConnectionType: 'startUsingKernelSpec' | 'startUsingPythonInterpreter';
     };
+    /**
+     * Sent when a jupyter session fails to start and we ask the user for a new kernel
+     */
+    [Telemetry.AskUserForNewJupyterKernel]: never | undefined;
     [Telemetry.KernelListingPerf]: never | undefined;
     [Telemetry.NumberOfLocalKernelSpecs]: {
         /**
@@ -859,9 +863,9 @@ export interface IEventNamePropertyMapping {
      */
     [Telemetry.KernelLauncherPerf]: undefined | never | TelemetryErrorProperties;
     /**
-     * Total time taken to find a kernel on disc.
+     * Total time taken to find a kernel on disc or on a remote machine.
      */
-    [Telemetry.KernelFinderPerf]: undefined | never;
+    [Telemetry.KernelFinderPerf]: never | undefined;
     /**
      * Total time taken to list kernels for VS Code.
      */

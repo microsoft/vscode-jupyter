@@ -179,6 +179,7 @@ export class RawJupyterSession extends BaseJupyterSession {
     }
 
     public async createNewKernelSession(
+        _resource: Resource,
         kernelConnection: KernelConnectionMetadata,
         timeoutMS: number,
         cancelToken?: CancellationToken,
@@ -201,7 +202,8 @@ export class RawJupyterSession extends BaseJupyterSession {
 
     protected shutdownSession(
         session: ISessionWithSocket | undefined,
-        statusHandler: Slot<ISessionWithSocket, Kernel.Status> | undefined
+        statusHandler: Slot<ISessionWithSocket, Kernel.Status> | undefined,
+        force: boolean | undefined
     ): Promise<void> {
         // REmove our process exit handler. Kernel is shutting down on purpose
         // so we don't need to listen.
@@ -209,7 +211,7 @@ export class RawJupyterSession extends BaseJupyterSession {
             this.processExitHandler.dispose();
             this.processExitHandler = undefined;
         }
-        return super.shutdownSession(session, statusHandler).then(() => {
+        return super.shutdownSession(session, statusHandler, force).then(() => {
             if (session) {
                 return (session as RawSession).kernelProcess.dispose();
             }
@@ -276,6 +278,9 @@ export class RawJupyterSession extends BaseJupyterSession {
         ) {
             throw new Error(`Unable to start Raw Kernels for Kernel Connection of type ${kernelConnection.kind}`);
         }
+
+        traceInfo(`Starting raw kernel ${getDisplayNameOrNameOfKernelConnection(kernelConnection)}`);
+
         const process = await this.kernelLauncher.launch(
             kernelConnection,
             timeout,

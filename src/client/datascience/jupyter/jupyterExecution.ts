@@ -18,13 +18,13 @@ import { IServiceContainer } from '../../ioc/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { JupyterSessionStartError } from '../baseJupyterSession';
-import { Commands, Identifiers, Telemetry } from '../constants';
+import { Identifiers, Telemetry } from '../constants';
+import { ILocalKernelFinder, IRemoteKernelFinder } from '../kernel-launcher/types';
 import { trackKernelResourceInformation } from '../telemetry/telemetry';
 import {
     IJupyterConnection,
     IJupyterExecution,
     IJupyterServerUri,
-    IJupyterSessionManagerFactory,
     IJupyterSubCommandExecutionService,
     IJupyterUriProviderRegistration,
     INotebookServer,
@@ -35,7 +35,7 @@ import {
 import { JupyterSelfCertsError } from './jupyterSelfCertsError';
 import { createRemoteConnectionInfo, expandWorkingDir } from './jupyterUtils';
 import { JupyterWaitForIdleError } from './jupyterWaitForIdleError';
-import { getDisplayNameOrNameOfKernelConnection, kernelConnectionMetadataHasKernelSpec } from './kernels/helpers';
+import { kernelConnectionMetadataHasKernelSpec } from './kernels/helpers';
 import { KernelSelector } from './kernels/kernelSelector';
 import { KernelConnectionMetadata } from './kernels/types';
 import { NotebookStarter } from './notebookStarter';
@@ -150,14 +150,13 @@ export class JupyterExecutionBase implements IJupyterExecution {
             const isLocalConnection = !options || !options.uri;
 
             if (isLocalConnection && !options?.kernelConnection) {
+                const kernelFinder = this.serviceContainer.get<ILocalKernelFinder>(ILocalKernelFinder);
                 // Get hold of the kernelspec and corresponding (matching) interpreter that'll be used as the spec.
                 // We can do this in parallel, while starting the server (faster).
                 traceInfo(`Getting kernel specs for ${options ? options.purpose : 'unknown type of'} server`);
-                kernelConnectionMetadataPromise = this.kernelSelector.getPreferredKernelForLocalConnection(
+                kernelConnectionMetadataPromise = kernelFinder.findKernel(
                     undefined,
-                    'jupyter',
                     options?.metadata,
-                    !allowUI,
                     kernelSpecCancelSource.token
                 );
             }
@@ -187,20 +186,13 @@ export class JupyterExecutionBase implements IJupyterExecution {
                         connection &&
                         !options?.skipSearchingForKernel
                     ) {
-                        const sessionManagerFactory = this.serviceContainer.get<IJupyterSessionManagerFactory>(
-                            IJupyterSessionManagerFactory
+                        const kernelFinder = this.serviceContainer.get<IRemoteKernelFinder>(IRemoteKernelFinder);
+                        kernelConnectionMetadata = await kernelFinder.findKernel(
+                            options?.resource,
+                            connection,
+                            options?.metadata,
+                            cancelToken
                         );
-                        const sessionManager = await sessionManagerFactory.create(connection);
-                        try {
-                            kernelConnectionMetadata = await this.kernelSelector.getPreferredKernelForRemoteConnection(
-                                options?.resource,
-                                sessionManager,
-                                options?.metadata,
-                                cancelToken
-                            );
-                        } finally {
-                            await sessionManager.dispose();
-                        }
                     }
 
                     // Populate the launch info that we are starting our server with
@@ -232,31 +224,20 @@ export class JupyterExecutionBase implements IJupyterExecution {
                         } catch (ex) {
                             traceError('Failed to connect to server', ex);
                             if (ex instanceof JupyterSessionStartError && isLocalConnection && allowUI) {
+                                sendTelemetryEvent(Telemetry.AskUserForNewJupyterKernel);
+
                                 // Keep retrying, until it works or user cancels.
-                                // Sometimes if a bad kernel is selected, starting a session can fail.
-                                // In such cases we need to let the user know about this and prompt them to select another kernel.
-                                const message = localize.DataScience.sessionStartFailedWithKernel().format(
-                                    getDisplayNameOrNameOfKernelConnection(launchInfo.kernelConnectionMetadata),
-                                    Commands.ViewJupyterOutput
+                                const kernelInterpreter = await this.kernelSelector.askForLocalKernel(
+                                    options?.resource,
+                                    connection,
+                                    launchInfo.kernelConnectionMetadata
                                 );
-                                const selectKernel = localize.DataScience.selectDifferentKernel();
-                                const cancel = localize.Common.cancel();
-                                const selection = await this.appShell.showErrorMessage(message, selectKernel, cancel);
-                                if (selection === selectKernel) {
-                                    const kernelInterpreter = await this.kernelSelector.selectLocalKernel(
-                                        options?.resource,
-                                        'jupyter',
-                                        new StopWatch(),
-                                        cancelToken,
-                                        getDisplayNameOrNameOfKernelConnection(launchInfo.kernelConnectionMetadata)
-                                    );
-                                    if (kernelInterpreter) {
-                                        launchInfo.kernelConnectionMetadata = kernelInterpreter;
-                                        trackKernelResourceInformation(options?.resource, {
-                                            kernelConnection: launchInfo.kernelConnectionMetadata
-                                        });
-                                        continue;
-                                    }
+                                if (kernelInterpreter) {
+                                    launchInfo.kernelConnectionMetadata = kernelInterpreter;
+                                    trackKernelResourceInformation(options?.resource, {
+                                        kernelConnection: launchInfo.kernelConnectionMetadata
+                                    });
+                                    continue;
                                 }
                             }
                             throw ex;

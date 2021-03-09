@@ -10,7 +10,7 @@ import { traceInfo } from '../../common/logger';
 import { IDisposable, IExtensionContext } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { Commands } from '../constants';
-import { getKernelConnectionId, IKernel, IKernelProvider, KernelConnectionMetadata } from '../jupyter/kernels/types';
+import { IKernel, IKernelProvider, KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { PreferredRemoteKernelIdProvider } from '../notebookStorage/preferredRemoteKernelIdProvider';
 import { KernelSocketInformation } from '../types';
 import { traceCellMessage, trackKernelInfoInNotebookMetadata } from './helpers/helpers';
@@ -26,14 +26,14 @@ export class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
         ];
     }
     get id() {
-        return getKernelConnectionId(this.selection);
+        return this.selection.id;
     }
     constructor(
         public readonly label: string,
         public readonly description: string,
         public readonly detail: string,
         public readonly selection: Readonly<KernelConnectionMetadata>,
-        public readonly isPreferred: boolean,
+        public isPreferred: boolean,
         private readonly kernelProvider: IKernelProvider,
         private readonly notebook: IVSCodeNotebook,
         private readonly context: IExtensionContext,
