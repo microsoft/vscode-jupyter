@@ -79,10 +79,11 @@ export class PythonApiProvider implements IPythonApiProvider {
         const pythonExtension = this.extensions.getExtension<{ jupyter: { registerHooks(): void } }>(PythonExtension);
         if (!pythonExtension) {
             const installed = await this.extensionChecker.showPythonExtensionInstallRequiredPrompt();
-            if (!installed) {
-                this.initialized = false;
+            if (installed === InstallerResponse.Installed) {
+                return true;
             }
-            return installed;
+            this.initialized = false;
+            return false;
         } else {
             if (!pythonExtension.isActive) {
                 await pythonExtension.activate();
@@ -114,9 +115,9 @@ export class PythonExtensionChecker implements IPythonExtensionChecker {
         return this.extensions.getExtension(this.pythonExtensionId) !== undefined;
     }
 
-    public async showPythonExtensionInstallRequiredPrompt(): Promise<boolean> {
+    public async showPythonExtensionInstallRequiredPrompt(): Promise<InstallerResponse> {
         if (this.waitingOnInstallPrompt) {
-            return this.waitingOnInstallPrompt;
+            return InstallerResponse.Waiting;
         }
         // Ask user if they want to install and then wait for them to actually install it.
         const yes = localize.Common.bannerLabelYes();
@@ -124,9 +125,9 @@ export class PythonExtensionChecker implements IPythonExtensionChecker {
         const answer = await this.appShell.showErrorMessage(localize.DataScience.pythonExtensionRequired(), yes, no);
         if (answer === yes) {
             await this.installPythonExtension();
-            return true;
+            return InstallerResponse.Installed;
         }
-        return false;
+        return InstallerResponse.Ignore;
     }
 
     public async showPythonExtensionInstallRecommendedPrompt() {

@@ -25,7 +25,7 @@ export interface IPythonApiProvider {
 export const IPythonExtensionChecker = Symbol('IPythonExtensionChecker');
 export interface IPythonExtensionChecker {
     readonly isPythonExtensionInstalled: boolean;
-    showPythonExtensionInstallRequiredPrompt(): Promise<boolean>;
+    showPythonExtensionInstallRequiredPrompt(): Promise<InstallerResponse>;
     showPythonExtensionInstallRecommendedPrompt(): Promise<void>;
 }
 
