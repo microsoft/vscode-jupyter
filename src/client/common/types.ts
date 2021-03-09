@@ -22,6 +22,7 @@ import { CommandsWithoutArgs } from './application/commands';
 import { Experiments } from './experiments/groups';
 import { InterpreterUri } from './installer/types';
 export const IsCodeSpace = Symbol('IsCodeSpace');
+export const IsDevMode = Symbol('IsDevMode');
 export const IOutputChannel = Symbol('IOutputChannel');
 export interface IOutputChannel extends OutputChannel {}
 export const IsWindows = Symbol('IS_WINDOWS');

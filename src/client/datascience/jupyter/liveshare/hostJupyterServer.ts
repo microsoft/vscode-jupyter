@@ -230,6 +230,7 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
 
             // If we switched kernels, try switching the possible session
             if (changedKernel && possibleSession && info.kernelConnectionMetadata) {
+                traceInfo(`Changing Kernel to ${JSON.stringify(info.kernelConnectionMetadata.id)}`);
                 await possibleSession.changeKernel(
                     resource,
                     info.kernelConnectionMetadata,
@@ -317,6 +318,7 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
         if (!launchInfo) {
             throw this.getDisposedError();
         }
+        traceInfo(`Compute Launch Info uri = ${resource?.fsPath}, kernelConnection id = ${kernelConnection?.id}`);
         // Create a copy of launch info, cuz we're modifying it here.
         // This launch info contains the server connection info (that could be shared across other nbs).
         // However the kernel info is different. The kernel info is stored as a  property of this, hence create a separate instance for each nb.
@@ -346,6 +348,8 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
                 kernelInfo = kernelConnection;
             } else if (!launchInfo.connectionInfo.localLaunch && kernelConnection?.kind === 'startUsingKernelSpec') {
                 kernelInfo = kernelConnection;
+            } else if (launchInfo.connectionInfo.localLaunch && kernelConnection) {
+                kernelInfo = kernelConnection;
             } else {
                 kernelInfo = await (launchInfo.connectionInfo.localLaunch
                     ? this.localKernelFinder.findKernel(resource, notebookMetadata, cancelToken)
@@ -361,6 +365,9 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
                 launchInfo.kernelConnectionMetadata = kernelInfo;
                 changedKernel = true;
             }
+            traceInfo(
+                `Compute Launch Info uri = ${resource?.fsPath}, changed ${changedKernel}, ${launchInfo.kernelConnectionMetadata?.id}`
+            );
         }
 
         return { info: launchInfo, changedKernel };

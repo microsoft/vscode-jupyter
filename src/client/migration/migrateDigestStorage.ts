@@ -12,7 +12,7 @@ export class MigrateDigestStorage {
     private ensuredDir: Promise<void>;
 
     constructor(private extensionContext: IExtensionContext, private fs: IFileSystem) {
-        this.currentExtensionStorageDir = this.extensionContext.globalStoragePath;
+        this.currentExtensionStorageDir = this.extensionContext.globalStorageUri.fsPath;
         this.pythonExtensionStorageDir = path.join(
             path.resolve(this.currentExtensionStorageDir, '..'),
             PythonExtension

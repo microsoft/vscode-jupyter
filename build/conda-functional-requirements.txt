@@ -5,6 +5,7 @@ pythreejs
 ipysheet
 ipyvolume
 beakerx
+beakerx_kernel_java
 py4j
 bqplot
 K3D

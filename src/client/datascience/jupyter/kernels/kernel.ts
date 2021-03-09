@@ -186,6 +186,7 @@ export class Kernel implements IKernel {
                 const stopWatch = new StopWatch();
                 try {
                     try {
+                        traceInfo(`Starting Notebook in kernel.ts id = ${this.kernelConnectionMetadata.id}`);
                         this.notebook = await this.notebookProvider.getOrCreateNotebook({
                             identity: this.uri,
                             resource: this.uri,

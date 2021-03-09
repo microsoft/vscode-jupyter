@@ -14,6 +14,7 @@ export const IS_REMOTE_NATIVE_TEST = (process.env.VSC_JUPYTER_REMOTE_NATIVE_TEST
 export const IS_NON_RAW_NATIVE_TEST = (process.env.VSC_JUPYTER_NON_RAW_NATIVE_TEST || '').toLowerCase() === 'true';
 export const IS_WEBVIEW_BUILD_SKIPPED = (process.env.VSC_JUPYTER_SKIP_WEBVIEW_BUILD || '').toLowerCase() === 'true';
 export const IS_MULTI_ROOT_TEST = isMultirootTest();
+export const IS_CONDA_TEST = (process.env.VSC_JUPYTER_CI_IS_CONDA || '').toLowerCase() === 'true';
 
 // If running on CI server, then run debugger tests ONLY if the corresponding flag is enabled.
 export const TEST_DEBUGGER = IS_CI_SERVER ? IS_CI_SERVER_TEST_DEBUGGER : true;
