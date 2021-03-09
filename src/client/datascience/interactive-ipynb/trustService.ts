@@ -28,7 +28,7 @@ export class TrustService implements ITrustService {
      * Once a notebook is loaded in an untrusted state, no code will be executed and no
      * markdown will be rendered until notebook as a whole is marked trusted
      */
-    @traceDecorators.verbose('Trusted', TraceOptions.ReturnValue)
+    @traceDecorators.verbose('Check if Notebook is Trusted', TraceOptions.ReturnValue)
     public async isNotebookTrusted(uri: Uri, notebookContents: string) {
         if (this.alwaysTrustNotebooks) {
             return true; // Skip check if user manually overrode our trust checking

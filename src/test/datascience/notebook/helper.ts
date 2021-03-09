@@ -60,7 +60,7 @@ import {
 import { VSCodeNotebookModel } from '../../../client/datascience/notebookStorage/vscNotebookModel';
 import { INotebookEditorProvider, INotebookProvider, ITrustService } from '../../../client/datascience/types';
 import { createEventHandler, IExtensionTestApi, sleep, waitForCondition } from '../../common';
-import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST, IS_SMOKE_TEST } from '../../constants';
+import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_CONDA_TEST, IS_REMOTE_NATIVE_TEST, IS_SMOKE_TEST } from '../../constants';
 import { noop } from '../../core';
 import { closeActiveWindows, initialize, isInsiders } from '../../initialize';
 import { JupyterServer } from '../jupyterServer';
@@ -68,7 +68,7 @@ import { NotebookEditorProvider } from '../../../client/datascience/notebook/not
 import { VSCodeNotebookProvider } from '../../../client/datascience/constants';
 
 // Running in Conda environments, things can be a little slower.
-const defaultTimeout = process.env.VSC_JUPYTER_CI_IS_CONDA === 'true' ? 30_000 : 15_000;
+const defaultTimeout = IS_CONDA_TEST ? 30_000 : 15_000;
 
 async function getServices() {
     const api = await initialize();
@@ -294,7 +294,7 @@ export async function waitForKernelToChange(criteria: { labelOrId?: string; inte
             .find((k) => k.selection.interpreter!.path.toLowerCase().includes(criteria.interpreterPath!.toLowerCase()))
             ?.id;
     }
-    traceInfo(`Kernel id searching for ${id}`);
+    traceInfo(`Switching to kernel id ${id}`);
 
     // Send a select kernel on the active notebook editor
     void commands.executeCommand('notebook.selectKernel', { id, extension: JVSC_EXTENSION_ID });
@@ -306,10 +306,14 @@ export async function waitForKernelToChange(criteria: { labelOrId?: string; inte
             return false;
         }
         if (vscodeNotebook.activeNotebookEditor.kernel.id === id) {
-            traceInfo(`Found selected kernel ${vscodeNotebook.activeNotebookEditor.kernel.label}`);
+            traceInfo(
+                `Found selected kernel id:label ${vscodeNotebook.activeNotebookEditor.kernel.id}:${vscodeNotebook.activeNotebookEditor.kernel.label}`
+            );
             return true;
         }
-        traceInfo(`Active kernel is ${vscodeNotebook.activeNotebookEditor.kernel.label}`);
+        traceInfo(
+            `Active kernel is id:label = ${vscodeNotebook.activeNotebookEditor.kernel.id}:${vscodeNotebook.activeNotebookEditor.kernel.label}`
+        );
         return false;
     };
     await waitForCondition(

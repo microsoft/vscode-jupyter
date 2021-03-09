@@ -119,7 +119,7 @@ export class DigestStorage implements IDigestStorage {
     }
 
     private getDefaultLocation(fileName: string) {
-        const dir = this.extensionContext.globalStoragePath;
+        const dir = this.extensionContext.globalStorageUri.fsPath;
         if (dir) {
             return path.join(dir, fileName);
         }

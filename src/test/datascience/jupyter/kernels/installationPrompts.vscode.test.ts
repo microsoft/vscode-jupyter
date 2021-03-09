@@ -16,7 +16,7 @@ import { INotebookEditorProvider } from '../../../../client/datascience/types';
 import { IInterpreterService } from '../../../../client/interpreter/contracts';
 import { IS_CI_SERVER } from '../../../ciConstants';
 import { getOSType, IExtensionTestApi, OSType, waitForCondition } from '../../../common';
-import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_NON_RAW_NATIVE_TEST, IS_REMOTE_NATIVE_TEST } from '../../../constants';
+import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST } from '../../../constants';
 import { closeActiveWindows, initialize } from '../../../initialize';
 import { openNotebook } from '../../helpers';
 import {
@@ -56,7 +56,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
     */
     suiteSetup(async function () {
         // These are slow tests, hence lets run only on linux on CI.
-        if (IS_REMOTE_NATIVE_TEST || IS_NON_RAW_NATIVE_TEST) {
+        if (IS_REMOTE_NATIVE_TEST) {
             return this.skip();
         }
         if (
@@ -177,7 +177,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         });
     });
     test('Ensure ipykernel install prompt is displayed every time you try to run a cell (VSCode Notebook)', async function () {
-        if (!(await canRunNotebookTests()) || IS_REMOTE_NATIVE_TEST || IS_NON_RAW_NATIVE_TEST) {
+        if (!(await canRunNotebookTests()) || IS_REMOTE_NATIVE_TEST) {
             return this.skip();
         }
 

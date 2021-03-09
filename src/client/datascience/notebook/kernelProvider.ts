@@ -33,7 +33,6 @@ import {
     getDisplayNameOrNameOfKernelConnection,
     isLocalLaunch
 } from '../jupyter/kernels/helpers';
-import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
 import { IKernelProvider, KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { INotebookStorageProvider } from '../notebookStorage/notebookStorageProvider';
 import { PreferredRemoteKernelIdProvider } from '../notebookStorage/preferredRemoteKernelIdProvider';
@@ -61,8 +60,7 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
         @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
         @inject(INotebookStorageProvider) private readonly storageProvider: INotebookStorageProvider,
         @inject(INotebookProvider) private readonly notebookProvider: INotebookProvider,
-        @inject(KernelSwitcher) private readonly kernelSwitcher: KernelSwitcher,
-        @inject(IDisposableRegistry) readonly disposables: IDisposableRegistry,
+        @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IExtensionContext) private readonly context: IExtensionContext,
         @inject(INotebookKernelResolver) private readonly kernelResolver: INotebookKernelResolver,
         @inject(IConfigurationService) private readonly configuration: IConfigurationService,
@@ -113,7 +111,9 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
 
         traceInfoIf(
             !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
-            `Providing kernels with length ${kernels.length}. Preferred is ${kernels.find((m) => m.isPreferred)?.label}`
+            `Providing kernels with length ${kernels.length} for ${document.uri.fsPath}. Preferred is ${
+                kernels.find((m) => m.isPreferred)?.label
+            }, ${kernels.find((m) => m.isPreferred)?.id}`
         );
         return kernels;
     }
@@ -212,7 +212,7 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
         const selectedKernelConnectionMetadata = kernel.selection;
 
         const model = this.storageProvider.get(document.uri);
-        if (!model || !model.isTrusted) {
+        if (model && model.isTrusted === false) {
             // eslint-disable-next-line
             // TODO: https://github.com/microsoft/vscode-python/issues/13476
             // If a model is not trusted, we cannot change the kernel (this results in changes to notebook metadata).
@@ -258,6 +258,9 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
                 : Telemetry.SelectRemoteJupyterKernel;
             sendKernelTelemetryEvent(document.uri, telemetryEvent);
         }
+
+        trackKernelInNotebookMetadata(document, selectedKernelConnectionMetadata);
+
         // Make this the new kernel (calling this method will associate the new kernel with this Uri).
         // Calling `getOrCreate` will ensure a kernel is created and it is mapped to the Uri provided.
         // This will dispose any existing (older kernels) associated with this notebook.
@@ -266,10 +269,7 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
         const newKernel = this.kernelProvider.getOrCreate(document.uri, {
             metadata: selectedKernelConnectionMetadata
         });
-        traceInfoIf(
-            !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
-            `KernelProvider switched kernel to ${newKernel?.kernelConnectionMetadata.id}`
-        );
+        traceInfo(`KernelProvider switched kernel to id = ${newKernel?.kernelConnectionMetadata.id}}`);
 
         // Before we start the notebook, make sure the metadata is set to this new kernel.
         trackKernelInNotebookMetadata(document, selectedKernelConnectionMetadata);
@@ -277,29 +277,6 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
         // Auto start the local kernels.
         if (newKernel && !this.configuration.getSettings(undefined).disableJupyterAutoStart && this.isLocalLaunch) {
             await newKernel.start({ disableUI: true, document }).catch(noop);
-        }
-
-        // Change kernel and update metadata (this can return `undefined`).
-        // When calling `kernelProvider.getOrCreate` it will attempt to dispose the current kernel.
-        const notebook = await this.notebookProvider.getOrCreateNotebook({
-            resource: document.uri,
-            identity: document.uri,
-            getOnly: true
-        });
-
-        // If we have a notebook, change its kernel now
-        if (notebook) {
-            // eslint-disable-next-line
-            // TODO: https://github.com/microsoft/vscode-python/issues/13514
-            // We need to handle these exceptions in `siwthKernelWithRetry`.
-            // We shouldn't handle them here, as we're already handling some errors in the `siwthKernelWithRetry` method.
-            // Adding comment here, so we have context for the requirement.
-            await this.kernelSwitcher.switchKernelWithRetry(notebook, selectedKernelConnectionMetadata).catch(noop);
-        } else {
-            traceInfoIf(
-                !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
-                `KernelProvider switched kernel and notebook not started/found.`
-            );
         }
     }
 }

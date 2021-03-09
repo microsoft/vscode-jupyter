@@ -18,8 +18,8 @@ import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry } from '../../telemetry';
 import { Telemetry } from '../constants';
 import {
-    createIntepreterKernelSpec,
     findPreferredKernel,
+    createInterpreterKernelSpec,
     getDisplayNameOrNameOfKernelConnection,
     getInterpreterKernelSpecName,
     getKernelId
@@ -221,7 +221,7 @@ export class LocalKernelFinder implements ILocalKernelFinder {
             ...kernelMetadata,
             ...filteredInterpreters.map((i) => {
                 // Update spec to have a default spec file
-                const spec = createIntepreterKernelSpec(i, rootSpecPath);
+                const spec = createInterpreterKernelSpec(i, rootSpecPath);
                 const result: PythonKernelConnectionMetadata = {
                     kind: 'startUsingPythonInterpreter',
                     kernelSpec: spec,
