@@ -98,7 +98,7 @@ export class PythonApiProvider implements IPythonApiProvider {
 export class PythonExtensionChecker implements IPythonExtensionChecker {
     private extensionChangeHandler: Disposable | undefined;
     private pythonExtensionId = PythonExtension;
-    private waitingOnInstallPrompt?: Promise<boolean>;
+    private waitingOnInstallPrompt?: Promise<void>;
     constructor(
         @inject(IExtensions) private readonly extensions: IExtensions,
         @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory,
@@ -138,7 +138,7 @@ export class PythonExtensionChecker implements IPythonExtensionChecker {
             const no = localize.Common.bannerLabelNo();
             const doNotShowAgain = localize.Common.doNotShowAgain();
 
-            const promise = (this.waitingOnInstallPrompt = new Promise<boolean>(async (resolve) => {
+            const promise = (this.waitingOnInstallPrompt = new Promise<void>(async (resolve) => {
                 const answer = await this.appShell.showWarningMessage(
                     localize.DataScience.pythonExtensionRecommended(),
                     yes,
@@ -155,7 +155,7 @@ export class PythonExtensionChecker implements IPythonExtensionChecker {
                     default:
                         break;
                 }
-                resolve(answer === yes);
+                resolve();
             }));
             await promise;
             this.waitingOnInstallPrompt = undefined;
