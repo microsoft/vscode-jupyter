@@ -58,7 +58,6 @@ import {
     WorkspaceFolder,
     WorkspaceFolderPickOptions,
     WorkspaceFoldersChangeEvent,
-    NotebookCellLanguageChangeEvent as VSCNotebookCellLanguageChangeEvent,
     NotebookCellMetadata,
     NotebookCellMetadataChangeEvent as VSCNotebookCellMetadataChangeEvent,
     NotebookCellOutputsChangeEvent as VSCNotebookCellOutputsChangeEvent,
