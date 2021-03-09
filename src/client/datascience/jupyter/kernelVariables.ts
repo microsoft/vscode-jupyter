@@ -164,10 +164,6 @@ export class KernelVariables implements IJupyterVariables {
         // Import the data frame script directory if we haven't already
         await this.importDataFrameScripts(notebook);
 
-        if (targetVariable.rowCount) {
-            end = Math.min(end, targetVariable.rowCount);
-        }
-
         let expression = targetVariable.name;
         if (sliceExpression) {
             expression = `${targetVariable.name}${sliceExpression}`;
