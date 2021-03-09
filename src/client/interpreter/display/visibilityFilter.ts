@@ -39,7 +39,7 @@ export class InterpreterStatusBarVisibility
                 .getApi()
                 .then((a) => {
                     // Python API may not have the register function yet.
-                    if (a.registerInterpreterStatusFilter) {
+                    if (a?.registerInterpreterStatusFilter) {
                         a.registerInterpreterStatusFilter(this);
                     }
                 })

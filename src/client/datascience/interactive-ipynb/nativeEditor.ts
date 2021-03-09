@@ -811,7 +811,8 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     private async exportAs(): Promise<void> {
         // Export requires the python extension
         if (!this.extensionChecker.isPythonExtensionInstalled) {
-            return this.extensionChecker.showPythonExtensionInstallRequiredPrompt();
+            await this.extensionChecker.showPythonExtensionInstallRequiredPrompt();
+            return;
         }
 
         const activeEditor = this.editorProvider.activeEditor;

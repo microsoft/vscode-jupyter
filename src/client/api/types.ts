@@ -19,13 +19,13 @@ export interface ILanguageServer extends Disposable {
 
 export const IPythonApiProvider = Symbol('IPythonApi');
 export interface IPythonApiProvider {
-    getApi(): Promise<PythonApi>;
+    getApi(): Promise<PythonApi | undefined>;
     setApi(api: PythonApi): void;
 }
 export const IPythonExtensionChecker = Symbol('IPythonExtensionChecker');
 export interface IPythonExtensionChecker {
     readonly isPythonExtensionInstalled: boolean;
-    showPythonExtensionInstallRequiredPrompt(): Promise<void>;
+    showPythonExtensionInstallRequiredPrompt(): Promise<boolean | void>;
     showPythonExtensionInstallRecommendedPrompt(): Promise<void>;
 }
 
@@ -116,7 +116,7 @@ export interface IPythonInstaller {
 
 export const IPythonDebuggerPathProvider = Symbol('IPythonDebuggerPathProvider');
 export interface IPythonDebuggerPathProvider {
-    getDebuggerPath(): Promise<string>;
+    getDebuggerPath(): Promise<string | undefined>;
 }
 
 export const ILanguageServerProvider = Symbol('ILanguageServerProvider');

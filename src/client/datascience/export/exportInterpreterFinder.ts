@@ -1,4 +1,5 @@
 import { inject, injectable } from 'inversify';
+import { traceInfo } from '../../common/logger';
 import * as localize from '../../common/utils/localize';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { JupyterInterpreterService } from '../jupyter/interpreter/jupyterInterpreterService';
@@ -21,7 +22,7 @@ export class ExportInterpreterFinder {
     public async getExportInterpreter(
         format: ExportFormat,
         candidateInterpreter?: PythonEnvironment
-    ): Promise<PythonEnvironment> {
+    ): Promise<PythonEnvironment | undefined> {
         // Before we try the import, see if we don't support it, if we don't give a chance to install dependencies
         const reporter = this.progressReporter.createProgressIndicator(`Exporting to ${format}`);
         try {
@@ -44,6 +45,10 @@ export class ExportInterpreterFinder {
                         return selectedJupyterInterpreter;
                     }
                 }
+            } else {
+                traceInfo(`User didn't install the Python Extension`);
+                reporter.dispose();
+                return;
             }
 
             throw new Error(localize.DataScience.jupyterNbConvertNotSupported());
@@ -54,7 +59,7 @@ export class ExportInterpreterFinder {
 
     // For this specific interpreter associated with a notebook check to see if it supports import
     // and export with nbconvert
-    private async checkNotebookInterpreter(interpreter: PythonEnvironment) {
+    private async checkNotebookInterpreter(interpreter: PythonEnvironment): Promise<boolean> {
         return this.nbConvertDependencyChecker.isNbConvertInstalled(interpreter);
     }
 }

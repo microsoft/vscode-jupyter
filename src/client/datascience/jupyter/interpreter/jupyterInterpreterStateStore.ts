@@ -61,7 +61,7 @@ export class MigrateJupyterInterpreterStateService implements IExtensionSingleAc
         // Hence end in deadlock (caught in smoke test).
         if (!this.memento.get(key) && this.checker.isPythonExtensionInstalled) {
             const api = await this.api.getApi();
-            const data = api.getInterpreterPathSelectedForJupyterServer();
+            const data = api?.getInterpreterPathSelectedForJupyterServer();
             await this.memento.update(key, data);
             await this.memento.update(keySelected, true);
         }

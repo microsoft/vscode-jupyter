@@ -44,11 +44,13 @@ export class ExportManager implements IExportManager {
                 format,
                 candidateInterpreter
             );
-            target = await this.getTargetFile(format, source, defaultFileName);
-            if (!target) {
-                return;
+            if (exportInterpreter) {
+                target = await this.getTargetFile(format, source, defaultFileName);
+                if (!target) {
+                    return;
+                }
+                await this.performExport(format, contents, target, exportInterpreter);
             }
-            await this.performExport(format, contents, target, exportInterpreter);
         } catch (e) {
             traceError('Export failed', e);
             sendTelemetryEvent(Telemetry.ExportNotebookAsFailed, undefined, { format: format });

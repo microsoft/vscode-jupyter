@@ -59,15 +59,15 @@ export class JupyterInterpreterService {
     // To be run one initial time. Check our saved locations and then current interpreter to try to start off
     // with a valid jupyter interpreter
     public async setInitialInterpreter(token?: CancellationToken): Promise<PythonEnvironment | undefined> {
-        if (!this.getInitialInterpreterPromise) {
-            this.getInitialInterpreterPromise = this.getInitialInterpreterImpl(token).then((result) => {
-                // Set ourselves as a valid interpreter if we found something
-                if (result) {
-                    this.changeSelectedInterpreterProperty(result);
-                }
-                return result;
-            });
-        }
+        // if (!this.getInitialInterpreterPromise) {
+        this.getInitialInterpreterPromise = this.getInitialInterpreterImpl(token).then((result) => {
+            // Set ourselves as a valid interpreter if we found something
+            if (result) {
+                this.changeSelectedInterpreterProperty(result);
+            }
+            return result;
+        });
+        // }
 
         return this.getInitialInterpreterPromise;
     }

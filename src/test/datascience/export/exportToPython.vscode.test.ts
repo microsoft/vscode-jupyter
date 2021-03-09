@@ -42,7 +42,7 @@ suite('DataScience - Export Python', function () {
         await exportToPython.export(
             Uri.file(path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience', 'export', 'test.ipynb')),
             target,
-            interpreter,
+            interpreter!,
             token.token
         );
 

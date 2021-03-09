@@ -239,10 +239,13 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         const connectionInfo = notebook.connection;
         if (connectionInfo && connectionInfo.localLaunch) {
             let localPath = await this.debuggerPathProvider.getDebuggerPath();
-            if (this.platform.isWindows) {
-                localPath = localPath.replace(/\\/g, '\\\\');
+
+            if (localPath) {
+                if (this.platform.isWindows) {
+                    localPath = localPath.replace(/\\/g, '\\\\');
+                }
+                extraPaths.push(localPath);
             }
-            extraPaths.push(localPath);
         }
 
         if (extraPaths && extraPaths.length > 0) {

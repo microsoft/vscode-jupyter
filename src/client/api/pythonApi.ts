@@ -57,9 +57,11 @@ export class PythonApiProvider implements IPythonApiProvider {
         @inject(IPythonExtensionChecker) private extensionChecker: IPythonExtensionChecker
     ) {}
 
-    public getApi(): Promise<PythonApi> {
-        this.init().catch(noop);
-        return this.api.promise;
+    public async getApi(): Promise<PythonApi | undefined> {
+        if (await this.init().catch(noop)) {
+            return this.api.promise;
+        }
+        return;
     }
 
     public setApi(api: PythonApi): void {
@@ -69,19 +71,25 @@ export class PythonApiProvider implements IPythonApiProvider {
         this.api.resolve(api);
     }
 
-    private async init() {
+    private async init(): Promise<boolean> {
         if (this.initialized) {
-            return;
+            return true;
         }
         this.initialized = true;
         const pythonExtension = this.extensions.getExtension<{ jupyter: { registerHooks(): void } }>(PythonExtension);
         if (!pythonExtension) {
-            await this.extensionChecker.showPythonExtensionInstallRequiredPrompt();
+            const installed = await this.extensionChecker.showPythonExtensionInstallRequiredPrompt();
+            if (installed === true) {
+                return true;
+            }
+            this.initialized = false;
+            return false;
         } else {
             if (!pythonExtension.isActive) {
                 await pythonExtension.activate();
             }
             pythonExtension.exports.jupyter.registerHooks();
+            return true;
         }
     }
 }
@@ -107,7 +115,7 @@ export class PythonExtensionChecker implements IPythonExtensionChecker {
         return this.extensions.getExtension(this.pythonExtensionId) !== undefined;
     }
 
-    public async showPythonExtensionInstallRequiredPrompt(): Promise<void> {
+    public async showPythonExtensionInstallRequiredPrompt(): Promise<boolean | void> {
         if (this.waitingOnInstallPrompt) {
             return this.waitingOnInstallPrompt;
         }
@@ -117,7 +125,9 @@ export class PythonExtensionChecker implements IPythonExtensionChecker {
         const answer = await this.appShell.showErrorMessage(localize.DataScience.pythonExtensionRequired(), yes, no);
         if (answer === yes) {
             await this.installPythonExtension();
+            return true;
         }
+        return false;
     }
 
     public async showPythonExtensionInstallRecommendedPrompt() {
@@ -176,7 +186,7 @@ export class LanguageServerProvider implements ILanguageServerProvider {
     constructor(@inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider) {}
 
     public getLanguageServer(resource?: InterpreterUri): Promise<ILanguageServer | undefined> {
-        return this.apiProvider.getApi().then((api) => api.getLanguageServer(resource));
+        return this.apiProvider.getApi().then((api) => api?.getLanguageServer(resource));
     }
 }
 
@@ -185,7 +195,7 @@ export class WindowsStoreInterpreter implements IWindowsStoreInterpreter {
     constructor(@inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider) {}
 
     public isWindowsStoreInterpreter(pythonPath: string): Promise<boolean> {
-        return this.apiProvider.getApi().then((api) => api.isWindowsStoreInterpreter(pythonPath));
+        return this.apiProvider.getApi().then((api) => (api ? api.isWindowsStoreInterpreter(pythonPath) : false));
     }
 }
 
@@ -193,8 +203,8 @@ export class WindowsStoreInterpreter implements IWindowsStoreInterpreter {
 export class PythonDebuggerPathProvider implements IPythonDebuggerPathProvider {
     constructor(@inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider) {}
 
-    public getDebuggerPath(): Promise<string> {
-        return this.apiProvider.getApi().then((api) => api.getDebuggerPath());
+    public getDebuggerPath(): Promise<string | undefined> {
+        return this.apiProvider.getApi().then((api) => api?.getDebuggerPath());
     }
 }
 
@@ -224,7 +234,7 @@ export class PythonInstaller implements IPythonInstaller {
         let action: 'installed' | 'failed' | 'disabled' | 'ignored' = 'installed';
         try {
             const api = await this.apiProvider.getApi();
-            const result = await api.install(ProductMapping[product], resource, cancel);
+            const result = await api?.install(ProductMapping[product], resource, cancel);
             if (result === InstallerResponse.Installed) {
                 this._onInstalled.fire({ product, resource });
             }
@@ -233,6 +243,7 @@ export class PythonInstaller implements IPythonInstaller {
                     action = 'installed';
                     break;
                 case InstallerResponse.Ignore:
+                case undefined:
                     action = 'ignored';
                     break;
                 case InstallerResponse.Disabled:
@@ -241,7 +252,7 @@ export class PythonInstaller implements IPythonInstaller {
                 default:
                     break;
             }
-            return result;
+            return result || InstallerResponse.Ignore;
         } catch (ex) {
             action = 'failed';
             throw ex;
@@ -266,7 +277,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
     ): Promise<NodeJS.ProcessEnv | undefined> {
         return this.apiProvider
             .getApi()
-            .then((api) => api.getActivatedEnvironmentVariables(resource, interpreter, true));
+            .then((api) => api?.getActivatedEnvironmentVariables(resource, interpreter, true));
     }
 }
 
@@ -276,7 +287,7 @@ export class InterpreterSelector implements IInterpreterSelector {
     constructor(@inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider) {}
 
     public async getSuggestions(resource: Resource): Promise<IInterpreterQuickPickItem[]> {
-        return this.apiProvider.getApi().then((api) => api.getSuggestions(resource));
+        return this.apiProvider.getApi().then((api) => (api ? api.getSuggestions(resource) : []));
     }
 }
 // eslint-disable-next-line max-classes-per-file
@@ -297,7 +308,7 @@ export class InterpreterService implements IInterpreterService {
                 .then((api) => {
                     if (!this.eventHandlerAdded) {
                         this.eventHandlerAdded = true;
-                        api.onDidChangeInterpreter(() => this.didChangeInterpreter.fire(), this, this.disposables);
+                        api?.onDidChangeInterpreter(() => this.didChangeInterpreter.fire(), this, this.disposables);
                     }
                 })
                 .catch(noop);
@@ -306,16 +317,16 @@ export class InterpreterService implements IInterpreterService {
     }
 
     public getInterpreters(resource?: Uri): Promise<PythonEnvironment[]> {
-        return this.apiProvider.getApi().then((api) => api.getInterpreters(resource));
+        return this.apiProvider.getApi().then((api) => (api ? api.getInterpreters(resource) : []));
     }
 
     public getActiveInterpreter(resource?: Uri): Promise<PythonEnvironment | undefined> {
-        return this.apiProvider.getApi().then((api) => api.getActiveInterpreter(resource));
+        return this.apiProvider.getApi().then((api) => api?.getActiveInterpreter(resource));
     }
 
     public async getInterpreterDetails(pythonPath: string, resource?: Uri): Promise<undefined | PythonEnvironment> {
         try {
-            return await this.apiProvider.getApi().then((api) => api.getInterpreterDetails(pythonPath, resource));
+            return await this.apiProvider.getApi().then((api) => api?.getInterpreterDetails(pythonPath, resource));
         } catch {
             // If the python extension cannot get the details here, don't fail. Just don't use them.
             return undefined;

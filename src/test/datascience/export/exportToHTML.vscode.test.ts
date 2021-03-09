@@ -43,7 +43,7 @@ suite('DataScience - Export HTML', function () {
         await exportToHTML.export(
             Uri.file(path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience', 'export', 'test.ipynb')),
             target,
-            interpreter,
+            interpreter!,
             token.token
         );
 
