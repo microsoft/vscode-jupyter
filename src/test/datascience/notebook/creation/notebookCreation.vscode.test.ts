@@ -14,7 +14,7 @@ import { IDisposable } from '../../../../client/common/types';
 import { Commands } from '../../../../client/datascience/constants';
 import { CreationOptionService } from '../../../../client/datascience/notebook/creation/creationOptionsService';
 import { IExtensionTestApi, waitForCondition } from '../../../common';
-import { IS_NON_RAW_NATIVE_TEST, IS_REMOTE_NATIVE_TEST } from '../../../constants';
+import { IS_REMOTE_NATIVE_TEST } from '../../../constants';
 import { closeActiveWindows, initialize } from '../../../initialize';
 import { canRunNotebookTests, closeNotebooksAndCleanUpAfterTests, ensureNewNotebooksHavePythonCells } from '../helper';
 
@@ -27,7 +27,7 @@ suite('DataScience - VSCode Notebook - (Creation Integration)', function () {
     const disposables: IDisposable[] = [];
     suiteSetup(async function () {
         api = await initialize();
-        if (IS_REMOTE_NATIVE_TEST || IS_NON_RAW_NATIVE_TEST || !(await canRunNotebookTests())) {
+        if (IS_REMOTE_NATIVE_TEST || !(await canRunNotebookTests())) {
             return this.skip();
         }
         creationOptions = api.serviceContainer.get<CreationOptionService>(CreationOptionService);

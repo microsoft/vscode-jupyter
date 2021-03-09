@@ -26,7 +26,7 @@ suite('DataScience - TrustService', () => {
         const configService = mock(ConfigurationService);
         const fileSystem = mock(FileSystem);
         const context = typemoq.Mock.ofType<IExtensionContext>();
-        context.setup((c) => c.globalStoragePath).returns(() => os.tmpdir());
+        context.setup((c) => c.globalStorageUri).returns(() => Uri.file(os.tmpdir()));
         const globalState = new MockMemento();
         context.setup((c) => c.globalState).returns(() => globalState);
         when(configService.getSettings()).thenCall(() => {

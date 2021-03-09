@@ -3,10 +3,10 @@
 'use strict';
 
 import type { nbformat } from '@jupyterlab/coreutils';
-import { sha256 } from 'hash.js';
 import { inject, injectable } from 'inversify';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
+import { getTelemetrySafeHashedString } from '../../telemetry/helpers';
 import { Telemetry } from '../constants';
 import { CellState, ICell, INotebookEditor, INotebookEditorProvider, INotebookExecutionLogger } from '../types';
 // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
@@ -133,7 +133,7 @@ export class CellOutputMimeTypeTracker implements IExtensionSingleActivationServ
         this.sentMimeTypes.add(mimeType);
         // Hash the package name so that we will never accidentally see a
         // user's private package name.
-        const hashedName = sha256().update(mimeType).digest('hex');
+        const hashedName = getTelemetrySafeHashedString(mimeType);
 
         const lowerMimeType = mimeType.toLowerCase();
         // The following gives us clues of the mimetype.

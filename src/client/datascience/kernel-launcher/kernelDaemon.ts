@@ -136,6 +136,7 @@ export class PythonKernelDaemon extends BasePythonDaemon implements IPythonKerne
                 } else {
                     this.subject.next(out);
                 }
+                this.subject.next(out);
             },
             this.subject.error.bind(this.subject),
             this.subject.complete.bind(this.subject)

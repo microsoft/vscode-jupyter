@@ -33,7 +33,7 @@ export class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
         public readonly description: string,
         public readonly detail: string,
         public readonly selection: Readonly<KernelConnectionMetadata>,
-        public isPreferred: boolean,
+        public readonly isPreferred: boolean,
         private readonly kernelProvider: IKernelProvider,
         private readonly notebook: IVSCodeNotebook,
         private readonly context: IExtensionContext,

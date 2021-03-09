@@ -47,6 +47,7 @@ export class JupyterKernelService {
      * @param resource
      * @param kernel
      */
+    @traceDecorators.verbose('Check if a kernel is usable')
     public async ensureKernelIsUsable(
         kernel: KernelConnectionMetadata,
         cancelToken?: CancellationToken,
