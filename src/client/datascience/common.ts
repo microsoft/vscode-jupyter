@@ -152,7 +152,7 @@ export function generateNewNotebookUri(
 export async function tryGetRealPath(expectedPath: string): Promise<string | undefined> {
     try {
         // Real path throws if the expected path is not actually created yet.
-        return fsExtra.realpath(expectedPath);
+        return await fsExtra.realpath(expectedPath);
     } catch {
         // So if that happens, just return the original path.
         return expectedPath;
