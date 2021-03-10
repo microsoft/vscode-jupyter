@@ -43,7 +43,7 @@ export class ExperimentService implements IExperimentService {
     private logged?: boolean;
 
     private get enabled() {
-        return this._optOutFrom.includes('All') || this.settings.experiments.enabled;
+        return this.settings.experiments.enabled;
     }
     constructor(
         @inject(IConfigurationService) readonly configurationService: IConfigurationService,
@@ -141,7 +141,7 @@ export class ExperimentService implements IExperimentService {
     }
 
     public async getExperimentValue<T extends boolean | number | string>(experiment: string): Promise<T | undefined> {
-        if (!this.experimentationService || this._optOutFrom.includes('All') || this._optOutFrom.includes(experiment)) {
+        if (!this.experimentationService || this._optOutFrom.includes(experiment)) {
             return;
         }
 
@@ -170,7 +170,7 @@ export class ExperimentService implements IExperimentService {
 
         // Currently the service doesn't support opting in and out of experiments,
         // so we need to perform these checks and send the corresponding telemetry manually.
-        if (this._optOutFrom.includes('All') || this._optOutFrom.includes(experiment)) {
+        if (this._optOutFrom.includes(experiment)) {
             return 'optOut';
         }
 
@@ -179,7 +179,7 @@ export class ExperimentService implements IExperimentService {
             return this._optInto.includes(`__${experiment}__`) ? 'optIn' : undefined;
         }
 
-        if (this._optInto.includes('All') || this._optInto.includes(experiment)) {
+        if (this._optInto.includes(experiment)) {
             return 'optIn';
         }
 

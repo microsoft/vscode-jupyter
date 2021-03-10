@@ -282,7 +282,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
     ): Promise<NodeJS.ProcessEnv | undefined> {
         return this.apiProvider
             .getApi()
-            .then((api) => api?.getActivatedEnvironmentVariables(resource, interpreter, true));
+            .then((api) => api?.getActivatedEnvironmentVariables(resource, interpreter, false));
     }
 }
 
