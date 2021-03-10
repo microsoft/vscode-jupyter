@@ -146,7 +146,7 @@ export class JupyterSession extends BaseJupyterSession {
                 traceInfo(`Error waiting for restart session: ${exc}`);
                 tryCount += 1;
                 if (result) {
-                    this.shutdownSession(result, undefined).ignoreErrors();
+                    this.shutdownSession(result, undefined, true).ignoreErrors();
                 }
                 result = undefined;
                 exception = exc;
