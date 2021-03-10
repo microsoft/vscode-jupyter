@@ -5,6 +5,7 @@
 
 .react-grid-container {
     border: none;
+    padding-left: 8px;
 }
 
 .react-grid-measure {
@@ -36,8 +37,8 @@
 
 /* Some overrides necessary to get the colors we want */
 .slick-headerrow-column {
-    background-color: var(--vscode-menu-background);
-    color: var(--vscode-menu-foreground);
+    background-color: var(--vscode-sideBar-background);
+    color: var(--vscode-sideBar-foreground);
     border-right: 1px solid transparent;
 }
 
@@ -107,8 +108,8 @@ input.editor-text {
     width: 100%;
     height: 100%;
     box-sizing: border-box;
-    border: 2px var(--vscode-input-border);
-    padding: 2px;
+    border: 2px var(--vscode-focusBorder);
+    padding-left: 7px;
     margin: 0;
     outline: 0 none;
     border-style: solid;
@@ -123,6 +124,7 @@ input.editor-text {
 
 .slick-cell {
     border: 1px solid var(--vscode-editor-lineHighlightBorder);
+    padding-left: 7px;
 }
 
 .slick-cell.editable {

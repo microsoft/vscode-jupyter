@@ -15,9 +15,16 @@ import './sliceControl.css';
 
 const checkboxStyles = {
     checkbox: {
-        color: 'var(--vscode-checkbox-foreground)',
-        backgroundColor: 'var(--vscode-checkbox-background) !important',
-        border: 'var(--vscode-checkbox-border)'
+        color: 'var(--vscode-settings-checkboxForeground)',
+        backgroundColor: 'var(--vscode-settings-checkboxBackground) !important',
+        border: '1px solid var(--vscode-settings-checkboxBorder) !important',
+        borderRadius: '3px',
+        width: '18px',
+        height: '18px'
+    },
+    checkmark: {
+        fontSize: '16px',
+        color: 'var(--vscode-settings-checkboxForeground)',
     },
     text: {
         fontFamily: 'var(--vscode-font-family)',
