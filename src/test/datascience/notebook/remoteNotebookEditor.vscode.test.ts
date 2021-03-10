@@ -190,12 +190,14 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
         await closeActiveWindows();
 
         // Create a new notebook document & connect to the live kernel
+        console.log('Opening 2nd notebook');
         await createEmptyPythonNotebook(disposables);
         assert.isOk(vscodeNotebook.activeNotebookEditor, 'No active notebook');
         nbEditor = vscodeNotebook.activeNotebookEditor!;
         await waitForKernelToChange({ labelOrId: newLiveKernels[0].id });
 
         // Add a cell to print value of `a` from the live kernel
+        console.log('Running cell in 2nd notebook');
         await insertCodeCell('print(a)', { index: 0, language: PYTHON_LANGUAGE });
         let cell1 = nbEditor.document.cells![0]!;
         await runCell(cell1);
@@ -206,12 +208,14 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
         await closeActiveWindows();
 
         // Create a new notebook document & connect to the live kernel
+        console.log('Opening 3rd notebook');
         await createEmptyPythonNotebook(disposables);
         assert.isOk(vscodeNotebook.activeNotebookEditor, 'No active notebook');
         nbEditor = vscodeNotebook.activeNotebookEditor!;
         await waitForKernelToChange({ labelOrId: newLiveKernels[0].id });
 
         // Add a cell to print value of `a` from the live kernel
+        console.log('Running cell in 3rd notebook');
         await insertCodeCell('print(a)', { index: 0, language: PYTHON_LANGUAGE });
         cell1 = nbEditor.document.cells![0]!;
         await runCell(cell1);

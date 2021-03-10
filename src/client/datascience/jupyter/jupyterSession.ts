@@ -103,7 +103,13 @@ export class JupyterSession extends BaseJupyterSession {
                 newSession.isRemoteSession = true;
                 newSession.resource = resource;
             } else {
-                newSession = await this.createSession(resource, this.serverSettings, kernelConnection, cancelToken, disableUI);
+                newSession = await this.createSession(
+                    resource,
+                    this.serverSettings,
+                    kernelConnection,
+                    cancelToken,
+                    disableUI
+                );
                 newSession.resource = resource;
             }
 

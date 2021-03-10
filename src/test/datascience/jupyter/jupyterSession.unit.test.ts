@@ -15,27 +15,21 @@ import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
+import { Uri } from 'vscode';
 
 import { traceInfo } from '../../../client/common/logger';
+import { Resource } from '../../../client/common/types';
 import { createDeferred, Deferred } from '../../../client/common/utils/async';
 import { DataScience } from '../../../client/common/utils/localize';
 import { noop } from '../../../client/common/utils/misc';
 import { JupyterSession } from '../../../client/datascience/jupyter/jupyterSession';
 import { JupyterKernelService } from '../../../client/datascience/jupyter/kernels/jupyterKernelService';
 import { KernelConnectionMetadata, LiveKernelModel } from '../../../client/datascience/jupyter/kernels/types';
-import { IJupyterConnection, IJupyterKernelSpec } from '../../../client/datascience/types';
+import { IJupyterConnection, IJupyterKernelSpec, ISessionWithSocket } from '../../../client/datascience/types';
 import { MockOutputChannel } from '../../mockClasses';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
 suite('DataScience - JupyterSession', () => {
-    type ISession = Session.ISession & {
-        /**
-         * Whether this is a remote session that we attached to.
-         *
-         * @type {boolean}
-         */
-        isRemoteSession?: boolean;
-    };
     interface IKernelChangedArgs {
         /**
          * The old kernel.
@@ -55,18 +49,18 @@ suite('DataScience - JupyterSession', () => {
     let mockKernelSpec: typemoq.IMock<KernelConnectionMetadata>;
     let sessionManager: SessionManager;
     let contentsManager: ContentsManager;
-    let session: ISession;
+    let session: ISessionWithSocket;
     let kernel: Kernel.IKernelConnection;
-    let statusChangedSignal: ISignal<Session.ISession, Kernel.Status>;
-    let kernelChangedSignal: ISignal<Session.ISession, IKernelChangedArgs>;
+    let statusChangedSignal: ISignal<ISessionWithSocket, Kernel.Status>;
+    let kernelChangedSignal: ISignal<ISessionWithSocket, IKernelChangedArgs>;
 
-    setup(() => {
+    function createJupyterSession(resource: Resource = undefined) {
         restartSessionCreatedEvent = createDeferred();
         restartSessionUsedEvent = createDeferred();
         connection = mock<IJupyterConnection>();
         serverSettings = typemoq.Mock.ofType<ServerConnection.ISettings>();
         mockKernelSpec = typemoq.Mock.ofType<KernelConnectionMetadata>();
-        session = mock(DefaultSession);
+        session = mock<ISessionWithSocket>();
         kernel = mock(DefaultKernel);
         when(session.kernel).thenReturn(instance(kernel));
         statusChangedSignal = mock(Signal);
@@ -86,7 +80,7 @@ suite('DataScience - JupyterSession', () => {
         sessionManager = mock(SessionManager);
         contentsManager = mock(ContentsManager);
         jupyterSession = new JupyterSession(
-            undefined,
+            resource,
             instance(connection),
             serverSettings.object,
             mockKernelSpec.object,
@@ -103,7 +97,8 @@ suite('DataScience - JupyterSession', () => {
             60_000,
             instance(kernelService)
         );
-    });
+    }
+    setup(() => createJupyterSession());
 
     async function connect() {
         const nbFile = 'file path';
@@ -148,10 +143,20 @@ suite('DataScience - JupyterSession', () => {
             verify(kernel.interrupt()).once();
         });
         suite('Shutdown', () => {
-            test('Remote session', async () => {
+            test('Remote session with Interactive and starting a new session', async () => {
+                // Create jupyter session for Interactive window
+                createJupyterSession(Uri.file('test.py'));
+                await connect();
+
                 when(connection.localLaunch).thenReturn(false);
                 when(sessionManager.refreshRunning()).thenResolve();
                 when(session.isRemoteSession).thenReturn(true);
+                when(session.isDisposed).thenReturn(false);
+                when(session.kernelConnectionMetadata).thenReturn({
+                    id: '',
+                    kind: 'startUsingKernelSpec',
+                    kernelSpec: {} as any
+                });
                 when(session.shutdown()).thenResolve();
                 when(session.dispose()).thenReturn();
 
@@ -159,9 +164,83 @@ suite('DataScience - JupyterSession', () => {
 
                 verify(sessionManager.refreshRunning()).never();
                 verify(contentsManager.delete(anything())).once();
-                // With remote sessions, do not shutdown the remote session.
+                // Shutdown sessions started for Interactive window.
+                verify(session.shutdown()).once();
+                verify(session.dispose()).once();
+            });
+            test('Remote session with Interactive and connecting to existing session', async () => {
+                // Create jupyter session for Interactive window
+                createJupyterSession(Uri.file('test.py'));
+                await connect();
+
+                when(connection.localLaunch).thenReturn(false);
+                when(sessionManager.refreshRunning()).thenResolve();
+                when(session.isRemoteSession).thenReturn(true);
+                when(session.isDisposed).thenReturn(false);
+                when(session.kernelConnectionMetadata).thenReturn({
+                    id: '',
+                    kind: 'connectToLiveKernel',
+                    kernelModel: {} as any
+                });
+                when(session.shutdown()).thenResolve();
+                when(session.dispose()).thenReturn();
+
+                await jupyterSession.shutdown();
+
+                verify(sessionManager.refreshRunning()).never();
+                verify(contentsManager.delete(anything())).once();
+                // Never shutdown live sessions connected from Interactive window.
                 verify(session.shutdown()).never();
-                // With remote sessions, we should not shut the session, but dispose it.
+                verify(session.dispose()).once();
+            });
+            test('Remote session with Notebook and starting a new session', async () => {
+                // Create jupyter session for Notebooks
+                createJupyterSession(Uri.file('test.ipynb'));
+                await connect();
+
+                when(connection.localLaunch).thenReturn(false);
+                when(sessionManager.refreshRunning()).thenResolve();
+                when(session.isRemoteSession).thenReturn(true);
+                when(session.isDisposed).thenReturn(false);
+                when(session.kernelConnectionMetadata).thenReturn({
+                    id: '',
+                    kind: 'startUsingKernelSpec',
+                    kernelSpec: {} as any
+                });
+                when(session.shutdown()).thenResolve();
+                when(session.dispose()).thenReturn();
+
+                await jupyterSession.shutdown();
+
+                verify(sessionManager.refreshRunning()).never();
+                verify(contentsManager.delete(anything())).once();
+                // Never shutdown sessions started from Notebooks.
+                verify(session.shutdown()).never();
+                verify(session.dispose()).once();
+            });
+            test('Remote session with Notebook and connecting to existing session', async () => {
+                // Create jupyter session for Notebooks
+                createJupyterSession(Uri.file('test.ipynb'));
+                await connect();
+
+                when(connection.localLaunch).thenReturn(false);
+                when(sessionManager.refreshRunning()).thenResolve();
+                when(session.isRemoteSession).thenReturn(true);
+                when(session.isDisposed).thenReturn(false);
+                when(session.kernelConnectionMetadata).thenReturn({
+                    id: '',
+                    kind: 'connectToLiveKernel',
+                    kernelModel: {} as any
+                });
+                when(session.shutdown()).thenResolve();
+                when(session.dispose()).thenReturn();
+
+                await jupyterSession.shutdown();
+
+                verify(sessionManager.refreshRunning()).never();
+                verify(contentsManager.delete(anything())).once();
+                // Never shutdown live sessions connected from Notebooks.
+                verify(session.shutdown()).never();
                 verify(session.dispose()).once();
             });
             test('Local session', async () => {
@@ -229,11 +308,11 @@ suite('DataScience - JupyterSession', () => {
                 } as any,
                 id: 'liveKernel'
             };
-            let remoteSession: ISession;
+            let remoteSession: ISessionWithSocket;
             let remoteKernel: Kernel.IKernelConnection;
-            let remoteSessionInstance: ISession;
+            let remoteSessionInstance: ISessionWithSocket;
             setup(() => {
-                remoteSession = mock(DefaultSession);
+                remoteSession = mock<ISessionWithSocket>();
                 remoteKernel = mock(DefaultKernel);
                 remoteSessionInstance = instance(remoteSession);
                 remoteSessionInstance.isRemoteSession = false;
