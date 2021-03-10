@@ -5,7 +5,7 @@ import type { ISignal, Signal } from '@phosphor/signaling';
 import * as uuid from 'uuid/v4';
 import '../../common/extensions';
 import { traceError } from '../../common/logger';
-import { IDisposable } from '../../common/types';
+import { IDisposable, Resource } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { IKernelProcess } from '../kernel-launcher/types';
@@ -34,7 +34,7 @@ export class RawSession implements ISessionWithSocket {
     private readonly exitHandler: IDisposable;
 
     // RawSession owns the lifetime of the kernel process and will dispose it
-    constructor(public kernelProcess: IKernelProcess) {
+    constructor(public kernelProcess: IKernelProcess, public readonly resource: Resource) {
         this.kernelConnectionMetadata = kernelProcess.kernelConnectionMetadata;
         // eslint-disable-next-line @typescript-eslint/no-require-imports
         const signaling = require('@phosphor/signaling') as typeof import('@phosphor/signaling');

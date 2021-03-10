@@ -359,10 +359,12 @@ export interface IJupyterSession extends IAsyncDisposable {
     ): void;
     removeMessageHook(msgId: string, hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>): void;
     requestKernelInfo(): Promise<KernelMessage.IInfoReplyMsg>;
-    shutdown(force?: boolean): Promise<void>;
+    shutdown(): Promise<void>;
 }
 
 export type ISessionWithSocket = Session.ISession & {
+    // The resource associated with this session.
+    resource: Resource;
     // Whether this is a remote session that we attached to.
     isRemoteSession?: boolean;
     // Socket information used for hooking messages to the kernel

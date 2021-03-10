@@ -154,6 +154,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         kernelConnection: KernelConnectionMetadata,
         timeoutMS: number
     ): Promise<void> {
+        this.resource = resource;
         let newSession: ISessionWithSocket | undefined;
         // If we are already using this kernel in an active session just return back
         const currentKernelSpec =
@@ -197,7 +198,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         this.session?.statusChanged.connect(this.statusHandler); // NOSONAR
 
         // Start the restart session promise too.
-        this.restartSessionPromise = this.createRestartSession(kernelConnection, newSession, timeoutMS);
+        this.restartSessionPromise = this.createRestartSession(resource, kernelConnection, newSession, timeoutMS);
     }
 
     public async restart(timeout: number): Promise<void> {
@@ -231,7 +232,12 @@ export abstract class BaseJupyterSession implements IJupyterSession {
             this.session.statusChanged.connect(this.statusHandler);
 
             // After switching, start another in case we restart again.
-            this.restartSessionPromise = this.createRestartSession(this.kernelConnectionMetadata, oldSession, timeout);
+            this.restartSessionPromise = this.createRestartSession(
+                this.session.resource,
+                this.kernelConnectionMetadata,
+                oldSession,
+                timeout
+            );
             traceInfo('Started new restart session');
             if (oldStatusHandler) {
                 oldSession.statusChanged.disconnect(oldStatusHandler);
@@ -357,6 +363,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     // Sub classes need to implement their own restarting specific code
     protected abstract startRestartSession(timeout: number): void;
     protected abstract createRestartSession(
+        resource: Resource,
         kernelConnection: KernelConnectionMetadata | undefined,
         session: ISessionWithSocket,
         timeout: number,
@@ -523,14 +530,17 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         if (session.kernelConnectionMetadata?.kind === 'connectToLiveKernel') {
             return false;
         }
+        // We can always shutdown restart sessions.
+        if (isRequestToShutDownRestartSession) {
+            return true;
+        }
         // If this Interactive Window, then always shutdown sessions (even with remote Jupyter).
-        if (getResourceType(this.resource) === 'interactive') {
+        if (session.resource && getResourceType(session.resource) === 'interactive') {
             return true;
         }
         // If we're in notebooks and using Remote Jupyter connections, then never shutdown the sessions.
-        if (getResourceType(this.resource) === 'notebook' && session.isRemoteSession === true) {
-            // If the session is a restart session then just shut it down, else leave it.
-            return !isRequestToShutDownRestartSession;
+        if (session.resource && getResourceType(session.resource) === 'notebook' && session.isRemoteSession === true) {
+            return false;
         }
 
         return true;

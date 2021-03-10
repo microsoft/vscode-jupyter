@@ -101,8 +101,10 @@ export class JupyterSession extends BaseJupyterSession {
                 newSession = this.sessionManager.connectTo(kernelConnection.kernelModel.session) as ISessionWithSocket;
                 newSession.kernelConnectionMetadata = kernelConnection;
                 newSession.isRemoteSession = true;
+                newSession.resource = resource;
             } else {
-                newSession = await this.createSession(this.serverSettings, kernelConnection, cancelToken, disableUI);
+                newSession = await this.createSession(resource, this.serverSettings, kernelConnection, cancelToken, disableUI);
+                newSession.resource = resource;
             }
 
             // Make sure it is idle before we return
@@ -123,6 +125,7 @@ export class JupyterSession extends BaseJupyterSession {
     }
 
     protected async createRestartSession(
+        resource: Resource,
         kernelConnection: KernelConnectionMetadata | undefined,
         session: ISessionWithSocket,
         _timeout: number,
@@ -138,7 +141,13 @@ export class JupyterSession extends BaseJupyterSession {
         let exception: any;
         while (tryCount < 3) {
             try {
-                result = await this.createSession(session.serverSettings, kernelConnection, cancelToken, true);
+                result = await this.createSession(
+                    resource,
+                    session.serverSettings,
+                    kernelConnection,
+                    cancelToken,
+                    true
+                );
                 await this.waitForIdleOnSession(result, this.idleTimeout);
                 this.restartSessionCreated(result.kernel);
                 return result;
@@ -158,6 +167,7 @@ export class JupyterSession extends BaseJupyterSession {
     protected startRestartSession(timeout: number) {
         if (!this.restartSessionPromise && this.session && this.contentsManager) {
             this.restartSessionPromise = this.createRestartSession(
+                this.session.resource,
                 this.kernelConnectionMetadata,
                 this.session,
                 timeout
@@ -212,6 +222,7 @@ export class JupyterSession extends BaseJupyterSession {
     }
 
     private async createSession(
+        resoruce: Resource,
         serverSettings: ServerConnection.ISettings,
         kernelConnection: KernelConnectionMetadata | undefined,
         cancelToken?: CancellationToken,
@@ -245,6 +256,7 @@ export class JupyterSession extends BaseJupyterSession {
                         const sessionWithSocket = session as ISessionWithSocket;
 
                         // Add on the kernel metadata & sock information
+                        sessionWithSocket.resource = resoruce;
                         sessionWithSocket.kernelConnectionMetadata = kernelConnection;
                         sessionWithSocket.kernelSocketInformation = {
                             socket: JupyterWebSockets.get(session.kernel.id),
