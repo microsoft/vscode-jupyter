@@ -96,16 +96,16 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     // Abstracts for each Session type to implement
     public abstract waitForIdle(timeout: number): Promise<void>;
 
-    public async shutdown(force?: boolean): Promise<void> {
+    public async shutdown(): Promise<void> {
         if (this.session) {
             try {
                 traceInfo('Shutdown session - current session');
-                await this.shutdownSession(this.session, this.statusHandler, force);
+                await this.shutdownSession(this.session, this.statusHandler);
                 traceInfo('Shutdown session - get restart session');
                 if (this.restartSessionPromise) {
                     const restartSession = await this.restartSessionPromise;
                     traceInfo('Shutdown session - shutdown restart session');
-                    await this.shutdownSession(restartSession, undefined, force);
+                    await this.shutdownSession(restartSession, undefined);
                 }
             } catch {
                 noop();
@@ -178,8 +178,8 @@ export abstract class BaseJupyterSession implements IJupyterSession {
 
         // This is just like doing a restart, kill the old session (and the old restart session), and start new ones
         if (this.session) {
-            this.shutdownSession(this.session, this.statusHandler, false).ignoreErrors();
-            this.restartSessionPromise?.then((r) => this.shutdownSession(r, undefined, true)).ignoreErrors(); // NOSONAR
+            this.shutdownSession(this.session, this.statusHandler).ignoreErrors();
+            this.restartSessionPromise?.then((r) => this.shutdownSession(r, undefined)).ignoreErrors(); // NOSONAR
         }
 
         traceInfoIf(
@@ -236,7 +236,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
             if (oldStatusHandler) {
                 oldSession.statusChanged.disconnect(oldStatusHandler);
             }
-            this.shutdownSession(oldSession, undefined, true).ignoreErrors();
+            this.shutdownSession(oldSession, undefined).ignoreErrors();
         } else {
             throw new Error(localize.DataScience.sessionDisposed());
         }
@@ -380,7 +380,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
                 } else if (e === 'dead') {
                     traceError('Kernel died while waiting for idle');
                     // If we throw an exception, make sure to shutdown the session as it's not usable anymore
-                    this.shutdownSession(session, this.statusHandler, true).ignoreErrors();
+                    this.shutdownSession(session, this.statusHandler).ignoreErrors();
                     const kernelModel = {
                         ...session.kernel,
                         lastActivityTime: new Date(),
@@ -443,7 +443,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
             }
 
             // If we throw an exception, make sure to shutdown the session as it's not usable anymore
-            this.shutdownSession(session, this.statusHandler, true).ignoreErrors();
+            this.shutdownSession(session, this.statusHandler).ignoreErrors();
             throw new JupyterWaitForIdleError(localize.DataScience.jupyterLaunchTimedOut());
         }
     }
@@ -479,8 +479,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     }
     protected async shutdownSession(
         session: ISessionWithSocket | undefined,
-        statusHandler: Slot<ISessionWithSocket, Kernel.Status> | undefined,
-        force: boolean | undefined
+        statusHandler: Slot<ISessionWithSocket, Kernel.Status> | undefined
     ): Promise<void> {
         if (session && session.kernel) {
             const kernelIdForLogging = `${session.kernel.id}, ${session.kernelConnectionMetadata?.id}`;
@@ -489,7 +488,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
                 if (statusHandler) {
                     session.statusChanged.disconnect(statusHandler);
                 }
-                if (this.canShutdownSession(session, force)) {
+                if (!this.canShutdownSession(session)) {
                     traceInfo(`Session cannot be shutdown ${session.kernelConnectionMetadata?.id}`);
                     session.dispose();
                     return;
@@ -514,13 +513,9 @@ export abstract class BaseJupyterSession implements IJupyterSession {
             traceInfo(`shutdownSession ${kernelIdForLogging} - shutdown complete`);
         }
     }
-    private canShutdownSession(session: ISessionWithSocket, force?: boolean) {
+    private canShutdownSession(session: ISessionWithSocket) {
         // We can never shut down existing (live) kernels.
         if (session.kernelConnectionMetadata?.kind === 'connectToLiveKernel') {
-            return false;
-        }
-        // If not forced, don't shutdown anything.
-        if (!force) {
             return false;
         }
         // If this Interactive Window, then always shutdown sessions (even with remote Jupyter).
@@ -528,12 +523,11 @@ export abstract class BaseJupyterSession implements IJupyterSession {
             return true;
         }
         // If we're in notebooks and using Remote Jupyter connections, then never shutdown the sessions.
-        if (getResourceType(this.resource) === 'interactive' && session.isRemoteSession === true) {
+        if (getResourceType(this.resource) === 'notebook' && session.isRemoteSession === true) {
             return false;
         }
 
-        // All other scenarios is whether we're forced or not.
-        return force;
+        return true;
     }
     private getServerStatus(): ServerStatus {
         if (this.session) {
