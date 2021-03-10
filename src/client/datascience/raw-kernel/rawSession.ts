@@ -7,6 +7,7 @@ import '../../common/extensions';
 import { traceError } from '../../common/logger';
 import { IDisposable } from '../../common/types';
 import { noop } from '../../common/utils/misc';
+import { KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { IKernelProcess } from '../kernel-launcher/types';
 import { ISessionWithSocket, KernelSocketInformation } from '../types';
 import { createRawKernel, RawKernel } from './rawKernel';
@@ -18,6 +19,7 @@ ZMQ Kernel connection can pretend to be a jupyterlab Session
 */
 export class RawSession implements ISessionWithSocket {
     public isDisposed: boolean = false;
+    public readonly kernelConnectionMetadata: KernelConnectionMetadata | undefined;
     private isDisposing?: boolean;
 
     // Note, ID is the ID of this session
@@ -33,6 +35,7 @@ export class RawSession implements ISessionWithSocket {
 
     // RawSession owns the lifetime of the kernel process and will dispose it
     constructor(public kernelProcess: IKernelProcess) {
+        this.kernelConnectionMetadata = kernelProcess.kernelConnectionMetadata;
         // eslint-disable-next-line @typescript-eslint/no-require-imports
         const signaling = require('@phosphor/signaling') as typeof import('@phosphor/signaling');
         this._statusChanged = new signaling.Signal<this, Kernel.Status>(this);

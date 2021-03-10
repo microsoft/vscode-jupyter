@@ -32,7 +32,7 @@ import { KernelConnectionMetadata } from './kernels/types';
 
 export class JupyterSession extends BaseJupyterSession {
     constructor(
-        private resource: Resource,
+        resource: Resource,
         private connInfo: IJupyterConnection,
         private serverSettings: ServerConnection.ISettings,
         kernelSpec: KernelConnectionMetadata | undefined,
@@ -45,7 +45,7 @@ export class JupyterSession extends BaseJupyterSession {
         private readonly idleTimeout: number,
         private readonly kernelService: JupyterKernelService
     ) {
-        super(restartSessionUsed, workingDirectory, idleTimeout);
+        super(resource, restartSessionUsed, workingDirectory, idleTimeout);
         this.kernelConnectionMetadata = kernelSpec;
     }
 
@@ -98,13 +98,11 @@ export class JupyterSession extends BaseJupyterSession {
                 kernelConnection.kernelModel.id
             ) {
                 // Remote case.
-                newSession = this.sessionManager.connectTo(kernelConnection.kernelModel.session);
+                newSession = this.sessionManager.connectTo(kernelConnection.kernelModel.session) as ISessionWithSocket;
+                newSession.kernelConnectionMetadata = kernelConnection;
                 newSession.isRemoteSession = true;
             } else {
                 newSession = await this.createSession(this.serverSettings, kernelConnection, cancelToken, disableUI);
-                if (!this.connInfo.localLaunch) {
-                    newSession.isRemoteSession = true;
-                }
             }
 
             // Make sure it is idle before we return
@@ -244,10 +242,11 @@ export class JupyterSession extends BaseJupyterSession {
                         this.logRemoteOutput(
                             localize.DataScience.createdNewKernel().format(this.connInfo.baseUrl, session.kernel.id)
                         );
+                        const sessionWithSocket = session as ISessionWithSocket;
 
-                        // Add on the kernel sock information
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        (session as any).kernelSocketInformation = {
+                        // Add on the kernel metadata & sock information
+                        sessionWithSocket.kernelConnectionMetadata = kernelConnection;
+                        sessionWithSocket.kernelSocketInformation = {
                             socket: JupyterWebSockets.get(session.kernel.id),
                             options: {
                                 clientId: session.kernel.clientId,
@@ -256,8 +255,10 @@ export class JupyterSession extends BaseJupyterSession {
                                 userName: session.kernel.username
                             }
                         };
-
-                        return session;
+                        if (!this.connInfo.localLaunch) {
+                            sessionWithSocket.isRemoteSession = true;
+                        }
+                        return sessionWithSocket;
                     })
                     .catch((ex) => Promise.reject(new JupyterSessionStartError(ex)))
                     .finally(() => {

@@ -48,14 +48,14 @@ export class RawJupyterSession extends BaseJupyterSession {
     private _disposables: IDisposable[] = [];
     constructor(
         private readonly kernelLauncher: IKernelLauncher,
-        private readonly resource: Resource,
+        resource: Resource,
         private readonly outputChannel: IOutputChannel,
         private readonly restartSessionCreated: (id: Kernel.IKernelConnection) => void,
         restartSessionUsed: (id: Kernel.IKernelConnection) => void,
         workingDirectory: string,
         timeout: number
     ) {
-        super(restartSessionUsed, workingDirectory, timeout);
+        super(resource, restartSessionUsed, workingDirectory, timeout);
     }
 
     @reportAction(ReportableAction.JupyterSessionWaitForIdleSession)

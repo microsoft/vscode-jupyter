@@ -16,6 +16,7 @@ import { sleep, waitForPromise } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
 import { noop } from '../common/utils/misc';
 import { sendTelemetryEvent } from '../telemetry';
+import { getResourceType } from './common';
 import { Identifiers, Telemetry } from './constants';
 import { JupyterInvalidKernelError } from './jupyter/jupyterInvalidKernelError';
 import { JupyterWaitForIdleError } from './jupyter/jupyterWaitForIdleError';
@@ -81,6 +82,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     private ioPubHandler: Slot<ISessionWithSocket, KernelMessage.IIOPubMessage>;
 
     constructor(
+        protected resource: Resource,
         private restartSessionUsed: (id: Kernel.IKernelConnection) => void,
         public workingDirectory: string,
         private sessionTimeout: number
@@ -481,18 +483,19 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         force: boolean | undefined
     ): Promise<void> {
         if (session && session.kernel) {
-            const kernelId = session.kernel.id;
-            traceInfo(`shutdownSession ${kernelId} - start`);
+            const kernelIdForLogging = `${session.kernel.id}, ${session.kernelConnectionMetadata?.id}`;
+            traceInfo(`shutdownSession ${kernelIdForLogging} - start`);
             try {
                 if (statusHandler) {
                     session.statusChanged.disconnect(statusHandler);
                 }
-                // Do not shutdown remote sessions.
-                if (session.isRemoteSession && !force) {
+                if (this.canShutdownSession(session, force)) {
+                    traceInfo(`Session cannot be shutdown ${session.kernelConnectionMetadata?.id}`);
                     session.dispose();
                     return;
                 }
                 try {
+                    traceInfo(`Session can be shutdown ${session.kernelConnectionMetadata?.id}`);
                     suppressShutdownErrors(session.kernel);
                     // Shutdown may fail if the process has been killed
                     if (!session.isDisposed) {
@@ -508,8 +511,29 @@ export abstract class BaseJupyterSession implements IJupyterSession {
                 // Ignore, just trace.
                 traceWarning(e);
             }
-            traceInfo(`shutdownSession ${kernelId} - shutdown complete`);
+            traceInfo(`shutdownSession ${kernelIdForLogging} - shutdown complete`);
         }
+    }
+    private canShutdownSession(session: ISessionWithSocket, force?: boolean) {
+        // We can never shut down existing (live) kernels.
+        if (session.kernelConnectionMetadata?.kind === 'connectToLiveKernel') {
+            return false;
+        }
+        // If not forced, don't shutdown anything.
+        if (!force) {
+            return false;
+        }
+        // If this Interactive Window, then always shutdown sessions (even with remote Jupyter).
+        if (getResourceType(this.resource) === 'interactive') {
+            return true;
+        }
+        // If we're in notebooks and using Remote Jupyter connections, then never shutdown the sessions.
+        if (getResourceType(this.resource) === 'interactive' && session.isRemoteSession === true) {
+            return false;
+        }
+
+        // All other scenarios is whether we're forced or not.
+        return force;
     }
     private getServerStatus(): ServerStatus {
         if (this.session) {
