@@ -228,7 +228,7 @@ export class JupyterSession extends BaseJupyterSession {
     }
 
     private async createSession(
-        resoruce: Resource,
+        resource: Resource,
         serverSettings: ServerConnection.ISettings,
         kernelConnection: KernelConnectionMetadata | undefined,
         cancelToken?: CancellationToken,
@@ -262,7 +262,7 @@ export class JupyterSession extends BaseJupyterSession {
                         const sessionWithSocket = session as ISessionWithSocket;
 
                         // Add on the kernel metadata & sock information
-                        sessionWithSocket.resource = resoruce;
+                        sessionWithSocket.resource = resource;
                         sessionWithSocket.kernelConnectionMetadata = kernelConnection;
                         sessionWithSocket.kernelSocketInformation = {
                             socket: JupyterWebSockets.get(session.kernel.id),

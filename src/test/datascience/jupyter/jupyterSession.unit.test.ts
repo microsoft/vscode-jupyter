@@ -70,6 +70,7 @@ suite('DataScience - JupyterSession', () => {
         when(session.kernelChanged).thenReturn(instance(kernelChangedSignal));
         when(session.iopubMessage).thenReturn(instance(ioPubSignal));
         when(session.kernel).thenReturn(instance(kernel));
+        when(session.isDisposed).thenReturn(false);
         when(kernel.status).thenReturn('idle');
         when(connection.rootDirectory).thenReturn('');
         const channel = new MockOutputChannel('JUPYTER');
@@ -151,7 +152,6 @@ suite('DataScience - JupyterSession', () => {
                 when(connection.localLaunch).thenReturn(false);
                 when(sessionManager.refreshRunning()).thenResolve();
                 when(session.isRemoteSession).thenReturn(true);
-                when(session.isDisposed).thenReturn(false);
                 when(session.kernelConnectionMetadata).thenReturn({
                     id: '',
                     kind: 'startUsingKernelSpec',
@@ -176,7 +176,6 @@ suite('DataScience - JupyterSession', () => {
                 when(connection.localLaunch).thenReturn(false);
                 when(sessionManager.refreshRunning()).thenResolve();
                 when(session.isRemoteSession).thenReturn(true);
-                when(session.isDisposed).thenReturn(false);
                 when(session.kernelConnectionMetadata).thenReturn({
                     id: '',
                     kind: 'connectToLiveKernel',
@@ -201,7 +200,6 @@ suite('DataScience - JupyterSession', () => {
                 when(connection.localLaunch).thenReturn(false);
                 when(sessionManager.refreshRunning()).thenResolve();
                 when(session.isRemoteSession).thenReturn(true);
-                when(session.isDisposed).thenReturn(false);
                 when(session.kernelConnectionMetadata).thenReturn({
                     id: '',
                     kind: 'startUsingKernelSpec',
@@ -226,7 +224,6 @@ suite('DataScience - JupyterSession', () => {
                 when(connection.localLaunch).thenReturn(false);
                 when(sessionManager.refreshRunning()).thenResolve();
                 when(session.isRemoteSession).thenReturn(true);
-                when(session.isDisposed).thenReturn(false);
                 when(session.kernelConnectionMetadata).thenReturn({
                     id: '',
                     kind: 'connectToLiveKernel',
@@ -246,7 +243,6 @@ suite('DataScience - JupyterSession', () => {
             test('Local session', async () => {
                 when(connection.localLaunch).thenReturn(true);
                 when(session.isRemoteSession).thenReturn(false);
-                when(session.isDisposed).thenReturn(false);
                 when(session.shutdown()).thenResolve();
                 when(session.dispose()).thenReturn();
                 await jupyterSession.shutdown();
@@ -385,7 +381,6 @@ suite('DataScience - JupyterSession', () => {
                 (instance(newSession) as any).then = undefined;
                 newSessionCreated = createDeferred();
                 when(session.isRemoteSession).thenReturn(false);
-                when(session.isDisposed).thenReturn(false);
                 when(newKernelConnection.id).thenReturn('restartId');
                 when(newKernelConnection.clientId).thenReturn('restartClientId');
                 when(newKernelConnection.status).thenReturn('idle');
