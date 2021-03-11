@@ -911,7 +911,8 @@ jobs:
   coverage:
     name: Coverage reports upload
     runs-on: ubuntu-latest
-    if: always()
+    # This should happen all the time except release
+    if: (!contains(github.ref, 'refs/heads/release'))
     needs: [ts_tests, vscodeTests, smoke-tests, tests]
     steps:
       - name: Checkout
