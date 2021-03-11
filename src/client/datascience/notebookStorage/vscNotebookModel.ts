@@ -99,13 +99,15 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
         if (!this.document) {
             return [];
         }
-        return this.document.cells.map((cell) => {
-            return {
-                id: cell.document.uri.toString(),
-                data: createJupyterCellFromVSCNotebookCell(cell),
-                state: cellRunStateToCellState(cell.metadata.runState)
-            };
-        });
+        return this.document.cells
+            .filter((cell) => !cell.document.isClosed)
+            .map((cell) => {
+                return {
+                    id: cell.document.uri.toString(),
+                    data: createJupyterCellFromVSCNotebookCell(cell),
+                    state: cellRunStateToCellState(cell.metadata.runState)
+                };
+            });
     }
     /**
      * Unfortunately Notebook models are created early, well before a VSC Notebook Document is created.
