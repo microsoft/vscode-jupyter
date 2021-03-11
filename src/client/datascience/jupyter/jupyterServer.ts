@@ -112,7 +112,7 @@ export class JupyterServerBase implements INotebookServer {
             this.savedSession = session;
         } else {
             // Otherwise for remote, just get rid of it.
-            await session.shutdown(true);
+            await session.shutdown();
         }
     }
 
