@@ -83,7 +83,7 @@ export class KernelDaemonPreWarmer {
         if (
             isJupyterKernel(kernel) ||
             doc.cells.some((cell: NotebookCell) => {
-                return cell.language === PYTHON_LANGUAGE;
+                return cell.document.languageId === PYTHON_LANGUAGE;
             })
         ) {
             await this.preWarmKernelDaemonPool();

@@ -101,7 +101,7 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
         }
         return this.document.cells.map((cell) => {
             return {
-                id: cell.uri.toString(),
+                id: cell.document.uri.toString(),
                 data: createJupyterCellFromVSCNotebookCell(cell),
                 state: cellRunStateToCellState(cell.metadata.runState)
             };
@@ -124,9 +124,7 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
                     document.uri,
                     document.metadata.with({
                         cellEditable: true,
-                        cellRunnable: true,
                         editable: true,
-                        runnable: true,
                         trusted: true
                     })
                 );

@@ -89,7 +89,7 @@ export class KernelExecution implements IDisposable {
 
         // Only run code cells that are not already running.
         const cellsThatWeCanRun = editor.document.cells
-            .filter((cell) => cell.cellKind === NotebookCellKind.Code)
+            .filter((cell) => cell.kind === NotebookCellKind.Code)
             .filter((cell) => cell.metadata.runState !== NotebookCellRunState.Running);
         if (cellsThatWeCanRun.length === 0) {
             // This is an unlikely scenario (UI doesn't allow this).

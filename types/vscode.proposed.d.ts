@@ -69,7 +69,6 @@ declare module 'vscode' {
         readonly statusMessage?: string;
 
         // run related API, will be removed
-        readonly runnable?: boolean;
         readonly hasExecutionOrder?: boolean;
         readonly executionOrder?: number;
         readonly runState?: NotebookCellRunState;
@@ -79,7 +78,6 @@ declare module 'vscode' {
         constructor(
             editable?: boolean,
             breakpointMargin?: boolean,
-            runnable?: boolean,
             hasExecutionOrder?: boolean,
             executionOrder?: number,
             runState?: NotebookCellRunState,
@@ -94,7 +92,6 @@ declare module 'vscode' {
         with(change: {
             editable?: boolean | null;
             breakpointMargin?: boolean | null;
-            runnable?: boolean | null;
             hasExecutionOrder?: boolean | null;
             executionOrder?: number | null;
             runState?: NotebookCellRunState | null;
@@ -111,14 +108,10 @@ declare module 'vscode' {
     export interface NotebookCell {
         readonly index: number;
         readonly notebook: NotebookDocument;
-        readonly cellKind: NotebookCellKind;
-        // todo@API duplicates #document.uri
-        readonly uri: Uri;
-        // todo@API duplicates #document.languageId
-        readonly language: string;
+        readonly kind: NotebookCellKind;
         readonly document: TextDocument;
-        readonly outputs: readonly NotebookCellOutput[];
         readonly metadata: NotebookCellMetadata;
+        readonly outputs: ReadonlyArray<NotebookCellOutput>;
     }
 
     export class NotebookDocumentMetadata {
@@ -145,18 +138,12 @@ declare module 'vscode' {
         // todo@API is this a kernel property?
         readonly cellHasExecutionOrder: boolean;
 
-        // run related, remove infer from kernel, exec
-        // todo@API infer from kernel
         // todo@API remove
-        readonly runnable: boolean;
-        readonly cellRunnable: boolean;
         readonly runState: NotebookRunState;
 
         constructor(
             editable?: boolean,
-            runnable?: boolean,
             cellEditable?: boolean,
-            cellRunnable?: boolean,
             cellHasExecutionOrder?: boolean,
             custom?: { [key: string]: any },
             runState?: NotebookRunState,
@@ -165,9 +152,7 @@ declare module 'vscode' {
 
         with(change: {
             editable?: boolean | null;
-            runnable?: boolean | null;
             cellEditable?: boolean | null;
-            cellRunnable?: boolean | null;
             cellHasExecutionOrder?: boolean | null;
             custom?: { [key: string]: any } | null;
             runState?: NotebookRunState | null;
@@ -192,15 +177,18 @@ declare module 'vscode' {
     export interface NotebookDocument {
         readonly uri: Uri;
         readonly version: number;
+
         // todo@API don't have this...
         readonly fileName: string;
-        // todo@API should we really expose this?
-        readonly viewType: string;
+
         readonly isDirty: boolean;
         readonly isUntitled: boolean;
         readonly cells: ReadonlyArray<NotebookCell>;
-        readonly contentOptions: NotebookDocumentContentOptions;
+
         readonly metadata: NotebookDocumentMetadata;
+
+        // todo@API should we really expose this?
+        readonly viewType: string;
 
         /**
          * Save the document. The saving will be handled by the corresponding content provider
@@ -219,6 +207,8 @@ declare module 'vscode' {
          * exclusive
          */
         readonly end: number;
+
+        isEmpty: boolean;
 
         constructor(start: number, end: number);
     }
@@ -276,8 +266,7 @@ declare module 'vscode' {
          * The column in which this editor shows.
          */
         // @jrieken
-        // todo@API maybe never undefined because notebooks always show in the editor area (unlike text editors)
-        // maybe for notebook diff editor
+        // this is not implemented...
         readonly viewColumn?: ViewColumn;
 
         /**
@@ -313,6 +302,15 @@ declare module 'vscode' {
          */
         readonly document: NotebookDocument;
         readonly cells: NotebookCell[];
+    }
+
+    export interface NotebookCellLanguageChangeEvent {
+        /**
+         * The affected document.
+         */
+        readonly document: NotebookDocument;
+        readonly cell: NotebookCell;
+        readonly language: string;
     }
 
     export interface NotebookCellMetadataChangeEvent {
@@ -399,9 +397,8 @@ declare module 'vscode' {
     }
 
     export namespace notebook {
-        // todo@API should we really support to pass the viewType? We do NOT support
-        // to open the same file with different viewTypes at the same time
-        export function openNotebookDocument(uri: Uri, viewType?: string): Thenable<NotebookDocument>;
+        export function openNotebookDocument(uri: Uri): Thenable<NotebookDocument>;
+
         export const onDidOpenNotebookDocument: Event<NotebookDocument>;
         export const onDidCloseNotebookDocument: Event<NotebookDocument>;
 
@@ -414,6 +411,7 @@ declare module 'vscode' {
         export const onDidChangeNotebookDocumentMetadata: Event<NotebookDocumentMetadataChangeEvent>;
         export const onDidChangeNotebookCells: Event<NotebookCellsChangeEvent>;
         export const onDidChangeCellOutputs: Event<NotebookCellOutputsChangeEvent>;
+
         export const onDidChangeCellMetadata: Event<NotebookCellMetadataChangeEvent>;
     }
 
@@ -567,31 +565,38 @@ declare module 'vscode' {
 
     interface NotebookDocumentOpenContext {
         readonly backupId?: string;
+        readonly untitledDocumentData?: Uint8Array;
     }
 
+    // todo@API use openNotebookDOCUMENT to align with openCustomDocument etc?
+    // todo@API rename to NotebookDocumentContentProvider
     export interface NotebookContentProvider {
         readonly options?: NotebookDocumentContentOptions;
         readonly onDidChangeNotebookContentOptions?: Event<NotebookDocumentContentOptions>;
+
+        // todo@API remove! against separation of data provider and renderer
+        // eslint-disable-next-line vscode-dts-cancellation
+        resolveNotebook(document: NotebookDocument, webview: NotebookCommunication): Thenable<void>;
+
         /**
          * Content providers should always use [file system providers](#FileSystemProvider) to
          * resolve the raw content for `uri` as the resouce is not necessarily a file on disk.
          */
-        openNotebook(uri: Uri, openContext: NotebookDocumentOpenContext): NotebookData | Thenable<NotebookData>;
-        resolveNotebook(document: NotebookDocument, webview: NotebookCommunication): Thenable<void>;
-        saveNotebook(document: NotebookDocument, cancellation: CancellationToken): Thenable<void>;
-        saveNotebookAs(
-            targetResource: Uri,
-            document: NotebookDocument,
-            cancellation: CancellationToken
-        ): Thenable<void>;
+        openNotebook(
+            uri: Uri,
+            openContext: NotebookDocumentOpenContext,
+            token: CancellationToken
+        ): NotebookData | Thenable<NotebookData>;
+
+        saveNotebook(document: NotebookDocument, token: CancellationToken): Thenable<void>;
+
+        saveNotebookAs(targetResource: Uri, document: NotebookDocument, token: CancellationToken): Thenable<void>;
+
         backupNotebook(
             document: NotebookDocument,
             context: NotebookDocumentBackupContext,
-            cancellation: CancellationToken
+            token: CancellationToken
         ): Thenable<NotebookDocumentBackup>;
-
-        // ???
-        // provideKernels(document: NotebookDocument, token: CancellationToken): ProviderResult<T[]>;
     }
 
     export namespace notebook {
