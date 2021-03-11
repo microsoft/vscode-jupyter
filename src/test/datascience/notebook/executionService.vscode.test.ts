@@ -844,9 +844,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         const cells = await insertRandomCells({ count: 15, addMarkdownCells: true });
 
         await runAllCellsInActiveNotebook();
-        const queuedCells = cells
-            .filter((item) => item.cell.kind === NotebookCellKind.Code)
-            .map((item) => item.cell);
+        const queuedCells = cells.filter((item) => item.cell.kind === NotebookCellKind.Code).map((item) => item.cell);
         await Promise.all(queuedCells.map((cell) => waitForQueuedForExecution(cell)));
 
         // Add a new cell to the document, this should not get executed.
