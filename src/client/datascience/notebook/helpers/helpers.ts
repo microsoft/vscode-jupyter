@@ -187,10 +187,8 @@ export function notebookModelToVSCNotebookData(
         new NotebookDocumentMetadata().with({
             custom: notebookContentWithoutCells, // Include metadata in VSC Model (so that VSC can display these if required)
             cellEditable: isNotebookTrusted,
-            cellRunnable: isNotebookTrusted,
             editable: isNotebookTrusted,
             cellHasExecutionOrder: true,
-            runnable: isNotebookTrusted,
             trusted: isNotebookTrusted
         })
     );
@@ -209,9 +207,9 @@ export function createJupyterCellFromVSCNotebookCell(
     vscCell: NotebookCell
 ): nbformat.IRawCell | nbformat.IMarkdownCell | nbformat.ICodeCell {
     let cell: nbformat.IRawCell | nbformat.IMarkdownCell | nbformat.ICodeCell;
-    if (vscCell.cellKind === NotebookCellKind.Markdown) {
+    if (vscCell.kind === NotebookCellKind.Markdown) {
         cell = createMarkdownCellFromNotebookCell(vscCell);
-    } else if (vscCell.language === 'raw' || vscCell.language === 'plaintext') {
+    } else if (vscCell.document.languageId === 'raw' || vscCell.document.languageId === 'plaintext') {
         cell = createRawCellFromNotebookCell(vscCell);
     } else {
         cell = createCodeCellFromNotebookCell(vscCell);
@@ -270,7 +268,6 @@ function createNotebookCellDataFromRawCell(cell: nbformat.IRawCell): NotebookCel
         editable: true,
         executionOrder: undefined,
         hasExecutionOrder: false,
-        runnable: false,
         custom: getNotebookCellMetadata(cell)
     });
     return new NotebookCellData(
@@ -298,7 +295,6 @@ function createNotebookCellDataFromMarkdownCell(cell: nbformat.IMarkdownCell): N
         editable: true,
         executionOrder: undefined,
         hasExecutionOrder: false,
-        runnable: false,
         custom: getNotebookCellMetadata(cell)
     });
     return new NotebookCellData(
@@ -328,7 +324,6 @@ function createNotebookCellDataFromCodeCell(cell: nbformat.ICodeCell, cellLangua
         executionOrder: typeof cell.execution_count === 'number' ? cell.execution_count : undefined,
         hasExecutionOrder: true,
         runState,
-        runnable: true,
         statusMessage,
         custom: getNotebookCellMetadata(cell)
     });
@@ -811,6 +806,6 @@ export function getCellStatusMessageBasedOnFirstCellErrorOutput(outputs?: readon
 
 export function findAssociatedNotebookDocument(cellUri: Uri, vscodeNotebook: IVSCodeNotebook, fs: IFileSystem) {
     return vscodeNotebook.notebookDocuments.find((item) =>
-        item.cells.some((cell) => fs.arePathsSame(cell.uri, cellUri))
+        item.cells.some((cell) => fs.arePathsSame(cell.document.uri, cellUri))
     );
 }

@@ -154,9 +154,10 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         await editorProvider.createNew();
 
         await waitForCondition(
-            async () => vscodeNotebook.activeNotebookEditor?.document.cells[0].language.toLowerCase() === 'julia',
+            async () =>
+                vscodeNotebook.activeNotebookEditor?.document.cells[0].document.languageId.toLowerCase() === 'julia',
             5_000,
-            `First cell is not julia, it is ${vscodeNotebook.activeNotebookEditor?.document.cells[0].language.toLowerCase()}`
+            `First cell is not julia, it is ${vscodeNotebook.activeNotebookEditor?.document.cells[0].document.languageId.toLowerCase()}`
         );
         await waitForKernelToGetAutoSelected('julia');
 

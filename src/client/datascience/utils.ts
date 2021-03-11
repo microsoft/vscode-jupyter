@@ -61,16 +61,20 @@ export function translateCellToNative(
         const query = '?query#';
         return {
             index: 0,
-            language: language,
             metadata: new NotebookCellMetadata().with({
                 executionOrder: cell.data.execution_count as number,
                 hasExecutionOrder: true,
                 runState: translateCellStateToNative(cell.state)
             }),
-            uri: Uri.parse(cell.file + query + cell.id),
             outputs: [],
-            cellKind: NotebookCellKind.Code,
-            code: concatMultilineString(cell.data.source)
+            kind: NotebookCellKind.Code,
+            code: concatMultilineString(cell.data.source),
+            document: {
+                languageId: language,
+                getText: () => concatMultilineString(cell.data.source),
+                uri: Uri.parse(cell.file + query + cell.id)
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            } as any
         };
     }
 }
@@ -84,8 +88,8 @@ export function translateCellFromNative(cell: NotebookCell): ICell {
         source: cell.document.getText().splitLines()
     };
     return {
-        id: cell.uri.fragment,
-        file: cell.uri.fsPath,
+        id: cell.document.uri.fragment,
+        file: cell.document.uri.fsPath,
         line: 0,
         state: translateCellStateFromNative(
             cell.metadata.runState ? cell.metadata.runState : NotebookCellRunState.Idle

@@ -50,7 +50,6 @@ suite('DataScience - VSCode Notebook - helpers', () => {
                     executionOrder: 10,
                     hasExecutionOrder: true,
                     runState: NotebookCellRunState.Idle,
-                    runnable: true,
                     statusMessage: undefined,
                     custom: { metadata: {} }
                 })
@@ -64,7 +63,6 @@ suite('DataScience - VSCode Notebook - helpers', () => {
                     editable: true,
                     executionOrder: undefined,
                     hasExecutionOrder: false,
-                    runnable: false,
                     custom: { metadata: {} }
                 })
             }

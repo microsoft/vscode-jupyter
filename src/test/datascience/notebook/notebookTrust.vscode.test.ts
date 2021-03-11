@@ -82,15 +82,12 @@ suite('DataScience - VSCode Notebook - (Trust) (slow)', function () {
     function assertDocumentTrust(trusted: boolean, hasOutput: boolean) {
         const document = vscodeNotebook.activeNotebookEditor?.document!;
         assert.equal(document.metadata.cellEditable, trusted);
-        assert.equal(document.metadata.cellRunnable, trusted);
         assert.equal(document.metadata.editable, trusted);
-        assert.equal(document.metadata.runnable, trusted);
         assert.equal(document.metadata.trusted, trusted);
 
         document.cells.forEach((cell) => {
             assert.equal(cell.metadata.editable, true);
-            if (cell.cellKind === NotebookCellKind.Code) {
-                assert.equal(cell.metadata.runnable, true);
+            if (cell.kind === NotebookCellKind.Code) {
                 if (hasOutput) {
                     assert.ok(cell.outputs.length, 'No output in trusted cell (should always exist)');
                 }
