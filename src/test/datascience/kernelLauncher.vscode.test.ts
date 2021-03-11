@@ -11,7 +11,7 @@ import { JupyterZMQBinariesNotFoundError } from '../../client/datascience/jupyte
 import { IKernelConnection, IKernelLauncher } from '../../client/datascience/kernel-launcher/types';
 import { createRawKernel } from '../../client/datascience/raw-kernel/rawKernel';
 import { IJupyterKernelSpec } from '../../client/datascience/types';
-import { sleep, waitForCondition } from '../common';
+import { PYTHON_PATH, sleep, waitForCondition } from '../common';
 import { requestExecute } from './raw-kernel/rawKernelTestHelpers';
 
 // Chai as promised is not part of this file
@@ -30,7 +30,7 @@ suite('DataScience - Kernel Launcher', () => {
         language: 'python',
         display_name: 'Python 3',
         metadata: {},
-        argv: ['python', '-m', 'ipykernel_launcher', '-f', `{connection_file}`],
+        argv: [PYTHON_PATH, '-m', 'ipykernel_launcher', '-f', `{connection_file}`],
         env: {},
         resources: {},
         path: ''
@@ -89,7 +89,7 @@ suite('DataScience - Kernel Launcher', () => {
             language: 'python',
             path: 'python',
             display_name: 'foo',
-            argv: ['python', '-m', 'ipykernel_launcher', '-f', '{connection_file}'],
+            argv: [PYTHON_PATH, '-m', 'ipykernel_launcher', '-f', '{connection_file}'],
             env: {
                 TEST_VAR: '1'
             }
