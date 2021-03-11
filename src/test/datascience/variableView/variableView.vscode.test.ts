@@ -33,6 +33,7 @@ suite('DataScience - VariableView', () => {
     let variableViewProvider: ITestVariableViewProvider;
     let vscodeNotebook: IVSCodeNotebook;
     suiteSetup(async function () {
+        this.skip();
         this.timeout(120_000);
         api = await initialize();
 
@@ -56,6 +57,7 @@ suite('DataScience - VariableView', () => {
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
     });
     setup(async function () {
+        this.skip();
         traceInfo(`Start Test ${this.currentTest?.title}`);
         sinon.restore();
 
@@ -64,6 +66,7 @@ suite('DataScience - VariableView', () => {
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
     });
     teardown(async function () {
+        this.skip();
         traceInfo(`Ended Test ${this.currentTest?.title}`);
         await closeNotebooks(disposables);
         await closeNotebooksAndCleanUpAfterTests(disposables);
